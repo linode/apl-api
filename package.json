@@ -2,7 +2,7 @@
   "name": "otomi-stack-api",
   "version": "1.0.0",
   "description": "REST API for admins and teams",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,5 +15,12 @@
   "bugs": {
     "url": "https://github.com/redkubes/otomi-stack-api/issues"
   },
-  "homepage": "https://github.com/redkubes/otomi-stack-api#readme"
+  "homepage": "https://github.com/redkubes/otomi-stack-api#readme",
+  "dependencies": {
+    "restify": "^8.5.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node main.js"
+  }
 }
