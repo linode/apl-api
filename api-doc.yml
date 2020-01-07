@@ -114,9 +114,18 @@ definitions:
         type: string
       password:
         type: string
+      oidc:
+        $ref: '#/definitions/TeamOidc'
     required:
     - name
     - password
+    - oidc
+  TeamOidc:
+    properties:
+      clientID:
+        type: string
+      clientSecret:
+        type: string
   Teams:
     properties:
       teams: 
