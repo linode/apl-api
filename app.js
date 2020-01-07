@@ -5,6 +5,7 @@ const openapi = require('express-openapi');
 const path = require('path');
 const cors = require('cors');
 
+
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -13,12 +14,10 @@ openapi.initialize({
   app: app,
   paths: path.resolve(__dirname, 'api-routes'),
   operations: {
-    getUser: function get(req, res) {
+    getTeams: function get(req, res){
       res.status(200).json({
-        id: req.params.id,
-        name: req.query.name,
-        age: req.query.age
-      });
+        id: "team1"
+      })
     }
   }
 });
