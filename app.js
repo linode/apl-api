@@ -13,13 +13,6 @@ openapi.initialize({
   apiDoc: fs.readFileSync(path.resolve(__dirname, 'api-doc.yml'), 'utf8'),
   app: app,
   paths: path.resolve(__dirname, 'api-routes'),
-  operations: {
-    getTeams: function get(req, res){
-      res.status(200).json({
-        id: "team1"
-      })
-    }
-  }
 });
 
 app.use(function(err, req, res, next) {

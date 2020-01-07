@@ -3,14 +3,10 @@ module.exports = {
   // for flexible middleware management.  express-openapi middleware generated from
   // the <path>.parameters + <methodHandler>.apiDoc.parameters is prepended to this
   // array.
-  post: [
+  get: [
     function(req, res, next) {
-      next();
-    },
-    post
-  ]
+      console.debug("Get deployment status")
+      res.status(200).json({ id: req.params.deploymentId });
+    }
+  ],
 };
-
-function post(req, res) {
-  res.status(200).json({ id: req.params.id });
-}

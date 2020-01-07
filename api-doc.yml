@@ -4,9 +4,110 @@ basePath: /v1
 info:
   title: The otomi-stack API
   version: '1.0.0'
+
+paths:
+  /deployments:
+    post:
+      description: Trigger a deployment
+      parameters: []
+      responses:
+        202:
+          description: Deployment has been triggered
+          schema:
+            $ref: '#/definitions/Deployment'
+
+  /deployments/{deploymentId}:
+    get: 
+      description: Get deployment
+      parameters:
+      - name: "deploymentId"
+        in: "path"
+        description: "ID of team to return"
+        required: true
+        type: "integer"
+      responses:
+        202:
+          description: Deployment has been triggered
+          schema:
+            $ref: '#/definitions/Deployment'
+  /teams:
+    get:
+      description: Get teams collection
+      parameters: []
+      responses:
+        200:
+          description: Successfully obtained teams collection
+          schema:
+            $ref: '#/definitions/Teams'
+    post:
+      description: Create a team
+      parameters: []
+      responses:
+        201:
+          description: Successfully obtained teams collection
+          schema:
+            $ref: '#/definitions/Team'
+
+  /teams/{teamId}:
+    get:
+      description: Get teams collection
+      parameters:
+      - name: "teamId"
+        in: "path"
+        description: "ID of team to return"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: Successfully obtained team
+          schema:
+            $ref: '#/definitions/Team'
+    put:
+      description: Edit a team
+      parameters:
+      - name: "teamId"
+        in: "path"
+        description: "ID of team to return"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: Successfully edited team
+          schema:
+            $ref: '#/definitions/Team'
+    delete:
+      description: Delete team
+      parameters:
+      - name: "teamId"
+        in: "path"
+        description: "ID of team to delete"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: Successfully deleted a team
+
+  /apiDocs:
+    get:
+      operationId: getApiDoc
+      description: Get OpenApi document
+      responses:
+        200:
+          description: The requested apiDoc.
+          schema:
+            type: object
+        default:
+          description: The requested apiDoc.
+
 definitions:
-  Error:
-    additionalProperties: true
+  Deployment:
+    properties:
+      id:
+        type: integer
+      status:
+        type: string
+        description: Deployment status
+        enum: [in-progress, completed, failed]
   Team:
     properties:
       name:
@@ -22,35 +123,3 @@ definitions:
         type: array
         items: 
           $ref: '#/definitions/Team'
-
-paths:
-  /teams:
-    get:
-      description: Get teams collection
-      operationId: getTeams
-      parameters: []
-      responses:
-        200:
-          description: Successfully obtained teams collection
-          schema:
-            $ref: '#/definitions/Teams'
-  /apiDocs:
-    get:
-      operationId: getApiDoc
-      description: Returns the requested apiDoc
-      parameters:
-        - description: The type of apiDoc to return.
-          in: query
-          name: type
-          type: string
-          enum:
-            - apiDoc
-            - operationDoc
-      responses:
-        200:
-          description: The requested apiDoc.
-          schema:
-            type: object
-        default:
-          description: The requested apiDoc.
-
