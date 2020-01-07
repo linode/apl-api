@@ -4,7 +4,7 @@
   "description": "REST API for admins and teams",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js"
   },
   "repository": {
     "type": "git",
@@ -17,10 +17,9 @@
   },
   "homepage": "https://github.com/redkubes/otomi-stack-api#readme",
   "dependencies": {
-    "restify": "^8.5.1"
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "express-openapi": "^6.0.0"
   },
-  "devDependencies": {},
-  "scripts": {
-    "start": "node main.js"
-  }
+  "devDependencies": {}
 }
