@@ -4,7 +4,8 @@
   "description": "REST API for admins and teams",
   "main": "main.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "start-dev": "nodemon -e js,yml app.js"
   },
   "repository": {
     "type": "git",
