@@ -58,7 +58,7 @@ class OtomiStack {
     let data = readYaml(this.teamsPath)
     const teamId = teamData.name
     if (data.teams.find(element => element.name == teamId) !== undefined)
-      throw new AlreadyExists('Team already exists');
+      throw new AlreadyExists('Team already exist');
 
     data.teams.push(teamData)
     saveYaml(this.teamsPath, data)

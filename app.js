@@ -4,7 +4,11 @@ const fs = require('fs');
 const openapi = require('express-openapi');
 const path = require('path');
 const cors = require('cors');
+
 const otomi = require('./otomi-stack')
+
+const openApiPath = path.resolve(__dirname, 'openapi.yaml')
+const apiDoc = fs.readFileSync(openApiPath, 'utf8')
 
 
 app.use(cors());
@@ -17,12 +21,11 @@ function errorMiddleware(err, req, res, next) {
   if (err instanceof otomi.NotExistError)
     return res.status(404).json({ error: err.message })
 
-  console.error(err)
-  return res.status(500).json({ error: "Unexpected error" })
+  return res.status(err.status).json({ error: err.errors })
 }
 
 openapi.initialize({
-  apiDoc: fs.readFileSync(path.resolve(__dirname, 'openapi.yaml'), 'utf8'),
+  apiDoc: apiDoc,
   app: app,
   dependencies: {
     otomi: new otomi.OtomiStack(path.resolve(__dirname, 'otomi-stack')),
@@ -34,6 +37,8 @@ openapi.initialize({
 app.use(function (err, req, res, next) {
   res.status(err.status).json(err);
 });
+
+
 
 module.exports = app;
 
