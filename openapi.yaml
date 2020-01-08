@@ -4,7 +4,6 @@ basePath: /v1
 info:
   title: The otomi-stack API
   version: '1.0.0'
-
 paths:
   /deployments:
     post:
@@ -44,7 +43,13 @@ paths:
             $ref: '#/definitions/Teams'
     post:
       description: Create a team
-      parameters: []
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Team object that needs to be added to the collection"
+        required: true
+        schema:
+          $ref: "#/definitions/Team"
       responses:
         201:
           description: Successfully obtained teams collection
@@ -73,6 +78,12 @@ paths:
         description: "ID of team to return"
         required: true
         type: "string"
+      - in: "body"
+        name: "body"
+        description: "Team object that contains updated values"
+        required: true
+        schema:
+          $ref: "#/definitions/Team"
       responses:
         200:
           description: Successfully edited team
