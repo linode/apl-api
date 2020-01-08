@@ -1,3 +1,4 @@
+require('dotenv').config()
 const app = require('express')();
 const bodyParser = require('body-parser');
 const fs = require('fs');
@@ -27,7 +28,7 @@ openapi.initialize({
   apiDoc: apiDoc,
   app: app,
   dependencies: {
-    otomi: new otomi.OtomiStack(path.resolve(__dirname, 'otomi-stack')),
+    otomi: new otomi.OtomiStack(process.env.OTOMI_STACK_PATH),
   },
   paths: path.resolve(__dirname, 'api-routes'),
   errorMiddleware: errorMiddleware,
@@ -38,8 +39,4 @@ app.use(function (err, req, res, next) {
 });
 
 
-
-module.exports = app;
-
-
-app.listen(8080);
+app.listen(process.env.PORT);

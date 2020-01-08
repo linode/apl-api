@@ -1,11 +1,25 @@
-# Running
+#  Overview
 
-Start app
+The otomi-stack-api is REST API implementation for otomi-stack.
+The API allows to manipulate teams and their configurations.
+
+
+# Running
+## Environment variables
+For local development define `.env` file. Example:
+```
+PORT=8080
+OTOMI_STACK_PATH=~/workspace/otomi/otomi-stack-values
+KUBE_PATH=~/.kube
+```
+For production environment export the same variables.
+
+## Start app
 ```
 npm run start
 ```
 
-Start app with live update
+## Start app with live update
 ```
 npm run start-dev
 ```
