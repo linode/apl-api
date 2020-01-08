@@ -48,20 +48,19 @@ class OtomiStack {
     return index
   }
   getTeam(teamId) {
-    const teams = this.getTeams()
-    const team = teams.find(element => element.name == teamId)
-
-    if (team === undefined)
-      throw new NotExistError('Team does not exists');
+    const data = readYaml(this.teamsPath)
+    const index = this.getTeamIndex(data, teamId)
+    const team = data.teams[index]
     return team
   }
 
-  addTeam(data) {
-    if (this.getTeam(data.teamId) !== null)
+  createTeam(teamData) {
+    let data = readYaml(this.teamsPath)
+
+    if (data.teams.find(element => element.name == teamId) !== undefined)
       throw new AlreadyExists('Team already exists');
 
-    let data = readYaml(this.teamsPath)
-    data.teams.append(data)
+    data.teams.push(teamData)
     saveYaml(this.teamsPath, data)
   }
 

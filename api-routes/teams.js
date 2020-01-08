@@ -12,7 +12,7 @@ module.exports = function (otomi) {
 
     post: function (req, res, next) {
       console.debug("Create team")
-      data = otomi.createTeam(req.data)
+      data = otomi.createTeam(req.body)
       res.status(200).json(data)
     }
   }
