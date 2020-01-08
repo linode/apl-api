@@ -1,14 +1,20 @@
-module.exports = {
+module.exports = function (otomi) {
 
-  get: [
-    function(req, res, next) {
-      console.debug("Get teams")
-      res.status(200).json([{}]);
+  var api = {
+    get: [
+      function (req, res, next) {
+        console.info("Get teams")
+        data = otomi.getTeams()
+        console.debug("Obtained teams")
+        res.status(200).json(data);
+      }
+    ],
+
+    post: function (req, res, next) {
+      console.debug("Create team")
+      data = otomi.createTeam(req.data)
+      res.status(200).json(data)
     }
-  ],
-
-  post: function(req, res, next) {
-    console.debug("Create team")
-    res.status(200).json({});
   }
+  return api;
 };
