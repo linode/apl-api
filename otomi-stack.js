@@ -56,12 +56,13 @@ class OtomiStack {
 
   createTeam(teamData) {
     let data = readYaml(this.teamsPath)
-
+    const teamId = teamData.name
     if (data.teams.find(element => element.name == teamId) !== undefined)
       throw new AlreadyExists('Team already exists');
 
     data.teams.push(teamData)
     saveYaml(this.teamsPath, data)
+    return teamData
   }
 
   editTeam(teamId, teamData) {
@@ -81,7 +82,7 @@ class OtomiStack {
 }
 
 module.exports = {
-  AlreadyExists: NotExistError,
+  AlreadyExists: AlreadyExists,
   NotExistError: NotExistError,
   OtomiStack: OtomiStack,
 };
