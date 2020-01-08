@@ -15,13 +15,12 @@ app.use(cors());
 app.use(bodyParser.json());
 
 function errorMiddleware(err, req, res, next) {
-  console.debug("errorMiddleware")
   if (err instanceof otomi.AlreadyExists)
     return res.status(409).json({ error: err.message })
   if (err instanceof otomi.NotExistError)
     return res.status(404).json({ error: err.message })
 
-  return res.status(err.status).json({ error: err.errors })
+  return res.status(err.status).json(err)
 }
 
 openapi.initialize({
