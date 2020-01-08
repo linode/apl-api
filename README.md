@@ -2,12 +2,12 @@
 
 Start app
 ```
-npm start
+npm run start
 ```
 
 Start app with live update
 ```
-npm start-dev
+npm run start-dev
 ```
 
 Note: it requires to instal globally the following package
