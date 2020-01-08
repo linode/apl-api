@@ -15,7 +15,10 @@ paths:
           description: Deployment has been triggered
           schema:
             $ref: '#/definitions/Deployment'
-
+        409:
+          description: There is ongoing deployment
+          schema:
+            $ref: '#/definitions/Deployment'
   /deployments/{deploymentId}:
     get: 
       description: Get deployment
@@ -120,6 +123,7 @@ definitions:
     - name
     - password
     - oidc
+
   TeamOidc:
     properties:
       clientID:
