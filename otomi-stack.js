@@ -27,7 +27,6 @@ function saveYaml(filePath, data) {
   console.debug("Saving file: " + filePath)
   let yamlStr = yaml.safeDump(data);
   fs.writeFileSync(filePath, yamlStr, 'utf8');
-  return doc;
 }
 
 class OtomiStack {
@@ -42,6 +41,12 @@ class OtomiStack {
     return data.teams
   }
 
+  getTeamIndex(data, teamId){
+    const index = data.teams.findIndex(el => el.name === teamId)
+    if (index === -1)
+      throw new NotExistError('Team does not exists');
+    return index
+  }
   getTeam(teamId) {
     const teams = this.getTeams()
     const team = teams.find(element => element.name == teamId)
@@ -60,19 +65,18 @@ class OtomiStack {
     saveYaml(this.teamsPath, data)
   }
 
-  editTeam(data) {
-    team = this.getTeam(data.teamId)
-
-
+  editTeam(teamId, teamData) {
     let data = readYaml(this.teamsPath)
-    data.teams.append(data)
+    const index = this.getTeamIndex(data, teamId)
+    data.teams[index] = teamData
     saveYaml(this.teamsPath, data)
+    return teamData
   }
 
-  removeTeam(teamId) {
-    team = this.getTeam();
+  deleteTeam(teamId) {
     let data = readYaml(this.teamsPath)
-    data.teams.splice(data.teams.indexOf(team), 1);
+    const index = this.getTeamIndex(data, teamId)
+    data.teams.splice(index, 1)
     saveYaml(this.teamsPath, data)
   }
 }

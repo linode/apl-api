@@ -13,13 +13,16 @@ module.exports = function (otomi) {
     put: [
       function (req, res, next) {
         console.debug("Modify team")
-        res.status(200).json({ id: req.params.name });
+        console.log('Got body:', req.body);
+        const data = otomi.editTeam(req.params.teamId, req.body)
+        res.status(200).json(data);
       }
     ],
 
     delete: [
       function (req, res, next) {
-        console.debug("Delete team")
+        console.debug("Delete team: " + req.params.teamId)
+        const data = otomi.deleteTeam(req.params.teamId)
         res.status(200).json({ id: req.params.name });
       }
     ]
