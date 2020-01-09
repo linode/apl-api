@@ -1,9 +1,9 @@
-swagger: '2.0'
+swagger: "2.0"
 host: otomi-stack-api
 basePath: /v1
 info:
   title: The otomi-stack API
-  version: '1.0.0'
+  version: "1.0.0"
 paths:
   /deployments:
     post:
@@ -13,25 +13,25 @@ paths:
         202:
           description: Deployment has been triggered
           schema:
-            $ref: '#/definitions/Deployment'
+            $ref: "#/definitions/Deployment"
         409:
           description: There is ongoing deployment
           schema:
-            $ref: '#/definitions/Deployment'
+            $ref: "#/definitions/Deployment"
   /deployments/{deploymentId}:
-    get: 
+    get:
       description: Get deployment
       parameters:
-      - name: "deploymentId"
-        in: "path"
-        description: "ID of team to return"
-        required: true
-        type: "integer"
+        - name: "deploymentId"
+          in: "path"
+          description: "ID of team to return"
+          required: true
+          type: "integer"
       responses:
         202:
           description: Deployment has been triggered
           schema:
-            $ref: '#/definitions/Deployment'
+            $ref: "#/definitions/Deployment"
   /teams:
     get:
       description: Get teams collection
@@ -40,67 +40,99 @@ paths:
         200:
           description: Successfully obtained teams collection
           schema:
-            $ref: '#/definitions/Teams'
+            $ref: "#/definitions/Teams"
     post:
       description: Create a team
       parameters:
-      - in: "body"
-        name: "body"
-        description: "Team object that needs to be added to the collection"
-        required: true
-        schema:
-          $ref: "#/definitions/Team"
+        - in: "body"
+          name: "body"
+          description: "Team object that needs to be added to the collection"
+          required: true
+          schema:
+            $ref: "#/definitions/Team"
       responses:
         201:
           description: Successfully obtained teams collection
           schema:
-            $ref: '#/definitions/Team'
+            $ref: "#/definitions/Team"
+        400:
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/OpenApiValidationError"
+        409:
+          description: Team already exists
+          schema:
+            $ref: "#/definitions/OtomiStackError"
 
   /teams/{teamId}:
     get:
       description: Get teams collection
       parameters:
-      - name: "teamId"
-        in: "path"
-        description: "ID of team to return"
-        required: true
-        type: "string"
+        - name: "teamId"
+          in: "path"
+          description: "ID of team to return"
+          required: true
+          type: "string"
       responses:
         200:
           description: Successfully obtained team
           schema:
-            $ref: '#/definitions/Team'
+            $ref: "#/definitions/Team"
+        400:
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/OpenApiValidationError"
+        404:
+          description: Team does not exists
+          schema:
+            $ref: "#/definitions/OtomiStackError"
     put:
       description: Edit a team
       parameters:
-      - name: "teamId"
-        in: "path"
-        description: "ID of team to return"
-        required: true
-        type: "string"
-      - in: "body"
-        name: "body"
-        description: "Team object that contains updated values"
-        required: true
-        schema:
-          $ref: "#/definitions/Team"
+        - name: "teamId"
+          in: "path"
+          description: "ID of team to return"
+          required: true
+          type: "string"
+        - in: "body"
+          name: "body"
+          description: "Team object that contains updated values"
+          required: true
+          schema:
+            $ref: "#/definitions/Team"
       responses:
         200:
           description: Successfully edited team
           schema:
-            $ref: '#/definitions/Team'
+            $ref: "#/definitions/Team"
+        400:
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/OpenApiValidationError"
+        404:
+          description: Team does not exists
+          schema:
+            $ref: "#/definitions/OtomiStackError"
+
     delete:
       description: Delete team
       parameters:
-      - name: "teamId"
-        in: "path"
-        description: "ID of team to delete"
-        required: true
-        type: "string"
+        - name: "teamId"
+          in: "path"
+          description: "ID of team to delete"
+          required: true
+          type: "string"
       responses:
         200:
           description: Successfully deleted a team
-
+        400:
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/OpenApiValidationError"
+        404:
+          description: Team does not exists
+          schema:
+            $ref: "#/definitions/OtomiStackError"
   /apiDocs:
     get:
       operationId: getApiDoc
@@ -129,12 +161,12 @@ definitions:
       password:
         type: string
       oidc:
-        $ref: '#/definitions/TeamOidc'
+        $ref: "#/definitions/TeamOidc"
     required:
-    - name
-    - password
-    - oidc
- 
+      - name
+      - password
+      - oidc
+
   TeamOidc:
     properties:
       clientID:
@@ -143,7 +175,33 @@ definitions:
         type: string
   Teams:
     properties:
-      teams: 
+      teams:
         type: array
-        items: 
-          $ref: '#/definitions/Team'
+        items:
+          $ref: "#/definitions/Team"
+
+  OpenApiValidationError:
+    properties:
+      status:
+        type: integer
+      errors:
+        type: array
+        items:
+          $ref: "#/definitions/ValidationError"
+
+  ValidationError:
+    properties:
+      path:
+        type: "string"
+      errorCode:
+        type: "string"
+      message:
+        type: "string"
+      location:
+        type: "string"
+        enum: [body, path]
+
+  OtomiStackError:
+    properties:
+      message:
+        type: "string"
