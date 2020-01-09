@@ -1,6 +1,4 @@
-yaml = require('js-yaml');
-fs = require('fs');
-path = require('path')
+const path = require('path')
 
 
 class NotExistError extends Error {

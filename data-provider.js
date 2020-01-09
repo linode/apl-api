@@ -1,4 +1,8 @@
 
+
+const yaml = require('js-yaml');
+const fs = require('fs');
+
 class DataProvider {
   readYaml(filePath) {
     console.debug("Reading file: " + filePath)
