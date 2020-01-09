@@ -15,69 +15,56 @@ class AlreadyExists extends Error {
   }
 }
 
-function readYaml(filePath) {
-  console.debug("Reading file: " + filePath)
-  let doc = yaml.safeLoad(fs.readFileSync(filePath, 'utf8'));
-  return doc;
-}
-
-
-
-function saveYaml(filePath, data) {
-  console.debug("Saving file: " + filePath)
-  let yamlStr = yaml.safeDump(data);
-  fs.writeFileSync(filePath, yamlStr, 'utf8');
-}
-
 class OtomiStack {
-  constructor(dirPath) {
+  constructor(dirPath, dataProvider) {
     this.dirPath = dirPath;
     this.valuesDirPath = path.join(dirPath, 'values');
     this.teamsPath = path.join(this.valuesDirPath, 'teams.yaml');
+    this.dataProvider = dataProvider
   }
 
   getTeams() {
-    const data = readYaml(this.teamsPath)
+    const data = this.dataProvider.readYaml(this.teamsPath)
     return data.teams
   }
 
-  getTeamIndex(data, teamId){
+  getTeamIndex(data, teamId) {
     const index = data.teams.findIndex(el => el.name === teamId)
     if (index === -1)
       throw new NotExistError('Team does not exists');
     return index
   }
   getTeam(teamId) {
-    const data = readYaml(this.teamsPath)
+    const data = this.dataProvider.readYaml(this.teamsPath)
     const index = this.getTeamIndex(data, teamId)
     const team = data.teams[index]
     return team
   }
 
   createTeam(teamData) {
-    let data = readYaml(this.teamsPath)
+    let data = this.dataProvider.readYaml(this.teamsPath)
     const teamId = teamData.name
     if (data.teams.find(element => element.name == teamId) !== undefined)
       throw new AlreadyExists('Team already exist');
 
     data.teams.push(teamData)
-    saveYaml(this.teamsPath, data)
+    this.dataProvider.saveYaml(this.teamsPath, data)
     return teamData
   }
 
   editTeam(teamId, teamData) {
-    let data = readYaml(this.teamsPath)
+    let data = this.dataProvider.readYaml(this.teamsPath)
     const index = this.getTeamIndex(data, teamId)
     data.teams[index] = teamData
-    saveYaml(this.teamsPath, data)
+    this.dataProvider.saveYaml(this.teamsPath, data)
     return teamData
   }
 
   deleteTeam(teamId) {
-    let data = readYaml(this.teamsPath)
+    let data = this.dataProvider.readYaml(this.teamsPath)
     const index = this.getTeamIndex(data, teamId)
     data.teams.splice(index, 1)
-    saveYaml(this.teamsPath, data)
+    this.dataProvider.saveYaml(this.teamsPath, data)
   }
 }
 

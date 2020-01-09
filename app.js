@@ -7,6 +7,7 @@ const path = require('path');
 const cors = require('cors');
 
 const otomi = require('./otomi-stack')
+const dataProvider = require('./data-provider')
 
 const openApiPath = path.resolve(__dirname, 'openapi.yaml')
 const apiDoc = fs.readFileSync(openApiPath, 'utf8')
@@ -24,11 +25,13 @@ function errorMiddleware(err, req, res, next) {
   return res.status(err.status).json(err)
 }
 
+const provider = new dataProvider.DataProvider()
 openapi.initialize({
   apiDoc: apiDoc,
   app: app,
   dependencies: {
-    otomi: new otomi.OtomiStack(process.env.OTOMI_STACK_PATH),
+    otomi: new otomi.OtomiStack(process.env.OTOMI_STACK_PATH, provider),
+
   },
   paths: path.resolve(__dirname, 'api-routes'),
   errorMiddleware: errorMiddleware,
