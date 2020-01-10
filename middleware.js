@@ -6,13 +6,13 @@ function errorMiddleware(err, req, res, next) {
     return res.status(409).json({ error: err.message })
   if (err instanceof otomi.NotExistError)
     return res.status(404).json({ error: err.message })
-
-  try {
+  
+  if (typeof(err.status) === undefined)
     return res.status(err.status).json(err)
-  } catch (err) {
-    console.error(err)
-    return res.status(500).json({ error: "Unexpected error" })
-  }
+
+  console.error(err)
+  return res.status(500).json({ error: "Unexpected error" })
+
 }
 
 module.exports = {
