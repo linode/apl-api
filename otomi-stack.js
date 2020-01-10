@@ -1,5 +1,7 @@
 const path = require('path')
-
+const util = require('util');
+const dataProvider = require('./data-provider')
+const shell = require('shelljs');
 
 class NotExistError extends Error {
   constructor(message) {
@@ -14,11 +16,13 @@ class AlreadyExists extends Error {
 }
 
 class OtomiStack {
-  constructor(dirPath, dataProvider) {
+  constructor(dirPath, cloud) {
     this.dirPath = dirPath;
-    this.valuesDirPath = path.join(dirPath, 'values');
-    this.teamsPath = path.join(this.valuesDirPath, 'teams.yaml');
-    this.dataProvider = dataProvider
+    this.aliasesRelativePath = './bin/aliases';
+    this.teamsPath = path.join(dirPath, './values/teams.yaml');
+    this.dataProvider = new dataProvider.DataProvider()
+    this.shell = shell;
+    this.cloud = cloud
   }
 
   getTeams() {

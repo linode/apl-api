@@ -1,8 +1,10 @@
 const dotEnv = require('dotenv')
-const dataProvider = require('./data-provider')
 const server = require('./server');
+const otomi = require('./otomi-stack')
+
 
 dotEnv.config()
-const provider = new dataProvider.DataProvider()
-const app = server.initApp(__dirname, process.env.OTOMI_STACK_PATH, provider)
+
+const otomiStack = new otomi.OtomiStack(process.env.OTOMI_STACK_PATH, "azure")
+const app = server.initApp(__dirname, otomiStack)
 app.listen(process.env.PORT);

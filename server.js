@@ -5,10 +5,8 @@ const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 const middleware = require('./middleware')
-const otomi = require('./otomi-stack')
 
-
-function initApp(appDir, otomiStackDir, dataProvider) {
+function initApp(appDir, otomiStack) {
 
   const app = express()
   const openApiPath = path.resolve(appDir, 'openapi.yaml')
@@ -22,7 +20,7 @@ function initApp(appDir, otomiStackDir, dataProvider) {
     apiDoc: apiDoc,
     app: app,
     dependencies: {
-      otomi: new otomi.OtomiStack(otomiStackDir, dataProvider),
+      otomi: otomiStack,
     },
     paths: apiRoutesPath,
     errorMiddleware: middleware.errorMiddleware,
