@@ -68,6 +68,17 @@ class OtomiStack {
     data.teams.splice(index, 1)
     this.dataProvider.saveYaml(this.teamsPath, data)
   }
+
+  deploy() {
+    const command = util.format('cd %s && source ./bin/aliases && hfd apply', + this.dirPath)
+    this.cmd(command)
+  }
+
+  cmd(command) {
+    console.info(command)
+    this.shell.ls('*.js')
+
+  }
 }
 
 module.exports = {
