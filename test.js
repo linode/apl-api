@@ -8,15 +8,17 @@ describe("Teams", function() {
   it("should return teams", function(done) {    
     const otomiStack = new otomi.OtomiStack('tpath', "tcloud")
     var stub = sinon.stub(otomiStack.dataProvider, "readYaml");
-    stub.returns("dsadas");
+    stub.returns({name: "team1"})
 
+    // expect(otomiStack.dataProvider.readYaml("")).to.equal("sample body")
     const app = server.initApp(otomiStack)
     request(app)
       .get('/v1/teams')
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
       .expect(
         200,
-        "dasdsdassasas",
-        done()
-      );
+        // {name: "team1"},
+      ).end(done);
   });
 });
