@@ -5,8 +5,6 @@ module.exports = function (otomi) {
       function (req, res, next) {
         console.debug("Get team: " + req.params.teamId)
         const data = otomi.getTeam(req.params.teamId)
-        if (data === undefined)
-          res.status(404).json({})
         res.status(200).json(data);
       }
     ],
