@@ -1,7 +1,6 @@
 function validateEnv() {
   // Ensure required ENV vars are set
   let requiredEnv = [
-    "PORT",
     "OTOMI_STACK_PATH",
     "KUBE_CONTEXT",
     "DEPLOYMENT_STAGE"

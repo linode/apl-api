@@ -13,8 +13,6 @@ In order to inspect the api file it is recommended to either:
 - install `swagger viewer` plugin in you vscode
 - or copy file content and paste in https://editor.swagger.io
 
-
-
 A client code can access API specification by querying the following endpoint:
 ```
 GET http://127.0.0.1:8080/v1/apiDocs
@@ -32,7 +30,6 @@ The `otomi-stack-api` can access
 ## Environment variables
 For local development define `.env` file. Example:
 ```
-PORT=8080
 OTOMI_STACK_PATH=/otomi-stack
 KUBE_CONTEXT=minikube
 DEPLOYMENT_STAGE=dev
