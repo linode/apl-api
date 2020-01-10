@@ -1,9 +1,10 @@
 const dotEnv = require('dotenv')
 const server = require('./src/server');
 const otomi = require('./src/otomi-stack')
-
+const utils = require('./src/utils')
 
 dotEnv.config()
+utils.validateEnv();
 
 const otomiStack = new otomi.OtomiStack(process.env.OTOMI_STACK_PATH, "azure")
 const app = server.initApp(otomiStack)
