@@ -9,8 +9,8 @@ const middleware = require('./middleware')
 function initApp(otomiStack) {
 
   const app = express()
-  const openApiPath = path.resolve(__dirname, 'openapi.yaml')
-  const apiRoutesPath = path.resolve(__dirname, 'api-routes')
+  const openApiPath = path.resolve(__dirname, 'api.yaml')
+  const apiRoutesPath = path.resolve(__dirname, 'api')
   const apiDoc = fs.readFileSync(openApiPath, 'utf8')
 
   app.use(cors());

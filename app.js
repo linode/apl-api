@@ -1,6 +1,6 @@
 const dotEnv = require('dotenv')
-const server = require('./server');
-const otomi = require('./otomi-stack')
+const server = require('./src/server');
+const otomi = require('./src/otomi-stack')
 
 
 dotEnv.config()

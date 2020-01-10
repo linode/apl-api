@@ -2,12 +2,12 @@
   "name": "otomi-stack-api",
   "version": "1.0.0",
   "description": "REST API for admins and teams",
-  "main": "main.js",
+  "main": "app.js",
   "scripts": {
     "start": "node app.js",
     "start-dev": "nodemon -e js,yaml,yml app.js",
     "lint": "eslint .",
-    "test": "mocha --exit"
+    "test": "mocha src --exit"
   },
   "repository": {
     "type": "git",
