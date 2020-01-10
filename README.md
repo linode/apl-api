@@ -33,8 +33,9 @@ The `otomi-stack-api` can access
 For local development define `.env` file. Example:
 ```
 PORT=8080
-OTOMI_STACK_PATH=~/workspace/otomi/otomi-stack-values
-KUBE_PATH=~/.kube
+OTOMI_STACK_PATH=/otomi-stack
+KUBE_CONTEXT=minikube
+DEPLOYMENT_STAGE=dev
 ```
 For production environment export the same variables with proper values.
 

@@ -16,13 +16,14 @@ class AlreadyExists extends Error {
 }
 
 class OtomiStack {
-  constructor(dirPath, cloud) {
-    this.dirPath = dirPath;
+  constructor(otomiStackPath, kubeContext, deploymentStage) {
+    this.otomiStackPath = otomiStackPath;
     this.aliasesRelativePath = './bin/aliases';
-    this.teamsPath = path.join(dirPath, './values/teams.yaml');
+    this.teamsPath = path.join(otomiStackPath, './values/teams.yaml');
     this.dataProvider = new dataProvider.DataProvider()
     this.shell = shell;
-    this.cloud = cloud
+    this.kubContext = kubeContext
+    this.deploymentStage = deploymentStage
   }
 
   getTeams() {
@@ -70,7 +71,9 @@ class OtomiStack {
   }
 
   deploy() {
-    const command = util.format('cd %s && source ./bin/aliases && hfd apply', + this.dirPath)
+    const command = util.format(
+      'cd %s && kubectl config use-context %s && helmfile -e %s apply --concurrency=1 --skip-deps;', 
+      this.otomiStackPath, this.kubeContext, this.deploymentStage)
     this.cmd(command)
   }
 

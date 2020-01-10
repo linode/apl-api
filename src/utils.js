@@ -3,8 +3,10 @@ function validateEnv() {
   let requiredEnv = [
     "PORT",
     "OTOMI_STACK_PATH",
-    "KUBE_PATH",
+    "KUBE_CONTEXT",
+    "DEPLOYMENT_STAGE"
   ];
+
   let unsetEnv = requiredEnv.filter((env) => !(typeof process.env[env] !== 'undefined'));
 
   if (unsetEnv.length > 0) {
