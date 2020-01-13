@@ -16,6 +16,13 @@ function initApp(otomiStack) {
   app.use(cors());
   app.use(bodyParser.json());
 
+  function getSecurityHandlers(){
+    const securityHandlers = {}
+    if (process.env.DISABLE_AUTH !== 1)
+      securityHandlers.groupAuthz = middleware.isAuthorized
+    return securityHandlers
+  }
+
   openapi.initialize({
     apiDoc: apiDoc,
     app: app,
@@ -24,9 +31,7 @@ function initApp(otomiStack) {
     },
     paths: apiRoutesPath,
     errorMiddleware: middleware.errorMiddleware,
-    securityHandlers: {
-      groupAuthz: middleware.isAuthorized,
-    },
+    securityHandlers: getSecurityHandlers(),
   });
 
   app.use(function (err, req, res, next) {

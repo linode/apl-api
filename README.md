@@ -34,7 +34,12 @@ OTOMI_STACK_PATH=/otomi-stack
 KUBE_CONTEXT=minikube
 DEPLOYMENT_STAGE=dev
 ```
+
+Use `DISABLE_AUTH=1` env to disable authorization.
+
+
 For production environment export the same variables with proper values.
+
 
 ## Start app
 ```
