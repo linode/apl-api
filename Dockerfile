@@ -74,6 +74,9 @@ COPY --from=clean /app/node_modules node_modules
 COPY --from=clean /app/package.json /app/app.js ./
 COPY --from=clean /app/src ./src
 
+# Make sure that .env is not at this stage
+RUN rm -f /app/.env
+
 EXPOSE 8080
 ENV OTOMI_STACK_PATH="/otomi-stack"
 ENV KUBE_CONTEXT="minikube"
