@@ -12,8 +12,16 @@ security:
 basePath: /v1
 info:
   title: The otomi-stack API
-  version: "1.0.0"
+  version: "0.1.0"
 paths:
+  /readiness:
+    get:
+      security: []
+      description: Check readiness
+      parameters: []
+      responses:
+        200:
+          description: Service is ready
   /deployments:
     post:
       description: Trigger a deployment
@@ -75,7 +83,7 @@ paths:
 
   /teams/{teamId}:
     get:
-      description: Get teams collection
+      description: Get a specific team
       parameters:
         - name: "teamId"
           in: "path"
@@ -144,7 +152,7 @@ paths:
             $ref: "#/definitions/OtomiStackError"
   /apiDocs:
     get:
-      operationId: getApiDoc
+      security: []
       description: Get OpenApi document
       responses:
         200:

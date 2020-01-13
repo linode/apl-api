@@ -24,6 +24,28 @@ describe("Teams", function () {
         // {name: "team1"},
       ).end(done);
   });
+  it("should answer for readiness check", function (done) {
+    const otomiStack = new otomi.OtomiStack('tpath', "tcloud")
+    const app = server.initApp(otomiStack)
+    request(app)
+      .get('/v1/readiness')
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
+      .expect(
+        200,
+      ).end(done);
+  });
+  it("should provide api spec", function (done) {
+    const otomiStack = new otomi.OtomiStack('tpath', "tcloud")
+    const app = server.initApp(otomiStack)
+    request(app)
+      .get('/v1/apiDocs')
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
+      .expect(
+        200,
+      ).end(done);
+  });
 });
 
 
