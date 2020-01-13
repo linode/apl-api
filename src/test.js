@@ -16,6 +16,7 @@ describe("Teams", function () {
     request(app)
       .get('/v1/teams')
       .set('Accept', 'application/json')
+      .set('Auth-Group', 'admin')
       .expect('Content-Type', /json/)
       .expect(
         200,
@@ -36,21 +37,31 @@ const mockRequest = (authGroup, teamId) => ({
 describe("Authorization", function () {
   it("should not authorize", function (done) {
     const req = mockRequest('team1', 'team2')
-    expect(middleware.isAuthorized(req, null, null)).to.be.false;
+    expect(() => middleware.isAuthorized(req, null, null)).to.throw();
     done()
   })
-  it("should not authorize", function (done) {
+  it("not authenticated - missing header", function (done) {
     const req = mockRequest('undefined', 'team2')
-    expect(middleware.isAuthorized(req, null, null)).to.be.false;
+    expect(() => middleware.isAuthorized(req, null, null)).to.be.throw();
     done()
   })
-  it("should not authorize", function (done) {
+  it("not authorized - missing teamId in uri path", function (done) {
     const req = mockRequest('team2', 'undefined')
-    expect(middleware.isAuthorized(req, null, null)).to.be.false;
+    expect(() => middleware.isAuthorized(req, null, null)).to.throw();
     done()
   })
-  it("should authorize", function (done) {
+  it("team authorized", function (done) {
     const req = mockRequest('team2', 'team2')
+    expect(middleware.isAuthorized(req, null, null)).to.be.true;
+    done()
+  })
+  it("admin authorized", function (done) {
+    const req = mockRequest('admin', 'team2')
+    expect(middleware.isAuthorized(req, null, null)).to.be.true;
+    done()
+  })
+  it("admin authorized 2", function (done) {
+    const req = mockRequest('admin', undefined)
     expect(middleware.isAuthorized(req, null, null)).to.be.true;
     done()
   })

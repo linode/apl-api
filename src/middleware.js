@@ -21,8 +21,11 @@ function isAuthorized(req, scopes, definition) {
   const group = req.header('Auth-Group')
 
   if (group === undefined)
-    return false
-
+    throw {
+      status: 401,
+      message: 'Not authenticated'
+    };
+    
   if (group === 'admin')
     return true
 
@@ -30,8 +33,8 @@ function isAuthorized(req, scopes, definition) {
   if (group !== req.params.teamId)
     throw {
       status: 403,
-      message: 'You are not allowed to query path ' + req.path
-  };
+      message: 'Not authorized' 
+    };
 
   return true
 }
