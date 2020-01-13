@@ -28,4 +28,5 @@ function validateConfig() {
 
 module.exports = {
   validateConfig: validateConfig,
+  validateEnv: validateEnv,
 };

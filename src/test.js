@@ -4,6 +4,7 @@ const sinon = require("sinon");
 const server = require('./server');
 const otomi = require('./otomi-stack')
 const middleware = require('./middleware')
+const utils = require('./utils')
 
 describe("Teams", function () {
   it("should return teams", function (done) {
@@ -65,4 +66,24 @@ describe("Authorization", function () {
     expect(middleware.isAuthorized(req, null, null)).to.be.true;
     done()
   })
+});
+
+
+
+describe("Config validation", function () {
+  it("missing env variables", function (done) {
+    expect(() => utils.validateEnv({})).to.throw();
+    done()
+  })
+
+  it("valid env variables", function (done) {
+    const envs = {
+      OTOMI_STACK_PATH: null,
+      KUBE_CONTEXT: null,
+      DEPLOYMENT_STAGE: null,
+    }
+    expect(() => utils.validateEnv(envs)).to.not.throw();
+    done()
+  })
+
 });
