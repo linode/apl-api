@@ -24,6 +24,9 @@ function initApp(otomiStack) {
     },
     paths: apiRoutesPath,
     errorMiddleware: middleware.errorMiddleware,
+    securityHandlers: {
+      groupAuthz: middleware.isAuthorized,
+    },
   });
 
   app.use(function (err, req, res, next) {

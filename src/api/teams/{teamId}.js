@@ -10,7 +10,7 @@ module.exports = function (otomi) {
     ],
     put: [
       function (req, res, next) {
-        console.debug("Modify team")
+        console.debug("Modify team: " + req.params.teamId)
         const data = otomi.editTeam(req.params.teamId, req.body)
         res.status(200).json(data);
       }

@@ -1,5 +1,14 @@
 swagger: "2.0"
 host: otomi-stack-api
+securityDefinitions:
+  groupAuthz:
+    type: "apiKey"
+    name: "Auth-Group"
+    in: "header"
+
+security:
+  - groupAuthz: []
+
 basePath: /v1
 info:
   title: The otomi-stack API
