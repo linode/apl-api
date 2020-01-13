@@ -4,7 +4,7 @@ const otomi = require('./src/otomi-stack')
 const utils = require('./src/utils')
 
 dotEnv.config()
-utils.validateEnv();
+utils.validateConfig();
 
 const otomiStack = new otomi.OtomiStack(
   process.env.OTOMI_STACK_PATH,
