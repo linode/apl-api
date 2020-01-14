@@ -29,6 +29,7 @@ The `otomi-stack-api` can access
 
 ## Environment variables
 
+
 For local development define `.env` file. Example:
 ```
 OTOMI_STACK_PATH=/otomi-stack
