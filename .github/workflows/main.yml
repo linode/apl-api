@@ -1,0 +1,17 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: CI
+      run: npm ci
+    - name: Linter
+      run: npm run lint
+    - name: Tests
+      run: npm run test
