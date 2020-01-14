@@ -6,45 +6,231 @@ const otomi = require('./otomi-stack')
 const middleware = require('./middleware')
 const utils = require('./utils')
 
-describe("Teams", function () {
-  it("should return teams", function (done) {
-    const otomiStack = new otomi.OtomiStack('tpath', "tcloud")
-    var stub = sinon.stub(otomiStack.dataProvider, "readYaml");
-    stub.returns({ name: "team1" })
 
-    // expect(otomiStack.dataProvider.readYaml("")).to.equal("sample body")
-    const app = server.initApp(otomiStack)
+describe("OpenApiSpec tests for admin", function () {
+  var app;
+  beforeEach(function () {
+    const otomiStack = new otomi.OtomiStack('tpath', "tcloud")
+    sinon.stub(otomiStack);
+    app = server.initApp(otomiStack)
+  })
+
+  it("admin can get all teams", function (done) {
     request(app)
       .get('/v1/teams')
       .set('Accept', 'application/json')
       .set('Auth-Group', 'admin')
+      .expect(200)
       .expect('Content-Type', /json/)
-      .expect(
-        200,
-        // {name: "team1"},
-      ).end(done);
+      .end(done);
   });
-  it("should answer for readiness check", function (done) {
+  it("admin can get a given team", function (done) {
+    request(app)
+      .get('/v1/teams/team1')
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'admin')
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+  it("admin can create a team", function (done) {
+    request(app)
+      .post('/v1/teams')
+      .send({ name: 'team1', password: 'pass', oidc: null })
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'admin')
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+  it("admin cannot delete all teams", function (done) {
+    request(app)
+      .delete('/v1/teams')
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'admin')
+      .expect(404)
+      .end(done);
+  });
+});
+
+describe("OpenApiSpec tests for team", function () {
+  var app;
+  beforeEach(function () {
     const otomiStack = new otomi.OtomiStack('tpath', "tcloud")
-    const app = server.initApp(otomiStack)
+    sinon.stub(otomiStack);
+    app = server.initApp(otomiStack)
+  })
+
+  it("team cannot get all teams", function (done) {
+    request(app)
+      .get('/v1/teams')
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'team1')
+      .expect(403)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+  it("team cannot delete all teams", function (done) {
+    request(app)
+      .delete('/v1/teams')
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'team1')
+      .expect(404)
+      .end(done);
+  });
+  it("team cannot create a new team", function (done) {
+    request(app)
+      .get('/v1/teams')
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'team1')
+      .expect(403)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+
+  it("team cannot get all teams", function (done) {
+    request(app)
+      .get('/v1/teams')
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'team1')
+      .expect(403)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+  it("team cannot get the other team", function (done) {
+    request(app)
+      .get('/v1/teams/team2')
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'team1')
+      .expect(403)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+  it("team can get its team data", function (done) {
+    request(app)
+      .get('/v1/teams/team1')
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'team1')
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+  it("team can get its services", function (done) {
+    request(app)
+      .get('/v1/teams/team1/services')
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'team1')
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+  it("team can get a specific service", function (done) {
+    request(app)
+      .get('/v1/teams/team1/services/service1')
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'team1')
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+});
+
+
+describe("Not authorized user", function () {
+  var app;
+  beforeEach(function () {
+    const otomiStack = new otomi.OtomiStack('tpath', "tcloud")
+    sinon.stub(otomiStack);
+    app = server.initApp(otomiStack)
+  })
+  it("should get app readiness", function (done) {
     request(app)
       .get('/v1/readiness')
       .set('Accept', 'application/json')
+      .expect(200)
       .expect('Content-Type', /json/)
-      .expect(
-        200,
-      ).end(done);
+      .end(done);
   });
-  it("should provide api spec", function (done) {
-    const otomiStack = new otomi.OtomiStack('tpath', "tcloud")
-    const app = server.initApp(otomiStack)
+  it("should get api spec", function (done) {
     request(app)
       .get('/v1/apiDocs')
       .set('Accept', 'application/json')
+      .expect(200)
       .expect('Content-Type', /json/)
-      .expect(
-        200,
-      ).end(done);
+      .end(done);
+  });
+  it("cannot get a specific team", function (done) {
+    request(app)
+      .get('/v1/teams/team1')
+      .set('Accept', 'application/json')
+      .expect(401)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+  it("cannot modify a team", function (done) {
+    request(app)
+      .put('/v1/teams/team1')
+      .set('Accept', 'application/json')
+      .expect(401)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+  it("cannot delete a team", function (done) {
+    request(app)
+      .delete('/v1/teams/team1')
+      .set('Accept', 'application/json')
+      .expect(401)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+  it("cannot create a team", function (done) {
+    request(app)
+      .post('/v1/teams')
+      .set('Accept', 'application/json')
+      .expect(401)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+  it("cannot get services", function (done) {
+    request(app)
+      .get('/v1/teams/team1/services')
+      .set('Accept', 'application/json')
+      .expect(401)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+  it("cannot get a given service", function (done) {
+    request(app)
+      .get('/v1/teams/team1/services/service1')
+      .set('Accept', 'application/json')
+      .expect(401)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+
+  it("cannot edit a given service", function (done) {
+    request(app)
+      .put('/v1/teams/team1/services/service1')
+      .set('Accept', 'application/json')
+      .expect(401)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+  it("cannot delete a given service", function (done) {
+    request(app)
+      .delete('/v1/teams/team1/services/service1')
+      .set('Accept', 'application/json')
+      .expect(401)
+      .expect('Content-Type', /json/)
+      .end(done);
+  });
+  it("cannot add a new service", function (done) {
+    request(app)
+      .post('/v1/teams/team1/services')
+      .set('Accept', 'application/json')
+      .expect(401)
+      .expect('Content-Type', /json/)
+      .end(done);
   });
 });
 

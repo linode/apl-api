@@ -129,7 +129,6 @@ paths:
           description: Team does not exists
           schema:
             $ref: "#/definitions/OtomiStackError"
-
     delete:
       description: Delete team
       parameters:
@@ -151,7 +150,7 @@ paths:
             $ref: "#/definitions/OtomiStackError"
   /teams/{teamId}/services:
     get:
-      description: Get services
+      description: Get services from a given team
       parameters:
         - name: "teamId"
           in: "path"
@@ -167,10 +166,117 @@ paths:
           description: Bad Request
           schema:
             $ref: "#/definitions/OpenApiValidationError"
-        404:
-          description: Team does not exists
+    post:
+      description: Create a service
+      parameters:
+        - name: "teamId"
+          in: "path"
+          description: "ID of team"
+          required: true
+          type: "string"
+        - in: "body"
+          name: "body"
+          description: "Service object"
+          required: true
+          schema:
+            $ref: "#/definitions/Service"
+      responses:
+        201:
+          description: Successfully obtained teams collection
+          schema:
+            $ref: "#/definitions/Team"
+        400:
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/OpenApiValidationError"
+        409:
+          description: Team already exists
           schema:
             $ref: "#/definitions/OtomiStackError"
+  /teams/{teamId}/services/{serviceId}:
+    get:
+      description: Get a service from a given team
+      parameters:
+        - name: "teamId"
+          in: "path"
+          description: "ID of team to return"
+          required: true
+          type: "string"
+        - name: "serviceId"
+          in: "path"
+          description: "ID of the service"
+          required: true
+          type: "string"
+      responses:
+        200:
+          description: Successfully obtained service
+          schema:
+            $ref: "#/definitions/Team"
+        400:
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/OpenApiValidationError"
+        404:
+          description: Service does not exists
+          schema:
+            $ref: "#/definitions/OtomiStackError"
+    put:
+      description: Edit a service from a given team
+      parameters:
+        - name: "teamId"
+          in: "path"
+          description: "ID of team to return"
+          required: true
+          type: "string"
+        - name: "serviceId"
+          in: "path"
+          description: "ID of the service"
+          required: true
+          type: "string"
+        - in: "body"
+          name: "body"
+          description: "Service object that contains updated values"
+          required: true
+          schema:
+            $ref: "#/definitions/Service"
+      responses:
+        200:
+          description: Successfully edited service
+          schema:
+            $ref: "#/definitions/Team"
+        400:
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/OpenApiValidationError"
+        404:
+          description: Service does not exists
+          schema:
+            $ref: "#/definitions/OtomiStackError"
+    delete:
+      description: Delete a service from a given team
+      parameters:
+        - name: "teamId"
+          in: "path"
+          description: "ID of team to delete"
+          required: true
+          type: "string"
+        - name: "serviceId"
+          in: "path"
+          description: "ID of the service"
+          required: true
+          type: "string"
+      responses:
+        200:
+          description: Successfully deleted a service
+        400:
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/OpenApiValidationError"
+        404:
+          description: Service does not exists
+          schema:
+            $ref: "#/definitions/OtomiStackError"
+      
   /apiDocs:
     get:
       security: []
@@ -220,7 +326,7 @@ definitions:
           $ref: "#/definitions/Team"
   Services:
     properties:
-      teams:
+      services:
         type: array
         items:
           $ref: "#/definitions/Service"

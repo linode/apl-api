@@ -1,7 +1,7 @@
 const otomi = require('./otomi-stack')
 
 function errorMiddleware(err, req, res, next) {
-
+  console.error(err)
   if (err instanceof otomi.AlreadyExists)
     return res.status(409).json({ error: err.message })
   if (err instanceof otomi.NotExistError)
@@ -25,7 +25,7 @@ function isAuthorized(req, scopes, definition) {
       status: 401,
       message: 'Not authenticated'
     };
-    
+
   if (group === 'admin')
     return true
 

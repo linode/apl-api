@@ -7,6 +7,12 @@ module.exports = function (otomi) {
         res.status(200).json({});
       },
     ],
+    post: [
+      function(req, res, next) {
+        console.debug("Create a new service")
+        res.status(200).json({});
+      },
+    ],
   }
   return api;
 };
