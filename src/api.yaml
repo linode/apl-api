@@ -80,7 +80,6 @@ paths:
           description: Team already exists
           schema:
             $ref: "#/definitions/OtomiStackError"
-
   /teams/{teamId}:
     get:
       description: Get a specific team
@@ -150,6 +149,28 @@ paths:
           description: Team does not exists
           schema:
             $ref: "#/definitions/OtomiStackError"
+  /teams/{teamId}/services:
+    get:
+      description: Get services
+      parameters:
+        - name: "teamId"
+          in: "path"
+          description: "ID of team"
+          required: true
+          type: "string"
+      responses:
+        200:
+          description: Successfully obtained services
+          schema:
+            $ref: "#/definitions/Services"
+        400:
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/OpenApiValidationError"
+        404:
+          description: Team does not exists
+          schema:
+            $ref: "#/definitions/OtomiStackError"
   /apiDocs:
     get:
       security: []
@@ -175,6 +196,7 @@ definitions:
     properties:
       name:
         type: string
+        pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
       password:
         type: string
       oidc:
@@ -196,6 +218,28 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Team"
+  Services:
+    properties:
+      teams:
+        type: array
+        items:
+          $ref: "#/definitions/Service"
+  Service:
+    properties:
+      name:
+        type: string
+        description: Service name visible as subdomian
+        pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+      domain:
+        type: string
+        description: A custom domain
+        pattern: '^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$'
+      svc:
+        type: string
+        readOnly: true
+        pattern: '^\d{3}-\d{2}-\d{4}$'
+    required:
+      - name
 
   OpenApiValidationError:
     properties:
