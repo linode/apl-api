@@ -28,6 +28,7 @@ The `otomi-stack-api` can access
 - helmfile and helm, kubectl installed binaries
 
 ## Environment variables
+
 For local development define `.env` file. Example:
 ```
 OTOMI_STACK_PATH=/otomi-stack
