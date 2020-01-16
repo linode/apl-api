@@ -17,6 +17,8 @@ class Db {
   getItem(name, uri_ids) {
     console.log(uri_ids)
     const data = this.db.get(name).find(uri_ids).value()
+    if (data === undefined)
+      throw new err.NotExistError("Item does not exists")
     console.log(data)
     return data
   }

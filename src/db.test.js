@@ -32,11 +32,9 @@ describe("Db", function () {
     testDb.createItem('teams', {teamId: "n2"}, {name: "n2", k: "1"})
 
     testDb.deleteItem('teams', {teamId: "n1"})
-    let v = testDb.getItem('teams', {teamId: "n1"})
-
-    expect(v).to.be.undefined;
+    expect(() => testDb.getItem('teams', {teamId: "n1"})).to.throw();
   
-    v = testDb.getItem('teams', {teamId: "n2"})
+    const v = testDb.getItem('teams', {teamId: "n2"})
     expect(v).to.not.be.undefined;
     done()
   })
@@ -79,4 +77,8 @@ describe("Db", function () {
     done()
   })
 
+  it("throws error if item does not exists", function (done) {
+    expect(() => testDb.getItem('teams', {teamId: "n1"})).to.throw();
+    done()
+  })
 });

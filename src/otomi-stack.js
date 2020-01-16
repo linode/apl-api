@@ -26,6 +26,10 @@ class OtomiStack {
     return res_data
   }
 
+  checkIfTeamExists(req_params){
+    this.db.getItem('teams', {teamId: req_params.teamId})
+  }
+
   createTeam(req_params, data) {
     // The team name is its ID
     req_params.teamId = data.name
@@ -44,11 +48,13 @@ class OtomiStack {
   }
 
   getServices(req_params) {
+    this.checkIfTeamExists(req_params)
     const res_data = this.db.getCollection('services', req_params)
     return res_data
   }
 
   createService(req_params, data) {
+    this.checkIfTeamExists(req_params)
     // The service name is its ID
     req_params.serviceId = data.name
     const res_data = this.db.createItem('services', req_params, data )
@@ -56,16 +62,19 @@ class OtomiStack {
   }
 
   getService(req_params) {
+    this.checkIfTeamExists(req_params)
     const res_data = this.db.getItem('services', req_params)
     return res_data
   }
 
   editService(req_params, data) {
+    this.checkIfTeamExists(req_params)
     const res_data = this.db.updateItem('services', req_params, data)
     return res_data
   }
 
   deleteService(req_params) {
+    this.checkIfTeamExists(req_params)
     const res_data = this.db.deleteItem('services', req_params)
     return res_data
   }
