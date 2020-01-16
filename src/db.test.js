@@ -64,7 +64,7 @@ describe("Db", function () {
     testDb.createItem('services', {teamId: "t1", serviceId: "s1" }, {name: "s1", s: "1"})
 
     const v = testDb.getItem('services', {teamId: "t1", serviceId: "s1" })
-    expect(v).to.deep.equal({teamIgdd: "t1", serviceId: "s1", name: "s1", s: "1"});
+    expect(v).to.deep.equal({teamId: "t1", serviceId: "s1", name: "s1", s: "1"});
     done()
   })
 

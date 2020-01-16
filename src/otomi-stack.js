@@ -3,7 +3,6 @@ const util = require('util');
 const dataProvider = require('./data-provider')
 const shell = require('shelljs');
 const db = require('./db')
-const err = require('./error')
 
 class OtomiStack {
   constructor(otomiStackPath, kubeContext, deploymentStage) {
@@ -14,96 +13,63 @@ class OtomiStack {
     this.shell = shell;
     this.kubContext = kubeContext
     this.deploymentStage = deploymentStage
+    this.db = db.init()
   }
 
   getTeams() {
-    const data = this.dataProvider.readYaml(this.teamsPath)
-    return data.teams
+    const res_data = this.db.getCollection('teams')
+    return res_data
   }
 
-  getTeamIndex(data, teamId) {
-    const index = data.teams.findIndex(el => el.name === teamId)
-    if (index === -1)
-      throw new NotExistError('Team does not exists');
-    return index
+  getTeam(req_params) {
+    const res_data = this.db.getItem('teams', req_params)
+    return res_data
   }
 
-  getTeam(teamId) {
-    const data = this.dataProvider.readYaml(this.teamsPath)
-    const index = this.getTeamIndex(data, teamId)
-    const team = data.teams[index]
-    return team
+  createTeam(req_params, data) {
+    // The team name is its ID
+    req_params.teamId = data.name
+    const res_data = this.db.createItem('teams', req_params, data )
+    return res_data
   }
 
-  createTeam(teamData) {
-    let data = this.dataProvider.readYaml(this.teamsPath)
-    const teamId = teamData.name
-    if (data.teams.find(element => element.name == teamId) !== undefined)
-      throw new AlreadyExists('Team already exist');
-
-    data.teams.push(teamData)
-    this.dataProvider.saveYaml(this.teamsPath, data)
-    return teamData
+  editTeam(req_params, data) {
+    const res_data = this.db.updateItem('teams', req_params, data)
+    return res_data
   }
 
-  editTeam(teamId, teamData) {
-    let data = this.dataProvider.readYaml(this.teamsPath)
-    const index = this.getTeamIndex(data, teamId)
-    let team = data.teams[index]
-    // Edit team edits only few fields from whole team structure
-    data.teams[index] = {...team, ...teamData}
-    this.dataProvider.saveYaml(this.teamsPath, data)
-    return teamData
+  deleteTeam(req_params) {
+    const res_data = this.db.deleteItem('teams', req_params)
+    return res_data
   }
 
-  deleteTeam(teamId) {
-    let data = this.dataProvider.readYaml(this.teamsPath)
-    const index = this.getTeamIndex(data, teamId)
-    data.teams.splice(index, 1)
-    this.dataProvider.saveYaml(this.teamsPath, data)
+  getServices(req_params) {
+    const res_data = this.db.getCollection('services', req_params)
+    return res_data
   }
 
-  getServices(teamId) {
-    const data = this.dataProvider.readYaml(this.teamsPath)
-    const index = this.getTeamIndex(data, teamId)
-    const team = data.teams[index]
-    return team.services
+  createService(req_params, data) {
+    // The service name is its ID
+    req_params.serviceId = data.name
+    const res_data = this.db.createItem('services', req_params, data )
+    return res_data
   }
 
-  createService(teamId, service) {
-    let data = this.dataProvider.readYaml(this.teamsPath)
-    const index = this.getTeamIndex(data, teamId)
-    const team = data.teams[index]
-
-    const serviceId = service.name
-    if (team.services.find(element => element.name == serviceId) !== undefined)
-      throw new err.AlreadyExists('Service already exist');
-
-    team.services.push(service)
-    this.dataProvider.saveYaml(this.teamsPath, data)
-
+  getService(req_params) {
+    const res_data = this.db.getItem('services', req_params)
+    return res_data
   }
 
-  getService(teamId, serviceId) {
-    let data = this.dataProvider.readYaml(this.teamsPath)
-    const index = this.getTeamIndex(data, teamId)
-    const team = data.teams[index]
-    const service = team.services.find(element => element.name == serviceId)
-    if(!service)
-      throw new err.NotExistError("Service does not exists")
-    return service
+  editService(req_params, data) {
+    const res_data = this.db.updateItem('services', req_params, data)
+    return res_data
   }
 
-  editService(teamId, serviceId, serviceData) {
-    let data = this.dataProvider.readYaml(this.teamsPath)
-    let index = this.getTeamIndex(data, teamId)
-    let team = data.teams[index]
-    index = team.services.findIndex(element => element.name == serviceId)
-    team.services[index] = serviceData
-    this.dataProvider.saveYaml(this.teamsPath, data)
-    return serviceData
+  deleteService(req_params) {
+    const res_data = this.db.deleteItem('services', req_params)
+    return res_data
   }
-  
+
   deploy() {
     const command = util.format(
       'cd %s && kubectl config use-context %s && helmfile -e %s apply --concurrency=1 --skip-deps;', 
