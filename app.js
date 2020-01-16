@@ -9,7 +9,8 @@ utils.validateConfig();
 const otomiStack = new otomi.OtomiStack(
   process.env.OTOMI_STACK_PATH,
   process.env.KUBE_CONTEXT,
-  process.env.DEPLOYMENT_STAGE
+  process.env.DEPLOYMENT_STAGE,
+  process.env.DB_PATH,
   )
 const app = server.initApp(otomiStack)
 console.info("Listening on port: 8080")

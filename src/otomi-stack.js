@@ -2,21 +2,10 @@ const path = require('path')
 const util = require('util');
 const dataProvider = require('./data-provider')
 const shell = require('shelljs');
-
-class NotExistError extends Error {
-  constructor(message) {
-    super(message);
-  }
-}
-
-class AlreadyExists extends Error {
-  constructor(message) {
-    super(message);
-  }
-}
+const db = require('./db')
 
 class OtomiStack {
-  constructor(otomiStackPath, kubeContext, deploymentStage) {
+  constructor(otomiStackPath, kubeContext, deploymentStage, dbPath) {
     this.otomiStackPath = otomiStackPath;
     this.aliasesRelativePath = './bin/aliases';
     this.teamsPath = path.join(otomiStackPath, './values/teams.yaml');
@@ -24,50 +13,70 @@ class OtomiStack {
     this.shell = shell;
     this.kubContext = kubeContext
     this.deploymentStage = deploymentStage
+    this.db = db.init(dbPath)
   }
 
   getTeams() {
-    const data = this.dataProvider.readYaml(this.teamsPath)
-    return data.teams
+    const res_data = this.db.getCollection('teams')
+    return res_data
   }
 
-  getTeamIndex(data, teamId) {
-    const index = data.teams.findIndex(el => el.name === teamId)
-    if (index === -1)
-      throw new NotExistError('Team does not exists');
-    return index
-  }
-  getTeam(teamId) {
-    const data = this.dataProvider.readYaml(this.teamsPath)
-    const index = this.getTeamIndex(data, teamId)
-    const team = data.teams[index]
-    return team
+  getTeam(req_params) {
+    const res_data = this.db.getItem('teams', req_params)
+    return res_data
   }
 
-  createTeam(teamData) {
-    let data = this.dataProvider.readYaml(this.teamsPath)
-    const teamId = teamData.name
-    if (data.teams.find(element => element.name == teamId) !== undefined)
-      throw new AlreadyExists('Team already exist');
-
-    data.teams.push(teamData)
-    this.dataProvider.saveYaml(this.teamsPath, data)
-    return teamData
+  checkIfTeamExists(req_params){
+    this.db.getItem('teams', {teamId: req_params.teamId})
   }
 
-  editTeam(teamId, teamData) {
-    let data = this.dataProvider.readYaml(this.teamsPath)
-    const index = this.getTeamIndex(data, teamId)
-    data.teams[index] = teamData
-    this.dataProvider.saveYaml(this.teamsPath, data)
-    return teamData
+  createTeam(req_params, data) {
+    // The team name is its ID
+    req_params.teamId = data.name
+    const res_data = this.db.createItem('teams', req_params, data )
+    return res_data
   }
 
-  deleteTeam(teamId) {
-    let data = this.dataProvider.readYaml(this.teamsPath)
-    const index = this.getTeamIndex(data, teamId)
-    data.teams.splice(index, 1)
-    this.dataProvider.saveYaml(this.teamsPath, data)
+  editTeam(req_params, data) {
+    const res_data = this.db.updateItem('teams', req_params, data)
+    return res_data
+  }
+
+  deleteTeam(req_params) {
+    const res_data = this.db.deleteItem('teams', req_params)
+    return res_data
+  }
+
+  getServices(req_params) {
+    this.checkIfTeamExists(req_params)
+    const res_data = this.db.getCollection('services', req_params)
+    return res_data
+  }
+
+  createService(req_params, data) {
+    this.checkIfTeamExists(req_params)
+    // The service name is its ID
+    req_params.serviceId = data.name
+    const res_data = this.db.createItem('services', req_params, data )
+    return res_data
+  }
+
+  getService(req_params) {
+    this.checkIfTeamExists(req_params)
+    const res_data = this.db.getItem('services', req_params)
+    return res_data
+  }
+
+  editService(req_params, data) {
+    this.checkIfTeamExists(req_params)
+    const res_data = this.db.updateItem('services', req_params, data)
+    return res_data
+  }
+
+  deleteService(req_params) {
+    this.checkIfTeamExists(req_params)
+    const res_data = this.db.deleteItem('services', req_params)
+    return res_data
   }
 
   deploy() {
@@ -85,7 +94,5 @@ class OtomiStack {
 }
 
 module.exports = {
-  AlreadyExists: AlreadyExists,
-  NotExistError: NotExistError,
   OtomiStack: OtomiStack,
 };
