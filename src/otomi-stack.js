@@ -2,18 +2,8 @@ const path = require('path')
 const util = require('util');
 const dataProvider = require('./data-provider')
 const shell = require('shelljs');
-
-class NotExistError extends Error {
-  constructor(message) {
-    super(message);
-  }
-}
-
-class AlreadyExists extends Error {
-  constructor(message) {
-    super(message);
-  }
-}
+const db = require('./db')
+const err = require('./error')
 
 class OtomiStack {
   constructor(otomiStackPath, kubeContext, deploymentStage) {
@@ -87,7 +77,7 @@ class OtomiStack {
 
     const serviceId = service.name
     if (team.services.find(element => element.name == serviceId) !== undefined)
-      throw new AlreadyExists('Service already exist');
+      throw new err.AlreadyExists('Service already exist');
 
     team.services.push(service)
     this.dataProvider.saveYaml(this.teamsPath, data)
@@ -100,7 +90,7 @@ class OtomiStack {
     const team = data.teams[index]
     const service = team.services.find(element => element.name == serviceId)
     if(!service)
-      throw new NotExistError("Service does not exists")
+      throw new err.NotExistError("Service does not exists")
     return service
   }
 
@@ -129,7 +119,5 @@ class OtomiStack {
 }
 
 module.exports = {
-  AlreadyExists: AlreadyExists,
-  NotExistError: NotExistError,
   OtomiStack: OtomiStack,
 };

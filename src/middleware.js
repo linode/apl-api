@@ -1,10 +1,10 @@
-const otomi = require('./otomi-stack')
+const error = require('./error')
 
 function errorMiddleware(err, req, res, next) {
   console.error(err)
-  if (err instanceof otomi.AlreadyExists)
+  if (err instanceof error.AlreadyExists)
     return res.status(409).json({ error: err.message })
-  if (err instanceof otomi.NotExistError)
+  if (err instanceof error.NotExistError)
     return res.status(404).json({ error: err.message })
 
   if (typeof (err.status) !== undefined)
