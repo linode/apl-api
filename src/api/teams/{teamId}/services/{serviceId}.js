@@ -11,7 +11,7 @@ module.exports = function (otomi) {
     put: [
       function (req, res, next) {
         console.debug("Modify service: " + JSON.stringify(req.params))
-        const data = otomi.editService(req.params, res.body)
+        const data = otomi.editService(req.params, req.body)
         res.status(200).json(data);
       }
     ],
