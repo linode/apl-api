@@ -34,10 +34,11 @@ For local development define `.env` file. Example:
 OTOMI_STACK_PATH=/otomi-stack
 KUBE_CONTEXT=minikube
 DEPLOYMENT_STAGE=dev
+DISABLE_AUTH=1
 ```
 
 Use `DISABLE_AUTH=1` env to disable authorization.
-
+Use `DB_PATH` for persistent storage
 
 For production environment export the same variables with proper values.
 

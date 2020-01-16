@@ -6,7 +6,7 @@ const Memory = require('lowdb/adapters/Memory')
 class Db {
   constructor(path) {
     this.db = low(
-      process.env.NODE_ENV === 'test'
+      path == null
         ? new Memory()
         : new FileSync(path)
     )
@@ -55,8 +55,8 @@ class Db {
   }
 }
 
-function init(){
-  return new Db()
+function init(path){
+  return new Db(path)
 }
 
 module.exports = {

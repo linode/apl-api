@@ -5,7 +5,7 @@ const shell = require('shelljs');
 const db = require('./db')
 
 class OtomiStack {
-  constructor(otomiStackPath, kubeContext, deploymentStage) {
+  constructor(otomiStackPath, kubeContext, deploymentStage, dbPath) {
     this.otomiStackPath = otomiStackPath;
     this.aliasesRelativePath = './bin/aliases';
     this.teamsPath = path.join(otomiStackPath, './values/teams.yaml');
@@ -13,7 +13,7 @@ class OtomiStack {
     this.shell = shell;
     this.kubContext = kubeContext
     this.deploymentStage = deploymentStage
-    this.db = db.init()
+    this.db = db.init(dbPath)
   }
 
   getTeams() {
