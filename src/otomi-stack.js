@@ -37,6 +37,7 @@ class OtomiStack {
       throw new NotExistError('Team does not exists');
     return index
   }
+
   getTeam(teamId) {
     const data = this.dataProvider.readYaml(this.teamsPath)
     const index = this.getTeamIndex(data, teamId)
@@ -58,7 +59,9 @@ class OtomiStack {
   editTeam(teamId, teamData) {
     let data = this.dataProvider.readYaml(this.teamsPath)
     const index = this.getTeamIndex(data, teamId)
-    data.teams[index] = teamData
+    let team = data.teams[index]
+    // Edit team edits only few fields from whole team structure
+    data.teams[index] = {...team, ...teamData}
     this.dataProvider.saveYaml(this.teamsPath, data)
     return teamData
   }
@@ -70,6 +73,47 @@ class OtomiStack {
     this.dataProvider.saveYaml(this.teamsPath, data)
   }
 
+  getServices(teamId) {
+    const data = this.dataProvider.readYaml(this.teamsPath)
+    const index = this.getTeamIndex(data, teamId)
+    const team = data.teams[index]
+    return team.services
+  }
+
+  createService(teamId, service) {
+    let data = this.dataProvider.readYaml(this.teamsPath)
+    const index = this.getTeamIndex(data, teamId)
+    const team = data.teams[index]
+
+    const serviceId = service.name
+    if (team.services.find(element => element.name == serviceId) !== undefined)
+      throw new AlreadyExists('Service already exist');
+
+    team.services.push(service)
+    this.dataProvider.saveYaml(this.teamsPath, data)
+
+  }
+
+  getService(teamId, serviceId) {
+    let data = this.dataProvider.readYaml(this.teamsPath)
+    const index = this.getTeamIndex(data, teamId)
+    const team = data.teams[index]
+    const service = team.services.find(element => element.name == serviceId)
+    if(!service)
+      throw new NotExistError("Service does not exists")
+    return service
+  }
+
+  editService(teamId, serviceId, serviceData) {
+    let data = this.dataProvider.readYaml(this.teamsPath)
+    let index = this.getTeamIndex(data, teamId)
+    let team = data.teams[index]
+    index = team.services.findIndex(element => element.name == serviceId)
+    team.services[index] = serviceData
+    this.dataProvider.saveYaml(this.teamsPath, data)
+    return serviceData
+  }
+  
   deploy() {
     const command = util.format(
       'cd %s && kubectl config use-context %s && helmfile -e %s apply --concurrency=1 --skip-deps;', 

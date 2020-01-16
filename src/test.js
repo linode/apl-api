@@ -7,7 +7,7 @@ const middleware = require('./middleware')
 const utils = require('./utils')
 
 
-describe("OpenApiSpec tests for admin", function () {
+describe("Api tests for admin", function () {
   var app;
   beforeEach(function () {
     const otomiStack = new otomi.OtomiStack('tpath', "tcloud")
@@ -53,7 +53,7 @@ describe("OpenApiSpec tests for admin", function () {
   });
 });
 
-describe("OpenApiSpec tests for team", function () {
+describe("Api tests for team", function () {
   var app;
   beforeEach(function () {
     const otomiStack = new otomi.OtomiStack('tpath', "tcloud")
@@ -136,7 +136,7 @@ describe("OpenApiSpec tests for team", function () {
 });
 
 
-describe("Not authorized user", function () {
+describe("Api tests for non authorized user", function () {
   var app;
   beforeEach(function () {
     const otomiStack = new otomi.OtomiStack('tpath', "tcloud")
@@ -243,7 +243,7 @@ const mockRequest = (authGroup, teamId) => ({
   params: { teamId: teamId },
 });
 
-describe("Authorization", function () {
+describe("Authorization tests", function () {
   it("should not authorize", function (done) {
     const req = mockRequest('team1', 'team2')
     expect(() => middleware.isAuthorized(req, null, null)).to.throw();
@@ -278,7 +278,7 @@ describe("Authorization", function () {
 
 
 
-describe("Config validation", function () {
+describe("Config validation tests", function () {
   it("missing env variables", function (done) {
     expect(() => utils.validateEnv({})).to.throw();
     done()
