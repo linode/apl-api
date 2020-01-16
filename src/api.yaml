@@ -249,9 +249,9 @@ paths:
           description: Service does not exists
           schema:
             $ref: "#/definitions/OtomiStackError"
-  /teams/{teamId}/deployments:
+  /deployments:
     post:
-      description: Trigger a deployment
+      description: Trigger a deployment (only for admin)
       parameters:
         - name: "teamId"
           in: "path"
@@ -264,29 +264,9 @@ paths:
           schema:
             $ref: "#/definitions/Deployment"
         409:
-          description: There is ongoing deployment
+          description: Unable not push data to git repo
           schema:
-            $ref: "#/definitions/Deployment"
-  
-  /teams/{teamId}/deployments/{deploymentId}:
-    get:
-      description: Get deployment
-      parameters:
-        - name: "teamId"
-          in: "path"
-          description: "ID of team to delete"
-          required: true
-          type: "string"
-        - name: "deploymentId"
-          in: "path"
-          description: "ID of team to return"
-          required: true
-          type: "integer"
-      responses:
-        200:
-          description: Deployment has been triggered
-          schema:
-            $ref: "#/definitions/Deployment"
+            $ref: "#/definitions/OtomiStackError"
 
   /apiDocs:
     get:
