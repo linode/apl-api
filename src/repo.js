@@ -6,8 +6,8 @@ const path = require('path');
 
 
 class Repo {
-  constructor(workingDirPath, url, user, password) {
-    this.path = path.join(workingDirPath, 'otomi-stack')
+  constructor(localRepoPath, url, user, password) {
+    this.path = localRepoPath
     this.git = simpleGit(this.path)
     this.url = url
     this.user = user
@@ -31,8 +31,7 @@ class Repo {
   async commit(user, group) {
     console.debug("Committing changes")
 
-    await this.git.add('./*')
-    await this.git.commit('otomi-stack-api')
+    await this.git.add('./*').then(this.git.commit('otomi-stack-api'))
     // const tag = user + "/" + group
     // // tagMessage - in JSON format can be used by parsers
     // const tagMessage = JSON.stringify({user: user, group: group, source: 'otomi-stack-api'})
@@ -40,10 +39,11 @@ class Repo {
   }
 
   async push() {
+    console.debug("Pushing changes to remote origin")
+
     try {
       const summary = await this.git.push()
       console.log(JSON.stringify(summary))
-      return summary
     } catch (err) {
       console.error(err.message);
       throw new error.GitError("Failed to push values to git repo")

@@ -89,8 +89,7 @@ class OtomiStack {
   triggerDeployment(req_params) {
     const values = this.convertDbToValues()
     this.repo.writeFile(this.valuesPath, values)
-    this.repo.commit("admin", "admin")
-    this.repo.push()
+    this.repo.commit("admin", "admin").then(this.repo.push())
   }
 
   loadValues() {
