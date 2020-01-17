@@ -5,8 +5,8 @@ class OtomiStack {
     this.valuesPath = './values/_env/teams.yaml'
   }
 
-  init() {
-    this.repo.clone()
+  async init() {
+    await this.repo.clone()
     this.loadValues()
   }
 
@@ -21,7 +21,7 @@ class OtomiStack {
   }
 
   checkIfTeamExists(req_params) {
-    console.log({ teamId: req_params.teamId })
+    // console.log({ teamId: req_params.teamId })
     this.db.getItem('teams', { teamId: req_params.teamId })
   }
 
@@ -89,7 +89,10 @@ class OtomiStack {
   async triggerDeployment(req_params) {
     const values = this.convertDbToValues()
     this.repo.writeFile(this.valuesPath, values)
-    this.repo.commit("admin", "admin").then(this.repo.push())
+
+    await this.repo.commit("admin", "admin")
+    return await this.repo.push()
+
   }
 
   loadValues() {
@@ -99,7 +102,7 @@ class OtomiStack {
 
   convertValuesToDb(values) {
     const teams = values.teams
-    console.debug(JSON.stringify(values))
+    // console.debug(JSON.stringify(values))
     teams.forEach(team => {
       const id = { teamId: team.name }
       let teamCloned = Object.assign({}, team);
@@ -133,7 +136,7 @@ class OtomiStack {
     })
 
     values.services = this.getDefaultServices()
-    console.debug(values)
+    // console.debug(values)
     return values
   }
 }

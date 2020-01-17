@@ -276,8 +276,6 @@ describe("Authorization tests", function () {
   })
 });
 
-
-
 describe("Config validation tests", function () {
   it("missing env variables", function (done) {
     expect(() => utils.validateEnv({})).to.throw();
@@ -286,7 +284,7 @@ describe("Config validation tests", function () {
 
   it("valid env variables", function (done) {
     const envs = {
-      GIT_LOCAL_PATH: null, GIT_REPO_URL: null, GIT_USER: null, GIT_PASSWORD: null
+      GIT_LOCAL_PATH: null, GIT_REPO_URL: null, GIT_USER: null, GIT_PASSWORD: null, GIT_EMAIL: null
     }
     expect(() => utils.validateEnv(envs)).to.not.throw();
     done()

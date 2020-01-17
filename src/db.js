@@ -15,11 +15,10 @@ class Db {
   }
 
   getItem(name, uri_ids) {
-    console.log(uri_ids)
+    // console.log(uri_ids)
     const data = this.db.get(name).find(uri_ids).value()
     if (data === undefined)
       throw new err.NotExistError("Item does not exists")
-    console.log(data)
     return data
   }
 
@@ -45,7 +44,8 @@ class Db {
     const v = this.db.get(name)
       .remove(uri_ids)
       .write()
-    console.log(v)
+    // console.log(v)
+    return v
   }
 
   updateItem(name, uri_ids, data){

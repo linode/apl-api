@@ -6,11 +6,12 @@ const path = require('path');
 
 
 class Repo {
-  constructor(localRepoPath, url, user, password) {
+  constructor(localRepoPath, url, user, email, password) {
     this.path = localRepoPath
     this.git = simpleGit(this.path)
     this.url = url
     this.user = user
+    this.email = email
     this.password = password
   }
 
@@ -30,8 +31,8 @@ class Repo {
 
   async commit(user, group) {
     console.debug("Committing changes")
-
-    this.git.add('./*').then(this.git.commit('otomi-stack-api'))
+    return this.git.add('./*').then(this.git.commit('otomi-stack-api'))
+    // TODO: tags ahs to be unique so user and group is not enough
     // const tag = user + "/" + group
     // // tagMessage - in JSON format can be used by parsers
     // const tagMessage = JSON.stringify({user: user, group: group, source: 'otomi-stack-api'})
@@ -42,8 +43,7 @@ class Repo {
     console.debug("Pushing changes to remote origin")
 
     try {
-      const summary = await this.git.push()
-      console.log(JSON.stringify(summary))
+      return this.git.push()
     } catch (err) {
       console.error(err.message);
       throw new error.GitError("Failed to push values to git repo")
@@ -52,17 +52,23 @@ class Repo {
 
   async clone() {
     console.debug("Cloning repo: " + this.url + " to: " + this.path)
-    if (fs.existsSync(this.path)) {
-      console.warn("Repo path '" + this.path + "' already exists and is not an empty directory.")
-      return
+
+    const isRepo = await this.git.checkIsRepo()
+    if (!isRepo){
+      const remote = `https://${this.user}:${this.password}@${this.url}`;
+      await this.git.clone(remote, this.path)
+      await this.git.addConfig('user.name', this.user)
+      return await this.git.addConfig('user.email', this.email)
     }
 
-    const remote = `https://${this.user}:${this.password}@${this.url}`;
-    await this.git.clone(remote, this.path)
+    return isRepo
+
   }
 }
 
-module.exports = function (localPath, url, user, password) {
-  return new Repo(localPath, url, user, password)
+module.exports = function (localPath, url, user, email, password) {
+  if (!fs.existsSync(localPath))
+    fs.mkdirSync(localPath, 0o744);
+  return new Repo(localPath, url, user, email, password)
 }
 
