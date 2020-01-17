@@ -31,8 +31,8 @@ class Repo {
 
   async commit(user, group) {
     console.debug("Committing changes")
-
-    this.git.add('./*').then(this.git.commit('otomi-stack-api'))
+    return this.git.add('./*').then(this.git.commit('otomi-stack-api'))
+    // TODO: tags ahs to be unique so user and group is not enough
     // const tag = user + "/" + group
     // // tagMessage - in JSON format can be used by parsers
     // const tagMessage = JSON.stringify({user: user, group: group, source: 'otomi-stack-api'})
@@ -43,8 +43,7 @@ class Repo {
     console.debug("Pushing changes to remote origin")
 
     try {
-      const summary = await this.git.push()
-      console.log(JSON.stringify(summary))
+      return this.git.push()
     } catch (err) {
       console.error(err.message);
       throw new error.GitError("Failed to push values to git repo")

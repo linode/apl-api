@@ -276,8 +276,6 @@ describe("Authorization tests", function () {
   })
 });
 
-
-
 describe("Config validation tests", function () {
   it("missing env variables", function (done) {
     expect(() => utils.validateEnv({})).to.throw();

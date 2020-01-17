@@ -1,3 +1,5 @@
+const error = require('./error')
+
 class OtomiStack {
   constructor(repo, db) {
     this.db = db
@@ -5,8 +7,8 @@ class OtomiStack {
     this.valuesPath = './values/_env/teams.yaml'
   }
 
-  init() {
-    this.repo.clone()
+  async init() {
+    await this.repo.clone()
     this.loadValues()
   }
 
@@ -89,7 +91,10 @@ class OtomiStack {
   async triggerDeployment(req_params) {
     const values = this.convertDbToValues()
     this.repo.writeFile(this.valuesPath, values)
-    this.repo.commit("admin", "admin").then(this.repo.push())
+
+    await this.repo.commit("admin", "admin")
+    return await this.repo.push()
+
   }
 
   loadValues() {

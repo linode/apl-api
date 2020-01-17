@@ -2,9 +2,15 @@ module.exports = function (otomi) {
 
   var api = {
     post: [
-      function(req, res, next) {
+      async function (req, res, next) {
         console.debug("Trigger deployments: " + JSON.stringify(req.params))
-        otomi.triggerDeployment(req.params)
+        try {
+          await otomi.triggerDeployment(req.params)
+        } catch (err) {
+          console.error(err.message)
+          res.status(409).json({ error: err.message })
+        }
+
         res.status(200).json({});
       },
     ],
