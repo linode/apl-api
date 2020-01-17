@@ -9,8 +9,14 @@ class AlreadyExists extends Error {
     super(message);
   }
 }
+class GitError extends Error {
+  constructor(message) {
+    super(message);
+  }
+}
 
 module.exports = {
   AlreadyExists: AlreadyExists,
   NotExistError: NotExistError,
+  GitError: GitError,
 };

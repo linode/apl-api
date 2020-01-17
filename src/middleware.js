@@ -6,6 +6,8 @@ function errorMiddleware(err, req, res, next) {
     return res.status(409).json({ error: err.message })
   if (err instanceof error.NotExistError)
     return res.status(404).json({ error: err.message })
+  if (err instanceof error.GitError)
+    return res.status(409).json({ error: err.message })
 
   if (typeof (err.status) !== undefined)
     return res.status(err.status).json(err)

@@ -1,12 +1,11 @@
 
-const fs = require('fs')
-
 function validateEnv(envVars) {
   // Ensure required ENV vars are set
   let requiredEnv = [
-    "OTOMI_STACK_PATH",
-    "KUBE_CONTEXT",
-    "DEPLOYMENT_STAGE"
+    "GIT_LOCAL_PATH",
+    "GIT_REPO_URL",
+    "GIT_USER",
+    "GIT_PASSWORD"
   ];
 
   let unsetEnv = requiredEnv.filter((env) => !(typeof envVars[env] !== 'undefined'));
@@ -17,8 +16,7 @@ function validateEnv(envVars) {
 }
 
 function validatePaths(env) {
-  if (!fs.existsSync(env.OTOMI_STACK_PATH))
-    throw new Error("Path does not exist: " + env.OTOMI_STACK_PATH);
+
 }
 
 function validateConfig() {
