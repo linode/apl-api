@@ -21,6 +21,7 @@ class OtomiStack {
   }
 
   checkIfTeamExists(req_params) {
+    console.log({ teamId: req_params.teamId })
     this.db.getItem('teams', { teamId: req_params.teamId })
   }
 
@@ -55,6 +56,16 @@ class OtomiStack {
     return res_data
   }
 
+  createDefaultService(data) {
+    const res_data = this.db.createItem('defaultServices', {}, data)
+    return res_data
+  }
+
+  getDefaultServices() {
+    return this.db.getCollection('defaultServices')
+  }
+
+
   getService(req_params) {
     this.checkIfTeamExists(req_params)
     const res_data = this.db.getItem('services', req_params)
@@ -77,38 +88,43 @@ class OtomiStack {
 
   triggerDeployment(req_params) {
     const values = this.convertDbToValues()
-    this.repo.saveFile('./values/teams.yaml', values)
-    this.repo.commit()
+    this.repo.writeFile(this.valuesPath, values)
+    this.repo.commit("admin", "admin")
     this.repo.push()
   }
 
   loadValues() {
-    const values = this.repo.readFile('./values/teams.yaml')
+    const values = this.repo.readFile(this.valuesPath)
     this.convertValuesToDb(values)
   }
 
   convertValuesToDb(values) {
     const teams = values.teams
-
+    console.debug(JSON.stringify(values))
     teams.forEach(team => {
       const id = { teamId: team.name }
       let teamCloned = Object.assign({}, team);
       delete teamCloned.services
-      this.db.createTeam(teamCloned, id)
-
+      this.createTeam(id, teamCloned)
       team.services.forEach(svc => {
         const id = { teamId: team.name, serviceId: svc.name }
         this.createService(id, svc)
       })
-      this.db.createService
     }
     )
+
+    values.services.forEach(svc => {
+      this.createDefaultService(svc)
+    })
+
+
   }
 
   convertDbToValues() {
 
     const values = {
-      teams: []
+      teams: [],
+      services: []
     }
     const teams = this.getTeams()
     teams.forEach(el => {
@@ -117,11 +133,11 @@ class OtomiStack {
       values.teams.push(team)
     })
 
-    console.log(values)
+    values.services = this.getDefaultServices()
+    console.debug(values)
     return values
   }
 }
-
 
 module.exports = {
   OtomiStack: OtomiStack,

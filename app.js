@@ -17,6 +17,9 @@ const r = repo(
   )
 
 const otomiStack = new otomi.OtomiStack(r, d)
+
+otomiStack.init()
+
 const app = server.initApp(otomiStack)
 console.info("Listening on port: 8080")
 app.listen(8080);
