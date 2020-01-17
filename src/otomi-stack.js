@@ -1,19 +1,7 @@
-const path = require('path')
-const util = require('util');
-const dataProvider = require('./data-provider')
-const shell = require('shelljs');
-const db = require('./db')
-
 class OtomiStack {
-  constructor(otomiStackPath, kubeContext, deploymentStage, dbPath) {
-    this.otomiStackPath = otomiStackPath;
-    this.aliasesRelativePath = './bin/aliases';
-    this.teamsPath = path.join(otomiStackPath, './values/teams.yaml');
-    this.dataProvider = new dataProvider.DataProvider()
-    this.shell = shell;
-    this.kubContext = kubeContext
-    this.deploymentStage = deploymentStage
-    this.db = db.init(dbPath)
+  constructor(repo, db) {
+    this.db = db
+    this.repo = repo
   }
 
   getTeams() {
@@ -26,14 +14,14 @@ class OtomiStack {
     return res_data
   }
 
-  checkIfTeamExists(req_params){
-    this.db.getItem('teams', {teamId: req_params.teamId})
+  checkIfTeamExists(req_params) {
+    this.db.getItem('teams', { teamId: req_params.teamId })
   }
 
   createTeam(req_params, data) {
     // The team name is its ID
     req_params.teamId = data.name
-    const res_data = this.db.createItem('teams', req_params, data )
+    const res_data = this.db.createItem('teams', req_params, data)
     return res_data
   }
 
@@ -57,7 +45,7 @@ class OtomiStack {
     this.checkIfTeamExists(req_params)
     // The service name is its ID
     req_params.serviceId = data.name
-    const res_data = this.db.createItem('services', req_params, data )
+    const res_data = this.db.createItem('services', req_params, data)
     return res_data
   }
 
@@ -79,19 +67,55 @@ class OtomiStack {
     return res_data
   }
 
-  deploy() {
-    const command = util.format(
-      'cd %s && kubectl config use-context %s && helmfile -e %s apply --concurrency=1 --skip-deps;', 
-      this.otomiStackPath, this.kubeContext, this.deploymentStage)
-    this.cmd(command)
+  getDeployments(req_params) { }
+
+  triggerDeployment(req_params) {
+    const values = this.convertDbToValues()
+    this.repo.saveFile('./values/teams.yaml', values)
+    this.repo.commit()
+    this.repo.push()
   }
 
-  cmd(command) {
-    console.info(command)
-    this.shell.ls('*.js')
+  loadValues() {
+    const values = this.repo.readFile('./values/teams.yaml')
+    this.convertValuesToDb(values)
+  }
 
+  convertValuesToDb(values) {
+    const teams = values.teams
+
+    teams.forEach(team => {
+      const id = { teamId: team.name }
+      let teamCloned = Object.assign({}, team);
+      delete teamCloned.services
+      this.db.createTeam(teamCloned, id)
+
+      team.services.forEach(svc => {
+        const id = { teamId: team.name, serviceId: svc.name }
+        this.createService(id, svc)
+      })
+      this.db.createService
+    }
+    )
+  }
+
+  convertDbToValues() {
+
+    const values = {
+      teams: []
+    }
+    const teams = this.getTeams()
+    teams.forEach(el => {
+      let team = el
+      team.services = this.getServices({ teamId: el.name })
+      values.teams.push(team)
+    })
+
+    console.log(values)
+    return values
   }
 }
+
 
 module.exports = {
   OtomiStack: OtomiStack,

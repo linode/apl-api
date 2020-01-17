@@ -11,8 +11,8 @@ module.exports = function (otomi) {
     post: [
       function(req, res, next) {
         console.debug("Trigger deployments: " + JSON.stringify(req.params))
-        // const v = otomi.triggerDeployment(req.params, req.body)
-        res.status(501).json({});
+        const v = otomi.triggerDeployment(req.params)
+        res.status(501).json(v);
       },
     ],
   }

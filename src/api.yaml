@@ -252,12 +252,6 @@ paths:
   /deployments:
     post:
       description: Trigger a deployment (only for admin)
-      parameters:
-        - name: "teamId"
-          in: "path"
-          description: "ID of team to delete"
-          required: true
-          type: "string"
       responses:
         202:
           description: Deployment has been triggered
@@ -287,6 +281,7 @@ definitions:
         type: integer
       status:
         type: string
+        readOnly: true
         description: Deployment status
         enum: [in-progress, completed, failed]
   Team:

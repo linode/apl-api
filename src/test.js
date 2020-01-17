@@ -10,7 +10,7 @@ const utils = require('./utils')
 describe("Api tests for admin", function () {
   var app;
   beforeEach(function () {
-    const otomiStack = new otomi.OtomiStack('tpath', "tcloud")
+    const otomiStack = new otomi.OtomiStack(null, null)
     sinon.stub(otomiStack);
     app = server.initApp(otomiStack)
   })
