@@ -31,7 +31,7 @@ class Repo {
   async commit(user, group) {
     console.debug("Committing changes")
 
-    await this.git.add('./*').then(this.git.commit('otomi-stack-api'))
+    this.git.add('./*').then(this.git.commit('otomi-stack-api'))
     // const tag = user + "/" + group
     // // tagMessage - in JSON format can be used by parsers
     // const tagMessage = JSON.stringify({user: user, group: group, source: 'otomi-stack-api'})

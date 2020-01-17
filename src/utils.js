@@ -1,6 +1,4 @@
 
-const fs = require('fs')
-
 function validateEnv(envVars) {
   // Ensure required ENV vars are set
   let requiredEnv = [
