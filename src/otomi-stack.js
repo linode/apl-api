@@ -21,7 +21,7 @@ class OtomiStack {
   }
 
   checkIfTeamExists(req_params) {
-    console.log({ teamId: req_params.teamId })
+    // console.log({ teamId: req_params.teamId })
     this.db.getItem('teams', { teamId: req_params.teamId })
   }
 
@@ -99,7 +99,7 @@ class OtomiStack {
 
   convertValuesToDb(values) {
     const teams = values.teams
-    console.debug(JSON.stringify(values))
+    // console.debug(JSON.stringify(values))
     teams.forEach(team => {
       const id = { teamId: team.name }
       let teamCloned = Object.assign({}, team);
@@ -133,7 +133,7 @@ class OtomiStack {
     })
 
     values.services = this.getDefaultServices()
-    console.debug(values)
+    // console.debug(values)
     return values
   }
 }
