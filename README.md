@@ -31,14 +31,14 @@ The `otomi-stack-api` can access
 
 For local development define `.env` file. Example:
 ```
-OTOMI_STACK_PATH=/otomi-stack
-KUBE_CONTEXT=minikube
-DEPLOYMENT_STAGE=dev
-DISABLE_AUTH=1
+GIT_LOCAL_PATH=/tmp/otomi-stack
+# The GIT_REPO_URL - only host and path, no schema
+GIT_REPO_URL=github.com/j-zimnowoda/test.git
+GIT_USER=test63688
+GIT_PASSWORD=wUnkus-cakzow-3nirky
 ```
 
 Use `DISABLE_AUTH=1` env to disable authorization.
-Use `DB_PATH` for persistent storage
 
 For production environment export the same variables with proper values.
 
