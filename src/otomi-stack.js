@@ -1,5 +1,3 @@
-const error = require('./error')
-
 class OtomiStack {
   constructor(repo, db) {
     this.db = db
