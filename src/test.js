@@ -286,9 +286,7 @@ describe("Config validation tests", function () {
 
   it("valid env variables", function (done) {
     const envs = {
-      OTOMI_STACK_PATH: null,
-      KUBE_CONTEXT: null,
-      DEPLOYMENT_STAGE: null,
+      GIT_LOCAL_PATH: null, GIT_REPO_URL: null, GIT_USER: null, GIT_PASSWORD: null
     }
     expect(() => utils.validateEnv(envs)).to.not.throw();
     done()
