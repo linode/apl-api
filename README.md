@@ -1,12 +1,12 @@
 #  Overview
 
-The otomi-stack-api is REST API implementation for otomi-stack.
-The API allows to manipulate teams and their configurations.
+This application:
+- provides REST API to manipulate values for teams and their services.
+- connects to git repo with `otomi-stack` code in order to load/update values from/in repository.
 
   
 # OpenApi specification
-The API is defined in `openapi.yaml`. This file is used to generate validation schemas and bind with API server endpoints (see: `api-routes` directory).
-
+The API is defined in `openapi.yaml`. This file is used to generate validation schemas and to bind with API server endpoints (see: `api-routes` directory).
 
 
 In order to inspect the api file it is recommended to either:
@@ -36,6 +36,16 @@ Use `DISABLE_AUTH=1` env to disable authorization.
 
 For production environment export the same variables with proper values.
 
+# Docker
+Building
+```
+docker build .
+```
+
+Running
+```
+docker run --env-file='.env' -p 8080:8080/tcp <image-id>
+```
 
 ## Start app
 ```
