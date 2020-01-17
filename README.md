@@ -20,14 +20,7 @@ GET http://127.0.0.1:8080/v1/apiDocs
 
 Moreover the `openapi.yaml` file can be used with `Postman` (File -> Import).
 
-# Running
-## Prerequisite
-The `otomi-stack-api` can access
-- the otomi-stack repository content under a path specified in OTOMI_STACK_PATH env
-- the .kube directory with proper credentials under a path specified in KUBE_PATH
-- helmfile and helm, kubectl installed binaries
-
-## Environment variables
+# Environment variables
 
 For local development define `.env` file. Example:
 ```
@@ -35,6 +28,7 @@ GIT_LOCAL_PATH=/tmp/otomi-stack
 # The GIT_REPO_URL - only host and path, no schema
 GIT_REPO_URL=github.com/j-zimnowoda/test.git
 GIT_USER=test63688
+GIT_EMAIL=test63688@gmail.com
 GIT_PASSWORD=wUnkus-cakzow-3nirky
 ```
 

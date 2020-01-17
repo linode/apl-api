@@ -13,6 +13,7 @@ const r = repo(
   process.env.GIT_LOCAL_PATH,
   process.env.GIT_REPO_URL,
   process.env.GIT_USER,
+  process.env.GIT_EMAIL,
   process.env.GIT_PASSWORD,
   )
 

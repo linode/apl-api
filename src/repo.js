@@ -6,11 +6,12 @@ const path = require('path');
 
 
 class Repo {
-  constructor(localRepoPath, url, user, password) {
+  constructor(localRepoPath, url, user, email, password) {
     this.path = localRepoPath
     this.git = simpleGit(this.path)
     this.url = url
     this.user = user
+    this.email = email
     this.password = password
   }
 
