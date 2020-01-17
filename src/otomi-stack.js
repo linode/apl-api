@@ -86,7 +86,7 @@ class OtomiStack {
 
   getDeployments(req_params) { }
 
-  triggerDeployment(req_params) {
+  async triggerDeployment(req_params) {
     const values = this.convertDbToValues()
     this.repo.writeFile(this.valuesPath, values)
     this.repo.commit("admin", "admin").then(this.repo.push())
