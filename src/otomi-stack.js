@@ -2,6 +2,12 @@ class OtomiStack {
   constructor(repo, db) {
     this.db = db
     this.repo = repo
+    this.valuesPath = './values/_env/teams.yaml'
+  }
+
+  init() {
+    this.repo.clone()
+    this.loadValues()
   }
 
   getTeams() {

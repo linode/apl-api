@@ -1,55 +1,68 @@
-const simpleGit = require('simple-git')
+const simpleGit = require('simple-git/promise');
 const yaml = require('js-yaml');
 const fs = require('fs');
 const error = require('./error')
+const path = require('path');
 
 
 class Repo {
-  constructor(localPath){   
-    this.git = simpleGit(localPath)
-    this.path = localPath
+  constructor(workingDirPath, url, user, password) {
+    this.path = path.join(workingDirPath, 'otomi-stack')
+    this.git = simpleGit(this.path)
+    this.url = url
+    this.user = user
+    this.password = password
   }
 
-  writeFile(relativePath, data){
-    console.debug("Writing to file: " + relativePath)
+  writeFile(relativePath, data) {
+    const absolutePath = path.join(this.path, relativePath)
+    console.debug("Writing to file: " + absolutePath)
     const yamlStr = yaml.safeDump(data);
-    fs.writeFileSync(relativePath, yamlStr, 'utf8');
+    fs.writeFileSync(absolutePath, yamlStr, 'utf8');
   }
 
-  readFile(relativePath){
-    console.debug("Reading from file: " + relativePath)
-    const doc = yaml.safeLoad(fs.readFileSync(relativePath, 'utf8'));
-    return doc;
+  readFile(relativePath) {
+    const absolutePath = path.join(this.path, relativePath)
+    console.debug("Reading from file: " + absolutePath)
+    const doc = yaml.safeLoad(fs.readFileSync(absolutePath, 'utf8'));
+    return doc
   }
 
-  push(user, group){
+  async commit(user, group) {
+    console.debug("Committing changes")
+
+    await this.git.add('./*')
+    await this.git.commit('otomi-stack-api')
+    // const tag = user + "/" + group
+    // // tagMessage - in JSON format can be used by parsers
+    // const tagMessage = JSON.stringify({user: user, group: group, source: 'otomi-stack-api'})
+    // await this.git.addAnnotatedTag(tag, tagMessage)
+  }
+
+  async push() {
     try {
-      console.debug("Pushing to remote origin")
-
-      this.git.commit('otomi-stack-api')
-      const tag = "User: " + user + "Group: " + group
-      // tagMessage - in JSON format can be used by parsers
-      const tagMessage = JSON.stringify({user: user, group: group, source: 'otomi-stack-api'})
-      this.git.addAnnotatedTag(tag, tagMessage)
-      const summary = this.git.push()
+      const summary = await this.git.push()
       console.log(JSON.stringify(summary))
       return summary
-    } 
-    catch (err) {
-        console.error(err.message);
-        throw new error.GitError("Failed to push values to git repo")
-      }
+    } catch (err) {
+      console.error(err.message);
+      throw new error.GitError("Failed to push values to git repo")
+    }
+  }
 
+  async clone() {
+    console.debug("Cloning repo: " + this.url + " to: " + this.path)
+    if (fs.existsSync(this.path)) {
+      console.warn("Repo path '" + this.path + "' already exists and is not an empty directory.")
+      return
     }
 
-  clone(url, user, password) {
-    console.debug("Cloning repo: " + url + " to: " + this.path)
-    const remote = `https://${user}:${password}@${url}`;
-    this.git.clone(remote)
+    const remote = `https://${this.user}:${this.password}@${this.url}`;
+    await this.git.clone(remote, this.path)
   }
 }
 
-module.exports = function(localPath) {
-  return new Repo(localPath)
+module.exports = function (localPath, url, user, password) {
+  return new Repo(localPath, url, user, password)
 }
 
