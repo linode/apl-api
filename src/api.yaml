@@ -293,6 +293,9 @@ definitions:
         type: string
       oidc:
         $ref: "#/definitions/TeamOidc"
+      teamId:
+        type: string
+        readOnly: true
     required:
       - name
       - password
@@ -341,6 +344,12 @@ definitions:
             pattern: '^[a-z0-9]+(?:[._-]{1,2}[a-z0-9]+)*$'
           tag:
             type: string
+      teamId:
+        type: string
+        readOnly: true
+      serviceId:
+        type: string
+        readOnly: true
     required:
       - name
 

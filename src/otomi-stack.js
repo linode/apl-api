@@ -38,7 +38,9 @@ class OtomiStack {
   }
 
   deleteTeam(req_params) {
-    const res_data = this.db.deleteItem('teams', req_params)
+    let res_data = this.db.deleteItem('services', req_params)
+    res_data = this.db.deleteItem('teams', req_params)
+
     return res_data
   }
 
