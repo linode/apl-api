@@ -51,15 +51,20 @@ class Repo {
   }
 
   async clone() {
-    console.debug("Cloning repo: " + this.url + " to: " + this.path)
+
+    console.debug("Checking if repo exists at: " + this.path)
 
     const isRepo = await this.git.checkIsRepo()
     if (!isRepo){
+      console.debug("Repo does not exists. Cloning from: " + this.url + " to: " + this.path)
       const remote = `https://${this.user}:${this.password}@${this.url}`;
       await this.git.clone(remote, this.path)
       await this.git.addConfig('user.name', this.user)
       return await this.git.addConfig('user.email', this.email)
     }
+
+    console.log("Repo already exists. Pulling latest changes")
+    await this.git.pull()
 
     return isRepo
 
