@@ -288,7 +288,7 @@ definitions:
     properties:
       name:
         type: string
-        pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+        pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
       password:
         type: string
       oidc:
@@ -296,6 +296,12 @@ definitions:
       teamId:
         type: string
         readOnly: true
+      slackUrl:
+        type: string
+        pattern: '^(https?):\/\/[^\s$.?#].[^\s]*$'
+        example: https://hooks.slack.com/services/service-01
+      resourceQuota:
+        type: object
     required:
       - name
       - password
@@ -307,6 +313,10 @@ definitions:
         type: string
       clientSecret:
         type: string
+    required:
+      - clientID
+      - clientSecret
+
   Teams:
     properties:
       teams:
@@ -324,11 +334,13 @@ definitions:
       name:
         type: string
         description: Service name visible as subdomain
-        pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+        pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+        example: "service-01"
       domain:
         type: string
         description: A custom domain
         pattern: '^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$'
+        example: "redkubes.com"
       svc:
         type: string
         readOnly: true
@@ -338,12 +350,14 @@ definitions:
           registry:
             type: string
             pattern: '^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$'
-            example: 'docker.io'
+            example: "docker.io"
           repository:
             type: string
-            pattern: '^[a-z0-9]+(?:[._-]{1,2}[a-z0-9]+)*$'
+            pattern: "^[a-z0-9]+(?:[._-]{1,2}[a-z0-9]+)*$"
+            example: service.01
           tag:
             type: string
+            example: "1.0.0"
       teamId:
         type: string
         readOnly: true
