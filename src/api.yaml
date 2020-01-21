@@ -19,7 +19,7 @@ paths:
         "200":
           description: Successfully obtained teams collection
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/Teams"
     post:
@@ -32,22 +32,22 @@ paths:
         description: Team object that needs to be added to the collection
         required: true
       responses:
-        "201":
+        "200":
           description: Successfully obtained teams collection
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/Team"
         "400":
           description: Bad Request
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OpenApiValidationError"
         "409":
           description: Team already exists
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
   "/teams/{teamId}":
@@ -64,19 +64,19 @@ paths:
         "200":
           description: Successfully obtained team
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/Team"
         "400":
           description: Bad Request
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OpenApiValidationError"
         "404":
           description: Team does not exists
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
     put:
@@ -99,19 +99,19 @@ paths:
         "200":
           description: Successfully edited team
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/Team"
         "400":
           description: Bad Request
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OpenApiValidationError"
         "404":
           description: Team does not exists
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
     delete:
@@ -129,13 +129,13 @@ paths:
         "400":
           description: Bad Request
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OpenApiValidationError"
         "404":
           description: Team does not exists
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
   "/teams/{teamId}/services":
@@ -152,13 +152,13 @@ paths:
         "200":
           description: Successfully obtained services
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/Services"
         "400":
           description: Bad Request
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OpenApiValidationError"
     post:
@@ -178,22 +178,22 @@ paths:
         description: Service object
         required: true
       responses:
-        "201":
+        "200":
           description: Successfully obtained teams collection
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/Team"
         "400":
           description: Bad Request
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OpenApiValidationError"
         "409":
           description: Team already exists
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
   "/teams/{teamId}/services/{serviceId}":
@@ -216,19 +216,19 @@ paths:
         "200":
           description: Successfully obtained service
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/Team"
         "400":
           description: Bad Request
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OpenApiValidationError"
         "404":
           description: Service does not exists
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
     put:
@@ -257,19 +257,19 @@ paths:
         "200":
           description: Successfully edited service
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/Team"
         "400":
           description: Bad Request
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OpenApiValidationError"
         "404":
           description: Service does not exists
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
     delete:
@@ -293,13 +293,13 @@ paths:
         "400":
           description: Bad Request
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OpenApiValidationError"
         "404":
           description: Service does not exists
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
   /deployments:
@@ -309,13 +309,13 @@ paths:
         "202":
           description: Deployment has been triggered
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/Deployment"
         "409":
           description: Unable not push data to git repo
           content:
-            "*/*":
+            "application/json":
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
   /apiDocs:
@@ -326,7 +326,7 @@ paths:
         "200":
           description: The requested apiDoc.
           content:
-            "*/*":
+            "application/json":
               schema:
                 type: object
         default:
@@ -357,8 +357,10 @@ components:
         name:
           type: string
           pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+          example: "team-1"
         password:
           type: string
+          example: "strongpasswprd"
         oidc:
           $ref: "#/components/schemas/TeamOidc"
         teamId:
@@ -378,8 +380,10 @@ components:
       properties:
         clientID:
           type: string
+          example: "ad8611c4-a701-4ec8-8ad3-a510441e728f"
         clientSecret:
           type: string
+          example: "Qn/=aZ7x]b/8PgGJhbtAlAejq0fA0P1K"
       required:
         - clientID
         - clientSecret
