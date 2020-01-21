@@ -6,8 +6,14 @@ class OtomiStack {
   }
 
   async init() {
-    await this.repo.clone()
-    this.loadValues()
+    try {
+      await this.repo.clone()
+      this.loadValues()
+    } catch (e) {
+      console.error(e.message)
+      return false
+    }
+    return true
   }
 
   getTeams() {
