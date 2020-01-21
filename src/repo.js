@@ -24,15 +24,15 @@ class Repo {
 
   readFile(relativePath) {
     const absolutePath = path.join(this.path, relativePath)
-    console.debug("Reading from file: " + absolutePath)
+    console.info("Reading from file: " + absolutePath)
     const doc = yaml.safeLoad(fs.readFileSync(absolutePath, 'utf8'));
     return doc
   }
 
   async commit(user, group) {
-    console.debug("Committing changes")
+    console.info("Committing changes")
     return this.git.add('./*').then(this.git.commit('otomi-stack-api'))
-    // TODO: tags ahs to be unique so user and group is not enough
+    // TODO: tags has to be unique so user and group is not enough
     // const tag = user + "/" + group
     // // tagMessage - in JSON format can be used by parsers
     // const tagMessage = JSON.stringify({user: user, group: group, source: 'otomi-stack-api'})
@@ -40,23 +40,25 @@ class Repo {
   }
 
   async push() {
-    console.debug("Pushing changes to remote origin")
+    console.info("Pushing values to remote origin")
 
     try {
-      return this.git.push()
+      const res = await this.git.push()
+      console.info("Successfully pushed values to remote origin")
+      return res
     } catch (err) {
       console.error(err.message);
-      throw new error.GitError("Failed to push values to git repo")
+      throw new error.GitError("Failed to push values to remote origin")
     }
   }
 
   async clone() {
 
-    console.debug("Checking if repo exists at: " + this.path)
+    console.info("Checking if repo exists at: " + this.path)
 
     const isRepo = await this.git.checkIsRepo()
     if (!isRepo){
-      console.debug("Repo does not exists. Cloning from: " + this.url + " to: " + this.path)
+      console.info("Repo does not exists. Cloning from: " + this.url + " to: " + this.path)
       const remote = `https://${this.user}:${this.password}@${this.url}`;
       await this.git.clone(remote, this.path)
       await this.git.addConfig('user.name', this.user)

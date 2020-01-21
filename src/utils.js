@@ -25,7 +25,27 @@ function validateConfig() {
   validatePaths(process.env)
 }
 
+
+function setSignalHandlers(server) {
+  process.on( 'SIGTERM', function () {
+    console.log("Received SIGTERM signal. \nFinishing all requests")
+    server.close(function () {
+      console.log("Finished all requests.");
+    });
+  });
+
+  process.on( 'SIGINT', function () {
+    console.log("Received SIGINT signal \nFinishing all requests")
+    server.close(function () {
+      console.log("Finished all requests");
+    });
+  });
+}
+
+
 module.exports = {
   validateConfig: validateConfig,
   validateEnv: validateEnv,
+  setSignalHandlers: setSignalHandlers,
 };
+

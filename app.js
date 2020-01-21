@@ -16,15 +16,18 @@ const r = repo(
   process.env.GIT_USER,
   process.env.GIT_EMAIL,
   process.env.GIT_PASSWORD,
-  )
+)
 
 const otomiStack = new otomi.OtomiStack(r, d)
 
-otomiStack.init().then(() => {
+otomiStack.init().then((status) => {
+  if (!status) {
+    console.info('Exiting')
+    process.exit(1)
+  }
   const app = server.initApp(otomiStack)
   console.info("Listening on port: 8080")
-  app.listen(8080);
+  const srv = app.listen(8080);
+  utils.setSignalHandlers(srv)
 }
 )
-
-

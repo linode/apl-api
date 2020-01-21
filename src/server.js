@@ -34,10 +34,6 @@ function initApp(otomiStack) {
     securityHandlers: getSecurityHandlers(),
   });
 
-  // app.use(function (err, req, res, next) {
-  //   res.status(err.status).json(err);
-  // });
-
   return app
 }
 
