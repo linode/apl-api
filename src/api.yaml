@@ -1,380 +1,459 @@
-swagger: "2.0"
-host: otomi-stack-api
-securityDefinitions:
-  groupAuthz:
-    type: "apiKey"
-    name: "Auth-Group"
-    in: "header"
-
+openapi: 3.0.0
 security:
   - groupAuthz: []
-
-basePath: /v1
 info:
   title: The otomi-stack API
-  version: "0.1.0"
+  version: 0.1.0
 paths:
   /readiness:
     get:
       security: []
       description: Check readiness
-      parameters: []
       responses:
-        200:
+        "200":
           description: Service is ready
   /teams:
     get:
       description: Get teams collection
-      parameters: []
       responses:
-        200:
+        "200":
           description: Successfully obtained teams collection
-          schema:
-            $ref: "#/definitions/Teams"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Teams"
     post:
       description: Create a team
-      parameters:
-        - in: "body"
-          name: "body"
-          description: "Team object that needs to be added to the collection"
-          required: true
-          schema:
-            $ref: "#/definitions/Team"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Team"
+        description: Team object that needs to be added to the collection
+        required: true
       responses:
-        201:
+        "201":
           description: Successfully obtained teams collection
-          schema:
-            $ref: "#/definitions/Team"
-        400:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Team"
+        "400":
           description: Bad Request
-          schema:
-            $ref: "#/definitions/OpenApiValidationError"
-        409:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OpenApiValidationError"
+        "409":
           description: Team already exists
-          schema:
-            $ref: "#/definitions/OtomiStackError"
-  /teams/{teamId}:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OtomiStackError"
+  "/teams/{teamId}":
     get:
       description: Get a specific team
       parameters:
-        - name: "teamId"
-          in: "path"
-          description: "ID of team to return"
+        - name: teamId
+          in: path
+          description: ID of team to return
           required: true
-          type: "string"
+          schema:
+            type: string
       responses:
-        200:
+        "200":
           description: Successfully obtained team
-          schema:
-            $ref: "#/definitions/Team"
-        400:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Team"
+        "400":
           description: Bad Request
-          schema:
-            $ref: "#/definitions/OpenApiValidationError"
-        404:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OpenApiValidationError"
+        "404":
           description: Team does not exists
-          schema:
-            $ref: "#/definitions/OtomiStackError"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OtomiStackError"
     put:
       description: Edit a team
       parameters:
-        - name: "teamId"
-          in: "path"
-          description: "ID of team to return"
-          required: true
-          type: "string"
-        - in: "body"
-          name: "body"
-          description: "Team object that contains updated values"
+        - name: teamId
+          in: path
+          description: ID of team to return
           required: true
           schema:
-            $ref: "#/definitions/Team"
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Team"
+        description: Team object that contains updated values
+        required: true
       responses:
-        200:
+        "200":
           description: Successfully edited team
-          schema:
-            $ref: "#/definitions/Team"
-        400:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Team"
+        "400":
           description: Bad Request
-          schema:
-            $ref: "#/definitions/OpenApiValidationError"
-        404:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OpenApiValidationError"
+        "404":
           description: Team does not exists
-          schema:
-            $ref: "#/definitions/OtomiStackError"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OtomiStackError"
     delete:
       description: Delete team
       parameters:
-        - name: "teamId"
-          in: "path"
-          description: "ID of team to delete"
+        - name: teamId
+          in: path
+          description: ID of team to delete
           required: true
-          type: "string"
+          schema:
+            type: string
       responses:
-        200:
+        "200":
           description: Successfully deleted a team
-        400:
+        "400":
           description: Bad Request
-          schema:
-            $ref: "#/definitions/OpenApiValidationError"
-        404:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OpenApiValidationError"
+        "404":
           description: Team does not exists
-          schema:
-            $ref: "#/definitions/OtomiStackError"
-  /teams/{teamId}/services:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OtomiStackError"
+  "/teams/{teamId}/services":
     get:
       description: Get services from a given team
       parameters:
-        - name: "teamId"
-          in: "path"
-          description: "ID of team"
+        - name: teamId
+          in: path
+          description: ID of team
           required: true
-          type: "string"
+          schema:
+            type: string
       responses:
-        200:
+        "200":
           description: Successfully obtained services
-          schema:
-            $ref: "#/definitions/Services"
-        400:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Services"
+        "400":
           description: Bad Request
-          schema:
-            $ref: "#/definitions/OpenApiValidationError"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OpenApiValidationError"
     post:
       description: Create a service
       parameters:
-        - name: "teamId"
-          in: "path"
-          description: "ID of team"
-          required: true
-          type: "string"
-        - in: "body"
-          name: "body"
-          description: "Service object"
+        - name: teamId
+          in: path
+          description: ID of team
           required: true
           schema:
-            $ref: "#/definitions/Service"
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Service"
+        description: Service object
+        required: true
       responses:
-        201:
+        "201":
           description: Successfully obtained teams collection
-          schema:
-            $ref: "#/definitions/Team"
-        400:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Team"
+        "400":
           description: Bad Request
-          schema:
-            $ref: "#/definitions/OpenApiValidationError"
-        409:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OpenApiValidationError"
+        "409":
           description: Team already exists
-          schema:
-            $ref: "#/definitions/OtomiStackError"
-  /teams/{teamId}/services/{serviceId}:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OtomiStackError"
+  "/teams/{teamId}/services/{serviceId}":
     get:
       description: Get a service from a given team
       parameters:
-        - name: "teamId"
-          in: "path"
-          description: "ID of team to return"
+        - name: teamId
+          in: path
+          description: ID of team to return
           required: true
-          type: "string"
-        - name: "serviceId"
-          in: "path"
-          description: "ID of the service"
+          schema:
+            type: string
+        - name: serviceId
+          in: path
+          description: ID of the service
           required: true
-          type: "string"
+          schema:
+            type: string
       responses:
-        200:
+        "200":
           description: Successfully obtained service
-          schema:
-            $ref: "#/definitions/Team"
-        400:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Team"
+        "400":
           description: Bad Request
-          schema:
-            $ref: "#/definitions/OpenApiValidationError"
-        404:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OpenApiValidationError"
+        "404":
           description: Service does not exists
-          schema:
-            $ref: "#/definitions/OtomiStackError"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OtomiStackError"
     put:
       description: Edit a service from a given team
       parameters:
-        - name: "teamId"
-          in: "path"
-          description: "ID of team to return"
-          required: true
-          type: "string"
-        - name: "serviceId"
-          in: "path"
-          description: "ID of the service"
-          required: true
-          type: "string"
-        - in: "body"
-          name: "body"
-          description: "Service object that contains updated values"
+        - name: teamId
+          in: path
+          description: ID of team to return
           required: true
           schema:
-            $ref: "#/definitions/Service"
+            type: string
+        - name: serviceId
+          in: path
+          description: ID of the service
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Service"
+        description: Service object that contains updated values
+        required: true
       responses:
-        200:
+        "200":
           description: Successfully edited service
-          schema:
-            $ref: "#/definitions/Team"
-        400:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Team"
+        "400":
           description: Bad Request
-          schema:
-            $ref: "#/definitions/OpenApiValidationError"
-        404:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OpenApiValidationError"
+        "404":
           description: Service does not exists
-          schema:
-            $ref: "#/definitions/OtomiStackError"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OtomiStackError"
     delete:
       description: Delete a service from a given team
       parameters:
-        - name: "teamId"
-          in: "path"
-          description: "ID of team to delete"
+        - name: teamId
+          in: path
+          description: ID of team to delete
           required: true
-          type: "string"
-        - name: "serviceId"
-          in: "path"
-          description: "ID of the service"
+          schema:
+            type: string
+        - name: serviceId
+          in: path
+          description: ID of the service
           required: true
-          type: "string"
+          schema:
+            type: string
       responses:
-        200:
+        "200":
           description: Successfully deleted a service
-        400:
+        "400":
           description: Bad Request
-          schema:
-            $ref: "#/definitions/OpenApiValidationError"
-        404:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OpenApiValidationError"
+        "404":
           description: Service does not exists
-          schema:
-            $ref: "#/definitions/OtomiStackError"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OtomiStackError"
   /deployments:
     post:
       description: Trigger a deployment (only for admin)
       responses:
-        202:
+        "202":
           description: Deployment has been triggered
-          schema:
-            $ref: "#/definitions/Deployment"
-        409:
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Deployment"
+        "409":
           description: Unable not push data to git repo
-          schema:
-            $ref: "#/definitions/OtomiStackError"
-
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/OtomiStackError"
   /apiDocs:
     get:
       security: []
       description: Get OpenApi document
       responses:
-        200:
+        "200":
           description: The requested apiDoc.
-          schema:
-            type: object
+          content:
+            "*/*":
+              schema:
+                type: object
         default:
           description: The requested apiDoc.
-
-definitions:
-  Deployment:
-    properties:
-      id:
-        type: integer
-      status:
-        type: string
-        readOnly: true
-        description: Deployment status
-        enum: [in-progress, completed, failed]
-  Team:
-    properties:
-      name:
-        type: string
-        pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
-      password:
-        type: string
-      oidc:
-        $ref: "#/definitions/TeamOidc"
-      teamId:
-        type: string
-        readOnly: true
-    required:
-      - name
-      - password
-      - oidc
-
-  TeamOidc:
-    properties:
-      clientID:
-        type: string
-      clientSecret:
-        type: string
-  Teams:
-    properties:
-      teams:
-        type: array
-        items:
-          $ref: "#/definitions/Team"
-  Services:
-    properties:
-      services:
-        type: array
-        items:
-          $ref: "#/definitions/Service"
-  Service:
-    properties:
-      name:
-        type: string
-        description: Service name visible as subdomain
-        pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
-      domain:
-        type: string
-        description: A custom domain
-        pattern: '^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$'
-      svc:
-        type: string
-        readOnly: true
-      image:
-        type: object
-        properties:
-          registry:
-            type: string
-            pattern: '^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$'
-            example: 'docker.io'
-          repository:
-            type: string
-            pattern: '^[a-z0-9]+(?:[._-]{1,2}[a-z0-9]+)*$'
-          tag:
-            type: string
-      teamId:
-        type: string
-        readOnly: true
-      serviceId:
-        type: string
-        readOnly: true
-    required:
-      - name
-
-  OpenApiValidationError:
-    properties:
-      status:
-        type: integer
-      errors:
-        type: array
-        items:
-          $ref: "#/definitions/ValidationError"
-
-  ValidationError:
-    properties:
-      path:
-        type: "string"
-      errorCode:
-        type: "string"
-      message:
-        type: "string"
-      location:
-        type: "string"
-        enum: [body, path]
-
-  OtomiStackError:
-    properties:
-      message:
-        type: "string"
+servers:
+  - url: //otomi-stack-api/v1
+components:
+  securitySchemes:
+    groupAuthz:
+      type: apiKey
+      name: Auth-Group
+      in: header
+  schemas:
+    Deployment:
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+          readOnly: true
+          description: Deployment status
+          enum:
+            - in-progress
+            - completed
+            - failed
+    Team:
+      properties:
+        name:
+          type: string
+          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+        password:
+          type: string
+        oidc:
+          $ref: "#/components/schemas/TeamOidc"
+        teamId:
+          type: string
+          readOnly: true
+        slackUrl:
+          type: string
+          pattern: ^(https?):\/\/[^\s$.?#].[^\s]*$
+          example: https://hooks.slack.com/services/service-01
+        resourceQuota:
+          type: object
+      required:
+        - name
+        - password
+        - oidc
+    TeamOidc:
+      properties:
+        clientID:
+          type: string
+        clientSecret:
+          type: string
+      required:
+        - clientID
+        - clientSecret
+    Teams:
+      properties:
+        teams:
+          type: array
+          items:
+            $ref: "#/components/schemas/Team"
+    Services:
+      properties:
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/Service"
+    Service:
+      properties:
+        name:
+          type: string
+          description: Service name visible as subdomain
+          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+          example: service-01
+        domain:
+          type: string
+          description: A custom domain
+          pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
+          example: redkubes.com
+        svc:
+          type: string
+          readOnly: true
+        image:
+          type: object
+          properties:
+            registry:
+              type: string
+              pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
+              example: docker.io
+            repository:
+              type: string
+              pattern: ^[a-z0-9]+(?:[._-]{1,2}[a-z0-9]+)*$
+              example: service.01
+            tag:
+              type: string
+              example: 1.0.0
+        teamId:
+          type: string
+          readOnly: true
+        serviceId:
+          type: string
+          readOnly: true
+      required:
+        - name
+    OpenApiValidationError:
+      properties:
+        status:
+          type: integer
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationError"
+    ValidationError:
+      properties:
+        path:
+          type: string
+        errorCode:
+          type: string
+        message:
+          type: string
+        location:
+          type: string
+          enum:
+            - body
+            - path
+    OtomiStackError:
+      properties:
+        message:
+          type: string

@@ -235,6 +235,36 @@ describe("Api tests for non authorized user", function () {
 });
 
 
+describe("Api tests for data validation", function () {
+  var app;
+  beforeEach(function () {
+    const otomiStack = new otomi.OtomiStack('tpath', "tcloud")
+    sinon.stub(otomiStack);
+    app = server.initApp(otomiStack)
+  })
+  it("invalid team name data", function (done) {
+    request(app)
+      .post('/v1/teams')
+      .send({name: 'test_1', password: 'pass', oidc: null})
+      .set('Auth-Group', 'admin')
+      .set('Accept', 'application/json')
+      .expect(400)
+      .expect('Content-Type', /json/)
+      .end(done);
+  })
+  it("invalid slackUrl  data", function (done) {
+    request(app)
+      .post('/v1/teams')
+      .send({name: 'test_1', password: 'pass', oidc: null, slackUrl: 'aaa.lll'})
+      .set('Auth-Group', 'admin')
+      .set('Accept', 'application/json')
+      .expect(400)
+      .expect('Content-Type', /json/)
+      .end(done);
+  })
+})
+
+
 const mockRequest = (authGroup, teamId) => ({
   header(name) {
     if (name === 'Auth-Group') return authGroup
@@ -275,6 +305,8 @@ describe("Authorization tests", function () {
     done()
   })
 });
+
+
 
 describe("Config validation tests", function () {
   it("missing env variables", function (done) {
