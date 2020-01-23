@@ -5,7 +5,7 @@ module.exports = function (otomi) {
       async function (req, res, next) {
         console.debug("Trigger deployments: " + JSON.stringify(req.params))
         try {
-          await otomi.triggerDeployment(req.params)
+          await otomi.triggerDeployment(req.params, req.headers['auth-group'])
         } catch (err) {
           console.error(err.message)
           res.status(409).json({ error: err.message })

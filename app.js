@@ -10,7 +10,7 @@ utils.validateConfig();
 
 
 const d = db.init(process.env.DB_PATH)
-const r = repo(
+const r = repo.init(
   process.env.GIT_LOCAL_PATH,
   process.env.GIT_REPO_URL,
   process.env.GIT_USER,

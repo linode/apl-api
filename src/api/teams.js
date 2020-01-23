@@ -5,6 +5,7 @@ module.exports = function (otomi) {
       function (req, res, next) {
         console.info("Get teams: " + JSON.stringify(req.params))
         const data = otomi.getTeams(req.params)
+
         res.status(200).json(data);
       }
     ],
