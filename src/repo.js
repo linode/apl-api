@@ -3,7 +3,6 @@ const yaml = require('js-yaml');
 const fs = require('fs');
 const error = require('./error')
 const path = require('path');
-const util = require('util');
 
 class Repo {
   constructor(localRepoPath, url, user, email, password) {
