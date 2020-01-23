@@ -4,7 +4,6 @@ const fs = require('fs');
 const error = require('./error')
 const path = require('path');
 
-
 class Repo {
   constructor(localRepoPath, url, user, email, password) {
     this.path = localRepoPath
@@ -29,16 +28,26 @@ class Repo {
     return doc
   }
 
-  async commit(user, group) {
+  async commit(userGroup) {
     console.info("Committing changes")
-    return this.git.add('./*').then(this.git.commit('otomi-stack-api'))
-    // TODO: tags has to be unique so user and group is not enough
-    // const tag = user + "/" + group
-    // // tagMessage - in JSON format can be used by parsers
-    // const tagMessage = JSON.stringify({user: user, group: group, source: 'otomi-stack-api'})
-    // await this.git.addAnnotatedTag(tag, tagMessage)
+    await this.git.add('./*')
+    const commitSummary = await this.git.commit('otomi-stack-api')
+    if (commitSummary.commit === '')
+      return commitSummary
+    // Only add note to a new commit
+    await this.addNote({ group: userGroup })
+    return commitSummary
   }
 
+  getNoteCmd(obj) {
+    const note = JSON.stringify(obj)
+    return ["notes", "add", "-m", note]
+  }
+
+  async addNote(obj) {
+    const cmd = this.getNoteCmd(obj)
+    return this.git.raw(cmd)
+  }
   async push() {
     console.info("Pushing values to remote origin")
 
@@ -57,7 +66,7 @@ class Repo {
     console.info("Checking if repo exists at: " + this.path)
 
     const isRepo = await this.git.checkIsRepo()
-    if (!isRepo){
+    if (!isRepo) {
       console.info("Repo does not exists. Cloning from: " + this.url + " to: " + this.path)
       const remote = `https://${this.user}:${this.password}@${this.url}`;
       await this.git.clone(remote, this.path)
@@ -73,9 +82,14 @@ class Repo {
   }
 }
 
-module.exports = function (localPath, url, user, email, password) {
+function init(localPath, url, user, email, password) {
   if (!fs.existsSync(localPath))
     fs.mkdirSync(localPath, 0o744);
   return new Repo(localPath, url, user, email, password)
+}
+
+module.exports = {
+  init: init,
+  Repo: Repo,
 }
 

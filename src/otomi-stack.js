@@ -94,11 +94,11 @@ class OtomiStack {
 
   getDeployments(req_params) { }
 
-  async triggerDeployment(req_params) {
+  async triggerDeployment(req_params, userGroup) {
     const values = this.convertDbToValues()
     this.repo.writeFile(this.valuesPath, values)
 
-    await this.repo.commit("admin", "admin")
+    await this.repo.commit(userGroup)
     return await this.repo.push()
 
   }

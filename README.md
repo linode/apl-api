@@ -4,6 +4,16 @@ This application:
 - provides REST API to manipulate values for teams and their services.
 - connects to git repo with `otomi-stack` code in order to load/update values from/in repository.
 
+# Git
+A git repository is an persistent storage for otomi-stack values. 
+
+## git-notes
+With each git commit performed by this application an extra user metadata associated. It is performed by using [git-notes](https://git-scm.com/docs/git-notes). A user metadata is encoded in JSON format.
+
+The metadata can be retrived by executing below command:
+```
+git notes show
+```
   
 # OpenApi specification
 The API is defined in `openapi.yaml`. This file is used to generate validation schemas and to bind with API server endpoints (see: `api-routes` directory).
