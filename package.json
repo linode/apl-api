@@ -25,6 +25,7 @@
     "express": "^4.17.1",
     "express-openapi": "^6.0.0",
     "lowdb": "^1.0.0",
+    "morgan": "^1.9.1",
     "shelljs": "^0.8.3",
     "simple-git": "^1.129.0"
   },
