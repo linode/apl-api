@@ -52,9 +52,14 @@ Building
 docker build .
 ```
 
-Running
+## Running
 ```
 docker run --env-file='.env' -p 8080:8080/tcp <image-id>
+```
+## Registry
+
+```
+docker push eu.gcr.io/k8s-playground-256113/otomi/otomi-stack-api:$TAG
 ```
 
 ## Start app
