@@ -1,5 +1,5 @@
 # --------------- Dev stage for developers to override sources
-FROM node:11.15-alpine as dev
+FROM node:13.7.0-alpine as dev
 
 RUN apk --no-cache add make gcc g++ python
 
