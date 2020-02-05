@@ -27,7 +27,6 @@ class OtomiStack {
   }
 
   checkIfTeamExists(req_params) {
-    // console.log({ teamId: req_params.teamId })
     this.db.getItem('teams', { teamId: req_params.teamId })
   }
 
@@ -51,6 +50,7 @@ class OtomiStack {
   }
 
   getServices(req_params) {
+    // console.log(req_params)
     this.checkIfTeamExists(req_params)
     const res_data = this.db.getCollection('services', req_params)
     return res_data
@@ -109,42 +109,43 @@ class OtomiStack {
   }
 
   convertValuesToDb(values) {
-    const teams = values.teams
-    // console.debug(JSON.stringify(values))
-    teams.forEach(team => {
-      const id = { teamId: team.name }
-      let teamCloned = Object.assign({}, team);
+    const teams = values.teamConfig.teams
+    for (let [teamId, teamData] of Object.entries(teams)) {
+      // console.log(`${teamId}: ${teamData}`);
+      // console.debug(JSON.stringify(teamData))
+      const id = { teamId: teamId }
+      let teamCloned = Object.assign({}, teamData);
       delete teamCloned.services
       this.createTeam(id, teamCloned)
-      team.services.forEach(svc => {
-        const id = { teamId: team.name, serviceId: svc.name }
-        this.createService(id, svc)
+      teamData.services.forEach(svc => {
+        const serviceId = { teamId: teamId, serviceId: svc.name }
+        this.createService(serviceId, svc)
       })
     }
-    )
-
-    values.services.forEach(svc => {
-      this.createDefaultService(svc)
-    })
-
-
   }
 
   convertDbToValues() {
+    const teams = {}
+    this.getTeams().forEach(el => {
+      let t = Object.assign({}, el);
+      const id = el.teamId
+      delete t.teamId
+      teams[id] = t
+      let dbServices = this.getServices({ teamId: id })
+      let services = new Array()
+      dbServices.forEach(svc => {
+        let svcCloned = Object.assign({}, svc);
+        delete svcCloned.teamId
+        delete svcCloned.serviceId
+        services.push(svcCloned)
+      })
 
-    const values = {
-      teams: [],
-      services: []
-    }
-    const teams = this.getTeams()
-    teams.forEach(el => {
-      let team = el
-      team.services = this.getServices({ teamId: el.name })
-      values.teams.push(team)
+      teams[id].services = services
     })
 
-    values.services = this.getDefaultServices()
-    // console.debug(values)
+    const values = {
+      teamConfig: { teams: teams },
+    }
     return values
   }
 }
