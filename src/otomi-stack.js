@@ -127,10 +127,10 @@ class OtomiStack {
   convertDbToValues() {
     const teams = {}
     this.getTeams().forEach(el => {
-      let t = Object.assign({}, el);
+      let teamCloned = Object.assign({}, el);
       const id = el.teamId
-      delete t.teamId
-      teams[id] = t
+      delete teamCloned.teamId
+      teams[id] = teamCloned
       let dbServices = this.getServices({ teamId: id })
       let services = new Array()
       dbServices.forEach(svc => {
