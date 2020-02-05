@@ -7,7 +7,8 @@
     "start": "node app.js",
     "start-dev": "nodemon -e js,yaml,yml app.js",
     "lint": "eslint .",
-    "test": "mocha src --exit"
+    "test": "mocha src --exit",
+    "gen-client": "docker run --rm -v ${PWD}:/otomi-stack-api openapitools/openapi-generator-cli generate -i  /otomi-stack-api/src/api.yaml --generator-name typescript-axios -o /otomi-stack-api/client/api"
   },
   "repository": {
     "type": "git",
