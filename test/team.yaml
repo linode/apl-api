@@ -1,0 +1,16 @@
+teamConfig:
+  teams:
+    team1:
+      cicd:
+        enabled: true
+        type: drone
+      name: team1
+      password: somepassworddd
+      services:
+      - image:
+          repository: otomi/helloworld-nodejs
+          tag: 1.1.3
+        isPublic: true
+        logo:
+          name: kubernetes
+        name: hello
