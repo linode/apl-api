@@ -6,6 +6,8 @@ const path = require('path');
 const cors = require('cors');
 const middleware = require('./middleware')
 const logger = require('morgan');
+const swaggerUi = require('swagger-ui-express');
+const yaml = require('js-yaml');
 
 
 function initApp(otomiStack) {
@@ -35,6 +37,9 @@ function initApp(otomiStack) {
     errorMiddleware: middleware.errorMiddleware,
     securityHandlers: getSecurityHandlers(),
   });
+
+  const doc = yaml.safeLoad(apiDoc);
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(doc));
 
   return app
 }
