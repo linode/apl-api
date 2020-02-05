@@ -76,3 +76,21 @@ Note: it requires to instal globally the following package
 ```
 npm install nodemon -g
 ```
+
+## Testing
+
+Run all tests
+```
+npm test
+```
+
+Run all test in watch mode
+
+```
+npm test -- -g repo --watch
+```
+
+Run test by their name (regex)
+```
+npm test -- -g repo
+```
