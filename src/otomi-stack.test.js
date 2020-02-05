@@ -59,8 +59,4 @@ describe("Load and dump values", function () {
     expect(data).to.deep.equal(expectedService)
     done()
   });
-
-
-
-
 });
