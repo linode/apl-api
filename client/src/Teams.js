@@ -1,8 +1,65 @@
+
 import React from 'react';
+import ModalWrapper from './Modal'
+import Team from './Team'
+import Button from 'react-bootstrap/Button'
+import ButtonToolbar from 'react-bootstrap/ButtonToolbar'
 
-function Teams() {
-  return <h2>Teams</h2>;
+class Teams extends React.Component {
+  state = { showModal: false };
+
+  showModal = () => {
+    this.setState({ showModal: true });
+  };
+
+  hideModal = () => {
+    this.setState({ showModal: false });
+  };
+
+  getModal = (teamId) => {
+    const body = <Team />
+
+    return (
+      <ModalWrapper
+        title='Create service'
+        body={body}
+        onClose={this.hideModal}
+      />
+    )
+  }
+
+  getTeams = () => {
+    console.log('Get servc')
+    // console.log(this.routerProps.match.params)
+    return (
+      <ButtonToolbar>
+        <Button
+          variant="primary"
+          size="lg" active
+          onClick={this.showModal}
+        >
+          Add new team
+        </Button>
+      </ButtonToolbar>
+    )
+  }
+
+  render() {
+    console.log(this.state.showModal)
+
+    const teams = this.getTeams()
+    let modal = null
+    if (this.state.showModal) {
+      modal = this.getModal()
+    }
+
+    return (
+      <div className='Services'>
+              { teams }
+              { modal }
+      </div>
+      )
+  }
 }
-
 
 export default Teams;
