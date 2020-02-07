@@ -179,11 +179,11 @@ paths:
         required: true
       responses:
         "200":
-          description: Successfully obtained teams collection
+          description: Successfully stored service configuration
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Team"
+                $ref: "#/components/schemas/Service"
         "400":
           description: Bad Request
           content:
@@ -214,11 +214,11 @@ paths:
             type: string
       responses:
         "200":
-          description: Successfully obtained service
+          description: Successfully obtained service configuration 
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Team"
+                $ref: "#/components/schemas/Service"
         "400":
           description: Bad Request
           content:
@@ -361,21 +361,21 @@ components:
         password:
           type: string
           example: "strongpasswprd"
-        oidc:
-          $ref: "#/components/schemas/TeamOidc"
+        # oidc:
+        #   $ref: "#/components/schemas/TeamOidc"
         teamId:
           type: string
           readOnly: true
-        slackUrl:
-          type: string
-          pattern: ^(https?):\/\/[^\s$.?#].[^\s]*$
-          example: https://hooks.slack.com/services/service-01
-        resourceQuota:
-          type: object
+        # slackUrl:
+        #   type: string
+        #   pattern: ^(https?):\/\/[^\s$.?#].[^\s]*$
+        #   example: https://hooks.slack.com/services/service-01
+        # resourceQuota:
+        #   type: object
       required:
         - name
         - password
-        - oidc
+        # - oidc
     TeamOidc:
       properties:
         clientID:
@@ -421,9 +421,10 @@ components:
               type: string
               pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
               example: docker.io
+              default: docker.io
             repository:
               type: string
-              pattern: ^[a-z0-9]+(?:[._-]{1,2}[a-z0-9]+)*$
+              pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
               example: service.01
             tag:
               type: string
@@ -434,8 +435,18 @@ components:
         serviceId:
           type: string
           readOnly: true
+        hasCert:
+          type: boolean
+          default: true
+          description: If true certificate is generated automatically. Otherwise it is expected that administrator provides cert as a secret 'cert-team-$teamName-$serviceName' for a given team.  
+        certArn:
+          type: string
+          readOnly: true
+          description: Only if hasCert set to true and deployed on AWS
+          example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
       required:
         - name
+        - image
     OpenApiValidationError:
       properties:
         status:
