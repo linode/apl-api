@@ -26,10 +26,11 @@ ENV NODE_ENV=test
 RUN pwd
 RUN npm run lint
 RUN npm run test
-
+RUN cd client && npm run build
 # --------------- Cleanup
 FROM dev as clean
 COPY . .eslintrc.yml ./
+
 # below command removes the packages specified in devDependencies and set NODE_ENV to production
 RUN npm prune --production
 # --------------- Production stage
@@ -52,6 +53,7 @@ WORKDIR /app
 COPY --from=clean /app/node_modules node_modules
 COPY --from=clean /app/package.json /app/app.js ./
 COPY --from=clean /app/src ./src
+COPY --from=clean /app/client ./client
 
 # Make sure that .env is not at this stage
 RUN rm -f /app/.env
