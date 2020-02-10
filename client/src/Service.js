@@ -20,19 +20,34 @@ function Service(values) {
   )
 }
 
-function CreateService() {
-  const schema = new Schema(openApiData).getServiceSchema()
-  
-  return (
-    <div className="Service">
-      <Form schema={schema}
-        onChange={log("changed")}
-        onSubmit={log("submitted")}
-        onError={log("errors")} 
+class CreateService extends React.Component {
+
+  onSubmit = (form) => {
+    this.props.client.addServiceToTeam(this.props.teamId, form.formData).then((response) => {
+      console.log('saved');
+      this.props.onSubmitted()
+    }).catch((error) => {
+      console.log(error);
+    })
+  }
+  render() {
+    const schema = this.props.schema.getServiceSchema()
+    return (
+
+      <div className="Service">
+        <Form
+          key='createService'
+          schema={schema}
+          onChange={log("changed")}
+          onSubmit={this.onSubmit}
+          onError={log("errors")}
+
         // liveValidate={true}
-      />
-    </div>
-  )
+        />
+      </div>
+    )
+
+  }
 }
 
 export {CreateService};

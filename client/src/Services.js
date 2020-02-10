@@ -35,8 +35,13 @@ class Services extends React.Component {
     this.getData()
   };
 
-  getModal = (teamId) => {
-    const body = <CreateService teamId={teamId} />
+  getModal = () => {
+    const body = <CreateService 
+    client={this.props.client}
+    schema={this.props.schema}
+    teamId={this.props.teamId} 
+    onSubmitted={this.hideModal}
+    />
 
     return (
       <ModalWrapper

@@ -98,7 +98,7 @@ class App extends React.Component {
             <Teams client={this.state.client} schema={this.state.schema} />
           </Route>
           <Route path="/">
-            <Home client={this.state.client} schema={this.state.schema} />
+            <Teams client={this.state.client} schema={this.state.schema} />
           </Route>
         </Switch >
       </Router >

@@ -7,7 +7,7 @@ const log = (type) => console.log.bind(console, type);
 class CreateTeam extends React.Component {
 
   onSubmit = (form) => {
-    this.props.client.createTeam(this.props.teamId, form.formData).then((response) => {
+    this.props.client.createTeam(null, form.formData).then((response) => {
       console.log('saved');
       this.props.onSubmitted()
     }).catch((error) => {
@@ -34,7 +34,6 @@ class CreateTeam extends React.Component {
     )
 
   }
-
 }
 
 class Team extends React.Component {
