@@ -20,4 +20,20 @@ function Service() {
   )
 }
 
+function CreateService() {
+  const schema = new Schema(openApiData).getServiceSchema()
+  
+  return (
+    <div className="Service">
+      <Form schema={schema}
+        onChange={log("changed")}
+        onSubmit={log("submitted")}
+        onError={log("errors")} 
+        // liveValidate={true}
+      />
+    </div>
+  )
+}
+
+export {CreateService};
 export default Service;

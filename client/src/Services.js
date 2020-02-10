@@ -1,7 +1,7 @@
 
 import React from 'react';
 import ModalWrapper from './Modal'
-import Service from './Service'
+import {CreateService} from './Service'
 import Button from 'react-bootstrap/Button'
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar'
 import Container from 'react-bootstrap/Container'
@@ -12,7 +12,12 @@ class Services extends React.Component {
   state = { showModal: false, services: [] };
 
   componentDidMount() {
-    console.log(this.props)
+    this.getData()
+  }
+
+  getData = () => {
+
+    console.log('getData')
     this.props.client.getServiceCollectionFromTeam(this.props.teamId).then((response) => {
       console.log(response)
       this.setState({ services: response.data })
@@ -20,16 +25,18 @@ class Services extends React.Component {
       console.log(error);
     })
   }
+
   showModal = () => {
     this.setState({ showModal: true });
   };
 
   hideModal = () => {
     this.setState({ showModal: false });
+    this.getData()
   };
 
   getModal = (teamId) => {
-    const body = <Service teamId={teamId} />
+    const body = <CreateService teamId={teamId} />
 
     return (
       <ModalWrapper

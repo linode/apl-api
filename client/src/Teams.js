@@ -1,7 +1,7 @@
 
 import React from 'react';
 import ModalWrapper from './Modal'
-import CreateTeam from './Team'
+import { CreateTeam } from './Team'
 import Button from 'react-bootstrap/Button'
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar'
 import Container from 'react-bootstrap/Container'
@@ -12,8 +12,12 @@ class Teams extends React.Component {
   state = { showModal: false, teams: [] };
 
   componentDidMount() {
+    this.getData()
+  }
+
+  getData = () => {
+    console.log('getData')
     this.props.client.getTeamCollection().then((response) => {
-      console.log(response)
       this.setState({ teams: response.data })
     }).catch((error) => {
       console.log(error);
@@ -25,9 +29,10 @@ class Teams extends React.Component {
 
   hideModal = () => {
     this.setState({ showModal: false });
+    this.getData()
   };
 
-  getModal = (teamId) => {
+  getModal = () => {
     const body = <CreateTeam schema={this.props.schema} client={this.props.client} />
 
     return (
@@ -59,12 +64,6 @@ class Teams extends React.Component {
     )
   }
 
-  renderItem(link) {
-    return (
-      <React.Fragment>
-      </React.Fragment>
-    )
-  }
   renderTeamCollection = () => {
 
     const button = this.renderAddTeamButton()
