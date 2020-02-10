@@ -26,6 +26,7 @@
     "express-openapi": "^6.0.0",
     "lowdb": "^1.0.0",
     "morgan": "^1.9.1",
+    "openapi-client-axios": "^3.3.2",
     "shelljs": "^0.8.3",
     "simple-git": "^1.129.0",
     "swagger-ui-express": "^4.1.3"

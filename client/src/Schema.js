@@ -1,3 +1,4 @@
+const yaml = require('js-yaml');
 const openApiData = {
   "openapi": "3.0.0",
   "security": [
@@ -24,6 +25,7 @@ const openApiData = {
     },
     "/teams": {
       "get": {
+        "operationId": "getTeams",
         "description": "Get teams collection",
         "responses": {
           "200": {
@@ -759,6 +761,13 @@ class Schema {
   }
 }
 
+function getOpenApiDefinitionJson(){
+  return JSON.stringify(openApiData)
+}
 
-export { openApiData }
+function getOpenApiDefinitionYaml(){
+  return yaml.safeDump(openApiData)
+}
+
+export { openApiData, getOpenApiDefinitionJson, getOpenApiDefinitionYaml }
 export default Schema

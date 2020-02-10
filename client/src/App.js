@@ -19,6 +19,9 @@ import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 
+
+import getClient from './client'
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -45,8 +48,9 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-function App() {
 
+function App() {
+  // getClient().then()
   return (
     // <div className="App">
 
