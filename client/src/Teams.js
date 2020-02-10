@@ -37,6 +37,14 @@ class Teams extends React.Component {
 
   getTeams = () => {
     console.log('Get servc')
+    console.log(this.state.teams)
+    // this.state.teams.map(item => (
+    //   // Without the `key`, React will fire a key warning
+    //   <React.Fragment key={item.id}>
+    //     <dt>{item.term}</dt>
+    //     <dd>{item.description}</dd>
+    //   </React.Fragment>
+    // ))}
     // console.log(this.routerProps.match.params)
     return (
       <ButtonToolbar>

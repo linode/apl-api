@@ -1,11 +1,10 @@
 import React from 'react';
+import axios from 'axios'
+
 import {
   BrowserRouter as Router,
   Switch,
   Route,
-  Link,
-  useRouteMatch,
-  useParams
 } from "react-router-dom";
 
 import './App.css';
@@ -55,35 +54,38 @@ class App extends React.Component {
 
   componentDidMount() {
 
-    getClient().then((client) => {
-      this.setState({ loading: false, client:  client})
+    axios.get('http://127.0.0.1:8080/v1/apiDocs').then((response) => {
+      const apiSpec = response.data
+      const client = getClient(apiSpec)
+
+      this.setState({ loading: false, client: client, apiSpec: apiSpec })
     })
-    .catch((error) => {
-      console.log(error);
-    })
+      .catch((error) => {
+        console.log(error);
+      })
   }
 
 
   setRouting = () => {
     return (
       <Router>
-      <Switch>
-        <Route path="/teams/:teamId/services/:serviceId" >
-        <Service client={this.state.client} />
-        </Route>
-      <Route path="/teams/:teamId/services">
-        <Services client={this.state.client} />
-      </Route>
-      <Route path="/teams/:teamId">
-        <Team client={this.state.client} />
-      </Route>
-      <Route path="/teams/">
-        <Teams client={this.state.client} />
-      </Route>
-      <Route path="/">
-        <Home client={this.state.client} />
-      </Route>
-      </Switch >
+        <Switch>
+          <Route path="/teams/:teamId/services/:serviceId" >
+            <Service client={this.state.client} />
+          </Route>
+          <Route path="/teams/:teamId/services">
+            <Services client={this.state.client} />
+          </Route>
+          <Route path="/teams/:teamId">
+            <Team client={this.state.client} />
+          </Route>
+          <Route path="/teams/">
+            <Teams client={this.state.client} />
+          </Route>
+          <Route path="/">
+            <Home client={this.state.client} />
+          </Route>
+        </Switch >
       </Router>
     )
   }
@@ -99,6 +101,8 @@ class App extends React.Component {
   }
   render() {
     console.log('App')
+    console.log(this.state.client)
+
     let body = undefined
     if (this.state.loading) {
       body = this.renderAppLoading()
@@ -107,14 +111,14 @@ class App extends React.Component {
     }
     return (
       <div className='App'>
-      <Container>
-        <Row>
-          <Col>
-          
-          {body}
-          </Col>
-        </Row>
-      </Container>
+        <Container>
+          <Row>
+            <Col>
+
+              {body}
+            </Col>
+          </Row>
+        </Container>
       </div>
     )
   }

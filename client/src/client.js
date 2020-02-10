@@ -1,15 +1,10 @@
 import OpenAPIClientAxios from 'openapi-client-axios';
-import { openApiData } from './Schema'
-import axios from 'axios'
 
-async function getClient(apiDefinition) {
 
-    // FIXME do not hardcoded host
-    const response = await axios.get('http://127.0.0.1:8080/v1/apiDocs');
-    console.log(response.data);
+function getClient(apiDefinition) {
     const api = new OpenAPIClientAxios({
 
-      definition: response.data,
+      definition: apiDefinition,
       axiosConfigDefaults: {
         // withCredentials: true,
         headers: {
@@ -18,7 +13,7 @@ async function getClient(apiDefinition) {
         },
       },
     });
-    return api.init();
+    return api.initSync();
 }
 
 export default getClient
