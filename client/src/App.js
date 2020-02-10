@@ -49,55 +49,75 @@ class ErrorBoundary extends React.Component {
 }
 
 
-function App() {
-  getClient()
-  return (
-    // <div className="App">
+class App extends React.Component {
+  state = { loading: true, client: null };
 
-    // </div>
-    <div className="App">
+
+  componentDidMount() {
+
+    getClient().then((client) => {
+      this.setState({ loading: false, client:  client})
+    })
+    .catch((error) => {
+      console.log(error);
+    })
+  }
+
+
+  setRouting = () => {
+    return (
+      <Router>
+      <Switch>
+        <Route path="/teams/:teamId/services/:serviceId" >
+        <Service client={this.state.client} />
+        </Route>
+      <Route path="/teams/:teamId/services">
+        <Services client={this.state.client} />
+      </Route>
+      <Route path="/teams/:teamId">
+        <Team client={this.state.client} />
+      </Route>
+      <Route path="/teams/">
+        <Teams client={this.state.client} />
+      </Route>
+      <Route path="/">
+        <Home client={this.state.client} />
+      </Route>
+      </Switch >
+      </Router>
+    )
+  }
+
+  renderAppLoading = () => {
+    return (
+      'App loading'
+    )
+  }
+
+  renderAppLoaded = () => {
+    return this.setRouting()
+  }
+  render() {
+    console.log('App')
+    let body = undefined
+    if (this.state.loading) {
+      body = this.renderAppLoading()
+    } else {
+      body = this.renderAppLoaded()
+    }
+    return (
+      <div className='App'>
       <Container>
         <Row>
           <Col>
-            <Router>
-              <div>
-                <nav>
-                  <ul>
-                    <li>
-                      <Link to="/">Home</Link>
-                    </li>
-                    <li>
-                      <Link to="/teams">Teams</Link>
-                    </li>
-                  </ul>
-                </nav>
-
-                {/* A <Switch> looks through its children <Route>s and
-              renders the first one that matches the current URL. */}
-                <Switch>
-                  <Route path="/teams/:teamId/services/:serviceId">
-                    <Service />
-                  </Route>
-                  <Route path="/teams/:teamId/services">
-                    <Services />
-                  </Route>
-                  <Route path="/teams/:teamId">
-                    <Team />
-                  </Route>
-                  <Route path="/teams/">
-                    <Teams />
-                  </Route>
-                  <Route path="/">
-                    <Home />
-                  </Route>
-                </Switch>
-              </div>
-            </Router>
+          
+          {body}
           </Col>
         </Row>
       </Container>
-    </div>
-  );
+      </div>
+    )
+  }
 }
 
 export default App;

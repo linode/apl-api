@@ -6,8 +6,15 @@ import Button from 'react-bootstrap/Button'
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar'
 
 class Teams extends React.Component {
-  state = { showModal: false };
+  state = { showModal: false, teams: []};
 
+  componentDidMount(){
+    this.props.client.getTeamCollection().then((response) => {
+      this.setState({teams: response.data})
+    }).catch((error) => {
+      console.log(error);
+    })
+  }
   showModal = () => {
     this.setState({ showModal: true });
   };
