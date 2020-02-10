@@ -4,10 +4,22 @@ import ModalWrapper from './Modal'
 import Service from './Service'
 import Button from 'react-bootstrap/Button'
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar'
+import Container from 'react-bootstrap/Container'
+import Row from 'react-bootstrap/Row'
+import { Link } from "react-router-dom";
 
 class Services extends React.Component {
-  state = { showModal: false };
+  state = { showModal: false, services: [] };
 
+  componentDidMount() {
+    console.log(this.props)
+    this.props.client.getServiceCollectionFromTeam(this.props.teamId).then((response) => {
+      console.log(response)
+      this.setState({ services: response.data })
+    }).catch((error) => {
+      console.log(error);
+    })
+  }
   showModal = () => {
     this.setState({ showModal: true });
   };
@@ -28,14 +40,42 @@ class Services extends React.Component {
     )
   }
 
-  getServices = () => {
-    console.log('Get servc')
-    // console.log(this.routerProps.match.params)
+  renderServiceCollection = () => {
+
+    const button = this.renderAddServiceButton()
+    const items = this.state.services.map((item) => {
+      console.log(item)
+
+      const link = `/teams/${this.props.teamId}/services/${item.serviceId}`
+      return (
+        <li><Link to={link}>{item.name}</Link></li>
+      )
+    })
+
+    return (
+
+      <React.Fragment>
+        <Container>
+          <Row className="mb-1">
+            {button}
+          </Row>
+          <Row>
+            <ul>
+              {items}
+            </ul>
+          </Row>
+        </Container>
+
+      </React.Fragment>
+    )
+  }
+
+  renderAddServiceButton = () => {
     return (
       <ButtonToolbar>
         <Button
           variant="primary"
-          size="lg" active
+          size="sm" active
           onClick={this.showModal}
         >
           Add new service
@@ -47,18 +87,18 @@ class Services extends React.Component {
   render() {
     console.log(this.state.showModal)
 
-    const services = this.getServices()
-    let modal = null
+    let body = null
     if (this.state.showModal) {
-      modal = this.getModal()
+      body = this.getModal()
+    } else {
+      body = this.renderServiceCollection()
     }
 
     return (
       <div className='Services'>
-              { services }
-              { modal }
+        {body}
       </div>
-      )
+    )
   }
 }
 

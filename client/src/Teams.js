@@ -1,16 +1,20 @@
 
 import React from 'react';
 import ModalWrapper from './Modal'
-import Team from './Team'
+import CreateTeam from './Team'
 import Button from 'react-bootstrap/Button'
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar'
+import Container from 'react-bootstrap/Container'
+import Row from 'react-bootstrap/Row'
+import { Link } from "react-router-dom";
 
 class Teams extends React.Component {
-  state = { showModal: false, teams: []};
+  state = { showModal: false, teams: [] };
 
-  componentDidMount(){
+  componentDidMount() {
     this.props.client.getTeamCollection().then((response) => {
-      this.setState({teams: response.data})
+      console.log(response)
+      this.setState({ teams: response.data })
     }).catch((error) => {
       console.log(error);
     })
@@ -24,33 +28,23 @@ class Teams extends React.Component {
   };
 
   getModal = (teamId) => {
-    const body = <Team />
+    const body = <CreateTeam schema={this.props.schema} client={this.props.client} />
 
     return (
       <ModalWrapper
-        title='Create service'
+        title='Create team'
         body={body}
         onClose={this.hideModal}
       />
     )
   }
 
-  getTeams = () => {
-    console.log('Get servc')
-    console.log(this.state.teams)
-    // this.state.teams.map(item => (
-    //   // Without the `key`, React will fire a key warning
-    //   <React.Fragment key={item.id}>
-    //     <dt>{item.term}</dt>
-    //     <dd>{item.description}</dd>
-    //   </React.Fragment>
-    // ))}
-    // console.log(this.routerProps.match.params)
+  renderAddTeamButton = () => {
     return (
       <ButtonToolbar>
         <Button
           variant="primary"
-          size="lg" active
+          size="sm" active
           onClick={this.showModal}
         >
           Add new team
@@ -59,21 +53,62 @@ class Teams extends React.Component {
     )
   }
 
+  renderAddTeamModal = () => {
+    return (
+      this.getModal()
+    )
+  }
+
+  renderItem(link) {
+    return (
+      <React.Fragment>
+      </React.Fragment>
+    )
+  }
+  renderTeamCollection = () => {
+
+    const button = this.renderAddTeamButton()
+    const items = this.state.teams.map((item) => {
+      console.log(item)
+
+      const link = `/teams/${item.teamId}`
+      return (
+        <li><Link to={link}>{item.name}</Link></li>
+      )
+    })
+    return (
+
+      <React.Fragment>
+        <Container>
+          <Row className="mb-1">
+            {button}
+          </Row>
+          <Row>
+            <ul>
+              {items}
+            </ul>
+          </Row>
+        </Container>
+
+      </React.Fragment>
+    )
+  }
+
   render() {
     console.log(this.state.showModal)
 
-    const teams = this.getTeams()
-    let modal = null
+    let body = null
     if (this.state.showModal) {
-      modal = this.getModal()
+      body = this.getModal()
+    } else {
+      body = this.renderTeamCollection()
     }
 
     return (
-      <div className='Services'>
-              { teams }
-              { modal }
+      <div className='Teams'>
+        {body}
       </div>
-      )
+    )
   }
 }
 
