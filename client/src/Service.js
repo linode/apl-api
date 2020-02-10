@@ -5,19 +5,37 @@ import Schema, { openApiData } from './Schema'
 
 const log = (type) => console.log.bind(console, type);
 
-function Service(values) {
-  const schema = new Schema(openApiData).getServiceSchema()
-  
-  return (
-    <div className="Service">
-      <Form schema={schema}
-        onChange={log("changed")}
-        onSubmit={log("submitted")}
-        onError={log("errors")} 
-        // liveValidate={true}
-      />
-    </div>
-  )
+
+class Service extends React.Component {
+  state = { service: {} };
+
+  componentDidMount() {
+    this.getData()
+  }
+
+  getData = () => {
+    console.log(this.props.serviceId)
+    this.props.client.getServiceFromTeam({teamId: this.props.teamId, serviceId: this.props.serviceId}).then((response) => {
+      this.setState({ service: response.data })
+    }).catch((error) => {
+      console.log(error);
+    })
+  }
+
+  render() {
+    const schema = this.props.schema.getServiceSchema()
+
+    return (
+      <div className="Service">
+        <Form schema={schema}
+          disabled
+          formData={this.state.service}
+        >
+          <div></div>
+        </Form>
+      </div>
+    )
+  }
 }
 
 class CreateService extends React.Component {
@@ -50,5 +68,5 @@ class CreateService extends React.Component {
   }
 }
 
-export {CreateService};
+export { CreateService };
 export default Service;
