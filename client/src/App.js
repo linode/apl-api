@@ -50,7 +50,7 @@ class ErrorBoundary extends React.Component {
 
 
 function App() {
-  // getClient().then()
+  getClient()
   return (
     // <div className="App">
 
