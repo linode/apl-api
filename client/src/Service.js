@@ -5,7 +5,7 @@ import Schema, { openApiData } from './Schema'
 
 const log = (type) => console.log.bind(console, type);
 
-function Service() {
+function Service(values) {
   const schema = new Schema(openApiData).getServiceSchema()
   
   return (

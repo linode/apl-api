@@ -6,8 +6,17 @@ const log = (type) => console.log.bind(console, type);
 
 class CreateTeam extends React.Component {
 
+  onSubmit = (form) => {
+    this.props.client.createTeam(this.props.teamId, form.formData).then((response) => {
+      console.log('saved');
+      this.props.onSubmitted()
+    }).catch((error) => {
+      console.log(error);
+    })
+  }
   render() {
     const schema = this.props.schema.getTeamSchema()
+
 
     return (
 
@@ -16,7 +25,7 @@ class CreateTeam extends React.Component {
           key='createTeam'
           schema={schema}
           onChange={log("changed")}
-          onSubmit={log("submitted")}
+          onSubmit={this.onSubmit}
           onError={log("errors")}
 
         // liveValidate={true}

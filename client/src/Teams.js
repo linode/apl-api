@@ -33,7 +33,10 @@ class Teams extends React.Component {
   };
 
   getModal = () => {
-    const body = <CreateTeam schema={this.props.schema} client={this.props.client} />
+    const body = <CreateTeam
+      schema={this.props.schema}
+      client={this.props.client}
+      onSubmitted={this.hideModal} />
 
     return (
       <ModalWrapper
