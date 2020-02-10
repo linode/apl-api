@@ -14,6 +14,7 @@ paths:
           description: Service is ready
   /teams:
     get:
+      operationId: getTeamCollection
       description: Get teams collection
       responses:
         "200":
@@ -23,6 +24,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Teams"
     post:
+      operationId: createTeam
       description: Create a team
       requestBody:
         content:
@@ -52,6 +54,7 @@ paths:
                 $ref: "#/components/schemas/OtomiStackError"
   "/teams/{teamId}":
     get:
+      operationId: getTeam
       description: Get a specific team
       parameters:
         - name: teamId
@@ -80,6 +83,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
     put:
+      operationId: editTeam
       description: Edit a team
       parameters:
         - name: teamId
@@ -115,6 +119,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
     delete:
+      operationId: deleteTeam
       description: Delete team
       parameters:
         - name: teamId
@@ -140,6 +145,7 @@ paths:
                 $ref: "#/components/schemas/OtomiStackError"
   "/teams/{teamId}/services":
     get:
+      operationId: getServiceCollectionFromTeam
       description: Get services from a given team
       parameters:
         - name: teamId
@@ -162,6 +168,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/OpenApiValidationError"
     post:
+      operationId: addServiceToTeam
       description: Create a service
       parameters:
         - name: teamId
@@ -198,6 +205,7 @@ paths:
                 $ref: "#/components/schemas/OtomiStackError"
   "/teams/{teamId}/services/{serviceId}":
     get:
+      operationId: getServiceFromTeam
       description: Get a service from a given team
       parameters:
         - name: teamId
@@ -232,6 +240,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
     put:
+      operationId: editServiceFromTeam
       description: Edit a service from a given team
       parameters:
         - name: teamId
@@ -273,6 +282,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
     delete:
+      operationId: deleteServiceFromTeam
       description: Delete a service from a given team
       parameters:
         - name: teamId
@@ -361,6 +371,7 @@ components:
         password:
           type: string
           example: "strongpasswprd"
+          writeOnly: true
         # oidc:
         #   $ref: "#/components/schemas/TeamOidc"
         teamId:
@@ -441,7 +452,6 @@ components:
           description: If true certificate is generated automatically. Otherwise it is expected that administrator provides cert as a secret 'cert-team-$teamName-$serviceName' for a given team.  
         certArn:
           type: string
-          readOnly: true
           description: Only if hasCert set to true and deployed on AWS
           example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
       required:
