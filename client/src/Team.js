@@ -48,7 +48,8 @@ class Team extends React.Component {
     return (
       
       <div className="Team">
-        <p>dasdsads</p>
+      <h2>Teams apps</h2>
+
         <Services schema={this.props.schema} client={this.props.client} teamId={this.props.teamId} />
       </div>
     )

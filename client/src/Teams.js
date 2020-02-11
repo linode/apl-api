@@ -3,10 +3,10 @@ import React from 'react';
 import ModalWrapper from './Modal'
 import { CreateTeam } from './Team'
 import Button from 'react-bootstrap/Button'
-import ButtonToolbar from 'react-bootstrap/ButtonToolbar'
 import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import { Link } from "react-router-dom";
+import ActionBar from './ActionBar'
 
 class Teams extends React.Component {
   state = { showModal: false, teams: [] };
@@ -47,17 +47,18 @@ class Teams extends React.Component {
     )
   }
 
-  renderAddTeamButton = () => {
+  TeamActionBar = () => {
     return (
-      <ButtonToolbar>
+
+      <ActionBar client={this.props.client} >
         <Button
           variant="primary"
           size="sm" active
           onClick={this.showModal}
         >
-          Add new team
+          + new team
         </Button>
-      </ButtonToolbar>
+      </ActionBar>
     )
   }
 
@@ -69,7 +70,6 @@ class Teams extends React.Component {
 
   renderTeamCollection = () => {
 
-    const button = this.renderAddTeamButton()
     const items = this.state.teams.map((item) => {
       console.log(item)
 
@@ -81,10 +81,9 @@ class Teams extends React.Component {
     return (
 
       <React.Fragment>
+        {this.TeamActionBar()}
+        <h2>Teams</h2>
         <Container>
-          <Row className="mb-1">
-            {button}
-          </Row>
           <Row>
             <ul>
               {items}

@@ -3,10 +3,10 @@ import React from 'react';
 import ModalWrapper from './Modal'
 import {CreateService} from './Service'
 import Button from 'react-bootstrap/Button'
-import ButtonToolbar from 'react-bootstrap/ButtonToolbar'
 import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import { Link } from "react-router-dom";
+import ActionBar from './ActionBar'
 
 class Services extends React.Component {
   state = { showModal: false, services: [] };
@@ -54,7 +54,6 @@ class Services extends React.Component {
 
   renderServiceCollection = () => {
 
-    const button = this.renderAddServiceButton()
     const items = this.state.services.map((item) => {
       console.log(item)
 
@@ -67,10 +66,9 @@ class Services extends React.Component {
     return (
 
       <React.Fragment>
+        {this.ServiceActionBar()}
+
         <Container>
-          <Row className="mb-1">
-            {button}
-          </Row>
           <Row>
             <ul className="mt-2">
               {items}
@@ -82,17 +80,19 @@ class Services extends React.Component {
     )
   }
 
-  renderAddServiceButton = () => {
+
+  ServiceActionBar = () => {
     return (
-      <ButtonToolbar>
+
+      <ActionBar client={this.props.client}>
         <Button
           variant="primary"
           size="sm" active
           onClick={this.showModal}
         >
-          Add new service
+          + new service
         </Button>
-      </ButtonToolbar>
+      </ActionBar>
     )
   }
 

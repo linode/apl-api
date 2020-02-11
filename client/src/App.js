@@ -88,7 +88,6 @@ class App extends React.Component {
     const routing = this.setRouting()
     return (
       <React.Fragment>
-      <ActionBar client={this.state.client} />
       {routing}
       </React.Fragment>
       )

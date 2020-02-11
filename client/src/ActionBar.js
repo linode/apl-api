@@ -21,8 +21,14 @@ class ActionBar extends React.Component {
 
         <Navbar.Collapse id="basic-navbar-nav">
           <div className="mr-auto">
+          {this.props.children}
           </div>
-          <Button onClick={this.onDeployButtonClick}>
+
+          <Button
+            onClick={this.onDeployButtonClick}
+            variant="dark"
+            size="sm"
+          >
             Deploy
       </Button>
 
