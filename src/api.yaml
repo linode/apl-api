@@ -222,7 +222,7 @@ paths:
             type: string
       responses:
         "200":
-          description: Successfully obtained service configuration 
+          description: Successfully obtained service configuration
           content:
             "application/json":
               schema:
@@ -342,7 +342,7 @@ paths:
         default:
           description: The requested apiDoc.
 servers:
-  - url: 'http://127.0.0.1:8080/v1'
+  - url: "http://127.0.0.1:8080/v1"
 components:
   securitySchemes:
     groupAuthz:
@@ -440,6 +440,9 @@ components:
             tag:
               type: string
               example: 1.0.0
+          required:
+            - repository
+            - tag
         teamId:
           type: string
           readOnly: true
@@ -449,7 +452,7 @@ components:
         hasCert:
           type: boolean
           default: true
-          description: If true certificate is generated automatically. Otherwise it is expected that administrator provides cert as a secret 'cert-team-$teamName-$serviceName' for a given team.  
+          description: If true certificate is generated automatically. Otherwise it is expected that administrator provides cert as a secret 'cert-team-$teamName-$serviceName' for a given team.
         certArn:
           type: string
           description: Only if hasCert set to true and deployed on AWS
