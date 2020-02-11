@@ -32,6 +32,8 @@ class Service extends React.Component {
 
     return (
       <div className="Service">
+        <h2>Service: {this.props.serviceId}</h2> 
+
         <Form 
           schema={schema}
           uiSchema={uiSchema}
