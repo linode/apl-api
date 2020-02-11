@@ -10,12 +10,11 @@ import {
 import './App.css';
 
 import Service from './Service'
-import Services from './Services'
+import Team from './Team'
 import Teams from './Teams'
 import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
-import ActionBar from './ActionBar'
 import NavigationBar from './NavigationBar'
 
 
@@ -60,7 +59,7 @@ class App extends React.Component {
           />
           <Route exact path="/teams/:teamId"
             render={(props) =>
-              <Services
+              <Team
                 teamId={props.match.params.teamId}
                 client={this.state.client}
                 schema={this.state.schema} />
