@@ -314,6 +314,7 @@ paths:
                 $ref: "#/components/schemas/OtomiStackError"
   /deployments:
     post:
+      operationId: deploy
       description: Trigger a deployment (only for admin)
       responses:
         "202":

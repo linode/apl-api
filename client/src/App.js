@@ -15,8 +15,10 @@ import Teams from './Teams'
 import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
-import Navbar from 'react-bootstrap/Navbar'
-import Nav from 'react-bootstrap/Nav'
+import ActionBar from './ActionBar'
+import NavigationBar from './NavigationBar'
+
+
 
 
 
@@ -82,54 +84,18 @@ class App extends React.Component {
     )
   }
 
-  renderNavBar = () => {
+  renderAppLoaded = () => {
+    const routing = this.setRouting()
     return (
       <React.Fragment>
-        <Navbar bg="light" >
-          <Navbar.Brand href="#home">
-            <img
-              src="/static/otomi_stack_medium.png"
-              width="40"
-              height="40"
-              className="d-inline-block align-top"
-              alt="logo"
-            />
-          </Navbar.Brand>
-          <Navbar.Brand href="/">Team management panel</Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="mr-auto">
-              {/* <Nav.Link href="#home">Home</Nav.Link>
-              <Nav.Link href="#link">Link</Nav.Link> */}
-            </Nav>
-            <Navbar.Brand>
-              <img
-                src="/static/user.svg"
-                width="30"
-                height="30"
-                className="d-inline-block align-top"
-                alt="user icon"
-              />
-            </Navbar.Brand>
-            <Navbar.Text>
-              user@redkubes.com (Admin)
-    </Navbar.Text>
-
-
-
-          </Navbar.Collapse>
-        </Navbar>
+      <ActionBar client={this.state.client} />
+      {routing}
       </React.Fragment>
-    )
-  }
-
-  renderAppLoaded = () => {
-    return this.setRouting()
+      )
   }
   render() {
     console.log('App')
 
-    const nav = this.renderNavBar()
     let body = undefined
     if (this.state.loading) {
       body = this.renderAppLoading()
@@ -138,7 +104,7 @@ class App extends React.Component {
     }
     return (
       <div className='App'>
-        {nav}
+        <NavigationBar client={this.state.client}/>
         <Container className='mt-2'>
           <Row></Row>
           <Row>
