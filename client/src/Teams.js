@@ -81,8 +81,9 @@ class Teams extends React.Component {
     return (
 
       <React.Fragment>
-        {this.TeamActionBar()}
         <h2>Teams</h2>
+
+        {this.TeamActionBar()}
         <Container>
           <Row>
             <ul>

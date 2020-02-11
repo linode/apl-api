@@ -1,5 +1,3 @@
-const yaml = require('js-yaml');
-
 class Schema {
   constructor(openApi) {
     this.openApi = openApi
