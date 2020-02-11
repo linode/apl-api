@@ -1,12 +1,13 @@
 
 import React from 'react';
 import ModalWrapper from './Modal'
-import {CreateService} from './Service'
+import { CreateService } from './Service'
 import Button from 'react-bootstrap/Button'
 import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import { Link } from "react-router-dom";
 import ActionBar from './ActionBar'
+
 class Services extends React.Component {
   state = { showModal: false, services: [] };
 
@@ -35,11 +36,11 @@ class Services extends React.Component {
   };
 
   getModal = () => {
-    const body = <CreateService 
-    client={this.props.client}
-    schema={this.props.schema}
-    teamId={this.props.teamId} 
-    onSubmitted={this.hideModal}
+    const body = <CreateService
+      client={this.props.client}
+      schema={this.props.schema}
+      teamId={this.props.teamId}
+      onSubmitted={this.hideModal}
     />
 
     return (
@@ -94,7 +95,7 @@ class Services extends React.Component {
       </ActionBar>
     )
   }
-  
+
 
   render() {
     console.log(this.state.showModal)

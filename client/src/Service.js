@@ -1,9 +1,5 @@
 import React from "react";
-
 import Form from "react-jsonschema-form";
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
-import Tooltip from 'react-bootstrap/Tooltip'
-import { IoIosHelpCircle } from "react-icons/io";
 import Help from './Help'
 
 const log = (type) => console.log.bind(console, type);
