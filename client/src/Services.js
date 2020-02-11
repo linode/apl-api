@@ -72,7 +72,7 @@ class Services extends React.Component {
             {button}
           </Row>
           <Row>
-            <ul>
+            <ul className="mt-2">
               {items}
             </ul>
           </Row>

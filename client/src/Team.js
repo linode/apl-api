@@ -40,7 +40,9 @@ class Team extends React.Component {
 
   render() {
     return (
+      
       <div className="Team">
+        <p>dasdsads</p>
         <Services schema={this.props.schema} client={this.props.client} teamId={this.props.teamId} />
       </div>
     )
