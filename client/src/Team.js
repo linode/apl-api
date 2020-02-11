@@ -1,8 +1,13 @@
-import React, { Component } from "react";
+import React from "react";
 import Form from "react-jsonschema-form";
 import Services from './Services'
 
 const log = (type) => console.log.bind(console, type);
+
+const uiSchema = {
+  teamId: {"ui:widget": "hidden"},
+  password: {"ui:widget": "password"},
+};
 
 class CreateTeam extends React.Component {
 
@@ -24,6 +29,7 @@ class CreateTeam extends React.Component {
         <Form
           key='createTeam'
           schema={schema}
+          uiSchema={uiSchema}
           onChange={log("changed")}
           onSubmit={this.onSubmit}
           onError={log("errors")}

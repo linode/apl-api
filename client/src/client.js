@@ -6,7 +6,7 @@ function getClient(apiDefinition) {
 
       definition: apiDefinition,
       axiosConfigDefaults: {
-        // withCredentials: true,
+        withCredentials: true,
         headers: {
           'Cache-Control': 'no-cache',
           'Auth-Group': 'admin',

@@ -1,9 +1,14 @@
-import React, { Component } from "react";
+import React from "react";
 
 import Form from "react-jsonschema-form";
-import Schema, { openApiData } from './Schema'
 
 const log = (type) => console.log.bind(console, type);
+
+const uiSchema = {
+  serviceId: {"ui:widget": "hidden"},
+  teamId: {"ui:widget": "hidden"},
+  svc: {"ui:widget": "hidden"}
+};
 
 
 class Service extends React.Component {
@@ -27,9 +32,12 @@ class Service extends React.Component {
 
     return (
       <div className="Service">
-        <Form schema={schema}
+        <Form 
+          schema={schema}
+          uiSchema={uiSchema}
           disabled
           formData={this.state.service}
+
         >
           <div></div>
         </Form>
@@ -56,6 +64,7 @@ class CreateService extends React.Component {
         <Form
           key='createService'
           schema={schema}
+          uiSchema={uiSchema}
           onChange={log("changed")}
           onSubmit={this.onSubmit}
           onError={log("errors")}

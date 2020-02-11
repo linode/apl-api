@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from 'axios'
-import Schema, { openApiData } from './Schema'
+import Schema from './Schema'
 
 import {
   BrowserRouter as Router,
@@ -10,10 +10,8 @@ import {
 
 import './App.css';
 
-import Home from './Home'
 import Service from './Service'
 import Services from './Services'
-import Team from './Team'
 import Teams from './Teams'
 import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
@@ -25,40 +23,13 @@ import Nav from 'react-bootstrap/Nav'
 
 import getClient from './client'
 
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error) {
-    // Update state so the next render will show the fallback UI.
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    // You can also log the error to an error reporting service
-    // console.error(error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      // You can render any custom fallback UI
-      return <h1>Something went wrong.</h1>;
-    }
-
-    return this.props.children;
-  }
-}
-
-
 class App extends React.Component {
   state = { loading: true, client: null, schema: null };
 
 
   componentDidMount() {
 
-    axios.get('http://127.0.0.1:8080/v1/apiDocs').then((response) => {
+    axios.get('/v1/apiDocs').then((response) => {
       const apiSpec = response.data
       const client = getClient(apiSpec)
       const schema = new Schema(apiSpec)
