@@ -16,11 +16,6 @@ import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import NavigationBar from './NavigationBar'
-
-
-
-
-
 import getClient, { getApiDefinition } from './client'
 
 class App extends React.Component {

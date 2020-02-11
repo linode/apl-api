@@ -4,6 +4,7 @@ import Form from "react-jsonschema-form";
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
 import Tooltip from 'react-bootstrap/Tooltip'
 import { IoIosHelpCircle } from "react-icons/io";
+import Help from './Help'
 
 const log = (type) => console.log.bind(console, type);
 
@@ -13,30 +14,9 @@ const uiSchema = {
   svc: { "ui:widget": "hidden" }
 };
 
-
-
 const CustomDescriptionField = ({ id, description }) => {
-
-  function renderTooltip(props) {
-    return <Tooltip {...props}>{description}</Tooltip>;
-  }
-
-  function renderOverlay() {
-    return (
-    <OverlayTrigger
-      placement="right"
-      delay={{ show: 250, hide: 400 }}
-      overlay={renderTooltip}>
-      <IoIosHelpCircle />
-    </OverlayTrigger>
-    )
-  }
-  let desc = null
-  if(description)
-    desc = renderOverlay()
-
   return (
-    desc
+    <Help description={description} id={id}/>
   )
 };
 
@@ -71,6 +51,7 @@ class Service extends React.Component {
           schema={schema}
           uiSchema={uiSchema}
           disabled
+          fields={fields}
           formData={this.state.service}
 
         >
