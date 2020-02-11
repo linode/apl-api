@@ -10,12 +10,25 @@ const swaggerUi = require('swagger-ui-express');
 const yaml = require('js-yaml');
 
 
+function updateHostInApiSpec(spec) {
+  if (process.env.API_PUBLIC_URL) {
+    console.log(spec)
+    spec.servers[0] = { url: process.env.API_PUBLIC_URL }
+  }
+
+}
+
 function initApp(otomiStack) {
 
   const app = express()
   const openApiPath = path.resolve(__dirname, 'api.yaml')
   const apiRoutesPath = path.resolve(__dirname, 'api')
   const apiDoc = fs.readFileSync(openApiPath, 'utf8')
+  let spec = yaml.safeLoad(apiDoc);
+  updateHostInApiSpec(spec)
+
+  const specYaml = yaml.dump(spec)
+
   app.use(logger('dev'));
   app.use(cors());
   app.use(bodyParser.json());
@@ -28,7 +41,7 @@ function initApp(otomiStack) {
   }
 
   openapi.initialize({
-    apiDoc: apiDoc,
+    apiDoc: specYaml,
     app: app,
     dependencies: {
       otomi: otomiStack,
