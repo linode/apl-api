@@ -431,16 +431,20 @@ components:
           properties:
             registry:
               type: string
+              description: A domain name of image registry
               pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
               example: docker.io
               default: docker.io
+              readOnly: true
             repository:
               type: string
               pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
               example: service.01
+              description: A container image repository
             tag:
               type: string
               example: 1.0.0
+              description: A container image tag
           required:
             - repository
             - tag
@@ -453,7 +457,7 @@ components:
         hasCert:
           type: boolean
           default: true
-          description: If true certificate is generated automatically. Otherwise it is expected that administrator provides cert as a secret 'cert-team-$teamName-$serviceName' for a given team.
+          # description: If true certificate is generated automatically. Otherwise it is expected that administrator provides cert as a secret 'cert-team-$teamName-$serviceName' for a given team.
         certArn:
           type: string
           description: Only if hasCert set to true and deployed on AWS
