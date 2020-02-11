@@ -1,5 +1,4 @@
 import React from 'react';
-import axios from 'axios'
 import Schema from './Schema'
 
 import {
@@ -21,15 +20,15 @@ import Nav from 'react-bootstrap/Nav'
 
 
 
-import getClient from './client'
+import getClient, { getApiDefinition } from './client'
 
 class App extends React.Component {
   state = { loading: true, client: null, schema: null };
 
 
   componentDidMount() {
-
-    axios.get('/v1/apiDocs').then((response) => {
+    console.log('componentDidMount')
+    getApiDefinition().then((response) => {
       const apiSpec = response.data
       const client = getClient(apiSpec)
       const schema = new Schema(apiSpec)
