@@ -12,10 +12,8 @@ const yaml = require('js-yaml');
 
 function updateHostInApiSpec(spec) {
   if (process.env.API_PUBLIC_URL) {
-    console.log(spec)
     spec.servers[0] = { url: process.env.API_PUBLIC_URL }
   }
-
 }
 
 function initApp(otomiStack) {
