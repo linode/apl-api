@@ -82,9 +82,9 @@ class App extends React.Component {
     const routing = this.setRouting()
     return (
       <React.Fragment>
-      {routing}
+        {routing}
       </React.Fragment>
-      )
+    )
   }
   render() {
     console.log('App')
@@ -97,7 +97,7 @@ class App extends React.Component {
     }
     return (
       <div className='App'>
-        <NavigationBar client={this.state.client}/>
+        <NavigationBar client={this.state.client} />
         <Container className='mt-2'>
           <Row></Row>
           <Row>

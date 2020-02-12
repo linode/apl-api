@@ -343,7 +343,7 @@ paths:
         default:
           description: The requested apiDoc.
 servers:
-  - url: "http://127.0.0.1:8080/v1"
+  - url: "/v1"
 components:
   securitySchemes:
     groupAuthz:

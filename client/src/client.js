@@ -22,6 +22,12 @@ function getClient(apiDefinition) {
     }
   }
 
+  if (process.env.NODE_ENV !== "production") {
+    apiDefinition.servers = [{
+      url: 'http://127.0.0.1:8080/v1'
+    }]
+  }
+
   const api = new OpenAPIClientAxios({
     definition: apiDefinition,
     axiosConfigDefaults: axiosConfigDefaults
