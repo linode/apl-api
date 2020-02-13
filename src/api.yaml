@@ -362,6 +362,8 @@ paths:
           description: The requested apiDoc.
 servers:
   - url: "/v1"
+
+# -------------------- Components
 components:
   securitySchemes:
     groupAuthz:
@@ -369,6 +371,61 @@ components:
       name: Auth-Group
       in: header
   schemas:
+    KubernetesService: &KubernetesService
+      type: object
+      properties:
+        name:
+          type: string
+          description: A name of existing kubernetes service
+
+    KnativeService: &KnativeService
+      description: Knative service definition
+      type: object
+      properties:
+        repository:
+          <<: *repositoryField
+        image:
+          type: string
+        tag:
+          type: string
+        env:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                <<: *envField
+              value:
+                type: string
+                maxLength: 131072
+        resources:
+          type: object
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu: &k8sResourceQuantityPattern
+                  <<: *k8sResourceQuantityField
+                memory:
+                  <<: *k8sResourceQuantityField
+            requests:
+              type: object
+              properties:
+                cpu:
+                  <<: *k8sResourceQuantityField
+                memory:
+                  <<: *k8sResourceQuantityField
+        annotations:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                <<: *k8sAnnotationField
+              value:
+                type: string
+                maxLength: 32767
+
     Deployment:
       properties:
         id:
@@ -434,7 +491,7 @@ components:
       properties:
         name:
           type: string
-          description: Service name visible as subdomain
+          description: A unique subdomain
           pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
           example: service-01
         domain:
@@ -443,55 +500,23 @@ components:
           <<: *domainNameField
           example: redkubes.com
         svc:
-          type: string
-          readOnly: true
-        ksvc:
-          description: Knative service definition
           type: object
-          properties:
-            repository:
-              <<: *repositoryField
-            image:
-              type: string
-            tag:
-              type: string
-            env:
-              type: array
-              items:
-                type: object
-                properties:
-                  name:
-                    <<: *envField
-                  value:
-                    type: string
-                    maxLength: 131072
-            resources:
-              type: object
-              properties:
-                limits:
-                  type: object
-                  properties:
-                    cpu: &k8sResourceQuantityPattern
-                      <<: *k8sResourceQuantityField
-                    memory:
-                      <<: *k8sResourceQuantityField
-                requests:
-                  type: object
-                  properties:
-                    cpu:
-                      <<: *k8sResourceQuantityField
-                    memory:
-                      <<: *k8sResourceQuantityField
-            annotations:
-              type: array
-              items:
-                type: object
-                properties:
-                  name:
-                    <<: *k8sAnnotationField
-                  value:
-                    type: string
-                    maxLength: 32767
+          <<: *KubernetesService
+        ksvc:
+          <<: *KnativeService
+        # sss:
+        #   type: object
+        #   oneOf:
+        #   - type: object
+        #     properties:
+        #       svc:
+        #         type: object
+        #         <<: *KubernetesService
+        #   - type: object
+        #     properties:
+        #       ksvc:
+        #         type: object
+        #         <<: *KnativeService
         image:
           type: object
           properties:
@@ -553,5 +578,3 @@ components:
       properties:
         message:
           type: string
-
-    
