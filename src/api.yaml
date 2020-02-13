@@ -567,7 +567,6 @@ components:
           example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
       required:
         - name
-        - image
     OpenApiValidationError:
       properties:
         status:
