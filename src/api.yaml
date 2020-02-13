@@ -4,7 +4,7 @@ security:
 info:
   title: The otomi-stack API
   version: 0.1.0
-
+# the x- prefix allows to define own objects that are ignored by openapi spec validation
 x-fields:
   domain: &domainNameField
     type: string
@@ -16,7 +16,11 @@ x-fields:
   quantity: &k8sResourceQuantityField
     type: string
     pattern: ^[0-9]+\.?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$
-
+  env: &envField
+    type: string
+    pattern: ^[A-Z0-9_]*$
+  annotation: &k8sAnnotationField
+    pattern: ((.){1,253}\/)?(.){1,63}
 
 paths:
   /readiness:
@@ -457,8 +461,7 @@ components:
                 type: object
                 properties:
                   name:
-                    type: string
-                    pattern: ^[A-Z0-9_]*$
+                    <<: *envField
                   value:
                     type: string
                     maxLength: 131072
@@ -485,8 +488,7 @@ components:
                 type: object
                 properties:
                   name:
-                    type: string
-                    pattern: ((.){1,253}\/)?(.){1,63}
+                    <<: *k8sAnnotationField
                   value:
                     type: string
                     maxLength: 32767
@@ -517,7 +519,7 @@ components:
           readOnly: true
         hasCert:
           type: boolean
-          default: true
+          default: false
           # description: If true certificate is generated automatically. Otherwise it is expected that administrator provides cert as a secret 'cert-team-$teamName-$serviceName' for a given team.
         certArn:
           type: string
