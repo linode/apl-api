@@ -1,5 +1,6 @@
 import React from "react";
-import Form from "react-jsonschema-form";
+import Form from "react-jsonschema-form-bs4";
+// npm install react-jsonschema-form-bs4
 import Help from './Help'
 
 const log = (type) => console.log.bind(console, type);
