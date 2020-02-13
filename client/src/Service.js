@@ -7,7 +7,6 @@ const log = (type) => console.log.bind(console, type);
 const uiSchema = {
   serviceId: { "ui:widget": "hidden" },
   teamId: { "ui:widget": "hidden" },
-  svc: { "ui:widget": "hidden" }
 };
 
 const CustomDescriptionField = ({ id, description }) => {
@@ -81,8 +80,7 @@ class CreateService extends React.Component {
           onChange={log("changed")}
           onSubmit={this.onSubmit}
           onError={log("errors")}
-
-        // liveValidate={true}
+          liveValidate={true}
         />
       </div>
     )
