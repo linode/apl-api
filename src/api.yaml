@@ -13,14 +13,18 @@ x-fields:
     type: string
     pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
     description: A container image repository
-  quantity: &k8sResourceQuantityField
+  memoryQuantity: &k8sResourceMemoryQuantityField
     type: string
     pattern: ^[0-9]+\.?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$
+  cpuQuantity: &k8sResourceCpuQuantityField
+    type: string
+    pattern: ^([0-9]+\.[0-9]{1,2})|([0-9]{2,3}m)?$
   env: &envField
     type: string
     pattern: ^[A-Z0-9_]*$
   annotation: &k8sAnnotationField
-    pattern: ((.){1,253}\/)?(.){1,63}
+    type: string
+    pattern: ^((.){1,253}\/)?(.){1,63}$
 
 paths:
   /readiness:
@@ -384,8 +388,6 @@ components:
       properties:
         repository:
           <<: *repositoryField
-        image:
-          type: string
         tag:
           type: string
         env:
@@ -398,23 +400,36 @@ components:
               value:
                 type: string
                 maxLength: 131072
+            required:
+              - name
+              - value
         resources:
           type: object
           properties:
-            limits:
-              type: object
-              properties:
-                cpu: &k8sResourceQuantityPattern
-                  <<: *k8sResourceQuantityField
-                memory:
-                  <<: *k8sResourceQuantityField
             requests:
               type: object
               properties:
                 cpu:
-                  <<: *k8sResourceQuantityField
+                  <<: *k8sResourceCpuQuantityField
+                  default: 50m
                 memory:
-                  <<: *k8sResourceQuantityField
+                  <<: *k8sResourceMemoryQuantityField
+                  default: 64Mi
+              required:
+                - cpu
+                - memory
+            limits:
+              type: object
+              properties:
+                cpu:
+                  <<: *k8sResourceCpuQuantityField
+                  default: 100m
+                memory:
+                  <<: *k8sResourceMemoryQuantityField
+                  default: 128Mi
+              required:
+                - cpu
+                - memory
         annotations:
           type: array
           items:
@@ -425,6 +440,9 @@ components:
               value:
                 type: string
                 maxLength: 32767
+            required:
+              - name
+              - value
 
     Deployment:
       properties:
@@ -500,7 +518,6 @@ components:
           <<: *domainNameField
           example: redkubes.com
         svc:
-          type: object
           <<: *KubernetesService
         ksvc:
           <<: *KnativeService
@@ -510,32 +527,30 @@ components:
         #   - type: object
         #     properties:
         #       svc:
-        #         type: object
         #         <<: *KubernetesService
         #   - type: object
         #     properties:
         #       ksvc:
-        #         type: object
         #         <<: *KnativeService
-        image:
-          type: object
-          properties:
-            registry:
-              <<: *domainNameField
-              description: A domain name of image registry
-              example: docker.io
-              default: docker.io
-              readOnly: true
-            repository:
-              <<: *repositoryField
-              example: service.01
-            tag:
-              type: string
-              example: 1.0.0
-              description: A container image tag
-          required:
-            - repository
-            - tag
+        # image:
+        #   type: object
+        #   properties:
+        #     registry:
+        #       <<: *domainNameField
+        #       description: A domain name of image registry
+        #       example: docker.io
+        #       default: docker.io
+        #       readOnly: true
+        #     repository:
+        #       <<: *repositoryField
+        #       example: service.01
+        #     tag:
+        #       type: string
+        #       example: 1.0.0
+        #       description: A container image tag
+        #   required:
+        #     - repository
+        #     - tag
         teamId:
           type: string
           readOnly: true
