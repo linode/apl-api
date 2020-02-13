@@ -4,6 +4,20 @@ security:
 info:
   title: The otomi-stack API
   version: 0.1.0
+
+x-fields:
+  domain: &domainNameField
+    type: string
+    pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
+  repository: &repositoryField
+    type: string
+    pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
+    description: A container image repository
+  quantity: &k8sResourceQuantityField
+    type: string
+    pattern: ^[0-9]+\.?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$
+
+
 paths:
   /readiness:
     get:
@@ -422,26 +436,72 @@ components:
         domain:
           type: string
           description: A custom domain
-          pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
+          <<: *domainNameField
           example: redkubes.com
         svc:
           type: string
           readOnly: true
+        ksvc:
+          description: Knative service definition
+          type: object
+          properties:
+            repository:
+              <<: *repositoryField
+            image:
+              type: string
+            tag:
+              type: string
+            env:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    pattern: ^[A-Z0-9_]*$
+                  value:
+                    type: string
+                    maxLength: 131072
+            resources:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu: &k8sResourceQuantityPattern
+                      <<: *k8sResourceQuantityField
+                    memory:
+                      <<: *k8sResourceQuantityField
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      <<: *k8sResourceQuantityField
+                    memory:
+                      <<: *k8sResourceQuantityField
+            annotations:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    pattern: ((.){1,253}\/)?(.){1,63}
+                  value:
+                    type: string
+                    maxLength: 32767
         image:
           type: object
           properties:
             registry:
-              type: string
+              <<: *domainNameField
               description: A domain name of image registry
-              pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
               example: docker.io
               default: docker.io
               readOnly: true
             repository:
-              type: string
-              pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
+              <<: *repositoryField
               example: service.01
-              description: A container image repository
             tag:
               type: string
               example: 1.0.0
@@ -491,3 +551,5 @@ components:
       properties:
         message:
           type: string
+
+    
