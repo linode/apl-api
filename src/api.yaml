@@ -383,7 +383,7 @@ components:
           description: A name of existing kubernetes service
 
     KnativeService: &KnativeService
-      description: Knative service definition
+      # description: Knative service definition
       type: object
       properties:
         repository:
@@ -391,6 +391,7 @@ components:
         tag:
           type: string
         env:
+          description: Environment variables for containers
           type: array
           items:
             type: object
@@ -404,6 +405,7 @@ components:
               - name
               - value
         resources:
+          description: Compute resources for containers
           type: object
           properties:
             requests:
@@ -431,6 +433,7 @@ components:
                 - cpu
                 - memory
         annotations:
+          description: Kubernetes annotations with arbitrary metadata
           type: array
           items:
             type: object
@@ -443,7 +446,9 @@ components:
             required:
               - name
               - value
-
+      required:
+        - repository
+        - tag
     Deployment:
       properties:
         id:
@@ -517,40 +522,23 @@ components:
           description: A custom domain
           <<: *domainNameField
           example: redkubes.com
-        svc:
-          <<: *KubernetesService
-        ksvc:
-          <<: *KnativeService
-        # sss:
-        #   type: object
-        #   oneOf:
-        #   - type: object
-        #     properties:
-        #       svc:
-        #         <<: *KubernetesService
-        #   - type: object
-        #     properties:
-        #       ksvc:
-        #         <<: *KnativeService
-        # image:
-        #   type: object
-        #   properties:
-        #     registry:
-        #       <<: *domainNameField
-        #       description: A domain name of image registry
-        #       example: docker.io
-        #       default: docker.io
-        #       readOnly: true
-        #     repository:
-        #       <<: *repositoryField
-        #       example: service.01
-        #     tag:
-        #       type: string
-        #       example: 1.0.0
-        #       description: A container image tag
-        #   required:
-        #     - repository
-        #     - tag
+        # svc:
+        #   <<: *KubernetesService
+        # ksvc:
+        #   <<: *KnativeService
+        serviceType:
+          type: object
+          anyOf:
+          - type: object
+            title: "Knative service"
+            properties:
+              ksvc:
+                <<: *KnativeService
+          - type: object
+            title: "Kubernetes service"
+            properties:
+              svc:
+                <<: *KubernetesService
         teamId:
           type: string
           readOnly: true

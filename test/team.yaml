@@ -14,3 +14,5 @@ teamConfig:
         logo:
           name: kubernetes
         name: hello
+        ksvc: ksvc_data
+        svc: svc_data
