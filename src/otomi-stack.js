@@ -131,7 +131,6 @@ class OtomiStack {
           svc.serviceType.svc = svc.svc
           delete svc.svc
         }
-        console.log(svc)
         this.createService(serviceId, svc)
       })
     }
