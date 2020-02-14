@@ -18,7 +18,8 @@ describe("Load and dump values", function () {
       image: { repository: 'otomi/helloworld-nodejs', tag: '1.1.3' },
       isPublic: true,
       logo: { name: 'kubernetes' },
-      name: 'hello'
+      name: 'hello',
+      serviceType: {ksvc: 'ksvc_data', svc: 'svc_data'}
     })
     const values = otomiStack.convertDbToValues()
     const expectedValues = yaml.safeLoad(fs.readFileSync('./test/team.yaml', 'utf8'));
@@ -36,7 +37,7 @@ describe("Load and dump values", function () {
         enabled: true,
         type: 'drone'
       },
-      password: 'somepassworddd'
+      password: 'somepassworddd',
     }
 
     const expectedService = {
@@ -49,7 +50,8 @@ describe("Load and dump values", function () {
       },
       isPublic: true,
       logo: { name: 'kubernetes' },
-      name: 'hello'
+      name: 'hello',
+      serviceType: {ksvc: 'ksvc_data', svc: 'svc_data'}
     }
 
     let data = otomiStack.getTeam({ teamId: 'team1' })

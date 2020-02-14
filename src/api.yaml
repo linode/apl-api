@@ -4,6 +4,28 @@ security:
 info:
   title: The otomi-stack API
   version: 0.1.0
+# the x- prefix allows to define own objects that are ignored by openapi spec validation
+x-fields:
+  domain: &domainNameField
+    type: string
+    pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
+  repository: &repositoryField
+    type: string
+    pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
+    description: A container image repository
+  memoryQuantity: &k8sResourceMemoryQuantityField
+    type: string
+    pattern: ^[0-9]+\.?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$
+  cpuQuantity: &k8sResourceCpuQuantityField
+    type: string
+    pattern: ^([0-9]+\.[0-9]{1,2})|([0-9]{2,3}m)?$
+  env: &envField
+    type: string
+    pattern: ^[A-Z0-9_]*$
+  annotation: &k8sAnnotationField
+    type: string
+    pattern: ^((.){1,253}\/)?(.){1,63}$
+
 paths:
   /readiness:
     get:
@@ -14,6 +36,7 @@ paths:
           description: Service is ready
   /teams:
     get:
+      operationId: getTeamCollection
       description: Get teams collection
       responses:
         "200":
@@ -23,6 +46,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Teams"
     post:
+      operationId: createTeam
       description: Create a team
       requestBody:
         content:
@@ -52,6 +76,7 @@ paths:
                 $ref: "#/components/schemas/OtomiStackError"
   "/teams/{teamId}":
     get:
+      operationId: getTeam
       description: Get a specific team
       parameters:
         - name: teamId
@@ -80,6 +105,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
     put:
+      operationId: editTeam
       description: Edit a team
       parameters:
         - name: teamId
@@ -115,6 +141,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
     delete:
+      operationId: deleteTeam
       description: Delete team
       parameters:
         - name: teamId
@@ -140,6 +167,7 @@ paths:
                 $ref: "#/components/schemas/OtomiStackError"
   "/teams/{teamId}/services":
     get:
+      operationId: getServiceCollectionFromTeam
       description: Get services from a given team
       parameters:
         - name: teamId
@@ -162,6 +190,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/OpenApiValidationError"
     post:
+      operationId: addServiceToTeam
       description: Create a service
       parameters:
         - name: teamId
@@ -198,6 +227,7 @@ paths:
                 $ref: "#/components/schemas/OtomiStackError"
   "/teams/{teamId}/services/{serviceId}":
     get:
+      operationId: getServiceFromTeam
       description: Get a service from a given team
       parameters:
         - name: teamId
@@ -214,7 +244,7 @@ paths:
             type: string
       responses:
         "200":
-          description: Successfully obtained service configuration 
+          description: Successfully obtained service configuration
           content:
             "application/json":
               schema:
@@ -232,6 +262,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
     put:
+      operationId: editServiceFromTeam
       description: Edit a service from a given team
       parameters:
         - name: teamId
@@ -273,6 +304,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
     delete:
+      operationId: deleteServiceFromTeam
       description: Delete a service from a given team
       parameters:
         - name: teamId
@@ -304,6 +336,7 @@ paths:
                 $ref: "#/components/schemas/OtomiStackError"
   /deployments:
     post:
+      operationId: deploy
       description: Trigger a deployment (only for admin)
       responses:
         "202":
@@ -332,7 +365,9 @@ paths:
         default:
           description: The requested apiDoc.
 servers:
-  - url: 'http://127.0.0.1:8080/v1'
+  - url: "/v1"
+
+# -------------------- Components
 components:
   securitySchemes:
     groupAuthz:
@@ -340,6 +375,80 @@ components:
       name: Auth-Group
       in: header
   schemas:
+    KubernetesService: &KubernetesService
+      type: object
+      properties:
+        name:
+          type: string
+          description: A name of existing kubernetes service
+
+    KnativeService: &KnativeService
+      # description: Knative service definition
+      type: object
+      properties:
+        repository:
+          <<: *repositoryField
+        tag:
+          type: string
+        env:
+          description: Environment variables for containers
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                <<: *envField
+              value:
+                type: string
+                maxLength: 131072
+            required:
+              - name
+              - value
+        resources:
+          description: Compute resources for containers
+          type: object
+          properties:
+            requests:
+              type: object
+              properties:
+                cpu:
+                  <<: *k8sResourceCpuQuantityField
+                  default: 50m
+                memory:
+                  <<: *k8sResourceMemoryQuantityField
+                  default: 64Mi
+              required:
+                - cpu
+                - memory
+            limits:
+              type: object
+              properties:
+                cpu:
+                  <<: *k8sResourceCpuQuantityField
+                  default: 100m
+                memory:
+                  <<: *k8sResourceMemoryQuantityField
+                  default: 128Mi
+              required:
+                - cpu
+                - memory
+        annotations:
+          description: Kubernetes annotations with arbitrary metadata
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                <<: *k8sAnnotationField
+              value:
+                type: string
+                maxLength: 32767
+            required:
+              - name
+              - value
+      required:
+        - repository
+        - tag
     Deployment:
       properties:
         id:
@@ -358,9 +467,11 @@ components:
           type: string
           pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
           example: "team-1"
+          description: A team name
         password:
           type: string
           example: "strongpasswprd"
+          writeOnly: true
         # oidc:
         #   $ref: "#/components/schemas/TeamOidc"
         teamId:
@@ -403,32 +514,31 @@ components:
       properties:
         name:
           type: string
-          description: Service name visible as subdomain
+          description: A unique subdomain
           pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
           example: service-01
         domain:
           type: string
           description: A custom domain
-          pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
+          <<: *domainNameField
           example: redkubes.com
-        svc:
-          type: string
-          readOnly: true
-        image:
+        # svc:
+        #   <<: *KubernetesService
+        # ksvc:
+        #   <<: *KnativeService
+        serviceType:
           type: object
-          properties:
-            registry:
-              type: string
-              pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
-              example: docker.io
-              default: docker.io
-            repository:
-              type: string
-              pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
-              example: service.01
-            tag:
-              type: string
-              example: 1.0.0
+          anyOf:
+          - type: object
+            title: "Knative service"
+            properties:
+              ksvc:
+                <<: *KnativeService
+          - type: object
+            title: "Kubernetes service"
+            properties:
+              svc:
+                <<: *KubernetesService
         teamId:
           type: string
           readOnly: true
@@ -437,16 +547,14 @@ components:
           readOnly: true
         hasCert:
           type: boolean
-          default: true
-          description: If true certificate is generated automatically. Otherwise it is expected that administrator provides cert as a secret 'cert-team-$teamName-$serviceName' for a given team.  
+          default: false
+          # description: If true certificate is generated automatically. Otherwise it is expected that administrator provides cert as a secret 'cert-team-$teamName-$serviceName' for a given team.
         certArn:
           type: string
-          readOnly: true
           description: Only if hasCert set to true and deployed on AWS
           example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
       required:
         - name
-        - image
     OpenApiValidationError:
       properties:
         status:

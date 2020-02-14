@@ -1,5 +1,16 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+
+
+## Development mode
+The app runs in development mode if `process.env.NODE_ENV !== "production")`
+
+In development mode:
+- it is expected that backend app listens on: `http://127.0.0.1:8080`,
+- cookies are not added to headers for HTTP requests made by axios,
+- The `'Auth-Group': 'admin'` header is added to each HTTP request made by axios.
+ ---
+
 ## Available Scripts
 
 In the project directory, you can run:

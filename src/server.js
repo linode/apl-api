@@ -16,19 +16,22 @@ function initApp(otomiStack) {
   const openApiPath = path.resolve(__dirname, 'api.yaml')
   const apiRoutesPath = path.resolve(__dirname, 'api')
   const apiDoc = fs.readFileSync(openApiPath, 'utf8')
+  let spec = yaml.safeLoad(apiDoc);
+  const specYaml = yaml.dump(spec)
+
   app.use(logger('dev'));
   app.use(cors());
   app.use(bodyParser.json());
 
-  function getSecurityHandlers(){
+  function getSecurityHandlers() {
     const securityHandlers = {}
-    if (process.env.DISABLE_AUTH !== 1)
+    if (process.env.DISABLE_AUTH !== "1")
       securityHandlers.groupAuthz = middleware.isAuthorized
     return securityHandlers
   }
 
   openapi.initialize({
-    apiDoc: apiDoc,
+    apiDoc: specYaml,
     app: app,
     dependencies: {
       otomi: otomiStack,
@@ -38,15 +41,14 @@ function initApp(otomiStack) {
     securityHandlers: getSecurityHandlers(),
   });
 
-  const doc = yaml.safeLoad(apiDoc);
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(doc));
+
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(spec));
 
   // Serve the static files from the React app
-  app.use(express.static(path.join(__dirname, '../client/build')));
-
+  app.use(express.static(path.join(__dirname, './../client/build')));
   // Handles any requests that don't match the ones above
-  app.get('*', (req,res) =>{
-    res.sendFile(path.join(__dirname+'../client/build/index.html'));
+  app.get('/', (req,res) =>{
+    res.sendFile(path.join(__dirname+'./../client/build/index.html'));
   });
 
   return app

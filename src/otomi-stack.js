@@ -117,8 +117,20 @@ class OtomiStack {
       let teamCloned = Object.assign({}, teamData);
       delete teamCloned.services
       this.createTeam(id, teamCloned)
+
       teamData.services.forEach(svc => {
         const serviceId = { teamId: teamId, serviceId: svc.name }
+        svc['serviceType'] = {}
+        if ('ksvc' in svc)
+        {
+          svc.serviceType['ksvc'] = svc.ksvc
+          delete svc.ksvc
+
+        }
+        if ('svc' in svc){
+          svc.serviceType.svc = svc.svc
+          delete svc.svc
+        }
         this.createService(serviceId, svc)
       })
     }
@@ -137,6 +149,12 @@ class OtomiStack {
         let svcCloned = Object.assign({}, svc);
         delete svcCloned.teamId
         delete svcCloned.serviceId
+        if ('ksvc' in svcCloned.serviceType)
+          svcCloned['ksvc'] = svcCloned.serviceType.ksvc
+        if ('svc' in svcCloned.serviceType)
+          svcCloned['svc'] = svcCloned.serviceType.svc
+        delete svcCloned.serviceType
+
         services.push(svcCloned)
       })
 
