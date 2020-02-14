@@ -8,7 +8,11 @@ const log = (type) => console.log.bind(console, type);
 const uiSchema = {
   serviceId: { "ui:widget": "hidden" },
   teamId: { "ui:widget": "hidden" },
+  serviceType: {"ui:widget": "radio"},
+  // env: {"ui:options":  {orderable: false}},
+  // annotations: {"ui:options":  {orderable: false}}
 };
+
 
 const CustomDescriptionField = ({ id, description }) => {
   return (
