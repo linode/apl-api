@@ -28,6 +28,7 @@
     "lowdb": "^1.0.0",
     "morgan": "^1.9.1",
     "openapi-client-axios": "^3.3.2",
+    "password-generator": "^2.2.3",
     "react-icons": "^3.9.0",
     "shelljs": "^0.8.3",
     "simple-git": "^1.129.0",
