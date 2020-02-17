@@ -29,7 +29,7 @@ class ActionBar extends React.Component {
             variant="dark"
             size="sm"
           >
-            Deploy
+            Commit
       </Button>
 
         </Navbar.Collapse>
