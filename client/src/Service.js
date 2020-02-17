@@ -9,6 +9,17 @@ const uiSchema = {
   serviceId: { "ui:widget": "hidden" },
   teamId: { "ui:widget": "hidden" },
   serviceType: {"ui:widget": "radio"},
+  clusters: {
+    aws: {
+    "ui:widget": "checkboxes"
+    },
+    azure: {
+      "ui:widget": "checkboxes"
+      },
+    google: {
+      "ui:widget": "checkboxes"
+      },
+  },
   // env: {"ui:options":  {orderable: false}},
   // annotations: {"ui:options":  {orderable: false}}
 };

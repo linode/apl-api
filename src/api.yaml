@@ -382,8 +382,7 @@ components:
           type: string
           description: A name of existing kubernetes service
 
-    KnativeService: &KnativeService
-      # description: Knative service definition
+    KnativeService: &KnativeService # description: Knative service definition
       type: object
       properties:
         repository:
@@ -518,26 +517,49 @@ components:
           example: service-01
         domain:
           type: string
-          description: A custom domain
+          description: A custom domain. Note that multi-cluster load balancing is not supported
           <<: *domainNameField
           example: redkubes.com
-        # svc:
+        clusters:
+          type: object
+          description: Select clusters for service deployment
+          properties:
+            aws:
+              type: array
+              items:
+                type: string
+                enum: [dev]
+              uniqueItems: true
+            azure:
+              type: array
+              items:
+                type: string
+                enum: [dev]
+              uniqueItems: true
+            google:
+              type: array
+              items:
+                type: string
+                enum: [dev]
+              uniqueItems: true
+
+          # svc:
         #   <<: *KubernetesService
         # ksvc:
         #   <<: *KnativeService
         serviceType:
           type: object
           anyOf:
-          - type: object
-            title: "Knative service"
-            properties:
-              ksvc:
-                <<: *KnativeService
-          - type: object
-            title: "Kubernetes service"
-            properties:
-              svc:
-                <<: *KubernetesService
+            - type: object
+              title: "Knative service"
+              properties:
+                ksvc:
+                  <<: *KnativeService
+            - type: object
+              title: "Kubernetes service"
+              properties:
+                svc:
+                  <<: *KubernetesService
         teamId:
           type: string
           readOnly: true
