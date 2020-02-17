@@ -470,7 +470,7 @@ components:
           description: A team name
         password:
           type: string
-          example: "strongpasswprd"
+          description: "A secret that is used access multi-tenant log aggregation system (Loki)"
           writeOnly: true
         # oidc:
         #   $ref: "#/components/schemas/TeamOidc"
@@ -485,7 +485,6 @@ components:
         #   type: object
       required:
         - name
-        - password
         # - oidc
     TeamOidc:
       properties:
