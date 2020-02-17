@@ -19,7 +19,7 @@ describe("Load and dump values", function () {
       isPublic: true,
       logo: { name: 'kubernetes' },
       name: 'hello',
-      serviceType: {ksvc: 'ksvc_data', svc: 'svc_data'}
+      serviceType: { ksvc: 'ksvc_data', svc: 'svc_data' }
     })
     const values = otomiStack.convertDbToValues()
     const expectedValues = yaml.safeLoad(fs.readFileSync('./test/team.yaml', 'utf8'));
@@ -51,7 +51,7 @@ describe("Load and dump values", function () {
       isPublic: true,
       logo: { name: 'kubernetes' },
       name: 'hello',
-      serviceType: {ksvc: 'ksvc_data', svc: 'svc_data'}
+      serviceType: { ksvc: 'ksvc_data', svc: 'svc_data' }
     }
 
     let data = otomiStack.getTeam({ teamId: 'team1' })
@@ -61,4 +61,19 @@ describe("Load and dump values", function () {
     expect(data).to.deep.equal(expectedService)
     done()
   });
+
+  it("should set password", function (done) {
+    let team = { password: undefined }
+    otomiStack.setPasswordIfNotExist(team)
+    expect(16).to.be.equal(team.password.length)
+    done()
+  });
+
+  it("should not set password", function (done) {
+    let team = { password: 'abcd' }
+    otomiStack.setPasswordIfNotExist(team)
+    expect(team.password).to.be.equal('abcd')
+    done()
+  });
+
 });

@@ -1,3 +1,5 @@
+var generatePassword = require('password-generator');
+
 class OtomiStack {
   constructor(repo, db) {
     this.db = db
@@ -121,13 +123,12 @@ class OtomiStack {
       teamData.services.forEach(svc => {
         const serviceId = { teamId: teamId, serviceId: svc.name }
         svc['serviceType'] = {}
-        if ('ksvc' in svc)
-        {
+        if ('ksvc' in svc) {
           svc.serviceType['ksvc'] = svc.ksvc
           delete svc.ksvc
 
         }
-        if ('svc' in svc){
+        if ('svc' in svc) {
           svc.serviceType.svc = svc.svc
           delete svc.svc
         }
@@ -136,13 +137,22 @@ class OtomiStack {
     }
   }
 
+  setPasswordIfNotExist(team) {
+    if (team.password)
+      return
+    // Generate password
+    team.password = generatePassword(16, false)
+  }
+
   convertDbToValues() {
     const teams = {}
     this.getTeams().forEach(el => {
       let teamCloned = Object.assign({}, el);
       const id = el.teamId
       delete teamCloned.teamId
+      this.setPasswordIfNotExist(teamCloned)
       teams[id] = teamCloned
+
       let dbServices = this.getServices({ teamId: id })
       let services = new Array()
       dbServices.forEach(svc => {

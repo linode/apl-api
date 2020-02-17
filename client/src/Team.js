@@ -8,7 +8,7 @@ const log = (type) => console.log.bind(console, type);
 
 const uiSchema = {
   teamId: { "ui:widget": "hidden" },
-  password: { "ui:widget": "password" },
+  password: { "ui:widget": "hidden" },
 };
 
 const CustomDescriptionField = ({ id, description }) => {
