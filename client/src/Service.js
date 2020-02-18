@@ -20,8 +20,10 @@ const uiSchema = {
       "ui:widget": "checkboxes"
       },
   },
-  // env: {"ui:options":  {orderable: false}},
-  // annotations: {"ui:options":  {orderable: false}}
+  ksvc: {
+    env: {"ui:options":  {orderable: false}}
+  },
+  annotations: {"ui:options":  {orderable: false}}
 };
 
 

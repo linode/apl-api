@@ -9,6 +9,17 @@ const log = (type) => console.log.bind(console, type);
 const uiSchema = {
   teamId: { "ui:widget": "hidden" },
   password: { "ui:widget": "hidden" },
+  clusters: {
+    aws: {
+    "ui:widget": "checkboxes"
+    },
+    azure: {
+      "ui:widget": "checkboxes"
+      },
+    google: {
+      "ui:widget": "checkboxes"
+      },
+  },
 };
 
 const CustomDescriptionField = ({ id, description }) => {

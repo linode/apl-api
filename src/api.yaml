@@ -382,6 +382,29 @@ components:
           type: string
           description: A name of existing kubernetes service
 
+    x-clusters: &Clusters
+      type: object
+      description: Select clusters for service deployment
+      properties:
+        aws:
+          type: array
+          items:
+            type: string
+            enum: [dev]
+          uniqueItems: true
+        azure:
+          type: array
+          items:
+            type: string
+            enum: [dev]
+          uniqueItems: true
+        google:
+          type: array
+          items:
+            type: string
+            enum: [dev]
+          uniqueItems: true
+
     KnativeService: &KnativeService # description: Knative service definition
       type: object
       properties:
@@ -467,6 +490,8 @@ components:
           pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
           example: "team-1"
           description: A team name
+        clusters:
+          <<: *Clusters
         password:
           type: string
           description: "A secret that is used access multi-tenant log aggregation system (Loki)"
@@ -521,28 +546,7 @@ components:
           <<: *domainNameField
           example: redkubes.com
         clusters:
-          type: object
-          description: Select clusters for service deployment
-          properties:
-            aws:
-              type: array
-              items:
-                type: string
-                enum: [dev]
-              uniqueItems: true
-            azure:
-              type: array
-              items:
-                type: string
-                enum: [dev]
-              uniqueItems: true
-            google:
-              type: array
-              items:
-                type: string
-                enum: [dev]
-              uniqueItems: true
-
+          <<: *Clusters
           # svc:
         #   <<: *KubernetesService
         # ksvc:

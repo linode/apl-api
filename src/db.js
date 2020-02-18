@@ -11,7 +11,7 @@ class Db {
         : new FileSync(path)
     )
     // Set some defaults (required if your JSON file is empty)
-    this.db.defaults({ teams: [], services: [], defaultServices: []}).write()
+    this.db.defaults({ teams: [], services: [], defaultServices: [], clouds: []}).write()
   }
 
   getItem(name, uri_ids) {

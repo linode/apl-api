@@ -5,6 +5,7 @@ class OtomiStack {
     this.db = db
     this.repo = repo
     this.valuesPath = './values/_env/teams.yaml'
+    this.coreValuesPath = './core.yaml'
   }
 
   async init() {
@@ -20,6 +21,11 @@ class OtomiStack {
 
   getTeams() {
     const res_data = this.db.getCollection('teams')
+    return res_data
+  }
+
+  getClouds() {
+    const res_data = this.db.getCollection('clouds')
     return res_data
   }
 
@@ -106,15 +112,35 @@ class OtomiStack {
   }
 
   loadValues() {
+    const core_values = this.repo.readFile(this.coreValuesPath)
+    this.convertCoreValuesToDb(core_values)
+
     const values = this.repo.readFile(this.valuesPath)
-    this.convertTeamValuesToDb(values)
+    this.convertValuesToDb(values)
   }
 
-  convertTeamValuesToDb(values) {
+  convertCoreValuesToDb(values) {
+    const cs = values.clouds
+    Object.keys(cs).forEach((cloud_name) => {
+      const clusters = []
+      Object.keys(cs[cloud_name].clusters).forEach((cluster_name) => {
+        clusters.push(cluster_name)
+      })
+
+      const cloud = {
+        name: cloud_name,
+        clusters: clusters
+      }
+      // console.log(cloud)
+      this.db.createItem('clouds', { name: cloud.name }, cloud)
+    })
+  }
+
+  convertValuesToDb(values) {
     this.convertTeamValuesTeamsToDb(values.teamConfig.teams)
   }
 
-  convertTeamValuesTeamsToDb(teams){
+  convertTeamValuesTeamsToDb(teams) {
     for (let [teamId, teamData] of Object.entries(teams)) {
       // console.log(`${teamId}: ${teamData}`);
       // console.debug(JSON.stringify(teamData))
@@ -126,7 +152,7 @@ class OtomiStack {
     }
   }
 
-  convertTeamValuesServicesToDb(services, teamId){
+  convertTeamValuesServicesToDb(services, teamId) {
     services.forEach(svc => {
       const serviceId = { teamId: teamId, serviceId: svc.name }
       svc['serviceType'] = {}
