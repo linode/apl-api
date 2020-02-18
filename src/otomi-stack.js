@@ -107,11 +107,14 @@ class OtomiStack {
 
   loadValues() {
     const values = this.repo.readFile(this.valuesPath)
-    this.convertValuesToDb(values)
+    this.convertTeamValuesToDb(values)
   }
 
-  convertValuesToDb(values) {
-    const teams = values.teamConfig.teams
+  convertTeamValuesToDb(values) {
+    this.convertTeamValuesTeamsToDb(values.teamConfig.teams)
+  }
+
+  convertTeamValuesTeamsToDb(teams){
     for (let [teamId, teamData] of Object.entries(teams)) {
       // console.log(`${teamId}: ${teamData}`);
       // console.debug(JSON.stringify(teamData))
@@ -119,22 +122,25 @@ class OtomiStack {
       let teamCloned = Object.assign({}, teamData);
       delete teamCloned.services
       this.createTeam(id, teamCloned)
-
-      teamData.services.forEach(svc => {
-        const serviceId = { teamId: teamId, serviceId: svc.name }
-        svc['serviceType'] = {}
-        if ('ksvc' in svc) {
-          svc.serviceType['ksvc'] = svc.ksvc
-          delete svc.ksvc
-
-        }
-        if ('svc' in svc) {
-          svc.serviceType.svc = svc.svc
-          delete svc.svc
-        }
-        this.createService(serviceId, svc)
-      })
+      this.convertTeamValuesServicesToDb(teamData.services, teamId)
     }
+  }
+
+  convertTeamValuesServicesToDb(services, teamId){
+    services.forEach(svc => {
+      const serviceId = { teamId: teamId, serviceId: svc.name }
+      svc['serviceType'] = {}
+      if ('ksvc' in svc) {
+        svc.serviceType['ksvc'] = svc.ksvc
+        delete svc.ksvc
+
+      }
+      if ('svc' in svc) {
+        svc.serviceType.svc = svc.svc
+        delete svc.svc
+      }
+      this.createService(serviceId, svc)
+    })
   }
 
   setPasswordIfNotExist(team) {
