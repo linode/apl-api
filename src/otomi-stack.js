@@ -186,9 +186,9 @@ class OtomiStack {
       teams[id] = teamCloned
 
       let dbServices = this.getServices({ teamId: id })
+      let dbServicesCloned = Object.assign([], dbServices);
       let services = new Array()
-      dbServices.forEach(svc => {
-        let svcCloned = Object.assign({}, svc);
+      dbServicesCloned.forEach(svcCloned => {
         delete svcCloned.teamId
         delete svcCloned.serviceId
         if ('ksvc' in svcCloned.serviceType)
