@@ -12,7 +12,6 @@ describe("Api tests for admin", function () {
   beforeEach(function () {
     const otomiStack = new otomi.OtomiStack(null, null)
     sinon.stub(otomiStack);
-    otomiStack.getClouds.returns([])
     app = server.initApp(otomiStack)
   })
 
@@ -59,7 +58,6 @@ describe("Api tests for team", function () {
   beforeEach(function () {
     const otomiStack = new otomi.OtomiStack('tpath', "tcloud")
     sinon.stub(otomiStack);
-    otomiStack.getClouds.returns([])
     app = server.initApp(otomiStack)
   })
 
@@ -143,7 +141,6 @@ describe("Api tests for non authorized user", function () {
   beforeEach(function () {
     const otomiStack = new otomi.OtomiStack('tpath', "tcloud")
     sinon.stub(otomiStack);
-    otomiStack.getClouds.returns([])
     app = server.initApp(otomiStack)
   })
   it("should get app readiness", function (done) {
@@ -243,13 +240,12 @@ describe("Api tests for data validation", function () {
   beforeEach(function () {
     const otomiStack = new otomi.OtomiStack('tpath', "tcloud")
     sinon.stub(otomiStack);
-    otomiStack.getClouds.returns([])
     app = server.initApp(otomiStack)
   })
   it("invalid team name data", function (done) {
     request(app)
       .post('/v1/teams')
-      .send({name: 'test_1', password: 'pass', oidc: null})
+      .send({ name: 'test_1', password: 'pass', oidc: null })
       .set('Auth-Group', 'admin')
       .set('Accept', 'application/json')
       .expect(400)
@@ -259,7 +255,7 @@ describe("Api tests for data validation", function () {
   it("invalid slackUrl  data", function (done) {
     request(app)
       .post('/v1/teams')
-      .send({name: 'test_1', password: 'pass', oidc: null, slackUrl: 'aaa.lll'})
+      .send({ name: 'test_1', password: 'pass', oidc: null, slackUrl: 'aaa.lll' })
       .set('Auth-Group', 'admin')
       .set('Accept', 'application/json')
       .expect(400)

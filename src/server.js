@@ -10,31 +10,6 @@ const swaggerUi = require('swagger-ui-express');
 const yaml = require('js-yaml');
 
 
-function getClustersSpec(clouds) {
-  let properties = {}
-  clouds.forEach(item => {
-
-    properties[item.name] = {
-      type: 'array',
-      items: {
-        type: 'string',
-        enum: item.clusters
-      },
-      uniqueItems: true
-    }
-  })
-  return properties
-}
-
-function updateApiSpec(spec, otomiStack) {
-
-  console.log("Updating openapi spec: adding data about available clusters")
-  const clouds = otomiStack.getClouds()
-  const properties = getClustersSpec(clouds)
-  spec.components.schemas.Team.properties.clusters.properties = properties
-  spec.components.schemas.Service.properties.clusters.properties = properties
-}
-
 function initApp(otomiStack) {
 
   const app = express()
@@ -43,7 +18,6 @@ function initApp(otomiStack) {
   const apiDoc = fs.readFileSync(openApiPath, 'utf8')
   let spec = yaml.safeLoad(apiDoc);
 
-  updateApiSpec(spec, otomiStack)
   const specYaml = yaml.dump(spec)
 
   app.use(logger('dev'));
@@ -83,5 +57,4 @@ function initApp(otomiStack) {
 
 module.exports = {
   initApp: initApp,
-  getClustersSpec: getClustersSpec
 };

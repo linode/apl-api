@@ -9,10 +9,20 @@ import { Link } from "react-router-dom";
 import ActionBar from './ActionBar'
 
 class Teams extends React.Component {
-  state = { showModal: false, teams: [] };
+  state = { showModal: false, teams: [], clusters: [] };
 
   componentDidMount() {
     this.getData()
+    this.getClusters()
+
+  }
+  getClusters = () => {
+    console.log('getClusters')
+    this.props.client.getClusterCollection().then((response) => {
+      this.setState({ clusters: response.data })
+    }).catch((error) => {
+      console.log(error);
+    })
   }
 
   getData = () => {
@@ -23,6 +33,7 @@ class Teams extends React.Component {
       console.log(error);
     })
   }
+
   showModal = () => {
     this.setState({ showModal: true });
   };
@@ -35,8 +46,10 @@ class Teams extends React.Component {
   getModal = () => {
     const body = <CreateTeam
       schema={this.props.schema}
+      clusters={this.state.clusters}
       client={this.props.client}
-      onSubmitted={this.hideModal} />
+      onSubmitted={this.hideModal}
+    />
 
     return (
       <ModalWrapper

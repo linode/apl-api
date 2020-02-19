@@ -29,6 +29,11 @@ class OtomiStack {
     return res_data
   }
 
+  getClusters() {
+    const res_data = this.db.getCollection('clusters')
+    return res_data
+  }
+
   getTeam(req_params) {
     const res_data = this.db.getItem('teams', req_params)
     return res_data
@@ -122,17 +127,10 @@ class OtomiStack {
   convertCoreValuesToDb(values) {
     const cs = values.clouds
     Object.keys(cs).forEach((cloud_name) => {
-      const clusters = []
+      this.db.createItem('clouds', {name: cloud_name}, {})
       Object.keys(cs[cloud_name].clusters).forEach((cluster_name) => {
-        clusters.push(cluster_name)
+        this.db.createItem('clusters', {cloudName: cloud_name, name: cluster_name}, {})
       })
-
-      const cloud = {
-        name: cloud_name,
-        clusters: clusters
-      }
-      // console.log(cloud)
-      this.db.createItem('clouds', { name: cloud.name }, cloud)
     })
   }
 

@@ -5,31 +5,9 @@ import Help from './Help'
 
 const log = (type) => console.log.bind(console, type);
 
-const uiSchema = {
-  serviceId: { "ui:widget": "hidden" },
-  teamId: { "ui:widget": "hidden" },
-  serviceType: {"ui:widget": "radio"},
-  clusters: {
-    aws: {
-    "ui:widget": "checkboxes"
-    },
-    azure: {
-      "ui:widget": "checkboxes"
-      },
-    google: {
-      "ui:widget": "checkboxes"
-      },
-  },
-  ksvc: {
-    env: {"ui:options":  {orderable: false}}
-  },
-  annotations: {"ui:options":  {orderable: false}}
-};
-
-
 const CustomDescriptionField = ({ id, description }) => {
   return (
-    <Help description={description} id={id}/>
+    <Help description={description} id={id} />
   )
 };
 
@@ -55,6 +33,7 @@ class Service extends React.Component {
 
   render() {
     const schema = this.props.schema.getServiceSchema()
+    const uiSchema = this.props.schema.getServiceUiSchema(schema)
 
     return (
       <div className="Service">
@@ -77,6 +56,7 @@ class Service extends React.Component {
 
 class CreateService extends React.Component {
 
+
   onSubmit = (form) => {
     this.props.client.addServiceToTeam(this.props.teamId, form.formData).then((response) => {
       console.log('saved');
@@ -87,6 +67,7 @@ class CreateService extends React.Component {
   }
   render() {
     const schema = this.props.schema.getServiceSchema()
+    const uiSchema = this.props.schema.getServiceUiSchema(schema)
     return (
 
       <div className="Service">

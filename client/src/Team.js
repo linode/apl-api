@@ -6,22 +6,6 @@ import Help from './Help'
 
 const log = (type) => console.log.bind(console, type);
 
-const uiSchema = {
-  teamId: { "ui:widget": "hidden" },
-  password: { "ui:widget": "hidden" },
-  clusters: {
-    aws: {
-    "ui:widget": "checkboxes"
-    },
-    azure: {
-      "ui:widget": "checkboxes"
-      },
-    google: {
-      "ui:widget": "checkboxes"
-      },
-  },
-};
-
 const CustomDescriptionField = ({ id, description }) => {
   return (
     <Help description={description} id={id} />
@@ -43,7 +27,8 @@ class CreateTeam extends React.Component {
     })
   }
   render() {
-    const schema = this.props.schema.getTeamSchema()
+    const schema = this.props.schema.getTeamSchema(this.props.clusters)
+    const uiSchema = this.props.schema.getTeamUiSchema(schema)
 
     return (
       <div className="Team">

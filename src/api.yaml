@@ -34,6 +34,17 @@ paths:
       responses:
         "200":
           description: Service is ready
+  /clusters:
+    get:
+      operationId: getClusterCollection
+      description: Get available clusters
+      responses:
+        "200":
+          description: Successfully obtained cluster collection
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Clusters"
   /teams:
     get:
       operationId: getTeamCollection
@@ -165,6 +176,7 @@ paths:
             "application/json":
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
+
   "/teams/{teamId}/services":
     get:
       operationId: getServiceCollectionFromTeam
@@ -383,27 +395,19 @@ components:
           description: A name of existing kubernetes service
 
     x-clusters: &Clusters
-      type: object
-      description: Select clusters for service deployment
-      properties:
-        aws:
-          type: array
-          items:
+      type: array
+      description: Clusters on which deployment takes effect
+      items:
+        type: object
+        properties:
+          name:
+            description: cluster name
+            example: dev
             type: string
-            enum: [dev]
-          uniqueItems: true
-        azure:
-          type: array
-          items:
+          cloudName:
+            description: cluster provider name
+            example: google
             type: string
-            enum: [dev]
-          uniqueItems: true
-        google:
-          type: array
-          items:
-            type: string
-            enum: [dev]
-          uniqueItems: true
 
     KnativeService: &KnativeService # description: Knative service definition
       type: object
@@ -471,6 +475,10 @@ components:
       required:
         - repository
         - tag
+    Clusters:
+      <<: *Clusters
+
+
     Deployment:
       properties:
         id:
