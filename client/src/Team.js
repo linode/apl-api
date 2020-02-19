@@ -19,8 +19,10 @@ const fields = {
 class CreateTeam extends React.Component {
 
   onSubmit = (form) => {
-    this.props.client.createTeam(null, form.formData).then((response) => {
-      console.log('saved');
+
+    const data = this.props.schema.convertTeamJsonSchemaToOpenApiSchema(form.formData)
+    this.props.client.createTeam(null, data).then((response) => {
+      // console.log('saved');
       this.props.onSubmitted()
     }).catch((error) => {
       console.log(error);
@@ -50,6 +52,20 @@ class CreateTeam extends React.Component {
 }
 
 class Team extends React.Component {
+  state = {team: {}}
+
+  componentDidMount() {
+    this.getTeam()
+  }
+
+  getTeam = () => {
+    console.log('getTeam')
+    this.props.client.getTeam(this.props.teamId).then((response) => {
+      this.setState({ team: response.data })
+    }).catch((error) => {
+      console.log(error);
+    })
+  }
 
   render() {
     return (

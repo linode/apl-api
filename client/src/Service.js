@@ -32,7 +32,7 @@ class Service extends React.Component {
   }
 
   render() {
-    const schema = this.props.schema.getServiceSchema()
+    const schema = this.props.schema.getServiceSchema(this.props.clusters)
     const uiSchema = this.props.schema.getServiceUiSchema(schema)
 
     return (
@@ -66,7 +66,7 @@ class CreateService extends React.Component {
     })
   }
   render() {
-    const schema = this.props.schema.getServiceSchema()
+    const schema = this.props.schema.getServiceSchema(this.props.clusters)
     const uiSchema = this.props.schema.getServiceUiSchema(schema)
     return (
 

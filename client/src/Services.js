@@ -9,14 +9,24 @@ import { Link } from "react-router-dom";
 import ActionBar from './ActionBar'
 
 class Services extends React.Component {
-  state = { showModal: false, services: [] };
+  state = { showModal: false, services: [], team: {}};
 
   componentDidMount() {
     this.getData()
+    this.getTeam()
+  }
+
+  getTeam = () => {
+    console.log('getTeam')
+    this.props.client.getTeam(this.props.teamId).then((response) => {
+      console.log(response)
+      this.setState({ team: response.data })
+    }).catch((error) => {
+      console.log(error);
+    })
   }
 
   getData = () => {
-
     console.log('getData')
     this.props.client.getServiceCollectionFromTeam(this.props.teamId).then((response) => {
       console.log(response)
@@ -39,6 +49,7 @@ class Services extends React.Component {
     const body = <CreateService
       client={this.props.client}
       schema={this.props.schema}
+      clusters={this.state.team.clusters}
       teamId={this.props.teamId}
       onSubmitted={this.hideModal}
     />

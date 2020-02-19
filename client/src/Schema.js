@@ -85,6 +85,26 @@ class Schema {
 
     return uiSchema
   }
+
+  convertTeamJsonSchemaToOpenApiSchema = (formData) => {
+    const clusters = []
+    const dd = formData.clusters
+    console.log(formData)
+
+    Object.keys(dd).forEach(cloudName => {
+      if (!dd[cloudName])
+        return
+      dd[cloudName].forEach(clusterName => {
+        clusters.push({cloudName: cloudName, name: clusterName})
+      })
+    })
+    formData.clusters = clusters
+    return formData
+  }
+
+  convertServiceJsonSchemaToOpenApiSchema = (formData) => {
+    return this.convertTeamJsonSchemaToOpenApiSchema(formData)
+  }
 }
 
 export default Schema
