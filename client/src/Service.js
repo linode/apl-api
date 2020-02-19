@@ -16,23 +16,34 @@ const fields = {
 };
 
 class Service extends React.Component {
-  state = { service: {} };
+  state = { service: {}, clusters: [], error: null};
 
   componentDidMount() {
-    this.getData()
+    this.getService()
+    this.getTeam()
   }
 
-  getData = () => {
-    console.log(this.props.serviceId)
+  getTeam = () => {
+    console.log('getTeam')
+    this.props.client.getTeam(this.props.teamId).then((response) => {
+      console.log(response)
+      this.setState({ clusters: response.data.clusters })
+    }).catch((error) => {
+      this.setState({error: error})
+    })
+  }
+
+  getService = () => {
+    console.log('getService ' + this.props.serviceId)
     this.props.client.getServiceFromTeam({ teamId: this.props.teamId, serviceId: this.props.serviceId }).then((response) => {
       this.setState({ service: response.data })
     }).catch((error) => {
-      console.log(error);
+      this.setState({error: error})
     })
   }
 
   render() {
-    const schema = this.props.schema.getServiceSchema(this.props.clusters)
+    const schema = this.props.schema.getServiceSchema(this.state.clusters)
     const uiSchema = this.props.schema.getServiceUiSchema(schema)
 
     return (
@@ -55,10 +66,10 @@ class Service extends React.Component {
 }
 
 class CreateService extends React.Component {
-
-
+  state = {error: null}
   onSubmit = (form) => {
-    this.props.client.addServiceToTeam(this.props.teamId, form.formData).then((response) => {
+    const data = this.props.schema.convertTeamJsonSchemaToOpenApiSchema(form.formData)
+    this.props.client.addServiceToTeam(this.props.teamId, data).then((response) => {
       console.log('saved');
       this.props.onSubmitted()
     }).catch((error) => {
@@ -66,6 +77,7 @@ class CreateService extends React.Component {
     })
   }
   render() {
+
     const schema = this.props.schema.getServiceSchema(this.props.clusters)
     const uiSchema = this.props.schema.getServiceUiSchema(schema)
     return (
