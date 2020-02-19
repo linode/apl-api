@@ -20,8 +20,8 @@ class CreateTeam extends React.Component {
 
   onSubmit = (form) => {
 
-    const data = this.props.schema.convertTeamJsonSchemaToOpenApiSchema(form.formData)
-    this.props.client.createTeam(null, data).then((response) => {
+    // const data = this.props.schema.convertFormTeamDataOpenApiData(form.formData)
+    this.props.client.createTeam(null, form.formData).then((response) => {
       // console.log('saved');
       this.props.onSubmitted()
     }).catch((error) => {

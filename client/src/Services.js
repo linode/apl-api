@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import ActionBar from './ActionBar'
 
 class Services extends React.Component {
-  state = { showModal: false, services: [], error: null};
+  state = { showModal: false, services: [], error: null };
 
   componentDidMount() {
     this.getData()
@@ -17,12 +17,12 @@ class Services extends React.Component {
 
   getData = () => {
     console.log('getData')
-    console.log(this.props.team)
+    // console.log(this.props.team)
     this.props.client.getServiceCollectionFromTeam(this.props.team.name).then((response) => {
       // console.log(response)
       this.setState({ services: response.data })
     }).catch((error) => {
-      this.setState({error: error})
+      this.setState({ error: error })
     })
   }
 
@@ -101,16 +101,16 @@ class Services extends React.Component {
   render() {
     console.log(this.state.showModal)
     if (this.state.error) {
-      return(
+      return (
         <p>{'Error: ' + this.state.error}</p>
       )
     }
     if (!this.state.services) {
-      return(
+      return (
         <p>{'Loading'}</p>
       )
     }
-    
+
     let body = null
     if (this.state.showModal) {
       body = this.getModal()

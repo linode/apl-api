@@ -1,32 +1,22 @@
 
-function getClustersSpec(clusters) {
+function addEnumField(schema, clouds) {
+  console.log(clouds)
+  console.log(schema.properties.clusters.properties)
 
-  const cc = {}
-  clusters.forEach(item => {
-
-    if (!cc[item.cloudName])
-      cc[item.cloudName] = []
-    cc[item.cloudName].push(item.name)
-  })
-
-  let properties = {}
-  Object.keys(cc).forEach(cloudName => {
-
-    properties[cloudName] = {
-      type: 'array',
-      items: {
-        type: 'string',
-        enum: cc[cloudName]
-      },
-      uniqueItems: true
+  const allClouds = ['aws', 'azure', 'google']
+  allClouds.forEach(cloudName => {
+    if(!clouds[cloudName]) {
+      delete schema.properties.clusters.properties[cloudName]
+      return
     }
+    schema.properties.clusters.properties[cloudName].items.enum = []
   })
 
-  const clustersSchema = {
-    type: 'object',
-    properties: properties
-  }
-  return clustersSchema
+  Object.keys(clouds).forEach(cloudName => {
+    schema.properties.clusters.properties[cloudName].items.enum = clouds[cloudName]
+  })
+  console.log(schema)
+
 }
 
 class Schema {
@@ -34,76 +24,53 @@ class Schema {
     this.openApi = openApi
     this.schemas = this.openApi.components.schemas
   }
-  getServiceSchema(clusters) {
-    const clustersSchema = getClustersSpec(clusters)
+  getServiceSchema(clouds) {
+    
     const schema = Object.assign({}, this.schemas.Service)
-    schema.properties.clusters = clustersSchema
+    addEnumField(schema, clouds)
 
     return schema
   }
+
+  getTeamSchema(clouds) {
+    const schema = Object.assign({}, this.schemas.Team)
+    addEnumField(schema, clouds)
+    return schema
+  }
+
+  getTeamUiSchema(schema) {
+
+    const uiSchema = {
+      teamId: { "ui:widget": "hidden" },
+      password: { "ui:widget": "hidden" },
+      clusters: {
+        aws: { "ui:widget": "checkboxes" },
+        azure: { "ui:widget": "checkboxes" },
+        google: { "ui:widget": "checkboxes" },
+      },
+    };
+
+    return uiSchema
+  }
+
   getServiceUiSchema(schema) {
     console.log(JSON.stringify(schema))
-    const clouds = Object.keys(schema.properties.clusters.properties)
-    const clusters = {}
-    clouds.forEach(cloudName => {
-      clusters[cloudName] = { "ui:widget": "checkboxes" }
-    })
 
     const uiSchema = {
       serviceId: { "ui:widget": "hidden" },
       teamId: { "ui:widget": "hidden" },
       serviceType: { "ui:widget": "radio" },
-      clusters: clusters,
+      clusters: {
+        aws: { "ui:widget": "checkboxes" },
+        azure: { "ui:widget": "checkboxes" },
+        google: { "ui:widget": "checkboxes" },
+      },      
       ksvc: {
         env: { "ui:options": { orderable: false } }
       },
       annotations: { "ui:options": { orderable: false } }
     };
     return uiSchema
-  }
-
-  getTeamSchema(clusters) {
-    const clustersSchema = getClustersSpec(clusters)
-    const schema = Object.assign({}, this.schemas.Team)
-    schema.properties.clusters = clustersSchema
-    return schema
-  }
-
-  getTeamUiSchema(schema) {
-    console.log(JSON.stringify(schema))
-    const clouds = Object.keys(schema.properties.clusters.properties)
-    const clusters = {}
-    clouds.forEach(cloudName => {
-      clusters[cloudName] = { "ui:widget": "checkboxes" }
-    })
-
-    const uiSchema = {
-      teamId: { "ui:widget": "hidden" },
-      password: { "ui:widget": "hidden" },
-      clusters: clusters,
-    };
-
-    return uiSchema
-  }
-
-  convertTeamJsonSchemaToOpenApiSchema = (formData) => {
-    const clusters = []
-    const dd = formData.clusters
-    console.log(formData)
-
-    Object.keys(dd).forEach(cloudName => {
-      if (!dd[cloudName])
-        return
-      dd[cloudName].forEach(clusterName => {
-        clusters.push({cloudName: cloudName, name: clusterName})
-      })
-    })
-    formData.clusters = clusters
-    return formData
-  }
-
-  convertServiceJsonSchemaToOpenApiSchema = (formData) => {
-    return this.convertTeamJsonSchemaToOpenApiSchema(formData)
   }
 }
 
