@@ -1,10 +1,12 @@
 var generatePassword = require('password-generator');
-
+var _ = require('lodash');
+var path = require('path')
 class OtomiStack {
   constructor(repo, db) {
     this.db = db
     this.repo = repo
     this.valuesPath = './values/_env/teams.yaml'
+    this.envPath = './values/_env/'
     this.coreValuesPath = './core.yaml'
   }
 
@@ -17,6 +19,11 @@ class OtomiStack {
       return false
     }
     return true
+  }
+
+  getValuePath(cloud, cluster) {
+    const clusterFilename = cluster + '.yaml'
+    return path.join(this.envPath, cloud, clusterFilename)
   }
 
   getTeams() {
@@ -37,6 +44,10 @@ class OtomiStack {
   getTeam(req_params) {
     const res_data = this.db.getItem('teams', req_params)
     return res_data
+  }
+
+  updateTeam(req_params, data) {
+    this.db.updateItem('teams', req_params, data)
   }
 
   checkIfTeamExists(req_params) {
@@ -75,6 +86,10 @@ class OtomiStack {
     req_params.serviceId = data.name
     const res_data = this.db.createItem('services', req_params, data)
     return res_data
+  }
+
+  updateService(req_params, data) {
+    this.db.updateItem('services', req_params, data)
   }
 
   createDefaultService(data) {
@@ -120,8 +135,19 @@ class OtomiStack {
     const core_values = this.repo.readFile(this.coreValuesPath)
     this.convertCoreValuesToDb(core_values)
 
-    const values = this.repo.readFile(this.valuesPath)
-    this.convertValuesToDb(values)
+    const clusters = this.getClusters()
+    this.loadAllTeamValues(clusters)
+  }
+
+  loadAllTeamValues(clusters) {
+    _.forIn(clusters, (cloudName, cloudClusters) => {
+      _.forEach(cloudClusters, (clusterName) => {
+        const path = this.getValuePath(cloudName, clusterName)
+        const values = this.repo.readFile(path)
+        console.log(values.teamConfig.teams)
+        this.convertTeamValuesTeamsToDb(values.teamConfig.teams, cloudName, clusterName)
+      })
+    })
   }
 
   convertCoreValuesToDb(values) {
@@ -143,37 +169,74 @@ class OtomiStack {
     this.db.createItem('clusters', {}, clusters)
   }
 
-  convertValuesToDb(values) {
-    this.convertTeamValuesTeamsToDb(values.teamConfig.teams)
+  convertTeamValuesTeamsToDb(teams, cloudName, clusterName) {
+    console.log(teams)
+    _.forIn(teams, (teamData, teamId) => {
+      console.log(`${teamId}:${teamData}`)
+      this.convertTeamToDb(teamData, teamId, cloudName, clusterName)
+    })
   }
 
-  convertTeamValuesTeamsToDb(teams) {
-    for (let [teamId, teamData] of Object.entries(teams)) {
-      // console.log(`${teamId}: ${teamData}`);
-      // console.debug(JSON.stringify(teamData))
-      const id = { teamId: teamId }
-      let teamCloned = Object.assign({}, teamData);
-      delete teamCloned.services
-      this.createTeam(id, teamCloned)
-      this.convertTeamValuesServicesToDb(teamData.services, teamId)
+  assignCluster(obj, cloud, cluster) {
+    console.info(`Assigning cluster ${cloud}-${cluster} to team ${obj.name}`)
+    const objectPath = `clusters.${cloud}`
+    const clusters = _.get(obj, objectPath, [])
+    clusters.push(cluster)
+    _.set(obj, objectPath, clusters)
+  }
+
+  convertTeamToDb(teamData, teamId, cloud, cluster) {
+
+    // console.log(`${teamId}: ${teamData}`);
+    // console.debug(JSON.stringify(teamData))
+    console.log(teamData)
+
+    const id = { teamId: teamId }
+    try {
+      // Here we only update clusters
+      let team = this.getTeam(id)
+      this.assignCluster(team, cloud, cluster)
+      this.updateTeam(id, team)
+    } catch (err) {
+      // Here we creat a team in DB
+      let rawTeam = _.omit(teamData, 'services')
+      this.assignCluster(rawTeam, cloud, cluster)
+      this.createTeam(id, rawTeam)
     }
+
+    console.log(teamData)
+    this.convertTeamValuesServicesToDb(teamData.services, teamId, cloud, cluster)
   }
 
-  convertTeamValuesServicesToDb(services, teamId) {
+  convertTeamValuesServicesToDb(services, teamId, cloud, cluster) {
     services.forEach(svc => {
-      const serviceId = { teamId: teamId, serviceId: svc.name }
+      this.convertServiceToDb(svc, teamId, cloud, cluster)
+    })
+  }
+
+  convertServiceToDb(svc, teamId, cloud, cluster) {
+    const serviceId = { teamId: teamId, serviceId: svc.name }
+
+    try {
+      // Update service cloud and cluster assignment
+      const existingService = this.getService(serviceId)
+      this.assignCluster(existingService, cloud, cluster)
+      this.updateService(serviceId, existingService)
+    } catch (err) {
+      // Create service
       svc['serviceType'] = {}
       if ('ksvc' in svc) {
         svc.serviceType['ksvc'] = svc.ksvc
         delete svc.ksvc
-
       }
       if ('svc' in svc) {
         svc.serviceType.svc = svc.svc
         delete svc.svc
       }
+
+      this.assignCluster(svc, cloud, cluster)
       this.createService(serviceId, svc)
-    })
+    }
   }
 
   setPasswordIfNotExist(team) {
@@ -186,23 +249,20 @@ class OtomiStack {
   convertDbToValues() {
     const teams = {}
     this.getTeams().forEach(el => {
-      let teamCloned = Object.assign({}, el);
+      const teamCloned = _.omit(el, ['teamId', 'clusters'])
       const id = el.teamId
-      delete teamCloned.teamId
       this.setPasswordIfNotExist(teamCloned)
       teams[id] = teamCloned
-
       let dbServices = this.getServices({ teamId: id })
-      let dbServicesCloned = Object.assign([], dbServices);
       let services = new Array()
-      dbServicesCloned.forEach(svcCloned => {
-        delete svcCloned.teamId
-        delete svcCloned.serviceId
-        if ('ksvc' in svcCloned.serviceType)
-          svcCloned['ksvc'] = svcCloned.serviceType.ksvc
-        if ('svc' in svcCloned.serviceType)
-          svcCloned['svc'] = svcCloned.serviceType.svc
-        delete svcCloned.serviceType
+
+      dbServices.forEach(svc => {
+        const svcCloned = _.omit(svc, ['teamId', 'serviceId', 'serviceType', 'clusters'])
+
+        if ('ksvc' in svc.serviceType)
+          svcCloned['ksvc'] = svc.serviceType.ksvc
+        if ('svc' in svc.serviceType)
+          svcCloned['svc'] = svc.serviceType.svc
 
         services.push(svcCloned)
       })

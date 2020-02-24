@@ -13,13 +13,20 @@ describe("Load and dump values", function () {
   })
 
   it("should convert db to values structure", function (done) {
-    otomiStack.createTeam({ teamId: 'team1' }, { name: 'team1', cicd: { enabled: true, type: 'drone' }, password: 'somepassworddd' })
+    otomiStack.createTeam({ teamId: 'team1' }, { name: 'team1', cicd: { enabled: true, type: 'drone' }, password: 'somepassworddd',
+    clusters: {
+      'aws': ['dev']
+    }
+  })
     otomiStack.createService({ teamId: 'team1', serviceId: 'hello' }, {
       image: { repository: 'otomi/helloworld-nodejs', tag: '1.1.3' },
       isPublic: true,
       logo: { name: 'kubernetes' },
       name: 'hello',
-      serviceType: { ksvc: 'ksvc_data', svc: 'svc_data' }
+      serviceType: { ksvc: 'ksvc_data', svc: 'svc_data' },
+      clusters: {
+        'aws': ['dev']
+      }
     })
     const values = otomiStack.convertDbToValues()
     const expectedValues = yaml.safeLoad(fs.readFileSync('./test/team.yaml', 'utf8'));
@@ -28,8 +35,9 @@ describe("Load and dump values", function () {
   });
 
   it("should load values to db", function (done) {
+    const values = yaml.safeLoad(fs.readFileSync('./test/team.yaml', 'utf8'))
 
-    otomiStack.convertValuesToDb(yaml.safeLoad(fs.readFileSync('./test/team.yaml', 'utf8')))
+    otomiStack.convertTeamValuesTeamsToDb(values.teamConfig.teams, 'aws', 'dev')
     const expectedTeam = {
       teamId: 'team1',
       name: 'team1',
@@ -38,6 +46,7 @@ describe("Load and dump values", function () {
         type: 'drone'
       },
       password: 'somepassworddd',
+      clusters: {aws: ['dev']}
     }
 
     const expectedService = {
@@ -51,7 +60,10 @@ describe("Load and dump values", function () {
       isPublic: true,
       logo: { name: 'kubernetes' },
       name: 'hello',
-      serviceType: { ksvc: 'ksvc_data', svc: 'svc_data' }
+      serviceType: { ksvc: 'ksvc_data', svc: 'svc_data' },
+      clusters: {
+        'aws': ['dev']
+      }
     }
 
     let data = otomiStack.getTeam({ teamId: 'team1' })
