@@ -21,7 +21,7 @@ class OtomiStack {
     return true
   }
 
-  getValuePath(cloud, cluster) {
+  getValueFilePath(cloud, cluster) {
     const clusterFilename = cluster + '.yaml'
     return path.join(this.envPath, cloud, clusterFilename)
   }
@@ -123,9 +123,8 @@ class OtomiStack {
   getDeployments(req_params) { }
 
   async triggerDeployment(req_params, userGroup) {
-    const values = this.convertDbToValues()
-    this.repo.writeFile(this.valuesPath, values)
 
+    this.saveValues()
     await this.repo.commit(userGroup)
     return await this.repo.push()
 
@@ -142,7 +141,7 @@ class OtomiStack {
   loadAllTeamValues(clusters) {
     _.forIn(clusters, (cloudName, cloudClusters) => {
       _.forEach(cloudClusters, (clusterName) => {
-        const path = this.getValuePath(cloudName, clusterName)
+        const path = this.getValueFilePath(cloudName, clusterName)
         const values = this.repo.readFile(path)
         console.log(values.teamConfig.teams)
         this.convertTeamValuesTeamsToDb(values.teamConfig.teams, cloudName, clusterName)
@@ -246,12 +245,31 @@ class OtomiStack {
     team.password = generatePassword(16, false)
   }
 
-  convertDbToValues() {
+  saveValues() {
+    const clusters = this.getClusters()
+    this.saveAllTeamValues(clusters)
+  }
+
+  saveAllTeamValues(clusters) {
+    _.forIn(clusters, (cloudName, cloudClusters) => {
+      _.forEach(cloudClusters, (clusterName) => {
+        const values = this.convertDbToValues(cloudName, clusterName)
+        const path = this.getValueFilePath(cloudName, clusterName)
+        this.repo.writeFile(path, values)
+      })
+    })
+  }
+
+  convertDbToValues(cloud, cluster) {
     const teams = {}
     this.getTeams().forEach(el => {
+      const clusters = _.get(el, `clusters.${cloud}`, [])
+      if (!_.includes(clusters, cluster))
+        return
+
       const teamCloned = _.omit(el, ['teamId', 'clusters'])
-      const id = el.teamId
       this.setPasswordIfNotExist(teamCloned)
+      const id = el.teamId
       teams[id] = teamCloned
       let dbServices = this.getServices({ teamId: id })
       let services = new Array()

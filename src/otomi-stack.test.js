@@ -3,7 +3,7 @@ const otomi = require('./otomi-stack')
 const yaml = require('js-yaml');
 const fs = require('fs');
 const db = require('./db');
-
+const _ = require('lodash')
 
 describe("Load and dump values", function () {
   let otomiStack = undefined
@@ -12,31 +12,9 @@ describe("Load and dump values", function () {
     otomiStack = new otomi.OtomiStack(null, d)
   })
 
-  it("should convert db to values structure", function (done) {
-    otomiStack.createTeam({ teamId: 'team1' }, { name: 'team1', cicd: { enabled: true, type: 'drone' }, password: 'somepassworddd',
-    clusters: {
-      'aws': ['dev']
-    }
-  })
-    otomiStack.createService({ teamId: 'team1', serviceId: 'hello' }, {
-      image: { repository: 'otomi/helloworld-nodejs', tag: '1.1.3' },
-      isPublic: true,
-      logo: { name: 'kubernetes' },
-      name: 'hello',
-      serviceType: { ksvc: 'ksvc_data', svc: 'svc_data' },
-      clusters: {
-        'aws': ['dev']
-      }
-    })
-    const values = otomiStack.convertDbToValues()
-    const expectedValues = yaml.safeLoad(fs.readFileSync('./test/team.yaml', 'utf8'));
-    expect(values).to.deep.equal(expectedValues)
-    done()
-  });
-
-  it("should load values to db", function (done) {
-    const values = yaml.safeLoad(fs.readFileSync('./test/team.yaml', 'utf8'))
-
+  it("should load values to db and convert them back", function (done) {
+    const expectedValues = yaml.safeLoad(fs.readFileSync('./test/team.yaml', 'utf8'))
+    const values = _.cloneDeep(expectedValues)
     otomiStack.convertTeamValuesTeamsToDb(values.teamConfig.teams, 'aws', 'dev')
     const expectedTeam = {
       teamId: 'team1',
@@ -48,7 +26,6 @@ describe("Load and dump values", function () {
       password: 'somepassworddd',
       clusters: {aws: ['dev']}
     }
-
     const expectedService = {
       teamId: 'team1',
       serviceId: 'hello',
@@ -71,6 +48,9 @@ describe("Load and dump values", function () {
 
     data = otomiStack.getService({ teamId: 'team1', serviceId: 'hello' })
     expect(data).to.deep.equal(expectedService)
+
+    const savedValues = otomiStack.convertDbToValues('aws', 'dev')
+    expect(savedValues).to.deep.equal(expectedValues)
     done()
   });
 
