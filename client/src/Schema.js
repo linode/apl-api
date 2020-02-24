@@ -35,10 +35,12 @@ class Schema {
   getTeamSchema(clouds) {
     const schema = Object.assign({}, this.schemas.Team)
     addEnumField(schema, clouds)
+    console.log(schema)
     return schema
   }
 
-  getTeamUiSchema(schema) {
+  getTeamUiSchema() {
+    console.log('getTeamUiSchema')
 
     const uiSchema = {
       teamId: { "ui:widget": "hidden" },

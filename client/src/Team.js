@@ -31,7 +31,7 @@ class CreateTeam extends React.Component {
   render() {
 
     const schema = this.props.schema.getTeamSchema(this.props.clusters)
-    const uiSchema = this.props.schema.getTeamUiSchema(schema)
+    const uiSchema = this.props.schema.getTeamUiSchema()
 
     return (
       <div className="Team">
