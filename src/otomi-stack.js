@@ -143,7 +143,12 @@ class OtomiStack {
       _.forEach(cloudClusters, (clusterName) => {
         const path = this.getValueFilePath(cloudName, clusterName)
         const values = this.repo.readFile(path)
-        console.log(values.teamConfig.teams)
+        const teams = _.get(values, 'teamConfig.teams', null)
+        if (!teams) {
+          console.warn(`Missing 'teams' key in ${path} file. Skipping`)
+          return
+        }
+
         this.convertTeamValuesTeamsToDb(values.teamConfig.teams, cloudName, clusterName)
       })
     })
@@ -158,7 +163,6 @@ class OtomiStack {
     }
 
     Object.keys(clusters).forEach(cloudName => {
-      console.log(cs[cloudName])
       if (!cs[cloudName])
         return
 
@@ -169,9 +173,9 @@ class OtomiStack {
   }
 
   convertTeamValuesTeamsToDb(teams, cloudName, clusterName) {
-    console.log(teams)
+    // console.debug(teams)
     _.forIn(teams, (teamData, teamId) => {
-      console.log(`${teamId}:${teamData}`)
+      // console.log(`${teamId}:${teamData}`)
       this.convertTeamToDb(teamData, teamId, cloudName, clusterName)
     })
   }
@@ -188,7 +192,6 @@ class OtomiStack {
 
     // console.log(`${teamId}: ${teamData}`);
     // console.debug(JSON.stringify(teamData))
-    console.log(teamData)
 
     const id = { teamId: teamId }
     try {
@@ -203,7 +206,11 @@ class OtomiStack {
       this.createTeam(id, rawTeam)
     }
 
-    console.log(teamData)
+    if (!teamData.services) {
+      path = this.getValueFilePath(cloud, cluster)
+      console.warn(`Missing 'services' key for team ${teamId} in ${path} file. Skipping.`)
+      return
+    }
     this.convertTeamValuesServicesToDb(teamData.services, teamId, cloud, cluster)
   }
 
