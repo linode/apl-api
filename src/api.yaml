@@ -25,6 +25,12 @@ x-fields:
   annotation: &k8sAnnotationField
     type: string
     pattern: ^((.){1,253}\/)?(.){1,63}$
+  uuid: &uuidField
+    type: string
+    pattern: ^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$
+  name: &nameField
+    type: string
+    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 
 paths:
   /readiness:
@@ -495,10 +501,9 @@ components:
       required:
         - repository
         - tag
- 
+
     Clusters:
       <<: *AvailableClusters
-
 
     Deployment:
       properties:
@@ -515,8 +520,7 @@ components:
     Team:
       properties:
         name:
-          type: string
-          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+          <<: *nameField
           example: "team-1"
           description: A team name
         clusters:
@@ -525,8 +529,17 @@ components:
           type: string
           description: "A secret that is used access multi-tenant log aggregation system (Loki)"
           writeOnly: true
-        # oidc:
-        #   $ref: "#/components/schemas/TeamOidc"
+        oidc:
+          type: object
+          properties:
+            clientID:
+              <<: *uuidField
+            clientSecret:
+              type: string
+              writeOnly: true
+          required:
+            - clientID
+            - clientSecret
         teamId:
           type: string
           readOnly: true
@@ -538,18 +551,7 @@ components:
         #   type: object
       required:
         - name
-        # - oidc
-    TeamOidc:
-      properties:
-        clientID:
-          type: string
-          example: "ad8611c4-a701-4ec8-8ad3-a510441e728f"
-        clientSecret:
-          type: string
-          example: "Qn/=aZ7x]b/8PgGJhbtAlAejq0fA0P1K"
-      required:
-        - clientID
-        - clientSecret
+        - oidc
     Teams:
       properties:
         teams:
@@ -565,10 +567,9 @@ components:
     Service:
       properties:
         name:
-          type: string
-          description: A unique subdomain
-          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-          example: service-01
+          <<: *nameField
+          description: A service name visible as subdomain
+          example: service01
         domain:
           type: string
           description: A custom domain. Note that multi-cluster load balancing is not supported
@@ -610,6 +611,7 @@ components:
           example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
       required:
         - name
+        - clusters
     OpenApiValidationError:
       properties:
         status:
