@@ -582,6 +582,7 @@ components:
         #   <<: *KnativeService
         serviceType:
           type: object
+          title: type
           anyOf:
             - type: object
               title: "Knative service"
