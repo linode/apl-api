@@ -15,7 +15,7 @@ class OtomiStack {
       await this.repo.clone()
       this.loadValues()
     } catch (e) {
-      console.error(e.message)
+      console.error("Unable to init app", e);
       return false
     }
     return true
@@ -23,7 +23,10 @@ class OtomiStack {
 
   getValueFilePath(cloud, cluster) {
     const clusterFilename = cluster + '.yaml'
-    return path.join(this.envPath, cloud, clusterFilename)
+
+    console.log(`${this.envPath} ${cloud} ${clusterFilename}`)
+    const fPath = path.join(this.envPath, cloud, clusterFilename)
+    return fPath
   }
 
   getTeams() {
@@ -57,9 +60,12 @@ class OtomiStack {
   createTeam(req_params, data) {
     // The team name is its ID
     req_params.teamId = data.name
+    this.setPasswordIfNotExist(data)
     const res_data = this.db.createItem('teams', req_params, data)
     return res_data
   }
+
+
 
   editTeam(req_params, data) {
     const res_data = this.db.updateItem('teams', req_params, data)
@@ -139,7 +145,7 @@ class OtomiStack {
   }
 
   loadAllTeamValues(clusters) {
-    _.forIn(clusters, (cloudName, cloudClusters) => {
+    _.forIn(clusters, (cloudClusters, cloudName) => {
       _.forEach(cloudClusters, (clusterName) => {
         const path = this.getValueFilePath(cloudName, clusterName)
         const values = this.repo.readFile(path)
@@ -149,7 +155,7 @@ class OtomiStack {
           return
         }
 
-        this.convertTeamValuesTeamsToDb(values.teamConfig.teams, cloudName, clusterName)
+        this.loadTeamsValues(values.teamConfig.teams, cloudName, clusterName)
       })
     })
   }
@@ -172,7 +178,7 @@ class OtomiStack {
     this.db.createItem('clusters', {}, clusters)
   }
 
-  convertTeamValuesTeamsToDb(teams, cloudName, clusterName) {
+  loadTeamsValues(teams, cloudName, clusterName) {
     // console.debug(teams)
     _.forIn(teams, (teamData, teamId) => {
       // console.log(`${teamId}:${teamData}`)
@@ -181,7 +187,6 @@ class OtomiStack {
   }
 
   assignCluster(obj, cloud, cluster) {
-    console.info(`Assigning cluster ${cloud}-${cluster} to team ${obj.name}`)
     const objectPath = `clusters.${cloud}`
     const clusters = _.get(obj, objectPath, [])
     clusters.push(cluster)
@@ -200,7 +205,7 @@ class OtomiStack {
       this.assignCluster(team, cloud, cluster)
       this.updateTeam(id, team)
     } catch (err) {
-      // Here we creat a team in DB
+      // Here we create a team in DB
       let rawTeam = _.omit(teamData, 'services')
       this.assignCluster(rawTeam, cloud, cluster)
       this.createTeam(id, rawTeam)
@@ -246,6 +251,7 @@ class OtomiStack {
   }
 
   setPasswordIfNotExist(team) {
+    console.log(team.password)
     if (team.password)
       return
     // Generate password
@@ -257,8 +263,8 @@ class OtomiStack {
     this.saveAllTeamValues(clusters)
   }
 
-  saveAllTeamValues(clusters) {
-    _.forIn(clusters, (cloudName, cloudClusters) => {
+  saveAllTeamValues(clouds) {
+    _.forIn(clouds, (cloudClusters, cloudName) => {
       _.forEach(cloudClusters, (clusterName) => {
         const values = this.convertDbToValues(cloudName, clusterName)
         const path = this.getValueFilePath(cloudName, clusterName)
@@ -275,7 +281,6 @@ class OtomiStack {
         return
 
       const teamCloned = _.omit(el, ['teamId', 'clusters'])
-      this.setPasswordIfNotExist(teamCloned)
       const id = el.teamId
       teams[id] = teamCloned
       let dbServices = this.getServices({ teamId: id })
