@@ -5,7 +5,6 @@ class OtomiStack {
   constructor(repo, db) {
     this.db = db
     this.repo = repo
-    this.valuesPath = './values/_env/teams.yaml'
     this.envPath = './values/_env/'
     this.coreValuesPath = './core.yaml'
   }
@@ -75,7 +74,6 @@ class OtomiStack {
   deleteTeam(req_params) {
     let res_data = this.db.deleteItem('services', req_params)
     res_data = this.db.deleteItem('teams', req_params)
-
     return res_data
   }
 
@@ -254,7 +252,6 @@ class OtomiStack {
     console.log(team.password)
     if (team.password)
       return
-    // Generate password
     team.password = generatePassword(16, false)
   }
 
@@ -273,11 +270,16 @@ class OtomiStack {
     })
   }
 
+  is_at_cluster(obj, cloud, cluster) {
+    const clusters = _.get(obj, `clusters.${cloud}`, [])
+    const res = _.includes(clusters, cluster)
+    return res
+  }
+
   convertDbToValues(cloud, cluster) {
     const teams = {}
     this.getTeams().forEach(el => {
-      const clusters = _.get(el, `clusters.${cloud}`, [])
-      if (!_.includes(clusters, cluster))
+      if (!this.is_at_cluster(el, cloud, cluster))
         return
 
       const teamCloned = _.omit(el, ['teamId', 'clusters'])
@@ -287,6 +289,9 @@ class OtomiStack {
       let services = new Array()
 
       dbServices.forEach(svc => {
+        if (!this.is_at_cluster(svc, cloud, cluster))
+          return
+
         const svcCloned = _.omit(svc, ['teamId', 'serviceId', 'serviceType', 'clusters'])
 
         if ('ksvc' in svc.serviceType)
