@@ -53,7 +53,7 @@ class CreateTeam extends React.Component {
 }
 
 class Team extends React.Component {
-  state = {team: null, error: null}
+  state = { team: null, error: null }
 
   componentDidMount() {
     this.getTeam()
@@ -66,26 +66,48 @@ class Team extends React.Component {
       this.setState({ team: response.data })
     }).catch((error) => {
       console.log(error)
-      this.setState({error: error})
+      this.setState({ error: error })
     })
+  }
+
+  renderTeamDetails = (formData) => {
+    const schema = this.props.schema.getTeamSchema(formData.clusters)
+    const uiSchema = this.props.schema.getTeamUiSchema()
+    return <Form
+      key='TeamDetails'
+      formData={formData}
+      fields={fields}
+      schema={schema}
+      uiSchema={uiSchema}
+      disabled>
+      <div></div>
+    </Form>
   }
 
   render() {
     if (this.state.error) {
-      return(
+      return (
         <p>{'Error:' + this.state.error}</p>
       )
     }
     if (!this.state.team) {
-      return(
+      return (
         <p>{'Loading'}</p>
       )
     }
+
+    const teamDetails = this.renderTeamDetails(this.state.team)
     // console.log(this.state.team)
     return (
       <div className="Team">
         <h2>Team: {this.props.teamId}</h2>
+
+
         <Services schema={this.props.schema} client={this.props.client} team={this.state.team} />
+        <h3>Team details:</h3>
+
+        {teamDetails}
+
       </div>
     )
 

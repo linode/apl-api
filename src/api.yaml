@@ -552,6 +552,7 @@ components:
       required:
         - name
         - oidc
+        - clusters
     Teams:
       properties:
         teams:
