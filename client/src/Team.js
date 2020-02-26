@@ -102,6 +102,7 @@ class Team extends React.Component {
       <div className="Team">
         <h2>Team: {this.props.teamId}</h2>
 
+        <h3>Services:</h3>
 
         <Services schema={this.props.schema} client={this.props.client} team={this.state.team} />
         <h3>Team details:</h3>
