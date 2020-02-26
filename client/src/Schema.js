@@ -45,6 +45,9 @@ class Schema {
     const uiSchema = {
       teamId: { "ui:widget": "hidden" },
       password: { "ui:widget": "hidden" },
+      oidc: {
+        clientSecret: {"ui:widget": "password"}
+      },
       clusters: {
         aws: { "ui:widget": "checkboxes" },
         azure: { "ui:widget": "checkboxes" },
