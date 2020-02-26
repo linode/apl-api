@@ -22,8 +22,6 @@ class OtomiStack {
 
   getValueFilePath(cloud, cluster) {
     const clusterFilename = cluster + '.yaml'
-
-    console.log(`${this.envPath} ${cloud} ${clusterFilename}`)
     const fPath = path.join(this.envPath, cloud, clusterFilename)
     return fPath
   }
@@ -249,7 +247,6 @@ class OtomiStack {
   }
 
   setPasswordIfNotExist(team) {
-    console.log(team.password)
     if (team.password)
       return
     team.password = generatePassword(16, false)

@@ -6,12 +6,11 @@ module.exports = function (otomi) {
         console.debug("Trigger deployments: " + JSON.stringify(req.params))
         try {
           await otomi.triggerDeployment(req.params, req.headers['auth-group'])
+          res.status(200).json({});
         } catch (err) {
-          console.error(err.message)
+          console.error(err)
           res.status(409).json({ error: err.message })
         }
-
-        res.status(200).json({});
       },
     ],
   }
