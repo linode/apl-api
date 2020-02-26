@@ -5,8 +5,8 @@ class OtomiStack {
   constructor(repo, db) {
     this.db = db
     this.repo = repo
-    this.envPath = './values/_env/'
-    this.coreValuesPath = './core.yaml'
+    this.envPath = './env/'
+    this.clustersPath = './env/clusters.yaml'
   }
 
   async init() {
@@ -133,7 +133,7 @@ class OtomiStack {
   }
 
   loadValues() {
-    const core_values = this.repo.readFile(this.coreValuesPath)
+    const core_values = this.repo.readFile(this.clustersPath)
     this.convertCoreValuesToDb(core_values)
 
     const clusters = this.getClusters()
