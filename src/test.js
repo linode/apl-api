@@ -34,9 +34,10 @@ describe("Api tests for admin", function () {
       .end(done);
   });
   it("admin can create a team", function (done) {
+    const data = {name:"team100",clusters:{aws:["dev"]},oidc:{clientID:"f0c64738-23f2-4418-a1ff-8a662662f7e9",clientSecret:"aaa"}}
     request(app)
       .post('/v1/teams')
-      .send({ name: 'team1', password: 'pass', oidc: null })
+      .send(data)
       .set('Accept', 'application/json')
       .set('Auth-Group', 'admin')
       .expect(200)
