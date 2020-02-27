@@ -1,22 +1,20 @@
 
 function addEnumField(schema, clouds) {
-  console.log(clouds)
-  console.log(schema.properties.clusters.properties)
 
   const allClouds = ['aws', 'azure', 'google']
+  const clusters = schema.properties.clusters
   allClouds.forEach(cloudName => {
-    if(!clouds[cloudName]) {
-      delete schema.properties.clusters.properties[cloudName]
+    // console.log(clusters.properties[cloudName])
+    if(!clusters.properties[cloudName]) {
+      delete clusters.properties[cloudName]
       return
     }
-    schema.properties.clusters.properties[cloudName].items.enum = []
+    clusters.properties[cloudName].items.enum = []
   })
 
   Object.keys(clouds).forEach(cloudName => {
-    schema.properties.clusters.properties[cloudName].items.enum = clouds[cloudName]
+    clusters.properties[cloudName].items.enum = clouds[cloudName]
   })
-  console.log(schema)
-
 }
 
 class Schema {
