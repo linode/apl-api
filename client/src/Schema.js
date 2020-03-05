@@ -1,20 +1,7 @@
 
-function addEnumField(schema, clouds) {
-
-  const allClouds = ['aws', 'azure', 'google']
-  const clusters = schema.properties.clusters
-  allClouds.forEach(cloudName => {
-    // console.log(clusters.properties[cloudName])
-    if(!clusters.properties[cloudName]) {
-      delete clusters.properties[cloudName]
-      return
-    }
-    clusters.properties[cloudName].items.enum = []
-  })
-
-  Object.keys(clouds).forEach(cloudName => {
-    clusters.properties[cloudName].items.enum = clouds[cloudName]
-  })
+function addEnumField(schema, clusters) {
+  console.log(clusters)
+  schema.properties.clusters.items.enum = clusters
 }
 
 class Schema {
@@ -22,18 +9,18 @@ class Schema {
     this.openApi = openApi
     this.schemas = this.openApi.components.schemas
   }
-  getServiceSchema(clouds) {
+
+  getServiceSchema(clusters) {
     
     const schema = Object.assign({}, this.schemas.Service)
-    addEnumField(schema, clouds)
-
+    addEnumField(schema, clusters)
     return schema
   }
 
-  getTeamSchema(clouds) {
+  getTeamSchema(clusters) {
     const schema = Object.assign({}, this.schemas.Team)
-    addEnumField(schema, clouds)
-    console.log(schema)
+    addEnumField(schema, clusters)
+    // console.log(schema)
     return schema
   }
 
@@ -47,9 +34,7 @@ class Schema {
         clientSecret: {"ui:widget": "password"}
       },
       clusters: {
-        aws: { "ui:widget": "checkboxes" },
-        azure: { "ui:widget": "checkboxes" },
-        google: { "ui:widget": "checkboxes" },
+        "ui:widget": "checkboxes",
       },
     };
 
@@ -64,9 +49,7 @@ class Schema {
       teamId: { "ui:widget": "hidden" },
       serviceType: { "ui:widget": "radio" },
       clusters: {
-        aws: { "ui:widget": "checkboxes" },
-        azure: { "ui:widget": "checkboxes" },
-        google: { "ui:widget": "checkboxes" },
+       "ui:widget": "checkboxes",
       },      
       ksvc: {
         env: { "ui:options": { orderable: false } }

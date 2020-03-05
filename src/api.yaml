@@ -416,24 +416,11 @@ components:
             type: string
 
     x-available-clusters: &AvailableClusters
-      type: object
       description: Select from available clusters
-      properties:
-        aws:
-          type: array
-          items:
-            type: string
-          uniqueItems: true
-        azure:
-          type: array
-          items:
-            type: string
-          uniqueItems: true
-        google:
-          type: array
-          items:
-            type: string
-          uniqueItems: true
+      type: array
+      items:
+        type: string
+      uniqueItems: true
 
     KnativeService: &KnativeService # description: Knative service definition
       type: object

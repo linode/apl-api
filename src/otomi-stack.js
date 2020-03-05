@@ -20,9 +20,9 @@ class OtomiStack {
     return true
   }
 
-  getValueFilePath(cloud, cluster) {
-    const clusterFilename = cluster + '.yaml'
-    const fPath = path.join(this.envPath, cloud, clusterFilename)
+  getValueFilePath(cluster) {
+    const clusterFilename = cluster.clusterName + '.yaml'
+    const fPath = path.join(this.envPath, cluster.cloudName, clusterFilename)
     return fPath
   }
 
@@ -31,13 +31,8 @@ class OtomiStack {
     return res_data
   }
 
-  getClouds() {
-    const res_data = this.db.getCollection('clouds')
-    return res_data
-  }
-
   getClusters() {
-    const res_data = this.db.getItem('clusters', {})
+    const res_data = this.db.getCollection('clusters')
     return res_data
   }
 
@@ -61,8 +56,6 @@ class OtomiStack {
     const res_data = this.db.createItem('teams', req_params, data)
     return res_data
   }
-
-
 
   editTeam(req_params, data) {
     const res_data = this.db.updateItem('teams', req_params, data)
@@ -141,55 +134,58 @@ class OtomiStack {
   }
 
   loadAllTeamValues(clusters) {
-    _.forIn(clusters, (cloudClusters, cloudName) => {
-      _.forEach(cloudClusters, (clusterName) => {
-        const path = this.getValueFilePath(cloudName, clusterName)
+
+    _.forEach(clusters, (cluster) => {
+      try {
+        const path = this.getValueFilePath(cluster)
         const values = this.repo.readFile(path)
         const teams = _.get(values, 'teamConfig.teams', null)
         if (!teams) {
           console.warn(`Missing 'teams' key in ${path} file. Skipping`)
           return
         }
-
-        this.loadTeamsValues(values.teamConfig.teams, cloudName, clusterName)
-      })
+        this.loadTeamsValues(values.teamConfig.teams, cluster)
+      }
+      catch(e) {
+        console.error(`Unable to load teams data for cluster ${cluster.id}`, e)
+        return
+      }
     })
   }
 
   convertCoreValuesToDb(values) {
     const cs = values.clouds
-    const clusters = {
-      'aws': [],
-      'azure': [],
-      'google': [],
-    }
-
-    Object.keys(clusters).forEach(cloudName => {
-      if (!cs[cloudName])
-        return
-
-      clusters[cloudName] = Object.keys(cs[cloudName].clusters)
+    _.forIn(cs, (cloudObj, cloudName) => {
+      _.forIn(cloudObj.clusters, (clusterObject, clusterName) => {
+        const cluster_id = `${clusterName}/${cloudName}`
+        const cluster = {
+          cloudName: cloudName, 
+          clusterName: clusterName,
+          domain: `${clusterName}.${cloudObj.domain}`,
+          k8sVersion: clusterObject.k8sVersion,
+          region: clusterObject.region,
+        }
+        console.log(cluster);
+        this.db.createItem('clusters', {id: cluster_id}, cluster)
+      });
     })
-
-    this.db.createItem('clusters', {}, clusters)
   }
 
-  loadTeamsValues(teams, cloudName, clusterName) {
+  loadTeamsValues(teams, cluster) {
     // console.debug(teams)
     _.forIn(teams, (teamData, teamId) => {
       // console.log(`${teamId}:${teamData}`)
-      this.convertTeamToDb(teamData, teamId, cloudName, clusterName)
+      this.convertTeamToDb(teamData, teamId, cluster)
     })
   }
 
-  assignCluster(obj, cloud, cluster) {
-    const objectPath = `clusters.${cloud}`
-    const clusters = _.get(obj, objectPath, [])
-    clusters.push(cluster)
-    _.set(obj, objectPath, clusters)
+  assignCluster(obj, cluster) {
+    const clusters = _.get(obj, 'clusters', [])
+    clusters.push(cluster.id)
+    _.set(obj, 'clusters', clusters)
   }
 
-  convertTeamToDb(teamData, teamId, cloud, cluster) {
+  convertTeamToDb(teamData, teamId, cluster) {
 
     // console.log(`${teamId}: ${teamData}`);
     // console.debug(JSON.stringify(teamData))
@@ -198,36 +194,36 @@ class OtomiStack {
     try {
       // Here we only update clusters
       let team = this.getTeam(id)
-      this.assignCluster(team, cloud, cluster)
+      this.assignCluster(team, cluster)
       this.updateTeam(id, team)
     } catch (err) {
       // Here we create a team in DB
       let rawTeam = _.omit(teamData, 'services')
-      this.assignCluster(rawTeam, cloud, cluster)
+      this.assignCluster(rawTeam, cluster)
       this.createTeam(id, rawTeam)
     }
 
     if (!teamData.services) {
-      path = this.getValueFilePath(cloud, cluster)
+      path = this.getValueFilePath(cluster)
       console.warn(`Missing 'services' key for team ${teamId} in ${path} file. Skipping.`)
       return
     }
-    this.convertTeamValuesServicesToDb(teamData.services, teamId, cloud, cluster)
+    this.convertTeamValuesServicesToDb(teamData.services, teamId, cluster)
   }
 
-  convertTeamValuesServicesToDb(services, teamId, cloud, cluster) {
+  convertTeamValuesServicesToDb(services, teamId, cluster) {
     services.forEach(svc => {
-      this.convertServiceToDb(svc, teamId, cloud, cluster)
+      this.convertServiceToDb(svc, teamId, cluster)
     })
   }
 
-  convertServiceToDb(svc, teamId, cloud, cluster) {
+  convertServiceToDb(svc, teamId, cluster) {
     const serviceId = { teamId: teamId, serviceId: svc.name }
 
     try {
       // Update service cloud and cluster assignment
       const existingService = this.getService(serviceId)
-      this.assignCluster(existingService, cloud, cluster)
+      this.assignCluster(existingService, cluster)
       this.updateService(serviceId, existingService)
     } catch (err) {
       // Create service
@@ -241,7 +237,7 @@ class OtomiStack {
         delete svc.svc
       }
 
-      this.assignCluster(svc, cloud, cluster)
+      this.assignCluster(svc, cluster)
       this.createService(serviceId, svc)
     }
   }
@@ -257,36 +253,34 @@ class OtomiStack {
     this.saveAllTeamValues(clusters)
   }
 
-  saveAllTeamValues(clouds) {
-    _.forIn(clouds, (cloudClusters, cloudName) => {
-      _.forEach(cloudClusters, (clusterName) => {
-        const values = this.convertDbToValues(cloudName, clusterName)
-        const path = this.getValueFilePath(cloudName, clusterName)
-        this.repo.writeFile(path, values)
-      })
+  saveAllTeamValues(clusters) {
+    _.forEach(clusters, (cluster) => {
+      const values = this.convertDbToValues(cluster)
+      const path = this.getValueFilePath(cluster)
+      this.repo.writeFile(path, values)
     })
   }
 
-  is_at_cluster(obj, cloud, cluster) {
-    const clusters = _.get(obj, `clusters.${cloud}`, [])
-    const res = _.includes(clusters, cluster)
+  is_at_cluster(obj, cluster) {
+    const clusters = _.get(obj, 'clusters', [])
+    const res = (_.indexOf(clusters, cluster.id) != -1)
     return res
   }
 
-  convertDbToValues(cloud, cluster) {
+  convertDbToValues(cluster) {
     const teams = {}
-    this.getTeams().forEach(el => {
-      if (!this.is_at_cluster(el, cloud, cluster))
+    this.getTeams().forEach(team => {
+      if (!this.is_at_cluster(team, cluster))
         return
 
-      const teamCloned = _.omit(el, ['teamId', 'clusters'])
-      const id = el.teamId
+      const teamCloned = _.omit(team, ['teamId', 'clusters'])
+      const id = team.teamId
       teams[id] = teamCloned
       let dbServices = this.getServices({ teamId: id })
       let services = new Array()
 
       dbServices.forEach(svc => {
-        if (!this.is_at_cluster(svc, cloud, cluster))
+        if (!this.is_at_cluster(svc, cluster))
           return
 
         const svcCloned = _.omit(svc, ['teamId', 'serviceId', 'serviceType', 'clusters'])

@@ -34,7 +34,7 @@ describe("Api tests for admin", function () {
       .end(done);
   });
   it("admin can create a team", function (done) {
-    const data = {name:"team100",clusters:{aws:["dev"]},oidc:{clientID:"f0c64738-23f2-4418-a1ff-8a662662f7e9",clientSecret:"aaa"}}
+    const data = { name: "team100", clusters: ['aws/dev'], oidc: { clientID: "f0c64738-23f2-4418-a1ff-8a662662f7e9", clientSecret: "aaa" } }
     request(app)
       .post('/v1/teams')
       .send(data)

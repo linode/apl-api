@@ -3,10 +3,15 @@ import React from 'react';
 import ModalWrapper from './Modal'
 import { CreateTeam } from './Team'
 import Button from 'react-bootstrap/Button'
-import Container from 'react-bootstrap/Container'
-import Row from 'react-bootstrap/Row'
 import { Link } from "react-router-dom";
 import ActionBar from './ActionBar'
+import BootstrapTable from 'react-bootstrap-table-next';
+
+
+function getTeamLink(cell, row, rowIndex, formatExtraData) {
+  return <Link to={`/teams/${row.name}`}>{row.name}</Link>
+}
+
 
 class Teams extends React.Component {
   state = { showModal: false, teams: [], allClusters: [] };
@@ -30,7 +35,7 @@ class Teams extends React.Component {
     this.props.client.getTeamCollection().then((response) => {
       this.setState({ teams: response.data })
     }).catch((error) => {
-      this.setState({error: error})
+      this.setState({ error: error })
     })
   }
 
@@ -44,9 +49,10 @@ class Teams extends React.Component {
   };
 
   getModal = () => {
+    const cluster_ids = this.state.allClusters.map(cluster => cluster.id)
     const body = <CreateTeam
       schema={this.props.schema}
-      clusters={this.state.allClusters}
+      clusters={cluster_ids}
       client={this.props.client}
       onSubmitted={this.hideModal}
     />
@@ -81,30 +87,41 @@ class Teams extends React.Component {
     )
   }
 
+  renderClusterCollection = () => {
+
+    const columns = [{
+      dataField: 'id',
+      text: 'Cluster ID'
+    }, {
+      dataField: 'k8sVersion',
+      text: 'K8s version'
+    }, {
+      dataField: 'region',
+      text: 'Region'
+    }];
+    return <BootstrapTable bootstrap4 keyField='id' data={this.state.allClusters} columns={columns} />
+  }
+
+
   renderTeamCollection = () => {
 
-    const items = this.state.teams.map((item) => {
-      console.log(item)
+    const columns = [{
+      dataField: 'name',
+      text: 'Team name',
+      formatter: getTeamLink,
+    }];
 
-      const link = `/teams/${item.teamId}`
-      return (
-        <li><Link to={link}>{item.name}</Link></li>
-      )
-    })
+    const teams = <BootstrapTable bootstrap4 keyField='name' data={this.state.teams} columns={columns} />
+
     return (
 
       <React.Fragment>
+        <h2>Clusters</h2>
+        {this.renderClusterCollection()}
+
         <h2>Teams</h2>
-
         {this.TeamActionBar()}
-        <Container>
-          <Row>
-            <ul>
-              {items}
-            </ul>
-          </Row>
-        </Container>
-
+        {teams}
       </React.Fragment>
     )
   }
@@ -112,12 +129,12 @@ class Teams extends React.Component {
   render() {
     console.log(this.state.showModal)
     if (this.state.error) {
-      return(
+      return (
         <p>{'Error:' + this.state.error}</p>
       )
     }
     if (!this.state.teams || !this.state.allClusters) {
-      return(
+      return (
         <p>{'Loading'}</p>
       )
     }
