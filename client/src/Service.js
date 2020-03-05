@@ -101,7 +101,7 @@ class CreateService extends React.Component {
           onChange={log("changed")}
           onSubmit={this.onSubmit}
           onError={log("errors")}
-          liveValidate={true}
+          // liveValidate={true}
         />
       </div>
     )

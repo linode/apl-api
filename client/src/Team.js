@@ -3,6 +3,7 @@ import Form from "react-jsonschema-form-bs4";
 import Services from './Services'
 import Help from './Help'
 import BootstrapTable from 'react-bootstrap-table-next';
+import { Link } from "react-router-dom";
 
 
 const log = (type) => console.log.bind(console, type);
@@ -53,6 +54,8 @@ class CreateTeam extends React.Component {
   }
 }
 
+
+
 class Team extends React.Component {
   state = { team: null, allClusters: null, error: null }
 
@@ -81,6 +84,11 @@ class Team extends React.Component {
     })
   }
 
+  getTeamDashboardLink = (cell, row, rowIndex, formatExtraData) => {
+    const url = `https://index.team-${this.state.team.name}.${row.domain}`
+    return <a href={url} target="_blank">link</a> 
+  }
+
   renderTeamDetails = (formData) => {
     const schema = this.props.schema.getTeamSchema(formData.clusters)
     const uiSchema = this.props.schema.getTeamUiSchema()
@@ -94,6 +102,10 @@ class Team extends React.Component {
     }, {
       dataField: 'region',
       text: 'Region'
+    }, {
+      dataField: 'dashboard',
+      text: 'Dashboard URL',
+      formatter: this.getTeamDashboardLink
     }];
 
     const clusters = this.state.allClusters.filter(el => this.state.team.clusters.includes(el.id))
@@ -108,17 +120,6 @@ class Team extends React.Component {
         <BootstrapTable bootstrap4 keyField='id' data={clusters} columns={columns} />
       </React.Fragment>
     )
-
-
-    // return <Form
-    //   key='TeamDetails'
-    //   formData={formData}
-    //   fields={fields}
-    //   schema={schema}
-    //   uiSchema={uiSchema}
-    //   disabled>
-    //   <div></div>
-    // </Form>
   }
 
   render() {
