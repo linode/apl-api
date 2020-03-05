@@ -3,8 +3,6 @@ import Form from "react-jsonschema-form-bs4";
 import Services from './Services'
 import Help from './Help'
 import BootstrapTable from 'react-bootstrap-table-next';
-import { Link } from "react-router-dom";
-
 
 const log = (type) => console.log.bind(console, type);
 
@@ -86,12 +84,10 @@ class Team extends React.Component {
 
   getTeamDashboardLink = (cell, row, rowIndex, formatExtraData) => {
     const url = `https://index.team-${this.state.team.name}.${row.domain}`
-    return <a href={url} target="_blank">link</a> 
+    return <a href={url} target="_blank" rel="noopener noreferrer">link</a>
   }
 
   renderTeamDetails = (formData) => {
-    const schema = this.props.schema.getTeamSchema(formData.clusters)
-    const uiSchema = this.props.schema.getTeamUiSchema()
 
     const columns = [{
       dataField: 'id',
