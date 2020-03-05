@@ -6,7 +6,8 @@ function validateEnv(envVars) {
     "GIT_REPO_URL",
     "GIT_USER",
     "GIT_PASSWORD",
-    "GIT_EMAIL"
+    "GIT_EMAIL",
+    "GIT_BRANCH"
   ];
 
   let unsetEnv = requiredEnv.filter((env) => !(typeof envVars[env] !== 'undefined'));

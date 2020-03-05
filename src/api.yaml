@@ -25,6 +25,12 @@ x-fields:
   annotation: &k8sAnnotationField
     type: string
     pattern: ^((.){1,253}\/)?(.){1,63}$
+  uuid: &uuidField
+    type: string
+    pattern: ^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$
+  name: &nameField
+    type: string
+    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 
 paths:
   /readiness:
@@ -34,6 +40,17 @@ paths:
       responses:
         "200":
           description: Service is ready
+  /clusters:
+    get:
+      operationId: getClusterCollection
+      description: Get available clusters
+      responses:
+        "200":
+          description: Successfully obtained cluster collection
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Clusters"
   /teams:
     get:
       operationId: getTeamCollection
@@ -165,6 +182,7 @@ paths:
             "application/json":
               schema:
                 $ref: "#/components/schemas/OtomiStackError"
+
   "/teams/{teamId}/services":
     get:
       operationId: getServiceCollectionFromTeam
@@ -382,8 +400,42 @@ components:
           type: string
           description: A name of existing kubernetes service
 
-    KnativeService: &KnativeService
-      # description: Knative service definition
+    x-clusters: &Clusters
+      type: array
+      description: Clusters on which deployment takes effect
+      items:
+        type: object
+        properties:
+          name:
+            description: cluster name
+            example: dev
+            type: string
+          cloudName:
+            description: cluster provider name
+            example: google
+            type: string
+
+    x-available-clusters: &AvailableClusters
+      type: object
+      description: Select from available clusters
+      properties:
+        aws:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+        azure:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+        google:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+
+    KnativeService: &KnativeService # description: Knative service definition
       type: object
       properties:
         repository:
@@ -449,6 +501,10 @@ components:
       required:
         - repository
         - tag
+
+    Clusters:
+      <<: *AvailableClusters
+
     Deployment:
       properties:
         id:
@@ -464,16 +520,26 @@ components:
     Team:
       properties:
         name:
-          type: string
-          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+          <<: *nameField
           example: "team-1"
           description: A team name
+        clusters:
+          <<: *AvailableClusters
         password:
           type: string
           description: "A secret that is used access multi-tenant log aggregation system (Loki)"
           writeOnly: true
-        # oidc:
-        #   $ref: "#/components/schemas/TeamOidc"
+        oidc:
+          type: object
+          properties:
+            clientID:
+              <<: *uuidField
+            clientSecret:
+              type: string
+              writeOnly: true
+          required:
+            - clientID
+            - clientSecret
         teamId:
           type: string
           readOnly: true
@@ -485,18 +551,8 @@ components:
         #   type: object
       required:
         - name
-        # - oidc
-    TeamOidc:
-      properties:
-        clientID:
-          type: string
-          example: "ad8611c4-a701-4ec8-8ad3-a510441e728f"
-        clientSecret:
-          type: string
-          example: "Qn/=aZ7x]b/8PgGJhbtAlAejq0fA0P1K"
-      required:
-        - clientID
-        - clientSecret
+        - oidc
+        - clusters
     Teams:
       properties:
         teams:
@@ -512,32 +568,34 @@ components:
     Service:
       properties:
         name:
-          type: string
-          description: A unique subdomain
-          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-          example: service-01
+          <<: *nameField
+          description: A service name visible as subdomain
+          example: service01
         domain:
           type: string
-          description: A custom domain
+          description: A custom domain. Note that multi-cluster load balancing is not supported
           <<: *domainNameField
           example: redkubes.com
-        # svc:
+        clusters:
+          <<: *AvailableClusters
+          # svc:
         #   <<: *KubernetesService
         # ksvc:
         #   <<: *KnativeService
         serviceType:
           type: object
+          title: type
           anyOf:
-          - type: object
-            title: "Knative service"
-            properties:
-              ksvc:
-                <<: *KnativeService
-          - type: object
-            title: "Kubernetes service"
-            properties:
-              svc:
-                <<: *KubernetesService
+            - type: object
+              title: "Knative service"
+              properties:
+                ksvc:
+                  <<: *KnativeService
+            - type: object
+              title: "Kubernetes service"
+              properties:
+                svc:
+                  <<: *KubernetesService
         teamId:
           type: string
           readOnly: true
@@ -554,6 +612,7 @@ components:
           example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
       required:
         - name
+        - clusters
     OpenApiValidationError:
       properties:
         status:

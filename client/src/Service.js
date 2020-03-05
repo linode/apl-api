@@ -5,18 +5,9 @@ import Help from './Help'
 
 const log = (type) => console.log.bind(console, type);
 
-const uiSchema = {
-  serviceId: { "ui:widget": "hidden" },
-  teamId: { "ui:widget": "hidden" },
-  serviceType: {"ui:widget": "radio"},
-  // env: {"ui:options":  {orderable: false}},
-  // annotations: {"ui:options":  {orderable: false}}
-};
-
-
 const CustomDescriptionField = ({ id, description }) => {
   return (
-    <Help description={description} id={id}/>
+    <Help description={description} id={id} />
   )
 };
 
@@ -25,24 +16,46 @@ const fields = {
 };
 
 class Service extends React.Component {
-  state = { service: {} };
+  state = { service: null, clusters: null, error: null };
 
   componentDidMount() {
-    this.getData()
+    this.getService()
+    this.getTeam()
   }
 
-  getData = () => {
-    console.log(this.props.serviceId)
+  getTeam = () => {
+    console.log('getTeam')
+    this.props.client.getTeam(this.props.teamId).then((response) => {
+      console.log(response)
+      this.setState({ clusters: response.data.clusters })
+    }).catch((error) => {
+      this.setState({ error: error })
+    })
+  }
+
+  getService = () => {
+    console.log('getService ' + this.props.serviceId)
     this.props.client.getServiceFromTeam({ teamId: this.props.teamId, serviceId: this.props.serviceId }).then((response) => {
       this.setState({ service: response.data })
     }).catch((error) => {
-      console.log(error);
+      this.setState({ error: error })
     })
   }
 
   render() {
-    const schema = this.props.schema.getServiceSchema()
-
+    if (this.state.error) {
+      return (
+        <p>{'Error: ' + this.state.error}</p>
+      )
+    }
+    if (!this.state.service || !this.state.clusters) {
+      return (
+        <p>{'Loading'}</p>
+      )
+    }
+    const schema = this.props.schema.getServiceSchema(this.state.clusters)
+    const uiSchema = this.props.schema.getServiceUiSchema(schema)
+    const service = this.state.service
     return (
       <div className="Service">
         <h2>Service: {this.props.serviceId}</h2>
@@ -52,7 +65,7 @@ class Service extends React.Component {
           uiSchema={uiSchema}
           disabled
           fields={fields}
-          formData={this.state.service}
+          formData={service}
 
         >
           <div></div>
@@ -63,9 +76,10 @@ class Service extends React.Component {
 }
 
 class CreateService extends React.Component {
-
+  state = { error: null }
   onSubmit = (form) => {
-    this.props.client.addServiceToTeam(this.props.teamId, form.formData).then((response) => {
+    const data = form.formData
+    this.props.client.addServiceToTeam(this.props.teamId, data).then((response) => {
       console.log('saved');
       this.props.onSubmitted()
     }).catch((error) => {
@@ -73,7 +87,9 @@ class CreateService extends React.Component {
     })
   }
   render() {
-    const schema = this.props.schema.getServiceSchema()
+
+    const schema = this.props.schema.getServiceSchema(this.props.clusters)
+    const uiSchema = this.props.schema.getServiceUiSchema(schema)
     return (
 
       <div className="Service">

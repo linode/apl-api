@@ -34,9 +34,10 @@ describe("Api tests for admin", function () {
       .end(done);
   });
   it("admin can create a team", function (done) {
+    const data = {name:"team100",clusters:{aws:["dev"]},oidc:{clientID:"f0c64738-23f2-4418-a1ff-8a662662f7e9",clientSecret:"aaa"}}
     request(app)
       .post('/v1/teams')
-      .send({ name: 'team1', password: 'pass', oidc: null })
+      .send(data)
       .set('Accept', 'application/json')
       .set('Auth-Group', 'admin')
       .expect(200)
@@ -245,7 +246,7 @@ describe("Api tests for data validation", function () {
   it("invalid team name data", function (done) {
     request(app)
       .post('/v1/teams')
-      .send({name: 'test_1', password: 'pass', oidc: null})
+      .send({ name: 'test_1', password: 'pass', oidc: null })
       .set('Auth-Group', 'admin')
       .set('Accept', 'application/json')
       .expect(400)
@@ -255,7 +256,7 @@ describe("Api tests for data validation", function () {
   it("invalid slackUrl  data", function (done) {
     request(app)
       .post('/v1/teams')
-      .send({name: 'test_1', password: 'pass', oidc: null, slackUrl: 'aaa.lll'})
+      .send({ name: 'test_1', password: 'pass', oidc: null, slackUrl: 'aaa.lll' })
       .set('Auth-Group', 'admin')
       .set('Accept', 'application/json')
       .expect(400)
@@ -316,7 +317,7 @@ describe("Config validation tests", function () {
 
   it("valid env variables", function (done) {
     const envs = {
-      GIT_LOCAL_PATH: null, GIT_REPO_URL: null, GIT_USER: null, GIT_PASSWORD: null, GIT_EMAIL: null
+      GIT_LOCAL_PATH: null, GIT_REPO_URL: null, GIT_USER: null, GIT_PASSWORD: null, GIT_EMAIL: null, GIT_BRANCH: null
     }
     expect(() => utils.validateEnv(envs)).to.not.throw();
     done()

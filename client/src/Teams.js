@@ -9,10 +9,20 @@ import { Link } from "react-router-dom";
 import ActionBar from './ActionBar'
 
 class Teams extends React.Component {
-  state = { showModal: false, teams: [] };
+  state = { showModal: false, teams: [], allClusters: [] };
 
   componentDidMount() {
     this.getData()
+    this.getClusters()
+
+  }
+  getClusters = () => {
+    console.log('getClusters')
+    this.props.client.getClusterCollection().then((response) => {
+      this.setState({ allClusters: response.data })
+    }).catch((error) => {
+      console.log(error);
+    })
   }
 
   getData = () => {
@@ -20,9 +30,10 @@ class Teams extends React.Component {
     this.props.client.getTeamCollection().then((response) => {
       this.setState({ teams: response.data })
     }).catch((error) => {
-      console.log(error);
+      this.setState({error: error})
     })
   }
+
   showModal = () => {
     this.setState({ showModal: true });
   };
@@ -35,8 +46,10 @@ class Teams extends React.Component {
   getModal = () => {
     const body = <CreateTeam
       schema={this.props.schema}
+      clusters={this.state.allClusters}
       client={this.props.client}
-      onSubmitted={this.hideModal} />
+      onSubmitted={this.hideModal}
+    />
 
     return (
       <ModalWrapper
@@ -98,6 +111,16 @@ class Teams extends React.Component {
 
   render() {
     console.log(this.state.showModal)
+    if (this.state.error) {
+      return(
+        <p>{'Error:' + this.state.error}</p>
+      )
+    }
+    if (!this.state.teams || !this.state.allClusters) {
+      return(
+        <p>{'Loading'}</p>
+      )
+    }
 
     let body = null
     if (this.state.showModal) {

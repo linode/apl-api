@@ -11,7 +11,13 @@ class Db {
         : new FileSync(path)
     )
     // Set some defaults (required if your JSON file is empty)
-    this.db.defaults({ teams: [], services: [], defaultServices: []}).write()
+    this.db.defaults({
+      teams: [],
+      services: [],
+      defaultServices: [],
+      clouds: [],
+      clusters: []
+    }).write()
   }
 
   getItem(name, uri_ids) {
@@ -27,10 +33,10 @@ class Db {
     return data
   }
 
-  createItem(name, uri_ids, data){
+  createItem(name, uri_ids, data) {
     const values = this.db.get(name).filter(uri_ids).value()
-    if(values.length > 0)
-      throw new err.AlreadyExists('Already exist');
+    if (values.length > 0)
+      throw new err.AlreadyExists(`Item: ${JSON.stringify(uri_ids)} already exist in ${name} document`);
 
     const value = this.db.get(name)
       .push(data)
@@ -40,7 +46,7 @@ class Db {
     return value
   }
 
-  deleteItem(name, uri_ids){
+  deleteItem(name, uri_ids) {
     const v = this.db.get(name)
       .remove(uri_ids)
       .write()
@@ -48,7 +54,7 @@ class Db {
     return v
   }
 
-  updateItem(name, uri_ids, data){
+  updateItem(name, uri_ids, data) {
     const v = this.db.get(name)
       .find(uri_ids)
       .assign(data)
@@ -57,7 +63,7 @@ class Db {
   }
 }
 
-function init(path){
+function init(path) {
   return new Db(path)
 }
 

@@ -16,6 +16,7 @@ const r = repo.init(
   process.env.GIT_USER,
   process.env.GIT_EMAIL,
   process.env.GIT_PASSWORD,
+  process.env.GIT_BRANCH,
 )
 
 const otomiStack = new otomi.OtomiStack(r, d)

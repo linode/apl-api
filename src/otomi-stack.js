@@ -1,10 +1,12 @@
 var generatePassword = require('password-generator');
-
+var _ = require('lodash');
+var path = require('path')
 class OtomiStack {
   constructor(repo, db) {
     this.db = db
     this.repo = repo
-    this.valuesPath = './values/_env/teams.yaml'
+    this.envPath = './env/'
+    this.clustersPath = './env/clusters.yaml'
   }
 
   async init() {
@@ -12,10 +14,16 @@ class OtomiStack {
       await this.repo.clone()
       this.loadValues()
     } catch (e) {
-      console.error(e.message)
+      console.error("Unable to init app", e);
       return false
     }
     return true
+  }
+
+  getValueFilePath(cloud, cluster) {
+    const clusterFilename = cluster + '.yaml'
+    const fPath = path.join(this.envPath, cloud, clusterFilename)
+    return fPath
   }
 
   getTeams() {
@@ -23,9 +31,23 @@ class OtomiStack {
     return res_data
   }
 
+  getClouds() {
+    const res_data = this.db.getCollection('clouds')
+    return res_data
+  }
+
+  getClusters() {
+    const res_data = this.db.getItem('clusters', {})
+    return res_data
+  }
+
   getTeam(req_params) {
     const res_data = this.db.getItem('teams', req_params)
     return res_data
+  }
+
+  updateTeam(req_params, data) {
+    this.db.updateItem('teams', req_params, data)
   }
 
   checkIfTeamExists(req_params) {
@@ -35,9 +57,12 @@ class OtomiStack {
   createTeam(req_params, data) {
     // The team name is its ID
     req_params.teamId = data.name
+    this.setPasswordIfNotExist(data)
     const res_data = this.db.createItem('teams', req_params, data)
     return res_data
   }
+
+
 
   editTeam(req_params, data) {
     const res_data = this.db.updateItem('teams', req_params, data)
@@ -47,7 +72,6 @@ class OtomiStack {
   deleteTeam(req_params) {
     let res_data = this.db.deleteItem('services', req_params)
     res_data = this.db.deleteItem('teams', req_params)
-
     return res_data
   }
 
@@ -64,6 +88,10 @@ class OtomiStack {
     req_params.serviceId = data.name
     const res_data = this.db.createItem('services', req_params, data)
     return res_data
+  }
+
+  updateService(req_params, data) {
+    this.db.updateItem('services', req_params, data)
   }
 
   createDefaultService(data) {
@@ -97,73 +125,176 @@ class OtomiStack {
   getDeployments(req_params) { }
 
   async triggerDeployment(req_params, userGroup) {
-    const values = this.convertDbToValues()
-    this.repo.writeFile(this.valuesPath, values)
 
+    this.saveValues()
     await this.repo.commit(userGroup)
     return await this.repo.push()
 
   }
 
   loadValues() {
-    const values = this.repo.readFile(this.valuesPath)
-    this.convertValuesToDb(values)
+    const core_values = this.repo.readFile(this.clustersPath)
+    this.convertCoreValuesToDb(core_values)
+
+    const clusters = this.getClusters()
+    this.loadAllTeamValues(clusters)
   }
 
-  convertValuesToDb(values) {
-    const teams = values.teamConfig.teams
-    for (let [teamId, teamData] of Object.entries(teams)) {
-      // console.log(`${teamId}: ${teamData}`);
-      // console.debug(JSON.stringify(teamData))
-      const id = { teamId: teamId }
-      let teamCloned = Object.assign({}, teamData);
-      delete teamCloned.services
-      this.createTeam(id, teamCloned)
-
-      teamData.services.forEach(svc => {
-        const serviceId = { teamId: teamId, serviceId: svc.name }
-        svc['serviceType'] = {}
-        if ('ksvc' in svc) {
-          svc.serviceType['ksvc'] = svc.ksvc
-          delete svc.ksvc
-
+  loadAllTeamValues(clusters) {
+    _.forIn(clusters, (cloudClusters, cloudName) => {
+      _.forEach(cloudClusters, (clusterName) => {
+        const path = this.getValueFilePath(cloudName, clusterName)
+        const values = this.repo.readFile(path)
+        const teams = _.get(values, 'teamConfig.teams', null)
+        if (!teams) {
+          console.warn(`Missing 'teams' key in ${path} file. Skipping`)
+          return
         }
-        if ('svc' in svc) {
-          svc.serviceType.svc = svc.svc
-          delete svc.svc
-        }
-        this.createService(serviceId, svc)
+
+        this.loadTeamsValues(values.teamConfig.teams, cloudName, clusterName)
       })
+    })
+  }
+
+  convertCoreValuesToDb(values) {
+    const cs = values.clouds
+    const clusters = {
+      'aws': [],
+      'azure': [],
+      'google': [],
+    }
+
+    Object.keys(clusters).forEach(cloudName => {
+      if (!cs[cloudName])
+        return
+
+      clusters[cloudName] = Object.keys(cs[cloudName].clusters)
+    })
+
+    this.db.createItem('clusters', {}, clusters)
+  }
+
+  loadTeamsValues(teams, cloudName, clusterName) {
+    // console.debug(teams)
+    _.forIn(teams, (teamData, teamId) => {
+      // console.log(`${teamId}:${teamData}`)
+      this.convertTeamToDb(teamData, teamId, cloudName, clusterName)
+    })
+  }
+
+  assignCluster(obj, cloud, cluster) {
+    const objectPath = `clusters.${cloud}`
+    const clusters = _.get(obj, objectPath, [])
+    clusters.push(cluster)
+    _.set(obj, objectPath, clusters)
+  }
+
+  convertTeamToDb(teamData, teamId, cloud, cluster) {
+
+    // console.log(`${teamId}: ${teamData}`);
+    // console.debug(JSON.stringify(teamData))
+
+    const id = { teamId: teamId }
+    try {
+      // Here we only update clusters
+      let team = this.getTeam(id)
+      this.assignCluster(team, cloud, cluster)
+      this.updateTeam(id, team)
+    } catch (err) {
+      // Here we create a team in DB
+      let rawTeam = _.omit(teamData, 'services')
+      this.assignCluster(rawTeam, cloud, cluster)
+      this.createTeam(id, rawTeam)
+    }
+
+    if (!teamData.services) {
+      path = this.getValueFilePath(cloud, cluster)
+      console.warn(`Missing 'services' key for team ${teamId} in ${path} file. Skipping.`)
+      return
+    }
+    this.convertTeamValuesServicesToDb(teamData.services, teamId, cloud, cluster)
+  }
+
+  convertTeamValuesServicesToDb(services, teamId, cloud, cluster) {
+    services.forEach(svc => {
+      this.convertServiceToDb(svc, teamId, cloud, cluster)
+    })
+  }
+
+  convertServiceToDb(svc, teamId, cloud, cluster) {
+    const serviceId = { teamId: teamId, serviceId: svc.name }
+
+    try {
+      // Update service cloud and cluster assignment
+      const existingService = this.getService(serviceId)
+      this.assignCluster(existingService, cloud, cluster)
+      this.updateService(serviceId, existingService)
+    } catch (err) {
+      // Create service
+      svc['serviceType'] = {}
+      if ('ksvc' in svc) {
+        svc.serviceType['ksvc'] = svc.ksvc
+        delete svc.ksvc
+      }
+      if ('svc' in svc) {
+        svc.serviceType.svc = svc.svc
+        delete svc.svc
+      }
+
+      this.assignCluster(svc, cloud, cluster)
+      this.createService(serviceId, svc)
     }
   }
 
   setPasswordIfNotExist(team) {
     if (team.password)
       return
-    // Generate password
     team.password = generatePassword(16, false)
   }
 
-  convertDbToValues() {
+  saveValues() {
+    const clusters = this.getClusters()
+    this.saveAllTeamValues(clusters)
+  }
+
+  saveAllTeamValues(clouds) {
+    _.forIn(clouds, (cloudClusters, cloudName) => {
+      _.forEach(cloudClusters, (clusterName) => {
+        const values = this.convertDbToValues(cloudName, clusterName)
+        const path = this.getValueFilePath(cloudName, clusterName)
+        this.repo.writeFile(path, values)
+      })
+    })
+  }
+
+  is_at_cluster(obj, cloud, cluster) {
+    const clusters = _.get(obj, `clusters.${cloud}`, [])
+    const res = _.includes(clusters, cluster)
+    return res
+  }
+
+  convertDbToValues(cloud, cluster) {
     const teams = {}
     this.getTeams().forEach(el => {
-      let teamCloned = Object.assign({}, el);
-      const id = el.teamId
-      delete teamCloned.teamId
-      this.setPasswordIfNotExist(teamCloned)
-      teams[id] = teamCloned
+      if (!this.is_at_cluster(el, cloud, cluster))
+        return
 
+      const teamCloned = _.omit(el, ['teamId', 'clusters'])
+      const id = el.teamId
+      teams[id] = teamCloned
       let dbServices = this.getServices({ teamId: id })
       let services = new Array()
+
       dbServices.forEach(svc => {
-        let svcCloned = Object.assign({}, svc);
-        delete svcCloned.teamId
-        delete svcCloned.serviceId
-        if ('ksvc' in svcCloned.serviceType)
-          svcCloned['ksvc'] = svcCloned.serviceType.ksvc
-        if ('svc' in svcCloned.serviceType)
-          svcCloned['svc'] = svcCloned.serviceType.svc
-        delete svcCloned.serviceType
+        if (!this.is_at_cluster(svc, cloud, cluster))
+          return
+
+        const svcCloned = _.omit(svc, ['teamId', 'serviceId', 'serviceType', 'clusters'])
+
+        if ('ksvc' in svc.serviceType)
+          svcCloned['ksvc'] = svc.serviceType.ksvc
+        if ('svc' in svc.serviceType)
+          svcCloned['svc'] = svc.serviceType.svc
 
         services.push(svcCloned)
       })

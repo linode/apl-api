@@ -33,32 +33,31 @@ COPY . .eslintrc.yml ./
 
 # below command removes the packages specified in devDependencies and set NODE_ENV to production
 RUN npm prune --production
+
+
+
+
 # --------------- Production stage
 FROM alpine:3.11 AS prod
 
 
 COPY --from=dev /usr/local/bin/node /usr/bin/
-COPY --from=dev /usr/lib/libgcc* /usr/lib/libstdc* /usr/lib/
+COPY --from=dev /usr/lib/libgcc* /usr/lib/
+COPY --from=dev /usr/lib/libstdc* /usr/lib/
 
 # Install dependencies
-
 RUN apk add --no-cache git
 
 # Install app
-
-
 RUN mkdir /app
 WORKDIR /app
-
 COPY --from=clean /app/node_modules node_modules
-COPY --from=clean /app/package.json /app/app.js ./
-COPY --from=clean /app/src ./src
-COPY --from=clean /app/client ./client
+COPY --from=clean /app/package.json ./
+COPY --from=clean /app/app.js ./
+COPY --from=clean /app/src src
+COPY --from=clean /app/client client
 
-# Make sure that .env is not at this stage
-RUN rm -f /app/.env
-
+USER 1001
 EXPOSE 8080
-
 
 CMD ["node", "app.js"]

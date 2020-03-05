@@ -8,21 +8,22 @@ import Row from 'react-bootstrap/Row'
 import { Link } from "react-router-dom";
 import ActionBar from './ActionBar'
 
+
 class Services extends React.Component {
-  state = { showModal: false, services: [] };
+  state = { showModal: false, services: [], error: null };
 
   componentDidMount() {
     this.getData()
   }
 
   getData = () => {
-
     console.log('getData')
-    this.props.client.getServiceCollectionFromTeam(this.props.teamId).then((response) => {
-      console.log(response)
+    // console.log(this.props.team)
+    this.props.client.getServiceCollectionFromTeam(this.props.team.name).then((response) => {
+      // console.log(response)
       this.setState({ services: response.data })
     }).catch((error) => {
-      console.log(error);
+      this.setState({ error: error })
     })
   }
 
@@ -39,7 +40,8 @@ class Services extends React.Component {
     const body = <CreateService
       client={this.props.client}
       schema={this.props.schema}
-      teamId={this.props.teamId}
+      clusters={this.props.team.clusters}
+      teamId={this.props.team.name}
       onSubmitted={this.hideModal}
     />
 
@@ -57,7 +59,7 @@ class Services extends React.Component {
     const items = this.state.services.map((item) => {
       console.log(item)
 
-      const link = `/teams/${this.props.teamId}/services/${item.serviceId}`
+      const link = `/teams/${this.props.team.name}/services/${item.serviceId}`
       return (
         <li><Link to={link}>{item.name}</Link></li>
       )
@@ -99,6 +101,16 @@ class Services extends React.Component {
 
   render() {
     console.log(this.state.showModal)
+    if (this.state.error) {
+      return (
+        <p>{'Error: ' + this.state.error}</p>
+      )
+    }
+    if (!this.state.services) {
+      return (
+        <p>{'Loading'}</p>
+      )
+    }
 
     let body = null
     if (this.state.showModal) {

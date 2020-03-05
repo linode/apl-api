@@ -17,6 +17,7 @@ function initApp(otomiStack) {
   const apiRoutesPath = path.resolve(__dirname, 'api')
   const apiDoc = fs.readFileSync(openApiPath, 'utf8')
   let spec = yaml.safeLoad(apiDoc);
+
   const specYaml = yaml.dump(spec)
 
   app.use(logger('dev'));
@@ -45,10 +46,10 @@ function initApp(otomiStack) {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(spec));
 
   // Serve the static files from the React app
-  app.use(express.static(path.join(__dirname, './../client/build')));
+  app.use('/static/', express.static(path.join(__dirname, './../client/build/static')));
   // Handles any requests that don't match the ones above
-  app.get('/', (req,res) =>{
-    res.sendFile(path.join(__dirname+'./../client/build/index.html'));
+  app.get('/*', (req, res) => {
+    res.sendFile(path.join(__dirname + './../client/build/index.html'));
   });
 
   return app

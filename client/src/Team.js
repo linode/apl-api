@@ -6,11 +6,6 @@ import Help from './Help'
 
 const log = (type) => console.log.bind(console, type);
 
-const uiSchema = {
-  teamId: { "ui:widget": "hidden" },
-  password: { "ui:widget": "hidden" },
-};
-
 const CustomDescriptionField = ({ id, description }) => {
   return (
     <Help description={description} id={id} />
@@ -24,15 +19,19 @@ const fields = {
 class CreateTeam extends React.Component {
 
   onSubmit = (form) => {
+
+    // const data = this.props.schema.convertFormTeamDataOpenApiData(form.formData)
     this.props.client.createTeam(null, form.formData).then((response) => {
-      console.log('saved');
+      // console.log('saved');
       this.props.onSubmitted()
     }).catch((error) => {
       console.log(error);
     })
   }
   render() {
-    const schema = this.props.schema.getTeamSchema()
+
+    const schema = this.props.schema.getTeamSchema(this.props.clusters)
+    const uiSchema = this.props.schema.getTeamUiSchema()
 
     return (
       <div className="Team">
@@ -54,13 +53,62 @@ class CreateTeam extends React.Component {
 }
 
 class Team extends React.Component {
+  state = { team: null, error: null }
+
+  componentDidMount() {
+    this.getTeam()
+  }
+
+  getTeam = () => {
+    console.log('getTeam')
+    this.props.client.getTeam(this.props.teamId).then((response) => {
+      console.log(response.data)
+      this.setState({ team: response.data })
+    }).catch((error) => {
+      console.log(error)
+      this.setState({ error: error })
+    })
+  }
+
+  renderTeamDetails = (formData) => {
+    const schema = this.props.schema.getTeamSchema(formData.clusters)
+    const uiSchema = this.props.schema.getTeamUiSchema()
+    return <Form
+      key='TeamDetails'
+      formData={formData}
+      fields={fields}
+      schema={schema}
+      uiSchema={uiSchema}
+      disabled>
+      <div></div>
+    </Form>
+  }
 
   render() {
-    return (
+    if (this.state.error) {
+      return (
+        <p>{'Error:' + this.state.error}</p>
+      )
+    }
+    if (!this.state.team) {
+      return (
+        <p>{'Loading'}</p>
+      )
+    }
 
+    const teamDetails = this.renderTeamDetails(this.state.team)
+    // console.log(this.state.team)
+    return (
       <div className="Team">
         <h2>Team: {this.props.teamId}</h2>
-        <Services schema={this.props.schema} client={this.props.client} teamId={this.props.teamId} />
+
+        <h3>Services:</h3>
+
+        <Services schema={this.props.schema} client={this.props.client} team={this.state.team} />
+        <h3>Team details:</h3>
+
+        {teamDetails}
+
       </div>
     )
 
