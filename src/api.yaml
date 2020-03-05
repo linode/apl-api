@@ -563,6 +563,10 @@ components:
           description: A custom domain. Note that multi-cluster load balancing is not supported
           <<: *domainNameField
           example: redkubes.com
+        isPublic:
+          type: boolean
+          title: Use OIDC for access control
+          # description: If true service will require from a user to proof its identity. A team clientID will be used to proceed with OIDC.
         clusters:
           <<: *AvailableClusters
           # svc:
