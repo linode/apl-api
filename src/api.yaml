@@ -425,10 +425,30 @@ components:
     KnativeService: &KnativeService # description: Knative service definition
       type: object
       properties:
-        repository:
-          <<: *repositoryField
-        tag:
-          type: string
+        image:
+          type: object
+          properties:
+            repository:
+              <<: *repositoryField
+            tag:
+              type: string
+          required:
+          - repository
+          - tag
+        autoCD:
+          type: object
+          properties:
+            tagMatcher:
+              type: string
+              enum: [semver, glob]
+              default: semver 
+              description: 'see https://docs.fluxcd.io/en/1.18.0/references/fluxctl.html#using-annotations'
+            semver:
+              type: string
+              example: '~1.1'
+            glob: 
+              type: string
+              example: '1.*'
         env:
           description: Environment variables for containers
           type: array
@@ -486,8 +506,7 @@ components:
               - name
               - value
       required:
-        - repository
-        - tag
+        - image
 
     Clusters:
       <<: *AvailableClusters
