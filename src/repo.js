@@ -5,13 +5,14 @@ const error = require('./error')
 const path = require('path');
 
 class Repo {
-  constructor(localRepoPath, url, user, email, password) {
+  constructor(localRepoPath, url, user, email, password, branch) {
     this.path = localRepoPath
     this.git = simpleGit(this.path)
     this.url = url
     this.user = user
     this.email = email
     this.password = password
+    this.branch = branch
   }
 
   writeFile(relativePath, data) {
@@ -52,7 +53,7 @@ class Repo {
     console.info("Pushing values to remote origin")
 
     try {
-      const res = await this.git.push()
+      const res = await this.git.push('origin', this.branch)
       console.info("Successfully pushed values to remote origin")
       return res
     } catch (err) {
@@ -71,21 +72,24 @@ class Repo {
       const remote = `https://${this.user}:${this.password}@${this.url}`;
       await this.git.clone(remote, this.path)
       await this.git.addConfig('user.name', this.user)
-      return await this.git.addConfig('user.email', this.email)
+      await this.git.addConfig('user.email', this.email)
+      // return await this.git.pull('origin', this.branch)
+      return await this.git.checkout(this.branch)
     }
 
     console.log("Repo already exists. Pulling latest changes")
-    await this.git.pull()
+    // await this.git.checkout(this.branch)
+    await this.git.pull('origin', this.branch)
 
     return isRepo
 
   }
 }
 
-function init(localPath, url, user, email, password) {
+function init(localPath, url, user, email, password, branch) {
   if (!fs.existsSync(localPath))
     fs.mkdirSync(localPath, 0o744);
-  return new Repo(localPath, url, user, email, password)
+  return new Repo(localPath, url, user, email, password, branch)
 }
 
 module.exports = {
