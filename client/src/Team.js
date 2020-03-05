@@ -2,6 +2,7 @@ import React from "react";
 import Form from "react-jsonschema-form-bs4";
 import Services from './Services'
 import Help from './Help'
+import BootstrapTable from 'react-bootstrap-table-next';
 
 
 const log = (type) => console.log.bind(console, type);
@@ -53,10 +54,11 @@ class CreateTeam extends React.Component {
 }
 
 class Team extends React.Component {
-  state = { team: null, error: null }
+  state = { team: null, allClusters: null, error: null }
 
   componentDidMount() {
     this.getTeam()
+    this.getClusters()
   }
 
   getTeam = () => {
@@ -70,18 +72,53 @@ class Team extends React.Component {
     })
   }
 
+  getClusters = () => {
+    console.log('getClusters')
+    this.props.client.getClusterCollection().then((response) => {
+      this.setState({ allClusters: response.data })
+    }).catch((error) => {
+      console.log(error);
+    })
+  }
+
   renderTeamDetails = (formData) => {
     const schema = this.props.schema.getTeamSchema(formData.clusters)
     const uiSchema = this.props.schema.getTeamUiSchema()
-    return <Form
-      key='TeamDetails'
-      formData={formData}
-      fields={fields}
-      schema={schema}
-      uiSchema={uiSchema}
-      disabled>
-      <div></div>
-    </Form>
+
+    const columns = [{
+      dataField: 'id',
+      text: 'Cluster ID'
+    }, {
+      dataField: 'k8sVersion',
+      text: 'K8s version'
+    }, {
+      dataField: 'region',
+      text: 'Region'
+    }];
+
+    const clusters = this.state.allClusters.filter(el => this.state.team.clusters.includes(el.id))
+    return (
+      <React.Fragment>
+        <h4>OIDC</h4>
+        <div>
+          <p>Client ID: {this.state.team.oidc.clientID}</p>
+          
+        </div>
+        <h3>Available clusters</h3>
+        <BootstrapTable bootstrap4 keyField='id' data={clusters} columns={columns} />
+      </React.Fragment>
+    )
+
+
+    // return <Form
+    //   key='TeamDetails'
+    //   formData={formData}
+    //   fields={fields}
+    //   schema={schema}
+    //   uiSchema={uiSchema}
+    //   disabled>
+    //   <div></div>
+    // </Form>
   }
 
   render() {
@@ -90,7 +127,7 @@ class Team extends React.Component {
         <p>{'Error:' + this.state.error}</p>
       )
     }
-    if (!this.state.team) {
+    if (!this.state.team || !this.state.allClusters) {
       return (
         <p>{'Loading'}</p>
       )
@@ -100,15 +137,11 @@ class Team extends React.Component {
     // console.log(this.state.team)
     return (
       <div className="Team">
-        <h2>Team: {this.props.teamId}</h2>
-
+        <h2>Team configuration</h2>
+        {teamDetails}
         <h3>Services:</h3>
 
         <Services schema={this.props.schema} client={this.props.client} team={this.state.team} />
-        <h3>Team details:</h3>
-
-        {teamDetails}
-
       </div>
     )
 

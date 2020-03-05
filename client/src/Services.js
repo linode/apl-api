@@ -7,7 +7,7 @@ import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import { Link } from "react-router-dom";
 import ActionBar from './ActionBar'
-
+import BootstrapTable from 'react-bootstrap-table-next';
 
 class Services extends React.Component {
   state = { showModal: false, services: [], error: null };
@@ -56,28 +56,19 @@ class Services extends React.Component {
 
   renderServiceCollection = () => {
 
-    const items = this.state.services.map((item) => {
-      console.log(item)
+    const columns = [{
+      dataField: 'name',
+      text: 'Service name',
+      formatter: this.getServiceLink,
+    }];
 
-      const link = `/teams/${this.props.team.name}/services/${item.serviceId}`
-      return (
-        <li><Link to={link}>{item.name}</Link></li>
-      )
-    })
+    const services = <BootstrapTable bootstrap4 keyField='name' data={this.state.services} columns={columns} />
 
     return (
 
       <React.Fragment>
         {this.ServiceActionBar()}
-
-        <Container>
-          <Row>
-            <ul className="mt-2">
-              {items}
-            </ul>
-          </Row>
-        </Container>
-
+        {services}
       </React.Fragment>
     )
   }
@@ -98,7 +89,10 @@ class Services extends React.Component {
     )
   }
 
-
+  getServiceLink = (cell, row, rowIndex, formatExtraData) => {
+    const link = `/teams/${this.props.team.name}/services/${row.serviceId}`
+    return <Link to={link}>{row.name}</Link>
+  }
   render() {
     console.log(this.state.showModal)
     if (this.state.error) {
