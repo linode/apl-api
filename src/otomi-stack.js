@@ -1,6 +1,7 @@
 var generatePassword = require('password-generator');
 var _ = require('lodash');
 var path = require('path')
+var utils = require('./utils')
 class OtomiStack {
   constructor(repo, db) {
     this.db = db
@@ -229,7 +230,8 @@ class OtomiStack {
       // Create service
       svc['serviceType'] = {}
       if ('ksvc' in svc) {
-        svc.serviceType['ksvc'] = svc.ksvc
+        svc.serviceType.ksvc = svc.ksvc
+        svc.serviceType.ksvc.annotations = utils.objectToArray(svc.serviceType.ksvc.annotations, 'name', 'value')
         delete svc.ksvc
       }
       if ('svc' in svc) {
@@ -283,10 +285,12 @@ class OtomiStack {
         if (!this.is_at_cluster(svc, cluster))
           return
 
-        const svcCloned = _.omit(svc, ['teamId', 'serviceId', 'serviceType', 'clusters'])
+        const svcCloned = _.omit(svc, ['teamId', 'serviceId', 'serviceType', 'clusters', 'annotations'])
 
         if ('ksvc' in svc.serviceType)
-          svcCloned['ksvc'] = svc.serviceType.ksvc
+          svcCloned.ksvc = svc.serviceType.ksvc
+          svcCloned.ksvc.annotations = utils.arrayToObject(svcCloned.ksvc.annotations, 'name', 'value')
+
         if ('svc' in svc.serviceType)
           svcCloned['svc'] = svc.serviceType.svc
 

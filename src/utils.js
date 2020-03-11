@@ -1,3 +1,4 @@
+var _ = require('lodash');
 
 function validateEnv(envVars) {
   // Ensure required ENV vars are set
@@ -43,10 +44,31 @@ function setSignalHandlers(server) {
   });
 }
 
+function arrayToObject(array, keyField, keyValue) {
+  const obj = array.reduce((obj, item) => {
+    const cloneItem = _.cloneDeep(item)
+    obj[cloneItem[keyField]] = cloneItem[keyValue]
+    delete cloneItem['name']
+    return obj
+  }, {})
+  return obj
+}
+
+function objectToArray(obj, keyName, keyValue) {
+  const arr = Object.keys(obj).map(key => {
+    let tmp = {}
+    tmp[keyName] = key
+    tmp[keyValue] = obj[key]
+    return tmp
+  });
+  return arr
+}
 
 module.exports = {
   validateConfig: validateConfig,
   validateEnv: validateEnv,
   setSignalHandlers: setSignalHandlers,
+  arrayToObject: arrayToObject,
+  objectToArray: objectToArray,
 };
 

@@ -15,7 +15,7 @@ describe("Load and dump values", function () {
   it("should load values to db and convert them back", function (done) {
     const expectedValues = yaml.safeLoad(fs.readFileSync('./test/team.yaml', 'utf8'))
     const values = _.cloneDeep(expectedValues)
-    const cluster = {cloudName: 'aws', clusterName: 'dev', id: 'dev/aws'}
+    const cluster = { cloudName: 'aws', clusterName: 'dev', id: 'dev/aws' }
     otomiStack.loadTeamsValues(values.teamConfig.teams, cluster)
     const expectedTeam = {
       teamId: 'team1',
@@ -38,9 +38,19 @@ describe("Load and dump values", function () {
       isPublic: true,
       logo: { name: 'kubernetes' },
       name: 'hello',
-      serviceType: { ksvc: 'ksvc_data', svc: 'svc_data' },
-      clusters: ['dev/aws']
+      serviceType: {
+        ksvc: {
+          annotations: [
+            { 'name': 'autoscaling.knative.dev/minScale', 'value': '1' }
+          ],
+          env: [
+            { name: 'RED', value: 'KUBES' }
+          ]
+        },
 
+        svc: 'svc_data'
+      },
+      clusters: ['dev/aws']
     }
 
     let data = otomiStack.getTeam({ teamId: 'team1' })

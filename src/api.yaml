@@ -21,7 +21,7 @@ x-fields:
     pattern: ^([0-9]+\.[0-9]{1,2})|([0-9]{2,3}m)?$
   env: &envField
     type: string
-    pattern: ^[A-Z0-9_]*$
+    pattern: ^[a-zA-Z0-9_]*$
   annotation: &k8sAnnotationField
     type: string
     pattern: ^((.){1,253}\/)?(.){1,63}$
@@ -421,6 +421,16 @@ components:
       items:
         type: string
       uniqueItems: true
+    
+    KnativeServicePredeployed: &KnativeServicePredeployed 
+      type: object
+      properties:
+        predeployed:
+          type: boolean
+          default: true
+          readOnly: true
+      required:
+      - predeployed
 
     KnativeService: &KnativeService # description: Knative service definition
       type: object
@@ -602,10 +612,19 @@ components:
                 ksvc:
                   <<: *KnativeService
             - type: object
+              title: "Knative pre-deployed service"
+              properties:
+                ksvc-predeployed:
+                  <<: *KnativeServicePredeployed
+            - type: object
               title: "Kubernetes service"
               properties:
                 svc:
                   <<: *KubernetesService
+        logo:
+          type: string
+          readOnly: true          
+          default: kubernetes
         teamId:
           type: string
           readOnly: true

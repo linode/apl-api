@@ -14,5 +14,10 @@ teamConfig:
         logo:
           name: kubernetes
         name: hello
-        ksvc: ksvc_data
+        ksvc:
+          annotations:
+            autoscaling.knative.dev/minScale: '1'
+          env:
+            - name: 'RED'
+              value: 'KUBES'
         svc: svc_data
