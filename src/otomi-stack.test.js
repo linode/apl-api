@@ -30,6 +30,7 @@ describe("Load and dump values", function () {
     const expectedService = {
       teamId: 'team1',
       serviceId: 'hello',
+      clusterId: 'dev/aws',
 
       image: {
         repository: 'otomi/helloworld-nodejs',
@@ -50,7 +51,6 @@ describe("Load and dump values", function () {
 
         svc: 'svc_data'
       },
-      clusters: ['dev/aws']
     }
 
     let data = otomiStack.getTeam({ teamId: 'team1' })
@@ -59,8 +59,8 @@ describe("Load and dump values", function () {
     data = otomiStack.getService({ teamId: 'team1', serviceId: 'hello' })
     expect(data).to.deep.equal(expectedService)
 
-    const savedValues = otomiStack.convertDbToValues(cluster)
-    expect(savedValues).to.deep.equal(expectedValues)
+    const dbValues = otomiStack.convertDbToValues(cluster)
+    expect(dbValues).to.deep.equal(expectedValues)
     done()
   });
 

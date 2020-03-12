@@ -229,13 +229,6 @@ class OtomiStack {
 
   convertServiceToDb(svc, teamId, cluster) {
     const serviceId = { teamId: teamId, serviceId: svc.name }
-
-    try {
-      // Update service cloud and cluster assignment
-      const existingService = this.getService(serviceId)
-      this.assignCluster(existingService, cluster)
-      this.updateService(serviceId, existingService)
-    } catch (err) {
       // Create service
       svc['serviceType'] = {}
       if ('ksvc' in svc) {
@@ -247,10 +240,8 @@ class OtomiStack {
         svc.serviceType.svc = svc.svc
         delete svc.svc
       }
-
-      this.assignCluster(svc, cluster)
+      svc.clusterId = cluster.id
       this.createService(serviceId, svc)
-    }
   }
 
   setPasswordIfNotExist(team) {
@@ -278,6 +269,10 @@ class OtomiStack {
     return res
   }
 
+  isServiceAtCluster(svc, cluster) {
+    const isAtCluster = (cluster.id === svc.clusterId)
+    return isAtCluster
+  }
   convertDbToValues(cluster) {
     const teams = {}
     this.getTeams().forEach(team => {
@@ -291,10 +286,10 @@ class OtomiStack {
       let services = new Array()
 
       dbServices.forEach(svc => {
-        if (!this.is_at_cluster(svc, cluster))
+        if (!this.isServiceAtCluster(svc, cluster))
           return
 
-        const svcCloned = _.omit(svc, ['teamId', 'serviceId', 'serviceType', 'clusters', 'annotations'])
+        const svcCloned = _.omit(svc, ['teamId', 'serviceId', 'serviceType', 'clusterId', 'annotations'])
 
         if ('ksvc' in svc.serviceType)
           svcCloned.ksvc = svc.serviceType.ksvc

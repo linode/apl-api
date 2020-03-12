@@ -585,6 +585,9 @@ components:
           type: string
           description: A custom domain for the service
           <<: *domainNameField
+        isPublic:
+          type: boolean
+          title: Use OIDC for access control
         hasCert:
           type: boolean
           default: false
@@ -598,19 +601,11 @@ components:
       properties:
         name:
           <<: *nameField
-          description: A service name visible as subdomain
+          description: A service name
           example: service01
-        domain:
+        clusterId:
           type: string
-          description: A custom domain. Note that multi-cluster load balancing is not supported
-          <<: *domainNameField
-          example: redkubes.com
-        isPublic:
-          type: boolean
-          title: Use OIDC for access control
-          # description: If true service will require from a user to proof its identity. A team clientID will be used to proceed with OIDC.
-        clusters:
-          <<: *AvailableClusters
+          description: A kubernetes cluster for the service
           # svc:
         #   <<: *KubernetesService
         # ksvc:
@@ -634,10 +629,6 @@ components:
               properties:
                 svc:
                   <<: *KubernetesService
-        logo:
-          type: string
-          readOnly: true
-          default: kubernetes
         teamId:
           type: string
           readOnly: true
@@ -654,7 +645,7 @@ components:
           example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
       required:
         - name
-        - clusters
+        - cluster
     OpenApiValidationError:
       properties:
         status:

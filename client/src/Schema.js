@@ -4,6 +4,11 @@ function addEnumField(schema, clusters) {
   schema.properties.clusters.items.enum = clusters
 }
 
+function addClusterEnumField(schema, clusters) {
+  console.log(clusters)
+  schema.properties.clusterId.enum = clusters
+}
+
 class Schema {
   constructor(openApi) {
     this.openApi = openApi
@@ -11,9 +16,9 @@ class Schema {
   }
 
   getServiceSchema(clusters) {
-    
+
     const schema = Object.assign({}, this.schemas.Service)
-    addEnumField(schema, clusters)
+    addClusterEnumField(schema, clusters)
     return schema
   }
 
@@ -33,7 +38,7 @@ class Schema {
     const uiSchema = {
       ingressId: { "ui:widget": "hidden" },
     };
-    return uiSchema  
+    return uiSchema
   }
 
   getTeamUiSchema() {
@@ -43,7 +48,7 @@ class Schema {
       teamId: { "ui:widget": "hidden" },
       password: { "ui:widget": "hidden" },
       oidc: {
-        clientSecret: {"ui:widget": "password"}
+        clientSecret: { "ui:widget": "password" }
       },
       clusters: {
         "ui:widget": "checkboxes",
@@ -60,9 +65,6 @@ class Schema {
       serviceId: { "ui:widget": "hidden" },
       teamId: { "ui:widget": "hidden" },
       serviceType: { "ui:widget": "radio" },
-      clusters: {
-       "ui:widget": "checkboxes",
-      },      
       ksvc: {
         env: { "ui:options": { orderable: false } }
       },
