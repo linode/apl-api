@@ -635,14 +635,6 @@ components:
         serviceId:
           type: string
           readOnly: true
-        hasCert:
-          type: boolean
-          default: false
-          # description: If true certificate is generated automatically. Otherwise it is expected that administrator provides cert as a secret 'cert-team-$teamName-$serviceName' for a given team.
-        certArn:
-          type: string
-          description: Only if hasCert set to true and deployed on AWS
-          example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
       required:
         - name
         - cluster
