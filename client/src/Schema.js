@@ -24,6 +24,18 @@ class Schema {
     return schema
   }
 
+  getIngressSchema() {
+    const schema = Object.assign({}, this.schemas.Ingress)
+    // console.log(schema)
+    return schema
+  }
+  getIngressUiSchema() {
+    const uiSchema = {
+      ingressId: { "ui:widget": "hidden" },
+    };
+    return uiSchema  
+  }
+
   getTeamUiSchema() {
     console.log('getTeamUiSchema')
 

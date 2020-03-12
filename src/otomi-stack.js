@@ -69,6 +69,16 @@ class OtomiStack {
     return res_data
   }
 
+  getIngressCollection(req_params) {
+    const res_data = this.db.getCollection('ingress', req_params)
+    return res_data
+  }
+
+  createIngress(req_params, data) {
+    const res_data = this.db.createItem('ingress', req_params, data)
+    return res_data
+  }
+
   getServices(req_params) {
     // console.log(req_params)
     this.checkIfTeamExists(req_params)
@@ -123,7 +133,6 @@ class OtomiStack {
     this.saveValues()
     await this.repo.commit(userGroup)
     return await this.repo.push()
-
   }
 
   loadValues() {

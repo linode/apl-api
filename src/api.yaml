@@ -32,22 +32,6 @@ x-fields:
     type: string
     pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 
-x-del-responses: &DefaultDelResponses
-  "200":
-    description: Successfully deleted resource
-  "400":
-    description: Bad Request
-    content:
-      "application/json":
-        schema:
-          $ref: "#/components/schemas/OpenApiValidationError"
-  "404":
-    description: Resource does not exists
-    content:
-      "application/json":
-        schema:
-          $ref: "#/components/schemas/OtomiStackError"
-
 x-post-responses: &DefaultPostResponses
   "400":
     description: Bad Request
@@ -106,7 +90,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/IngressCollection"
     post:
-      operationId: createTeam
+      operationId: createIngress
       description: Create a team
       requestBody:
         content:

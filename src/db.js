@@ -16,7 +16,8 @@ class Db {
       services: [],
       defaultServices: [],
       clouds: [],
-      clusters: []
+      clusters: [],
+      ingress: [],
     }).write()
   }
 
