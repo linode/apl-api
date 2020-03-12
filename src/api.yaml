@@ -580,14 +580,16 @@ components:
           type: string
           readOnly: true
         serviceId:
+          title: Service ID
           type: string
         domain:
+          title: Domain
           type: string
           description: A custom domain for the service
           <<: *domainNameField
         isPublic:
           type: boolean
-          title: Use OIDC for access control
+          title: OAuth
         hasCert:
           type: boolean
           default: false
