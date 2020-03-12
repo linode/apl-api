@@ -32,6 +32,49 @@ x-fields:
     type: string
     pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 
+x-del-responses: &DefaultDelResponses
+  "200":
+    description: Successfully deleted resource
+  "400":
+    description: Bad Request
+    content:
+      "application/json":
+        schema:
+          $ref: "#/components/schemas/OpenApiValidationError"
+  "404":
+    description: Resource does not exists
+    content:
+      "application/json":
+        schema:
+          $ref: "#/components/schemas/OtomiStackError"
+
+x-post-responses: &DefaultPostResponses
+  "400":
+    description: Bad Request
+    content:
+      "application/json":
+        schema:
+          $ref: "#/components/schemas/OpenApiValidationError"
+  "409":
+    description: Resource already exists
+    content:
+      "application/json":
+        schema:
+          $ref: "#/components/schemas/OtomiStackError"
+
+x-get-responses: &DefaultGetResponses
+  "400":
+    description: Bad Request
+    content:
+      "application/json":
+        schema:
+          $ref: "#/components/schemas/OpenApiValidationError"
+  "404":
+    description: Resource does not exists
+    content:
+      "application/json":
+        schema:
+          $ref: "#/components/schemas/OtomiStackError"
 paths:
   /readiness:
     get:
@@ -51,6 +94,55 @@ paths:
             "application/json":
               schema:
                 $ref: "#/components/schemas/Clusters"
+  /ingress:
+    get:
+      operationId: getIngressCollection
+      description: Get ingress collection
+      responses:
+        "200":
+          description: Successfully obtained ingress collection
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/IngressCollection"
+    post:
+      operationId: createTeam
+      description: Create a team
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Ingress"
+        description: Team object that needs to be added to the collection
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        "200":
+          description: Successfully created ingress
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Ingress"
+
+  "/ingress/{ingressId}":
+    get:
+      operationId: getIngress
+      description: Get a specific ingress
+      parameters:
+        - name: ingressId
+          in: path
+          description: IngressId
+          required: true
+          schema:
+            type: string
+      responses:
+        <<: *DefaultGetResponses
+        "200":
+          description: Successfully obtained ingress
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Ingress"
   /teams:
     get:
       operationId: getTeamCollection
@@ -73,24 +165,14 @@ paths:
         description: Team object that needs to be added to the collection
         required: true
       responses:
+        <<: *DefaultPostResponses
         "200":
           description: Successfully obtained teams collection
           content:
             "application/json":
               schema:
                 $ref: "#/components/schemas/Team"
-        "400":
-          description: Bad Request
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/OpenApiValidationError"
-        "409":
-          description: Team already exists
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/OtomiStackError"
+
   "/teams/{teamId}":
     get:
       operationId: getTeam
@@ -103,24 +185,13 @@ paths:
           schema:
             type: string
       responses:
+        <<: *DefaultGetResponses
         "200":
           description: Successfully obtained team
           content:
             "application/json":
               schema:
                 $ref: "#/components/schemas/Team"
-        "400":
-          description: Bad Request
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/OpenApiValidationError"
-        "404":
-          description: Team does not exists
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/OtomiStackError"
     put:
       operationId: editTeam
       description: Edit a team
@@ -139,24 +210,13 @@ paths:
         description: Team object that contains updated values
         required: true
       responses:
+        <<: *DefaultGetResponses
         "200":
           description: Successfully edited team
           content:
             "application/json":
               schema:
                 $ref: "#/components/schemas/Team"
-        "400":
-          description: Bad Request
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/OpenApiValidationError"
-        "404":
-          description: Team does not exists
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/OtomiStackError"
     delete:
       operationId: deleteTeam
       description: Delete team
@@ -168,20 +228,9 @@ paths:
           schema:
             type: string
       responses:
+        <<: *DefaultGetResponses
         "200":
           description: Successfully deleted a team
-        "400":
-          description: Bad Request
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/OpenApiValidationError"
-        "404":
-          description: Team does not exists
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/OtomiStackError"
 
   "/teams/{teamId}/services":
     get:
@@ -225,24 +274,14 @@ paths:
         description: Service object
         required: true
       responses:
+        <<: *DefaultPostResponses
         "200":
           description: Successfully stored service configuration
           content:
             "application/json":
               schema:
                 $ref: "#/components/schemas/Service"
-        "400":
-          description: Bad Request
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/OpenApiValidationError"
-        "409":
-          description: Team already exists
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/OtomiStackError"
+
   "/teams/{teamId}/services/{serviceId}":
     get:
       operationId: getServiceFromTeam
@@ -261,24 +300,13 @@ paths:
           schema:
             type: string
       responses:
+        <<: *DefaultGetResponses
         "200":
           description: Successfully obtained service configuration
           content:
             "application/json":
               schema:
                 $ref: "#/components/schemas/Service"
-        "400":
-          description: Bad Request
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/OpenApiValidationError"
-        "404":
-          description: Service does not exists
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/OtomiStackError"
     put:
       operationId: editServiceFromTeam
       description: Edit a service from a given team
@@ -303,24 +331,13 @@ paths:
         description: Service object that contains updated values
         required: true
       responses:
+        <<: *DefaultGetResponses
         "200":
           description: Successfully edited service
           content:
             "application/json":
               schema:
                 $ref: "#/components/schemas/Team"
-        "400":
-          description: Bad Request
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/OpenApiValidationError"
-        "404":
-          description: Service does not exists
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/OtomiStackError"
     delete:
       operationId: deleteServiceFromTeam
       description: Delete a service from a given team
@@ -338,20 +355,10 @@ paths:
           schema:
             type: string
       responses:
+        <<: *DefaultGetResponses
         "200":
           description: Successfully deleted a service
-        "400":
-          description: Bad Request
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/OpenApiValidationError"
-        "404":
-          description: Service does not exists
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/OtomiStackError"
+
   /deployments:
     post:
       operationId: deploy
@@ -421,8 +428,8 @@ components:
       items:
         type: string
       uniqueItems: true
-    
-    KnativeServicePredeployed: &KnativeServicePredeployed 
+
+    KnativeServicePredeployed: &KnativeServicePredeployed
       type: object
       properties:
         predeployed:
@@ -430,7 +437,7 @@ components:
           default: true
           readOnly: true
       required:
-      - predeployed
+        - predeployed
 
     KnativeService: &KnativeService # description: Knative service definition
       type: object
@@ -443,22 +450,22 @@ components:
             tag:
               type: string
           required:
-          - repository
-          - tag
+            - repository
+            - tag
         autoCD:
           type: object
           properties:
             tagMatcher:
               type: string
               enum: [semver, glob]
-              default: semver 
-              description: 'see https://docs.fluxcd.io/en/1.18.0/references/fluxctl.html#using-annotations'
+              default: semver
+              description: "see https://docs.fluxcd.io/en/1.18.0/references/fluxctl.html#using-annotations"
             semver:
               type: string
-              example: '~1.1'
-            glob: 
+              example: "~1.1"
+            glob:
               type: string
-              example: '1.*'
+              example: "1.*"
         env:
           description: Environment variables for containers
           type: array
@@ -546,6 +553,7 @@ components:
           description: "A secret that is used access multi-tenant log aggregation system (Loki)"
           writeOnly: true
         oidc:
+          title: Azure team authentication
           type: object
           properties:
             clientID:
@@ -559,16 +567,17 @@ components:
         teamId:
           type: string
           readOnly: true
-        # slackUrl:
-        #   type: string
-        #   pattern: ^(https?):\/\/[^\s$.?#].[^\s]*$
-        #   example: https://hooks.slack.com/services/service-01
-        # resourceQuota:
-        #   type: object
       required:
         - name
         - oidc
         - clusters
+
+    IngressCollection:
+      properties:
+        teams:
+          type: array
+          items:
+            $ref: "#/components/schemas/Ingress"
     Teams:
       properties:
         teams:
@@ -581,6 +590,26 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Service"
+    Ingress:
+      properties:
+        ingressId:
+          type: string
+          readOnly: true
+        serviceId:
+          type: string
+        domain:
+          type: string
+          description: A custom domain for the service
+          <<: *domainNameField
+        hasCert:
+          type: boolean
+          default: false
+          # description: If true certificate is generated automatically. Otherwise it is expected that administrator provides cert as a secret 'cert-team-$teamName-$serviceName' for a given team.
+        certArn:
+          type: string
+          description: Only if hasCert set to true and deployed on AWS
+          example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
+
     Service:
       properties:
         name:
@@ -623,7 +652,7 @@ components:
                   <<: *KubernetesService
         logo:
           type: string
-          readOnly: true          
+          readOnly: true
           default: kubernetes
         teamId:
           type: string
