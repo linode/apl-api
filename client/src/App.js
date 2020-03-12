@@ -1,6 +1,5 @@
 import React from 'react';
 import Schema from './Schema'
-
 import {
   BrowserRouter as Router,
   Switch,
@@ -12,11 +11,11 @@ import './App.css';
 import Service from './Service'
 import Team from './Team'
 import Teams from './Teams'
-import Container from 'react-bootstrap/Container'
-import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
-import NavigationBar from './NavigationBar'
+import Clusters from './Clusters'
+import Ingress from './Ingress'
+import Overview from './Overview'
 import getClient, { getApiDefinition } from './client'
+import Dashboard from './Dashboard';
 
 class App extends React.Component {
   state = { loading: true, client: null, schema: null };
@@ -41,6 +40,7 @@ class App extends React.Component {
     return (
 
       <Router>
+        <Dashboard client={this.state.client}>
         <Switch>
           <Route
             exact path="/teams/:teamId/services/:serviceId"
@@ -64,10 +64,18 @@ class App extends React.Component {
           <Route exact path="/teams/">
             <Teams client={this.state.client} schema={this.state.schema} />
           </Route>
+          <Route exact path="/clusters/">
+            <Clusters client={this.state.client} schema={this.state.schema} />
+          </Route>
+          <Route exact path="/ingress/">
+            <Ingress client={this.state.client} schema={this.state.schema} />
+          </Route>
+          
           <Route path="/">
-            <Teams client={this.state.client} schema={this.state.schema} />
+            <Overview client={this.state.client} schema={this.state.schema} />
           </Route>
         </Switch >
+        </Dashboard>
       </Router >
     )
   }
@@ -97,7 +105,8 @@ class App extends React.Component {
     }
     return (
       <div className='App'>
-        <NavigationBar client={this.state.client} />
+        {body}
+        {/* <NavigationBar client={this.state.client} />
         <Container className='mt-2'>
           <Row></Row>
           <Row>
@@ -105,7 +114,7 @@ class App extends React.Component {
               {body}
             </Col>
           </Row>
-        </Container>
+        </Container> */}
       </div>
     )
   }

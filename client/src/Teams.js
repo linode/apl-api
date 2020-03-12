@@ -87,21 +87,6 @@ class Teams extends React.Component {
     )
   }
 
-  renderClusterCollection = () => {
-
-    const columns = [{
-      dataField: 'id',
-      text: 'Cluster ID'
-    }, {
-      dataField: 'k8sVersion',
-      text: 'K8s version'
-    }, {
-      dataField: 'region',
-      text: 'Region'
-    }];
-    return <BootstrapTable bootstrap4 keyField='id' data={this.state.allClusters} columns={columns} />
-  }
-
 
   renderTeamCollection = () => {
 
@@ -116,9 +101,6 @@ class Teams extends React.Component {
     return (
 
       <React.Fragment>
-        <h2>Clusters</h2>
-        {this.renderClusterCollection()}
-
         <h2>Teams</h2>
         {this.TeamActionBar()}
         {teams}
