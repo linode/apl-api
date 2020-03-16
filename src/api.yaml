@@ -561,8 +561,8 @@ components:
             provider:
               type: string
               description: "Identity provider"
-              enum: ["AzureAD"]
-              default: "AzureAD"
+              enum: ["Azure AD"]
+              default: ["Azure AD"]
             clientID:
               <<: *uuidField
             clientSecret:
@@ -634,27 +634,10 @@ components:
         clusterId:
           type: string
           description: A kubernetes cluster for the service
-        isInternal:
-          type: boolean
-          description: Indicate if service is internal (not exposed to public domain)
-          default: true
-        domain:
-          title: Public domain
-          type: string
-          description: A custom domain for the service
-          <<: *domainNameField
-        isPublic:
-          title: Single Sign On
-          type: boolean
-          default: false
-        hasCert:
-          type: boolean
-          default: false
-          description: If true certificate is generated automatically. Otherwise it is expected that administrator provides cert as a secret 'cert-team-$teamName-$serviceName' for a given team.
-        certArn:
-          type: string
-          description: Only if hasCert set to true and deployed on AWS
-          example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
+          # svc:
+        #   <<: *KubernetesService
+        # ksvc:
+        #   <<: *KnativeService
         serviceType:
           type: object
           title: type
@@ -667,7 +650,7 @@ components:
             - type: object
               title: "Knative pre-deployed service"
               properties:
-                ksvcPredeployed:
+                ksvc-predeployed:
                   <<: *KnativeServicePredeployed
             - type: object
               title: "Kubernetes service"
@@ -683,8 +666,6 @@ components:
       required:
         - name
         - clusterId
-        - isInternal
-        - isPublic
     OpenApiValidationError:
       properties:
         status:
