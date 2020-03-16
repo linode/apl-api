@@ -37,35 +37,40 @@ class OtomiStack {
     return res_data
   }
 
-  getTeam(req_params) {
-    const res_data = this.db.getItem('teams', req_params)
+  getTeam(teamId) {
+    const id = {teamId: teamId}
+    const res_data = this.db.getItem('teams', id)
     return res_data
   }
 
-  updateTeam(req_params, data) {
-    this.db.updateItem('teams', req_params, data)
+  updateTeam(teamId, data) {
+    const id = {teamId: teamId}
+    this.db.updateItem('teams', id, data)
   }
 
-  checkIfTeamExists(req_params) {
-    this.db.getItem('teams', { teamId: req_params.teamId })
+  checkIfTeamExists(teamId) {
+    const id = {teamId: teamId}
+    this.db.getItem('teams', id)
   }
 
-  createTeam(req_params, data) {
+  createTeam(data) {
     // The team name is its ID
-    req_params.teamId = data.name
+    const id = {teamId: data.name}
     this.setPasswordIfNotExist(data)
-    const res_data = this.db.createItem('teams', req_params, data)
+    const res_data = this.db.createItem('teams', id, data)
     return res_data
   }
 
-  editTeam(req_params, data) {
-    const res_data = this.db.updateItem('teams', req_params, data)
+  editTeam(teamId, data) {
+    const id = {teamId: teamId}
+    const res_data = this.db.updateItem('teams', id, data)
     return res_data
   }
 
-  deleteTeam(req_params) {
-    let res_data = this.db.deleteItem('services', req_params)
-    res_data = this.db.deleteItem('teams', req_params)
+  deleteTeam(teamId) {
+    const id = {teamId: teamId}
+    let res_data = this.db.deleteItem('services', id)
+    res_data = this.db.deleteItem('teams', id)
     return res_data
   }
 
@@ -79,23 +84,25 @@ class OtomiStack {
     return res_data
   }
 
-  getServices(req_params) {
+  getServices(teamId) {
     // console.log(req_params)
-    this.checkIfTeamExists(req_params)
-    const res_data = this.db.getCollection('services', req_params)
+    this.checkIfTeamExists(teamId)
+    const id = {teamId: teamId}
+    const res_data = this.db.getCollection('services', id)
     return res_data
   }
 
-  createService(req_params, data) {
-    this.checkIfTeamExists(req_params)
+  getAllServices(){
+    const res_data = this.db.getCollection('services')
+    return res_data
+  }
+
+  createService(teamId, data) {
+    this.checkIfTeamExists(teamId)
     // The service name is its ID
-    req_params.serviceId = data.name
-    const res_data = this.db.createItem('services', req_params, data)
+    const id = {teamId: teamId, serviceId: data.name}
+    const res_data = this.db.createItem('services', id, data)
     return res_data
-  }
-
-  updateService(req_params, data) {
-    this.db.updateItem('services', req_params, data)
   }
 
   createDefaultService(data) {
@@ -108,21 +115,23 @@ class OtomiStack {
   }
 
 
-  getService(req_params) {
-    this.checkIfTeamExists(req_params)
-    const res_data = this.db.getItem('services', req_params)
+  getService(teamId, serviceId) {
+    this.checkIfTeamExists(teamId)
+    const id = {teamId: teamId, serviceId: serviceId}
+    const res_data = this.db.getItem('services', id)
     return res_data
   }
 
-  editService(req_params, data) {
-    this.checkIfTeamExists(req_params)
-    const res_data = this.db.updateItem('services', req_params, data)
+  editService(teamId, serviceId, data) {
+    const id = {teamId: teamId, serviceId: serviceId}
+    const res_data = this.db.updateItem('services', id, data)
     return res_data
   }
 
-  deleteService(req_params) {
-    this.checkIfTeamExists(req_params)
-    const res_data = this.db.deleteItem('services', req_params)
+  deleteService(teamId, serviceId, data) {
+    this.checkIfTeamExists(teamId)
+    const id = {teamId: teamId, serviceId: serviceId}
+    const res_data = this.db.deleteItem('services', id)
     return res_data
   }
 
@@ -200,17 +209,16 @@ class OtomiStack {
     // console.log(`${teamId}: ${teamData}`);
     // console.debug(JSON.stringify(teamData))
 
-    const id = { teamId: teamId }
     try {
       // Here we only update clusters
-      let team = this.getTeam(id)
+      let team = this.getTeam(teamId)
       this.assignCluster(team, cluster)
-      this.updateTeam(id, team)
+      this.updateTeam(teamId, team)
     } catch (err) {
       // Here we create a team in DB
       let rawTeam = _.omit(teamData, 'services')
       this.assignCluster(rawTeam, cluster)
-      this.createTeam(id, rawTeam)
+      this.createTeam(rawTeam)
     }
 
     if (!teamData.services) {
@@ -228,7 +236,6 @@ class OtomiStack {
   }
 
   convertServiceToDb(svc, teamId, cluster) {
-    const serviceId = { teamId: teamId, serviceId: svc.name }
       // Create service
       svc['serviceType'] = {}
       if ('ksvc' in svc) {
@@ -241,7 +248,7 @@ class OtomiStack {
         delete svc.svc
       }
       svc.clusterId = cluster.id
-      this.createService(serviceId, svc)
+      this.createService(teamId, svc)
   }
 
   setPasswordIfNotExist(team) {
@@ -282,7 +289,7 @@ class OtomiStack {
       const teamCloned = _.omit(team, ['teamId', 'clusters'])
       const id = team.teamId
       teams[id] = teamCloned
-      let dbServices = this.getServices({ teamId: id })
+      let dbServices = this.getServices(id)
       let services = new Array()
 
       dbServices.forEach(svc => {

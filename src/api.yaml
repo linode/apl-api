@@ -108,6 +108,24 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ingress"
 
+  /services:
+    get:
+      operationId: getAllServices
+      description: Get services from a given team
+      responses:
+        "200":
+          description: Successfully obtained all services
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Services"
+        "400":
+          description: Bad Request
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/OpenApiValidationError"
+
   "/ingress/{ingressId}":
     get:
       operationId: getIngress
@@ -537,9 +555,14 @@ components:
           description: "A secret that is used access multi-tenant log aggregation system (Loki)"
           writeOnly: true
         oidc:
-          title: Azure team authentication
+          title: Team authentication
           type: object
           properties:
+            provider:
+              type: string
+              description: "Identity provider"
+              enum: ["Azure AD"]
+              default: ["Azure AD"]
             clientID:
               <<: *uuidField
             clientSecret:
@@ -579,6 +602,9 @@ components:
         ingressId:
           type: string
           readOnly: true
+        Team:
+          title: Team ID
+          type: string
         serviceId:
           title: Service ID
           type: string
@@ -639,7 +665,7 @@ components:
           readOnly: true
       required:
         - name
-        - cluster
+        - clusterId
     OpenApiValidationError:
       properties:
         status:

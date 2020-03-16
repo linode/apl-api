@@ -4,7 +4,7 @@ module.exports = function (otomi) {
     get: [
       function(req, res, next) {
         console.debug("Get services: " + JSON.stringify(req.params))
-        const v = otomi.getServices(req.params)
+        const v = otomi.getServices(req.params.teamId)
         res.status(200).json(v);
       },
     ],

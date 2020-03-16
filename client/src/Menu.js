@@ -29,11 +29,11 @@ export const LeftMenu = (
       </ListItemIcon>
       <ListItemText primary="Teams" />
     </ListItem>
-    <ListItem component={Link} to="/ingress" >
+    <ListItem component={Link} to="/services" >
       <ListItemIcon>
         <SwapVerticalCircleIcon />
       </ListItemIcon>
-      <ListItemText primary="Ingress" />
+      <ListItemText primary="Services" />
     </ListItem>
   </div>
 );

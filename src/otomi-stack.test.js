@@ -53,10 +53,10 @@ describe("Load and dump values", function () {
       },
     }
 
-    let data = otomiStack.getTeam({ teamId: 'team1' })
+    let data = otomiStack.getTeam('team1')
     expect(data).to.deep.equal(expectedTeam)
 
-    data = otomiStack.getService({ teamId: 'team1', serviceId: 'hello' })
+    data = otomiStack.getService('team1', 'hello')
     expect(data).to.deep.equal(expectedService)
 
     const dbValues = otomiStack.convertDbToValues(cluster)

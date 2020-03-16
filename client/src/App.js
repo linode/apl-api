@@ -13,6 +13,7 @@ import Team from './Team'
 import Teams from './Teams'
 import Clusters from './Clusters'
 import Ingress from './Ingress'
+import Services from './Services'
 import Overview from './Overview'
 import getClient, { getApiDefinition } from './client'
 import Dashboard from './Dashboard';
@@ -38,7 +39,6 @@ class App extends React.Component {
 
   setRouting = () => {
     return (
-
       <Router>
         <Dashboard client={this.state.client}>
         <Switch>
@@ -67,6 +67,9 @@ class App extends React.Component {
           <Route exact path="/clusters/">
             <Clusters client={this.state.client} schema={this.state.schema} />
           </Route>
+          <Route exact path="/services/">
+            <Services client={this.state.client} schema={this.state.schema} />
+          </Route>
           <Route exact path="/ingress/">
             <Ingress client={this.state.client} schema={this.state.schema} />
           </Route>
@@ -74,9 +77,9 @@ class App extends React.Component {
           <Route path="/">
             <Overview client={this.state.client} schema={this.state.schema} />
           </Route>
-        </Switch >
+        </Switch>
         </Dashboard>
-      </Router >
+      </Router>
     )
   }
 

@@ -123,7 +123,7 @@ export default class Ingress extends React.Component {
       },
       {
         dataField: 'serviceId',
-        text: 'Service ID',
+        text: 'Service',
       }, {
         dataField: 'isPublic',
         text: 'OAuth',

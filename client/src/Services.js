@@ -7,6 +7,24 @@ import { Link } from "react-router-dom";
 import ActionBar from './ActionBar'
 import BootstrapTable from 'react-bootstrap-table-next';
 
+
+function ServiceTable(props) {
+
+  function getServiceLink(cell, row, rowIndex, formatExtraData) {
+    const link = `/teams/${row.teamId}/services/${row.serviceId}`
+    return <Link to={link}>{row.name}</Link>
+  }
+  const columns = [{
+    dataField: 'name',
+    text: 'Service name',
+    formatter: getServiceLink,
+  }];
+
+  return (
+    <BootstrapTable bootstrap4 keyField='name' data={props.services} columns={columns} />
+  )
+}
+
 class Services extends React.Component {
   state = { showModal: false, services: [], error: null };
 
@@ -14,15 +32,28 @@ class Services extends React.Component {
     this.getData()
   }
 
-  getData = () => {
-    console.log('getData')
-    // console.log(this.props.team)
+  getTeamServices() {
     this.props.client.getServiceCollectionFromTeam(this.props.team.name).then((response) => {
-      // console.log(response)
       this.setState({ services: response.data })
     }).catch((error) => {
       this.setState({ error: error })
     })
+  }
+
+  getAllServices() {
+    this.props.client.getAllServices().then((response) => {
+      this.setState({ services: response.data })
+    }).catch((error) => {
+      this.setState({ error: error })
+    })   
+  }
+
+  getData = () => {
+    console.log('getData')
+    if (this.props.team === undefined)
+      this.getAllServices()
+    else
+      this.getTeamServices()
   }
 
   showModal = () => {
@@ -54,25 +85,18 @@ class Services extends React.Component {
 
   renderServiceCollection = () => {
 
-    const columns = [{
-      dataField: 'name',
-      text: 'Service name',
-      formatter: this.getServiceLink,
-    }];
-
-    const services = <BootstrapTable bootstrap4 keyField='name' data={this.state.services} columns={columns} />
-
     return (
-
       <React.Fragment>
         {this.ServiceActionBar()}
-        {services}
+        <ServiceTable services={this.state.services}/>
       </React.Fragment>
     )
   }
 
-
   ServiceActionBar = () => {
+    if (this.props.team === undefined)
+      return
+
     return (
 
       <ActionBar client={this.props.client}>
@@ -87,10 +111,6 @@ class Services extends React.Component {
     )
   }
 
-  getServiceLink = (cell, row, rowIndex, formatExtraData) => {
-    const link = `/teams/${this.props.team.name}/services/${row.serviceId}`
-    return <Link to={link}>{row.name}</Link>
-  }
   render() {
     console.log(this.state.showModal)
     if (this.state.error) {

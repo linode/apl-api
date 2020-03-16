@@ -22,10 +22,12 @@ class Db {
   }
 
   getItem(name, uri_ids) {
-    // console.log(uri_ids)
+    console.log(uri_ids)
     const data = this.db.get(name).find(uri_ids).value()
-    if (data === undefined)
-      throw new err.NotExistError("Item does not exists")
+    if (data === undefined) {
+      const item = JSON.stringify(uri_ids)
+      throw new err.NotExistError(`Item ${item} from collection does not exists `)
+    }
     return data
   }
 
