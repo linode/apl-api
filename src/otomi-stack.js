@@ -239,9 +239,16 @@ class OtomiStack {
       // Create service
       svc['serviceType'] = {}
       if ('ksvc' in svc) {
-        svc.serviceType.ksvc = svc.ksvc
-        svc.serviceType.ksvc.annotations = utils.objectToArray(svc.serviceType.ksvc.annotations, 'name', 'value')
-        delete svc.ksvc
+        if (svc.ksvc.predeployed) {
+          svc.serviceType.ksvcPredeployed
+          delete svc.ksvc
+        } else {
+          svc.serviceType.ksvc = svc.ksvc
+          svc.serviceType.ksvc.annotations = utils.objectToArray(svc.serviceType.ksvc.annotations, 'name', 'value')
+          delete svc.ksvc
+
+        }
+
       }
       if ('svc' in svc) {
         svc.serviceType.svc = svc.svc
@@ -298,13 +305,17 @@ class OtomiStack {
 
         const svcCloned = _.omit(svc, ['teamId', 'serviceId', 'serviceType', 'clusterId', 'annotations'])
 
-        if ('ksvc' in svc.serviceType)
+        if ('ksvcPredeployed' in svc.serviceType) {
+          svcCloned.ksvc = svc.serviceType.ksvcPredeployed
+        }
+
+        if ('ksvc' in svc.serviceType){
           svcCloned.ksvc = svc.serviceType.ksvc
           svcCloned.ksvc.annotations = utils.arrayToObject(svcCloned.ksvc.annotations, 'name', 'value')
-
-        if ('svc' in svc.serviceType)
+        }
+        if ('svc' in svc.serviceType){
           svcCloned['svc'] = svc.serviceType.svc
-
+        }
         services.push(svcCloned)
       })
 

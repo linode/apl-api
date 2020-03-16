@@ -40,7 +40,7 @@ class App extends React.Component {
   setRouting = () => {
     return (
       <Router>
-        <Dashboard client={this.state.client}>
+        <Dashboard client={this.state.client, teamId=this.props.match.params.teamId}>
         <Switch>
           <Route
             exact path="/teams/:teamId/services/:serviceId"
@@ -73,7 +73,6 @@ class App extends React.Component {
           <Route exact path="/ingress/">
             <Ingress client={this.state.client} schema={this.state.schema} />
           </Route>
-          
           <Route path="/">
             <Overview client={this.state.client} schema={this.state.schema} />
           </Route>

@@ -37,3 +37,35 @@ export const LeftMenu = (
     </ListItem>
   </div>
 );
+
+
+export const LeftMenuTeam = (teamId) => {
+  return (
+  <div>
+    <ListItem component={Link} to="/">
+      <ListItemIcon>
+        <DashboardIcon />
+      </ListItemIcon>
+      <ListItemText primary="Overview" />
+    </ListItem>
+    <ListItem component={Link} to="{`/team/${teamId}/clusters`}">
+      <ListItemIcon>
+        <CloudIcon />
+      </ListItemIcon>
+      <ListItemText primary="Clusters" />
+    </ListItem>
+    <ListItem component={Link} to="{`/team/${teamId}`}">
+      <ListItemIcon>
+        <PeopleIcon />
+      </ListItemIcon>
+      <ListItemText primary="Teams" />
+    </ListItem>
+    <ListItem component={Link} to="{`/team/${teamId}/services`}">
+      <ListItemIcon>
+        <SwapVerticalCircleIcon />
+      </ListItemIcon>
+      <ListItemText primary="Services" />
+    </ListItem>
+  </div>
+  )
+}

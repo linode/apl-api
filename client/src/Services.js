@@ -18,7 +18,28 @@ function ServiceTable(props) {
     dataField: 'name',
     text: 'Service name',
     formatter: getServiceLink,
-  }];
+  },
+  {
+    dataField: 'teamId',
+    text: 'Team',
+  },
+  {
+    dataField: 'clusterId',
+    text: 'Cluster',
+  },
+  {
+    dataField: 'isInternal',
+    text: 'isInternal',
+  },
+  {
+    dataField: 'domain',
+    text: 'Domain',
+  },
+  {
+    dataField: 'isPublic',
+    text: 'isPublic',
+  },
+];
 
   return (
     <BootstrapTable bootstrap4 keyField='name' data={props.services} columns={columns} />

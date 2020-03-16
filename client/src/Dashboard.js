@@ -18,7 +18,7 @@ import Link from '@material-ui/core/Link';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import NotificationsIcon from '@material-ui/icons/Notifications';
-import { LeftMenu } from './Menu';
+import { LeftMenu, LeftMenuTeam } from './Menu';
 import User from './User'
 import Logo from './Logo'
 
@@ -128,6 +128,10 @@ export default function Dashboard(props) {
   };
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
+  let menu = LeftMenu
+  if (props.teamId)
+    menu = LeftMenuTeam
+
   return (
     <div className={classes.root}>
       <CssBaseline />
@@ -176,7 +180,7 @@ export default function Dashboard(props) {
           </IconButton>
         </div>
         <Divider />
-        <List>{LeftMenu}</List>
+        <List>{menu}</List>
         <Divider />
         {/* <List>{secondaryListItems}</List> */}
       </Drawer>
