@@ -9,7 +9,7 @@ In development mode:
 - it is expected that backend app listens on: `http://127.0.0.1:8080`,
 - cookies are not added to headers for HTTP requests made by axios,
 - The `'Auth-Group': 'admin'` header is added to each HTTP request made by axios.
-- ## We use [OpenApiClientAxios](https://github.com/anttiviljami/openapi-client-axios/blob/master/DOCS.md) with `api.yaml` file which built with [OpenAPI Swagger](https://swagger.io/specification/) in the backend (wich defines schemas, paths and methods) to fetch or change the data
+- We use [OpenApiClientAxios](https://github.com/anttiviljami/openapi-client-axios/blob/master/DOCS.md) with `api.yaml` file which built with [OpenAPI Swagger](https://swagger.io/specification/) in the backend (wich defines schemas, paths and methods) to fetch or change the data
 
 ## Available Scripts
 
