@@ -562,7 +562,7 @@ components:
               type: string
               description: "Identity provider"
               enum: ["Azure AD"]
-              default: ["Azure AD"]
+              default: "Azure AD"
             clientID:
               <<: *uuidField
             clientSecret:
