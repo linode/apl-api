@@ -1,108 +1,117 @@
-import React from "react";
-import Form from "react-jsonschema-form-bs4";
+import React from 'react'
+import Form from 'react-jsonschema-form-bs4'
 import Services from './Services'
 import Help from './Help'
-import BootstrapTable from 'react-bootstrap-table-next';
+import BootstrapTable from 'react-bootstrap-table-next'
 
-const log = (type) => console.log.bind(console, type);
+const log = type => console.log.bind(console, type)
 
 const CustomDescriptionField = ({ id, description }) => {
-  return (
-    <Help description={description} id={id} />
-  )
-};
+  return <Help description={description} id={id} />
+}
 
 const fields = {
-  DescriptionField: CustomDescriptionField
-};
+  DescriptionField: CustomDescriptionField,
+}
 
 class CreateTeam extends React.Component {
-
-  onSubmit = (form) => {
-
+  onSubmit = form => {
     // const data = this.props.schema.convertFormTeamDataOpenApiData(form.formData)
-    this.props.client.createTeam(null, form.formData).then((response) => {
-      // console.log('saved');
-      this.props.onSubmitted()
-    }).catch((error) => {
-      console.log(error);
-    })
+    this.props.client
+      .createTeam(null, form.formData)
+      .then(response => {
+        // console.log('saved');
+        this.props.onSubmitted()
+      })
+      .catch(error => {
+        console.log(error)
+      })
   }
   render() {
-
     const schema = this.props.schema.getTeamSchema(this.props.clusters)
     const uiSchema = this.props.schema.getTeamUiSchema()
 
     return (
-      <div className="Team">
+      <div className='Team'>
         <Form
           key='createTeam'
           fields={fields}
           schema={schema}
           uiSchema={uiSchema}
-          onChange={log("changed")}
+          onChange={log('changed')}
           onSubmit={this.onSubmit}
-          onError={log("errors")}
+          onError={log('errors')}
 
-        // liveValidate={true}
+          // liveValidate={true}
         />
       </div>
     )
-
   }
 }
-
-
 
 class Team extends React.Component {
   state = { team: null, allClusters: null, error: null }
 
   componentDidMount() {
     this.getTeam()
-    this.getClusters()
+    this.getAllClusters()
   }
 
   getTeam = () => {
     console.log('getTeam')
-    this.props.client.getTeam(this.props.teamId).then((response) => {
-      console.log(response.data)
-      this.setState({ team: response.data })
-    }).catch((error) => {
-      console.log(error)
-      this.setState({ error: error })
-    })
+    this.props.client
+      .getTeam(this.props.teamId)
+      .then(response => {
+        console.log(response.data)
+        this.setState({ team: response.data })
+      })
+      .catch(error => {
+        console.log(error)
+        this.setState({ error: error })
+      })
   }
 
-  getClusters = () => {
-    console.log('getClusters')
-    this.props.client.getClusterCollection().then((response) => {
-      this.setState({ allClusters: response.data })
-    }).catch((error) => {
-      console.log(error);
-    })
+  getAllClusters = () => {
+    console.log('getAllClusters')
+    this.props.client
+      .getClusterCollection()
+      .then(response => {
+        this.setState({ allClusters: response.data })
+      })
+      .catch(error => {
+        console.log(error)
+      })
   }
 
   getTeamDashboardLink = (cell, row, rowIndex, formatExtraData) => {
     const url = `https://index.team-${this.state.team.name}.${row.domain}`
-    return <a href={url} target="_blank" rel="noopener noreferrer">link</a>
+    return (
+      <a href={url} target='_blank' rel='noopener noreferrer'>
+        link
+      </a>
+    )
   }
 
-  renderTeamDetails = (formData) => {
-
-    const columns = [{
-      dataField: 'id',
-      text: 'Cluster ID'
-    }, {
-      dataField: 'k8sVersion',
-      text: 'K8s version'
-    }, {
-      dataField: 'region',
-      text: 'Region'
-    }, {
-      dataField: 'dashboard',
-      text: 'Dashboard URL',
-      formatter: this.getTeamDashboardLink
-    }];
+  renderTeamDetails = formData => {
+    const columns = [
+      {
+        dataField: 'id',
+        text: 'Cluster ID',
+      },
+      {
+        dataField: 'k8sVersion',
+        text: 'K8s version',
+      },
+      {
+        dataField: 'region',
+        text: 'Region',
+      },
+      {
+        dataField: 'dashboard',
+        text: 'Dashboard URL',
+        formatter: this.getTeamDashboardLink,
+      },
+    ]
 
     const clusters = this.state.allClusters.filter(el => this.state.team.clusters.includes(el.id))
     return (
@@ -110,7 +119,6 @@ class Team extends React.Component {
         <h4>OIDC</h4>
         <div>
           <p>Client ID: {this.state.team.oidc.clientID}</p>
-          
         </div>
         <h3>Available clusters</h3>
         <BootstrapTable bootstrap4 keyField='id' data={clusters} columns={columns} />
@@ -120,20 +128,16 @@ class Team extends React.Component {
 
   render() {
     if (this.state.error) {
-      return (
-        <p>{'Error:' + this.state.error}</p>
-      )
+      return <p>{'Error:' + this.state.error}</p>
     }
     if (!this.state.team || !this.state.allClusters) {
-      return (
-        <p>{'Loading'}</p>
-      )
+      return <p>{'Loading'}</p>
     }
 
     const teamDetails = this.renderTeamDetails(this.state.team)
     // console.log(this.state.team)
     return (
-      <div className="Team">
+      <div className='Team'>
         <h2>Team configuration</h2>
         {teamDetails}
         <h3>Services:</h3>
@@ -141,9 +145,8 @@ class Team extends React.Component {
         <Services schema={this.props.schema} client={this.props.client} team={this.state.team} />
       </div>
     )
-
   }
 }
 
-export { CreateTeam };
-export default Team;
+export { CreateTeam }
+export default Team

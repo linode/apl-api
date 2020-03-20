@@ -33,129 +33,81 @@ x-fields:
     pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 
 x-post-responses: &DefaultPostResponses
-  "400":
+  '400':
     description: Bad Request
     content:
-      "application/json":
+      'application/json':
         schema:
-          $ref: "#/components/schemas/OpenApiValidationError"
-  "409":
+          $ref: '#/components/schemas/OpenApiValidationError'
+  '409':
     description: Resource already exists
     content:
-      "application/json":
+      'application/json':
         schema:
-          $ref: "#/components/schemas/OtomiStackError"
+          $ref: '#/components/schemas/OtomiStackError'
 
 x-get-responses: &DefaultGetResponses
-  "400":
+  '400':
     description: Bad Request
     content:
-      "application/json":
+      'application/json':
         schema:
-          $ref: "#/components/schemas/OpenApiValidationError"
-  "404":
+          $ref: '#/components/schemas/OpenApiValidationError'
+  '404':
     description: Resource does not exists
     content:
-      "application/json":
+      'application/json':
         schema:
-          $ref: "#/components/schemas/OtomiStackError"
+          $ref: '#/components/schemas/OtomiStackError'
 paths:
   /readiness:
     get:
       security: []
       description: Check readiness
       responses:
-        "200":
+        '200':
           description: Service is ready
   /clusters:
     get:
-      operationId: getClusterCollection
+      operationId: getClusters
       description: Get available clusters
       responses:
-        "200":
+        '200':
           description: Successfully obtained cluster collection
           content:
-            "application/json":
+            'application/json':
               schema:
-                $ref: "#/components/schemas/Clusters"
-  /ingress:
-    get:
-      operationId: getIngressCollection
-      description: Get ingress collection
-      responses:
-        "200":
-          description: Successfully obtained ingress collection
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/IngressCollection"
-    post:
-      operationId: createIngress
-      description: Create a team
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Ingress"
-        description: Team object that needs to be added to the collection
-        required: true
-      responses:
-        <<: *DefaultPostResponses
-        "200":
-          description: Successfully created ingress
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/Ingress"
+                $ref: '#/components/schemas/Clusters'
 
   /services:
     get:
       operationId: getAllServices
       description: Get services from a given team
       responses:
-        "200":
+        '200':
           description: Successfully obtained all services
           content:
-            "application/json":
+            'application/json':
               schema:
-                $ref: "#/components/schemas/Services"
-        "400":
+                $ref: '#/components/schemas/Services'
+        '400':
           description: Bad Request
           content:
-            "application/json":
+            'application/json':
               schema:
-                $ref: "#/components/schemas/OpenApiValidationError"
+                $ref: '#/components/schemas/OpenApiValidationError'
 
-  "/ingress/{ingressId}":
-    get:
-      operationId: getIngress
-      description: Get a specific ingress
-      parameters:
-        - name: ingressId
-          in: path
-          description: IngressId
-          required: true
-          schema:
-            type: string
-      responses:
-        <<: *DefaultGetResponses
-        "200":
-          description: Successfully obtained ingress
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/Ingress"
   /teams:
     get:
-      operationId: getTeamCollection
+      operationId: getTeams
       description: Get teams collection
       responses:
-        "200":
+        '200':
           description: Successfully obtained teams collection
           content:
-            "application/json":
+            'application/json':
               schema:
-                $ref: "#/components/schemas/Teams"
+                $ref: '#/components/schemas/Teams'
     post:
       operationId: createTeam
       description: Create a team
@@ -163,19 +115,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Team"
+              $ref: '#/components/schemas/Team'
         description: Team object that needs to be added to the collection
         required: true
       responses:
         <<: *DefaultPostResponses
-        "200":
+        '200':
           description: Successfully obtained teams collection
           content:
-            "application/json":
+            'application/json':
               schema:
-                $ref: "#/components/schemas/Team"
+                $ref: '#/components/schemas/Team'
 
-  "/teams/{teamId}":
+  '/teams/{teamId}':
     get:
       operationId: getTeam
       description: Get a specific team
@@ -188,12 +140,12 @@ paths:
             type: string
       responses:
         <<: *DefaultGetResponses
-        "200":
+        '200':
           description: Successfully obtained team
           content:
-            "application/json":
+            'application/json':
               schema:
-                $ref: "#/components/schemas/Team"
+                $ref: '#/components/schemas/Team'
     put:
       operationId: editTeam
       description: Edit a team
@@ -208,17 +160,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Team"
+              $ref: '#/components/schemas/Team'
         description: Team object that contains updated values
         required: true
       responses:
         <<: *DefaultGetResponses
-        "200":
+        '200':
           description: Successfully edited team
           content:
-            "application/json":
+            'application/json':
               schema:
-                $ref: "#/components/schemas/Team"
+                $ref: '#/components/schemas/Team'
     delete:
       operationId: deleteTeam
       description: Delete team
@@ -231,12 +183,11 @@ paths:
             type: string
       responses:
         <<: *DefaultGetResponses
-        "200":
+        '200':
           description: Successfully deleted a team
-
-  "/teams/{teamId}/services":
+  '/teams/{teamId}/services':
     get:
-      operationId: getServiceCollectionFromTeam
+      operationId: getTeamServices
       description: Get services from a given team
       parameters:
         - name: teamId
@@ -246,18 +197,18 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Successfully obtained services
           content:
-            "application/json":
+            'application/json':
               schema:
-                $ref: "#/components/schemas/Services"
-        "400":
+                $ref: '#/components/schemas/Services'
+        '400':
           description: Bad Request
           content:
-            "application/json":
+            'application/json':
               schema:
-                $ref: "#/components/schemas/OpenApiValidationError"
+                $ref: '#/components/schemas/OpenApiValidationError'
     post:
       operationId: addServiceToTeam
       description: Create a service
@@ -272,43 +223,43 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Service"
+              $ref: '#/components/schemas/Service'
         description: Service object
         required: true
       responses:
         <<: *DefaultPostResponses
-        "200":
+        '200':
           description: Successfully stored service configuration
           content:
-            "application/json":
+            'application/json':
               schema:
-                $ref: "#/components/schemas/Service"
+                $ref: '#/components/schemas/Service'
 
-  "/teams/{teamId}/services/{serviceId}":
+  '/teams/{teamId}/services/{name}':
     get:
-      operationId: getServiceFromTeam
+      operationId: getService
       description: Get a service from a given team
       parameters:
         - name: teamId
           in: path
-          description: ID of team to return
+          description: ID of team
           required: true
           schema:
             type: string
-        - name: serviceId
+        - name: name
           in: path
-          description: ID of the service
+          description: Name of the service
           required: true
           schema:
             type: string
       responses:
         <<: *DefaultGetResponses
-        "200":
+        '200':
           description: Successfully obtained service configuration
           content:
-            "application/json":
+            'application/json':
               schema:
-                $ref: "#/components/schemas/Service"
+                $ref: '#/components/schemas/Service'
     put:
       operationId: editServiceFromTeam
       description: Edit a service from a given team
@@ -319,9 +270,9 @@ paths:
           required: true
           schema:
             type: string
-        - name: serviceId
+        - name: name
           in: path
-          description: ID of the service
+          description: Name of the service
           required: true
           schema:
             type: string
@@ -329,17 +280,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Service"
+              $ref: '#/components/schemas/Service'
         description: Service object that contains updated values
         required: true
       responses:
         <<: *DefaultGetResponses
-        "200":
+        '200':
           description: Successfully edited service
           content:
-            "application/json":
+            'application/json':
               schema:
-                $ref: "#/components/schemas/Team"
+                $ref: '#/components/schemas/Team'
     delete:
       operationId: deleteServiceFromTeam
       description: Delete a service from a given team
@@ -350,15 +301,15 @@ paths:
           required: true
           schema:
             type: string
-        - name: serviceId
+        - name: name
           in: path
-          description: ID of the service
+          description: Name of the service
           required: true
           schema:
             type: string
       responses:
         <<: *DefaultGetResponses
-        "200":
+        '200':
           description: Successfully deleted a service
 
   /deployments:
@@ -366,33 +317,33 @@ paths:
       operationId: deploy
       description: Trigger a deployment (only for admin)
       responses:
-        "202":
+        '202':
           description: Deployment has been triggered
           content:
-            "application/json":
+            'application/json':
               schema:
-                $ref: "#/components/schemas/Deployment"
-        "409":
+                $ref: '#/components/schemas/Deployment'
+        '409':
           description: Unable not push data to git repo
           content:
-            "application/json":
+            'application/json':
               schema:
-                $ref: "#/components/schemas/OtomiStackError"
+                $ref: '#/components/schemas/OtomiStackError'
   /apiDocs:
     get:
       security: []
       description: Get OpenApi document
       responses:
-        "200":
+        '200':
           description: The requested apiDoc.
           content:
-            "application/json":
+            'application/json':
               schema:
                 type: object
         default:
           description: The requested apiDoc.
 servers:
-  - url: "/v1"
+  - url: '/v1'
 
 # -------------------- Components
 components:
@@ -419,7 +370,7 @@ components:
             description: cluster name
             example: dev
             type: string
-          cloudName:
+          cloud:
             description: cluster provider name
             example: google
             type: string
@@ -461,13 +412,13 @@ components:
               type: string
               enum: [semver, glob]
               default: semver
-              description: "see https://docs.fluxcd.io/en/1.18.0/references/fluxctl.html#using-annotations"
+              description: 'see https://docs.fluxcd.io/en/1.18.0/references/fluxctl.html#using-annotations'
             semver:
               type: string
-              example: "~1.1"
+              example: '~1.1'
             glob:
               type: string
-              example: "1.*"
+              example: '1.*'
         env:
           description: Environment variables for containers
           type: array
@@ -546,84 +497,20 @@ components:
       properties:
         name:
           <<: *nameField
-          example: "team-1"
+          example: 'team-1'
           description: A team name
         clusters:
           <<: *AvailableClusters
         password:
           type: string
-          description: "A secret that is used access multi-tenant log aggregation system (Loki)"
+          description: 'A secret that is used access multi-tenant log aggregation system (Loki)'
           writeOnly: true
-        oidc:
-          title: Team authentication
-          type: object
-          properties:
-            provider:
-              type: string
-              description: "Identity provider"
-              enum: ["Azure AD"]
-              default: ["Azure AD"]
-            clientID:
-              <<: *uuidField
-            clientSecret:
-              type: string
-              writeOnly: true
-          required:
-            - clientID
-            - clientSecret
         teamId:
           type: string
           readOnly: true
       required:
         - name
-        - oidc
         - clusters
-
-    IngressCollection:
-      properties:
-        teams:
-          type: array
-          items:
-            $ref: "#/components/schemas/Ingress"
-    Teams:
-      properties:
-        teams:
-          type: array
-          items:
-            $ref: "#/components/schemas/Team"
-    Services:
-      properties:
-        services:
-          type: array
-          items:
-            $ref: "#/components/schemas/Service"
-    Ingress:
-      properties:
-        ingressId:
-          type: string
-          readOnly: true
-        Team:
-          title: Team ID
-          type: string
-        serviceId:
-          title: Service ID
-          type: string
-        domain:
-          title: Domain
-          type: string
-          description: A custom domain for the service
-          <<: *domainNameField
-        isPublic:
-          type: boolean
-          title: OAuth
-        hasCert:
-          type: boolean
-          default: false
-          # description: If true certificate is generated automatically. Otherwise it is expected that administrator provides cert as a secret 'cert-team-$teamName-$serviceName' for a given team.
-        certArn:
-          type: string
-          description: Only if hasCert set to true and deployed on AWS
-          example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
 
     Service:
       properties:
@@ -643,17 +530,17 @@ components:
           title: type
           anyOf:
             - type: object
-              title: "Knative service"
+              title: 'Knative service'
               properties:
                 ksvc:
                   <<: *KnativeService
             - type: object
-              title: "Knative pre-deployed service"
+              title: 'Knative pre-deployed service'
               properties:
                 ksvc-predeployed:
                   <<: *KnativeServicePredeployed
             - type: object
-              title: "Kubernetes service"
+              title: 'Kubernetes service'
               properties:
                 svc:
                   <<: *KubernetesService
@@ -673,7 +560,7 @@ components:
         errors:
           type: array
           items:
-            $ref: "#/components/schemas/ValidationError"
+            $ref: '#/components/schemas/ValidationError'
     ValidationError:
       properties:
         path:

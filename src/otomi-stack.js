@@ -1,7 +1,10 @@
-var generatePassword = require('password-generator');
-var _ = require('lodash');
-var path = require('path')
-var utils = require('./utils')
+const generatePassword = require('password-generator')
+const _ = require('lodash')
+const path = require('path')
+const utils = require('./utils')
+
+const getServiceId = (teamId, svcName) => `${teamId}/${svcName}`
+
 class OtomiStack {
   constructor(repo, db) {
     this.db = db
@@ -15,146 +18,106 @@ class OtomiStack {
       await this.repo.clone()
       this.loadValues()
     } catch (e) {
-      console.error("Unable to init app", e);
+      console.error('Unable to init app', e)
       return false
     }
     return true
   }
 
   getValueFilePath(cluster) {
-    const clusterFilename = cluster.clusterName + '.yaml'
-    const fPath = path.join(this.envPath, cluster.cloudName, clusterFilename)
+    const clusterFilename = cluster.cluster + '.yaml'
+    const fPath = path.join(this.envPath, cluster.cloud, clusterFilename)
     return fPath
   }
 
   getTeams() {
-    const res_data = this.db.getCollection('teams')
-    return res_data
+    return this.db.getCollection('teams')
   }
 
   getClusters() {
-    const res_data = this.db.getCollection('clusters')
-    return res_data
+    return this.db.getCollection('clusters')
   }
 
   getTeam(teamId) {
-    const id = {teamId: teamId}
-    const res_data = this.db.getItem('teams', id)
-    return res_data
+    return this.db.getItem('teams', { teamId })
   }
 
   updateTeam(teamId, data) {
-    const id = {teamId: teamId}
-    this.db.updateItem('teams', id, data)
+    this.db.updateItem('teams', { teamId }, data)
   }
 
   checkIfTeamExists(teamId) {
-    const id = {teamId: teamId}
-    this.db.getItem('teams', id)
+    this.db.getItem('teams', { teamId })
   }
 
   createTeam(data) {
-    // The team name is its ID
-    const id = {teamId: data.name}
     this.setPasswordIfNotExist(data)
-    const res_data = this.db.createItem('teams', id, data)
-    return res_data
+    return this.db.createItem('teams', { teamId: data.name }, data)
   }
 
   editTeam(teamId, data) {
-    const id = {teamId: teamId}
-    const res_data = this.db.updateItem('teams', id, data)
-    return res_data
+    return this.db.updateItem('teams', { teamId }, data)
   }
 
   deleteTeam(teamId) {
-    const id = {teamId: teamId}
-    let res_data = this.db.deleteItem('services', id)
-    res_data = this.db.deleteItem('teams', id)
-    return res_data
+    this.db.deleteItem('services', { teamId })
+    return this.db.deleteItem('teams', { teamId })
   }
 
-  getIngressCollection(req_params) {
-    const res_data = this.db.getCollection('ingress', req_params)
-    return res_data
-  }
-
-  createIngress(req_params, data) {
-    const res_data = this.db.createItem('ingress', req_params, data)
-    return res_data
-  }
-
-  getServices(teamId) {
-    // console.log(req_params)
+  getTeamServices(teamId) {
     this.checkIfTeamExists(teamId)
-    const id = {teamId: teamId}
-    const res_data = this.db.getCollection('services', id)
-    return res_data
+    return this.db.getCollection('services', { teamId })
   }
 
-  getAllServices(){
-    const res_data = this.db.getCollection('services')
-    return res_data
+  getAllServices() {
+    return this.db.getCollection('services')
   }
 
   createService(teamId, data) {
     this.checkIfTeamExists(teamId)
-    // The service name is its ID
-    const id = {teamId: teamId, serviceId: data.name}
-    const res_data = this.db.createItem('services', id, data)
-    return res_data
+    return this.db.createItem('services', { teamId, serviceId: getServiceId(teamId, data.name) }, data)
   }
 
   createDefaultService(data) {
-    const res_data = this.db.createItem('defaultServices', {}, data)
-    return res_data
+    return this.db.createItem('defaultServices', {}, data)
   }
 
   getDefaultServices() {
     return this.db.getCollection('defaultServices')
   }
 
-
-  getService(teamId, serviceId) {
+  getService(teamId, name) {
     this.checkIfTeamExists(teamId)
-    const id = {teamId: teamId, serviceId: serviceId}
-    const res_data = this.db.getItem('services', id)
-    return res_data
+    return this.db.getItem('services', { teamId, name })
   }
 
-  editService(teamId, serviceId, data) {
-    const id = {teamId: teamId, serviceId: serviceId}
-    const res_data = this.db.updateItem('services', id, data)
-    return res_data
+  editService(teamId, name, data) {
+    return this.db.updateItem('services', { teamId, name }, data)
   }
 
-  deleteService(teamId, serviceId, data) {
+  deleteService(teamId, name) {
     this.checkIfTeamExists(teamId)
-    const id = {teamId: teamId, serviceId: serviceId}
-    const res_data = this.db.deleteItem('services', id)
-    return res_data
+    return this.db.deleteItem('services', { teamId, name })
   }
 
-  getDeployments(req_params) { }
+  getDeployments(params) {}
 
-  async triggerDeployment(req_params, userGroup) {
-
+  async triggerDeployment(userGroup) {
     this.saveValues()
     await this.repo.commit(userGroup)
     return await this.repo.push()
   }
 
   loadValues() {
-    const core_values = this.repo.readFile(this.clustersPath)
-    this.convertCoreValuesToDb(core_values)
+    const coreValues = this.repo.readFile(this.clustersPath)
+    this.convertCoreValuesToDb(coreValues)
 
     const clusters = this.getClusters()
     this.loadAllTeamValues(clusters)
   }
 
   loadAllTeamValues(clusters) {
-
-    _.forEach(clusters, (cluster) => {
+    _.forEach(clusters, cluster => {
       try {
         const path = this.getValueFilePath(cluster)
         const values = this.repo.readFile(path)
@@ -164,8 +127,7 @@ class OtomiStack {
           return
         }
         this.loadTeamsValues(values.teamConfig.teams, cluster)
-      }
-      catch(e) {
+      } catch (e) {
         console.error(`Unable to load teams data for cluster ${cluster.id}`, e)
         return
       }
@@ -174,19 +136,19 @@ class OtomiStack {
 
   convertCoreValuesToDb(values) {
     const cs = values.clouds
-    _.forIn(cs, (cloudObj, cloudName) => {
-      _.forIn(cloudObj.clusters, (clusterObject, clusterName) => {
-        const cluster_id = `${clusterName}/${cloudName}`
-        const cluster = {
-          cloudName: cloudName, 
-          clusterName: clusterName,
-          domain: `${clusterName}.${cloudObj.domain}`,
+    _.forIn(cs, (cloudObj, cloud) => {
+      _.forIn(cloudObj.clusters, (clusterObject, cluster) => {
+        const clusterId = `${cluster}/${cloud}`
+        const clusterObj = {
+          cloud: cloud,
+          cluster: cluster,
+          domain: `${cluster}.${cloudObj.domain}`,
           k8sVersion: clusterObject.k8sVersion,
           region: clusterObject.region,
         }
-        console.log(cluster);
-        this.db.createItem('clusters', {id: cluster_id}, cluster)
-      });
+        console.log(clusterObj)
+        this.db.createItem('clusters', { id: clusterId }, clusterObj)
+      })
     })
   }
 
@@ -205,7 +167,6 @@ class OtomiStack {
   }
 
   convertTeamToDb(teamData, teamId, cluster) {
-
     // console.log(`${teamId}: ${teamData}`);
     // console.debug(JSON.stringify(teamData))
 
@@ -236,24 +197,23 @@ class OtomiStack {
   }
 
   convertServiceToDb(svc, teamId, cluster) {
-      // Create service
-      svc['serviceType'] = {}
-      if ('ksvc' in svc) {
-        svc.serviceType.ksvc = svc.ksvc
-        svc.serviceType.ksvc.annotations = utils.objectToArray(svc.serviceType.ksvc.annotations, 'name', 'value')
-        delete svc.ksvc
-      }
-      if ('svc' in svc) {
-        svc.serviceType.svc = svc.svc
-        delete svc.svc
-      }
-      svc.clusterId = cluster.id
-      this.createService(teamId, svc)
+    // Create service
+    svc['serviceType'] = {}
+    if ('ksvc' in svc) {
+      svc.serviceType.ksvc = svc.ksvc
+      svc.serviceType.ksvc.annotations = utils.objectToArray(svc.serviceType.ksvc.annotations, 'name', 'value')
+      delete svc.ksvc
+    }
+    if ('svc' in svc) {
+      svc.serviceType.svc = svc.svc
+      delete svc.svc
+    }
+    svc.clusterId = cluster.id
+    this.createService(teamId, svc)
   }
 
   setPasswordIfNotExist(team) {
-    if (team.password)
-      return
+    if (team.password) return
     team.password = generatePassword(16, false)
   }
 
@@ -263,47 +223,38 @@ class OtomiStack {
   }
 
   saveAllTeamValues(clusters) {
-    _.forEach(clusters, (cluster) => {
+    _.forEach(clusters, cluster => {
       const values = this.convertDbToValues(cluster)
       const path = this.getValueFilePath(cluster)
       this.repo.writeFile(path, values)
     })
   }
 
-  is_at_cluster(obj, cluster) {
+  inCluster(obj, cluster) {
     const clusters = _.get(obj, 'clusters', [])
-    const res = (_.indexOf(clusters, cluster.id) != -1)
-    return res
+    return _.indexOf(clusters, cluster.id) != -1
   }
 
-  isServiceAtCluster(svc, cluster) {
-    const isAtCluster = (cluster.id === svc.clusterId)
-    return isAtCluster
-  }
   convertDbToValues(cluster) {
     const teams = {}
     this.getTeams().forEach(team => {
-      if (!this.is_at_cluster(team, cluster))
-        return
+      if (!this.inCluster(team, cluster)) return
 
       const teamCloned = _.omit(team, ['teamId', 'clusters'])
       const id = team.teamId
       teams[id] = teamCloned
-      let dbServices = this.getServices(id)
+      let dbServices = this.getTeamServices(id)
       let services = new Array()
 
       dbServices.forEach(svc => {
-        if (!this.isServiceAtCluster(svc, cluster))
-          return
+        if (cluster.id !== svc.clusterId) return
 
         const svcCloned = _.omit(svc, ['teamId', 'serviceId', 'serviceType', 'clusterId', 'annotations'])
 
-        if ('ksvc' in svc.serviceType)
-          svcCloned.ksvc = svc.serviceType.ksvc
-          svcCloned.ksvc.annotations = utils.arrayToObject(svcCloned.ksvc.annotations, 'name', 'value')
+        if ('ksvc' in svc.serviceType) svcCloned.ksvc = svc.serviceType.ksvc
+        svcCloned.ksvc.annotations = utils.arrayToObject(svcCloned.ksvc.annotations, 'name', 'value')
 
-        if ('svc' in svc.serviceType)
-          svcCloned['svc'] = svc.serviceType.svc
+        if ('svc' in svc.serviceType) svcCloned['svc'] = svc.serviceType.svc
 
         services.push(svcCloned)
       })
@@ -320,4 +271,4 @@ class OtomiStack {
 
 module.exports = {
   OtomiStack: OtomiStack,
-};
+}

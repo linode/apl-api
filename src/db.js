@@ -5,61 +5,69 @@ const Memory = require('lowdb/adapters/Memory')
 
 class Db {
   constructor(path) {
-    this.db = low(
-      path == null
-        ? new Memory()
-        : new FileSync(path)
-    )
+    this.db = low(path == null ? new Memory() : new FileSync(path))
     // Set some defaults (required if your JSON file is empty)
-    this.db.defaults({
-      teams: [],
-      services: [],
-      defaultServices: [],
-      clouds: [],
-      clusters: [],
-      ingress: [],
-    }).write()
+    this.db
+      .defaults({
+        teams: [],
+        services: [],
+        defaultServices: [],
+        clouds: [],
+        clusters: [],
+      })
+      .write()
   }
 
-  getItem(name, uri_ids) {
-    console.log(uri_ids)
-    const data = this.db.get(name).find(uri_ids).value()
+  getItem(name, selectors) {
+    console.log(selectors)
+    const data = this.db
+      .get(name)
+      .find(selectors)
+      .value()
     if (data === undefined) {
-      const item = JSON.stringify(uri_ids)
-      throw new err.NotExistError(`Item ${item} from collection does not exists `)
+      throw new err.NotExistError(`Selector props ${JSON.stringify(selectors)} do not exist on collection`)
     }
     return data
   }
 
-  getCollection(name, uri_ids) {
-    const data = this.db.get(name).filter(uri_ids).value()
+  getCollection(name, selectors) {
+    const data = this.db
+      .get(name)
+      .filter(selectors)
+      .value()
     return data
   }
 
-  createItem(name, uri_ids, data) {
-    const values = this.db.get(name).filter(uri_ids).value()
+  createItem(name, selectors, data) {
+    const values = this.db
+      .get(name)
+      .filter(selectors)
+      .value()
     if (values.length > 0)
-      throw new err.AlreadyExists(`Item: ${JSON.stringify(uri_ids)} already exist in ${name} document`);
+      throw new err.AlreadyExists(`Item: ${JSON.stringify(selectors)} already exist in ${name} document`)
 
-    const value = this.db.get(name)
+    const value = this.db
+      .get(name)
       .push(data)
       .last()
-      .assign(uri_ids)
+      .assign(selectors)
       .write()
     return value
   }
 
-  deleteItem(name, uri_ids) {
-    const v = this.db.get(name)
-      .remove(uri_ids)
+  deleteItem(name, selectors) {
+    const v = this.db
+      .get(name)
+      .remove(selectors)
       .write()
     // console.log(v)
     return v
   }
 
-  updateItem(name, uri_ids, data) {
-    const v = this.db.get(name)
-      .find(uri_ids)
+  updateItem(name, selectors, data) {
+    const v = this.db
+      .get(name)
+      .find(selectors)
       .assign(data)
       .write()
     return v
@@ -72,5 +80,5 @@ function init(path) {
 
 module.exports = {
   Db: Db,
-  init: init
-};
+  init: init,
+}
