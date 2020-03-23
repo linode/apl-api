@@ -7,17 +7,29 @@ teamConfig:
       name: team1
       password: somepassworddd
       services:
-      - image:
-          repository: otomi/helloworld-nodejs
-          tag: 1.1.3
-        isPublic: true
-        logo:
-          name: kubernetes
-        name: hello
-        ksvc:
-          annotations:
-            autoscaling.knative.dev/minScale: '1'
-          env:
-            - name: 'RED'
-              value: 'KUBES'
-        svc: svc_data
+        - image:
+            repository: otomi/helloworld-nodejs
+            tag: 1.1.3
+          isPublic: true
+          logo:
+            name: kubernetes
+          name: hello
+          ksvc:
+            annotations:
+              autoscaling.knative.dev/minScale: "1"
+            env:
+              - name: "RED"
+                value: "KUBES"
+        - name: hello-svc
+          svc:
+            name: hello-svc
+        - name: hello-predeployed-ksvc
+          ksvc:
+            predeployed: true
+            annotations: {}
+        - name: hello-ksvc-internal
+          internal: true
+          isPublic: true
+          ksvc:
+            predeployed: true
+            annotations: {}
