@@ -100,7 +100,7 @@ class OtomiStack {
     return this.db.deleteItem('services', { teamId, name })
   }
 
-  getDeployments(params) {}
+  getDeployments(params) { }
 
   async triggerDeployment(userGroup) {
     this.saveValues()
@@ -196,19 +196,37 @@ class OtomiStack {
     })
   }
 
-  convertServiceToDb(svc, teamId, cluster) {
+  convertServiceToDb(svcRaw, teamId, cluster) {
     // Create service
-    svc['serviceType'] = {}
-    if ('ksvc' in svc) {
-      svc.serviceType.ksvc = svc.ksvc
-      svc.serviceType.ksvc.annotations = utils.objectToArray(svc.serviceType.ksvc.annotations, 'name', 'value')
-      delete svc.ksvc
+    let svc = _.omit(svcRaw, 'ksvc', 'svc', 'isPublic', 'internal', 'hasCert')
+    svc.spec = {}
+
+    if ('ksvc' in svcRaw) {
+      if (svcRaw.ksvc.predeployed) {
+        svc.spec.serviceType = 'ksvcPredeployed'
+      }
+      else {
+        svc.spec = _.cloneDeep(svcRaw.ksvc)
+        svc.spec.serviceType = 'ksvc'
+      }
+
+      const annotations = _.get(svcRaw.ksvc, 'annotations', {})
+      svc.spec.annotations = utils.objectToArray(annotations, 'name', 'value')
+
+    } else if ('svc' in svcRaw) {
+      svc.spec = _.cloneDeep(svcRaw.svc)
+      svc.spec.serviceType = 'svc'
+    } else {
+      console.warn("Unknown service structure")
     }
-    if ('svc' in svc) {
-      svc.serviceType.svc = svc.svc
-      delete svc.svc
+
+    svc.ingress = {
+      hasPublicUrl: !("internal" in svcRaw),
+      hasCert: ("hasCert" in svcRaw),
+      hasSingleSignOn: !("isPublic" in svcRaw),
     }
     svc.clusterId = cluster.id
+    svc.teamId = teamId
     this.createService(teamId, svc)
   }
 
@@ -247,14 +265,34 @@ class OtomiStack {
       let services = new Array()
 
       dbServices.forEach(svc => {
+
         if (cluster.id !== svc.clusterId) return
 
-        const svcCloned = _.omit(svc, ['teamId', 'serviceId', 'serviceType', 'clusterId', 'annotations'])
+        const svcCloned = _.omit(svc, ['_id', 'teamId', 'spec', 'ingress', 'serviceId', 'clusterId'])
 
-        if ('ksvc' in svc.serviceType) svcCloned.ksvc = svc.serviceType.ksvc
-        svcCloned.ksvc.annotations = utils.arrayToObject(svcCloned.ksvc.annotations, 'name', 'value')
+        if ('ksvc' === svc.spec.serviceType) {
+          svcCloned.ksvc = _.omit(svc.spec, 'serviceType')
+          const annotations = _.get(svc.spec, 'annotations', [])
+          svcCloned.ksvc.annotations = utils.arrayToObject(annotations, 'name', 'value')
+        } else if ('ksvcPredeployed' === svc.spec.serviceType) {
+          svcCloned.ksvc = _.omit(svc.spec, 'serviceType')
+          svcCloned.ksvc.predeployed = true
+          const annotations = _.get(svc.spec, 'annotations', [])
+          svcCloned.ksvc.annotations = utils.arrayToObject(annotations, 'name', 'value')
+        } else if ('svc' === svc.spec.serviceType) {
+          svcCloned.svc = _.omit(svc.spec, 'serviceType')
+        } else {
+          console.warn(`Unknown service structure: ${JSON.stringify(svc)}`)
+        }
 
-        if ('svc' in svc.serviceType) svcCloned['svc'] = svc.serviceType.svc
+        if (!svc.ingress.hasPublicUrl)
+          svcCloned.internal = true
+
+        if (!svc.ingress.hasSingleSignOn)
+          svcCloned.isPublic = true
+
+        if (!svc.ingress.hasCert)
+          delete svcCloned.hasCert
 
         services.push(svcCloned)
       })
