@@ -523,12 +523,15 @@ components:
     ServiceIngress:
       properties: &ServiceIngress
         domain:
-          title: Public URL
+          title: Domain
+          description: A managed domain zone
           type: string
-          description: A custom domain for the service
+        subdomain:
+          type: string
+          description: A subdomain that is going to be used together with with domain zone
           <<: *domainNameField
         hasSingleSignOn:
-          title: Has Single Sign On
+          title: Add Single Sign On
           type: boolean
           default: false
         hasCert:
