@@ -183,7 +183,7 @@ class OtomiStack {
     }
 
     if (!teamData.services) {
-      path = this.getValueFilePath(cluster)
+      const path = this.getValueFilePath(cluster)
       console.warn(`Missing 'services' key for team ${teamId} in ${path} file. Skipping.`)
       return
     }
