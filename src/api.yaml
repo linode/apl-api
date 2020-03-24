@@ -261,7 +261,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Service"
     put:
-      operationId: editServiceFromTeam
+      operationId: editService
       description: Edit a service from a given team
       parameters:
         - name: teamId
