@@ -43,9 +43,9 @@ RUN apk add --no-cache git
 RUN mkdir /app
 WORKDIR /app
 COPY --from=clean /app/node_modules node_modules
-COPY --from=clean /app/package.json ./
-COPY --from=clean /app/app.js ./
-COPY --from=clean /app/src src
+COPY package.json .
+COPY app.js .
+COPY src src
 
 USER 1001
 EXPOSE 8080
