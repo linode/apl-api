@@ -1,5 +1,5 @@
 # --------------- Dev stage for developers to override sources
-FROM node:13.7.0-alpine as dev
+FROM node:13.10.1-alpine as dev
 
 RUN apk --no-cache add make gcc g++ python
 
@@ -16,30 +16,21 @@ RUN npm ci
 # --------------- ci stage for CI runner
 FROM dev as ci
 
-COPY --from=dev /app/node_modules node_modules
 COPY . .eslintrc.yml ./
 ARG CI=true
 ENV NODE_ENV=test
-# tests should be executed in parallel (on a good CI runner)
-# by calling this 'ci' stage with different commands (i.e. npm run test:lint)
 
-RUN pwd
 RUN npm run lint
 RUN npm run test
-RUN cd client && npm run build
+
 # --------------- Cleanup
 FROM dev as clean
-COPY . .eslintrc.yml ./
 
 # below command removes the packages specified in devDependencies and set NODE_ENV to production
 RUN npm prune --production
 
-
-
-
 # --------------- Production stage
 FROM alpine:3.11 AS prod
-
 
 COPY --from=dev /usr/local/bin/node /usr/bin/
 COPY --from=dev /usr/lib/libgcc* /usr/lib/
@@ -55,7 +46,6 @@ COPY --from=clean /app/node_modules node_modules
 COPY --from=clean /app/package.json ./
 COPY --from=clean /app/app.js ./
 COPY --from=clean /app/src src
-COPY --from=clean /app/client client
 
 USER 1001
 EXPOSE 8080
