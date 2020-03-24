@@ -28,6 +28,20 @@
       "postmerge": "./bin/post-merge-hook.sh"
     }
   },
+  "lint-staged": {
+    "*.{jts}": [
+      "tslint --project ./tsconfig.tslint.json",
+      "git add"
+    ],
+    "*.{js}": [
+      "eslint --project ./eslintrc.yml",
+      "git add"
+    ],
+    "*.{js,json,md,ts,yml,yaml}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/redkubes/otomi-stack-api.git"
@@ -59,8 +73,11 @@
     "commitizen": "^4.0.3",
     "cz-conventional-changelog": "^3.1.0",
     "eslint": "^6.8.0",
+    "husky": "^4.2.3",
+    "lint-staged": "^10.0.9",
     "mocha": "^7.0.0",
     "nodemon": "^2.0.2",
+    "prettier": "^2.0.2",
     "sinon": "^8.0.4",
     "supertest": "^4.0.2"
   }
