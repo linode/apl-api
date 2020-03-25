@@ -42,12 +42,8 @@ class OtomiStack {
     return this.db.getItem('teams', { teamId })
   }
 
-  updateTeam(teamId, data) {
-    this.db.updateItem('teams', { teamId }, data)
-  }
-
-  checkIfTeamExists(teamId) {
-    this.db.getItem('teams', { teamId })
+  checkIfTeamExists(ids) {
+    this.db.getItem('teams', ids)
   }
 
   checkIfServiceExists(ids){
@@ -55,22 +51,28 @@ class OtomiStack {
   }
 
   createTeam(data) {
+    const ids = { teamId: data.name }
     this.setPasswordIfNotExist(data)
-    return this.db.createItem('teams', { teamId: data.name }, data)
+    return this.db.createItem('teams', ids, data)
   }
 
   editTeam(teamId, data) {
-    return this.db.updateItem('teams', { teamId }, data)
+    const ids = { teamId }
+    this.checkIfTeamExists(ids)
+    return this.db.updateItem('teams', ids, data)
   }
 
   deleteTeam(teamId) {
-    this.db.deleteItem('services', { teamId })
-    return this.db.deleteItem('teams', { teamId })
+    const ids = { teamId }
+    this.checkIfTeamExists(ids)
+    this.db.deleteItem('services', ids)
+    return this.db.deleteItem('teams', ids)
   }
 
   getTeamServices(teamId) {
-    this.checkIfTeamExists(teamId)
-    return this.db.getCollection('services', { teamId })
+    const ids = { teamId }
+    this.checkIfTeamExists(ids)
+    return this.db.getCollection('services', ids)
   }
 
   getAllServices() {
@@ -78,8 +80,9 @@ class OtomiStack {
   }
 
   createService(teamId, data) {
-    this.checkIfTeamExists(teamId)
-    return this.db.createItem('services', { teamId, serviceId: getServiceId(teamId, data.name) }, data)
+    this.checkIfTeamExists({ teamId })
+    const ids = { teamId, serviceId: getServiceId(teamId, data.name) }
+    return this.db.createItem('services', ids, data)
   }
 
   createDefaultService(data) {
@@ -181,7 +184,7 @@ class OtomiStack {
       // Here we only update clusters
       let team = this.getTeam(teamId)
       this.assignCluster(team, cluster)
-      this.updateTeam(teamId, team)
+      this.editTeam(teamId, team)
     } catch (err) {
       // Here we create a team in DB
       let rawTeam = _.omit(teamData, 'services')
