@@ -1,6 +1,6 @@
 {
   "name": "otomi-stack-api",
-  "version": "0.1.21",
+  "version": "0.1.22",
   "description": "REST API for admins and teams",
   "main": "app.js",
   "scripts": {
