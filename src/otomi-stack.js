@@ -50,6 +50,10 @@ class OtomiStack {
     this.db.getItem('teams', { teamId })
   }
 
+  checkIfServiceExists(ids){
+    this.db.getItem('services', ids)
+  }
+
   createTeam(data) {
     this.setPasswordIfNotExist(data)
     return this.db.createItem('teams', { teamId: data.name }, data)
@@ -87,17 +91,20 @@ class OtomiStack {
   }
 
   getService(teamId, name) {
-    this.checkIfTeamExists(teamId)
-    return this.db.getItem('services', { teamId, name })
+    const ids = { teamId, name }
+    return this.db.getItem('services', ids)
   }
 
   editService(teamId, name, data) {
-    return this.db.updateItem('services', { teamId, name }, data)
+    const ids = { teamId, name }
+    this.checkIfServiceExists(ids)
+    return this.db.updateItem('services', ids, data)
   }
 
   deleteService(teamId, name) {
-    this.checkIfTeamExists(teamId)
-    return this.db.deleteItem('services', { teamId, name })
+    const ids = { teamId, name }
+    this.checkIfServiceExists(ids)
+    return this.db.deleteItem('services', ids)
   }
 
   getDeployments(params) { }

@@ -18,7 +18,7 @@ module.exports = function(otomi) {
     delete: [
       function(req, res, next) {
         console.debug('Delete service: ' + JSON.stringify(req.params))
-        otomi.deleteService(req.params.teamId)
+        otomi.deleteService(req.params.teamId, req.params.name)
         res.status(200).json({})
       },
     ],

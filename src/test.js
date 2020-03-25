@@ -133,6 +133,55 @@ describe('Api tests for team', function() {
       .expect('Content-Type', /json/)
       .end(done)
   })
+
+  it('team can delete its service', function(done) {
+    request(app)
+      .delete('/v1/teams/team1/services/service1')
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'team1')
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+
+  it('team can update service from other team', function(done) {
+    request(app)
+      .put('/v1/teams/team2/services/service1', {})
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'team1')
+      .expect(403)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+
+  it('team can not delete service from other team', function(done) {
+    request(app)
+      .delete('/v1/teams/team2/services/service1')
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'team1')
+      .expect(403)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+
+  it('team can not update service from other team', function(done) {
+    request(app)
+      .put('/v1/teams/team2/services/service1', {})
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'team1')
+      .expect(403)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+  it('team can not get service from other team', function(done) {
+    request(app)
+      .put('/v1/teams/team2/services/service1', {})
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'team1')
+      .expect(403)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
 })
 
 describe('Api tests for non authorized user', function() {
