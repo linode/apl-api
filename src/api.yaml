@@ -292,7 +292,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Team"
     delete:
-      operationId: deleteServiceFromTeam
+      operationId: deleteService
       description: Delete a service from a given team
       parameters:
         - name: teamId
@@ -488,7 +488,18 @@ components:
 
     Clusters:
       <<: *AvailableClusters
-
+    Teams:
+      properties:
+        teams:
+          type: array
+          items:
+            $ref: "#/components/schemas/Team"
+    Services:
+      properties:
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/Service"
     Deployment:
       properties:
         id:
