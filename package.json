@@ -13,7 +13,8 @@
     "format": "prettier --check \"**/*.{js,json,md,ts,yml,yaml}\"",
     "format:fix": "prettier --write \"**/*.{js,json,md,ts,yml,yaml}\"",
     "husky:lint-staged": "lint-staged",
-    "husky:pre-commit": "lint-staged"
+    "husky:pre-commit": "lint-staged",
+    "release": "standard-version"
   },
   "config": {
     "commitizen": {
@@ -81,6 +82,7 @@
     "nodemon": "^2.0.2",
     "prettier": "^2.0.2",
     "sinon": "^8.0.4",
+    "standard-version": "^7.1.0",
     "supertest": "^4.0.2"
   }
 }
