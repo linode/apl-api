@@ -581,7 +581,8 @@ components:
                 <<: *ServiceIngress
         spec:
           type: object
-          anyOf:
+          nullable: true
+          oneOf:
             - title: Knative service
               properties:
                 <<: *KnativeServiceProperties
