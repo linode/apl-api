@@ -376,7 +376,7 @@ components:
             type: string
 
     x-available-clusters: &AvailableClusters
-      description: Select from available clusters
+      # description: Select from available clusters
       type: array
       items:
         type: string
@@ -389,8 +389,11 @@ components:
         type: object
         properties:
           name:
+            title: Annotation name
+            description: Annotation name
             <<: *k8sAnnotationField
           value:
+            title: Annotation value
             type: string
             maxLength: 32767
 
@@ -445,9 +448,11 @@ components:
               type: object
               properties:
                 cpu:
+                  description: 'The guaranteed amount of CPU'
                   <<: *k8sResourceCpuQuantityField
                   default: 50m
                 memory:
+                  description: 'The guaranteed amount of RAM'
                   <<: *k8sResourceMemoryQuantityField
                   default: 64Mi
               required:
@@ -457,9 +462,11 @@ components:
               type: object
               properties:
                 cpu:
+                  description: 'The maximal amount of CPU'
                   <<: *k8sResourceCpuQuantityField
                   default: 100m
                 memory:
+                  description: 'The maximal amount of RAM'
                   <<: *k8sResourceMemoryQuantityField
                   default: 128Mi
               required:
@@ -513,6 +520,7 @@ components:
             - completed
             - failed
     Team:
+      type: object
       properties:
         name:
           <<: *nameField
@@ -565,49 +573,74 @@ components:
         clusterId:
           type: string
           description: A kubernetes cluster for the service
+        # hasPublicUrl:
+        #   title: Has Public URL
+        #   type: boolean
+        #   # enum: ["yes", "no"]
+        #   default: false
         ingress:
-          title: Ingress
           type: object
-          properties:
-            hasPublicUrl:
-              title: Has Public URL
-              type: boolean
-              # enum: ["yes", "no"]
-              default: false
-          x-dependencies:
-            hasPublicUrl:
-              oneOf:
-                - properties:
-                    hasPublicUrl:
-                      enum: [true]
-                    <<: *ServiceIngress
-                - properties:
-                    hasPublicUrl:
-                      enum: [false]
+          # nullable: true
+          # allOf:
+          oneOf:
+            - title: No public URL
+              properties: {}
+              # properties:
+              #   noPublicUrl:
+              #     type: boolean
+            - title: With public URL
+              properties:
+                <<: *ServiceIngress
+
+        # ingress:
+        #   title: Ingress
+        #   type: object
+        #   properties:
+        #     <<: *ServiceIngress
+          # x-dependencies:
+          #   hasPublicUrl:
+          #     oneOf:
+          #       - properties:
+          #           hasPublicUrl:
+          #             enum: [true]
+          #           <<: *ServiceIngress
+          #       - properties:
+          #           hasPublicUrl:
+          #             enum: [false]
+        # serviceType:
+        #   type: string
+        #   title: type
+        #   enum: [ksvc, ksvcPredeployed, svc]
+        #   default: "ksvc"
+        # spec:
+        #   title: Specification
+        #   type: object
+        #   properties:
+        #     serviceType:
+        #       type: string
+        #       title: type
+        #       enum: [ksvc, ksvcPredeployed, svc]
+        #       default: "ksvc"
+        #     ksvc:
+        #       <<: *KnativeService
+        #     ksvcPredeployed:
+        #       <<: *KnativeServicePredeployed
+        #     svc:
+        #       <<: *KubernetesService
+          # x-dependencies:
+          # serviceType:
         spec:
-          title: Specification
           type: object
-          properties:
-            serviceType:
-              type: string
-              title: type
-              enum: [ksvc, ksvcPredeployed, svc]
-              default: "ksvc"
-          x-dependencies:
-            serviceType:
-              oneOf:
-                - properties:
-                    serviceType:
-                      enum: [ksvc]
-                    <<: *KnativeServiceProperties
-                - properties:
-                    serviceType:
-                      enum: [ksvcPredeployed]
-                    <<: *KnativeServicePredeployedProperties
-                - properties:
-                    serviceType:
-                      enum: [svc]
-                    <<: *KubernetesServiceProperties
+          anyOf:
+            - title: Knative service
+              properties:
+                <<: *KnativeServiceProperties
+            - title: Existing Knative service
+              properties:
+                <<: *KnativeServicePredeployedProperties
+            - title: Existing Kubernetes service
+              properties:
+                <<: *KubernetesServiceProperties
 
         teamId:
           type: string
