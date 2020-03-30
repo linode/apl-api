@@ -36,16 +36,13 @@
   },
   "lint-staged": {
     "*.{jts}": [
-      "tslint --project ./tsconfig.tslint.json",
-      "git add"
+      "tslint --project ./tsconfig.tslint.json"
     ],
     "*.{js}": [
-      "eslint --project ./eslintrc.yml",
-      "git add"
+      "eslint --project ./eslintrc.yml"
     ],
     "*.{js,json,md,ts,yml,yaml}": [
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ]
   },
   "repository": {
