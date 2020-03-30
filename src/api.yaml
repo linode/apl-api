@@ -569,7 +569,7 @@ components:
           description: A kubernetes cluster for the service
         ingress:
           type: object
-          # nullable: true
+          nullable: true
           # allOf:
           oneOf:
             - title: No public URL
