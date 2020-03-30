@@ -2,12 +2,12 @@ env:
   # es6: true
   mocha: true
   node: true
-extends: "eslint:recommended"
-globals:
-  Atomics: readonly
-  SharedArrayBuffer: readonly
+extends:
+  - eslint:recommended
+  - plugin:prettier/recommended
+globals: {}
 parserOptions:
-  ecmaVersion: 2018
+  ecmaVersion: 2019
 rules:
   no-unused-vars:
     - error

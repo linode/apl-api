@@ -16,10 +16,10 @@ teamConfig:
           name: hello
           ksvc:
             annotations:
-              autoscaling.knative.dev/minScale: "1"
+              autoscaling.knative.dev/minScale: '1'
             env:
-              - name: "RED"
-                value: "KUBES"
+              - name: 'RED'
+                value: 'KUBES'
         - name: hello-svc
           svc:
             name: hello-svc

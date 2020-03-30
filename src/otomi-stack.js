@@ -46,7 +46,7 @@ class OtomiStack {
     this.db.getItem('teams', ids)
   }
 
-  checkIfServiceExists(ids){
+  checkIfServiceExists(ids) {
     this.db.getItem('services', ids)
   }
 
@@ -110,7 +110,7 @@ class OtomiStack {
     return this.db.deleteItem('services', ids)
   }
 
-  getDeployments(params) { }
+  getDeployments(params) {}
 
   async triggerDeployment(userGroup) {
     this.saveValues()
@@ -127,7 +127,7 @@ class OtomiStack {
   }
 
   loadAllTeamValues(clusters) {
-    _.forEach(clusters, cluster => {
+    _.forEach(clusters, (cluster) => {
       try {
         const path = this.getValueFilePath(cluster)
         const values = this.repo.readFile(path)
@@ -201,7 +201,7 @@ class OtomiStack {
   }
 
   convertTeamValuesServicesToDb(services, teamId, cluster) {
-    services.forEach(svc => {
+    services.forEach((svc) => {
       this.convertServiceToDb(svc, teamId, cluster)
     })
   }
@@ -214,26 +214,24 @@ class OtomiStack {
     if ('ksvc' in svcRaw) {
       if (svcRaw.ksvc.predeployed) {
         svc.spec.serviceType = 'ksvcPredeployed'
-      }
-      else {
+      } else {
         svc.spec = _.cloneDeep(svcRaw.ksvc)
         svc.spec.serviceType = 'ksvc'
       }
 
       const annotations = _.get(svcRaw.ksvc, 'annotations', {})
       svc.spec.annotations = utils.objectToArray(annotations, 'name', 'value')
-
     } else if ('svc' in svcRaw) {
       svc.spec = _.cloneDeep(svcRaw.svc)
       svc.spec.serviceType = 'svc'
     } else {
-      console.warn("Unknown service structure")
+      console.warn('Unknown service structure')
     }
 
     svc.ingress = {
-      hasPublicUrl: !("internal" in svcRaw),
-      hasCert: ("hasCert" in svcRaw),
-      hasSingleSignOn: !("isPublic" in svcRaw),
+      hasPublicUrl: !('internal' in svcRaw),
+      hasCert: 'hasCert' in svcRaw,
+      hasSingleSignOn: !('isPublic' in svcRaw),
     }
     svc.clusterId = cluster.id
     svc.teamId = teamId
@@ -251,7 +249,7 @@ class OtomiStack {
   }
 
   saveAllTeamValues(clusters) {
-    _.forEach(clusters, cluster => {
+    _.forEach(clusters, (cluster) => {
       const values = this.convertDbToValues(cluster)
       const path = this.getValueFilePath(cluster)
       this.repo.writeFile(path, values)
@@ -265,7 +263,7 @@ class OtomiStack {
 
   convertDbToValues(cluster) {
     const teams = {}
-    this.getTeams().forEach(team => {
+    this.getTeams().forEach((team) => {
       if (!this.inCluster(team, cluster)) return
 
       const teamCloned = _.omit(team, ['teamId', 'clusters'])
@@ -274,8 +272,7 @@ class OtomiStack {
       let dbServices = this.getTeamServices(id)
       let services = new Array()
 
-      dbServices.forEach(svc => {
-
+      dbServices.forEach((svc) => {
         if (cluster.id !== svc.clusterId) return
 
         const svcCloned = _.omit(svc, ['_id', 'teamId', 'spec', 'ingress', 'serviceId', 'clusterId'])
@@ -295,14 +292,11 @@ class OtomiStack {
           console.warn(`Unknown service structure: ${JSON.stringify(svc)}`)
         }
 
-        if (!svc.ingress.hasPublicUrl)
-          svcCloned.internal = true
+        if (!svc.ingress.hasPublicUrl) svcCloned.internal = true
 
-        if (!svc.ingress.hasSingleSignOn)
-          svcCloned.isPublic = true
+        if (!svc.ingress.hasSingleSignOn) svcCloned.isPublic = true
 
-        if (!svc.ingress.hasCert)
-          delete svcCloned.hasCert
+        if (!svc.ingress.hasCert) delete svcCloned.hasCert
 
         services.push(svcCloned)
       })

@@ -1,8 +1,8 @@
-const simpleGit = require('simple-git/promise');
-const yaml = require('js-yaml');
-const fs = require('fs');
+const simpleGit = require('simple-git/promise')
+const yaml = require('js-yaml')
+const fs = require('fs')
 const error = require('./error')
-const path = require('path');
+const path = require('path')
 
 class Repo {
   constructor(localRepoPath, url, user, email, password, branch) {
@@ -17,24 +17,23 @@ class Repo {
 
   writeFile(relativePath, data) {
     const absolutePath = path.join(this.path, relativePath)
-    console.debug("Writing to file: " + absolutePath)
-    const yamlStr = yaml.safeDump(data);
-    fs.writeFileSync(absolutePath, yamlStr, 'utf8');
+    console.debug('Writing to file: ' + absolutePath)
+    const yamlStr = yaml.safeDump(data)
+    fs.writeFileSync(absolutePath, yamlStr, 'utf8')
   }
 
   readFile(relativePath) {
     const absolutePath = path.join(this.path, relativePath)
-    console.info("Reading from file: " + absolutePath)
-    const doc = yaml.safeLoad(fs.readFileSync(absolutePath, 'utf8'));
+    console.info('Reading from file: ' + absolutePath)
+    const doc = yaml.safeLoad(fs.readFileSync(absolutePath, 'utf8'))
     return doc
   }
 
   async commit(userGroup) {
-    console.info("Committing changes")
+    console.info('Committing changes')
     await this.git.add('./*')
     const commitSummary = await this.git.commit('otomi-stack-api')
-    if (commitSummary.commit === '')
-      return commitSummary
+    if (commitSummary.commit === '') return commitSummary
     // Only add note to a new commit
     await this.addNote({ group: userGroup })
     return commitSummary
@@ -42,7 +41,7 @@ class Repo {
 
   getNoteCmd(obj) {
     const note = JSON.stringify(obj)
-    return ["notes", "add", "-m", note]
+    return ['notes', 'add', '-m', note]
   }
 
   async addNote(obj) {
@@ -50,26 +49,25 @@ class Repo {
     return this.git.raw(cmd)
   }
   async push() {
-    console.info("Pushing values to remote origin")
+    console.info('Pushing values to remote origin')
 
     try {
       const res = await this.git.push('origin', this.branch)
-      console.info("Successfully pushed values to remote origin")
+      console.info('Successfully pushed values to remote origin')
       return res
     } catch (err) {
-      console.error(err.message);
-      throw new error.GitError("Failed to push values to remote origin")
+      console.error(err.message)
+      throw new error.GitError('Failed to push values to remote origin')
     }
   }
 
   async clone() {
-
-    console.info("Checking if repo exists at: " + this.path)
+    console.info('Checking if repo exists at: ' + this.path)
 
     const isRepo = await this.git.checkIsRepo()
     if (!isRepo) {
-      console.info("Repo does not exists. Cloning from: " + this.url + " to: " + this.path)
-      const remote = `https://${this.user}:${this.password}@${this.url}`;
+      console.info('Repo does not exists. Cloning from: ' + this.url + ' to: ' + this.path)
+      const remote = `https://${this.user}:${this.password}@${this.url}`
       await this.git.clone(remote, this.path)
       await this.git.addConfig('user.name', this.user)
       await this.git.addConfig('user.email', this.email)
@@ -77,18 +75,16 @@ class Repo {
       return await this.git.checkout(this.branch)
     }
 
-    console.log("Repo already exists. Pulling latest changes")
+    console.log('Repo already exists. Pulling latest changes')
     // await this.git.checkout(this.branch)
     await this.git.pull('origin', this.branch)
 
     return isRepo
-
   }
 }
 
 function init(localPath, url, user, email, password, branch) {
-  if (!fs.existsSync(localPath))
-    fs.mkdirSync(localPath, 0o744);
+  if (!fs.existsSync(localPath)) fs.mkdirSync(localPath, 0o744)
   return new Repo(localPath, url, user, email, password, branch)
 }
 
@@ -96,4 +92,3 @@ module.exports = {
   init: init,
   Repo: Repo,
 }
-

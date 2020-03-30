@@ -1,6 +1,12 @@
 {
   "recommendations": [
     "arjun.swagger-viewer",
-    "xyz.local-history",
+    "christian-kohler.path-intellisense",
+    "codezombiech.gitignore",
+    "donjayamanne.githistory",
+    "eamodio.gitlens",
+    "esbenp.prettier-vscode",
+    "redhat.vscode-yaml",
+    "xyz.local-history"
   ]
 }
