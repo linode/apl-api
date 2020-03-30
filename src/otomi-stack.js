@@ -212,29 +212,27 @@ class OtomiStack {
     svc.spec = {}
 
     if ('ksvc' in svcRaw) {
-      if (svcRaw.ksvc.predeployed) {
-        svc.spec.serviceType = 'ksvcPredeployed'
+      svc.spec = _.cloneDeep(svcRaw.ksvc)
+      if (!svcRaw.predeployed){
+        const annotations = _.get(svcRaw.ksvc, 'annotations', {})
+        svc.spec.annotations = utils.objectToArray(annotations, 'name', 'value')
       }
-      else {
-        svc.spec = _.cloneDeep(svcRaw.ksvc)
-        svc.spec.serviceType = 'ksvc'
-      }
-
-      const annotations = _.get(svcRaw.ksvc, 'annotations', {})
-      svc.spec.annotations = utils.objectToArray(annotations, 'name', 'value')
-
     } else if ('svc' in svcRaw) {
       svc.spec = _.cloneDeep(svcRaw.svc)
-      svc.spec.serviceType = 'svc'
     } else {
       console.warn("Unknown service structure")
     }
 
-    svc.ingress = {
-      hasPublicUrl: !("internal" in svcRaw),
-      hasCert: ("hasCert" in svcRaw),
-      hasSingleSignOn: !("isPublic" in svcRaw),
+    if ("internal" in svcRaw) {
+      svc.ingress = {internal: true}
+    } else {
+      svc.ingress = {
+        hasCert: ("hasCert" in svcRaw),
+        hasSingleSignOn: !("isPublic" in svcRaw),
+        certArn: svcRaw.certArn
+      }
     }
+
     svc.clusterId = cluster.id
     svc.teamId = teamId
     this.createService(teamId, svc)
@@ -279,30 +277,27 @@ class OtomiStack {
         if (cluster.id !== svc.clusterId) return
 
         const svcCloned = _.omit(svc, ['_id', 'teamId', 'spec', 'ingress', 'serviceId', 'clusterId'])
-
-        if ('ksvc' === svc.spec.serviceType) {
-          svcCloned.ksvc = _.omit(svc.spec, 'serviceType')
+        const spec = svcCloned.ksvc = _.omit(svc.spec, 'serviceType')
+        if (svc.spec.predeployed) {
+          svcCloned.ksvc = spec
+        } else if (svc.spec.image) {
+          svcCloned.ksvc = spec
           const annotations = _.get(svc.spec, 'annotations', [])
           svcCloned.ksvc.annotations = utils.arrayToObject(annotations, 'name', 'value')
-        } else if ('ksvcPredeployed' === svc.spec.serviceType) {
-          svcCloned.ksvc = _.omit(svc.spec, 'serviceType')
-          svcCloned.ksvc.predeployed = true
-          const annotations = _.get(svc.spec, 'annotations', [])
-          svcCloned.ksvc.annotations = utils.arrayToObject(annotations, 'name', 'value')
-        } else if ('svc' === svc.spec.serviceType) {
-          svcCloned.svc = _.omit(svc.spec, 'serviceType')
+        } else if (svc.spec.name) {
+          svcCloned.svc = spec
         } else {
           console.warn(`Unknown service structure: ${JSON.stringify(svc)}`)
         }
 
-        if (!svc.ingress.hasPublicUrl)
+        if (svc.ingress.internal)
           svcCloned.internal = true
 
         if (!svc.ingress.hasSingleSignOn)
           svcCloned.isPublic = true
 
-        if (!svc.ingress.hasCert)
-          delete svcCloned.hasCert
+        if (svc.ingress.hasCert)
+          svcCloned.hasCert = true
 
         services.push(svcCloned)
       })

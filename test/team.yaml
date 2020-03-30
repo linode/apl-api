@@ -26,10 +26,8 @@ teamConfig:
         - name: hello-predeployed-ksvc
           ksvc:
             predeployed: true
-            annotations: {}
         - name: hello-ksvc-internal
           internal: true
           isPublic: true
           ksvc:
             predeployed: true
-            annotations: {}

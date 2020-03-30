@@ -359,6 +359,9 @@ components:
         name:
           type: string
           description: A name of existing kubernetes service
+      required:
+        - name
+      additionalProperties: false
 
     x-clusters: &Clusters
       type: array
@@ -400,8 +403,13 @@ components:
     KnativeServicePredeployed: &KnativeServicePredeployed
       type: object
       properties: &KnativeServicePredeployedProperties
-        dummyProperty:
+        predeployed:
           type: boolean
+          default: true
+          readOnly: true
+      required:
+        - predeployed
+      additionalProperties: false
 
     KnativeService: &KnativeService # description: Knative service definition
       type: object
@@ -485,6 +493,8 @@ components:
               example: "1.*"
       required:
         - image
+        - resources
+      additionalProperties: false
 
     Clusters:
       <<: *AvailableClusters
@@ -521,10 +531,12 @@ components:
           example: "team-1"
           description: A team name
         clusters:
+          title: Clusters
           <<: *AvailableClusters
+          minItems: 1
         password:
           type: string
-          description: "A secret that is used access multi-tenant log aggregation system (Loki)"
+          # description: "A secret that is used access multi-tenant log aggregation system (Loki)"
           writeOnly: true
         teamId:
           type: string
@@ -557,6 +569,7 @@ components:
           title: Certificate ARN
           description: Only if hasCert set to true and deployed on AWS
           example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
+      additionalProperties: false
 
     Service:
       properties:
@@ -569,20 +582,24 @@ components:
           description: A kubernetes cluster for the service
         ingress:
           type: object
-          nullable: true
           # allOf:
-          oneOf:
+          anyOf:
             - title: No public URL
+              nullable: true
               properties:
-                dummyProperty:
-                  type: boolean
+                internal:
+                  type: string
+                  nullable: true
+              additionalProperties: false
             - title: With public URL
               properties:
                 <<: *ServiceIngress
+
+
         spec:
+          title: Service specification
           type: object
-          nullable: true
-          oneOf:
+          anyOf:
             - title: Knative service
               properties:
                 <<: *KnativeServiceProperties

@@ -35,10 +35,9 @@ describe("Load and dump values", function () {
       ingress: {
         hasSingleSignOn: false,
         hasCert: false,
-        hasPublicUrl: true,
+        certArn: undefined
       },
       spec: {
-        serviceType: "ksvc",
         annotations: [{ name: 'autoscaling.knative.dev/minScale', value: '1' }],
         env: [{ name: 'RED', value: 'KUBES' }],
       },
@@ -59,11 +58,10 @@ describe("Load and dump values", function () {
       ingress: {
         hasSingleSignOn: true,
         hasCert: false,
-        hasPublicUrl: true,
+        certArn: undefined
       },
       spec: {
-        serviceType: "ksvcPredeployed",
-        annotations: [],
+        predeployed: true,
       },
     }
 
@@ -73,13 +71,10 @@ describe("Load and dump values", function () {
       clusterId: 'dev/aws',
       name: 'hello-ksvc-internal',
       ingress: {
-        hasSingleSignOn: false,
-        hasCert: false,
-        hasPublicUrl: false,
+        internal: true,
       },
       spec: {
-        serviceType: "ksvcPredeployed",
-        annotations: [],
+        predeployed: true,
       },
     }
 
@@ -91,10 +86,9 @@ describe("Load and dump values", function () {
       ingress: {
         hasSingleSignOn: true,
         hasCert: false,
-        hasPublicUrl: true,
+        certArn: undefined
       },
       spec: {
-        serviceType: "svc",
         name: 'hello-svc',
       },
     }
