@@ -210,7 +210,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/OpenApiValidationError"
     post:
-      operationId: addServiceToTeam
+      operationId: createService
       description: Create a service
       parameters:
         - name: teamId
@@ -400,15 +400,8 @@ components:
     KnativeServicePredeployed: &KnativeServicePredeployed
       type: object
       properties: &KnativeServicePredeployedProperties
-        # predeployed:
-        #   type: boolean
-        #   default: true
-        #   readOnly: true
-        annotations:
-          title: Pod annotations
-          <<: *K8sAnnotation
-      required:
-        - predeployed
+        dummyProperty:
+          type: boolean
 
     KnativeService: &KnativeService # description: Knative service definition
       type: object
@@ -496,6 +489,7 @@ components:
     Clusters:
       <<: *AvailableClusters
     Teams:
+      type: object
       properties:
         teams:
           type: array
@@ -573,62 +567,18 @@ components:
         clusterId:
           type: string
           description: A kubernetes cluster for the service
-        # hasPublicUrl:
-        #   title: Has Public URL
-        #   type: boolean
-        #   # enum: ["yes", "no"]
-        #   default: false
         ingress:
           type: object
           # nullable: true
           # allOf:
           oneOf:
             - title: No public URL
-              properties: {}
-              # properties:
-              #   noPublicUrl:
-              #     type: boolean
+              properties:
+                dummyProperty:
+                  type: boolean
             - title: With public URL
               properties:
                 <<: *ServiceIngress
-
-        # ingress:
-        #   title: Ingress
-        #   type: object
-        #   properties:
-        #     <<: *ServiceIngress
-          # x-dependencies:
-          #   hasPublicUrl:
-          #     oneOf:
-          #       - properties:
-          #           hasPublicUrl:
-          #             enum: [true]
-          #           <<: *ServiceIngress
-          #       - properties:
-          #           hasPublicUrl:
-          #             enum: [false]
-        # serviceType:
-        #   type: string
-        #   title: type
-        #   enum: [ksvc, ksvcPredeployed, svc]
-        #   default: "ksvc"
-        # spec:
-        #   title: Specification
-        #   type: object
-        #   properties:
-        #     serviceType:
-        #       type: string
-        #       title: type
-        #       enum: [ksvc, ksvcPredeployed, svc]
-        #       default: "ksvc"
-        #     ksvc:
-        #       <<: *KnativeService
-        #     ksvcPredeployed:
-        #       <<: *KnativeServicePredeployed
-        #     svc:
-        #       <<: *KubernetesService
-          # x-dependencies:
-          # serviceType:
         spec:
           type: object
           anyOf:
