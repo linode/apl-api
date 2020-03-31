@@ -1,7 +1,7 @@
-module.exports = function(otomi) {
+module.exports = function (otomi) {
   var api = {
     post: [
-      async function(req, res, next) {
+      async function (req, res, next) {
         console.debug('Trigger deployments: ' + JSON.stringify(req.params))
         try {
           await otomi.triggerDeployment(req.headers['auth-group'])
