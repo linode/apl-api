@@ -213,7 +213,7 @@ class OtomiStack {
 
     if ('ksvc' in svcRaw) {
       svc.spec = _.cloneDeep(svcRaw.ksvc)
-      if (!svcRaw.predeployed){
+      if (!svcRaw.predeployed) {
         const annotations = _.get(svcRaw.ksvc, 'annotations', {})
         svc.spec.annotations = utils.objectToArray(annotations, 'name', 'value')
       }
@@ -223,13 +223,13 @@ class OtomiStack {
       console.warn('Unknown service structure')
     }
 
-    if ("internal" in svcRaw) {
-      svc.ingress = {internal: true}
+    if ('internal' in svcRaw) {
+      svc.ingress = { internal: true }
     } else {
       svc.ingress = {
-        hasCert: ("hasCert" in svcRaw),
-        hasSingleSignOn: !("isPublic" in svcRaw),
-        certArn: svcRaw.certArn
+        hasCert: 'hasCert' in svcRaw,
+        hasSingleSignOn: !('isPublic' in svcRaw),
+        certArn: svcRaw.certArn,
       }
     }
 
@@ -276,7 +276,7 @@ class OtomiStack {
         if (cluster.id !== svc.clusterId) return
 
         const svcCloned = _.omit(svc, ['_id', 'teamId', 'spec', 'ingress', 'serviceId', 'clusterId'])
-        const spec = svcCloned.ksvc = _.omit(svc.spec, 'serviceType')
+        const spec = (svcCloned.ksvc = _.omit(svc.spec, 'serviceType'))
         if (svc.spec.predeployed) {
           svcCloned.ksvc = spec
         } else if (svc.spec.image) {
@@ -289,13 +289,11 @@ class OtomiStack {
           console.warn(`Unknown service structure: ${JSON.stringify(svc)}`)
         }
 
-        if (svc.ingress.internal)
-          svcCloned.internal = true
+        if (svc.ingress.internal) svcCloned.internal = true
 
         if (!svc.ingress.hasSingleSignOn) svcCloned.isPublic = true
 
-        if (svc.ingress.hasCert)
-          svcCloned.hasCert = true
+        if (svc.ingress.hasCert) svcCloned.hasCert = true
 
         services.push(svcCloned)
       })
