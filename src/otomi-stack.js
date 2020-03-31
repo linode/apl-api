@@ -46,7 +46,7 @@ class OtomiStack {
     this.db.getItem('teams', ids)
   }
 
-  checkIfServiceExists(ids){
+  checkIfServiceExists(ids) {
     this.db.getItem('services', ids)
   }
 
@@ -110,7 +110,7 @@ class OtomiStack {
     return this.db.deleteItem('services', ids)
   }
 
-  getDeployments(params) { }
+  getDeployments(params) {}
 
   async triggerDeployment(userGroup) {
     this.saveValues()
@@ -127,7 +127,7 @@ class OtomiStack {
   }
 
   loadAllTeamValues(clusters) {
-    _.forEach(clusters, cluster => {
+    _.forEach(clusters, (cluster) => {
       try {
         const path = this.getValueFilePath(cluster)
         const values = this.repo.readFile(path)
@@ -201,7 +201,7 @@ class OtomiStack {
   }
 
   convertTeamValuesServicesToDb(services, teamId, cluster) {
-    services.forEach(svc => {
+    services.forEach((svc) => {
       this.convertServiceToDb(svc, teamId, cluster)
     })
   }
@@ -220,7 +220,7 @@ class OtomiStack {
     } else if ('svc' in svcRaw) {
       svc.spec = _.cloneDeep(svcRaw.svc)
     } else {
-      console.warn("Unknown service structure")
+      console.warn('Unknown service structure')
     }
 
     if ("internal" in svcRaw) {
@@ -249,7 +249,7 @@ class OtomiStack {
   }
 
   saveAllTeamValues(clusters) {
-    _.forEach(clusters, cluster => {
+    _.forEach(clusters, (cluster) => {
       const values = this.convertDbToValues(cluster)
       const path = this.getValueFilePath(cluster)
       this.repo.writeFile(path, values)
@@ -263,7 +263,7 @@ class OtomiStack {
 
   convertDbToValues(cluster) {
     const teams = {}
-    this.getTeams().forEach(team => {
+    this.getTeams().forEach((team) => {
       if (!this.inCluster(team, cluster)) return
 
       const teamCloned = _.omit(team, ['teamId', 'clusters'])
@@ -272,8 +272,7 @@ class OtomiStack {
       let dbServices = this.getTeamServices(id)
       let services = new Array()
 
-      dbServices.forEach(svc => {
-
+      dbServices.forEach((svc) => {
         if (cluster.id !== svc.clusterId) return
 
         const svcCloned = _.omit(svc, ['_id', 'teamId', 'spec', 'ingress', 'serviceId', 'clusterId'])
@@ -293,8 +292,7 @@ class OtomiStack {
         if (svc.ingress.internal)
           svcCloned.internal = true
 
-        if (!svc.ingress.hasSingleSignOn)
-          svcCloned.isPublic = true
+        if (!svc.ingress.hasSingleSignOn) svcCloned.isPublic = true
 
         if (svc.ingress.hasCert)
           svcCloned.hasCert = true
