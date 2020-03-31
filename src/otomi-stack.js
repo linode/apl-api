@@ -213,7 +213,7 @@ class OtomiStack {
 
     if ('ksvc' in svcRaw) {
       svc.spec = _.cloneDeep(svcRaw.ksvc)
-      if (!svcRaw.predeployed) {
+      if (!('predeployed' in svcRaw.ksvc)) {
         const annotations = _.get(svcRaw.ksvc, 'annotations', {})
         svc.spec.annotations = utils.objectToArray(annotations, 'name', 'value')
       }
@@ -275,18 +275,18 @@ class OtomiStack {
       dbServices.forEach((svc) => {
         if (cluster.id !== svc.clusterId) return
 
-        const svcCloned = _.omit(svc, ['_id', 'teamId', 'spec', 'ingress', 'serviceId', 'clusterId'])
-        const spec = (svcCloned.ksvc = _.omit(svc.spec, 'serviceType'))
-        if (svc.spec.predeployed) {
+        const svcCloned = _.omit(svc, ['teamId', 'spec', 'ingress', 'serviceId', 'clusterId'])
+        const spec = _.cloneDeep(svc.spec)
+        if ('predeployed' in spec) {
           svcCloned.ksvc = spec
-        } else if (svc.spec.image) {
+        } else if ('image' in spec) {
           svcCloned.ksvc = spec
           const annotations = _.get(svc.spec, 'annotations', [])
           svcCloned.ksvc.annotations = utils.arrayToObject(annotations, 'name', 'value')
-        } else if (svc.spec.name) {
+        } else if ('name' in spec) {
           svcCloned.svc = spec
         } else {
-          console.warn(`Unknown service structure: ${JSON.stringify(svc)}`)
+          console.warn(`Dump service to value file: unknown service structure: ${JSON.stringify(spec)}`)
         }
 
         if (svc.ingress.internal) svcCloned.internal = true

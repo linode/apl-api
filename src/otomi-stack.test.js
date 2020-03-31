@@ -35,17 +35,16 @@ describe('Load and dump values', function () {
       ingress: {
         hasSingleSignOn: false,
         hasCert: false,
-        certArn: undefined
+        certArn: undefined,
       },
       spec: {
         annotations: [{ name: 'autoscaling.knative.dev/minScale', value: '1' }],
         env: [{ name: 'RED', value: 'KUBES' }],
+        image: {
+          repository: 'otomi/helloworld-nodejs',
+          tag: '1.1.3',
+        },
       },
-      image: {
-        repository: 'otomi/helloworld-nodejs',
-        tag: '1.1.3',
-      },
-      logo: { name: 'kubernetes' },
       name: 'hello',
     }
 
@@ -57,7 +56,7 @@ describe('Load and dump values', function () {
       ingress: {
         hasSingleSignOn: true,
         hasCert: false,
-        certArn: undefined
+        certArn: undefined,
       },
       spec: {
         predeployed: true,
@@ -85,7 +84,7 @@ describe('Load and dump values', function () {
       ingress: {
         hasSingleSignOn: true,
         hasCert: false,
-        certArn: undefined
+        certArn: undefined,
       },
       spec: {
         name: 'hello-svc',
