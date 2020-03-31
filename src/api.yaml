@@ -580,6 +580,7 @@ components:
           type: string
           description: A kubernetes cluster for the service
         ingress:
+          title: Exposure
           type: object
           # allOf:
           anyOf:
@@ -594,9 +595,8 @@ components:
               properties:
                 <<: *ServiceIngress
 
-
         spec:
-          title: Service specification
+          title: Type
           type: object
           anyOf:
             - title: Knative service
