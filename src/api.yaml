@@ -59,6 +59,11 @@ x-get-responses: &DefaultGetResponses
       'application/json':
         schema:
           $ref: '#/components/schemas/OtomiStackError'
+
+x-acl: &Acl
+  team: [read]
+  admin: [read, write]
+
 paths:
   /readiness:
     get:
@@ -528,11 +533,15 @@ components:
         name:
           <<: *nameField
           example: 'team-1'
+          x-acl:
+            <<: *Acl
           description: A team name
         clusters:
           title: Clusters
           <<: *AvailableClusters
           minItems: 1
+          x-acl:
+            <<: *Acl
         password:
           type: string
           # description: "A secret that is used access multi-tenant log aggregation system (Loki)"
@@ -582,7 +591,8 @@ components:
         ingress:
           title: Exposure
           type: object
-          # allOf:
+          x-acl:
+            <<: *Acl
           anyOf:
             - title: No public URL
               nullable: true
