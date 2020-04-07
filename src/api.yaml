@@ -358,6 +358,45 @@ components:
       name: Auth-Group
       in: header
   schemas:
+    AzureMonitor: &AzureMonitor
+      type: object
+      oneOf:
+        - title: No Azure monitoring
+          properties: {}
+        - title: Azure monitoring with global settings
+          type: object
+          properties:
+            useAdmin:
+              type: boolean
+        - title: Azure monitoring with custom settings
+          type: object
+          properties:
+            clientId:
+              <<: *uuidField
+            clientSecret:
+              type: string
+              writeOnly: true
+            logAnalyticsClientId:
+              <<: *uuidField
+            logAnalyticsClientSecret:
+              type: string
+              writeOnly: true
+            appInsightsAppId:
+              type: string
+            appInsightsAppSecret:
+              type: string
+              writeOnly: true
+          required:
+            - clientId
+            - clientSecret
+
+    Azure: &Azure
+      type: object
+      properties:
+        monitor:
+          <<: *AzureMonitor
+          type: object
+
     KubernetesService: &KubernetesService
       type: object
       properties: &KubernetesServiceProperties
@@ -550,29 +589,7 @@ components:
           type: string
           readOnly: true
         azure:
-          # type: object
-          nullable: true
-          properties:
-            monitor:
-              # type: object
-              properties:
-                clientId:
-                  <<: *uuidField
-                clientSecret:
-                  type: string
-                  writeOnly: true
-                logAnalyticsClientId:
-                  <<: *uuidField
-                logAnalyticsClientSecret:
-                  type: string
-                  writeOnly: true
-                appInsightsAppId:
-                  type: string
-                appInsightsAppSecret:
-                  type: string
-                  writeOnly: true
-                useAdmin:
-                  type: boolean
+          <<: *Azure
       required:
         - name
         - clusters
