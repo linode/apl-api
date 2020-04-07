@@ -482,19 +482,24 @@ components:
           <<: *K8sAnnotation
         autoCD:
           title: Continuous delivery pipeline
+          description: Define filter pattern types for container image tags
           type: object
-          properties:
-            tagMatcher:
-              type: string
-              enum: [semver, glob]
-              default: semver
-              description: 'see https://docs.fluxcd.io/en/1.18.0/references/fluxctl.html#using-annotations'
-            semver:
-              type: string
-              example: '~1.1'
-            glob:
-              type: string
-              example: '1.*'
+          oneOf:
+            - title: Semver
+              properties:
+                semver:
+                  type: string
+                  example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
+                  description:
+                    'Use this filter if your images tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.:
+                    PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
+              additionalProperties: false
+            - title: Glob
+              properties:
+                glob:
+                  type: string
+                  description: 'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*"'
+                  example: 'master-v1.*.*'
       required:
         - image
         - resources
