@@ -482,24 +482,29 @@ components:
           <<: *K8sAnnotation
         autoCD:
           title: Continuous delivery pipeline
-          description: Define filter pattern types for container image tags
+          description: Select filter type and define image tag pattern
           type: object
           oneOf:
-            - title: Semver
+            - title: Semver filter
               properties:
                 semver:
+                  title: Image tag pattern
                   type: string
                   example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
                   description:
                     'Use this filter if your images tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.:
                     PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
-              additionalProperties: false
-            - title: Glob
+              required:
+                - semver
+            - title: Glob filter
               properties:
                 glob:
+                  title: Image tag pattern
                   type: string
                   description: 'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*"'
                   example: 'master-v1.*.*'
+              required:
+                - glob
       required:
         - image
         - resources
