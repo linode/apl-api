@@ -549,6 +549,30 @@ components:
         teamId:
           type: string
           readOnly: true
+        azure:
+          # type: object
+          nullable: true
+          properties:
+            monitor:
+              # type: object
+              properties:
+                clientId:
+                  <<: *uuidField
+                clientSecret:
+                  type: string
+                  writeOnly: true
+                logAnalyticsClientId:
+                  <<: *uuidField
+                logAnalyticsClientSecret:
+                  type: string
+                  writeOnly: true
+                appInsightsAppId:
+                  type: string
+                appInsightsAppSecret:
+                  type: string
+                  writeOnly: true
+                useAdmin:
+                  type: boolean
       required:
         - name
         - clusters
