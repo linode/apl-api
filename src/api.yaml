@@ -361,15 +361,18 @@ components:
     AzureMonitor: &AzureMonitor
       type: object
       description: Azure Monitor is the platform service that provides a single source for monitoring Azure resources.
-      oneOf:
+      anyOf:
         - title: No Azure monitoring
+          nullable: true
           properties: {}
         - title: Azure monitoring with global settings
           type: object
           properties:
             useAdmin:
               type: boolean
-              nullable: true
+              default: true
+          required:
+            - useAdmin
         - title: Azure monitoring with custom settings
           type: object
           properties:
