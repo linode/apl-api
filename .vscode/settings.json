@@ -1,5 +1,10 @@
 {
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "editor.codeActionsOnSave": {
+    "source.fixAll": true
+  },
+  "editor.formatOnPaste": false,
   "editor.formatOnSave": true,
-  "editor.formatOnPaste": false
+  "eslint.enable": true,
+  "eslint.validate": ["javascript", { "language": "typescript", "autoFix": true }]
 }
