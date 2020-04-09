@@ -1,5 +1,6 @@
 const generatePassword = require('password-generator')
 const _ = require('lodash')
+const err = require('./error')
 const path = require('path')
 const utils = require('./utils')
 
@@ -92,6 +93,7 @@ class OtomiStack {
 
   createService(teamId, data) {
     const ids = { teamId, name: data.name, clusterId: data.clusterId }
+    this.validateService(data)
     return this.db.createItem('services', ids, data)
   }
 
@@ -110,6 +112,7 @@ class OtomiStack {
 
   editService(teamId, name, clusterId, data) {
     const ids = { teamId, name, clusterId }
+    this.validateService(data)
     return this.db.updateItem('services', ids, data)
   }
 
@@ -118,7 +121,27 @@ class OtomiStack {
     return this.db.deleteItem('services', ids)
   }
 
-  getDeployments(params) {}
+  validateService(data) {
+    if (this.isDomainDuplicated(data)) throw err.SubdomainDuplicated('The subdomain is already registered at domain')
+  }
+
+  isDomainDuplicated(data) {
+    if (_.isEmpty(data.ingress)) return false
+
+    const services = this.db.getCollection('services')
+
+    const servicesFiltered = _.filter(services, (svc) => {
+      const subdomain = _.get(svc, 'ingress.subdomain')
+      const domain = _.get(svc, 'ingress.domain')
+      return subdomain === data.ingress.subdomain && domain === data.ingress.domain && svc.serviceId !== data.serviceId
+    })
+
+    if (servicesFiltered.length === 0) return false
+
+    return true
+  }
+
+  getDeployments(params) { }
 
   async triggerDeployment(teamId, email) {
     this.saveValues()
