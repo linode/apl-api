@@ -254,7 +254,7 @@ class OtomiStack {
     if ('internal' in svcRaw) {
       svc.ingress = { internal: true }
     } else {
-      const publicUrl = utils.getSubdomainAndDomainFromServiceDomain(svc, cluster)
+      const publicUrl = utils.getSubdomainAndDomainFromServiceDomain(svcRaw.domain, svcRaw.name, teamId, cluster)
       svc.ingress = {
         hasCert: 'hasCert' in svcRaw,
         hasSingleSignOn: !('isPublic' in svcRaw),
@@ -327,7 +327,10 @@ class OtomiStack {
         }
 
         if (svc.ingress.internal) svcCloned.internal = true
-        else svcCloned.domain = `${svc.ingress.subdomain}.${svc.ingress.domain}`
+        else
+          svcCloned.domain = svc.ingress.subdomain
+            ? `${svc.ingress.subdomain}.${svc.ingress.domain}`
+            : svc.ingress.domain
 
         if (!svc.ingress.hasSingleSignOn) svcCloned.isPublic = true
 

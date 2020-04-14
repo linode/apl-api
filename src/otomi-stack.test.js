@@ -15,7 +15,7 @@ describe('Load and dump values', function () {
   it('should load values to db and convert them back', function (done) {
     const expectedValues = yaml.safeLoad(fs.readFileSync('./test/team.yaml', 'utf8'))
     const values = _.cloneDeep(expectedValues)
-    const cluster = { cloudName: 'aws', clusterName: 'dev', id: 'aws/dev', dnsZone: 'otomi.cloud' }
+    const cluster = { cloudName: 'aws', cluster: 'dev', id: 'aws/dev', dnsZone: 'otomi.cloud' }
     otomiStack.loadTeamsValues(values.teamConfig.teams, cluster)
 
     const expectedTeam = {

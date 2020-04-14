@@ -54,24 +54,21 @@ function objectToArray(obj, keyName, keyValue) {
   return arr
 }
 
-function getSubdomainAndDomainFromServiceDomain(service, cluster) {
-  const defaultValue = {
-    subdomain: `${service.name}.team-${service.teamId}.${cluster.clusterName}`,
-    domain: cluster.dnsZone,
+function getSubdomainAndDomainFromServiceDomain(serviceDomain, serviceName, teamId, cluster) {
+  if (!serviceDomain) {
+    return {
+      subdomain: `${serviceName}.team-${teamId}.${cluster.cluster}`,
+      domain: cluster.dnsZone,
+    }
   }
-  if (!service.domain) return defaultValue
 
-  if (!service.domain.endsWith(cluster.dnsZone)) {
-    return { subdomain: null, domain: service.domain }
+  if (serviceDomain.endsWith(cluster.dnsZone)) {
+    const subdomainLength = serviceDomain.length - cluster.dnsZone.length - 1
+    return { subdomain: serviceDomain.substring(0, subdomainLength), domain: cluster.dnsZone }
   }
-  const groups = extractSubdomainAndDomain(service.domain, cluster.dnsZone)
-  return { subdomain: groups.subdomain, domain: groups.domain }
-}
 
-function extractSubdomainAndDomain(serviceDomain, dnsZone) {
-  const r = `(?<subdomain>.*){1}.(?<domain>${dnsZone}){1}`
-  const groups = serviceDomain.match(r).groups
-  return groups
+  // Custom domain that is not visible in clusters.yaml values
+  return { subdomain: '', domain: serviceDomain }
 }
 
 module.exports = {
