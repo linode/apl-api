@@ -3,6 +3,8 @@ const _ = require('lodash')
 const path = require('path')
 const utils = require('./utils')
 
+const baseGlobal = { teamValues: { teamConfig: {} } }
+let glbl = { ...baseGlobal }
 const getServiceId = (teamId, svcName, clusterId) => `${teamId}/${clusterId}/${svcName}`
 
 const getFilePath = (cloud = null, cluster = null) => {
@@ -14,11 +16,30 @@ const getFilePath = (cloud = null, cluster = null) => {
   return path.join('./env/', file)
 }
 
+function splitGlobal(teamValues) {
+  const t = teamValues.teamConfig.teams
+  const g = glbl.teamConfig.teams
+  const globalProps = ['name', 'password']
+  _.forEach(t, (team, teamId) => {
+    if (!g[teamId]) g[teamId] = {}
+    globalProps.forEach((prop) => {
+      if (prop === 'password') {
+        if (!g[teamId].password) g[teamId].password = generatePassword(16, false)
+      } else {
+        g[teamId][prop] = team[prop]
+        delete t[teamId][prop]
+      }
+    })
+  })
+}
+
 class OtomiStack {
   constructor(repo, db) {
     this.db = db
     this.repo = repo
     this.clustersPath = './env/clusters.yaml'
+    const globalPath = getFilePath()
+    glbl = this.repo.readFile(globalPath)
   }
 
   async init() {
@@ -54,7 +75,6 @@ class OtomiStack {
 
   createTeam(data) {
     const ids = { teamId: data.teamId }
-    this.setPasswordIfNotExist(data)
     data.name = data.name || data.teamId
     return this.db.createItem('teams', ids, data)
   }
@@ -249,11 +269,6 @@ class OtomiStack {
     } else this.createService(teamId, svc)
   }
 
-  setPasswordIfNotExist(team) {
-    if (team.password) return
-    team.password = generatePassword(16, false)
-  }
-
   saveValues() {
     const clusters = this.getClusters()
     this.saveAllTeamValues(clusters)
@@ -263,11 +278,17 @@ class OtomiStack {
     _.forEach(clusters, (cluster) => {
       const { cloud, cluster: clusterName } = cluster
       const teamValues = this.convertTeamsToValues(cluster)
+      splitGlobal(teamValues)
       const path = getFilePath(cloud, clusterName)
       const values = this.repo.readFile(path)
       const newValues = { ...values, ...teamValues }
       this.repo.writeFile(path, newValues)
     })
+    const path = getFilePath()
+    const values = this.repo.readFile(path)
+    const newValues = { ...values, ...glbl }
+    this.repo.writeFile(path, newValues)
+    glbl = { ...baseGlobal }
   }
 
   inCluster(obj, cluster) {
