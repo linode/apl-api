@@ -89,5 +89,5 @@
     "start": "node app.js",
     "test": "mocha src --exit"
   },
-  "version": "0.2.1"
+  "version": "0.2.2"
 }
