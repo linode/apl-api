@@ -5,7 +5,6 @@ const utils = require('./utils')
 
 const baseGlobal = { teamValues: { teamConfig: {} } }
 let glbl = { ...baseGlobal }
-const getServiceId = (teamId, svcName, clusterId) => `${teamId}/${clusterId}/${svcName}`
 
 const getFilePath = (cloud = null, cluster = null) => {
   let file
@@ -104,7 +103,7 @@ class OtomiStack {
 
   createService(teamId, data) {
     this.checkIfTeamExists({ teamId })
-    const ids = { serviceId: getServiceId(teamId, data.name, data.clusterId) }
+    const ids = { teamId, name: data.name, clusterId: data.clusterId }
     return this.db.createItem('services', ids, data)
   }
 
@@ -117,7 +116,7 @@ class OtomiStack {
   }
 
   getService(teamId, name, clusterId) {
-    const ids = { serviceId: getServiceId(teamId, name, clusterId) }
+    const ids = { teamId, name, clusterId }
     return this.db.getItem('services', ids)
   }
 
