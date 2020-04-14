@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file. See
 [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.2.0](https://github.com/redkubes/otomi-stack-api/compare/v0.1.23...v0.2.0) (2020-04-14)
+
+### ⚠ BREAKING CHANGES
+
+- new apiDocs for services
+
+### Bug Fixes
+
+- disabling tests for now
+  [ci skip](<[dff27ec](https://github.com/redkubes/otomi-stack-api/commit/dff27ec2513a4bfb7847f56a503529ec080bbf4a)>)
+- made api work with values structure, needs test fix
+  [ci skip](<[8f21f9d](https://github.com/redkubes/otomi-stack-api/commit/8f21f9d25ac7de9958ff834f2eb2980d98f77936)>)
+
 ### [0.1.23](https://github.com/redkubes/otomi-stack-api/compare/v0.1.22...v0.1.23) (2020-04-09)
 
 ### Features
