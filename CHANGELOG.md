@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. See
 [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.1](https://github.com/redkubes/otomi-stack-api/compare/v0.2.0...v0.2.1) (2020-04-14)
+
+### Bug Fixes
+
+- global prop mapping
+  [ci skip](<[0d7867c](https://github.com/redkubes/otomi-stack-api/commit/0d7867cb107d04cdad2d727f8bd50716b49db0b4)>)
+
 ## [0.2.0](https://github.com/redkubes/otomi-stack-api/compare/v0.1.23...v0.2.0) (2020-04-14)
 
 ### ⚠ BREAKING CHANGES
