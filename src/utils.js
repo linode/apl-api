@@ -54,10 +54,31 @@ function objectToArray(obj, keyName, keyValue) {
   return arr
 }
 
+function getSubdomainAndDomainFromServiceDomain(service, cluster) {
+  const defaultValue = {
+    subdomain: `${service.name}.team-${service.teamId}.${cluster.clusterName}`,
+    domain: cluster.dnsZone,
+  }
+  if (!service.domain) return defaultValue
+
+  if (!service.domain.endsWith(cluster.dnsZone)) {
+    return { subdomain: null, domain: service.domain }
+  }
+  const groups = extractSubdomainAndDomain(service.domain, cluster.dnsZone)
+  return { subdomain: groups.subdomain, domain: groups.domain }
+}
+
+function extractSubdomainAndDomain(serviceDomain, dnsZone) {
+  const r = `(?<subdomain>.*){1}.(?<domain>${dnsZone}){1}`
+  const groups = serviceDomain.match(r).groups
+  return groups
+}
+
 module.exports = {
-  validateConfig: validateConfig,
-  validateEnv: validateEnv,
-  setSignalHandlers: setSignalHandlers,
-  arrayToObject: arrayToObject,
-  objectToArray: objectToArray,
+  validateConfig,
+  validateEnv,
+  setSignalHandlers,
+  arrayToObject,
+  objectToArray,
+  getSubdomainAndDomainFromServiceDomain,
 }
