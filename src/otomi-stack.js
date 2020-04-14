@@ -254,7 +254,7 @@ class OtomiStack {
     if ('internal' in svcRaw) {
       svc.ingress = { internal: true }
     } else {
-      const publicUrl = utils.getSubdomainAndDomainFromServiceDomain(svcRaw.domain, svcRaw.name, teamId, cluster)
+      const publicUrl = utils.getPublicUrl(svcRaw.domain, svcRaw.name, teamId, cluster)
       svc.ingress = {
         hasCert: 'hasCert' in svcRaw,
         hasSingleSignOn: !('isPublic' in svcRaw),

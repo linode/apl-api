@@ -54,7 +54,7 @@ function objectToArray(obj, keyName, keyValue) {
   return arr
 }
 
-function getSubdomainAndDomainFromServiceDomain(serviceDomain, serviceName, teamId, cluster) {
+function getPublicUrl(serviceDomain, serviceName, teamId, cluster) {
   if (!serviceDomain) {
     return {
       subdomain: `${serviceName}.team-${teamId}.${cluster.cluster}`,
@@ -77,5 +77,5 @@ module.exports = {
   setSignalHandlers,
   arrayToObject,
   objectToArray,
-  getSubdomainAndDomainFromServiceDomain,
+  getPublicUrl,
 }

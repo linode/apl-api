@@ -51,7 +51,6 @@ describe('Load and dump values', function () {
 
     const expectedService2 = {
       teamId: 'team1',
-      // serviceId: 'team1/hello-predeployed-ksvc',
       clusterId: 'aws/dev',
       name: 'hello-predeployed-ksvc',
       ingress: {
@@ -68,7 +67,6 @@ describe('Load and dump values', function () {
 
     const expectedService3 = {
       teamId: 'team1',
-      // serviceId: 'team1/hello-ksvc-internal',
       clusterId: 'aws/dev',
       name: 'hello-ksvc-internal',
       ingress: {
@@ -81,7 +79,6 @@ describe('Load and dump values', function () {
 
     const expectedService4 = {
       teamId: 'team1',
-      // serviceId: 'team1/hello-svc',
       clusterId: 'aws/dev',
       name: 'hello-svc',
       ingress: {
