@@ -38,14 +38,14 @@ class OtomiStack {
     this.db = db
     this.repo = repo
     this.clustersPath = './env/clusters.yaml'
-    const globalPath = getFilePath()
-    glbl = this.repo.readFile(globalPath)
   }
 
   async init() {
     try {
       await this.repo.clone()
       this.loadValues()
+      const globalPath = getFilePath()
+      glbl = this.repo.readFile(globalPath)
     } catch (e) {
       console.error('Unable to init app', e)
       return false

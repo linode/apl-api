@@ -31,12 +31,12 @@ class Repo {
 
   async commit(teamId, email) {
     console.info('Committing changes')
-    // await this.git.add('./*')
-    // const commitSummary = await this.git.commit('otomi-stack-api')
-    // if (commitSummary.commit === '') return commitSummary
-    // // Only add note to a new commit
-    // await this.addNote({ team: teamId, email })
-    // return commitSummary
+    await this.git.add('./*')
+    const commitSummary = await this.git.commit('otomi-stack-api')
+    if (commitSummary.commit === '') return commitSummary
+    // Only add note to a new commit
+    await this.addNote({ team: teamId, email })
+    return commitSummary
   }
 
   getNoteCmd(obj) {
