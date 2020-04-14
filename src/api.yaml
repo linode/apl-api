@@ -694,14 +694,14 @@ components:
           x-acl:
             <<: *AclAdmin
           anyOf:
-            - title: No public URL
+            - title: Private
               nullable: true
               properties:
                 internal:
                   type: string
                   nullable: true
               additionalProperties: false
-            - title: With public URL
+            - title: Public URL
               properties:
                 <<: *ServiceIngress
 
