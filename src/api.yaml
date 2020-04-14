@@ -31,6 +31,9 @@ x-fields:
   name: &nameField
     type: string
     pattern: ^[A-Z0-9]([-a-z0-9]*[a-z0-9])?$
+  idName: &idNameField
+    type: string
+    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 
 x-post-responses: &DefaultPostResponses
   '400':
@@ -679,7 +682,7 @@ components:
     Service:
       properties:
         name:
-          <<: *nameField
+          <<: *idNameField
           description: A service name
           example: service01
         clusterId:
