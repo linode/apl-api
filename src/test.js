@@ -7,7 +7,7 @@ const middleware = require('./middleware')
 const utils = require('./utils')
 
 describe('Api tests for admin', function () {
-  var app
+  let app
   beforeEach(function () {
     const otomiStack = new otomi.OtomiStack(null, null)
     sinon.stub(otomiStack)
@@ -49,7 +49,7 @@ describe('Api tests for admin', function () {
 })
 
 describe('Api tests for team', function () {
-  var app
+  let app
   beforeEach(function () {
     const otomiStack = new otomi.OtomiStack('tpath', 'tcloud')
     sinon.stub(otomiStack)
@@ -175,7 +175,7 @@ describe('Api tests for team', function () {
 })
 
 describe('Api tests for non authorized user', function () {
-  var app
+  let app
   beforeEach(function () {
     const otomiStack = new otomi.OtomiStack('tpath', 'tcloud')
     sinon.stub(otomiStack)
@@ -273,7 +273,7 @@ describe('Api tests for non authorized user', function () {
 })
 
 describe('Api tests for data validation', function () {
-  var app
+  let app
   beforeEach(function () {
     const otomiStack = new otomi.OtomiStack('tpath', 'tcloud')
     sinon.stub(otomiStack)

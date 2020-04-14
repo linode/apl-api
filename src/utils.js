@@ -1,4 +1,4 @@
-var _ = require('lodash')
+const _ = require('lodash')
 
 function validateEnv(envVars) {
   // Ensure required ENV vars are set

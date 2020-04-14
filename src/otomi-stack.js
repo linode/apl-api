@@ -3,13 +3,21 @@ const _ = require('lodash')
 const path = require('path')
 const utils = require('./utils')
 
-const getServiceId = (teamId, svcName) => `${teamId}/${svcName}`
+const getServiceId = (teamId, svcName, clusterId) => `${teamId}/${clusterId}/${svcName}`
+
+const getFilePath = (cloud = null, cluster = null) => {
+  let file
+  if (cloud) {
+    if (cluster) file = `${cloud}/${cluster}.yaml`
+    else file = `${cloud}/default.yaml`
+  } else file = 'default.yaml'
+  return path.join('./env/', file)
+}
 
 class OtomiStack {
   constructor(repo, db) {
     this.db = db
     this.repo = repo
-    this.envPath = './env/'
     this.clustersPath = './env/clusters.yaml'
   }
 
@@ -22,12 +30,6 @@ class OtomiStack {
       return false
     }
     return true
-  }
-
-  getValueFilePath(cluster) {
-    const clusterFilename = cluster.cluster + '.yaml'
-    const fPath = path.join(this.envPath, cluster.cloud, clusterFilename)
-    return fPath
   }
 
   getTeams() {
@@ -43,16 +45,17 @@ class OtomiStack {
   }
 
   checkIfTeamExists(ids) {
-    this.db.getItem('teams', ids)
+    return !!this.db.getItem('teams', ids)
   }
 
   checkIfServiceExists(ids) {
-    this.db.getItem('services', ids)
+    return !!this.db.getItem('services', ids)
   }
 
   createTeam(data) {
-    const ids = { teamId: data.name }
+    const ids = { teamId: data.teamId }
     this.setPasswordIfNotExist(data)
+    data.name = data.name || data.teamId
     return this.db.createItem('teams', ids, data)
   }
 
@@ -81,7 +84,7 @@ class OtomiStack {
 
   createService(teamId, data) {
     this.checkIfTeamExists({ teamId })
-    const ids = { teamId, serviceId: getServiceId(teamId, data.name) }
+    const ids = { serviceId: getServiceId(teamId, data.name, data.clusterId) }
     return this.db.createItem('services', ids, data)
   }
 
@@ -93,54 +96,61 @@ class OtomiStack {
     return this.db.getCollection('defaultServices')
   }
 
-  getService(teamId, name) {
-    const ids = { teamId, name }
+  getService(teamId, name, clusterId) {
+    const ids = { serviceId: getServiceId(teamId, name, clusterId) }
     return this.db.getItem('services', ids)
   }
 
-  editService(teamId, name, data) {
-    const ids = { teamId, name }
+  editService(teamId, name, clusterId, data) {
+    const ids = { teamId, name, clusterId }
     this.checkIfServiceExists(ids)
     return this.db.updateItem('services', ids, data)
   }
 
-  deleteService(teamId, name) {
-    const ids = { teamId, name }
+  deleteService(teamId, name, clusterId) {
+    const ids = { teamId, name, clusterId }
     this.checkIfServiceExists(ids)
     return this.db.deleteItem('services', ids)
   }
 
   getDeployments(params) {}
 
-  async triggerDeployment(userGroup) {
+  async triggerDeployment(teamId, email) {
     this.saveValues()
-    await this.repo.commit(userGroup)
+    await this.repo.commit(teamId, email)
     return await this.repo.push()
   }
 
   loadValues() {
     const coreValues = this.repo.readFile(this.clustersPath)
     this.convertCoreValuesToDb(coreValues)
-
     const clusters = this.getClusters()
     this.loadAllTeamValues(clusters)
   }
 
+  loadFileValues(cluster, path) {
+    const values = this.repo.readFile(path)
+    const teams = _.get(values, 'teamConfig.teams', null)
+    if (!teams) {
+      console.info(`Missing 'teamConfig.teams' key in ${path} file. Skipping`)
+      return
+    }
+    this.loadTeamsValues(values.teamConfig.teams, cluster)
+  }
+
   loadAllTeamValues(clusters) {
+    console.log('loadAllTeamValues')
+    const loaded = []
     _.forEach(clusters, (cluster) => {
-      try {
-        const path = this.getValueFilePath(cluster)
-        const values = this.repo.readFile(path)
-        const teams = _.get(values, 'teamConfig.teams', null)
-        if (!teams) {
-          console.warn(`Missing 'teams' key in ${path} file. Skipping`)
-          return
-        }
-        this.loadTeamsValues(values.teamConfig.teams, cluster)
-      } catch (e) {
-        console.error(`Unable to load teams data for cluster ${cluster.id}`, e)
-        return
+      const { cloud, cluster: clusterName } = cluster
+      if (!loaded.includes(cloud)) {
+        const cloudFile = getFilePath(cloud)
+        console.log('loading: ', cloudFile)
+        this.loadFileValues(cluster, cloudFile)
+        loaded.push(cloud)
       }
+      const clusterFile = getFilePath(cloud, clusterName)
+      this.loadFileValues(cluster, clusterFile)
     })
   }
 
@@ -148,12 +158,13 @@ class OtomiStack {
     const cs = values.clouds
     _.forIn(cs, (cloudObj, cloud) => {
       _.forIn(cloudObj.clusters, (clusterObject, cluster) => {
-        const clusterId = `${cluster}/${cloud}`
+        const clusterId = `${cloud}/${cluster}`
         const clusterObj = {
           cloud: cloud,
           cluster: cluster,
           domain: `${cluster}.${cloudObj.domain}`,
           k8sVersion: clusterObject.k8sVersion,
+          hasKnative: clusterObject.hasKnative !== undefined ? clusterObject.hasKnative : true,
           region: clusterObject.region,
         }
         console.log(clusterObj)
@@ -177,24 +188,20 @@ class OtomiStack {
   }
 
   convertTeamToDb(teamData, teamId, cluster) {
-    // console.log(`${teamId}: ${teamData}`);
-    // console.debug(JSON.stringify(teamData))
-
-    try {
-      // Here we only update clusters
-      let team = this.getTeam(teamId)
+    let team = this.db.getItem('teams', { teamId })
+    if (team) {
       this.assignCluster(team, cluster)
       this.editTeam(teamId, team)
-    } catch (err) {
-      // Here we create a team in DB
-      let rawTeam = _.omit(teamData, 'services')
+    } else {
+      const rawTeam = _.omit(teamData, 'services')
+      rawTeam.teamId = teamId
       this.assignCluster(rawTeam, cluster)
       this.createTeam(rawTeam)
     }
 
     if (!teamData.services) {
-      const path = this.getValueFilePath(cluster)
-      console.warn(`Missing 'services' key for team ${teamId} in ${path} file. Skipping.`)
+      const path = getFilePath(cluster)
+      console.info(`Missing 'services' key for team ${teamId} in ${path} file. Skipping.`)
       return
     }
     this.convertTeamValuesServicesToDb(teamData.services, teamId, cluster)
@@ -235,7 +242,11 @@ class OtomiStack {
 
     svc.clusterId = cluster.id
     svc.teamId = teamId
-    this.createService(teamId, svc)
+    const service = this.getService(teamId, svc.name, cluster.id)
+    if (service) {
+      const data = { ...service, svc }
+      this.db.updateItem('services', { teamId }, data)
+    } else this.createService(teamId, svc)
   }
 
   setPasswordIfNotExist(team) {
@@ -250,9 +261,12 @@ class OtomiStack {
 
   saveAllTeamValues(clusters) {
     _.forEach(clusters, (cluster) => {
-      const values = this.convertDbToValues(cluster)
-      const path = this.getValueFilePath(cluster)
-      this.repo.writeFile(path, values)
+      const { cloud, cluster: clusterName } = cluster
+      const teamValues = this.convertTeamsToValues(cluster)
+      const path = getFilePath(cloud, clusterName)
+      const values = this.repo.readFile(path)
+      const newValues = { ...values, ...teamValues }
+      this.repo.writeFile(path, newValues)
     })
   }
 
@@ -261,7 +275,7 @@ class OtomiStack {
     return _.indexOf(clusters, cluster.id) != -1
   }
 
-  convertDbToValues(cluster) {
+  convertTeamsToValues(cluster) {
     const teams = {}
     this.getTeams().forEach((team) => {
       if (!this.inCluster(team, cluster)) return
@@ -275,7 +289,7 @@ class OtomiStack {
       dbServices.forEach((svc) => {
         if (cluster.id !== svc.clusterId) return
 
-        const svcCloned = _.omit(svc, ['teamId', 'spec', 'ingress', 'serviceId', 'clusterId'])
+        const svcCloned = _.omit(svc, ['teamId', 'spec', 'ingress', 'clusterId'])
         const spec = _.cloneDeep(svc.spec)
         if ('predeployed' in spec) {
           svcCloned.ksvc = spec

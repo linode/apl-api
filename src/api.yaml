@@ -54,7 +54,7 @@ x-get-responses: &DefaultGetResponses
         schema:
           $ref: '#/components/schemas/OpenApiValidationError'
   '404':
-    description: Resource does not exists
+    description: Resource does not exist
     content:
       'application/json':
         schema:
@@ -251,6 +251,12 @@ paths:
           required: true
           schema:
             type: string
+        - name: clusterId
+          in: query
+          description: ID of cluster
+          required: true
+          schema:
+            type: string
         - name: name
           in: path
           description: Name of the service
@@ -306,6 +312,12 @@ paths:
           required: true
           schema:
             type: string
+        - name: clusterId
+          in: query
+          description: ID of cluster
+          required: true
+          schema:
+            type: string
         - name: name
           in: path
           description: Name of the service
@@ -317,8 +329,8 @@ paths:
         '200':
           description: Successfully deleted a service
 
-  /deployments:
-    post:
+  /deploy:
+    get:
       operationId: deploy
       description: Trigger a deployment (only for admin)
       responses:
@@ -327,13 +339,28 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Deployment'
+                type: object
         '409':
           description: Unable not push data to git repo
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/OtomiStackError'
+
+  /session:
+    get:
+      security: []
+      operationId: getSession
+      description: Get the session for the current user
+      responses:
+        '200':
+          description: Get the session for the logged in user
+          content:
+            'application/json':
+              schema:
+                type: object
+        default:
+          description: The requested session.
   /apiDocs:
     get:
       security: []
@@ -353,6 +380,10 @@ servers:
 # -------------------- Components
 components:
   securitySchemes:
+    groupAuthn:
+      type: apiKey
+      name: Auth-User
+      in: header
     groupAuthz:
       type: apiKey
       name: Auth-Group

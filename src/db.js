@@ -21,9 +21,6 @@ class Db {
   getItem(name, selectors) {
     console.log(selectors)
     const data = this.db.get(name).find(selectors).value()
-    if (data === undefined) {
-      throw new err.NotExistError(`Selector props ${JSON.stringify(selectors)} do not exist on collection`)
-    }
     return data
   }
 

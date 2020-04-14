@@ -21,20 +21,10 @@ function isAuthorized(req, scopes, definition) {
       status: 401,
       message: 'Not authenticated',
     }
-
-  if (group === 'admin') return true
-
-  // If not admin then we require that a team uses its id in request path
-  if (group !== req.params.teamId)
-    throw {
-      status: 403,
-      message: 'Not authorized',
-    }
-
   return true
 }
 
 module.exports = {
-  errorMiddleware: errorMiddleware,
-  isAuthorized: isAuthorized,
+  errorMiddleware,
+  isAuthorized,
 }

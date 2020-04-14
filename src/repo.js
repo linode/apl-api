@@ -29,13 +29,13 @@ class Repo {
     return doc
   }
 
-  async commit(userGroup) {
+  async commit(teamId, email) {
     console.info('Committing changes')
     await this.git.add('./*')
     const commitSummary = await this.git.commit('otomi-stack-api')
     if (commitSummary.commit === '') return commitSummary
     // Only add note to a new commit
-    await this.addNote({ group: userGroup })
+    await this.addNote({ team: teamId, email })
     return commitSummary
   }
 
@@ -66,7 +66,7 @@ class Repo {
 
     const isRepo = await this.git.checkIsRepo()
     if (!isRepo) {
-      console.info('Repo does not exists. Cloning from: ' + this.url + ' to: ' + this.path)
+      console.info('Repo does not exist. Cloning from: ' + this.url + ' to: ' + this.path)
       const remote = `https://${this.user}:${this.password}@${this.url}`
       await this.git.clone(remote, this.path)
       await this.git.addConfig('user.name', this.user)

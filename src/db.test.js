@@ -2,7 +2,7 @@ const expect = require('chai').expect
 const db = require('./db')
 
 describe('Db', function () {
-  var testDb
+  let testDb
   beforeEach(function () {
     testDb = new db.Db(null)
   })
@@ -76,7 +76,7 @@ describe('Db', function () {
     done()
   })
 
-  it('throws error if item does not exists', function (done) {
+  it('throws error if item does not exist', function (done) {
     expect(() => testDb.getItem('teams', { teamId: 'n1' })).to.throw()
     done()
   })

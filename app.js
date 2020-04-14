@@ -8,15 +8,9 @@ const repo = require('./src/repo')
 dotEnv.config()
 utils.validateConfig()
 
-const d = db.init(process.env.DB_PATH)
-const r = repo.init(
-  process.env.GIT_LOCAL_PATH,
-  process.env.GIT_REPO_URL,
-  process.env.GIT_USER,
-  process.env.GIT_EMAIL,
-  process.env.GIT_PASSWORD,
-  process.env.GIT_BRANCH,
-)
+const env = process.env
+const d = db.init(env.DB_PATH)
+const r = repo.init(env.GIT_LOCAL_PATH, env.GIT_REPO_URL, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, env.GIT_BRANCH)
 
 const otomiStack = new otomi.OtomiStack(r, d)
 

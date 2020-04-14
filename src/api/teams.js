@@ -1,5 +1,5 @@
 module.exports = function (otomi) {
-  var api = {
+  const api = {
     get: [
       function (req, res, next) {
         const data = otomi.getTeams()
