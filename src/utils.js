@@ -56,15 +56,22 @@ function objectToArray(obj, keyName, keyValue) {
 
 function getPublicUrl(serviceDomain, serviceName, teamId, cluster) {
   if (!serviceDomain) {
+    // Fallback mechanism for exposed service that does not have its public url specified in values
     return {
-      subdomain: `${serviceName}.team-${teamId}.${cluster.cluster}`,
-      domain: cluster.dnsZone,
+      subdomain: `${serviceName}.team-${teamId}`,
+      domain: cluster.dnsZones[0],
     }
   }
 
-  if (serviceDomain.endsWith(cluster.dnsZone)) {
-    const subdomainLength = serviceDomain.length - cluster.dnsZone.length - 1
-    return { subdomain: serviceDomain.substring(0, subdomainLength), domain: cluster.dnsZone }
+  const dnsZones = [...cluster.dnsZones]
+  // Sort by length descending
+  dnsZones.sort((a, b) => b.length - a.length)
+
+  for (const dnsZone of dnsZones) {
+    if (serviceDomain.endsWith(dnsZone)) {
+      const subdomainLength = serviceDomain.length - dnsZone.length - 1
+      return { subdomain: serviceDomain.substring(0, subdomainLength), domain: dnsZone }
+    }
   }
 
   // Custom domain that is not visible in clusters.yaml values

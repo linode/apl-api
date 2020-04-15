@@ -181,7 +181,7 @@ class OtomiStack {
         const clusterObj = {
           cloud: cloud,
           cluster: cluster,
-          dnsZone: cloudObj.domain,
+          dnsZones: [cloudObj.domain],
           domain: `${cluster}.${cloudObj.domain}`,
           k8sVersion: clusterObject.k8sVersion,
           hasKnative: clusterObject.hasKnative !== undefined ? clusterObject.hasKnative : true,
