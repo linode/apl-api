@@ -181,6 +181,7 @@ class OtomiStack {
         const clusterObj = {
           cloud: cloud,
           cluster: cluster,
+          dnsZones: [cloudObj.domain],
           domain: `${cluster}.${cloudObj.domain}`,
           k8sVersion: clusterObject.k8sVersion,
           hasKnative: clusterObject.hasKnative !== undefined ? clusterObject.hasKnative : true,
@@ -234,9 +235,10 @@ class OtomiStack {
 
   convertServiceToDb(svcRaw, teamId, cluster) {
     // Create service
-    let svc = _.omit(svcRaw, 'ksvc', 'svc', 'isPublic', 'internal', 'hasCert')
+    let svc = _.omit(svcRaw, 'ksvc', 'svc', 'isPublic', 'internal', 'hasCert', 'domain')
     svc.spec = {}
-
+    svc.clusterId = cluster.id
+    svc.teamId = teamId
     if ('ksvc' in svcRaw) {
       svc.spec = _.cloneDeep(svcRaw.ksvc)
       if (!('predeployed' in svcRaw.ksvc)) {
@@ -252,15 +254,16 @@ class OtomiStack {
     if ('internal' in svcRaw) {
       svc.ingress = { internal: true }
     } else {
+      const publicUrl = utils.getPublicUrl(svcRaw.domain, svcRaw.name, teamId, cluster)
       svc.ingress = {
         hasCert: 'hasCert' in svcRaw,
         hasSingleSignOn: !('isPublic' in svcRaw),
         certArn: svcRaw.certArn,
+        domain: publicUrl.domain,
+        subdomain: publicUrl.subdomain,
       }
     }
 
-    svc.clusterId = cluster.id
-    svc.teamId = teamId
     const service = this.getService(teamId, svc.name, cluster.id)
     if (service) {
       const data = { ...service, svc }
@@ -324,6 +327,10 @@ class OtomiStack {
         }
 
         if (svc.ingress.internal) svcCloned.internal = true
+        else
+          svcCloned.domain = svc.ingress.subdomain
+            ? `${svc.ingress.subdomain}.${svc.ingress.domain}`
+            : svc.ingress.domain
 
         if (!svc.ingress.hasSingleSignOn) svcCloned.isPublic = true
 

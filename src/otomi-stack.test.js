@@ -15,7 +15,7 @@ describe('Load and dump values', function () {
   it('should load values to db and convert them back', function (done) {
     const expectedValues = yaml.safeLoad(fs.readFileSync('./test/team.yaml', 'utf8'))
     const values = _.cloneDeep(expectedValues)
-    const cluster = { cloudName: 'aws', clusterName: 'dev', id: 'dev/aws' }
+    const cluster = { cloudName: 'aws', cluster: 'dev', id: 'aws/dev', dnsZones: ['otomi.cloud'] }
     otomiStack.loadTeamsValues(values.teamConfig.teams, cluster)
 
     const expectedTeam = {
@@ -26,16 +26,17 @@ describe('Load and dump values', function () {
         type: 'drone',
       },
       password: 'somepassworddd',
-      clusters: ['dev/aws'],
+      clusters: ['aws/dev'],
     }
     const expectedService = {
       teamId: 'team1',
-      serviceId: 'team1/hello',
-      clusterId: 'dev/aws',
+      clusterId: 'aws/dev',
       ingress: {
+        domain: 'otomi.cloud',
         hasSingleSignOn: false,
         hasCert: false,
         certArn: undefined,
+        subdomain: 'hello.team-team1.dev',
       },
       spec: {
         annotations: [{ name: 'autoscaling.knative.dev/minScale', value: '1' }],
@@ -50,13 +51,14 @@ describe('Load and dump values', function () {
 
     const expectedService2 = {
       teamId: 'team1',
-      serviceId: 'team1/hello-predeployed-ksvc',
-      clusterId: 'dev/aws',
+      clusterId: 'aws/dev',
       name: 'hello-predeployed-ksvc',
       ingress: {
+        domain: 'otomi.cloud',
         hasSingleSignOn: true,
         hasCert: false,
         certArn: undefined,
+        subdomain: 'hello-predeployed-ksvc.team-team1.dev',
       },
       spec: {
         predeployed: true,
@@ -65,8 +67,7 @@ describe('Load and dump values', function () {
 
     const expectedService3 = {
       teamId: 'team1',
-      serviceId: 'team1/hello-ksvc-internal',
-      clusterId: 'dev/aws',
+      clusterId: 'aws/dev',
       name: 'hello-ksvc-internal',
       ingress: {
         internal: true,
@@ -78,13 +79,14 @@ describe('Load and dump values', function () {
 
     const expectedService4 = {
       teamId: 'team1',
-      serviceId: 'team1/hello-svc',
-      clusterId: 'dev/aws',
+      clusterId: 'aws/dev',
       name: 'hello-svc',
       ingress: {
+        domain: 'otomi.cloud',
         hasSingleSignOn: true,
         hasCert: false,
         certArn: undefined,
+        subdomain: 'hello-svc.team-team1.dev',
       },
       spec: {
         name: 'hello-svc',
@@ -94,34 +96,20 @@ describe('Load and dump values', function () {
     let data = otomiStack.getTeam('team1')
     expect(data).to.deep.equal(expectedTeam)
 
-    data = otomiStack.getService('team1', 'hello')
+    data = otomiStack.getService('team1', 'hello', 'aws/dev')
     expect(data).to.deep.equal(expectedService)
 
-    data = otomiStack.getService('team1', 'hello-predeployed-ksvc')
+    data = otomiStack.getService('team1', 'hello-predeployed-ksvc', 'aws/dev')
     expect(data).to.deep.equal(expectedService2)
 
-    data = otomiStack.getService('team1', 'hello-ksvc-internal')
+    data = otomiStack.getService('team1', 'hello-ksvc-internal', 'aws/dev')
     expect(data).to.deep.equal(expectedService3)
 
-    data = otomiStack.getService('team1', 'hello-svc')
+    data = otomiStack.getService('team1', 'hello-svc', 'aws/dev')
     expect(data).to.deep.equal(expectedService4)
 
-    const dbValues = otomiStack.convertDbToValues(cluster)
+    const dbValues = otomiStack.convertTeamsToValues(cluster)
     expect(dbValues).to.deep.equal(expectedValues)
-    done()
-  })
-
-  it('should set password', function (done) {
-    let team = { password: undefined }
-    otomiStack.setPasswordIfNotExist(team)
-    expect(16).to.be.equal(team.password.length)
-    done()
-  })
-
-  it('should not set password', function (done) {
-    let team = { password: 'abcd' }
-    otomiStack.setPasswordIfNotExist(team)
-    expect(team.password).to.be.equal('abcd')
     done()
   })
 })

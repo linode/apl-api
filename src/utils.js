@@ -54,10 +54,35 @@ function objectToArray(obj, keyName, keyValue) {
   return arr
 }
 
+function getPublicUrl(serviceDomain, serviceName, teamId, cluster) {
+  if (!serviceDomain) {
+    // Fallback mechanism for exposed service that does not have its public url specified in values
+    return {
+      subdomain: `${serviceName}.team-${teamId}`,
+      domain: cluster.dnsZones[0],
+    }
+  }
+
+  const dnsZones = [...cluster.dnsZones]
+  // Sort by length descending
+  dnsZones.sort((a, b) => b.length - a.length)
+
+  for (const dnsZone of dnsZones) {
+    if (serviceDomain.endsWith(dnsZone)) {
+      const subdomainLength = serviceDomain.length - dnsZone.length - 1
+      return { subdomain: serviceDomain.substring(0, subdomainLength), domain: dnsZone }
+    }
+  }
+
+  // Custom domain that is not visible in clusters.yaml values
+  return { subdomain: '', domain: serviceDomain }
+}
+
 module.exports = {
-  validateConfig: validateConfig,
-  validateEnv: validateEnv,
-  setSignalHandlers: setSignalHandlers,
-  arrayToObject: arrayToObject,
-  objectToArray: objectToArray,
+  validateConfig,
+  validateEnv,
+  setSignalHandlers,
+  arrayToObject,
+  objectToArray,
+  getPublicUrl,
 }

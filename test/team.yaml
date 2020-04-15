@@ -8,6 +8,7 @@ teamConfig:
       password: somepassworddd
       services:
         - isPublic: true
+          domain: 'hello.team-team1.dev.otomi.cloud'
           name: hello
           ksvc:
             annotations:
@@ -19,9 +20,11 @@ teamConfig:
               repository: otomi/helloworld-nodejs
               tag: 1.1.3
         - name: hello-svc
+          domain: 'hello-svc.team-team1.dev.otomi.cloud'
           svc:
             name: hello-svc
         - name: hello-predeployed-ksvc
+          domain: 'hello-predeployed-ksvc.team-team1.dev.otomi.cloud'
           ksvc:
             predeployed: true
         - name: hello-ksvc-internal
