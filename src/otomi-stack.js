@@ -3,7 +3,7 @@ const _ = require('lodash')
 const path = require('path')
 const utils = require('./utils')
 
-const baseGlobal = { teamValues: { teamConfig: {} } }
+const baseGlobal = { teamConfig: { teams: {} } }
 let glbl = { ...baseGlobal }
 
 const getFilePath = (cloud = null, cluster = null) => {
@@ -343,7 +343,7 @@ class OtomiStack {
     })
 
     const values = {
-      teamConfig: { teams: teams },
+      teamConfig: { teams },
     }
     return values
   }
