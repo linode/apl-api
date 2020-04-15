@@ -207,12 +207,13 @@ class OtomiStack {
   convertCoreValuesToDb(values) {
     const cs = values.clouds
     _.forIn(cs, (cloudObj, cloud) => {
+      const dnsZones = [cloudObj.domain].concat(_.get(cloudObj, 'dnsZones', []))
       _.forIn(cloudObj.clusters, (clusterObject, cluster) => {
         const clusterId = `${cloud}/${cluster}`
         const clusterObj = {
           cloud: cloud,
           cluster: cluster,
-          dnsZones: [cloudObj.domain],
+          dnsZones: dnsZones,
           domain: `${cluster}.${cloudObj.domain}`,
           k8sVersion: clusterObject.k8sVersion,
           hasKnative: clusterObject.hasKnative !== undefined ? clusterObject.hasKnative : true,
