@@ -599,7 +599,30 @@ components:
       additionalProperties: false
 
     Clusters:
-      <<: *AvailableClusters
+      type: array
+      items:
+        $ref: '#/components/schemas/Cluster'
+    Cluster:
+      type: object
+      properties:
+        cluster:
+          type: string
+          description: A cluster name
+          readOnly: true
+        cloud:
+          type: string
+          description: A cloud name
+          readOnly: true
+        dnsZones:
+          type: array
+          items:
+            type: string
+          readOnly: true
+          uniqueItems: true
+        clusterId:
+          type: string
+          readOnly: true
+
     Teams:
       type: object
       properties:
@@ -657,11 +680,12 @@ components:
       properties: &ServiceIngress
         domain:
           title: Domain
-          description: A managed domain zone
+          description: A managed DNS zone
           type: string
         subdomain:
+          title: 'Host'
           type: string
-          description: A subdomain that is going to be used together with with domain zone
+          description: A host that is used to set DNS 'A' record
           <<: *domainNameField
         hasSingleSignOn:
           title: Add Single Sign On
