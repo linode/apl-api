@@ -64,14 +64,6 @@ class OtomiStack {
     return this.db.getItem('teams', { teamId })
   }
 
-  checkIfTeamExists(ids) {
-    return !!this.db.getItem('teams', ids)
-  }
-
-  checkIfServiceExists(ids) {
-    return !!this.db.getItem('services', ids)
-  }
-
   createTeam(data) {
     const ids = { teamId: data.teamId }
     data.name = data.name || data.teamId
@@ -80,20 +72,17 @@ class OtomiStack {
 
   editTeam(teamId, data) {
     const ids = { teamId }
-    this.checkIfTeamExists(ids)
     return this.db.updateItem('teams', ids, data)
   }
 
   deleteTeam(teamId) {
     const ids = { teamId }
-    this.checkIfTeamExists(ids)
     this.db.deleteItem('services', ids)
     return this.db.deleteItem('teams', ids)
   }
 
   getTeamServices(teamId) {
     const ids = { teamId }
-    this.checkIfTeamExists(ids)
     return this.db.getCollection('services', ids)
   }
 
@@ -102,7 +91,6 @@ class OtomiStack {
   }
 
   createService(teamId, data) {
-    this.checkIfTeamExists({ teamId })
     const ids = { teamId, name: data.name, clusterId: data.clusterId }
     return this.db.createItem('services', ids, data)
   }
@@ -122,13 +110,11 @@ class OtomiStack {
 
   editService(teamId, name, clusterId, data) {
     const ids = { teamId, name, clusterId }
-    this.checkIfServiceExists(ids)
     return this.db.updateItem('services', ids, data)
   }
 
   deleteService(teamId, name, clusterId) {
     const ids = { teamId, name, clusterId }
-    this.checkIfServiceExists(ids)
     return this.db.deleteItem('services', ids)
   }
 
@@ -209,11 +195,12 @@ class OtomiStack {
   }
 
   convertTeamToDb(teamData, teamId, cluster) {
-    let team = this.db.getItem('teams', { teamId })
-    if (team) {
+    let team
+    try {
+      team = this.getTeam(teamId)
       this.assignCluster(team, cluster)
       this.editTeam(teamId, team)
-    } else {
+    } catch (e) {
       const rawTeam = _.omit(teamData, 'services')
       rawTeam.teamId = teamId
       this.assignCluster(rawTeam, cluster)
@@ -265,11 +252,13 @@ class OtomiStack {
       }
     }
 
-    const service = this.getService(teamId, svc.name, cluster.id)
-    if (service) {
+    try {
+      const service = this.getService(teamId, svc.name, cluster.id)
       const data = { ...service, svc }
       this.db.updateItem('services', { teamId }, data)
-    } else this.createService(teamId, svc)
+    } catch (e) {
+      this.createService(teamId, svc)
+    }
   }
 
   saveValues() {
