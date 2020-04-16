@@ -137,7 +137,8 @@ class OtomiStack {
   async triggerDeployment(teamId, email) {
     this.saveValues()
     await this.repo.commit(teamId, email)
-    return await this.repo.push()
+    await this.repo.push()
+    glbl = { ...baseGlobal }
   }
 
   loadValues() {
@@ -273,10 +274,6 @@ class OtomiStack {
 
   saveValues() {
     const clusters = this.getClusters()
-    this.saveAllTeamValues(clusters)
-  }
-
-  saveAllTeamValues(clusters) {
     _.forEach(clusters, (cluster) => {
       const { cloud, cluster: clusterName } = cluster
       const teamValues = this.convertTeamsToValues(cluster)

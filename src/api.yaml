@@ -63,7 +63,6 @@ x-get-responses: &DefaultGetResponses
         schema:
           $ref: '#/components/schemas/OtomiStackError'
 
-x-acl-admin: &AclAdmin
   team: [read]
   admin: [read, write]
 
@@ -655,14 +654,16 @@ components:
           <<: *nameField
           example: 'team-1'
           x-acl:
-            <<: *AclAdmin
+            team: [read]
+            admin: [read, write]
           description: A team name
         clusters:
           title: Clusters
           <<: *AvailableClusters
           minItems: 1
           x-acl:
-            <<: *AclAdmin
+            team: [read]
+            admin: [read, write]
         password:
           type: string
           # description: "A secret that is used access multi-tenant log aggregation system (Loki)"
@@ -716,7 +717,8 @@ components:
           title: Exposure
           type: object
           x-acl:
-            <<: *AclAdmin
+            team: [read]
+            admin: [read, write]
           anyOf:
             - title: Private
               nullable: true
