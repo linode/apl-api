@@ -63,7 +63,7 @@
     "*.{js}": [
       "eslint --project ./eslintrc.yml"
     ],
-    "*.{jts}": [
+    "*.{ts}": [
       "tslint --project ./tsconfig.tslint.json"
     ]
   },
@@ -84,10 +84,16 @@
     "format:fix": "prettier --write \"**/*.{js,json,md,ts,yml,yaml}\"",
     "husky:lint-staged": "lint-staged",
     "husky:pre-commit": "lint-staged",
-    "lint": "eslint .",
+    "lint": "eslint --ext js,ts --fix .",
+    "lint:fix": "eslint --ext js,ts .",
     "release": "standard-version",
     "start": "node app.js",
     "test": "mocha src --exit"
+  },
+  "standard-version": {
+    "scripts": {
+      "precommit": "prettier --write CHANGELOG.md && git add package.json package-lock.json CHANGELOG.md"
+    }
   },
   "version": "0.2.5"
 }
