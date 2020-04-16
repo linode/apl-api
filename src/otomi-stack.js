@@ -133,7 +133,9 @@ class OtomiStack {
     const servicesFiltered = _.filter(services, (svc) => {
       const subdomain = _.get(svc, 'ingress.subdomain')
       const domain = _.get(svc, 'ingress.domain')
-      return subdomain === data.ingress.subdomain && domain === data.ingress.domain && svc.serviceId !== data.serviceId
+      const existingUrl = `${subdomain}.${domain}`
+      const url = `${data.ingress.subdomain}.${data.ingress.domain}`
+      return existingUrl === url && svc.serviceId !== data.serviceId
     })
 
     if (servicesFiltered.length === 0) return false
