@@ -113,3 +113,38 @@ describe('Load and dump values', function () {
     done()
   })
 })
+
+describe('Data validation', function () {
+  let otomiStack = undefined
+  beforeEach(function () {
+    const d = db.init()
+    otomiStack = new otomi.OtomiStack(null, d)
+  })
+
+  it('should indicate duplicated subdomain', function (done) {
+    const svc = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'b' } }
+    const svc1 = { serviceId: 's/B', ingress: { domain: 'a.com', subdomain: 'b' } }
+
+    otomiStack.db.createItem('services', { teamId: 'A' }, svc)
+
+    const duplicated = otomiStack.isPublicUrlInUse(svc1)
+    expect(duplicated).to.be.true
+    done()
+  })
+  it('should not indicate duplicated subdomain', function (done) {
+    const svc = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'b' } }
+    otomiStack.db.createItem('services', { teamId: 'A' }, svc)
+    const svc1 = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'c' } }
+    const duplicated = otomiStack.isPublicUrlInUse(svc1)
+    expect(duplicated).to.be.false
+    done()
+  })
+  it('should not indicate that public URL already exist (existing service is updated)', function (done) {
+    const svc = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'b' } }
+    otomiStack.db.createItem('services', { teamId: 'A' }, svc)
+    const svc1 = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'b' } }
+    const duplicated = otomiStack.isPublicUrlInUse(svc1)
+    expect(duplicated).to.be.false
+    done()
+  })
+})

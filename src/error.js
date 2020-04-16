@@ -15,8 +15,15 @@ class GitError extends Error {
   }
 }
 
+class PublicUrlExists extends Error {
+  constructor(message) {
+    super(message)
+  }
+}
+
 module.exports = {
-  AlreadyExists: AlreadyExists,
-  NotExistError: NotExistError,
-  GitError: GitError,
+  AlreadyExists,
+  NotExistError,
+  PublicUrlExists,
+  GitError,
 }
