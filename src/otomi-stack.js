@@ -283,6 +283,7 @@ class OtomiStack {
       const newValues = { ...values, ...teamValues }
       this.repo.writeFile(path, newValues)
     })
+    // now also write the globals back
     const path = getFilePath()
     const values = this.repo.readFile(path)
     const newValues = { ...values, ...glbl }

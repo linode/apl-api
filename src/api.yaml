@@ -63,9 +63,6 @@ x-get-responses: &DefaultGetResponses
         schema:
           $ref: '#/components/schemas/OtomiStackError'
 
-  team: [read]
-  admin: [read, write]
-
 paths:
   /readiness:
     get:
