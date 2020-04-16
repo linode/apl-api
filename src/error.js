@@ -15,15 +15,15 @@ class GitError extends Error {
   }
 }
 
-class SubdomainDuplicated extends Error {
+class PublicUrlExists extends Error {
   constructor(message) {
     super(message)
   }
 }
 
 module.exports = {
-  AlreadyExists: AlreadyExists,
-  NotExistError: NotExistError,
-  SubdomainDuplicated: SubdomainDuplicated,
-  GitError: GitError,
+  AlreadyExists,
+  NotExistError,
+  PublicUrlExists,
+  GitError,
 }

@@ -122,11 +122,11 @@ class OtomiStack {
   }
 
   validateService(data) {
-    if (this.isDomainDuplicated(data)) throw err.SubdomainDuplicated('The subdomain is already registered at domain')
+    if (this.isPublicUrlInUse(data)) throw new err.PublicUrlExists('Public URL is already used')
   }
 
-  isDomainDuplicated(data) {
-    if (_.isEmpty(data.ingress)) return false
+  isPublicUrlInUse(data) {
+    if ('ingress' in data.ingress) return false
 
     const services = this.db.getCollection('services')
 
