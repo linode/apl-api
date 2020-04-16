@@ -21,7 +21,7 @@ ARG CI=true
 ENV NODE_ENV=test
 
 RUN npm run lint
-# RUN npm run test
+RUN npm run test
 
 # --------------- Cleanup
 FROM dev as clean
