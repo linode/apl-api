@@ -8,7 +8,7 @@ info:
 x-fields:
   domain: &domainNameField
     type: string
-    pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
+    # pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
   repository: &repositoryField
     type: string
     pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
@@ -683,6 +683,7 @@ components:
         subdomain:
           title: 'Host'
           type: string
+          # nullable: true
           description: A host that is used to set DNS 'A' record
           <<: *domainNameField
         hasSingleSignOn:
@@ -699,6 +700,9 @@ components:
           title: Certificate ARN
           description: Only if hasCert set to true and deployed on AWS
           example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
+      required:
+        - domain
+        - subdomain
       additionalProperties: false
 
     Service:
