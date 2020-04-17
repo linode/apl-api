@@ -42,9 +42,9 @@ class OtomiStack {
   async init() {
     try {
       await this.repo.clone()
-      this.loadValues()
       const globalPath = getFilePath()
       glbl = this.repo.readFile(globalPath)
+      this.loadValues()
     } catch (e) {
       console.error('Unable to init app', e)
       return false
@@ -64,9 +64,8 @@ class OtomiStack {
     return this.db.getItem('teams', { teamId })
   }
 
-  createTeam(data) {
-    const ids = { teamId: data.teamId }
-    data.name = data.name || data.teamId
+  createTeam(teamId, data) {
+    const ids = { teamId: teamId || data.name }
     return this.db.createItem('teams', ids, data)
   }
 
@@ -202,9 +201,8 @@ class OtomiStack {
       this.editTeam(teamId, team)
     } catch (e) {
       const rawTeam = _.omit(teamData, 'services')
-      rawTeam.teamId = teamId
       this.assignCluster(rawTeam, cluster)
-      this.createTeam(rawTeam)
+      this.createTeam(teamId, { ...rawTeam, ...glbl.teamConfig.teams[teamId] })
     }
 
     if (!teamData.services) {
