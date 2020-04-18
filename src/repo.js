@@ -83,7 +83,7 @@ class Repo {
   }
 }
 
-function init(localPath, url, user, email, password, branch) {
+function init(localPath = '/tmp/otomi-stack', url, user, email, password, branch) {
   if (!fs.existsSync(localPath)) fs.mkdirSync(localPath, 0o744)
   return new Repo(localPath, url, user, email, password, branch)
 }

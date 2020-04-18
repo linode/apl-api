@@ -39,16 +39,6 @@ function splitGlobal(teamValues) {
 
 class OtomiStack {
   constructor() {
-    this.initDb()
-    this.initRepo()
-    this.clustersPath = './env/clusters.yaml'
-  }
-
-  initDb() {
-    this.db = db.init(env.DB_PATH)
-  }
-
-  initRepo() {
     this.repo = repo.init(
       env.GIT_LOCAL_PATH,
       env.GIT_REPO_URL,
@@ -57,6 +47,12 @@ class OtomiStack {
       env.GIT_PASSWORD,
       env.GIT_BRANCH,
     )
+    this.initDb()
+    this.clustersPath = './env/clusters.yaml'
+  }
+
+  initDb() {
+    this.db = db.init(env.DB_PATH)
   }
 
   async init() {
@@ -270,25 +266,20 @@ class OtomiStack {
 
   convertServiceToDb(svcRaw, teamId, cluster) {
     // Create service
-    let svc = _.omit(svcRaw, 'ksvc', 'svc', 'isPublic', 'internal', 'hasCert', 'domain')
-    svc.spec = {}
+    let svc = _.omit(svcRaw, 'ksvc', 'isPublic', 'hasCert', 'domain')
     svc.clusterId = cluster.id
     svc.teamId = teamId
     if ('ksvc' in svcRaw) {
-      svc.spec = _.cloneDeep(svcRaw.ksvc)
+      svc.ksvc = _.cloneDeep(svcRaw.ksvc)
       if (!('predeployed' in svcRaw.ksvc)) {
         const annotations = _.get(svcRaw.ksvc, 'annotations', {})
-        svc.spec.annotations = utils.objectToArray(annotations, 'name', 'value')
+        svc.ksvc.annotations = utils.objectToArray(annotations, 'name', 'value')
       }
-    } else if ('svc' in svcRaw) {
-      svc.spec = _.cloneDeep(svcRaw.svc)
-    } else {
+    } else if (!('name' in svcRaw)) {
       console.warn('Unknown service structure')
     }
 
-    if ('internal' in svcRaw) {
-      svc.ingress = { internal: true }
-    } else {
+    if (!('internal' in svcRaw)) {
       const publicUrl = utils.getPublicUrl(svcRaw.domain, svcRaw.name, teamId, cluster)
       svc.ingress = {
         hasCert: 'hasCert' in svcRaw,
@@ -296,7 +287,6 @@ class OtomiStack {
         certArn: svcRaw.certArn,
         domain: publicUrl.domain,
         subdomain: publicUrl.subdomain,
-        useDefaultSubdomain: publicUrl.useDefaultSubdomain,
       }
     }
 
@@ -324,7 +314,7 @@ class OtomiStack {
     // now also write the globals back
     const path = getFilePath()
     const values = this.repo.readFile(path)
-    const newValues = { ...values, ...glbl }
+    const newValues = _.omit({ ...values, ...glbl }, _.isUndefined)
     this.repo.writeFile(path, newValues)
   }
 
@@ -347,18 +337,18 @@ class OtomiStack {
       dbServices.forEach((svc) => {
         if (cluster.id !== svc.clusterId) return
 
-        const svcCloned = _.omit(svc, ['teamId', 'spec', 'ingress', 'clusterId'])
-        const spec = _.cloneDeep(svc.spec)
-        if (spec.predeployed) {
-          svcCloned.ksvc = { predeployed: true, name: spec.name }
-        } else if (spec.image && !_.isEmpty(spec.image)) {
-          svcCloned.ksvc = spec
-          const annotations = _.get(svc.spec, 'annotations', [])
-          svcCloned.ksvc.annotations = utils.arrayToObject(annotations, 'name', 'value')
-        } else if (spec.name) {
-          svcCloned.svc = { name: spec.name }
-        } else {
-          console.warn(`Dump service to value file: unknown service structure: ${JSON.stringify(spec)}`)
+        const svcCloned = _.omit(svc, ['teamId', 'serviceId', 'clusterId', 'ksvc', 'ingress'])
+        if (svc.ksvc) {
+          const ksvc = _.cloneDeep(svc.ksvc)
+          if (ksvc.predeployed) {
+            svcCloned.ksvc = { predeployed: true }
+          } else if (ksvc.image && !_.isEmpty(ksvc.image)) {
+            svcCloned.ksvc = ksvc
+            const annotations = _.get(svc.ksvc, 'annotations', [])
+            svcCloned.ksvc.annotations = utils.arrayToObject(annotations, 'name', 'value')
+          } else if (ksvc) {
+            console.warn(`Dump service to value file: unknown ksvc structure: ${JSON.stringify(ksvc)}`)
+          }
         }
         if (svc.ingress && !_.isEmpty(svc.ingress)) {
           svcCloned.domain = `${svc.ingress.subdomain}.${svc.ingress.domain}`

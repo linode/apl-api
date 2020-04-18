@@ -1,18 +1,17 @@
 const expect = require('chai').expect
-const otomi = require('./otomi-stack')
+const OtomiStack = require('./otomi-stack')
 const yaml = require('js-yaml')
 const fs = require('fs')
-const db = require('./db')
 const _ = require('lodash')
 
 describe('Load and dump values', function () {
   let otomiStack = undefined
   beforeEach(function () {
-    const d = db.init()
-    otomiStack = new otomi.OtomiStack(null, d)
+    otomiStack = new OtomiStack()
   })
 
   it('should load values to db and convert them back', function (done) {
+    // this.skip('New method signatur for getService needs implementation')
     const expectedValues = yaml.safeLoad(fs.readFileSync('./test/team.yaml', 'utf8'))
     const values = _.cloneDeep(expectedValues)
     const cluster = { cloudName: 'aws', cluster: 'dev', id: 'aws/dev', dnsZones: ['otomi.cloud'] }
@@ -29,6 +28,7 @@ describe('Load and dump values', function () {
       clusters: ['aws/dev'],
     }
     const expectedService = {
+      serviceId: 'aws/dev/team1/hello',
       teamId: 'team1',
       clusterId: 'aws/dev',
       ingress: {
@@ -38,7 +38,7 @@ describe('Load and dump values', function () {
         certArn: undefined,
         subdomain: 'hello.team-team1.dev',
       },
-      spec: {
+      ksvc: {
         annotations: [{ name: 'autoscaling.knative.dev/minScale', value: '1' }],
         env: [{ name: 'RED', value: 'KUBES' }],
         image: {
@@ -50,6 +50,7 @@ describe('Load and dump values', function () {
     }
 
     const expectedService2 = {
+      serviceId: 'aws/dev/team1/hello-predeployed-ksvc',
       teamId: 'team1',
       clusterId: 'aws/dev',
       name: 'hello-predeployed-ksvc',
@@ -60,24 +61,24 @@ describe('Load and dump values', function () {
         certArn: undefined,
         subdomain: 'hello-predeployed-ksvc.team-team1.dev',
       },
-      spec: {
+      ksvc: {
         predeployed: true,
       },
     }
 
     const expectedService3 = {
+      serviceId: 'aws/dev/team1/hello-ksvc-internal',
       teamId: 'team1',
       clusterId: 'aws/dev',
       name: 'hello-ksvc-internal',
-      ingress: {
-        internal: true,
-      },
-      spec: {
+      internal: true,
+      ksvc: {
         predeployed: true,
       },
     }
 
     const expectedService4 = {
+      serviceId: 'aws/dev/team1/hello-svc',
       teamId: 'team1',
       clusterId: 'aws/dev',
       name: 'hello-svc',
@@ -88,24 +89,21 @@ describe('Load and dump values', function () {
         certArn: undefined,
         subdomain: 'hello-svc.team-team1.dev',
       },
-      spec: {
-        name: 'hello-svc',
-      },
     }
 
     let data = otomiStack.getTeam('team1')
     expect(data).to.deep.equal(expectedTeam)
 
-    data = otomiStack.getService('team1', 'hello', 'aws/dev')
+    data = otomiStack.getService('aws/dev/team1/hello')
     expect(data).to.deep.equal(expectedService)
 
-    data = otomiStack.getService('team1', 'hello-predeployed-ksvc', 'aws/dev')
+    data = otomiStack.getService('aws/dev/team1/hello-predeployed-ksvc')
     expect(data).to.deep.equal(expectedService2)
 
-    data = otomiStack.getService('team1', 'hello-ksvc-internal', 'aws/dev')
+    data = otomiStack.getService('aws/dev/team1/hello-ksvc-internal')
     expect(data).to.deep.equal(expectedService3)
 
-    data = otomiStack.getService('team1', 'hello-svc', 'aws/dev')
+    data = otomiStack.getService('aws/dev/team1/hello-svc')
     expect(data).to.deep.equal(expectedService4)
 
     const dbValues = otomiStack.convertTeamsToValues(cluster)
@@ -117,8 +115,7 @@ describe('Load and dump values', function () {
 describe('Data validation', function () {
   let otomiStack = undefined
   beforeEach(function () {
-    const d = db.init()
-    otomiStack = new otomi.OtomiStack(null, d)
+    otomiStack = new OtomiStack()
   })
 
   it('should indicate duplicated subdomain', function (done) {

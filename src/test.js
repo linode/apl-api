@@ -2,14 +2,14 @@ const expect = require('chai').expect
 const request = require('supertest')
 const sinon = require('sinon')
 const server = require('./server')
-const otomi = require('./otomi-stack')
+const OtomiStack = require('./otomi-stack')
 const middleware = require('./middleware')
 const utils = require('./utils')
 
 describe('Api tests for admin', function () {
   let app
   beforeEach(function () {
-    const otomiStack = new otomi.OtomiStack(null, null)
+    const otomiStack = new OtomiStack()
     sinon.stub(otomiStack)
     app = server.initApp(otomiStack)
   })
@@ -52,7 +52,7 @@ describe('Api tests for admin', function () {
 describe('Api tests for team', function () {
   let app
   beforeEach(function () {
-    const otomiStack = new otomi.OtomiStack('tpath', 'tcloud')
+    const otomiStack = new OtomiStack()
     sinon.stub(otomiStack)
     app = server.initApp(otomiStack)
   })
@@ -187,7 +187,7 @@ describe('Api tests for team', function () {
 describe('Api tests for non authorized user', function () {
   let app
   beforeEach(function () {
-    const otomiStack = new otomi.OtomiStack('tpath', 'tcloud')
+    const otomiStack = new OtomiStack()
     sinon.stub(otomiStack)
     app = server.initApp(otomiStack)
   })
@@ -285,7 +285,7 @@ describe('Api tests for non authorized user', function () {
 describe('Api tests for data validation', function () {
   let app
   beforeEach(function () {
-    const otomiStack = new otomi.OtomiStack('tpath', 'tcloud')
+    const otomiStack = new OtomiStack('tpath', 'tcloud')
     sinon.stub(otomiStack)
     app = server.initApp(otomiStack)
   })
