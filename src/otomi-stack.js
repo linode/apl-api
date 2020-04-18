@@ -3,6 +3,10 @@ const _ = require('lodash')
 const err = require('./error')
 const path = require('path')
 const utils = require('./utils')
+const db = require('./db')
+const repo = require('./repo')
+
+const env = process.env
 
 const baseGlobal = { teamConfig: { teams: {} } }
 let glbl = { ...baseGlobal }
@@ -19,25 +23,40 @@ const getFilePath = (cloud = null, cluster = null) => {
 function splitGlobal(teamValues) {
   const t = teamValues.teamConfig.teams
   const g = glbl.teamConfig.teams
-  const globalProps = ['name', 'password']
+  const globalProps = ['name', 'password', 'receiver', 'slack', 'msteams']
   _.forEach(t, (team, teamId) => {
     if (!g[teamId]) g[teamId] = {}
     globalProps.forEach((prop) => {
-      if (prop === 'password') {
-        if (!g[teamId].password) g[teamId].password = generatePassword(16, false)
+      if (prop === 'password' && !g[teamId].password) {
+        g[teamId].password = generatePassword(16, false)
       } else {
         g[teamId][prop] = team[prop]
-        delete t[teamId][prop]
       }
+      delete t[teamId][prop]
     })
   })
 }
 
 class OtomiStack {
-  constructor(repo, db) {
-    this.db = db
-    this.repo = repo
+  constructor() {
+    this.initDb()
+    this.initRepo()
     this.clustersPath = './env/clusters.yaml'
+  }
+
+  initDb() {
+    this.db = db.init(env.DB_PATH)
+  }
+
+  initRepo() {
+    this.repo = repo.init(
+      env.GIT_LOCAL_PATH,
+      env.GIT_REPO_URL,
+      env.GIT_USER,
+      env.GIT_EMAIL,
+      env.GIT_PASSWORD,
+      env.GIT_BRANCH,
+    )
   }
 
   async init() {
@@ -66,7 +85,7 @@ class OtomiStack {
   }
 
   createTeam(teamId, data) {
-    const ids = { teamId: teamId || data.name }
+    const ids = { teamId: teamId || data.name.toLowerCase().replace(' ', '-') }
     return this.db.createItem('teams', ids, data)
   }
 
@@ -77,8 +96,13 @@ class OtomiStack {
 
   deleteTeam(teamId) {
     const ids = { teamId }
-    this.db.deleteItem('services', ids)
-    return this.db.deleteItem('teams', ids)
+    try {
+      this.db.deleteItem('services', ids)
+    } catch (e) {
+      // no services found
+    }
+    this.db.deleteItem('teams', ids)
+    delete glbl.teamConfig.teams[teamId]
   }
 
   getTeamServices(teamId) {
@@ -91,7 +115,8 @@ class OtomiStack {
   }
 
   createService(teamId, data) {
-    const ids = { teamId, name: data.name, clusterId: data.clusterId }
+    const { name, clusterId } = data
+    const ids = { teamId, serviceId: `${clusterId}/${teamId}/${name}` }
     this.validateService(data)
     return this.db.createItem('services', ids, data)
   }
@@ -104,20 +129,17 @@ class OtomiStack {
     return this.db.getCollection('defaultServices')
   }
 
-  getService(teamId, name, clusterId) {
-    const ids = { teamId, name, clusterId }
-    return this.db.getItem('services', ids)
+  getService(serviceId) {
+    return this.db.getItem('services', { serviceId })
   }
 
-  editService(teamId, name, clusterId, data) {
-    const ids = { teamId, name, clusterId }
+  editService(serviceId, data) {
     this.validateService(data)
-    return this.db.updateItem('services', ids, data)
+    return this.db.updateItem('services', { serviceId }, data)
   }
 
-  deleteService(teamId, name, clusterId) {
-    const ids = { teamId, name, clusterId }
-    return this.db.deleteItem('services', ids)
+  deleteService(serviceId) {
+    return this.db.deleteItem('services', { serviceId })
   }
 
   validateService(data) {
@@ -125,7 +147,7 @@ class OtomiStack {
   }
 
   isPublicUrlInUse(data) {
-    if ('ingress' in data.ingress) return false
+    if (!data.ingress) return false
 
     const services = this.db.getCollection('services')
 
@@ -142,13 +164,14 @@ class OtomiStack {
     return true
   }
 
-  getDeployments(params) { }
-
   async triggerDeployment(teamId, email) {
     this.saveValues()
-    await this.repo.commit(teamId, email)
-    await this.repo.push()
-    glbl = { ...baseGlobal }
+    // await this.repo.commit(teamId, email)
+    // await this.repo.push()
+    // this.saveValues()
+    // reset db and load values again
+    this.initDb()
+    this.loadValues()
   }
 
   loadValues() {
@@ -156,6 +179,7 @@ class OtomiStack {
     this.convertCoreValuesToDb(coreValues)
     const clusters = this.getClusters()
     this.loadAllTeamValues(clusters)
+    this.db.setDirtyActive()
   }
 
   loadFileValues(cluster, path) {
@@ -272,11 +296,13 @@ class OtomiStack {
         certArn: svcRaw.certArn,
         domain: publicUrl.domain,
         subdomain: publicUrl.subdomain,
+        useDefaultSubdomain: publicUrl.useDefaultSubdomain,
       }
     }
 
     try {
-      const service = this.getService(teamId, svc.name, cluster.id)
+      const serviceId = `${cluster.id}/${teamId}/${svc.name}`
+      const service = this.getService(serviceId)
       const data = { ...service, svc }
       this.db.updateItem('services', { teamId }, data)
     } catch (e) {
@@ -300,7 +326,6 @@ class OtomiStack {
     const values = this.repo.readFile(path)
     const newValues = { ...values, ...glbl }
     this.repo.writeFile(path, newValues)
-    glbl = { ...baseGlobal }
   }
 
   inCluster(obj, cluster) {
@@ -324,27 +349,25 @@ class OtomiStack {
 
         const svcCloned = _.omit(svc, ['teamId', 'spec', 'ingress', 'clusterId'])
         const spec = _.cloneDeep(svc.spec)
-        if ('predeployed' in spec) {
-          svcCloned.ksvc = spec
-        } else if ('image' in spec) {
+        if (spec.predeployed) {
+          svcCloned.ksvc = { predeployed: true, name: spec.name }
+        } else if (spec.image && !_.isEmpty(spec.image)) {
           svcCloned.ksvc = spec
           const annotations = _.get(svc.spec, 'annotations', [])
           svcCloned.ksvc.annotations = utils.arrayToObject(annotations, 'name', 'value')
-        } else if ('name' in spec) {
-          svcCloned.svc = spec
+        } else if (spec.name) {
+          svcCloned.svc = { name: spec.name }
         } else {
           console.warn(`Dump service to value file: unknown service structure: ${JSON.stringify(spec)}`)
         }
+        if (svc.ingress && !_.isEmpty(svc.ingress)) {
+          svcCloned.domain = `${svc.ingress.subdomain}.${svc.ingress.domain}`
 
-        if (svc.ingress.internal) svcCloned.internal = true
-        else
-          svcCloned.domain = svc.ingress.subdomain
-            ? `${svc.ingress.subdomain}.${svc.ingress.domain}`
-            : svc.ingress.domain
+          if (!svc.ingress.hasSingleSignOn) svcCloned.isPublic = true
 
-        if (!svc.ingress.hasSingleSignOn) svcCloned.isPublic = true
-
-        if (svc.ingress.hasCert) svcCloned.hasCert = true
+          if (svc.ingress.hasCert) svcCloned.hasCert = true
+          if (svc.ingress.certArn) svcCloned.certArn = svc.ingress.certArn
+        } else svcCloned.internal = true
 
         services.push(svcCloned)
       })
@@ -359,6 +382,4 @@ class OtomiStack {
   }
 }
 
-module.exports = {
-  OtomiStack: OtomiStack,
-}
+module.exports = OtomiStack

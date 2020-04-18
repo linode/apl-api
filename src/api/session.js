@@ -4,11 +4,12 @@ module.exports = function (otomi) {
       function (req, res, next) {
         const teamId = req.header('Auth-Group')
         const email = req.header('Auth-User')
+        const isAdmin = teamId === 'admin'
+        const role = teamId === 'admin' ? 'admin' : 'team'
         const data = {
           clusters: otomi.getClusters(),
-          user: { email },
-          teamId: teamId === 'admin' ? undefined : teamId,
-          isAdmin: teamId === 'admin',
+          user: { email, teamId, isAdmin, role },
+          isDirty: otomi.db.isDirty(),
         }
         res.status(200).json(data)
       },

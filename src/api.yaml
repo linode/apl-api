@@ -239,7 +239,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Service'
 
-  '/teams/{teamId}/services/{name}':
+  '/teams/{teamId}/services/{serviceId}':
     get:
       operationId: getService
       description: Get a service from a given team
@@ -250,15 +250,9 @@ paths:
           required: true
           schema:
             type: string
-        - name: clusterId
-          in: query
-          description: ID of cluster
-          required: true
-          schema:
-            type: string
-        - name: name
+        - name: serviceId
           in: path
-          description: Name of the service
+          description: ID of the service
           required: true
           schema:
             type: string
@@ -280,9 +274,9 @@ paths:
           required: true
           schema:
             type: string
-        - name: name
+        - name: serviceId
           in: path
-          description: Name of the service
+          description: ID of the service
           required: true
           schema:
             type: string
@@ -311,15 +305,9 @@ paths:
           required: true
           schema:
             type: string
-        - name: clusterId
-          in: query
-          description: ID of cluster
-          required: true
-          schema:
-            type: string
-        - name: name
+        - name: serviceId
           in: path
-          description: Name of the service
+          description: ID of the service
           required: true
           schema:
             type: string
@@ -441,13 +429,39 @@ components:
         monitor:
           <<: *AzureMonitor
           type: object
+    Slack: &Slack
+      type: object
+      nullable: true
+      properties:
+        url:
+          title: Web hook
+          type: string
+          description: Slack web hook. If none is given the global one is used.
+        channel:
+          title: Channel
+          type: string
+          description:
+            Slack channel. If none is given the global one is used. An extra channel with the suffix '-crit' must exist
+            as well!
+    MSTeams: &MSTeams
+      type: object
+      nullable: true
+      properties:
+        lowPrio:
+          title: High prio webhook
+          type: string
+          description: The low prio web hook
+        highPrio:
+          title: Low prio webhook
+          type: string
+          description: The high prio web hook
 
     KubernetesService: &KubernetesService
       type: object
       properties: &KubernetesServiceProperties
         name:
           type: string
-          description: A name of existing kubernetes service
+          description: The name of the existing kubernetes service
       required:
         - name
       additionalProperties: false
@@ -491,12 +505,16 @@ components:
     KnativeServicePredeployed: &KnativeServicePredeployed
       type: object
       properties: &KnativeServicePredeployedProperties
+        name:
+          type: string
+          description: The name of the existing knative service
         predeployed:
           type: boolean
           default: true
           readOnly: true
       required:
         - predeployed
+        - name
       additionalProperties: false
 
     KnativeService: &KnativeService # description: Knative service definition
@@ -505,6 +523,7 @@ components:
         image:
           title: Container image
           type: object
+          nullable: true
           properties:
             repository:
               <<: *repositoryField
@@ -517,6 +536,7 @@ components:
           title: Environment variables
           # description: Environment variables for containers
           type: array
+          nullable: true
           items:
             type: object
             properties:
@@ -532,6 +552,7 @@ components:
           title: Pod resources
           # description: Compute resources for containers
           type: object
+          nullable: true
           properties:
             requests:
               type: object
@@ -566,29 +587,48 @@ components:
           <<: *K8sAnnotation
         autoCD:
           title: Continuous delivery pipeline
-          description: Select filter type and define image tag pattern
+          description: Deploys new images based on a tagging strategy
           type: object
-          oneOf:
-            - title: Semver filter
+          nullable: true
+          anyOf:
+            - title: Off
+              nullable: true
+            - title: On
+              nullable: true
               properties:
-                semver:
-                  title: Image tag pattern
-                  type: string
-                  example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
-                  description:
-                    'Use this filter if your images tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.:
-                    PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
+                strategy:
+                  title: Strategy
+                  nullable: true
+                  description: Select tag matching method
+                  type: object
+                  anyOf:
+                    - title: Semver versioning
+                      nullable: true
+                      properties:
+                        semver:
+                          nullable: true
+                          title: Semver version pattern
+                          type: string
+                          example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
+                          description:
+                            'Use this filter if your images tags follow semantic versioning rules (MAJOR.MINOR.PATCH).
+                            E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
+                      required:
+                        - semver
+                    - title: Glob pattern matching
+                      nullable: true
+                      properties:
+                        glob:
+                          nullable: true
+                          title: Glob string pattern
+                          type: string
+                          description:
+                            'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*"'
+                          example: 'master-v1.*.*'
+                      required:
+                        - glob
               required:
-                - semver
-            - title: Glob filter
-              properties:
-                glob:
-                  title: Image tag pattern
-                  type: string
-                  description: 'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*"'
-                  example: 'master-v1.*.*'
-              required:
-                - glob
+                - autoCD
       required:
         - image
         - resources
@@ -649,7 +689,7 @@ components:
       properties:
         name:
           <<: *nameField
-          example: 'team-1'
+          example: 'Team Otomi'
           x-acl:
             team: [read]
             admin: [read, write]
@@ -668,8 +708,19 @@ components:
         teamId:
           type: string
           readOnly: true
+        receiver:
+          type: string
+          description: Alerting Endpoint
+          enum:
+            - msteams
+            - slack
+          default: slack
         azure:
           <<: *Azure
+        slack:
+          <<: *Slack
+        msteams:
+          <<: *MSTeams
       required:
         - name
         - clusters
@@ -677,29 +728,37 @@ components:
     ServiceIngress:
       properties: &ServiceIngress
         domain:
-          title: Domain
+          title: DNS Zone
           description: A managed DNS zone
           type: string
+        useDefaultSubdomain:
+          title: 'Use suggested domain (preferred)'
+          type: boolean
+          default: true
+          description: Allows to use wildcard certs already available. Only override for public facing services.
         subdomain:
           title: 'Host'
           type: string
+          nullable: true
           description: A host that is used to set DNS 'A' record
           <<: *domainNameField
         hasSingleSignOn:
-          title: Add Single Sign On
+          title: Authenticate with Single Sign On
           type: boolean
           default: false
         hasCert:
-          title: Generate certificate for me
+          title: Already has a certificate
           type: boolean
           default: true
-          # description: If true certificate is generated automatically. Otherwise it is expected that administrator provides cert as a secret 'cert-team-$teamName-$serviceName' for a given team.
+          description: If true a certificate is gto be deployed as a TLS secret already. Otherwise it will be generated.
         certArn:
           type: string
           title: Certificate ARN
-          description: Only if hasCert set to true and deployed on AWS
+          description: Certificate ARN of an existing AWS certificate
           example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
-      additionalProperties: false
+      required:
+        - domain
+        - subdomain
 
     Service:
       properties:
@@ -716,15 +775,12 @@ components:
           x-acl:
             team: [read]
             admin: [read, write]
-          anyOf:
+          oneOf:
             - title: Private
               nullable: true
-              properties:
-                internal:
-                  type: string
-                  nullable: true
               additionalProperties: false
             - title: Public URL
+              nullable: true
               properties:
                 <<: *ServiceIngress
 
@@ -733,12 +789,15 @@ components:
           type: object
           anyOf:
             - title: Knative service
+              nullable: true
               properties:
                 <<: *KnativeServiceProperties
             - title: Existing Knative service
+              nullable: true
               properties:
                 <<: *KnativeServicePredeployedProperties
             - title: Existing Kubernetes service
+              nullable: true
               properties:
                 <<: *KubernetesServiceProperties
 

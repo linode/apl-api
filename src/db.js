@@ -16,13 +16,14 @@ class Db {
         clusters: [],
       })
       .write()
+    this.dirty = false
+    this.dirtyActive = false
   }
 
   getItem(name, selectors) {
-    console.log(selectors)
     const data = this.db.get(name).find(selectors).value()
     if (data === undefined) {
-      throw new err.NotExistError('Selector props do not exist on collection: ', selectors)
+      throw new err.NotExistError(`Selector props do not exist in '${name}' collection: ${JSON.stringify(selectors)}`)
     }
     return data
   }
@@ -35,19 +36,32 @@ class Db {
     try {
       this.getItem(name, selectors)
     } catch (e) {
-      return this.db.get(name).push(data).last().assign(selectors).write()
+      const ret = this.db.get(name).push(data).last().assign(selectors).write()
+      this.dirty = this.dirtyActive
+      return ret
     }
-    throw new err.AlreadyExists(`Item already exists in ${name} collection: `, selectors)
+    throw new err.AlreadyExists(`Item already exists in '${name}' collection: ${JSON.stringify(selectors)}`)
   }
 
   deleteItem(name, selectors) {
     this.getItem(name, selectors)
-    return this.db.get(name).remove(selectors).write()
+    this.db.get(name).remove(selectors).write()
+    this.dirty = this.dirtyActive
   }
 
   updateItem(name, selectors, data) {
     this.getItem(name, selectors)
-    return this.db.get(name).find(selectors).assign(data).write()
+    const ret = this.db.get(name).find(selectors).assign(data).write()
+    this.dirty = this.dirtyActive
+    return ret
+  }
+
+  setDirtyActive(active = true) {
+    this.dirtyActive = active
+  }
+
+  isDirty() {
+    return !!this.dirty
   }
 }
 
@@ -56,6 +70,6 @@ function init(path) {
 }
 
 module.exports = {
-  Db: Db,
-  init: init,
+  Db,
+  init,
 }

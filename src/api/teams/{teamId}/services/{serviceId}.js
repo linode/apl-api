@@ -3,18 +3,16 @@ module.exports = function (otomi) {
     get: [
       function (req, res, next) {
         console.debug('Get service: ' + JSON.stringify(req.params))
-        const { teamId, name } = req.params
-        const { clusterId } = req.query
-        const data = otomi.getService(teamId, name, clusterId)
+        const { serviceId } = req.params
+        const data = otomi.getService(decodeURIComponent(serviceId))
         res.status(200).json(data)
       },
     ],
     put: [
       function (req, res, next) {
         console.debug('Modify service: ' + JSON.stringify(req.params))
-        const { teamId, name } = req.params
-        const { clusterId } = req.body
-        const data = otomi.editService(teamId, name, clusterId, req.body)
+        const { serviceId } = req.params
+        const data = otomi.editService(decodeURIComponent(serviceId), req.body)
         res.status(200).json(data)
       },
     ],
@@ -22,9 +20,8 @@ module.exports = function (otomi) {
     delete: [
       function (req, res, next) {
         console.debug('Delete service: ' + JSON.stringify(req.params))
-        const { teamId, name } = req.params
-        const { clusterId } = req.query
-        otomi.deleteService(teamId, name, clusterId)
+        const { serviceId } = req.params
+        otomi.deleteService(decodeURIComponent(serviceId))
         res.status(200).json({})
       },
     ],
