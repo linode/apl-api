@@ -1,0 +1,93 @@
+{
+  "author": "RedKubes",
+  "bugs": {
+    "url": "https://github.com/redkubes/otomi-stack-api/issues"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "dependencies": {
+    "axios": "^0.19.2",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-openapi": "^6.0.0",
+    "lodash": "^4.17.15",
+    "lowdb": "^1.0.0",
+    "morgan": "^1.9.1",
+    "openapi-client-axios": "^3.3.2",
+    "password-generator": "^2.2.3",
+    "react-icons": "^3.9.0",
+    "shelljs": "^0.8.3",
+    "simple-git": "^1.129.0",
+    "swagger-ui-express": "^4.1.3"
+  },
+  "description": "REST API for admins and teams",
+  "devDependencies": {
+    "@commitlint/cli": "^8.3.5",
+    "@commitlint/config-conventional": "^8.3.4",
+    "@hkdobrev/run-if-changed": "^0.3.1",
+    "chai": "^4.2.0",
+    "commitizen": "^4.0.3",
+    "cz-conventional-changelog": "^3.1.0",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.1",
+    "eslint-plugin-prettier": "^3.1.2",
+    "husky": "^4.2.3",
+    "lint-staged": "^10.0.9",
+    "mocha": "^7.0.0",
+    "nodemon": "^2.0.2",
+    "prettier": "^2.0.2",
+    "sinon": "^8.0.4",
+    "standard-version": "^7.1.0",
+    "supertest": "^4.0.2"
+  },
+  "homepage": "https://github.com/redkubes/otomi-stack-api#readme",
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
+      "post-checkout": "run-if-changed",
+      "post-commit": "run-if-changed",
+      "post-merge": "run-if-changed",
+      "post-rewrite": "run-if-changed",
+      "pre-commit": "npm run husky:pre-commit"
+    }
+  },
+  "license": "ISC",
+  "lint-staged": {
+    "*.{js,json,md,ts,yml,yaml}": ["prettier --write"],
+    "*.{js}": ["eslint --project ./eslintrc.yml"],
+    "*.{ts}": ["tslint --project ./tsconfig.tslint.json"]
+  },
+  "main": "app.js",
+  "name": "otomi-stack-api",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/redkubes/otomi-stack-api.git"
+  },
+  "run-if-changed": {
+    "package-lock.json": "npm install --prefer-offline --no-audit"
+  },
+  "scripts": {
+    "cz": "git-cz",
+    "cz:retry": "git-cz --retry",
+    "dev": "nodemon -e js,yaml,yml app.js",
+    "format": "prettier --check \"**/*.{js,json,md,ts,yml,yaml}\"",
+    "format:fix": "prettier --write \"**/*.{js,json,md,ts,yml,yaml}\"",
+    "husky:lint-staged": "lint-staged",
+    "husky:pre-commit": "lint-staged",
+    "lint": "eslint --ext js,ts --fix .",
+    "lint:fix": "eslint --ext js,ts .",
+    "release": "standard-version",
+    "start": "node app.js",
+    "test": "mocha src --exit"
+  },
+  "standard-version": {
+    "scripts": {
+      "precommit": "prettier --write CHANGELOG.md && git add package.json package-lock.json CHANGELOG.md"
+    }
+  },
+  "version": "0.2.9"
+}
