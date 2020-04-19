@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. See
 [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.7](https://github.com/redkubes/otomi-stack-api/compare/v0.2.6...v0.2.7) (2020-04-19)
+
+### Feature Improvements
+
+- added currentClusterId
+  [ci skip](<[c6afb9b](https://github.com/redkubes/otomi-stack-api/commit/c6afb9ba3515f8b6bc68f24a922a3f410d23168a)>)
+
 ### [0.2.6](https://github.com/redkubes/otomi-stack-api/compare/v0.2.5...v0.2.6) (2020-04-19)
 
 ### Features
