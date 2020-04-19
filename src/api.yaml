@@ -382,15 +382,15 @@ components:
       anyOf:
         - title: No Azure monitoring
           nullable: true
-          properties: {}
+          additionalProperties: false
         - title: Azure monitoring with global settings
           type: object
           properties:
             useAdmin:
               type: boolean
               default: true
-          required:
-            - useAdmin
+          nullable: true
+          additionalProperties: false
         - title: Azure monitoring with custom settings
           type: object
           properties:
@@ -422,50 +422,16 @@ components:
           required:
             - clientId
             - clientSecret
+          nullable: true
+          additionalProperties: false
 
     Azure: &Azure
+      title: Azure
       type: object
-      nullable: true
       properties:
         monitor:
           <<: *AzureMonitor
           type: object
-    Slack: &Slack
-      type: object
-      nullable: true
-      properties:
-        url:
-          title: Web hook
-          type: string
-          description: Slack web hook. If none is given the global one is used.
-        channel:
-          title: Channel
-          type: string
-          description:
-            Slack channel. If none is given the global one is used. When overridden here, an extra channel with the
-            suffix '-crit' must exist as well!
-    MSTeams: &MSTeams
-      type: object
-      nullable: true
-      properties:
-        lowPrio:
-          title: High prio webhook
-          type: string
-          description: The low prio web hook
-        highPrio:
-          title: Low prio webhook
-          type: string
-          description: The high prio web hook
-
-    KubernetesService: &KubernetesService
-      type: object
-      properties: &KubernetesServiceProperties
-        name:
-          type: string
-          description: The name of the existing kubernetes service
-      required:
-        - name
-      additionalProperties: false
 
     x-clusters: &Clusters
       type: array
@@ -506,16 +472,12 @@ components:
     KnativeServicePredeployed: &KnativeServicePredeployed
       type: object
       properties: &KnativeServicePredeployedProperties
-        name:
-          type: string
-          description: The name of the existing knative service
         predeployed:
           type: boolean
           default: true
           readOnly: true
       required:
         - predeployed
-        - name
       additionalProperties: false
 
     KnativeService: &KnativeService # description: Knative service definition
@@ -590,46 +552,40 @@ components:
           title: Continuous delivery pipeline
           description: Deploys new images based on a tagging strategy
           type: object
-          nullable: true
           anyOf:
             - title: Off
               nullable: true
-            - title: On
+              additionalProperties: false
+            - title: Semver versioning
               nullable: true
               properties:
-                strategy:
-                  title: Strategy
-                  nullable: true
-                  description: Select tag matching method
-                  type: object
-                  anyOf:
-                    - title: Semver versioning
-                      nullable: true
-                      properties:
-                        semver:
-                          nullable: true
-                          title: Semver version pattern
-                          type: string
-                          example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
-                          description:
-                            'Use this filter if your images tags follow semantic versioning rules (MAJOR.MINOR.PATCH).
-                            E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
-                      required:
-                        - semver
-                    - title: Glob pattern matching
-                      nullable: true
-                      properties:
-                        glob:
-                          nullable: true
-                          title: Glob string pattern
-                          type: string
-                          description:
-                            'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*"'
-                          example: 'master-v1.*.*'
-                      required:
-                        - glob
+                tagMatcher:
+                  type: string
+                  default: semver
+                semver:
+                  title: Semver version pattern
+                  type: string
+                  example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
+                  description:
+                    'Use this filter if your images tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.:
+                    PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
               required:
-                - autoCD
+                - semver
+              additionalProperties: false
+            - title: Glob pattern matching
+              nullable: true
+              properties:
+                tagMatcher:
+                  type: string
+                  default: glob
+                glob:
+                  title: Glob string pattern
+                  type: string
+                  description: 'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*"'
+                  example: 'master-v1.*.*'
+              required:
+                - glob
+              additionalProperties: false
       required:
         - image
         - resources
@@ -710,18 +666,47 @@ components:
           type: string
           readOnly: true
         receiver:
-          type: string
-          description: Alerting Endpoint
-          enum:
-            - msteams
-            - slack
-          default: slack
+          title: Alerting Endpoint
+          type: object
+          # description: Alerting Endpoint
+          anyOf:
+            - title: Slack
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - slack
+                  default: slack
+                url:
+                  title: Web hook
+                  type: string
+                  description: Slack web hook. If none is given the global one is used.
+                channel:
+                  title: Channel
+                  type: string
+                  description:
+                    Slack channel. If none is given the global one is used. When overridden here, an extra channel with
+                    the suffix '-crit' must exist as well!
+            - title: Microsoft Teams
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - msteams
+                  default: msteams
+                lowPrio:
+                  title: High prio webhook
+                  type: string
+                  description: The low prio web hook
+                highPrio:
+                  title: Low prio webhook
+                  type: string
+                  description: The high prio web hook
+            - title: None
         azure:
           <<: *Azure
-        slack:
-          <<: *Slack
-        msteams:
-          <<: *MSTeams
       required:
         - name
         - clusters
@@ -793,14 +778,20 @@ components:
               nullable: true
               properties:
                 <<: *KnativeServiceProperties
+              additionalProperties: false
             - title: Existing Knative service
               nullable: true
               properties:
-                <<: *KnativeServicePredeployedProperties
+                predeployed:
+                  type: boolean
+                  default: true
+                  readOnly: true
+              required:
+                - predeployed
+              # additionalProperties: false
             - title: Existing Kubernetes service
               nullable: true
-              properties:
-                <<: *KubernetesServiceProperties
+              # additionalProperties: false
 
         teamId:
           type: string

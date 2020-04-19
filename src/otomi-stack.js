@@ -23,14 +23,14 @@ const getFilePath = (cloud = null, cluster = null) => {
 function splitGlobal(teamValues) {
   const t = teamValues.teamConfig.teams
   const g = glbl.teamConfig.teams
-  const globalProps = ['name', 'password', 'receiver', 'slack', 'msteams']
+  const globalProps = ['name', 'password', 'receiver', 'azure']
   _.forEach(t, (team, teamId) => {
     if (!g[teamId]) g[teamId] = {}
     globalProps.forEach((prop) => {
       if (prop === 'password' && !g[teamId].password) {
         g[teamId].password = generatePassword(16, false)
       } else {
-        g[teamId][prop] = team[prop]
+        if (team[prop] !== undefined) g[teamId][prop] = team[prop]
       }
       delete t[teamId][prop]
     })
@@ -110,9 +110,9 @@ class OtomiStack {
     return this.db.getCollection('services')
   }
 
-  createService(teamId, data) {
-    const { name, clusterId } = data
-    const ids = { teamId, serviceId: `${clusterId}/${teamId}/${name}` }
+  createService(data) {
+    const { name, clusterId, teamId } = data
+    const ids = { serviceId: `${clusterId}/${teamId}/${name}` }
     this.validateService(data)
     return this.db.createItem('services', ids, data)
   }
@@ -294,9 +294,9 @@ class OtomiStack {
       const serviceId = `${cluster.id}/${teamId}/${svc.name}`
       const service = this.getService(serviceId)
       const data = { ...service, svc }
-      this.db.updateItem('services', { teamId }, data)
+      this.db.updateItem('services', { serviceId }, data)
     } catch (e) {
-      this.createService(teamId, svc)
+      this.createService(svc)
     }
   }
 

@@ -2,6 +2,7 @@ const low = require('lowdb')
 const err = require('./error')
 const FileSync = require('lowdb/adapters/FileSync')
 const Memory = require('lowdb/adapters/Memory')
+const _ = require('lodash')
 
 class Db {
   constructor(path) {
@@ -51,7 +52,17 @@ class Db {
 
   updateItem(name, selectors, data) {
     this.getItem(name, selectors)
-    const ret = this.db.get(name).find(selectors).assign(data).write()
+    const getter = this.db.get(name).find(selectors)
+    const value = getter.value()
+    const emptied = _.reduce(
+      value,
+      (memo, val, key) => {
+        memo[key] = undefined
+        return memo
+      },
+      {},
+    )
+    const ret = getter.assign({ ...emptied, ...data }).write()
     this.dirty = this.dirtyActive
     return ret
   }
