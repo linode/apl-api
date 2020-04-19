@@ -1,3 +1,4 @@
+const env = process.env
 module.exports = function (otomi) {
   const api = {
     get: [
@@ -7,6 +8,7 @@ module.exports = function (otomi) {
         const isAdmin = teamId === 'admin'
         const role = teamId === 'admin' ? 'admin' : 'team'
         const data = {
+          currentClusterId: env.CLUSTER ? env.CLUSTER : env.NODE_ENV !== 'production' ? 'azure/dev' : '',
           clusters: otomi.getClusters(),
           user: { email, teamId, isAdmin, role },
           isDirty: otomi.db.isDirty(),
