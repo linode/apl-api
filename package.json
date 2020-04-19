@@ -90,10 +90,5 @@
     "start": "node app.js",
     "test": "mocha src --exit"
   },
-  "standard-version": {
-    "scripts": {
-      "precommit": "prettier --write CHANGELOG.md && git add package.json package-lock.json CHANGELOG.md"
-    }
-  },
   "version": "0.2.5"
 }
