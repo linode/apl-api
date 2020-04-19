@@ -3,6 +3,63 @@
 All notable changes to this project will be documented in this file. See
 [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.6](https://github.com/redkubes/otomi-stack-api/compare/v0.2.5...v0.2.6) (2020-04-19)
+
+### Features
+
+- add multi dns zone support
+  ([d915257](https://github.com/redkubes/otomi-stack-api/commit/d91525777c8ca3faa004562291ef51715da8bdb0))
+- load and dump service domain
+  ([8d1a46f](https://github.com/redkubes/otomi-stack-api/commit/8d1a46f4abc5489a69dfd64c4d7ef116cbb6433f))
+- validate subdomain against duplicates
+  ([68e4994](https://github.com/redkubes/otomi-stack-api/commit/68e4994eed4a7d0f9c1a394572a84548e377179c))
+
+### Bug Fixes
+
+- allow for custom domain that is not mentioned in clusters.yaml
+  ([d8745f7](https://github.com/redkubes/otomi-stack-api/commit/d8745f775c3fadbe9f454b30e66b690f1a447489))
+- apiDoc was broken
+  ([76925c5](https://github.com/redkubes/otomi-stack-api/commit/76925c52edc9e83d82a076a6e990a16138425d6c))
+- bug fix for http errors
+  ([48d06fc](https://github.com/redkubes/otomi-stack-api/commit/48d06fce60831ebd0527a7abeb3fefe82f3b6223))
+- change cluster schema definition
+  ([a03db21](https://github.com/redkubes/otomi-stack-api/commit/a03db213d245eee6833195a061e8878c416ae4d7))
+- check whole url against duplicates
+  ([1c66ba1](https://github.com/redkubes/otomi-stack-api/commit/1c66ba1649c30cba1a0456a358aa7c01363e9dcb))
+- many ([499964e](https://github.com/redkubes/otomi-stack-api/commit/499964ee8931512b2e029a2c63ed9d21da54b213))
+- many ([70717ed](https://github.com/redkubes/otomi-stack-api/commit/70717edb015cabc15ec7cb963b6608d706550405))
+- many fixes before demo
+  ([ec9e7f1](https://github.com/redkubes/otomi-stack-api/commit/ec9e7f1eb2b845957213bdc442c0eadd3c5f3ed5))
+- otomi-stack tests
+  ([78bc5c1](https://github.com/redkubes/otomi-stack-api/commit/78bc5c1598f9f733fe1f171215bf2590a81184dd))
+- teamId or name not set
+  ([0c9a2cf](https://github.com/redkubes/otomi-stack-api/commit/0c9a2cfb8e8154d4e1239e61e6ec243bba359a04))
+- tests fixed, structure simplified
+  ([d8334f1](https://github.com/redkubes/otomi-stack-api/commit/d8334f17934cdb8dd56e4d9d12e402b8d6f3ab9a))
+
+### Others
+
+- refactored some code
+  [ci skip](<[b2978eb](https://github.com/redkubes/otomi-stack-api/commit/b2978eb5d4fd05c80650ae9a08b2b26ea99b19d9)>)
+
+### Tests
+
+- skip tests due to removed functionallity
+  ([e4b3910](https://github.com/redkubes/otomi-stack-api/commit/e4b3910c7c564ee71e55169ae01d2dd3296c3307))
+- validate api spec
+  ([0aff415](https://github.com/redkubes/otomi-stack-api/commit/0aff41572ff422dc349e9730f8cfb6bcbba97fdf))
+
+### Build System
+
+- enable tests ([7d8d8b4](https://github.com/redkubes/otomi-stack-api/commit/7d8d8b4dfe0196946692b171ba7be5a0bdb804d7))
+
+### Code Refactoring
+
+- code rework after review
+  ([fa18d96](https://github.com/redkubes/otomi-stack-api/commit/fa18d9691054d1760908c756cdfbdbbc3315d8a5))
+- remarks from review
+  ([fcc183d](https://github.com/redkubes/otomi-stack-api/commit/fcc183ddd40071eb223d3969bd21ee42885e529f))
+
 ### [0.2.5](https://github.com/redkubes/otomi-stack-api/compare/v0.2.4...v0.2.5) (2020-04-14)
 
 ### Styling

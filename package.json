@@ -95,5 +95,5 @@
       "precommit": "prettier --write CHANGELOG.md && git add package.json package-lock.json CHANGELOG.md"
     }
   },
-  "version": "0.2.5"
+  "version": "0.2.6"
 }
