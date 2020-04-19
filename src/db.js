@@ -57,7 +57,7 @@ class Db {
     const emptied = _.reduce(
       value,
       (memo, val, key) => {
-        memo[key] = undefined
+        if (!key in selectors) memo[key] = undefined
         return memo
       },
       {},
