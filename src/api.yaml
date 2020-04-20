@@ -773,25 +773,31 @@ components:
         ksvc:
           title: Type
           type: object
-          anyOf:
+          oneOf:
             - title: Knative service
               nullable: true
               properties:
+                serviceType:
+                  type: string
+                  enum: [ksvc]
+                  default: ksvc
                 <<: *KnativeServiceProperties
-              additionalProperties: false
             - title: Existing Knative service
-              nullable: true
               properties:
-                predeployed:
-                  type: boolean
-                  default: true
-                  readOnly: true
+                serviceType:
+                  type: string
+                  enum: [ksvcPredeployed]
+                  default: ksvcPredeployed
               required:
-                - predeployed
-              # additionalProperties: false
+                - serviceType
             - title: Existing Kubernetes service
-              nullable: true
-              # additionalProperties: false
+              properties:
+                serviceType:
+                  type: string
+                  enum: [svcPredeployed]
+                  default: svcPredeployed
+              required:
+                - serviceType
 
         teamId:
           type: string
