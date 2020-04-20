@@ -57,7 +57,10 @@ class Db {
 
   updateItem(name, selectors, data) {
     const item = this.getItem(name, selectors)
-    const ret = this.db.get(name).replaceRecord(item, data).write()
+    const ret = this.db
+      .get(name)
+      .replaceRecord(item, { ...data, ...selectors })
+      .write()
     this.dirty = this.dirtyActive
     return ret
   }
