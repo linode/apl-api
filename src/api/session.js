@@ -10,6 +10,7 @@ module.exports = function (otomi) {
         const data = {
           currentClusterId: env.CLUSTER ? env.CLUSTER : env.NODE_ENV !== 'production' ? 'azure/dev' : '',
           clusters: otomi.getClusters(),
+          core: otomi.getCore(),
           user: { email, teamId, isAdmin, role },
           isDirty: otomi.db.isDirty(),
         }
