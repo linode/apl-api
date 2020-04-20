@@ -10,6 +10,7 @@ const repo = require('./repo')
 
 const env = process.env
 const isProduction = env.NODE_ENV === 'production'
+console.log('NODE_ENV: ', env.NODE_ENV)
 
 const baseGlobal = { teamConfig: { teams: {} } }
 let glbl = { ...baseGlobal }
