@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file. See
 [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.8](https://github.com/redkubes/otomi-stack-api/compare/v0.2.7...v0.2.8) (2020-04-20)
+
+### Features
+
+- use dnsZones field
+  ([8883900](https://github.com/redkubes/otomi-stack-api/commit/88839001002bac124107c4fee2bd16d6631b1a55))
+
+### Bug Fixes
+
+- missing dev file
+  [ci skip](<[8ca087a](https://github.com/redkubes/otomi-stack-api/commit/8ca087a3f133b9cdca9b26f86a72639139cefd2b)>)
+- updateItem
+  [ci skip](<[c7c3572](https://github.com/redkubes/otomi-stack-api/commit/c7c3572583efa7a2a835a80f4dfa807e1f4a1828)>)
+
 ### [0.2.7](https://github.com/redkubes/otomi-stack-api/compare/v0.2.6...v0.2.7) (2020-04-19)
 
 ### Feature Improvements
