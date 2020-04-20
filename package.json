@@ -88,7 +88,7 @@
     "lint": "eslint --ext js,ts --fix .",
     "lint:fix": "eslint --ext js,ts .",
     "release": "standard-version",
-    "start": "NODE_ENV=production node app.js",
+    "start": "node app.js",
     "test": "mocha src --exit"
   },
   "version": "0.2.10"
