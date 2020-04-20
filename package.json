@@ -91,5 +91,5 @@
     "start": "NODE_ENV=production node app.js",
     "test": "mocha src --exit"
   },
-  "version": "0.2.9"
+  "version": "0.2.10"
 }
