@@ -9,7 +9,7 @@ const db = require('./db')
 const repo = require('./repo')
 
 const env = process.env
-const isProduction = env.NODE_ENV !== 'development'
+const isProduction = env.NODE_ENV === 'production'
 
 const baseGlobal = { teamConfig: { teams: {} } }
 let glbl = { ...baseGlobal }
