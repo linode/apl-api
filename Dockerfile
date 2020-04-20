@@ -32,7 +32,7 @@ RUN npm prune --production
 # --------------- Production stage
 FROM alpine:3.11 AS prod
 
-ENV NODE_ENV=test
+ENV NODE_ENV=production
 
 COPY --from=dev /usr/local/bin/node /usr/bin/
 COPY --from=dev /usr/lib/libgcc* /usr/lib/
