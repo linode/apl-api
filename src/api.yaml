@@ -606,15 +606,33 @@ components:
           readOnly: true
         cloud:
           type: string
-          description: A cloud name
+          description: A cloud provider name
+          readOnly: true
+        domain:
+          type: string
+          description: A default cluster DNS zone
           readOnly: true
         dnsZones:
           type: array
+          description: A list of DNS zones that are available to the cluster
           items:
             type: string
           readOnly: true
           uniqueItems: true
+        hasKnative:
+          description: A flag that indicates capability for deploying serverless services by using Knative
+          type: boolean
+          readOnly: true
+        k8sVersion:
+          description: A version of kubernetes that is installed on the cluster
+          type: string
+          readOnly: true
+        region:
+          description: A physical location of the cluster
+          type: string
+          readOnly: true
         clusterId:
+          description: An unique cluster identifier
           type: string
           readOnly: true
 
