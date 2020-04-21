@@ -70,6 +70,7 @@
   },
   "main": "app.js",
   "name": "otomi-stack-api",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/redkubes/otomi-stack-api.git"
