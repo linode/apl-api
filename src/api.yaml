@@ -608,12 +608,26 @@ components:
           type: string
           description: A cloud name
           readOnly: true
+        domain:
+          type: string
+          description: A default cluster domain
+          readOnly: true
         dnsZones:
           type: array
+          description: A list of DNS zones that are available to the cluster
           items:
             type: string
           readOnly: true
           uniqueItems: true
+        hasKnative:
+          type: boolean
+          readOnly: true
+        k8sVersion:
+          type: string
+          readOnly: true
+        region:
+          type: string
+          readOnly: true
         clusterId:
           type: string
           readOnly: true
