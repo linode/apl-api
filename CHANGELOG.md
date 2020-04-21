@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file. See
 [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.15](https://github.com/redkubes/otomi-stack-api/compare/v0.2.14...v0.2.15) (2020-04-21)
+
+### Bug Fixes
+
+- add enum with one value to tagMatcher
+  ([82ea358](https://github.com/redkubes/otomi-stack-api/commit/82ea358079f5f85a05d98b18427814f00ba50a75))
+- add serviceType field to api spec
+  ([9eff626](https://github.com/redkubes/otomi-stack-api/commit/9eff626347b55801904618ed4df97525567b87c6))
+
 ### [0.2.14](https://github.com/redkubes/otomi-stack-api/compare/v0.2.13...v0.2.14) (2020-04-21)
 
 ### [0.2.13](https://github.com/redkubes/otomi-stack-api/compare/v0.2.12...v0.2.13) (2020-04-21)
