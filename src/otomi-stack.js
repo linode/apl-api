@@ -280,15 +280,19 @@ class OtomiStack {
     let svc = _.omit(svcRaw, 'ksvc', 'isPublic', 'hasCert', 'domain')
     svc.clusterId = cluster.id
     svc.teamId = teamId
+    if (!('name' in svcRaw)) {
+      console.warn('Unknown service structure')
+    }
     if ('ksvc' in svcRaw) {
-      svc.ksvc = _.cloneDeep(svcRaw.ksvc)
-      if (!('predeployed' in svcRaw.ksvc)) {
+      if ('predeployed' in svcRaw.ksvc) {
+        _.set(svc, 'ksvc.serviceType', 'ksvcPredeployed')
+      } else {
+        svc.ksvc = _.cloneDeep(svcRaw.ksvc)
+        svc.ksvc.serviceType = 'ksvc'
         const annotations = _.get(svcRaw.ksvc, 'annotations', {})
         svc.ksvc.annotations = utils.objectToArray(annotations, 'name', 'value')
       }
-    } else if (!('name' in svcRaw)) {
-      console.warn('Unknown service structure')
-    }
+    } else _.set(svc, 'ksvc.serviceType', 'svcPredeployed')
 
     if (!('internal' in svcRaw)) {
       const publicUrl = utils.getPublicUrl(svcRaw.domain, svcRaw.name, teamId, cluster)
@@ -301,8 +305,9 @@ class OtomiStack {
       }
     }
 
+    const serviceId = `${cluster.id}/${teamId}/${svc.name}`
+    console.log(`Loading service: serviceName: ${serviceId}, serviceType ${svc.ksvc.serviceType}`)
     try {
-      const serviceId = `${cluster.id}/${teamId}/${svc.name}`
       const service = this.getService(serviceId)
       const data = { ...service, svc }
       this.db.updateItem('services', { serviceId }, data)
@@ -348,18 +353,19 @@ class OtomiStack {
       dbServices.forEach((svc) => {
         if (cluster.id !== svc.clusterId) return
 
+        const serviceType = svc.ksvc.serviceType
+        console.info(`Saving service: serviceId: ${svc.serviceId} serviceType: ${serviceType}`)
         const svcCloned = _.omit(svc, ['teamId', 'serviceId', 'clusterId', 'ksvc', 'ingress'])
-        if (svc.ksvc) {
-          const ksvc = _.cloneDeep(svc.ksvc)
-          if (ksvc.predeployed) {
-            svcCloned.ksvc = { predeployed: true }
-          } else if (ksvc.image && !_.isEmpty(ksvc.image)) {
-            svcCloned.ksvc = ksvc
-            const annotations = _.get(svc.ksvc, 'annotations', [])
-            svcCloned.ksvc.annotations = utils.arrayToObject(annotations, 'name', 'value')
-          } else if (ksvc) {
-            console.warn(`Dump service to value file: unknown ksvc structure: ${JSON.stringify(ksvc)}`)
-          }
+        const ksvc = _.cloneDeep(svc.ksvc)
+        if (serviceType === 'ksvc') {
+          svcCloned.ksvc = ksvc
+          delete svcCloned.ksvc.serviceType
+          const annotations = _.get(svc.ksvc, 'annotations', [])
+          svcCloned.ksvc.annotations = utils.arrayToObject(annotations, 'name', 'value')
+        } else if (serviceType === 'ksvcPredeployed') {
+          svcCloned.ksvc = { predeployed: true }
+        } else if (serviceType !== 'svcPredeployed') {
+          console.warn(`Saving service failure: Not supported service type: ${serviceType}`)
         }
         if (svc.ingress && !_.isEmpty(svc.ingress)) {
           svcCloned.domain = `${svc.ingress.subdomain}.${svc.ingress.domain}`
