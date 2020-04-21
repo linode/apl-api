@@ -1,0 +1,176 @@
+toolsVersion: 1.1.4
+redkubesSlackUrl: https://hooks.slack.com/services/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
+
+k8s:
+  namespaces:
+    - name: drone-pipelines
+      disableIstioInjection: true
+    - name: gatekeeper-system
+      disableIstioInjection: true
+    - name: ingress
+    - name: istio-operator
+      disableIstioInjection: true
+    - name: istio-system
+      disableIstioInjection: true
+    - name: knative-serving
+    - name: kube-system
+      disableIstioInjection: true
+    - name: maintenance
+      disableIstioInjection: true
+    - name: monitoring
+    - name: shared
+    - name: team-admin
+
+services:
+  - name: auth
+    svc: oauth2-proxy
+    namespace: istio-system
+    hide: true
+    isAuthProxy: true
+  - name: index
+    svc: index
+    hide: true
+    namespace: team-admin
+  - name: otomi-web
+    namespace: shared
+    svc: otomi-api
+    hide: true
+    path: /api
+    logo:
+      name: kubernetes
+  - name: otomi-web
+    namespace: shared
+    svc: otomi-web
+    hide: true
+    logo:
+      name: kubernetes
+  # - name: dashboard
+  #   svc: kubernetes-dashboard
+  #   namespace: kube-system
+  #   mtls:
+  #     policyMode: permissive
+  #     gatewayDisabled: true
+  - name: loki-private
+    svc: loki-headless
+    namespace: monitoring
+    internal: true # this service is only specified to create an Istio Policy, so not exposed
+    hide: true
+    mtls:
+      policyMode: permissive
+  - name: loki
+    svc: po-grafana
+    host: grafana # this service is only specified to generate an icon on the dashboard that opens grafana's loki view
+    namespace: monitoring
+    path: /explore?orgId=1&left=%5B"now-1h","now","Loki",%7B%7D,%7B"mode":"Logs"%7D,%7B"ui":%5Btrue,true,true,"none"%5D%7D%5D
+  - name: scope
+    svc: weave-scope
+    namespace: monitoring
+    mtls:
+      policyMode: permissive
+  - name: grafana
+    svc: po-grafana
+    namespace: monitoring
+    mtls:
+      policyMode: permissive
+      gatewayDisabled: true
+  - name: grafana-istio
+    svc: grafana
+    port: 3000
+    logo:
+      name: istio
+    namespace: istio-system
+    mtls:
+      policyMode: permissive
+      gatewayDisabled: true
+  - name: prometheus
+    svc: po-prometheus
+    port: 9090
+    namespace: monitoring
+    mtls:
+      gatewayDisabled: true
+  - name: prometheus-istio
+    svc: prometheus
+    port: 9090
+    logo:
+      name: prometheus
+    namespace: istio-system
+    mtls:
+      gatewayDisabled: true
+  - name: alertmanager
+    svc: po-alertmanager
+    port: 9093
+    logo:
+      name: prometheus
+    namespace: monitoring
+    mtls:
+      gatewayDisabled: true
+  - name: kiali
+    svc: kiali
+    port: 20001
+    namespace: istio-system
+    mtls:
+      gatewayDisabled: true
+  - name: tracing
+    svc: tracing
+    logo:
+      name: jaeger
+    namespace: istio-system
+    mtls:
+      gatewayDisabled: true
+  - name: drone
+    svc: drone
+    namespace: team-admin
+
+proxies:
+  - name: drone
+    namespace: team-admin
+    path: /hook
+
+teamConfig:
+  services:
+    - name: otomi-web
+      namespace: shared
+      svc: otomi-api
+      path: /api
+      hide: true
+      logo:
+        name: kubernetes
+    - name: otomi-web
+      namespace: shared
+      svc: otomi-web
+      hide: true
+      logo:
+        name: kubernetes
+    - name: auth
+      svc: oauth2-proxy
+      namespace: istio-system
+      isAuthProxy: true
+    - name: index
+      svc: index
+      hide: true
+    - name: loki
+      svc: po-grafana
+      host: grafana # this service is only specified to generate an icon on the dashboard that opens grafana's loki view
+      path: /explore?orgId=1&left=%5B%22now-1h%22,%22now%22,%22Loki%22,%7B%22expr%22:%22%7Bnamespace%3D%5C%22#NS#%5C%22%7D%22%7D,%7B%22mode%22:%22Logs%22%7D,%7B%22ui%22:%5Btrue,true,true,%22none%22%5D%7D%5D
+    - name: grafana
+      svc: po-grafana
+      hasPrefix: true
+      mtls:
+        policyMode: permissive
+        gatewayDisabled: true
+    - name: prometheus
+      svc: po-prometheus
+      hasPrefix: true
+      port: 9090
+      mtls:
+        # policyMode: permissive
+        gatewayDisabled: true
+    - name: alertmanager
+      svc: po-alertmanager
+      hasPrefix: true
+      port: 9093
+      logo:
+        name: prometheus
+      mtls:
+        # policyMode: permissive
+        gatewayDisabled: true

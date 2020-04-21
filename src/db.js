@@ -7,6 +7,11 @@ const _ = require('lodash')
 class Db {
   constructor(path) {
     this.db = low(path == null ? new Memory() : new FileSync(path))
+    this.db._.mixin({
+      replaceRecord: function (arr, current_object, new_object) {
+        return arr.splice(_.findIndex(arr, current_object), 1, new_object)
+      },
+    })
     // Set some defaults (required if your JSON file is empty)
     this.db
       .defaults({
@@ -51,18 +56,11 @@ class Db {
   }
 
   updateItem(name, selectors, data) {
-    this.getItem(name, selectors)
-    const getter = this.db.get(name).find(selectors)
-    const value = getter.value()
-    const emptied = _.reduce(
-      value,
-      (memo, val, key) => {
-        if (!(key in selectors)) memo[key] = undefined
-        return memo
-      },
-      {},
-    )
-    const ret = getter.assign({ ...emptied, ...data }).write()
+    const item = this.getItem(name, selectors)
+    const ret = this.db
+      .get(name)
+      .replaceRecord(item, { ...data, ...selectors })
+      .write()
     this.dirty = this.dirtyActive
     return ret
   }

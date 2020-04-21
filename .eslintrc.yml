@@ -5,6 +5,9 @@ env:
 extends:
   - eslint:recommended
   - plugin:prettier/recommended
+  - plugin:import/errors
+  - plugin:import/warnings
+
 globals: {}
 parserOptions:
   ecmaVersion: 2019
