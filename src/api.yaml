@@ -552,7 +552,7 @@ components:
           title: Continuous delivery pipeline
           description: Deploys new images based on a tagging strategy
           type: object
-          anyOf:
+          oneOf:
             - title: Off
               nullable: true
               additionalProperties: false
@@ -561,6 +561,7 @@ components:
               properties:
                 tagMatcher:
                   type: string
+                  enum: [semver]
                   default: semver
                 semver:
                   title: Semver version pattern
@@ -571,12 +572,13 @@ components:
                     PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
               required:
                 - semver
-              additionalProperties: false
+              # additionalProperties: false
             - title: Glob pattern matching
-              nullable: true
+              # nullable: true
               properties:
                 tagMatcher:
                   type: string
+                  enum: [glob]
                   default: glob
                 glob:
                   title: Glob string pattern
@@ -773,25 +775,31 @@ components:
         ksvc:
           title: Type
           type: object
-          anyOf:
+          oneOf:
             - title: Knative service
               nullable: true
               properties:
+                serviceType:
+                  type: string
+                  enum: [ksvc]
+                  default: ksvc
                 <<: *KnativeServiceProperties
-              additionalProperties: false
             - title: Existing Knative service
-              nullable: true
               properties:
-                predeployed:
-                  type: boolean
-                  default: true
-                  readOnly: true
+                serviceType:
+                  type: string
+                  enum: [ksvcPredeployed]
+                  default: ksvcPredeployed
               required:
-                - predeployed
-              # additionalProperties: false
+                - serviceType
             - title: Existing Kubernetes service
-              nullable: true
-              # additionalProperties: false
+              properties:
+                serviceType:
+                  type: string
+                  enum: [svcPredeployed]
+                  default: svcPredeployed
+              required:
+                - serviceType
 
         teamId:
           type: string
