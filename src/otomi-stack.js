@@ -1,4 +1,6 @@
 const generatePassword = require('password-generator')
+const fs = require('fs')
+const yaml = require('js-yaml')
 const _ = require('lodash')
 const err = require('./error')
 const path = require('path')
@@ -7,6 +9,8 @@ const db = require('./db')
 const repo = require('./repo')
 
 const env = process.env
+const isProduction = env.NODE_ENV === 'production'
+console.log('NODE_ENV: ', env.NODE_ENV)
 
 const baseGlobal = { teamConfig: { teams: {} } }
 let glbl = { ...baseGlobal }
@@ -49,6 +53,8 @@ class OtomiStack {
     )
     this.initDb()
     this.clustersPath = './env/clusters.yaml'
+    const corePath = isProduction ? '/etc/otomi/core.yaml' : './test/core.yaml'
+    this.coreValues = yaml.safeLoad(fs.readFileSync(corePath, 'utf8'))
   }
 
   initDb() {
@@ -74,6 +80,10 @@ class OtomiStack {
 
   getClusters() {
     return this.db.getCollection('clusters')
+  }
+
+  getCore() {
+    return this.coreValues
   }
 
   getTeam(teamId) {
@@ -171,8 +181,8 @@ class OtomiStack {
   }
 
   loadValues() {
-    const coreValues = this.repo.readFile(this.clustersPath)
-    this.convertCoreValuesToDb(coreValues)
+    const clusterValues = this.repo.readFile(this.clustersPath)
+    this.convertClusterValuesToDb(clusterValues)
     const clusters = this.getClusters()
     this.loadAllTeamValues(clusters)
     this.db.setDirtyActive()
@@ -204,15 +214,16 @@ class OtomiStack {
     })
   }
 
-  convertCoreValuesToDb(values) {
+  convertClusterValuesToDb(values) {
     const cs = values.clouds
     _.forIn(cs, (cloudObj, cloud) => {
+      const dnsZones = [cloudObj.domain].concat(_.get(cloudObj, 'dnsZones', []))
       _.forIn(cloudObj.clusters, (clusterObject, cluster) => {
         const clusterId = `${cloud}/${cluster}`
         const clusterObj = {
           cloud: cloud,
           cluster: cluster,
-          dnsZones: [cloudObj.domain],
+          dnsZones: dnsZones,
           domain: `${cluster}.${cloudObj.domain}`,
           k8sVersion: clusterObject.k8sVersion,
           hasKnative: clusterObject.hasKnative !== undefined ? clusterObject.hasKnative : true,

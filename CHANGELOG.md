@@ -3,6 +3,48 @@
 All notable changes to this project will be documented in this file. See
 [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.12](https://github.com/redkubes/otomi-stack-api/compare/v0.2.11...v0.2.12) (2020-04-20)
+
+### Bug Fixes
+
+- corrected NODE_ENV now in Dockerfile...dohhhh!
+  [ci skip](<[2ca4bc8](https://github.com/redkubes/otomi-stack-api/commit/2ca4bc84cbc553edd8163241384ef82c2abcba29)>)
+
+### [0.2.11](https://github.com/redkubes/otomi-stack-api/compare/v0.2.10...v0.2.11) (2020-04-20)
+
+### Bug Fixes
+
+- corrected NODE_ENV now in Dockerfile...doh!
+  [ci skip](<[55ed81f](https://github.com/redkubes/otomi-stack-api/commit/55ed81fddb1c7ef2989c713188f7b7728ed5a4b0)>)
+
+### [0.2.10](https://github.com/redkubes/otomi-stack-api/compare/v0.2.9...v0.2.10) (2020-04-20)
+
+### Bug Fixes
+
+- corrected NODE_ENV
+  [ci skip](<[03eed5b](https://github.com/redkubes/otomi-stack-api/commit/03eed5b1f518ffee114c6ff51095581e2bb19d5a)>)
+
+### [0.2.9](https://github.com/redkubes/otomi-stack-api/compare/v0.2.8...v0.2.9) (2020-04-20)
+
+### Bug Fixes
+
+- corrected NODE_ENV check
+  [ci skip](<[b8345ae](https://github.com/redkubes/otomi-stack-api/commit/b8345ae5ff23b03a97e6571e66fb6b46a805ebad)>)
+
+### [0.2.8](https://github.com/redkubes/otomi-stack-api/compare/v0.2.7...v0.2.8) (2020-04-20)
+
+### Features
+
+- use dnsZones field
+  ([8883900](https://github.com/redkubes/otomi-stack-api/commit/88839001002bac124107c4fee2bd16d6631b1a55))
+
+### Bug Fixes
+
+- missing dev file
+  [ci skip](<[8ca087a](https://github.com/redkubes/otomi-stack-api/commit/8ca087a3f133b9cdca9b26f86a72639139cefd2b)>)
+- updateItem
+  [ci skip](<[c7c3572](https://github.com/redkubes/otomi-stack-api/commit/c7c3572583efa7a2a835a80f4dfa807e1f4a1828)>)
+
 ### [0.2.7](https://github.com/redkubes/otomi-stack-api/compare/v0.2.6...v0.2.7) (2020-04-19)
 
 ### Feature Improvements
