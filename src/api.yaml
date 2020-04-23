@@ -737,12 +737,12 @@ components:
           title: 'Use suggested domain (preferred)'
           type: boolean
           default: true
-          description: Allows to use wildcard certs already available. Only override for public facing services.
+          description: Allows to use wildcard certs already available (only override for public facing services)
         subdomain:
           title: 'Host'
           type: string
           nullable: true
-          description: A host that is used to set DNS 'A' record
+          description: A host that is used to set DNS 'A' records
           <<: *domainNameField
         domain:
           title: DNS Zone

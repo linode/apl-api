@@ -3,6 +3,34 @@
 All notable changes to this project will be documented in this file. See
 [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.17](https://github.com/redkubes/otomi-stack-api/compare/v0.2.15...v0.2.17) (2020-04-23)
+
+### Features
+
+- add new fields to cluster schema
+  ([7528457](https://github.com/redkubes/otomi-stack-api/commit/7528457f67a610f2208bc37449ba22d3f96e7093))
+- add new fields to cluster schema ([#64](https://github.com/redkubes/otomi-stack-api/issues/64))
+  ([3f3e1c1](https://github.com/redkubes/otomi-stack-api/commit/3f3e1c1c0aed6b8cc5ff4d711c4f4b313d20012c))
+
+### Bug Fixes
+
+- node env, added hide flag to auth
+  [ci skip](<[f61d2f8](https://github.com/redkubes/otomi-stack-api/commit/f61d2f84b0dc1958ee0ad92fc4cc6e1bada4b10d)>)
+- put host in front of dns zone
+  ([85e0e02](https://github.com/redkubes/otomi-stack-api/commit/85e0e021ce77aca65f646ee303d48e67ca90af66))
+
+### Build System
+
+- indicate that package is private
+  ([fbda887](https://github.com/redkubes/otomi-stack-api/commit/fbda8874547e5d2d517d0f307b455fdf199d851c))
+
+### Others
+
+- **release:** 0.2.16
+  ([d17d290](https://github.com/redkubes/otomi-stack-api/commit/d17d290f7eceb7f1e9bed3c26bdc5fc58d75f657))
+- disable yaml formmater that conflicts with eslint
+  ([b330227](https://github.com/redkubes/otomi-stack-api/commit/b33022789120152850c731613968dae615184a58))
+
 ### [0.2.16](https://github.com/redkubes/otomi-stack-api/compare/v0.2.15...v0.2.16) (2020-04-23)
 
 ### Features
