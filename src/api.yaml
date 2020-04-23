@@ -755,7 +755,7 @@ components:
         hasCert:
           title: Already has a certificate
           type: boolean
-          default: true
+          default: false
           description:
             If true a certificate should be deployed as a TLS secret already with the name 'cert-$svcName'. Otherwise it
             will be generated.
