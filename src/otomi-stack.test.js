@@ -39,6 +39,7 @@ describe('Load and dump values', function () {
         subdomain: 'hello.team-team1.dev',
       },
       ksvc: {
+        serviceType: 'ksvc',
         annotations: [{ name: 'autoscaling.knative.dev/minScale', value: '1' }],
         env: [{ name: 'RED', value: 'KUBES' }],
         image: {
@@ -62,7 +63,7 @@ describe('Load and dump values', function () {
         subdomain: 'hello-predeployed-ksvc.team-team1.dev',
       },
       ksvc: {
-        predeployed: true,
+        serviceType: 'ksvcPredeployed',
       },
     }
 
@@ -73,7 +74,7 @@ describe('Load and dump values', function () {
       name: 'hello-ksvc-internal',
       internal: true,
       ksvc: {
-        predeployed: true,
+        serviceType: 'ksvcPredeployed',
       },
     }
 
@@ -88,6 +89,9 @@ describe('Load and dump values', function () {
         hasCert: false,
         certArn: undefined,
         subdomain: 'hello-svc.team-team1.dev',
+      },
+      ksvc: {
+        serviceType: 'svcPredeployed',
       },
     }
 
