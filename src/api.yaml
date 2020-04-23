@@ -733,10 +733,6 @@ components:
 
     ServiceIngress:
       properties: &ServiceIngress
-        domain:
-          title: DNS Zone
-          description: A managed DNS zone
-          type: string
         useDefaultSubdomain:
           title: 'Use suggested domain (preferred)'
           type: boolean
@@ -748,6 +744,10 @@ components:
           nullable: true
           description: A host that is used to set DNS 'A' record
           <<: *domainNameField
+        domain:
+          title: DNS Zone
+          description: A managed DNS zone
+          type: string
         hasSingleSignOn:
           title: Authenticate with Single Sign On
           type: boolean
@@ -756,7 +756,9 @@ components:
           title: Already has a certificate
           type: boolean
           default: true
-          description: If true a certificate is gto be deployed as a TLS secret already. Otherwise it will be generated.
+          description:
+            If true a certificate should be deployed as a TLS secret already with the name 'cert-$svcName'. Otherwise it
+            will be generated.
         certArn:
           type: string
           title: Certificate ARN
@@ -770,9 +772,11 @@ components:
       properties:
         name:
           <<: *idNameField
+          title: Name
           description: A service name
           example: service01
         clusterId:
+          title: Cluster ID
           type: string
           description: A kubernetes cluster for the service
         ingress:
