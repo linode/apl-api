@@ -8,7 +8,7 @@ module.exports = function (otomi) {
         const isAdmin = teamId === 'admin'
         const role = teamId === 'admin' ? 'admin' : 'team'
         const data = {
-          currentClusterId: env.CLUSTER ? env.CLUSTER : env.NODE_ENV !== 'production' ? 'azure/dev' : '',
+          currentClusterId: env.CLUSTER ? env.CLUSTER : env.NODE_ENV !== 'production' ? 'google/dev' : '',
           clusters: otomi.getClusters(),
           core: otomi.getCore(),
           user: { email, teamId, isAdmin, role },

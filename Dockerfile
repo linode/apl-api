@@ -32,7 +32,6 @@ RUN npm prune --production
 # --------------- Production stage
 FROM alpine:3.11 AS prod
 
-ENV NODE_ENV=production
 
 COPY --from=dev /usr/local/bin/node /usr/bin/
 COPY --from=dev /usr/lib/libgcc* /usr/lib/
@@ -51,5 +50,7 @@ COPY src src
 
 USER 1001
 EXPOSE 8080
+
+ENV NODE_ENV=production
 
 CMD ["node", "app.js"]
