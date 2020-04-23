@@ -733,6 +733,12 @@ components:
 
     ServiceIngress:
       properties: &ServiceIngress
+        subdomain:
+          title: 'Host'
+          type: string
+          nullable: true
+          description: A host that is used to set DNS 'A' record
+          <<: *domainNameField
         domain:
           title: DNS Zone
           description: A managed DNS zone
@@ -742,12 +748,6 @@ components:
           type: boolean
           default: true
           description: Allows to use wildcard certs already available. Only override for public facing services.
-        subdomain:
-          title: 'Host'
-          type: string
-          nullable: true
-          description: A host that is used to set DNS 'A' record
-          <<: *domainNameField
         hasSingleSignOn:
           title: Authenticate with Single Sign On
           type: boolean
