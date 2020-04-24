@@ -355,7 +355,7 @@ class OtomiStack {
 
         const serviceType = svc.ksvc.serviceType
         console.info(`Saving service: serviceId: ${svc.serviceId} serviceType: ${serviceType}`)
-        const svcCloned = _.omit(svc, ['teamId', 'serviceId', 'clusterId', 'ksvc', 'ingress'])
+        const svcCloned = _.omit(svc, ['teamId', 'serviceId', 'clusterId', 'ksvc', 'ingress', 'internal'])
         const ksvc = _.cloneDeep(svc.ksvc)
         if (serviceType === 'ksvc') {
           svcCloned.ksvc = ksvc
