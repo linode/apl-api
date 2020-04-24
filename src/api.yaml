@@ -461,11 +461,8 @@ components:
         type: object
         properties:
           name:
-            title: Annotation name
-            description: Annotation name
             <<: *k8sAnnotationField
           value:
-            title: Annotation value
             type: string
             maxLength: 32767
 
