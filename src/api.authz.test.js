@@ -1,21 +1,23 @@
-const expect = require('chai').expect
-const request = require('supertest')
-const sinon = require('sinon')
-const server = require('./server')
-const OtomiStack = require('./otomi-stack')
-const middleware = require('./middleware')
-const utils = require('./utils')
+import { expect } from 'chai'
+import request from 'supertest'
+import sinon from 'sinon'
+import initApp from './server'
+import OtomiStack from './otomi-stack'
+import { isAuthorized } from './middleware'
+import { validateEnv } from './utils'
 
 describe('Api tests for admin', function () {
   let app
-  beforeEach(function () {
+  beforeEach(function (done) {
     const otomiStack = new OtomiStack()
     sinon.stub(otomiStack)
-    app = server.initApp(otomiStack)
+    app = initApp(otomiStack)
+    done()
   })
 
   it('admin can get all teams', function (done) {
-    this.skip('Missing request authorization mechanism')
+    // 'Missing request authorization mechanism'
+    this.skip()
     request(app)
       .get('/v1/teams')
       .set('Accept', 'application/json')
@@ -54,11 +56,12 @@ describe('Api tests for team', function () {
   beforeEach(function () {
     const otomiStack = new OtomiStack()
     sinon.stub(otomiStack)
-    app = server.initApp(otomiStack)
+    app = initApp(otomiStack)
   })
 
   it('team cannot get all teams', function (done) {
-    this.skip('Missing request authorization mechanism')
+    // this.skip('Missing request authorization mechanism')
+    this.skip()
     request(app)
       .get('/v1/teams')
       .set('Accept', 'application/json')
@@ -68,11 +71,13 @@ describe('Api tests for team', function () {
       .end(done)
   })
   it('team cannot delete all teams', function (done) {
-    this.skip('Missing request authorization mechanism')
+    // this.skip('Missing request authorization mechanism')
+    this.skip()
     request(app).delete('/v1/teams').set('Accept', 'application/json').set('Auth-Group', 'team1').expect(404).end(done)
   })
   it('team cannot create a new team', function (done) {
-    this.skip('Missing request authorization mechanism')
+    // this.skip('Missing request authorization mechanism')
+    this.skip()
     request(app)
       .get('/v1/teams')
       .set('Accept', 'application/json')
@@ -83,7 +88,8 @@ describe('Api tests for team', function () {
   })
 
   it('team cannot get all teams', function (done) {
-    this.skip('Missing request authorization mechanism')
+    // this.skip('Missing request authorization mechanism')
+    this.skip()
     request(app)
       .get('/v1/teams')
       .set('Accept', 'application/json')
@@ -93,7 +99,8 @@ describe('Api tests for team', function () {
       .end(done)
   })
   it('team cannot get the other team', function (done) {
-    this.skip('Missing request authorization mechanism')
+    // this.skip('Missing request authorization mechanism')
+    this.skip()
     request(app)
       .get('/v1/teams/team2')
       .set('Accept', 'application/json')
@@ -141,7 +148,8 @@ describe('Api tests for team', function () {
   })
 
   it('team can not update service from other team', function (done) {
-    this.skip('Missing request authorization mechanism')
+    // this.skip('Missing request authorization mechanism')
+    this.skip()
     request(app)
       .put('/v1/teams/team2/services/service1?clusterId=aws/dev', {})
       .set('Accept', 'application/json')
@@ -152,7 +160,8 @@ describe('Api tests for team', function () {
   })
 
   it('team can not delete service from other team', function (done) {
-    this.skip('Missing request authorization mechanism')
+    // this.skip('Missing request authorization mechanism')
+    this.skip()
     request(app)
       .delete('/v1/teams/team2/services/service1?clusterId=aws/dev')
       .set('Accept', 'application/json')
@@ -163,7 +172,8 @@ describe('Api tests for team', function () {
   })
 
   it('team can not update service from other team', function (done) {
-    this.skip('Missing request authorization mechanism')
+    // this.skip('Missing request authorization mechanism')
+    this.skip()
     request(app)
       .put('/v1/teams/team2/services/service1?clusterId=aws/dev', {})
       .set('Accept', 'application/json')
@@ -173,7 +183,8 @@ describe('Api tests for team', function () {
       .end(done)
   })
   it('team can not get service from other team', function (done) {
-    this.skip('Missing request authorization mechanism')
+    // this.skip('Missing request authorization mechanism')
+    this.skip()
     request(app)
       .put('/v1/teams/team2/services/service1?clusterId=aws/dev', {})
       .set('Accept', 'application/json')
@@ -189,7 +200,7 @@ describe('Api tests for non authorized user', function () {
   beforeEach(function () {
     const otomiStack = new OtomiStack()
     sinon.stub(otomiStack)
-    app = server.initApp(otomiStack)
+    app = initApp(otomiStack)
   })
   it('should get app readiness', function (done) {
     request(app)
@@ -287,7 +298,7 @@ describe('Api tests for data validation', function () {
   beforeEach(function () {
     const otomiStack = new OtomiStack('tpath', 'tcloud')
     sinon.stub(otomiStack)
-    app = server.initApp(otomiStack)
+    app = initApp(otomiStack)
   })
   it('invalid team name data', function (done) {
     request(app)
@@ -316,48 +327,49 @@ const mockRequest = (authGroup, teamId) => ({
     if (name === 'Auth-Group') return authGroup
     return null
   },
-  params: { teamId: teamId },
+  params: { teamId },
 })
 
 describe('Authorization tests', function () {
   it('should not authorize', function (done) {
-    this.skip('Missing request authorization mechanism')
+    // this.skip('Missing request authorization mechanism')
+    this.skip()
     const req = mockRequest('team1', 'team2')
-    expect(() => middleware.isAuthorized(req, null, null)).to.throw()
+    expect(() => isAuthorized(req, null, null)).to.throw()
     done()
   })
   it('skipped not authenticated - missing header', function (done) {
     this.skip('Missing request authorization mechanism')
     const req = mockRequest('undefined', 'team2')
-    expect(() => middleware.isAuthorized(req, null, null)).to.be.throw()
+    expect(() => isAuthorized(req, null, null)).to.be.throw()
     done()
   })
   it('not authorized - missing teamId in uri path', function (done) {
     this.skip('Missing request authorization mechanism')
     const req = mockRequest('team2', 'undefined')
-    expect(() => middleware.isAuthorized(req, null, null)).to.throw()
+    expect(() => isAuthorized(req, null, null)).to.throw()
     done()
   })
   it('team authorized', function (done) {
     const req = mockRequest('team2', 'team2')
-    expect(middleware.isAuthorized(req, null, null)).to.be.true
+    expect(isAuthorized(req, null, null)).to.be.true
     done()
   })
   it('admin authorized', function (done) {
     const req = mockRequest('admin', 'team2')
-    expect(middleware.isAuthorized(req, null, null)).to.be.true
+    expect(isAuthorized(req, null, null)).to.be.true
     done()
   })
   it('admin authorized 2', function (done) {
     const req = mockRequest('admin', undefined)
-    expect(middleware.isAuthorized(req, null, null)).to.be.true
+    expect(isAuthorized(req, null, null)).to.be.true
     done()
   })
 })
 
 describe('Config validation tests', function () {
   it('missing env variables', function (done) {
-    expect(() => utils.validateEnv({})).to.throw()
+    expect(() => validateEnv({})).to.throw()
     done()
   })
 
@@ -370,7 +382,7 @@ describe('Config validation tests', function () {
       GIT_EMAIL: null,
       GIT_BRANCH: null,
     }
-    expect(() => utils.validateEnv(envs)).to.not.throw()
+    expect(() => validateEnv(envs)).to.not.throw()
     done()
   })
 })

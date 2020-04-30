@@ -66,25 +66,30 @@ docker build .
 ## Running
 
 ```
-docker run --env-file='.env' -p 8080:8080/tcp <image-id>
+docker run --env-file='.env' \
+-p 8080:8080/tcp \
+-v <full-path-to-dir-with-core.yaml>:/etc/otomi \
+<image-id>
+
 ```
 
 ## Registry
 
 ```
-docker push eu.gcr.io/k8s-playground-256113/otomi/otomi-stack-api:$TAG
+docker push eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG
 ```
 
 ## Start app
 
 ```
+npm run build
 npm run start
 ```
 
 ## Start app with live update
 
 ```
-npm run start-dev
+npm run dev
 ```
 
 Note: it requires to instal globally the following package

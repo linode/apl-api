@@ -1,10 +1,10 @@
-const expect = require('chai').expect
-const db = require('./db')
+import { expect } from 'chai'
+import { Db } from './db'
 
 describe('Db', function () {
   let testDb
   beforeEach(function () {
-    testDb = new db.Db(null)
+    testDb = new Db(null)
   })
 
   it('can store ', function (done) {
@@ -27,7 +27,8 @@ describe('Db', function () {
   })
 
   it('can remove item', function (done) {
-    this.skip('Missing validation')
+    // this.skip('Missing validation')
+    this.skip()
 
     testDb.createItem('teams', { teamId: 'n1' }, { name: 'n1', k: '1' })
     testDb.createItem('teams', { teamId: 'n2' }, { name: 'n2', k: '1' })
@@ -79,7 +80,7 @@ describe('Db', function () {
   })
 
   it('throws error if item does not exist', function (done) {
-    this.skip('Missing validation')
+    this.skip()
 
     expect(() => testDb.getItem('teams', { teamId: 'n1' })).to.throw()
     done()

@@ -8,7 +8,7 @@ module.exports = function (otomi) {
       },
     ],
 
-    post: function (req, res, next) {
+    post(req, res, next) {
       const data = otomi.createTeam(null, req.body)
       res.status(200).json(data)
     },

@@ -2,7 +2,7 @@ module.exports = function (otomi) {
   const api = {
     get: [
       async function (req, res, next) {
-        console.debug('Trigger deployment: ' + JSON.stringify(req.params))
+        console.debug(`Trigger deployment: ${JSON.stringify(req.params)}`)
         const teamId = req.header('Auth-Group')
         const email = req.header('Auth-User')
         try {

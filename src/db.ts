@@ -1,15 +1,23 @@
-const low = require('lowdb')
-const err = require('./error')
-const FileSync = require('lowdb/adapters/FileSync')
-const Memory = require('lowdb/adapters/Memory')
-const _ = require('lodash')
+import lowdb from 'lowdb'
+import FileSync from 'lowdb/adapters/FileSync'
+import Memory from 'lowdb/adapters/Memory'
+import findIndex from 'lodash/findIndex'
 
-class Db {
+import { AlreadyExists, NotExistError } from './error'
+
+export class Db {
+  // db: LowdbSync<any>
+  db: any
+
+  dirty: boolean
+
+  dirtyActive: boolean
+
   constructor(path) {
-    this.db = low(path == null ? new Memory() : new FileSync(path))
+    this.db = lowdb(path == null ? new Memory('') : new FileSync(path))
     this.db._.mixin({
-      replaceRecord: function (arr, current_object, new_object) {
-        return arr.splice(_.findIndex(arr, current_object), 1, new_object)
+      replaceRecord(arr, currentObject, newObject) {
+        return arr.splice(findIndex(arr, currentObject), 1, newObject)
       },
     })
     // Set some defaults (required if your JSON file is empty)
@@ -29,12 +37,12 @@ class Db {
   getItem(name, selectors) {
     const data = this.db.get(name).find(selectors).value()
     if (data === undefined) {
-      throw new err.NotExistError(`Selector props do not exist in '${name}' collection: ${JSON.stringify(selectors)}`)
+      throw new NotExistError(`Selector props do not exist in '${name}' collection: ${JSON.stringify(selectors)}`)
     }
     return data
   }
 
-  getCollection(name, selectors) {
+  getCollection(name: string, selectors?: object) {
     return this.db.get(name).filter(selectors).value()
   }
 
@@ -46,7 +54,7 @@ class Db {
       this.dirty = this.dirtyActive
       return ret
     }
-    throw new err.AlreadyExists(`Item already exists in '${name}' collection: ${JSON.stringify(selectors)}`)
+    throw new AlreadyExists(`Item already exists in '${name}' collection: ${JSON.stringify(selectors)}`)
   }
 
   deleteItem(name, selectors) {
@@ -74,11 +82,6 @@ class Db {
   }
 }
 
-function init(path) {
+export default function db(path) {
   return new Db(path)
-}
-
-module.exports = {
-  Db,
-  init,
 }

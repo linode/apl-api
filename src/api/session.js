@@ -1,5 +1,6 @@
 const env = process.env
 module.exports = function (otomi) {
+  const fallbackCluster = env.NODE_ENV !== 'production' ? 'google/dev' : ''
   const api = {
     get: [
       function (req, res, next) {
@@ -8,7 +9,7 @@ module.exports = function (otomi) {
         const isAdmin = teamId === 'admin'
         const role = teamId === 'admin' ? 'admin' : 'team'
         const data = {
-          currentClusterId: env.CLUSTER ? env.CLUSTER : env.NODE_ENV !== 'production' ? 'google/dev' : '',
+          currentClusterId: env.CLUSTER ? env.CLUSTER : fallbackCluster,
           clusters: otomi.getClusters(),
           core: otomi.getCore(),
           user: { email, teamId, isAdmin, role },
