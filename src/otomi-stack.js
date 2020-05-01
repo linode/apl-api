@@ -172,9 +172,11 @@ class OtomiStack {
 
   async triggerDeployment(teamId, email) {
     this.saveValues()
-    await this.repo.commit(teamId, email)
-    await this.repo.push()
-    this.saveValues()
+    if (!env.DISABLE_SYNC) {
+      await this.repo.commit(teamId, email)
+      await this.repo.push()
+    }
+    // this.saveValues()
     // reset db and load values again
     this.initDb()
     this.loadValues()
