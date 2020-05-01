@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. See
 [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.22](https://github.com/redkubes/otomi-stack-api/compare/v0.2.21...v0.2.22) (2020-05-01)
+
+### Bug Fixes
+
+- missing path fields
+  [ci skip](<[9e96a02](https://github.com/redkubes/otomi-stack-api/commit/9e96a024c6b69c6f054e7603ed973f350a9a7b15)>)
+
 ### [0.2.21](https://github.com/redkubes/otomi-stack-api/compare/v0.2.20...v0.2.21) (2020-04-24)
 
 ### Bug Fixes
