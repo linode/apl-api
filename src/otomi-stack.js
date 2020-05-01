@@ -374,6 +374,8 @@ class OtomiStack {
 
           if (svc.ingress.hasCert) svcCloned.hasCert = true
           if (svc.ingress.certArn) svcCloned.certArn = svc.ingress.certArn
+          if (svc.ingress.path) svcCloned.path = svc.ingress.path
+          if (svc.ingress.forwardPath) svcCloned.forwardPath = true
         } else svcCloned.internal = true
 
         services.push(svcCloned)
