@@ -6,18 +6,15 @@ import OtomiStack from './otomi-stack'
 import { isAuthorized } from './middleware'
 import { validateEnv } from './utils'
 
-describe('Api tests for admin', function () {
+describe('Api tests for admin', () => {
   let app
-  beforeEach(function (done) {
+  beforeEach(() => {
     const otomiStack = new OtomiStack()
     sinon.stub(otomiStack)
     app = initApp(otomiStack)
-    done()
   })
 
-  it('admin can get all teams', function (done) {
-    // 'Missing request authorization mechanism'
-    this.skip()
+  it.skip('admin can get all teams', (done) => {
     request(app)
       .get('/v1/teams')
       .set('Accept', 'application/json')
@@ -26,7 +23,7 @@ describe('Api tests for admin', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('admin can get a given team', function (done) {
+  it.skip('admin can get a given team', (done) => {
     request(app)
       .get('/v1/teams/team1')
       .set('Accept', 'application/json')
@@ -35,7 +32,7 @@ describe('Api tests for admin', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('admin can create a team', function (done) {
+  it.skip('admin can create a team', (done) => {
     const data = { name: 'Team100', clusters: ['aws/dev'], password: 'test' }
     request(app)
       .post('/v1/teams')
@@ -46,20 +43,21 @@ describe('Api tests for admin', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('admin cannot delete all teams', function (done) {
+  it('admin cannot delete all teams', (done) => {
     request(app).delete('/v1/teams').set('Accept', 'application/json').set('Auth-Group', 'admin').expect(404).end(done)
   })
 })
 
-describe('Api tests for team', function () {
+describe('Api tests for team', () => {
   let app
-  beforeEach(function () {
+
+  beforeEach(() => {
     const otomiStack = new OtomiStack()
     sinon.stub(otomiStack)
     app = initApp(otomiStack)
   })
 
-  it('team cannot get all teams', function (done) {
+  it.skip('team cannot get all teams', (done) => {
     // this.skip('Missing request authorization mechanism')
     this.skip()
     request(app)
@@ -70,12 +68,12 @@ describe('Api tests for team', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('team cannot delete all teams', function (done) {
+  it.skip('team cannot delete all teams', (done) => {
     // this.skip('Missing request authorization mechanism')
     this.skip()
     request(app).delete('/v1/teams').set('Accept', 'application/json').set('Auth-Group', 'team1').expect(404).end(done)
   })
-  it('team cannot create a new team', function (done) {
+  it.skip('team cannot create a new team', (done) => {
     // this.skip('Missing request authorization mechanism')
     this.skip()
     request(app)
@@ -87,7 +85,7 @@ describe('Api tests for team', function () {
       .end(done)
   })
 
-  it('team cannot get all teams', function (done) {
+  it.skip('team cannot get all teams', (done) => {
     // this.skip('Missing request authorization mechanism')
     this.skip()
     request(app)
@@ -98,7 +96,7 @@ describe('Api tests for team', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('team cannot get the other team', function (done) {
+  it.skip('team cannot get the other team', (done) => {
     // this.skip('Missing request authorization mechanism')
     this.skip()
     request(app)
@@ -109,7 +107,7 @@ describe('Api tests for team', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('team can get its team data', function (done) {
+  it('team can get its team data', (done) => {
     request(app)
       .get('/v1/teams/team1')
       .set('Accept', 'application/json')
@@ -118,7 +116,7 @@ describe('Api tests for team', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('team can get its services', function (done) {
+  it('team can get its services', (done) => {
     request(app)
       .get('/v1/teams/team1/services')
       .set('Accept', 'application/json')
@@ -127,7 +125,7 @@ describe('Api tests for team', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('team can get a specific service', function (done) {
+  it('team can get a specific service', (done) => {
     request(app)
       .get('/v1/teams/team1/services/service1?clusterId=aws/dev')
       .set('Accept', 'application/json')
@@ -137,7 +135,7 @@ describe('Api tests for team', function () {
       .end(done)
   })
 
-  it('team can delete its service', function (done) {
+  it('team can delete its service', (done) => {
     request(app)
       .delete('/v1/teams/team1/services/service1?clusterId="aws/dev')
       .set('Accept', 'application/json')
@@ -147,7 +145,7 @@ describe('Api tests for team', function () {
       .end(done)
   })
 
-  it('team can not update service from other team', function (done) {
+  it.skip('team can not update service from other team', (done) => {
     // this.skip('Missing request authorization mechanism')
     this.skip()
     request(app)
@@ -159,7 +157,7 @@ describe('Api tests for team', function () {
       .end(done)
   })
 
-  it('team can not delete service from other team', function (done) {
+  it.skip('team can not delete service from other team', (done) => {
     // this.skip('Missing request authorization mechanism')
     this.skip()
     request(app)
@@ -171,7 +169,7 @@ describe('Api tests for team', function () {
       .end(done)
   })
 
-  it('team can not update service from other team', function (done) {
+  it.skip('team can not update service from other team', (done) => {
     // this.skip('Missing request authorization mechanism')
     this.skip()
     request(app)
@@ -182,7 +180,7 @@ describe('Api tests for team', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('team can not get service from other team', function (done) {
+  it.skip('team can not get service from other team', (done) => {
     // this.skip('Missing request authorization mechanism')
     this.skip()
     request(app)
@@ -195,14 +193,14 @@ describe('Api tests for team', function () {
   })
 })
 
-describe('Api tests for non authorized user', function () {
+describe('Api tests for non authorized user', () => {
   let app
-  beforeEach(function () {
+  beforeEach(() => {
     const otomiStack = new OtomiStack()
     sinon.stub(otomiStack)
     app = initApp(otomiStack)
   })
-  it('should get app readiness', function (done) {
+  it('should get app readiness', (done) => {
     request(app)
       .get('/v1/readiness')
       .set('Accept', 'application/json')
@@ -210,7 +208,7 @@ describe('Api tests for non authorized user', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('should get api spec', function (done) {
+  it('should get api spec', (done) => {
     request(app)
       .get('/v1/apiDocs')
       .set('Accept', 'application/json')
@@ -218,7 +216,7 @@ describe('Api tests for non authorized user', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('cannot get a specific team', function (done) {
+  it('cannot get a specific team', (done) => {
     request(app)
       .get('/v1/teams/team1')
       .set('Accept', 'application/json')
@@ -226,7 +224,7 @@ describe('Api tests for non authorized user', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('cannot modify a team', function (done) {
+  it('cannot modify a team', (done) => {
     request(app)
       .put('/v1/teams/team1')
       .set('Accept', 'application/json')
@@ -234,7 +232,7 @@ describe('Api tests for non authorized user', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('cannot delete a team', function (done) {
+  it('cannot delete a team', (done) => {
     request(app)
       .delete('/v1/teams/team1')
       .set('Accept', 'application/json')
@@ -242,7 +240,7 @@ describe('Api tests for non authorized user', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('cannot create a team', function (done) {
+  it('cannot create a team', (done) => {
     request(app)
       .post('/v1/teams')
       .set('Accept', 'application/json')
@@ -250,7 +248,7 @@ describe('Api tests for non authorized user', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('cannot get services', function (done) {
+  it('cannot get services', (done) => {
     request(app)
       .get('/v1/teams/team1/services')
       .set('Accept', 'application/json')
@@ -258,7 +256,7 @@ describe('Api tests for non authorized user', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('cannot get a given service', function (done) {
+  it('cannot get a given service', (done) => {
     request(app)
       .get('/v1/teams/team1/services/service1')
       .set('Accept', 'application/json')
@@ -267,7 +265,7 @@ describe('Api tests for non authorized user', function () {
       .end(done)
   })
 
-  it('cannot edit a given service', function (done) {
+  it('cannot edit a given service', (done) => {
     request(app)
       .put('/v1/teams/team1/services/service1')
       .set('Accept', 'application/json')
@@ -275,7 +273,7 @@ describe('Api tests for non authorized user', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('cannot delete a given service', function (done) {
+  it('cannot delete a given service', (done) => {
     request(app)
       .delete('/v1/teams/team1/services/service1')
       .set('Accept', 'application/json')
@@ -283,7 +281,7 @@ describe('Api tests for non authorized user', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('cannot add a new service', function (done) {
+  it('cannot add a new service', (done) => {
     request(app)
       .post('/v1/teams/team1/services')
       .set('Accept', 'application/json')
@@ -293,14 +291,14 @@ describe('Api tests for non authorized user', function () {
   })
 })
 
-describe('Api tests for data validation', function () {
+describe('Api tests for data validation', () => {
   let app
-  beforeEach(function () {
-    const otomiStack = new OtomiStack('tpath', 'tcloud')
+  beforeEach(() => {
+    const otomiStack = new OtomiStack()
     sinon.stub(otomiStack)
     app = initApp(otomiStack)
   })
-  it('invalid team name data', function (done) {
+  it('invalid team name data', (done) => {
     request(app)
       .post('/v1/teams')
       .send({ name: 'test_1', password: 'pass' })
@@ -310,7 +308,7 @@ describe('Api tests for data validation', function () {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('invalid slackUrl  data', function (done) {
+  it('invalid slackUrl  data', (done) => {
     request(app)
       .post('/v1/teams')
       .send({ name: 'test_1', password: 'pass', slackUrl: 'aaa.lll' })
@@ -330,50 +328,50 @@ const mockRequest = (authGroup, teamId) => ({
   params: { teamId },
 })
 
-describe('Authorization tests', function () {
-  it('should not authorize', function (done) {
+describe('Authorization tests', () => {
+  it.skip('should not authorize', (done) => {
     // this.skip('Missing request authorization mechanism')
     this.skip()
     const req = mockRequest('team1', 'team2')
-    expect(() => isAuthorized(req, null, null)).to.throw()
+    expect(() => isAuthorized(req)).to.throw()
     done()
   })
-  it('skipped not authenticated - missing header', function (done) {
-    this.skip('Missing request authorization mechanism')
+  it.skip('skipped not authenticated - missing header', (done) => {
+    this.skip()
     const req = mockRequest('undefined', 'team2')
-    expect(() => isAuthorized(req, null, null)).to.be.throw()
+    expect(() => isAuthorized(req)).to.be.throw()
     done()
   })
-  it('not authorized - missing teamId in uri path', function (done) {
-    this.skip('Missing request authorization mechanism')
+  it.skip('not authorized - missing teamId in uri path', (done) => {
+    this.skip()
     const req = mockRequest('team2', 'undefined')
-    expect(() => isAuthorized(req, null, null)).to.throw()
+    expect(() => isAuthorized(req)).to.throw()
     done()
   })
-  it('team authorized', function (done) {
+  it('team authorized', (done) => {
     const req = mockRequest('team2', 'team2')
-    expect(isAuthorized(req, null, null)).to.be.true
+    expect(isAuthorized(req)).to.be.true
     done()
   })
-  it('admin authorized', function (done) {
+  it('admin authorized', (done) => {
     const req = mockRequest('admin', 'team2')
-    expect(isAuthorized(req, null, null)).to.be.true
+    expect(isAuthorized(req)).to.be.true
     done()
   })
-  it('admin authorized 2', function (done) {
+  it('admin authorized 2', (done) => {
     const req = mockRequest('admin', undefined)
-    expect(isAuthorized(req, null, null)).to.be.true
+    expect(isAuthorized(req)).to.be.true
     done()
   })
 })
 
-describe('Config validation tests', function () {
-  it('missing env variables', function (done) {
+describe('Config validation tests', () => {
+  it('missing env variables', (done) => {
     expect(() => validateEnv({})).to.throw()
     done()
   })
 
-  it('valid env variables', function (done) {
+  it('valid env variables', (done) => {
     const envs = {
       GIT_LOCAL_PATH: null,
       GIT_REPO_URL: null,

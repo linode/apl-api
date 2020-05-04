@@ -19,16 +19,16 @@ export function validateConfig() {
 }
 
 export function setSignalHandlers(server) {
-  process.on('SIGTERM', function () {
+  process.on('SIGTERM', () => {
     console.log('Received SIGTERM signal. \nFinishing all requests')
-    server.close(function () {
+    server.close(() => {
       console.log('Finished all requests.')
     })
   })
 
-  process.on('SIGINT', function () {
+  process.on('SIGINT', () => {
     console.log('Received SIGINT signal \nFinishing all requests')
-    server.close(function () {
+    server.close(() => {
       console.log('Finished all requests')
     })
   })

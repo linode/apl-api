@@ -4,13 +4,13 @@ import yaml from 'js-yaml'
 import cloneDeep from 'lodash/cloneDeep'
 import OtomiStack from './otomi-stack'
 
-describe('Load and dump values', function () {
+describe('Load and dump values', () => {
   let otomiStack
-  beforeEach(function () {
+  beforeEach(() => {
     otomiStack = new OtomiStack()
   })
 
-  it('should load values to db and convert them back', function (done) {
+  it('should load values to db and convert them back', (done) => {
     // this.skip('New method signatur for getService needs implementation')
     const expectedValues = yaml.safeLoad(fs.readFileSync('./test/team.yaml', 'utf8'))
     const values = cloneDeep(expectedValues)
@@ -116,13 +116,13 @@ describe('Load and dump values', function () {
   })
 })
 
-describe('Data validation', function () {
+describe('Data validation', () => {
   let otomiStack
-  beforeEach(function () {
+  beforeEach(() => {
     otomiStack = new OtomiStack()
   })
 
-  it('should indicate duplicated subdomain', function (done) {
+  it('should indicate duplicated subdomain', (done) => {
     const svc = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'b' } }
     const svc1 = { serviceId: 's/B', ingress: { domain: 'a.com', subdomain: 'b' } }
 
@@ -132,7 +132,7 @@ describe('Data validation', function () {
     expect(duplicated).to.be.true
     done()
   })
-  it('should not indicate duplicated subdomain', function (done) {
+  it('should not indicate duplicated subdomain', (done) => {
     const svc = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'b' } }
     otomiStack.db.createItem('services', { teamId: 'A' }, svc)
     const svc1 = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'c' } }
@@ -140,7 +140,7 @@ describe('Data validation', function () {
     expect(duplicated).to.be.false
     done()
   })
-  it('should not indicate that public URL already exist (existing service is updated)', function (done) {
+  it('should not indicate that public URL already exist (existing service is updated)', (done) => {
     const svc = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'b' } }
     otomiStack.db.createItem('services', { teamId: 'A' }, svc)
     const svc1 = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'b' } }

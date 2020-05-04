@@ -37,6 +37,8 @@ export default function initApp(otomiStack) {
     paths: apiRoutesPath,
     errorMiddleware,
     securityHandlers: getSecurityHandlers(),
+    routesGlob: '**/*.{ts,js}',
+    routesIndexFileRegExp: /(?:index)?\.[tj]s$/,
   })
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(spec))
