@@ -189,9 +189,11 @@ export default class OtomiStack {
 
   async triggerDeployment(teamId, email) {
     this.saveValues()
-    await this.repo.commit(teamId, email)
-    await this.repo.push()
-    this.saveValues()
+    if (!env.DISABLE_SYNC) {
+      await this.repo.commit(teamId, email)
+      await this.repo.push()
+    }
+    // this.saveValues()
     // reset db and load values again
     this.initDb()
     this.loadValues()
@@ -391,6 +393,8 @@ export default class OtomiStack {
 
           if (svc.ingress.hasCert) svcCloned.hasCert = true
           if (svc.ingress.certArn) svcCloned.certArn = svc.ingress.certArn
+          if (svc.ingress.path) svcCloned.path = svc.ingress.path
+          if (svc.ingress.forwardPath) svcCloned.forwardPath = true
         } else svcCloned.internal = true
 
         services.push(svcCloned)

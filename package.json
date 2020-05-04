@@ -112,5 +112,5 @@
     "start": "node dist/app.js",
     "test": "mocha -r ts-node/register src/*.test.* --exit"
   },
-  "version": "0.2.21"
+  "version": "0.2.23"
 }

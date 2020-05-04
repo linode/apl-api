@@ -745,6 +745,15 @@ components:
           title: DNS Zone
           description: A managed DNS zone
           type: string
+        path:
+          title: URL path
+          description:
+            The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
+          type: string
+        forwardPath:
+          title: Forward path
+          description: Forward the URL path into the service (don't rewrite to /)
+          type: boolean
         hasSingleSignOn:
           title: Authenticate with Single Sign On
           type: boolean
