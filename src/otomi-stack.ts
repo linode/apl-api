@@ -1,12 +1,23 @@
-const generatePassword = require('password-generator')
-const fs = require('fs')
-const yaml = require('js-yaml')
-const _ = require('lodash')
-const err = require('./error')
-const path = require('path')
-const utils = require('./utils')
-const db = require('./db')
-const repo = require('./repo')
+import fs from 'fs'
+import generatePassword from 'password-generator'
+import path from 'path'
+import yaml from 'js-yaml'
+import cloneDeep from 'lodash/cloneDeep'
+import forEach from 'lodash/forEach'
+import forIn from 'lodash/forIn'
+import filter from 'lodash/filter'
+import get from 'lodash/get'
+import indexOf from 'lodash/indexOf'
+import isUndefined from 'lodash/isUndefined'
+import isEmpty from 'lodash/isEmpty'
+import omit from 'lodash/omit'
+import omitBy from 'lodash/omitBy'
+import set from 'lodash/set'
+
+import { PublicUrlExists } from './error'
+import { arrayToObject, getPublicUrl, objectToArray } from './utils'
+import db, { Db } from './db'
+import repo, { Repo } from './repo'
 
 const env = process.env
 const isProduction = env.NODE_ENV === 'production'
@@ -28,22 +39,28 @@ function splitGlobal(teamValues) {
   const t = teamValues.teamConfig.teams
   const g = glbl.teamConfig.teams
   const globalProps = ['name', 'password', 'receiver', 'azure']
-  _.forEach(t, (team, teamId) => {
+  forEach(t, (team, teamId) => {
     if (!g[teamId]) g[teamId] = {}
     globalProps.forEach((prop) => {
       if (prop === 'password' && !g[teamId].password) {
         g[teamId].password = generatePassword(16, false)
-      } else {
-        if (team[prop] !== undefined) g[teamId][prop] = team[prop]
-      }
+      } else if (team[prop] !== undefined) g[teamId][prop] = team[prop]
       delete t[teamId][prop]
     })
   })
 }
 
-class OtomiStack {
+export default class OtomiStack {
+  clustersPath: string
+
+  coreValues: any
+
+  db: Db
+
+  repo: Repo
+
   constructor() {
-    this.repo = repo.init(
+    this.repo = repo(
       env.GIT_LOCAL_PATH,
       env.GIT_REPO_URL,
       env.GIT_USER,
@@ -58,7 +75,7 @@ class OtomiStack {
   }
 
   initDb() {
-    this.db = db.init(env.DB_PATH)
+    this.db = db(env.DB_PATH)
   }
 
   async init() {
@@ -111,7 +128,7 @@ class OtomiStack {
     delete glbl.teamConfig.teams[teamId]
   }
 
-  getTeamServices(teamId) {
+  getTeamServices(teamId: string) {
     const ids = { teamId }
     return this.db.getCollection('services', ids)
   }
@@ -149,7 +166,7 @@ class OtomiStack {
   }
 
   validateService(data) {
-    if (this.isPublicUrlInUse(data)) throw new err.PublicUrlExists('Public URL is already used')
+    if (this.isPublicUrlInUse(data)) throw new PublicUrlExists('Public URL is already used')
   }
 
   isPublicUrlInUse(data) {
@@ -157,9 +174,9 @@ class OtomiStack {
 
     const services = this.db.getCollection('services')
 
-    const servicesFiltered = _.filter(services, (svc) => {
-      const subdomain = _.get(svc, 'ingress.subdomain')
-      const domain = _.get(svc, 'ingress.domain')
+    const servicesFiltered = filter(services, (svc) => {
+      const subdomain = get(svc, 'ingress.subdomain')
+      const domain = get(svc, 'ingress.domain')
       const existingUrl = `${subdomain}.${domain}`
       const url = `${data.ingress.subdomain}.${data.ingress.domain}`
       return existingUrl === url && svc.serviceId !== data.serviceId
@@ -192,7 +209,7 @@ class OtomiStack {
 
   loadFileValues(cluster, path) {
     const values = this.repo.readFile(path)
-    const teams = _.get(values, 'teamConfig.teams', null)
+    const teams = get(values, 'teamConfig.teams', null)
     if (!teams) {
       console.info(`Missing 'teamConfig.teams' key in ${path} file. Skipping`)
       return
@@ -203,7 +220,7 @@ class OtomiStack {
   loadAllTeamValues(clusters) {
     console.log('loadAllTeamValues')
     const loaded = []
-    _.forEach(clusters, (cluster) => {
+    forEach(clusters, (cluster) => {
       const { cloud, cluster: clusterName } = cluster
       if (!loaded.includes(cloud)) {
         const cloudFile = getFilePath(cloud)
@@ -218,14 +235,14 @@ class OtomiStack {
 
   convertClusterValuesToDb(values) {
     const cs = values.clouds
-    _.forIn(cs, (cloudObj, cloud) => {
-      const dnsZones = [cloudObj.domain].concat(_.get(cloudObj, 'dnsZones', []))
-      _.forIn(cloudObj.clusters, (clusterObject, cluster) => {
+    forIn(cs, (cloudObj, cloud) => {
+      const dnsZones = [cloudObj.domain].concat(get(cloudObj, 'dnsZones', []))
+      forIn(cloudObj.clusters, (clusterObject, cluster) => {
         const clusterId = `${cloud}/${cluster}`
         const clusterObj = {
-          cloud: cloud,
-          cluster: cluster,
-          dnsZones: dnsZones,
+          cloud,
+          cluster,
+          dnsZones,
           domain: `${cluster}.${cloudObj.domain}`,
           k8sVersion: clusterObject.k8sVersion,
           hasKnative: clusterObject.hasKnative !== undefined ? clusterObject.hasKnative : true,
@@ -239,27 +256,27 @@ class OtomiStack {
 
   loadTeamsValues(teams, cluster) {
     // console.debug(teams)
-    _.forIn(teams, (teamData, teamId) => {
+    forIn(teams, (teamData, teamId) => {
       // console.log(`${teamId}:${teamData}`)
       this.convertTeamToDb(teamData, teamId, cluster)
     })
   }
 
-  assignCluster(obj, cluster) {
-    const clusters = _.get(obj, 'clusters', [])
+  static assignCluster(obj, cluster) {
+    const clusters = get(obj, 'clusters', [])
     clusters.push(cluster.id)
-    _.set(obj, 'clusters', clusters)
+    set(obj, 'clusters', clusters)
   }
 
   convertTeamToDb(teamData, teamId, cluster) {
     let team
     try {
       team = this.getTeam(teamId)
-      this.assignCluster(team, cluster)
+      OtomiStack.assignCluster(team, cluster)
       this.editTeam(teamId, team)
     } catch (e) {
-      const rawTeam = _.omit(teamData, 'services')
-      this.assignCluster(rawTeam, cluster)
+      const rawTeam = omit(teamData, 'services')
+      OtomiStack.assignCluster(rawTeam, cluster)
       this.createTeam(teamId, { ...rawTeam, ...glbl.teamConfig.teams[teamId] })
     }
 
@@ -279,7 +296,7 @@ class OtomiStack {
 
   convertServiceToDb(svcRaw, teamId, cluster) {
     // Create service
-    let svc = _.omit(svcRaw, 'ksvc', 'isPublic', 'hasCert', 'domain')
+    const svc = omit(svcRaw, 'ksvc', 'isPublic', 'hasCert', 'domain')
     svc.clusterId = cluster.id
     svc.teamId = teamId
     if (!('name' in svcRaw)) {
@@ -287,17 +304,17 @@ class OtomiStack {
     }
     if ('ksvc' in svcRaw) {
       if ('predeployed' in svcRaw.ksvc) {
-        _.set(svc, 'ksvc.serviceType', 'ksvcPredeployed')
+        set(svc, 'ksvc.serviceType', 'ksvcPredeployed')
       } else {
-        svc.ksvc = _.cloneDeep(svcRaw.ksvc)
+        svc.ksvc = cloneDeep(svcRaw.ksvc)
         svc.ksvc.serviceType = 'ksvc'
-        const annotations = _.get(svcRaw.ksvc, 'annotations', {})
-        svc.ksvc.annotations = utils.objectToArray(annotations, 'name', 'value')
+        const annotations = get(svcRaw.ksvc, 'annotations', {})
+        svc.ksvc.annotations = objectToArray(annotations, 'name', 'value')
       }
-    } else _.set(svc, 'ksvc.serviceType', 'svcPredeployed')
+    } else set(svc, 'ksvc.serviceType', 'svcPredeployed')
 
     if (!('internal' in svcRaw)) {
-      const publicUrl = utils.getPublicUrl(svcRaw.domain, svcRaw.name, teamId, cluster)
+      const publicUrl = getPublicUrl(svcRaw.domain, svcRaw.name, teamId, cluster)
       svc.ingress = {
         hasCert: 'hasCert' in svcRaw,
         hasSingleSignOn: !('isPublic' in svcRaw),
@@ -320,7 +337,7 @@ class OtomiStack {
 
   saveValues() {
     const clusters = this.getClusters()
-    _.forEach(clusters, (cluster) => {
+    forEach(clusters, (cluster) => {
       const { cloud, cluster: clusterName } = cluster
       const teamValues = this.convertTeamsToValues(cluster)
       splitGlobal(teamValues)
@@ -332,44 +349,44 @@ class OtomiStack {
     // now also write the globals back
     const path = getFilePath()
     const values = this.repo.readFile(path)
-    const newValues = _.omit({ ...values, ...glbl }, _.isUndefined)
+    const newValues = omitBy({ ...values, ...glbl }, isUndefined)
     this.repo.writeFile(path, newValues)
   }
 
-  inCluster(obj, cluster) {
-    const clusters = _.get(obj, 'clusters', [])
-    return _.indexOf(clusters, cluster.id) != -1
+  static inCluster(obj, cluster) {
+    const clusters = get(obj, 'clusters', [])
+    return indexOf(clusters, cluster.id) !== -1
   }
 
   convertTeamsToValues(cluster) {
     const teams = {}
     this.getTeams().forEach((team) => {
-      if (!this.inCluster(team, cluster)) return
+      if (!OtomiStack.inCluster(team, cluster)) return
 
-      const teamCloned = _.omit(team, ['teamId', 'clusters'])
+      const teamCloned = omit(team, ['teamId', 'clusters'])
       const id = team.teamId
       teams[id] = teamCloned
-      let dbServices = this.getTeamServices(id)
-      let services = new Array()
+      const dbServices = this.getTeamServices(id)
+      const services = []
 
       dbServices.forEach((svc) => {
         if (cluster.id !== svc.clusterId) return
 
         const serviceType = svc.ksvc.serviceType
         console.info(`Saving service: serviceId: ${svc.serviceId} serviceType: ${serviceType}`)
-        const svcCloned = _.omit(svc, ['teamId', 'serviceId', 'clusterId', 'ksvc', 'ingress', 'internal'])
-        const ksvc = _.cloneDeep(svc.ksvc)
+        const svcCloned = omit(svc, ['teamId', 'serviceId', 'clusterId', 'ksvc', 'ingress', 'internal'])
+        const ksvc = cloneDeep(svc.ksvc)
         if (serviceType === 'ksvc') {
           svcCloned.ksvc = ksvc
           delete svcCloned.ksvc.serviceType
-          const annotations = _.get(svc.ksvc, 'annotations', [])
-          svcCloned.ksvc.annotations = utils.arrayToObject(annotations, 'name', 'value')
+          const annotations = get(svc.ksvc, 'annotations', [])
+          svcCloned.ksvc.annotations = arrayToObject(annotations, 'name', 'value')
         } else if (serviceType === 'ksvcPredeployed') {
           svcCloned.ksvc = { predeployed: true }
         } else if (serviceType !== 'svcPredeployed') {
           console.warn(`Saving service failure: Not supported service type: ${serviceType}`)
         }
-        if (svc.ingress && !_.isEmpty(svc.ingress)) {
+        if (svc.ingress && !isEmpty(svc.ingress)) {
           svcCloned.domain = `${svc.ingress.subdomain}.${svc.ingress.domain}`
 
           if (!svc.ingress.hasSingleSignOn) svcCloned.isPublic = true
@@ -392,5 +409,3 @@ class OtomiStack {
     return values
   }
 }
-
-module.exports = OtomiStack

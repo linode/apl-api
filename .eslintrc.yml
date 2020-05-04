@@ -1,17 +1,52 @@
-env:
-  # es6: true
-  mocha: true
-  node: true
+---
+root: true
+
+parser: '@typescript-eslint/parser'
+parserOptions:
+  project: ['./tsconfig.json']
 extends:
   - eslint:recommended
-  - plugin:prettier/recommended
+  - plugin:@typescript-eslint/eslint-recommended
+  - plugin:@typescript-eslint/recommended
+  - plugin:@typescript-eslint/recommended-requiring-type-checking
+  - airbnb-base
+  - prettier
+  - prettier/@typescript-eslint
   - plugin:import/errors
   - plugin:import/warnings
+  - plugin:import/typescript
 
-globals: {}
-parserOptions:
-  ecmaVersion: 2019
+plugins:
+  - chai-expect
+  - chai-friendly
+  - import
+  - prettier
+  - '@typescript-eslint'
+  # - unused-imports
+
+settings:
+  import/resolver:
+    node:
+      extensions: ['.js', '.jsx', '.ts', '.tsx']
+
+env:
+  es6: true
+  browser: true
+  node: true
+  mocha: true
+
 rules:
-  no-unused-vars:
-    - error
-    - args: none
+  '@typescript-eslint/member-delimiter-style': off
+  '@typescript-eslint/no-explicit-any': off
+  '@typescript-eslint/explicit-function-return-type': off
+  '@typescript-eslint/no-unused-vars': warn
+  import/extensions: off
+  max-classes-per-file: ['error', 10]
+  no-console: 0
+  'import/no-extraneous-dependencies': ['error', { 'devDependencies': ['**/*.test.ts', '**/*.test.js'] }]
+  no-shadow: 0
+  no-unused-vars: 0
+  no-unused-expressions: 0
+  chai-friendly/no-unused-expressions: 2
+  prefer-destructuring: 0
+  semi: 0

@@ -1,34 +1,32 @@
-const expect = require('chai').expect
-const db = require('./db')
+import { expect } from 'chai'
+import { Db } from './db'
 
-describe('Db', function () {
+describe('Db', () => {
   let testDb
-  beforeEach(function () {
-    testDb = new db.Db(null)
+  beforeEach(() => {
+    testDb = new Db(null)
   })
 
-  it('can store ', function (done) {
+  it('can store ', (done) => {
     const v = testDb.createItem('teams', { teamId: 'n1' }, { name: 'n1', k: '1' })
     expect(v).to.deep.equal({ name: 'n1', teamId: 'n1', k: '1' })
     done()
   })
 
-  it('cannot store resource with duplicated name', function (done) {
+  it('cannot store resource with duplicated name', (done) => {
     testDb.createItem('teams', {}, { name: 'n1' })
 
     expect(() => testDb.createItem('teams', {}, { name: 'n1' })).to.throw()
     done()
   })
 
-  it('can store relationships', function (done) {
+  it('can store relationships', (done) => {
     const v = testDb.createItem('services', { teamId: 't1', serviceId: 'n1' }, { name: 'n1', k: '1' })
     expect(v).to.deep.equal({ name: 'n1', teamId: 't1', serviceId: 'n1', k: '1' })
     done()
   })
 
-  it('can remove item', function (done) {
-    this.skip('Missing validation')
-
+  it.skip('can remove item', (done) => {
     testDb.createItem('teams', { teamId: 'n1' }, { name: 'n1', k: '1' })
     testDb.createItem('teams', { teamId: 'n2' }, { name: 'n2', k: '1' })
 
@@ -40,7 +38,7 @@ describe('Db', function () {
     done()
   })
 
-  it('can update item', function (done) {
+  it('can update item', (done) => {
     testDb.createItem('teams', { teamId: 'n1' }, { name: 'n1', k: '1' })
     testDb.updateItem('teams', { teamId: 'n1' }, { name: 'n1', k: '2' })
 
@@ -49,7 +47,7 @@ describe('Db', function () {
     done()
   })
 
-  it('can obtain collection', function (done) {
+  it('can obtain collection', (done) => {
     testDb.createItem('teams', { teamId: 'n1' }, { name: 'n1', k: '1' })
     testDb.createItem('teams', { teamId: 'n2' }, { name: 'n2', k: '1' })
     const v = testDb.getCollection('teams', {})
@@ -57,7 +55,7 @@ describe('Db', function () {
     done()
   })
 
-  it('can obtain service from a given team', function (done) {
+  it('can obtain service from a given team', (done) => {
     testDb.createItem('teams', { teamId: 't1' }, { name: 't1', t: '1' })
     testDb.createItem('services', { teamId: 't1', serviceId: 's1' }, { name: 's1', s: '1' })
 
@@ -66,7 +64,7 @@ describe('Db', function () {
     done()
   })
 
-  it('can obtain services from a given team', function (done) {
+  it('can obtain services from a given team', (done) => {
     testDb.createItem('teams', { teamId: 't1' }, { name: 't1', t: '1' })
     testDb.createItem('teams', { teamId: 't2' }, { name: 't2', t: '2' })
     testDb.createItem('services', { teamId: 't1', serviceId: 's1' }, { name: 's1', s: '1' })
@@ -78,9 +76,7 @@ describe('Db', function () {
     done()
   })
 
-  it('throws error if item does not exist', function (done) {
-    this.skip('Missing validation')
-
+  it.skip('throws error if item does not exist', (done) => {
     expect(() => testDb.getItem('teams', { teamId: 'n1' })).to.throw()
     done()
   })

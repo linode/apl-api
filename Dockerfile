@@ -22,13 +22,14 @@ ENV NODE_ENV=test
 
 RUN npm run lint
 RUN npm run test
+RUN npm run build
+
+RUN ls /app/dist
 
 # --------------- Cleanup
 FROM dev as clean
-
 # below command removes the packages specified in devDependencies and set NODE_ENV to production
 RUN npm prune --production
-
 # --------------- Production stage
 FROM alpine:3.11 AS prod
 
@@ -44,13 +45,12 @@ RUN apk add --no-cache git
 RUN mkdir /app
 WORKDIR /app
 COPY --from=clean /app/node_modules node_modules
+COPY --from=ci /app/dist /app/dist
 COPY package.json .
-COPY app.js .
-COPY src src
 
 USER 1001
 EXPOSE 8080
 
 ENV NODE_ENV=production
 
-CMD ["node", "app.js"]
+CMD ["node", "dist/app.js"]
