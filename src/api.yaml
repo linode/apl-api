@@ -34,6 +34,9 @@ x-fields:
   idName: &idNameField
     type: string
     pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+externalDocs:
+  description: "This is the base url of the external documentation"
+  url: http://localhost:3000/ #Using this URL a final docUrl can be made using this+info.version+ the component's x-externalDocsPath
 
 x-post-responses: &DefaultPostResponses
   '400':
@@ -647,6 +650,7 @@ components:
           items:
             $ref: '#/components/schemas/Service'
     Deployment:
+      x-externalDocsPath: 'otomi/docs/deployment'
       properties:
         id:
           type: integer
@@ -659,6 +663,7 @@ components:
             - completed
             - failed
     Team:
+      x-externalDocsPath: 'otomi/docs/configuring-service'
       type: object
       properties:
         name:
@@ -775,6 +780,7 @@ components:
         - subdomain
 
     Service:
+      x-externalDocsPath: 'otomi/docs/configuring-service'
       properties:
         name:
           <<: *idNameField
