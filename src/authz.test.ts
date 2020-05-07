@@ -34,9 +34,8 @@ describe('Schema wise permissions', () => {
   }
 
   const data = {
-    name: 'mercury',
+    name: 'svc',
     ingress: { f1: 'test' },
-    teamId: 'mercury',
   }
 
   it('An admin can only get and update service', () => {
@@ -47,7 +46,7 @@ describe('Schema wise permissions', () => {
     expect(authz.isUserAuthorized('update', 'Service', sessionAdmin, 'mercury', data)).to.be.true
   })
 
-  it('A team can get its own service', () => {
+  it('A team can only get its own service', () => {
     const authz = new Authz(spec)
 
     expect(authz.isUserAuthorized('create', 'Service', session, 'mercury', data)).to.be.false
@@ -91,17 +90,13 @@ describe('Property wise permissions', () => {
 
   const data1 = {
     name: 'svcName',
-    // teamId: 'mercury',
   }
   const data2 = {
     name: 'svcName',
     ingress: 'test',
-    // teamId: 'mercury',
   }
   it('A team can update all service properties except ingress', () => {
     const authz = new Authz(spec)
-
-    // authz.printRules('team', 'myTeam')
     expect(authz.isUserAuthorized('update', 'Service', session, 'mercury', data1)).to.be.true
     expect(authz.isUserAuthorized('update', 'Service', session, 'mercury', data2)).to.be.false
   })

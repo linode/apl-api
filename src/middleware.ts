@@ -1,4 +1,7 @@
+import get from 'lodash/get'
 import { AlreadyExists, GitError, NotAuthorized, NotExistError, PublicUrlExists } from './error'
+import { OpenApiRequest, Session } from './api.d'
+import Authz from './authz'
 
 export function errorMiddleware(err, req, res, next) {
   console.error('errorMiddleware handler')
@@ -15,14 +18,22 @@ export function errorMiddleware(err, req, res, next) {
   return res.status(500).json({ error: 'Unexpected error' })
 }
 
-export function isAuthorized(req) {
-  console.debug('isAuthorized')
-  const group = req.header('Auth-Group')
+export function getSession(req: OpenApiRequest): Session {
+  const teamId = req.header('Auth-Group')
+  const email = req.header('Auth-User')
+  const isAdmin = teamId === 'admin'
+  const role = teamId === 'admin' ? 'admin' : 'team'
 
-  if (group === undefined) {
-    return false
-    // throw new NotAuthorized('Missing Auth-Group header')
+  return { user: { teamId, email, role, isAdmin } }
+}
+
+export function isAuthorizedFactory(authz: Authz) {
+  const isAuthorized = (req: OpenApiRequest) => {
+    const session = getSession(req)
+    console.debug(`is user authorize teamId=${session.user.teamId}, role`)
+    const schema: string = get(req, 'operationDoc.responses[200].content["application/json"].schema.$ref', '')
+    const schemaName = schema.split('/').pop()
+    return authz.isUserAuthorized('create', schemaName, session, req.params.teamId, req)
   }
-
-  return true
+  return isAuthorized
 }

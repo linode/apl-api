@@ -7,7 +7,8 @@ import cors from 'cors'
 import logger from 'morgan'
 import swaggerUi from 'swagger-ui-express'
 import yaml from 'js-yaml'
-import { errorMiddleware, isAuthorized } from './middleware'
+import { errorMiddleware, isAuthorizedFactory } from './middleware'
+import Authz from './authz'
 
 export default function initApp(otomiStack) {
   const app = express()
@@ -15,6 +16,7 @@ export default function initApp(otomiStack) {
   const apiRoutesPath = path.resolve(__dirname, 'api')
   const apiDoc = fs.readFileSync(openApiPath, 'utf8')
   const spec = yaml.safeLoad(apiDoc)
+  const authz = new Authz(spec)
 
   const specYaml = yaml.dump(spec)
 
@@ -24,7 +26,8 @@ export default function initApp(otomiStack) {
 
   function getSecurityHandlers() {
     const securityHandlers = { groupAuthz: undefined }
-    if (process.env.DISABLE_AUTH !== '1') securityHandlers.groupAuthz = isAuthorized
+
+    if (process.env.DISABLE_AUTH !== '1') securityHandlers.groupAuthz = isAuthorizedFactory(authz)
     return securityHandlers
   }
 
@@ -33,6 +36,7 @@ export default function initApp(otomiStack) {
     app,
     dependencies: {
       otomi: otomiStack,
+      authz,
     },
     paths: apiRoutesPath,
     errorMiddleware,
