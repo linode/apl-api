@@ -79,7 +79,7 @@ describe('Property wise permissions', () => {
               'x-acl': {
                 team: ['get'],
               },
-              type: 'object',
+              type: 'string',
             },
           },
         },
@@ -93,12 +93,14 @@ describe('Property wise permissions', () => {
   }
   const data2 = {
     name: 'svcName',
-    ingress: { f1: 'test' },
+    ingress: 'test',
     teamId: 'mercury',
   }
   it('A team can update all service properties except ingress', () => {
     const authz = new Authz(spec)
 
+    authz.printRules('team', 'myTeam')
+    console.log(authz.relevantRuleFor('update', 'team', 'mercury', 'Service', data2))
     expect(authz.isUserAuthorized('update', 'team', 'mercury', 'Service', data1)).to.be.true
     expect(authz.isUserAuthorized('update', 'team', 'mercury', 'Service', data2)).to.be.false
   })
