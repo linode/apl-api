@@ -24,3 +24,12 @@ export interface Property {
   type: string
   'x-acl'?: Acl
 }
+
+export interface Session {
+  user: {
+    email: string
+    teamId: string
+    isAdmin: boolean
+    role: string
+  }
+}

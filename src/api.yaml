@@ -345,7 +345,7 @@ paths:
           content:
             'application/json':
               schema:
-                type: object
+                $ref: '#/components/schemas/Session'
         default:
           description: The requested session.
   /apiDocs:
@@ -590,7 +590,7 @@ components:
         - resources
       additionalProperties: false
 
-    Clusters:
+    Clusters: &ClustersSchema
       type: array
       items:
         $ref: '#/components/schemas/Cluster'
@@ -864,3 +864,30 @@ components:
       properties:
         message:
           type: string
+
+    Session:
+      properties:
+        currentClusterId:
+          type: string
+          readOnly: true
+        clusters:
+          readOnly: true
+          <<: *ClustersSchema
+        core:
+          type: object
+          readOnly: true
+        user:
+          type: object
+          readOnly: true
+          properties:
+            email:
+              type: string
+            teamId:
+              type: string
+            isAdmin:
+              type: boolean
+            role:
+              type: string
+        isDirty:
+          type: boolean
+          readOnly: true
