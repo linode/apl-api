@@ -20,6 +20,11 @@ export default class Authz {
     const schemas = apiSpec.components.schemas
     Object.keys(schemas).forEach((schemaName: string) => {
       const schema: Schema = schemas[schemaName]
+      if (!schema.properties) {
+        console.debug(`Ignoring schema ${schemaName} without properties key`)
+        return
+      }
+
       Object.keys(schema.properties).forEach((propertyName: string) => {
         const property: Property = schema.properties[propertyName]
         // Attribute wise permission overwrite model wise permissions
