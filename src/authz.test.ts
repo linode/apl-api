@@ -1,6 +1,7 @@
 import { expect } from 'chai'
 import Authz from './authz'
 import { OpenApi, Session } from './api.d'
+import { objectToArray } from './utils'
 
 const session: Session = {
   user: { role: 'team', email: 'a@b.c', teamId: 'mercury', isAdmin: false },
@@ -15,6 +16,7 @@ describe('Schema wise permissions', () => {
     components: {
       schemas: {
         Service: {
+          type: 'object',
           'x-acl': {
             admin: ['get', 'update'],
             team: ['get'],
@@ -64,11 +66,47 @@ describe('Schema wise permissions', () => {
   })
 })
 
+describe('Schema collection wise permissions', () => {
+  const spec: OpenApi = {
+    components: {
+      schemas: {
+        Services: {
+          type: 'array',
+          'x-acl': {
+            admin: ['get-all'],
+            team: ['get-all'],
+          },
+          items: {
+            type: 'object',
+          },
+        },
+      },
+    },
+  }
+
+  it('An admin can only get collection of services', () => {
+    const authz = new Authz(spec)
+    expect(authz.isUserAuthorized('create', 'Services', sessionAdmin, 'mercury', null)).to.be.false
+    expect(authz.isUserAuthorized('delete', 'Services', sessionAdmin, 'mercury', null)).to.be.false
+    expect(authz.isUserAuthorized('get', 'Services', sessionAdmin, 'mercury', null)).to.be.true
+    expect(authz.isUserAuthorized('update', 'Services', sessionAdmin, 'mercury', null)).to.be.false
+  })
+
+  it('A team can only get collection of services', () => {
+    const authz = new Authz(spec)
+    expect(authz.isUserAuthorized('create', 'Services', session, 'mercury', null)).to.be.false
+    expect(authz.isUserAuthorized('delete', 'Services', session, 'mercury', null)).to.be.false
+    expect(authz.isUserAuthorized('get', 'Services', session, 'mercury', null)).to.be.true
+    expect(authz.isUserAuthorized('update', 'Services', session, 'mercury', null)).to.be.false
+  })
+})
+
 describe('Property wise permissions', () => {
   const spec: OpenApi = {
     components: {
       schemas: {
         Service: {
+          type: 'object',
           'x-acl': {
             team: ['get', 'update'],
           },

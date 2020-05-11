@@ -29,11 +29,12 @@ export function getSession(req: OpenApiRequest): Session {
 
 export function isAuthorizedFactory(authz: Authz) {
   const isAuthorized = (req: OpenApiRequest) => {
+    const action = req.method.toLowerCase()
     const session = getSession(req)
-    console.debug(`is user authorize teamId=${session.user.teamId}, role`)
+    console.debug(`Authz: ${action} ${req.path}, session(role: ${session.user.role} team=${session.user.teamId})`)
     const schema: string = get(req, 'operationDoc.responses[200].content["application/json"].schema.$ref', '')
     const schemaName = schema.split('/').pop()
-    return authz.isUserAuthorized('create', schemaName, session, req.params.teamId, req)
+    return authz.isUserAuthorized(action, schemaName, session, req.params.teamId, req)
   }
   return isAuthorized
 }

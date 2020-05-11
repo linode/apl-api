@@ -12,12 +12,15 @@ export interface OpenApi {
     }
   }
 }
+export type SchemaType = 'object' | 'array'
 
 export interface Schema {
   'x-acl'?: Acl
-  properties: {
+  type: SchemaType
+  properties?: {
     [propertyName: string]: Property
   }
+  items?: object
 }
 
 export interface Acl {
@@ -25,7 +28,7 @@ export interface Acl {
   admin?: AclAction[]
 }
 
-export type AclAction = 'delete' | 'create' | 'get' | 'update'
+export type AclAction = 'delete' | 'create' | 'get' | 'update' | 'get-all' | 'create-all' | 'delete-all' | 'update-all'
 
 export interface Property {
   type: string
