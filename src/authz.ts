@@ -3,7 +3,7 @@ import set from 'lodash/set'
 import has from 'lodash/has'
 import get from 'lodash/get'
 
-import { AclAction, OpenApi, Schema, Property, Session } from './api.d'
+import { OpenApi, Schema, Property, Session } from './api.d'
 
 interface RawRules {
   [actionName: string]: { [schemaName: string]: { fields: string[]; conditions: object } }
@@ -17,14 +17,13 @@ export default class Authz {
   }
 
   static loadSpecRules(apiSpec: OpenApi) {
-    // Load model wide permissions
-
     const schemas = apiSpec.components.schemas
+
     Object.keys(schemas).forEach((schemaName: string) => {
       console.debug(`Authz: loading rules for ${schemaName} schema`)
       const schema: Schema = schemas[schemaName]
       if (!schema['x-acl']) {
-        console.warn(`Authz: the schema ${schemaName} doe not contain x-acl attribute`)
+        console.warn(`Authz: the schema ${schemaName} does not contain x-acl attribute`)
         return
       }
       if (schema.type !== 'object' && schema.type !== 'array') {
@@ -63,6 +62,7 @@ export default class Authz {
     Object.keys(this.specRules).forEach((schemaName: string) => {
       const schema: Schema = this.specRules[schemaName]
       const ownershipCondition = () => {
+        console.debug(`Checking ownership session(${session.user.teamId}), resource(${teamId})`)
         return teamId === session.user.teamId
       }
       const actions: string[] = get(schema, `x-acl.${session.user.role}`, [])
@@ -82,6 +82,8 @@ export default class Authz {
 
     Object.keys(this.specRules).forEach((schemaName: string) => {
       const schema: Schema = this.specRules[schemaName]
+      if (!(schema.type === 'object' && schema.properties)) return
+
       Object.keys(schema.properties).forEach((propertyName: string) => {
         const property: Property = schema.properties[propertyName]
         const actions: string[] = get(property, `x-acl.${session.user.role}`, [])
@@ -119,7 +121,8 @@ export default class Authz {
   isUserAuthorized = (action: string, schemaName, session: Session, teamId: string, data: object): boolean => {
     const rbac = this.getResourceBasedAccessControl(teamId, session)
     if (!rbac.can(action, schemaName)) {
-      console.debug(`Authz: not authorized (RBAC) ${action} ${schemaName}/${teamId}`)
+      // console.debug(rbac.rules)
+      console.debug(`Authz: not authorized (RBAC): ${action} ${schemaName}/${teamId}`)
       return false
     }
 
