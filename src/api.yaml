@@ -36,7 +36,7 @@ x-fields:
     pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 externalDocs:
   description: "This is the base url of the external documentation"
-  url: http://localhost:3000/ #Using this URL a final docUrl can be made using this+info.version+ the component's x-externalDocsPath
+  url: https://redkubes.github.io/otomi/ #Using this URL a final docUrl can be made using this+info.version+ the component's x-externalDocsPath
 
 x-post-responses: &DefaultPostResponses
   '400':
@@ -663,7 +663,7 @@ components:
             - completed
             - failed
     Team:
-      x-externalDocsPath: 'otomi/docs/configuring-service'
+      x-externalDocsPath: 'otomi/docs/configuring-team'
       type: object
       properties:
         name:
