@@ -33,7 +33,7 @@ export default class Authz {
 
       if (schema.type === 'array') {
         Object.keys(schema['x-acl']).forEach((role) => {
-          if (schema['x-acl'][role] !== ['get-all'])
+          if (JSON.stringify(schema['x-acl'][role]) !== JSON.stringify(['get-all']))
             console.warn(
               `Authz: the schema type ${schema.type} supports only 'get-all' permission. Found at ${schemaName}.x-acl`,
             )
@@ -77,7 +77,7 @@ export default class Authz {
     return new Ability(canRules)
   }
 
-  getResourceAttributeBasedAccessControl(teamId, session: Session) {
+  getResourceAttributeBasedAccessControl(teamId: string, session: Session) {
     const specRules: RawRules = {}
 
     Object.keys(this.specRules).forEach((schemaName: string) => {
@@ -132,11 +132,18 @@ export default class Authz {
     // ABAC
     const abac = this.getResourceAttributeBasedAccessControl(teamId, session)
     let allowed = true
-    Object.keys(data).forEach((field) => {
-      allowed = allowed && abac.can(action, schemaName, field)
+    const notAllowedAttributes: string[] = []
+    Object.keys(data).forEach((attributeName) => {
+      const isAuthorized = abac.can(action, schemaName, attributeName)
+      if (!isAuthorized) notAllowedAttributes.push(attributeName)
+      allowed = allowed && isAuthorized
     })
-
-    if (!allowed) console.debug(`Authz: not authorized (ABAC): ${action} ${schemaName}/${teamId}`)
+    if (!allowed) {
+      console.debug(
+        `Authz: not authorized (ABAC): ${action} ${schemaName}/${teamId}, failing attributes: ${notAllowedAttributes}`,
+      )
+      // console.debug(`Authz: not authorized (ABAC): ${JSON.stringify(abac.rules)}`)
+    }
     return allowed
   }
 }
