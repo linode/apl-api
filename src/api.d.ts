@@ -28,7 +28,17 @@ export interface Acl {
   admin?: AclAction[]
 }
 
-export type AclAction = 'delete' | 'create' | 'get' | 'update' | 'get-all' | 'create-all' | 'delete-all' | 'update-all'
+export type AclAction =
+  | 'create'
+  | 'create-all'
+  | 'delete'
+  | 'delete-all'
+  | 'get'
+  | 'get-all'
+  | 'patch'
+  | 'patch-all'
+  | 'put'
+  | 'put-all'
 
 export interface Property {
   type: string

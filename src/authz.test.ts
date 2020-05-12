@@ -1,7 +1,6 @@
 import { expect } from 'chai'
 import Authz from './authz'
 import { OpenApi, Session } from './api.d'
-import { objectToArray } from './utils'
 
 const session: Session = {
   user: { role: 'team', email: 'a@b.c', teamId: 'mercury', isAdmin: false },
@@ -18,7 +17,7 @@ describe('Schema wise permissions', () => {
         Service: {
           type: 'object',
           'x-acl': {
-            admin: ['get', 'update'],
+            admin: ['get', 'put'],
             team: ['get'],
           },
           properties: {
@@ -45,7 +44,7 @@ describe('Schema wise permissions', () => {
     expect(authz.isUserAuthorized('create', 'Service', sessionAdmin, 'mercury', data)).to.be.false
     expect(authz.isUserAuthorized('delete', 'Service', sessionAdmin, 'mercury', data)).to.be.false
     expect(authz.isUserAuthorized('get', 'Service', sessionAdmin, 'mercury', data)).to.be.true
-    expect(authz.isUserAuthorized('update', 'Service', sessionAdmin, 'mercury', data)).to.be.true
+    expect(authz.isUserAuthorized('put', 'Service', sessionAdmin, 'mercury', data)).to.be.true
   })
 
   it('A team can only get its own service', () => {
@@ -54,7 +53,7 @@ describe('Schema wise permissions', () => {
     expect(authz.isUserAuthorized('create', 'Service', session, 'mercury', data)).to.be.false
     expect(authz.isUserAuthorized('delete', 'Service', session, 'mercury', data)).to.be.false
     expect(authz.isUserAuthorized('get', 'Service', session, 'mercury', data)).to.be.true
-    expect(authz.isUserAuthorized('update', 'Service', session, 'mercury', data)).to.be.false
+    expect(authz.isUserAuthorized('put', 'Service', session, 'mercury', data)).to.be.false
   })
 
   it('A team cannot update a service from other team', () => {
@@ -62,7 +61,7 @@ describe('Schema wise permissions', () => {
     expect(authz.isUserAuthorized('create', 'Service', session, 'venus', data)).to.be.false
     expect(authz.isUserAuthorized('delete', 'Service', session, 'venus', data)).to.be.false
     expect(authz.isUserAuthorized('get', 'Service', session, 'venus', data)).to.be.true
-    expect(authz.isUserAuthorized('update', 'Service', session, 'venus', data)).to.be.false
+    expect(authz.isUserAuthorized('put', 'Service', session, 'venus', data)).to.be.false
   })
 })
 
@@ -89,7 +88,7 @@ describe('Schema collection wise permissions', () => {
     expect(authz.isUserAuthorized('create', 'Services', sessionAdmin, 'mercury', null)).to.be.false
     expect(authz.isUserAuthorized('delete', 'Services', sessionAdmin, 'mercury', null)).to.be.false
     expect(authz.isUserAuthorized('get', 'Services', sessionAdmin, 'mercury', null)).to.be.true
-    expect(authz.isUserAuthorized('update', 'Services', sessionAdmin, 'mercury', null)).to.be.false
+    expect(authz.isUserAuthorized('put', 'Services', sessionAdmin, 'mercury', null)).to.be.false
   })
 
   it('A team can only get collection of services', () => {
@@ -97,7 +96,7 @@ describe('Schema collection wise permissions', () => {
     expect(authz.isUserAuthorized('create', 'Services', session, 'mercury', null)).to.be.false
     expect(authz.isUserAuthorized('delete', 'Services', session, 'mercury', null)).to.be.false
     expect(authz.isUserAuthorized('get', 'Services', session, 'mercury', null)).to.be.true
-    expect(authz.isUserAuthorized('update', 'Services', session, 'mercury', null)).to.be.false
+    expect(authz.isUserAuthorized('put', 'Services', session, 'mercury', null)).to.be.false
   })
 })
 
@@ -108,7 +107,7 @@ describe('Property wise permissions', () => {
         Service: {
           type: 'object',
           'x-acl': {
-            team: ['get', 'update'],
+            team: ['get', 'put'],
           },
           properties: {
             name: {
@@ -135,7 +134,7 @@ describe('Property wise permissions', () => {
   }
   it('A team can update all service properties except ingress', () => {
     const authz = new Authz(spec)
-    expect(authz.isUserAuthorized('update', 'Service', session, 'mercury', data1)).to.be.true
-    expect(authz.isUserAuthorized('update', 'Service', session, 'mercury', data2)).to.be.false
+    expect(authz.isUserAuthorized('put', 'Service', session, 'mercury', data1)).to.be.true
+    expect(authz.isUserAuthorized('put', 'Service', session, 'mercury', data2)).to.be.false
   })
 })

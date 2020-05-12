@@ -5,6 +5,21 @@ import get from 'lodash/get'
 
 import { Acl, OpenApi, Schema, Property, Session, AclAction } from './api.d'
 
+const allowedResourceActions = [
+  'get',
+  'get-all',
+  'patch',
+  'patch-all',
+  'put',
+  'put-all',
+  'delete',
+  'delete-all',
+  'create',
+  'create-all',
+]
+const allowedResourceCollectionActions = ['get-all']
+const allowedAttributeActions = ['get', 'get-all', 'patch', 'patch-all', 'put', 'put-all']
+
 interface RawRules {
   [actionName: string]: { [schemaName: string]: { fields: string[]; conditions: object } }
 }
@@ -22,20 +37,6 @@ function validatePermissions(acl: Acl, allowedPermissions: string[], path: strin
 }
 
 export function isValidAuthzSpec(apiSpec: OpenApi): boolean {
-  const allowedResourcePermissions = [
-    'get',
-    'get-all',
-    'patch',
-    'patch-all',
-    'update',
-    'update-all',
-    'delete',
-    'delete-all',
-    'create',
-    'create-all',
-  ]
-  const allowedResourceCollectionPermissions = ['get-all']
-  const allowedAttributePermissions = ['get', 'get-all', 'patch', 'patch-all', 'update', 'update-all']
   const err: string[] = []
   const schemas = apiSpec.components.schemas
   Object.keys(schemas).forEach((schemaName: string) => {
@@ -50,13 +51,13 @@ export function isValidAuthzSpec(apiSpec: OpenApi): boolean {
 
     if (schema.type === 'array') {
       if (schema['x-acl'])
-        err.concat(validatePermissions(schema['x-acl'], allowedResourceCollectionPermissions, `${schemaName}.x-acl`))
+        err.concat(validatePermissions(schema['x-acl'], allowedResourceCollectionActions, `${schemaName}.x-acl`))
       return
     }
 
     if (schema.type === 'object') {
       if (schema['x-acl'])
-        err.concat(validatePermissions(schema['x-acl'], allowedResourcePermissions, `${schemaName}.x-acl`))
+        err.concat(validatePermissions(schema['x-acl'], allowedResourceActions, `${schemaName}.x-acl`))
 
       if (!schema.properties) {
         err.push(`schema does not contain properties attribute, found at ${schemaName}`)
@@ -68,7 +69,7 @@ export function isValidAuthzSpec(apiSpec: OpenApi): boolean {
           err.concat(
             validatePermissions(
               schema['x-acl'],
-              allowedAttributePermissions,
+              allowedAttributeActions,
               `${schemaName}.properties${attributeName}.x-acl`,
             ),
           )
@@ -165,6 +166,8 @@ export default class Authz {
           return teamId === session.user.teamId
         }
         actions.forEach((actionName) => {
+          if (!allowedAttributeActions.includes(actionName)) return
+
           let action = actionName
           let isCondition = true
           if (actionName.endsWith('-all')) {
@@ -205,7 +208,7 @@ export default class Authz {
       return false
     }
 
-    // ABAC for operation GET is not supported
+    // ABAC for get action does not make much sense restrict user permission on RBAC level
     if (action === 'get') return true
 
     // ABAC
