@@ -3,12 +3,86 @@ import set from 'lodash/set'
 import has from 'lodash/has'
 import get from 'lodash/get'
 
-import { OpenApi, Schema, Property, Session } from './api.d'
+import { Acl, OpenApi, Schema, Property, Session, AclAction } from './api.d'
 
 interface RawRules {
   [actionName: string]: { [schemaName: string]: { fields: string[]; conditions: object } }
 }
 
+function validatePermissions(acl: Acl, allowedPermissions: string[], path: string): string[] {
+  const err: string[] = []
+  Object.keys(acl).forEach((role) => {
+    acl[role].forEach((permission) => {
+      if (!allowedPermissions.includes(permission))
+        err.push(`the resource permission supports only [${allowedPermissions}], found at ${path}`)
+    })
+  })
+
+  return err
+}
+
+export function isValidAuthzSpec(apiSpec: OpenApi): boolean {
+  const allowedResourcePermissions = [
+    'get',
+    'get-all',
+    'patch',
+    'patch-all',
+    'update',
+    'update-all',
+    'delete',
+    'delete-all',
+    'create',
+    'create-all',
+  ]
+  const allowedResourceCollectionPermissions = ['get-all']
+  const allowedAttributePermissions = ['get', 'get-all', 'patch', 'patch-all', 'update', 'update-all']
+  const err: string[] = []
+  const schemas = apiSpec.components.schemas
+  Object.keys(schemas).forEach((schemaName: string) => {
+    console.debug(`Authz: loading rules for ${schemaName} schema`)
+    const schema: Schema = schemas[schemaName]
+    if (!schema['x-acl']) err.push(`schema does not contain x-acl attribute, found at ${schemaName} `)
+
+    if (schema.type !== 'object' && schema.type !== 'array') {
+      err.push(`schema type ${schema.type} is not supported, found at ${schemaName}`)
+      return
+    }
+
+    if (schema.type === 'array') {
+      if (schema['x-acl'])
+        err.concat(validatePermissions(schema['x-acl'], allowedResourceCollectionPermissions, `${schemaName}.x-acl`))
+      return
+    }
+
+    if (schema.type === 'object') {
+      if (schema['x-acl'])
+        err.concat(validatePermissions(schema['x-acl'], allowedResourcePermissions, `${schemaName}.x-acl`))
+
+      if (!schema.properties) {
+        err.push(`schema does not contain properties attribute, found at ${schemaName}`)
+        return
+      }
+      Object.keys(schema.properties).forEach((attributeName) => {
+        const property = schema.properties[attributeName]
+        if (property['x-acl'])
+          err.concat(
+            validatePermissions(
+              schema['x-acl'],
+              allowedAttributePermissions,
+              `${schemaName}.properties${attributeName}.x-acl`,
+            ),
+          )
+      })
+    }
+  })
+  if (err.length !== 0) {
+    console.log('Authz config validation errors:')
+    err.forEach((error) => console.error(error))
+    return false
+  }
+  console.log('Authz config validation succeeded')
+  return true
+}
 export default class Authz {
   specRules
 
