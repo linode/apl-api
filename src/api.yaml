@@ -634,6 +634,9 @@ components:
           readOnly: true
 
     Teams:
+      x-acl:
+        admin: [get-all]
+        team: [get-all]
       type: object
       properties:
         teams:
@@ -641,11 +644,12 @@ components:
           items:
             $ref: '#/components/schemas/Team'
     Services:
-      properties:
-        services:
-          type: array
-          items:
-            $ref: '#/components/schemas/Service'
+      x-acl:
+        admin: [get-all]
+        team: [get-all]
+      type: array
+      items:
+        $ref: '#/components/schemas/Service'
     Deployment:
       properties:
         id:
@@ -659,22 +663,25 @@ components:
             - completed
             - failed
     Team:
+      x-acl:
+        admin: [delete-all, get-all, post-all, put-all]
+        team: [get, put]
       type: object
       properties:
         name:
           <<: *nameField
           example: 'Team Otomi'
           x-acl:
-            team: [read]
-            admin: [read, write]
+            team: [get]
+            # team: [read]
+            # admin: [read, write]
           description: A team name
         clusters:
           title: Clusters
           <<: *AvailableClusters
           minItems: 1
           x-acl:
-            team: [read]
-            admin: [read, write]
+            team: [get]
         password:
           type: string
           # description: "A secret that is used access multi-tenant log aggregation system (Loki)"
@@ -775,6 +782,10 @@ components:
         - subdomain
 
     Service:
+      x-acl:
+        admin: [delete-all, get-all, post-all, put-all]
+        team: [delete, get, post, put]
+      type: object
       properties:
         name:
           <<: *idNameField
@@ -789,8 +800,7 @@ components:
           title: Exposure
           type: object
           x-acl:
-            team: [read]
-            admin: [read, write]
+            team: [get]
           oneOf:
             - title: Private
               nullable: true
@@ -870,6 +880,10 @@ components:
           type: string
 
     Session:
+      x-acl:
+        admin: [get]
+        team: [get]
+      type: object
       properties:
         currentClusterId:
           type: string
