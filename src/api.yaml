@@ -375,7 +375,7 @@ components:
       type: apiKey
       name: Auth-Group
       in: header
-  schemas:
+  x-schemas:
     AzureMonitor: &AzureMonitor
       type: object
       description: Azure Monitor is the platform service that provides a single source for monitoring Azure resources.
@@ -590,12 +590,64 @@ components:
         - resources
       additionalProperties: false
 
+    ServiceIngress:
+      properties: &ServiceIngress
+        useDefaultSubdomain:
+          title: 'Use suggested domain (preferred)'
+          type: boolean
+          default: true
+          description: Allows to use wildcard certs already available (only override for public facing services)
+        subdomain:
+          title: 'Host'
+          type: string
+          nullable: true
+          description: A host that is used to set DNS 'A' records
+          <<: *domainNameField
+        domain:
+          title: DNS Zone
+          description: A managed DNS zone
+          type: string
+        path:
+          title: URL path
+          description:
+            The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
+          type: string
+        forwardPath:
+          title: Forward path
+          description: Forward the URL path into the service (don't rewrite to /)
+          type: boolean
+        hasSingleSignOn:
+          title: Authenticate with Single Sign On
+          type: boolean
+          default: false
+        hasCert:
+          title: Already has a certificate
+          type: boolean
+          default: false
+          description:
+            If true a certificate should be deployed as a TLS secret already with the name 'cert-$svcName'. Otherwise it
+            will be generated.
+        certArn:
+          type: string
+          title: Certificate ARN
+          description: Certificate ARN of an existing AWS certificate
+          example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
+      required:
+        - domain
+        - subdomain
+  schemas:
     Clusters: &ClustersSchema
       type: array
+      x-acl:
+        admin: [get-all]
+        team: [get-all]
       items:
         $ref: '#/components/schemas/Cluster'
     Cluster:
       type: object
+      x-acl:
+        admin: [get-all]
+        team: [get-all]
       properties:
         cluster:
           type: string
@@ -632,7 +684,6 @@ components:
           description: An unique cluster identifier
           type: string
           readOnly: true
-
     Teams:
       x-acl:
         admin: [get-all]
@@ -651,6 +702,10 @@ components:
       items:
         $ref: '#/components/schemas/Service'
     Deployment:
+      type: object
+      x-acl:
+        admin: [get]
+        team: [get]
       properties:
         id:
           type: integer
@@ -734,53 +789,6 @@ components:
       required:
         - name
         - clusters
-
-    ServiceIngress:
-      properties: &ServiceIngress
-        useDefaultSubdomain:
-          title: 'Use suggested domain (preferred)'
-          type: boolean
-          default: true
-          description: Allows to use wildcard certs already available (only override for public facing services)
-        subdomain:
-          title: 'Host'
-          type: string
-          nullable: true
-          description: A host that is used to set DNS 'A' records
-          <<: *domainNameField
-        domain:
-          title: DNS Zone
-          description: A managed DNS zone
-          type: string
-        path:
-          title: URL path
-          description:
-            The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
-          type: string
-        forwardPath:
-          title: Forward path
-          description: Forward the URL path into the service (don't rewrite to /)
-          type: boolean
-        hasSingleSignOn:
-          title: Authenticate with Single Sign On
-          type: boolean
-          default: false
-        hasCert:
-          title: Already has a certificate
-          type: boolean
-          default: false
-          description:
-            If true a certificate should be deployed as a TLS secret already with the name 'cert-$svcName'. Otherwise it
-            will be generated.
-        certArn:
-          type: string
-          title: Certificate ARN
-          description: Certificate ARN of an existing AWS certificate
-          example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
-      required:
-        - domain
-        - subdomain
-
     Service:
       x-acl:
         admin: [delete-all, get-all, post-all, put-all]
@@ -809,7 +817,6 @@ components:
               nullable: true
               properties:
                 <<: *ServiceIngress
-
         ksvc:
           title: Type
           type: object
@@ -854,6 +861,8 @@ components:
         - clusterId
 
     OpenApiValidationError:
+      type: object
+      x-acl: []
       properties:
         status:
           type: integer
@@ -861,7 +870,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ValidationError'
+
     ValidationError:
+      type: object
+      x-acl: []
       properties:
         path:
           type: string
@@ -874,7 +886,10 @@ components:
           enum:
             - body
             - path
+
     OtomiStackError:
+      type: object
+      x-acl: []
       properties:
         message:
           type: string
