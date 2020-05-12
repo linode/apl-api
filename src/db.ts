@@ -35,6 +35,16 @@ export class Db {
   }
 
   getItem(name, selectors) {
+    // By default data is returned by reference, this means that modifications to returned objects may change the database.
+    // To avoid such behavior, we use .cloneDeep().
+    const data = this.db.get(name).find(selectors).cloneDeep().value()
+    if (data === undefined) {
+      throw new NotExistError(`Selector props do not exist in '${name}' collection: ${JSON.stringify(selectors)}`)
+    }
+    return data
+  }
+
+  getItemReference(name, selectors) {
     const data = this.db.get(name).find(selectors).value()
     if (data === undefined) {
       throw new NotExistError(`Selector props do not exist in '${name}' collection: ${JSON.stringify(selectors)}`)
@@ -48,7 +58,7 @@ export class Db {
 
   createItem(name, selectors, data) {
     try {
-      this.getItem(name, selectors)
+      this.getItemReference(name, selectors)
     } catch (e) {
       const ret = this.db.get(name).push(data).last().assign(selectors).write()
       this.dirty = this.dirtyActive
@@ -58,13 +68,14 @@ export class Db {
   }
 
   deleteItem(name, selectors) {
-    this.getItem(name, selectors)
+    this.getItemReference(name, selectors)
     this.db.get(name).remove(selectors).write()
     this.dirty = this.dirtyActive
   }
 
   updateItem(name, selectors, data) {
-    const item = this.getItem(name, selectors)
+    const item = this.getItemReference(name, selectors)
+
     const ret = this.db
       .get(name)
       .replaceRecord(item, { ...data, ...selectors })
