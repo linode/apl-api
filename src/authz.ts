@@ -164,12 +164,17 @@ export default class Authz {
         const ownershipCondition = () => {
           return teamId === session.user.teamId
         }
-        actions.forEach((action) => {
+        actions.forEach((actionName) => {
+          let action = actionName
+          let isCondition = true
+          if (actionName.endsWith('-all')) {
+            action = action.slice(0, -4)
+            isCondition = false
+          }
           if (has(specRules, `${action}.${schemaName}.fields`)) specRules[action][schemaName].fields.push(propertyName)
           else set(specRules, `${action}.${schemaName}.fields`, [propertyName])
           // conditions - CASL requires that a tuple (action, schema) has the same conditions
-          if (action.endsWith('-all')) specRules[action][schemaName].conditions = null
-          else specRules[action][schemaName].conditions = ownershipCondition
+          if (isCondition) specRules[action][schemaName].conditions = ownershipCondition
         })
       })
     })
@@ -216,7 +221,7 @@ export default class Authz {
       console.debug(
         `Authz: not authorized (ABAC): ${action} ${schemaName}/${teamId}, failing attributes: ${notAllowedAttributes}`,
       )
-      // console.debug(`Authz: not authorized (ABAC): ${JSON.stringify(abac.rules)}`)
+      console.debug(`Authz: not authorized (ABAC): ${JSON.stringify(abac.rules)}`)
     }
     return allowed
   }
