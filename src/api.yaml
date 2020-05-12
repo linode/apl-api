@@ -294,7 +294,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Team'
+                $ref: '#/components/schemas/Service'
     delete:
       operationId: deleteService
       description: Delete a service from a given team
@@ -828,7 +828,11 @@ components:
                   default: svcPredeployed
               required:
                 - serviceType
-
+        logo:
+          properties:
+            name:
+              type: string
+              readOnly: true
         teamId:
           type: string
           readOnly: true
