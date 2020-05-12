@@ -7,7 +7,8 @@ import { AlreadyExists, NotExistError } from './error'
 
 export class Db {
   // db: LowdbSync<any>
-  db: any
+  // db: lowdb.LowdbSync<any>
+  db
 
   dirty: boolean
 
@@ -74,12 +75,8 @@ export class Db {
   }
 
   updateItem(name, selectors, data) {
-    const item = this.getItemReference(name, selectors)
-
-    const ret = this.db
-      .get(name)
-      .replaceRecord(item, { ...data, ...selectors })
-      .write()
+    this.getItemReference(name, selectors)
+    const ret = this.db.get(name).find(selectors).assign(data).write()
     this.dirty = this.dirtyActive
     return ret
   }
