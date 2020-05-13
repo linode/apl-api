@@ -19,6 +19,7 @@ const allowedResourceActions = [
 ]
 const allowedResourceCollectionActions = ['get-all']
 const allowedAttributeActions = ['get', 'get-all', 'patch', 'patch-all', 'put', 'put-all']
+const skipABACActions = ['post', 'get', 'delete']
 
 interface RawRules {
   [actionName: string]: { [schemaName: string]: { fields: string[]; conditions: object } }
@@ -208,8 +209,7 @@ export default class Authz {
       return false
     }
 
-    // ABAC for get action does not make much sense restrict user permission on RBAC level
-    if (action === 'get') return true
+    if (skipABACActions.includes(action)) return true
 
     // ABAC
     const abac = this.getResourceAttributeBasedAccessControl(teamId, session)
