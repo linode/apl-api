@@ -37,7 +37,7 @@ COPY --from=dev /usr/lib/libgcc* /usr/lib/
 COPY --from=dev /usr/lib/libstdc* /usr/lib/
 
 # Install dependencies
-RUN apk add --no-cache git
+RUN apk add --no-cache git jq
 
 # Install app
 RUN mkdir /app
