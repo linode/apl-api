@@ -720,7 +720,7 @@ components:
     Team:
       x-acl:
         admin: [delete-all, get-all, post-all, put-all]
-        team: [get, put]
+        team: [get-all, put]
       type: object
       properties:
         name:
@@ -728,8 +728,6 @@ components:
           example: 'Team Otomi'
           x-acl:
             team: [get]
-            # team: [read]
-            # admin: [read, write]
           description: A team name
         clusters:
           title: Clusters
