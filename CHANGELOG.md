@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file. See
 [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.24](https://github.com/redkubes/otomi-stack-api/compare/v0.2.23...v0.2.24) (2020-05-13)
+
+### Bug Fixes
+
+- api path ([14af05d](https://github.com/redkubes/otomi-stack-api/commit/14af05db702c963ccaefffc38b1bfb0e8418a7ef))
+- download fix ([a830893](https://github.com/redkubes/otomi-stack-api/commit/a83089366809c7e13f20f9b6b71b1b24050520ac))
+
+### Code Refactoring
+
+- migrate missing files to typescript
+  ([001dd25](https://github.com/redkubes/otomi-stack-api/commit/001dd25e23b7751b46c0d2d07ab593a492dfde06))
+- use typescript
+  ([10233af](https://github.com/redkubes/otomi-stack-api/commit/10233af8fdda3bc5c7757ab48d16beeb3265f3d2))
+
+### Others
+
+- committing ([bd02a99](https://github.com/redkubes/otomi-stack-api/commit/bd02a9971221d72c708ac4dc5c97f70d3bdf2952))
+
 ### [0.2.23](https://github.com/redkubes/otomi-stack-api/compare/v0.2.22...v0.2.23) (2020-05-01)
 
 ### Feature Improvements
