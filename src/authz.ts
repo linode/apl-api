@@ -3,7 +3,7 @@ import set from 'lodash/set'
 import has from 'lodash/has'
 import get from 'lodash/get'
 
-import { Acl, OpenApi, Schema, Property, Session, AclAction } from './api.d'
+import { Acl, OpenApi, Schema, Property, Session } from './api.d'
 
 const allowedResourceActions = [
   'get',
@@ -98,28 +98,9 @@ export default class Authz {
     Object.keys(schemas).forEach((schemaName: string) => {
       console.debug(`Authz: loading rules for ${schemaName} schema`)
       const schema: Schema = schemas[schemaName]
-      if (!schema['x-acl']) {
-        console.warn(`Authz: the schema ${schemaName} does not contain x-acl attribute`)
-        return
-      }
-      if (schema.type !== 'object' && schema.type !== 'array') {
-        console.warn(`Authz: the schema type ${schema.type} is not supported. Found at ${schemaName}.type`)
-        return
-      }
 
       if (schema.type === 'array') {
-        Object.keys(schema['x-acl']).forEach((role) => {
-          if (JSON.stringify(schema['x-acl'][role]) !== JSON.stringify(['get-all']))
-            console.warn(
-              `Authz: the schema type ${schema.type} supports only 'get-all' permission. Found at ${schemaName}.x-acl`,
-            )
-        })
-        // No ABAC for collections
-        return
-      }
-
-      if (!schema.properties) {
-        console.debug(`Authz: the ${schemaName} schema does not contain properties`)
+        // No ABAC for array
         return
       }
 
@@ -149,7 +130,7 @@ export default class Authz {
       })
     })
 
-    console.log(JSON.stringify(canRules))
+    // console.log(JSON.stringify(canRules))
     return new Ability(canRules)
   }
 
@@ -196,11 +177,6 @@ export default class Authz {
     return new Ability(canRules)
   }
 
-  printRules = (teamId: string, session: Session) => {
-    const ability = this.getResourceAttributeBasedAccessControl(teamId, session)
-    console.log(JSON.stringify(ability.rules))
-  }
-
   isUserAuthorized = (action: string, schemaName, session: Session, teamId: string, data: object): boolean => {
     const rbac = this.getResourceBasedAccessControl(teamId, session)
     if (!rbac.can(action, schemaName)) {
@@ -224,7 +200,7 @@ export default class Authz {
       console.debug(
         `Authz: not authorized (ABAC): ${action} ${schemaName}/${teamId}, failing attributes: ${notAllowedAttributes}`,
       )
-      console.debug(`Authz: not authorized (ABAC): ${JSON.stringify(abac.rules)}`)
+      // console.debug(`Authz: not authorized (ABAC): ${JSON.stringify(abac.rules)}`)
     }
     return allowed
   }
