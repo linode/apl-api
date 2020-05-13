@@ -13,7 +13,7 @@ import isEmpty from 'lodash/isEmpty'
 import omit from 'lodash/omit'
 import omitBy from 'lodash/omitBy'
 import set from 'lodash/set'
-
+import { exec } from 'child_process'
 import { PublicUrlExists } from './error'
 import { arrayToObject, getPublicUrl, objectToArray } from './utils'
 import db, { Db } from './db'
@@ -197,6 +197,28 @@ export default class OtomiStack {
     // reset db and load values again
     this.initDb()
     this.loadValues()
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  async downloadKubecfg(teamId) {
+    const version = env.KUBE_VERSION || 'v1.15'
+    return new Promise((resolve, reject) => {
+      exec(
+        `NAMESPACE=${teamId || 'monitoring'} NODE_ENV=${env.NODE_ENV} KUBE_VERSION=${version} bin/get-team-kubeconf.sh`,
+        (err, stdout, stderr) => {
+          if (err) {
+            console.log(`error: ${err}`)
+            return reject(err)
+          }
+          if (stderr) {
+            console.log(`stderr: ${stderr}`)
+            return reject(err)
+          }
+          console.log(`stdout: ${stdout}`)
+          return resolve(stdout)
+        },
+      )
+    })
   }
 
   loadValues() {

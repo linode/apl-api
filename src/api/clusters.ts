@@ -1,9 +1,7 @@
 import { Operation } from 'express-openapi'
 
-export const parameters = []
-
 export default function (otomi) {
-  const get: Operation = [
+  const GET: Operation = [
     /* business middleware not expressible by OpenAPI documentation goes here */
     (req, res, next) => {
       console.info(`Get clusters: ${JSON.stringify(req.params)}`)
@@ -13,7 +11,7 @@ export default function (otomi) {
     },
   ]
   const api = {
-    get,
+    GET,
   }
   return api
 }

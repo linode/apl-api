@@ -2,7 +2,7 @@ import { Operation } from 'express-openapi'
 
 export default function (otomi) {
   const DELETE: Operation = [
-    (req, res, next) => {
+    (req, res) => {
       console.debug(`Delete service: ${JSON.stringify(req.params)}`)
       const { serviceId } = req.params
       otomi.deleteService(decodeURIComponent(serviceId))
@@ -10,7 +10,7 @@ export default function (otomi) {
     },
   ]
   const GET: Operation = [
-    (req, res, next) => {
+    (req, res) => {
       console.debug(`Get service: ${JSON.stringify(req.params)}`)
       const { serviceId } = req.params
       const data = otomi.getService(decodeURIComponent(serviceId))
@@ -18,7 +18,7 @@ export default function (otomi) {
     },
   ]
   const PUT: Operation = [
-    (req, res, next) => {
+    (req, res) => {
       console.debug(`Modify service: ${JSON.stringify(req.params)}`)
       const { serviceId } = req.params
       const data = otomi.editService(decodeURIComponent(serviceId), req.body)

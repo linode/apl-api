@@ -6,7 +6,7 @@ export default function (otomi) {
   const fallbackCluster = env.NODE_ENV !== 'production' ? 'google/dev' : ''
 
   const GET: Operation = [
-    (req, res, next) => {
+    (req, res) => {
       const teamId = req.header('Auth-Group')
       const email = req.header('Auth-User')
       const isAdmin = teamId === 'admin'
