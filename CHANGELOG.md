@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. See
 [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.27](https://github.com/redkubes/otomi-stack-api/compare/v0.2.26...v0.2.27) (2020-05-13)
+
+### Bug Fixes
+
+- adding jq to docker
+  [ci skip](<[c317352](https://github.com/redkubes/otomi-stack-api/commit/c317352fe98553da8918da8550a96c136cac0c81)>)
+
 ### [0.2.26](https://github.com/redkubes/otomi-stack-api/compare/v0.2.25...v0.2.26) (2020-05-13)
 
 ### Bug Fixes
