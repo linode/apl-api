@@ -21,6 +21,7 @@ export function errorMiddleware(err, req, res, next) {
 export function getSession(req: OpenApiRequest): Session {
   const teamId = req.header('Auth-Group')
   const email = req.header('Auth-User')
+  if (!teamId) return null
   const isAdmin = teamId === 'admin'
   const role = teamId === 'admin' ? 'admin' : 'team'
 
@@ -31,10 +32,12 @@ export function isAuthorizedFactory(authz: Authz) {
   const isAuthorized = (req: OpenApiRequest) => {
     const action = req.method.toLowerCase()
     const session = getSession(req)
+    if (!session) return false
     console.debug(`Authz: ${action} ${req.path}, session(role: ${session.user.role} team=${session.user.teamId})`)
     const schema: string = get(req, 'operationDoc.responses[200].content["application/json"].schema.$ref', '')
     const schemaName = schema.split('/').pop()
-    return authz.isUserAuthorized(action, schemaName, session, req.params.teamId, req.body)
+    const result = authz.isUserAuthorized(action, schemaName, session, req.params.teamId, req.body)
+    return result
   }
   return isAuthorized
 }
