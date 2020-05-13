@@ -1,10 +1,8 @@
 import { Operation } from 'express-openapi'
 
-export const parameters = []
-
-export default function (otomi) {
+export default function () {
   const GET: Operation = [
-    (req, res, next) => {
+    (req, res) => {
       res.status(200).json({})
     },
   ]

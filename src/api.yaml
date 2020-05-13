@@ -334,6 +334,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/OtomiStackError'
 
+  '/kubecfg/{teamId}':
+    get:
+      operationId: downloadKubecfg
+      description: Download a kubecfg for a team
+      parameters:
+        - name: teamId
+          in: path
+          description: ID of team to get kubecfg for
+          required: true
+          schema:
+            type: string
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Succesfully finished the download
+          content:
+            'application/yaml':
+              schema:
+                type: object
+
   /session:
     get:
       security: []
