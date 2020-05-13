@@ -6,8 +6,7 @@ KUBE_VERSION=${KUBE_VERSION:-v1.15}
 kubectl="bin/kubectl-$KUBE_VERSION"
 [ "$NODE_ENV" = "development" ] && kubectl=$(which kubectl)
 
-SERVICE_ACCOUNT_NAME=default
-KUBECFG_FILE_NAME="/tmp/kube/k8s-${SERVICE_ACCOUNT_NAME}-${NAMESPACE}-conf"
+KUBECFG_FILE_NAME="/tmp/kube/k8s-default-${NAMESPACE}-conf"
 TARGET_FOLDER="/tmp/kube"
 
 # exit if exists
@@ -20,8 +19,8 @@ create_target_folder() {
 }
 
 get_secret_name_from_service_account() {
-  echo -e "\\nGetting secret of service account ${SERVICE_ACCOUNT_NAME} on ${NAMESPACE}"
-  SECRET_NAME=$($kubectl get sa "${SERVICE_ACCOUNT_NAME}" --namespace="${NAMESPACE}" -o json | jq -r .secrets[].name)
+  echo -e "\\nGetting secret of service account default on ${NAMESPACE}"
+  SECRET_NAME=$($kubectl get sa "default" --namespace="${NAMESPACE}" -o json | jq -r .secrets[].name)
   echo "Secret name: ${SECRET_NAME}"
 }
 
@@ -50,7 +49,7 @@ set_kube_config_values() {
   echo "Endpoint: ${ENDPOINT}"
 
   # Set up the config
-  echo -e "\\nPreparing k8s-${SERVICE_ACCOUNT_NAME}-${NAMESPACE}-conf"
+  echo -e "\\nPreparing $KUBECFG_FILE_NAME"
   echo -n "Setting a cluster entry in kubeconfig..."
   # $kubectl config set-cluster "${CLUSTER_NAME}" \
   # --kubeconfig="${KUBECFG_FILE_NAME}" \
@@ -64,20 +63,20 @@ set_kube_config_values() {
 
   echo -n "Setting token credentials entry in kubeconfig..."
   $kubectl config set-credentials \
-    "${SERVICE_ACCOUNT_NAME}-${NAMESPACE}-${CLUSTER_NAME}" \
+    "${NAMESPACE}-${CLUSTER_NAME}" \
     --kubeconfig="${KUBECFG_FILE_NAME}" \
     --token="${USER_TOKEN}"
 
   echo -n "Setting a context entry in kubeconfig..."
   $kubectl config set-context \
-    "${SERVICE_ACCOUNT_NAME}-${NAMESPACE}-${CLUSTER_NAME}" \
+    "${NAMESPACE}-${CLUSTER_NAME}" \
     --kubeconfig="${KUBECFG_FILE_NAME}" \
     --cluster="${CLUSTER_NAME}" \
-    --user="${SERVICE_ACCOUNT_NAME}-${NAMESPACE}-${CLUSTER_NAME}" \
+    --user="${NAMESPACE}-${CLUSTER_NAME}" \
     --namespace="${NAMESPACE}"
 
   echo -n "Setting the current-context in the kubeconfig file..."
-  $kubectl config use-context "${SERVICE_ACCOUNT_NAME}-${NAMESPACE}-${CLUSTER_NAME}" \
+  $kubectl config use-context "${NAMESPACE}-${CLUSTER_NAME}" \
     --kubeconfig="${KUBECFG_FILE_NAME}"
 }
 

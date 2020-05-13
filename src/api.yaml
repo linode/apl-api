@@ -334,7 +334,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/OtomiStackError'
 
-  '/download-kubecfg/{teamId}':
+  '/kubecfg/{teamId}':
     get:
       operationId: downloadKubecfg
       description: Download a kubecfg for a team

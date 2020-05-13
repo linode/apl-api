@@ -41,7 +41,7 @@ export default function initApp(otomiStack) {
     routesIndexFileRegExp: /(?:index)?\.[tj]s$/,
   })
 
-  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(spec))
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(spec))
 
   return app
 }

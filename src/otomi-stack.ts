@@ -204,7 +204,7 @@ export default class OtomiStack {
     const version = env.KUBE_VERSION || 'v1.15'
     return new Promise((resolve, reject) => {
       exec(
-        `NAMESPACE=${teamId || 'monitoring'} NODE_ENV=${env.NODE_ENV} KUBE_VERSION=${version} bin/get-team-kubeconf.sh`,
+        `NAMESPACE=team-${teamId} NODE_ENV=${env.NODE_ENV} KUBE_VERSION=${version} bin/get-team-kubeconf.sh`,
         (err, stdout, stderr) => {
           if (err) {
             console.log(`error: ${err}`)
