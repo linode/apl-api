@@ -53,4 +53,4 @@ EXPOSE 8080
 
 ENV NODE_ENV=production
 
-CMD ["node", "dist/app.js"]
+CMD ["node", "--max-http-header-size=16384", "dist/app.js"]
