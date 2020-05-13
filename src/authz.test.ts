@@ -65,6 +65,39 @@ describe('Schema wise permissions', () => {
   })
 })
 
+describe('Ownership wise resource permissions', () => {
+  const spec: OpenApi = {
+    components: {
+      schemas: {
+        Service: {
+          type: 'object',
+          'x-acl': {
+            team: ['put'],
+          },
+          properties: {
+            name: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+  }
+
+  const data = {
+    name: 'svc',
+  }
+
+  it('A team cannot update service from another team', () => {
+    const authz = new Authz(spec)
+    expect(authz.isUserAuthorized('put', 'Service', session, 'venus', data)).to.be.false
+  })
+  it('A team can update its own service', () => {
+    const authz = new Authz(spec)
+    expect(authz.isUserAuthorized('put', 'Service', session, 'mercury', data)).to.be.true
+  })
+})
+
 describe('Schema collection wise permissions', () => {
   const spec: OpenApi = {
     components: {
