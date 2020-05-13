@@ -382,7 +382,7 @@ paths:
         default:
           description: The requested apiDoc.
 servers:
-  - url: '/api/v1'
+  - url: '/v1'
 
 # -------------------- Components
 components:
