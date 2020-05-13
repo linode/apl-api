@@ -105,6 +105,7 @@ paths:
     get:
       operationId: getTeams
       description: Get teams collection
+      x-aclSchema: Teams
       responses:
         '200':
           description: Successfully obtained teams collection
@@ -115,6 +116,7 @@ paths:
     post:
       operationId: createTeam
       description: Create a team
+      x-aclSchema: Team
       requestBody:
         content:
           application/json:
@@ -135,6 +137,7 @@ paths:
     get:
       operationId: getTeam
       description: Get a specific team
+      x-aclSchema: Team
       parameters:
         - name: teamId
           in: path
@@ -153,6 +156,7 @@ paths:
     put:
       operationId: editTeam
       description: Edit a team
+      x-aclSchema: Team
       parameters:
         - name: teamId
           in: path
@@ -178,6 +182,7 @@ paths:
     delete:
       operationId: deleteTeam
       description: Delete team
+      x-aclSchema: Team
       parameters:
         - name: teamId
           in: path
@@ -193,6 +198,7 @@ paths:
     get:
       operationId: getTeamServices
       description: Get services from a given team
+      x-aclSchema: Services
       parameters:
         - name: teamId
           in: path
@@ -216,6 +222,7 @@ paths:
     post:
       operationId: createService
       description: Create a service
+      x-aclSchema: Service
       parameters:
         - name: teamId
           in: path
@@ -243,6 +250,7 @@ paths:
     get:
       operationId: getService
       description: Get a service from a given team
+      x-aclSchema: Service
       parameters:
         - name: teamId
           in: path
@@ -267,6 +275,7 @@ paths:
     put:
       operationId: editService
       description: Edit a service from a given team
+      x-aclSchema: Service
       parameters:
         - name: teamId
           in: path
@@ -298,6 +307,7 @@ paths:
     delete:
       operationId: deleteService
       description: Delete a service from a given team
+      x-aclSchema: Service
       parameters:
         - name: teamId
           in: path

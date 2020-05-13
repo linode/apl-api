@@ -34,7 +34,7 @@ export function isAuthorizedFactory(authz: Authz) {
     const session = getSession(req)
     if (!session) return false
     console.debug(`Authz: ${action} ${req.path}, session(role: ${session.user.role} team=${session.user.teamId})`)
-    const schema: string = get(req, 'operationDoc.responses[200].content["application/json"].schema.$ref', '')
+    const schema: string = get(req, 'operationDoc.x-aclSchema', '')
     const schemaName = schema.split('/').pop()
     const result = authz.isUserAuthorized(action, schemaName, session, req.params.teamId, req.body)
     return result

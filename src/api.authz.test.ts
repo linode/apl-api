@@ -96,6 +96,25 @@ describe('Api tests for team', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
+
+  it('team can create its own services', (done) => {
+    request(app)
+      .post('/v1/teams/team1/services', {
+        name: 'service1',
+        clusterId: 'google/dev',
+        ksvc: {
+          serviceType: 'ksvcPredeployed',
+          image: {},
+          resources: { requests: { cpu: '50m', memory: '64Mi' }, limits: { cpu: '100m', memory: '128Mi' } },
+        },
+      })
+      .set('Content-Type', 'application/json')
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'team1')
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
   it('team can get its services', (done) => {
     request(app)
       .get('/v1/teams/team1/services')
@@ -115,19 +134,9 @@ describe('Api tests for team', () => {
       .end(done)
   })
 
-  it('team can delete its own service', (done) => {
+  it('team can update its own service', (done) => {
     request(app)
-      .delete('/v1/teams/team1/services/service1?clusterId="aws/dev')
-      .set('Accept', 'application/json')
-      .set('Auth-Group', 'team1')
-      .expect(200)
-      .expect('Content-Type', /json/)
-      .end(done)
-  })
-
-  it('team can not update service from other team', (done) => {
-    request(app)
-      .put('/v1/teams/team2/services/service1?clusterId=aws/dev', {
+      .put('/v1/teams/team1/services/service1?clusterId=aws/dev', {
         name: 'service1',
         clusterId: 'google/dev',
         ksvc: {
@@ -139,7 +148,17 @@ describe('Api tests for team', () => {
       .set('Content-Type', 'application/json')
       .set('Accept', 'application/json')
       .set('Auth-Group', 'team1')
-      .expect(401)
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+  it('team can delete its own service', (done) => {
+    request(app)
+      .delete('/v1/teams/team1/services/service1?clusterId="aws/dev')
+      .set('Accept', 'application/json')
+      .set('Content-Type', 'application/json')
+      .set('Auth-Group', 'team1')
+      .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
   })
@@ -153,7 +172,7 @@ describe('Api tests for team', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('team can not get service from other team', (done) => {
+  it('team can not update service from other team', (done) => {
     request(app)
       .put('/v1/teams/team2/services/service1?clusterId=aws/dev', {})
       .set('Accept', 'application/json')

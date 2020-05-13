@@ -1,4 +1,4 @@
-import { Ability, RawRule } from '@casl/ability'
+import { Ability, RawRule, subject } from '@casl/ability'
 import set from 'lodash/set'
 import has from 'lodash/has'
 import get from 'lodash/get'
@@ -114,19 +114,16 @@ export default class Authz {
     return schemas
   }
 
-  getResourceBasedAccessControl(teamId, session: Session) {
+  getResourceBasedAccessControl(session: Session) {
     const canRules: RawRule[] = []
     Object.keys(this.specRules).forEach((schemaName: string) => {
       const schema: Schema = this.specRules[schemaName]
-      const ownershipCondition = () => {
-        console.debug(`Checking ownership session(${session.user.teamId}), resource(${teamId})`)
-        return teamId === session.user.teamId
-      }
+
       const actions: string[] = get(schema, `x-acl.${session.user.role}`, [])
       actions.forEach((action) => {
         if (action.endsWith('-all')) {
           canRules.push({ action: action.slice(0, -4), subject: schemaName })
-        } else canRules.push({ action, subject: schemaName, conditions: ownershipCondition })
+        } else canRules.push({ action, subject: schemaName, conditions: { teamId: { $eq: session.user.teamId } } })
       })
     })
 
@@ -178,8 +175,9 @@ export default class Authz {
   }
 
   isUserAuthorized = (action: string, schemaName, session: Session, teamId: string, data: object): boolean => {
-    const rbac = this.getResourceBasedAccessControl(teamId, session)
-    if (!rbac.can(action, schemaName)) {
+    const rbac = this.getResourceBasedAccessControl(session)
+    const sub = subject(schemaName, { ...data, teamId })
+    if (!rbac.can(action, sub)) {
       // console.debug(rbac.rules)
       console.debug(`Authz: not authorized (RBAC): ${action} ${schemaName}/${teamId}`)
       return false
