@@ -12,7 +12,7 @@ export default function (otomi) {
       const isAdmin = teamId === 'admin'
       const role = teamId === 'admin' ? 'admin' : 'team'
       const data = {
-        currentClusterId: env.CLUSTER ? env.CLUSTER : fallbackCluster,
+        currentClusterId: env.CLUSTER_ID ? env.CLUSTER_ID : fallbackCluster,
         clusters: otomi.getClusters(),
         core: otomi.getCore(),
         user: { email, teamId, isAdmin, role },

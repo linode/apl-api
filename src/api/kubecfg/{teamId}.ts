@@ -10,7 +10,7 @@ export default function (otomi) {
       // trigger creation of file
       await otomi.downloadKubecfg(teamId)
       res.setHeader('Content-type', 'application/yaml')
-      res.download(`/tmp/kube/k8s-default-team-${teamId}-conf`, 'kubecfg.yaml', (err) => {
+      res.download(`/tmp/kube/k8s-default-team-${teamId}-conf`, `kubecfg-team-${teamId}.yaml`, (err) => {
         if (err) console.error(err)
       })
     },

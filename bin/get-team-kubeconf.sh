@@ -1,29 +1,30 @@
 #!/usr/bin/env sh
-set -e
-set -o pipefail
+# set -x
 
 OSX=false
 uname -a | grep Darwin >/dev/null
 [ $? -eq 0 ] && OSX=true
-
 decode='-d'
-[ $OSX ] && decode='--decode'
+[ "$OSX" = true ] && decode='--decode'
+
+set -e
+set -o pipefail
 
 KUBE_VERSION=${KUBE_VERSION:-v1.15}
 kubectl="bin/kubectl-$KUBE_VERSION"
 [ "$NODE_ENV" = "development" ] && kubectl=$(which kubectl)
 
-
 KUBECFG_FILE_NAME="/tmp/kube/k8s-default-${NAMESPACE}-conf"
 TARGET_FOLDER="/tmp/kube"
+# export KUBECONFIG="$TARGET_FOLDER/config"
 
 # exit if exists
-[ -f $KUBECFG_FILE_NAME ] && exit
+[ -f $KUBECFG_FILE_NAME ] && echo "exists: $KUBECFG_FILE_NAME" && exit
 
 create_target_folder() {
   printf "Creating target directory to hold files in ${TARGET_FOLDER}..."
   mkdir -p "${TARGET_FOLDER}"
-  printf "done"
+  printf "done\n"
 }
 
 get_secret_name_from_service_account() {
@@ -36,37 +37,25 @@ extract_ca_crt_from_secret() {
   printf "\nExtracting ca.crt from secret..."
   $kubectl get secret --namespace "${NAMESPACE}" "${SECRET_NAME}" -o json | jq \
     -r '.data["ca.crt"]' | base64 $decode >"${TARGET_FOLDER}/ca.crt"
-  printf "done"
+  printf "done\n"
 }
 
 get_user_token_from_secret() {
   printf "\nGetting user token from secret..."
   USER_TOKEN=$($kubectl get secret --namespace "${NAMESPACE}" "${SECRET_NAME}" -o json | jq -r '.data["token"]' | base64 $decode)
-  printf "done"
+  printf "done\n"
 }
 
 set_kube_config_values() {
-  context=$($kubectl config current-context)
-  printf "\nSetting current context to: $context"
-
-  CLUSTER_NAME=$($kubectl config get-contexts "$context" | awk '{print $3}' | tail -n 1)
   echo "Cluster name: ${CLUSTER_NAME}"
-
-  ENDPOINT=$($kubectl config view \
-    -o jsonpath="{.clusters[?(@.name == \"${CLUSTER_NAME}\")].cluster.server}")
-  echo "Endpoint: ${ENDPOINT}"
+  echo "Cluster api server: ${CLUSTER_APISERVER}"
 
   # Set up the config
   echo "Preparing $KUBECFG_FILE_NAME"
   echo "Setting a cluster entry in kubeconfig..."
-  # $kubectl config set-cluster "${CLUSTER_NAME}" \
-  # --kubeconfig="${KUBECFG_FILE_NAME}" \
-  # --server="${ENDPOINT}" \
-  # --certificate-authority="${TARGET_FOLDER}/ca.crt" \
-  # --embed-certs=true
   $kubectl config set-cluster "${CLUSTER_NAME}" \
     --kubeconfig="${KUBECFG_FILE_NAME}" \
-    --server="${ENDPOINT}" \
+    --server="${CLUSTER_APISERVER}" \
     --insecure-skip-tls-verify
 
   echo "Setting token credentials entry in kubeconfig..."

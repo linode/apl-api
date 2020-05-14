@@ -206,15 +206,15 @@ export default class OtomiStack {
       exec(
         `NAMESPACE=team-${teamId} NODE_ENV=${env.NODE_ENV} KUBE_VERSION=${version} bin/get-team-kubeconf.sh`,
         (err, stdout, stderr) => {
+          console.error(`stderr: ${stderr}`)
+          console.error(`error: ${err}`)
+          console.log(`stdout: ${stdout}`)
           if (err) {
-            console.log(`error: ${err}`)
             return reject(err)
           }
           if (stderr) {
-            console.log(`stderr: ${stderr}`)
             return reject(err)
           }
-          console.log(`stdout: ${stdout}`)
           return resolve(stdout)
         },
       )
