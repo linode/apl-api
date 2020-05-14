@@ -3,6 +3,7 @@ import set from 'lodash/set'
 import has from 'lodash/has'
 import get from 'lodash/get'
 
+import isEmpty from 'lodash/isEmpty'
 import { Acl, OpenApi, Schema, Property, Session } from './api.d'
 
 const allowedResourceActions = [
@@ -39,29 +40,53 @@ function validatePermissions(acl: Acl, allowedPermissions: string[], path: strin
 
 export function isValidAuthzSpec(apiSpec: OpenApi): boolean {
   const err: string[] = []
+
+  if (isEmpty(apiSpec.security)) err.push(`Missing global security definition at 'security'`)
+
+  Object.keys(apiSpec.paths).forEach((pathName: string) => {
+    const pathObj = apiSpec.paths[pathName]
+    Object.keys(pathObj).forEach((methodName) => {
+      const methodObj = pathObj[methodName]
+
+      // check if security is disabled for a given http method
+      if (methodObj.security && methodObj.security.length === 0) return
+
+      if (!methodObj['x-aclSchema']) err.push(`Missing x-aclSchema at 'paths.${pathName}.${methodName}'`)
+    })
+  })
+
   const schemas = apiSpec.components.schemas
   Object.keys(schemas).forEach((schemaName: string) => {
     console.debug(`Authz: loading rules for ${schemaName} schema`)
     const schema: Schema = schemas[schemaName]
-    if (!schema['x-acl']) err.push(`schema does not contain x-acl attribute, found at ${schemaName} `)
+    if (!schema['x-acl'])
+      err.push(`schema does not contain x-acl attribute, found at 'components.schemas.${schemaName}'`)
 
     if (schema.type !== 'object' && schema.type !== 'array') {
-      err.push(`schema type ${schema.type} is not supported, found at ${schemaName}`)
+      err.push(`schema type ${schema.type} is not supported, found at 'components.schemas.${schemaName}'`)
       return
     }
 
     if (schema.type === 'array') {
       if (schema['x-acl'])
-        err.concat(validatePermissions(schema['x-acl'], allowedResourceCollectionActions, `${schemaName}.x-acl`))
+        err.concat(
+          validatePermissions(
+            schema['x-acl'],
+            allowedResourceCollectionActions,
+            `components.schemas.${schemaName}.x-acl`,
+          ),
+        )
       return
     }
 
     if (schema.type === 'object') {
       if (schema['x-acl'])
-        err.concat(validatePermissions(schema['x-acl'], allowedResourceActions, `${schemaName}.x-acl`))
+        err.concat(
+          validatePermissions(schema['x-acl'], allowedResourceActions, `components.schemas.${schemaName}.x-acl`),
+        )
 
       if (!schema.properties) {
-        err.push(`schema does not contain properties attribute, found at ${schemaName}`)
+        err.push(`schema does not contain properties attribute, found at 'components.schemas.${schemaName}'`)
         return
       }
       Object.keys(schema.properties).forEach((attributeName) => {

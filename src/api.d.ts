@@ -5,12 +5,22 @@ export interface OpenApiRequest extends Request {
   apiDoc: object
 }
 
+type httpMethodType = 'delete' | 'get' | 'patch' | 'post' | 'put'
 export interface OpenApi {
   components: {
     schemas: {
       [schemaName: string]: Schema
     }
   }
+  paths?: {
+    [path: string]: {
+      [httpMethod: httpMethodType]: {
+        'x-aclSchema'?: [string]
+        security?: [string]
+      }
+    }
+  }
+  security?: string[]
 }
 export type SchemaType = 'object' | 'array'
 

@@ -75,6 +75,7 @@ paths:
     get:
       operationId: getClusters
       description: Get available clusters
+      x-aclSchema: Clusters
       responses:
         '200':
           description: Successfully obtained cluster collection
@@ -87,6 +88,7 @@ paths:
     get:
       operationId: getAllServices
       description: Get services from a given team
+      x-aclSchema: Services
       responses:
         '200':
           description: Successfully obtained all services
@@ -328,6 +330,7 @@ paths:
 
   /deploy:
     get:
+      x-aclSchema: Deployment
       operationId: deploy
       description: Trigger a deployment (only for admin)
       responses:
@@ -714,8 +717,8 @@ components:
     Deployment:
       type: object
       x-acl:
-        admin: [get]
-        team: [get]
+        admin: [get-all]
+        team: [get-all]
       properties:
         id:
           type: integer
