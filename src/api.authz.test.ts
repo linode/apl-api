@@ -45,6 +45,15 @@ describe('Api tests for admin', () => {
   it('admin cannot delete all teams', (done) => {
     request(app).delete('/v1/teams').set('Accept', 'application/json').set('Auth-Group', 'admin').expect(404).end(done)
   })
+  it('admin can deploy changes', (done) => {
+    request(app)
+      .get('/v1/deploy')
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'admin')
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
 })
 
 describe('Api tests for team', () => {
@@ -54,6 +63,16 @@ describe('Api tests for team', () => {
     const otomiStack = new OtomiStack()
     sinon.stub(otomiStack)
     app = initApp(otomiStack)
+  })
+
+  it('a team can deploy changes', (done) => {
+    request(app)
+      .get('/v1/deploy')
+      .set('Accept', 'application/json')
+      .set('Auth-Group', 'team1')
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done)
   })
 
   it('team can get all teams', (done) => {
