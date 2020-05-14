@@ -55,7 +55,7 @@ set_kube_config_values() {
   echo "Setting a cluster entry in kubeconfig..."
   $kubectl config set-cluster "${CLUSTER_NAME}" \
     --kubeconfig="${KUBECFG_FILE_NAME}" \
-    --server="${CLUSTER_APISERVER}" \
+    --server="https://${CLUSTER_APISERVER}" \
     --insecure-skip-tls-verify
 
   echo "Setting token credentials entry in kubeconfig..."
