@@ -1,4 +1,6 @@
+import dotEnv from 'dotenv'
 import fs from 'fs'
+import * as k8s from '@kubernetes/client-node'
 import generatePassword from 'password-generator'
 import path from 'path'
 import yaml from 'js-yaml'
@@ -13,11 +15,12 @@ import isEmpty from 'lodash/isEmpty'
 import omit from 'lodash/omit'
 import omitBy from 'lodash/omitBy'
 import set from 'lodash/set'
-import { exec } from 'child_process'
 import { PublicUrlExists } from './error'
 import { arrayToObject, getPublicUrl, objectToArray } from './utils'
 import db, { Db } from './db'
 import repo, { Repo } from './repo'
+
+dotEnv.config()
 
 const env = process.env
 const isProduction = env.NODE_ENV === 'production'
@@ -199,26 +202,53 @@ export default class OtomiStack {
     this.loadValues()
   }
 
+  apiClient = undefined
+
+  getApiClient() {
+    if (this.apiClient) return this.apiClient
+    const kc = new k8s.KubeConfig()
+    kc.loadFromDefault()
+    this.apiClient = kc.makeApiClient(k8s.CoreV1Api)
+    return this.apiClient
+  }
+
   // eslint-disable-next-line class-methods-use-this
-  async downloadKubecfg(teamId) {
-    const version = env.KUBE_VERSION || 'v1.15'
-    return new Promise((resolve, reject) => {
-      exec(
-        `NAMESPACE=team-${teamId} NODE_ENV=${env.NODE_ENV} KUBE_VERSION=${version} bin/get-team-kubeconf.sh`,
-        (err, stdout, stderr) => {
-          console.error(`stderr: ${stderr}`)
-          console.error(`error: ${err}`)
-          console.log(`stdout: ${stdout}`)
-          if (err) {
-            return reject(err)
-          }
-          if (stderr) {
-            return reject(err)
-          }
-          return resolve(stdout)
-        },
-      )
-    })
+  async getKubecfg(teamId): Promise<k8s.KubeConfig> {
+    const client = this.getApiClient()
+    const namespace = `team-${teamId}`
+    const saRes = await client.readNamespacedServiceAccount('default', namespace)
+    const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
+    const { secrets }: { secrets?: any[] } = sa
+    const secretName: string = secrets[0].name
+    const secretRes = await client.readNamespacedSecret(secretName, namespace)
+    const { body: secret }: { body: k8s.V1Secret } = secretRes
+    const token = Buffer.from(secret.data.token, 'base64').toString('ascii')
+    const cluster = {
+      name: env.CLUSTER_NAME,
+      server: `https://${env.CLUSTER_APISERVER}`,
+      skipTLSVerify: true,
+    }
+
+    const user = {
+      name: `${namespace}-${env.CLUSTER_NAME}`,
+      token,
+    }
+
+    const context = {
+      name: `${namespace}-${env.CLUSTER_NAME}`,
+      namespace,
+      user: user.name,
+      cluster: cluster.name,
+    }
+    const options = {
+      clusters: [cluster],
+      users: [user],
+      contexts: [context],
+      currentContext: context.name,
+    }
+    const config = new k8s.KubeConfig()
+    config.loadFromOptions(options)
+    return config
   }
 
   loadValues() {

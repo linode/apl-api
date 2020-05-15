@@ -1,4 +1,6 @@
 import { Operation } from 'express-openapi'
+import yaml from 'js-yaml'
+import { KubeConfig } from '@kubernetes/client-node'
 
 export const parameters = []
 
@@ -8,11 +10,11 @@ export default function (otomi) {
       console.debug(`Trigger download: ${JSON.stringify(req.params)}`)
       const { teamId } = req.params
       // trigger creation of file
-      await otomi.downloadKubecfg(teamId)
+      const config: KubeConfig = await otomi.getKubecfg(teamId)
+      const yamlConfig = yaml.safeDump(JSON.parse(config.exportConfig()))
       res.setHeader('Content-type', 'application/yaml')
-      res.download(`/tmp/kube/k8s-default-team-${teamId}-conf`, `kubecfg-team-${teamId}.yaml`, (err) => {
-        if (err) console.error(err)
-      })
+      res.setHeader('Content-Disposition', `attachment; filename=kubecfg-team-${teamId}.yaml`)
+      res.send(yamlConfig)
     },
   ]
   const api = {

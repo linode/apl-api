@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@casl/ability": "^4.0.7",
+    "@kubernetes/client-node": "^0.11.2",
     "@types/lodash": "^4.14.150",
     "axios": "^0.19.2",
     "body-parser": "^1.19.0",
@@ -102,8 +103,7 @@
     "build": "tsc && copyup ./src/api.yaml ./dist",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
-    "dev": "ts-node-dev --respawn --transpileOnly src/app.ts",
-    "dev:debug": "ts-node-dev --inspect=4321 --respawn --transpileOnly src/app.ts",
+    "dev": "ts-node-dev --inspect=4321 --respawn --transpileOnly src/app.ts",
     "format": "prettier --check \"**/*.{js,json,md,ts,yml,yaml}\"",
     "format:fix": "prettier --write \"**/*.{js,json,md,ts,yml,yaml}\"",
     "husky:lint-staged": "lint-staged",

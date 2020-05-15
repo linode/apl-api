@@ -3,8 +3,6 @@ import { Operation } from 'express-openapi'
 const env = process.env
 
 export default function (otomi) {
-  const fallbackCluster = env.NODE_ENV !== 'production' ? 'google/dev' : ''
-
   const GET: Operation = [
     (req, res) => {
       const teamId = req.header('Auth-Group')
@@ -12,7 +10,7 @@ export default function (otomi) {
       const isAdmin = teamId === 'admin'
       const role = teamId === 'admin' ? 'admin' : 'team'
       const data = {
-        currentClusterId: env.CLUSTER_ID ? env.CLUSTER_ID : fallbackCluster,
+        currentClusterId: env.CLUSTER_ID,
         clusters: otomi.getClusters(),
         core: otomi.getCore(),
         user: { email, teamId, isAdmin, role },
