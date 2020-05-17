@@ -43,12 +43,12 @@ describe('Api tests for admin', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('admin cannot delete all teams', (done) => {
+  it.skip('admin cannot delete all teams', (done) => {
     request(app).delete('/v1/teams').set('Accept', 'application/json').set('Auth-Group', 'admin').expect(404).end(done)
   })
 })
 
-describe('Api tests for team', () => {
+describe.skip('Api tests for team', () => {
   let app
 
   beforeEach(() => {
@@ -57,7 +57,7 @@ describe('Api tests for team', () => {
     app = initApp(otomiStack)
   })
 
-  it.skip('team cannot get all teams', (done) => {
+  it('team cannot get all teams', (done) => {
     // this.skip('Missing request authorization mechanism')
     this.skip()
     request(app)
@@ -193,7 +193,7 @@ describe('Api tests for team', () => {
   })
 })
 
-describe('Api tests for non authorized user', () => {
+describe.skip('Api tests for non authorized user', () => {
   let app
   beforeEach(() => {
     const otomiStack = new OtomiStack()
@@ -291,7 +291,7 @@ describe('Api tests for non authorized user', () => {
   })
 })
 
-describe('Api tests for data validation', () => {
+describe.skip('Api tests for data validation', () => {
   let app
   beforeEach(() => {
     const otomiStack = new OtomiStack()

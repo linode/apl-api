@@ -37,6 +37,8 @@ describe('Load and dump values', () => {
         hasCert: false,
         certArn: undefined,
         subdomain: 'hello.team-team1.dev',
+        path: '/bla',
+        forwardPath: false,
       },
       ksvc: {
         serviceType: 'ksvc',
@@ -61,6 +63,8 @@ describe('Load and dump values', () => {
         hasCert: false,
         certArn: undefined,
         subdomain: 'hello-predeployed-ksvc.team-team1.dev',
+        path: undefined,
+        forwardPath: false,
       },
       ksvc: {
         serviceType: 'ksvcPredeployed',
@@ -89,6 +93,8 @@ describe('Load and dump values', () => {
         hasCert: false,
         certArn: undefined,
         subdomain: 'hello-svc.team-team1.dev',
+        path: undefined,
+        forwardPath: false,
       },
       ksvc: {
         serviceType: 'svcPredeployed',

@@ -191,8 +191,9 @@ export default class OtomiStack {
   }
 
   async triggerDeployment(teamId, email) {
+    console.log('DISABLE_SYNC: ', env.DISABLE_SYNC)
     this.saveValues()
-    if (!env.DISABLE_SYNC) {
+    if (env.DISABLE_SYNC !== 'true') {
       await this.repo.commit(teamId, email)
       await this.repo.push()
     }
@@ -348,7 +349,7 @@ export default class OtomiStack {
 
   convertServiceToDb(svcRaw, teamId, cluster) {
     // Create service
-    const svc = omit(svcRaw, 'ksvc', 'isPublic', 'hasCert', 'domain')
+    const svc = omit(svcRaw, 'ksvc', 'isPublic', 'hasCert', 'domain', 'path', 'forwardPath')
     svc.clusterId = cluster.id
     svc.teamId = teamId
     if (!('name' in svcRaw)) {
@@ -373,6 +374,8 @@ export default class OtomiStack {
         certArn: svcRaw.certArn,
         domain: publicUrl.domain,
         subdomain: publicUrl.subdomain,
+        path: svcRaw.path,
+        forwardPath: 'forwardPath' in svcRaw,
       }
     }
 
@@ -426,7 +429,7 @@ export default class OtomiStack {
 
         const serviceType = svc.ksvc.serviceType
         console.info(`Saving service: serviceId: ${svc.serviceId} serviceType: ${serviceType}`)
-        const svcCloned = omit(svc, ['teamId', 'serviceId', 'clusterId', 'ksvc', 'ingress', 'internal'])
+        const svcCloned = omit(svc, ['teamId', 'serviceId', 'clusterId', 'ksvc', 'ingress', 'internal', 'path'])
         const ksvc = cloneDeep(svc.ksvc)
         if (serviceType === 'ksvc') {
           svcCloned.ksvc = ksvc
