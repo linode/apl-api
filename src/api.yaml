@@ -9,6 +9,9 @@ x-fields:
   domain: &domainNameField
     type: string
     pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
+  path: &pathField
+    type: string
+    pattern: ^\/[a-zA-Z0-9_\-\/]*\/$
   repository: &repositoryField
     type: string
     pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
@@ -500,6 +503,11 @@ components:
     KnativeService: &KnativeService # description: Knative service definition
       type: object
       properties: &KnativeServiceProperties
+        scaleToZero:
+          title: Scale to zero
+          description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
+          type: boolean
+          default: false
         image:
           title: Container image
           type: object
@@ -770,6 +778,7 @@ components:
           description:
             The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
           type: string
+          <<: *pathField
         forwardPath:
           title: Forward path
           description: Forward the URL path into the service (don't rewrite to /)
