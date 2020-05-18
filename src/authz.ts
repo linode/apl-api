@@ -156,7 +156,7 @@ export default class Authz {
     return new Ability(canRules)
   }
 
-  getResourceAttributeBasedAccessControl(teamId: string, session: Session) {
+  getAttributeBasedAccessControl(session: Session) {
     const specRules: RawRules = {}
 
     Object.keys(this.specRules).forEach((schemaName: string) => {
@@ -166,22 +166,16 @@ export default class Authz {
       Object.keys(schema.properties).forEach((propertyName: string) => {
         const property: Property = schema.properties[propertyName]
         const actions: string[] = get(property, `x-acl.${session.user.role}`, [])
-        const ownershipCondition = () => {
-          return teamId === session.user.teamId
-        }
+
         actions.forEach((actionName) => {
           if (!allowedAttributeActions.includes(actionName)) return
 
           let action = actionName
-          let isCondition = true
           if (actionName.endsWith('-all')) {
             action = action.slice(0, -4)
-            isCondition = false
           }
           if (has(specRules, `${action}.${schemaName}.fields`)) specRules[action][schemaName].fields.push(propertyName)
           else set(specRules, `${action}.${schemaName}.fields`, [propertyName])
-          // conditions - CASL requires that a tuple (action, schema) has the same conditions
-          if (isCondition) specRules[action][schemaName].conditions = ownershipCondition
         })
       })
     })
@@ -211,7 +205,7 @@ export default class Authz {
     if (skipABACActions.includes(action)) return true
 
     // ABAC
-    const abac = this.getResourceAttributeBasedAccessControl(teamId, session)
+    const abac = this.getAttributeBasedAccessControl(session)
     let allowed = true
     const notAllowedAttributes: string[] = []
     Object.keys(data).forEach((attributeName) => {
