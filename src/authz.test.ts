@@ -166,7 +166,7 @@ describe('Property wise permissions', () => {
   }
   it('A team can update all service properties except ingress', () => {
     const authz = new Authz(spec)
-    expect(authz.isUserAuthorized('put', 'Service', sessionTeam, 'mercury', data1)).to.be.true
-    expect(authz.isUserAuthorized('put', 'Service', sessionTeam, 'mercury', data2)).to.be.false
+    expect(authz.getAllowedAttributes('put', 'Service', sessionTeam, data1)).to.eql(['name'])
+    expect(authz.getAllowedAttributes('put', 'Service', sessionTeam, data2)).to.eql(['name'])
   })
 })

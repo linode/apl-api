@@ -2,7 +2,7 @@ import { Request } from 'express'
 
 export interface OpenApiRequest extends Request {
   operationDoc: { responses: { '200'?: { content: { 'application/json': { schema: { $ref: string } } } } } }
-  apiDoc: object
+  apiDoc: OpenApi
 }
 
 type httpMethodType = 'delete' | 'get' | 'patch' | 'post' | 'put'
@@ -31,6 +31,7 @@ export interface Schema {
     [propertyName: string]: Property
   }
   items?: object
+  required?: string[]
 }
 
 export interface Acl {

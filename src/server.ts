@@ -7,7 +7,8 @@ import cors from 'cors'
 import logger from 'morgan'
 import swaggerUi from 'swagger-ui-express'
 import yaml from 'js-yaml'
-import { errorMiddleware, isAuthorizedFactory } from './middleware'
+import get from 'lodash/get'
+import { errorMiddleware, isAuthorizedFactory, getSession } from './middleware'
 import Authz from './authz'
 
 export default function initApp(otomiStack) {
@@ -17,8 +18,6 @@ export default function initApp(otomiStack) {
   const apiDoc = fs.readFileSync(openApiPath, 'utf8')
   const spec = yaml.safeLoad(apiDoc)
   const authz = new Authz(spec)
-
-  const specYaml = yaml.dump(spec)
 
   app.use(logger('dev'))
   app.use(cors())
@@ -31,8 +30,20 @@ export default function initApp(otomiStack) {
     return securityHandlers
   }
 
+  function stripNotAllowedAttributes(req, res, next) {
+    const schema: string = get(req, 'operationDoc.x-aclSchema', '')
+    const schemaName = schema.split('/').pop()
+    const action = req.method.toLowerCase()
+    const session = getSession(req)
+    req.body = authz.getDataWithAllowedAttributes(action, schemaName, session, req.body)
+    next()
+  }
+
   initialize({
-    apiDoc: specYaml,
+    apiDoc: {
+      ...spec,
+      'x-express-openapi-additional-middleware': [stripNotAllowedAttributes],
+    },
     app,
     dependencies: {
       otomi: otomiStack,

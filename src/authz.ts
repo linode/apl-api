@@ -2,6 +2,7 @@ import { Ability, RawRule, subject } from '@casl/ability'
 import set from 'lodash/set'
 import has from 'lodash/has'
 import get from 'lodash/get'
+import pick from 'lodash/pick'
 
 import isEmpty from 'lodash/isEmpty'
 import { Acl, OpenApi, Schema, Property, Session } from './api.d'
@@ -139,6 +140,24 @@ export default class Authz {
     return schemas
   }
 
+  getAllowedAttributes = (action: string, schemaName, session: Session, data: any) => {
+    const abac = this.getAttributeBasedAccessControl(session)
+    const allowedAttributes: string[] = []
+    Object.keys(data).forEach((attributeName) => {
+      const isAuthorized = abac.can(action, schemaName, attributeName)
+      if (isAuthorized) allowedAttributes.push(attributeName)
+    })
+
+    return allowedAttributes
+  }
+
+  getDataWithAllowedAttributes = (action: string, schemaName, session: Session, data: any) => {
+    if (skipABACActions.includes(action)) return data
+
+    const attr = this.getAllowedAttributes(action, schemaName, session, data)
+    return pick(data, attr)
+  }
+
   getResourceBasedAccessControl(session: Session) {
     const canRules: RawRule[] = []
     Object.keys(this.specRules).forEach((schemaName: string) => {
@@ -202,23 +221,6 @@ export default class Authz {
       return false
     }
 
-    if (skipABACActions.includes(action)) return true
-
-    // ABAC
-    const abac = this.getAttributeBasedAccessControl(session)
-    let allowed = true
-    const notAllowedAttributes: string[] = []
-    Object.keys(data).forEach((attributeName) => {
-      const isAuthorized = abac.can(action, schemaName, attributeName)
-      if (!isAuthorized) notAllowedAttributes.push(attributeName)
-      allowed = allowed && isAuthorized
-    })
-    if (!allowed) {
-      console.debug(
-        `Authz: not authorized (ABAC): ${action} ${schemaName}/${teamId}, failing attributes: ${notAllowedAttributes}`,
-      )
-      // console.debug(`Authz: not authorized (ABAC): ${JSON.stringify(abac.rules)}`)
-    }
-    return allowed
+    return true
   }
 }
