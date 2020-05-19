@@ -128,30 +128,28 @@ describe('Data validation', () => {
     otomiStack = new OtomiStack()
   })
 
-  it('should indicate duplicated subdomain', (done) => {
+  it('should throw exception on duplicated domain', (done) => {
     const svc = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'b' } }
-    const svc1 = { serviceId: 's/B', ingress: { domain: 'a.com', subdomain: 'b' } }
-
+    const svc1 = { ...svc }
     otomiStack.db.createItem('services', { teamId: 'A' }, svc)
-
-    const duplicated = otomiStack.isPublicUrlInUse(svc1)
-    expect(duplicated).to.be.true
+    const check = otomiStack.checkPublicUrlInUse(svc1)
+    expect(check).to.be.throw
     done()
   })
-  it('should not indicate duplicated subdomain', (done) => {
-    const svc = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'b' } }
+  it('should throw exception on duplicated url with path', (done) => {
+    const svc = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'b', path: '/test/' } }
+    const svc1 = { ...svc }
+    otomiStack.db.createItem('services', { teamId: 'A' }, svc)
+    const check = otomiStack.checkPublicUrlInUse(svc1)
+    expect(check).to.be.throw
+    done()
+  })
+  it('should not throw exception on unique url', (done) => {
+    const svc = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'b', path: '/test/' } }
     otomiStack.db.createItem('services', { teamId: 'A' }, svc)
     const svc1 = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'c' } }
-    const duplicated = otomiStack.isPublicUrlInUse(svc1)
-    expect(duplicated).to.be.false
-    done()
-  })
-  it('should not indicate that public URL already exist (existing service is updated)', (done) => {
-    const svc = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'b' } }
-    otomiStack.db.createItem('services', { teamId: 'A' }, svc)
-    const svc1 = { serviceId: 's/A', ingress: { domain: 'a.com', subdomain: 'b' } }
-    const duplicated = otomiStack.isPublicUrlInUse(svc1)
-    expect(duplicated).to.be.false
+    const check = otomiStack.checkPublicUrlInUse(svc1)
+    expect(check).to.be.undefined
     done()
   })
 })

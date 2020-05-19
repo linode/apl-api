@@ -143,7 +143,7 @@ export default class OtomiStack {
   createService(data) {
     const { name, clusterId, teamId } = data
     const ids = { serviceId: `${clusterId}/${teamId}/${name}` }
-    this.validateService(data)
+    this.checkPublicUrlInUse(data)
     return this.db.createItem('services', ids, data)
   }
 
@@ -160,7 +160,7 @@ export default class OtomiStack {
   }
 
   editService(serviceId, data) {
-    this.validateService(data)
+    this.checkPublicUrlInUse(data)
     return this.db.updateItem('services', { serviceId }, data)
   }
 
@@ -168,26 +168,20 @@ export default class OtomiStack {
     return this.db.deleteItem('services', { serviceId })
   }
 
-  validateService(data) {
-    if (this.isPublicUrlInUse(data)) throw new PublicUrlExists('Public URL is already used')
-  }
-
-  isPublicUrlInUse(data) {
-    if (!data.ingress) return false
+  checkPublicUrlInUse(data) {
+    if (!data.ingress) return
 
     const services = this.db.getCollection('services')
 
     const servicesFiltered = filter(services, (svc) => {
-      const subdomain = get(svc, 'ingress.subdomain')
-      const domain = get(svc, 'ingress.domain')
-      const existingUrl = `${subdomain}.${domain}`
-      const url = `${data.ingress.subdomain}.${data.ingress.domain}`
+      if (!svc.ingress) return false
+      const { domain, subdomain, path } = svc.ingress
+      const existingUrl = `${subdomain}.${domain}${path || ''}`
+      const url = `${data.ingress.subdomain}.${data.ingress.domain}${data.ingress.path || ''}`
       return existingUrl === url && svc.serviceId !== data.serviceId
     })
 
-    if (servicesFiltered.length === 0) return false
-
-    return true
+    if (servicesFiltered.length !== 0) throw new PublicUrlExists('Public URL is already used')
   }
 
   async triggerDeployment(teamId, email) {
