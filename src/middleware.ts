@@ -28,16 +28,24 @@ export function getSession(req: OpenApiRequest): Session {
   return { user: { teamId, email, role, isAdmin } }
 }
 
+function isUserAuthorized(req: OpenApiRequest, authz: Authz) {
+  const session = req.session
+  const action = req.method.toLowerCase()
+  console.debug(`Authz: ${action} ${req.path}, session(role: ${session.user.role} team=${session.user.teamId})`)
+  const schema: string = get(req, 'operationDoc.x-aclSchema', '')
+  const schemaName = schema.split('/').pop()
+  const result = authz.isUserAuthorized(action, schemaName, session, req.params.teamId, req.body)
+  return result
+}
+
 export function isAuthorizedFactory(authz: Authz) {
-  const isAuthorized = (req: OpenApiRequest) => {
-    const action = req.method.toLowerCase()
+  const isAuthorized = (req: OpenApiRequest, scopes: [], definitions: any) => {
     const session = getSession(req)
     if (!session) return false
-    console.debug(`Authz: ${action} ${req.path}, session(role: ${session.user.role} team=${session.user.teamId})`)
-    const schema: string = get(req, 'operationDoc.x-aclSchema', '')
-    const schemaName = schema.split('/').pop()
-    const result = authz.isUserAuthorized(action, schemaName, session, req.params.teamId, req.body)
-    return result
+    req.session = session
+
+    const authorized = isUserAuthorized(req, authz)
+    return authorized
   }
   return isAuthorized
 }
