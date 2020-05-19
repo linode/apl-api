@@ -5,14 +5,11 @@ import initApp from './server'
 import OtomiStack from './otomi-stack'
 import { validateEnv } from './utils'
 
-describe('Api tests for admin', () => {
-  let app
-  beforeEach(() => {
-    const otomiStack = new OtomiStack()
-    sinon.stub(otomiStack)
-    app = initApp(otomiStack)
-  })
+const otomiStack = new OtomiStack()
+sinon.stub(otomiStack)
+const app = initApp(otomiStack)
 
+describe('Api tests for admin', () => {
   it('admin can get all teams', (done) => {
     request(app)
       .get('/v1/teams')
@@ -57,15 +54,7 @@ describe('Api tests for admin', () => {
 })
 
 describe('Api tests for team', () => {
-  let app
-
-  beforeEach(() => {
-    const otomiStack = new OtomiStack()
-    sinon.stub(otomiStack)
-    app = initApp(otomiStack)
-  })
-
-  it('a team can deploy changes', (done) => {
+  it('team cannot get all teams', (done) => {
     request(app)
       .get('/v1/deploy')
       .set('Accept', 'application/json')
@@ -203,12 +192,6 @@ describe('Api tests for team', () => {
 })
 
 describe('Api tests for non authorized user', () => {
-  let app
-  beforeEach(() => {
-    const otomiStack = new OtomiStack()
-    sinon.stub(otomiStack)
-    app = initApp(otomiStack)
-  })
   it('should get app readiness', (done) => {
     request(app)
       .get('/v1/readiness')
@@ -301,12 +284,6 @@ describe('Api tests for non authorized user', () => {
 })
 
 describe('Api tests for data validation', () => {
-  let app
-  beforeEach(() => {
-    const otomiStack = new OtomiStack()
-    sinon.stub(otomiStack)
-    app = initApp(otomiStack)
-  })
   it('invalid team name data', (done) => {
     request(app)
       .post('/v1/teams')
@@ -336,46 +313,6 @@ const mockRequest = (authGroup, teamId) => ({
   },
   params: { teamId },
 })
-
-// describe('Authorization tests', () => {
-//   beforeEach(() => {
-//     isAuthorizedFactory()
-//   })
-//   it('should not authorize', (done) => {
-//     // this.skip('Missing request authorization mechanism')
-//     this.skip()
-//     const req = mockRequest('team1', 'team2')
-//     expect(() => isAuthorized(req)).to.throw()
-//     done()
-//   })
-//   it.skip('skipped not authenticated - missing header', (done) => {
-//     this.skip()
-//     const req = mockRequest('undefined', 'team2')
-//     expect(() => isAuthorized(req)).to.be.throw()
-//     done()
-//   })
-//   it.skip('not authorized - missing teamId in uri path', (done) => {
-//     this.skip()
-//     const req = mockRequest('team2', 'undefined')
-//     expect(() => isAuthorized(req)).to.throw()
-//     done()
-//   })
-//   it('team authorized', (done) => {
-//     const req = mockRequest('team2', 'team2')
-//     expect(isAuthorized(req)).to.be.true
-//     done()
-//   })
-//   it('admin authorized', (done) => {
-//     const req = mockRequest('admin', 'team2')
-//     expect(isAuthorized(req)).to.be.true
-//     done()
-//   })
-//   it('admin authorized 2', (done) => {
-//     const req = mockRequest('admin', undefined)
-//     expect(isAuthorized(req)).to.be.true
-//     done()
-//   })
-// })
 
 describe('Config validation tests', () => {
   it('missing env variables', (done) => {

@@ -1,10 +1,8 @@
 import { Operation } from 'express-openapi'
 
-export const parameters = []
-
 export default function (otomi) {
   const GET: Operation = [
-    async (req, res, next) => {
+    async (req, res) => {
       console.debug(`Trigger deployment: ${JSON.stringify(req.params)}`)
       const teamId = req.header('Auth-Group')
       const email = req.header('Auth-User')

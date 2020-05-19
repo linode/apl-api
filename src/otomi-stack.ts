@@ -1,4 +1,6 @@
+import dotEnv from 'dotenv'
 import fs from 'fs'
+import * as k8s from '@kubernetes/client-node'
 import generatePassword from 'password-generator'
 import path from 'path'
 import yaml from 'js-yaml'
@@ -13,11 +15,12 @@ import isEmpty from 'lodash/isEmpty'
 import omit from 'lodash/omit'
 import omitBy from 'lodash/omitBy'
 import set from 'lodash/set'
-
 import { PublicUrlExists } from './error'
 import { arrayToObject, getPublicUrl, objectToArray } from './utils'
 import db, { Db } from './db'
 import repo, { Repo } from './repo'
+
+dotEnv.config()
 
 const env = process.env
 const isProduction = env.NODE_ENV === 'production'
@@ -140,7 +143,7 @@ export default class OtomiStack {
   createService(data) {
     const { name, clusterId, teamId } = data
     const ids = { serviceId: `${clusterId}/${teamId}/${name}` }
-    this.validateService(data)
+    this.checkPublicUrlInUse(data)
     return this.db.createItem('services', ids, data)
   }
 
@@ -157,7 +160,7 @@ export default class OtomiStack {
   }
 
   editService(serviceId, data) {
-    this.validateService(data)
+    this.checkPublicUrlInUse(data)
     return this.db.updateItem('services', { serviceId }, data)
   }
 
@@ -165,31 +168,26 @@ export default class OtomiStack {
     return this.db.deleteItem('services', { serviceId })
   }
 
-  validateService(data) {
-    if (this.isPublicUrlInUse(data)) throw new PublicUrlExists('Public URL is already used')
-  }
-
-  isPublicUrlInUse(data) {
-    if (!data.ingress) return false
+  checkPublicUrlInUse(data) {
+    if (!data.ingress) return
 
     const services = this.db.getCollection('services')
 
     const servicesFiltered = filter(services, (svc) => {
-      const subdomain = get(svc, 'ingress.subdomain')
-      const domain = get(svc, 'ingress.domain')
-      const existingUrl = `${subdomain}.${domain}`
-      const url = `${data.ingress.subdomain}.${data.ingress.domain}`
+      if (!svc.ingress) return false
+      const { domain, subdomain, path } = svc.ingress
+      const existingUrl = `${subdomain}.${domain}${path || ''}`
+      const url = `${data.ingress.subdomain}.${data.ingress.domain}${data.ingress.path || ''}`
       return existingUrl === url && svc.serviceId !== data.serviceId
     })
 
-    if (servicesFiltered.length === 0) return false
-
-    return true
+    if (servicesFiltered.length !== 0) throw new PublicUrlExists('Public URL is already used')
   }
 
   async triggerDeployment(teamId, email) {
+    console.log('DISABLE_SYNC: ', env.DISABLE_SYNC)
     this.saveValues()
-    if (!env.DISABLE_SYNC) {
+    if (env.DISABLE_SYNC !== 'true') {
       await this.repo.commit(teamId, email)
       await this.repo.push()
     }
@@ -197,6 +195,55 @@ export default class OtomiStack {
     // reset db and load values again
     this.initDb()
     this.loadValues()
+  }
+
+  apiClient = undefined
+
+  getApiClient() {
+    if (this.apiClient) return this.apiClient
+    const kc = new k8s.KubeConfig()
+    kc.loadFromDefault()
+    this.apiClient = kc.makeApiClient(k8s.CoreV1Api)
+    return this.apiClient
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  async getKubecfg(teamId): Promise<k8s.KubeConfig> {
+    const client = this.getApiClient()
+    const namespace = `team-${teamId}`
+    const saRes = await client.readNamespacedServiceAccount('default', namespace)
+    const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
+    const { secrets }: { secrets?: any[] } = sa
+    const secretName: string = secrets[0].name
+    const secretRes = await client.readNamespacedSecret(secretName, namespace)
+    const { body: secret }: { body: k8s.V1Secret } = secretRes
+    const token = Buffer.from(secret.data.token, 'base64').toString('ascii')
+    const cluster = {
+      name: env.CLUSTER_NAME,
+      server: `https://${env.CLUSTER_APISERVER}`,
+      skipTLSVerify: true,
+    }
+
+    const user = {
+      name: `${namespace}-${env.CLUSTER_NAME}`,
+      token,
+    }
+
+    const context = {
+      name: `${namespace}-${env.CLUSTER_NAME}`,
+      namespace,
+      user: user.name,
+      cluster: cluster.name,
+    }
+    const options = {
+      clusters: [cluster],
+      users: [user],
+      contexts: [context],
+      currentContext: context.name,
+    }
+    const config = new k8s.KubeConfig()
+    config.loadFromOptions(options)
+    return config
   }
 
   loadValues() {
@@ -296,7 +343,7 @@ export default class OtomiStack {
 
   convertServiceToDb(svcRaw, teamId, cluster) {
     // Create service
-    const svc = omit(svcRaw, 'ksvc', 'isPublic', 'hasCert', 'domain')
+    const svc = omit(svcRaw, 'ksvc', 'isPublic', 'hasCert', 'domain', 'path', 'forwardPath')
     svc.clusterId = cluster.id
     svc.teamId = teamId
     if (!('name' in svcRaw)) {
@@ -321,6 +368,8 @@ export default class OtomiStack {
         certArn: svcRaw.certArn,
         domain: publicUrl.domain,
         subdomain: publicUrl.subdomain,
+        path: svcRaw.path,
+        forwardPath: 'forwardPath' in svcRaw,
       }
     }
 
@@ -374,7 +423,7 @@ export default class OtomiStack {
 
         const serviceType = svc.ksvc.serviceType
         console.info(`Saving service: serviceId: ${svc.serviceId} serviceType: ${serviceType}`)
-        const svcCloned = omit(svc, ['teamId', 'serviceId', 'clusterId', 'ksvc', 'ingress', 'internal'])
+        const svcCloned = omit(svc, ['teamId', 'serviceId', 'clusterId', 'ksvc', 'ingress', 'internal', 'path'])
         const ksvc = cloneDeep(svc.ksvc)
         if (serviceType === 'ksvc') {
           svcCloned.ksvc = ksvc

@@ -3,6 +3,61 @@
 All notable changes to this project will be documented in this file. See
 [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.29](https://github.com/redkubes/otomi-stack-api/compare/v0.2.28...v0.2.29) (2020-05-14)
+
+### Bug Fixes
+
+- download file name with teamId
+  [ci skip](<[96d4599](https://github.com/redkubes/otomi-stack-api/commit/96d4599f9391f64b40284e5b58fa0632b2aee8d7)>)
+
+### [0.2.28](https://github.com/redkubes/otomi-stack-api/compare/v0.2.27...v0.2.28) (2020-05-13)
+
+### Bug Fixes
+
+- os dependend base64 decode
+  [ci skip](<[57d61a8](https://github.com/redkubes/otomi-stack-api/commit/57d61a8151bec887e16b4731a847e69fe1566fd6)>)
+- os dependend base64 decode
+  [ci skip](<[c7b2568](https://github.com/redkubes/otomi-stack-api/commit/c7b25689e3d745fc459838a96474730f07044348)>)
+
+### [0.2.27](https://github.com/redkubes/otomi-stack-api/compare/v0.2.26...v0.2.27) (2020-05-13)
+
+### Bug Fixes
+
+- adding jq to docker
+  [ci skip](<[c317352](https://github.com/redkubes/otomi-stack-api/commit/c317352fe98553da8918da8550a96c136cac0c81)>)
+
+### [0.2.26](https://github.com/redkubes/otomi-stack-api/compare/v0.2.25...v0.2.26) (2020-05-13)
+
+### Bug Fixes
+
+- bin in dockerfile
+  [ci skip](<[0cde5fa](https://github.com/redkubes/otomi-stack-api/commit/0cde5fa6135ff5b9a89d298547e929bf3bdd902f)>)
+
+### [0.2.25](https://github.com/redkubes/otomi-stack-api/compare/v0.2.24...v0.2.25) (2020-05-13)
+
+### Bug Fixes
+
+- node needed to accept bigger header size
+  ([8eaf035](https://github.com/redkubes/otomi-stack-api/commit/8eaf035aa7178a1bec87868bc8f8c5e54fee36e1))
+
+### [0.2.24](https://github.com/redkubes/otomi-stack-api/compare/v0.2.23...v0.2.24) (2020-05-13)
+
+### Bug Fixes
+
+- api path ([14af05d](https://github.com/redkubes/otomi-stack-api/commit/14af05db702c963ccaefffc38b1bfb0e8418a7ef))
+- download fix ([a830893](https://github.com/redkubes/otomi-stack-api/commit/a83089366809c7e13f20f9b6b71b1b24050520ac))
+
+### Code Refactoring
+
+- migrate missing files to typescript
+  ([001dd25](https://github.com/redkubes/otomi-stack-api/commit/001dd25e23b7751b46c0d2d07ab593a492dfde06))
+- use typescript
+  ([10233af](https://github.com/redkubes/otomi-stack-api/commit/10233af8fdda3bc5c7757ab48d16beeb3265f3d2))
+
+### Others
+
+- committing ([bd02a99](https://github.com/redkubes/otomi-stack-api/commit/bd02a9971221d72c708ac4dc5c97f70d3bdf2952))
+
 ### [0.2.23](https://github.com/redkubes/otomi-stack-api/compare/v0.2.22...v0.2.23) (2020-05-01)
 
 ### Feature Improvements

@@ -9,6 +9,9 @@ x-fields:
   domain: &domainNameField
     type: string
     pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
+  path: &pathField
+    type: string
+    pattern: ^\/[a-zA-Z0-9_\-\/]*\/$
   repository: &repositoryField
     type: string
     pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
@@ -347,6 +350,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/OtomiStackError'
 
+  '/kubecfg/{teamId}':
+    get:
+      operationId: downloadKubecfg
+      description: Download a kubecfg for a team
+      x-aclSchema: Kubecfg
+      parameters:
+        - name: teamId
+          in: path
+          description: ID of team to get kubecfg for
+          required: true
+          schema:
+            type: string
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Succesfully finished the download
+          content:
+            'application/yaml':
+              schema:
+                type: object
+
   /session:
     get:
       security: []
@@ -493,6 +517,11 @@ components:
     KnativeService: &KnativeService # description: Knative service definition
       type: object
       properties: &KnativeServiceProperties
+        scaleToZero:
+          title: Scale to zero
+          description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
+          type: boolean
+          default: false
         image:
           title: Container image
           type: object
@@ -800,6 +829,14 @@ components:
       required:
         - name
         - clusters
+
+    Kubecfg:
+      type: object
+      x-acl:
+        admin: [get-all]
+        team: [get]
+      properties: {}
+
     Service:
       x-acl:
         admin: [delete-all, get-all, post-all, put-all]

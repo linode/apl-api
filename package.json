@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@casl/ability": "^4.0.7",
+    "@kubernetes/client-node": "^0.11.2",
     "@types/lodash": "^4.14.150",
     "axios": "^0.19.2",
     "body-parser": "^1.19.0",
@@ -62,6 +63,7 @@
     "standard-version": "^7.1.0",
     "supertest": "^4.0.2",
     "ts-node": "^8.9.1",
+    "ts-node-dev": "^1.0.0-pre.44",
     "tslint": "^6.1.2",
     "typescript": "^3.8.3"
   },
@@ -102,7 +104,7 @@
     "build": "tsc && copyup ./src/api.yaml ./dist",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
-    "dev": "nodemon",
+    "dev": "ts-node-dev --inspect=4321 --respawn --transpileOnly src/app.ts",
     "format": "prettier --check \"**/*.{js,json,md,ts,yml,yaml}\"",
     "format:fix": "prettier --write \"**/*.{js,json,md,ts,yml,yaml}\"",
     "husky:lint-staged": "lint-staged",
@@ -113,5 +115,5 @@
     "start": "node dist/app.js",
     "test": "mocha --timeout 5000 -r ts-node/register src/*.test.* --exit"
   },
-  "version": "0.2.23"
+  "version": "0.2.29"
 }
