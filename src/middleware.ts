@@ -28,9 +28,21 @@ export function getSession(req: OpenApiRequest): Session {
   return { user: { teamId, email, role, isAdmin } }
 }
 
+const HttpMethodMapping = {
+  DELETE: 'delete',
+  GET: 'read',
+  PATCH: 'update',
+  POST: 'create',
+  PUT: 'update',
+}
+
+export function getCrudOperation(req: OpenApiRequest) {
+  return HttpMethodMapping[req.method]
+}
+
 function isUserAuthorized(req: OpenApiRequest, authz: Authz) {
   const session = req.session
-  const action = req.method.toLowerCase()
+  const action = getCrudOperation(req)
   console.debug(`Authz: ${action} ${req.path}, session(role: ${session.user.role} team=${session.user.teamId})`)
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
   const schemaName = schema.split('/').pop()

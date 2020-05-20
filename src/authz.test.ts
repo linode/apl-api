@@ -17,8 +17,8 @@ describe('Schema wise permissions', () => {
         Service: {
           type: 'object',
           'x-acl': {
-            admin: ['get-all', 'put-all'],
-            team: ['get'],
+            admin: ['read-any', 'update-any'],
+            team: ['read'],
           },
           properties: {
             name: {
@@ -43,8 +43,8 @@ describe('Schema wise permissions', () => {
     const authz = new Authz(spec)
     expect(authz.isUserAuthorized('create', 'Service', sessionAdmin, 'mercury', data)).to.be.false
     expect(authz.isUserAuthorized('delete', 'Service', sessionAdmin, 'mercury', data)).to.be.false
-    expect(authz.isUserAuthorized('get', 'Service', sessionAdmin, 'mercury', data)).to.be.true
-    expect(authz.isUserAuthorized('put', 'Service', sessionAdmin, 'mercury', data)).to.be.true
+    expect(authz.isUserAuthorized('read', 'Service', sessionAdmin, 'mercury', data)).to.be.true
+    expect(authz.isUserAuthorized('update', 'Service', sessionAdmin, 'mercury', data)).to.be.true
   })
 
   it('A team can only get its own service', () => {
@@ -52,8 +52,8 @@ describe('Schema wise permissions', () => {
 
     expect(authz.isUserAuthorized('create', 'Service', sessionTeam, 'mercury', data)).to.be.false
     expect(authz.isUserAuthorized('delete', 'Service', sessionTeam, 'mercury', data)).to.be.false
-    expect(authz.isUserAuthorized('get', 'Service', sessionTeam, 'mercury', data)).to.be.true
-    expect(authz.isUserAuthorized('put', 'Service', sessionTeam, 'mercury', data)).to.be.false
+    expect(authz.isUserAuthorized('read', 'Service', sessionTeam, 'mercury', data)).to.be.true
+    expect(authz.isUserAuthorized('update', 'Service', sessionTeam, 'mercury', data)).to.be.false
   })
 })
 
@@ -64,7 +64,7 @@ describe('Ownership wise resource permissions', () => {
         Service: {
           type: 'object',
           'x-acl': {
-            team: ['put'],
+            team: ['update'],
           },
           properties: {
             name: {
@@ -85,7 +85,7 @@ describe('Ownership wise resource permissions', () => {
       // teamId: 'venus',
     }
     const authz = new Authz(spec)
-    expect(authz.isUserAuthorized('put', 'Service', sessionTeam, 'venus', data)).to.be.false
+    expect(authz.isUserAuthorized('update', 'Service', sessionTeam, 'venus', data)).to.be.false
   })
   it('A team can update its own service', () => {
     const data = {
@@ -93,7 +93,7 @@ describe('Ownership wise resource permissions', () => {
       // teamId: 'mercury',
     }
     const authz = new Authz(spec)
-    expect(authz.isUserAuthorized('put', 'Service', sessionTeam, 'mercury', data)).to.be.true
+    expect(authz.isUserAuthorized('update', 'Service', sessionTeam, 'mercury', data)).to.be.true
   })
 })
 
@@ -104,8 +104,8 @@ describe('Schema collection wise permissions', () => {
         Services: {
           type: 'array',
           'x-acl': {
-            admin: ['get-all'],
-            team: ['get-all'],
+            admin: ['read-any'],
+            team: ['read-any'],
           },
           items: {
             type: 'object',
@@ -119,16 +119,16 @@ describe('Schema collection wise permissions', () => {
     const authz = new Authz(spec)
     expect(authz.isUserAuthorized('create', 'Services', sessionAdmin, 'mercury', null)).to.be.false
     expect(authz.isUserAuthorized('delete', 'Services', sessionAdmin, 'mercury', null)).to.be.false
-    expect(authz.isUserAuthorized('get', 'Services', sessionAdmin, 'mercury', null)).to.be.true
-    expect(authz.isUserAuthorized('put', 'Services', sessionAdmin, 'mercury', null)).to.be.false
+    expect(authz.isUserAuthorized('read', 'Services', sessionAdmin, 'mercury', null)).to.be.true
+    expect(authz.isUserAuthorized('update', 'Services', sessionAdmin, 'mercury', null)).to.be.false
   })
 
   it('A team can only get collection of services', () => {
     const authz = new Authz(spec)
     expect(authz.isUserAuthorized('create', 'Services', sessionTeam, 'mercury', null)).to.be.false
     expect(authz.isUserAuthorized('delete', 'Services', sessionTeam, 'mercury', null)).to.be.false
-    expect(authz.isUserAuthorized('get', 'Services', sessionTeam, 'mercury', null)).to.be.true
-    expect(authz.isUserAuthorized('put', 'Services', sessionTeam, 'mercury', null)).to.be.false
+    expect(authz.isUserAuthorized('read', 'Services', sessionTeam, 'mercury', null)).to.be.true
+    expect(authz.isUserAuthorized('update', 'Services', sessionTeam, 'mercury', null)).to.be.false
   })
 })
 
@@ -139,7 +139,7 @@ describe('Property wise permissions', () => {
         Service: {
           type: 'object',
           'x-acl': {
-            team: ['get', 'put'],
+            team: ['read', 'update'],
           },
           properties: {
             name: {
@@ -147,7 +147,7 @@ describe('Property wise permissions', () => {
             },
             ingress: {
               'x-acl': {
-                team: ['get'],
+                team: ['read'],
               },
               type: 'string',
             },
@@ -166,7 +166,7 @@ describe('Property wise permissions', () => {
   }
   it('A team can update all service properties except ingress', () => {
     const authz = new Authz(spec)
-    expect(authz.getAllowedAttributes('put', 'Service', sessionTeam, data1)).to.eql(['name'])
-    expect(authz.getAllowedAttributes('put', 'Service', sessionTeam, data2)).to.eql(['name'])
+    expect(authz.getAllowedAttributes('update', 'Service', sessionTeam, data1)).to.eql(['name'])
+    expect(authz.getAllowedAttributes('update', 'Service', sessionTeam, data2)).to.eql(['name'])
   })
 })

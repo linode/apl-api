@@ -8,8 +8,9 @@ import logger from 'morgan'
 import swaggerUi from 'swagger-ui-express'
 import yaml from 'js-yaml'
 import get from 'lodash/get'
-import { errorMiddleware, isAuthorizedFactory, getSession } from './middleware'
+import { errorMiddleware, isAuthorizedFactory, getCrudOperation, getSession } from './middleware'
 import Authz from './authz'
+import { OpenApiRequest } from './api.d'
 
 export default function initApp(otomiStack) {
   const app = express()
@@ -30,10 +31,15 @@ export default function initApp(otomiStack) {
     return securityHandlers
   }
 
-  function stripNotAllowedAttributes(req, res, next) {
+  function stripNotAllowedAttributes(req: OpenApiRequest, res, next) {
+    if (req.operationDoc.security === undefined || req.operationDoc.security.length === 0) {
+      next()
+      return
+    }
+
     const schema: string = get(req, 'operationDoc.x-aclSchema', '')
     const schemaName = schema.split('/').pop()
-    const action = req.method.toLowerCase()
+    const action = getCrudOperation(req)
     const session = getSession(req)
     req.body = authz.getDataWithAllowedAttributes(action, schemaName, session, req.body)
     next()
