@@ -5,7 +5,7 @@ import get from 'lodash/get'
 import pick from 'lodash/pick'
 
 import isEmpty from 'lodash/isEmpty'
-import { Acl, OpenApi, Schema, Property, Session } from './api.d'
+import { Acl, OpenApi, Schema, Property, Session, AclAction } from './api.d'
 
 const allowedResourceActions = [
   'get',
@@ -129,11 +129,19 @@ export default class Authz {
         // No ABAC for array
         return
       }
+      const schemaAcl = {}
+      Object.keys(schema['x-acl']).forEach((role) => {
+        schemaAcl[role] = schema['x-acl'][role].map((action: AclAction) => {
+          if (action.endsWith('-all')) return action.slice(0, -4)
+          return action
+        })
+      })
 
       Object.keys(schema.properties).forEach((propertyName: string) => {
         const property: Property = schema.properties[propertyName]
         // Attribute wise permission overwrite model wise permissions
-        property['x-acl'] = { ...schema['x-acl'], ...property['x-acl'] }
+        property['x-acl'] = { ...schemaAcl, ...property['x-acl'] }
+        console.log(property['x-acl'])
       })
     })
     // console.log(JSON.stringify(schemas))

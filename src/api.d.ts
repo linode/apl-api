@@ -36,8 +36,7 @@ export interface Schema {
 }
 
 export interface Acl {
-  team?: AclAction[]
-  admin?: AclAction[]
+  [roleName: string]: AclAction[]
 }
 
 export type AclAction =
