@@ -38,7 +38,7 @@ x-fields:
     type: string
     pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 externalDocs:
-  description: "This is the base url of the external documentation"
+  description: 'This is the base url of the external documentation'
   url: https://redkubes.github.io/otomi/ #Using this URL a final docUrl can be made using this+info.version+ the component's x-externalDocsPath
 
 x-post-responses: &DefaultPostResponses
@@ -81,6 +81,7 @@ paths:
     get:
       operationId: getClusters
       description: Get available clusters
+      x-aclSchema: Clusters
       responses:
         '200':
           description: Successfully obtained cluster collection
@@ -93,6 +94,7 @@ paths:
     get:
       operationId: getAllServices
       description: Get services from a given team
+      x-aclSchema: Services
       responses:
         '200':
           description: Successfully obtained all services
@@ -111,6 +113,7 @@ paths:
     get:
       operationId: getTeams
       description: Get teams collection
+      x-aclSchema: Teams
       responses:
         '200':
           description: Successfully obtained teams collection
@@ -121,6 +124,7 @@ paths:
     post:
       operationId: createTeam
       description: Create a team
+      x-aclSchema: Team
       requestBody:
         content:
           application/json:
@@ -141,6 +145,7 @@ paths:
     get:
       operationId: getTeam
       description: Get a specific team
+      x-aclSchema: Team
       parameters:
         - name: teamId
           in: path
@@ -159,6 +164,7 @@ paths:
     put:
       operationId: editTeam
       description: Edit a team
+      x-aclSchema: Team
       parameters:
         - name: teamId
           in: path
@@ -184,6 +190,7 @@ paths:
     delete:
       operationId: deleteTeam
       description: Delete team
+      x-aclSchema: Team
       parameters:
         - name: teamId
           in: path
@@ -199,6 +206,7 @@ paths:
     get:
       operationId: getTeamServices
       description: Get services from a given team
+      x-aclSchema: Services
       parameters:
         - name: teamId
           in: path
@@ -222,6 +230,7 @@ paths:
     post:
       operationId: createService
       description: Create a service
+      x-aclSchema: Service
       parameters:
         - name: teamId
           in: path
@@ -249,6 +258,7 @@ paths:
     get:
       operationId: getService
       description: Get a service from a given team
+      x-aclSchema: Service
       parameters:
         - name: teamId
           in: path
@@ -273,6 +283,7 @@ paths:
     put:
       operationId: editService
       description: Edit a service from a given team
+      x-aclSchema: Service
       parameters:
         - name: teamId
           in: path
@@ -300,10 +311,11 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Team'
+                $ref: '#/components/schemas/Service'
     delete:
       operationId: deleteService
       description: Delete a service from a given team
+      x-aclSchema: Service
       parameters:
         - name: teamId
           in: path
@@ -324,6 +336,7 @@ paths:
 
   /deploy:
     get:
+      x-aclSchema: Deployment
       operationId: deploy
       description: Trigger a deployment (only for admin)
       responses:
@@ -344,6 +357,7 @@ paths:
     get:
       operationId: downloadKubecfg
       description: Download a kubecfg for a team
+      x-aclSchema: Kubecfg
       parameters:
         - name: teamId
           in: path
@@ -371,7 +385,7 @@ paths:
           content:
             'application/json':
               schema:
-                type: object
+                $ref: '#/components/schemas/Session'
         default:
           description: The requested session.
   /apiDocs:
@@ -401,7 +415,7 @@ components:
       type: apiKey
       name: Auth-Group
       in: header
-  schemas:
+  x-schemas:
     AzureMonitor: &AzureMonitor
       type: object
       description: Azure Monitor is the platform service that provides a single source for monitoring Azure resources.
@@ -621,12 +635,64 @@ components:
         - resources
       additionalProperties: false
 
-    Clusters:
+    ServiceIngress:
+      properties: &ServiceIngress
+        useDefaultSubdomain:
+          title: 'Use suggested domain (preferred)'
+          type: boolean
+          default: true
+          description: Allows to use wildcard certs already available (only override for public facing services)
+        subdomain:
+          title: 'Host'
+          type: string
+          nullable: true
+          description: A host that is used to set DNS 'A' records
+          <<: *domainNameField
+        domain:
+          title: DNS Zone
+          description: A managed DNS zone
+          type: string
+        path:
+          title: URL path
+          description:
+            The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
+          type: string
+        forwardPath:
+          title: Forward path
+          description: Forward the URL path into the service (don't rewrite to /)
+          type: boolean
+        hasSingleSignOn:
+          title: Authenticate with Single Sign On
+          type: boolean
+          default: false
+        hasCert:
+          title: Already has a certificate
+          type: boolean
+          default: false
+          description:
+            If true a certificate should be deployed as a TLS secret already with the name 'cert-$svcName'. Otherwise it
+            will be generated.
+        certArn:
+          type: string
+          title: Certificate ARN
+          description: Certificate ARN of an existing AWS certificate
+          example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
+      required:
+        - domain
+        - subdomain
+  schemas:
+    Clusters: &ClustersSchema
       type: array
+      x-acl:
+        admin: [get-all]
+        team: [get-all]
       items:
         $ref: '#/components/schemas/Cluster'
     Cluster:
       type: object
+      x-acl:
+        admin: [get-all]
+        team: [get-all]
       properties:
         cluster:
           type: string
@@ -663,8 +729,10 @@ components:
           description: An unique cluster identifier
           type: string
           readOnly: true
-
     Teams:
+      x-acl:
+        admin: [get-all]
+        team: [get-all]
       type: object
       properties:
         teams:
@@ -672,13 +740,18 @@ components:
           items:
             $ref: '#/components/schemas/Team'
     Services:
-      properties:
-        services:
-          type: array
-          items:
-            $ref: '#/components/schemas/Service'
+      x-acl:
+        admin: [get-all]
+        team: [get-all]
+      type: array
+      items:
+        $ref: '#/components/schemas/Service'
     Deployment:
       x-externalDocsPath: 'otomi/docs/deployment'
+      x-acl:
+        admin: [get-all]
+        team: [get-all]
+      type: object
       properties:
         id:
           type: integer
@@ -692,22 +765,23 @@ components:
             - failed
     Team:
       x-externalDocsPath: 'otomi/docs/configuring-team'
+      x-acl:
+        admin: [delete-all, get-all, post-all, put-all]
+        team: [get-all, put]
       type: object
       properties:
         name:
           <<: *nameField
           example: 'Team Otomi'
           x-acl:
-            team: [read]
-            admin: [read, write]
+            team: [get]
           description: A team name
         clusters:
           title: Clusters
           <<: *AvailableClusters
           minItems: 1
           x-acl:
-            team: [read]
-            admin: [read, write]
+            team: [get]
         password:
           type: string
           # description: "A secret that is used access multi-tenant log aggregation system (Loki)"
@@ -761,55 +835,19 @@ components:
         - name
         - clusters
 
-    ServiceIngress:
-      properties: &ServiceIngress
-        useDefaultSubdomain:
-          title: 'Use suggested domain (preferred)'
-          type: boolean
-          default: true
-          description: Allows to use wildcard certs already available (only override for public facing services)
-        subdomain:
-          title: 'Host'
-          type: string
-          nullable: true
-          description: A host that is used to set DNS 'A' records
-          <<: *domainNameField
-        domain:
-          title: DNS Zone
-          description: A managed DNS zone
-          type: string
-        path:
-          title: URL path
-          description:
-            The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
-          type: string
-          <<: *pathField
-        forwardPath:
-          title: Forward path
-          description: Forward the URL path into the service (don't rewrite to /)
-          type: boolean
-        hasSingleSignOn:
-          title: Authenticate with Single Sign On
-          type: boolean
-          default: false
-        hasCert:
-          title: Already has a certificate
-          type: boolean
-          default: false
-          description:
-            If true a certificate should be deployed as a TLS secret already with the name 'cert-$svcName'. Otherwise it
-            will be generated.
-        certArn:
-          type: string
-          title: Certificate ARN
-          description: Certificate ARN of an existing AWS certificate
-          example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
-      required:
-        - domain
-        - subdomain
+    Kubecfg:
+      type: object
+      x-acl:
+        admin: [get-all]
+        team: [get]
+      properties: {}
 
     Service:
       x-externalDocsPath: 'otomi/docs/configuring-service'
+      x-acl:
+        admin: [delete-all, get-all, post-all, put-all]
+        team: [delete, get, post, put]
+      type: object
       properties:
         name:
           <<: *idNameField
@@ -820,12 +858,14 @@ components:
           title: Cluster ID
           type: string
           description: A kubernetes cluster for the service
+          x-acl:
+            admin: [get, post]
+            team: [get, post]
         ingress:
           title: Exposure
           type: object
           x-acl:
-            team: [read]
-            admin: [read, write]
+            team: [get]
           oneOf:
             - title: Private
               nullable: true
@@ -834,7 +874,6 @@ components:
               nullable: true
               properties:
                 <<: *ServiceIngress
-
         ksvc:
           title: Type
           type: object
@@ -863,7 +902,6 @@ components:
                   default: svcPredeployed
               required:
                 - serviceType
-
         teamId:
           type: string
           readOnly: true
@@ -875,6 +913,8 @@ components:
         - clusterId
 
     OpenApiValidationError:
+      type: object
+      x-acl: []
       properties:
         status:
           type: integer
@@ -882,7 +922,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ValidationError'
+
     ValidationError:
+      type: object
+      x-acl: []
       properties:
         path:
           type: string
@@ -895,7 +938,41 @@ components:
           enum:
             - body
             - path
+
     OtomiStackError:
+      type: object
+      x-acl: []
       properties:
         message:
           type: string
+
+    Session:
+      x-acl:
+        admin: [get]
+        team: [get]
+      type: object
+      properties:
+        currentClusterId:
+          type: string
+          readOnly: true
+        clusters:
+          readOnly: true
+          <<: *ClustersSchema
+        core:
+          type: object
+          readOnly: true
+        user:
+          type: object
+          readOnly: true
+          properties:
+            email:
+              type: string
+            teamId:
+              type: string
+            isAdmin:
+              type: boolean
+            role:
+              type: string
+        isDirty:
+          type: boolean
+          readOnly: true

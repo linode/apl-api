@@ -3,11 +3,13 @@ import FileSync from 'lowdb/adapters/FileSync'
 import Memory from 'lowdb/adapters/Memory'
 import findIndex from 'lodash/findIndex'
 
+import cloneDeep from 'lodash/cloneDeep'
 import { AlreadyExists, NotExistError } from './error'
 
 export class Db {
   // db: LowdbSync<any>
-  db: any
+  // db: lowdb.LowdbSync<any>
+  db
 
   dirty: boolean
 
@@ -35,6 +37,13 @@ export class Db {
   }
 
   getItem(name, selectors) {
+    // By default data is returned by reference, this means that modifications to returned objects may change the database.
+    // To avoid such behavior, we use .cloneDeep().
+    const data = this.getItemReference(name, selectors)
+    return cloneDeep(data)
+  }
+
+  getItemReference(name, selectors) {
     const data = this.db.get(name).find(selectors).value()
     if (data === undefined) {
       throw new NotExistError(`Selector props do not exist in '${name}' collection: ${JSON.stringify(selectors)}`)
@@ -48,7 +57,7 @@ export class Db {
 
   createItem(name, selectors, data) {
     try {
-      this.getItem(name, selectors)
+      this.getItemReference(name, selectors)
     } catch (e) {
       const ret = this.db.get(name).push(data).last().assign(selectors).write()
       this.dirty = this.dirtyActive
@@ -58,17 +67,14 @@ export class Db {
   }
 
   deleteItem(name, selectors) {
-    this.getItem(name, selectors)
+    this.getItemReference(name, selectors)
     this.db.get(name).remove(selectors).write()
     this.dirty = this.dirtyActive
   }
 
   updateItem(name, selectors, data) {
-    const item = this.getItem(name, selectors)
-    const ret = this.db
-      .get(name)
-      .replaceRecord(item, { ...data, ...selectors })
-      .write()
+    this.getItemReference(name, selectors)
+    const ret = this.db.get(name).find(selectors).assign(data).write()
     this.dirty = this.dirtyActive
     return ret
   }
