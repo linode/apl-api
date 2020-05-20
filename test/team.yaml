@@ -10,6 +10,7 @@ teamConfig:
         - isPublic: true
           domain: 'hello.team-team1.dev.otomi.cloud'
           name: hello
+          path: '/bla'
           ksvc:
             annotations:
               autoscaling.knative.dev/minScale: '1'

@@ -22,15 +22,14 @@ ENV NODE_ENV=test
 
 RUN npm run lint
 RUN npm run test
+RUN npm run build
 
 # --------------- Cleanup
 FROM dev as clean
-
 # below command removes the packages specified in devDependencies and set NODE_ENV to production
 RUN npm prune --production
-
 # --------------- Production stage
-FROM alpine:3.11 AS prod
+FROM node:13.10.1-alpine AS prod
 
 
 COPY --from=dev /usr/local/bin/node /usr/bin/
@@ -38,19 +37,19 @@ COPY --from=dev /usr/lib/libgcc* /usr/lib/
 COPY --from=dev /usr/lib/libstdc* /usr/lib/
 
 # Install dependencies
-RUN apk add --no-cache git
+RUN apk add --no-cache git jq
 
 # Install app
 RUN mkdir /app
 WORKDIR /app
 COPY --from=clean /app/node_modules node_modules
+COPY --from=ci /app/dist dist
 COPY package.json .
-COPY app.js .
-COPY src src
+COPY bin bin
 
-USER 1001
+USER node
 EXPOSE 8080
 
 ENV NODE_ENV=production
 
-CMD ["node", "app.js"]
+CMD ["node", "--max-http-header-size", "16384", "dist/app.js"]
