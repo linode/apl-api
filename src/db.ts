@@ -3,6 +3,7 @@ import FileSync from 'lowdb/adapters/FileSync'
 import Memory from 'lowdb/adapters/Memory'
 import findIndex from 'lodash/findIndex'
 
+import cloneDeep from 'lodash/cloneDeep'
 import { AlreadyExists, NotExistError } from './error'
 
 export class Db {
@@ -38,11 +39,8 @@ export class Db {
   getItem(name, selectors) {
     // By default data is returned by reference, this means that modifications to returned objects may change the database.
     // To avoid such behavior, we use .cloneDeep().
-    const data = this.db.get(name).find(selectors).cloneDeep().value()
-    if (data === undefined) {
-      throw new NotExistError(`Selector props do not exist in '${name}' collection: ${JSON.stringify(selectors)}`)
-    }
-    return data
+    const data = this.getItemReference(name, selectors)
+    return cloneDeep(data)
   }
 
   getItemReference(name, selectors) {

@@ -141,7 +141,6 @@ export default class Authz {
         const property: Property = schema.properties[propertyName]
         // Attribute wise permission overwrite model wise permissions
         property['x-acl'] = { ...schemaAcl, ...property['x-acl'] }
-        console.log(property['x-acl'])
       })
     })
     // console.log(JSON.stringify(schemas))
