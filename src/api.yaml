@@ -893,11 +893,6 @@ components:
                   default: svcPredeployed
               required:
                 - serviceType
-        logo:
-          properties:
-            name:
-              type: string
-              readOnly: true
         teamId:
           type: string
           readOnly: true
