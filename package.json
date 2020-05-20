@@ -104,7 +104,7 @@
     "build": "tsc && copyup ./src/api.yaml ./dist",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
-    "dev": "ts-node-dev --inspect=4321 --respawn --transpileOnly src/app.ts",
+    "dev": "ts-node-dev --watch src/api.yaml,src/**/*.ts --inspect=4321 --respawn --transpileOnly src/app.ts",
     "format": "prettier --check \"**/*.{js,json,md,ts,yml,yaml}\"",
     "format:fix": "prettier --write \"**/*.{js,json,md,ts,yml,yaml}\"",
     "husky:lint-staged": "lint-staged",
