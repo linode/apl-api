@@ -1,12 +1,15 @@
 import { Request } from 'express'
 
 export interface OpenApiRequest extends Request {
-  operationDoc: { responses: { '200'?: { content: { 'application/json': { schema: { $ref: string } } } } } }
+  operationDoc: {
+    responses: { '200'?: { content: { 'application/json': { schema: { $ref: string } } } } }
+    security: any[]
+  }
   apiDoc: OpenApi
   session: Session
 }
 
-type httpMethodType = 'delete' | 'get' | 'patch' | 'post' | 'put'
+type httpMethodType = 'delete' | 'read' | 'create' | 'update'
 export interface OpenApi {
   components: {
     schemas: {
@@ -41,15 +44,13 @@ export interface Acl {
 
 export type AclAction =
   | 'create'
-  | 'create-all'
+  | 'create-any'
   | 'delete'
-  | 'delete-all'
-  | 'get'
-  | 'get-all'
-  | 'patch'
-  | 'patch-all'
-  | 'put'
-  | 'put-all'
+  | 'delete-any'
+  | 'read'
+  | 'read-any'
+  | 'update'
+  | 'update-any'
 
 export interface Property {
   type: string

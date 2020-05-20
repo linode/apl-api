@@ -8,20 +8,18 @@ import isEmpty from 'lodash/isEmpty'
 import { Acl, OpenApi, Schema, Property, Session, AclAction } from './api.d'
 
 const allowedResourceActions = [
-  'get',
-  'get-all',
-  'patch',
-  'patch-all',
-  'put',
-  'put-all',
+  'read',
+  'read-any',
+  'update',
+  'update-any',
   'delete',
-  'delete-all',
+  'delete-any',
   'create',
-  'create-all',
+  'create-any',
 ]
-const allowedResourceCollectionActions = ['get-all']
-const allowedAttributeActions = ['get', 'get-all', 'patch', 'patch-all', 'put', 'put-all']
-const skipABACActions = ['post', 'get', 'delete']
+const allowedResourceCollectionActions = ['read-any']
+const allowedAttributeActions = ['read', 'read-any', 'update', 'update-any']
+const skipABACActions = ['create', 'read', 'delete']
 
 interface RawRules {
   [actionName: string]: { [schemaName: string]: { fields: string[]; conditions: object } }
@@ -132,7 +130,7 @@ export default class Authz {
       const schemaAcl = {}
       Object.keys(schema['x-acl']).forEach((role) => {
         schemaAcl[role] = schema['x-acl'][role].map((action: AclAction) => {
-          if (action.endsWith('-all')) return action.slice(0, -4)
+          if (action.endsWith('-any')) return action.slice(0, -4)
           return action
         })
       })
@@ -172,7 +170,7 @@ export default class Authz {
 
       const actions: string[] = get(schema, `x-acl.${session.user.role}`, [])
       actions.forEach((action) => {
-        if (action.endsWith('-all')) {
+        if (action.endsWith('-any')) {
           canRules.push({ action: action.slice(0, -4), subject: schemaName })
         } else canRules.push({ action, subject: schemaName, conditions: { teamId: { $eq: session.user.teamId } } })
       })
@@ -197,7 +195,7 @@ export default class Authz {
           if (!allowedAttributeActions.includes(actionName)) return
 
           let action = actionName
-          if (actionName.endsWith('-all')) {
+          if (actionName.endsWith('-any')) {
             action = action.slice(0, -4)
           }
           if (has(specRules, `${action}.${schemaName}.fields`)) specRules[action][schemaName].fields.push(propertyName)

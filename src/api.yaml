@@ -684,15 +684,15 @@ components:
     Clusters: &ClustersSchema
       type: array
       x-acl:
-        admin: [get-all]
-        team: [get-all]
+        admin: [read-any]
+        team: [read-any]
       items:
         $ref: '#/components/schemas/Cluster'
     Cluster:
       type: object
       x-acl:
-        admin: [get-all]
-        team: [get-all]
+        admin: [read-any]
+        team: [read-any]
       properties:
         cluster:
           type: string
@@ -731,8 +731,8 @@ components:
           readOnly: true
     Teams:
       x-acl:
-        admin: [get-all]
-        team: [get-all]
+        admin: [read-any]
+        team: [read-any]
       type: object
       properties:
         teams:
@@ -741,16 +741,16 @@ components:
             $ref: '#/components/schemas/Team'
     Services:
       x-acl:
-        admin: [get-all]
-        team: [get-all]
+        admin: [read-any]
+        team: [read-any]
       type: array
       items:
         $ref: '#/components/schemas/Service'
     Deployment:
       x-externalDocsPath: 'otomi/docs/deployment'
       x-acl:
-        admin: [get-all]
-        team: [get-all]
+        admin: [read-any]
+        team: [read-any]
       type: object
       properties:
         id:
@@ -766,22 +766,22 @@ components:
     Team:
       x-externalDocsPath: 'otomi/docs/configuring-team'
       x-acl:
-        admin: [delete-all, get-all, post-all, put-all]
-        team: [get-all, put]
+        admin: [delete-any, read-any, create-any, update-any]
+        team: [read-any, update]
       type: object
       properties:
         name:
           <<: *nameField
           example: 'Team Otomi'
           x-acl:
-            team: [get]
+            team: [read]
           description: A team name
         clusters:
           title: Clusters
           <<: *AvailableClusters
           minItems: 1
           x-acl:
-            team: [get]
+            team: [read]
         password:
           type: string
           # description: "A secret that is used access multi-tenant log aggregation system (Loki)"
@@ -838,15 +838,15 @@ components:
     Kubecfg:
       type: object
       x-acl:
-        admin: [get-all]
-        team: [get]
+        admin: [read-any]
+        team: [read]
       properties: {}
 
     Service:
       x-externalDocsPath: 'otomi/docs/configuring-service'
       x-acl:
-        admin: [delete-all, get-all, post-all, put-all]
-        team: [delete, get, post, put]
+        admin: [delete-any, read-any, create-any, update-any]
+        team: [delete, read, create, update]
       type: object
       properties:
         name:
@@ -859,13 +859,13 @@ components:
           type: string
           description: A kubernetes cluster for the service
           x-acl:
-            admin: [get, post]
-            team: [get, post]
+            admin: [read, create]
+            team: [read, create]
         ingress:
           title: Exposure
           type: object
           x-acl:
-            team: [get]
+            team: [read]
           oneOf:
             - title: Private
               nullable: true
@@ -948,8 +948,8 @@ components:
 
     Session:
       x-acl:
-        admin: [get]
-        team: [get]
+        admin: [read]
+        team: [read]
       type: object
       properties:
         currentClusterId:

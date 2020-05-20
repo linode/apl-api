@@ -89,8 +89,8 @@ components:
   schemas:
     Services:
       x-acl:
-        admin: [get-all]
-        team: [get-all]
+        admin: [read-any]
+        team: [read-any]
       type: array
 ```
 
@@ -110,8 +110,8 @@ components:
   schemas:
     Service:
       x-acl:
-        admin: [delete-all, get-all, post-all, put-all]
-        team: [delete, get, post, put]
+        admin: [delete-any, read-any, create-any, update-any]
+        team: [delete, read, create, put]
       type: object
       properties:
 ```
@@ -128,8 +128,8 @@ The ABAC permissions are used to narrow down RBAC ones. Never the other way roun
 ```
     Service:
       x-acl:
-        admin: [delete-all, get-all, post-all, put-all]
-        team: [delete, get, post, put]
+        admin: [delete-any, read-any, create-any, update-any]
+        team: [delete, read, create, put]
       type: object
       properties:
         name:
@@ -171,8 +171,8 @@ From above:
 ```
     Services:
       x-acl:
-        admin: [get-all]
-        team: [get-all]
+        admin: [read-any]
+        team: [read-any]
       type: array
       items:
         $ref: '#/components/schemas/Service'     # even if the components/schemas/Service defines ABAC it will NOT be applied
