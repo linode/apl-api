@@ -852,6 +852,9 @@ components:
           title: Cluster ID
           type: string
           description: A kubernetes cluster for the service
+          x-acl:
+            admin: [get, post]
+            team: [get, post]
         ingress:
           title: Exposure
           type: object
