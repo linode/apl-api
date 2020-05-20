@@ -37,6 +37,9 @@ x-fields:
   idName: &idNameField
     type: string
     pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+externalDocs:
+  description: 'This is the base url of the external documentation'
+  url: https://redkubes.github.io/otomi/ #Using this URL a final docUrl can be made using this+info.version+ the component's x-externalDocsPath
 
 x-post-responses: &DefaultPostResponses
   '400':
@@ -744,10 +747,11 @@ components:
       items:
         $ref: '#/components/schemas/Service'
     Deployment:
-      type: object
+      x-externalDocsPath: 'otomi/docs/deployment'
       x-acl:
         admin: [get-all]
         team: [get-all]
+      type: object
       properties:
         id:
           type: integer
@@ -760,6 +764,7 @@ components:
             - completed
             - failed
     Team:
+      x-externalDocsPath: 'otomi/docs/configuring-team'
       x-acl:
         admin: [delete-all, get-all, post-all, put-all]
         team: [get-all, put]
@@ -838,6 +843,7 @@ components:
       properties: {}
 
     Service:
+      x-externalDocsPath: 'otomi/docs/configuring-service'
       x-acl:
         admin: [delete-all, get-all, post-all, put-all]
         team: [delete, get, post, put]
