@@ -1,24 +1,25 @@
+import * as k8s from '@kubernetes/client-node'
 import dotEnv from 'dotenv'
 import fs from 'fs'
-import * as k8s from '@kubernetes/client-node'
-import generatePassword from 'password-generator'
-import path from 'path'
 import yaml from 'js-yaml'
+import { findIndex } from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
+import filter from 'lodash/filter'
 import forEach from 'lodash/forEach'
 import forIn from 'lodash/forIn'
-import filter from 'lodash/filter'
 import get from 'lodash/get'
 import indexOf from 'lodash/indexOf'
-import isUndefined from 'lodash/isUndefined'
 import isEmpty from 'lodash/isEmpty'
+import isUndefined from 'lodash/isUndefined'
 import omit from 'lodash/omit'
 import omitBy from 'lodash/omitBy'
 import set from 'lodash/set'
-import { PublicUrlExists } from './error'
-import { arrayToObject, getPublicUrl, objectToArray } from './utils'
+import generatePassword from 'password-generator'
+import path from 'path'
 import db, { Db } from './db'
+import { AlreadyExists, NotExistError, PublicUrlExists } from './error'
 import repo, { Repo } from './repo'
+import { arrayToObject, getPublicUrl, objectToArray } from './utils'
 
 dotEnv.config()
 
@@ -199,7 +200,7 @@ export default class OtomiStack {
 
   apiClient = undefined
 
-  getApiClient() {
+  getApiClient(): k8s.CoreV1Api {
     if (this.apiClient) return this.apiClient
     const kc = new k8s.KubeConfig()
     kc.loadFromDefault()
@@ -244,6 +245,94 @@ export default class OtomiStack {
     const config = new k8s.KubeConfig()
     config.loadFromOptions(options)
     return config
+  }
+
+  async createPullSecret(teamId: string, name: string, server: string, password: string, username = '_json_key') {
+    const client = this.getApiClient()
+    const namespace = `team-${teamId}`
+    // create data structure for secret
+    const data = {
+      auths: {
+        [server]: {
+          username,
+          password,
+          email: 'not@val.id',
+          auth: username + Buffer.from(password).toString('base64'),
+        },
+      },
+    }
+    // create the secret
+    const secret = {
+      ...new k8s.V1Secret(),
+      metadata: { ...new k8s.V1ObjectMeta(), name },
+      type: 'docker-registry',
+      data: {
+        '.dockerconfigjson': Buffer.from(JSON.stringify(data)).toString('base64'),
+      },
+    }
+    // eslint-disable-next-line no-useless-catch
+    try {
+      await client.createNamespacedSecret(namespace, secret)
+      // get service account we want to add the secret to as pull secret
+      const saRes = await client.readNamespacedServiceAccount('default', namespace)
+      const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
+      // add to service account if needed
+      if (!sa.imagePullSecrets) sa.imagePullSecrets = []
+      const idx = findIndex(sa.imagePullSecrets, { name })
+      if (idx === -1) {
+        sa.imagePullSecrets.push({ name })
+        await client.patchNamespacedServiceAccount(
+          'default',
+          namespace,
+          sa,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          {
+            headers: { 'content-type': 'application/strategic-merge-patch+json' },
+          },
+        )
+      }
+    } catch (e) {
+      throw new AlreadyExists(`Secret '${name}' already exists in namespace '${namespace}'`)
+    }
+  }
+
+  async getPullSecrets(teamId) {
+    const client = this.getApiClient()
+    const namespace = `team-${teamId}`
+    const saRes = await client.readNamespacedServiceAccount('default', namespace)
+    const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
+    return sa.imagePullSecrets || []
+  }
+
+  async deletePullSecret(teamId, name) {
+    const client = this.getApiClient()
+    const namespace = `team-${teamId}`
+    const saRes = await client.readNamespacedServiceAccount('default', namespace)
+    const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
+    try {
+      const idx = findIndex(sa.imagePullSecrets, { name })
+      if (idx > -1) {
+        delete sa.imagePullSecrets[idx]
+        await client.patchNamespacedServiceAccount(
+          'default',
+          namespace,
+          sa,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          {
+            headers: { 'content-type': 'application/strategic-merge-patch+json' },
+          },
+        )
+      }
+      await client.deleteNamespacedSecret(name, namespace)
+    } catch (e) {
+      throw new NotExistError(`Secret '${name}' does not exist in namespace '${namespace}'`)
+    }
   }
 
   loadValues() {

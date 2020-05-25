@@ -1,8 +1,10 @@
+import './test-init'
 import { expect } from 'chai'
 import fs from 'fs'
 import yaml from 'js-yaml'
 import cloneDeep from 'lodash/cloneDeep'
 import OtomiStack from './otomi-stack'
+import { AlreadyExists } from './error'
 
 describe('Load and dump values', () => {
   let otomiStack

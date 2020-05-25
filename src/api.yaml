@@ -254,6 +254,58 @@ paths:
               schema:
                 $ref: '#/components/schemas/Service'
 
+  '/teams/{teamId}/secrets':
+    get:
+      operationId: getTeamSecrets
+      description: Get secrets from a given team
+      x-aclSchema: Secrets
+      parameters:
+        - name: teamId
+          in: path
+          description: ID of team
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully obtained secrets
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Secrets'
+        '400':
+          description: Bad Request
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OpenApiValidationError'
+    post:
+      operationId: createSecret
+      description: Create a secret
+      x-aclSchema: Secret
+      parameters:
+        - name: teamId
+          in: path
+          description: ID of team
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secret'
+        description: Service object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored service configuration
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Service'
+
   '/teams/{teamId}/services/{serviceId}':
     get:
       operationId: getService
