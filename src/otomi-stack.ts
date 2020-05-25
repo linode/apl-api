@@ -273,29 +273,20 @@ export default class OtomiStack {
     // eslint-disable-next-line no-useless-catch
     try {
       await client.createNamespacedSecret(namespace, secret)
-      // get service account we want to add the secret to as pull secret
-      const saRes = await client.readNamespacedServiceAccount('default', namespace)
-      const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
-      // add to service account if needed
-      if (!sa.imagePullSecrets) sa.imagePullSecrets = []
-      const idx = findIndex(sa.imagePullSecrets, { name })
-      if (idx === -1) {
-        sa.imagePullSecrets.push({ name })
-        await client.patchNamespacedServiceAccount(
-          'default',
-          namespace,
-          sa,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          {
-            headers: { 'content-type': 'application/strategic-merge-patch+json' },
-          },
-        )
-      }
     } catch (e) {
       throw new AlreadyExists(`Secret '${name}' already exists in namespace '${namespace}'`)
+    }
+    // get service account we want to add the secret to as pull secret
+    const saRes = await client.readNamespacedServiceAccount('default', namespace)
+    const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
+    // add to service account if needed
+    if (!sa.imagePullSecrets) sa.imagePullSecrets = []
+    const idx = findIndex(sa.imagePullSecrets, { name })
+    if (idx === -1) {
+      sa.imagePullSecrets.push({ name })
+      await client.patchNamespacedServiceAccount('default', namespace, sa, undefined, undefined, undefined, undefined, {
+        headers: { 'content-type': 'application/strategic-merge-patch+json' },
+      })
     }
   }
 
@@ -312,23 +303,14 @@ export default class OtomiStack {
     const namespace = `team-${teamId}`
     const saRes = await client.readNamespacedServiceAccount('default', namespace)
     const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
+    const idx = findIndex(sa.imagePullSecrets, { name })
+    if (idx > -1) {
+      delete sa.imagePullSecrets[idx]
+      await client.patchNamespacedServiceAccount('default', namespace, sa, undefined, undefined, undefined, undefined, {
+        headers: { 'content-type': 'application/strategic-merge-patch+json' },
+      })
+    }
     try {
-      const idx = findIndex(sa.imagePullSecrets, { name })
-      if (idx > -1) {
-        delete sa.imagePullSecrets[idx]
-        await client.patchNamespacedServiceAccount(
-          'default',
-          namespace,
-          sa,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          {
-            headers: { 'content-type': 'application/strategic-merge-patch+json' },
-          },
-        )
-      }
       await client.deleteNamespacedSecret(name, namespace)
     } catch (e) {
       throw new NotExistError(`Secret '${name}' does not exist in namespace '${namespace}'`)

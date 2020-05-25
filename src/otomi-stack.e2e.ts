@@ -24,7 +24,7 @@ describe('Secret creation', () => {
     const check = otomiStack.createPullSecret(teamId, name, server, data.password, data.username)
     return expect(check).to.eventually.be.rejectedWith(`Secret '${name}' already exists in namespace 'team-${teamId}'`)
   })
-  it('should delete an existing secret successfully', async () => {
+  it('should delete an existing pull secret successfully', async () => {
     await promise
     await otomiStack.deletePullSecret(teamId, name)
     const list = await otomiStack.getPullSecrets(teamId)
