@@ -184,17 +184,13 @@ export default class OtomiStack {
     if (servicesFiltered.length !== 0) throw new PublicUrlExists('Public URL is already used')
   }
 
-  async triggerDeployment(teamId, email) {
+  async triggerDeployment(teamId: string, email: string) {
     console.log('DISABLE_SYNC: ', env.DISABLE_SYNC)
     this.saveValues()
+
     if (env.DISABLE_SYNC !== 'true') {
-      await this.repo.commit(teamId, email)
-      await this.repo.push()
+      await this.repo.save(teamId, email)
     }
-    // this.saveValues()
-    // reset db and load values again
-    this.initDb()
-    this.loadValues()
   }
 
   apiClient = undefined
