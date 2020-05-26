@@ -272,7 +272,7 @@ export default class OtomiStack {
     }
     // eslint-disable-next-line no-useless-catch
     try {
-      await client.createNamespacedSecret(namespace, secret)
+      const res = await client.createNamespacedSecret(namespace, secret)
     } catch (e) {
       throw new AlreadyExists(`Secret '${name}' already exists in namespace '${namespace}'`)
     }
@@ -305,7 +305,7 @@ export default class OtomiStack {
     const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
     const idx = findIndex(sa.imagePullSecrets, { name })
     if (idx > -1) {
-      delete sa.imagePullSecrets[idx]
+      sa.imagePullSecrets.splice(idx, 1)
       await client.patchNamespacedServiceAccount('default', namespace, sa, undefined, undefined, undefined, undefined, {
         headers: { 'content-type': 'application/strategic-merge-patch+json' },
       })
