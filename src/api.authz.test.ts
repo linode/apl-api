@@ -5,11 +5,13 @@ import initApp from './server'
 import OtomiStack from './otomi-stack'
 import { validateEnv } from './utils'
 
-const otomiStack = new OtomiStack()
-sinon.stub(otomiStack)
-const app = initApp(otomiStack)
-
 describe('Api tests for admin', () => {
+  let app
+  before(() => {
+    const otomiStack = new OtomiStack()
+    sinon.stub(otomiStack)
+    app = initApp(otomiStack)
+  })
   it('admin can get all teams', (done) => {
     request(app)
       .get('/v1/teams')
@@ -51,9 +53,7 @@ describe('Api tests for admin', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-})
 
-describe('Api tests for team', () => {
   it('team cannot get all teams', (done) => {
     request(app)
       .get('/v1/deploy')
@@ -189,10 +189,7 @@ describe('Api tests for team', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-})
-
-describe('Api tests for non authorized user', () => {
-  it('should get app readiness', (done) => {
+  it('anonymous user should get app readiness', (done) => {
     request(app)
       .get('/v1/readiness')
       .set('Accept', 'application/json')
@@ -200,7 +197,7 @@ describe('Api tests for non authorized user', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('should get api spec', (done) => {
+  it('anonymous user should get api spec', (done) => {
     request(app)
       .get('/v1/apiDocs')
       .set('Accept', 'application/json')
@@ -208,7 +205,7 @@ describe('Api tests for non authorized user', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('cannot get a specific team', (done) => {
+  it('anonymous user cannot get a specific team', (done) => {
     request(app)
       .get('/v1/teams/team1')
       .set('Accept', 'application/json')
@@ -216,7 +213,7 @@ describe('Api tests for non authorized user', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('cannot modify a team', (done) => {
+  it('anonymous user cannot modify a team', (done) => {
     request(app)
       .put('/v1/teams/team1')
       .set('Accept', 'application/json')
@@ -224,7 +221,7 @@ describe('Api tests for non authorized user', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('cannot delete a team', (done) => {
+  it('anonymous user cannot delete a team', (done) => {
     request(app)
       .delete('/v1/teams/team1')
       .set('Accept', 'application/json')
@@ -232,7 +229,7 @@ describe('Api tests for non authorized user', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('cannot create a team', (done) => {
+  it('anonymous user cannot create a team', (done) => {
     request(app)
       .post('/v1/teams')
       .set('Accept', 'application/json')
@@ -240,7 +237,7 @@ describe('Api tests for non authorized user', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('cannot get services', (done) => {
+  it('anonymous user cannot get services', (done) => {
     request(app)
       .get('/v1/teams/team1/services')
       .set('Accept', 'application/json')
@@ -248,7 +245,7 @@ describe('Api tests for non authorized user', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('cannot get a given service', (done) => {
+  it('anonymous user cannot get a given service', (done) => {
     request(app)
       .get('/v1/teams/team1/services/service1')
       .set('Accept', 'application/json')
@@ -257,7 +254,7 @@ describe('Api tests for non authorized user', () => {
       .end(done)
   })
 
-  it('cannot edit a given service', (done) => {
+  it('anonymous user cannot edit a given service', (done) => {
     request(app)
       .put('/v1/teams/team1/services/service1')
       .set('Accept', 'application/json')
@@ -265,7 +262,7 @@ describe('Api tests for non authorized user', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('cannot delete a given service', (done) => {
+  it('anonymous user cannot delete a given service', (done) => {
     request(app)
       .delete('/v1/teams/team1/services/service1')
       .set('Accept', 'application/json')
@@ -273,7 +270,7 @@ describe('Api tests for non authorized user', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('cannot add a new service', (done) => {
+  it('anonymous user cannot add a new service', (done) => {
     request(app)
       .post('/v1/teams/team1/services')
       .set('Accept', 'application/json')
@@ -284,6 +281,12 @@ describe('Api tests for non authorized user', () => {
 })
 
 describe('Api tests for data validation', () => {
+  let app
+  before(() => {
+    const otomiStack = new OtomiStack()
+    sinon.stub(otomiStack)
+    app = initApp(otomiStack)
+  })
   it('invalid team name data', (done) => {
     request(app)
       .post('/v1/teams')
