@@ -91,6 +91,9 @@ paths:
                 $ref: '#/components/schemas/Clusters'
 
   /services:
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+
     get:
       operationId: getAllServices
       description: Get services from a given team
@@ -142,17 +145,12 @@ paths:
                 $ref: '#/components/schemas/Team'
 
   '/teams/{teamId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeam
       description: Get a specific team
       x-aclSchema: Team
-      parameters:
-        - name: teamId
-          in: path
-          description: ID of team to return
-          required: true
-          schema:
-            type: string
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -165,13 +163,6 @@ paths:
       operationId: editTeam
       description: Edit a team
       x-aclSchema: Team
-      parameters:
-        - name: teamId
-          in: path
-          description: ID of team to return
-          required: true
-          schema:
-            type: string
       requestBody:
         content:
           application/json:
@@ -191,29 +182,17 @@ paths:
       operationId: deleteTeam
       description: Delete team
       x-aclSchema: Team
-      parameters:
-        - name: teamId
-          in: path
-          description: ID of team to delete
-          required: true
-          schema:
-            type: string
       responses:
         <<: *DefaultGetResponses
         '200':
           description: Successfully deleted a team
   '/teams/{teamId}/services':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamServices
       description: Get services from a given team
       x-aclSchema: Services
-      parameters:
-        - name: teamId
-          in: path
-          description: ID of team
-          required: true
-          schema:
-            type: string
       responses:
         '200':
           description: Successfully obtained services
@@ -231,13 +210,6 @@ paths:
       operationId: createService
       description: Create a service
       x-aclSchema: Service
-      parameters:
-        - name: teamId
-          in: path
-          description: ID of team
-          required: true
-          schema:
-            type: string
       requestBody:
         content:
           application/json:
@@ -255,23 +227,13 @@ paths:
                 $ref: '#/components/schemas/Service'
 
   '/teams/{teamId}/services/{serviceId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/serviceParams'
     get:
       operationId: getService
       description: Get a service from a given team
       x-aclSchema: Service
-      parameters:
-        - name: teamId
-          in: path
-          description: ID of team
-          required: true
-          schema:
-            type: string
-        - name: serviceId
-          in: path
-          description: ID of the service
-          required: true
-          schema:
-            type: string
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -284,19 +246,6 @@ paths:
       operationId: editService
       description: Edit a service from a given team
       x-aclSchema: Service
-      parameters:
-        - name: teamId
-          in: path
-          description: ID of team to return
-          required: true
-          schema:
-            type: string
-        - name: serviceId
-          in: path
-          description: ID of the service
-          required: true
-          schema:
-            type: string
       requestBody:
         content:
           application/json:
@@ -316,19 +265,6 @@ paths:
       operationId: deleteService
       description: Delete a service from a given team
       x-aclSchema: Service
-      parameters:
-        - name: teamId
-          in: path
-          description: ID of team to delete
-          required: true
-          schema:
-            type: string
-        - name: serviceId
-          in: path
-          description: ID of the service
-          required: true
-          schema:
-            type: string
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -354,17 +290,12 @@ paths:
                 $ref: '#/components/schemas/OtomiStackError'
 
   '/kubecfg/{teamId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
     get:
       operationId: downloadKubecfg
       description: Download a kubecfg for a team
       x-aclSchema: Kubecfg
-      parameters:
-        - name: teamId
-          in: path
-          description: ID of team to get kubecfg for
-          required: true
-          schema:
-            type: string
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -406,6 +337,22 @@ servers:
 
 # -------------------- Components
 components:
+  parameters:
+    teamParams:
+      name: teamId
+      in: path
+      description: ID of team to return
+      required: true
+      schema:
+        type: string
+    serviceParams:
+      name: serviceId
+      in: path
+      description: ID of the service
+      required: true
+      schema:
+        type: string
+
   securitySchemes:
     groupAuthn:
       type: apiKey
