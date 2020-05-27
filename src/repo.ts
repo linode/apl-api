@@ -3,7 +3,7 @@ import simpleGit, { SimpleGit } from 'simple-git/promise'
 import yaml from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
-import { GitPullError, GitPushError } from './error'
+import { GitPullError, GitPushError, GitError } from './error'
 
 export class Repo {
   path: string
@@ -24,10 +24,13 @@ export class Repo {
 
   remoteBranch: string
 
+  urlLogin: string
+
   constructor(localRepoPath, url, user, email, password, branch) {
     this.path = localRepoPath
-    this.git = simpleGit(this.path)
     this.url = url
+    this.urlLogin = `https://${user}:${password}@${url}`
+    this.git = simpleGit(this.path)
     this.user = user
     this.email = email
     this.password = password
@@ -86,8 +89,7 @@ export class Repo {
     const isRepo = await this.git.checkIsRepo()
     if (!isRepo) {
       console.info(`Repo does not exist. Cloning from: ${this.url} to: ${this.path}`)
-      const remote = `https://${this.user}:${this.password}@${this.url}`
-      await this.git.clone(remote, this.path)
+      await this.git.clone(this.urlLogin, this.path)
       await this.git.addConfig('user.name', this.user)
       await this.git.addConfig('user.email', this.email)
       await this.git.checkout(this.branch)
@@ -111,8 +113,12 @@ export class Repo {
     return pullSummary
   }
 
+  async getCommitSha() {
+    return this.git.revparse(['--verify', 'HEAD'])
+  }
+
   async save(team, email) {
-    const sha = await this.git.revparse(['HEAD'])
+    const sha = await this.getCommitSha()
     const commitSummary = await this.commit()
     if (commitSummary.commit === '') return
     await this.addNote({ team, email })
@@ -124,9 +130,21 @@ export class Repo {
     }
     await this.push()
   }
+
+  async addRemoteOrigin(origin: string) {
+    await this.git.addRemote(this.remote, origin)
+  }
 }
 
-export default function repo(localPath = '/tmp/otomi-stack', url, user, email, password, branch) {
+export default function repo(localPath = '/tmp/otomi-stack', url, user, email, password, branch): Repo {
   if (!fs.existsSync(localPath)) fs.mkdirSync(localPath, 0o744)
   return new Repo(localPath, url, user, email, password, branch)
+}
+
+export async function createBareRepo(path = '/tmp/repo-bare'): Promise<SimpleGit> {
+  // if (fs.existsSync(path)) throw new GitError(`Path exists: ${path}`)
+  fs.mkdirSync(path, 0o744)
+  const git = simpleGit(path)
+  await git.init(true)
+  return git
 }
