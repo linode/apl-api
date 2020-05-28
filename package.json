@@ -35,7 +35,6 @@
     "@hkdobrev/run-if-changed": "^0.3.1",
     "@types/chai": "^4.2.11",
     "@types/express": "^4.17.6",
-    "@types/fs-extra": "^9.0.1",
     "@types/lowdb": "^1.0.7",
     "@types/mocha": "^7.0.2",
     "@types/node": "^13.13.4",
@@ -54,7 +53,6 @@
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-prettier": "^3.1.2",
     "eslint-plugin-react": "^7.19.0",
-    "fs-extra": "^9.0.0",
     "husky": "^4.2.3",
     "lint-staged": "^10.0.9",
     "mocha": "^7.0.0",
@@ -115,7 +113,7 @@
     "lint:fix": "eslint --ext js,ts .",
     "release": "standard-version",
     "start": "node dist/app.js",
-    "test": "mocha --timeout 5000 -r ts-node/register src/*.test.* --exit"
+    "test": "mocha --timeout 20000 -r ts-node/register src/*.test.* --exit"
   },
   "version": "0.2.29"
 }

@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { removeSync, appendFileSync } from 'fs-extra'
+import { appendFileSync } from 'fs'
 import { join } from 'path'
 import { execSync } from 'child_process'
 import repo, { Repo, createBareRepo } from './repo'
@@ -15,29 +15,41 @@ describe('Repo scenarios', () => {
   beforeEach(async () => {
     await createBareRepo(bareRepoPath)
     r1 = repo(repo1Path, bareRepoPath, null, null, null, 'master')
-    r1.git.init()
-    r1.addRemoteOrigin(remoteOrigin)
-    r2 = repo(repo2Path, repo2Path, null, null, null, 'master')
-    r2.git.init()
-    r2.addRemoteOrigin(remoteOrigin)
+    await r1.git.init()
+    await r1.addRemoteOrigin(remoteOrigin)
+    // Create an initial commit to get rid of 'Needed a single revision' error
+    appendFileSync(join(r1.path, testFile), 'AAA')
+    await r1.git.add(testFile)
+    await r1.git.commit('initial value')
+    await r1.git.push('origin', 'master')
+
+    r2 = repo(repo2Path, bareRepoPath, null, null, null, 'master')
+    await r2.git.init()
+    await r2.addRemoteOrigin(remoteOrigin)
+    await r2.pull()
   })
 
   afterEach(() => {
-    // execSync(`rm -rf ${repo1Path}`)
-    // execSync(`rm -rf ${repo2Path}`)
-    // execSync(`rm -rf ${bareRepoPath}`)
+    execSync(`rm -rf /tmp/test-r*`)
   })
 
   it('should throw on conflict', async () => {
-    appendFileSync(join(r1.path, testFile), 'AAA')
-    r1.save('', '')
-    // const sha = await r1.getCommitSha()
-    r2.pull()
+    const sha = await r1.getCommitSha()
     appendFileSync(join(r1.path, testFile), 'AAB')
-    r1.save('', '')
+    await r1.git.add(testFile)
+    await r1.git.commit('initial value')
+    await r1.git.push('origin', 'master')
     appendFileSync(join(r2.path, testFile), 'ABA')
-    expect(() => r2.save('', '')).to.throw
-    // const sha2 = await r2.getCommitSha()
-    // expect(sha).be.equal(sha2)
+    try {
+      await r2.save('', '')
+    } catch (error) {
+      // empty
+    }
+
+    // expect(await r2.save('', '')). rejectedWith(GitPullError)
+    const sha2 = await r2.getCommitSha()
+    expect(sha).be.equal(sha2)
+    const status = await r2.git.status()
+    expect(status.isClean()).be.true
   })
 })

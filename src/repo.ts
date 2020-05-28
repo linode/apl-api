@@ -3,7 +3,7 @@ import simpleGit, { SimpleGit } from 'simple-git/promise'
 import yaml from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
-import { GitPullError, GitPushError, GitError } from './error'
+import { GitPullError } from './error'
 
 export class Repo {
   path: string
@@ -54,9 +54,9 @@ export class Repo {
   }
 
   async commit() {
-    console.info('Committing changes')
     await this.git.add('./*')
     const commitSummary = await this.git.commit('otomi-stack-api')
+    console.debug(`Commit summary: ${JSON.stringify(commitSummary)}`)
     return commitSummary
   }
 
@@ -70,19 +70,6 @@ export class Repo {
     await this.git.raw(cmd)
   }
 
-  async push() {
-    console.info(`Pushing values to remote ${this.remoteBranch}`)
-
-    try {
-      const res = await this.git.push(this.remote, this.branch)
-      console.info(`Successfully pushed values to remote ${this.remoteBranch}`)
-      return res
-    } catch (err) {
-      console.error(err.message)
-      throw new GitPushError(`Failed to push values to remote ${this.remoteBranch}`)
-    }
-  }
-
   async clone() {
     console.info(`Checking if repo exists at: ${this.path}`)
 
@@ -93,6 +80,7 @@ export class Repo {
       await this.git.addConfig('user.name', this.user)
       await this.git.addConfig('user.email', this.email)
       await this.git.checkout(this.branch)
+      return isRepo
     }
 
     console.log('Repo already exists. Pulling latest changes')
@@ -102,14 +90,8 @@ export class Repo {
   }
 
   async pull() {
-    let pullSummary
-    try {
-      pullSummary = await this.git.pull(this.remote, this.branch, { '--rebase': true })
-      console.log(`Pull ${pullSummary.files.length} files`)
-      return pullSummary
-    } catch (e) {
-      console.error(`Unable to rebase: ${JSON.stringify(e)}`)
-    }
+    const pullSummary = await this.git.pull(this.remote, this.branch, { '--rebase': true })
+    console.debug(`Pull summary: ${JSON.stringify(pullSummary)}`)
     return pullSummary
   }
 
@@ -119,16 +101,22 @@ export class Repo {
 
   async save(team, email) {
     const sha = await this.getCommitSha()
+
     const commitSummary = await this.commit()
     if (commitSummary.commit === '') return
     await this.addNote({ team, email })
-    const pullSummary = await this.pull()
-    if (!pullSummary) {
+    try {
+      await this.pull()
+    } catch (e) {
+      console.warn(`Pull error: ${JSON.stringify(e)}`)
       await this.git.rebase({ '--abort': true })
-      this.git.reset(['--hard', sha])
+      await this.git.reset(['--hard', sha])
+      console.info(`Reset HEAD to ${sha} commit`)
+
       throw new GitPullError()
     }
-    await this.push()
+
+    await this.git.push(this.remote, this.branch)
   }
 
   async addRemoteOrigin(origin: string) {
@@ -141,8 +129,7 @@ export default function repo(localPath = '/tmp/otomi-stack', url, user, email, p
   return new Repo(localPath, url, user, email, password, branch)
 }
 
-export async function createBareRepo(path = '/tmp/repo-bare'): Promise<SimpleGit> {
-  // if (fs.existsSync(path)) throw new GitError(`Path exists: ${path}`)
+export async function createBareRepo(path): Promise<SimpleGit> {
   fs.mkdirSync(path, 0o744)
   const git = simpleGit(path)
   await git.init(true)
