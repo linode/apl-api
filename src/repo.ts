@@ -24,19 +24,28 @@ export class Repo {
 
   remoteBranch: string
 
-  urlLogin: string
+  repoPathAuth: string
 
-  constructor(localRepoPath, url, user, email, password, branch) {
+  constructor(localRepoPath, remotePath, user, email, repoPathAuth, branch) {
     this.path = localRepoPath
-    this.url = url
-    this.urlLogin = `https://${user}:${password}@${url}`
-    this.git = simpleGit(this.path)
+    this.url = remotePath
+    this.repoPathAuth = repoPathAuth
     this.user = user
     this.email = email
-    this.password = password
     this.branch = branch
     this.remote = 'origin'
     this.remoteBranch = `${this.remote}/${branch}`
+    this.git = simpleGit(this.path)
+  }
+
+  async addConfig() {
+    await this.git.addConfig('user.name', this.user)
+    await this.git.addConfig('user.email', this.email)
+  }
+
+  async init() {
+    await this.git.init()
+    await this.addRemoteOrigin()
   }
 
   writeFile(relativePath, data) {
@@ -76,9 +85,8 @@ export class Repo {
     const isRepo = await this.git.checkIsRepo()
     if (!isRepo) {
       console.info(`Repo does not exist. Cloning from: ${this.url} to: ${this.path}`)
-      await this.git.clone(this.urlLogin, this.path)
-      await this.git.addConfig('user.name', this.user)
-      await this.git.addConfig('user.email', this.email)
+      await this.git.clone(this.repoPathAuth, this.path)
+
       await this.git.checkout(this.branch)
       return isRepo
     }
@@ -119,17 +127,51 @@ export class Repo {
     await this.git.push(this.remote, this.branch)
   }
 
-  async addRemoteOrigin(origin: string) {
-    await this.git.addRemote(this.remote, origin)
+  async addRemoteOrigin() {
+    await this.git.addRemote(this.remote, this.url)
   }
 }
 
-export default function repo(localPath = '/tmp/otomi-stack', url, user, email, password, branch): Repo {
-  if (!fs.existsSync(localPath)) fs.mkdirSync(localPath, 0o744)
-  return new Repo(localPath, url, user, email, password, branch)
+function getRemotePathAuth(path, protocol, user, password) {
+  return protocol === 'file' ? `${protocol}://${path}` : `${protocol}://${user}:${password}@${path}`
 }
 
-export async function createBareRepo(path): Promise<SimpleGit> {
+export default async function cloneRepo(
+  localPath,
+  remotePath,
+  user,
+  email,
+  password,
+  branch,
+  protocol = 'https',
+): Promise<Repo> {
+  if (!fs.existsSync(localPath)) fs.mkdirSync(localPath, 0o744)
+  const remotePathAuth = getRemotePathAuth(remotePath, protocol, user, password)
+  const repo = new Repo(localPath, remotePath, user, email, remotePathAuth, branch)
+  await repo.clone()
+  await repo.addConfig()
+  return repo
+}
+
+export async function initRepo(
+  localPath,
+  remotePath,
+  user,
+  email,
+  password,
+  branch,
+  protocol = 'https',
+): Promise<Repo> {
+  if (!fs.existsSync(localPath)) fs.mkdirSync(localPath, 0o744)
+  const remotePathAuth = getRemotePathAuth(remotePath, protocol, user, password)
+
+  const repo = new Repo(localPath, remotePath, user, email, remotePathAuth, branch)
+  await repo.init()
+  await repo.addConfig()
+  return repo
+}
+
+export async function initRepoBare(path): Promise<SimpleGit> {
   fs.mkdirSync(path, 0o744)
   const git = simpleGit(path)
   await git.init(true)
