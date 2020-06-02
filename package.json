@@ -25,7 +25,7 @@
     "openapi-client-axios": "^3.3.2",
     "password-generator": "^2.2.3",
     "shelljs": "^0.8.3",
-    "simple-git": "^1.129.0",
+    "simple-git": "^2.5.0",
     "swagger-ui-express": "^4.1.3"
   },
   "description": "REST API for admins and teams",
@@ -120,6 +120,11 @@
     "release": "standard-version",
     "start": "node dist/app.js",
     "test": "mocha --timeout 5000 -r ts-node/register -r --require ts-custom-error src/*.test.* --exit"
+  },
+  "standard-version": {
+    "skip": {
+      "tag": true
+    }
   },
   "version": "0.2.29"
 }

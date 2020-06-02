@@ -1,9 +1,9 @@
-import SimpleGit from 'simple-git'
-import simpleGit from 'simple-git/promise'
+import simpleGit, { SimpleGit } from 'simple-git/promise'
+
 import yaml from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
-import { GitError } from './error'
+import { GitPullError, GitPushError } from './error'
 
 export class Repo {
   path: string
@@ -20,6 +20,10 @@ export class Repo {
 
   branch: string
 
+  remote: string
+
+  remoteBranch: string
+
   constructor(localRepoPath, url, user, email, password, branch) {
     this.path = localRepoPath
     this.git = simpleGit(this.path)
@@ -28,6 +32,8 @@ export class Repo {
     this.email = email
     this.password = password
     this.branch = branch
+    this.remote = 'origin'
+    this.remoteBranch = `${this.remote}/${branch}`
   }
 
   writeFile(relativePath, data) {
@@ -44,13 +50,10 @@ export class Repo {
     return doc
   }
 
-  async commit(teamId, email) {
+  async commit() {
     console.info('Committing changes')
     await this.git.add('./*')
     const commitSummary = await this.git.commit('otomi-stack-api')
-    if (commitSummary.commit === '') return commitSummary
-    // Only add note to a new commit
-    await this.addNote({ team: teamId, email })
     return commitSummary
   }
 
@@ -65,15 +68,15 @@ export class Repo {
   }
 
   async push() {
-    console.info('Pushing values to remote origin')
+    console.info(`Pushing values to remote ${this.remoteBranch}`)
 
     try {
-      const res = await this.git.push('origin', this.branch)
-      console.info('Successfully pushed values to remote origin')
+      const res = await this.git.push(this.remote, this.branch)
+      console.info(`Successfully pushed values to remote ${this.remoteBranch}`)
       return res
     } catch (err) {
       console.error(err.message)
-      throw new GitError('Failed to push values to remote origin')
+      throw new GitPushError(`Failed to push values to remote ${this.remoteBranch}`)
     }
   }
 
@@ -87,15 +90,39 @@ export class Repo {
       await this.git.clone(remote, this.path)
       await this.git.addConfig('user.name', this.user)
       await this.git.addConfig('user.email', this.email)
-      // return await this.git.pull('origin', this.branch)
       await this.git.checkout(this.branch)
     }
 
     console.log('Repo already exists. Pulling latest changes')
-    // await this.git.checkout(this.branch)
-    await this.git.pull('origin', this.branch)
+    await this.pull()
 
     return isRepo
+  }
+
+  async pull() {
+    let pullSummary
+    try {
+      pullSummary = await this.git.pull(this.remote, this.branch, { '--rebase': true })
+      console.log(`Pull ${pullSummary.files.length} files`)
+      return pullSummary
+    } catch (e) {
+      console.error(`Unable to rebase: ${JSON.stringify(e)}`)
+    }
+    return pullSummary
+  }
+
+  async save(team, email) {
+    const sha = await this.git.revparse(['HEAD'])
+    const commitSummary = await this.commit()
+    if (commitSummary.commit === '') return
+    await this.addNote({ team, email })
+    const pullSummary = await this.pull()
+    if (!pullSummary) {
+      await this.git.rebase({ '--abort': true })
+      this.git.reset(['--hard', sha])
+      throw new GitPullError()
+    }
+    await this.push()
   }
 }
 
