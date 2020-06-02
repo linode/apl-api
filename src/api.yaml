@@ -91,9 +91,6 @@ paths:
                 $ref: '#/components/schemas/Clusters'
 
   /services:
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-
     get:
       operationId: getAllServices
       description: Get services from a given team
@@ -542,7 +539,7 @@ components:
           description: Deploys new images based on a tagging strategy
           type: object
           oneOf:
-            - title: Off
+            - title: 'Off'
               nullable: true
               additionalProperties: false
             - title: Semver versioning
