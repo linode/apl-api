@@ -115,5 +115,10 @@
     "start": "node dist/app.js",
     "test": "mocha --timeout 20000 -r ts-node/register src/*.test.* --exit"
   },
+  "standard-version": {
+    "skip": {
+      "tag": true
+    }
+  },
   "version": "0.2.29"
 }
