@@ -1,7 +1,9 @@
+import { OpenApiRequest } from '../api.d'
+
 export default function (otomi) {
   const GET: any = [
-    (req, res, next) => {
-      return res.json(req.apiDoc)
+    ({ apiDoc }: OpenApiRequest, res, next) => {
+      return res.json(apiDoc)
     },
   ]
   const api = {

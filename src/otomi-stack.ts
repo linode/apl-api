@@ -57,7 +57,7 @@ function splitGlobal(teamValues) {
 export default class OtomiStack {
   clustersPath: string
 
-  coreValues: any
+  private coreValues: any
 
   db: Db
 
@@ -107,29 +107,33 @@ export default class OtomiStack {
     return this.coreValues
   }
 
-  getTeam(teamId) {
-    return this.db.getItem('teams', { teamId })
+  getTeam(id) {
+    return this.db.getItem('teams', { id })
   }
 
-  createTeam(teamId, data) {
-    const ids = { teamId: teamId || data.name.toLowerCase().replace(' ', '-') }
-    return this.db.createItem('teams', ids, data)
+  createTeam(data) {
+    const { name } = data
+    return this.db.createItem('teams', data, { name }, name.toLowerCase())
   }
 
-  editTeam(teamId, data) {
-    const ids = { teamId }
-    return this.db.updateItem('teams', ids, data)
+  editTeam(id, data) {
+    if (data.name.toLowerCase() !== id) {
+      this.deleteTeam(id)
+      // eslint-disable-next-line no-param-reassign
+      delete data.id
+      return this.createTeam(data)
+    }
+    return this.db.updateItem('teams', { id }, data)
   }
 
-  deleteTeam(teamId) {
-    const ids = { teamId }
+  deleteTeam(id) {
     try {
-      this.db.deleteItem('services', ids)
+      this.db.deleteItem('services', { id })
     } catch (e) {
       // no services found
     }
-    this.db.deleteItem('teams', ids)
-    delete glbl.teamConfig.teams[teamId]
+    this.db.deleteItem('teams', { id })
+    delete glbl.teamConfig.teams[id]
   }
 
   getTeamServices(teamId: string) {
@@ -141,32 +145,22 @@ export default class OtomiStack {
     return this.db.getCollection('services')
   }
 
-  createService(data) {
-    const { name, clusterId, teamId } = data
-    const ids = { serviceId: `${clusterId}/${teamId}/${name}` }
+  createService(teamId, data) {
     this.checkPublicUrlInUse(data)
-    return this.db.createItem('services', ids, data)
+    return this.db.createItem('services', { ...data, teamId })
   }
 
-  createDefaultService(data) {
-    return this.db.createItem('defaultServices', {}, data)
+  getService(id) {
+    return this.db.getItem('services', { id })
   }
 
-  getDefaultServices() {
-    return this.db.getCollection('defaultServices')
-  }
-
-  getService(serviceId) {
-    return this.db.getItem('services', { serviceId })
-  }
-
-  editService(serviceId, data) {
+  editService(id, data) {
     this.checkPublicUrlInUse(data)
-    return this.db.updateItem('services', { serviceId }, data)
+    return this.db.updateItem('services', { id }, data)
   }
 
-  deleteService(serviceId) {
-    return this.db.deleteItem('services', { serviceId })
+  deleteService(id) {
+    return this.db.deleteItem('services', { id })
   }
 
   checkPublicUrlInUse(data) {
@@ -243,6 +237,31 @@ export default class OtomiStack {
     return config
   }
 
+  createSecret(teamId, data, scope = 'global') {
+    return this.db.createItem('secret', { ...data, teamId }, { teamId, name: data.name })
+  }
+
+  editSecret(id, data) {
+    return this.db.updateItem('secret', { id }, data)
+  }
+
+  deleteSecret(id) {
+    try {
+      this.db.deleteItem('secrets', { id })
+    } catch (e) {
+      // no such secret found
+    }
+    this.db.deleteItem('secrets', { id })
+  }
+
+  getSecret(id) {
+    return this.db.getItem('secrets', { id })
+  }
+
+  getSecrets(teamId, scope = 'global') {
+    return this.db.getCollection('secrets', { teamId, scope })
+  }
+
   async createPullSecret(teamId: string, name: string, server: string, password: string, username = '_json_key') {
     const client = this.getApiClient()
     const namespace = `team-${teamId}`
@@ -268,7 +287,7 @@ export default class OtomiStack {
     }
     // eslint-disable-next-line no-useless-catch
     try {
-      const res = await client.createNamespacedSecret(namespace, secret)
+      await client.createNamespacedSecret(namespace, secret)
     } catch (e) {
       throw new AlreadyExists(`Secret '${name}' already exists in namespace '${namespace}'`)
     }
@@ -352,7 +371,6 @@ export default class OtomiStack {
     forIn(cs, (cloudObj, cloud) => {
       const dnsZones = [cloudObj.domain].concat(get(cloudObj, 'dnsZones', []))
       forIn(cloudObj.clusters, (clusterObject, cluster) => {
-        const clusterId = `${cloud}/${cluster}`
         const clusterObj = {
           cloud,
           cluster,
@@ -363,7 +381,8 @@ export default class OtomiStack {
           region: clusterObject.region,
         }
         console.log(clusterObj)
-        this.db.createItem('clusters', { id: clusterId }, clusterObj)
+        const id = `${cloud}/${cluster}`
+        this.db.populateItem('clusters', clusterObj, id)
       })
     })
   }
@@ -391,7 +410,7 @@ export default class OtomiStack {
     } catch (e) {
       const rawTeam = omit(teamData, 'services')
       OtomiStack.assignCluster(rawTeam, cluster)
-      this.createTeam(teamId, { ...rawTeam, ...glbl.teamConfig.teams[teamId] })
+      this.db.populateItem('teams', { ...rawTeam, ...glbl.teamConfig.teams[teamId] }, teamId)
     }
 
     if (!teamData.services) {
@@ -440,15 +459,15 @@ export default class OtomiStack {
       }
     }
 
-    const serviceId = `${cluster.id}/${teamId}/${svc.name}`
-    console.log(`Loading service: serviceName: ${serviceId}, serviceType ${svc.ksvc.serviceType}`)
-    try {
-      const service = this.getService(serviceId)
-      const data = { ...service, svc }
-      this.db.updateItem('services', { serviceId }, data)
-    } catch (e) {
-      this.createService(svc)
-    }
+    // try {
+    //   const service = this.getService(serviceId)
+    //   const data = { ...service, svc }
+    //   this.db.updateItem('services', { serviceId }, data)
+    // } catch (e) {
+    //   this.createService(teamId, svc)
+    // }
+    const res: any = this.db.populateItem('services', svc)
+    console.log(`Loaded service: name: ${res.name}, id: ${res.id}`)
   }
 
   saveValues() {

@@ -1,6 +1,7 @@
 import { Operation } from 'express-openapi'
+import OtomiStack from '../otomi-stack'
 
-export default function (otomi) {
+export default function (otomi: OtomiStack) {
   const GET: Operation = [
     /* business middleware not expressible by OpenAPI documentation goes here */
     (req, res) => {

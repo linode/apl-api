@@ -1,6 +1,7 @@
 import { Operation } from 'express-openapi'
+import OtomiStack from '../otomi-stack'
 
-export default function (otomi) {
+export default function (otomi: OtomiStack) {
   const GET: Operation = [
     (req, res) => {
       const data = otomi.getTeams()
@@ -9,8 +10,8 @@ export default function (otomi) {
     },
   ]
   const POST: Operation = [
-    (req, res) => {
-      const data = otomi.createTeam(null, req.body)
+    ({ body }, res) => {
+      const data = otomi.createTeam(body)
       res.status(200).json(data)
     },
   ]
