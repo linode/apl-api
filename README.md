@@ -8,8 +8,8 @@ This application:
 # Glossary:
 
 **api spec** - a HTTP REST API definition in OpenApiV3 standard **schema** - a data model that defines attributes and
-their types **attribute** - a single feature regarded as a characteristic of schema **property** - a single feature
-regarded as a characteristic of api spec
+their types **attribute** - a single feature of schema **property** - a single feature of schema **resource** - an
+instance of schema
 
 # Api
 
@@ -89,8 +89,8 @@ components:
   schemas:
     Services:
       x-acl:
-        admin: [read-any]
-        team: [read-any]
+        admin: [read]
+        team: [read]
       type: array
 ```
 
@@ -102,8 +102,10 @@ The authorization is only applied if authentication is enabled, so required head
 
 ### Resource Based Access Control (RBAC)
 
-The RBAC is used to define allowed CRUD operation on resource. Moreover it defines if operations are performed with
-regard or regardless to the resource ownership. For example:
+The RBAC is used to define allowed CRUD operations on resource level. It also guards resource ownership by comparing
+`teamId` from HTTP request parameter against content of `Auth-Group` HTTP header.
+
+The following example briefly introduce possible configurations:
 
 ```
 components:
@@ -111,25 +113,42 @@ components:
     Service:
       x-acl:
         admin: [delete-any, read-any, create-any, update-any]
-        team: [delete, read, create, put]
+        team: [delete, read, create, update]
       type: object
       properties:
 ```
 
-From above configuration:
+From above:
 
-- a user with admin role can perform all CRUD operations regardless resource ownership (the `-all` postfix),
+- a user with admin role can perform all CRUD operations regardless resource ownership (the `-any` postfix),
 - a user with team role can perform all CRUD operations only on its own resource.
+
+**Note:**
+
+- use `-any` if a given role grands permission to perform operations regardless resource ownership
+- the `-any` is supported only for RBAC permissions
 
 ### Attribute Based Access Control (ABAC)
 
-The ABAC permissions are used to narrow down RBAC ones. Never the other way round. For example:
+The ABAC permissions are used to limit RBAC permissions (never the other way round)
+
+The following permissions can be set for a given resource attribute:
+
+- `create` - a user can set attribute while creating a new resource
+- `read` - a user can obtain this field
+- `update` - a user can set attribute while updating an existing resource
+
+**Note:**
+
+- `delete` permission cannot be set for ABAC
+
+For example:
 
 ```
     Service:
       x-acl:
         admin: [delete-any, read-any, create-any, update-any]
-        team: [delete, read, create, put]
+        team: [delete, read, create, update]
       type: object
       properties:
         name:
@@ -137,14 +156,21 @@ The ABAC permissions are used to narrow down RBAC ones. Never the other way roun
         ingress:
           type: object
           x-acl:
-            team: [get]
+            admin: [read, create]
+            team: [read]
 ```
 
 From above:
 
-- a user with admin role can perform all CRUD operations regardless resource ownership,
-- a user with team role can perform all CRUD operations only on its own resource **BUT** it cannot update ingress
-  attribute.
+A user with admin role can:
+
+- perform all CRUD operations regardless resource ownership (RBAC)
+- all attributes can be edited except ingress that can be only set on resource creation event (ABAC)
+
+A user with team role can:
+
+- perform all CRUD operations only withing its own team (RBAC)
+- all attributes can be edited except ingress that isn be only read (ABAC)
 
 ### Limitations:
 
@@ -159,11 +185,11 @@ From above:
           properties:
             name:
               type: string
-              x-acl: [get]       # nested x-acl not supported
+              x-acl: [read]       # nested x-acl not supported
         ingress:
           type: object
           x-acl:
-            team: [get]
+            team: [read]
 ```
 
 - ABAC is not applied for resource collections, e.g.:

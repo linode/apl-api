@@ -20,7 +20,7 @@ const allowedResourceActions = [
 const allowedResourceCollectionActions = ['read-any']
 const allowedAttributeActions = ['read', 'read-any', 'update', 'update-any']
 const skipABACActions = ['create', 'read', 'delete']
-
+const httpMethods = ['post', 'delete', 'get', 'patch', 'update']
 interface RawRules {
   [actionName: string]: { [schemaName: string]: { fields: string[]; conditions: object } }
 }
@@ -45,6 +45,7 @@ export function isValidAuthzSpec(apiSpec: OpenApi): boolean {
   Object.keys(apiSpec.paths).forEach((pathName: string) => {
     const pathObj = apiSpec.paths[pathName]
     Object.keys(pathObj).forEach((methodName) => {
+      if (!httpMethods.includes(methodName)) return
       const methodObj = pathObj[methodName]
 
       // check if security is disabled for a given http method

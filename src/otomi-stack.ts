@@ -18,7 +18,7 @@ import set from 'lodash/set'
 import { PublicUrlExists } from './error'
 import { arrayToObject, getPublicUrl, objectToArray } from './utils'
 import db, { Db } from './db'
-import repo, { Repo } from './repo'
+import cloneRepo, { Repo } from './repo'
 
 dotEnv.config()
 
@@ -63,27 +63,22 @@ export default class OtomiStack {
   repo: Repo
 
   constructor() {
-    this.repo = repo(
-      env.GIT_LOCAL_PATH,
-      env.GIT_REPO_URL,
-      env.GIT_USER,
-      env.GIT_EMAIL,
-      env.GIT_PASSWORD,
-      env.GIT_BRANCH,
-    )
-    this.initDb()
+    this.db = db(env.DB_PATH)
     this.clustersPath = './env/clusters.yaml'
     const corePath = isProduction ? '/etc/otomi/core.yaml' : './test/core.yaml'
     this.coreValues = yaml.safeLoad(fs.readFileSync(corePath, 'utf8'))
   }
 
-  initDb() {
-    this.db = db(env.DB_PATH)
-  }
-
   async init() {
     try {
-      await this.repo.clone()
+      this.repo = await cloneRepo(
+        env.GIT_LOCAL_PATH,
+        env.GIT_REPO_URL,
+        env.GIT_USER,
+        env.GIT_EMAIL,
+        env.GIT_PASSWORD,
+        env.GIT_BRANCH,
+      )
       const globalPath = getFilePath()
       glbl = this.repo.readFile(globalPath)
       this.loadValues()
@@ -184,17 +179,13 @@ export default class OtomiStack {
     if (servicesFiltered.length !== 0) throw new PublicUrlExists('Public URL is already used')
   }
 
-  async triggerDeployment(teamId, email) {
+  async triggerDeployment(teamId: string, email: string) {
     console.log('DISABLE_SYNC: ', env.DISABLE_SYNC)
     this.saveValues()
+
     if (env.DISABLE_SYNC !== 'true') {
-      await this.repo.commit(teamId, email)
-      await this.repo.push()
+      await this.repo.save(teamId, email)
     }
-    // this.saveValues()
-    // reset db and load values again
-    this.initDb()
-    this.loadValues()
   }
 
   apiClient = undefined
