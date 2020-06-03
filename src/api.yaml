@@ -223,7 +223,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Service'
 
-  '/teams/{teamId}/secrets':
+  '/teams/{teamId}/secrets/{type}':
     get:
       operationId: getTeamSecrets
       description: Get secrets from a given team
@@ -233,6 +233,12 @@ paths:
           in: path
           description: ID of team
           required: true
+          schema:
+            type: string
+        - name: type
+          in: path
+          description: type of secret
+          required: false
           schema:
             type: string
       responses:
@@ -256,6 +262,12 @@ paths:
         - name: teamId
           in: path
           description: ID of team
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: path
+          description: type of secret
           required: true
           schema:
             type: string
@@ -735,6 +747,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Team'
+    Secrets:
+      x-acl:
+        admin: [read-any]
+        team: [read-any]
+      type: object
+      properties:
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/Secret'
     Services:
       x-acl:
         admin: [read-any]
@@ -972,3 +994,22 @@ components:
         isDirty:
           type: boolean
           readOnly: true
+
+    Secret:
+      x-acl:
+        admin: [read-any]
+        team: [read]
+      type: object
+      properties:
+        name:
+          type: string
+          readOnly: true
+        namespace:
+          type: string
+          readOnly: true
+        data:
+          type: object
+          readOnly: true
+          x-acl:
+            admin: []
+            team: []
