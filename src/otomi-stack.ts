@@ -113,16 +113,10 @@ export default class OtomiStack {
 
   createTeam(data) {
     const { name } = data
-    return this.db.createItem('teams', data, { name }, name.toLowerCase())
+    return this.db.createItem('teams', data, { name })
   }
 
   editTeam(id, data) {
-    if (data.name.toLowerCase() !== id) {
-      this.deleteTeam(id)
-      // eslint-disable-next-line no-param-reassign
-      delete data.id
-      return this.createTeam(data)
-    }
     return this.db.updateItem('teams', { id }, data)
   }
 
@@ -382,7 +376,7 @@ export default class OtomiStack {
         }
         console.log(clusterObj)
         const id = `${cloud}/${cluster}`
-        this.db.populateItem('clusters', clusterObj, id)
+        this.db.populateItem('clusters', clusterObj, undefined, id)
       })
     })
   }
@@ -410,7 +404,7 @@ export default class OtomiStack {
     } catch (e) {
       const rawTeam = omit(teamData, 'services')
       OtomiStack.assignCluster(rawTeam, cluster)
-      this.db.populateItem('teams', { ...rawTeam, ...glbl.teamConfig.teams[teamId] }, teamId)
+      this.db.populateItem('teams', { ...rawTeam, ...glbl.teamConfig.teams[teamId] }, undefined, teamId)
     }
 
     if (!teamData.services) {

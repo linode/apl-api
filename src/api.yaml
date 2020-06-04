@@ -700,12 +700,14 @@ components:
         team: [read-any, update]
       type: object
       properties:
-        name:
-          <<: *nameField
-          example: 'Team Otomi'
+        id:
+          title: ID
+          <<: *idNameField
+          example: 'otomi'
           x-acl:
             team: [read]
-          description: A team name
+            admin: [create, read]
+          description: A team id
         clusters:
           title: Clusters
           <<: *AvailableClusters

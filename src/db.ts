@@ -55,7 +55,8 @@ export class Db {
     return this.db.get(type).filter(selectors).value()
   }
 
-  populateItem(type, data, id: string = undefined) {
+  populateItem(type, data, selector = undefined, id: string = undefined) {
+    if (selector && this.db.get(type).find(selector).value()) return undefined
     return this.db
       .get(type)
       .push(data)
