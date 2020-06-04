@@ -716,11 +716,8 @@ components:
             team: [read]
         password:
           type: string
-          # description: "A secret that is used access multi-tenant log aggregation system (Loki)"
+          # description: "A secret that is to used access multi-tenant log aggregation system (Loki)"
           writeOnly: true
-        teamId:
-          type: string
-          readOnly: true
         receiver:
           title: Alerting Endpoint
           type: object
@@ -764,7 +761,7 @@ components:
         azure:
           <<: *Azure
       required:
-        - name
+        - id
         - clusters
 
     Kubecfg:
@@ -781,11 +778,14 @@ components:
         team: [delete, read, create, update]
       type: object
       properties:
+        id:
+          type: string
+          readOnly: true
         name:
           <<: *idNameField
           title: Name
           description: A service name
-          example: service01
+          example: some-service
         clusterId:
           title: Cluster ID
           type: string
@@ -945,9 +945,6 @@ components:
               required:
                 - serviceType
         teamId:
-          type: string
-          readOnly: true
-        serviceId:
           type: string
           readOnly: true
       required:

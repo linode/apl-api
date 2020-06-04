@@ -68,7 +68,7 @@ export class Db {
   createItem(type, data, selector = undefined, id: string = undefined) {
     if (selector && this.db.get(type).find(selector).value())
       throw new AlreadyExists(`Item already exists in '${type}' collection: ${JSON.stringify(selector)}`)
-    const ret = this.populateItem(type, data, id)
+    const ret = this.populateItem(type, data, selector, id)
     this.dirty = this.dirtyActive
     return ret
   }
@@ -79,7 +79,7 @@ export class Db {
     this.dirty = this.dirtyActive
   }
 
-  updateItem(type, selectors, data) {
+  updateItem(type, data, selectors) {
     this.getItemReference(type, selectors)
     const ret = this.db.get(type).find(selectors).assign(data).write()
     this.dirty = this.dirtyActive

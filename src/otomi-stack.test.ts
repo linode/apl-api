@@ -8,7 +8,7 @@ import sinon from 'sinon'
 import OtomiStack from './otomi-stack'
 
 describe('Load and dump values', () => {
-  let otomiStack
+  let otomiStack: OtomiStack
   beforeEach(() => {
     otomiStack = new OtomiStack()
   })
@@ -21,8 +21,7 @@ describe('Load and dump values', () => {
     otomiStack.loadTeamsValues(values.teamConfig.teams, cluster)
 
     const expectedTeam = {
-      teamId: 'team1',
-      name: 'team1',
+      id: 'team1',
       cicd: {
         enabled: true,
         type: 'drone',
@@ -31,7 +30,7 @@ describe('Load and dump values', () => {
       clusters: ['aws/dev'],
     }
     const expectedService = {
-      serviceId: 'aws/dev/team1/hello',
+      id: 'id1',
       teamId: 'team1',
       clusterId: 'aws/dev',
       ingress: {
@@ -56,7 +55,7 @@ describe('Load and dump values', () => {
     }
 
     const expectedService2 = {
-      serviceId: 'aws/dev/team1/hello-predeployed-ksvc',
+      id: 'id2',
       teamId: 'team1',
       clusterId: 'aws/dev',
       name: 'hello-predeployed-ksvc',
@@ -75,7 +74,7 @@ describe('Load and dump values', () => {
     }
 
     const expectedService3 = {
-      serviceId: 'aws/dev/team1/hello-ksvc-internal',
+      id: 'id3',
       teamId: 'team1',
       clusterId: 'aws/dev',
       name: 'hello-ksvc-internal',
@@ -86,7 +85,7 @@ describe('Load and dump values', () => {
     }
 
     const expectedService4 = {
-      serviceId: 'aws/dev/team1/hello-svc',
+      id: 'id4',
       teamId: 'team1',
       clusterId: 'aws/dev',
       name: 'hello-svc',
@@ -107,16 +106,16 @@ describe('Load and dump values', () => {
     let data = otomiStack.getTeam('team1')
     expect(data).to.deep.equal(expectedTeam)
 
-    data = otomiStack.getService('aws/dev/team1/hello')
+    data = otomiStack.getService('id1')
     expect(data).to.deep.equal(expectedService)
 
-    data = otomiStack.getService('aws/dev/team1/hello-predeployed-ksvc')
+    data = otomiStack.getService('id2')
     expect(data).to.deep.equal(expectedService2)
 
-    data = otomiStack.getService('aws/dev/team1/hello-ksvc-internal')
+    data = otomiStack.getService('id3')
     expect(data).to.deep.equal(expectedService3)
 
-    data = otomiStack.getService('aws/dev/team1/hello-svc')
+    data = otomiStack.getService('id4')
     expect(data).to.deep.equal(expectedService4)
 
     const dbValues = otomiStack.convertTeamsToValues(cluster)

@@ -4,10 +4,11 @@ teamConfig:
       cicd:
         enabled: true
         type: drone
-      name: team1
+      id: team1
       password: somepassworddd
       services:
-        - isPublic: true
+        - id: id1
+          isPublic: true
           domain: 'hello.team-team1.dev.otomi.cloud'
           name: hello
           path: '/bla'
@@ -20,13 +21,16 @@ teamConfig:
             image:
               repository: otomi/helloworld-nodejs
               tag: 1.1.3
-        - name: hello-svc
-          domain: 'hello-svc.team-team1.dev.otomi.cloud'
-        - name: hello-predeployed-ksvc
+        - id: id2
+          name: hello-predeployed-ksvc
           domain: 'hello-predeployed-ksvc.team-team1.dev.otomi.cloud'
           ksvc:
             predeployed: true
-        - name: hello-ksvc-internal
+        - id: id3
+          name: hello-ksvc-internal
           internal: true
           ksvc:
             predeployed: true
+        - id: id4
+          name: hello-svc
+          domain: 'hello-svc.team-team1.dev.otomi.cloud'

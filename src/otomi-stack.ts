@@ -42,7 +42,7 @@ const getFilePath = (cloud = null, cluster = null) => {
 function splitGlobal(teamValues) {
   const t = teamValues.teamConfig.teams
   const g = glbl.teamConfig.teams
-  const globalProps = ['name', 'password', 'receiver', 'azure']
+  const globalProps = ['id', 'password', 'receiver', 'azure']
   forEach(t, (team, teamId) => {
     if (!g[teamId]) g[teamId] = {}
     globalProps.forEach((prop) => {
@@ -107,12 +107,12 @@ export default class OtomiStack {
   }
 
   createTeam(data) {
-    const { name } = data
-    return this.db.createItem('teams', data, { name })
+    const { id } = data
+    return this.db.createItem('teams', data, { id }, id)
   }
 
   editTeam(id, data) {
-    return this.db.updateItem('teams', { id }, data)
+    return this.db.updateItem('teams', data, { id })
   }
 
   deleteTeam(id) {
@@ -145,7 +145,14 @@ export default class OtomiStack {
 
   editService(id, data) {
     this.checkPublicUrlInUse(data)
-    return this.db.updateItem('services', { id }, data)
+    const oldData = this.getService(id)
+    if (data.name !== oldData.name) {
+      this.deleteService(id)
+      // eslint-disable-next-line no-param-reassign
+      delete data.id
+      return this.createService(data.teamId, data)
+    }
+    return this.db.updateItem('services', data, { id })
   }
 
   deleteService(id) {
@@ -172,7 +179,7 @@ export default class OtomiStack {
     console.log('DISABLE_SYNC: ', env.DISABLE_SYNC)
     this.saveValues()
 
-    if (env.DISABLE_SYNC !== 'true') {
+    if (!env.DISABLE_SYNC) {
       await this.repo.save(teamId, email)
     }
   }
@@ -231,7 +238,7 @@ export default class OtomiStack {
   }
 
   editSecret(id, data) {
-    return this.db.updateItem('secret', { id }, data)
+    return this.db.updateItem('secret', data, { id })
   }
 
   deleteSecret(id) {
@@ -448,14 +455,7 @@ export default class OtomiStack {
       }
     }
 
-    // try {
-    //   const service = this.getService(serviceId)
-    //   const data = { ...service, svc }
-    //   this.db.updateItem('services', { serviceId }, data)
-    // } catch (e) {
-    //   this.createService(teamId, svc)
-    // }
-    const res: any = this.db.populateItem('services', svc)
+    const res: any = this.db.populateItem('services', svc, undefined, svc.id)
     console.log(`Loaded service: name: ${res.name}, id: ${res.id}`)
   }
 
@@ -487,8 +487,8 @@ export default class OtomiStack {
     this.getTeams().forEach((team) => {
       if (!OtomiStack.inCluster(team, cluster)) return
 
-      const teamCloned = omit(team, ['teamId', 'clusters'])
-      const id = team.teamId
+      const teamCloned = omit(team, ['clusters', 'name'])
+      const id = team.id
       teams[id] = teamCloned
       const dbServices = this.getTeamServices(id)
       const services = []
@@ -498,7 +498,7 @@ export default class OtomiStack {
 
         const serviceType = svc.ksvc.serviceType
         console.info(`Saving service: serviceId: ${svc.serviceId} serviceType: ${serviceType}`)
-        const svcCloned = omit(svc, ['teamId', 'serviceId', 'clusterId', 'ksvc', 'ingress', 'internal', 'path'])
+        const svcCloned = omit(svc, ['teamId', 'clusterId', 'ksvc', 'ingress', 'internal', 'path'])
         const ksvc = cloneDeep(svc.ksvc)
         if (serviceType === 'ksvc') {
           svcCloned.ksvc = ksvc
