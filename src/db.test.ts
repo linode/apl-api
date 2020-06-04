@@ -2,14 +2,20 @@ import { expect } from 'chai'
 import { Db } from './db'
 
 describe('Db', () => {
-  let testDb
+  let testDb: Db
   beforeEach(() => {
     testDb = new Db(null)
   })
 
-  it('can store ', (done) => {
-    const v = testDb.createItem('teams', { teamId: 'n1' }, { name: 'n1', k: '1' })
-    expect(v).to.deep.equal({ name: 'n1', teamId: 'n1', k: '1' })
+  it('can store with id', (done) => {
+    const v = testDb.createItem('teams', { name: 'n1', k: '1' }, undefined, '1')
+    expect(v).to.deep.equal({ name: 'n1', k: '1', id: '1' })
+    done()
+  })
+
+  it('can store without id', (done) => {
+    const v = testDb.createItem('teams', { name: 'n1', k: '1' })
+    expect(v).to.equal({ name: 'n1', teamId: 'n1', k: '1' }).and.have('id')
     done()
   })
 

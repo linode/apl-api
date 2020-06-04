@@ -120,7 +120,7 @@
     "lint:fix": "eslint --ext js,ts .",
     "release": "standard-version",
     "start": "node dist/app.js",
-    "test": "mocha --timeout 5000 -r ts-node/register -r --require ts-custom-error src/*.test.* --exit"
+    "test": "mocha --timeout 15000 -r ts-node/register -r ts-custom-error src/*.test.* --exit"
   },
   "standard-version": {
     "skip": {
