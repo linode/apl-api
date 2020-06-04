@@ -1,0 +1,6 @@
+test:
+  a: azure
+  e:
+    - azure
+  f:
+    g: [azure]

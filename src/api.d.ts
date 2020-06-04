@@ -65,3 +65,16 @@ export interface Session {
     role: string
   }
 }
+
+export interface CloudValues {
+  [cloud: string]: {
+    domain: string
+    clusters: {
+      [cluster: string]: {
+        k8sVersion: string
+        region: string
+        hasKnative: boolean
+      }
+    }
+  }
+}

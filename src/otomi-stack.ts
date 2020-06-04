@@ -20,6 +20,8 @@ import db, { Db } from './db'
 import { AlreadyExists, NotExistError, PublicUrlExists } from './error'
 import { arrayToObject, getPublicUrl, objectToArray } from './utils'
 import cloneRepo, { Repo } from './repo'
+import { loadSettings } from './otomi-settings'
+// import { Cluster } from './api.d'
 
 dotEnv.config()
 
@@ -82,6 +84,7 @@ export default class OtomiStack {
       )
       const globalPath = getFilePath()
       glbl = this.repo.readFile(globalPath)
+      loadSettings(this.repo, this.db)
       this.loadValues()
     } catch (e) {
       console.error('Unable to init app', e)

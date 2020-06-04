@@ -24,10 +24,16 @@ export default function (otomi: OtomiStack) {
       res.status(200).json(data)
     },
   ]
+  const PATCH: Operation = [
+    (req, res, next) => {
+      res.status(200).json({})
+    },
+  ]
   const api = {
     DELETE,
     GET,
     PUT,
+    PATCH,
   }
   return api
 }

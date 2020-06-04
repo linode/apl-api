@@ -1,0 +1,10 @@
+test:
+  a: default
+  b: default
+  c: default
+  d: default
+  e:
+    - default
+  f:
+    g: [default]
+    h: default

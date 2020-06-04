@@ -1,0 +1,6 @@
+test:
+  a: google
+  e:
+    - google
+  f:
+    g: [google]

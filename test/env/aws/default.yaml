@@ -1,0 +1,6 @@
+test:
+  a: aws
+  e:
+    - aws
+  f:
+    g: [aws]
