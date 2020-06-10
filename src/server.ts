@@ -12,12 +12,10 @@ import { errorMiddleware, isAuthorizedFactory, getCrudOperation, getSession } fr
 import Authz from './authz'
 import { OpenApiRequest } from './api.d'
 
-export default function initApp(otomiStack) {
+export default function initApp(otomiStack, spec) {
   const app = express()
-  const openApiPath = path.resolve(__dirname, 'api.yaml')
   const apiRoutesPath = path.resolve(__dirname, 'api')
-  const apiDoc = fs.readFileSync(openApiPath, 'utf8')
-  const spec = yaml.safeLoad(apiDoc)
+  // const spec = yaml.safeLoad(apiDoc)
   const authz = new Authz(spec)
 
   app.use(logger('dev'))
