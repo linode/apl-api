@@ -2,6 +2,10 @@ uuid: &uuidField
   type: string
   pattern: ^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$
 
+idName: &idNameField
+  type: string
+  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+
 name: &nameField
   type: string
   pattern: ^[A-Z0-9]([-a-z0-9]*[a-z0-9])?$
@@ -75,12 +79,14 @@ Team:
     team: [read-any, update]
   type: object
   properties:
-    name:
-      <<: *nameField
-      example: 'Team Otomi'
+    id:
+      title: ID
+      <<: *idNameField
+      example: 'otomi'
       x-acl:
+        admin: [create, read]
         team: [read]
-      description: A team name
+      description: A team id
     clusters:
       title: Clusters
       <<: *AvailableClusters
@@ -91,9 +97,6 @@ Team:
       type: string
       # description: "A secret that is used access multi-tenant log aggregation system (Loki)"
       writeOnly: true
-    teamId:
-      type: string
-      readOnly: true
     receiver:
       title: Alerting Endpoint
       type: object
@@ -137,5 +140,5 @@ Team:
     azure:
       <<: *Azure
   required:
-    - name
+    - id
     - clusters

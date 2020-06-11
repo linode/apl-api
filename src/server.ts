@@ -15,15 +15,12 @@ export async function loadOpenApisSpec() {
   const openApiPath = path.resolve(__dirname, 'openapi/api.yaml')
   console.log(`Loading api spec from: ${openApiPath}`)
   const schema = await $RefParser.bundle(openApiPath)
-  // console.log(`Schema: ${JSON.stringify(schema)}`)
-
   return schema
 }
 
 export default async function initApp(otomiStack) {
   const app = express()
   const apiRoutesPath = path.resolve(__dirname, 'api')
-  // const spec = yaml.safeLoad(apiDoc)
   const spec: any = await loadOpenApisSpec()
   const authz = new Authz(spec)
 

@@ -33,135 +33,6 @@ x-annotations: &K8sAnnotation
         type: string
         maxLength: 32767
 
-KnativeServicePredeployed: &KnativeServicePredeployed
-  type: object
-  properties: &KnativeServicePredeployedProperties
-    predeployed:
-      type: boolean
-      default: true
-      readOnly: true
-  required:
-    - predeployed
-  additionalProperties: false
-
-KnativeService: &KnativeService # description: Knative service definition
-  type: object
-  properties: &KnativeServiceProperties
-    scaleToZero:
-      title: Scale to zero
-      description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
-      type: boolean
-      default: false
-    image:
-      title: Container image
-      type: object
-      nullable: true
-      properties:
-        repository:
-          <<: *repositoryField
-        tag:
-          type: string
-      required:
-        - repository
-        - tag
-    env:
-      title: Environment variables
-      # description: Environment variables for containers
-      type: array
-      nullable: true
-      items:
-        type: object
-        properties:
-          name:
-            <<: *envField
-          value:
-            type: string
-            maxLength: 131072
-        required:
-          - name
-          - value
-    resources:
-      title: Pod resources
-      # description: Compute resources for containers
-      type: object
-      nullable: true
-      properties:
-        requests:
-          type: object
-          properties:
-            cpu:
-              description: 'The guaranteed amount of CPU'
-              <<: *k8sResourceCpuQuantityField
-              default: 50m
-            memory:
-              description: 'The guaranteed amount of RAM'
-              <<: *k8sResourceMemoryQuantityField
-              default: 64Mi
-          required:
-            - cpu
-            - memory
-        limits:
-          type: object
-          properties:
-            cpu:
-              description: 'The maximal amount of CPU'
-              <<: *k8sResourceCpuQuantityField
-              default: 100m
-            memory:
-              description: 'The maximal amount of RAM'
-              <<: *k8sResourceMemoryQuantityField
-              default: 128Mi
-          required:
-            - cpu
-            - memory
-    annotations:
-      title: Pod annotations
-      <<: *K8sAnnotation
-    autoCD:
-      title: Continuous delivery pipeline
-      description: Deploys new images based on a tagging strategy
-      type: object
-      oneOf:
-        - title: 'Off'
-          nullable: true
-          additionalProperties: false
-        - title: Semver versioning
-          nullable: true
-          properties:
-            tagMatcher:
-              type: string
-              enum: [semver]
-              default: semver
-            semver:
-              title: Semver version pattern
-              type: string
-              example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
-              description:
-                'Use this filter if your images tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH
-                only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
-          required:
-            - semver
-          # additionalProperties: false
-        - title: Glob pattern matching
-          # nullable: true
-          properties:
-            tagMatcher:
-              type: string
-              enum: [glob]
-              default: glob
-            glob:
-              title: Glob string pattern
-              type: string
-              description: 'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*"'
-              example: 'master-v1.*.*'
-          required:
-            - glob
-          additionalProperties: false
-  required:
-    - image
-    - resources
-  additionalProperties: false
-
 ServiceIngress:
   properties: &ServiceIngress
     useDefaultSubdomain:
@@ -214,11 +85,14 @@ Service:
     team: [delete, read, create, update]
   type: object
   properties:
+    id:
+      type: string
+      readOnly: true
     name:
       <<: *idNameField
       title: Name
       description: A service name
-      example: service01
+      example: some-service
     clusterId:
       title: Cluster ID
       type: string
@@ -250,7 +124,117 @@ Service:
               type: string
               enum: [ksvc]
               default: ksvc
-            <<: *KnativeServiceProperties
+            scaleToZero:
+              title: Scale to zero
+              description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
+              type: boolean
+              default: false
+            image:
+              title: Container image
+              type: object
+              nullable: true
+              properties:
+                repository:
+                  <<: *repositoryField
+                tag:
+                  type: string
+              required:
+                - repository
+                - tag
+            env:
+              title: Environment variables
+              # description: Environment variables for containers
+              type: array
+              nullable: true
+              items:
+                type: object
+                properties:
+                  name:
+                    <<: *envField
+                  value:
+                    type: string
+                    maxLength: 131072
+                required:
+                  - name
+                  - value
+            resources:
+              title: Pod resources
+              # description: Compute resources for containers
+              type: object
+              nullable: true
+              properties:
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      description: 'The guaranteed amount of CPU'
+                      <<: *k8sResourceCpuQuantityField
+                      default: 50m
+                    memory:
+                      description: 'The guaranteed amount of RAM'
+                      <<: *k8sResourceMemoryQuantityField
+                      default: 64Mi
+                  required:
+                    - cpu
+                    - memory
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      description: 'The maximal amount of CPU'
+                      <<: *k8sResourceCpuQuantityField
+                      default: 100m
+                    memory:
+                      description: 'The maximal amount of RAM'
+                      <<: *k8sResourceMemoryQuantityField
+                      default: 128Mi
+                  required:
+                    - cpu
+                    - memory
+            annotations:
+              title: Pod annotations
+              <<: *K8sAnnotation
+            autoCD:
+              title: Continuous delivery pipeline
+              description: Deploys new images based on a tagging strategy
+              type: object
+              oneOf:
+                - title: 'Off'
+                  nullable: true
+                  additionalProperties: false
+                - title: Semver versioning
+                  nullable: true
+                  properties:
+                    tagMatcher:
+                      type: string
+                      enum: [semver]
+                      default: semver
+                    semver:
+                      title: Semver version pattern
+                      type: string
+                      example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
+                      description:
+                        'Use this filter if your images tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.:
+                        PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
+                  required:
+                    - semver
+                  # additionalProperties: false
+                - title: Glob pattern matching
+                  # nullable: true
+                  properties:
+                    tagMatcher:
+                      type: string
+                      enum: [glob]
+                      default: glob
+                    glob:
+                      title: Glob string pattern
+                      type: string
+                      description:
+                        'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*"'
+                      example: 'master-v1.*.*'
+                  required:
+                    - glob
+                  additionalProperties: false
         - title: Existing Knative service
           properties:
             serviceType:
@@ -268,9 +252,6 @@ Service:
           required:
             - serviceType
     teamId:
-      type: string
-      readOnly: true
-    serviceId:
       type: string
       readOnly: true
   required:

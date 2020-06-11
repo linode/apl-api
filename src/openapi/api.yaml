@@ -192,6 +192,53 @@ paths:
               schema:
                 $ref: '#/components/schemas/Service'
 
+  '/teams/{teamId}/secrets':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getSecrets
+      description: Get secrets from a given team
+      x-aclSchema: Secrets
+      responses:
+        '200':
+          description: Successfully obtained secrets
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Secrets'
+        '400':
+          description: Bad Request
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OpenApiValidationError'
+    post:
+      operationId: createSecret
+      description: Create a team secret
+      x-aclSchema: Secret
+      parameters:
+        - name: teamId
+          in: path
+          description: ID of team
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secret'
+        description: Service object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored secret configuration
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Secret'
+
   '/teams/{teamId}/services/{serviceId}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
@@ -317,6 +364,20 @@ components:
       required: true
       schema:
         type: string
+    secretParams:
+      name: secretId
+      in: path
+      description: ID of the secret
+      required: true
+      schema:
+        type: string
+    scopeParams:
+      name: scope
+      in: path
+      description: Scope of the resource
+      required: false
+      schema:
+        type: string
 
   securitySchemes:
     groupAuthn:
@@ -343,6 +404,12 @@ components:
 
     Kubecfg:
       $ref: 'kubecfg.yaml#/Kubecfg'
+
+    Secret:
+      $ref: 'secret.yaml#/Secret'
+
+    Secrets:
+      $ref: 'secrets.yaml#/Secrets'
 
     Service:
       $ref: 'service.yaml#/Service'
