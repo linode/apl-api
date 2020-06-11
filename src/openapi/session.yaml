@@ -1,0 +1,36 @@
+x-available-clusters: &AvailableClusters # description: Select from available clusters
+  type: array
+  items:
+    type: string
+  uniqueItems: true
+
+Session:
+  x-acl:
+    admin: [read]
+    team: [read]
+  type: object
+  properties:
+    currentClusterId:
+      type: string
+      readOnly: true
+    clusters:
+      readOnly: true
+      <<: *AvailableClusters
+    core:
+      type: object
+      readOnly: true
+    user:
+      type: object
+      readOnly: true
+      properties:
+        email:
+          type: string
+        teamId:
+          type: string
+        isAdmin:
+          type: boolean
+        role:
+          type: string
+    isDirty:
+      type: boolean
+      readOnly: true

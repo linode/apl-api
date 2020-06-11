@@ -1,0 +1,17 @@
+Deployment:
+  x-externalDocsPath: 'otomi/docs/deployment'
+  x-acl:
+    admin: [read-any]
+    team: [read-any]
+  type: object
+  properties:
+    id:
+      type: integer
+    status:
+      type: string
+      readOnly: true
+      description: Deployment status
+      enum:
+        - in-progress
+        - completed
+        - failed

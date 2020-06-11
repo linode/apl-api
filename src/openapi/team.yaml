@@ -1,0 +1,150 @@
+uuid: &uuidField
+  type: string
+  pattern: ^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$
+
+idName: &idNameField
+  type: string
+  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+
+name: &nameField
+  type: string
+  pattern: ^[A-Z0-9]([-a-z0-9]*[a-z0-9])?$
+
+x-available-clusters: &AvailableClusters # description: Select from available clusters
+  type: array
+  items:
+    type: string
+  uniqueItems: true
+
+AzureMonitor: &AzureMonitor
+  type: object
+  description: Azure Monitor is the platform service that provides a single source for monitoring Azure resources.
+  anyOf:
+    - title: No Azure monitoring
+      nullable: true
+      additionalProperties: false
+    - title: Azure monitoring with global settings
+      type: object
+      properties:
+        useAdmin:
+          type: boolean
+          default: true
+      nullable: true
+      additionalProperties: false
+    - title: Azure monitoring with custom settings
+      type: object
+      properties:
+        clientId:
+          description:
+            'An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID)'
+          <<: *uuidField
+        clientSecret:
+          type: string
+          writeOnly: true
+          description:
+            An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a
+            key -> Use client secret)
+        logAnalyticsClientId:
+          description: 'A dedicated client ID for Azure Log Analytics. Default: form clientId field'
+          <<: *uuidField
+        logAnalyticsClientSecret:
+          description: 'A client Secret for Azure Log Analytics. Default: form clientSecret field'
+          type: string
+          writeOnly: true
+        appInsightsAppId:
+          description: 'An API key for use with an Application Insights resource. Default: form clientId field'
+          type: string
+        appInsightsAppSecret:
+          description: 'An API secret for use with an Application Insights resource. Default: form clientSecret field'
+          type: string
+          writeOnly: true
+      required:
+        - clientId
+        - clientSecret
+      nullable: true
+      additionalProperties: false
+
+Azure: &Azure
+  title: Azure
+  type: object
+  properties:
+    monitor:
+      <<: *AzureMonitor
+      type: object
+
+Team:
+  x-externalDocsPath: 'otomi/docs/configuring-team'
+  x-acl:
+    admin: [delete-any, read-any, create-any, update-any]
+    team: [read-any, update]
+  type: object
+  properties:
+    id:
+      title: ID
+      <<: *idNameField
+      x-acl:
+        admin: [read]
+        team: [read]
+    name:
+      title: name
+      <<: *idNameField
+      example: 'otomi'
+      x-acl:
+        admin: [create, read]
+        team: [read]
+      description: A team name
+    clusters:
+      title: Clusters
+      <<: *AvailableClusters
+      minItems: 1
+      x-acl:
+        team: [read]
+    password:
+      type: string
+      # description: "A secret that is used access multi-tenant log aggregation system (Loki)"
+      writeOnly: true
+    receiver:
+      title: Alerting Endpoint
+      type: object
+      # description: Alerting Endpoint
+      anyOf:
+        - title: Slack
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - slack
+              default: slack
+            url:
+              title: Web hook
+              type: string
+              description: Slack web hook. If none is given the global one is used.
+            channel:
+              title: Channel
+              type: string
+              description:
+                Slack channel. If none is given the global one is used. When overridden here, an extra channel with the
+                suffix '-crit' must exist as well!
+        - title: Microsoft Teams
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - msteams
+              default: msteams
+            lowPrio:
+              title: High prio webhook
+              type: string
+              description: The low prio web hook
+            highPrio:
+              title: Low prio webhook
+              type: string
+              description: The high prio web hook
+        - title: None
+    azure:
+      <<: *Azure
+  required:
+    - name
+    - clusters
