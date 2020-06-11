@@ -31,7 +31,7 @@ describe('Api tests for admin', () => {
       .end(done)
   })
   it('admin can create a team', (done) => {
-    const data = { name: 'Team100', clusters: ['aws/dev'], password: 'test' }
+    const data = { id: 'otomi', clusters: ['aws/dev'], password: 'test' }
     request(app)
       .post('/v1/teams')
       .send(data)

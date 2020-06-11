@@ -2,7 +2,7 @@ import lowdb from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
 import Memory from 'lowdb/adapters/Memory'
 import findIndex from 'lodash/findIndex'
-
+import { v4 as uuidv4 } from 'uuid'
 import cloneDeep from 'lodash/cloneDeep'
 import { AlreadyExists, NotExistError } from './error'
 
@@ -43,38 +43,45 @@ export class Db {
     return cloneDeep(data)
   }
 
-  getItemReference(name, selectors) {
-    const data = this.db.get(name).find(selectors).value()
+  getItemReference(type, selectors) {
+    const data = this.db.get(type).find(selectors).value()
     if (data === undefined) {
-      throw new NotExistError(`Selector props do not exist in '${name}' collection: ${JSON.stringify(selectors)}`)
+      throw new NotExistError(`Selector props do not exist in '${type}' collection: ${JSON.stringify(selectors)}`)
     }
     return data
   }
 
-  getCollection(name: string, selectors?: object) {
-    return this.db.get(name).filter(selectors).value()
+  getCollection(type: string, selectors?: object) {
+    return this.db.get(type).filter(selectors).value()
   }
 
-  createItem(name, selectors, data) {
-    try {
-      this.getItemReference(name, selectors)
-    } catch (e) {
-      const ret = this.db.get(name).push(data).last().assign(selectors).write()
-      this.dirty = this.dirtyActive
-      return ret
-    }
-    throw new AlreadyExists(`Item already exists in '${name}' collection: ${JSON.stringify(selectors)}`)
+  populateItem(type, data, selector = undefined, id: string = undefined) {
+    if (selector && this.db.get(type).find(selector).value()) return undefined
+    return this.db
+      .get(type)
+      .push(data)
+      .last()
+      .assign({ id: id || uuidv4() })
+      .write()
   }
 
-  deleteItem(name, selectors) {
-    this.getItemReference(name, selectors)
-    this.db.get(name).remove(selectors).write()
+  createItem(type, data, selector = undefined, id: string = undefined) {
+    if (selector && this.db.get(type).find(selector).value())
+      throw new AlreadyExists(`Item already exists in '${type}' collection: ${JSON.stringify(selector)}`)
+    const ret = this.populateItem(type, data, selector, id)
+    this.dirty = this.dirtyActive
+    return ret
+  }
+
+  deleteItem(type, selectors) {
+    this.getItemReference(type, selectors)
+    this.db.get(type).remove(selectors).write()
     this.dirty = this.dirtyActive
   }
 
-  updateItem(name, selectors, data) {
-    this.getItemReference(name, selectors)
-    const ret = this.db.get(name).find(selectors).assign(data).write()
+  updateItem(type, data, selectors) {
+    this.getItemReference(type, selectors)
+    const ret = this.db.get(type).find(selectors).assign(data).write()
     this.dirty = this.dirtyActive
     return ret
   }

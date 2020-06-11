@@ -1,14 +1,15 @@
 import { Operation } from 'express-openapi'
 import yaml from 'js-yaml'
 import { KubeConfig } from '@kubernetes/client-node'
+import OtomiStack from '../../otomi-stack'
+import { OpenApiRequest } from '../../api.d'
 
 export const parameters = []
 
-export default function (otomi) {
+export default function (otomi: OtomiStack) {
   const GET: Operation = [
-    async (req, res) => {
-      console.debug(`Trigger download: ${JSON.stringify(req.params)}`)
-      const { teamId } = req.params
+    async ({ params: { teamId } }: OpenApiRequest, res) => {
+      console.debug(`Trigger download: ${JSON.stringify({ teamId })}`)
       // trigger creation of file
       const config: KubeConfig = await otomi.getKubecfg(teamId)
       const yamlConfig = yaml.safeDump(JSON.parse(config.exportConfig()))

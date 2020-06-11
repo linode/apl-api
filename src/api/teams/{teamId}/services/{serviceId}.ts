@@ -1,27 +1,26 @@
 import { Operation } from 'express-openapi'
+import OtomiStack from '../../../../otomi-stack'
+import { OpenApiRequest } from '../../../../api.d'
 
-export default function (otomi) {
+export default function (otomi: OtomiStack) {
   const DELETE: Operation = [
-    (req, res) => {
-      console.debug(`Delete service: ${JSON.stringify(req.params)}`)
-      const { serviceId } = req.params
+    ({ params: { serviceId } }: OpenApiRequest, res) => {
+      console.debug(`Delete service: ${JSON.stringify({ serviceId })}`)
       otomi.deleteService(decodeURIComponent(serviceId))
       res.status(200).json({})
     },
   ]
   const GET: Operation = [
-    (req, res) => {
-      console.debug(`Get service: ${JSON.stringify(req.params)}`)
-      const { serviceId } = req.params
+    ({ params: { serviceId } }: OpenApiRequest, res) => {
+      console.debug(`Get service: ${JSON.stringify({ serviceId })}`)
       const data = otomi.getService(decodeURIComponent(serviceId))
       res.status(200).json(data)
     },
   ]
   const PUT: Operation = [
-    (req, res) => {
-      console.debug(`Modify service: ${JSON.stringify(req.params)}`)
-      const { serviceId } = req.params
-      const data = otomi.editService(decodeURIComponent(serviceId), req.body)
+    ({ params: { serviceId }, body }: OpenApiRequest, res) => {
+      console.debug(`Modify service: ${JSON.stringify({ serviceId })}`)
+      const data = otomi.editService(decodeURIComponent(serviceId), body)
       res.status(200).json(data)
     },
   ]

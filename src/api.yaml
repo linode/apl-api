@@ -223,6 +223,53 @@ paths:
               schema:
                 $ref: '#/components/schemas/Service'
 
+  '/teams/{teamId}/secrets':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getSecrets
+      description: Get secrets from a given team
+      x-aclSchema: Secrets
+      responses:
+        '200':
+          description: Successfully obtained secrets
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Secrets'
+        '400':
+          description: Bad Request
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OpenApiValidationError'
+    post:
+      operationId: createSecret
+      description: Create a team secret
+      x-aclSchema: Secret
+      parameters:
+        - name: teamId
+          in: path
+          description: ID of team
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secret'
+        description: Service object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored secret configuration
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Secret'
+
   '/teams/{teamId}/services/{serviceId}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
@@ -253,7 +300,7 @@ paths:
       responses:
         <<: *DefaultGetResponses
         '200':
-          description: Successfully edited service
+          description: Successfully edited team service
           content:
             'application/json':
               schema:
@@ -265,7 +312,51 @@ paths:
       responses:
         <<: *DefaultGetResponses
         '200':
-          description: Successfully deleted a service
+          description: Successfully deleted a team service
+
+  '/teams/{teamId}/secrets/{secretId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/secretParams'
+    get:
+      operationId: getSecret
+      description: Get a secret from a given team
+      x-aclSchema: Secret
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained secret configuration
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Secret'
+    put:
+      operationId: editSecret
+      description: Edit a secret from a given team
+      x-aclSchema: Secret
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secret'
+        description: Secret object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team secret
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Secret'
+    delete:
+      operationId: deleteSecret
+      description: Delete a secret from a given team
+      x-aclSchema: Secret
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a team secret
 
   /deploy:
     get:
@@ -347,6 +438,20 @@ components:
       in: path
       description: ID of the service
       required: true
+      schema:
+        type: string
+    secretParams:
+      name: secretId
+      in: path
+      description: ID of the secret
+      required: true
+      schema:
+        type: string
+    scopeParams:
+      name: scope
+      in: path
+      description: Scope of the resource
+      required: false
       schema:
         type: string
 
@@ -449,135 +554,6 @@ components:
           value:
             type: string
             maxLength: 32767
-
-    KnativeServicePredeployed: &KnativeServicePredeployed
-      type: object
-      properties: &KnativeServicePredeployedProperties
-        predeployed:
-          type: boolean
-          default: true
-          readOnly: true
-      required:
-        - predeployed
-      additionalProperties: false
-
-    KnativeService: &KnativeService # description: Knative service definition
-      type: object
-      properties: &KnativeServiceProperties
-        scaleToZero:
-          title: Scale to zero
-          description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
-          type: boolean
-          default: false
-        image:
-          title: Container image
-          type: object
-          nullable: true
-          properties:
-            repository:
-              <<: *repositoryField
-            tag:
-              type: string
-          required:
-            - repository
-            - tag
-        env:
-          title: Environment variables
-          # description: Environment variables for containers
-          type: array
-          nullable: true
-          items:
-            type: object
-            properties:
-              name:
-                <<: *envField
-              value:
-                type: string
-                maxLength: 131072
-            required:
-              - name
-              - value
-        resources:
-          title: Pod resources
-          # description: Compute resources for containers
-          type: object
-          nullable: true
-          properties:
-            requests:
-              type: object
-              properties:
-                cpu:
-                  description: 'The guaranteed amount of CPU'
-                  <<: *k8sResourceCpuQuantityField
-                  default: 50m
-                memory:
-                  description: 'The guaranteed amount of RAM'
-                  <<: *k8sResourceMemoryQuantityField
-                  default: 64Mi
-              required:
-                - cpu
-                - memory
-            limits:
-              type: object
-              properties:
-                cpu:
-                  description: 'The maximal amount of CPU'
-                  <<: *k8sResourceCpuQuantityField
-                  default: 100m
-                memory:
-                  description: 'The maximal amount of RAM'
-                  <<: *k8sResourceMemoryQuantityField
-                  default: 128Mi
-              required:
-                - cpu
-                - memory
-        annotations:
-          title: Pod annotations
-          <<: *K8sAnnotation
-        autoCD:
-          title: Continuous delivery pipeline
-          description: Deploys new images based on a tagging strategy
-          type: object
-          oneOf:
-            - title: 'Off'
-              nullable: true
-              additionalProperties: false
-            - title: Semver versioning
-              nullable: true
-              properties:
-                tagMatcher:
-                  type: string
-                  enum: [semver]
-                  default: semver
-                semver:
-                  title: Semver version pattern
-                  type: string
-                  example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
-                  description:
-                    'Use this filter if your images tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.:
-                    PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
-              required:
-                - semver
-              # additionalProperties: false
-            - title: Glob pattern matching
-              # nullable: true
-              properties:
-                tagMatcher:
-                  type: string
-                  enum: [glob]
-                  default: glob
-                glob:
-                  title: Glob string pattern
-                  type: string
-                  description: 'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*"'
-                  example: 'master-v1.*.*'
-              required:
-                - glob
-              additionalProperties: false
-      required:
-        - image
-        - resources
-      additionalProperties: false
 
     ServiceIngress:
       properties: &ServiceIngress
@@ -683,6 +659,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Team'
+    Secrets:
+      x-acl:
+        admin: [read-any]
+        team: [read-any]
+      type: object
+      properties:
+        secrets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Secret'
     Services:
       x-acl:
         admin: [read-any]
@@ -714,12 +700,14 @@ components:
         team: [read-any, update]
       type: object
       properties:
-        name:
-          <<: *nameField
-          example: 'Team Otomi'
+        id:
+          title: ID
+          <<: *idNameField
+          example: 'otomi'
           x-acl:
             team: [read]
-          description: A team name
+            admin: [create, read]
+          description: A team id
         clusters:
           title: Clusters
           <<: *AvailableClusters
@@ -728,11 +716,8 @@ components:
             team: [read]
         password:
           type: string
-          # description: "A secret that is used access multi-tenant log aggregation system (Loki)"
+          # description: "A secret that is to used access multi-tenant log aggregation system (Loki)"
           writeOnly: true
-        teamId:
-          type: string
-          readOnly: true
         receiver:
           title: Alerting Endpoint
           type: object
@@ -776,7 +761,7 @@ components:
         azure:
           <<: *Azure
       required:
-        - name
+        - id
         - clusters
 
     Kubecfg:
@@ -793,11 +778,14 @@ components:
         team: [delete, read, create, update]
       type: object
       properties:
+        id:
+          type: string
+          readOnly: true
         name:
           <<: *idNameField
           title: Name
           description: A service name
-          example: service01
+          example: some-service
         clusterId:
           title: Cluster ID
           type: string
@@ -829,7 +817,117 @@ components:
                   type: string
                   enum: [ksvc]
                   default: ksvc
-                <<: *KnativeServiceProperties
+                scaleToZero:
+                  title: Scale to zero
+                  description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
+                  type: boolean
+                  default: false
+                image:
+                  title: Container image
+                  type: object
+                  nullable: true
+                  properties:
+                    repository:
+                      <<: *repositoryField
+                    tag:
+                      type: string
+                  required:
+                    - repository
+                    - tag
+                env:
+                  title: Environment variables
+                  # description: Environment variables for containers
+                  type: array
+                  nullable: true
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        <<: *envField
+                      value:
+                        type: string
+                        maxLength: 131072
+                    required:
+                      - name
+                      - value
+                resources:
+                  title: Pod resources
+                  # description: Compute resources for containers
+                  type: object
+                  nullable: true
+                  properties:
+                    requests:
+                      type: object
+                      properties:
+                        cpu:
+                          description: 'The guaranteed amount of CPU'
+                          <<: *k8sResourceCpuQuantityField
+                          default: 50m
+                        memory:
+                          description: 'The guaranteed amount of RAM'
+                          <<: *k8sResourceMemoryQuantityField
+                          default: 64Mi
+                      required:
+                        - cpu
+                        - memory
+                    limits:
+                      type: object
+                      properties:
+                        cpu:
+                          description: 'The maximal amount of CPU'
+                          <<: *k8sResourceCpuQuantityField
+                          default: 100m
+                        memory:
+                          description: 'The maximal amount of RAM'
+                          <<: *k8sResourceMemoryQuantityField
+                          default: 128Mi
+                      required:
+                        - cpu
+                        - memory
+                annotations:
+                  title: Pod annotations
+                  <<: *K8sAnnotation
+                autoCD:
+                  title: Continuous delivery pipeline
+                  description: Deploys new images based on a tagging strategy
+                  type: object
+                  oneOf:
+                    - title: 'Off'
+                      nullable: true
+                      additionalProperties: false
+                    - title: Semver versioning
+                      nullable: true
+                      properties:
+                        tagMatcher:
+                          type: string
+                          enum: [semver]
+                          default: semver
+                        semver:
+                          title: Semver version pattern
+                          type: string
+                          example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
+                          description:
+                            'Use this filter if your images tags follow semantic versioning rules (MAJOR.MINOR.PATCH).
+                            E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
+                      required:
+                        - semver
+                      # additionalProperties: false
+                    - title: Glob pattern matching
+                      # nullable: true
+                      properties:
+                        tagMatcher:
+                          type: string
+                          enum: [glob]
+                          default: glob
+                        glob:
+                          title: Glob string pattern
+                          type: string
+                          description:
+                            'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*"'
+                          example: 'master-v1.*.*'
+                      required:
+                        - glob
+                      additionalProperties: false
             - title: Existing Knative service
               properties:
                 serviceType:
@@ -847,9 +945,6 @@ components:
               required:
                 - serviceType
         teamId:
-          type: string
-          readOnly: true
-        serviceId:
           type: string
           readOnly: true
       required:
@@ -920,3 +1015,74 @@ components:
         isDirty:
           type: boolean
           readOnly: true
+
+    Secret:
+      x-acl:
+        admin: [read-any, create-any, delete-any]
+        team: [read, create, delete]
+      type: object
+      properties:
+        name:
+          <<: *idNameField
+          title: Name
+          description: A secret name
+          example: secret01
+        namespace:
+          type: string
+          x-acl:
+            team: []
+            admin: [read, edit]
+        type:
+          type: string
+          default: docker-registry
+      oneOf:
+        - title: Docker Registry
+          properties:
+            type:
+              type: string
+              enum: [docker-registry]
+              default: docker-registry
+            username:
+              type: string
+            password:
+              type: string
+              # writeOnly: true
+          required: [username, password]
+        - title: Generic
+          properties:
+            type:
+              type: string
+              enum: [generic]
+              default: generic
+            entries:
+              type: array
+              description: Key names and their values
+              items:
+                type: object
+                properties:
+                  key:
+                    description: Key or file name
+                    example: secretstuff.conf
+                    type: string
+                  value:
+                    description: Value to be encrypted
+                    example: password=yoursecretpassword
+                    type: string
+                    # writeOnly: true
+                required: [key, value]
+          required: [entries]
+        - title: TLS
+          properties:
+            type:
+              type: string
+              enum: [tls]
+              default: tls
+            cert:
+              description: The PEM encoded public key certificate content
+              type: string
+            key:
+              description: The private key certificate content
+              type: string
+          required: [cert, key]
+      required: [type]
+      default: docker-registry
