@@ -82,11 +82,17 @@ Team:
     id:
       title: ID
       <<: *idNameField
+      x-acl:
+        admin: [read]
+        team: [read]
+    name:
+      title: name
+      <<: *idNameField
       example: 'otomi'
       x-acl:
         admin: [create, read]
         team: [read]
-      description: A team id
+      description: A team name
     clusters:
       title: Clusters
       <<: *AvailableClusters
@@ -140,5 +146,5 @@ Team:
     azure:
       <<: *Azure
   required:
-    - id
+    - name
     - clusters
