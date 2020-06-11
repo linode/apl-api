@@ -1,15 +1,7 @@
 import cloneDeep from 'lodash/cloneDeep'
-import $RefParser from '@apidevtools/json-schema-ref-parser'
-import fs from 'fs'
-import path from 'path'
 
 interface ResourceBase {
   name: string
-}
-
-export async function loadOpenApisSpec(path: string) {
-  const schema = await $RefParser.bundle(path)
-  return schema
 }
 
 export function validateEnv(envVars) {

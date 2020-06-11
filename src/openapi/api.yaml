@@ -1,0 +1,363 @@
+openapi: 3.0.0
+security:
+  - groupAuthz: []
+info:
+  title: The otomi-stack API
+  version: 0.1.0
+
+externalDocs:
+  description: 'This is the base url of the external documentation'
+  url: https://redkubes.github.io/otomi/ #Using this URL a final docUrl can be made using this+info.version+ the component's x-externalDocsPath
+
+x-responses:
+  BadRequest: &BadRequest
+    description: Bad Request
+    content:
+      'application/json':
+        schema:
+          $ref: '#/components/schemas/OpenApiValidationError'
+
+  OtomiStackError: &OtomiStackError
+    description: Resource already exists
+    content:
+      'application/json':
+        schema:
+          $ref: '#/components/schemas/OtomiStackError'
+
+  NotFound: &NotFound
+    description: Resource does not exist
+    content:
+      'application/json':
+        schema:
+          $ref: '#/components/schemas/OtomiStackError'
+
+x-post-responses: &DefaultPostResponses
+  '400':
+    <<: *BadRequest
+  '409':
+    <<: *OtomiStackError
+
+x-get-responses: &DefaultGetResponses
+  '400':
+    <<: *BadRequest
+  '404':
+    <<: *NotFound
+
+# -------------------------------------------- Paths
+paths:
+  /readiness:
+    get:
+      security: []
+      description: Check readiness
+      responses:
+        '200':
+          description: Service is ready
+  /clusters:
+    get:
+      operationId: getClusters
+      description: Get available clusters
+      x-aclSchema: Clusters
+      responses:
+        '200':
+          description: Successfully obtained cluster collection
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Clusters'
+
+  /services:
+    get:
+      operationId: getAllServices
+      description: Get services from a given team
+      x-aclSchema: Services
+      responses:
+        '200':
+          description: Successfully obtained all services
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Services'
+        '400':
+          <<: *BadRequest
+
+  /teams:
+    get:
+      operationId: getTeams
+      description: Get teams collection
+      x-aclSchema: Teams
+      responses:
+        '200':
+          description: Successfully obtained teams collection
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Teams'
+    post:
+      operationId: createTeam
+      description: Create a team
+      x-aclSchema: Team
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Team'
+        description: Team object that needs to be added to the collection
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully obtained teams collection
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Team'
+
+  '/teams/{teamId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeam
+      description: Get a specific team
+      x-aclSchema: Team
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Team'
+    put:
+      operationId: editTeam
+      description: Edit a team
+      x-aclSchema: Team
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Team'
+        description: Team object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited team
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Team'
+    delete:
+      operationId: deleteTeam
+      description: Delete team
+      x-aclSchema: Team
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a team
+
+  '/teams/{teamId}/services':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamServices
+      description: Get services from a given team
+      x-aclSchema: Services
+      responses:
+        '200':
+          description: Successfully obtained services
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Services'
+        '400':
+          <<: *BadRequest
+
+    post:
+      operationId: createService
+      description: Create a service
+      x-aclSchema: Service
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Service'
+        description: Service object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored service configuration
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Service'
+
+  '/teams/{teamId}/services/{serviceId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/serviceParams'
+    get:
+      operationId: getService
+      description: Get a service from a given team
+      x-aclSchema: Service
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained service configuration
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Service'
+    put:
+      operationId: editService
+      description: Edit a service from a given team
+      x-aclSchema: Service
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Service'
+        description: Service object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited service
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Service'
+    delete:
+      operationId: deleteService
+      description: Delete a service from a given team
+      x-aclSchema: Service
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a service
+
+  /deploy:
+    get:
+      x-aclSchema: Deployment
+      operationId: deploy
+      description: Trigger a deployment (only for admin)
+      responses:
+        '202':
+          description: Deployment has been triggered
+          content:
+            'application/json':
+              schema:
+                type: object
+        '409':
+          <<: *OtomiStackError
+
+  '/kubecfg/{teamId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: downloadKubecfg
+      description: Download a kubecfg for a team
+      x-aclSchema: Kubecfg
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Succesfully finished the download
+          content:
+            'application/yaml':
+              schema:
+                type: object
+
+  /session:
+    get:
+      security: []
+      operationId: getSession
+      description: Get the session for the current user
+      responses:
+        '200':
+          description: Get the session for the logged in user
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Session'
+        default:
+          description: The requested session.
+  /apiDocs:
+    get:
+      security: []
+      description: Get OpenApi document
+      responses:
+        '200':
+          description: The requested apiDoc.
+          content:
+            'application/json':
+              schema:
+                type: object
+        default:
+          description: The requested apiDoc.
+
+# -------------------------------------------- Servers
+
+servers:
+  - url: '/v1'
+
+# -------------------------------------------- Components
+components:
+  parameters:
+    teamParams:
+      name: teamId
+      in: path
+      description: ID of team to return
+      required: true
+      schema:
+        type: string
+    serviceParams:
+      name: serviceId
+      in: path
+      description: ID of the service
+      required: true
+      schema:
+        type: string
+
+  securitySchemes:
+    groupAuthn:
+      type: apiKey
+      name: Auth-User
+      in: header
+    groupAuthz:
+      type: apiKey
+      name: Auth-Group
+      in: header
+
+  schemas:
+    Teams:
+      $ref: 'teams.yaml#/Teams'
+
+    Cluster:
+      $ref: 'cluster.yaml#/Cluster'
+
+    Clusters:
+      $ref: 'clusters.yaml#/Clusters'
+
+    Deployment:
+      $ref: 'deployment.yaml#/Deployment'
+
+    Kubecfg:
+      $ref: 'kubecfg.yaml#/Kubecfg'
+
+    Service:
+      $ref: 'service.yaml#/Service'
+
+    Services:
+      $ref: 'services.yaml#/Services'
+
+    Session:
+      $ref: 'session.yaml#/Session'
+
+    Team:
+      $ref: 'team.yaml#/Team'
+
+    OpenApiValidationError:
+      $ref: 'error.yaml#/OpenApiValidationError'
+
+    OtomiStackError:
+      $ref: 'error.yaml#/OtomiStackError'

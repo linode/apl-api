@@ -1,0 +1,7 @@
+Clusters: &ClustersSchema
+  type: array
+  x-acl:
+    admin: [read-any]
+    team: [read-any]
+  items:
+    $ref: 'cluster.yaml#/Cluster'

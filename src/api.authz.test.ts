@@ -7,10 +7,10 @@ import { validateEnv } from './utils'
 
 describe('Api tests for admin', () => {
   let app
-  before(() => {
+  before(async () => {
     const otomiStack = new OtomiStack()
     sinon.stub(otomiStack)
-    app = initApp(otomiStack)
+    app = await initApp(otomiStack)
   })
   it('admin can get all teams', (done) => {
     request(app)
@@ -282,10 +282,10 @@ describe('Api tests for admin', () => {
 
 describe('Api tests for data validation', () => {
   let app
-  before(() => {
+  before(async () => {
     const otomiStack = new OtomiStack()
     sinon.stub(otomiStack)
-    app = initApp(otomiStack)
+    app = await initApp(otomiStack)
   })
   it('invalid team name data', (done) => {
     request(app)

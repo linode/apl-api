@@ -1,21 +1,30 @@
 import express from 'express'
 import { initialize } from 'express-openapi'
 import bodyParser from 'body-parser'
-import fs from 'fs'
 import path from 'path'
+import $RefParser from '@apidevtools/json-schema-ref-parser'
 import cors from 'cors'
 import logger from 'morgan'
 import swaggerUi from 'swagger-ui-express'
-import yaml from 'js-yaml'
 import get from 'lodash/get'
 import { errorMiddleware, isAuthorizedFactory, getCrudOperation, getSession } from './middleware'
 import Authz from './authz'
 import { OpenApiRequest } from './api.d'
 
-export default function initApp(otomiStack, spec) {
+export async function loadOpenApisSpec() {
+  const openApiPath = path.resolve(__dirname, 'openapi/api.yaml')
+  console.log(`Loading api spec from: ${openApiPath}`)
+  const schema = await $RefParser.bundle(openApiPath)
+  // console.log(`Schema: ${JSON.stringify(schema)}`)
+
+  return schema
+}
+
+export default async function initApp(otomiStack) {
   const app = express()
   const apiRoutesPath = path.resolve(__dirname, 'api')
   // const spec = yaml.safeLoad(apiDoc)
+  const spec: any = await loadOpenApisSpec()
   const authz = new Authz(spec)
 
   app.use(logger('dev'))

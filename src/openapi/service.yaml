@@ -1,0 +1,278 @@
+domain: &domainNameField
+  type: string
+  pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
+repository: &repositoryField
+  type: string
+  pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
+  description: A container image repository
+memoryQuantity: &k8sResourceMemoryQuantityField
+  type: string
+  pattern: ^[0-9]+\.?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$
+cpuQuantity: &k8sResourceCpuQuantityField
+  type: string
+  pattern: ^([0-9]+\.[0-9]{1,2})|([0-9]{2,3}m)?$
+env: &envField
+  type: string
+  pattern: ^[a-zA-Z0-9_]*$
+annotation: &k8sAnnotationField
+  type: string
+  pattern: ^((.){1,253}\/)?(.){1,63}$
+idName: &idNameField
+  type: string
+  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+
+x-annotations: &K8sAnnotation
+  description: Kubernetes annotations with arbitrary metadata
+  type: array
+  items:
+    type: object
+    properties:
+      name:
+        <<: *k8sAnnotationField
+      value:
+        type: string
+        maxLength: 32767
+
+KnativeServicePredeployed: &KnativeServicePredeployed
+  type: object
+  properties: &KnativeServicePredeployedProperties
+    predeployed:
+      type: boolean
+      default: true
+      readOnly: true
+  required:
+    - predeployed
+  additionalProperties: false
+
+KnativeService: &KnativeService # description: Knative service definition
+  type: object
+  properties: &KnativeServiceProperties
+    scaleToZero:
+      title: Scale to zero
+      description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
+      type: boolean
+      default: false
+    image:
+      title: Container image
+      type: object
+      nullable: true
+      properties:
+        repository:
+          <<: *repositoryField
+        tag:
+          type: string
+      required:
+        - repository
+        - tag
+    env:
+      title: Environment variables
+      # description: Environment variables for containers
+      type: array
+      nullable: true
+      items:
+        type: object
+        properties:
+          name:
+            <<: *envField
+          value:
+            type: string
+            maxLength: 131072
+        required:
+          - name
+          - value
+    resources:
+      title: Pod resources
+      # description: Compute resources for containers
+      type: object
+      nullable: true
+      properties:
+        requests:
+          type: object
+          properties:
+            cpu:
+              description: 'The guaranteed amount of CPU'
+              <<: *k8sResourceCpuQuantityField
+              default: 50m
+            memory:
+              description: 'The guaranteed amount of RAM'
+              <<: *k8sResourceMemoryQuantityField
+              default: 64Mi
+          required:
+            - cpu
+            - memory
+        limits:
+          type: object
+          properties:
+            cpu:
+              description: 'The maximal amount of CPU'
+              <<: *k8sResourceCpuQuantityField
+              default: 100m
+            memory:
+              description: 'The maximal amount of RAM'
+              <<: *k8sResourceMemoryQuantityField
+              default: 128Mi
+          required:
+            - cpu
+            - memory
+    annotations:
+      title: Pod annotations
+      <<: *K8sAnnotation
+    autoCD:
+      title: Continuous delivery pipeline
+      description: Deploys new images based on a tagging strategy
+      type: object
+      oneOf:
+        - title: 'Off'
+          nullable: true
+          additionalProperties: false
+        - title: Semver versioning
+          nullable: true
+          properties:
+            tagMatcher:
+              type: string
+              enum: [semver]
+              default: semver
+            semver:
+              title: Semver version pattern
+              type: string
+              example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
+              description:
+                'Use this filter if your images tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH
+                only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
+          required:
+            - semver
+          # additionalProperties: false
+        - title: Glob pattern matching
+          # nullable: true
+          properties:
+            tagMatcher:
+              type: string
+              enum: [glob]
+              default: glob
+            glob:
+              title: Glob string pattern
+              type: string
+              description: 'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*"'
+              example: 'master-v1.*.*'
+          required:
+            - glob
+          additionalProperties: false
+  required:
+    - image
+    - resources
+  additionalProperties: false
+
+ServiceIngress:
+  properties: &ServiceIngress
+    useDefaultSubdomain:
+      title: 'Use suggested domain (preferred)'
+      type: boolean
+      default: true
+      description: Allows to use wildcard certs already available (only override for public facing services)
+    subdomain:
+      title: 'Host'
+      type: string
+      nullable: true
+      description: A host that is used to set DNS 'A' records
+      <<: *domainNameField
+    domain:
+      title: DNS Zone
+      description: A managed DNS zone
+      type: string
+    path:
+      title: URL path
+      description: The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
+      type: string
+    forwardPath:
+      title: Forward path
+      description: Forward the URL path into the service (don't rewrite to /)
+      type: boolean
+    hasSingleSignOn:
+      title: Authenticate with Single Sign On
+      type: boolean
+      default: false
+    hasCert:
+      title: Already has a certificate
+      type: boolean
+      default: false
+      description:
+        If true a certificate should be deployed as a TLS secret already with the name 'cert-$svcName'. Otherwise it
+        will be generated.
+    certArn:
+      type: string
+      title: Certificate ARN
+      description: Certificate ARN of an existing AWS certificate
+      example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
+  required:
+    - domain
+    - subdomain
+
+Service:
+  x-externalDocsPath: 'otomi/docs/configuring-service'
+  x-acl:
+    admin: [delete-any, read-any, create-any, update-any]
+    team: [delete, read, create, update]
+  type: object
+  properties:
+    name:
+      <<: *idNameField
+      title: Name
+      description: A service name
+      example: service01
+    clusterId:
+      title: Cluster ID
+      type: string
+      description: A kubernetes cluster for the service
+      x-acl:
+        admin: [read, create]
+        team: [read, create]
+    ingress:
+      title: Exposure
+      type: object
+      x-acl:
+        team: [read]
+      oneOf:
+        - title: Private
+          nullable: true
+          additionalProperties: false
+        - title: Public URL
+          nullable: true
+          properties:
+            <<: *ServiceIngress
+    ksvc:
+      title: Type
+      type: object
+      oneOf:
+        - title: Knative service
+          nullable: true
+          properties:
+            serviceType:
+              type: string
+              enum: [ksvc]
+              default: ksvc
+            <<: *KnativeServiceProperties
+        - title: Existing Knative service
+          properties:
+            serviceType:
+              type: string
+              enum: [ksvcPredeployed]
+              default: ksvcPredeployed
+          required:
+            - serviceType
+        - title: Existing Kubernetes service
+          properties:
+            serviceType:
+              type: string
+              enum: [svcPredeployed]
+              default: svcPredeployed
+          required:
+            - serviceType
+    teamId:
+      type: string
+      readOnly: true
+    serviceId:
+      type: string
+      readOnly: true
+  required:
+    - name
+    - clusterId

@@ -1,0 +1,7 @@
+Services:
+  x-acl:
+    admin: [read-any]
+    team: [read-any]
+  type: array
+  items:
+    $ref: 'service.yaml#/Service'
