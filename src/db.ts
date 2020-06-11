@@ -30,6 +30,11 @@ export class Db {
         defaultServices: [],
         clouds: [],
         clusters: [],
+        chartsSettings: [],
+        clusterSettings: [],
+        ingressSettings: [],
+        oidcSettings: [],
+        sitesSettings: [],
       })
       .write()
     this.dirty = false
@@ -62,6 +67,7 @@ export class Db {
       .push(data)
       .last()
       .assign({ id: id || uuidv4() })
+      .assign(selector)
       .write()
   }
 

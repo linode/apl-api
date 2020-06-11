@@ -57,13 +57,20 @@ export function diffLikeHelm(baseObject: any, topObject: any): any {
   return changeObj
 }
 
+function createSettingItems(db: Db, settings: any, scope: string) {
+  db.createItem('chartsSettings', settings.charts, { scope })
+  db.createItem('clusterSettings', settings.cluster, { scope })
+  db.createItem('ingressSettings', settings.ingress, { scope })
+  db.createItem('oidcSettings', settings.oidc, { scope })
+  db.createItem('sitesSettings', settings.sites, { scope })
+}
 export function loadSettings(repo: Repo, db: Db) {
   // load common settings
   const scope = 'global'
   console.log(``)
   const path = 'env/default.yaml'
   const globalSettings = repo.readFile(path)
-  db.createItem('settings', { scope }, globalSettings)
+  createSettingItems(db, globalSettings, scope)
 
   const allClusters = db.getCollection('clusters')
   const clouds = [...new Set(allClusters.map((cluster) => cluster.cloud))]
@@ -71,14 +78,14 @@ export function loadSettings(repo: Repo, db: Db) {
     const path = `env/$cloud/default.yaml`
     const scope = `global/$cloud`
     const cloudSettings = mergeLikeHelm(globalSettings, repo.readFile(path))
-    db.createItem('settings', { scope }, cloudSettings)
+    createSettingItems(db, cloudSettings, scope)
 
     const clusters = db.getCollection('clusters', { cloud })
     clusters.forEach((cluster) => {
       const path = `env/${cloud}/${cluster}.yaml`
       const scope = `global/${cloud}/${cluster}`
       const clusterSettings = mergeLikeHelm(cloudSettings, repo.readFile(path))
-      db.createItem('settings', { scope }, clusterSettings)
+      createSettingItems(db, clusterSettings, scope)
     })
   })
 }

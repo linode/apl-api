@@ -328,6 +328,77 @@ paths:
                 $ref: '#/components/schemas/Session'
         default:
           description: The requested session.
+
+  /settings/charts/{scope}:
+    parameters:
+      - $ref: '#/components/parameters/scopeParams'
+    get:
+      x-aclSchema: SettingsCharts
+      operationId: getChartSettings
+      responses:
+        '200':
+          description: Get chart settings form a given scope
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/SettingsCharts'
+
+  /settings/cluster/{scope}:
+    parameters:
+      - $ref: '#/components/parameters/scopeParams'
+    get:
+      x-aclSchema: SettingsCluster
+      operationId: getClusterSettings
+      responses:
+        '200':
+          description: Get cluster settings
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/SettingsCluster'
+
+  /settings/ingress/{scope}:
+    parameters:
+      - $ref: '#/components/parameters/scopeParams'
+    get:
+      x-aclSchema: SettingsIngress
+      operationId: getIngressSettings
+      responses:
+        '200':
+          description: Get ingress settings
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/SettingsIngress'
+
+  /settings/oidc/{scope}:
+    parameters:
+      - $ref: '#/components/parameters/scopeParams'
+    get:
+      x-aclSchema: SettingsOidc
+      operationId: getOidcSettings
+      responses:
+        '200':
+          description: Get the OIDC settings
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/SettingsOidc'
+
+  /settings/sites/{scope}:
+    parameters:
+      - $ref: '#/components/parameters/scopeParams'
+    get:
+      x-aclSchema: SettingsSites
+      operationId: getSitesSettings
+      responses:
+        '200':
+          description: Get site settings
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/SettingsSites'
+
   /apiDocs:
     get:
       security: []
@@ -419,6 +490,21 @@ components:
 
     Session:
       $ref: 'session.yaml#/Session'
+
+    SettingsCharts:
+      $ref: 'settingsCharts.yaml#/SettingsCharts'
+
+    SettingsCluster:
+      $ref: 'settingsCluster.yaml#/SettingsCluster'
+
+    SettingsIngress:
+      $ref: 'settingsIngress.yaml#/SettingsIngress'
+
+    SettingsOidc:
+      $ref: 'settingsOidc.yaml#/SettingsOidc'
+
+    SettingsSites:
+      $ref: 'settingsSites.yaml#/SettingsSites'
 
     Team:
       $ref: 'team.yaml#/Team'

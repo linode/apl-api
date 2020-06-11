@@ -1,0 +1,7 @@
+SettingsSites:
+  x-acl:
+    admin: [read-any, update-any]
+    team: [read]
+  type: 'array'
+  items:
+    type: 'string'

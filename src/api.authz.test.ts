@@ -5,6 +5,14 @@ import initApp from './server'
 import OtomiStack from './otomi-stack'
 import { validateEnv } from './utils'
 
+async function validateIfUserCanGet(app, path: string, group: string) {
+  await request(app)
+    .get(path)
+    .set('Accept', 'application/json')
+    .set('Auth-Group', group)
+    .expect(200)
+    .expect('Content-Type', /json/)
+}
 describe('Api tests for admin', () => {
   let app
   before(async () => {
@@ -12,6 +20,27 @@ describe('Api tests for admin', () => {
     sinon.stub(otomiStack)
     app = await initApp(otomiStack)
   })
+
+  it('admin can get global charts settings', async () => {
+    await validateIfUserCanGet(app, '/v1/settings/charts/global', 'admin')
+  })
+
+  it('admin can get global cluster settings', async () => {
+    await validateIfUserCanGet(app, '/v1/settings/cluster/global', 'admin')
+  })
+
+  it('admin can get global ingress settings', async () => {
+    await validateIfUserCanGet(app, '/v1/settings/ingress/global', 'admin')
+  })
+
+  it('admin can get global oidc settings', async () => {
+    await validateIfUserCanGet(app, '/v1/settings/oidc/global', 'admin')
+  })
+
+  it('admin can get global sites settings', async () => {
+    await validateIfUserCanGet(app, '/v1/settings/sites/global', 'admin')
+  })
+
   it('admin can get all teams', (done) => {
     request(app)
       .get('/v1/teams')

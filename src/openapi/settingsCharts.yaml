@@ -1,0 +1,262 @@
+SettingsCharts:
+  x-acl:
+    admin: [read-any, update-any]
+    team: [read]
+  required:
+    - 'cert-manager'
+    - 'drone'
+    - 'index'
+    - 'istio'
+    - 'loki'
+    - 'oauth2-proxy'
+    - 'otomi-api'
+    - 'otomi-web'
+    - 'prometheus-operator'
+    - 'sitespeed'
+  properties:
+    cert-manager:
+      required:
+        - 'emailUser'
+        - 'stage'
+      properties:
+        emailUser:
+          type: 'string'
+        stage:
+          type: 'string'
+      type: 'object'
+    drone:
+      required:
+        - 'orgsFilter'
+        - 'repoFilter'
+        - 'server'
+        - 'sourceControl'
+      properties:
+        orgsFilter:
+          type: 'string'
+        repoFilter:
+          type: 'string'
+        server:
+          required:
+            - 'adminUser'
+          properties:
+            adminUser:
+              type: 'string'
+          type: 'object'
+        sourceControl:
+          required:
+            - 'github'
+            - 'provider'
+          properties:
+            github:
+              required:
+                - 'server'
+              properties:
+                server:
+                  type: 'string'
+              type: 'object'
+            provider:
+              type: 'string'
+          type: 'object'
+      type: 'object'
+    index:
+      required:
+        - 'image'
+      properties:
+        image:
+          required:
+            - 'tag'
+          properties:
+            tag:
+              type: 'string'
+          type: 'object'
+      type: 'object'
+    istio:
+      required:
+        - 'gateway'
+        - 'mtls'
+        - 'profile'
+        - 'sds'
+      properties:
+        gateway:
+          required:
+            - 'name'
+            - 'namespace'
+          properties:
+            name:
+              type: 'string'
+            namespace:
+              type: 'string'
+          type: 'object'
+        mtls:
+          required:
+            - 'enabled'
+          properties:
+            enabled:
+              type: 'boolean'
+          type: 'object'
+        profile:
+          type: 'string'
+        sds:
+          required:
+            - 'enabled'
+          properties:
+            enabled:
+              type: 'boolean'
+          type: 'object'
+      type: 'object'
+    loki:
+      required:
+        - 'adminPassword'
+        - 'persistence'
+        - 'retention'
+        - 'storageType'
+      properties:
+        adminPassword:
+          type: 'string'
+        persistence:
+          required:
+            - 'size'
+          properties:
+            size:
+              type: 'string'
+          type: 'object'
+        retention:
+          required:
+            - 'duration'
+            - 'period'
+          properties:
+            duration:
+              type: 'string'
+            period:
+              type: 'string'
+          type: 'object'
+        storageType:
+          type: 'string'
+      type: 'object'
+    oauth2-proxy:
+      required:
+        - 'config'
+      properties:
+        config:
+          required:
+            - 'cookieSecret'
+          properties:
+            cookieSecret:
+              type: 'string'
+          type: 'object'
+      type: 'object'
+    otomi-api:
+      required:
+        - 'git'
+        - 'image'
+        - 'syncEnabled'
+      properties:
+        git:
+          required:
+            - 'branch'
+            - 'email'
+            - 'localPath'
+            - 'password'
+            - 'repoUrl'
+            - 'user'
+          properties:
+            branch:
+              type: 'string'
+            email:
+              type: 'string'
+            localPath:
+              type: 'string'
+            password:
+              type: 'string'
+            repoUrl:
+              type: 'string'
+            user:
+              type: 'string'
+          type: 'object'
+        image:
+          required:
+            - 'pullPolicy'
+            - 'tag'
+          properties:
+            pullPolicy:
+              type: 'string'
+            tag:
+              type: 'string'
+          type: 'object'
+        syncEnabled:
+          type: 'boolean'
+      type: 'object'
+    otomi-web:
+      required:
+        - 'image'
+      properties:
+        image:
+          required:
+            - 'pullPolicy'
+            - 'tag'
+          properties:
+            pullPolicy:
+              type: 'string'
+            tag:
+              type: 'string'
+          type: 'object'
+      type: 'object'
+    prometheus-operator:
+      required:
+        - 'alertmanager'
+        - 'grafana'
+      properties:
+        alertmanager:
+          required:
+            - 'groupInterval'
+            - 'receiver'
+            - 'repeatInterval'
+            - 'slack'
+          properties:
+            groupInterval:
+              type: 'string'
+            receiver:
+              type: 'string'
+            repeatInterval:
+              type: 'string'
+            slack:
+              required:
+                - 'channel'
+                - 'url'
+              properties:
+                channel:
+                  type: 'string'
+                url:
+                  type: 'string'
+              type: 'object'
+          type: 'object'
+        grafana:
+          required:
+            - 'adminPassword'
+          properties:
+            adminPassword:
+              type: 'string'
+          type: 'object'
+      type: 'object'
+    sitespeed:
+      required:
+        - 'pvc'
+        - 'retention'
+        - 'schedule'
+      properties:
+        pvc:
+          required:
+            - 'graphite'
+            - 'results'
+          properties:
+            graphite:
+              type: 'string'
+            results:
+              type: 'string'
+          type: 'object'
+        retention:
+          type: 'string'
+        schedule:
+          type: 'string'
+      type: 'object'
+  type: 'object'

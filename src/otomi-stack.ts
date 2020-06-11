@@ -101,6 +101,26 @@ export default class OtomiStack {
     return this.db.getCollection('clusters')
   }
 
+  getChartsSettings(scope) {
+    return this.db.getItem('chartsSettings', { scope })
+  }
+
+  getClusterSettings(scope) {
+    return this.db.getItem('clusterSettings', { scope })
+  }
+
+  getIngressSettings(scope) {
+    return this.db.getItem('ingressSettings', { scope })
+  }
+
+  getOidcSettings(scope) {
+    return this.db.getItem('oidcSetting', { scope })
+  }
+
+  getSitesSettings(scope) {
+    return this.db.getItem('sitesSetting', { scope })
+  }
+
   getCore() {
     return this.coreValues
   }

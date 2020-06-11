@@ -1,0 +1,60 @@
+SettingsOidc:
+  type: object
+  x-acl:
+    admin: [read-any, update-any]
+    team: [read]
+  required:
+    - 'authUrl'
+    - 'azure'
+    - 'clientID'
+    - 'clientSecret'
+    - 'github'
+    - 'google'
+    - 'oidc'
+    - 'provider'
+    - 'scope'
+    - 'tokenUrl'
+  properties:
+    authUrl:
+      type: 'string'
+    azure:
+      required:
+        - 'issuer'
+        - 'tenantID'
+      properties:
+        issuer:
+          type: 'string'
+        tenantID:
+          type: 'string'
+      type: 'object'
+    clientID:
+      type: 'string'
+    clientSecret:
+      type: 'string'
+    github:
+      required:
+        - 'org'
+      properties:
+        org:
+          type: 'string'
+      type: 'object'
+    google:
+      required:
+        - 'issuer'
+      properties:
+        issuer:
+          type: 'string'
+      type: 'object'
+    oidc:
+      required:
+        - 'issuer'
+      properties:
+        issuer:
+          type: 'string'
+      type: 'object'
+    provider:
+      type: 'string'
+    scope:
+      type: 'string'
+    tokenUrl:
+      type: 'string'

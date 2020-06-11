@@ -1,0 +1,28 @@
+SettingsCluster:
+  type: object
+  x-acl:
+    admin: [read-any, update-any]
+    team: [read]
+  required:
+    - 'hasCloudLB'
+    - 'hasKnative'
+    - 'isManaged'
+    - 'isMultitenant'
+    - 'isRedkubesMonitored'
+    - 'teamPrefix'
+    - 'useCloudCA'
+  properties:
+    hasCloudLB:
+      type: 'boolean'
+    hasKnative:
+      type: 'boolean'
+    isManaged:
+      type: 'boolean'
+    isMultitenant:
+      type: 'boolean'
+    isRedkubesMonitored:
+      type: 'boolean'
+    teamPrefix:
+      type: 'string'
+    useCloudCA:
+      type: 'boolean'

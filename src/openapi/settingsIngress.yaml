@@ -1,0 +1,12 @@
+SettingsIngress:
+  type: object
+  x-acl:
+    admin: [read-any, update-any]
+    team: [read]
+  properties:
+    allowedCidrs:
+      type: 'array'
+      items:
+        type: 'string'
+  required:
+    - 'allowedCidrs'
