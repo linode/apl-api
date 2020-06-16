@@ -4,9 +4,9 @@ import { OpenApiRequest } from '../../../api.d'
 
 export default function (otomi: OtomiStack) {
   const GET: Operation = [
-    async ({ params: { teamId } }: OpenApiRequest, res, next) => {
+    ({ params: { teamId } }: OpenApiRequest, res, next) => {
       console.debug(`Get team secrets: ${JSON.stringify({ teamId })}`)
-      const v = await otomi.getSecrets(teamId)
+      const v = otomi.getSecrets(teamId)
       res.status(200).json(v)
     },
   ]

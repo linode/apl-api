@@ -27,9 +27,9 @@ export class Db {
       .defaults({
         teams: [],
         services: [],
-        defaultServices: [],
         clouds: [],
         clusters: [],
+        secrets: [],
       })
       .write()
     this.dirty = false
@@ -59,9 +59,7 @@ export class Db {
     if (selector && this.db.get(type).find(selector).value()) return undefined
     return this.db
       .get(type)
-      .push(data)
-      .last()
-      .assign({ id: id || uuidv4() })
+      .push({ ...data, id: id || uuidv4() })
       .write()
   }
 
