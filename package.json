@@ -109,7 +109,7 @@
     "package-lock.json": "npm install --prefer-offline --no-audit"
   },
   "scripts": {
-    "build": "tsc && copyup ./src/api.yaml ./dist",
+    "build": "tsc && copyup --error ./src/openapi/*.yaml ./dist/",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
     "dev": "ts-node-dev --watch src/api.yaml,src/**/*.ts --inspect=4321 --respawn --transpileOnly src/app.ts",
@@ -121,7 +121,7 @@
     "lint:fix": "eslint --ext js,ts .",
     "release": "standard-version",
     "start": "node dist/app.js",
-    "test": "mocha --timeout 15000 -r ts-node/register -r ts-custom-error src/*.test.* --exit"
+    "test": "mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit"
   },
   "standard-version": {
     "skip": {

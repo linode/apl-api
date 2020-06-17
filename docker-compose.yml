@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  api:
+    network_mode: 'host'
+    build:
+      context: .
+      target: dev
+    image: eu.gcr.io/otomi-cloud/otomi-stack-api:${WEB_TAG:-latest}
+    command: npm run dev
+    volumes:
+      - ./:/app
+      - ./test/core.yaml:/etc/otomi/core.yaml
+      - .npm:/root/.npm

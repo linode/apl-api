@@ -27,7 +27,6 @@ export class Db {
       .defaults({
         teams: [],
         services: [],
-        defaultServices: [],
         clouds: [],
         clusters: [],
         chartsSettings: [],
@@ -35,6 +34,7 @@ export class Db {
         ingressSettings: [],
         oidcSettings: [],
         sitesSettings: [],
+        secrets: [],
       })
       .write()
     this.dirty = false
