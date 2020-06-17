@@ -234,19 +234,14 @@ export default class OtomiStack {
   }
 
   createSecret(teamId, data, scope = 'global') {
-    return this.db.createItem('secret', { ...data, teamId }, { teamId, name: data.name })
+    return this.db.createItem('secrets', { ...data, teamId, scope }, { teamId, name: data.name })
   }
 
   editSecret(id, data) {
-    return this.db.updateItem('secret', data, { id })
+    return this.db.updateItem('secrets', data, { id })
   }
 
   deleteSecret(id) {
-    try {
-      this.db.deleteItem('secrets', { id })
-    } catch (e) {
-      // no such secret found
-    }
     this.db.deleteItem('secrets', { id })
   }
 
