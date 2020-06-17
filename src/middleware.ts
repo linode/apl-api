@@ -3,7 +3,7 @@ import { AlreadyExists, GitError, NotAuthorized, NotExistError, PublicUrlExists 
 import { OpenApiRequest, Session } from './api.d'
 import Authz from './authz'
 
-export function errorMiddleware(err, req, res, next) {
+export function errorMiddleware(err, req: OpenApiRequest, res) {
   console.error('errorMiddleware handler')
 
   if (err instanceof AlreadyExists) return res.status(409).json({ error: err.message })
@@ -51,7 +51,7 @@ function isUserAuthorized(req: OpenApiRequest, authz: Authz) {
 }
 
 export function isAuthorizedFactory(authz: Authz) {
-  const isAuthorized = (req: OpenApiRequest, scopes: [], definitions: any) => {
+  const isAuthorized = (req: OpenApiRequest /*, scopes: [], definitions: any*/) => {
     const session = getSession(req)
     if (!session) return false
     req.session = session

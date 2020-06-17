@@ -1,9 +1,9 @@
-openapi: 3.0.0
+openapi: '3.0.0'
 security:
   - groupAuthz: []
 info:
   title: The otomi-stack API
-  version: 0.1.0
+  version: '0.1.0'
 
 externalDocs:
   description: 'This is the base url of the external documentation'
@@ -282,6 +282,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Secret'
+
   '/teams/{teamId}/secrets/{secretId}':
     parameters:
       - $ref: '#/components/parameters/teamParams'

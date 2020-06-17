@@ -63,6 +63,7 @@
     "lint-staged": "^10.0.9",
     "mocha": "^7.0.0",
     "nodemon": "^2.0.3",
+    "npm-run-all": "^4.1.5",
     "openapi-schema-validator": "^3.0.3",
     "prettier": "^2.0.2",
     "sinon": "^8.0.4",
@@ -88,14 +89,11 @@
   },
   "license": "ISC",
   "lint-staged": {
-    "*.{js,json,md,ts,yml,yaml}": [
+    "*.{json,md,yml,yaml}": [
       "prettier --write"
     ],
-    "*.{js}": [
-      "eslint --project ./eslintrc.yml"
-    ],
-    "*.{ts}": [
-      "tslint --project ./tsconfig.tslint.json"
+    "*.{js,ts}": [
+      "eslint --fix"
     ]
   },
   "main": "dist/app.js",
@@ -112,12 +110,10 @@
     "build": "tsc && copyup --error ./src/openapi/*.yaml ./dist/",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
-    "dev": "ts-node-dev --watch src/api.yaml,src/**/*.ts --inspect=4321 --respawn --transpileOnly src/app.ts",
-    "format": "prettier --check \"**/*.{js,json,md,ts,yml,yaml}\"",
-    "format:fix": "prettier --write \"**/*.{js,json,md,ts,yml,yaml}\"",
+    "dev": "ts-node-dev --watch src/openapi/*.yaml,src/**/*.ts --inspect=4321 --respawn --transpileOnly src/app.ts",
     "husky:lint-staged": "lint-staged",
-    "husky:pre-commit": "lint-staged",
-    "lint": "eslint --ext js,ts --fix .",
+    "husky:pre-commit": "run-p lint husky:lint-staged",
+    "lint": "eslint --ext js,ts .",
     "lint:fix": "eslint --ext js,ts .",
     "release": "standard-version",
     "start": "node dist/app.js",

@@ -253,7 +253,19 @@ export default class OtomiStack {
     return this.db.getCollection('secrets', { teamId, scope })
   }
 
-  async createPullSecret(teamId: string, name: string, server: string, password: string, username = '_json_key') {
+  async createPullSecret({
+    teamId,
+    name,
+    server,
+    password,
+    username = '_json_key',
+  }: {
+    teamId: string
+    name: string
+    server: string
+    password: string
+    username?: string
+  }) {
     const client = this.getApiClient()
     const namespace = `team-${teamId}`
     // create data structure for secret
@@ -401,7 +413,7 @@ export default class OtomiStack {
     } catch (e) {
       const rawTeam = omit(teamData, 'services')
       OtomiStack.assignCluster(rawTeam, cluster)
-      this.db.populateItem('teams', { ...rawTeam, ...glbl.teamConfig.teams[teamId] }, undefined, teamId)
+      this.db.populateItem('teams', { name: teamId, ...rawTeam, ...glbl.teamConfig.teams[teamId] }, undefined, teamId)
     }
 
     if (!teamData.services) {

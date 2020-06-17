@@ -4,7 +4,7 @@
   },
   "editor.defaultFormatter": "dbaeumer.vscode-eslint",
   "editor.formatOnPaste": false,
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "eslint.alwaysShowStatus": true,
   "eslint.enable": true,
   "eslint.validate": ["javascript", "typescript"],

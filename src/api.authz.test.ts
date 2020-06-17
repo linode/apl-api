@@ -309,13 +309,13 @@ describe('Api tests for data validation', () => {
   })
 })
 
-const mockRequest = (authGroup, teamId) => ({
-  header(name) {
-    if (name === 'Auth-Group') return authGroup
-    return null
-  },
-  params: { teamId },
-})
+// const mockRequest = (authGroup, teamId) => ({
+//   header(name) {
+//     if (name === 'Auth-Group') return authGroup
+//     return null
+//   },
+//   params: { teamId },
+// })
 
 describe('Config validation tests', () => {
   it('missing env variables', (done) => {

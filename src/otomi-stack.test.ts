@@ -209,7 +209,7 @@ describe('Secret creation', () => {
     sinon.stub(client, 'createNamespacedSecret').returns(secretPromise)
     sinon.stub(client, 'readNamespacedServiceAccount').returns(newServiceAccountPromise)
     const patchSpy = sinon.stub(client, 'patchNamespacedServiceAccount').returns(undefined)
-    await otomiStack.createPullSecret(teamId, name, server, data.password, data.username)
+    await otomiStack.createPullSecret({ teamId, name, server, password: data.password, username: data.username })
     expect(patchSpy).to.have.been.calledWith('default', namespace, saWithExistingSecret)
   })
 
@@ -217,7 +217,7 @@ describe('Secret creation', () => {
     sinon.stub(client, 'createNamespacedSecret').returns(secretPromise)
     sinon.stub(client, 'readNamespacedServiceAccount').returns(newEmptyServiceAccountPromise)
     const patchSpy = sinon.stub(client, 'patchNamespacedServiceAccount').returns(undefined)
-    await otomiStack.createPullSecret(teamId, name, server, data.password, data.username)
+    await otomiStack.createPullSecret({ teamId, name, server, password: data.password, username: data.username })
     expect(patchSpy).to.have.been.calledWith('default', namespace, saWithExistingSecret)
   })
 
@@ -225,13 +225,19 @@ describe('Secret creation', () => {
     sinon.stub(client, 'createNamespacedSecret').returns(secretPromise)
     sinon.stub(client, 'readNamespacedServiceAccount').returns(withOtherSecretServiceAccountPromise)
     const patchSpy = sinon.stub(client, 'patchNamespacedServiceAccount').returns(undefined)
-    await otomiStack.createPullSecret(teamId, name, server, data.password, data.username)
+    await otomiStack.createPullSecret({ teamId, name, server, password: data.password, username: data.username })
     expect(patchSpy).to.have.been.calledWith('default', namespace, saCombinedWithOtherSecret)
   })
 
   it('should throw exception on secret creation for existing name', () => {
     sinon.stub(client, 'createNamespacedSecret').throws(409)
-    const check = otomiStack.createPullSecret(teamId, name, server, data.password, data.username)
+    const check = otomiStack.createPullSecret({
+      teamId,
+      name,
+      server,
+      password: data.password,
+      username: data.username,
+    })
     return expect(check).to.eventually.be.rejectedWith(`Secret '${name}' already exists in namespace 'team-${teamId}'`)
   })
 

@@ -1,6 +1,6 @@
 .history/
+.vscode/
 build
 dist
 coverage
-node_modules
-commitlint.config.js
+# commitlint.config.js
