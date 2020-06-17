@@ -5,7 +5,7 @@ import initApp from './server'
 import OtomiStack from './otomi-stack'
 import { validateEnv } from './utils'
 
-describe('Api tests for admin', () => {
+describe.skip('Api tests for admin', () => {
   let app
   before(async () => {
     const otomiStack = new OtomiStack()
@@ -280,7 +280,7 @@ describe('Api tests for admin', () => {
   })
 })
 
-describe('Api tests for data validation', () => {
+describe.skip('Api tests for data validation', () => {
   let app
   before(async () => {
     const otomiStack = new OtomiStack()

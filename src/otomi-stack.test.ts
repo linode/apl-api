@@ -22,6 +22,7 @@ describe('Load and dump values', () => {
 
     const expectedTeam = {
       id: 'team1',
+      name: 'team1',
       cicd: {
         enabled: true,
         type: 'drone',
