@@ -109,7 +109,7 @@
     "package-lock.json": "npm install --prefer-offline --no-audit"
   },
   "scripts": {
-    "build": "tsc && copyup ./src/openapi/*.yaml ./dist/",
+    "build": "tsc && copyup --error ./src/openapi/*.yaml ./dist/",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
     "dev": "ts-node-dev --watch src/api.yaml,src/**/*.ts --inspect=4321 --respawn --transpileOnly src/app.ts",
