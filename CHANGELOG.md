@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. See
 [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.2](https://github.com/redkubes/otomi-stack-api/compare/v0.3.1...v0.3.2) (2020-06-17)
+
+### Bug Fixes
+
+- eslint, acl for secrets
+  ([4c6a293](https://github.com/redkubes/otomi-stack-api/commit/4c6a293a04d2272043dd0a0fed6c292ba975bac3))
+
 ### [0.3.1](https://github.com/redkubes/otomi-stack-api/compare/v0.3.0...v0.3.1) (2020-06-17)
 
 ### Bug Fixes
