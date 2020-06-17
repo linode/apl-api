@@ -3,6 +3,174 @@
 All notable changes to this project will be documented in this file. See
 [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.3.0](https://github.com/redkubes/otomi-stack-api/compare/v0.2.29...v0.3.0) (2020-06-17)
+
+### ⚠ BREAKING CHANGES
+
+- The acl permissions are used by fronted
+
+### Features
+
+- a team can inspect others team settings
+  ([ff1a3eb](https://github.com/redkubes/otomi-stack-api/commit/ff1a3ebf60a500cdb5080dfb985d458fac5e02e4))
+- add authorization
+  ([3df67af](https://github.com/redkubes/otomi-stack-api/commit/3df67afd86e9345beafe558b8b8280638bb80327))
+- add authorization middleware
+  ([40d0da3](https://github.com/redkubes/otomi-stack-api/commit/40d0da3e1f1b63c3e5e8e8418ed4225e8dbcd0c5))
+- add authorization rules to api spec
+  ([2c7c3ff](https://github.com/redkubes/otomi-stack-api/commit/2c7c3ffe96a6cd05c9502009e0c76981b2d62501))
+- add new entry in .env
+  ([38b1531](https://github.com/redkubes/otomi-stack-api/commit/38b1531212dd06ff8e81cb62cddd967931374be8))
+- add RBAC ([ed9492f](https://github.com/redkubes/otomi-stack-api/commit/ed9492fbcd1328c80523efe73e14b3e9b3aed04b))
+- add x-aclSchema to api spec
+  ([702e394](https://github.com/redkubes/otomi-stack-api/commit/702e394f3b1aa3d54878ba889263ef13c179cc47))
+- authorize against fields
+  ([1fcd8ca](https://github.com/redkubes/otomi-stack-api/commit/1fcd8ca9e657584a5feb383a7794aa57e4b3a2fa))
+- bundle api specs
+  ([4807966](https://github.com/redkubes/otomi-stack-api/commit/480796648d2599bff4fd95a43d51cc9ac617dc33))
+- do not allow to change cluster after service is created
+  ([ef46338](https://github.com/redkubes/otomi-stack-api/commit/ef46338030448106f89cf413fa16ad31510a7867))
+- enrich api spec validaiton
+  ([f9aff5b](https://github.com/redkubes/otomi-stack-api/commit/f9aff5b69ad6b33f822bf36aafabd8ca1007f856))
+- generate team id
+  ([03ff5a6](https://github.com/redkubes/otomi-stack-api/commit/03ff5a6f3d6546e1b4e5e6f6ca013a5453603b1e))
+- handle git pull exception
+  ([f8ba4cf](https://github.com/redkubes/otomi-stack-api/commit/f8ba4cf68a3153e127c6df028a4fa4e803284335))
+- ignore schemas that does not have property key
+  ([f8a1e8e](https://github.com/redkubes/otomi-stack-api/commit/f8a1e8e438ba0d7ca682ebfdc90342a69d3a2289))
+- move schema helpers to separate section
+  ([1403aae](https://github.com/redkubes/otomi-stack-api/commit/1403aae04633fc424145dd847f11d99196aab3b2))
+- move schemas to separate files
+  ([73118f3](https://github.com/redkubes/otomi-stack-api/commit/73118f3936953d62257b4752e74444d4efe887b0))
+- pull changes from remote branch before pushing
+  ([47308be](https://github.com/redkubes/otomi-stack-api/commit/47308be5d23af36ddf12e83c73c1a77b066080d8))
+- remove logo from api spec
+  ([c6f04d4](https://github.com/redkubes/otomi-stack-api/commit/c6f04d43f1fdb10f765df1c133335fb22ae4a359))
+- remove ownershipCondition for ABAC
+  ([5bd20a2](https://github.com/redkubes/otomi-stack-api/commit/5bd20a2e4c6f91e27496e662b814b4394c198b39))
+- remove unnecessary validation
+  ([a1394f2](https://github.com/redkubes/otomi-stack-api/commit/a1394f2d0d69bcf8a21fadcde07429bd993a872b))
+- skip ABAC for delete, get and post actions
+  ([acf861f](https://github.com/redkubes/otomi-stack-api/commit/acf861ff1642032c2c0a8f6f86375d3e6e0b070c))
+- skip actions that are not applicable for resource attributes
+  ([de060aa](https://github.com/redkubes/otomi-stack-api/commit/de060aa340a2515dcafcf7f665234cbc5d3c299c))
+- skip schemas that do not contain properties attribute
+  ([69ad08b](https://github.com/redkubes/otomi-stack-api/commit/69ad08b063b58c4f67e586c7c1160b773e1ef661))
+- split functionallity to either clone or init repo
+  ([fa5e0c0](https://github.com/redkubes/otomi-stack-api/commit/fa5e0c0aaf1e3584b496127cc5b1be380fa568c2))
+- strip data attributes
+  ([63267fb](https://github.com/redkubes/otomi-stack-api/commit/63267fb171ac44a174d2753befa5f2242c17a91d))
+- transform schema actions to property actions
+  ([21f9689](https://github.com/redkubes/otomi-stack-api/commit/21f96893775181419d7ac283e414c2d77eb0dbdf))
+- update instead of replace data in db
+  ([529b0c8](https://github.com/redkubes/otomi-stack-api/commit/529b0c87ee56adebc3ce66269a9b4e10f6d6cbe0))
+- use can and cannot statements for authorization
+  ([056a083](https://github.com/redkubes/otomi-stack-api/commit/056a0830a208b38fa9a5c1187d1d22cba4f823cb))
+- validate api spec against authz configuration
+  ([a2dc1ba](https://github.com/redkubes/otomi-stack-api/commit/a2dc1ba8782643ae6a92da76b183e231736d0969))
+
+### Bug Fixes
+
+- added api yaml to watch
+  [ci skip](<[1b16662](https://github.com/redkubes/otomi-stack-api/commit/1b16662f567b42584d305d2eccda82b5b6ab1b7d)>)
+- authz permission check
+  ([89768cd](https://github.com/redkubes/otomi-stack-api/commit/89768cde9b9720cbd2a1d693728b1706c30763a9))
+- better error catching
+  ([714683d](https://github.com/redkubes/otomi-stack-api/commit/714683d7bdaf7f5af683cc6f5014e13546099d96))
+- change ABAC ([ed6a813](https://github.com/redkubes/otomi-stack-api/commit/ed6a813db92891ad5033b5d22214211212a7e12f))
+- copy directory with openapi spec
+  ([dd3d138](https://github.com/redkubes/otomi-stack-api/commit/dd3d1385ac6e3eb068bbf9c4da2b77628b6048f5))
+- new id scheme fixes
+  ([dccca74](https://github.com/redkubes/otomi-stack-api/commit/dccca74faa715406df0985fe1e738506c474e886))
+- path setup
+  [ci skip](<[c65eefc](https://github.com/redkubes/otomi-stack-api/commit/c65eefc813450758d9016843c21c5cc0d776dd4b)>)
+- tmp ([0a5cb10](https://github.com/redkubes/otomi-stack-api/commit/0a5cb1007442806f833441e0b162204b1c3f7c0a))
+- **api.yaml:** fix wrong param in /services
+  ([41971cc](https://github.com/redkubes/otomi-stack-api/commit/41971cc80e0ece54b353bd7d30ef127b83decfec))
+- provide indpenendet copy of data from db
+  ([1453d76](https://github.com/redkubes/otomi-stack-api/commit/1453d766840f09237772c4a39281f513b0adfa70))
+- provide only request data to authz module
+  ([92aa597](https://github.com/redkubes/otomi-stack-api/commit/92aa5973081c0f8101aaa141efe272b2489f9e55))
+- reject requests that does not have required headers
+  ([79d35a9](https://github.com/redkubes/otomi-stack-api/commit/79d35a94c0045a8fed080667409ae8a1e239dd79))
+- stubbed tests ([e0a0b3b](https://github.com/redkubes/otomi-stack-api/commit/e0a0b3bc0e27479dffaa6b2b710da0551e0dcff4))
+- turned tests back on
+  [ci skip](<[d7fdac9](https://github.com/redkubes/otomi-stack-api/commit/d7fdac9955325406f92c59f86578fed6fb8705e8)>)
+- upadte api spec
+  ([bb294f1](https://github.com/redkubes/otomi-stack-api/commit/bb294f18dc89d25635d49b61d3511092c20e2693))
+
+### Docs
+
+- describe authentication and authorization framework
+  ([f151793](https://github.com/redkubes/otomi-stack-api/commit/f151793c9261e0ef4a93636b5dc91688c8811f45))
+- update section about api authorization
+  ([d7bab24](https://github.com/redkubes/otomi-stack-api/commit/d7bab241c9e4d678fc2bb279bc49e593a96f2f7a))
+
+### Others
+
+- add configuration for app debugging
+  ([90a1ff9](https://github.com/redkubes/otomi-stack-api/commit/90a1ff9e669d7612211d5a9f770d175cfde599f6))
+- add script for stubbing git remote origin
+  ([4c870da](https://github.com/redkubes/otomi-stack-api/commit/4c870dac0a9f0c1e805b81e01c8f869f67bc7b9d))
+- add test explorer plugin
+  ([46fe408](https://github.com/redkubes/otomi-stack-api/commit/46fe408cd4d714ec435e9d8f21ba84857d8f0cda))
+- add types for lowdb
+  ([d89ad11](https://github.com/redkubes/otomi-stack-api/commit/d89ad1196b8650462e82fe34c9cb1073404db771))
+- change vscode lunch configuration
+  ([0c5b229](https://github.com/redkubes/otomi-stack-api/commit/0c5b22972f54c980798ed84359b02e16eda1aa44))
+
+### Tests
+
+- add api authorization tests
+  ([b1fcd08](https://github.com/redkubes/otomi-stack-api/commit/b1fcd08bd4a7bb9bc04c6263eef5947137781baf))
+- check if team/admin can perform deployment
+  ([049fc2c](https://github.com/redkubes/otomi-stack-api/commit/049fc2ca71218946a5bba671f6994219a25da3e6))
+- check repo functionallity
+  ([d8e073d](https://github.com/redkubes/otomi-stack-api/commit/d8e073d830c421bfdcdc8c281744b8029f2319bf))
+- init api server only if a a given is to executed
+  ([78bfed5](https://github.com/redkubes/otomi-stack-api/commit/78bfed5a82d3db4f49dfb2ba320996d2682a7010))
+
+### CI
+
+- new workflow for releasing
+  [ci skip](<[ae4efe6](https://github.com/redkubes/otomi-stack-api/commit/ae4efe6d84f7849d6c64c0e0838b53f692916c0e)>)
+
+### Feature Improvements
+
+- added path to url check
+  [ci skip](<[edeb9bf](https://github.com/redkubes/otomi-stack-api/commit/edeb9bf111f6c48753c3e0f9b22a770deae85cf7)>)
+- added pullsecret creation to api
+  ([660272d](https://github.com/redkubes/otomi-stack-api/commit/660272d593794b482b563fd14d3e98515592d3a3))
+- added scaleToZero, path validation
+  [ci skip](<[f0cfb19](https://github.com/redkubes/otomi-stack-api/commit/f0cfb198a71fcce2796c4b0a35f959097c1aa155)>)
+- now using kubectl client for kubecfg download
+  ([e464bc1](https://github.com/redkubes/otomi-stack-api/commit/e464bc145f0be374dd84292b18ed8fae626545fe))
+- refactored ids
+  ([98acabf](https://github.com/redkubes/otomi-stack-api/commit/98acabf15b2f09925bc860da097916b3b9f3cd10))
+- refactored ids: [#2](https://github.com/redkubes/otomi-stack-api/issues/2)
+  ([fa20ee7](https://github.com/redkubes/otomi-stack-api/commit/fa20ee7f0d3c18e550a5fc9c5e3edb558b67a12e))
+
+### Code Refactoring
+
+- added secrets and id to attributes api spec
+  ([e925aa7](https://github.com/redkubes/otomi-stack-api/commit/e925aa7b9be345f72c48703668a0889fbb1a2010))
+- move authorization code to separate function
+  ([955c25a](https://github.com/redkubes/otomi-stack-api/commit/955c25ac11b597cd69d2fc291c1d42c4a9e60290))
+- reuse db method
+  ([eceac7b](https://github.com/redkubes/otomi-stack-api/commit/eceac7b7d34c06d99cbfce2d6e228e8da42737c9))
+- use common parameters in api spec
+  ([5fe9276](https://github.com/redkubes/otomi-stack-api/commit/5fe9276a21a905adb07fd9b906d1d465e9023c9a))
+- use CRUD naming for authorization
+  ([df6eba7](https://github.com/redkubes/otomi-stack-api/commit/df6eba7d19685cb821c3ca3309f2c4fb3597714c))
+- use team id ([d6b1975](https://github.com/redkubes/otomi-stack-api/commit/d6b1975306dc5a27f2993c8905f292aad4c2f2e7))
+
+### Build System
+
+- install git before running functional tests
+  ([ded6c1f](https://github.com/redkubes/otomi-stack-api/commit/ded6c1ffec2079fe7a69336604bb9b0c6baeab47))
+- throw error if nothing is copied
+  ([73e41c1](https://github.com/redkubes/otomi-stack-api/commit/73e41c155ec885f7dbffc7066503d68ab97ac32e))
+
 ### [0.2.29](https://github.com/redkubes/otomi-stack-api/compare/v0.2.28...v0.2.29) (2020-05-14)
 
 ### Bug Fixes
