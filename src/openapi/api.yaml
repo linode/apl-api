@@ -192,6 +192,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/Service'
 
+  '/teams/{teamId}/services/{serviceId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/serviceParams'
+    get:
+      operationId: getService
+      description: Get a service from a given team
+      x-aclSchema: Service
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained service configuration
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Service'
+    put:
+      operationId: editService
+      description: Edit a service from a given team
+      x-aclSchema: Service
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Service'
+        description: Service object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited service
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Service'
+    delete:
+      operationId: deleteService
+      description: Delete a service from a given team
+      x-aclSchema: Service
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a service
+
   '/teams/{teamId}/secrets':
     parameters:
       - $ref: '#/components/parameters/teamParams'
@@ -238,50 +282,49 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Secret'
-
-  '/teams/{teamId}/services/{serviceId}':
+  '/teams/{teamId}/secrets/{secretId}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/serviceParams'
+      - $ref: '#/components/parameters/secretParams'
     get:
-      operationId: getService
-      description: Get a service from a given team
-      x-aclSchema: Service
+      operationId: getSecret
+      description: Get a secret from a given team
+      x-aclSchema: Secret
       responses:
         <<: *DefaultGetResponses
         '200':
-          description: Successfully obtained service configuration
+          description: Successfully obtained secret configuration
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Service'
+                $ref: '#/components/schemas/Secret'
     put:
-      operationId: editService
-      description: Edit a service from a given team
-      x-aclSchema: Service
+      operationId: editSecret
+      description: Edit a secret from a given team
+      x-aclSchema: Secret
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Service'
-        description: Service object that contains updated values
+              $ref: '#/components/schemas/Secret'
+        description: Secret object that contains updated values
         required: true
       responses:
         <<: *DefaultGetResponses
         '200':
-          description: Successfully edited service
+          description: Successfully edited a team secret
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Service'
+                $ref: '#/components/schemas/Secret'
     delete:
-      operationId: deleteService
-      description: Delete a service from a given team
-      x-aclSchema: Service
+      operationId: deleteSecret
+      description: Delete a secret from a given team
+      x-aclSchema: Secret
       responses:
         <<: *DefaultGetResponses
         '200':
-          description: Successfully deleted a service
+          description: Successfully deleted a team secret
 
   /deploy:
     get:
