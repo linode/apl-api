@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. See
 [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.3](https://github.com/redkubes/otomi-stack-api/compare/v0.3.2...v0.3.3) (2020-06-17)
+
+### Bug Fixes
+
+- namespace editable for admin
+  ([4966aa7](https://github.com/redkubes/otomi-stack-api/commit/4966aa778b8c2573ebe7662bccd54a53d7690569))
+
 ### [0.3.2](https://github.com/redkubes/otomi-stack-api/compare/v0.3.1...v0.3.2) (2020-06-17)
 
 ### Bug Fixes
