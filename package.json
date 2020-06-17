@@ -110,7 +110,7 @@
     "build": "tsc && copyup --error ./src/openapi/*.yaml ./dist/",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
-    "dev": "ts-node-dev --watch src/openapi/*.yaml,src/**/*.ts --inspect=4321 --respawn --transpileOnly src/app.ts",
+    "dev": "ts-node-dev --watch 'src/**/*.yaml' --inspect=4321 --respawn --transpileOnly src/app.ts",
     "husky:lint-staged": "lint-staged",
     "husky:pre-commit": "run-p lint husky:lint-staged",
     "lint": "eslint --ext js,ts .",

@@ -82,7 +82,7 @@ Team:
         admin: [read]
         team: [read]
     name:
-      title: name
+      title: Name
       <<: *idNameField
       example: 'otomi'
       x-acl:
