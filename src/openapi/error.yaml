@@ -1,0 +1,33 @@
+ValidationError: &ValidationError
+  type: object
+  x-acl: []
+  properties:
+    path:
+      type: string
+    errorCode:
+      type: string
+    message:
+      type: string
+    location:
+      type: string
+      enum:
+        - body
+        - path
+
+OpenApiValidationError:
+  type: object
+  x-acl: []
+  properties:
+    status:
+      type: integer
+    errors:
+      type: array
+      items:
+        <<: *ValidationError
+
+OtomiStackError:
+  type: object
+  x-acl: []
+  properties:
+    message:
+      type: string

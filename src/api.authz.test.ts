@@ -7,10 +7,10 @@ import { validateEnv } from './utils'
 
 describe('Api tests for admin', () => {
   let app
-  before(() => {
+  before(async () => {
     const otomiStack = new OtomiStack()
     sinon.stub(otomiStack)
-    app = initApp(otomiStack)
+    app = await initApp(otomiStack)
   })
   it('admin can get all teams', (done) => {
     request(app)
@@ -31,7 +31,7 @@ describe('Api tests for admin', () => {
       .end(done)
   })
   it('admin can create a team', (done) => {
-    const data = { id: 'otomi', clusters: ['aws/dev'], password: 'test' }
+    const data = { name: 'otomi', clusters: ['aws/dev'], password: 'test' }
     request(app)
       .post('/v1/teams')
       .send(data)
@@ -282,10 +282,10 @@ describe('Api tests for admin', () => {
 
 describe('Api tests for data validation', () => {
   let app
-  before(() => {
+  before(async () => {
     const otomiStack = new OtomiStack()
     sinon.stub(otomiStack)
-    app = initApp(otomiStack)
+    app = await initApp(otomiStack)
   })
   it('invalid team name data', (done) => {
     request(app)

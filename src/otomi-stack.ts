@@ -107,7 +107,7 @@ export default class OtomiStack {
   }
 
   createTeam(data) {
-    const { id } = data
+    const id = data.name
     return this.db.createItem('teams', data, { id }, id)
   }
 
