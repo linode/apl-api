@@ -122,7 +122,7 @@
     "start": "node dist/app.js",
     "test": "mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit",
     "tasks:harbor": "node dist/tasks/harbor/harbor.js",
-    "tasks:harbor-dev": "ts-node-dev  ./tasks/harbor/harbor.ts"
+    "tasks:harbor-dev": "ts-node-dev  ./src/tasks/harbor/harbor.ts"
   },
   "standard-version": {
     "skip": {
