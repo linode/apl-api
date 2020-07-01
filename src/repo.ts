@@ -4,6 +4,7 @@ import yaml from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
 import { GitPullError } from './error'
+import { exec } from 'child_process'
 
 export class Repo {
   path: string
@@ -58,7 +59,7 @@ export class Repo {
   readFile(relativePath) {
     const absolutePath = path.join(this.path, relativePath)
     console.info(`Reading from file: ${absolutePath}`)
-    const doc = yaml.safeLoad(fs.readFileSync(absolutePath, 'utf8'))
+    const doc = yaml.safeLoad(fs.readFileSync(`${absolutePath}.dec`, 'utf8'))
     return doc
   }
 
@@ -88,6 +89,7 @@ export class Repo {
       await this.git.clone(this.repoPathAuth, this.path)
 
       await this.git.checkout(this.branch)
+      const decryptRes = this.decrypt()
       return isRepo
     }
 
@@ -97,8 +99,17 @@ export class Repo {
     return isRepo
   }
 
+  decrypt() {
+    return exec('bin/crypt.sh')
+  }
+
+  encrypt() {
+    return exec('bin/crypt.sh 1')
+  }
+
   async pull() {
     const pullSummary = await this.git.pull(this.remote, this.branch, { '--rebase': true })
+    const decryptRes = this.decrypt()
     console.debug(`Pull summary: ${JSON.stringify(pullSummary)}`)
     return pullSummary
   }

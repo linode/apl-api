@@ -31,6 +31,20 @@ RUN npm prune --production
 # --------------- Production stage
 FROM node:13.10.1-alpine AS prod
 
+ARG HELM_VERSION=3.2.4
+ENV HELM_FILE_NAME helm-v${HELM_VERSION}-linux-amd64.tar.gz
+ARG HELM_SECRETS_VERSION=v2.0.2
+ARG SOPS_VERSION=3.5.0
+
+# sops
+ADD https://github.com/mozilla/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux /usr/bin/sops
+RUN chmod +x /usr/bin/sops
+
+# helm
+ADD https://get.helm.sh/${HELM_FILE_NAME} /tmp
+RUN tar -zxvf /tmp/${HELM_FILE_NAME} -C /tmp && mv /tmp/linux-amd64/helm /usr/bin/helm
+RUN echo "exec $*" > /usr/bin/sudo && chmod +x /usr/bin/sudo
+RUN helm plugin install https://github.com/futuresimple/helm-secrets --version ${HELM_SECRETS_VERSION}
 
 COPY --from=dev /usr/local/bin/node /usr/bin/
 COPY --from=dev /usr/lib/libgcc* /usr/lib/
