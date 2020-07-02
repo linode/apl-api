@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.2](https://github.com/redkubes/otomi-stack-api/compare/v0.4.1...v0.4.2) (2020-07-02)
+
+### Bug Fixes
+
+- docker now extending from tools image, bleh ([67cfced](https://github.com/redkubes/otomi-stack-api/commit/67cfced8003816f635a2a29aa3c1b1a405f57751))
+- docker now extending from tools image, bleh [#2](https://github.com/redkubes/otomi-stack-api/issues/2) ([970cf60](https://github.com/redkubes/otomi-stack-api/commit/970cf60e59e51cc81b1f572623ade34c531b94ee))
+- docker now extending from tools image, bleh [#3](https://github.com/redkubes/otomi-stack-api/issues/3) ([1973675](https://github.com/redkubes/otomi-stack-api/commit/1973675edbe713df65a1331ec2e705a8dea9abed))
+- docker now extending from tools image, bleh [#4](https://github.com/redkubes/otomi-stack-api/issues/4) ([2114fe8](https://github.com/redkubes/otomi-stack-api/commit/2114fe8bbe17327b954d686ba9a8b2181133b7e2))
+
 ### [0.4.1](https://github.com/redkubes/otomi-stack-api/compare/v0.4.0...v0.4.1) (2020-07-02)
 
 ### Bug Fixes
