@@ -5,8 +5,8 @@ RUN apk --no-cache add make gcc g++ python git jq
 ENV NODE_ENV=development
 ENV BLUEBIRD_DEBUG=0
 
-RUN mkdir /app
-WORKDIR /app
+RUN mkdir /home/app
+WORKDIR /home/app
 
 COPY package*.json ./
 
@@ -30,17 +30,16 @@ RUN npm prune --production
 # --------------- Production stage
 FROM otomi/tools:1.3.2 AS prod
 
+RUN apk --no-cache add make gcc g++
 COPY --from=dev /usr/local/bin/node /usr/bin/
 
 # Install app
-RUN mkdir /app
-WORKDIR /app
-COPY --from=clean /app/node_modules node_modules
-COPY --from=ci /app/dist dist
+WORKDIR /home/app
+COPY --from=clean /home/app/node_modules node_modules
+COPY --from=ci /home/app/dist dist
 COPY package.json .
 COPY bin bin
 
-USER node
 EXPOSE 8080
 
 ENV NODE_ENV=production
