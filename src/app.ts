@@ -1,9 +1,7 @@
-import dotEnv from 'dotenv'
 import initApp from './server'
 import OtomiStack from './otomi-stack'
 import { setSignalHandlers, validateConfig } from './utils'
 
-dotEnv.config()
 validateConfig()
 
 const otomiStack = new OtomiStack()

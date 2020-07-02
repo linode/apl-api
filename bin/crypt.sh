@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+[ "$TESTING" != "" ] && exit 0
+
 shopt -s expand_aliases
 . bin/utils.sh
 set -e
