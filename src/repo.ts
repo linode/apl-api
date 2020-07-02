@@ -6,27 +6,19 @@ import { GitPullError } from './error'
 import { exec as Exec } from 'child_process'
 import util from 'util'
 
+const env = process.env
 const exec = util.promisify(Exec)
 
 export class Repo {
   path: string
-
   git: SimpleGit
-
   url: string
-
   user: string
-
   email: string
-
   password: string
-
   branch: string
-
   remote: string
-
   remoteBranch: string
-
   repoPathAuth: string
 
   constructor(localRepoPath, remotePath, user, email, repoPathAuth, branch) {
@@ -102,6 +94,7 @@ export class Repo {
   }
 
   async decrypt() {
+    if (env.TESTING) return {}
     const res = await exec('bin/crypt.sh')
     if (res.stderr !== '') throw new Error(`Decryption failed: ${res.stderr}`)
     console.debug('decrypt results: ', res.stdout)
@@ -109,6 +102,7 @@ export class Repo {
   }
 
   async encrypt() {
+    if (env.TESTING) return {}
     const res = await exec('bin/crypt.sh 1')
     if (res.stderr !== '') throw new Error(`Encryption failed: ${res.stderr}`)
     console.debug('encrypt results: ', res.stdout)
