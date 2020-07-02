@@ -1,7 +1,7 @@
 # --------------- Dev stage for developers to override sources
 FROM node:13.10.1-alpine as dev
 
-RUN apk --no-cache add make gcc g++ python
+RUN apk --no-cache add make gcc g++ python git
 RUN apk --no-cache add git jq
 ENV NODE_ENV=development
 ENV BLUEBIRD_DEBUG=0
