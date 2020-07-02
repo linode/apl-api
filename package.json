@@ -62,7 +62,6 @@
     "husky": "^4.2.3",
     "lint-staged": "^10.0.9",
     "mocha": "^7.0.0",
-    "nodemon": "^2.0.3",
     "npm-run-all": "^4.1.5",
     "openapi-schema-validator": "^3.0.3",
     "prettier": "^2.0.2",
@@ -110,14 +109,14 @@
     "build": "tsc && copyup --error ./src/openapi/*.yaml ./dist/",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
-    "dev": "ts-node-dev --watch '**/*.yaml' --inspect=4321 --respawn --transpileOnly src/app.ts",
+    "dev": ". ./.secrets && export $(cut -d= -f1 .secrets) && ts-node-dev --watch '**/*.yaml' --inspect=4321 --respawn --transpileOnly src/app.ts",
     "husky:lint-staged": "lint-staged",
     "husky:pre-commit": "run-p lint husky:lint-staged",
     "lint": "eslint --ext js,ts .",
     "lint:fix": "eslint --ext js,ts .",
     "release": "standard-version",
     "start": "node dist/app.js",
-    "test": "mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit"
+    "test": "TESTING=1 mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit"
   },
   "standard-version": {
     "skip": {
