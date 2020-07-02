@@ -30,7 +30,7 @@ RUN npm prune --production
 # --------------- Production stage
 FROM otomi/tools:1.3.2 AS prod
 
-RUN apk --no-cache add make gcc g++
+RUN apt-get install -qqy --no-install-recommends make gcc g++
 COPY --from=dev /usr/local/bin/node /usr/bin/
 
 # Install app
