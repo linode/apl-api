@@ -59,6 +59,7 @@ export class Repo {
 
   async commit() {
     await this.git.add('./*')
+    await this.encrypt()
     const commitSummary = await this.git.commit('otomi-stack-api')
     console.debug(`Commit summary: ${JSON.stringify(commitSummary)}`)
     return commitSummary
