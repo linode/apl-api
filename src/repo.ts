@@ -94,7 +94,7 @@ export class Repo {
   }
 
   async decrypt() {
-    if (env.TESTING) return {}
+    if (env.CI || env.TESTING) return {}
     const res = await exec('bin/crypt.sh')
     if (res.stderr !== '') throw new Error(`Decryption failed: ${res.stderr}`)
     console.debug('decrypt results: ', res.stdout)
@@ -102,7 +102,7 @@ export class Repo {
   }
 
   async encrypt() {
-    if (env.TESTING) return {}
+    if (env.CI || env.TESTING) return {}
     const res = await exec('bin/crypt.sh 1')
     if (res.stderr !== '') throw new Error(`Encryption failed: ${res.stderr}`)
     console.debug('encrypt results: ', res.stdout)
