@@ -5,7 +5,7 @@ This application:
 - provides REST API to manipulate values for teams and their services.
 - connects to git repo with `otomi-stack` code in order to load/update values from/in repository.
 
-# Glossary:
+# Glossary
 
 **api spec** - a HTTP REST API definition in OpenApiV3 standard **schema** - a data model that defines attributes and
 their types **attribute** - a single feature of schema **property** - a single feature of schema **resource** - an
@@ -172,7 +172,7 @@ A user with team role can:
 - perform all CRUD operations only withing its own team (RBAC)
 - all attributes can be edited except ingress that isn be only read (ABAC)
 
-### Limitations:
+### Limitations
 
 - nested ABAC is NOT supported E.g.:
 
@@ -223,17 +223,7 @@ Moreover the `openapi.yaml` file can be used with `Postman` (File -> Import).
 
 ## Environment variables
 
-For local development define `.env` file. Example:
-
-```
-GIT_LOCAL_PATH=/tmp/otomi-stack
-# The GIT_REPO_URL - only host and path, no schema
-GIT_REPO_URL=github.com/some/repo.git
-GIT_USER=somuser
-GIT_EMAIL=someuser@gmail.com
-GIT_PASSWORD=somepassword
-DISABLE_SYNC=0
-```
+For local development copy `.env.sample` to `.env` and fill in missing secrets. (Secrets are always found in company secrets storage.) Also get the crypt service account and put in `kms.json`.
 
 Use `DISABLE_AUTH=1` env to disable authorization. Use `DISABLE_SYNC=1` to disable pushing changes to git remote branch
 
@@ -289,12 +279,6 @@ npm run start
 
 ```
 npm run dev
-```
-
-Note: it requires to instal globally the following package
-
-```
-npm install nodemon -g
 ```
 
 # Testing

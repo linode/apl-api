@@ -4,6 +4,7 @@ shopt -s expand_aliases
 set -e
 
 ENV_DIR=$GIT_LOCAL_PATH
+echo "ENV_DIR: $ENV_DIR"
 
 source $ENV_DIR/env.ini
 ENV_DIR=${ENV_DIR:-./env}

@@ -1,10 +1,12 @@
 import simpleGit, { SimpleGit } from 'simple-git/promise'
-
 import yaml from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
 import { GitPullError } from './error'
-import { exec } from 'child_process'
+import { exec as Exec } from 'child_process'
+import util from 'util'
+
+const exec = util.promisify(Exec)
 
 export class Repo {
   path: string
@@ -57,9 +59,9 @@ export class Repo {
   }
 
   readFile(relativePath) {
-    const absolutePath = path.join(this.path, relativePath)
+    const absolutePath = path.join(this.path, relativePath) + '.dec'
     console.info(`Reading from file: ${absolutePath}`)
-    const doc = yaml.safeLoad(fs.readFileSync(`${absolutePath}.dec`, 'utf8'))
+    const doc = yaml.safeLoad(fs.readFileSync(absolutePath, 'utf8'))
     return doc
   }
 
@@ -89,7 +91,7 @@ export class Repo {
       await this.git.clone(this.repoPathAuth, this.path)
 
       await this.git.checkout(this.branch)
-      const decryptRes = this.decrypt()
+      await this.decrypt()
       return isRepo
     }
 
@@ -99,17 +101,23 @@ export class Repo {
     return isRepo
   }
 
-  decrypt() {
-    return exec('bin/crypt.sh')
+  async decrypt() {
+    const res = await exec('bin/crypt.sh')
+    if (res.stderr !== '') throw new Error(`Decryption failed: ${res.stderr}`)
+    console.debug('decrypt results: ', res.stdout)
+    return res
   }
 
-  encrypt() {
-    return exec('bin/crypt.sh 1')
+  async encrypt() {
+    const res = await exec('bin/crypt.sh 1')
+    if (res.stderr !== '') throw new Error(`Encryption failed: ${res.stderr}`)
+    console.debug('encrypt results: ', res.stdout)
+    return res
   }
 
   async pull() {
     const pullSummary = await this.git.pull(this.remote, this.branch, { '--rebase': true })
-    const decryptRes = this.decrypt()
+    await this.decrypt()
     console.debug(`Pull summary: ${JSON.stringify(pullSummary)}`)
     return pullSummary
   }
