@@ -325,12 +325,10 @@ describe('Config validation tests', () => {
 
   it('valid env variables', (done) => {
     const envs = {
-      GIT_LOCAL_PATH: null,
       GIT_REPO_URL: null,
       GIT_USER: null,
       GIT_PASSWORD: null,
       GIT_EMAIL: null,
-      GIT_BRANCH: null,
     }
     expect(() => validateEnv(envs)).to.not.throw()
     done()

@@ -72,14 +72,13 @@ export default class OtomiStack {
 
   async init() {
     try {
-      console.log(`env.GIT_BRANCH: ${env.GIT_BRANCH}`)
       this.repo = await cloneRepo(
-        env.GIT_LOCAL_PATH,
+        env.GIT_LOCAL_PATH || '/tmp/otomi-stack',
         env.GIT_REPO_URL,
         env.GIT_USER,
         env.GIT_EMAIL,
         env.GIT_PASSWORD,
-        env.GIT_BRANCH,
+        env.GIT_BRANCH || 'master',
       )
       const globalPath = getFilePath()
       glbl = this.repo.readFile(globalPath)

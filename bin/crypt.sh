@@ -3,8 +3,7 @@ shopt -s expand_aliases
 . bin/utils.sh
 set -e
 
-ENV_DIR=$GIT_LOCAL_PATH
-echo "ENV_DIR: $ENV_DIR"
+ENV_DIR=${GIT_LOCAL_PATH:-'/tmp/otomi-stack'}
 
 source $ENV_DIR/env.ini
 ENV_DIR=${ENV_DIR:-./env}

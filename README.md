@@ -223,7 +223,8 @@ Moreover the `openapi.yaml` file can be used with `Postman` (File -> Import).
 
 ## Environment variables
 
-For local development copy `.env.sample` to `.env` and fill in missing secrets. (Secrets are always found in company secrets storage.) Also get the crypt service account and put in `kms.json`.
+For local development copy `.env.sample` to `.env` and copy `.secrets` from company secrets storage. Also get the crypt
+service account and put in `kms.json`.
 
 Use `DISABLE_AUTH=1` env to disable authorization. Use `DISABLE_SYNC=1` to disable pushing changes to git remote branch
 
