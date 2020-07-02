@@ -1,7 +1,13 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See
-[standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### [0.4.1](https://github.com/redkubes/otomi-stack-api/compare/v0.4.0...v0.4.1) (2020-07-02)
+
+### Bug Fixes
+
+- adding encryption step before commit [ci skip](<[7e19c5e](https://github.com/redkubes/otomi-stack-api/commit/7e19c5e5c9c691aa7a0e697abb004a42e365d178)>)
+- writefile + .enc ([382dce5](https://github.com/redkubes/otomi-stack-api/commit/382dce5f10b6ecd6d9b317423572585b33c790fb))
 
 ## [0.4.0](https://github.com/redkubes/otomi-stack-api/compare/v0.3.3...v0.4.0) (2020-07-02)
 
