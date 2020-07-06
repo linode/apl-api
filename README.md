@@ -223,7 +223,7 @@ Moreover the `openapi.yaml` file can be used with `Postman` (File -> Import).
 
 ## Environment variables
 
-For local development copy `.env.sample` to `.env` and copy `otomi-stack/.secrets` from company secrets storage.
+For local development copy `.env.sample` to `.env.dev` and copy `otomi-stack/.secrets` from company secrets storage.
 
 Use `DISABLE_AUTH=1` env to disable authorization. Use `DISABLE_SYNC=1` to disable pushing changes to git remote branch
 
@@ -262,9 +262,9 @@ docker push eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG
 # Running
 
 ```
-docker run --env-file='.env' --env-file='.secrets' \
+docker run --env-file='.env.dev' --env-file='.secrets' \
 -p 8080:8080/tcp \
--v <full-path-to-dir-with-core.yaml>:/etc/otomi \
+-v ./test/core.yaml:/etc/otomi/core.yaml \
 eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG
 
 ```

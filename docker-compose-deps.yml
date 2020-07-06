@@ -11,10 +11,7 @@ services:
     ports:
       - 17771:17771
     volumes:
-      - tmp:/tmp:rw
+      - /tmp:/tmp
     environment:
       ENV_DIR: ${GIT_LOCAL_PATH}
       GCLOUD_SERVICE_KEY: ${GCLOUD_SERVICE_KEY}
-
-volumes:
-  tmp:

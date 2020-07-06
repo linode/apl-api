@@ -17,19 +17,19 @@ sub_help () {
 }
 
 sub_up () {
-    docker-compose -f docker-compose.yml --env-file /dev/null up $1 
+    docker-compose -f docker-compose.yml up $1 
 }
 
 sub_up-all () {
-    docker-compose -f docker-compose.yml -f docker-compose-deps.yml --env-file /dev/null up $1
+    docker-compose -f docker-compose.yml -f docker-compose-deps.yml up $1
 }
 
 sub_up-deps () {
-    docker-compose -f docker-compose-deps.yml --env-file /dev/null up $1
+    docker-compose -f docker-compose-deps.yml up $1
 }
 
 sub_down () {
-    docker-compose -f docker-compose.yml -f docker-compose-deps.yml --env-file /dev/null down --remove-orphans
+    docker-compose -f docker-compose.yml -f docker-compose-deps.yml down --remove-orphans
 }
 
 case $COMMAND_NAME in
