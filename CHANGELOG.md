@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.4](https://github.com/redkubes/otomi-stack-api/compare/v0.4.3...v0.4.4) (2020-07-06)
+
+### Bug Fixes
+
+- added docker compose files for tools server ([91bd02f](https://github.com/redkubes/otomi-stack-api/commit/91bd02f09dc314c1f2985c4c65eb64298a66e616))
+- cleaned [ci skip](<[5dc7cd6](https://github.com/redkubes/otomi-stack-api/commit/5dc7cd6bc54b99c1ab766f99fae556f84cd8f8f0)>)
+- disabled test ([377b1c1](https://github.com/redkubes/otomi-stack-api/commit/377b1c1f9a2bd6bad52e014d454186ffc88d9c5e))
+- disabled test: [#2](https://github.com/redkubes/otomi-stack-api/issues/2) ([3bc1679](https://github.com/redkubes/otomi-stack-api/commit/3bc167948146b1ae75b1c8db2f9d2b41ee5e0ac3))
+- docker git dep [ci skip](<[d8032b5](https://github.com/redkubes/otomi-stack-api/commit/d8032b567d79530331a6de9a143bceaa9e32d834)>)
+- now removing old repo before clone ([92dfafc](https://github.com/redkubes/otomi-stack-api/commit/92dfafcfdfa1080203ef57a3ce847ec0b2b91bbb))
+- now removing old repo before clone: [#2](https://github.com/redkubes/otomi-stack-api/issues/2) ([321ac52](https://github.com/redkubes/otomi-stack-api/commit/321ac52306d11929ccdf5679a03139efbac4f31c))
+- readme ([32d08f4](https://github.com/redkubes/otomi-stack-api/commit/32d08f4603d9de1bf80c551a95c00cde2403687f))
+- test exclusion flag for tools dep, readme updated ([17af5f8](https://github.com/redkubes/otomi-stack-api/commit/17af5f849d2e5cbca9eb9d37c623a00437cfc182))
+
 ### [0.4.3](https://github.com/redkubes/otomi-stack-api/compare/v0.4.2...v0.4.3) (2020-07-02)
 
 ### Bug Fixes
