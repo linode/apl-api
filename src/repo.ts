@@ -4,7 +4,10 @@ import fs from 'fs'
 import path from 'path'
 import { GitPullError } from './error'
 import axios from 'axios'
+import { exec as Exec } from 'child_process'
+import { promisify } from 'util'
 
+const exec = promisify(Exec)
 const env = process.env
 const baseUrl = `http://${env.TOOLS_HOST || 'localhost'}:17771/`
 const decryptUrl = `${baseUrl}dec`
@@ -77,32 +80,22 @@ export class Repo {
   }
 
   async clone() {
-    console.info(`Checking if repo exists at: ${this.path}`)
+    console.info(`Cloning from: ${this.url} to: ${this.path}`)
+    await this.git.clone(this.repoPathAuth, this.path)
 
-    const isRepo = await this.git.checkIsRepo()
-    if (!isRepo) {
-      console.info(`Repo does not exist. Cloning from: ${this.url} to: ${this.path}`)
-      await this.git.clone(this.repoPathAuth, this.path)
-
-      await this.git.checkout(this.branch)
-      await this.decrypt()
-      return isRepo
-    }
-
-    console.log('Repo already exists. Pulling latest changes')
-    await this.pull()
-
-    return isRepo
+    await this.git.checkout(this.branch)
+    await this.decrypt()
+    return
   }
 
   async decrypt() {
-    if (env.TESTING) return
+    // if (env.TESTING) return
     const res = await axios.get(decryptUrl)
     return res
   }
 
   async encrypt() {
-    if (env.TESTING) return
+    // if (env.TESTING) return
     const res = await axios.get(encryptUrl)
     return res
   }
