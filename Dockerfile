@@ -31,10 +31,12 @@ RUN npm prune --production
 # --------------- Production stage
 FROM node:13.10.1-alpine AS prod
 
-
 COPY --from=dev /usr/local/bin/node /usr/bin/
 COPY --from=dev /usr/lib/libgcc* /usr/lib/
 COPY --from=dev /usr/lib/libstdc* /usr/lib/
+
+# Install dependencies
+RUN apk add --no-cache git
 
 # Install app
 RUN mkdir /app

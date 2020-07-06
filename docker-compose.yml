@@ -7,7 +7,7 @@ services:
       context: .
       target: dev
     image: eu.gcr.io/otomi-cloud/otomi-stack-api:${API_TAG:-dev}
-    user: 1000:1000
+    user: ${UID}
     command: sh -c 'rm -rf /tmp/otomi-stack && npm run dev:docker'
     ports:
       - 8080:8080
@@ -15,6 +15,6 @@ services:
       - ./:/app
       - ./test/core.yaml:/etc/otomi/core.yaml
       - .npm:/root/.npm
-      - /tmp:/tmp
+      - /tmp:/tmp:rw
     environment:
       TOOLS_HOST: tools
