@@ -231,7 +231,7 @@ For production environment export the same variables with proper values.
 
 # Git
 
-A git repository is an persistent storage for otomi-stack values.
+Git is used as the persistent storage for otomi-stack values.
 
 ## git-notes
 
@@ -249,7 +249,8 @@ git notes show
 ## Docker images
 
 ```
-docker build .
+TAG=dev
+docker build -t eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG .
 ```
 
 ### Registry
@@ -261,23 +262,25 @@ docker push eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG
 # Running
 
 ```
-docker run --env-file='.env' \
+docker run --env-file='.env' --env-file='.secrets' \
 -p 8080:8080/tcp \
 -v <full-path-to-dir-with-core.yaml>:/etc/otomi \
-<image-id>
+eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG
 
 ```
 
-## Start app
+## Start app (dev mode)
+
+All in docker compose:
 
 ```
-npm run build
-npm run start
+bin/dc.sh up-all
 ```
 
-## Start app with live update
+With only dependencies running in docker compose:
 
 ```
+bin/dc.sh up-deps
 npm run dev
 ```
 
@@ -289,13 +292,13 @@ Run all tests
 npm test
 ```
 
-Run all test in watch mode
+Run all tests in watch mode
 
 ```
 npm test -- -g repo --watch
 ```
 
-Run test by their name (regex)
+Run test by name (regex)
 
 ```
 npm test -- -g repo
