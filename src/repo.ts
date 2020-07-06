@@ -3,11 +3,12 @@ import yaml from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
 import { GitPullError } from './error'
-import { exec as Exec } from 'child_process'
-import util from 'util'
+import axios from 'axios'
 
 const env = process.env
-const exec = util.promisify(Exec)
+const baseUrl = `http://${env.TOOLS_HOST || 'localhost'}:17771/`
+const decryptUrl = `${baseUrl}dec`
+const encryptUrl = `${baseUrl}enc`
 
 export class Repo {
   path: string
@@ -95,18 +96,12 @@ export class Repo {
   }
 
   async decrypt() {
-    if (env.CI || env.TESTING) return {}
-    const res = await exec('bin/crypt.sh')
-    if (res.stderr !== '') throw new Error(`Decryption failed: ${res.stderr}`)
-    console.debug('decrypt results: ', res.stdout)
+    const res = await axios.get(decryptUrl)
     return res
   }
 
   async encrypt() {
-    if (env.CI || env.TESTING) return {}
-    const res = await exec('bin/crypt.sh 1')
-    if (res.stderr !== '') throw new Error(`Encryption failed: ${res.stderr}`)
-    console.debug('encrypt results: ', res.stdout)
+    const res = await axios.get(encryptUrl)
     return res
   }
 

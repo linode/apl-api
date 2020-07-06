@@ -2,11 +2,12 @@
 FROM node:13.10.1-alpine as dev
 
 RUN apk --no-cache add make gcc g++ python git jq
+
 ENV NODE_ENV=development
 ENV BLUEBIRD_DEBUG=0
 
-RUN mkdir /home/app
-WORKDIR /home/app
+RUN mkdir /app
+WORKDIR /app
 
 COPY package*.json ./
 
@@ -28,20 +29,22 @@ FROM dev as clean
 # below command removes the packages specified in devDependencies and set NODE_ENV to production
 RUN npm prune --production
 # --------------- Production stage
-FROM otomi/tools:1.3.2 AS prod
+FROM node:13.10.1-alpine AS prod
 
-USER root
-RUN apt-get install -qqy --no-install-recommends make gcc g++
-USER app
+
 COPY --from=dev /usr/local/bin/node /usr/bin/
+COPY --from=dev /usr/lib/libgcc* /usr/lib/
+COPY --from=dev /usr/lib/libstdc* /usr/lib/
 
 # Install app
-WORKDIR /home/app
-COPY --from=clean /home/app/node_modules node_modules
-COPY --from=ci /home/app/dist dist
+RUN mkdir /app
+WORKDIR /app
+COPY --from=clean /app/node_modules node_modules
+COPY --from=ci /app/dist dist
 COPY package.json .
 COPY bin bin
 
+USER node
 EXPOSE 8080
 
 ENV NODE_ENV=production

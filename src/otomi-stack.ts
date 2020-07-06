@@ -1,5 +1,4 @@
 import * as k8s from '@kubernetes/client-node'
-import dotEnv from 'dotenv'
 import fs from 'fs'
 import yaml from 'js-yaml'
 import { findIndex } from 'lodash'
@@ -20,8 +19,6 @@ import db, { Db } from './db'
 import { AlreadyExists, NotExistError, PublicUrlExists } from './error'
 import { arrayToObject, getPublicUrl, objectToArray } from './utils'
 import cloneRepo, { Repo } from './repo'
-
-dotEnv.config()
 
 const env = process.env
 const isProduction = env.NODE_ENV === 'production'
