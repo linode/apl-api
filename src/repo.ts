@@ -80,6 +80,7 @@ export class Repo {
   }
 
   async clone() {
+    await exec('rm -rf ' + this.path)
     console.info(`Cloning from: ${this.url} to: ${this.path}`)
     await this.git.clone(this.repoPathAuth, this.path)
 
