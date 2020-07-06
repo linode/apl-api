@@ -35,7 +35,6 @@ export class Repo {
     this.remote = 'origin'
     this.remoteBranch = `${this.remote}/${branch}`
     this.git = simpleGit(this.path)
-    await exec('rm -rf ' + this.path)
   }
 
   async addConfig() {
@@ -81,6 +80,7 @@ export class Repo {
   }
 
   async clone() {
+    await exec('rm -rf ' + this.path)
     console.info(`Cloning from: ${this.url} to: ${this.path}`)
     await this.git.clone(this.repoPathAuth, this.path)
 
