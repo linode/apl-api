@@ -59,8 +59,8 @@ export class Repo {
   }
 
   async commit() {
-    await this.git.add('./*')
     await this.encrypt()
+    await this.git.add('./*')
     const commitSummary = await this.git.commit('otomi-stack-api')
     console.debug(`Commit summary: ${JSON.stringify(commitSummary)}`)
     return commitSummary
@@ -89,7 +89,6 @@ export class Repo {
     }
 
     await this.pull()
-    await this.decrypt()
   }
 
   async decrypt() {
@@ -131,8 +130,9 @@ export class Repo {
 
       throw new GitPullError()
     }
-
+    console.debug('pushing')
     await this.git.push(this.remote, this.branch)
+    console.debug('pushed')
   }
 
   async addRemoteOrigin() {
