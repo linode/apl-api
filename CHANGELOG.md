@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.6](https://github.com/redkubes/otomi-stack-api/compare/v0.4.5...v0.4.6) (2020-07-07)
+
+### Bug Fixes
+
+- svc.paths array [ci skip](<[e6d216a](https://github.com/redkubes/otomi-stack-api/commit/e6d216a61e158269ccb751a2b95093d8938c58c0)>)
+
 ### [0.4.5](https://github.com/redkubes/otomi-stack-api/compare/v0.4.4...v0.4.5) (2020-07-07)
 
 ### Bug Fixes
