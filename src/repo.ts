@@ -2,7 +2,7 @@ import simpleGit, { SimpleGit } from 'simple-git/promise'
 import yaml from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
-import { GitPullError } from './error'
+import { GitPullError, ToolsError } from './error'
 import axios from 'axios'
 
 const env = process.env
