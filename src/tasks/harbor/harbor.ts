@@ -39,9 +39,10 @@ async function main() {
       await api.projectsPost(project)
     } catch (e) {
       if (e instanceof HttpError) {
-        if (e.statusCode === 409) console.error(`Project already exists for team ${team.name}`)
-        else console.error(`Harbor client: ${JSON.stringify(e.response)}`)
-        continue
+        if (e.statusCode === 409) {
+          console.info(`Project already exists for team ${team.name}. Skipping.`)
+          continue
+        } else console.error(`Harbor client: ${JSON.stringify(e.response)}`)
       } else console.error('Harbor client: ', e)
       errors.push(`Error while creating harbor project for '${team.name}' team`)
     }
