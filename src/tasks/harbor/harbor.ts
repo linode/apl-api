@@ -1,33 +1,36 @@
 import dotEnv from 'dotenv'
 import path from 'path'
-import { HttpError, ProductsApi, ProjectReq } from '@redkubes/harbor-client'
+import { HttpError, ProductsApi, ProjectReq, ProjectMember } from '@redkubes/harbor-client'
 import OtomiStack from '../../otomi-stack'
 import { HttpBasicAuth } from '@kubernetes/client-node'
 
 dotEnv.config({ path: path.resolve(__dirname, '.env'), debug: true })
 const env = process.env
 
+const HarborRole = {
+  admin: 1,
+  developer: 2,
+  guest: 3,
+  master: 4,
+}
+
+const HarborGroupType = {
+  ldap: 1,
+  http: 2,
+}
+
 // console.log([env.HARBOR_USER, env.HARBOR_PASSWORD, env.HARBOR_BASE_URL])
 async function main() {
   const api = new ProductsApi(env.HARBOR_BASE_URL)
   const auth = new HttpBasicAuth()
-  // FIXME there is an authentication issues, somehow a user is not authenticated thus HTTP 401
   auth.username = env.HARBOR_USER
   auth.password = env.HARBOR_PASSWORD
   api.setDefaultAuthentication(auth)
 
-  // const auth = new HttpBasicAuth(env.HARBOR_USER, env.HARBOR_PASSWORD)
-  // api.setDefaultAuthentication(auth)
   const os = new OtomiStack()
   await os.init()
 
   const errors = []
-  try {
-    const res = await api.projectsGet()
-    console.log(res.body)
-  } catch (e) {
-    console.error(`Harbor client: ${JSON.stringify(e)}`)
-  }
 
   for await (const team of os.getTeams()) {
     try {
@@ -36,7 +39,23 @@ async function main() {
         metadata: {},
       }
       console.log(`Creating a project for a team ${team.name}`)
-      await api.projectsPost(project)
+
+      const res = await api.projectsPost(project)
+      console.info(`Harbor client: ${JSON.stringify(res)}`)
+
+      if (!res.response.headers.location) throw Error('Unable to obtain location header from response')
+      // E.g.: location: "/api/v2.0/projects/6"
+      const projectId = parseInt(res.response.headers.location.split('/').pop())
+
+      const projMember: ProjectMember = {
+        roleId: HarborRole.developer,
+        memberGroup: {
+          groupName: team.name,
+          groupType: HarborGroupType.http,
+        },
+      }
+      console.log(`Associating user group (${team.name}) with harbor project (${team.name})`)
+      await api.projectsProjectIdMembersPost(projectId, projMember)
     } catch (e) {
       if (e instanceof HttpError) {
         if (e.statusCode === 409) {
