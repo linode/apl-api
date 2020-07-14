@@ -11,7 +11,6 @@ env:
   REPO: otomi-cloud/otomi-stack-api
   GIT_USER: redkubesbot
   GIT_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-
 jobs:
   build-test-push-release:
     if: "!contains(github.event.head_commit.message, 'ci skip') && !startsWith(github.ref, 'refs/tags/')"
@@ -32,6 +31,8 @@ jobs:
           registry: ${{ env.REG }}
           image_name: ${{ env.REPO }}
           image_tag: ${{ env.TAG }}
+          build_extra_args: '--build-arg=NPM_TOKEN=${{ secrets.GITHUB_TOKEN }}'
+
       - name: Docker login
         run: docker login -u _json_key -p '${{ secrets.DOCKER_PASSWORD }}' $REG
       - name: Push tag 'latest'

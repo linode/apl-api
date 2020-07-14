@@ -1,6 +1,6 @@
 # --------------- Dev stage for developers to override sources
 FROM node:13.10.1-alpine as dev
-
+ARG NPM_TOKEN
 RUN apk --no-cache add make gcc g++ python
 RUN apk --no-cache add git jq
 ENV NODE_ENV=development
@@ -10,7 +10,10 @@ RUN mkdir /app
 WORKDIR /app
 
 COPY package*.json ./
+COPY .npmrc ./
+RUN echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" >> .npmrc
 
+RUN env
 RUN npm ci
 
 # --------------- ci stage for CI runner
