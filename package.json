@@ -12,7 +12,7 @@
     "@apidevtools/json-schema-ref-parser": "^9.0.1",
     "@casl/ability": "^4.0.7",
     "@kubernetes/client-node": "^0.11.2",
-    "@redkubes/harbor-client": "^2.0.0",
+    "@redkubes/harbor-client": "^2.0.1",
     "@types/lodash": "^4.14.150",
     "axios": "^0.19.2",
     "bluebird": "^3.7.2",
@@ -122,7 +122,8 @@
     "start": "node dist/app.js",
     "test": "mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit",
     "tasks:harbor": "node dist/tasks/harbor/harbor.js",
-    "tasks:harbor-dev": "ts-node-dev  ./src/tasks/harbor/harbor.ts"
+    "tasks:harbor-dev": "ts-node-dev  ./src/tasks/harbor/harbor.ts",
+    "tasks:harbor-init-dev": "ts-node-dev  ./src/tasks/harbor/harbor-init.ts"
   },
   "standard-version": {
     "skip": {

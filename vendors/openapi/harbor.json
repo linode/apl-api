@@ -1,6 +1,6 @@
 {
   "info": {
-    "version": "2.0.0",
+    "version": "2.0.1",
     "description": "These APIs provide services for manipulating Harbor project.",
     "title": "Harbor API"
   },
@@ -3363,6 +3363,10 @@
           "description": "Whether verify your OIDC server certificate, disable it if your OIDC server is hosted via self-hosted certificate.",
           "$ref": "#/definitions/BoolConfigItem"
         },
+        "oidc_groups_claim": {
+          "description": "The name of Claim in the ID token whose value is the list of group names.",
+          "$ref": "#/definitions/BoolConfigItem"
+        },
         "email_identity": {
           "description": "By default it's empty so the email_username is picked.",
           "$ref": "#/definitions/StringConfigItem"
@@ -4549,6 +4553,10 @@
         "self_registration": {
           "type": "boolean",
           "description": "Whether the Harbor instance supports self-registration.  If it's set to false, admin need to add user to the instance."
+        },
+        "oidc_groups_claim": {
+          "type": "string",
+          "description": "The name of Claim in the ID token whose value is the list of group names."
         },
         "oidc_scope": {
           "type": "string",
