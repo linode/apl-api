@@ -5,7 +5,7 @@ import initApp from './server'
 import OtomiStack from './otomi-stack'
 import { validateEnv } from './utils'
 
-describe.skip('Api tests for admin', () => {
+describe('Api tests for admin', () => {
   let app
   before(async () => {
     const otomiStack = new OtomiStack()
@@ -38,7 +38,6 @@ describe.skip('Api tests for admin', () => {
       .set('Accept', 'application/json')
       .set('Auth-Group', 'admin')
       .expect(200)
-      .expect('Content-Type', /json/)
       .end(done)
   })
   it('admin cannot delete all teams', (done) => {
@@ -77,13 +76,7 @@ describe.skip('Api tests for admin', () => {
     request(app).delete('/v1/teams').set('Accept', 'application/json').set('Auth-Group', 'team1').expect(404).end(done)
   })
   it('team cannot create a new team', (done) => {
-    request(app)
-      .post('/v1/teams')
-      .set('Accept', 'application/json')
-      .set('Auth-Group', 'team1')
-      .expect(401)
-      .expect('Content-Type', /json/)
-      .end(done)
+    request(app).post('/v1/teams').set('Accept', 'application/json').set('Auth-Group', 'team1').expect(401).end(done)
   })
 
   it('team can get other teams', (done) => {
@@ -177,7 +170,6 @@ describe.skip('Api tests for admin', () => {
       .set('Accept', 'application/json')
       .set('Auth-Group', 'team1')
       .expect(401)
-      .expect('Content-Type', /json/)
       .end(done)
   })
   it('team can not update service from other team', (done) => {
@@ -186,7 +178,6 @@ describe.skip('Api tests for admin', () => {
       .set('Accept', 'application/json')
       .set('Auth-Group', 'team1')
       .expect(401)
-      .expect('Content-Type', /json/)
       .end(done)
   })
   it('anonymous user should get app readiness', (done) => {
@@ -206,81 +197,36 @@ describe.skip('Api tests for admin', () => {
       .end(done)
   })
   it('anonymous user cannot get a specific team', (done) => {
-    request(app)
-      .get('/v1/teams/team1')
-      .set('Accept', 'application/json')
-      .expect(401)
-      .expect('Content-Type', /json/)
-      .end(done)
+    request(app).get('/v1/teams/team1').set('Accept', 'application/json').expect(401).end(done)
   })
   it('anonymous user cannot modify a team', (done) => {
-    request(app)
-      .put('/v1/teams/team1')
-      .set('Accept', 'application/json')
-      .expect(401)
-      .expect('Content-Type', /json/)
-      .end(done)
+    request(app).put('/v1/teams/team1').set('Accept', 'application/json').expect(401).end(done)
   })
   it('anonymous user cannot delete a team', (done) => {
-    request(app)
-      .delete('/v1/teams/team1')
-      .set('Accept', 'application/json')
-      .expect(401)
-      .expect('Content-Type', /json/)
-      .end(done)
+    request(app).delete('/v1/teams/team1').set('Accept', 'application/json').expect(401).end(done)
   })
   it('anonymous user cannot create a team', (done) => {
-    request(app)
-      .post('/v1/teams')
-      .set('Accept', 'application/json')
-      .expect(401)
-      .expect('Content-Type', /json/)
-      .end(done)
+    request(app).post('/v1/teams').set('Accept', 'application/json').expect(401).end(done)
   })
   it('anonymous user cannot get services', (done) => {
-    request(app)
-      .get('/v1/teams/team1/services')
-      .set('Accept', 'application/json')
-      .expect(401)
-      .expect('Content-Type', /json/)
-      .end(done)
+    request(app).get('/v1/teams/team1/services').set('Accept', 'application/json').expect(401).end(done)
   })
   it('anonymous user cannot get a given service', (done) => {
-    request(app)
-      .get('/v1/teams/team1/services/service1')
-      .set('Accept', 'application/json')
-      .expect(401)
-      .expect('Content-Type', /json/)
-      .end(done)
+    request(app).get('/v1/teams/team1/services/service1').set('Accept', 'application/json').expect(401).end(done)
   })
 
   it('anonymous user cannot edit a given service', (done) => {
-    request(app)
-      .put('/v1/teams/team1/services/service1')
-      .set('Accept', 'application/json')
-      .expect(401)
-      .expect('Content-Type', /json/)
-      .end(done)
+    request(app).put('/v1/teams/team1/services/service1').set('Accept', 'application/json').expect(401).end(done)
   })
   it('anonymous user cannot delete a given service', (done) => {
-    request(app)
-      .delete('/v1/teams/team1/services/service1')
-      .set('Accept', 'application/json')
-      .expect(401)
-      .expect('Content-Type', /json/)
-      .end(done)
+    request(app).delete('/v1/teams/team1/services/service1').set('Accept', 'application/json').expect(401).end(done)
   })
   it('anonymous user cannot add a new service', (done) => {
-    request(app)
-      .post('/v1/teams/team1/services')
-      .set('Accept', 'application/json')
-      .expect(401)
-      .expect('Content-Type', /json/)
-      .end(done)
+    request(app).post('/v1/teams/team1/services').set('Accept', 'application/json').expect(401).end(done)
   })
 })
 
-describe.skip('Api tests for data validation', () => {
+describe('Api tests for data validation', () => {
   let app
   before(async () => {
     const otomiStack = new OtomiStack()
@@ -294,7 +240,6 @@ describe.skip('Api tests for data validation', () => {
       .set('Auth-Group', 'admin')
       .set('Accept', 'application/json')
       .expect(400)
-      .expect('Content-Type', /json/)
       .end(done)
   })
   it('invalid slackUrl  data', (done) => {
@@ -304,7 +249,6 @@ describe.skip('Api tests for data validation', () => {
       .set('Auth-Group', 'admin')
       .set('Accept', 'application/json')
       .expect(400)
-      .expect('Content-Type', /json/)
       .end(done)
   })
 })
@@ -325,12 +269,10 @@ describe('Config validation tests', () => {
 
   it('valid env variables', (done) => {
     const envs = {
-      GIT_LOCAL_PATH: null,
       GIT_REPO_URL: null,
       GIT_USER: null,
       GIT_PASSWORD: null,
       GIT_EMAIL: null,
-      GIT_BRANCH: null,
     }
     expect(() => validateEnv(envs)).to.not.throw()
     done()

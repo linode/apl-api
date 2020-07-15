@@ -1,8 +1,8 @@
 # --------------- Dev stage for developers to override sources
 FROM node:13.10.1-alpine as dev
 
-RUN apk --no-cache add make gcc g++ python
-RUN apk --no-cache add git jq
+RUN apk --no-cache add make gcc g++ python git jq
+
 ENV NODE_ENV=development
 ENV BLUEBIRD_DEBUG=0
 
@@ -31,13 +31,12 @@ RUN npm prune --production
 # --------------- Production stage
 FROM node:13.10.1-alpine AS prod
 
-
 COPY --from=dev /usr/local/bin/node /usr/bin/
 COPY --from=dev /usr/lib/libgcc* /usr/lib/
 COPY --from=dev /usr/lib/libstdc* /usr/lib/
 
 # Install dependencies
-RUN apk add --no-cache git jq
+RUN apk add --no-cache git
 
 # Install app
 RUN mkdir /app

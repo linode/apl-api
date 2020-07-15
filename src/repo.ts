@@ -1,29 +1,25 @@
 import simpleGit, { SimpleGit } from 'simple-git/promise'
-
 import yaml from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
-import { GitPullError } from './error'
+import { GitPullError, ToolsError } from './error'
+import axios from 'axios'
+
+const env = process.env
+const baseUrl = `http://${env.TOOLS_HOST || 'localhost'}:17771/`
+const decryptUrl = `${baseUrl}dec`
+const encryptUrl = `${baseUrl}enc`
 
 export class Repo {
   path: string
-
   git: SimpleGit
-
   url: string
-
   user: string
-
   email: string
-
   password: string
-
   branch: string
-
   remote: string
-
   remoteBranch: string
-
   repoPathAuth: string
 
   constructor(localRepoPath, remotePath, user, email, repoPathAuth, branch) {
@@ -49,20 +45,21 @@ export class Repo {
   }
 
   writeFile(relativePath, data) {
-    const absolutePath = path.join(this.path, relativePath)
+    const absolutePath = path.join(this.path, relativePath) + '.dec'
     console.debug(`Writing to file: ${absolutePath}`)
     const yamlStr = yaml.safeDump(data)
     fs.writeFileSync(absolutePath, yamlStr, 'utf8')
   }
 
   readFile(relativePath) {
-    const absolutePath = path.join(this.path, relativePath)
+    const absolutePath = path.join(this.path, relativePath) + '.dec'
     console.info(`Reading from file: ${absolutePath}`)
     const doc = yaml.safeLoad(fs.readFileSync(absolutePath, 'utf8'))
     return doc
   }
 
   async commit() {
+    await this.encrypt()
     await this.git.add('./*')
     const commitSummary = await this.git.commit('otomi-stack-api')
     console.debug(`Commit summary: ${JSON.stringify(commitSummary)}`)
@@ -86,19 +83,29 @@ export class Repo {
     if (!isRepo) {
       console.info(`Repo does not exist. Cloning from: ${this.url} to: ${this.path}`)
       await this.git.clone(this.repoPathAuth, this.path)
-
+    } else {
+      console.log('Repo already exists. Checking out correct branch.')
       await this.git.checkout(this.branch)
-      return isRepo
     }
 
-    console.log('Repo already exists. Pulling latest changes')
     await this.pull()
+  }
 
-    return isRepo
+  async decrypt() {
+    if (env.TESTING) return
+    const res = await axios.get(decryptUrl)
+    return res
+  }
+
+  async encrypt() {
+    if (env.TESTING) return
+    const res = await axios.get(encryptUrl)
+    return res
   }
 
   async pull() {
     const pullSummary = await this.git.pull(this.remote, this.branch, { '--rebase': true })
+    await this.decrypt()
     console.debug(`Pull summary: ${JSON.stringify(pullSummary)}`)
     return pullSummary
   }
@@ -123,8 +130,9 @@ export class Repo {
 
       throw new GitPullError()
     }
-
+    console.debug('pushing')
     await this.git.push(this.remote, this.branch)
+    console.debug('pushed')
   }
 
   async addRemoteOrigin() {

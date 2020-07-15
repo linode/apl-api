@@ -1,7 +1,61 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See
-[standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### [0.4.6](https://github.com/redkubes/otomi-stack-api/compare/v0.4.5...v0.4.6) (2020-07-07)
+
+### Bug Fixes
+
+- svc.paths array [ci skip](<[e6d216a](https://github.com/redkubes/otomi-stack-api/commit/e6d216a61e158269ccb751a2b95093d8938c58c0)>)
+
+### [0.4.5](https://github.com/redkubes/otomi-stack-api/compare/v0.4.4...v0.4.5) (2020-07-07)
+
+### Bug Fixes
+
+- decrypt moment now before add files ([78e2832](https://github.com/redkubes/otomi-stack-api/commit/78e2832cf81ecd67fec84612583fabba97a44fab))
+
+### [0.4.4](https://github.com/redkubes/otomi-stack-api/compare/v0.4.3...v0.4.4) (2020-07-06)
+
+### Bug Fixes
+
+- added docker compose files for tools server ([91bd02f](https://github.com/redkubes/otomi-stack-api/commit/91bd02f09dc314c1f2985c4c65eb64298a66e616))
+- cleaned [ci skip](<[5dc7cd6](https://github.com/redkubes/otomi-stack-api/commit/5dc7cd6bc54b99c1ab766f99fae556f84cd8f8f0)>)
+- disabled test ([377b1c1](https://github.com/redkubes/otomi-stack-api/commit/377b1c1f9a2bd6bad52e014d454186ffc88d9c5e))
+- disabled test: [#2](https://github.com/redkubes/otomi-stack-api/issues/2) ([3bc1679](https://github.com/redkubes/otomi-stack-api/commit/3bc167948146b1ae75b1c8db2f9d2b41ee5e0ac3))
+- docker git dep [ci skip](<[d8032b5](https://github.com/redkubes/otomi-stack-api/commit/d8032b567d79530331a6de9a143bceaa9e32d834)>)
+- now removing old repo before clone ([92dfafc](https://github.com/redkubes/otomi-stack-api/commit/92dfafcfdfa1080203ef57a3ce847ec0b2b91bbb))
+- now removing old repo before clone: [#2](https://github.com/redkubes/otomi-stack-api/issues/2) ([321ac52](https://github.com/redkubes/otomi-stack-api/commit/321ac52306d11929ccdf5679a03139efbac4f31c))
+- readme ([32d08f4](https://github.com/redkubes/otomi-stack-api/commit/32d08f4603d9de1bf80c551a95c00cde2403687f))
+- test exclusion flag for tools dep, readme updated ([17af5f8](https://github.com/redkubes/otomi-stack-api/commit/17af5f849d2e5cbca9eb9d37c623a00437cfc182))
+
+### [0.4.3](https://github.com/redkubes/otomi-stack-api/compare/v0.4.2...v0.4.3) (2020-07-02)
+
+### Bug Fixes
+
+- docker now extending from tools image, bleh [#5](https://github.com/redkubes/otomi-stack-api/issues/5) [ci skip](<[02db689](https://github.com/redkubes/otomi-stack-api/commit/02db689b5f2f67f34c2a1ce6214ef34c18500951)>)
+
+### [0.4.2](https://github.com/redkubes/otomi-stack-api/compare/v0.4.1...v0.4.2) (2020-07-02)
+
+### Bug Fixes
+
+- docker now extending from tools image, bleh ([67cfced](https://github.com/redkubes/otomi-stack-api/commit/67cfced8003816f635a2a29aa3c1b1a405f57751))
+- docker now extending from tools image, bleh [#2](https://github.com/redkubes/otomi-stack-api/issues/2) ([970cf60](https://github.com/redkubes/otomi-stack-api/commit/970cf60e59e51cc81b1f572623ade34c531b94ee))
+- docker now extending from tools image, bleh [#3](https://github.com/redkubes/otomi-stack-api/issues/3) ([1973675](https://github.com/redkubes/otomi-stack-api/commit/1973675edbe713df65a1331ec2e705a8dea9abed))
+- docker now extending from tools image, bleh [#4](https://github.com/redkubes/otomi-stack-api/issues/4) ([2114fe8](https://github.com/redkubes/otomi-stack-api/commit/2114fe8bbe17327b954d686ba9a8b2181133b7e2))
+
+### [0.4.1](https://github.com/redkubes/otomi-stack-api/compare/v0.4.0...v0.4.1) (2020-07-02)
+
+### Bug Fixes
+
+- adding encryption step before commit [ci skip](<[7e19c5e](https://github.com/redkubes/otomi-stack-api/commit/7e19c5e5c9c691aa7a0e697abb004a42e365d178)>)
+- writefile + .enc ([382dce5](https://github.com/redkubes/otomi-stack-api/commit/382dce5f10b6ecd6d9b317423572585b33c790fb))
+
+## [0.4.0](https://github.com/redkubes/otomi-stack-api/compare/v0.3.3...v0.4.0) (2020-07-02)
+
+### CI
+
+- updated core yaml
+  [ci skip](<[b4807f6](https://github.com/redkubes/otomi-stack-api/commit/b4807f60c494d54bfbf5f14fb82b5514b2022c77)>)
 
 ### [0.3.3](https://github.com/redkubes/otomi-stack-api/compare/v0.3.2...v0.3.3) (2020-06-17)
 

@@ -8,6 +8,9 @@
   "eslint.alwaysShowStatus": true,
   "eslint.enable": true,
   "eslint.validate": ["javascript", "typescript"],
+  "files.associations": {
+    ".secrets": "shellscript"
+  },
   "tslint.enable": false,
   "yaml.format.enable": false,
   "mochaExplorer.files": "src/*.test.ts",
