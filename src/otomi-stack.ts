@@ -1,5 +1,4 @@
 import * as k8s from '@kubernetes/client-node'
-import dotEnv from 'dotenv'
 import fs from 'fs'
 import yaml from 'js-yaml'
 import { findIndex } from 'lodash'
@@ -20,8 +19,6 @@ import db, { Db } from './db'
 import { AlreadyExists, NotExistError, PublicUrlExists } from './error'
 import { arrayToObject, getPublicUrl, objectToArray } from './utils'
 import cloneRepo, { Repo } from './repo'
-
-dotEnv.config()
 
 const env = process.env
 const isProduction = env.NODE_ENV === 'production'
@@ -73,12 +70,12 @@ export default class OtomiStack {
   async init() {
     try {
       this.repo = await cloneRepo(
-        env.GIT_LOCAL_PATH,
+        env.GIT_LOCAL_PATH || '/tmp/otomi-stack',
         env.GIT_REPO_URL,
         env.GIT_USER,
         env.GIT_EMAIL,
         env.GIT_PASSWORD,
-        env.GIT_BRANCH,
+        env.GIT_BRANCH || 'master',
       )
       const globalPath = getFilePath()
       glbl = this.repo.readFile(globalPath)
@@ -432,7 +429,7 @@ export default class OtomiStack {
 
   convertServiceToDb(svcRaw, teamId, cluster) {
     // Create service
-    const svc = omit(svcRaw, 'ksvc', 'isPublic', 'hasCert', 'domain', 'path', 'forwardPath')
+    const svc = omit(svcRaw, 'ksvc', 'isPublic', 'hasCert', 'domain', 'paths', 'forwardPath')
     svc.clusterId = cluster.id
     svc.teamId = teamId
     if (!('name' in svcRaw)) {
@@ -457,7 +454,7 @@ export default class OtomiStack {
         certArn: svcRaw.certArn,
         domain: publicUrl.domain,
         subdomain: publicUrl.subdomain,
-        path: svcRaw.path,
+        path: svcRaw.paths && svcRaw.paths.length ? svcRaw.paths[0] : undefined,
         forwardPath: 'forwardPath' in svcRaw,
       }
     }
@@ -524,7 +521,7 @@ export default class OtomiStack {
 
           if (svc.ingress.hasCert) svcCloned.hasCert = true
           if (svc.ingress.certArn) svcCloned.certArn = svc.ingress.certArn
-          if (svc.ingress.path) svcCloned.path = svc.ingress.path
+          if (svc.ingress.path) svcCloned.paths = [svc.ingress.path]
           if (svc.ingress.forwardPath) svcCloned.forwardPath = true
         } else svcCloned.internal = true
 

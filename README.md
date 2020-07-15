@@ -5,7 +5,7 @@ This application:
 - provides REST API to manipulate values for teams and their services.
 - connects to git repo with `otomi-stack` code in order to load/update values from/in repository.
 
-# Glossary:
+# Glossary
 
 **api spec** - a HTTP REST API definition in OpenApiV3 standard **schema** - a data model that defines attributes and
 their types **attribute** - a single feature of schema **property** - a single feature of schema **resource** - an
@@ -172,7 +172,7 @@ A user with team role can:
 - perform all CRUD operations only withing its own team (RBAC)
 - all attributes can be edited except ingress that isn be only read (ABAC)
 
-### Limitations:
+### Limitations
 
 - nested ABAC is NOT supported E.g.:
 
@@ -223,17 +223,7 @@ Moreover the `openapi.yaml` file can be used with `Postman` (File -> Import).
 
 ## Environment variables
 
-For local development define `.env` file. Example:
-
-```
-GIT_LOCAL_PATH=/tmp/otomi-stack
-# The GIT_REPO_URL - only host and path, no schema
-GIT_REPO_URL=github.com/some/repo.git
-GIT_USER=somuser
-GIT_EMAIL=someuser@gmail.com
-GIT_PASSWORD=somepassword
-DISABLE_SYNC=0
-```
+For local development copy `.env.sample` to `.env.dev` and copy `otomi-stack/.secrets` from company secrets storage.
 
 Use `DISABLE_AUTH=1` env to disable authorization. Use `DISABLE_SYNC=1` to disable pushing changes to git remote branch
 
@@ -241,7 +231,7 @@ For production environment export the same variables with proper values.
 
 # Git
 
-A git repository is an persistent storage for otomi-stack values.
+Git is used as the persistent storage for otomi-stack values.
 
 ## git-notes
 
@@ -259,7 +249,8 @@ git notes show
 ## Docker images
 
 ```
-docker build .
+TAG=dev
+docker build -t eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG .
 ```
 
 ### Registry
@@ -271,30 +262,26 @@ docker push eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG
 # Running
 
 ```
-docker run --env-file='.env' \
+docker run --env-file='.env.dev' --env-file='.secrets' \
 -p 8080:8080/tcp \
--v <full-path-to-dir-with-core.yaml>:/etc/otomi \
-<image-id>
+-v ./test/core.yaml:/etc/otomi/core.yaml \
+eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG
 
 ```
 
-## Start app
+## Start app (dev mode)
+
+All in docker compose:
 
 ```
-npm run build
-npm run start
+bin/dc.sh up-all
 ```
 
-## Start app with live update
+With only dependencies running in docker compose:
 
 ```
+bin/dc.sh up-deps
 npm run dev
-```
-
-Note: it requires to instal globally the following package
-
-```
-npm install nodemon -g
 ```
 
 # Testing
@@ -305,13 +292,13 @@ Run all tests
 npm test
 ```
 
-Run all test in watch mode
+Run all tests in watch mode
 
 ```
 npm test -- -g repo --watch
 ```
 
-Run test by their name (regex)
+Run test by name (regex)
 
 ```
 npm test -- -g repo
