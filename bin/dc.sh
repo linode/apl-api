@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+source .secrets
 BIN_NAME=$(basename "$0")
 COMMAND_NAME=$1
 SUB_COMMAND_NAME=$2

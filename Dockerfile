@@ -1,6 +1,8 @@
 # --------------- Dev stage for developers to override sources
 FROM node:13.10.1-alpine as dev
 ARG NPM_TOKEN
+RUN test -n "$NPM_TOKEN"
+
 RUN apk --no-cache add make gcc g++ python git jq
 
 ENV NODE_ENV=development
