@@ -1,8 +1,5 @@
-import dotEnv from 'dotenv'
-import path from 'path'
 import { ProductsApi, Configurations, HttpBasicAuth } from '@redkubes/harbor-client'
 
-dotEnv.config({ path: path.resolve(__dirname, '.env'), debug: true })
 const env = process.env
 
 async function main() {
@@ -13,7 +10,7 @@ async function main() {
   api.setDefaultAuthentication(auth)
 
   try {
-    console.info(`Setting up harbor configuration`)
+    console.info('Setting up harbor configuration')
 
     const config: Configurations = {
       authMode: 'oidc_auth',
@@ -28,7 +25,8 @@ async function main() {
     await api.configurationsPut(config)
     console.info(`Successfully configured harbor`)
   } catch (e) {
-    console.error(JSON.stringify(e))
+    console.trace()
+    console.error('Error:', e)
     process.exit(1)
   }
 }
