@@ -1,11 +1,6 @@
-import dotEnv from 'dotenv'
-import path from 'path'
 import { HttpError, ProductsApi, ProjectReq, ProjectMember } from '@redkubes/harbor-client'
 import OtomiStack from '../../otomi-stack'
 import { HttpBasicAuth } from '@kubernetes/client-node'
-
-dotEnv.config({ path: path.resolve(__dirname, '.env'), debug: true })
-const env = process.env
 
 const HarborRole = {
   admin: 1,
@@ -21,6 +16,7 @@ const HarborGroupType = {
 
 // console.log([env.HARBOR_USER, env.HARBOR_PASSWORD, env.HARBOR_BASE_URL])
 async function main() {
+  const env = process.env
   const api = new ProductsApi(env.HARBOR_BASE_URL)
   const auth = new HttpBasicAuth()
   auth.username = env.HARBOR_USER
