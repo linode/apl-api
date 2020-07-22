@@ -126,6 +126,7 @@ export class Repo {
       console.warn(`Pull error: ${JSON.stringify(e)}`)
       await this.git.rebase({ '--abort': true })
       await this.git.reset(['--hard', sha])
+      await this.decrypt()
       console.info(`Reset HEAD to ${sha} commit`)
 
       throw new GitPullError()
