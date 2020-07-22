@@ -1,6 +1,13 @@
 import { HttpError, ProductsApi, ProjectReq, ProjectMember } from '@redkubes/harbor-client'
-import OtomiStack from '../../otomi-stack'
 import { HttpBasicAuth } from '@kubernetes/client-node'
+import { cleanEnv, json, str } from 'envalid'
+
+const env = cleanEnv(process.env, {
+  HARBOR_BASE_URL: str({ desc: 'A harbor core service URL' }),
+  HARBOR_USER: str({ desc: 'A name of harbor admin user' }),
+  HARBOR_PASSWORD: str({ desc: 'A password of harbor admin user' }),
+  TEAM_NAMES: json({ desc: 'A list of team names in JSON format' }),
+})
 
 const HarborRole = {
   admin: 1,
@@ -16,25 +23,21 @@ const HarborGroupType = {
 
 // console.log([env.HARBOR_USER, env.HARBOR_PASSWORD, env.HARBOR_BASE_URL])
 async function main() {
-  const env = process.env
   const api = new ProductsApi(env.HARBOR_BASE_URL)
   const auth = new HttpBasicAuth()
   auth.username = env.HARBOR_USER
   auth.password = env.HARBOR_PASSWORD
   api.setDefaultAuthentication(auth)
 
-  const os = new OtomiStack()
-  await os.init()
-
   const errors = []
 
-  for await (const team of os.getTeams()) {
+  for await (const team of env.TEAM_NAMES) {
     try {
       const project: ProjectReq = {
-        projectName: team.name,
+        projectName: team,
         metadata: {},
       }
-      console.log(`Creating a project for a team ${team.name}`)
+      console.log(`Creating a project for a team ${team}`)
 
       const res = await api.projectsPost(project)
       console.info(`Harbor client: ${JSON.stringify(res)}`)
@@ -46,20 +49,22 @@ async function main() {
       const projMember: ProjectMember = {
         roleId: HarborRole.developer,
         memberGroup: {
-          groupName: team.name,
+          groupName: team,
           groupType: HarborGroupType.http,
         },
       }
-      console.log(`Associating user group (${team.name}) with harbor project (${team.name})`)
+      console.log(`Associating user group (${team}) with harbor project (${team})`)
       await api.projectsProjectIdMembersPost(projectId, projMember)
     } catch (e) {
       if (e instanceof HttpError) {
         if (e.statusCode === 409) {
-          console.info(`Project already exists for team ${team.name}. Skipping.`)
+          console.info(`Project already exists for team ${team}. Skipping.`)
           continue
-        } else console.error(`Harbor client: ${JSON.stringify(e.response)}`)
+        } else {
+          console.error(`Harbor client, ${JSON.stringify(e.response)}`)
+        }
       } else console.error('Harbor client: ', e)
-      errors.push(`Error while creating harbor project for '${team.name}' team`)
+      errors.push(`Error while creating harbor project for '${team}' team`)
     }
   }
 
