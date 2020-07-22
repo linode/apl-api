@@ -2,13 +2,6 @@ import { HttpError, ProductsApi, ProjectReq, ProjectMember } from '@redkubes/har
 import { HttpBasicAuth } from '@kubernetes/client-node'
 import { cleanEnv, json, str } from 'envalid'
 
-const env = cleanEnv(process.env, {
-  HARBOR_BASE_URL: str({ desc: 'A harbor core service URL' }),
-  HARBOR_USER: str({ desc: 'A name of harbor admin user' }),
-  HARBOR_PASSWORD: str({ desc: 'A password of harbor admin user' }),
-  TEAM_NAMES: json({ desc: 'A list of team names in JSON format' }),
-})
-
 const HarborRole = {
   admin: 1,
   developer: 2,
@@ -23,6 +16,16 @@ const HarborGroupType = {
 
 // console.log([env.HARBOR_USER, env.HARBOR_PASSWORD, env.HARBOR_BASE_URL])
 async function main() {
+  const env = cleanEnv(
+    process.env,
+    {
+      HARBOR_BASE_URL: str({ desc: 'A harbor core service URL' }),
+      HARBOR_USER: str({ desc: 'A name of harbor admin user' }),
+      HARBOR_PASSWORD: str({ desc: 'A password of harbor admin user' }),
+      TEAM_NAMES: json({ desc: 'A list of team names in JSON format' }),
+    },
+    { strict: true },
+  )
   const api = new ProductsApi(env.HARBOR_BASE_URL)
   const auth = new HttpBasicAuth()
   auth.username = env.HARBOR_USER
