@@ -66,6 +66,7 @@ async function main() {
       }
       console.log(`Associating user group (${team}) with harbor project (${team})`)
       await api.projectsProjectIdMembersPost(projectId, projMember)
+      console.log(`Associating admin group (${team}) with harbor project (${team})`)
       await api.projectsProjectIdMembersPost(projectId, projAdminMember)
     } catch (e) {
       if (e instanceof HttpError) {
