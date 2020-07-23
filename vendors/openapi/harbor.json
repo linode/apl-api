@@ -1,6 +1,6 @@
 {
   "info": {
-    "version": "2.0.1",
+    "version": "2.0.2",
     "description": "These APIs provide services for manipulating Harbor project.",
     "title": "Harbor API"
   },
@@ -3365,7 +3365,7 @@
         },
         "oidc_groups_claim": {
           "description": "The name of Claim in the ID token whose value is the list of group names.",
-          "$ref": "#/definitions/BoolConfigItem"
+          "$ref": "#/definitions/StringConfigItem"
         },
         "email_identity": {
           "description": "By default it's empty so the email_username is picked.",
