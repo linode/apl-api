@@ -22,6 +22,7 @@ async function main() {
       HARBOR_BASE_URL: str({ desc: 'A harbor core service URL' }),
       HARBOR_USER: str({ desc: 'A name of harbor admin user' }),
       HARBOR_PASSWORD: str({ desc: 'A password of harbor admin user' }),
+      HARBOR_ADMIN_GROUP_NAME: str({ desc: 'A name of admin group' }),
       TEAM_NAMES: json({ desc: 'A list of team names in JSON format' }),
     },
     { strict: true },
@@ -56,8 +57,16 @@ async function main() {
           groupType: HarborGroupType.http,
         },
       }
+      const projAdminMember: ProjectMember = {
+        roleId: HarborRole.admin,
+        memberGroup: {
+          groupName: env.HARBOR_ADMIN_GROUP_NAME,
+          groupType: HarborGroupType.http,
+        },
+      }
       console.log(`Associating user group (${team}) with harbor project (${team})`)
       await api.projectsProjectIdMembersPost(projectId, projMember)
+      await api.projectsProjectIdMembersPost(projectId, projAdminMember)
     } catch (e) {
       if (e instanceof HttpError) {
         if (e.statusCode === 409) {
