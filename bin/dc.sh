@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
+set -e
 source .secrets
+source .env.dev
 BIN_NAME=$(basename "$0")
 COMMAND_NAME=$1
 SUB_COMMAND_NAME=$2
+
 
 info="(add '-d' to daemonize, or 'logs' for logs on pre-daemonized stack)"
 sub_help () {

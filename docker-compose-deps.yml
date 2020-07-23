@@ -4,7 +4,7 @@ services:
   tools:
     container_name: tools
     image: eu.gcr.io/otomi-cloud/otomi-stack:${TOOLS_TAG:-latest}
-    user: ${UID}
+    user: ${USER_ID}
     command: bin/server.sh
     expose:
       - 17771
