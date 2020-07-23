@@ -5,6 +5,78 @@ This application:
 - provides REST API to manipulate values for teams and their services.
 - connects to git repo with `otomi-stack` code in order to load/update values from/in repository.
 
+# Setting up environment
+
+1. Download .secrets file from Google Drive (https://drive.google.com/drive/folders/0AGwuKvXYSqGIUk9PVA) to root directory of this project.
+
+2. Setup access to GitHub packages
+
+```
+. ./.secrets && echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
+```
+
+# Building
+
+## Docker images
+
+```
+TAG=dev
+. ./.secrets
+# The .secrets contains NPM_TOKEN env
+docker build -t eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG --build-arg=NPM_TOKEN .
+```
+
+### Registry
+
+```
+docker push eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG
+```
+
+# Running
+
+```
+docker run --env-file='.env.dev' --env-file='.secrets' \
+-p 8080:8080/tcp \
+-v ./test/core.yaml:/etc/otomi/core.yaml \
+eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG
+
+```
+
+## Start app (dev mode)
+
+All in docker compose:
+
+```
+bin/dc.sh up-all
+```
+
+With only dependencies running in docker compose:
+
+```
+bin/dc.sh up-deps
+npm run dev
+```
+
+# Testing
+
+Run all tests
+
+```
+npm test
+```
+
+Run all tests in watch mode
+
+```
+npm test -- -g repo --watch
+```
+
+Run test by name (regex)
+
+```
+npm test -- -g repo
+```
+
 # Glossary
 
 **api spec** - a HTTP REST API definition in OpenApiV3 standard **schema** - a data model that defines attributes and
@@ -242,65 +314,4 @@ The metadata can be retrived by executing below command:
 
 ```
 git notes show
-```
-
-# Building
-
-## Docker images
-
-```
-TAG=dev
-NPM_TOKEN=<GitHub Personal access token with read:packages permission>
-docker build -t eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG --build-arg=NPM_TOKEN .
-```
-
-### Registry
-
-```
-docker push eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG
-```
-
-# Running
-
-```
-docker run --env-file='.env.dev' --env-file='.secrets' \
--p 8080:8080/tcp \
--v ./test/core.yaml:/etc/otomi/core.yaml \
-eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG
-
-```
-
-## Start app (dev mode)
-
-All in docker compose:
-
-```
-bin/dc.sh up-all
-```
-
-With only dependencies running in docker compose:
-
-```
-bin/dc.sh up-deps
-npm run dev
-```
-
-# Testing
-
-Run all tests
-
-```
-npm test
-```
-
-Run all tests in watch mode
-
-```
-npm test -- -g repo --watch
-```
-
-Run test by name (regex)
-
-```
-npm test -- -g repo
 ```
