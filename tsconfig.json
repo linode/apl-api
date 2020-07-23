@@ -14,7 +14,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true
   },
-  "include": ["./src/**/*.ts", "./src/**/*.ts"],
+  "include": ["./src/**/*.ts", "dist/tasks/**/*.ts"],
   "exclude": ["node_modules", "dist"],
   "parserOptions": {
     "ecmaVersion": 2018,

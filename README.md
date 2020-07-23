@@ -250,7 +250,8 @@ git notes show
 
 ```
 TAG=dev
-docker build -t eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG .
+NPM_TOKEN=<GitHub Personal access token with read:packages permission>
+docker build -t eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG --build-arg=NPM_TOKEN .
 ```
 
 ### Registry

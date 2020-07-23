@@ -3,13 +3,19 @@
   "configurations": [
     {
       "type": "node",
+      "request": "launch",
+      "name": "Launch Program",
+      "program": "${workspaceFolder}/${relativeFile}",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "type": "node",
       "request": "attach",
       "name": "Attach to dev:debug",
       "protocol": "inspector",
       "port": 4321,
       "restart": true,
-      "cwd": "${workspaceRoot}",
-      "runtimeArgs": ["--preserve-symlinks"]
+      "cwd": "${workspaceRoot}"
     },
     {
       "type": "node",
