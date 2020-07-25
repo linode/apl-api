@@ -516,7 +516,7 @@ export default class OtomiStack {
           console.warn(`Saving service failure: Not supported service type: ${serviceType}`)
         }
         if (svc.ingress && !isEmpty(svc.ingress)) {
-          if (!svc.useDefaultSubdomain) svcCloned.domain = `${svc.ingress.subdomain}.${svc.ingress.domain}`
+          if (!svc.ingress.useDefaultSubdomain) svcCloned.domain = `${svc.ingress.subdomain}.${svc.ingress.domain}`
 
           if (!svc.ingress.hasSingleSignOn) svcCloned.isPublic = true
 
