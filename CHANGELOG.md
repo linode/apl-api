@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.8](https://github.com/redkubes/otomi-stack-api/compare/v0.4.7...v0.4.8) (2020-07-25)
+
+### Bug Fixes
+
+- svc.useDefaultSubdomain should remove domain [ci skip](<[1dd56a5](https://github.com/redkubes/otomi-stack-api/commit/1dd56a55e0ddcd02707d25bbeb6b80bcd7531ea8)>)
+- svc.useDefaultSubdomain should remove domain [ci skip](<[55f4032](https://github.com/redkubes/otomi-stack-api/commit/55f4032c7355fb4186b4d3edb26543a10bf4361c)>)
+
 ### [0.4.7](https://github.com/redkubes/otomi-stack-api/compare/v0.4.6...v0.4.7) (2020-07-25)
 
 ### Features
