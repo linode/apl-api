@@ -87,7 +87,7 @@ export default class OtomiStack {
     return true
   }
 
-  getTeams(): [any] {
+  getTeams() {
     return this.db.getCollection('teams')
   }
 
@@ -179,6 +179,7 @@ export default class OtomiStack {
     if (!env.DISABLE_SYNC) {
       await this.repo.save(teamId, email)
     }
+    this.db.dirty = false
   }
 
   apiClient = undefined
