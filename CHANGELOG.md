@@ -2,6 +2,53 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.7](https://github.com/redkubes/otomi-stack-api/compare/v0.4.6...v0.4.7) (2020-07-25)
+
+### Features
+
+- add npm command to run harbor-init task ([c1e96d5](https://github.com/redkubes/otomi-stack-api/commit/c1e96d5bd6b61f81e02a6365158a1fc93a78b7e0))
+- add task to set harbor configuration ([e2a86e3](https://github.com/redkubes/otomi-stack-api/commit/e2a86e3b70992a03c2a63cfa93d2844eba84c5d9))
+- associate oidc group with project ([05fcf93](https://github.com/redkubes/otomi-stack-api/commit/05fcf9341c487ba1d9b2255131729b79d0838bd7))
+- build clients from openapi spec ([8f62fff](https://github.com/redkubes/otomi-stack-api/commit/8f62fffaba30f7ba016b75c8e1cc53fa5248bd95))
+- create harbor projects ([a38a8fc](https://github.com/redkubes/otomi-stack-api/commit/a38a8fcd73eda00680519810ffc300e7a9f3b55b))
+- get team list from env ([65885b8](https://github.com/redkubes/otomi-stack-api/commit/65885b8bacf3701d9ea13f8511d6028bfc4dfd87))
+- perform initial harbor configuration ([6b002f8](https://github.com/redkubes/otomi-stack-api/commit/6b002f86d52efa0db2d111ab8111d6db640a93fe))
+- validate env ([0ab115e](https://github.com/redkubes/otomi-stack-api/commit/0ab115ec8b61b6ba2ba48653733554397c27c816))
+
+### Bug Fixes
+
+- add mising property to harbor api spec ([2aff468](https://github.com/redkubes/otomi-stack-api/commit/2aff468589229e8eee9805b303ab387608d78270))
+- dirty false after deployment [ci skip](<[cea4b57](https://github.com/redkubes/otomi-stack-api/commit/cea4b57d62aa3a0a79b40f149037e0f4b764db7f)>)
+- harbor api spec ([c7adb37](https://github.com/redkubes/otomi-stack-api/commit/c7adb377f1c3463fd8055e3b114e7771d6083190))
+- lint warning ToolsError [ci skip](<[9565c6b](https://github.com/redkubes/otomi-stack-api/commit/9565c6bcc6a45a29d8056dcf3674e12711ffc06e)>)
+- log on harbor client http error ([cb29aea](https://github.com/redkubes/otomi-stack-api/commit/cb29aeac15fe4a618d2cf6fa903a5650e9821b25))
+- updated core.yaml for dev [ci skip](<[58b0932](https://github.com/redkubes/otomi-stack-api/commit/58b09325bbec7b95f4635d56bcf093bebcc42926)>)
+- workflow now only tagging latest upon release [ci skip](<[6cddefa](https://github.com/redkubes/otomi-stack-api/commit/6cddefa433f9873bd0c94319466a21e31529e5ab)>)
+
+### CI
+
+- use github token to access github packages ([16d18b7](https://github.com/redkubes/otomi-stack-api/commit/16d18b7a2d87f2d16aecde6fba2f057a73c32cd1))
+
+### Build System
+
+- add NPM_TOKEN env dependency ([9e7ad77](https://github.com/redkubes/otomi-stack-api/commit/9e7ad7708a1c64f2daa58515bd5d3c8aade09b7a))
+
+### Others
+
+- debug currently opened file ([2928490](https://github.com/redkubes/otomi-stack-api/commit/29284906f541682ccf9ac7d3be939f8c5445d669))
+
+### Code Refactoring
+
+- do not use dot env ([eff6fe8](https://github.com/redkubes/otomi-stack-api/commit/eff6fe8b7f74b9e85a6a3348276fe9f988390367))
+- do not use dot env ([d5a73bc](https://github.com/redkubes/otomi-stack-api/commit/d5a73bc5d7b4e2d5770e8e600a83d8e7215f344e))
+- remove unused script ([c4a329b](https://github.com/redkubes/otomi-stack-api/commit/c4a329b6e931d77c0f6e66758221402fa9e27dfe))
+
+### Feature Improvements
+
+- added feedback in case team project exists [ci skip](<[980726c](https://github.com/redkubes/otomi-stack-api/commit/980726c0c879054f4db39b3d41fab31c649105a8)>)
+- added feedback in case team project exists [ci skip](<[057cd6d](https://github.com/redkubes/otomi-stack-api/commit/057cd6d64c7183320ae9705b65c21cdb022a32b2)>)
+- tls secret CA field [ci skip](<[fdb497f](https://github.com/redkubes/otomi-stack-api/commit/fdb497f994690088d124c3b5d248f4729caf4b2a)>)
+
 ### [0.4.6](https://github.com/redkubes/otomi-stack-api/compare/v0.4.5...v0.4.6) (2020-07-07)
 
 ### Bug Fixes
