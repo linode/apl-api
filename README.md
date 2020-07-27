@@ -15,9 +15,9 @@ This application:
 . ./.secrets && echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
 ```
 
-# Building
+# Docker
 
-## Docker images
+## Building
 
 ```
 TAG=dev
@@ -26,23 +26,7 @@ TAG=dev
 docker build -t eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG --build-arg=NPM_TOKEN .
 ```
 
-### Registry
-
-```
-docker push eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG
-```
-
-# Running
-
-```
-docker run --env-file='.env.dev' --env-file='.secrets' \
--p 8080:8080/tcp \
--v ./test/core.yaml:/etc/otomi/core.yaml \
-eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG
-
-```
-
-## Start app (dev mode)
+# Local development
 
 All in docker compose:
 
@@ -65,16 +49,16 @@ Run all tests
 npm test
 ```
 
-Run all tests in watch mode
-
-```
-npm test -- -g repo --watch
-```
-
 Run test by name (regex)
 
 ```
 npm test -- -g repo
+```
+
+Run test by name (regex) in watch mode
+
+```
+npm test -- -g repo --watch
 ```
 
 # Glossary
