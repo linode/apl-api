@@ -87,7 +87,7 @@ export default class OtomiStack {
     return true
   }
 
-  getTeams(): [any] {
+  getTeams() {
     return this.db.getCollection('teams')
   }
 
@@ -179,6 +179,7 @@ export default class OtomiStack {
     if (!env.DISABLE_SYNC) {
       await this.repo.save(teamId, email)
     }
+    this.db.dirty = false
   }
 
   apiClient = undefined
@@ -515,7 +516,8 @@ export default class OtomiStack {
           console.warn(`Saving service failure: Not supported service type: ${serviceType}`)
         }
         if (svc.ingress && !isEmpty(svc.ingress)) {
-          svcCloned.domain = `${svc.ingress.subdomain}.${svc.ingress.domain}`
+          if (svc.ingress.useDefaultSubdomain) svcCloned.ownHost = true
+          else svcCloned.domain = `${svc.ingress.subdomain}.${svc.ingress.domain}`
 
           if (!svc.ingress.hasSingleSignOn) svcCloned.isPublic = true
 

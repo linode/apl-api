@@ -1,4 +1,4 @@
-toolsVersion: 1.3.0
+toolsVersion: 1.3.5
 redkubesSlackUrl: https://hooks.slack.com/services/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
 
 k8s:
@@ -6,6 +6,7 @@ k8s:
     - name: drone-pipelines
       disableIstioInjection: true
     - name: ingress
+    - name: keycloak
     - name: harbor
       # disableIstioInjection: true
     - name: istio-system
@@ -20,6 +21,18 @@ k8s:
     - name: team-admin
 
 services:
+  - name: keycloak
+    namespace: keycloak
+    forwardPath: true
+    logo:
+      name: kubernetes
+    ownHost: true
+    paths: [/auth/]
+    path: auth/
+    svc: keycloak-http
+    port: 80
+    isShared: true
+    isPublic: true
   - name: harbor
     svc: harbor-harbor-portal
     namespace: harbor

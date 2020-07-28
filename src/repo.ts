@@ -2,7 +2,7 @@ import simpleGit, { SimpleGit } from 'simple-git/promise'
 import yaml from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
-import { GitPullError, ToolsError } from './error'
+import { GitPullError } from './error'
 import axios from 'axios'
 
 const env = process.env
@@ -126,6 +126,7 @@ export class Repo {
       console.warn(`Pull error: ${JSON.stringify(e)}`)
       await this.git.rebase({ '--abort': true })
       await this.git.reset(['--hard', sha])
+      await this.decrypt()
       console.info(`Reset HEAD to ${sha} commit`)
 
       throw new GitPullError()
