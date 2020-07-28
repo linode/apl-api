@@ -31,8 +31,7 @@ AzureMonitor: &AzureMonitor
       type: object
       properties:
         clientId:
-          description:
-            'An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID)'
+          description: 'An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID)'
           <<: *uuidField
         clientSecret:
           type: string
@@ -95,6 +94,13 @@ Team:
       minItems: 1
       x-acl:
         team: [read]
+    oidc:
+      type: object
+      title: OIDC
+      properties:
+        groupMapping:
+          type: string
+          description: 'A JWT group name used for granting an access to this team'
     password:
       type: string
       # description: "A secret that is used access multi-tenant log aggregation system (Loki)"
