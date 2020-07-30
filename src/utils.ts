@@ -82,3 +82,17 @@ export function getPublicUrl(serviceDomain, serviceName, teamId, cluster) {
   // Custom domain that is not visible in clusters.yaml values
   return { subdomain: '', domain: serviceDomain }
 }
+
+export function objectToConfigMap(config: Record<string, any>): { [key: string]: Record<string, any> } {
+  // duck typing friendly way
+  const configMap: { [key: string]: Record<string, any> } = {};
+  
+  // TS way
+  // const configMap = new Map<string, Object>();
+  
+  for (const key in config) {
+    configMap[key] = config[key];
+    // configMap.set(key, config[key]);
+  }
+  return configMap;
+}
