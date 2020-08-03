@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import * as api from "@redkubes/keycloak-10.0-client";
 import { cleanEnv, str, json } from "envalid";
-import {protocolMappersObj, ProtocolMappers} from "./clientScopeProtocolMappers"
-import { ProtocolMapperRepresentation } from "@redkubes/keycloak-10.0-client";
+import {
+  protocolMappersObj, ProtocolMappers, rolesObj, Role,
+  identityProviderMappersObj, IdentityProviderMapper,
+  otomiClientConfigObj, Client
+} from "./realmExportConfig"
+// import { ProtocolMapperRepresentation, RoleRepresentation } from "@redkubes/keycloak-10.0-client";
 import * as utils from "../../utils"
+import { IdentityProviderMapperRepresentation } from "@redkubes/keycloak-10.0-client";
 
 const env = cleanEnv(
   process.env,
@@ -20,20 +25,48 @@ const env = cleanEnv(
 )
 
 export class KeycloakRealmSettingsGenerator {
-  static idProvider: api.IdentityProviderRepresentation;
-  static myClient: api.ClientRepresentation;
-  static defaultClientScopes: Array<string>;
-  static secret: string;
 
   static generateClient(id?: string, defaultClientScopes?: Array<string>|null, secret?: string|null): api.ClientRepresentation {
-    this.myClient = new api.IdentityProviderRepresentation();
-    this.myClient.id = id ? id : env.KEYCLOAK_CLIENT_ID;
-    this.myClient.defaultClientScopes = defaultClientScopes ? defaultClientScopes : env.KEYCLOAK_DEFAULT_ROLES;
-    this.myClient.secret = secret ? secret : env.KEYCLOAK_CLIENT_SECRET;
+    const client = new api.ClientRepresentation();
+    console.log(`generating client::::::     ${id}`)
+    // const mappedClient: Client = otomiClientConfigObj
+    // client = mappedClient
+
+     
+    client.standardFlowEnabled = true
+    client.implicitFlowEnabled = true
+    client.directAccessGrantsEnabled = true
+    client.serviceAccountsEnabled = true
+    client.authorizationServicesEnabled = true
+
+    client.id = id ? id : env.KEYCLOAK_CLIENT_ID;
+    client.defaultClientScopes = defaultClientScopes ? defaultClientScopes : env.KEYCLOAK_DEFAULT_ROLES;
+    client.secret = secret ? secret : env.KEYCLOAK_CLIENT_SECRET;
+    client.attributes = utils.objectToConfigMap(otomiClientConfigObj.attributes)
+    client.redirectUris = otomiClientConfigObj.redirectUris
+    // ???
+    // client.protocolMappers = utils.objectToConfigMap(otomiClientConfigObj.protocolMappers)
     
-    return this.myClient;
+    client.authenticationFlowBindingOverrides = utils.objectToConfigMap(otomiClientConfigObj.authenticationFlowBindingOverrides)
+    // authorizationSettings?
+    
+    
+    return client;
   }
 
+  static generateIdpMappers(): Array<IdentityProviderMapperRepresentation> {
+    return identityProviderMappersObj.map((idpMapper) => {
+      const idpm: IdentityProviderMapper = idpMapper
+      // @todo remove
+      idpm.identityProviderAlias = env.IDP_ALIAS
+
+      // working with interface destructuring
+      // idpm.config = utils.objectToConfigMap(idpMapper.config)
+      return idpm
+    })
+  }
+
+  
   static generateIdProvider(tenantId?: string | undefined, clientId?: string | undefined, secret?: string | undefined): api.IdentityProviderRepresentation {
     tenantId = tenantId ? tenantId : env.CLOUD_TENANT;
     
@@ -78,20 +111,24 @@ export class KeycloakRealmSettingsGenerator {
   }
   
   static generateProtocolMappersForClientScope(): Array<api.ProtocolMapperRepresentation> {
-    const mappers = [];
-    protocolMappersObj.forEach((proto) => { 
-      // const mapper = new ProtocolMapperRepresentation();
-      // const mapper: ProtocolMappers = proto;
-      const m: ProtocolMapperRepresentation = {};
-      m.name = proto.name;
-      m.protocol = proto.protocol;
-      m.protocolMapper = proto.protocolMapper;
-      m.config = utils.objectToConfigMap(proto.config)
-      mappers.push(m)
+    return protocolMappersObj.map((proto) => { 
+      const mapper: ProtocolMappers = proto;
+      const m: api.ProtocolMapperRepresentation = mapper;
+      // working with interface Types
+      // m.config = utils.objectToConfigMap(proto.config);
+      return m;
     })
-    return mappers;
   }
 
+  static generateRoles(): Array<api.RoleRepresentation> {
+    return rolesObj.map((role) => {
+      const mappedRole: Role = role;
+      // @todo remove
+      mappedRole.name += "-devtest"
+      const r: api.RoleRepresentation = mappedRole;
+      return r;
+    })
+  }
   
    
   
