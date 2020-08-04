@@ -1,5 +1,38 @@
 import { ProtocolMapperRepresentation, ResourceServerRepresentation } from "@redkubes/keycloak-10.0-client/dist/model/models";
 
+
+export interface AuthenticationExecution {
+  authenticator: string;
+  requirement: string;
+  priority: number;
+  userSetupAllowed: boolean;
+  autheticatorFlow: boolean;
+  flowAlias: string;
+  authenticatorConfig: string;
+}
+
+export interface AuthenticationFlow {
+  id: string;
+  alias: string;
+  description: string;
+  providerId: string;
+  topLevel: boolean;
+  builtIn: boolean;
+  authenticationExecutions: AuthenticationExecution[];
+}
+
+export interface Config8 {
+  "update.profile.on.first.login": string;
+  "require.password.update.after.registration": string;
+  defaultProvider: string;
+}
+
+export interface AuthenticatorConfig {
+  id: string;
+  alias: string;
+  config: Config8;
+}
+
 export interface  ProtocolMappers {
   name: string,
   protocol: string,
@@ -280,7 +313,7 @@ export const authenticatorConfig = [
   }
 ]
 
-export const authenticationFlows = [{
+export const authenticationFlowsObject = [{
   "alias": "browser",
   "description": "browser based authentication",
   "providerId": "basic-flow",
@@ -320,7 +353,7 @@ export const authenticationFlows = [{
 }]
 
 export const otomiClientConfigObj = {
-    "clientId": "otomi-devtest",
+    "clientId": "otomi",
     "surrogateAuthRequired": false,
     "enabled": true,
     "alwaysDisplayInConsole": false,
