@@ -100,6 +100,12 @@ Service:
       x-acl:
         admin: [read, create]
         team: [read, create]
+    port:
+      title: A port to a service
+      type: integer
+      default: 80
+      minimum: 1
+      maximum: 65535
     ingress:
       title: Exposure
       type: object
@@ -229,8 +235,7 @@ Service:
                     glob:
                       title: Glob string pattern
                       type: string
-                      description:
-                        'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*"'
+                      description: 'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*"'
                       example: 'master-v1.*.*'
                   required:
                     - glob
