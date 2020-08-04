@@ -1,9 +1,10 @@
 import { Operation } from 'express-openapi'
 import OtomiStack from '../otomi-stack'
-
-const env = process.env
+import { getEnv } from '../utils'
 
 export default function (otomi: OtomiStack) {
+  const env = getEnv()
+
   const GET: Operation = [
     (req, res) => {
       const teamId = req.header('Auth-Group')

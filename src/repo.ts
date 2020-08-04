@@ -4,8 +4,9 @@ import fs from 'fs'
 import path from 'path'
 import { GitPullError } from './error'
 import axios from 'axios'
+import { getEnv } from './utils'
 
-const env = process.env
+const env = getEnv()
 const baseUrl = `http://${env.TOOLS_HOST || 'localhost'}:17771/`
 const decryptUrl = `${baseUrl}dec`
 const encryptUrl = `${baseUrl}enc`

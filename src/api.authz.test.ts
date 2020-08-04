@@ -3,7 +3,6 @@ import request from 'supertest'
 import sinon from 'sinon'
 import initApp from './server'
 import OtomiStack from './otomi-stack'
-import { validateEnv } from './utils'
 
 describe('Api tests for admin', () => {
   let app
@@ -260,21 +259,3 @@ describe('Api tests for data validation', () => {
 //   },
 //   params: { teamId },
 // })
-
-describe('Config validation tests', () => {
-  it('missing env variables', (done) => {
-    expect(() => validateEnv({})).to.throw()
-    done()
-  })
-
-  it('valid env variables', (done) => {
-    const envs = {
-      GIT_REPO_URL: null,
-      GIT_USER: null,
-      GIT_PASSWORD: null,
-      GIT_EMAIL: null,
-    }
-    expect(() => validateEnv(envs)).to.not.throw()
-    done()
-  })
-})

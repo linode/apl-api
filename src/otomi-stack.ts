@@ -17,11 +17,10 @@ import generatePassword from 'password-generator'
 import path from 'path'
 import db, { Db } from './db'
 import { AlreadyExists, NotExistError, PublicUrlExists } from './error'
-import { arrayToObject, getPublicUrl, objectToArray } from './utils'
+import { arrayToObject, getPublicUrl, objectToArray, getEnv } from './utils'
 import cloneRepo, { Repo } from './repo'
 
-const env = process.env
-const isProduction = env.NODE_ENV === 'production'
+const env = getEnv()
 console.log('NODE_ENV: ', env.NODE_ENV)
 
 const baseGlobal = { teamConfig: { teams: {} } }
@@ -62,20 +61,20 @@ export default class OtomiStack {
 
   constructor() {
     this.db = db(env.DB_PATH)
-    this.clustersPath = './env/clusters.yaml'
-    const corePath = isProduction ? '/etc/otomi/core.yaml' : './test/core.yaml'
+    this.clustersPath = env.OTOMI_CLUSTERS_FILE_PATH
+    const corePath = env.OTOMI_CORE_FILE_PATH
     this.coreValues = yaml.safeLoad(fs.readFileSync(corePath, 'utf8'))
   }
 
   async init() {
     try {
       this.repo = await cloneRepo(
-        env.GIT_LOCAL_PATH || '/tmp/otomi-stack',
+        env.GIT_LOCAL_PATH,
         env.GIT_REPO_URL,
         env.GIT_USER,
         env.GIT_EMAIL,
         env.GIT_PASSWORD,
-        env.GIT_BRANCH || 'master',
+        env.GIT_BRANCH,
       )
       const globalPath = getFilePath()
       glbl = this.repo.readFile(globalPath)

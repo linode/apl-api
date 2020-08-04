@@ -1,22 +1,59 @@
 import cloneDeep from 'lodash/cloneDeep'
+import { bool, cleanEnv, str } from 'envalid'
 
 interface ResourceBase {
   name: string
 }
 
-export function validateEnv(envVars) {
-  // Ensure required ENV vars are set
-  const requiredEnv = ['GIT_REPO_URL', 'GIT_USER', 'GIT_PASSWORD', 'GIT_EMAIL']
-
-  const unsetEnv = requiredEnv.filter((env) => !(typeof envVars[env] !== 'undefined'))
-
-  if (unsetEnv.length > 0) {
-    throw new Error(`Required ENV variables are not set: [${unsetEnv.join(', ')}]`)
-  }
-}
-
-export function validateConfig() {
-  validateEnv(process.env)
+export function getEnv() {
+  const env = cleanEnv(
+    process.env,
+    {
+      DEBUG: str({
+        desc: 'Enables/disables specific debugging namespaces.Refer to: https://github.com/visionmedia/debug',
+        devDefault: '*',
+        default: undefined,
+      }),
+      CLUSTER_APISERVER: str({
+        desc: 'A public IP address of kubernetes api server that is used to generate kubeconfig',
+      }),
+      CLUSTER_ID: str({ desc: 'A cluster ID used to identify kubernetes cluster', devDefault: 'google/dev' }),
+      CLUSTER_NAME: str({ desc: 'A cluster name that is used to generate kubeconfig' }),
+      DB_PATH: str({
+        desc: 'A path to database file for data persistency. By default database is stored only in memory',
+        default: undefined,
+      }),
+      DISABLE_SYNC: bool({ devDefault: true, default: false }),
+      DISABLE_AUTH: bool({ devDefault: true, default: false }),
+      GIT_BRANCH: str({ desc: 'A git branch used for fetching and pushing commits', default: 'master' }),
+      GIT_EMAIL: str({ desc: 'An email for git config' }),
+      GIT_LOCAL_PATH: str({ desc: 'A path where git repository is clone', default: '/tmp/otomi-stack' }),
+      GIT_PASSWORD: str({ desc: 'A git access password' }),
+      GIT_REPO_URL: str({ desc: 'A git repository url' }),
+      GIT_USER: str({ desc: 'A name of harbor admin user' }),
+      NODE_ENV: str({ desc: 'An environment mode', default: 'production' }),
+      OTOMI_CORE_FILE_PATH: str({
+        desc: 'A path to a file that contains data about core services',
+        devDefault: './test/core.yaml',
+        default: '/etc/otomi/core.yaml',
+      }),
+      OTOMI_CLUSTERS_FILE_PATH: str({
+        desc: 'A path to a file that contains data about kubernetes clusters',
+        devDefault: './env/clusters.yaml',
+        default: './env/clusters.yaml',
+      }),
+      TESTING: bool({
+        desc: 'A flag to disable encryption/decryption',
+        default: false,
+      }),
+      TOOLS_HOST: str({
+        desc: 'A host the tools service that performs file encryption/decryption',
+        default: 'localhost',
+      }),
+    },
+    { strict: true },
+  )
+  return env
 }
 
 export function setSignalHandlers(server) {
