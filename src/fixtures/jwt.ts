@@ -44,6 +44,8 @@ const nockReply = {
     },
   ],
 }
+env.OIDC_ENDPOINT = 'https://bla.dida'
+env.OIDC_NAME = 'otomi'
 
 nock(env.OIDC_ENDPOINT).persist().get('/.well-known/jwks.json').reply(200, nockReply)
 

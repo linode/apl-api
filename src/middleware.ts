@@ -1,6 +1,6 @@
 import get from 'lodash/get'
 import { AlreadyExists, GitError, NotAuthorized, NotExistError, PublicUrlExists } from './error'
-import { OpenApiRequest, JWT, OpenApiRequestExt, SessionUser, SessionRole } from './otomi-models'
+import { OpenApiRequest, JWT, OpenApiRequestExt, SessionUser } from './otomi-models'
 import Authz from './authz'
 
 export function errorMiddleware(err, req: OpenApiRequest, res) {

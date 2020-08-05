@@ -6,7 +6,7 @@ export default function (otomi: OtomiStack) {
     /* business middleware not expressible by OpenAPI documentation goes here */
     (req, res) => {
       console.debug('Get all secrets')
-      const v = otomi.getSecrets()
+      const v = otomi.getAllSecrets()
       res.status(200).json(v)
     },
   ]
