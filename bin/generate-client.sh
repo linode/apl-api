@@ -7,11 +7,12 @@ ORG=redkubes
 REPO="ssh://git@github.com/redkubes/otomi-stack-api.git"
 
 VENDOR="$1"
-OPENAPI_DOC="./openapi/${VENDOR}.json"
+TYPE="${2:-node}"
+OPENAPI_DOC="./vendors/openapi/${VENDOR}.json"
 REGISTRY="https://npm.pkg.github.com/"
-TARGET_DIR="./client/${VENDOR}"
+TARGET_DIR="./vendors/client/${VENDOR}/${TYPE}"
 TARGET_PACKAGE_JSON="${TARGET_DIR}/package.json"
-TARGET_NPM_NAME="@${ORG}/$VENDOR-client"
+TARGET_NPM_NAME="@${ORG}/$VENDOR-client-${TYPE}"
 
 function validate {
 
@@ -64,7 +65,8 @@ function  set_package_json {
 
 function build_npm_package {
     echo "Building $TARGET_NPM_NAME npm pacakge"
-    cd ${TARGET_DIR} && npm run build
+    cd ${TARGET_DIR}
+    npm install && npm run build
     cd $DIR
 }
 

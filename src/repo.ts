@@ -92,13 +92,13 @@ export class Repo {
   }
 
   async decrypt() {
-    if (env.TESTING) return
+    if (env.NODE_ENV === 'test') return
     const res = await axios.get(decryptUrl)
     return res
   }
 
   async encrypt() {
-    if (env.TESTING) return
+    if (env.NODE_ENV === 'test') return
     const res = await axios.get(encryptUrl)
     return res
   }
@@ -114,12 +114,12 @@ export class Repo {
     return this.git.revparse(['--verify', 'HEAD'])
   }
 
-  async save(team, email) {
+  async save(email) {
     const sha = await this.getCommitSha()
 
     const commitSummary = await this.commit()
     if (commitSummary.commit === '') return
-    await this.addNote({ team, email })
+    await this.addNote({ email })
     try {
       await this.pull()
     } catch (e) {

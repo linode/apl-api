@@ -1,14 +1,10 @@
 import { expect } from 'chai'
 import Authz from './authz'
-import { OpenApi, Session } from './api.d'
+import { OpenApi, SessionRole, SessionUser } from './otomi-models'
 
-const sessionTeam: Session = {
-  user: { role: 'team', email: 'a@b.c', teamId: 'mercury', isAdmin: false },
-}
+const sessionTeam: SessionUser = { isAdmin: false, roles: [SessionRole.User], email: 'a@b.c', teams: ['mercury'] }
 
-const sessionAdmin: Session = {
-  user: { role: 'admin', email: 'a@b.c', teamId: 'admin', isAdmin: true },
-}
+const sessionAdmin: SessionUser = { isAdmin: true, roles: [SessionRole.Admin], email: 'a@b.c', teams: ['mercury'] }
 
 describe('Schema wise permissions', () => {
   const spec: OpenApi = {

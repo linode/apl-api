@@ -9,7 +9,8 @@ export interface OpenApiRequest extends Request {
   session: Session
 }
 
-type httpMethodType = 'delete' | 'read' | 'create' | 'update'
+type HttpMethodType = 'delete' | 'read' | 'create' | 'update'
+
 export interface OpenApi {
   components: {
     schemas: {
@@ -18,7 +19,7 @@ export interface OpenApi {
   }
   paths?: {
     [path: string]: {
-      [httpMethod: httpMethodType]: {
+      [key in HttpMethodType]: {
         'x-aclSchema'?: [string]
         security?: [string]
       }
@@ -57,11 +58,24 @@ export interface Property {
   'x-acl'?: Acl
 }
 
-export interface Session {
-  user: {
-    email: string
-    teamId: string
-    isAdmin: boolean
-    role: string
-  }
+export enum SessionRole {
+  Admin = 'admin',
+  User = 'team',
 }
+
+export interface JWT {
+  email: string
+  groups?: string[]
+  roles: string[]
+}
+
+export interface SessionUser extends JWT {
+  teams: string[]
+  isAdmin: boolean
+}
+
+export interface Session {
+  user: SessionUser
+}
+
+export interface OpenApiRequestExt extends OpenApiRequest, Session {}

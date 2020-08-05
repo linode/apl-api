@@ -17,7 +17,7 @@ describe('Load and dump values', () => {
     // this.skip('New method signatur for getService needs implementation')
     const expectedValues = yaml.safeLoad(fs.readFileSync('./test/team.yaml', 'utf8'))
     const values = cloneDeep(expectedValues)
-    const cluster = { cloudName: 'aws', cluster: 'dev', id: 'aws/dev', dnsZones: ['otomi.cloud'] }
+    const cluster = { cloud: 'aws', name: 'dev', id: 'aws/dev', dnsZones: ['otomi.cloud'] }
     otomiStack.loadTeamsValues(values.teamConfig.teams, cluster)
 
     const expectedTeam = {
