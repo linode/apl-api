@@ -19,10 +19,10 @@ async function main() {
   const env = cleanEnv(
     process.env,
     {
-      HARBOR_BASE_URL: str({ desc: 'A harbor core service URL' }),
-      HARBOR_USER: str({ desc: 'A name of harbor admin user' }),
-      HARBOR_PASSWORD: str({ desc: 'A password of harbor admin user' }),
-      HARBOR_ADMIN_GROUP_NAME: str({ desc: 'A name of admin group' }),
+      HARBOR_BASE_URL: str({ desc: 'The harbor core service URL' }),
+      HARBOR_USER: str({ desc: 'The name of the harbor admin user' }),
+      HARBOR_PASSWORD: str({ desc: 'The password of the harbor admin user' }),
+      HARBOR_ADMIN_GROUP_NAME: str({ desc: 'The name of the project-admin group' }),
       TEAM_NAMES: json({ desc: 'A list of team names in JSON format' }),
     },
     { strict: true },
@@ -64,9 +64,9 @@ async function main() {
           groupType: HarborGroupType.http,
         },
       }
-      console.log(`Associating user group (${team}) with harbor project (${team})`)
+      console.log(`Associating "developer" role for team "${team}" with harbor project "${team}"`)
       await api.projectsProjectIdMembersPost(projectId, projMember)
-      console.log(`Associating admin group (${team}) with harbor project (${team})`)
+      console.log(`Associating "project-admin" role for "${team}" with harbor project "${team}"`)
       await api.projectsProjectIdMembersPost(projectId, projAdminMember)
     } catch (e) {
       if (e instanceof HttpError) {

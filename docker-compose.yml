@@ -9,7 +9,7 @@ services:
       args:
         - NPM_TOKEN
     image: eu.gcr.io/otomi-cloud/otomi-stack-api:${API_TAG:-dev}
-    user: ${USER_ID}
+    user: ${USER_ID}:${GROUP_ID}
     command: sh -c 'rm -rf /tmp/otomi-stack && npm run dev:docker'
     ports:
       - 8080:8080

@@ -10,27 +10,36 @@ Session:
     team: [read]
   type: object
   properties:
-    currentClusterId:
-      type: string
-      readOnly: true
     clusters:
       readOnly: true
       <<: *AvailableClusters
     core:
       type: object
       readOnly: true
+    currentClusterId:
+      type: string
+      readOnly: true
+    isDirty:
+      type: boolean
+      readOnly: true
+    namespaces:
+      readOnly: true
+      type: array
+      items:
+        type: string
     user:
       type: object
       readOnly: true
       properties:
         email:
           type: string
-        teamId:
-          type: string
+        teams:
+          type: array
+          items:
+            type: string
         isAdmin:
           type: boolean
-        role:
-          type: string
-    isDirty:
-      type: boolean
-      readOnly: true
+        roles:
+          type: array
+          items:
+            type: string

@@ -34,7 +34,7 @@ describe('Repo scenarios', () => {
     await r1.git.push('origin', 'master')
     appendFileSync(join(r2.path, testFile), 'ABA')
     try {
-      await r2.save('', '')
+      await r2.save('')
     } catch (error) {
       // empty
     }

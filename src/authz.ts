@@ -5,7 +5,7 @@ import get from 'lodash/get'
 import pick from 'lodash/pick'
 
 import isEmpty from 'lodash/isEmpty'
-import { Acl, OpenApi, Schema, Property, Session, AclAction } from './api.d'
+import { Acl, OpenApi, Schema, Property, AclAction, SessionUser } from './otomi-models'
 
 const allowedResourceActions = [
   'read',
@@ -146,8 +146,8 @@ export default class Authz {
     return schemas
   }
 
-  getAllowedAttributes = (action: string, schemaName, session: Session, data: any) => {
-    const abac = this.getAttributeBasedAccessControl(session)
+  getAllowedAttributes = (action: string, schemaName, user: SessionUser, data: any) => {
+    const abac = this.getAttributeBasedAccessControl(user)
     const allowedAttributes: string[] = []
     Object.keys(data).forEach((attributeName) => {
       const isAuthorized = abac.can(action, schemaName, attributeName)
@@ -157,23 +157,28 @@ export default class Authz {
     return allowedAttributes
   }
 
-  getDataWithAllowedAttributes = (action: string, schemaName, session: Session, data: any) => {
+  getDataWithAllowedAttributes = (action: string, schemaName, user: SessionUser, data: any) => {
     if (skipABACActions.includes(action)) return data
 
-    const attr = this.getAllowedAttributes(action, schemaName, session, data)
+    const attr = this.getAllowedAttributes(action, schemaName, user, data)
     return pick(data, attr)
   }
 
-  getResourceBasedAccessControl(session: Session) {
+  getResourceBasedAccessControl(user: SessionUser) {
     const canRules: RawRule[] = []
     Object.keys(this.specRules).forEach((schemaName: string) => {
       const schema: Schema = this.specRules[schemaName]
-
-      const actions: string[] = get(schema, `x-acl.${session.user.role}`, [])
-      actions.forEach((action) => {
-        if (action.endsWith('-any')) {
-          canRules.push({ action: action.slice(0, -4), subject: schemaName })
-        } else canRules.push({ action, subject: schemaName, conditions: { teamId: { $eq: session.user.teamId } } })
+      user.roles.forEach((role) => {
+        const actions: string[] = get(schema, `x-acl.${role}`, [])
+        actions.forEach((action) => {
+          if (action.endsWith('-any')) {
+            canRules.push({ action: action.slice(0, -4), subject: schemaName })
+          } else {
+            user.teams.forEach((teamId) => {
+              canRules.push({ action, subject: schemaName, conditions: { teamId: { $eq: teamId } } })
+            })
+          }
+        })
       })
     })
 
@@ -181,26 +186,28 @@ export default class Authz {
     return new Ability(canRules)
   }
 
-  getAttributeBasedAccessControl(session: Session) {
+  getAttributeBasedAccessControl(user: SessionUser) {
     const specRules: RawRules = {}
 
     Object.keys(this.specRules).forEach((schemaName: string) => {
       const schema: Schema = this.specRules[schemaName]
       if (!(schema.type === 'object' && schema.properties)) return
+      user.roles.forEach((role) => {
+        Object.keys(schema.properties).forEach((propertyName: string) => {
+          const property: Property = schema.properties[propertyName]
+          const actions: string[] = get(property, `x-acl.${role}`, [])
 
-      Object.keys(schema.properties).forEach((propertyName: string) => {
-        const property: Property = schema.properties[propertyName]
-        const actions: string[] = get(property, `x-acl.${session.user.role}`, [])
+          actions.forEach((actionName) => {
+            if (!allowedAttributeActions.includes(actionName)) return
 
-        actions.forEach((actionName) => {
-          if (!allowedAttributeActions.includes(actionName)) return
-
-          let action = actionName
-          if (actionName.endsWith('-any')) {
-            action = action.slice(0, -4)
-          }
-          if (has(specRules, `${action}.${schemaName}.fields`)) specRules[action][schemaName].fields.push(propertyName)
-          else set(specRules, `${action}.${schemaName}.fields`, [propertyName])
+            let action = actionName
+            if (actionName.endsWith('-any')) {
+              action = action.slice(0, -4)
+            }
+            if (has(specRules, `${action}.${schemaName}.fields`))
+              specRules[action][schemaName].fields.push(propertyName)
+            else set(specRules, `${action}.${schemaName}.fields`, [propertyName])
+          })
         })
       })
     })
@@ -218,8 +225,8 @@ export default class Authz {
     return new Ability(canRules)
   }
 
-  isUserAuthorized = (action: string, schemaName, session: Session, teamId: string, data: object): boolean => {
-    const rbac = this.getResourceBasedAccessControl(session)
+  isUserAuthorized = (action: string, schemaName, user: SessionUser, teamId: string, data: object): boolean => {
+    const rbac = this.getResourceBasedAccessControl(user)
     const sub = subject(schemaName, { ...data, teamId })
     if (!rbac.can(action, sub)) {
       // console.debug(rbac.rules)

@@ -3,5 +3,5 @@
 build
 dist
 coverage
-vendors/client/**/*.ts
+vendors/client/
 # commitlint.config.js

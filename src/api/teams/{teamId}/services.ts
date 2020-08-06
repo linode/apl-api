@@ -1,13 +1,13 @@
 import { Operation } from 'express-openapi'
 import OtomiStack from '../../../otomi-stack'
-import { OpenApiRequest } from '../../../api.d'
+import { OpenApiRequest } from '../../../otomi-models'
 
 export default function (otomi: OtomiStack) {
   const GET: Operation = [
     ({ params: { teamId } }: OpenApiRequest, res) => {
       console.debug(`Get services: ${JSON.stringify({ teamId })}`)
       const v = otomi.getTeamServices(teamId)
-      res.status(200).json(v);
+      res.status(200).json(v)
     },
   ]
   const POST: Operation = [
