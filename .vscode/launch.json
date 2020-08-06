@@ -24,6 +24,8 @@
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
       "args": [
         "--require",
+        "dotenv/config",
+        "--require",
         "ts-node/register",
         "-u",
         "tdd",
@@ -33,6 +35,9 @@
         "--recursive",
         "${workspaceFolder}/src/**/*.ts"
       ],
+      "env": {
+        "NODE_ENV": "test"
+      },
       "internalConsoleOptions": "openOnSessionStart"
     },
     {
@@ -40,7 +45,20 @@
       "request": "launch",
       "name": "Mocha Current File",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-      "args": ["--require", "ts-node/register", "--timeout", "999999", "--colors", "--recursive", "${file}"],
+      "args": [
+        "--require",
+        "dotenv/config",
+        "--require",
+        "ts-node/register",
+        "--timeout",
+        "999999",
+        "--colors",
+        "--recursive",
+        "${file}"
+      ],
+      "env": {
+        "NODE_ENV": "test"
+      },
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     }
