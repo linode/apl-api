@@ -64,12 +64,14 @@ export enum SessionRole {
 }
 
 export interface JWT {
+  name: string
   email: string
   groups: string[]
   roles?: string[]
 }
 
 export interface SessionUser {
+  name: string
   email: string
   roles: string[]
   teams: string[]

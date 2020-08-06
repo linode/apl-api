@@ -7,13 +7,11 @@ const adminGroups = ['team-admin', 'admin']
 const multiTeamGroups = ['team-team1', 'team-team2']
 const multiTeamUser = ['team1', 'team2']
 const adminJWT: JWT = {
+  name: 'joe',
   email,
   groups: adminGroups,
 }
-const multiTeamJWT: JWT = {
-  email,
-  groups: multiTeamGroups,
-}
+const multiTeamJWT: JWT = { ...adminJWT, groups: multiTeamGroups }
 
 describe('JWT claims mapping', () => {
   it('A user in either admin or team-admin group should get admin role and have isAdmin', () => {

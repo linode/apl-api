@@ -7,7 +7,7 @@ import cors from 'cors'
 import logger from 'morgan'
 import swaggerUi from 'swagger-ui-express'
 import get from 'lodash/get'
-import { errorMiddleware, jwtMiddleware, isUserAuthorized, getCrudOperation, mapGroupsToRoles } from './middleware'
+import { errorMiddleware, jwtMiddleware, isUserAuthorized, getCrudOperation } from './middleware'
 import Authz from './authz'
 import { OpenApiRequestExt } from './otomi-models'
 
@@ -28,7 +28,6 @@ export default async function initApp(otomiStack) {
   app.use(cors())
   app.use(bodyParser.json())
   app.use(jwtMiddleware())
-  app.use(mapGroupsToRoles())
 
   function getSecurityHandlers() {
     const securityHandlers = { groupAuthz: undefined }
