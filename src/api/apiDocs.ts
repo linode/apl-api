@@ -1,4 +1,4 @@
-import { OpenApiRequest } from '../api.d'
+import { OpenApiRequest } from '../otomi-models'
 
 export default function () {
   const GET: any = [

@@ -31,8 +31,7 @@ AzureMonitor: &AzureMonitor
       type: object
       properties:
         clientId:
-          description:
-            'An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID)'
+          description: 'An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID)'
           <<: *uuidField
         clientSecret:
           type: string
@@ -69,7 +68,7 @@ Azure: &Azure
       type: object
 
 Team:
-  x-externalDocsPath: 'otomi/docs/configuring-team'
+  x-externalDocsPath: 'otomi/docs/configuring-teams'
   x-acl:
     admin: [delete-any, read-any, create-any, update-any]
     team: [read-any, update]

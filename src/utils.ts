@@ -35,7 +35,13 @@ export function getEnv() {
       GIT_PASSWORD: str({ desc: 'A git access password', devDefault: 'dev-pass' }),
       GIT_REPO_URL: str({ desc: 'A git repository url', devDefault: 'http://localhost/dev.git' }),
       GIT_USER: str({ desc: 'A name of harbor admin user', devDefault: 'dev' }),
-      NODE_ENV: str({ desc: 'An environment mode', default: 'production' }),
+      NODE_ENV: str({
+        choices: ['test', 'development', 'production'],
+        desc: 'An environment mode',
+        default: 'production',
+      }),
+      OIDC_ENDPOINT: str({ devDefault: 'https://bla.dida' }),
+      OIDC_NAME: str({ devDefault: 'otomi' }),
       OTOMI_CORE_FILE_PATH: str({
         desc: 'A path to a file that contains data about core services',
         devDefault: './test/core.yaml',

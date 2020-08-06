@@ -7,9 +7,9 @@ import cors from 'cors'
 import logger from 'morgan'
 import swaggerUi from 'swagger-ui-express'
 import get from 'lodash/get'
-import { errorMiddleware, isAuthorizedFactory, getCrudOperation, getSession } from './middleware'
+import { errorMiddleware, jwtMiddleware, isUserAuthorized, getCrudOperation, mapGroupsToRoles } from './middleware'
 import Authz from './authz'
-import { OpenApiRequest } from './api.d'
+import { OpenApiRequestExt } from './otomi-models'
 import { getEnv } from './utils'
 
 export async function loadOpenApisSpec() {
@@ -30,16 +30,21 @@ export default async function initApp(otomiStack) {
   app.use(logger('dev'))
   app.use(cors())
   app.use(bodyParser.json())
+  app.use(jwtMiddleware())
+  app.use(mapGroupsToRoles())
 
   function getSecurityHandlers() {
     const securityHandlers = { groupAuthz: undefined }
 
     if (env.DISABLE_AUTH) return securityHandlers
-    securityHandlers.groupAuthz = isAuthorizedFactory(authz)
+
+    securityHandlers.groupAuthz = (req) => {
+      return isUserAuthorized(req, authz)
+    }
     return securityHandlers
   }
 
-  function stripNotAllowedAttributes(req: OpenApiRequest, res, next) {
+  function stripNotAllowedAttributes(req: OpenApiRequestExt, res, next) {
     if (req.operationDoc.security === undefined || req.operationDoc.security.length === 0) {
       next()
       return
@@ -48,8 +53,7 @@ export default async function initApp(otomiStack) {
     const schema: string = get(req, 'operationDoc.x-aclSchema', '')
     const schemaName = schema.split('/').pop()
     const action = getCrudOperation(req)
-    const session = getSession(req)
-    req.body = authz.getDataWithAllowedAttributes(action, schemaName, session, req.body)
+    req.body = authz.getDataWithAllowedAttributes(action, schemaName, req.user, req.body)
     next()
   }
 
