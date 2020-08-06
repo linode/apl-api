@@ -2,7 +2,8 @@ import get from 'lodash/get'
 import { AlreadyExists, GitError, NotAuthorized, NotExistError, PublicUrlExists } from './error'
 import { OpenApiRequest, JWT, OpenApiRequestExt, SessionUser } from './otomi-models'
 import Authz from './authz'
-import jwt, { RequestHandler } from 'express-jwt'
+import { RequestHandler } from 'express'
+import jwt, { RequestHandler as RequestHandlerJwt } from 'express-jwt'
 import jwksRsa from 'jwks-rsa'
 
 const HttpMethodMapping = {
@@ -47,7 +48,7 @@ export function getSessionUser(user: JWT): SessionUser {
 }
 
 const env = process.env
-export function jwtMiddleware() {
+export function jwtMiddleware(): RequestHandler | RequestHandlerJwt {
   if (env.NODE_ENV === 'development')
     return function (req: OpenApiRequestExt, res, next) {
       // allow the client to specify a group to be in
@@ -79,7 +80,7 @@ export function jwtMiddleware() {
     })
 }
 
-export function mapGroupsToRoles() {
+export function mapGroupsToRoles(): RequestHandler {
   return (req: any, res, next) => {
     console.log('user found by express-jwt:', req.user)
     if (req.user) req.user = getSessionUser(req.user)
