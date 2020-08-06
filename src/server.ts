@@ -7,7 +7,7 @@ import cors from 'cors'
 import logger from 'morgan'
 import swaggerUi from 'swagger-ui-express'
 import get from 'lodash/get'
-import { errorMiddleware, jwtMiddleware, isUserAuthorized, getCrudOperation, getSessionUser, mapGroupsToRoles } from './middleware'
+import { errorMiddleware, jwtMiddleware, isUserAuthorized, getCrudOperation, mapGroupsToRoles } from './middleware'
 import Authz from './authz'
 import { OpenApiRequestExt } from './otomi-models'
 
