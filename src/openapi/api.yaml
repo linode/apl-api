@@ -3,7 +3,7 @@ security:
   - groupAuthz: []
 info:
   title: The otomi-stack API
-  version: '0.1.0'
+  version: 0.4.8
 
 externalDocs:
   description: 'This is the base url of the external documentation'
@@ -64,6 +64,21 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Clusters'
+
+  /secrets:
+    get:
+      operationId: getAllSecrets
+      description: Get all secrets
+      x-aclSchema: Secrets
+      responses:
+        '200':
+          description: Successfully obtained all secrets
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Secrets'
+        '400':
+          <<: *BadRequest
 
   /services:
     get:
@@ -413,13 +428,6 @@ components:
       in: path
       description: ID of the secret
       required: true
-      schema:
-        type: string
-    scopeParams:
-      name: scope
-      in: path
-      description: Scope of the resource
-      required: false
       schema:
         type: string
 
