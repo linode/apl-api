@@ -136,5 +136,5 @@
     },
     "postrelease": ". bin/aliases.sh && drun update_openapi_version && release_otomi"
   },
-  "version": "0.4.8"
+  "version": "0.4.9"
 }
