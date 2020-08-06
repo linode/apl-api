@@ -2,6 +2,16 @@ import get from 'lodash/get'
 import { AlreadyExists, GitError, NotAuthorized, NotExistError, PublicUrlExists } from './error'
 import { OpenApiRequest, JWT, OpenApiRequestExt, SessionUser } from './otomi-models'
 import Authz from './authz'
+import jwt from 'express-jwt'
+import jwksRsa from 'jwks-rsa'
+
+const HttpMethodMapping = {
+  DELETE: 'delete',
+  GET: 'read',
+  PATCH: 'update',
+  POST: 'create',
+  PUT: 'update',
+}
 
 export function errorMiddleware(err, req: OpenApiRequest, res) {
   console.error('errorMiddleware handler')
@@ -36,12 +46,44 @@ export function getSessionUser(user: JWT): SessionUser {
   return sessionUser
 }
 
-const HttpMethodMapping = {
-  DELETE: 'delete',
-  GET: 'read',
-  PATCH: 'update',
-  POST: 'create',
-  PUT: 'update',
+const env = process.env
+export function jwtMiddleware() {
+  if (env.NODE_ENV === 'development')
+    return function (err, req: OpenApiRequestExt, res, next) {
+      // allow the client to specify a group to be in
+      const group = req.header('Auth-Group') ? `team-${req.header('Auth-Group')}` : undefined
+      // default to admin unless team is given
+      const isAdmin = !group || group === 'team-admin'
+      const groups = [`team-${env.CLUSTER_ID.split('/')[1]}`, 'team-otomi']
+      if (group && !groups.includes(group)) groups.push(group)
+      req.user = getSessionUser({
+        email: isAdmin ? 'bob.admin@otomi.cloud' : `joe.team@otomi.cloud`,
+        groups,
+        roles: [],
+      })
+      next()
+    }
+  else
+    return jwt({
+      secret: jwksRsa.expressJwtSecret({
+        cache: true,
+        rateLimit: true,
+        jwksRequestsPerMinute: 5,
+        jwksUri: `${env.OIDC_ENDPOINT}/.well-known/jwks.json`,
+      }),
+      issuer: env.OIDC_ENDPOINT,
+      audience: env.OIDC_NAME,
+      algorithms: ['RS256'],
+    }).unless({
+      path: ['/v1/readiness', '/v1/apiDocs'],
+    })
+}
+
+export function mapGroupsToRoles() {
+  return (req: any, res, next) => {
+    if (req.user) req.user = getSessionUser(req.user)
+    next()
+  }
 }
 
 export function getCrudOperation(req: OpenApiRequest) {
