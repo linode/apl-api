@@ -65,11 +65,13 @@ export enum SessionRole {
 
 export interface JWT {
   email: string
-  groups?: string[]
-  roles: string[]
+  groups: string[]
+  roles?: string[]
 }
 
-export interface SessionUser extends JWT {
+export interface SessionUser {
+  email: string
+  roles: string[]
   teams: string[]
   isAdmin: boolean
 }

@@ -20,12 +20,15 @@ export function errorMiddleware(err, req: OpenApiRequest, res) {
 }
 
 export function getSessionUser(user: JWT): SessionUser {
-  const sessionUser = { ...user, teams: [], groups: user.groups || [], isAdmin: false }
+  const sessionUser = { ...user, teams: [], groups: user.groups || [], roles: [], isAdmin: false }
+  // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
   user.groups.forEach((group) => {
-    if (['admin', 'team-admin'].includes(group) && !sessionUser.roles.includes('admin')) {
-      sessionUser.isAdmin = true
-      sessionUser.roles.push('admin')
+    if (['admin', 'team-admin'].includes(group)) {
+      if (!sessionUser.roles.includes('admin')) {
+        sessionUser.isAdmin = true
+        sessionUser.roles.push('admin')
+      }
     } else if (!sessionUser.roles.includes('team')) sessionUser.roles.push('team')
     // if in team-(not admin), remove 'team-' prefix
     if (group.substr(0, 5) === 'team-' && group !== 'team-admin') sessionUser.teams.push(group.substr(5))

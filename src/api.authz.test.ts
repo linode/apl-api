@@ -4,10 +4,10 @@ import sinon from 'sinon'
 import initApp from './server'
 import OtomiStack from './otomi-stack'
 import { validateEnv } from './utils'
-import mockJwt from './fixtures/jwt'
+import getToken from './fixtures/jwt'
 
-const adminToken = mockJwt(['team-admin'])
-const teamToken = mockJwt(['team-team1'])
+const adminToken = getToken(['team-admin'])
+const teamToken = getToken(['team-team1'])
 
 describe('Api tests for admin', () => {
   let app
