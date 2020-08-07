@@ -475,6 +475,9 @@ components:
     Team:
       $ref: 'team.yaml#/Team'
 
+    User:
+      $ref: 'user.yaml#/User'
+
     OpenApiValidationError:
       $ref: 'error.yaml#/OpenApiValidationError'
 

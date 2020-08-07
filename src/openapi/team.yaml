@@ -99,8 +99,9 @@ Team:
       title: OIDC
       properties:
         groupMapping:
+          title: Group mapping
           type: string
-          description: 'A JWT group name used for granting an access to this team'
+          description: 'An OIDC group name/id granting access to this team'
     password:
       type: string
       # description: "A secret that is used access multi-tenant log aggregation system (Loki)"

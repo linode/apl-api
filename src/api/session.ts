@@ -12,6 +12,7 @@ export default function (otomi: OtomiStack) {
         clusters: otomi.getClusters(),
         core: otomi.getCore(),
         user: req.user,
+        teams: otomi.getTeams(),
         isDirty: otomi.db.isDirty(),
       }
       res.status(200).json(data)
