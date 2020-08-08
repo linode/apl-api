@@ -2,13 +2,19 @@
 import * as api from "@redkubes/keycloak-10.0-client";
 import { cleanEnv, str, json } from "envalid";
 import {
-  protocolMappersObj, ProtocolMappers, rolesObj, Role,
-  identityProviderMappersObj, IdentityProviderMapper,
-  otomiClientConfigObj, Client,
-  authenticationFlowsObject
-} from "./realmExportConfig"
+  roles,
+  protocolMappers,
+  identityProviderMappers, 
+  otomiClientConfig, 
+  authenticationFlows
+} from "./config"
+import {
+  Role,
+  ProtocolMappers,
+  IdentityProviderMapper,
+  Client
+} from "./interfaces"
 import * as utils from "../../utils"
-import { IdentityProviderMapperRepresentation, AuthenticationFlowRepresentation } from "@redkubes/keycloak-10.0-client";
 
 const env = cleanEnv(
   process.env,
@@ -24,43 +30,34 @@ const env = cleanEnv(
   { strict: true },
 )
 
-export class KeycloakRealmSettingsGenerator {
-
-  static generateClient(id?: string, defaultClientScopes?: Array<string>|null, secret?: string|null): api.ClientRepresentation {
-    const client = new api.ClientRepresentation();
+  export function createClient(id: string = env.KEYCLOAK_CLIENT_ID, defaultClientScopes: Array<string> = env.KEYCLOAK_DEFAULT_ROLES, secret: string = env.KEYCLOAK_CLIENT_SECRET): api.ClientRepresentation {
     console.log(`generating client::::::     ${id}`)
+    const client = new api.ClientRepresentation();
+    client.id = id
+    client.defaultClientScopes = defaultClientScopes
+    client.secret = secret  
     client.standardFlowEnabled = true
     client.implicitFlowEnabled = true
     client.directAccessGrantsEnabled = true
     client.serviceAccountsEnabled = true
     client.authorizationServicesEnabled = true
-    client.id = id ? id : env.KEYCLOAK_CLIENT_ID;
-    client.defaultClientScopes = defaultClientScopes ? defaultClientScopes : env.KEYCLOAK_DEFAULT_ROLES;
-    client.secret = secret ? secret : env.KEYCLOAK_CLIENT_SECRET;
-    client.attributes = utils.objectToConfigMap(otomiClientConfigObj.attributes)
-    client.redirectUris = otomiClientConfigObj.redirectUris
-    client.authenticationFlowBindingOverrides = utils.objectToConfigMap(otomiClientConfigObj.authenticationFlowBindingOverrides)
-    // authorizationSettings?
-    
-    return client;
+    client.attributes = utils.objectToConfigMap(otomiClientConfig.attributes)
+    client.redirectUris = otomiClientConfig.redirectUris
+    // @todo match correct types
+    // client.authenticationFlowBindingOverrides = utils.objectToConfigMap(otomiClientConfig.authenticationFlowBindingOverrides)
+    return client
   }
 
-
-  static generateIdpMappers(): Array<IdentityProviderMapperRepresentation> {
-    return identityProviderMappersObj.map((idpMapper) => {
+  export function createIdpMappers(idpAlias: string = env.IDP_ALIAS): Array<api.IdentityProviderMapperRepresentation> {
+    return identityProviderMappers.map((idpMapper) => {
       const idpm: IdentityProviderMapper = idpMapper
-      // @todo remove
-      idpm.identityProviderAlias = env.IDP_ALIAS
-
-      // working with interface destructuring
-      // idpm.config = utils.objectToConfigMap(idpMapper.config)
+      idpm.identityProviderAlias = idpAlias
       return idpm
     })
   }
 
-  static generateIdProvider(tenantId?: string | undefined, clientId?: string | undefined, secret?: string | undefined): api.IdentityProviderRepresentation {
-    tenantId = tenantId ? tenantId : env.CLOUD_TENANT;
-    
+  export function createIdProvider(tenantId: string = env.CLOUD_TENANT, clientId: string = env.TENANT_CLIENT_ID, secret: string = env.KEYCLOAK_CLIENT_SECRET): api.IdentityProviderRepresentation {
+       
     const idp = new api.IdentityProviderRepresentation();
     idp.alias = env.IDP_ALIAS;
     idp.displayName = env.IDP_ALIAS;
@@ -71,7 +68,7 @@ export class KeycloakRealmSettingsGenerator {
     const config = {
       userInfoUrl: "https://graph.microsoft.com/oidc/userinfo",
       validateSignature: "true",
-      clientId: clientId ? clientId : env.TENANT_CLIENT_ID,
+      clientId: clientId,
       tokenUrl: `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
       jwksUrl: `https://login.microsoftonline.com/${tenantId}/discovery/v2.0/keys`,
       issuer: `https://login.microsoftonline.com/${tenantId}/v2.0`,
@@ -80,7 +77,7 @@ export class KeycloakRealmSettingsGenerator {
       clientAuthMethod: `client_secret_post`,
       logoutUrl: `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/logout`,
       syncMode: "FORCE",
-      clientSecret: secret ? secret : env.KEYCLOAK_CLIENT_SECRET, 
+      clientSecret: secret, 
       defaultScope: "openid email profile"
     };
 
@@ -88,7 +85,7 @@ export class KeycloakRealmSettingsGenerator {
     return idp;
   }
 
-  static generateClientScopes() : api.ClientScopeRepresentation {
+  export function createClientScopes() : api.ClientScopeRepresentation {
     const clientScopes = new api.ClientScopeRepresentation();
     clientScopes.name = env.OIDC_SCOPE;
     clientScopes.protocol = "openid-connect";
@@ -97,12 +94,12 @@ export class KeycloakRealmSettingsGenerator {
       "display.on.consent.screen": "true"
     })
 
-    clientScopes.protocolMappers = this.generateProtocolMappersForClientScope()
+    clientScopes.protocolMappers = this.createProtocolMappersForClientScope()
     return clientScopes;
   }
   
-  static generateProtocolMappersForClientScope(): Array<api.ProtocolMapperRepresentation> {
-    return protocolMappersObj.map((proto) => { 
+  export function createProtocolMappersForClientScope(): Array<api.ProtocolMapperRepresentation> {
+    return protocolMappers.map((proto) => { 
       const mapper: ProtocolMappers = proto;
       const m: api.ProtocolMapperRepresentation = mapper;
       // working with interface Types
@@ -111,8 +108,8 @@ export class KeycloakRealmSettingsGenerator {
     })
   }
 
-  static generateRoles(): Array<api.RoleRepresentation> {
-    return rolesObj.map((role) => {
+  export function createRoles(): Array<api.RoleRepresentation> {
+    return roles.map((role) => {
       const mappedRole: Role = role;
       // @todo remove
       // mappedRole.name += "-devtest"
@@ -121,11 +118,10 @@ export class KeycloakRealmSettingsGenerator {
     })
   }
   
-  // static generateAuthenticationFlows(): AuthenticationFlowRepresentation {
+  // static createAuthenticationFlows(): AuthenticationFlowRepresentation {
   //   const authFlow = new AuthenticationFlowRepresentation();
   //   authFlow = authenticationFlowsObject;
   //   return authFlow
   //   // AuthenticatorConfigRepresentation
   // }
   
-}

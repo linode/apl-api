@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/camelcase */
 import { Issuer } from "openid-client";
 import { ClientsApi, IdentityProvidersApi, ClientScopesApi, RolesApi, HttpError } from "@redkubes/keycloak-10.0-client";
-import { KeycloakRealmSettingsGenerator }  from "./KeycloakRealmSettingsGenerator";
+import  * as realmConfig   from "./realm-factory";
 import { cleanEnv, str } from 'envalid'
 
 const errors = [];
@@ -10,12 +10,10 @@ async function main() {
   const env = cleanEnv(
     process.env,
     {
-      CLOUD_TENANT: str({ desc: 'A Cloud Tenant ID' }),
       IDP_ALIAS: str({ desc: 'A name for the Identity Provider Entry' }),
       KEYCLOAK_ADMIN: str({ desc: 'Default Admin User for KeyCloak Server' }),
       KEYCLOAK_ADMIN_PASSWORD: str({ desc: 'Default Password for Admins' }),
       KEYCLOAK_ADDRESS: str({ desc: 'Default Keycloak Server Address' }),
-      KEYCLOAK_CLIENT_ID: str({ desc: 'A Keycloak client application ID ' }),
       KEYCLOAK_REALM: str({ desc: 'Default Keycloak Realm' }),
     },
     { strict: true },
@@ -42,7 +40,7 @@ async function main() {
     const clients = new ClientsApi(basePath);
     clients.accessToken = String(token.access_token);
     await clients.realmClientsPost(env.KEYCLOAK_REALM,
-      KeycloakRealmSettingsGenerator.generateClient(env.KEYCLOAK_CLIENT_ID)
+      realmConfig.createClient()
     );
     console.log("Loaded Keycloak Client Application");
   } catch (e) {
@@ -56,7 +54,7 @@ async function main() {
     const providers = new IdentityProvidersApi(basePath);
     providers.accessToken = String(token.access_token);
     await providers.realmIdentityProviderInstancesPost(env.KEYCLOAK_REALM,
-      KeycloakRealmSettingsGenerator.generateIdProvider(env.CLOUD_TENANT)
+      realmConfig.createIdProvider()
     );
     console.log(`Loaded IDP provider settings`);
   } catch (e) {
@@ -70,10 +68,10 @@ async function main() {
     const providers = new IdentityProvidersApi(basePath);
     providers.accessToken = String(token.access_token);
     
-    for await (const idpMapper of KeycloakRealmSettingsGenerator.generateIdpMappers()) {
+    for await (const idpMapper of realmConfig.createIdpMappers()) {
       try {
         console.log(` Loading config for mapper  ${env.KEYCLOAK_REALM}, ${env.IDP_ALIAS}, [${idpMapper.name}] `)
-        await providers.realmIdentityProviderInstancesAliasMappersPost(env.KEYCLOAK_REALM, env.IDP_ALIAS /* 'redkubes-azure-devtest'*/, idpMapper)
+        await providers.realmIdentityProviderInstancesAliasMappersPost(env.KEYCLOAK_REALM, env.IDP_ALIAS, idpMapper)
       } catch (e) {
         if (e instanceof HttpError) {
           if (e.statusCode === 409) console.info(`IdPMapper [${idpMapper.name}] already exists. Skipping.`)
@@ -98,7 +96,7 @@ async function main() {
     const clientScope = new ClientScopesApi(basePath);
     clientScope.accessToken = String(token.access_token);
     await clientScope.realmClientScopesPost(env.KEYCLOAK_REALM,
-      KeycloakRealmSettingsGenerator.generateClientScopes()
+      realmConfig.createClientScopes()
     );
     console.log(`Loaded ClientScope settings`);
   } catch (e) {
@@ -111,7 +109,7 @@ async function main() {
   try {
     const rolesScope = new RolesApi(basePath);
     rolesScope.accessToken = String(token.access_token);
-    for await (const role of KeycloakRealmSettingsGenerator.generateRoles()) {
+    for await (const role of realmConfig.createRoles()) {
       try {
         await rolesScope.realmRolesPost(env.KEYCLOAK_REALM, role);
       } catch (e) {

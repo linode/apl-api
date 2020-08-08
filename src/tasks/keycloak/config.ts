@@ -1,120 +1,4 @@
-import { ProtocolMapperRepresentation, ResourceServerRepresentation } from "@redkubes/keycloak-10.0-client/dist/model/models";
-
-
-export interface AuthenticationExecution {
-  authenticator: string;
-  requirement: string;
-  priority: number;
-  userSetupAllowed: boolean;
-  autheticatorFlow: boolean;
-  flowAlias: string;
-  authenticatorConfig: string;
-}
-
-export interface AuthenticationFlow {
-  id: string;
-  alias: string;
-  description: string;
-  providerId: string;
-  topLevel: boolean;
-  builtIn: boolean;
-  authenticationExecutions: AuthenticationExecution[];
-}
-
-export interface Config8 {
-  "update.profile.on.first.login": string;
-  "require.password.update.after.registration": string;
-  defaultProvider: string;
-}
-
-export interface AuthenticatorConfig {
-  id: string;
-  alias: string;
-  config: Config8;
-}
-
-export interface  ProtocolMappers {
-  name: string,
-  protocol: string,
-  protocolMapper: string,
-  consentRequired: boolean,
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  config?: { [key: string]: Object } 
-  // config: Map<string, object>
-}
-
-export interface Role {
-  'attributes'?: {
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    [key: string]: Object,
-  },
-  clientRole: boolean,
-  composite: boolean,
-  containerId: string,
-  description: string,
-  name: string,
-}
-
-
-export interface IdentityProviderMapper{
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  config?: { [key: string]: Object } 
-  identityProviderAlias:	string,
-  identityProviderMapper:	string,
-  name:	string,  
-}
-
-export interface Client {
-  'access'?: {
-    [key: string]: Record<string, any>,
-  },
-  'adminUrl'?: string,
-  'alwaysDisplayInConsole'?: boolean,
-  // 'attributes'?: {
-  //   [key: string]: Record<string, any>,
-  // },
-  // 'authenticationFlowBindingOverrides'?: {
-  //   [key: string]: Record<string, any>,
-  // },
-  'authorizationServicesEnabled'?: boolean,
-  // 'authorizationSettings'?: ResourceServerRepresentation,
-  'baseUrl'?: string,
-  'bearerOnly'?: boolean,
-  'clientAuthenticatorType'?: string,
-  'clientId'?: string,
-  'consentRequired'?: boolean,
-  'defaultClientScopes'?: Array<string>,
-  'defaultRoles'?: Array<string>,
-  'description'?: string,
-  'directAccessGrantsEnabled'?: boolean,
-  'enabled'?: boolean,
-  'frontchannelLogout'?: boolean,
-  'fullScopeAllowed'?: boolean,
-  'id'?: string,
-  'implicitFlowEnabled'?: boolean,
-  'name'?: string,
-  'nodeReRegistrationTimeout'?: number,
-  'notBefore'?: number,
-  'optionalClientScopes'?: Array<string>,
-  'origin'?: string,
-  'protocol'?: string,
-  // 'protocolMappers'?: Array<ProtocolMapperRepresentation>,
-  'publicClient'?: boolean,
-  'redirectUris'?: Array<string>,
-  // 'registeredNodes'?: {
-  //   [key: string]: Record<string, any>,
-  // },
-  'registrationAccessToken'?: string,
-  'rootUrl'?: string,
-  'secret'?: string,
-  'serviceAccountsEnabled'?: boolean,
-  'standardFlowEnabled'?: boolean,
-  'surrogateAuthRequired'?: boolean,
-  // 'webOrigins'?: Array<string>,
-
-}
-
-export const identityProviderMappersObj = [
+export const identityProviderMappers = [
   {
     "name": "upn_to_email",
     "identityProviderAlias": "redkubes-azure",
@@ -184,7 +68,7 @@ export const identityProviderMappersObj = [
   }
 ]
 
-export const protocolMappersObj = [
+export const protocolMappers = [
   {
     "name": "groups",
     "protocol": "openid-connect",
@@ -256,8 +140,7 @@ export const protocolMappersObj = [
   }
 ]
 
-
-export const rolesObj = [
+export const roles = [
     {
       "name": "team-admin",
       "description": "Has Azure IDP groupID: 3c63814c-59df-46c3-9a69-d9e1c3611097",
@@ -313,7 +196,7 @@ export const authenticatorConfig = [
   }
 ]
 
-export const authenticationFlowsObject = [{
+export const authenticationFlows = [{
   "alias": "browser",
   "description": "browser based authentication",
   "providerId": "basic-flow",
@@ -352,13 +235,13 @@ export const authenticationFlowsObject = [{
   ]
 }]
 
-export const otomiClientConfigObj = {
+export const otomiClientConfig = {
     "clientId": "otomi",
     "surrogateAuthRequired": false,
     "enabled": true,
     "alwaysDisplayInConsole": false,
     "clientAuthenticatorType": "client-secret",
-    "secret": "79e11c3d-0231-4882-95a7-36fd1e0b02b8",
+    "secret": "",
     "redirectUris": [
       "https://apps.team-dev.dev.gke.otomi.cloud/*",
       "https://auth.dev.gke.otomi.cloud/*",
