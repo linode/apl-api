@@ -93,13 +93,13 @@ export class Repo {
   }
 
   async decrypt() {
-    if (env.TESTING) return
+    if (env.NODE_ENV === 'test') return
     const res = await axios.get(decryptUrl)
     return res
   }
 
   async encrypt() {
-    if (env.TESTING) return
+    if (env.NODE_ENV === 'test') return
     const res = await axios.get(encryptUrl)
     return res
   }

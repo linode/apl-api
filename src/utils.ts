@@ -52,10 +52,6 @@ export function getEnv() {
         devDefault: './env/clusters.yaml',
         default: './env/clusters.yaml',
       }),
-      TESTING: bool({
-        desc: 'A flag to disable encryption/decryption',
-        default: false,
-      }),
       TOOLS_HOST: str({
         desc: 'A host the tools service that performs file encryption/decryption',
         default: 'localhost',

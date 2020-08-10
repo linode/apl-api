@@ -281,10 +281,6 @@ Moreover the `openapi.yaml` file can be used with `Postman` (File -> Import).
 
 For local development copy `.env.sample` to `.env.dev` and copy `otomi-stack/.secrets` from company secrets storage.
 
-Use `DISABLE_AUTH=1` env to disable authorization. Use `DISABLE_SYNC=1` to disable pushing changes to git remote branch
-
-For production environment export the same variables with proper values.
-
 # Git
 
 Git is used as the persistent storage for otomi-stack values.

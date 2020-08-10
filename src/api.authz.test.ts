@@ -270,11 +270,3 @@ describe('Api tests for data validation', () => {
       .end(done)
   })
 })
-
-// const mockRequest = (authGroup, teamId) => ({
-//   header(name) {
-//     if (name === 'Auth-Group') return authGroup
-//     return null
-//   },
-//   params: { teamId },
-// })
