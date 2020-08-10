@@ -2,8 +2,8 @@ import get from 'lodash/get'
 import { AlreadyExists, GitError, NotAuthorized, NotExistError, PublicUrlExists } from './error'
 import { OpenApiRequest, JWT, OpenApiRequestExt, SessionUser } from './otomi-models'
 import Authz from './authz'
-import jwt from 'express-jwt'
-import jwksRsa from 'jwks-rsa'
+import { RequestHandler } from 'express'
+import jwtDecode from 'jwt-decode'
 import { getEnv } from './utils'
 
 const HttpMethodMapping = {
@@ -47,11 +47,10 @@ export function getSessionUser(user: JWT): SessionUser {
   return sessionUser
 }
 
-export function jwtMiddleware() {
+export function jwtMiddleware(): RequestHandler {
   const env = getEnv()
-
-  if (env.NODE_ENV === 'development')
-    return function (err, req: OpenApiRequestExt, res, next) {
+  return function (req: OpenApiRequestExt, res, next) {
+    if (env.NODE_ENV === 'development') {
       // allow the client to specify a group to be in
       const group = req.header('Auth-Group') ? `team-${req.header('Auth-Group')}` : undefined
       // default to admin unless team is given
@@ -59,31 +58,20 @@ export function jwtMiddleware() {
       const groups = [`team-${env.CLUSTER_ID.split('/')[1]}`, 'team-otomi']
       if (group && !groups.includes(group)) groups.push(group)
       req.user = getSessionUser({
+        name: isAdmin ? 'Bob Admin' : 'Joe Team',
         email: isAdmin ? 'bob.admin@otomi.cloud' : `joe.team@otomi.cloud`,
         groups,
         roles: [],
       })
-      next()
+    } else {
+      const token = req.header('Authorization')
+      if (!token) {
+        console.log('anonymous request')
+        return next()
+      }
+      const { name, email, roles, groups } = jwtDecode(token)
+      req.user = getSessionUser({ name, email, roles, groups })
     }
-  else
-    return jwt({
-      secret: jwksRsa.expressJwtSecret({
-        cache: true,
-        rateLimit: true,
-        jwksRequestsPerMinute: 5,
-        jwksUri: `${env.OIDC_ENDPOINT}/.well-known/jwks.json`,
-      }),
-      issuer: env.OIDC_ENDPOINT,
-      audience: env.OIDC_NAME,
-      algorithms: ['RS256'],
-    }).unless({
-      path: ['/v1/readiness', '/v1/apiDocs'],
-    })
-}
-
-export function mapGroupsToRoles() {
-  return (req: any, res, next) => {
-    if (req.user) req.user = getSessionUser(req.user)
     next()
   }
 }
@@ -99,8 +87,11 @@ export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz) {
   const user = req.user
   const action = getCrudOperation(req)
   console.debug(
-    `Authz: ${action} ${req.path}, session(roles: ${JSON.stringify(user.roles)} teams=${JSON.stringify(user.teams)})`,
+    `Authz: ${action} ${req.path}, session(roles: ${user && JSON.stringify(user.roles)} teams=${
+      user && JSON.stringify(user.teams)
+    })`,
   )
+  if (!user) return false
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
   const schemaName = schema.split('/').pop()
   const result = authz.isUserAuthorized(action, schemaName, user, teamId, req.body)

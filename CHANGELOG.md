@@ -2,6 +2,56 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.14](https://github.com/redkubes/otomi-stack-api/compare/v0.4.13...v0.4.14) (2020-08-07)
+
+### Bug Fixes
+
+- api spec [ci skip](<[2e9ef26](https://github.com/redkubes/otomi-stack-api/commit/2e9ef26716af2507e55cb5b1b36cd33cca13ae2d)>)
+
+### [0.4.13](https://github.com/redkubes/otomi-stack-api/compare/v0.4.12...v0.4.13) (2020-08-06)
+
+### Bug Fixes
+
+- package missing [ci skip](<[da4bd6e](https://github.com/redkubes/otomi-stack-api/commit/da4bd6ec478dda227b7cac0c745c72f39e2f51f6)>)
+
+### [0.4.12](https://github.com/redkubes/otomi-stack-api/compare/v0.4.11...v0.4.12) (2020-08-06)
+
+### Bug Fixes
+
+- disabled jwt validation [ci skip](<[cdaff55](https://github.com/redkubes/otomi-stack-api/commit/cdaff55b25d854fc06f762ddf03de55a89b5de09)>)
+- typing [ci skip](<[1ee6564](https://github.com/redkubes/otomi-stack-api/commit/1ee656420e7e7f298b388b63194b66bfe6d0259f)>)
+
+### [0.4.11](https://github.com/redkubes/otomi-stack-api/compare/v0.4.10...v0.4.11) (2020-08-06)
+
+### Bug Fixes
+
+- jwt handler [ci skip](<[0038555](https://github.com/redkubes/otomi-stack-api/commit/00385551f9ccedbeae4a42bd4312d11b522ec1a1)>)
+
+### [0.4.10](https://github.com/redkubes/otomi-stack-api/compare/v0.4.9...v0.4.10) (2020-08-06)
+
+### Bug Fixes
+
+- missing package [ci skip](<[8ec289b](https://github.com/redkubes/otomi-stack-api/commit/8ec289bc3a8ecf99bb35c738fe5aa7232c3b13f8)>)
+
+### [0.4.9](https://github.com/redkubes/otomi-stack-api/compare/v0.4.8...v0.4.9) (2020-08-06)
+
+### Features
+
+- add group mapping ([#99](https://github.com/redkubes/otomi-stack-api/issues/99)) ([5644277](https://github.com/redkubes/otomi-stack-api/commit/56442772aa95423b326bea0b0610b2215d29d4a6))
+- add service port ([#102](https://github.com/redkubes/otomi-stack-api/issues/102)) ([b65603f](https://github.com/redkubes/otomi-stack-api/commit/b65603fafcc80b787ec2eb0123c6afbb408757fb))
+
+### Bug Fixes
+
+- running docker-compose ([#96](https://github.com/redkubes/otomi-stack-api/issues/96)) ([d18f90a](https://github.com/redkubes/otomi-stack-api/commit/d18f90a66bf137aba980756babc295a6667238da))
+
+### Others
+
+- **release:** 0.4.8 ([5a47084](https://github.com/redkubes/otomi-stack-api/commit/5a470844907da6aa97e7be9c85eace2e87371929))
+
+### Feature Improvements
+
+- jwt auth, added automation to generate otomi client ([#103](https://github.com/redkubes/otomi-stack-api/issues/103)) ([93a2c6b](https://github.com/redkubes/otomi-stack-api/commit/93a2c6bc6efde938cef7b138e622c597cf4f9179))
+
 ### [0.4.8](https://github.com/redkubes/otomi-stack-api/compare/v0.4.7...v0.4.8) (2020-07-25)
 
 ### Bug Fixes

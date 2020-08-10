@@ -3,7 +3,7 @@ security:
   - groupAuthz: []
 info:
   title: The otomi-stack API
-  version: 0.4.8
+  version: 0.4.14
 
 externalDocs:
   description: 'This is the base url of the external documentation'
@@ -474,6 +474,9 @@ components:
 
     Team:
       $ref: 'team.yaml#/Team'
+
+    User:
+      $ref: 'user.yaml#/User'
 
     OpenApiValidationError:
       $ref: 'error.yaml#/OpenApiValidationError'

@@ -5,16 +5,12 @@ import { OpenApi, SessionRole, SessionUser } from './otomi-models'
 const sessionTeam: SessionUser = {
   isAdmin: false,
   roles: [SessionRole.User],
+  name: 'joe',
   email: 'a@b.c',
   teams: ['mercury'],
 }
 
-const sessionAdmin: SessionUser = {
-  isAdmin: true,
-  roles: [SessionRole.Admin],
-  email: 'a@b.c',
-  teams: ['mercury'],
-}
+const sessionAdmin: SessionUser = { ...sessionTeam, roles: [SessionRole.Admin] }
 
 describe('Schema wise permissions', () => {
   const spec: OpenApi = {

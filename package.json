@@ -20,9 +20,9 @@
     "cors": "^2.8.5",
     "envalid": "^6.0.2",
     "express": "^4.17.1",
-    "express-jwt": "^6.0.0",
     "express-openapi": "^6.0.0",
     "js-yaml": "^3.14.0",
+    "jwt-decode": "^2.2.0",
     "lodash": "^4.17.19",
     "lowdb": "^1.0.0",
     "morgan": "^1.10.0",
@@ -65,7 +65,7 @@
     "eslint-plugin-prettier": "^3.1.4",
     "eslint-plugin-react": "^7.20.5",
     "husky": "^4.2.5",
-    "jwks-rsa": "^1.8.1",
+    "jsonwebtoken": "^8.5.1",
     "lint-staged": "^10.2.11",
     "mocha": "^7.2.0",
     "nock": "^13.0.3",
@@ -136,5 +136,5 @@
     },
     "postrelease": ". bin/aliases.sh && drun update_openapi_version && release_otomi"
   },
-  "version": "0.4.8"
+  "version": "0.4.14"
 }
