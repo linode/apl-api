@@ -10,7 +10,8 @@ export function getEnv() {
     process.env,
     {
       DEBUG: str({
-        desc: 'Enables/disables specific debugging namespaces. Refer to: https://github.com/visionmedia/debug',
+        desc:
+          'A regular expression to enable specific debugging namespaces. Refer to: https://github.com/visionmedia/debug',
         devDefault: '*',
         default: undefined,
       }),
@@ -24,17 +25,17 @@ export function getEnv() {
         devDefault: 'gke_otomi-cloud_europe-west4_otomi-dev-demo',
       }),
       DB_PATH: str({
-        desc: 'A path to database file for data persistency. By default database is stored only in memory',
+        desc: 'A database file path for data persistency. By default database is stored in memory',
         default: undefined,
       }),
       DISABLE_SYNC: bool({ devDefault: true, default: false }),
       DISABLE_AUTH: bool({ devDefault: false, default: false }),
-      GIT_BRANCH: str({ desc: 'A git branch used for fetching and pushing commits', default: 'master' }),
+      GIT_BRANCH: str({ desc: 'A git branch name used for fetching and pushing commits', default: 'master' }),
       GIT_EMAIL: str({ desc: 'An email for git config', devDefault: 'user@dev.com' }),
-      GIT_LOCAL_PATH: str({ desc: 'A path where git repository is clone', default: '/tmp/otomi-stack' }),
+      GIT_LOCAL_PATH: str({ desc: 'A path where git repository is cloned', default: '/tmp/otomi-stack' }),
       GIT_PASSWORD: str({ desc: 'A git access password', devDefault: 'dev-pass' }),
       GIT_REPO_URL: str({ desc: 'A git repository url', devDefault: 'http://localhost/dev.git' }),
-      GIT_USER: str({ desc: 'A name of harbor admin user', devDefault: 'dev' }),
+      GIT_USER: str({ desc: 'A git access user name', devDefault: 'dev' }),
       NODE_ENV: str({
         choices: ['test', 'development', 'production'],
         desc: 'An environment mode',
@@ -53,7 +54,7 @@ export function getEnv() {
         default: './env/clusters.yaml',
       }),
       TOOLS_HOST: str({
-        desc: 'A host the tools service that performs file encryption/decryption',
+        desc: 'A host to the tools service that performs file encryption/decryption',
         default: 'localhost',
       }),
     },
