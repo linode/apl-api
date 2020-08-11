@@ -130,38 +130,6 @@ async function main() {
   }
   
 
-// ----------------------------------------------------
-  // WIP
-  // Create authn flows
-  try {
-    const authn = new AuthenticationManagementApi(basePath)
-    authn.accessToken = String(token.access_token)
-    for await (const authnc of realmConfig.createAuthConfigs()) {
-    //  console.log(authnc)
-    }
-    for await (const authnflows of [realmConfig.createAuthenticationFlows()]) {
-    //  console.log(authnflows)
-    }
-    
-    const execs = await authn.realmAuthenticationFlowsFlowAliasExecutionsGet("master", "browser")
-    execs.body.array.forEach((execution) => {
-      if (execution.configurable === true) {
-        console.log(
-         execution
-        )
-        const id = execution.id
-        const providerId = execution.providerId
-      }
-    })
-// ----------------------------------------------------
-    
-    
-    console.log(`Finished loading Authentication settings`)
-  } catch (e) {
-    if (e instanceof HttpError) {
-      if (e.statusCode === 409) console.info(`Authentication already exists. Skipping.`)
-    } else errors.push(`Caught Exception Uploading Authentication: ${e}`)
-  }
   
   if (errors.length) {
     console.log(JSON.stringify(errors, null, 2))
