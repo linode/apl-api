@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import * as api from "@redkubes/keycloak-10.0-client";
-import { cleanEnv, str, json } from "envalid";
+import * as api from "@redkubes/keycloak-10.0-client"
+import { cleanEnv, str, json } from "envalid"
 import * as utils from "../../utils"
-import { keys, cloneDeep, defaultsDeep, snakeCase } from "lodash";
+import {  cloneDeep, defaultsDeep, snakeCase } from "lodash"
 
 import {
   roles,
@@ -14,14 +14,13 @@ import {
   authenticationFlows,
   authenticatorConfig
 } from "./config"
+
 import {
   Role,
   ProtocolMappers,
   IdentityProviderMapper,
   AuthenticationFlow,
-  AuthenticatorConfig,
-  Client,
-  Team,
+  Team
 } from "./interfaces"
 
 const env = cleanEnv(
@@ -58,7 +57,7 @@ export function createClient(id: string = env.KEYCLOAK_CLIENT_ID,
     attributes: utils.objectToConfigMap(otomiClientConfig.attributes),
     redirectUris: redirectUris,
     // @todo match correct types
-    // client.authenticationFlowBindingOverrides = utils.objectToConfigMap(otomiClientConfig.authenticationFlowBindingOverrides)
+    // authenticationFlowBindingOverrides: utils.objectToConfigMap(otomiClientConfig.authenticationFlowBindingOverrides)
   })
 }
 
@@ -67,7 +66,7 @@ export function createIdpMappers(idpAlias: string = env.IDP_ALIAS,
   adminGid: string = env.IDP_GROUP_OTOMI_ADMIN
 ): Array<api.IdentityProviderMapperRepresentation> {
   // admin idp mapper case
-  const adminmaps = adminIdpMappers.map((idpMapper) => {
+  const adminmaps = adminIdpMappers.map((idpMapper) => { 
     return defaultsDeep({
       identityProviderAlias: idpAlias,
       config: {
@@ -139,13 +138,13 @@ export function createClientScopes(scope: string = env.OIDC_SCOPE) : api.ClientS
       "display.on.consent.screen": "true"
     }),
     protocolMappers: this.createProtocolMappersForClientScope(),
-    })
+  })
 }
 
 export function createProtocolMappersForClientScope(): Array<api.ProtocolMapperRepresentation> {
   return protocolMappers.map((proto) => { 
-    const m: api.ProtocolMapperRepresentation = proto as ProtocolMappers;
-    return m;
+    const m: api.ProtocolMapperRepresentation = proto as ProtocolMappers
+    return m
   })
 }
 
@@ -161,7 +160,7 @@ export function createRoles(teams: object = env.IDP_GROUP_TEAMS,
       containerId: realm
     },
     mockRole as Role,
-  );
+    )
   })
 }
 
