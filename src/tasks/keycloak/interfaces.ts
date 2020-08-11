@@ -10,13 +10,13 @@ export interface AuthenticationExecution {
 }
 
 export interface AuthenticationFlow {
-  id: string;
+  id?: string;
   alias: string;
   description: string;
   providerId: string;
   topLevel: boolean;
   builtIn: boolean;
-  authenticationExecutions: AuthenticationExecution[];
+  authenticationExecutions?: object[];
 }
 
 export interface Config8 {
@@ -30,6 +30,7 @@ export interface AuthenticatorConfig {
   alias: string;
   config: Config8;
 }
+
 
 export interface  ProtocolMappers {
   name: string,
@@ -141,4 +142,9 @@ export interface IdentityProvider {
   linkOnly: boolean;
   firstBrokerLoginFlowAlias: string;
   config: IdentityProviderConfig;
+}
+
+export interface Team {
+  name: string;
+  gid: string
 }

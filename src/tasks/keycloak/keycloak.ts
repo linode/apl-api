@@ -2,7 +2,7 @@
 import { Issuer } from "openid-client";
 import { ClientsApi, IdentityProvidersApi, ClientScopesApi, RolesApi, HttpError } from "@redkubes/keycloak-10.0-client";
 import  * as realmConfig   from "./realm-factory";
-import { cleanEnv, str } from 'envalid'
+import { cleanEnv, str, json } from "envalid";
 
 const errors = [];
 async function main() {
@@ -15,7 +15,7 @@ async function main() {
       KEYCLOAK_ADMIN_PASSWORD: str({ desc: 'Default Password for Admins' }),
       KEYCLOAK_ADDRESS: str({ desc: 'Default Keycloak Server Address' }),
       KEYCLOAK_REALM: str({ desc: 'Default Keycloak Realm' }),
-    },
+  },
     { strict: true },
   )
 
@@ -107,11 +107,11 @@ async function main() {
   
   // Create Roles
   try {
-    const rolesScope = new RolesApi(basePath);
-    rolesScope.accessToken = String(token.access_token);
+    const roles = new RolesApi(basePath);
+    roles.accessToken = String(token.access_token);
     for await (const role of realmConfig.createRoles()) {
       try {
-        await rolesScope.realmRolesPost(env.KEYCLOAK_REALM, role);
+        await roles.realmRolesPost(env.KEYCLOAK_REALM, role);
       } catch (e) {
         if (e instanceof HttpError) {
           if (e.statusCode === 409) console.info(`Role [${role.name}] already exists. Skipping.`)

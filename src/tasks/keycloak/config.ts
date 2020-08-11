@@ -1,4 +1,17 @@
-export const identityProviderMappers = [
+export const adminIdpMappers = [
+  {
+    "name": "map_otomi_admin_group_to_role",
+    "identityProviderAlias": "redkubes-azure",
+    "identityProviderMapper": "oidc-role-idp-mapper",
+    "config": {
+      "syncMode": "INHERIT",
+      "claim": "groups",
+      "role": "admin",
+      "claim.value": ""
+    }
+  },
+]
+export const defaultIdpMappers = [
   {
     "name": "upn_to_email",
     "identityProviderAlias": "redkubes-azure",
@@ -9,63 +22,20 @@ export const identityProviderMappers = [
       "user.attribute": "email"
     }
   },
+]
+
+export const teamIdpMappers = [
   {
-    "name": "azure_map_otomi_admin_group_to_role",
+    "name": "map_team_group_to_role",
     "identityProviderAlias": "redkubes-azure",
     "identityProviderMapper": "oidc-role-idp-mapper",
     "config": {
       "syncMode": "INHERIT",
       "claim": "groups",
-      "role": "admin",
-      "claim.value": "e69ded30-0882-4490-8e0f-2e67625a0693"
+      "role": "team-name",
+      "claim.value": ""
     }
   },
-  {
-    "name": "azure_map_team_demo_group_to_role",
-    "identityProviderAlias": "redkubes-azure",
-    "identityProviderMapper": "oidc-role-idp-mapper",
-    "config": {
-      "syncMode": "INHERIT",
-      "claim": "groups",
-      "role": "team-demo",
-      "claim.value": "28010af7-9535-4265-8689-50f51f8f2c87"
-    }
-  },
-  {
-    "name": "azure_map_team_admin_group_to_role",
-    "identityProviderAlias": "redkubes-azure",
-    "identityProviderMapper": "oidc-role-idp-mapper",
-    "config": {
-      "syncMode": "INHERIT",
-      "claim": "groups",
-      "role": "team-admin",
-      "claim.value": "3c63814c-59df-46c3-9a69-d9e1c3611097"
-    }
-  },
-  {
-    "name": "azure_map_team_dev_group_to_role",
-    "identityProviderAlias": "redkubes-azure",
-    "identityProviderMapper": "oidc-role-idp-mapper",
-    "config": {
-      "attribute.value": "3d2e6df8-c7c7-4d51-aa6a-9b7b5330d915",
-      "syncMode": "INHERIT",
-      "claim": "groups",
-      "role": "team-dev",
-      "claim.value": "3d2e6df8-c7c7-4d51-aa6a-9b7b5330d915"
-    }
-  },
-  {
-    "name": "azure_map_team_otomi_group_to_role",
-    "identityProviderAlias": "redkubes-azure",
-    "identityProviderMapper": "oidc-role-idp-mapper",
-    "config": {
-      "claims": "[]",
-      "syncMode": "INHERIT",
-      "claim": "groups",
-      "role": "team-otomi",
-      "claim.value": "0efd2f6d-fb8b-49a9-9507-54cd6e92c348"
-    }
-  }
 ]
 
 export const protocolMappers = [
@@ -141,38 +111,14 @@ export const protocolMappers = [
 ]
 
 export const roles = [
-    {
-      "name": "team-admin",
-      "description": "Has Azure IDP groupID: 3c63814c-59df-46c3-9a69-d9e1c3611097",
-      "composite": false,
-      "clientRole": false,
-      "containerId": "master",
-      "attributes": {}
-    },
-    {
-      "name": "team-otomi",
-      "description": "Has Azure IDP groupID: 0efd2f6d-fb8b-49a9-9507-54cd6e92c348",
-      "composite": false,
-      "clientRole": false,
-      "containerId": "master",
-      "attributes": {}
-    },
-    {
-      "name": "team-demo",
-      "description": "Has Azure IDP groupID: 28010af7-9535-4265-8689-50f51f8f2c87",
-      "composite": false,
-      "clientRole": false,
-      "containerId": "master",
-      "attributes": {}
-    },
-    {
-      "name": "team-dev",
-      "description": "Has Azure IDP groupID: 3d2e6df8-c7c7-4d51-aa6a-9b7b5330d915",
-      "composite": false,
-      "clientRole": false,
-      "containerId": "master",
-      "attributes": {}
-    }
+  {
+    "name": "",
+    "description": "Mapped for incoming Cloud IDP GROUP_ID: ",
+    "composite": false,
+    "clientRole": false,
+    "containerId": "",
+    "attributes": {}
+  },
 ]
 
 export const authenticatorConfig = [
@@ -242,15 +188,7 @@ export const otomiClientConfig = {
     "alwaysDisplayInConsole": false,
     "clientAuthenticatorType": "client-secret",
     "secret": "",
-    "redirectUris": [
-      "https://apps.team-dev.dev.gke.otomi.cloud/*",
-      "https://auth.dev.gke.otomi.cloud/*",
-      "https://apps.team-demo.dev.gke.otomi.cloud/*",
-      "https://harbor.dev.gke.otomi.cloud/*",
-      "https://apps.team-admin.dev.gke.otomi.cloud/*",
-      "https://apps.team-otomi.dev.gke.otomi.cloud/*",
-      "https://apps.team-chai.dev.gke.otomi.cloud/*"
-    ],
+    "redirectUris": [],
     "webOrigins": [],
     "notBefore": 0,
     "bearerOnly": false,
