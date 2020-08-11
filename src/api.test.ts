@@ -8,8 +8,7 @@ describe('Api spec validation', () => {
     const spec: any = await loadOpenApisSpec()
     const validator = new OpenAPISchemaValidator({ version: 3 })
     const result = validator.validate(spec)
-    console.log(JSON.stringify(result))
-    expect(result.errors).to.be.empty
+    expect(result.errors, JSON.stringify(result, null, '  ')).to.be.empty
   })
 })
 

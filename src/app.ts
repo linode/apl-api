@@ -12,7 +12,7 @@ otomiStack.init().then(async (status) => {
     process.exit(1)
   }
   const app = await initApp(otomiStack)
-  console.info('Listening on port: 8080')
+  console.info('Listening on port: http://127.0.0.1:8080')
   const srv = app.listen(8080)
   setSignalHandlers(srv)
 })

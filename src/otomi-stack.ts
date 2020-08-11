@@ -172,12 +172,12 @@ export default class OtomiStack {
     if (servicesFiltered.length !== 0) throw new PublicUrlExists('Public URL is already used')
   }
 
-  async triggerDeployment(teamId: string, email: string) {
+  async triggerDeployment(email: string) {
     console.log('DISABLE_SYNC: ', env.DISABLE_SYNC)
     this.saveValues()
 
     if (!env.DISABLE_SYNC) {
-      await this.repo.save(teamId, email)
+      await this.repo.save(email)
     }
     this.db.dirty = false
   }
@@ -245,6 +245,10 @@ export default class OtomiStack {
 
   getSecret(id) {
     return this.db.getItem('secrets', { id })
+  }
+
+  getAllSecrets(scope = 'global') {
+    return this.db.getCollection('secrets', { scope })
   }
 
   getSecrets(teamId, scope = 'global') {
@@ -355,14 +359,14 @@ export default class OtomiStack {
     console.log('loadAllTeamValues')
     const loaded = []
     forEach(clusters, (cluster) => {
-      const { cloud, cluster: clusterName } = cluster
+      const { cloud, name } = cluster
       if (!loaded.includes(cloud)) {
         const cloudFile = getFilePath(cloud)
         console.log('loading: ', cloudFile)
         this.loadFileValues(cluster, cloudFile)
         loaded.push(cloud)
       }
-      const clusterFile = getFilePath(cloud, clusterName)
+      const clusterFile = getFilePath(cloud, name)
       this.loadFileValues(cluster, clusterFile)
     })
   }
@@ -374,7 +378,7 @@ export default class OtomiStack {
       forIn(cloudObj.clusters, (clusterObject, cluster) => {
         const clusterObj = {
           cloud,
-          cluster,
+          name: cluster,
           dnsZones,
           domain: `${cluster}.${cloudObj.domain}`,
           k8sVersion: clusterObject.k8sVersion,
@@ -467,10 +471,10 @@ export default class OtomiStack {
   saveValues() {
     const clusters = this.getClusters()
     forEach(clusters, (cluster) => {
-      const { cloud, cluster: clusterName } = cluster
+      const { cloud, name } = cluster
       const teamValues = this.convertTeamsToValues(cluster)
       splitGlobal(teamValues)
-      const path = getFilePath(cloud, clusterName)
+      const path = getFilePath(cloud, name)
       const values = this.repo.readFile(path)
       const newValues = { ...values, ...teamValues }
       this.repo.writeFile(path, newValues)

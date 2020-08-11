@@ -4,7 +4,7 @@ Cluster:
     admin: [read-any]
     team: [read-any]
   properties:
-    cluster:
+    name:
       type: string
       description: A cluster name
       readOnly: true

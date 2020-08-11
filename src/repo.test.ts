@@ -26,7 +26,7 @@ describe('Repo scenarios', () => {
     execSync(`rm -rf /tmp/test-r*`)
   })
 
-  it.skip('should throw on conflict', async () => {
+  it.skip('should throw on git conflict', async () => {
     const sha = await r1.getCommitSha()
     appendFileSync(join(r1.path, testFile), 'AAB')
     await r1.git.add(testFile)
@@ -34,7 +34,7 @@ describe('Repo scenarios', () => {
     await r1.git.push('origin', 'master')
     appendFileSync(join(r2.path, testFile), 'ABA')
     try {
-      await r2.save('', '')
+      await r2.save('')
     } catch (error) {
       // empty
     }

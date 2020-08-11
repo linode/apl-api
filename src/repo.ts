@@ -58,22 +58,12 @@ export class Repo {
     return doc
   }
 
-  async commit() {
+  async commit(author: string) {
     await this.encrypt()
     await this.git.add('./*')
-    const commitSummary = await this.git.commit('otomi-stack-api')
+    const commitSummary = await this.git.commit(`otomi-stack-api<${author}>`)
     console.debug(`Commit summary: ${JSON.stringify(commitSummary)}`)
     return commitSummary
-  }
-
-  static getNoteCmd(obj: any) {
-    const note = JSON.stringify(obj)
-    return ['notes', 'add', '-m', note]
-  }
-
-  async addNote(obj: any) {
-    const cmd = Repo.getNoteCmd(obj)
-    await this.git.raw(cmd)
   }
 
   async clone() {
@@ -92,13 +82,13 @@ export class Repo {
   }
 
   async decrypt() {
-    if (env.TESTING) return
+    if (env.NODE_ENV === 'test') return
     const res = await axios.get(decryptUrl)
     return res
   }
 
   async encrypt() {
-    if (env.TESTING) return
+    if (env.NODE_ENV === 'test') return
     const res = await axios.get(encryptUrl)
     return res
   }
@@ -114,12 +104,11 @@ export class Repo {
     return this.git.revparse(['--verify', 'HEAD'])
   }
 
-  async save(team, email) {
+  async save(email) {
     const sha = await this.getCommitSha()
 
-    const commitSummary = await this.commit()
+    const commitSummary = await this.commit(email)
     if (commitSummary.commit === '') return
-    await this.addNote({ team, email })
     try {
       await this.pull()
     } catch (e) {

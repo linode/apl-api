@@ -66,20 +66,25 @@ ServiceIngress:
       title: Already has a certificate
       type: boolean
       default: false
-      description:
-        If true a certificate should be deployed as a TLS secret already with the name 'cert-$svcName'. Otherwise it
-        will be generated.
+      description: If true a certificate should exist already
     certArn:
       type: string
       title: Certificate ARN
-      description: Certificate ARN of an existing AWS certificate
       example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
+    certSelect:
+      type: boolean
+      title: Select existing secret name
+      default: true
+    certName:
+      type: string
+      title: Secret name
+      example: www-example-com
   required:
     - domain
     - subdomain
 
 Service:
-  x-externalDocsPath: 'otomi/docs/configuring-service'
+  x-externalDocsPath: 'otomi/docs/configuring-services'
   x-acl:
     admin: [delete-any, read-any, create-any, update-any]
     team: [delete, read, create, update]
@@ -100,6 +105,12 @@ Service:
       x-acl:
         admin: [read, create]
         team: [read, create]
+    port:
+      title: A port to a service
+      type: integer
+      default: 80
+      minimum: 1
+      maximum: 65535
     ingress:
       title: Exposure
       type: object
@@ -229,8 +240,7 @@ Service:
                     glob:
                       title: Glob string pattern
                       type: string
-                      description:
-                        'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*"'
+                      description: 'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*"'
                       example: 'master-v1.*.*'
                   required:
                     - glob

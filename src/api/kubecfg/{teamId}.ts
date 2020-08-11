@@ -2,7 +2,7 @@ import { Operation } from 'express-openapi'
 import yaml from 'js-yaml'
 import { KubeConfig } from '@kubernetes/client-node'
 import OtomiStack from '../../otomi-stack'
-import { OpenApiRequest } from '../../api.d'
+import { OpenApiRequest } from '../../otomi-models'
 
 export const parameters = []
 
