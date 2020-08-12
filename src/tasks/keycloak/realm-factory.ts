@@ -15,7 +15,7 @@ import {
 } from "./config"
 
 import {
-  Team
+  TeamMapping
 } from "./interfaces"
 
 const env = cleanEnv(
@@ -48,20 +48,19 @@ export function createClient(id: string = env.KEYCLOAK_CLIENT_ID,
 }
 
 export function createIdpMappers(idpAlias: string = env.IDP_ALIAS,
-  teams: object = env.IDP_GROUP_MAPPINGS_TEAMS,
-  adminGroupMapping: string = env.IDP_GROUP_OTOMI_ADMIN
-): Array<api.IdentityProviderMapperRepresentation> {
+    teams: object = env.IDP_GROUP_MAPPINGS_TEAMS,
+    adminGroupMapping: string = env.IDP_GROUP_OTOMI_ADMIN
+  ): Array<api.IdentityProviderMapperRepresentation> {
   // admin idp mapper case
   const admin =  idpMapperTpl("map otomi-admin group to role", idpAlias, "admin", adminGroupMapping)
   const adminMappers =  defaultsDeep(new api.IdentityProviderMapperRepresentation(), admin) 
-  
   // default idp mappers case
   const defaultIdps = defaultsIdpMapperTpl(idpAlias)
   const defaultMappers = defaultIdps.map((idpMapper) => {
     return defaultsDeep(new api.IdentityProviderMapperRepresentation(), idpMapper)
   })
   // team idp case - team list extracted from IDP_GROUP_MAPPINGS_TEAMS env 
-  const teamList = utils.objectToArray(teams, "name", "groupMapping") as Team[] 
+  const teamList = utils.objectToArray(teams, "name", "groupMapping") as TeamMapping[] 
   const teamMappers = teamList.map((team) => {
     const teamMapper =  idpMapperTpl(`map ${team.name} group to role`, idpAlias, team.name, team.groupMapping)
     return defaultsDeep(new api.IdentityProviderMapperRepresentation(), teamMapper)
@@ -96,7 +95,7 @@ export function createClientScopes(scope: string = env.OIDC_SCOPE) : api.ClientS
 export function mapTeamsToRoles(teams: object = env.IDP_GROUP_MAPPINGS_TEAMS,
     realm: string = env.KEYCLOAK_REALM): Array<api.RoleRepresentation> {
   // iterate through all the teams and map groups
-  const teamList = utils.objectToArray(teams, "name", "groupMapping") as Team[] 
+  const teamList = utils.objectToArray(teams, "name", "groupMapping") as TeamMapping[] 
   const teamRoleRepresentations = teamList.map((team) => {
     const role = roleTpl(team.name, team.groupMapping, realm)
     const roleRepresentation = defaultsDeep(new api.RoleRepresentation(), role)

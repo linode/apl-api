@@ -1,4 +1,4 @@
-export interface Team {
+export interface TeamMapping {
   name: string;
   groupMapping: string
 }
