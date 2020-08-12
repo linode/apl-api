@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/camelcase */
 import { Issuer } from "openid-client"
-import { ClientsApi, IdentityProvidersApi, ClientScopesApi, RolesApi, AuthenticationManagementApi, HttpError } from "@redkubes/keycloak-10.0-client"
+import { ClientsApi, IdentityProvidersApi, ClientScopesApi, RolesApi, HttpError } from "@redkubes/keycloak-client-node"
 import  * as realmConfig   from "./realm-factory"
-import { cleanEnv, str, json } from "envalid"
+import { cleanEnv, str } from "envalid"
 
 const errors = []
 async function main() {
@@ -21,9 +21,10 @@ async function main() {
 
   // keycloak oapi client connection options
   const keycloakAddress = env.KEYCLOAK_ADDRESS
+  const keycloakRealm = env.KEYCLOAK_REALM
   const basePath = `${keycloakAddress}/admin/realms`
   const keycloakIssuer = await Issuer.discover(
-    `${keycloakAddress}/realms/${env.KEYCLOAK_REALM}/`
+    `${keycloakAddress}/realms/${keycloakRealm}/`
   )
   const openIdConnectClient = new keycloakIssuer.Client({
     client_id: "admin-cli",
@@ -35,20 +36,6 @@ async function main() {
     password: env.KEYCLOAK_ADMIN_PASSWORD
   })
   
-  // Create Otomi Client
-  try {
-    const clients = new ClientsApi(basePath)
-    clients.accessToken = String(token.access_token)
-    await clients.realmClientsPost(env.KEYCLOAK_REALM,
-      realmConfig.createClient()
-    )
-    console.log("Loaded Keycloak Client Application")
-  } catch (e) {
-    if (e instanceof HttpError) {
-      if (e.statusCode === 409) console.info(`Client already exists. Skipping.`)
-    } else errors.push(`Caught Exception Uploading Client: ${e}`)
-  }
-
   // Create Identity Provider
   try {
     const providers = new IdentityProvidersApi(basePath)
@@ -60,14 +47,13 @@ async function main() {
   } catch (e) {
     if (e instanceof HttpError) {
       if (e.statusCode === 409) console.info(`IdentityProvider already exists. Skipping.`)
-    } else errors.push(`Caught Exception Uploading IdentityProvider: ${e}`)
+    } else errors.push(`Caught Exception Creating IdentityProvider: ${e}`)
   }
 
   // Create Identity Provider Mappers
   try {
     const providers = new IdentityProvidersApi(basePath)
     providers.accessToken = String(token.access_token)
-    
     for await (const idpMapper of realmConfig.createIdpMappers()) {
       try {
         console.log(` Loading config for mapper  ${env.KEYCLOAK_REALM}, ${env.IDP_ALIAS}, [${idpMapper.name}] `)
@@ -76,21 +62,19 @@ async function main() {
         if (e instanceof HttpError) {
           if (e.statusCode === 409) console.info(`IdPMapper [${idpMapper.name}] already exists. Skipping.`)
         } else {
-          console.debug(`Caught Exception Uploading IdpMapper: ${e}`)
+          console.debug(`Caught Exception Creating IdpMapper: ${e}`)
         }
       } finally {
         console.log(`Loaded [${idpMapper.name}] IdpMapper settings`)
       }
     }
     console.log(`Loaded IDP provider Mappers settings`)
-  
-  
   } catch (e) {
     if (e instanceof HttpError) {
       if (e.statusCode === 409) console.info(`IdentityProviderMappings already exists. Skipping.`)
-    } else errors.push(`Caught Exception Uploading IdentityProvider: ${e}`)
+    } else errors.push(`Caught Exception Creating IdentityProvider: ${e}`)
   }
-  
+
   // Create Client Scopes
   try {
     const clientScope = new ClientScopesApi(basePath)
@@ -102,21 +86,21 @@ async function main() {
   } catch (e) {
     if (e instanceof HttpError) {
       if (e.statusCode === 409) console.info(`ClientScope already exists. Skipping.`)
-    } else errors.push(`Caught Exception Uploading ClientScope: ${e}`)
+    } else errors.push(`Caught Exception Creating ClientScope: ${e}`)
   }
-  
+
   // Create Roles
   try {
     const roles = new RolesApi(basePath)
     roles.accessToken = String(token.access_token)
-    for await (const role of realmConfig.createRoles()) {
+    for await (const role of realmConfig.mapTeamsToRoles()) {
       try {
         await roles.realmRolesPost(env.KEYCLOAK_REALM, role)
       } catch (e) {
         if (e instanceof HttpError) {
           if (e.statusCode === 409) console.info(`Role [${role.name}] already exists. Skipping.`)
         } else {
-          console.debug(`Caught Exception Uploading Role: ${e}`)
+          console.debug(`Caught Exception Creating Role: ${e}`)
         }
       } finally {
         console.log(`Loaded ${role.name} Role settings`)
@@ -126,10 +110,22 @@ async function main() {
   } catch (e) {
     if (e instanceof HttpError) {
       if (e.statusCode === 409) console.info(`Role already exists. Skipping.`)
-    } else errors.push(`Caught Exception Uploading Roles: ${e}`)
+    } else errors.push(`Caught Exception Creating Roles: ${e}`)
   }
-  
 
+  // Create Otomi Client
+  try {
+    const clients = new ClientsApi(basePath)
+    clients.accessToken = String(token.access_token)
+    await clients.realmClientsPost(env.KEYCLOAK_REALM,
+      realmConfig.createClient()
+    )
+    console.log("Loaded Keycloak Client Application")
+  } catch (e) {
+    if (e instanceof HttpError) {
+      if (e.statusCode === 409) console.info(`Client already exists. Skipping.`)
+    } else errors.push(`Caught Exception Creating Client: ${e}`)
+  }
   
   if (errors.length) {
     console.log(JSON.stringify(errors, null, 2))
