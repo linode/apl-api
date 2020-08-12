@@ -10,7 +10,6 @@ import get from 'lodash/get'
 import { errorMiddleware, jwtMiddleware, isUserAuthorized, getCrudOperation } from './middleware'
 import Authz from './authz'
 import { OpenApiRequestExt } from './otomi-models'
-import { getEnv } from './utils'
 
 export async function loadOpenApisSpec() {
   const openApiPath = path.resolve(__dirname, 'openapi/api.yaml')
@@ -20,8 +19,6 @@ export async function loadOpenApisSpec() {
 }
 
 export default async function initApp(otomiStack) {
-  const env = getEnv()
-
   const app = express()
   const apiRoutesPath = path.resolve(__dirname, 'api')
   const spec: any = await loadOpenApisSpec()
@@ -34,8 +31,6 @@ export default async function initApp(otomiStack) {
 
   function getSecurityHandlers() {
     const securityHandlers = { groupAuthz: undefined }
-
-    if (env.DISABLE_AUTH) return securityHandlers
 
     securityHandlers.groupAuthz = (req) => {
       return isUserAuthorized(req, authz)

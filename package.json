@@ -128,7 +128,7 @@
     "tasks:harbor-dev": ". ./.env.dev && . ./.secrets && ts-node-dev  ./src/tasks/harbor/harbor.ts",
     "tasks:harbor-init": "node dist/tasks/harbor/harbor-init.js",
     "tasks:harbor-init-dev": ". ./.env.dev && . ./.secrets && ts-node-dev  ./src/tasks/harbor/harbor-init.ts",
-    "test": "NODE_ENV=test && mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit"
+    "test": "NODE_ENV=test mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit"
   },
   "standard-version": {
     "skip": {

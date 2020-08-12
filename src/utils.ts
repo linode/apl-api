@@ -29,7 +29,6 @@ export function getEnv() {
         default: undefined,
       }),
       DISABLE_SYNC: bool({ devDefault: true, default: false }),
-      DISABLE_AUTH: bool({ devDefault: false, default: false }),
       GIT_BRANCH: str({ desc: 'A git branch name used for fetching and pushing commits', default: 'master' }),
       GIT_EMAIL: str({ desc: 'An email for git config', devDefault: 'user@dev.com' }),
       GIT_LOCAL_PATH: str({ desc: 'A path where git repository is cloned', default: '/tmp/otomi-stack' }),
