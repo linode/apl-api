@@ -15,7 +15,7 @@ async function main() {
       KEYCLOAK_ADMIN_PASSWORD: str({ desc: 'Default Password for Admins' }),
       KEYCLOAK_ADDRESS: str({ desc: 'Default Keycloak Server Address' }),
       KEYCLOAK_REALM: str({ desc: 'Default Keycloak Realm' }),
-  },
+    },
     { strict: true },
   )
 
@@ -36,97 +36,64 @@ async function main() {
     password: env.KEYCLOAK_ADMIN_PASSWORD
   })
   
+  // Configure AccessToken for service calls
+  const providers = new IdentityProvidersApi(basePath)
+  providers.accessToken = String(token.access_token)
+  const clientScope = new ClientScopesApi(basePath)
+  clientScope.accessToken = String(token.access_token)
+  const roles = new RolesApi(basePath)
+  roles.accessToken = String(token.access_token)
+  const clients = new ClientsApi(basePath)
+  clients.accessToken = String(token.access_token)
+
+  async function runIdempotentTask(resource:string, fn: () => Promise<void>) {
+    try {
+      await fn()
+      console.log(`Loaded ${resource} settings`)
+    } catch (e) {
+      if (e instanceof HttpError) {
+        if (e.statusCode === 409) console.info(`${resource} already exists. Skipping.`)
+      } else errors.push(`Caught Exception Creating ${resource}: ${e}`)
+    }
+  }
+
   // Create Identity Provider
-  try {
-    const providers = new IdentityProvidersApi(basePath)
-    providers.accessToken = String(token.access_token)
+  await runIdempotentTask("Identity Provider",   async () => {
     await providers.realmIdentityProviderInstancesPost(env.KEYCLOAK_REALM,
       realmConfig.createIdProvider()
     )
-    console.log(`Loaded IDP provider settings`)
-  } catch (e) {
-    if (e instanceof HttpError) {
-      if (e.statusCode === 409) console.info(`IdentityProvider already exists. Skipping.`)
-    } else errors.push(`Caught Exception Creating IdentityProvider: ${e}`)
-  }
+  })
 
   // Create Identity Provider Mappers
-  try {
-    const providers = new IdentityProvidersApi(basePath)
-    providers.accessToken = String(token.access_token)
-    for await (const idpMapper of realmConfig.createIdpMappers()) {
-      try {
-        console.log(` Loading config for mapper  ${env.KEYCLOAK_REALM}, ${env.IDP_ALIAS}, [${idpMapper.name}] `)
-        await providers.realmIdentityProviderInstancesAliasMappersPost(env.KEYCLOAK_REALM, env.IDP_ALIAS, idpMapper)
-      } catch (e) {
-        if (e instanceof HttpError) {
-          if (e.statusCode === 409) console.info(`IdPMapper [${idpMapper.name}] already exists. Skipping.`)
-        } else {
-          console.debug(`Caught Exception Creating IdpMapper: ${e}`)
-        }
-      } finally {
-        console.log(`Loaded [${idpMapper.name}] IdpMapper settings`)
-      }
-    }
-    console.log(`Loaded IDP provider Mappers settings`)
-  } catch (e) {
-    if (e instanceof HttpError) {
-      if (e.statusCode === 409) console.info(`IdentityProviderMappings already exists. Skipping.`)
-    } else errors.push(`Caught Exception Creating IdentityProvider: ${e}`)
+  for await (const idpMapper of realmConfig.createIdpMappers()) {
+    await runIdempotentTask(`${idpMapper.name} Mapping`, async () => {
+      await providers.realmIdentityProviderInstancesAliasMappersPost(env.KEYCLOAK_REALM,
+        env.IDP_ALIAS, idpMapper
+      )
+    })
   }
 
   // Create Client Scopes
-  try {
-    const clientScope = new ClientScopesApi(basePath)
-    clientScope.accessToken = String(token.access_token)
+  await runIdempotentTask("OpenID Client Scope", async () => { 
     await clientScope.realmClientScopesPost(env.KEYCLOAK_REALM,
       realmConfig.createClientScopes()
     )
-    console.log(`Loaded ClientScope settings`)
-  } catch (e) {
-    if (e instanceof HttpError) {
-      if (e.statusCode === 409) console.info(`ClientScope already exists. Skipping.`)
-    } else errors.push(`Caught Exception Creating ClientScope: ${e}`)
-  }
-
+  })
+    
   // Create Roles
-  try {
-    const roles = new RolesApi(basePath)
-    roles.accessToken = String(token.access_token)
-    for await (const role of realmConfig.mapTeamsToRoles()) {
-      try {
-        await roles.realmRolesPost(env.KEYCLOAK_REALM, role)
-      } catch (e) {
-        if (e instanceof HttpError) {
-          if (e.statusCode === 409) console.info(`Role [${role.name}] already exists. Skipping.`)
-        } else {
-          console.debug(`Caught Exception Creating Role: ${e}`)
-        }
-      } finally {
-        console.log(`Loaded ${role.name} Role settings`)
-      }
-    }
-    console.log(`Finished loading Roles settings`)
-  } catch (e) {
-    if (e instanceof HttpError) {
-      if (e.statusCode === 409) console.info(`Role already exists. Skipping.`)
-    } else errors.push(`Caught Exception Creating Roles: ${e}`)
+  for await (const role of realmConfig.mapTeamsToRoles()) {
+    await runIdempotentTask(`${role.name} Role`, async () => { 
+      await roles.realmRolesPost(env.KEYCLOAK_REALM, role)
+    })
   }
-
+    
   // Create Otomi Client
-  try {
-    const clients = new ClientsApi(basePath)
-    clients.accessToken = String(token.access_token)
+  await runIdempotentTask("Otomi Client", async () => { 
     await clients.realmClientsPost(env.KEYCLOAK_REALM,
       realmConfig.createClient()
     )
-    console.log("Loaded Keycloak Client Application")
-  } catch (e) {
-    if (e instanceof HttpError) {
-      if (e.statusCode === 409) console.info(`Client already exists. Skipping.`)
-    } else errors.push(`Caught Exception Creating Client: ${e}`)
-  }
-  
+  })
+
   if (errors.length) {
     console.log(JSON.stringify(errors, null, 2))
     process.exit(1)
