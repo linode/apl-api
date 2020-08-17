@@ -16,12 +16,11 @@ npm run tasks:harbor
 
 KeyCloak SSO configuration:
 
-Running the tasks script will bootstrap all the configs for setting up an OIDC Provider
+Running the tasks script will bootstrap all the configs for setting up any OIDC Provider.
 Expected environment variables need to be sourced from the `.env.dev` file in the local workstation, which can be created from the `.secrets` file, in the company shared drive.
 
 For example:
 
 ```
-npm run tasks:keycloak-dev
 npm run tasks:keycloak
 ```

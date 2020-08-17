@@ -12,7 +12,6 @@ import {
   idpProviderCfgTpl,
   clientScopeCfgTpl,
   otomiClientCfgTpl,
-  OidcProvider,
 } from "./config"
 
 //type definition for imported ENV variable IDP_GROUP_MAPPINGS_TEAMS
@@ -20,7 +19,6 @@ export interface TeamMapping {
   name: string;
   groupMapping: string
 }
-
 
 const env = cleanEnv(
   process.env,
@@ -37,7 +35,7 @@ const env = cleanEnv(
     REDIRECT_URIS: json({ desc: 'A list of Redirect URI\'s in JSON format' }),
     IDP_GROUP_OTOMI_ADMIN: str({ desc: 'Otomi Admin IDP Group ID' }),
     IDP_GROUP_MAPPINGS_TEAMS: json({ desc: 'A list of Team Names and Group Id\'s from the IDP' }),
-    OIDC_IDP_CONFIG: json({ desc: 'A oidc Provider configuration object' }),
+    IDP_OIDC_URL: str({ desc: 'The Provider\'s OIDC enpoints url' }),
   },
   { strict: true },
 )
@@ -73,14 +71,13 @@ export function createIdpMappers(idpAlias: string = env.IDP_ALIAS,
   return teamMappers.concat(defaultMappers).concat(adminMappers)
 }
 
-export function createIdProvider(tenantId: string = env.CLOUD_TENANT,
+export async function createIdProvider(tenantId: string = env.CLOUD_TENANT,
     clientId: string = env.TENANT_CLIENT_ID,
     alias: string = env.IDP_ALIAS,
     clientSecret: string = env.TENANT_CLIENT_SECRET,
-    oidcProvider: object = env.OIDC_IDP_CONFIG): api.IdentityProviderRepresentation {  
-  const oidc = oidcProvider as OidcProvider
+    oidcUrl: string = env.IDP_OIDC_URL): Promise<api.IdentityProviderRepresentation> {  
   const otomiClientIdp = defaultsDeep(new api.IdentityProviderRepresentation(),
-    idpProviderCfgTpl(alias, tenantId, clientId, clientSecret, oidc)
+    await idpProviderCfgTpl(alias, tenantId, clientId, clientSecret, oidcUrl)
   )
   return otomiClientIdp
 }

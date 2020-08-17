@@ -82,7 +82,7 @@ async function main() {
   // Create Identity Provider
   await runIdempotentTask("Identity Provider", async () => {
     await providers.realmIdentityProviderInstancesPost(env.KEYCLOAK_REALM,
-      realmConfig.createIdProvider()
+      await realmConfig.createIdProvider()
     )
   })
 
