@@ -12,11 +12,15 @@ import {
   idpProviderCfgTpl,
   clientScopeCfgTpl,
   otomiClientCfgTpl,
+  OidcProvider,
 } from "./config"
 
-import {
-  TeamMapping
-} from "./interfaces"
+//type definition for imported ENV variable IDP_GROUP_MAPPINGS_TEAMS
+export interface TeamMapping {
+  name: string;
+  groupMapping: string
+}
+
 
 const env = cleanEnv(
   process.env,
@@ -33,6 +37,7 @@ const env = cleanEnv(
     REDIRECT_URIS: json({ desc: 'A list of Redirect URI\'s in JSON format' }),
     IDP_GROUP_OTOMI_ADMIN: str({ desc: 'Otomi Admin IDP Group ID' }),
     IDP_GROUP_MAPPINGS_TEAMS: json({ desc: 'A list of Team Names and Group Id\'s from the IDP' }),
+    OIDC_IDP_CONFIG: json({ desc: 'A oidc Provider configuration object' }),
   },
   { strict: true },
 )
@@ -71,9 +76,11 @@ export function createIdpMappers(idpAlias: string = env.IDP_ALIAS,
 export function createIdProvider(tenantId: string = env.CLOUD_TENANT,
     clientId: string = env.TENANT_CLIENT_ID,
     alias: string = env.IDP_ALIAS,
-    clientSecret: string = env.TENANT_CLIENT_SECRET): api.IdentityProviderRepresentation {  
+    clientSecret: string = env.TENANT_CLIENT_SECRET,
+    oidcProvider: object = env.OIDC_IDP_CONFIG): api.IdentityProviderRepresentation {  
+  const oidc = oidcProvider as OidcProvider
   const otomiClientIdp = defaultsDeep(new api.IdentityProviderRepresentation(),
-    idpProviderCfgTpl(alias, tenantId, clientId, clientSecret)
+    idpProviderCfgTpl(alias, tenantId, clientId, clientSecret, oidc)
   )
   return otomiClientIdp
 }

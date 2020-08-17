@@ -5,6 +5,7 @@ import  * as realmConfig   from "./realm-factory"
 import { cleanEnv, str } from "envalid"
 
 const errors = []
+
 async function main() {
 
   const env = cleanEnv(
@@ -18,24 +19,30 @@ async function main() {
     },
     { strict: true },
   )
+  let basePath, token
+  try {
+    // keycloak oapi client connection options
+    const keycloakAddress = env.KEYCLOAK_ADDRESS
+    const keycloakRealm = env.KEYCLOAK_REALM
+    basePath = `${keycloakAddress}/admin/realms`
+    const keycloakIssuer = await Issuer.discover(
+      `${keycloakAddress}/realms/${keycloakRealm}/`
+    )
+    const openIdConnectClient = new keycloakIssuer.Client({
+      client_id: "admin-cli",
+      client_secret: "unused",
+    })
+    token = await openIdConnectClient.grant({
+      grant_type: "password",
+      username: env.KEYCLOAK_ADMIN,
+      password: env.KEYCLOAK_ADMIN_PASSWORD
+    })
+    
+  } catch (error) {
+    console.error(error)
+    process.exit()
+  }
 
-  // keycloak oapi client connection options
-  const keycloakAddress = env.KEYCLOAK_ADDRESS
-  const keycloakRealm = env.KEYCLOAK_REALM
-  const basePath = `${keycloakAddress}/admin/realms`
-  const keycloakIssuer = await Issuer.discover(
-    `${keycloakAddress}/realms/${keycloakRealm}/`
-  )
-  const openIdConnectClient = new keycloakIssuer.Client({
-    client_id: "admin-cli",
-    client_secret: "unused",
-  })
-  const token = await openIdConnectClient.grant({
-    grant_type: "password",
-    username: env.KEYCLOAK_ADMIN,
-    password: env.KEYCLOAK_ADMIN_PASSWORD
-  })
-  
   // Configure AccessToken for service calls
   const providers = new IdentityProvidersApi(basePath)
   providers.accessToken = String(token.access_token)
@@ -46,6 +53,7 @@ async function main() {
   const clients = new ClientsApi(basePath)
   clients.accessToken = String(token.access_token)
 
+  
   async function runIdempotentTask(resource:string, fn: () => Promise<void>) {
     try {
       await fn()
@@ -55,22 +63,6 @@ async function main() {
         if (e.statusCode === 409) console.info(`${resource} already exists. Skipping.`)
       } else errors.push(`Caught Exception Creating ${resource}: ${e}`)
     }
-  }
-
-  // Create Identity Provider
-  await runIdempotentTask("Identity Provider",   async () => {
-    await providers.realmIdentityProviderInstancesPost(env.KEYCLOAK_REALM,
-      realmConfig.createIdProvider()
-    )
-  })
-
-  // Create Identity Provider Mappers
-  for await (const idpMapper of realmConfig.createIdpMappers()) {
-    await runIdempotentTask(`${idpMapper.name} Mapping`, async () => {
-      await providers.realmIdentityProviderInstancesAliasMappersPost(env.KEYCLOAK_REALM,
-        env.IDP_ALIAS, idpMapper
-      )
-    })
   }
 
   // Create Client Scopes
@@ -87,6 +79,22 @@ async function main() {
     })
   }
     
+  // Create Identity Provider
+  await runIdempotentTask("Identity Provider", async () => {
+    await providers.realmIdentityProviderInstancesPost(env.KEYCLOAK_REALM,
+      realmConfig.createIdProvider()
+    )
+  })
+
+  // Create Identity Provider Mappers
+  for await (const idpMapper of realmConfig.createIdpMappers()) {
+    await runIdempotentTask(`${idpMapper.name} Mapping`, async () => {
+      await providers.realmIdentityProviderInstancesAliasMappersPost(env.KEYCLOAK_REALM,
+        env.IDP_ALIAS, idpMapper
+      )
+    })
+  }
+
   // Create Otomi Client
   await runIdempotentTask("Otomi Client", async () => { 
     await clients.realmClientsPost(env.KEYCLOAK_REALM,
@@ -104,3 +112,4 @@ async function main() {
 }
 
 main() 
+
