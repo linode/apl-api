@@ -106,7 +106,7 @@ Service:
         admin: [read, create]
         team: [read, create]
     port:
-      title: A port to a service
+      title: Service port
       type: integer
       default: 80
       minimum: 1
