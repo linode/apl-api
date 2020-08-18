@@ -64,7 +64,7 @@ export function getPublicUrl(serviceDomain, serviceName, teamId, cluster) {
   if (!serviceDomain) {
     // Fallback mechanism for exposed service that does not have its public url specified in values
     return {
-      subdomain: `${serviceName}.team-${teamId}`,
+      subdomain: `${serviceName}.team-${teamId}.${cluster.name}`,
       domain: cluster.dnsZones[0],
     }
   }
