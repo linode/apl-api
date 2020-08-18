@@ -39,7 +39,7 @@ const getFilePath = (cloud = null, cluster = null) => {
 function splitGlobal(teamValues) {
   const t = teamValues.teamConfig.teams
   const g = glbl.teamConfig.teams
-  const globalProps = ['id', 'password', 'receiver', 'azure']
+  const globalProps = ['id', 'password', 'receiver', 'azure', 'secrets']
   forEach(t, (team, teamId) => {
     if (!g[teamId]) g[teamId] = {}
     globalProps.forEach((prop) => {
@@ -423,7 +423,7 @@ export default class OtomiStack {
       console.info(`Missing 'services' key for team ${teamId} in ${path} file. Skipping.`)
       return
     }
-    if (teamData.secrets) this.convertTeamValuesSecretsToDb(teamData.secrets, teamId)
+    this.convertTeamValuesSecretsToDb(teamData.secrets || [], teamId)
     this.convertTeamValuesServicesToDb(teamData.services, teamId, cluster)
   }
 
