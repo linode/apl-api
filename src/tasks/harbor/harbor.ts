@@ -1,6 +1,6 @@
 import { HttpError, ProductsApi, ProjectReq, ProjectMember } from '@redkubes/harbor-client'
 import { HttpBasicAuth } from '@kubernetes/client-node'
-import { cleanEnv, json, str } from 'envalid'
+import { cleanEnv, str } from 'envalid'
 
 const HarborRole = {
   admin: 1,
