@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.15](https://github.com/redkubes/otomi-stack-api/compare/v0.4.14...v0.4.15) (2020-08-18)
+
+### Features
+
+- add email of the author to commit message ([#104](https://github.com/redkubes/otomi-stack-api/issues/104)) ([b3a9a36](https://github.com/redkubes/otomi-stack-api/commit/b3a9a36349cabb8afeeb757b9391cc642f9671c5))
+- save/load secrets ([#111](https://github.com/redkubes/otomi-stack-api/issues/111)) ([a2d2e22](https://github.com/redkubes/otomi-stack-api/commit/a2d2e22976c1850933f5c2e13a855c55802e28d2))
+
+### Bug Fixes
+
+- core [ci skip](<[41c490d](https://github.com/redkubes/otomi-stack-api/commit/41c490ddaf792b296d4afefe234a293dbd38de6f)>)
+- secrets acl + location [ci skip](<[cb7823b](https://github.com/redkubes/otomi-stack-api/commit/cb7823b18f460e994af435af9ea4c244bc99d2a6)>)
+- updated released apiDoc version [ci skip](<[fd67b0a](https://github.com/redkubes/otomi-stack-api/commit/fd67b0a43ecfad16f7a20196a5e940ef2650efe9)>)
+
+### Others
+
+- core updated [ci skip](<[9075947](https://github.com/redkubes/otomi-stack-api/commit/907594792b42d10d7a0edd165422c4fbbd8a7418)>)
+
 ### [0.4.14](https://github.com/redkubes/otomi-stack-api/compare/v0.4.13...v0.4.14) (2020-08-07)
 
 ### Bug Fixes
