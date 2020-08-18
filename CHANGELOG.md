@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.18](https://github.com/redkubes/otomi-stack-api/compare/v0.4.17...v0.4.18) (2020-08-18)
+
+### Bug Fixes
+
+- domain name creation [ci skip](<[ca96218](https://github.com/redkubes/otomi-stack-api/commit/ca96218fa6bfdde0871167000bb130b8018fde0a)>)
+
 ### [0.4.17](https://github.com/redkubes/otomi-stack-api/compare/v0.4.16...v0.4.17) (2020-08-18)
 
 ### Bug Fixes
