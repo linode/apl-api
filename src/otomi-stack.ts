@@ -345,7 +345,7 @@ export default class OtomiStack {
     this.db.setDirtyActive()
   }
 
-  loadFileValues(cluster, path) {
+  loadFileValues(path = undefined, cluster = undefined) {
     const values = this.repo.readFile(path)
     const teams = get(values, 'teamConfig.teams', null)
     if (!teams) {
@@ -358,16 +358,18 @@ export default class OtomiStack {
   loadAllTeamValues(clusters) {
     console.log('loadAllTeamValues')
     const loaded = []
+    // load globals first
+    this.loadFileValues(getFilePath())
     forEach(clusters, (cluster) => {
       const { cloud, name } = cluster
       if (!loaded.includes(cloud)) {
         const cloudFile = getFilePath(cloud)
         console.log('loading: ', cloudFile)
-        this.loadFileValues(cluster, cloudFile)
+        this.loadFileValues(cloudFile, cluster)
         loaded.push(cloud)
       }
       const clusterFile = getFilePath(cloud, name)
-      this.loadFileValues(cluster, clusterFile)
+      this.loadFileValues(clusterFile, cluster)
     })
   }
 
@@ -414,23 +416,28 @@ export default class OtomiStack {
       this.editTeam(teamId, team)
     } catch (e) {
       const rawTeam = omit(teamData, 'services', 'secrets')
-      OtomiStack.assignCluster(rawTeam, cluster)
+      if (cluster) OtomiStack.assignCluster(rawTeam, cluster)
       this.db.populateItem('teams', { name: teamId, ...rawTeam, ...glbl.teamConfig.teams[teamId] }, undefined, teamId)
     }
 
-    if (!teamData.services) {
+    if (teamData.services) {
+      this.convertTeamValuesServicesToDb(teamData.services, teamId, cluster)
+    } else {
       const path = getFilePath(cluster)
       console.info(`Missing 'services' key for team ${teamId} in ${path} file. Skipping.`)
-      return
     }
-    this.convertTeamValuesSecretsToDb(teamData.secrets || [], teamId)
-    this.convertTeamValuesServicesToDb(teamData.services, teamId, cluster)
+    if (teamData.secrets) {
+      this.convertTeamValuesSecretsToDb(teamData.secrets, teamId)
+    } else {
+      const path = getFilePath(cluster)
+      console.info(`Missing 'secret' key for team ${teamId} in ${path} file. Skipping.`)
+    }
   }
 
   convertTeamValuesSecretsToDb(secrets, teamId) {
     secrets.forEach((secret) => {
       const res = this.db.populateItem('secrets', { ...secret, teamId }, { teamId, name: secret.name }, secret.id)
-      console.log(`Loaded secret: name: ${res.name}, id: ${res.secretId}, teamId: ${teamId}`)
+      console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
     })
   }
 
