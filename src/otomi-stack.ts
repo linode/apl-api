@@ -231,8 +231,8 @@ export default class OtomiStack {
     return config
   }
 
-  createSecret(teamId, data, scope = 'global') {
-    return this.db.createItem('secrets', { ...data, teamId, scope }, { teamId, name: data.name })
+  createSecret(teamId, data) {
+    return this.db.createItem('secrets', { ...data, teamId }, { teamId, name: data.name })
   }
 
   editSecret(id, data) {
@@ -247,12 +247,12 @@ export default class OtomiStack {
     return this.db.getItem('secrets', { id })
   }
 
-  getAllSecrets(scope = 'global') {
-    return this.db.getCollection('secrets', { scope })
+  getAllSecrets() {
+    return this.db.getCollection('secrets', {})
   }
 
-  getSecrets(teamId, scope = 'global') {
-    return this.db.getCollection('secrets', { teamId, scope })
+  getSecrets(teamId) {
+    return this.db.getCollection('secrets', { teamId })
   }
 
   async createPullSecret({
@@ -413,7 +413,7 @@ export default class OtomiStack {
       OtomiStack.assignCluster(team, cluster)
       this.editTeam(teamId, team)
     } catch (e) {
-      const rawTeam = omit(teamData, 'services')
+      const rawTeam = omit(teamData, 'services', 'secrets')
       OtomiStack.assignCluster(rawTeam, cluster)
       this.db.populateItem('teams', { name: teamId, ...rawTeam, ...glbl.teamConfig.teams[teamId] }, undefined, teamId)
     }
@@ -423,7 +423,15 @@ export default class OtomiStack {
       console.info(`Missing 'services' key for team ${teamId} in ${path} file. Skipping.`)
       return
     }
+    if (teamData.secrets) this.convertTeamValuesSecretsToDb(teamData.secrets, teamId)
     this.convertTeamValuesServicesToDb(teamData.services, teamId, cluster)
+  }
+
+  convertTeamValuesSecretsToDb(secrets, teamId) {
+    secrets.forEach((secret) => {
+      const res = this.db.populateItem('secrets', { ...secret, teamId }, { teamId, name: secret.name }, secret.id)
+      console.log(`Loaded secret: name: ${res.name}, id: ${res.secretId}, teamId: ${teamId}`)
+    })
   }
 
   convertTeamValuesServicesToDb(services, teamId, cluster) {
@@ -499,6 +507,12 @@ export default class OtomiStack {
       const teamCloned = omit(team, ['clusters', 'name'])
       const id = team.id
       teams[id] = teamCloned
+      const dbSecrets = this.getSecrets(id)
+      teamCloned.secrets = []
+      dbSecrets.forEach((item) => {
+        teamCloned.secrets.push(omit(item, 'teamId'))
+      })
+
       const dbServices = this.getTeamServices(id)
       const services = []
 

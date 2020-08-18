@@ -6,6 +6,9 @@ teamConfig:
         type: drone
       id: team1
       password: somepassworddd
+      secrets:
+        - name: secret
+          id: c961dfef-4e81-4b5b-873d-5d6ec5852b37
       services:
         - id: id1
           isPublic: true
