@@ -474,6 +474,7 @@ export default class OtomiStack {
         certArn: svcRaw.certArn,
         domain: publicUrl.domain,
         subdomain: publicUrl.subdomain,
+        useDefaultSubdomain: !!svcRaw.ownHost,
         path: svcRaw.paths && svcRaw.paths.length ? svcRaw.paths[0] : undefined,
         forwardPath: 'forwardPath' in svcRaw,
       }
