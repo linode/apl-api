@@ -12,7 +12,7 @@ teamConfig:
       services:
         - id: id1
           isPublic: true
-          domain: 'hello.team-team1.dev.otomi.cloud'
+          domain: 'hello.team-team1.dev.gke.otomi.cloud'
           name: hello
           paths:
             - '/bla'

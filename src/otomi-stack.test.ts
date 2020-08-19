@@ -17,7 +17,7 @@ describe('Load and dump values', () => {
     // this.skip('New method signatur for getService needs implementation')
     const expectedValues = yaml.safeLoad(fs.readFileSync('./test/team.yaml', 'utf8'))
     const values = cloneDeep(expectedValues)
-    const cluster = { cloud: 'aws', name: 'dev', id: 'aws/dev', dnsZones: ['otomi.cloud'] }
+    const cluster = { cloud: 'aws', name: 'dev', id: 'aws/dev', dnsZones: ['gke.otomi.cloud', 'otomi.cloud'] }
     otomiStack.loadTeamsValues(values.teamConfig.teams, cluster)
 
     const expectedTeam = {
@@ -35,11 +35,12 @@ describe('Load and dump values', () => {
       teamId: 'team1',
       clusterId: 'aws/dev',
       ingress: {
-        domain: 'otomi.cloud',
+        domain: 'gke.otomi.cloud',
         hasSingleSignOn: false,
         hasCert: false,
         certArn: undefined,
         subdomain: 'hello.team-team1.dev',
+        useDefaultSubdomain: false,
         path: '/bla',
         forwardPath: false,
       },
@@ -66,6 +67,7 @@ describe('Load and dump values', () => {
         hasCert: false,
         certArn: undefined,
         subdomain: 'hello-predeployed-ksvc.team-team1.dev',
+        useDefaultSubdomain: false,
         path: undefined,
         forwardPath: false,
       },
@@ -96,6 +98,7 @@ describe('Load and dump values', () => {
         hasCert: false,
         certArn: undefined,
         subdomain: 'hello-svc.team-team1.dev',
+        useDefaultSubdomain: false,
         path: undefined,
         forwardPath: false,
       },
