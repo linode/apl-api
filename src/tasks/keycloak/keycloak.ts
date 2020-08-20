@@ -54,6 +54,7 @@ async function main() {
   clients.accessToken = String(token.access_token)
 
   
+  // Abstraction for async idempotent task
   async function runIdempotentTask(resource:string, fn: () => Promise<void>) {
     try {
       await fn()

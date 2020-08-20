@@ -126,7 +126,7 @@
     "release": "standard-version",
     "start": "node dist/app.js",
     "tasks:keycloak": "node dist/tasks/keycloak/keycloak.js",
-    "tasks:keycloak-dev": ". ./src/tasks/keycloak/.env.dev && ts-node-dev ./src/tasks/keycloak/keycloak.ts",
+    "tasks:keycloak-dev": ". ./src/tasks/keycloak/.env.dev && ts-node-dev  ./src/tasks/keycloak/keycloak.ts",
     "tasks:harbor": "node dist/tasks/harbor/harbor.js",
     "tasks:harbor-dev": ". ./.env.dev && . ./.secrets && ts-node-dev  ./src/tasks/harbor/harbor.ts",
     "tasks:harbor-init": "node dist/tasks/harbor/harbor-init.js",

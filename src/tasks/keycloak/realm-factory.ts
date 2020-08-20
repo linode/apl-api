@@ -12,13 +12,8 @@ import {
   idpProviderCfgTpl,
   clientScopeCfgTpl,
   otomiClientCfgTpl,
+  TeamMapping,
 } from "./config"
-
-//type definition for imported ENV variable IDP_GROUP_MAPPINGS_TEAMS
-export interface TeamMapping {
-  name: string;
-  groupMapping: string
-}
 
 const env = cleanEnv(
   process.env,

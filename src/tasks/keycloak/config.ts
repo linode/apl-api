@@ -133,7 +133,6 @@ export const roleTpl = (name: string, groupMapping: string, containerId: string)
   }
 }
 
-
 // cloud idprovider configurations
 function oidcCfg(providerCfg: OidcProviderCfg, tenantId: string, clientId: string, clientSecret: string) {
   return {
@@ -155,6 +154,7 @@ function oidcCfg(providerCfg: OidcProviderCfg, tenantId: string, clientId: strin
 
 async function getDiscoveryUrls(oidcUrl: string, version = "v2.0") {
   return await axios.get(`${oidcUrl}/${version}/.well-known/openid-configuration`).then(response => {
+    if (!response.data) throw Error("Oidc Provider Address not found!")
     return response.data
   })
 }
@@ -189,13 +189,13 @@ export const otomiClientCfgTpl = (id: string, secret: string, defaultClientScope
 }
 
 //type definition for imported ENV variable IDP_GROUP_MAPPINGS_TEAMS
-export interface TeamMapping {
+export type TeamMapping = {
   name: string,
   groupMapping: string,
 }
 
 //type definition for OIDC Discovery URI Object Metadata 
-export interface OidcProviderCfg {
+export type OidcProviderCfg = {
   jwks_uri: string,
   token_endpoint: string,
   issuer: string,

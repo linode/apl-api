@@ -61,6 +61,15 @@
       },
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Keycloak Tasks",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run-script", "tasks:keycloak-dev"],
+      "cwd": "${workspaceRoot}",
+      "console": "integratedTerminal"
     }
   ]
 }
