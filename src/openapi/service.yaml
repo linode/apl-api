@@ -149,6 +149,12 @@ Service:
                   <<: *repositoryField
                 tag:
                   type: string
+            secrets:
+              type: array
+              title: Secrets
+              items:
+                type: string
+              uniqueItems: true
               required:
                 - repository
                 - tag
