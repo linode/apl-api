@@ -30,6 +30,37 @@ describe('Load and dump values', () => {
       password: 'somepassworddd',
       clusters: ['aws/dev'],
     }
+    const expectedSecrets = [
+      {
+        name: 'tls-secret',
+        id: 'c961dfef-4e81-4b5b-873d-5d6ec5852b37',
+        teamId: 'team1',
+        type: 'tls',
+      },
+      {
+        name: 'generic-secret',
+        id: 'c961dfef-4e81-4b5b-873d-5d6ec5852b38',
+        type: 'generic',
+        teamId: 'team1',
+        items: [
+          {
+            key: 'key1',
+            value: 'val1',
+          },
+          {
+            key: 'key2',
+            value: 'val2',
+          },
+        ],
+      },
+      {
+        name: 'docker-registry-secret',
+        id: 'c961dfef-4e81-4b5b-873d-5d6ec5852b39',
+        type: 'docker-registry',
+        teamId: 'team1',
+      },
+    ]
+
     const expectedService = {
       id: 'id1',
       teamId: 'team1',
@@ -52,6 +83,7 @@ describe('Load and dump values', () => {
           repository: 'otomi/helloworld-nodejs',
           tag: '1.1.3',
         },
+        secrets: [{ name: 'generic-secret', entries: ['key1'] }],
       },
       name: 'hello',
     }
@@ -109,6 +141,9 @@ describe('Load and dump values', () => {
 
     let data = otomiStack.getTeam('team1')
     expect(data).to.deep.equal(expectedTeam)
+
+    data = otomiStack.getSecrets('team1')
+    expect(data).to.deep.equal(expectedSecrets)
 
     data = otomiStack.getService('id1')
     expect(data).to.deep.equal(expectedService)
