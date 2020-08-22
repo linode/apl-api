@@ -39,7 +39,7 @@ const getFilePath = (cloud = null, cluster = null) => {
 function splitGlobal(teamValues) {
   const t = teamValues.teamConfig.teams
   const g = glbl.teamConfig.teams
-  const globalProps = ['id', 'password', 'receiver', 'azure']
+  const globalProps = ['id', 'password', 'receiver', 'azure', 'secrets']
   forEach(t, (team, teamId) => {
     if (!g[teamId]) g[teamId] = {}
     globalProps.forEach((prop) => {
@@ -231,8 +231,8 @@ export default class OtomiStack {
     return config
   }
 
-  createSecret(teamId, data, scope = 'global') {
-    return this.db.createItem('secrets', { ...data, teamId, scope }, { teamId, name: data.name })
+  createSecret(teamId, data) {
+    return this.db.createItem('secrets', { ...data, teamId }, { teamId, name: data.name })
   }
 
   editSecret(id, data) {
@@ -247,12 +247,12 @@ export default class OtomiStack {
     return this.db.getItem('secrets', { id })
   }
 
-  getAllSecrets(scope = 'global') {
-    return this.db.getCollection('secrets', { scope })
+  getAllSecrets() {
+    return this.db.getCollection('secrets', {})
   }
 
-  getSecrets(teamId, scope = 'global') {
-    return this.db.getCollection('secrets', { teamId, scope })
+  getSecrets(teamId) {
+    return this.db.getCollection('secrets', { teamId })
   }
 
   async createPullSecret({
@@ -345,7 +345,7 @@ export default class OtomiStack {
     this.db.setDirtyActive()
   }
 
-  loadFileValues(cluster, path) {
+  loadFileValues(path = undefined, cluster = undefined) {
     const values = this.repo.readFile(path)
     const teams = get(values, 'teamConfig.teams', null)
     if (!teams) {
@@ -358,16 +358,18 @@ export default class OtomiStack {
   loadAllTeamValues(clusters) {
     console.log('loadAllTeamValues')
     const loaded = []
+    // load globals first
+    this.loadFileValues(getFilePath())
     forEach(clusters, (cluster) => {
       const { cloud, name } = cluster
       if (!loaded.includes(cloud)) {
         const cloudFile = getFilePath(cloud)
         console.log('loading: ', cloudFile)
-        this.loadFileValues(cluster, cloudFile)
+        this.loadFileValues(cloudFile, cluster)
         loaded.push(cloud)
       }
       const clusterFile = getFilePath(cloud, name)
-      this.loadFileValues(cluster, clusterFile)
+      this.loadFileValues(clusterFile, cluster)
     })
   }
 
@@ -413,17 +415,30 @@ export default class OtomiStack {
       OtomiStack.assignCluster(team, cluster)
       this.editTeam(teamId, team)
     } catch (e) {
-      const rawTeam = omit(teamData, 'services')
-      OtomiStack.assignCluster(rawTeam, cluster)
+      const rawTeam = omit(teamData, 'services', 'secrets')
+      if (cluster) OtomiStack.assignCluster(rawTeam, cluster)
       this.db.populateItem('teams', { name: teamId, ...rawTeam, ...glbl.teamConfig.teams[teamId] }, undefined, teamId)
     }
 
-    if (!teamData.services) {
+    if (teamData.services) {
+      this.convertTeamValuesServicesToDb(teamData.services, teamId, cluster)
+    } else {
       const path = getFilePath(cluster)
       console.info(`Missing 'services' key for team ${teamId} in ${path} file. Skipping.`)
-      return
     }
-    this.convertTeamValuesServicesToDb(teamData.services, teamId, cluster)
+    if (teamData.secrets) {
+      this.convertTeamValuesSecretsToDb(teamData.secrets, teamId)
+    } else {
+      const path = getFilePath(cluster)
+      console.info(`Missing 'secret' key for team ${teamId} in ${path} file. Skipping.`)
+    }
+  }
+
+  convertTeamValuesSecretsToDb(secrets, teamId) {
+    secrets.forEach((secret) => {
+      const res = this.db.populateItem('secrets', { ...secret, teamId }, { teamId, name: secret.name }, secret.id)
+      console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
+    })
   }
 
   convertTeamValuesServicesToDb(services, teamId, cluster) {
@@ -459,6 +474,7 @@ export default class OtomiStack {
         certArn: svcRaw.certArn,
         domain: publicUrl.domain,
         subdomain: publicUrl.subdomain,
+        useDefaultSubdomain: !svcRaw.domain && svcRaw.ownHost,
         path: svcRaw.paths && svcRaw.paths.length ? svcRaw.paths[0] : undefined,
         forwardPath: 'forwardPath' in svcRaw,
       }
@@ -499,6 +515,12 @@ export default class OtomiStack {
       const teamCloned = omit(team, ['clusters', 'name'])
       const id = team.id
       teams[id] = teamCloned
+      const dbSecrets = this.getSecrets(id)
+      teamCloned.secrets = []
+      dbSecrets.forEach((item) => {
+        teamCloned.secrets.push(omit(item, 'teamId'))
+      })
+
       const dbServices = this.getTeamServices(id)
       const services = []
 

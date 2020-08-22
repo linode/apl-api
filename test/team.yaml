@@ -6,10 +6,25 @@ teamConfig:
         type: drone
       id: team1
       password: somepassworddd
+      secrets:
+        - name: tls-secret
+          id: c961dfef-4e81-4b5b-873d-5d6ec5852b37
+          type: tls
+        - name: generic-secret
+          id: c961dfef-4e81-4b5b-873d-5d6ec5852b38
+          type: generic
+          items:
+            - key: key1
+              value: val1
+            - key: key2
+              value: val2
+        - name: docker-registry-secret
+          id: c961dfef-4e81-4b5b-873d-5d6ec5852b39
+          type: docker-registry
       services:
         - id: id1
           isPublic: true
-          domain: 'hello.team-team1.dev.otomi.cloud'
+          domain: 'hello.team-team1.dev.gke.otomi.cloud'
           name: hello
           paths:
             - '/bla'
@@ -22,6 +37,10 @@ teamConfig:
             image:
               repository: otomi/helloworld-nodejs
               tag: 1.1.3
+            secrets:
+              - name: generic-secret
+                entries:
+                  - key1
         - id: id2
           name: hello-predeployed-ksvc
           domain: 'hello-predeployed-ksvc.team-team1.dev.otomi.cloud'

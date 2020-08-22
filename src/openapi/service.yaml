@@ -36,10 +36,10 @@ x-annotations: &K8sAnnotation
 ServiceIngress:
   properties: &ServiceIngress
     useDefaultSubdomain:
-      title: 'Use suggested domain (preferred)'
+      title: 'Use team domain (preferred)'
       type: boolean
       default: true
-      description: Allows to use wildcard certs already available (only override for public facing services)
+      description: Use the team domain so that the URL reveals the owner.
     subdomain:
       title: 'Host'
       type: string
@@ -106,7 +106,7 @@ Service:
         admin: [read, create]
         team: [read, create]
     port:
-      title: A port to a service
+      title: Service port
       type: integer
       default: 80
       minimum: 1
@@ -149,6 +149,23 @@ Service:
                   <<: *repositoryField
                 tag:
                   type: string
+            secrets:
+              type: array
+              title: Secrets
+              nullable: true
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  entries:
+                    title: Entries
+                    type: array
+                    items:
+                      type: string
+                    uniqueItems: true
+                required:
+                  - name
               required:
                 - repository
                 - tag

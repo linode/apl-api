@@ -15,8 +15,8 @@ describe('Utils', () => {
     done()
   })
   it('should retrieve default host if service domain not defined', (done) => {
-    const x = getPublicUrl(undefined, 'aa', 'bb', { dnsZones: ['dd.ee'] })
-    expect(x.subdomain).to.equal('aa.team-bb')
+    const x = getPublicUrl(undefined, 'aa', 'bb', { name: 'dev', dnsZones: ['dd.ee'] })
+    expect(x.subdomain).to.equal('aa.team-bb.dev')
     expect(x.domain).to.equal('dd.ee')
     done()
   })
