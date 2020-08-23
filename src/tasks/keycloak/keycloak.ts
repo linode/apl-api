@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/camelcase */
-import { Issuer } from "openid-client"
-import { ClientsApi, IdentityProvidersApi, ClientScopesApi, RolesApi, HttpError } from "@redkubes/keycloak-client-node"
-import  * as realmConfig   from "./realm-factory"
-import { cleanEnv, str } from "envalid"
+import { Issuer } from 'openid-client'
+import { ClientsApi, IdentityProvidersApi, ClientScopesApi, RolesApi, HttpError } from '@redkubes/keycloak-client-node'
+import * as realmConfig from './realm-factory'
+import { cleanEnv, str } from 'envalid'
 
 const errors = []
 
 async function main() {
-
   const env = cleanEnv(
     process.env,
     {
@@ -25,19 +24,16 @@ async function main() {
     const keycloakAddress = env.KEYCLOAK_ADDRESS
     const keycloakRealm = env.KEYCLOAK_REALM
     basePath = `${keycloakAddress}/admin/realms`
-    const keycloakIssuer = await Issuer.discover(
-      `${keycloakAddress}/realms/${keycloakRealm}/`
-    )
+    const keycloakIssuer = await Issuer.discover(`${keycloakAddress}/realms/${keycloakRealm}/`)
     const openIdConnectClient = new keycloakIssuer.Client({
-      client_id: "admin-cli",
-      client_secret: "unused",
+      client_id: 'admin-cli',
+      client_secret: 'unused',
     })
     token = await openIdConnectClient.grant({
-      grant_type: "password",
+      grant_type: 'password',
       username: env.KEYCLOAK_ADMIN,
-      password: env.KEYCLOAK_ADMIN_PASSWORD
+      password: env.KEYCLOAK_ADMIN_PASSWORD,
     })
-    
   } catch (error) {
     console.error(error)
     process.exit()
@@ -53,9 +49,8 @@ async function main() {
   const clients = new ClientsApi(basePath)
   clients.accessToken = String(token.access_token)
 
-  
   // Abstraction for async idempotent task
-  async function runIdempotentTask(resource:string, fn: () => Promise<void>) {
+  async function runIdempotentTask(resource: string, fn: () => Promise<void>) {
     try {
       await fn()
       console.log(`Loaded ${resource} settings`)
@@ -67,50 +62,40 @@ async function main() {
   }
 
   // Create Client Scopes
-  await runIdempotentTask("OpenID Client Scope", async () => { 
-    await clientScope.realmClientScopesPost(env.KEYCLOAK_REALM,
-      realmConfig.createClientScopes()
-    )
+  await runIdempotentTask('OpenID Client Scope', async () => {
+    await clientScope.realmClientScopesPost(env.KEYCLOAK_REALM, realmConfig.createClientScopes())
   })
-    
+
   // Create Roles
   for await (const role of realmConfig.mapTeamsToRoles()) {
-    await runIdempotentTask(`${role.name} Role`, async () => { 
+    await runIdempotentTask(`${role.name} Role`, async () => {
       await roles.realmRolesPost(env.KEYCLOAK_REALM, role)
     })
   }
-    
+
   // Create Identity Provider
-  await runIdempotentTask("Identity Provider", async () => {
-    await providers.realmIdentityProviderInstancesPost(env.KEYCLOAK_REALM,
-      await realmConfig.createIdProvider()
-    )
+  await runIdempotentTask('Identity Provider', async () => {
+    await providers.realmIdentityProviderInstancesPost(env.KEYCLOAK_REALM, await realmConfig.createIdProvider())
   })
 
   // Create Identity Provider Mappers
   for await (const idpMapper of realmConfig.createIdpMappers()) {
     await runIdempotentTask(`${idpMapper.name} Mapping`, async () => {
-      await providers.realmIdentityProviderInstancesAliasMappersPost(env.KEYCLOAK_REALM,
-        env.IDP_ALIAS, idpMapper
-      )
+      await providers.realmIdentityProviderInstancesAliasMappersPost(env.KEYCLOAK_REALM, env.IDP_ALIAS, idpMapper)
     })
   }
 
   // Create Otomi Client
-  await runIdempotentTask("Otomi Client", async () => { 
-    await clients.realmClientsPost(env.KEYCLOAK_REALM,
-      realmConfig.createClient()
-    )
+  await runIdempotentTask('Otomi Client', async () => {
+    await clients.realmClientsPost(env.KEYCLOAK_REALM, realmConfig.createClient())
   })
 
   if (errors.length) {
     console.log(JSON.stringify(errors, null, 2))
     process.exit(1)
   } else {
-    console.log("Success!")
+    console.log('Success!')
   }
-
 }
 
-main() 
-
+main()

@@ -4,18 +4,9 @@ import fs from 'fs'
 import path from 'path'
 import { GitPullError } from './error'
 import axios from 'axios'
-import { cleanEnv, str } from 'envalid'
+import { env } from './app'
 
-const env = cleanEnv(
-  process.env,
-  {
-    NODE_ENV: str({ desc: 'The node.js environment', default: 'production' }),
-    TOOLS_HOST: str({ desc: 'The host of the tools server' }),
-  },
-  { strict: true },
-)
-
-const baseUrl = `http://${env.TOOLS_HOST || 'localhost'}:17771/`
+const baseUrl = `http://${env.TOOLS_HOST}:17771/`
 const decryptUrl = `${baseUrl}dec`
 const encryptUrl = `${baseUrl}enc`
 

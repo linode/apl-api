@@ -17,7 +17,7 @@ export const env = cleanEnv(
     CLUSTER_ID: str({ desc: 'The cluster id' }),
     CLUSTER_NAME: str({ desc: 'The cluster name' }),
     CLUSTER_APISERVER: str({ desc: 'The cluster api server ip/host' }),
-    TOOLS_HOST: str({ desc: 'The host:port of the tools server' }),
+    TOOLS_HOST: str({ desc: 'The host of the tools server', default: '127.0.0.1' }),
     DISABLE_SYNC: bool({ desc: 'Wether to disable pushing to the repo', default: false }),
   },
   { strict: true },
