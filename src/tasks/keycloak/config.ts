@@ -125,7 +125,7 @@ export const protocolMappersList = [
 export const roleTpl = (name: string, groupMapping: string, containerId: string) => {
   return {
     name: name,
-    description: `Mapped for incoming Cloud IDP GROUP_ID: ${groupMapping}`,
+    description: `Mapped for incoming IDP GROUP_ID: ${groupMapping}`,
     composite: false,
     clientRole: false,
     containerId: containerId,
@@ -133,7 +133,6 @@ export const roleTpl = (name: string, groupMapping: string, containerId: string)
   }
 }
 
-// cloud idprovider configurations
 function oidcCfg(providerCfg: OidcProviderCfg, tenantId: string, clientId: string, clientSecret: string) {
   return {
     userInfoUrl: providerCfg.userinfo_endpoint,

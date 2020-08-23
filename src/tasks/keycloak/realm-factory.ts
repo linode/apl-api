@@ -15,7 +15,6 @@ import {
   IDP_GROUP_MAPPINGS_TEAMS,
   IDP_OIDC_URL,
 } from '../../validators'
-
 import {
   roleTpl,
   idpMapperTpl,
@@ -27,27 +26,22 @@ import {
   TeamMapping,
 } from './config'
 
-const env = cleanEnv(
-  process.env,
-  {
-    TENANT_ID,
-    TENANT_CLIENT_ID,
-    TENANT_CLIENT_SECRET,
-    IDP_ALIAS,
-    KEYCLOAK_CLIENT_SECRET,
-    KEYCLOAK_REALM,
-    REDIRECT_URIS,
-    IDP_GROUP_OTOMI_ADMIN,
-    IDP_GROUP_MAPPINGS_TEAMS,
-    IDP_OIDC_URL,
-  },
-  { strict: true },
-)
+const env = cleanEnv({
+  TENANT_ID,
+  TENANT_CLIENT_ID,
+  TENANT_CLIENT_SECRET,
+  IDP_ALIAS,
+  KEYCLOAK_CLIENT_SECRET,
+  KEYCLOAK_REALM,
+  REDIRECT_URIS,
+  IDP_GROUP_OTOMI_ADMIN,
+  IDP_GROUP_MAPPINGS_TEAMS,
+  IDP_OIDC_URL,
+})
 
-export function createClient(
-  redirectUris: Array<string> = env.REDIRECT_URIS,
-  secret: string = env.KEYCLOAK_CLIENT_SECRET,
-): api.ClientRepresentation {
+export function createClient(): api.ClientRepresentation {
+  const redirectUris: Array<string> = env.REDIRECT_URIS
+  const secret = env.KEYCLOAK_CLIENT_SECRET
   const otomiClientRepresentation = defaultsDeep(
     new api.ClientRepresentation(),
     otomiClientCfgTpl(secret, redirectUris),
@@ -55,11 +49,10 @@ export function createClient(
   return otomiClientRepresentation
 }
 
-export function createIdpMappers(
-  idpAlias: string = env.IDP_ALIAS,
-  teams: object = env.IDP_GROUP_MAPPINGS_TEAMS,
-  adminGroupMapping: string = env.IDP_GROUP_OTOMI_ADMIN,
-): Array<api.IdentityProviderMapperRepresentation> {
+export function createIdpMappers(): Array<api.IdentityProviderMapperRepresentation> {
+  const idpAlias = env.IDP_ALIAS
+  const teams = env.IDP_GROUP_MAPPINGS_TEAMS
+  const adminGroupMapping = env.IDP_GROUP_OTOMI_ADMIN
   // admin idp mapper case
   const admin = idpMapperTpl('map otomi-admin group to role', idpAlias, 'admin', adminGroupMapping)
   const adminMappers = defaultsDeep(new api.IdentityProviderMapperRepresentation(), admin)
@@ -77,13 +70,12 @@ export function createIdpMappers(
   return teamMappers.concat(defaultMappers).concat(adminMappers)
 }
 
-export async function createIdProvider(
-  tenantId: string = env.TENANT_ID,
-  clientId: string = env.TENANT_CLIENT_ID,
-  alias: string = env.IDP_ALIAS,
-  clientSecret: string = env.TENANT_CLIENT_SECRET,
-  oidcUrl: string = env.IDP_OIDC_URL,
-): Promise<api.IdentityProviderRepresentation> {
+export async function createIdProvider(): Promise<api.IdentityProviderRepresentation> {
+  const tenantId = env.TENANT_ID
+  const clientId = env.TENANT_CLIENT_ID
+  const alias = env.IDP_ALIAS
+  const clientSecret = env.TENANT_CLIENT_SECRET
+  const oidcUrl = env.IDP_OIDC_URL
   const otomiClientIdp = defaultsDeep(
     new api.IdentityProviderRepresentation(),
     await idpProviderCfgTpl(alias, tenantId, clientId, clientSecret, oidcUrl),
@@ -106,10 +98,9 @@ export function createClientScopes(): api.ClientScopeRepresentation {
   return clientScopeRepresentation
 }
 
-export function mapTeamsToRoles(
-  teams: object = env.IDP_GROUP_MAPPINGS_TEAMS,
-  realm: string = env.KEYCLOAK_REALM,
-): Array<api.RoleRepresentation> {
+export function mapTeamsToRoles(): Array<api.RoleRepresentation> {
+  const teams = env.IDP_GROUP_MAPPINGS_TEAMS
+  const realm = env.KEYCLOAK_REALM
   // iterate through all the teams and map groups
   const teamList = utils.objectToArray(teams, 'name', 'groupMapping') as TeamMapping[]
   const teamRoleRepresentations = teamList.map((team) => {

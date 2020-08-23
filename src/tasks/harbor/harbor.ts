@@ -1,6 +1,28 @@
-import { HttpError, ProductsApi, ProjectReq, ProjectMember } from '@redkubes/harbor-client'
+import { Configurations, HttpError, ProductsApi, ProjectReq, ProjectMember } from '@redkubes/harbor-client'
+import http from 'http'
 import { HttpBasicAuth } from '@kubernetes/client-node'
-import { cleanEnv, json, str } from 'envalid'
+import {
+  cleanEnv,
+  HARBOR_ADMIN_GROUP_NAME,
+  HARBOR_BASE_URL,
+  HARBOR_PASSWORD,
+  HARBOR_USER,
+  OIDC_CLIENT_SECRET,
+  OIDC_ENDPOINT,
+  OIDC_VERIFY_CERT,
+  TEAM_NAMES,
+} from '../../validators'
+
+const env = cleanEnv({
+  HARBOR_ADMIN_GROUP_NAME,
+  HARBOR_BASE_URL,
+  HARBOR_PASSWORD,
+  HARBOR_USER,
+  OIDC_CLIENT_SECRET,
+  OIDC_ENDPOINT,
+  OIDC_VERIFY_CERT,
+  TEAM_NAMES,
+})
 
 const HarborRole = {
   admin: 1,
@@ -14,76 +36,94 @@ const HarborGroupType = {
   http: 2,
 }
 
-// console.log([env.HARBOR_USER, env.HARBOR_PASSWORD, env.HARBOR_BASE_URL])
+const errors = []
+
+async function doApiCall(
+  action: string,
+  fn: () => Promise<{
+    response: http.IncomingMessage
+    body?: any
+  }>,
+): Promise<{
+  response: http.IncomingMessage
+  body?: any
+}> {
+  console.info(`Running '${action}'`)
+  try {
+    const res = await fn()
+    console.log(`Successful '${action}'`)
+    return res
+  } catch (e) {
+    if (e instanceof HttpError) {
+      if (e.statusCode === 409) console.warn(`${action}: already exists.`)
+      else errors.push(`HTTP error ${e.statusCode}: ${e.message}`)
+    } else errors.push(`Error processing '${action}': ${e}`)
+  }
+}
+
 async function main() {
-  const env = cleanEnv(
-    process.env,
-    {
-      HARBOR_BASE_URL: str({ desc: 'The harbor core service URL' }),
-      HARBOR_USER: str({ desc: 'The name of the harbor admin user' }),
-      HARBOR_PASSWORD: str({ desc: 'The password of the harbor admin user' }),
-      HARBOR_ADMIN_GROUP_NAME: str({ desc: 'The name of the project-admin group' }),
-      TEAM_NAMES: json({ desc: 'A comma separated list of team names' }),
-    },
-    { strict: true },
-  )
   const api = new ProductsApi(env.HARBOR_BASE_URL)
   const auth = new HttpBasicAuth()
   auth.username = env.HARBOR_USER
   auth.password = env.HARBOR_PASSWORD
   api.setDefaultAuthentication(auth)
 
-  const errors = []
+  const config: Configurations = {
+    authMode: 'oidc_auth',
+    oidcClientId: 'otomi',
+    oidcClientSecret: env.OIDC_CLIENT_SECRET,
+    oidcEndpoint: env.OIDC_ENDPOINT,
+    oidcGroupsClaim: 'groups',
+    oidcName: 'otomi',
+    oidcScope: 'openid',
+    oidcVerifyCert: env.OIDC_VERIFY_CERT,
+  }
+  await doApiCall('Harbor configuration', async () => {
+    return await api.configurationsPut(config)
+  })
 
   for await (const team of env.TEAM_NAMES) {
-    try {
-      const project: ProjectReq = {
-        projectName: team,
-        metadata: {},
-      }
-      console.log(`Creating a project for a team ${team}`)
-
-      const res = await api.projectsPost(project)
-      console.info(`Harbor client: ${JSON.stringify(res)}`)
-
-      if (!res.response.headers.location) throw Error('Unable to obtain location header from response')
-      // E.g.: location: "/api/v2.0/projects/6"
-      const projectId = parseInt(res.response.headers.location.split('/').pop())
-
-      const projMember: ProjectMember = {
-        roleId: HarborRole.developer,
-        memberGroup: {
-          groupName: team,
-          groupType: HarborGroupType.http,
-        },
-      }
-      const projAdminMember: ProjectMember = {
-        roleId: HarborRole.admin,
-        memberGroup: {
-          groupName: env.HARBOR_ADMIN_GROUP_NAME,
-          groupType: HarborGroupType.http,
-        },
-      }
-      console.log(`Associating "developer" role for team "${team}" with harbor project "${team}"`)
-      await api.projectsProjectIdMembersPost(projectId, projMember)
-      console.log(`Associating "project-admin" role for "${team}" with harbor project "${team}"`)
-      await api.projectsProjectIdMembersPost(projectId, projAdminMember)
-    } catch (e) {
-      if (e instanceof HttpError) {
-        if (e.statusCode === 409) {
-          console.info(`Project already exists for team ${team}. Skipping.`)
-          continue
-        } else {
-          console.error(`Harbor client, ${JSON.stringify(e.response)}`)
-        }
-      } else console.error('Harbor client: ', e)
-      errors.push(`Error while creating harbor project for '${team}' team`)
+    const project: ProjectReq = {
+      projectName: team,
+      metadata: {},
     }
+    const res = await doApiCall(`Project for team ${team}`, async () => {
+      return await api.projectsPost(project)
+    })
+
+    if (!res) continue
+
+    if (!res.response.headers.location) throw Error('Unable to obtain location header from response')
+    // E.g.: location: "/api/v2.0/projects/6"
+    const projectId = parseInt(res.response.headers.location.split('/').pop())
+
+    const projMember: ProjectMember = {
+      roleId: HarborRole.developer,
+      memberGroup: {
+        groupName: team,
+        groupType: HarborGroupType.http,
+      },
+    }
+    const projAdminMember: ProjectMember = {
+      roleId: HarborRole.admin,
+      memberGroup: {
+        groupName: env.HARBOR_ADMIN_GROUP_NAME,
+        groupType: HarborGroupType.http,
+      },
+    }
+    await doApiCall(`Associating "developer" role for team "${team}" with harbor project "${team}"`, async () => {
+      return await api.projectsProjectIdMembersPost(projectId, projMember)
+    })
+    await doApiCall(`Associating "project-admin" role for "${team}" with harbor project "${team}"`, async () => {
+      return await api.projectsProjectIdMembersPost(projectId, projAdminMember)
+    })
   }
 
   if (errors.length) {
-    console.log(JSON.stringify(errors, null, 2))
+    console.error(`Errors found: ${JSON.stringify(errors, null, 2)}`)
     process.exit(1)
+  } else {
+    console.info('Success!')
   }
 }
 main()

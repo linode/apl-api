@@ -1,47 +1,37 @@
-# Overview
+# Otomi Stack Api
 
-This application:
+This application provides a HTTP REST API (definition in [OpenApiV3](https://swagger.io/specification/) standard) to manipulate values for teams and their services.
+Git is used as the persistent storage for the values that will be consumed by [otomi-stack](https://github.com/redkubes/otomi-stack) for reconciling the state of the cluster landscape. (For an example look at the [otomi-values](https://github.com/redkubes/otomi-values-demo) repo with demo values.)
+Every api deployment will result in a commit to the values repo with the author's email in the title.
 
-- provides REST API to manipulate values for teams and their services.
-- connects to git repo with `otomi-stack` code in order to load/update values from/in repository.
+## 1. Development
 
-# Setting up environment
+### 1.1 Setting up environment
 
-1. Add contents of `.secrets` file from Google Drive (<https://drive.google.com/drive/folders/0AGwuKvXYSqGIUk9PVA>) to `.env` file in root.
+1. Copy `.env.sample` to `.env` and edit accordingly.
 
-2. Setup access to GitHub packages
+2. Download `otomi-stack-api/.secrets` file from [Google Drive secrets](https://drive.google.com/drive/folders/1N802vs0IplKehkZq8SxMi67RipyO1pHN) and put contents in `.env`.
+
+3. Setup access to GitHub packages:
 
 ```
 source .env && echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
 ```
 
-# Docker
-
-## Building
-
-```
-TAG=dev
-source .env
-# The .env contains NPM_TOKEN env
-docker build -t eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG --build-arg=NPM_TOKEN .
-```
-
-# Local development
-
-All in docker compose:
+### 1.2 Running in docker-compose with all deps
 
 ```
 bin/dc.sh up-all
 ```
 
-With only dependencies running in docker compose:
+### 1.3 Running with only deps in docker-compose
 
 ```
-bin/dc.sh up-deps
+bin/dc.sh up-deps &
 npm run dev
 ```
 
-# Testing
+### 1.4 Running tests
 
 Run all tests
 
@@ -61,17 +51,13 @@ Run test by name (regex) in watch mode
 npm test -- -g repo --watch
 ```
 
-# Glossary
+# Overview
 
-**api spec** - a HTTP REST API definition in OpenApiV3 standard **schema** - a data model that defines attributes and
-their types **attribute** - a single feature of schema **property** - a single feature of schema **resource** - an
-instance of schema
+## 1. Api
 
-# Api
+### 1.1 Specification
 
-## Specification
-
-The API is defined in `src/api.yaml` file in OpenApi v3 format.
+The API is defined in [src/openapi/api.yaml](src/openapi/api.yaml) file in OpenApi v3 format.
 
 This file is used to generate server API endpoints and client API library as well. The api endpoints are bound to a
 given function that developer can implement. For example:
@@ -95,7 +81,7 @@ method.
 For the api client there is an `operationId` property defined. It can be used to client with expected method names (see
 relevant usage in otomi-stack-web repo)
 
-## Authentication
+### 1.2 Authentication
 
 The authentication ensures that a user is identified, so the request contains required headers.
 
@@ -124,7 +110,7 @@ From above:
   `paths./readiness.get.security: []`,
 - the GET /clusters request handler authenticate it by using security schema defined under global `security` property.
 
-## Authorization
+### 1.3 Authorization
 
 An authorization is defined in `src/api.yaml` file as an extension to OpenApiV3 spec.
 
@@ -156,7 +142,7 @@ From above:
 
 The authorization is only applied if authentication is enabled, so required header are available.
 
-### Resource Based Access Control (RBAC)
+#### 1.3.1 Resource Based Access Control (RBAC)
 
 The RBAC is used to define allowed CRUD operations on resource level. It also guards resource ownership by comparing
 `teamId` from HTTP request parameter against content of `Auth-Group` HTTP header.
@@ -184,7 +170,7 @@ From above:
 - use `-any` if a given role grands permission to perform operations regardless resource ownership
 - the `-any` is supported only for RBAC permissions
 
-### Attribute Based Access Control (ABAC)
+#### 1.3.2 Attribute Based Access Control (ABAC)
 
 The ABAC permissions are used to limit RBAC permissions (never the other way round)
 
@@ -228,7 +214,7 @@ A user with team role can:
 - perform all CRUD operations only withing its own team (RBAC)
 - all attributes can be edited except ingress that isn be only read (ABAC)
 
-### Limitations
+#### 1.3.3 Limitations
 
 - nested ABAC is NOT supported E.g.:
 
@@ -260,7 +246,7 @@ A user with team role can:
         $ref: '#/components/schemas/Service'     # even if the components/schemas/Service defines ABAC it will NOT be applied
 ```
 
-# View openapi spec
+## 2. View openapi spec
 
 In order to inspect the api file it is recommended to either:
 
@@ -274,28 +260,3 @@ GET http://127.0.0.1:8080/v1/apiDocs
 ```
 
 Moreover the `openapi.yaml` file can be used with `Postman` (File -> Import).
-
-# Configuration
-
-## Environment variables
-
-For local development copy `.env.sample` to `.env` and copy contents of `otomi-stack/.secrets` in there as well.
-
-Use `DISABLE_SYNC=1` to disable pushing changes to git remote branch.
-
-For production environment export the same variables with proper values.
-
-# Git
-
-Git is used as the persistent storage for otomi-stack values.
-
-## git-notes
-
-With each git commit performed by this application an extra user metadata associated. It is performed by using
-[git-notes](https://git-scm.com/docs/git-notes). A user metadata is encoded in JSON format.
-
-The metadata can be retrived by executing below command:
-
-```
-git notes show
-```

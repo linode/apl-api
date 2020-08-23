@@ -13,7 +13,7 @@ import { OpenApiRequestExt } from './otomi-models'
 
 export async function loadOpenApisSpec() {
   const openApiPath = path.resolve(__dirname, 'openapi/api.yaml')
-  console.log(`Loading api spec from: ${openApiPath}`)
+  console.info(`Loading api spec from: ${openApiPath}`)
   const schema = await $RefParser.bundle(openApiPath)
   return schema
 }
