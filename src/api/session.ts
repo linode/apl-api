@@ -8,7 +8,7 @@ export const env = cleanEnv(
   {
     CLUSTER_ID,
   },
-  { strict: true },
+  { strict: process.env.NODE_NAME !== 'test' },
 )
 
 export default function (otomi: OtomiStack) {

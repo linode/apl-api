@@ -41,7 +41,7 @@ const env = cleanEnv(
     IDP_GROUP_MAPPINGS_TEAMS,
     IDP_OIDC_URL,
   },
-  { strict: true },
+  { strict: process.env.NODE_NAME !== 'test' },
 )
 
 export function createClient(
