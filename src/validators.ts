@@ -27,6 +27,6 @@ export const KEYCLOAK_REALM = str({ desc: 'The Keycloak Realm' })
 export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '127.0.0.1' })
 
 export const cleanEnv = (env, validators, options) => {
-  if (process.env.NODE_ENV === 'test') return env
-  else return clean(process.env, validators, options)
+  if (env.NODE_ENV === 'test') return env
+  else return clean(env, validators, options)
 }
