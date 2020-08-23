@@ -30,12 +30,11 @@ export default async function initApp(otomiStack) {
   app.use(jwtMiddleware())
 
   function getSecurityHandlers() {
-    const securityHandlers = { groupAuthz: undefined }
-
-    if (process.env.DISABLE_AUTH !== '1')
-      securityHandlers.groupAuthz = (req) => {
+    const securityHandlers = {
+      groupAuthz: (req) => {
         return isUserAuthorized(req, authz)
-      }
+      },
+    }
     return securityHandlers
   }
 

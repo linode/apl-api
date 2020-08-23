@@ -5,15 +5,11 @@ async function main() {
   const env = cleanEnv(
     process.env,
     {
-      HARBOR_BASE_URL: str({ desc: 'A harbor core service URL' }),
-      HARBOR_USER: str({ desc: 'A name of harbor admin user' }),
-      HARBOR_PASSWORD: str({ desc: 'A password of harbor admin user' }),
-      OIDC_CLIENT_ID: str(),
+      HARBOR_BASE_URL: str({ desc: 'The harbor core service URL' }),
+      HARBOR_USER: str({ desc: 'The harbor admin username' }),
+      HARBOR_PASSWORD: str({ desc: 'The harbor admin password' }),
       OIDC_CLIENT_SECRET: str(),
       OIDC_ENDPOINT: str(),
-      OIDC_GROUPS_CLAIM: str(),
-      OIDC_NAME: str(),
-      OIDC_SCOPE: str(),
       OIDC_VERIFY_CERT: bool(),
     },
     { strict: true },
@@ -25,17 +21,16 @@ async function main() {
   auth.password = env.HARBOR_PASSWORD
   api.setDefaultAuthentication(auth)
 
+  console.info('Configuring harbor')
   try {
-    console.info('Setting up harbor configuration')
-
     const config: Configurations = {
       authMode: 'oidc_auth',
-      oidcClientId: env.OIDC_CLIENT_ID,
+      oidcClientId: 'otomi',
       oidcClientSecret: env.OIDC_CLIENT_SECRET,
       oidcEndpoint: env.OIDC_ENDPOINT,
-      oidcGroupsClaim: env.OIDC_GROUPS_CLAIM,
-      oidcName: env.OIDC_NAME,
-      oidcScope: env.OIDC_SCOPE,
+      oidcGroupsClaim: 'groups',
+      oidcName: 'otomi',
+      oidcScope: 'openid',
       oidcVerifyCert: env.OIDC_VERIFY_CERT,
     }
     await api.configurationsPut(config)

@@ -45,7 +45,6 @@ const nockReply = {
   ],
 }
 env.OIDC_ENDPOINT = 'https://bla.dida'
-env.OIDC_NAME = 'otomi'
 
 nock(env.OIDC_ENDPOINT).persist().get('/.well-known/jwks.json').reply(200, nockReply)
 
@@ -64,7 +63,7 @@ export default function getToken(groups = [], roles = []) {
     header: { kid: '0' },
     algorithm: 'RS256',
     expiresIn: '1d',
-    audience: env.OIDC_NAME,
+    audience: 'otomi',
     issuer: env.OIDC_ENDPOINT,
   }
 

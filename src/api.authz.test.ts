@@ -1,9 +1,7 @@
-import { expect } from 'chai'
 import request from 'supertest'
 import sinon from 'sinon'
 import initApp from './server'
 import OtomiStack from './otomi-stack'
-import { validateEnv } from './utils'
 import getToken from './fixtures/jwt'
 
 const adminToken = getToken(['team-admin'])
@@ -269,23 +267,5 @@ describe('Api tests for data validation', () => {
       .set('Accept', 'application/json')
       .expect(400)
       .end(done)
-  })
-})
-
-describe('Config validation tests', () => {
-  it('missing env variables', (done) => {
-    expect(() => validateEnv({})).to.throw()
-    done()
-  })
-
-  it('valid env variables', (done) => {
-    const envs = {
-      GIT_REPO_URL: null,
-      GIT_USER: null,
-      GIT_PASSWORD: null,
-      GIT_EMAIL: null,
-    }
-    expect(() => validateEnv(envs)).to.not.throw()
-    done()
   })
 })

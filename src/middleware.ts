@@ -4,6 +4,9 @@ import { OpenApiRequest, JWT, OpenApiRequestExt, SessionUser } from './otomi-mod
 import Authz from './authz'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
+import { cleanEnv, CLUSTER_ID } from './validators'
+
+export const env = cleanEnv(process.env, { CLUSTER_ID }, { strict: true })
 
 const HttpMethodMapping = {
   DELETE: 'delete',
@@ -46,10 +49,9 @@ export function getSessionUser(user: JWT): SessionUser {
   return sessionUser
 }
 
-const env = process.env
 export function jwtMiddleware(): RequestHandler {
   return function (req: OpenApiRequestExt, res, next) {
-    if (env.NODE_ENV === 'development') {
+    if (env.isDev) {
       // allow the client to specify a group to be in
       const group = req.header('Auth-Group') ? `team-${req.header('Auth-Group')}` : undefined
       // default to admin unless team is given

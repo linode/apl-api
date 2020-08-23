@@ -1,8 +1,15 @@
 import { Operation } from 'express-openapi'
 import OtomiStack from '../otomi-stack'
 import { OpenApiRequestExt } from '../otomi-models'
+import { cleanEnv, CLUSTER_ID } from '../validators'
 
-const env = process.env
+export const env = cleanEnv(
+  process.env,
+  {
+    CLUSTER_ID,
+  },
+  { strict: true },
+)
 
 export default function (otomi: OtomiStack) {
   const GET: Operation = [

@@ -1,8 +1,8 @@
 import initApp from './server'
 import OtomiStack from './otomi-stack'
-import { setSignalHandlers, validateConfig } from './utils'
+import { setSignalHandlers } from './utils'
 
-validateConfig()
+console.log('NODE_ENV: ', process.env.NODE_ENV)
 
 const otomiStack = new OtomiStack()
 

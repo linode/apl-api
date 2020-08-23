@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.20](https://github.com/redkubes/otomi-stack-api/compare/v0.4.19...v0.4.20) (2020-08-23)
+
+### Features
+
+- **keycloak_tasks:** add keycloak task runners ([6aa60e5](https://github.com/redkubes/otomi-stack-api/commit/6aa60e5509aae9928626b307b453aab607fd62f0))
+- **launch.json:** add debugger configuration for tasks:keycloak ([489a9a1](https://github.com/redkubes/otomi-stack-api/commit/489a9a125fb2fa5177999daccb6f3e6cf9eb2457))
+
+### Bug Fixes
+
+- **src/tasks/keycloak/config.ts:** add query to oidc discovery urls ([2df9058](https://github.com/redkubes/otomi-stack-api/commit/2df90585fac49d6cd73994044423b7be131c68c0))
+- merge master [ci skip](<[3050ddf](https://github.com/redkubes/otomi-stack-api/commit/3050ddfb7890a666c9a8654ebe8412f614a37165)>)
+- refactor [ci skip](<[7bce66d](https://github.com/redkubes/otomi-stack-api/commit/7bce66d2774dea2c4f724f996d0b4331d409ca75)>)
+- refactor config templates [ci skip](<[1c053f7](https://github.com/redkubes/otomi-stack-api/commit/1c053f7f49dc48db753e10ab29d4c9f4cfc4097a)>)
+- refactor syntax [ci skip](<[c32c64a](https://github.com/redkubes/otomi-stack-api/commit/c32c64a6c3282a824225d1b066b743e2b243e3a5)>)
+- **use cloud_tenant_id env var:** change env variable usage ([988f029](https://github.com/redkubes/otomi-stack-api/commit/988f029f8083deedab1995700ab9ff28f8c180b4))
+
+### Code Refactoring
+
+- **env:** now using envalid ([e99d8b5](https://github.com/redkubes/otomi-stack-api/commit/e99d8b558de85cf09681541da510d1941df87e77))
+- refactor for multiple oidc providers ([cb2bc7e](https://github.com/redkubes/otomi-stack-api/commit/cb2bc7efab119dfe0f6329838e5e627f5871de5e))
+- **add roles, idp, client settings:** improving tasks ([13d9d04](https://github.com/redkubes/otomi-stack-api/commit/13d9d04159b461f720eb3fa09baf68b6f22fb0a8))
+- **code refactor:** remove hardcoded variables from config ([4f19c7a](https://github.com/redkubes/otomi-stack-api/commit/4f19c7affa520b72067406eae454b2ed182316df))
+- **interfaces.ts:** rename TeamMapping interface ([659acfb](https://github.com/redkubes/otomi-stack-api/commit/659acfbd261894b5e8b63a5647d65c6c801a4853))
+- **src/tasks/keycloak/keycloak.ts:** refactor for idempotent task ([f3a7896](https://github.com/redkubes/otomi-stack-api/commit/f3a7896f30f239561af43946734e818097b9aeb5))
+- remove wip tasks section [ci skip](<[0e59f34](https://github.com/redkubes/otomi-stack-api/commit/0e59f343f08a1ccbf6ca7dce093f1960fd3ea318)>)
+- **keycloak realm config factory:** refactor config and interfaces ([cd28b3e](https://github.com/redkubes/otomi-stack-api/commit/cd28b3e80e56ac0d247f360d13fb270e77217bdf))
+
 ### [0.4.19](https://github.com/redkubes/otomi-stack-api/compare/v0.4.18...v0.4.19) (2020-08-22)
 
 ### [0.4.18](https://github.com/redkubes/otomi-stack-api/compare/v0.4.17...v0.4.18) (2020-08-18)

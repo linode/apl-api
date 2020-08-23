@@ -13,6 +13,7 @@
     "@casl/ability": "^4.1.5",
     "@kubernetes/client-node": "^0.11.2",
     "@redkubes/harbor-client": "^2.0.2",
+    "@redkubes/keycloak-client-node": "^10.0.0",
     "@types/lodash": "^4.14.158",
     "axios": "^0.19.2",
     "bluebird": "^3.7.2",
@@ -116,7 +117,7 @@
     "build:client:otomi": "ts-node-dev src/tasks/build-spec.ts vendors/openapi/otomi-api.json && rm -rf vendors/client/otomi-api >/dev/null && bin/generate-client.sh otomi-api axios",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
-    "dev": ". ./.env.dev && . ./.secrets && ts-node-dev --watch '**/*.yaml' --inspect=4321 --respawn --transpile-only src/app.ts",
+    "dev": "ts-node-dev --watch '**/*.yaml' --inspect=4321 --respawn --transpile-only src/app.ts",
     "dev:docker": "npm install && npm run dev",
     "husky:lint-staged": "lint-staged",
     "husky:pre-commit": "run-p lint husky:lint-staged",
@@ -124,10 +125,12 @@
     "lint:fix": "eslint --ext js,ts .",
     "release": "standard-version",
     "start": "node dist/app.js",
+    "tasks:keycloak": "node dist/tasks/keycloak/keycloak.js",
+    "tasks:keycloak-dev": "ts-node-dev  ./src/tasks/keycloak/keycloak.ts",
     "tasks:harbor": "node dist/tasks/harbor/harbor.js",
-    "tasks:harbor-dev": ". ./.env.dev && . ./.secrets && ts-node-dev  ./src/tasks/harbor/harbor.ts",
+    "tasks:harbor-dev": "ts-node-dev  ./src/tasks/harbor/harbor.ts",
     "tasks:harbor-init": "node dist/tasks/harbor/harbor-init.js",
-    "tasks:harbor-init-dev": ". ./.env.dev && . ./.secrets && ts-node-dev  ./src/tasks/harbor/harbor-init.ts",
+    "tasks:harbor-init-dev": "ts-node-dev  ./src/tasks/harbor/harbor-init.ts",
     "test": "NODE_ENV=test mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit"
   },
   "standard-version": {
@@ -136,5 +139,5 @@
     },
     "postrelease": ". bin/aliases.sh && drun update_openapi_version && release_otomi"
   },
-  "version": "0.4.19"
+  "version": "0.4.20"
 }
