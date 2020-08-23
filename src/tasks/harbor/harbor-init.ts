@@ -12,7 +12,7 @@ async function main() {
       OIDC_ENDPOINT: str(),
       OIDC_VERIFY_CERT: bool(),
     },
-    { strict: process.env.NODE_ENV !== 'test' },
+    { strict: true },
   )
 
   const api = new ProductsApi(env.HARBOR_BASE_URL)

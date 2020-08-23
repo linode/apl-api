@@ -23,7 +23,7 @@ async function main() {
       KEYCLOAK_ADDRESS,
       KEYCLOAK_REALM,
     },
-    { strict: process.env.NODE_ENV !== 'test' },
+    { strict: true },
   )
   let basePath, token
   try {

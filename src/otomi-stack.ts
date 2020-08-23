@@ -47,7 +47,7 @@ export const env = cleanEnv(
     CLUSTER_APISERVER,
     DISABLE_SYNC,
   },
-  { strict: process.env.NODE_ENV !== 'test' },
+  { strict: true },
 )
 
 const baseGlobal = { teamConfig: { teams: {} } }
