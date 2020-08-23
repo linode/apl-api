@@ -28,5 +28,5 @@ export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '
 
 export const cleanEnv = (env, validators, options) => {
   if (process.env.NODE_ENV === 'test') return env
-  else return cleanEnv(process.env, validators, options)
+  else return clean(process.env, validators, options)
 }
