@@ -2,7 +2,14 @@
 import { Issuer } from 'openid-client'
 import { ClientsApi, IdentityProvidersApi, ClientScopesApi, RolesApi, HttpError } from '@redkubes/keycloak-client-node'
 import * as realmConfig from './realm-factory'
-import { cleanEnv, str } from 'envalid'
+import {
+  cleanEnv,
+  IDP_ALIAS,
+  KEYCLOAK_ADMIN,
+  KEYCLOAK_ADMIN_PASSWORD,
+  KEYCLOAK_ADDRESS,
+  KEYCLOAK_REALM,
+} from '../../validators'
 
 const errors = []
 
@@ -10,11 +17,11 @@ async function main() {
   const env = cleanEnv(
     process.env,
     {
-      IDP_ALIAS: str({ desc: 'A name for the Identity Provider Entry' }),
-      KEYCLOAK_ADMIN: str({ desc: 'Default Admin User for KeyCloak Server' }),
-      KEYCLOAK_ADMIN_PASSWORD: str({ desc: 'Default Password for Admins' }),
-      KEYCLOAK_ADDRESS: str({ desc: 'Default Keycloak Server Address' }),
-      KEYCLOAK_REALM: str({ desc: 'Default Keycloak Realm' }),
+      IDP_ALIAS,
+      KEYCLOAK_ADMIN,
+      KEYCLOAK_ADMIN_PASSWORD,
+      KEYCLOAK_ADDRESS,
+      KEYCLOAK_REALM,
     },
     { strict: true },
   )

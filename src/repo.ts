@@ -4,7 +4,15 @@ import fs from 'fs'
 import path from 'path'
 import { GitPullError } from './error'
 import axios from 'axios'
-import { env } from './app'
+import { cleanEnv, TOOLS_HOST } from './validators'
+
+export const env = cleanEnv(
+  process.env,
+  {
+    TOOLS_HOST,
+  },
+  { strict: true },
+)
 
 const baseUrl = `http://${env.TOOLS_HOST}:17771/`
 const decryptUrl = `${baseUrl}dec`

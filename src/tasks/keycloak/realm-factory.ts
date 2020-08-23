@@ -1,8 +1,20 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import * as api from '@redkubes/keycloak-client-node'
-import { cleanEnv, str, json } from 'envalid'
 import * as utils from '../../utils'
 import { defaultsDeep } from 'lodash'
+import {
+  cleanEnv,
+  TENANT_ID,
+  TENANT_CLIENT_ID,
+  TENANT_CLIENT_SECRET,
+  IDP_ALIAS,
+  KEYCLOAK_CLIENT_SECRET,
+  KEYCLOAK_REALM,
+  REDIRECT_URIS,
+  IDP_GROUP_OTOMI_ADMIN,
+  IDP_GROUP_MAPPINGS_TEAMS,
+  IDP_OIDC_URL,
+} from '../../validators'
 
 import {
   roleTpl,
@@ -18,16 +30,16 @@ import {
 const env = cleanEnv(
   process.env,
   {
-    TENANT_ID: str({ desc: 'A Cloud Tenant ID' }),
-    TENANT_CLIENT_ID: str({ desc: 'A Cloud Application ID' }),
-    TENANT_CLIENT_SECRET: str({ desc: 'A Cloud Application Secret' }),
-    IDP_ALIAS: str({ desc: 'A name for the Identity Provider Entry' }),
-    KEYCLOAK_CLIENT_SECRET: str({ desc: 'A Keycloak Client Application Secret' }),
-    KEYCLOAK_REALM: str({ desc: 'Default Keycloak Realm' }),
-    REDIRECT_URIS: json({ desc: "A list of Redirect URI's in JSON format" }),
-    IDP_GROUP_OTOMI_ADMIN: str({ desc: 'Otomi Admin IDP Group ID' }),
-    IDP_GROUP_MAPPINGS_TEAMS: json({ desc: "A list of Team Names and Group Id's from the IDP" }),
-    IDP_OIDC_URL: str({ desc: "The Provider's OIDC enpoints url" }),
+    TENANT_ID,
+    TENANT_CLIENT_ID,
+    TENANT_CLIENT_SECRET,
+    IDP_ALIAS,
+    KEYCLOAK_CLIENT_SECRET,
+    KEYCLOAK_REALM,
+    REDIRECT_URIS,
+    IDP_GROUP_OTOMI_ADMIN,
+    IDP_GROUP_MAPPINGS_TEAMS,
+    IDP_OIDC_URL,
   },
   { strict: true },
 )

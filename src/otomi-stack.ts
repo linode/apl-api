@@ -19,7 +19,36 @@ import db, { Db } from './db'
 import { AlreadyExists, NotExistError, PublicUrlExists } from './error'
 import { arrayToObject, getPublicUrl, objectToArray } from './utils'
 import cloneRepo, { Repo } from './repo'
-import { env } from './app'
+import {
+  cleanEnv,
+  GIT_REPO_URL,
+  GIT_LOCAL_PATH,
+  GIT_BRANCH,
+  GIT_USER,
+  GIT_PASSWORD,
+  GIT_EMAIL,
+  DB_PATH,
+  CLUSTER_NAME,
+  CLUSTER_APISERVER,
+  DISABLE_SYNC,
+} from './validators'
+
+export const env = cleanEnv(
+  process.env,
+  {
+    GIT_REPO_URL,
+    GIT_LOCAL_PATH,
+    GIT_BRANCH,
+    GIT_USER,
+    GIT_PASSWORD,
+    GIT_EMAIL,
+    DB_PATH,
+    CLUSTER_NAME,
+    CLUSTER_APISERVER,
+    DISABLE_SYNC,
+  },
+  { strict: true },
+)
 
 const baseGlobal = { teamConfig: { teams: {} } }
 let glbl = { ...baseGlobal }
