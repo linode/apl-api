@@ -4,7 +4,7 @@ import { Db } from './db'
 describe('Db', () => {
   let testDb: Db
   beforeEach(() => {
-    testDb = new Db(null)
+    testDb = new Db()
   })
 
   it('can store with id', (done) => {

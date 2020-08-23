@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -e
-source .secrets
-source .env.dev
+source .env
 BIN_NAME=$(basename "$0")
 COMMAND_NAME=$1
 SUB_COMMAND_NAME=$2

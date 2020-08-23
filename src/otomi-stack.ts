@@ -19,10 +19,7 @@ import db, { Db } from './db'
 import { AlreadyExists, NotExistError, PublicUrlExists } from './error'
 import { arrayToObject, getPublicUrl, objectToArray } from './utils'
 import cloneRepo, { Repo } from './repo'
-
-const env = process.env
-const isProduction = env.NODE_ENV === 'production'
-console.log('NODE_ENV: ', env.NODE_ENV)
+import { env } from './app'
 
 const baseGlobal = { teamConfig: { teams: {} } }
 let glbl = { ...baseGlobal }
@@ -63,19 +60,19 @@ export default class OtomiStack {
   constructor() {
     this.db = db(env.DB_PATH)
     this.clustersPath = './env/clusters.yaml'
-    const corePath = isProduction ? '/etc/otomi/core.yaml' : './test/core.yaml'
+    const corePath = env.isProd ? '/etc/otomi/core.yaml' : './test/core.yaml'
     this.coreValues = yaml.safeLoad(fs.readFileSync(corePath, 'utf8'))
   }
 
   async init() {
     try {
       this.repo = await cloneRepo(
-        env.GIT_LOCAL_PATH || '/tmp/otomi-stack',
+        env.GIT_LOCAL_PATH,
         env.GIT_REPO_URL,
         env.GIT_USER,
         env.GIT_EMAIL,
         env.GIT_PASSWORD,
-        env.GIT_BRANCH || 'master',
+        env.GIT_BRANCH,
       )
       const globalPath = getFilePath()
       glbl = this.repo.readFile(globalPath)

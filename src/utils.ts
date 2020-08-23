@@ -4,21 +4,6 @@ interface ResourceBase {
   name: string
 }
 
-export function validateEnv(envVars) {
-  // Ensure required ENV vars are set
-  const requiredEnv = ['GIT_REPO_URL', 'GIT_USER', 'GIT_PASSWORD', 'GIT_EMAIL']
-
-  const unsetEnv = requiredEnv.filter((env) => !(typeof envVars[env] !== 'undefined'))
-
-  if (unsetEnv.length > 0) {
-    throw new Error(`Required ENV variables are not set: [${unsetEnv.join(', ')}]`)
-  }
-}
-
-export function validateConfig() {
-  validateEnv(process.env)
-}
-
 export function setSignalHandlers(server) {
   process.on('SIGTERM', () => {
     console.log('Received SIGTERM signal. \nFinishing all requests')

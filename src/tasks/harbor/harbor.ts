@@ -1,6 +1,6 @@
 import { HttpError, ProductsApi, ProjectReq, ProjectMember } from '@redkubes/harbor-client'
 import { HttpBasicAuth } from '@kubernetes/client-node'
-import { cleanEnv, str } from 'envalid'
+import { cleanEnv, json, str } from 'envalid'
 
 const HarborRole = {
   admin: 1,
@@ -23,7 +23,7 @@ async function main() {
       HARBOR_USER: str({ desc: 'The name of the harbor admin user' }),
       HARBOR_PASSWORD: str({ desc: 'The password of the harbor admin user' }),
       HARBOR_ADMIN_GROUP_NAME: str({ desc: 'The name of the project-admin group' }),
-      TEAM_NAMES: str({ desc: 'A comma separated list of team names' }),
+      TEAM_NAMES: json({ desc: 'A comma separated list of team names' }),
     },
     { strict: true },
   )
@@ -35,7 +35,7 @@ async function main() {
 
   const errors = []
 
-  for await (const team of env.TEAM_NAMES.split(',')) {
+  for await (const team of env.TEAM_NAMES) {
     try {
       const project: ProjectReq = {
         projectName: team,

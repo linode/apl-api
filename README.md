@@ -7,12 +7,12 @@ This application:
 
 # Setting up environment
 
-1. Download .secrets file from Google Drive (https://drive.google.com/drive/folders/0AGwuKvXYSqGIUk9PVA) to root directory of this project.
+1. Add contents of `.secrets` file from Google Drive (<https://drive.google.com/drive/folders/0AGwuKvXYSqGIUk9PVA>) to `.env` file in root.
 
 2. Setup access to GitHub packages
 
 ```
-. ./.secrets && echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
+source .env && echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
 ```
 
 # Docker
@@ -21,8 +21,8 @@ This application:
 
 ```
 TAG=dev
-. ./.secrets
-# The .secrets contains NPM_TOKEN env
+source .env
+# The .env contains NPM_TOKEN env
 docker build -t eu.gcr.io/otomi-cloud/otomi-stack-api:$TAG --build-arg=NPM_TOKEN .
 ```
 
@@ -279,9 +279,9 @@ Moreover the `openapi.yaml` file can be used with `Postman` (File -> Import).
 
 ## Environment variables
 
-For local development copy `.env.sample` to `.env.dev` and copy `otomi-stack/.secrets` from company secrets storage.
+For local development copy `.env.sample` to `.env` and copy contents of `otomi-stack/.secrets` in there as well.
 
-Use `DISABLE_AUTH=1` env to disable authorization. Use `DISABLE_SYNC=1` to disable pushing changes to git remote branch
+Use `DISABLE_SYNC=1` to disable pushing changes to git remote branch.
 
 For production environment export the same variables with proper values.
 

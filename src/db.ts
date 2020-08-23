@@ -15,8 +15,8 @@ export class Db {
 
   dirtyActive: boolean
 
-  constructor(path) {
-    this.db = lowdb(path == null ? new Memory('') : new FileSync(path))
+  constructor(path = undefined) {
+    this.db = lowdb(path === undefined ? new Memory('') : new FileSync(path))
     this.db._.mixin({
       replaceRecord(arr, currentObject, newObject) {
         return arr.splice(findIndex(arr, currentObject), 1, newObject)

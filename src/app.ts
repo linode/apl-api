@@ -1,8 +1,27 @@
 import initApp from './server'
 import OtomiStack from './otomi-stack'
-import { setSignalHandlers, validateConfig } from './utils'
+import { setSignalHandlers } from './utils'
+import { cleanEnv, str, bool } from 'envalid'
 
-validateConfig()
+console.log('NODE_ENV: ', process.env.NODE_ENV)
+export const env = cleanEnv(
+  process.env,
+  {
+    GIT_REPO_URL: str({ desc: 'The git repo url' }),
+    GIT_LOCAL_PATH: str({ desc: 'The local file path to the repo', default: '/tmp/otomi-stack' }),
+    GIT_BRANCH: str({ desc: 'The git repo branch', default: 'master' }),
+    GIT_USER: str({ desc: 'The git username' }),
+    GIT_PASSWORD: str({ desc: 'The git password' }),
+    GIT_EMAIL: str({ desc: 'The git user email' }),
+    DB_PATH: str({ desc: 'The file path to the db. If not given in-memory db is used.', default: undefined }),
+    CLUSTER_ID: str({ desc: 'The cluster id' }),
+    CLUSTER_NAME: str({ desc: 'The cluster name' }),
+    CLUSTER_APISERVER: str({ desc: 'The cluster api server ip/host' }),
+    TOOLS_HOST: str({ desc: 'The host:port of the tools server' }),
+    DISABLE_SYNC: bool({ desc: 'Wether to disable pushing to the repo', default: false }),
+  },
+  { strict: true },
+)
 
 const otomiStack = new OtomiStack()
 
