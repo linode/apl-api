@@ -11,7 +11,7 @@ export const env = cleanEnv(
   {
     TOOLS_HOST,
   },
-  { strict: process.env.NODE_NAME !== 'test' },
+  { strict: process.env.NODE_ENV !== 'test' },
 )
 
 const baseUrl = `http://${env.TOOLS_HOST}:17771/`

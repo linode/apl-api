@@ -25,7 +25,7 @@ async function main() {
       HARBOR_ADMIN_GROUP_NAME: str({ desc: 'The name of the project-admin group' }),
       TEAM_NAMES: json({ desc: 'A comma separated list of team names' }),
     },
-    { strict: process.env.NODE_NAME !== 'test' },
+    { strict: process.env.NODE_ENV !== 'test' },
   )
   const api = new ProductsApi(env.HARBOR_BASE_URL)
   const auth = new HttpBasicAuth()

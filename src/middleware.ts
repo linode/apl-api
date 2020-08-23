@@ -6,7 +6,7 @@ import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
 import { cleanEnv, CLUSTER_ID } from './validators'
 
-export const env = cleanEnv(process.env, { CLUSTER_ID }, { strict: process.env.NODE_NAME !== 'test' })
+export const env = cleanEnv(process.env, { CLUSTER_ID }, { strict: process.env.NODE_ENV !== 'test' })
 
 const HttpMethodMapping = {
   DELETE: 'delete',
