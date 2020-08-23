@@ -3,7 +3,7 @@ import axios from 'axios'
 export const defaultsIdpMapperTpl = (alias: string) => {
   return [
     {
-      name: 'upn_to_email',
+      name: 'upn to email',
       identityProviderAlias: alias,
       identityProviderMapper: 'oidc-user-attribute-idp-mapper',
       config: {

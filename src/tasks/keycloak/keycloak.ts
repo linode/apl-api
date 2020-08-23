@@ -29,7 +29,7 @@ async function doApiCall(resource: string, fn: () => Promise<void>, update = fal
     return true
   } catch (e) {
     if (e instanceof HttpError) {
-      if (e.statusCode === 409) console.warn(`${resource}: already exists.`)
+      if ([400, 409].includes(e.statusCode)) console.warn(`${resource}: already exists.`)
       else errors.push(`HTTP error ${e.statusCode}: ${e.message}`)
     } else errors.push(`Error processing '${resource}': ${e}`)
     return false

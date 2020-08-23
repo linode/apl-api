@@ -12,6 +12,7 @@ import {
   KEYCLOAK_REALM,
   REDIRECT_URIS,
   IDP_GROUP_OTOMI_ADMIN,
+  IDP_GROUP_TEAM_ADMIN,
   IDP_GROUP_MAPPINGS_TEAMS,
   IDP_OIDC_URL,
 } from '../../validators'
@@ -35,6 +36,7 @@ const env = cleanEnv({
   KEYCLOAK_REALM,
   REDIRECT_URIS,
   IDP_GROUP_OTOMI_ADMIN,
+  IDP_GROUP_TEAM_ADMIN,
   IDP_GROUP_MAPPINGS_TEAMS,
   IDP_OIDC_URL,
 })
@@ -53,12 +55,16 @@ export function createIdpMappers(): Array<api.IdentityProviderMapperRepresentati
   const idpAlias = env.IDP_ALIAS
   const teams = env.IDP_GROUP_MAPPINGS_TEAMS
   const adminGroupMapping = env.IDP_GROUP_OTOMI_ADMIN
+  const teamAdminGroupMapping = env.IDP_GROUP_TEAM_ADMIN
   // admin idp mapper case
   const admin = idpMapperTpl('map otomi-admin group to role', idpAlias, 'admin', adminGroupMapping)
-  const adminMappers = defaultsDeep(new api.IdentityProviderMapperRepresentation(), admin)
+  const adminMapper = defaultsDeep(new api.IdentityProviderMapperRepresentation(), admin)
+  // team admin idp mapper case
+  const teamAdmin = idpMapperTpl('map team-admin group to role', idpAlias, 'team-admin', teamAdminGroupMapping)
+  const teamAdminMapper = defaultsDeep(new api.IdentityProviderMapperRepresentation(), teamAdmin)
   // default idp mappers case
   const defaultIdps = defaultsIdpMapperTpl(idpAlias)
-  const defaultMappers = defaultIdps.map((idpMapper) => {
+  const defaultMapper = defaultIdps.map((idpMapper) => {
     return defaultsDeep(new api.IdentityProviderMapperRepresentation(), idpMapper)
   })
   // team idp case - team list extracted from IDP_GROUP_MAPPINGS_TEAMS env
@@ -67,7 +73,7 @@ export function createIdpMappers(): Array<api.IdentityProviderMapperRepresentati
     const teamMapper = idpMapperTpl(`map ${team.name} group to role`, idpAlias, team.name, team.groupMapping)
     return defaultsDeep(new api.IdentityProviderMapperRepresentation(), teamMapper)
   })
-  return teamMappers.concat(defaultMappers).concat(adminMappers)
+  return teamMappers.concat(defaultMapper).concat(adminMapper).concat(teamAdminMapper)
 }
 
 export async function createIdProvider(): Promise<api.IdentityProviderRepresentation> {
