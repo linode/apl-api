@@ -105,14 +105,14 @@ async function main() {
     const projAdminMember: ProjectMember = {
       roleId: HarborRole.admin,
       memberGroup: {
-        groupName: 'admin',
+        groupName: 'team-admin',
         groupType: HarborGroupType.http,
       },
     }
     await doApiCall(`Associating "developer" role for team "${team}" with harbor project "${team}"`, async () => {
       return await api.projectsProjectIdMembersPost(projectId, projMember)
     })
-    await doApiCall(`Associating "project-admin" role for "${team}" with harbor project "${team}"`, async () => {
+    await doApiCall(`Associating "project-admin" role for "team-admin" with harbor project "${team}"`, async () => {
       return await api.projectsProjectIdMembersPost(projectId, projAdminMember)
     })
   }
