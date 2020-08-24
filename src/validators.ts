@@ -11,7 +11,6 @@ export const GIT_LOCAL_PATH = str({ desc: 'The local file path to the repo', def
 export const GIT_PASSWORD = str({ desc: 'The git password' })
 export const GIT_REPO_URL = str({ desc: 'The git repo url', default: 'github.com/redkubes/otomi-values-demo.git' })
 export const GIT_USER = str({ desc: 'The git username' })
-export const HARBOR_ADMIN_GROUP_NAME = str({ desc: 'The name of the project-admin group' })
 export const HARBOR_BASE_URL = str({ desc: 'The harbor core service URL' })
 export const HARBOR_PASSWORD = str({ desc: 'The harbor admin password' })
 export const HARBOR_USER = str({ desc: 'The harbor admin username' })

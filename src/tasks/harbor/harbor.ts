@@ -3,7 +3,6 @@ import http from 'http'
 import { HttpBasicAuth } from '@kubernetes/client-node'
 import {
   cleanEnv,
-  HARBOR_ADMIN_GROUP_NAME,
   HARBOR_BASE_URL,
   HARBOR_PASSWORD,
   HARBOR_USER,
@@ -14,7 +13,6 @@ import {
 } from '../../validators'
 
 const env = cleanEnv({
-  HARBOR_ADMIN_GROUP_NAME,
   HARBOR_BASE_URL,
   HARBOR_PASSWORD,
   HARBOR_USER,
@@ -107,7 +105,7 @@ async function main() {
     const projAdminMember: ProjectMember = {
       roleId: HarborRole.admin,
       memberGroup: {
-        groupName: env.HARBOR_ADMIN_GROUP_NAME,
+        groupName: 'admin',
         groupType: HarborGroupType.http,
       },
     }
