@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.25](https://github.com/redkubes/otomi-stack-api/compare/v0.4.24...v0.4.25) (2020-08-24)
+
+### Bug Fixes
+
+- create keycloak static admin teams ([#113](https://github.com/redkubes/otomi-stack-api/issues/113)) ([1b76cb5](https://github.com/redkubes/otomi-stack-api/commit/1b76cb511bdd9bcc743b0c24f098cbbd75a6c1f2))
+
 ### [0.4.24](https://github.com/redkubes/otomi-stack-api/compare/v0.4.23...v0.4.24) (2020-08-23)
 
 ### Bug Fixes
