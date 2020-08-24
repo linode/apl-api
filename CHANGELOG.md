@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.27](https://github.com/redkubes/otomi-stack-api/compare/v0.4.26...v0.4.27) (2020-08-24)
+
+### Bug Fixes
+
+- team-admin group for harbor project [ci skip](<[208a087](https://github.com/redkubes/otomi-stack-api/commit/208a0875268f7a2da75f753a1c55ac0b8b8a570a)>)
+
 ### [0.4.26](https://github.com/redkubes/otomi-stack-api/compare/v0.4.25...v0.4.26) (2020-08-24)
 
 ### Bug Fixes
