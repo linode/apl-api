@@ -105,25 +105,6 @@ Service:
       x-acl:
         admin: [read, create]
         team: [read, create]
-    port:
-      title: Service port
-      type: integer
-      default: 80
-      minimum: 1
-      maximum: 65535
-    ingress:
-      title: Exposure
-      type: object
-      x-acl:
-        team: [read]
-      oneOf:
-        - title: Private
-          nullable: true
-          additionalProperties: false
-        - title: Public URL
-          nullable: true
-          properties:
-            <<: *ServiceIngress
     ksvc:
       title: Type
       type: object
@@ -276,8 +257,27 @@ Service:
               type: string
               enum: [svcPredeployed]
               default: svcPredeployed
+            port:
+              title: Service port
+              type: integer
+              default: 80
+              minimum: 1
+              maximum: 65535
           required:
             - serviceType
+    ingress:
+      title: Exposure
+      type: object
+      x-acl:
+        team: [read]
+      oneOf:
+        - title: Private
+          nullable: true
+          additionalProperties: false
+        - title: Public URL
+          nullable: true
+          properties:
+            <<: *ServiceIngress
     teamId:
       type: string
       readOnly: true
