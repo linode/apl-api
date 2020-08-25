@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.28](https://github.com/redkubes/otomi-stack-api/compare/v0.4.27...v0.4.28) (2020-08-25)
+
+### Bug Fixes
+
+- moved ingress part below svc input [ci skip](<[52166f5](https://github.com/redkubes/otomi-stack-api/commit/52166f5c9b97c95b2071e6cfb895b521cb385a38)>)
+
+### [0.4.27](https://github.com/redkubes/otomi-stack-api/compare/v0.4.26...v0.4.27) (2020-08-24)
+
+### Bug Fixes
+
+- team-admin group for harbor project [ci skip](<[208a087](https://github.com/redkubes/otomi-stack-api/commit/208a0875268f7a2da75f753a1c55ac0b8b8a570a)>)
+
+### [0.4.26](https://github.com/redkubes/otomi-stack-api/compare/v0.4.25...v0.4.26) (2020-08-24)
+
+### Bug Fixes
+
+- hardcoded group 'admin' to harbor admin [ci skip](<[f45575a](https://github.com/redkubes/otomi-stack-api/commit/f45575aebf0ea777b042f1749cdaf8b5da21e375)>)
+
+### [0.4.25](https://github.com/redkubes/otomi-stack-api/compare/v0.4.24...v0.4.25) (2020-08-24)
+
+### Bug Fixes
+
+- create keycloak static admin teams ([#113](https://github.com/redkubes/otomi-stack-api/issues/113)) ([1b76cb5](https://github.com/redkubes/otomi-stack-api/commit/1b76cb511bdd9bcc743b0c24f098cbbd75a6c1f2))
+
 ### [0.4.24](https://github.com/redkubes/otomi-stack-api/compare/v0.4.23...v0.4.24) (2020-08-23)
 
 ### Bug Fixes

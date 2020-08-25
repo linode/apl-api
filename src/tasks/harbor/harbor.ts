@@ -3,7 +3,6 @@ import http from 'http'
 import { HttpBasicAuth } from '@kubernetes/client-node'
 import {
   cleanEnv,
-  HARBOR_ADMIN_GROUP_NAME,
   HARBOR_BASE_URL,
   HARBOR_PASSWORD,
   HARBOR_USER,
@@ -14,7 +13,6 @@ import {
 } from '../../validators'
 
 const env = cleanEnv({
-  HARBOR_ADMIN_GROUP_NAME,
   HARBOR_BASE_URL,
   HARBOR_PASSWORD,
   HARBOR_USER,
@@ -107,14 +105,14 @@ async function main() {
     const projAdminMember: ProjectMember = {
       roleId: HarborRole.admin,
       memberGroup: {
-        groupName: env.HARBOR_ADMIN_GROUP_NAME,
+        groupName: 'team-admin',
         groupType: HarborGroupType.http,
       },
     }
     await doApiCall(`Associating "developer" role for team "${team}" with harbor project "${team}"`, async () => {
       return await api.projectsProjectIdMembersPost(projectId, projMember)
     })
-    await doApiCall(`Associating "project-admin" role for "${team}" with harbor project "${team}"`, async () => {
+    await doApiCall(`Associating "project-admin" role for "team-admin" with harbor project "${team}"`, async () => {
       return await api.projectsProjectIdMembersPost(projectId, projAdminMember)
     })
   }

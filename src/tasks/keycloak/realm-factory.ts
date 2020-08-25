@@ -108,11 +108,9 @@ export function createClientScopes(): api.ClientScopeRepresentation {
 export function mapTeamsToRoles(): Array<api.RoleRepresentation> {
   const teams = env.IDP_GROUP_MAPPINGS_TEAMS
   const realm = env.KEYCLOAK_REALM
-  const adminGroupMapping = env.IDP_GROUP_OTOMI_ADMIN
-  const teamAdminGroupMapping = env.IDP_GROUP_TEAM_ADMIN
   // create static admin teams
-  const otomiAdmin = Object.create({ name: "otomi-admin", groupMapping: adminGroupMapping }) as TeamMapping
-  const teamAdmin = Object.create({ name: "team-admin", groupMapping: teamAdminGroupMapping }) as TeamMapping
+  const otomiAdmin = Object.create({ name: "otomi-admin", groupMapping: env.IDP_GROUP_OTOMI_ADMIN }) as TeamMapping
+  const teamAdmin = Object.create({ name: "team-admin", groupMapping: env.IDP_GROUP_TEAM_ADMIN }) as TeamMapping
   const adminTeams = [ otomiAdmin, teamAdmin ] 
   // iterate through all the teams and map groups
   const teamList = utils.objectToArray(teams, 'name', 'groupMapping') as TeamMapping[]
