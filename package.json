@@ -15,6 +15,7 @@
     "@redkubes/harbor-client": "^2.0.2",
     "@redkubes/keycloak-client-node": "^10.0.0",
     "@types/lodash": "^4.14.158",
+    "aws-sdk": "^2.742.0",
     "axios": "^0.19.2",
     "bluebird": "^3.7.2",
     "body-parser": "^1.19.0",
@@ -129,6 +130,8 @@
     "tasks:keycloak-dev": "ts-node-dev  ./src/tasks/keycloak/keycloak.ts",
     "tasks:harbor": "node dist/tasks/harbor/harbor.js",
     "tasks:harbor-dev": "ts-node-dev  ./src/tasks/harbor/harbor.ts",
+    "tasks:certs-aws": "node dist/tasks/otomi/certs-aws.js",
+    "tasks:certs-aws-dev": "ts-node-dev  ./src/tasks/otomi/certs-aws.ts",
     "test": "NODE_ENV=test mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit"
   },
   "standard-version": {
@@ -137,5 +140,5 @@
     },
     "postrelease": ". bin/aliases.sh && drun update_openapi_version && release_otomi"
   },
-  "version": "0.4.28"
+  "version": "0.4.29"
 }
