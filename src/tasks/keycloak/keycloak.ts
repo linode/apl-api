@@ -61,7 +61,7 @@ async function main() {
   const providers = new IdentityProvidersApi(basePath)
   providers.accessToken = String(token.access_token)
   const clientScope = new ClientScopesApi(basePath)
-  clientScope.accessToken = String(token.accqess_token)
+  clientScope.accessToken = String(token.access_token)
   const roles = new RolesApi(basePath)
   roles.accessToken = String(token.access_token)
   const clients = new ClientsApi(basePath)
