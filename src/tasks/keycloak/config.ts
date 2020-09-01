@@ -57,7 +57,7 @@ export const protocolMappersList = [
     protocolMapper: 'oidc-usermodel-realm-role-mapper',
     consentRequired: false,
     config: {
-      multivalued: 'true',
+      multivalued: 'false',
       'userinfo.token.claim': 'true',
       'user.attribute': '',
       'id.token.claim': 'true',
