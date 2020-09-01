@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.29](https://github.com/redkubes/otomi-stack-api/compare/v0.4.28...v0.4.29) (2020-09-01)
+
+### Feature Improvements
+
+- added certs-aws task to import letsencrypt certs [ci skip](<[0c641ae](https://github.com/redkubes/otomi-stack-api/commit/0c641aef88fb39abfa10f75a23960909f5a05ca2)>)
+
 ### [0.4.28](https://github.com/redkubes/otomi-stack-api/compare/v0.4.27...v0.4.28) (2020-08-25)
 
 ### Bug Fixes
