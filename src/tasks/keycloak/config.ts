@@ -133,6 +133,23 @@ export const roleTpl = (name: string, groupMapping: string, containerId: string)
   }
 }
 
+export const clientEmailClaimMapper = () => {
+  return {
+    name: "email",
+    protocol: "openid-connect",
+    protocolMapper: "oidc-usermodel-property-mapper",
+    consentRequired: false,
+    config: {
+      "userinfo.token.claim": "true",
+      "user.attribute": "email",
+      "id.token.claim": "true",
+      "access.token.claim": "true",
+      "claim.name": "email",
+      "jsonType.label": "String"
+    }
+  }
+}
+
 function oidcCfg(providerCfg: OidcProviderCfg, tenantId: string, clientId: string, clientSecret: string) {
   return {
     userInfoUrl: providerCfg.userinfo_endpoint,
