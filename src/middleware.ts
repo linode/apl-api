@@ -44,7 +44,9 @@ export function getSessionUser(user: JWT): SessionUser {
       }
     } else if (!sessionUser.roles.includes('team')) sessionUser.roles.push('team')
     // if in team-(not admin), remove 'team-' prefix
-    if (group.substr(0, 5) === 'team-' && group !== 'team-admin') sessionUser.teams.push(group.substr(5))
+    const team = group.substr(5)
+    if (group.substr(0, 5) === 'team-' && group !== 'team-admin' && !sessionUser.teams.includes(team))
+      sessionUser.teams.push(team)
   })
   return sessionUser
 }

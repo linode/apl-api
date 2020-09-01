@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.30](https://github.com/redkubes/otomi-stack-api/compare/v0.4.29...v0.4.30) (2020-09-01)
+
+### Bug Fixes
+
+- oidc settings, duplicate teams [ci skip](<[0497270](https://github.com/redkubes/otomi-stack-api/commit/0497270e12d55b4521260836d97d0f494562b766)>)
+
 ### [0.4.28](https://github.com/redkubes/otomi-stack-api/compare/v0.4.27...v0.4.28) (2020-08-25)
 
 ### Bug Fixes
