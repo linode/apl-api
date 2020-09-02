@@ -200,16 +200,9 @@ export const otomiClientCfgTpl = (secret: string, redirectUris: object) => {
     id: 'otomi',
     secret: secret,
     defaultClientScopes: [
-      'groups',
       'openid',
-      'address',
       'email',
-      'microprofile-jwt',
-      'offline_access',
-      'phone',
       'profile',
-      'roles',
-      'web-origins',
     ],
     redirectUris: redirectUris,
     standardFlowEnabled: true,
@@ -217,7 +210,6 @@ export const otomiClientCfgTpl = (secret: string, redirectUris: object) => {
     directAccessGrantsEnabled: true,
     serviceAccountsEnabled: true,
     authorizationServicesEnabled: true,
-    // authenticationFlowBindingOverrides: {}
   }
 }
 

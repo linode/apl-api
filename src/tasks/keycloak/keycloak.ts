@@ -54,7 +54,8 @@ async function main() {
     })
   } catch (error) {
     console.error(error)
-    process.exit()
+    console.log("Exiting!")
+    process.exit(1)
   }
 
   // Configure AccessToken for service calls
@@ -118,6 +119,7 @@ async function main() {
   // check errors and exit
   if (errors.length) {
     console.error(JSON.stringify(errors, null, 2))
+    console.log("Exiting!")
     process.exit(1)
   } else {
     console.info('Success!')
