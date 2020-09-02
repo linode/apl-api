@@ -61,7 +61,7 @@ const getFilePath = (cloud = null, cluster = null) => {
 function splitGlobal(teamValues) {
   const t = teamValues.teamConfig.teams
   const g = glbl.teamConfig.teams
-  const globalProps = ['id', 'password', 'receiver', 'azure', 'secrets']
+  const globalProps = ['id', 'password', 'receiver', 'azure', 'secrets', 'oidc']
   forEach(t, (team, teamId) => {
     if (!g[teamId]) g[teamId] = {}
     globalProps.forEach((prop) => {
