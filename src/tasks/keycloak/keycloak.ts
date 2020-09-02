@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/camelcase */
 import { Issuer } from 'openid-client'
-import { ClientsApi, IdentityProvidersApi, ClientScopesApi, RolesApi, HttpError } from '@redkubes/keycloak-client-node'
+import { ClientsApi, IdentityProvidersApi, ClientScopesApi, RolesApi, HttpError, ProtocolMappersApi } from '@redkubes/keycloak-client-node'
 import * as realmConfig from './realm-factory'
 import {
   cleanEnv,
@@ -54,7 +54,8 @@ async function main() {
     })
   } catch (error) {
     console.error(error)
-    process.exit()
+    console.log("Exiting!")
+    process.exit(1)
   }
 
   // Configure AccessToken for service calls
@@ -66,6 +67,8 @@ async function main() {
   roles.accessToken = String(token.access_token)
   const clients = new ClientsApi(basePath)
   clients.accessToken = String(token.access_token)
+  const protocols = new ProtocolMappersApi(basePath)
+  protocols.accessToken = String(token.access_token)
 
   // Create Client Scopes
   await doApiCall('OpenID Client Scope', async () => {
@@ -107,8 +110,16 @@ async function main() {
     )
   }
 
+  // add email claim for client protocolMappers
+  await doApiCall('Client Email Claim', async () => {
+    await protocols.realmClientsIdProtocolMappersAddModelsPost(env.KEYCLOAK_REALM, 
+      client.id, realmConfig.createClientEmailClaimMapper())
+  })
+  
+  // check errors and exit
   if (errors.length) {
     console.error(JSON.stringify(errors, null, 2))
+    console.log("Exiting!")
     process.exit(1)
   } else {
     console.info('Success!')

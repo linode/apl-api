@@ -133,6 +133,23 @@ export const roleTpl = (name: string, groupMapping: string, containerId: string)
   }
 }
 
+export const clientEmailClaimMapper = () => {
+  return {
+    name: "email",
+    protocol: "openid-connect",
+    protocolMapper: "oidc-usermodel-property-mapper",
+    consentRequired: false,
+    config: {
+      "userinfo.token.claim": "true",
+      "user.attribute": "email",
+      "id.token.claim": "true",
+      "access.token.claim": "true",
+      "claim.name": "email",
+      "jsonType.label": "String"
+    }
+  }
+}
+
 function oidcCfg(providerCfg: OidcProviderCfg, tenantId: string, clientId: string, clientSecret: string) {
   return {
     userInfoUrl: providerCfg.userinfo_endpoint,
@@ -183,16 +200,9 @@ export const otomiClientCfgTpl = (secret: string, redirectUris: object) => {
     id: 'otomi',
     secret: secret,
     defaultClientScopes: [
-      'groups',
       'openid',
-      'address',
       'email',
-      'microprofile-jwt',
-      'offline_access',
-      'phone',
       'profile',
-      'roles',
-      'web-origins',
     ],
     redirectUris: redirectUris,
     standardFlowEnabled: true,
@@ -200,7 +210,6 @@ export const otomiClientCfgTpl = (secret: string, redirectUris: object) => {
     directAccessGrantsEnabled: true,
     serviceAccountsEnabled: true,
     authorizationServicesEnabled: true,
-    // authenticationFlowBindingOverrides: {}
   }
 }
 

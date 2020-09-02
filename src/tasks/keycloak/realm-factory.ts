@@ -26,6 +26,7 @@ import {
   clientScopeCfgTpl,
   otomiClientCfgTpl,
   TeamMapping,
+  clientEmailClaimMapper
 } from './config'
 
 const env = cleanEnv({
@@ -95,6 +96,10 @@ export function createProtocolMappersForClientScope(): Array<api.ProtocolMapperR
     return defaultsDeep(new api.ProtocolMapperRepresentation(), protoMapper)
   })
   return protocolMapperRepresentations
+}
+
+export function createClientEmailClaimMapper(): Array<api.ProtocolMapperRepresentation> {
+  return [defaultsDeep(new api.ProtocolMapperRepresentation(), clientEmailClaimMapper())]
 }
 
 export function createClientScopes(): api.ClientScopeRepresentation {
