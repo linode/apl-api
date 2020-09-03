@@ -19,7 +19,6 @@ function stripRequiredFromObject(o) {
   if (o.required) o.required = []
   if (o.properties) {
     _.keys(o.properties).forEach( prop => {
-      o.properties[prop].required = []
       stripRequiredFromObject(o.properties[prop])
     })
   }
