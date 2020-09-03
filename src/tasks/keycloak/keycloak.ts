@@ -54,7 +54,7 @@ async function main() {
     })
   } catch (error) {
     console.error(error)
-    process.exit()
+    process.exit(1)
   }
 
   // Configure AccessToken for service calls
