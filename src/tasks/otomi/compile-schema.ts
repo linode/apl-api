@@ -29,12 +29,14 @@ async function main() {
   const openApiPath = path.resolve(env.INPUT_FILE_PATH)
   console.log(`Loading api spec from: ${openApiPath}`)
   const schema = await $RefParser.bundle(openApiPath)
-  const liteSchema = stripRequiredFromObject(_.cloneDeep(schema))
+  const looseSchema = stripRequiredFromObject(_.cloneDeep(schema))
   // output file for default schema 
   fs.writeFileSync(env.OUTPUT_FILE_PATH, JSON.stringify(schema, null, '  '), 'utf8')
+  console.log(`JsonSchema generated: ${env.OUTPUT_FILE_PATH}`)
   // output file for lite schema (used for vscode autocomplete)
-  fs.writeFileSync(env.OUTPUT_LITE_FILE_PATH, JSON.stringify(liteSchema, null, '  '), 'utf8')
-  return schema
+  fs.writeFileSync(env.OUTPUT_LITE_FILE_PATH, JSON.stringify(looseSchema, null, '  '), 'utf8')
+  console.log(`LooseSchema generated: ${env.OUTPUT_LITE_FILE_PATH}`)
+  return [schema, looseSchema]
 }
 
 main()
