@@ -2,6 +2,24 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "command": ". ${workspaceFolder}/.env.sample && npm run tasks:otomi:compile-schema",
+      "name": "Run schema-compile task",
+      "request": "launch",
+      "type": "node-terminal"
+    },
+    {
+      "command": ". ${workspaceFolder}/.env.sample && npm run tasks:otomi:validate-values",
+      "name": "Run validate-values task",
+      "request": "launch",
+      "type": "node-terminal"
+    },
+    {
+      "command": ". ${workspaceFolder}/.env.sample && ((npm run tasks:otomi:compile-schema && npm run tasks:otomi:validate-values) && echo Success) || echo Failed",
+      "name": "E2e validate task",
+      "request": "launch",
+      "type": "node-terminal"
+    },
+    {
       "type": "node",
       "request": "launch",
       "name": "Launch Program",
