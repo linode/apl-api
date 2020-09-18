@@ -62,7 +62,7 @@ async function main() {
   const providers = new IdentityProvidersApi(basePath)
   providers.accessToken = String(token.access_token)
   const clientScope = new ClientScopesApi(basePath)
-  clientScope.accessToken = String(token.accqess_token)
+  clientScope.accessToken = String(token.access_token)
   const roles = new RolesApi(basePath)
   roles.accessToken = String(token.access_token)
   const clients = new ClientsApi(basePath)
@@ -112,7 +112,7 @@ async function main() {
 
   // add email claim for client protocolMappers
   await doApiCall('Client Email Claim', async () => {
-    await protocols.realmClientsIdProtocolMappersAddModelsPost(env.KEYCLOAK_REALM, 
+    await protocols.realmClientsIdProtocolMappersModelsPost(env.KEYCLOAK_REALM, 
       client.id, realmConfig.createClientEmailClaimMapper())
   })
   
