@@ -112,7 +112,7 @@ async function main() {
 
   // add email claim for client protocolMappers
   await doApiCall('Client Email Claim', async () => {
-    await protocols.realmClientsIdProtocolMappersAddModelsPost(env.KEYCLOAK_REALM, 
+    await protocols.realmClientsIdProtocolMappersModelsPost(env.KEYCLOAK_REALM, 
       client.id, realmConfig.createClientEmailClaimMapper())
   })
   
