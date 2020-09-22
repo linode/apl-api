@@ -3,21 +3,18 @@ import fs from 'fs'
 import yaml from 'js-yaml'
 import { findIndex } from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
+import merge from 'lodash/merge'
 import filter from 'lodash/filter'
-import forEach from 'lodash/forEach'
 import forIn from 'lodash/forIn'
 import get from 'lodash/get'
-import indexOf from 'lodash/indexOf'
 import isEmpty from 'lodash/isEmpty'
-import isUndefined from 'lodash/isUndefined'
 import omit from 'lodash/omit'
-import omitBy from 'lodash/omitBy'
 import set from 'lodash/set'
 import generatePassword from 'password-generator'
 import path from 'path'
 import db, { Db } from './db'
 import { AlreadyExists, NotExistError, PublicUrlExists } from './error'
-import { arrayToObject, getPublicUrl, objectToArray } from './utils'
+import { arrayToObject, getPublicUrl, objectToArray, getObjectPaths } from './utils'
 import cloneRepo, { Repo } from './repo'
 import {
   cleanEnv,
@@ -46,8 +43,23 @@ const env = cleanEnv({
   DISABLE_SYNC,
 })
 
-const baseGlobal = { teamConfig: { teams: {} } }
-let glbl = { ...baseGlobal }
+function loadConfig(repo: Repo, dataPath, secretDataPath): any {
+  const data = repo.readFile(dataPath)
+  const secretData = repo.readFile(secretDataPath)
+  return merge(data, secretData)
+}
+
+function saveConfig(repo: Repo, dataPath: string, secretDataPath: string, config, objectPathsForSecrets: string[]) {
+  const secretData = {}
+  objectPathsForSecrets.forEach((objectPath) => {
+    set(secretData, objectPath, get(config, objectPath))
+  })
+
+  const data = omit(config, objectPathsForSecrets)
+
+  repo.writeFile(secretDataPath, secretData)
+  repo.writeFile(dataPath, data)
+}
 
 const getFilePath = (cloud = null, cluster = null) => {
   let file
@@ -56,21 +68,6 @@ const getFilePath = (cloud = null, cluster = null) => {
     else file = `${cloud}/default.yaml`
   } else file = 'default.yaml'
   return path.join('./env/', file)
-}
-
-function splitGlobal(teamValues) {
-  const t = teamValues.teamConfig.teams
-  const g = glbl.teamConfig.teams
-  const globalProps = ['id', 'password', 'receiver', 'azure', 'secrets', 'oidc']
-  forEach(t, (team, teamId) => {
-    if (!g[teamId]) g[teamId] = {}
-    globalProps.forEach((prop) => {
-      if (prop === 'password' && !g[teamId].password) {
-        g[teamId].password = generatePassword(16, false)
-      } else if (team[prop] !== undefined) g[teamId][prop] = team[prop]
-      delete t[teamId][prop]
-    })
-  })
 }
 
 export default class OtomiStack {
@@ -99,8 +96,6 @@ export default class OtomiStack {
         env.GIT_PASSWORD,
         env.GIT_BRANCH,
       )
-      const globalPath = getFilePath()
-      glbl = this.repo.readFile(globalPath)
       this.loadValues()
     } catch (e) {
       console.error('Unable to init app', e)
@@ -141,7 +136,6 @@ export default class OtomiStack {
       // no services found
     }
     this.db.deleteItem('teams', { id })
-    delete glbl.teamConfig.teams[id]
   }
 
   getTeamServices(teamId: string) {
@@ -360,39 +354,116 @@ export default class OtomiStack {
   }
 
   loadValues() {
-    const clusterValues = this.repo.readFile(this.clustersPath)
-    this.convertClusterValuesToDb(clusterValues)
-    const clusters = this.getClusters()
-    this.loadAllTeamValues(clusters)
+    this.loadClusters()
+    this.loadTeams()
     this.db.setDirtyActive()
   }
 
-  loadFileValues(path = undefined, cluster = undefined) {
-    const values = this.repo.readFile(path)
-    const teams = get(values, 'teamConfig.teams', null)
-    if (!teams) {
-      console.info(`Missing 'teamConfig.teams' key in ${path} file. Skipping`)
-      return
-    }
-    this.loadTeamsValues(values.teamConfig.teams, cluster)
+  loadTeamSecrets(teamId) {
+    // e.g.: ./env/teams/otomi.secrets.yaml
+    const data = this.repo.readFile(`./env/teams/secrets.${teamId}.yaml`)
+    const secrets: [any] = get(data, `teamConfig.teams.${teamId}.secrets`)
+
+    secrets.forEach((secret) => {
+      const res = this.db.populateItem('secrets', { ...secret, teamId }, { teamId, name: secret.name }, secret.id)
+      console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
+    })
   }
 
-  loadAllTeamValues(clusters) {
-    console.log('loadAllTeamValues')
-    const loaded = []
-    // load globals first
-    this.loadFileValues(getFilePath())
-    forEach(clusters, (cluster) => {
-      const { cloud, name } = cluster
-      if (!loaded.includes(cloud)) {
-        const cloudFile = getFilePath(cloud)
-        console.log('loading: ', cloudFile)
-        this.loadFileValues(cloudFile, cluster)
-        loaded.push(cloud)
-      }
-      const clusterFile = getFilePath(cloud, name)
-      this.loadFileValues(clusterFile, cluster)
+  loadClusters() {
+    const data = this.repo.readFile('./env/clusters.yaml')
+    this.convertClusterValuesToDb(data)
+  }
+  loadTeams() {
+    const mergedData = loadConfig(this.repo, './env/teams.yaml', './env/secrets.teams.yaml')
+
+    Object.values(mergedData.teamConfig.teams).forEach((team: any) => {
+      this.db.populateItem('teams', { name: team.id, ...team }, undefined, team.id)
+      this.loadTeamSecrets(team.id)
+      team.clusters.forEach((clusterId) => this.loadTeamServices(team.id, clusterId))
     })
+  }
+
+  loadTeamServices(teamId, clusterId) {
+    // e.g.: ./env/clouds/google/dev/services.chai.yaml
+    const filePath = `./env/clouds/${clusterId}/services.${teamId}.yaml`
+    const data = this.repo.readFile(filePath)
+    const services = get(data, `teamConfig.teams.${teamId}.services`, [])
+    const cluster = this.db.getItem('clusters', { id: clusterId })
+    services.forEach((svc) => {
+      this.convertServiceToDb(svc, teamId, cluster)
+    })
+  }
+
+  saveTeams() {
+    const filePath = './env/teams.yaml'
+    const secretFilePath = './env/secrets.teams.yaml'
+    const teamValues = {}
+
+    const teams = this.getTeams()
+    teams.forEach((team) => {
+      this.saveTeamSecrets(team.id)
+      team.clusters.forEach((clusterId) => {
+        this.saveTeamServices(team.id, clusterId)
+      })
+      if (!team.password) team.password = generatePassword(16, false)
+      teamValues[team.id] = omit(team, 'name')
+    })
+    const values = {}
+    set(values, 'teamConfig.teams', teamValues)
+    this.repo.writeFile(filePath, values)
+    saveConfig(this.repo, filePath, secretFilePath, values, [])
+  }
+
+  saveTeamSecrets(teamId) {
+    let secrets = this.getSecrets(teamId)
+    secrets = secrets.map((item) => omit(item, 'teamId'))
+    const data = {}
+    set(data, `teamConfig.teams.${teamId}.secrets`, secrets)
+    this.repo.writeFile(`./env/teams/secrets.${teamId}.yaml`, data)
+  }
+
+  saveTeamServices(teamId, clusterId) {
+    const services = this.db.getCollection('services', { teamId, clusterId })
+    const data = {}
+    const values = []
+    services.forEach((service) => {
+      const value = this.convertDbServiceToValues(service)
+      values.push(value)
+    })
+
+    set(data, `teamConfig.teams.${teamId}.services`, values)
+    const filePath = `./env/clouds/${clusterId}/services.${teamId}.yaml`
+    this.repo.writeFile(filePath, data)
+  }
+
+  convertDbServiceToValues(svc) {
+    const serviceType = svc.ksvc.serviceType
+    console.info(`Saving service: serviceId: ${svc.serviceId} serviceType: ${serviceType}`)
+    const svcCloned = omit(svc, ['teamId', 'clusterId', 'ksvc', 'ingress', 'internal', 'path'])
+    const ksvc = cloneDeep(svc.ksvc)
+    if (serviceType === 'ksvc') {
+      svcCloned.ksvc = ksvc
+      delete svcCloned.ksvc.serviceType
+      const annotations = get(svc.ksvc, 'annotations', [])
+      svcCloned.ksvc.annotations = arrayToObject(annotations, 'name', 'value')
+    } else if (serviceType === 'ksvcPredeployed') {
+      svcCloned.ksvc = { predeployed: true }
+    } else if (serviceType !== 'svcPredeployed') {
+      console.warn(`Saving service failure: Not supported service type: ${serviceType}`)
+    }
+    if (svc.ingress && !isEmpty(svc.ingress)) {
+      if (svc.ingress.useDefaultSubdomain) svcCloned.ownHost = true
+      else svcCloned.domain = `${svc.ingress.subdomain}.${svc.ingress.domain}`
+
+      if (!svc.ingress.hasSingleSignOn) svcCloned.isPublic = true
+
+      if (svc.ingress.hasCert) svcCloned.hasCert = true
+      if (svc.ingress.certArn) svcCloned.certArn = svc.ingress.certArn
+      if (svc.ingress.path) svcCloned.paths = [svc.ingress.path]
+      if (svc.ingress.forwardPath) svcCloned.forwardPath = true
+    } else svcCloned.internal = true
+    return svcCloned
   }
 
   convertClusterValuesToDb(values) {
@@ -413,59 +484,6 @@ export default class OtomiStack {
         const id = `${cloud}/${cluster}`
         this.db.populateItem('clusters', clusterObj, undefined, id)
       })
-    })
-  }
-
-  loadTeamsValues(teams, cluster) {
-    // console.debug(teams)
-    forIn(teams, (teamData, teamId) => {
-      // console.log(`${teamId}:${teamData}`)
-      this.convertTeamToDb(teamData, teamId, cluster)
-    })
-  }
-
-  static assignCluster(obj, cluster) {
-    const clusters = get(obj, 'clusters', [])
-    clusters.push(cluster.id)
-    set(obj, 'clusters', clusters)
-  }
-
-  convertTeamToDb(teamData, teamId, cluster) {
-    let team
-    try {
-      team = this.getTeam(teamId)
-      OtomiStack.assignCluster(team, cluster)
-      this.editTeam(teamId, team)
-    } catch (e) {
-      const rawTeam = omit(teamData, 'services', 'secrets')
-      if (cluster) OtomiStack.assignCluster(rawTeam, cluster)
-      this.db.populateItem('teams', { name: teamId, ...rawTeam, ...glbl.teamConfig.teams[teamId] }, undefined, teamId)
-    }
-
-    if (teamData.services) {
-      this.convertTeamValuesServicesToDb(teamData.services, teamId, cluster)
-    } else {
-      const path = getFilePath(cluster)
-      console.info(`Missing 'services' key for team ${teamId} in ${path} file. Skipping.`)
-    }
-    if (teamData.secrets) {
-      this.convertTeamValuesSecretsToDb(teamData.secrets, teamId)
-    } else {
-      const path = getFilePath(cluster)
-      console.info(`Missing 'secret' key for team ${teamId} in ${path} file. Skipping.`)
-    }
-  }
-
-  convertTeamValuesSecretsToDb(secrets, teamId) {
-    secrets.forEach((secret) => {
-      const res = this.db.populateItem('secrets', { ...secret, teamId }, { teamId, name: secret.name }, secret.id)
-      console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
-    })
-  }
-
-  convertTeamValuesServicesToDb(services, teamId, cluster) {
-    services.forEach((svc) => {
-      this.convertServiceToDb(svc, teamId, cluster)
     })
   }
 
@@ -507,83 +525,9 @@ export default class OtomiStack {
   }
 
   saveValues() {
-    const clusters = this.getClusters()
-    forEach(clusters, (cluster) => {
-      const { cloud, name } = cluster
-      const teamValues = this.convertTeamsToValues(cluster)
-      splitGlobal(teamValues)
-      const path = getFilePath(cloud, name)
-      const values = this.repo.readFile(path)
-      const newValues = { ...values, ...teamValues }
-      this.repo.writeFile(path, newValues)
-    })
-    // now also write the globals back
-    const path = getFilePath()
-    const values = this.repo.readFile(path)
-    const newValues = omitBy({ ...values, ...glbl }, isUndefined)
-    this.repo.writeFile(path, newValues)
-  }
+    this.saveTeams()
 
-  static inCluster(obj, cluster) {
-    const clusters = get(obj, 'clusters', [])
-    return indexOf(clusters, cluster.id) !== -1
-  }
-
-  convertTeamsToValues(cluster) {
-    const teams = {}
-    this.getTeams().forEach((team) => {
-      if (!OtomiStack.inCluster(team, cluster)) return
-
-      const teamCloned = omit(team, ['clusters', 'name'])
-      const id = team.id
-      teams[id] = teamCloned
-      const dbSecrets = this.getSecrets(id)
-      teamCloned.secrets = []
-      dbSecrets.forEach((item) => {
-        teamCloned.secrets.push(omit(item, 'teamId'))
-      })
-
-      const dbServices = this.getTeamServices(id)
-      const services = []
-
-      dbServices.forEach((svc) => {
-        if (cluster.id !== svc.clusterId) return
-
-        const serviceType = svc.ksvc.serviceType
-        console.info(`Saving service: serviceId: ${svc.serviceId} serviceType: ${serviceType}`)
-        const svcCloned = omit(svc, ['teamId', 'clusterId', 'ksvc', 'ingress', 'internal', 'path'])
-        const ksvc = cloneDeep(svc.ksvc)
-        if (serviceType === 'ksvc') {
-          svcCloned.ksvc = ksvc
-          delete svcCloned.ksvc.serviceType
-          const annotations = get(svc.ksvc, 'annotations', [])
-          svcCloned.ksvc.annotations = arrayToObject(annotations, 'name', 'value')
-        } else if (serviceType === 'ksvcPredeployed') {
-          svcCloned.ksvc = { predeployed: true }
-        } else if (serviceType !== 'svcPredeployed') {
-          console.warn(`Saving service failure: Not supported service type: ${serviceType}`)
-        }
-        if (svc.ingress && !isEmpty(svc.ingress)) {
-          if (svc.ingress.useDefaultSubdomain) svcCloned.ownHost = true
-          else svcCloned.domain = `${svc.ingress.subdomain}.${svc.ingress.domain}`
-
-          if (!svc.ingress.hasSingleSignOn) svcCloned.isPublic = true
-
-          if (svc.ingress.hasCert) svcCloned.hasCert = true
-          if (svc.ingress.certArn) svcCloned.certArn = svc.ingress.certArn
-          if (svc.ingress.path) svcCloned.paths = [svc.ingress.path]
-          if (svc.ingress.forwardPath) svcCloned.forwardPath = true
-        } else svcCloned.internal = true
-
-        services.push(svcCloned)
-      })
-
-      teams[id].services = services
-    })
-
-    const values = {
-      teamConfig: { teams },
-    }
-    return values
+    // TODO: saveSettings
+    // TODO: saveCharts
   }
 }

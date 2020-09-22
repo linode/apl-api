@@ -56,7 +56,7 @@ export class Repo {
   }
 
   readFile(relativePath) {
-    const absolutePath = path.join(this.path, relativePath) + '.dec'
+    const absolutePath = path.join(this.path, relativePath)
     console.info(`Reading from file: ${absolutePath}`)
     const doc = yaml.safeLoad(fs.readFileSync(absolutePath, 'utf8'))
     return doc
