@@ -1,5 +1,7 @@
 import { expect } from 'chai'
 import { getObjectPaths, getPublicUrl } from './utils'
+import yaml from 'js-yaml'
+import fs from 'fs'
 
 describe('Utils', () => {
   it('should retrieve host part from service domain', (done) => {
@@ -36,6 +38,16 @@ describe('Utils', () => {
     }
     const paths = getObjectPaths(obj)
     expect(paths).to.have.members(['a', 'b.bb', 'c[0].ee.fff', 'c[1].ee.fff', 'd.dd[0]', 'd.dd[1]'])
+    done()
+  })
+
+  it('print paths', (done) => {
+    const obj = yaml.safeLoad(
+      fs.readFileSync('/Users/jehoszafatzimnowoda/workspace/otomi/otomi-values/env/teams.secrets.yaml', 'utf8'),
+    )
+    const paths = getObjectPaths(obj)
+    console.log(paths)
+    // expect(paths).to.have.members(['a', 'b.bb', 'c[0].ee.fff', 'c[1].ee.fff', 'd.dd[0]', 'd.dd[1]'])
     done()
   })
 })

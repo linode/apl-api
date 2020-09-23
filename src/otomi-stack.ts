@@ -10,6 +10,7 @@ import get from 'lodash/get'
 import isEmpty from 'lodash/isEmpty'
 import omit from 'lodash/omit'
 import set from 'lodash/set'
+import unset from 'lodash/unset'
 import generatePassword from 'password-generator'
 import path from 'path'
 import db, { Db } from './db'
@@ -43,22 +44,17 @@ const env = cleanEnv({
   DISABLE_SYNC,
 })
 
-function loadConfig(repo: Repo, dataPath, secretDataPath): any {
-  const data = repo.readFile(dataPath)
-  const secretData = repo.readFile(secretDataPath)
-  return merge(data, secretData)
-}
-
 function saveConfig(repo: Repo, dataPath: string, secretDataPath: string, config, objectPathsForSecrets: string[]) {
   const secretData = {}
+  const plainData = cloneDeep(config)
+
   objectPathsForSecrets.forEach((objectPath) => {
     set(secretData, objectPath, get(config, objectPath))
+    unset(plainData, objectPath)
   })
 
-  const data = omit(config, objectPathsForSecrets)
-
   repo.writeFile(secretDataPath, secretData)
-  repo.writeFile(dataPath, data)
+  repo.writeFile(dataPath, plainData)
 }
 
 const getFilePath = (cloud = null, cluster = null) => {
@@ -359,6 +355,12 @@ export default class OtomiStack {
     this.db.setDirtyActive()
   }
 
+  loadConfig(dataPath, secretDataPath): any {
+    const data = this.repo.readFile(dataPath)
+    const secretData = this.repo.readFile(secretDataPath)
+    return merge(data, secretData)
+  }
+
   loadTeamSecrets(teamId) {
     // e.g.: ./env/teams/otomi.secrets.yaml
     const data = this.repo.readFile(`./env/teams/secrets.${teamId}.yaml`)
@@ -375,7 +377,7 @@ export default class OtomiStack {
     this.convertClusterValuesToDb(data)
   }
   loadTeams() {
-    const mergedData = loadConfig(this.repo, './env/teams.yaml', './env/secrets.teams.yaml')
+    const mergedData = this.loadConfig('./env/teams.yaml', './env/secrets.teams.yaml')
 
     Object.values(mergedData.teamConfig.teams).forEach((team: any) => {
       this.db.populateItem('teams', { name: team.id, ...team }, undefined, team.id)
@@ -399,7 +401,8 @@ export default class OtomiStack {
     const filePath = './env/teams.yaml'
     const secretFilePath = './env/secrets.teams.yaml'
     const teamValues = {}
-
+    const secretPropertyPaths = ['password', 'oidc.groupMapping', 'azure']
+    const objectPaths = []
     const teams = this.getTeams()
     teams.forEach((team) => {
       this.saveTeamSecrets(team.id)
@@ -408,11 +411,16 @@ export default class OtomiStack {
       })
       if (!team.password) team.password = generatePassword(16, false)
       teamValues[team.id] = omit(team, 'name')
+
+      secretPropertyPaths.forEach((propertyPath) => {
+        objectPaths.push(`teamConfig.teams.${team.id}.${propertyPath}`)
+      })
     })
+
     const values = {}
     set(values, 'teamConfig.teams', teamValues)
-    this.repo.writeFile(filePath, values)
-    saveConfig(this.repo, filePath, secretFilePath, values, [])
+
+    saveConfig(this.repo, filePath, secretFilePath, values, objectPaths)
   }
 
   saveTeamSecrets(teamId) {

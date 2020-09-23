@@ -3,3 +3,4 @@ teamConfig:
     otomi:
       id: otomi
       clusters: ['aws/dev', onprem/dev]
+      oidc: {}
