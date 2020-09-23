@@ -469,13 +469,15 @@ export default class OtomiStack {
   convertClusterValuesToDb(values) {
     const cs = values.clouds
     forIn(cs, (cloudObj, cloud) => {
-      const dnsZones = [cloudObj.domain].concat(get(cloudObj, 'dnsZones', []))
       forIn(cloudObj.clusters, (clusterObject, cluster) => {
+        const domain = `${cluster}.${cloudObj.domain}`
+        const dnsZones = [domain].concat(get(cloudObj, 'dnsZones', []))
+
         const clusterObj = {
           cloud,
           name: cluster,
           dnsZones,
-          domain: `${cluster}.${cloudObj.domain}`,
+          domain,
           k8sVersion: clusterObject.k8sVersion,
           hasKnative: clusterObject.hasKnative !== undefined ? clusterObject.hasKnative : true,
           region: clusterObject.region,
