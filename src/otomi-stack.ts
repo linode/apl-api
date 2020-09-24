@@ -353,7 +353,7 @@ export default class OtomiStack {
 
   loadTeamSecrets(teamId) {
     // e.g.: ./env/teams/otomi.secrets.yaml
-    const data = this.repo.readFile(`./env/teams/secrets.${teamId}.yaml`)
+    const data = this.repo.readFile(`./env/teams/secrets.${teamId}.yaml.dec`)
     const secrets: [any] = get(data, `teamConfig.teams.${teamId}.secrets`)
 
     secrets.forEach((secret) => {
@@ -367,7 +367,7 @@ export default class OtomiStack {
     this.convertClusterValuesToDb(data)
   }
   loadTeams() {
-    const mergedData = this.loadConfig('./env/teams.yaml', './env/secrets.teams.yaml')
+    const mergedData = this.loadConfig('./env/teams.yaml', './env/secrets.teams.yaml.dec')
 
     Object.values(mergedData.teamConfig.teams).forEach((team: any) => {
       this.db.populateItem('teams', { name: team.id, ...team }, undefined, team.id)
@@ -389,7 +389,7 @@ export default class OtomiStack {
 
   saveTeams() {
     const filePath = './env/teams.yaml'
-    const secretFilePath = './env/secrets.teams.yaml'
+    const secretFilePath = './env/secrets.teams.yaml.dec'
     const teamValues = {}
     const secretPropertyPaths = ['password', 'oidc.groupMapping', 'azure']
     const objectPaths = []
@@ -418,7 +418,7 @@ export default class OtomiStack {
     secrets = secrets.map((item) => omit(item, 'teamId'))
     const data = {}
     set(data, `teamConfig.teams.${teamId}.secrets`, secrets)
-    this.repo.writeFile(`./env/teams/secrets.${teamId}.yaml`, data)
+    this.repo.writeFile(`./env/teams/secrets.${teamId}.yaml.dec`, data)
   }
 
   saveTeamServices(teamId, clusterId) {
