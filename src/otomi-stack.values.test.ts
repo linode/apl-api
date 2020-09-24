@@ -159,7 +159,7 @@ const expectedDbState = {
     {
       cloud: 'aws',
       name: 'dev',
-      dnsZones: ['dev.eks.otomi.cloud'],
+      dnsZones: ['dev.eks.otomi.cloud', 'eks.otomi.cloud'],
       domain: 'dev.eks.otomi.cloud',
       k8sVersion: 1.16,
       hasKnative: true,
@@ -169,7 +169,7 @@ const expectedDbState = {
     {
       cloud: 'google',
       name: 'dev',
-      dnsZones: ['dev.gke.otomi.cloud'],
+      dnsZones: ['dev.gke.otomi.cloud', 'gke.otomi.cloud'],
       domain: 'dev.gke.otomi.cloud',
       k8sVersion: 1.17,
       hasKnative: true,
@@ -179,7 +179,7 @@ const expectedDbState = {
     {
       cloud: 'azure',
       name: 'dev',
-      dnsZones: ['dev.aks.otomi.cloud'],
+      dnsZones: ['dev.aks.otomi.cloud', 'aks.otomi.cloud'],
       domain: 'dev.aks.otomi.cloud',
       k8sVersion: 1.17,
       hasKnative: true,
@@ -189,7 +189,7 @@ const expectedDbState = {
     {
       cloud: 'onprem',
       name: 'dev',
-      dnsZones: ['dev.onprem.otomi.cloud', 'onprem.otomi.cloud'],
+      dnsZones: ['dev.onprem.otomi.cloud', 'onprem.otomi.cloud', 'otomi.cloud'],
       domain: 'dev.onprem.otomi.cloud',
       k8sVersion: 1.18,
       hasKnative: true,

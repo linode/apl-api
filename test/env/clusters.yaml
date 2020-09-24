@@ -29,7 +29,7 @@ clouds:
         region: westeurope
   onprem:
     domain: onprem.otomi.cloud
-    dnsZones: [onprem.otomi.cloud]
+    dnsZones: [otomi.cloud]
     clusters:
       dev:
         dnsProvider: google

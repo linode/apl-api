@@ -12,10 +12,9 @@ import omit from 'lodash/omit'
 import set from 'lodash/set'
 import unset from 'lodash/unset'
 import generatePassword from 'password-generator'
-import path from 'path'
 import db, { Db } from './db'
 import { AlreadyExists, NotExistError, PublicUrlExists } from './error'
-import { arrayToObject, getPublicUrl, objectToArray, getObjectPaths } from './utils'
+import { arrayToObject, getPublicUrl, objectToArray } from './utils'
 import cloneRepo, { Repo } from './repo'
 import {
   cleanEnv,
@@ -55,15 +54,6 @@ function saveConfig(repo: Repo, dataPath: string, secretDataPath: string, config
 
   repo.writeFile(secretDataPath, secretData)
   repo.writeFile(dataPath, plainData)
-}
-
-const getFilePath = (cloud = null, cluster = null) => {
-  let file
-  if (cloud) {
-    if (cluster) file = `${cloud}/${cluster}.yaml`
-    else file = `${cloud}/default.yaml`
-  } else file = 'default.yaml'
-  return path.join('./env/', file)
 }
 
 export default class OtomiStack {
