@@ -1,41 +1,41 @@
 clouds:
   aws:
-    domain: eks.otomi.cloud
+    domain: eks.example.com
     clusters:
       dev:
         apiName: eks_otomi-cloud_eu-central-1_otomi-eks-dev
-        apiServer: https://C5C373E1AA55479B6E855F7E1670F624.yl4.eu-central-1.eks.amazonaws.com
+        apiServer: https://1234.1234.eu-central-1.eks.amazonaws.com
         k8sVersion: 1.16
         otomiVersion: 0.11.18
         region: eu-central-1
-        vpcID: vpc-073b45ec181ee4d45
+        vpcID: vpc-1234
   google:
-    domain: gke.otomi.cloud
+    domain: gke.example.com
     clusters:
       dev:
         apiName: gke_otomi-cloud_europe-west4_otomi-gke-dev
-        apiServer: 34.91.158.18
+        apiServer: 1.2.3.4
         otomiVersion: 0.11.18
         k8sVersion: 1.17
         region: europe-west4
   azure:
-    domain: aks.otomi.cloud
+    domain: aks.example.com
     clusters:
       dev:
         apiName: aks_otomi-cloud_westeurope_otomi-aks-dev
-        apiServer: otomi-aks-dev-cb2335fb.hcp.westeurope.azmk8s.io
+        apiServer: otomi-aks-dev-123456.hcp.westeurope.azmk8s.io
         k8sVersion: 1.17
         otomiVersion: 0.11.18
         region: westeurope
   onprem:
-    domain: onprem.otomi.cloud
-    dnsZones: [otomi.cloud]
+    domain: onprem.example.com
+    dnsZones: [example.com]
     clusters:
       dev:
         dnsProvider: google
         apiName: onprem_otomi-cloud
-        apiServer: 192.168.1.17
+        apiServer: 1.2.3.4
         k8sVersion: 1.18
         otomiVersion: 0.11.18
         region: local
-        entrypoint: 178.85.0.21
+        entrypoint: 1.2.3.5
