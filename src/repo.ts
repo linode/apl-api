@@ -11,8 +11,8 @@ const env = cleanEnv({
 })
 
 const baseUrl = `http://${env.TOOLS_HOST}:17771/`
-const decryptUrl = `${baseUrl}dec`
-const encryptUrl = `${baseUrl}enc`
+const decryptUrl = `${baseUrl}decrypt`
+const encryptUrl = `${baseUrl}encrypt`
 
 export class Repo {
   path: string
@@ -56,7 +56,7 @@ export class Repo {
   }
 
   readFile(relativePath) {
-    const absolutePath = path.join(this.path, relativePath) + '.dec'
+    const absolutePath = path.join(this.path, relativePath)
     console.info(`Reading from file: ${absolutePath}`)
     const doc = yaml.safeLoad(fs.readFileSync(absolutePath, 'utf8'))
     return doc

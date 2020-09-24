@@ -1,0 +1,73 @@
+teamConfig:
+  teams:
+    otomi:
+      services:
+        - name: servant1
+          id: fb88a85d-49e6-4c20-98ed-11b3ceff540e
+          ksvc:
+            scaleToZero: false
+            image:
+              repository: otomi/helloworld-nodejs
+              tag: 1.2.8
+            env:
+              - name: TARGET
+                value: master, I am servant 1
+              - name: INFORMANT
+                value: http://informant.team-otomi.svc.cluster.local
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
+            annotations: {}
+          domain: master.onprem.example.com
+          isPublic: true
+          paths:
+            - /servant-1
+        - name: hello
+          id: f818a64d-25a4-46e0-9eaf-769b78866031
+          domain: hello.team-otomi.dev.onprem.example.com
+          isPublic: true
+        - name: servant2
+          id: f818a64d-25a4-46e0-9eaf-769b7886603d
+          ksvc:
+            scaleToZero: false
+            image:
+              repository: otomi/helloworld-nodejs
+              tag: 1.2.8
+            env:
+              - name: TARGET
+                value: master, I am servant 2
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
+            annotations: {}
+          domain: master.onprem.example.com
+          isPublic: true
+          paths:
+            - /servant-2
+        - name: informant
+          id: 2f18da9a-e659-479d-9d65-2ca82503f43c
+          ksvc:
+            scaleToZero: false
+            image:
+              repository: otomi/helloworld-nodejs
+              tag: 1.2.10
+            env:
+              - name: TARGET
+                value: head servant, I have a version number
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
+            annotations: {}
+          internal: true

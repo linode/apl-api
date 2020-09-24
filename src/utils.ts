@@ -45,6 +45,35 @@ export function objectToArray(obj, keyName, keyValue) {
   return arr
 }
 
+export function getObjectPaths(tree) {
+  const leaves = []
+  const walk = function (obj, path) {
+    path = path || ''
+
+    for (const n in obj) {
+      // eslint-disable-next-line no-prototype-builtins
+      if (obj.hasOwnProperty(n)) {
+        if (obj instanceof Array) {
+          if (typeof obj[n] !== 'object') leaves.push(path + '[' + n + ']')
+          else walk(obj[n], path + '[' + n + ']')
+        } else if (typeof obj[n] === 'object') {
+          walk(obj[n], path + '.' + n)
+        } else {
+          leaves.push(path + '.' + n)
+        }
+      } else {
+        console.error(`No property: ${n}`)
+      }
+    }
+  }
+  walk(tree, '')
+
+  const rawLeaves = leaves.map((x: string) => {
+    return x.substring(1)
+  })
+  return rawLeaves
+}
+
 export function getPublicUrl(serviceDomain, serviceName, teamId, cluster) {
   if (!serviceDomain) {
     // Fallback mechanism for exposed service that does not have its public url specified in values

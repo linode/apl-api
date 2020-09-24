@@ -15,3 +15,4 @@ services:
     environment:
       ENV_DIR: ${GIT_LOCAL_PATH}
       GCLOUD_SERVICE_KEY: ${GCLOUD_SERVICE_KEY}
+      GOOGLE_APPLICATION_CREDENTIALS: '/tmp/key.json'

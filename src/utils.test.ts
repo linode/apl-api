@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { getPublicUrl } from './utils'
+import { getObjectPaths, getPublicUrl } from './utils'
 
 describe('Utils', () => {
   it('should retrieve host part from service domain', (done) => {
@@ -24,6 +24,18 @@ describe('Utils', () => {
     const x = getPublicUrl('aa.bb.cc.dd.ee', 'aa', 'bb', { dnsZones: ['cc.dd.ee', 'dd.ee', 'bb.cc.dd.ee'] })
     expect(x.subdomain).to.equal('aa')
     expect(x.domain).to.equal('bb.cc.dd.ee')
+    done()
+  })
+
+  it('should retrieve all object paths', (done) => {
+    const obj = {
+      a: 1,
+      b: { bb: 2 },
+      c: [{ ee: { fff: 3 } }, { ee: { fff: 4 } }],
+      d: { dd: [1, 2] },
+    }
+    const paths = getObjectPaths(obj)
+    expect(paths).to.have.members(['a', 'b.bb', 'c[0].ee.fff', 'c[1].ee.fff', 'd.dd[0]', 'd.dd[1]'])
     done()
   })
 })
