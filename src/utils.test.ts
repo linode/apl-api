@@ -1,7 +1,5 @@
 import { expect } from 'chai'
 import { getObjectPaths, getPublicUrl } from './utils'
-import yaml from 'js-yaml'
-import fs from 'fs'
 
 describe('Utils', () => {
   it('should retrieve host part from service domain', (done) => {

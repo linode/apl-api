@@ -11,8 +11,8 @@ const env = cleanEnv({
 })
 
 const baseUrl = `http://${env.TOOLS_HOST}:17771/`
-const decryptUrl = `${baseUrl}dec`
-const encryptUrl = `${baseUrl}enc`
+const decryptUrl = `${baseUrl}decrypt`
+const encryptUrl = `${baseUrl}encrypt`
 
 export class Repo {
   path: string
