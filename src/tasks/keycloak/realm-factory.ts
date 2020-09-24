@@ -98,8 +98,9 @@ export function createProtocolMappersForClientScope(): Array<api.ProtocolMapperR
   return protocolMapperRepresentations
 }
 
-export function createClientEmailClaimMapper(): Array<api.ProtocolMapperRepresentation> {
-  return [defaultsDeep(new api.ProtocolMapperRepresentation(), clientEmailClaimMapper())]
+export function createClientEmailClaimMapper(): api.ProtocolMapperRepresentation {
+    const emailClaimMapper = defaultsDeep(new api.ProtocolMapperRepresentation(), clientEmailClaimMapper())
+    return emailClaimMapper
 }
 
 export function createClientScopes(): api.ClientScopeRepresentation {
