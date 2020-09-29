@@ -49,7 +49,7 @@ export class Repo {
   }
 
   writeFile(relativePath, data) {
-    const absolutePath = path.join(this.path, relativePath) + '.dec'
+    const absolutePath = path.join(this.path, relativePath)
     console.debug(`Writing to file: ${absolutePath}`)
     const yamlStr = yaml.safeDump(data)
     fs.writeFileSync(absolutePath, yamlStr, 'utf8')
