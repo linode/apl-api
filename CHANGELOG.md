@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.32](https://github.com/redkubes/otomi-stack-api/compare/v0.4.31...v0.4.32) (2020-09-30)
+
+### Bug Fixes
+
+- do not apply cluster dns zone ([#124](https://github.com/redkubes/otomi-stack-api/issues/124)) ([dcb852b](https://github.com/redkubes/otomi-stack-api/commit/dcb852b3010351522699dbd8eb58d0b654d0a077))
+
 ### [0.4.31](https://github.com/redkubes/otomi-stack-api/compare/v0.4.30...v0.4.31) (2020-09-28)
 
 ### [0.4.30](https://github.com/redkubes/otomi-stack-api/compare/v0.4.29...v0.4.30) (2020-09-01)
