@@ -73,9 +73,9 @@ const expectedDbState = {
         certArn: undefined,
         hasCert: false,
         hasSingleSignOn: false,
-        domain: 'dev.onprem.example.com',
+        domain: 'onprem.example.com',
         path: undefined,
-        subdomain: 'hello.team-otomi',
+        subdomain: 'hello.team-otomi.dev',
         useDefaultSubdomain: false,
         forwardPath: false,
       },
@@ -159,7 +159,7 @@ const expectedDbState = {
     {
       cloud: 'aws',
       name: 'dev',
-      dnsZones: ['dev.eks.example.com', 'eks.example.com'],
+      dnsZones: ['eks.example.com'],
       domain: 'dev.eks.example.com',
       k8sVersion: 1.16,
       hasKnative: true,
@@ -169,7 +169,7 @@ const expectedDbState = {
     {
       cloud: 'google',
       name: 'dev',
-      dnsZones: ['dev.gke.example.com', 'gke.example.com'],
+      dnsZones: ['gke.example.com'],
       domain: 'dev.gke.example.com',
       k8sVersion: 1.17,
       hasKnative: true,
@@ -179,7 +179,7 @@ const expectedDbState = {
     {
       cloud: 'azure',
       name: 'dev',
-      dnsZones: ['dev.aks.example.com', 'aks.example.com'],
+      dnsZones: ['aks.example.com'],
       domain: 'dev.aks.example.com',
       k8sVersion: 1.17,
       hasKnative: true,
@@ -189,7 +189,7 @@ const expectedDbState = {
     {
       cloud: 'onprem',
       name: 'dev',
-      dnsZones: ['dev.onprem.example.com', 'onprem.example.com', 'example.com'],
+      dnsZones: ['onprem.example.com', 'example.com'],
       domain: 'dev.onprem.example.com',
       k8sVersion: 1.18,
       hasKnative: true,

@@ -469,7 +469,7 @@ export default class OtomiStack {
     forIn(cs, (cloudObj, cloud) => {
       forIn(cloudObj.clusters, (clusterObject, cluster) => {
         const domain = `${cluster}.${cloudObj.domain}`
-        const dnsZones = [domain, cloudObj.domain].concat(get(cloudObj, 'dnsZones', []))
+        const dnsZones = [cloudObj.domain].concat(get(cloudObj, 'dnsZones', []))
 
         const clusterObj = {
           cloud,
