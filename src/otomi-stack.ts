@@ -48,7 +48,7 @@ function saveConfig(repo: Repo, dataPath: string, secretDataPath: string, config
   const plainData = cloneDeep(config)
 
   objectPathsForSecrets.forEach((objectPath) => {
-    set(secretData, objectPath, get(config, objectPath))
+    set(secretData, objectPath, get(config, objectPath, {}))
     unset(plainData, objectPath)
   })
 
@@ -354,7 +354,7 @@ export default class OtomiStack {
   loadTeamSecrets(teamId) {
     // e.g.: ./env/teams/otomi.secrets.yaml
     const data = this.repo.readFile(`./env/teams/secrets.${teamId}.yaml.dec`)
-    const secrets: [any] = get(data, `teamConfig.teams.${teamId}.secrets`)
+    const secrets: [any] = get(data, `teamConfig.teams.${teamId}.secrets`, [])
 
     secrets.forEach((secret) => {
       const res = this.db.populateItem('secrets', { ...secret, teamId }, { teamId, name: secret.name }, secret.id)
