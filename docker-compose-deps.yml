@@ -5,7 +5,7 @@ services:
     container_name: tools
     image: eu.gcr.io/otomi-cloud/otomi-stack:${TOOLS_TAG:-latest}
     user: ${USER_ID}
-    command: sh -c 'env && bin/server.sh'
+    command: bin/server.sh
     expose:
       - 17771
     ports:
