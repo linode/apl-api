@@ -3,8 +3,6 @@ set -e
 source .env
 BIN_NAME=$(basename "$0")
 COMMAND_NAME=$1
-SUB_COMMAND_NAME=$2
-
 
 info="(add '-d' to daemonize, or 'logs' for logs on pre-daemonized stack)"
 sub_help () {
@@ -31,7 +29,7 @@ sub_up-deps () {
 }
 
 sub_down () {
-    docker-compose -f docker-compose.yml -f docker-compose-deps.yml down --remove-orphans
+    docker-compose -f docker-compose.yml -f docker-compose-deps.yml down --remove-orphans -v
 }
 
 case $COMMAND_NAME in

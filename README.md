@@ -6,13 +6,16 @@ Every api deployment will result in a commit to the values repo with the author'
 
 ## 1. Development
 
-### 1.1 Setting up environment
+### 1.1 Prerequisites
 
-1. Copy `.env.sample` to `.env` and edit accordingly.
+- npm@~10.0 installed
 
-2. Download `otomi-stack-api/.secrets` file from [Google Drive secrets](https://drive.google.com/drive/folders/1N802vs0IplKehkZq8SxMi67RipyO1pHN) and put contents in `.env`.
+### 1.2 Setting up environment
 
-3. Setup access to GitHub packages:
+1. `npm install`
+2. Copy `.env.sample` to `.env` and edit accordingly.
+3. Download `otomi-stack-api/.secrets` file from [Google Drive secrets](https://drive.google.com/drive/folders/1N802vs0IplKehkZq8SxMi67RipyO1pHN) and put contents in `.env`.
+4. Setup access to GitHub packages:
 
 ```
 source .env && echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" >> ~/.npmrc

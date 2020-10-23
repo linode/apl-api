@@ -78,8 +78,8 @@ export class Repo {
       console.info(`Repo does not exist. Cloning from: ${this.url} to: ${this.path}`)
       await this.git.clone(this.repoPathAuth, this.path)
     } else {
-      console.log('Repo already exists. Checking out correct branch.')
-      await this.git.checkout(this.branch)
+      console.log('Repo already exists.')
+      return
     }
 
     await this.pull()
@@ -98,7 +98,7 @@ export class Repo {
   }
 
   async pull() {
-    const pullSummary = await this.git.pull(this.remote, this.branch, { '--rebase': true })
+    const pullSummary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
     await this.decrypt()
     console.debug(`Pull summary: ${JSON.stringify(pullSummary)}`)
     return pullSummary
@@ -117,7 +117,7 @@ export class Repo {
       await this.pull()
     } catch (e) {
       console.warn(`Pull error: ${JSON.stringify(e)}`)
-      await this.git.rebase({ '--abort': true })
+      await this.git.rebase({ '--abort': 'true' })
       await this.git.reset(['--hard', sha])
       await this.decrypt()
       console.info(`Reset HEAD to ${sha} commit`)

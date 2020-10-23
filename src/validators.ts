@@ -1,7 +1,7 @@
 import { str, bool, json, cleanEnv as clean, CleanEnv, StrictCleanOptions, ValidatorSpec, num } from 'envalid'
 
 export const CERT_ROTATION_DAYS = num({ desc: 'The amount of days for the cert rotation', default: 75 })
-export const CLUSTER_APISERVER = str({ desc: 'The cluster api server ip/host' })
+export const CLUSTER_APISERVER = str({ desc: 'The cluster api server ip/host', default: 'http://127.0.0.1:8080' })
 export const CLUSTER_ID = str({ desc: 'The cluster id', default: 'google/dev' })
 export const CLUSTER_NAME = str({ desc: 'The cluster name', default: 'dev' })
 export const DB_PATH = str({ desc: 'The file path to the db. If not given in-memory db is used.', default: undefined })

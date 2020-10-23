@@ -31,7 +31,7 @@
     "openapi-client-axios": "^3.6.1",
     "password-generator": "^2.3.2",
     "shelljs": "^0.8.4",
-    "simple-git": "^2.16.0",
+    "simple-git": "^2.20.1",
     "swagger-client": "^3.10.12",
     "swagger-ui-express": "^4.1.4",
     "uuid": "^8.3.0"
