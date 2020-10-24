@@ -79,7 +79,7 @@ export class Repo {
       await this.git.clone(this.repoPathAuth, this.path)
     } else {
       console.log('Repo already exists.')
-      return
+      await this.git.checkout(this.branch)
     }
 
     await this.pull()
