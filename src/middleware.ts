@@ -4,9 +4,6 @@ import { OpenApiRequest, JWT, OpenApiRequestExt, SessionUser } from './otomi-mod
 import Authz from './authz'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
-import { cleanEnv, CLUSTER_ID } from './validators'
-
-const env = cleanEnv({ CLUSTER_ID })
 
 const HttpMethodMapping = {
   DELETE: 'delete',
