@@ -31,14 +31,14 @@ FROM dev as clean
 # below command removes the packages specified in devDependencies and set NODE_ENV to production
 RUN npm prune --production
 # --------------- Production stage
-FROM node:14-slim AS prod
+FROM node:14.10-alpine AS prod
 
-# COPY --from=dev /usr/local/bin/node /usr/bin/
-# COPY --from=dev /usr/lib/libgcc* /usr/lib/
-# COPY --from=dev /usr/lib/libstdc* /usr/lib/
+COPY --from=dev /usr/local/bin/node /usr/bin/
+COPY --from=dev /usr/lib/libgcc* /usr/lib/
+COPY --from=dev /usr/lib/libstdc* /usr/lib/
 
-# # Install dependencies
-# RUN apk add --no-cache git
+# Install dependencies
+RUN apk add --no-cache git
 
 # Install app
 RUN mkdir /app

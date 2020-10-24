@@ -78,7 +78,7 @@ export class Repo {
       console.info(`Repo does not exist. Cloning from: ${this.url} to: ${this.path}`)
       await this.git.clone(this.repoPathAuth, this.path)
     } else {
-      console.log('Repo already exists.')
+      console.log('Repo already exists. Checking out correct branch.')
       await this.git.checkout(this.branch)
     }
 
