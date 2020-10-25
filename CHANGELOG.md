@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.33](https://github.com/redkubes/otomi-stack-api/compare/v0.4.32...v0.4.33) (2020-10-25)
+
+### Bug Fixes
+
+- adding owners file [ci skip](<[bd4256a](https://github.com/redkubes/otomi-stack-api/commit/bd4256a4a8866031244038be2ebb55e29caf6576)>)
+- regression ([165c2bc](https://github.com/redkubes/otomi-stack-api/commit/165c2bca56dbdaf79cec0acb9af3d76a33657f77))
+- regression ([5114170](https://github.com/redkubes/otomi-stack-api/commit/5114170655e64fa733b1cd051c7f60f2629e9bce))
+- regression missing git in image ([77a8b13](https://github.com/redkubes/otomi-stack-api/commit/77a8b13cc08ceabec50aaf92be2042bf4c723ec5))
+- regression missing git in image ([ec60ab5](https://github.com/redkubes/otomi-stack-api/commit/ec60ab55eb4edb5e436ba959c14aa0468e95e853))
+- regression missing git in image ([9adb07d](https://github.com/redkubes/otomi-stack-api/commit/9adb07d6cde2a150ef200b8757794731bc089f60))
+- **repo:** removed checkout in case repo exists as OS can differ ([2d754d2](https://github.com/redkubes/otomi-stack-api/commit/2d754d2084060fe3dc4d35755cec30788590cf99))
+
+### Code Refactoring
+
+- cleaned output [ci skip](<[130e228](https://github.com/redkubes/otomi-stack-api/commit/130e228b125db1f01ddfc5a71b1d536dd1e6f450)>)
+
+### CI
+
+- workflow fix [ci skip](<[912f358](https://github.com/redkubes/otomi-stack-api/commit/912f358ead23a5f25cccbb1bcbb01881898fd39e)>)
+
 ### [0.4.32](https://github.com/redkubes/otomi-stack-api/compare/v0.4.31...v0.4.32) (2020-09-30)
 
 ### Bug Fixes
