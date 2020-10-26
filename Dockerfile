@@ -34,7 +34,7 @@ RUN npm prune --production
 FROM node:14.10-alpine AS prod
 
 # Install dependencies
-RUN apk --no-cache add make gcc g++ python git jq
+RUN apk --no-cache add python git jq
 
 # Install app
 RUN mkdir /app
@@ -42,11 +42,10 @@ WORKDIR /app
 COPY --from=clean /app/node_modules node_modules
 COPY --from=ci /app/dist dist
 COPY package.json .
-COPY bin bin
 
 USER node
 EXPOSE 8080
 
 ENV NODE_ENV=production
 
-CMD ["node", "--max-http-header-size", "16384", "dist/app.js"]
+CMD ["node", "--max-http-header-size", "16384", "dist/src/app.js"]

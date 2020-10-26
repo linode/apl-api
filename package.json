@@ -114,7 +114,7 @@
     "package-lock.json": "npm install --prefer-offline --no-audit"
   },
   "scripts": {
-    "build": "tsc && copyup --error ./src/openapi/*.yaml ./dist/",
+    "build": "tsc && copyup --error ./src/openapi/*.yaml ./dist/src",
     "build:client:otomi": "ts-node-dev src/tasks/build-spec.ts vendors/openapi/otomi-api.json && rm -rf vendors/client/otomi-api >/dev/null && bin/generate-client.sh otomi-api axios",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
@@ -125,12 +125,12 @@
     "lint": "eslint --ext js,ts .",
     "lint:fix": "eslint --ext js,ts .",
     "release": "standard-version",
-    "start": "node dist/app.js",
-    "tasks:keycloak": "node dist/tasks/keycloak/keycloak.js",
+    "start": "node dist/src/app.js",
+    "tasks:keycloak": "node dist/src/tasks/keycloak/keycloak.js",
     "tasks:keycloak-dev": "ts-node-dev  ./src/tasks/keycloak/keycloak.ts",
-    "tasks:harbor": "node dist/tasks/harbor/harbor.js",
+    "tasks:harbor": "node dist/src/tasks/harbor/harbor.js",
     "tasks:harbor-dev": "ts-node-dev  ./src/tasks/harbor/harbor.ts",
-    "tasks:certs-aws": "node dist/tasks/otomi/certs-aws.js",
+    "tasks:certs-aws": "node dist/src/tasks/otomi/certs-aws.js",
     "tasks:certs-aws-dev": "ts-node-dev  ./src/tasks/otomi/certs-aws.ts",
     "test": "NODE_ENV=test mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit"
   },
