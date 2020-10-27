@@ -73,6 +73,7 @@ export default class OtomiStack {
   }
 
   async init() {
+    console.log(process.env.USE_SOPS)
     try {
       this.repo = await cloneRepo(
         env.GIT_LOCAL_PATH,

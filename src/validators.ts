@@ -5,7 +5,7 @@ export const CLUSTER_APISERVER = str({ desc: 'The cluster api server ip/host' })
 export const CLUSTER_ID = str({ desc: 'The cluster id', default: 'google/dev' })
 export const CLUSTER_NAME = str({ desc: 'The cluster name', default: 'dev' })
 export const DB_PATH = str({ desc: 'The file path to the db. If not given in-memory db is used.', default: undefined })
-export const DISABLE_SYNC = bool({ desc: 'Wether to disable pushing to the repo', default: false })
+export const DISABLE_SYNC = bool({ desc: 'Whether to disable pushing to the repo', default: false })
 export const DOMAINS = json({ desc: 'A list of domains and their cert status' })
 export const GIT_BRANCH = str({ desc: 'The git repo branch', default: 'master' })
 export const GIT_EMAIL = str({ desc: 'The git user email' })
@@ -37,7 +37,7 @@ export const SECRETS_NAMESPACE = str({ desc: 'The namespace of the TLS secrets',
 export const TENANT_CLIENT_SECRET = str({ desc: 'The tenant client secret' })
 export const TENANT_ID = str({ desc: 'The tenant ID' })
 export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '127.0.0.1' })
-
+export const USE_SOPS = bool({ desc: 'Whether to disable data encryption', default: true })
 const env = process.env
 export function cleanEnv<T>(
   validators: { [K in keyof T]: ValidatorSpec<T[K]> },

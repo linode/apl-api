@@ -4,10 +4,11 @@ import fs from 'fs'
 import path from 'path'
 import { GitPullError } from './error'
 import axios from 'axios'
-import { cleanEnv, TOOLS_HOST } from './validators'
+import { cleanEnv, TOOLS_HOST, USE_SOPS } from './validators'
 
 const env = cleanEnv({
   TOOLS_HOST,
+  USE_SOPS,
 })
 
 const baseUrl = `http://${env.TOOLS_HOST}:17771/`
@@ -86,13 +87,13 @@ export class Repo {
   }
 
   async decrypt() {
-    if (env.isTest) return
+    if (env.isTest || !env.USE_SOPS) return
     const res = await axios.get(decryptUrl)
     return res
   }
 
   async encrypt() {
-    if (env.isTest) return
+    if (env.isTest || !env.USE_SOPS) return
     const res = await axios.get(encryptUrl)
     return res
   }
