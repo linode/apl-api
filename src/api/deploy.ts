@@ -10,6 +10,9 @@ export default function (otomi: OtomiStack) {
       try {
         await otomi.triggerDeployment(email)
         res.status(200).json({})
+        setTimeout(() => {
+          process.exit()
+        }, 1000)
       } catch (err) {
         console.error(err)
         res.status(409).json({ error: err.message })
