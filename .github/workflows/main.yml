@@ -36,7 +36,7 @@ jobs:
           build_extra_args: '--build-arg=NPM_TOKEN=${{ secrets.NPM_TOKEN }}'
       - name: Retag from cache and push
         run: |
-          docker login -u otomi -p {{ secrets.DOCKERHUB_OTOMI_TOKEN }}
+          docker login -u otomi -p '{{ secrets.DOCKERHUB_OTOMI_TOKEN }}'
           docker tag $CACHE_REPO:$TAG $REPO:$TAG
           docker push $REPO:$TAG
       - if: "contains(github.event.head_commit.message, 'chore(release)')"
