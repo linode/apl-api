@@ -17,6 +17,7 @@ const expectedDbState = {
   ],
   services: [
     {
+      enabled: true,
       name: 'servant1',
       id: 'fb88a85d-49e6-4c20-98ed-11b3ceff540e',
       clusterId: 'onprem/dev',
@@ -62,6 +63,7 @@ const expectedDbState = {
       },
     },
     {
+      enabled: true,
       name: 'hello',
       id: 'f818a64d-25a4-46e0-9eaf-769b78866031',
       clusterId: 'onprem/dev',
@@ -81,6 +83,7 @@ const expectedDbState = {
       },
     },
     {
+      enabled: true,
       name: 'servant2',
       id: 'f818a64d-25a4-46e0-9eaf-769b7886603d',
       clusterId: 'onprem/dev',
@@ -122,6 +125,7 @@ const expectedDbState = {
       },
     },
     {
+      enabled: true,
       name: 'informant',
       id: '2f18da9a-e659-479d-9d65-2ca82503f43c',
       internal: true,
@@ -157,6 +161,7 @@ const expectedDbState = {
   clouds: [],
   clusters: [
     {
+      enabled: true,
       cloud: 'aws',
       name: 'dev',
       dnsZones: ['eks.example.com'],
@@ -167,6 +172,7 @@ const expectedDbState = {
       id: 'aws/dev',
     },
     {
+      enabled: false,
       cloud: 'google',
       name: 'dev',
       dnsZones: ['gke.example.com'],
@@ -177,6 +183,7 @@ const expectedDbState = {
       id: 'google/dev',
     },
     {
+      enabled: false,
       cloud: 'azure',
       name: 'dev',
       dnsZones: ['aks.example.com'],
@@ -187,6 +194,7 @@ const expectedDbState = {
       id: 'azure/dev',
     },
     {
+      enabled: true,
       cloud: 'onprem',
       name: 'dev',
       dnsZones: ['onprem.example.com', 'example.com'],
