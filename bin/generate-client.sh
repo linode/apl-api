@@ -30,12 +30,6 @@ validate() {
         echo "The directoy $TARGET_DIR already exists. Please choose different vendor name or remove existing directory."
         exit 1
     fi
-
-    if [ ! -f "$OPENAPI_DOC" ]; then
-        echo "The file $OPENAPI_DOC does not exist."
-        exit 1
-    fi
-
 }
 
 generate_client() {
@@ -64,7 +58,7 @@ set_package_json() {
 }
 
 build_npm_package() {
-    echo "Building $TARGET_NPM_NAME npm pacakge"
+    echo "Building $TARGET_NPM_NAME npm package"
     cd ${TARGET_DIR}
     npm install && npm run build
     cd $DIR

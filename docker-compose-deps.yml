@@ -13,5 +13,5 @@ services:
     volumes:
       - /tmp:/tmp
     environment:
-      ENV_DIR: ${GIT_LOCAL_PATH}
+      ENV_DIR: /tmp/otomi-values
       GCLOUD_SERVICE_KEY: ${GCLOUD_SERVICE_KEY}
