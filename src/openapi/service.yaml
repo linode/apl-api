@@ -90,6 +90,9 @@ Service:
     team: [delete, read, create, update]
   type: object
   properties:
+    enabled:
+      type: boolean
+      default: true
     id:
       type: string
       readOnly: true

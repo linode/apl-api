@@ -64,6 +64,7 @@ build_npm_package() {
     cd $DIR
 }
 
+rm -rf $TARGET_DIR >/dev/null
 validate
 generate_client 
 set_package_json

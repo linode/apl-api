@@ -4,6 +4,9 @@ Cluster:
     admin: [read-any]
     team: [read-any]
   properties:
+    enabled:
+      type: boolean
+      default: true
     name:
       type: string
       description: A cluster name
