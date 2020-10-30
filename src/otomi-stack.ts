@@ -478,6 +478,7 @@ export default class OtomiStack {
           name: cluster,
           dnsZones,
           domain,
+          otomiVersion: clusterObject.otomiVersion,
           k8sVersion: clusterObject.k8sVersion,
           hasKnative: clusterObject.hasKnative !== undefined ? clusterObject.hasKnative : true,
           region: clusterObject.region,
