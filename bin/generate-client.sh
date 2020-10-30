@@ -6,8 +6,8 @@ DIR=$(pwd)
 ORG=redkubes
 REPO="ssh://git@github.com/redkubes/otomi-api.git"
 
-VENDOR="$1"
-TYPE="${2:-node}"
+VENDOR="otomi-api"
+TYPE="axios"
 OPENAPI_DOC="./vendors/openapi/${VENDOR}.json"
 REGISTRY="https://npm.pkg.github.com/"
 TARGET_DIR="./vendors/client/${VENDOR}/${TYPE}"

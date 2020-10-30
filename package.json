@@ -34,7 +34,7 @@
     "swagger-ui-express": "^4.1.4",
     "uuid": "^8.3.0"
   },
-  "description": "REST API for admins and teams",
+  "description": "The brain of the Otomi Container Platform. Handling console input and talking to core, it knows what to do.",
   "devDependencies": {
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
@@ -113,7 +113,7 @@
   },
   "scripts": {
     "build": "tsc && copyup --error ./src/openapi/*.yaml ./dist/src",
-    "build:client:otomi": "ts-node-dev src/tasks/build-spec.ts vendors/openapi/otomi-api.json && rm -rf vendors/client/otomi-api >/dev/null && bin/generate-client.sh otomi-api axios",
+    "build:client:otomi": "ts-node-dev src/tasks/build-spec.ts vendors/openapi/otomi-api.json && rm -rf vendors/client/otomi-api >/dev/null && bin/generate-client.sh",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
     "dev": "ts-node-dev --watch '**/*.yaml' --inspect=4321 --respawn --transpile-only src/app.ts",

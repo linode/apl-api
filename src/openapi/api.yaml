@@ -434,11 +434,11 @@ components:
   securitySchemes:
     groupAuthn:
       type: apiKey
-      name: Auth-User
+      name: Authorization
       in: header
     groupAuthz:
       type: apiKey
-      name: Auth-Group
+      name: Authorization
       in: header
 
   schemas:

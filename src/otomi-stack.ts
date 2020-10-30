@@ -488,6 +488,7 @@ export default class OtomiStack {
   }
 
   convertServiceToDb(svcRaw, teamId, cluster) {
+    if (!cluster.enabled) return
     // Create service
     const svc = omit(svcRaw, 'ksvc', 'isPublic', 'hasCert', 'domain', 'paths', 'forwardPath')
     svc.clusterId = cluster.id
