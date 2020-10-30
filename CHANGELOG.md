@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.35](https://github.com/redkubes/otomi-api/compare/v0.4.34...v0.4.35) (2020-10-30)
+
+### Features
+
+- filtering out resources for disabled clusters ([0ee4330](https://github.com/redkubes/otomi-api/commit/0ee4330fc2d7506cd3319111e5790cee40305a3d))
+
+### Bug Fixes
+
+- **spec:** authorization header ([65f4b25](https://github.com/redkubes/otomi-api/commit/65f4b2576821bed0d41a61ed113b84b51aa91e46))
+- git rebase abort flag ([eec53ec](https://github.com/redkubes/otomi-api/commit/eec53eca057f1d36d6068069d680b05991a1d8f1))
+- process exit after 1 sec on save error ([189e4d2](https://github.com/redkubes/otomi-api/commit/189e4d21c7ae29e69a2b659d94dce5b03bfc8020))
+- process exit after 1 sec on save error ([2d08404](https://github.com/redkubes/otomi-api/commit/2d08404c954937645939afd3311d146e653a4929))
+- removed keycloak and harbor client ([fadbe8a](https://github.com/redkubes/otomi-api/commit/fadbe8a89aa5a85e663ba17e00c96d17b1dbe7fe))
+- token quotes? ([4453d84](https://github.com/redkubes/otomi-api/commit/4453d84d13bb37c96c5dd88bc9dd272c0290021f))
+- workflow ([481b595](https://github.com/redkubes/otomi-api/commit/481b5954294f0c8b0b2680feb9d04d58a11db3fb))
+- workflow ([0d1d61f](https://github.com/redkubes/otomi-api/commit/0d1d61f9680293fb226e27fbf67ad20830057a5e))
+- workflow ([6438b85](https://github.com/redkubes/otomi-api/commit/6438b85e46ab17e38837e3a27910bd120973dfe0))
+- workflow ([80129c6](https://github.com/redkubes/otomi-api/commit/80129c634ec9243657994e3c52a5411f2d0bdc5f))
+- workflow ([f1aafef](https://github.com/redkubes/otomi-api/commit/f1aafef952b3682ad9f864e04d3d8419540297aa))
+
+### Others
+
+- **release:** 0.4.34 ([b3c5994](https://github.com/redkubes/otomi-api/commit/b3c599412cfb8e53c3f0686402a2390773fca7c2))
+
+### Code Refactoring
+
+- now using ghcr.io as private cache ([9df44f7](https://github.com/redkubes/otomi-api/commit/9df44f733ef80ea7cf31ec4701ea36a01db44fce))
+- removed tasks, fixed npmrc ([05041cc](https://github.com/redkubes/otomi-api/commit/05041cc0a8dc3f40e9097b5152dc7dd9f5705e2e))
+- renamed repos and images ([db09fb9](https://github.com/redkubes/otomi-api/commit/db09fb9f69ad2ea4074ec95da0b79b68344b78fd))
+
 ### [0.4.34](https://github.com/redkubes/otomi-api/compare/v0.4.33...v0.4.34) (2020-10-26)
 
 ### Feature Improvements
