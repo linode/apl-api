@@ -28,6 +28,7 @@ import {
   CLUSTER_NAME,
   CLUSTER_APISERVER,
   DISABLE_SYNC,
+  USE_SOPS,
 } from './validators'
 
 const env = cleanEnv({
@@ -41,6 +42,7 @@ const env = cleanEnv({
   CLUSTER_NAME,
   CLUSTER_APISERVER,
   DISABLE_SYNC,
+  USE_SOPS,
 })
 
 function saveConfig(repo: Repo, dataPath: string, secretDataPath: string, config, objectPathsForSecrets: string[]) {
@@ -64,16 +66,17 @@ export default class OtomiStack {
   db: Db
 
   repo: Repo
+  decryptedFilePostfix: string
 
   constructor() {
     this.db = db(env.DB_PATH)
     this.clustersPath = './env/clusters.yaml'
     const corePath = env.isProd ? '/etc/otomi/core.yaml' : './test/core.yaml'
     this.coreValues = yaml.safeLoad(fs.readFileSync(corePath, 'utf8'))
+    this.decryptedFilePostfix = env.USE_SOPS ? '.dec' : ''
   }
 
   async init() {
-    console.log(process.env.USE_SOPS)
     try {
       this.repo = await cloneRepo(
         env.GIT_LOCAL_PATH,
@@ -354,7 +357,7 @@ export default class OtomiStack {
 
   loadTeamSecrets(teamId) {
     // e.g.: ./env/teams/otomi.secrets.yaml
-    const data = this.repo.readFile(`./env/teams/secrets.${teamId}.yaml.dec`)
+    const data = this.repo.readFile(`./env/teams/secrets.${teamId}.yaml${this.decryptedFilePostfix}`)
     const secrets: [any] = get(data, `teamConfig.teams.${teamId}.secrets`, [])
 
     secrets.forEach((secret) => {
@@ -368,7 +371,7 @@ export default class OtomiStack {
     this.convertClusterValuesToDb(data)
   }
   loadTeams() {
-    const mergedData = this.loadConfig('./env/teams.yaml', './env/secrets.teams.yaml.dec')
+    const mergedData = this.loadConfig('./env/teams.yaml', `./env/secrets.teams.yaml${this.decryptedFilePostfix}`)
 
     Object.values(mergedData.teamConfig.teams).forEach((team: any) => {
       this.db.populateItem('teams', { name: team.id, ...team }, undefined, team.id)
@@ -390,7 +393,7 @@ export default class OtomiStack {
 
   saveTeams() {
     const filePath = './env/teams.yaml'
-    const secretFilePath = './env/secrets.teams.yaml.dec'
+    const secretFilePath = `./env/secrets.teams.yaml${this.decryptedFilePostfix}`
     const teamValues = {}
     const secretPropertyPaths = ['password', 'oidc.groupMapping', 'azure']
     const objectPaths = []
@@ -419,7 +422,7 @@ export default class OtomiStack {
     secrets = secrets.map((item) => omit(item, 'teamId'))
     const data = {}
     set(data, `teamConfig.teams.${teamId}.secrets`, secrets)
-    this.repo.writeFile(`./env/teams/secrets.${teamId}.yaml.dec`, data)
+    this.repo.writeFile(`./env/teams/secrets.${teamId}.yaml${this.decryptedFilePostfix}`, data)
   }
 
   saveTeamServices(teamId, clusterId) {

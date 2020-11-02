@@ -22,3 +22,5 @@ services:
     environment:
       TOOLS_HOST: tools
       HOME: /app
+    env_file:
+      - .secrets
