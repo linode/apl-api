@@ -20,7 +20,7 @@ FROM dev as ci
 
 COPY . .eslintrc.yml ./
 ARG CI=true
-ENV USE_SOPS=0
+ENV NODE_ENV=test
 
 RUN npm run lint
 RUN npm run test

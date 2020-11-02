@@ -87,13 +87,13 @@ export class Repo {
   }
 
   async decrypt() {
-    if (env.isTest || !env.USE_SOPS) return
+    if (!env.USE_SOPS) return
     const res = await axios.get(decryptUrl)
     return res
   }
 
   async encrypt() {
-    if (env.isTest || !env.USE_SOPS) return
+    if (!env.USE_SOPS) return
     const res = await axios.get(encryptUrl)
     return res
   }

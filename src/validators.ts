@@ -44,9 +44,12 @@ export function cleanEnv<T>(
   validators: { [K in keyof T]: ValidatorSpec<T[K]> },
   options: StrictCleanOptions = { strict: true },
 ): Readonly<T> & CleanEnv & { readonly [varName: string]: string | undefined } {
-  if (env.NODE_ENV === 'test')
-    return process.env as Readonly<T> & CleanEnv & { readonly [varName: string]: string | undefined }
-  else
+  if (env.NODE_ENV === 'test') {
+    process.env.USE_SOPS = '0'
+    process.env.GIT_EMAIL = 'testUser@redkubes.com'
+    process.env.GIT_USER = 'testUser'
+    process.env.GIT_PASSWORD = 'testUserPassword'
     return clean(env, validators, options) as Readonly<T> &
       CleanEnv & { readonly [varName: string]: string | undefined }
+  }
 }
