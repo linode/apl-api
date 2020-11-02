@@ -4,17 +4,17 @@ set -e
 
 DIR=$(pwd)
 ORG=redkubes
-REPO="ssh://git@github.com/redkubes/otomi-stack-api.git"
+REPO="ssh://git@github.com/redkubes/otomi-api.git"
 
-VENDOR="$1"
-TYPE="${2:-node}"
+VENDOR="otomi-api"
+TYPE="axios"
 OPENAPI_DOC="./vendors/openapi/${VENDOR}.json"
 REGISTRY="https://npm.pkg.github.com/"
 TARGET_DIR="./vendors/client/${VENDOR}/${TYPE}"
 TARGET_PACKAGE_JSON="${TARGET_DIR}/package.json"
 TARGET_NPM_NAME="@${ORG}/$VENDOR-client-${TYPE}"
 
-function validate {
+validate() {
 
     if ! which sponge > /dev/null; then
         echo "The sponge binary does not exist. To install it execute: 'brew install moreutils'"
@@ -30,15 +30,9 @@ function validate {
         echo "The directoy $TARGET_DIR already exists. Please choose different vendor name or remove existing directory."
         exit 1
     fi
-
-    if [ ! -f "$OPENAPI_DOC" ]; then
-        echo "The file $OPENAPI_DOC does not exist."
-        exit 1
-    fi
-
 }
 
-function generate_client {
+generate_client() {
     echo "Generating client code from openapi specification ${OPENAPI_DOC}.."
 
     docker run --rm -v ${PWD}:/local \
@@ -49,7 +43,7 @@ function generate_client {
     --additional-properties supportsES6=true,npmName=${TARGET_NPM_NAME}
 }
 
-function  set_package_json {
+set_package_json() {
     echo "Updating  $TARGET_PACKAGE_JSON file.."
 
     jq \
@@ -63,13 +57,14 @@ function  set_package_json {
 
 }
 
-function build_npm_package {
-    echo "Building $TARGET_NPM_NAME npm pacakge"
+build_npm_package() {
+    echo "Building $TARGET_NPM_NAME npm package"
     cd ${TARGET_DIR}
     npm install && npm run build
     cd $DIR
 }
 
+rm -rf $TARGET_DIR >/dev/null
 validate
 generate_client 
 set_package_json

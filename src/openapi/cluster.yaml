@@ -4,6 +4,9 @@ Cluster:
     admin: [read-any]
     team: [read-any]
   properties:
+    enabled:
+      type: boolean
+      default: true
     name:
       type: string
       description: A cluster name
@@ -28,6 +31,10 @@ Cluster:
       type: boolean
       readOnly: true
     k8sVersion:
+      description: A version of kubernetes that is installed on the cluster
+      type: string
+      readOnly: true
+    otomiVersion:
       description: A version of kubernetes that is installed on the cluster
       type: string
       readOnly: true

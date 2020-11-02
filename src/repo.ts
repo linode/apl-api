@@ -66,7 +66,7 @@ export class Repo {
   async commit(author: string) {
     await this.encrypt()
     await this.git.add('./*')
-    const commitSummary = await this.git.commit(`otomi-stack-api<${author}>`)
+    const commitSummary = await this.git.commit(`otomi-api<${author}>`)
     console.debug(`Commit summary: ${JSON.stringify(commitSummary)}`)
     return commitSummary
   }
@@ -99,7 +99,7 @@ export class Repo {
   }
 
   async pull() {
-    const pullSummary = await this.git.pull(this.remote, this.branch, { '--rebase': true })
+    const pullSummary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
     await this.decrypt()
     console.debug(`Pull summary: ${JSON.stringify(pullSummary)}`)
     return pullSummary
@@ -118,7 +118,7 @@ export class Repo {
       await this.pull()
     } catch (e) {
       console.warn(`Pull error: ${JSON.stringify(e)}`)
-      await this.git.rebase({ '--abort': true })
+      await this.git.rebase(['--abort'])
       await this.git.reset(['--hard', sha])
       await this.decrypt()
       console.info(`Reset HEAD to ${sha} commit`)

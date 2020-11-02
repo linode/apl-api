@@ -34,7 +34,7 @@ sub_up-deps () {
 }
 
 sub_down () {
-    docker-compose -f docker-compose.yml -f docker-compose-deps.yml down --remove-orphans
+    docker-compose -f docker-compose.yml -f docker-compose-deps.yml down --remove-orphans -v
 }
 
 case $COMMAND_NAME in

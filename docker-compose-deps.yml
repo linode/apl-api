@@ -3,7 +3,7 @@ version: '3.4'
 services:
   tools:
     container_name: tools
-    image: eu.gcr.io/otomi-cloud/otomi-stack:${TOOLS_TAG:-latest}
+    image: otomi/core:${TOOLS_TAG:-latest}
     user: ${USER_ID}
     command: bin/server.sh
     expose:
@@ -11,8 +11,8 @@ services:
     ports:
       - 17771:17771
     volumes:
-      - /tmp:/tmp:rw
+      - /tmp:/tmp
     environment:
-      ENV_DIR: ${GIT_LOCAL_PATH}
+      ENV_DIR: /tmp/otomi-values
     env_file:
       - .secrets

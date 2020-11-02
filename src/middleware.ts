@@ -4,9 +4,6 @@ import { OpenApiRequest, JWT, OpenApiRequestExt, SessionUser } from './otomi-mod
 import Authz from './authz'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
-import { cleanEnv, CLUSTER_ID } from './validators'
-
-const env = cleanEnv({ CLUSTER_ID })
 
 const HttpMethodMapping = {
   DELETE: 'delete',
@@ -53,28 +50,13 @@ export function getSessionUser(user: JWT): SessionUser {
 
 export function jwtMiddleware(): RequestHandler {
   return function (req: OpenApiRequestExt, res, next) {
-    if (env.isDev) {
-      // allow the client to specify a group to be in
-      const group = req.header('Auth-Group') ? `team-${req.header('Auth-Group')}` : undefined
-      // default to admin unless team is given
-      const isAdmin = !group || group === 'team-admin'
-      const groups = [`team-${env.CLUSTER_ID.split('/')[1]}`, 'team-otomi']
-      if (group && !groups.includes(group)) groups.push(group)
-      req.user = getSessionUser({
-        name: isAdmin ? 'Bob Admin' : 'Joe Team',
-        email: isAdmin ? 'bob.admin@otomi.cloud' : `joe.team@otomi.cloud`,
-        groups,
-        roles: [],
-      })
-    } else {
-      const token = req.header('Authorization')
-      if (!token) {
-        console.log('anonymous request')
-        return next()
-      }
-      const { name, email, roles, groups } = jwtDecode(token)
-      req.user = getSessionUser({ name, email, roles, groups })
+    const token = req.header('Authorization')
+    if (!token) {
+      console.log('anonymous request')
+      return next()
     }
+    const { name, email, roles, groups } = jwtDecode(token)
+    req.user = getSessionUser({ name, email, roles, groups })
     next()
   }
 }

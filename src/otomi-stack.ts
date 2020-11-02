@@ -465,6 +465,7 @@ export default class OtomiStack {
       if (svc.ingress.path) svcCloned.paths = [svc.ingress.path]
       if (svc.ingress.forwardPath) svcCloned.forwardPath = true
     } else svcCloned.internal = true
+    delete svcCloned.enabled
     return svcCloned
   }
 
@@ -476,10 +477,12 @@ export default class OtomiStack {
         const dnsZones = [cloudObj.domain].concat(get(cloudObj, 'dnsZones', []))
 
         const clusterObj = {
+          enabled: !!clusterObject.enabled,
           cloud,
           name: cluster,
           dnsZones,
           domain,
+          otomiVersion: clusterObject.otomiVersion,
           k8sVersion: clusterObject.k8sVersion,
           hasKnative: clusterObject.hasKnative !== undefined ? clusterObject.hasKnative : true,
           region: clusterObject.region,
@@ -494,6 +497,7 @@ export default class OtomiStack {
   convertServiceToDb(svcRaw, teamId, cluster) {
     // Create service
     const svc = omit(svcRaw, 'ksvc', 'isPublic', 'hasCert', 'domain', 'paths', 'forwardPath')
+    svc.enabled = !!cluster.enabled
     svc.clusterId = cluster.id
     svc.teamId = teamId
     if (!('name' in svcRaw)) {
@@ -515,7 +519,7 @@ export default class OtomiStack {
       svc.ingress = {
         hasCert: 'hasCert' in svcRaw,
         hasSingleSignOn: !('isPublic' in svcRaw),
-        certArn: svcRaw.certArn,
+        certArn: svcRaw.certArn || undefined,
         domain: publicUrl.domain,
         subdomain: publicUrl.subdomain,
         useDefaultSubdomain: !svcRaw.domain && svcRaw.ownHost,

@@ -1,15 +1,16 @@
 import { str, bool, json, cleanEnv as clean, CleanEnv, StrictCleanOptions, ValidatorSpec, num } from 'envalid'
 
 export const CERT_ROTATION_DAYS = num({ desc: 'The amount of days for the cert rotation', default: 75 })
-export const CLUSTER_APISERVER = str({ desc: 'The cluster api server ip/host' })
+export const CLUSTER_APISERVER = str({ desc: 'The cluster api server ip/host', default: 'http://127.0.0.1:8080' })
 export const CLUSTER_ID = str({ desc: 'The cluster id', default: 'google/dev' })
 export const CLUSTER_NAME = str({ desc: 'The cluster name', default: 'dev' })
+export const CORE_VERSION = str({ desc: 'The otomi-core version', default: 'x.x.x' })
 export const DB_PATH = str({ desc: 'The file path to the db. If not given in-memory db is used.', default: undefined })
 export const DISABLE_SYNC = bool({ desc: 'Whether to disable pushing to the repo', default: false })
 export const DOMAINS = json({ desc: 'A list of domains and their cert status' })
 export const GIT_BRANCH = str({ desc: 'The git repo branch', default: 'master' })
 export const GIT_EMAIL = str({ desc: 'The git user email' })
-export const GIT_LOCAL_PATH = str({ desc: 'The local file path to the repo', default: '/tmp/otomi-stack' })
+export const GIT_LOCAL_PATH = str({ desc: 'The local file path to the repo', default: '/tmp/otomi-values' })
 export const GIT_PASSWORD = str({ desc: 'The git password' })
 export const GIT_REPO_URL = str({ desc: 'The git repo url', default: 'github.com/redkubes/otomi-values-demo.git' })
 export const GIT_USER = str({ desc: 'The git username' })

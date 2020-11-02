@@ -1,7 +1,7 @@
 {
   "author": "RedKubes",
   "bugs": {
-    "url": "https://github.com/redkubes/otomi-stack-api/issues"
+    "url": "https://github.com/redkubes/otomi-api/issues"
   },
   "config": {
     "commitizen": {
@@ -11,9 +11,7 @@
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^9.0.6",
     "@casl/ability": "^4.1.5",
-    "@kubernetes/client-node": "^0.11.2",
-    "@redkubes/harbor-client": "^2.0.2",
-    "@redkubes/keycloak-client-node": "^10.0.0",
+    "@kubernetes/client-node": "^0.12.3",
     "@types/lodash": "^4.14.158",
     "aws-sdk": "^2.742.0",
     "axios": "^0.19.2",
@@ -31,15 +29,15 @@
     "openapi-client-axios": "^3.6.1",
     "password-generator": "^2.3.2",
     "shelljs": "^0.8.4",
-    "simple-git": "^2.16.0",
+    "simple-git": "^2.20.1",
     "swagger-client": "^3.10.12",
     "swagger-ui-express": "^4.1.4",
     "uuid": "^8.3.0"
   },
-  "description": "REST API for admins and teams",
+  "description": "The brain of the Otomi Container Platform. Handling console input and talking to core, it knows what to do.",
   "devDependencies": {
-    "@commitlint/cli": "^8.3.5",
-    "@commitlint/config-conventional": "^8.3.4",
+    "@commitlint/cli": "^11.0.0",
+    "@commitlint/config-conventional": "^11.0.0",
     "@hkdobrev/run-if-changed": "^0.3.1",
     "@types/chai": "^4.2.12",
     "@types/chai-as-promised": "^7.1.3",
@@ -53,7 +51,7 @@
     "@typescript-eslint/parser": "^2.34.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "commitizen": "^4.1.2",
+    "commitizen": "^4.2.2",
     "copyfiles": "^2.3.0",
     "cz-conventional-changelog": "^3.2.0",
     "dotenv": "^8.2.0",
@@ -76,14 +74,14 @@
     "prettier": "^2.0.5",
     "sinon": "^8.1.1",
     "sinon-chai": "^3.5.0",
-    "standard-version": "^7.1.0",
+    "standard-version": "^9.0.0",
     "supertest": "^4.0.2",
     "ts-custom-error": "^3.1.1",
     "ts-node": "^8.10.2",
     "ts-node-dev": "^1.0.0-pre.56",
     "typescript": "^3.9.7"
   },
-  "homepage": "https://github.com/redkubes/otomi-stack-api#readme",
+  "homepage": "https://github.com/redkubes/otomi-api#readme",
   "husky": {
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
@@ -104,18 +102,18 @@
     ]
   },
   "main": "dist/app.js",
-  "name": "otomi-stack-api",
+  "name": "otomi-api",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/redkubes/otomi-stack-api.git"
+    "url": "git+https://github.com/redkubes/otomi-api.git"
   },
   "run-if-changed": {
     "package-lock.json": "npm install --prefer-offline --no-audit"
   },
   "scripts": {
-    "build": "tsc && copyup --error ./src/openapi/*.yaml ./dist/",
-    "build:client:otomi": "ts-node-dev src/tasks/build-spec.ts vendors/openapi/otomi-api.json && rm -rf vendors/client/otomi-api >/dev/null && bin/generate-client.sh otomi-api axios",
+    "build": "tsc && copyup --error ./src/openapi/*.yaml ./dist/src",
+    "build:client:otomi": "ts-node-dev src/build-spec.ts vendors/openapi/otomi-api.json && rm -rf vendors/client/otomi-api >/dev/null && bin/generate-client.sh",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
     "dev": "ts-node-dev --watch '**/*.yaml' --inspect=4321 --respawn --transpile-only src/app.ts",
@@ -125,12 +123,12 @@
     "lint": "eslint --ext js,ts .",
     "lint:fix": "eslint --ext js,ts .",
     "release": "standard-version",
-    "start": "node dist/app.js",
-    "tasks:keycloak": "node dist/tasks/keycloak/keycloak.js",
+    "start": "node dist/src/app.js",
+    "tasks:keycloak": "node dist/src/tasks/keycloak/keycloak.js",
     "tasks:keycloak-dev": "ts-node-dev  ./src/tasks/keycloak/keycloak.ts",
-    "tasks:harbor": "node dist/tasks/harbor/harbor.js",
+    "tasks:harbor": "node dist/src/tasks/harbor/harbor.js",
     "tasks:harbor-dev": "ts-node-dev  ./src/tasks/harbor/harbor.ts",
-    "tasks:certs-aws": "node dist/tasks/otomi/certs-aws.js",
+    "tasks:certs-aws": "node dist/src/tasks/otomi/certs-aws.js",
     "tasks:certs-aws-dev": "ts-node-dev  ./src/tasks/otomi/certs-aws.ts",
     "test": "NODE_ENV=test mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit"
   },
@@ -140,5 +138,5 @@
     },
     "postrelease": ". bin/aliases.sh && drun update_openapi_version && release_otomi"
   },
-  "version": "0.4.32"
+  "version": "0.4.37"
 }

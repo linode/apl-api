@@ -13,6 +13,10 @@ export default function (otomi: OtomiStack) {
       } catch (err) {
         console.error(err)
         res.status(409).json({ error: err.message })
+        // TODO: remove this part after we know how to merge (if ever):
+        setTimeout(() => {
+          process.exit()
+        }, 1000)
       }
     },
   ]
