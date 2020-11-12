@@ -22,7 +22,7 @@ export function cleanEnv<T>(
   options: StrictCleanOptions = { strict: true },
 ): Readonly<T> & CleanEnv & { readonly [varName: string]: string | undefined } {
   if (env.NODE_ENV === 'test') {
-    process.env.USE_SOPS = '0'
+    process.env.USE_SOPS = 'false'
     process.env.GIT_EMAIL = 'testUser@redkubes.com'
     process.env.GIT_USER = 'testUser'
     process.env.GIT_PASSWORD = 'testUserPassword'
