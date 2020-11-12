@@ -1,4 +1,11 @@
-name: Build and publish Docker
+# RedKubes default Workflow
+#
+# Given facts:
+# * We don't allow manual tagging, but let the workflow create them after tests have passed.
+# * We don't let workflows be triggered by events coming from tags
+# * We use `npm run release` (without automated tagging) which only bumps version and creates changelog and commit message with title 'chore(release): v${semverVersion}'
+# * Pipeline detects the release title and after tests pass, creates artifacts (images) and makes full tag copies (and github release) to allow release patching.
+name: Build test push release
 on:
   push:
     branches:
@@ -16,7 +23,6 @@ env:
 
 jobs:
   build-test-push-release:
-    # we allow releasing via commit message, but only from master
     if: "((contains(github.event.head_commit.message, 'chore(release)') && github.ref == 'refs/heads/master') || !contains(github.event.head_commit.message, 'chore(release)')) && !contains(github.event.head_commit.message, 'ci skip') && !startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
     steps:
