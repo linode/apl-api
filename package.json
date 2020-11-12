@@ -124,12 +124,6 @@
     "lint:fix": "eslint --ext js,ts .",
     "release": "standard-version",
     "start": "node dist/src/app.js",
-    "tasks:keycloak": "node dist/src/tasks/keycloak/keycloak.js",
-    "tasks:keycloak-dev": "ts-node-dev  ./src/tasks/keycloak/keycloak.ts",
-    "tasks:harbor": "node dist/src/tasks/harbor/harbor.js",
-    "tasks:harbor-dev": "ts-node-dev  ./src/tasks/harbor/harbor.ts",
-    "tasks:certs-aws": "node dist/src/tasks/otomi/certs-aws.js",
-    "tasks:certs-aws-dev": "ts-node-dev  ./src/tasks/otomi/certs-aws.ts",
     "test": "NODE_ENV=test mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit"
   },
   "standard-version": {

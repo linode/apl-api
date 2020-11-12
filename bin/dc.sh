@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 source .env
 BIN_NAME=$(basename "$0")
 COMMAND_NAME=$1
@@ -16,16 +16,21 @@ sub_help () {
     echo "   down               Stop and clean docker-compose containers"
 }
 
+
 sub_up () {
-    docker-compose -f docker-compose.yml up $1 
+    docker-compose -f docker-compose.yml up ${1-}
 }
 
 sub_up-all () {
-    docker-compose -f docker-compose.yml -f docker-compose-deps.yml up $1
+    local files='-f docker-compose.yml -f docker-compose-deps.yml'
+    [ "$USE_SOPS" == "0" ] && echo "The USE_SOPS=$USE_SOPS prevents running deps" && files='-f docker-compose.yml'
+
+    docker-compose $files up ${1-}
 }
 
 sub_up-deps () {
-    docker-compose -f docker-compose-deps.yml up $1
+    [ "$USE_SOPS" == "0" ] && echo "The USE_SOPS=$USE_SOPS prevents running deps" && exit 0
+    docker-compose -f docker-compose-deps.yml up ${1-}
 }
 
 sub_down () {
@@ -46,5 +51,3 @@ case $COMMAND_NAME in
         fi
         ;;
 esac
-
-:

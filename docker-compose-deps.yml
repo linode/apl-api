@@ -14,4 +14,5 @@ services:
       - /tmp:/tmp
     environment:
       ENV_DIR: /tmp/otomi-values
-      GCLOUD_SERVICE_KEY: ${GCLOUD_SERVICE_KEY}
+    env_file:
+      - .secrets
