@@ -26,7 +26,6 @@ export function cleanEnv<T>(
     process.env.GIT_EMAIL = 'testUser@redkubes.com'
     process.env.GIT_USER = 'testUser'
     process.env.GIT_PASSWORD = 'testUserPassword'
-    return clean(env, validators, options) as Readonly<T> &
-      CleanEnv & { readonly [varName: string]: string | undefined }
   }
+  return clean(env, validators, options) as Readonly<T> & CleanEnv & { readonly [varName: string]: string | undefined }
 }
