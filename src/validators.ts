@@ -15,7 +15,7 @@ export const GIT_USER = str({ desc: 'The git username' })
 export const OIDC_ENDPOINT = str()
 export const REGION = str({ desc: 'The cloud region' })
 export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '127.0.0.1' })
-export const USE_SOPS = bool({ desc: 'Whether to disable data encryption', default: true })
+export const USE_SOPS = bool({ desc: 'Whether to use encryption', default: true })
 const env = process.env
 export function cleanEnv<T>(
   validators: { [K in keyof T]: ValidatorSpec<T[K]> },
