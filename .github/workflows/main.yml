@@ -59,7 +59,7 @@ jobs:
           release_tag=v${COMMIT_MSG#* }
           echo ::set-output name=tag::$release_tag
           echo "Releasing $REPO:$release_tag"
-          docker tag $REG/$REPO:$TAG $REPO:$release_tag
+          docker tag $REG/$REPO:$TAG $REG/$REPO:$release_tag
           docker push $REG/$REPO:$release_tag
           git config --global user.email $GIT_USER@users.noreply.github.com
           git config --global user.name $GIT_USER
