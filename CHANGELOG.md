@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.38](https://github.com/redkubes/otomi-api/compare/v0.4.37...v0.4.38) (2020-11-20)
+
+### Features
+
+- **no_authz:** allowing to start without authz checks, defaulting to admin ([cb33da6](https://github.com/redkubes/otomi-api/commit/cb33da68d2a86807164e8780ec4038f44772bd8a))
+- use_sops flag ([#125](https://github.com/redkubes/otomi-api/issues/125)) ([37f5382](https://github.com/redkubes/otomi-api/commit/37f5382736168548f57f7dd2fc0f273536f2f5d4))
+
+### CI
+
+- release step added [ci skip](<[476fb60](https://github.com/redkubes/otomi-api/commit/476fb604a41de2fa06b53cc845f8dc46dc14001d)>)
+
+### Tests
+
+- **lint:** added js checking [ci skip](<[c9af447](https://github.com/redkubes/otomi-api/commit/c9af447b6e7e7634a2f77150e043265cb9a8dacc)>)
+
+### Others
+
+- cleanup [ci skip](<[c42fc3b](https://github.com/redkubes/otomi-api/commit/c42fc3b024347994c691457cdbb95e17cb24a6b6)>)
+- **coding-standards:** fixed eslint autofix, prettier autosave [ci skip](<[cc0e225](https://github.com/redkubes/otomi-api/commit/cc0e225585958c3f6bbd8de2c7f719e415b8b7b9)>)
+
 ### [0.4.37](https://github.com/redkubes/otomi-api/compare/v0.4.36...v0.4.37) (2020-10-30)
 
 ### Features
