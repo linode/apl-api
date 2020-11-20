@@ -54,14 +54,13 @@ jobs:
         name: Create latest and push git tag
         id: git_tag
         run: |
-          docker login -u otomi -p $DOCKER_PASSWORD
-          docker tag $REPO:$TAG $REPO:latest
-          docker push $REPO:latest
+          docker tag $REG/$REPO:$TAG $REG/$REPO:latest
+          docker push $REG/$REPO:latest
           release_tag=v${COMMIT_MSG#* }
           echo ::set-output name=tag::$release_tag
           echo "Releasing $REPO:$release_tag"
-          docker tag $REPO:$TAG $REPO:$release_tag
-          docker push $REPO:$release_tag
+          docker tag $REG/$REPO:$TAG $REPO:$release_tag
+          docker push $REG/$REPO:$release_tag
           git config --global user.email $GIT_USER@users.noreply.github.com
           git config --global user.name $GIT_USER
           echo "machine github.com login $GIT_USER password $GIT_PASSWORD" > ~/.netrc
