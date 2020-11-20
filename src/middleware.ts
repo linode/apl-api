@@ -13,6 +13,8 @@ const HttpMethodMapping = {
   PUT: 'update',
 }
 
+const noAuthz = !!process.env.NO_AUTHZ
+
 export function errorMiddleware(err, req: OpenApiRequest, res) {
   console.error('errorMiddleware handler')
 
@@ -33,18 +35,22 @@ export function getSessionUser(user: JWT): SessionUser {
   const sessionUser = { ...user, teams: [], groups: user.groups || [], roles: [], isAdmin: false }
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
-  user.groups.forEach((group) => {
-    if (['admin', 'team-admin'].includes(group)) {
-      if (!sessionUser.roles.includes('admin')) {
-        sessionUser.isAdmin = true
-        sessionUser.roles.push('admin')
-      }
-    } else if (!sessionUser.roles.includes('team')) sessionUser.roles.push('team')
-    // if in team-(not admin), remove 'team-' prefix
-    const team = group.substr(5)
-    if (group.substr(0, 5) === 'team-' && group !== 'team-admin' && !sessionUser.teams.includes(team))
-      sessionUser.teams.push(team)
-  })
+  if (noAuthz) {
+    sessionUser.isAdmin = true
+  } else {
+    user.groups.forEach((group) => {
+      if (['admin', 'team-admin'].includes(group)) {
+        if (!sessionUser.roles.includes('admin')) {
+          sessionUser.isAdmin = true
+          sessionUser.roles.push('admin')
+        }
+      } else if (!sessionUser.roles.includes('team')) sessionUser.roles.push('team')
+      // if in team-(not admin), remove 'team-' prefix
+      const team = group.substr(5)
+      if (group.substr(0, 5) === 'team-' && group !== 'team-admin' && !sessionUser.teams.includes(team))
+        sessionUser.teams.push(team)
+    })
+  }
   return sessionUser
 }
 
@@ -66,6 +72,7 @@ export function getCrudOperation(req: OpenApiRequest) {
 }
 
 export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz) {
+  if (noAuthz) return true
   const {
     params: { teamId },
   } = req

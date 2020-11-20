@@ -477,7 +477,7 @@ export default class OtomiStack {
         const dnsZones = [cloudObj.domain].concat(get(cloudObj, 'dnsZones', []))
 
         const clusterObj = {
-          enabled: !!clusterObject.enabled,
+          enabled: clusterObject.enabled === undefined ? true : clusterObject.enabled,
           cloud,
           name: cluster,
           dnsZones,

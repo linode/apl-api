@@ -15,4 +15,4 @@ services:
     environment:
       ENV_DIR: /tmp/otomi-values
     env_file:
-      - .secrets
+      - .env
