@@ -8,7 +8,7 @@ const expectedDbState = {
       name: 'otomi',
       id: 'otomi',
       clusters: ['aws/dev', 'onprem/dev'],
-      azure: {},
+      azureMonitor: {},
       password: 'linux123',
       oidc: {
         groupMapping: '0efd2f6d-fb8b-49a9-9507-54cd6e92c348',
