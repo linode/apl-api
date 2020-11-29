@@ -13,21 +13,15 @@ x-available-clusters: &AvailableClusters # description: Select from available cl
   uniqueItems: true
 
 AzureMonitor: &AzureMonitor
+  title: Azure Monitor
   type: object
   description: Azure Monitor is the platform service that provides a single source for monitoring Azure resources.
   anyOf:
-    - title: No Azure monitoring
-      nullable: true
-      additionalProperties: false
-    - title: Azure monitoring with global settings
+    - title: Use global settings
       type: object
-      properties:
-        useAdmin:
-          type: boolean
-          default: true
       nullable: true
       additionalProperties: false
-    - title: Azure monitoring with custom settings
+    - title: Override global settings
       type: object
       properties:
         clientId:
@@ -40,17 +34,17 @@ AzureMonitor: &AzureMonitor
             An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a
             key -> Use client secret)
         logAnalyticsClientId:
-          description: 'A dedicated client ID for Azure Log Analytics. Default: form clientId field'
+          description: A dedicated client ID for Azure Log Analytics. Defaults to clientId value.
           <<: *uuidField
         logAnalyticsClientSecret:
-          description: 'A client Secret for Azure Log Analytics. Default: form clientSecret field'
+          description: A client Secret for Azure Log Analytics. Defaults to clientSecret value.
           type: string
           writeOnly: true
         appInsightsAppId:
-          description: 'An API key for use with an Application Insights resource. Default: form clientId field'
+          description: An app id for use with an Application Insights resource. Defaults to clientId value.
           type: string
-        appInsightsAppSecret:
-          description: 'An API secret for use with an Application Insights resource. Default: form clientSecret field'
+        appInsightsApiKey:
+          description: An api key for use with an Application Insights resource. Defaults to clientSecret value.
           type: string
           writeOnly: true
       required:
@@ -58,14 +52,6 @@ AzureMonitor: &AzureMonitor
         - clientSecret
       nullable: true
       additionalProperties: false
-
-Azure: &Azure
-  title: Azure
-  type: object
-  properties:
-    monitor:
-      <<: *AzureMonitor
-      type: object
 
 Team:
   x-externalDocsPath: 'otomi/docs/configuring-teams'
@@ -146,8 +132,8 @@ Team:
               type: string
               description: The high prio web hook
         - title: None
-    azure:
-      <<: *Azure
+    azureMonitor:
+      <<: *AzureMonitor
   required:
     - name
     - clusters
