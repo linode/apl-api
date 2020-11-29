@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.40](https://github.com/redkubes/otomi-api/compare/v0.4.39...v0.4.40) (2020-11-29)
+
+### Features
+
+- multiple alert endpoints ([04cd606](https://github.com/redkubes/otomi-api/commit/04cd6066d906b4cec377c35119619b51f684fa3a))
+
+### Bug Fixes
+
+- alerts added to test ([808ee8d](https://github.com/redkubes/otomi-api/commit/808ee8de5a83b12846c98ca532089a54f7f7689c))
+- test related to azure monitor ([7a91a0c](https://github.com/redkubes/otomi-api/commit/7a91a0c88525c086d39ae5480e7e9647faa5c24c))
+
+### Code Refactoring
+
+- monitor to azureMonitor ([31bdcfe](https://github.com/redkubes/otomi-api/commit/31bdcfeb1f3ad48a385850454d0b0ecf128ea2ba))
+
 ### [0.4.39](https://github.com/redkubes/otomi-api/compare/v0.4.37...v0.4.39) (2020-11-20)
 
 ### Features
