@@ -1,4 +1,4 @@
-import simpleGit, { SimpleGit } from 'simple-git/promise'
+import simpleGit, { CleanOptions, SimpleGit } from 'simple-git/promise'
 import yaml from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
@@ -83,7 +83,12 @@ export class Repo {
       await this.git.checkout(this.branch)
     }
 
-    await this.pull()
+    try {
+      await this.pull()
+    } catch (e) {
+      if (env.isDev) await this.git.clean(CleanOptions.FORCE)
+      else throw e
+    }
   }
 
   async decrypt() {

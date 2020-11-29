@@ -395,7 +395,14 @@ export default class OtomiStack {
     const filePath = './env/teams.yaml'
     const secretFilePath = `./env/secrets.teams.yaml${this.decryptedFilePostfix}`
     const teamValues = {}
-    const secretPropertyPaths = ['password', 'oidc.groupMapping', 'azureMonitor']
+    const secretPropertyPaths = [
+      'password',
+      'oidc.groupMapping',
+      'azureMonitor',
+      'alerts.slack',
+      'alerts.email',
+      'alerts.msteams',
+    ]
     const objectPaths = []
     const teams = this.getTeams()
     teams.forEach((team) => {

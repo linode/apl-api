@@ -92,46 +92,59 @@ Team:
       type: string
       # description: "A secret that is used access multi-tenant log aggregation system (Loki)"
       writeOnly: true
-    receiver:
-      title: Alerting Endpoint
-      type: object
-      # description: Alerting Endpoint
-      anyOf:
-        - title: Slack
+    alerts:
+      title: Alerting endpoints
+      properties:
+        receivers:
+          title: Receivers
+          type: array
+          items:
+            type: string
+            enum:
+              - slack
+              - msteams
+              - email
+          uniqueItems: true
+        slack:
+          title: Slack
           type: object
           properties:
-            type:
-              type: string
-              enum:
-                - slack
-              default: slack
             url:
               title: Web hook
               type: string
               description: Slack web hook. If none is given the global one is used.
             channel:
-              title: Channel
+              title: Channel for non-criticals
               type: string
-              description:
-                Slack channel. If none is given the global one is used. When overridden here, an extra channel with the
-                suffix '-crit' must exist as well!
-        - title: Microsoft Teams
+              description: Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'.
+            channelCrit:
+              title: Channel for criticals
+              type: string
+              description: Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'.
+        msteams:
+          title: Microsoft Teams
           type: object
           properties:
-            type:
-              type: string
-              enum:
-                - msteams
-              default: msteams
             lowPrio:
-              title: High prio webhook
+              title: Low prio webhook
               type: string
               description: The low prio web hook
             highPrio:
-              title: Low prio webhook
+              title: High prio webhook
               type: string
               description: The high prio web hook
-        - title: None
+        email:
+          title: Email
+          type: object
+          properties:
+            nonCritical:
+              title: Non criticals
+              type: string
+              description: One or more email addresses (comma separated) for non-critical events.
+            critical:
+              title: Criticals
+              type: string
+              description: Email addresses (comma separated) for critical events.
     azureMonitor:
       <<: *AzureMonitor
   required:
