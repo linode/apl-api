@@ -13,6 +13,13 @@ const expectedDbState = {
       oidc: {
         groupMapping: '0efd2f6d-fb8b-49a9-9507-54cd6e92c348',
       },
+      alerts: {
+        email: {
+          critical: 'test@doma.in',
+        },
+        msteams: {},
+        slack: {},
+      },
     },
   ],
   services: [
