@@ -1,5 +1,5 @@
 Deployment:
-  x-externalDocsPath: 'otomi/docs/deployment'
+  x-externalDocsPath: 'docs/deployment'
   x-acl:
     admin: [read-any]
     team: [read-any]
