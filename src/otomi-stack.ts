@@ -50,8 +50,11 @@ function saveConfig(repo: Repo, dataPath: string, secretDataPath: string, config
   const plainData = cloneDeep(config)
 
   objectPathsForSecrets.forEach((objectPath) => {
-    set(secretData, objectPath, get(config, objectPath, {}))
-    unset(plainData, objectPath)
+    const val = get(config, objectPath)
+    if (val) {
+      set(secretData, objectPath, val)
+      unset(plainData, objectPath)
+    }
   })
 
   repo.writeFile(secretDataPath, secretData)
@@ -383,12 +386,16 @@ export default class OtomiStack {
   loadTeamServices(teamId, clusterId) {
     // e.g.: ./env/clouds/google/dev/services.chai.yaml
     const filePath = `./env/clouds/${clusterId}/services.${teamId}.yaml`
-    const data = this.repo.readFile(filePath)
-    const services = get(data, `teamConfig.teams.${teamId}.services`, [])
-    const cluster = this.db.getItem('clusters', { id: clusterId })
-    services.forEach((svc) => {
-      this.convertServiceToDb(svc, teamId, cluster)
-    })
+    try {
+      const data = this.repo.readFile(filePath)
+      const services = get(data, `teamConfig.teams.${teamId}.services`, [])
+      const cluster = this.db.getItem('clusters', { id: clusterId })
+      services.forEach((svc) => {
+        this.convertServiceToDb(svc, teamId, cluster)
+      })
+    } catch (e) {
+      console.warn(`Team ${teamId} has no services on cluster ${clusterId}`)
+    }
   }
 
   saveTeams() {
@@ -494,7 +501,6 @@ export default class OtomiStack {
           hasKnative: clusterObject.hasKnative !== undefined ? clusterObject.hasKnative : true,
           region: clusterObject.region,
         }
-        console.log(clusterObj)
         const id = `${cloud}/${cluster}`
         this.db.populateItem('clusters', clusterObj, undefined, id)
       })

@@ -179,11 +179,11 @@ Service:
                   type: object
                   properties:
                     cpu:
-                      description: 'The guaranteed amount of CPU'
+                      description: The guaranteed amount of CPU
                       <<: *k8sResourceCpuQuantityField
                       default: 50m
                     memory:
-                      description: 'The guaranteed amount of RAM'
+                      description: The guaranteed amount of RAM
                       <<: *k8sResourceMemoryQuantityField
                       default: 64Mi
                   required:
@@ -193,11 +193,11 @@ Service:
                   type: object
                   properties:
                     cpu:
-                      description: 'The maximal amount of CPU'
+                      description: The maximum amount of CPU
                       <<: *k8sResourceCpuQuantityField
                       default: 100m
                     memory:
-                      description: 'The maximal amount of RAM'
+                      description: The maximum amount of RAM
                       <<: *k8sResourceMemoryQuantityField
                       default: 128Mi
                   required:
@@ -207,7 +207,7 @@ Service:
               title: Pod annotations
               <<: *K8sAnnotation
             autoCD:
-              title: Continuous delivery pipeline
+              title: Continuous delivery
               description: Deploys new images based on a tagging strategy
               type: object
               oneOf:
@@ -226,7 +226,7 @@ Service:
                       type: string
                       example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
                       description:
-                        'Use this filter if your images tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.:
+                        'Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.:
                         PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
                   required:
                     - semver
@@ -241,8 +241,8 @@ Service:
                     glob:
                       title: Glob string pattern
                       type: string
-                      description: 'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*"'
-                      example: 'master-v1.*.*'
+                      description: 'Use this filter if you want to make glob-style patterns. E.g.: "master-v1.3.*"'
+                      example: 'master-v1.3.*'
                   required:
                     - glob
                   additionalProperties: false
