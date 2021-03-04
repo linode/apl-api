@@ -14,7 +14,7 @@
     "@kubernetes/client-node": "^0.12.3",
     "@types/lodash": "^4.14.158",
     "aws-sdk": "^2.742.0",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "bluebird": "^3.7.2",
     "body-parser": "^1.19.0",
     "clean-deep": "^3.4.0",
@@ -27,7 +27,7 @@
     "lodash": "^4.17.19",
     "lowdb": "^1.0.0",
     "morgan": "^1.10.0",
-    "openapi-client-axios": "^3.6.1",
+    "openapi-client-axios": "^3.13.1",
     "password-generator": "^2.3.2",
     "shelljs": "^0.8.4",
     "simple-git": "^2.20.1",
@@ -133,5 +133,5 @@
     },
     "postrelease": ". bin/aliases.sh && drun update_openapi_version && release_otomi"
   },
-  "version": "0.4.42"
+  "version": "0.4.43"
 }
