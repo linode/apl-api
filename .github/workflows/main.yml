@@ -95,7 +95,7 @@ jobs:
           scope: '@redkubes'
       - name: Build and publish clients
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           sudo apt-get install moreutils
           bin/generate-client.sh
