@@ -2,17 +2,16 @@
 
 set -e
 
-DIR=$(pwd)
-ORG=redkubes
-REPO="ssh://git@github.com/redkubes/otomi-api.git"
+org=redkubes
+repo="ssh://git@github.com/redkubes/otomi-api.git"
 
-VENDOR="otomi-api"
-TYPE="axios"
-OPENAPI_DOC="./vendors/openapi/${VENDOR}.json"
-REGISTRY="https://npm.pkg.github.com/"
-TARGET_DIR="./vendors/client/${VENDOR}/${TYPE}"
-TARGET_PACKAGE_JSON="${TARGET_DIR}/package.json"
-TARGET_NPM_NAME="@${ORG}/$VENDOR-client-${TYPE}"
+vendor="otomi-api"
+type="axios"
+openapi_doc="./vendors/openapi/$vendor.json"
+registry="https://npm.pkg.github.com/"
+target_dir="./vendors/client/$vendor/$type}"
+target_package_json="$target_dir/package.json"
+target_npm_name="@$org/$vendor-client-$type"
 
 validate() {
 
@@ -21,55 +20,55 @@ validate() {
         exit 1
     fi
 
-    if [ -z "$VENDOR" ]; then
+    if [ -z "$vendor" ]; then
         echo "No vendor argument supplied.\nUsage:\n\t./bin/generate-client.sh <vendor-name>"
         exit 1
     fi
 
-    if [ -d "$TARGET_DIR" ]; then
-        echo "The directoy $TARGET_DIR already exists. Please choose different vendor name or remove existing directory."
+    if [ -d "$target_dir" ]; then
+        echo "The directoy $target_dir already exists. Please choose different vendor name or remove existing directory."
         exit 1
     fi
 }
 
 generate_client() {
-    echo "Generating client code from openapi specification ${OPENAPI_DOC}.."
+    echo "Generating client code from openapi specification ${openapi_doc}.."
 
-    docker run --rm -v ${PWD}:/local \
+    docker run --rm -v $PWD:/local \
     openapitools/openapi-generator-cli generate \
-    -i /local/${OPENAPI_DOC} \
-    -o /local/${TARGET_DIR} \
+    -i /local/$openapi_doc \
+    -o /local/$target_dir \
     -g typescript-node \
-    --additional-properties supportsES6=true,npmName=${TARGET_NPM_NAME}
+    --additional-properties supportsES6=true,npmName=$=target_npm_name
 }
 
 set_package_json() {
-    echo "Updating  $TARGET_PACKAGE_JSON file.."
+    echo "Updating  $target_package_json file.."
 
     jq \
     --arg type 'git' \
-    --arg url ${REPO} \
-    --arg directory "packages/vendors/${VENDOR}" \
-    --arg registry ${REGISTRY} \
+    --arg url $repo \
+    --arg directory "packages/vendors/${vendor}" \
+    --arg registry $registry \
     '. + {"repository": {"type": $type, "url": $url, "directory": $directory}, "publishConfig": {"registry": $registry}}' \
-    ${TARGET_PACKAGE_JSON} \
-    | sponge ${TARGET_PACKAGE_JSON}
+    $target_package_json \
+    | sponge $target_package_json
 
 }
 
 build_npm_package() {
-    echo "Building $TARGET_NPM_NAME npm package"
-    cd ${TARGET_DIR}
+    echo "Building $target_npm_name npm package"
+    cd $target_dir
     npm install && npm run build
-    cd $DIR
+    cd $PWD
 }
 
-rm -rf $TARGET_DIR >/dev/null
+rm -rf $target_dir >/dev/null
 validate
 generate_client 
 set_package_json
 build_npm_package
 
-echo "The client code has been generated at ${TARGET_DIR}/ directory"
+echo "The client code has been generated at $target_dir/ directory"
 
-echo "In order to publish an NPM package run:\n\t cd ${TARGET_DIR} && npm publish"
+echo "In order to publish an npm package run:\n\t cd $target_dir && npm publish"
