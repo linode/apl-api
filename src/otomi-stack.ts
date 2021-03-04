@@ -359,20 +359,24 @@ export default class OtomiStack {
   }
 
   loadTeamSecrets(teamId) {
-    // e.g.: ./env/teams/otomi.secrets.yaml
-    const data = this.repo.readFile(`./env/teams/secrets.${teamId}.yaml${this.decryptedFilePostfix}`)
-    const secrets: [any] = get(data, `teamConfig.teams.${teamId}.secrets`, [])
+    try {
+      const data = this.repo.readFile(`./env/teams/secrets.${teamId}.yaml${this.decryptedFilePostfix}`)
+      const secrets: [any] = get(data, `teamConfig.teams.${teamId}.secrets`, [])
 
-    secrets.forEach((secret) => {
-      const res = this.db.populateItem('secrets', { ...secret, teamId }, { teamId, name: secret.name }, secret.id)
-      console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
-    })
+      secrets.forEach((secret) => {
+        const res = this.db.populateItem('secrets', { ...secret, teamId }, { teamId, name: secret.name }, secret.id)
+        console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
+      })
+    } catch (e) {
+      console.warn(`Team ${teamId} has no secrets yet`)
+    }
   }
 
   loadClusters() {
     const data = this.repo.readFile('./env/clusters.yaml')
     this.convertClusterValuesToDb(data)
   }
+
   loadTeams() {
     const mergedData = this.loadConfig('./env/teams.yaml', `./env/secrets.teams.yaml${this.decryptedFilePostfix}`)
 
