@@ -17,6 +17,7 @@
     "axios": "^0.19.2",
     "bluebird": "^3.7.2",
     "body-parser": "^1.19.0",
+    "clean-deep": "^3.4.0",
     "cors": "^2.8.5",
     "envalid": "^6.0.2",
     "express": "^4.17.1",

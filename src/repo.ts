@@ -5,6 +5,7 @@ import path from 'path'
 import { GitPullError } from './error'
 import axios from 'axios'
 import { cleanEnv, TOOLS_HOST, USE_SOPS } from './validators'
+import { removeBlankAttributes } from './utils'
 
 const env = cleanEnv({
   TOOLS_HOST,
@@ -52,7 +53,8 @@ export class Repo {
   writeFile(relativePath, data) {
     const absolutePath = path.join(this.path, relativePath)
     console.debug(`Writing to file: ${absolutePath}`)
-    const yamlStr = yaml.safeDump(data)
+    const cleanedData = removeBlankAttributes(data)
+    const yamlStr = yaml.safeDump(cleanedData)
     fs.writeFileSync(absolutePath, yamlStr, 'utf8')
   }
 
