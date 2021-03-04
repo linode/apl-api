@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.43](https://github.com/redkubes/otomi-api/compare/v0.4.42...v0.4.43) (2021-03-04)
+
+### Features
+
+- added npm publish to github workflow ([506908c](https://github.com/redkubes/otomi-api/commit/506908cef35d656d3fc364954a24265ce314ffdf))
+
+### Bug Fixes
+
+- allow missing team service files ([#132](https://github.com/redkubes/otomi-api/issues/132)) ([efa2c86](https://github.com/redkubes/otomi-api/commit/efa2c86074fadd85564fa850037081ecf810c896))
+- missing file for release step [ci skip](<[4bc456a](https://github.com/redkubes/otomi-api/commit/4bc456adf8f3815c36247a62a80e69e5ce11ef8f)>)
+- npmrc plus docs ([#129](https://github.com/redkubes/otomi-api/issues/129)) ([88f881a](https://github.com/redkubes/otomi-api/commit/88f881ab388895fa95845dfff24730e59cdc8d93))
+- try catching team secrets because those might not exist ([e4faee6](https://github.com/redkubes/otomi-api/commit/e4faee637a7b9ce32e740fe02c92dc12e40d75b0))
+- vulnerabilities ([ebf4a94](https://github.com/redkubes/otomi-api/commit/ebf4a9460dc78beac03582d38929174c0dd26997))
+
 ### [0.4.42](https://github.com/redkubes/otomi-api/compare/v0.4.41...v0.4.42) (2020-12-06)
 
 ### Bug Fixes
