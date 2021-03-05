@@ -40,8 +40,8 @@ generate_client() {
     -o /local/$target_dir \
     -g typescript-node \
     --additional-properties supportsES6=true,npmName=$target_npm_name
-    
-    sudo chmod a+w vendors/openapi/otomi-api.json
+
+    sudo chmod a+w $target_package_json
 }
 
 set_package_json() {
