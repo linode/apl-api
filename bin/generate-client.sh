@@ -34,7 +34,7 @@ validate() {
 generate_client() {
     echo "Generating client code from openapi specification $openapi_doc.."
 
-    docker run --rm -v $PWD:/local -w /local -u $UID \
+    docker run --rm -v $PWD:/local -w /local -u 1001 \
     openapitools/openapi-generator-cli:v5.0.1 generate \
     -i /local/$openapi_doc \
     -o /local/$target_dir \
