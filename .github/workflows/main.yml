@@ -96,7 +96,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo pwd=$PWD
-          ls -als
+          ls -als bin/vendors/
           sudo apt-get install moreutils
           # bin/generate-client.sh
           # bin/release-client.sh
