@@ -34,8 +34,10 @@ validate() {
 generate_client() {
     echo "Generating client code from openapi specification $openapi_doc.."
 
-    docker run --rm -v $PWD:/local \
-    openapitools/openapi-generator-cli generate \
+    docker run --rm -v $PWD:/local -w /local busybox pwd && ls -als
+
+    docker run --rm -v $PWD:/local -w /local \
+    openapitools/openapi-generator-cli:v5.0.1 generate \
     -i /local/$openapi_doc \
     -o /local/$target_dir \
     -g typescript-node \
