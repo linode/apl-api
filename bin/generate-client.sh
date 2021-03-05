@@ -34,14 +34,12 @@ validate() {
 generate_client() {
     echo "Generating client code from openapi specification $openapi_doc.."
 
-    docker run --rm -v $PWD:/local -w /local -u 1001 \
+    docker run --rm -v $PWD:/local -w /local -u "${UID:-1001}" \
     openapitools/openapi-generator-cli:v5.0.1 generate \
     -i /local/$openapi_doc \
     -o /local/$target_dir \
     -g typescript-node \
     --additional-properties supportsES6=true,npmName=$target_npm_name
-
-    # sudo chmod a+w $target_package_json
 }
 
 set_package_json() {
@@ -53,8 +51,8 @@ set_package_json() {
     --arg directory "packages/vendors/$vendor" \
     --arg registry $registry \
     '. + {"repository": {"type": $type, "url": $url, "directory": $directory}, "publishConfig": {"registry": $registry}}' \
-    $target_package_json \
-    | sponge $target_package_json
+    $target_package_json > /tmp/pkg.json
+    mv /tmp/pkg.json $target_package_json
 
 }
 
