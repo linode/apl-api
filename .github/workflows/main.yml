@@ -96,4 +96,5 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           sudo apt-get install moreutils
+          npm install
           npm run release:client
