@@ -97,4 +97,5 @@ jobs:
         run: |
           sudo apt-get install moreutils
           npm install
+          pwd
           npm run release:client
