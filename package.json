@@ -126,7 +126,7 @@
     "lint": "eslint --ext js,ts .",
     "lint:fix": "eslint --ext js,ts .",
     "release": "standard-version",
-    "release:client": "npm run build:client:otomi && bin/release-client.sh",
+    "release:client": "bin/release-client.sh",
     "start": "node dist/src/app.js",
     "test": "NODE_ENV=test mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit"
   },

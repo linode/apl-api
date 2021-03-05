@@ -96,6 +96,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           sudo apt-get install moreutils
-          sudo chmod a+w $PWD/vendors/openapi
           npm install
+          npm run build:client:otomi
+          sudo chmod a+w $PWD/vendors/openapi/otomi-api.json
           npm run release:client
