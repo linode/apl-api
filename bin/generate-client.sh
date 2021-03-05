@@ -7,9 +7,9 @@ repo="ssh://git@github.com/redkubes/otomi-api.git"
 
 vendor="otomi-api"
 type="axios"
-openapi_doc="./vendors/openapi/$vendor.json"
+openapi_doc="vendors/openapi/$vendor.json"
 registry="https://npm.pkg.github.com/"
-target_dir="./vendors/client/$vendor/$type"
+target_dir="vendors/client/$vendor/$type"
 target_package_json="$target_dir/package.json"
 target_npm_name="@$org/$vendor-client-$type"
 
@@ -21,7 +21,7 @@ validate() {
     fi
 
     if [ -z "$vendor" ]; then
-        echo "No vendor argument supplied.\nUsage:\n\t./bin/generate-client.sh <vendor-name>"
+        echo "No vendor argument supplied.\nUsage:\n\tbin/generate-client.sh <vendor-name>"
         exit 1
     fi
 
@@ -34,14 +34,14 @@ validate() {
 generate_client() {
     echo "Generating client code from openapi specification $openapi_doc.."
 
-    docker run --rm -v $PWD:/local -w /local busybox pwd && ls -als vendors/openapi/
-
     docker run --rm -v $PWD:/local -w /local \
     openapitools/openapi-generator-cli:v5.0.1 generate \
     -i /local/$openapi_doc \
     -o /local/$target_dir \
     -g typescript-node \
     --additional-properties supportsES6=true,npmName=$target_npm_name
+    
+    sudo chmod a+w vendors/openapi/otomi-api.json
 }
 
 set_package_json() {

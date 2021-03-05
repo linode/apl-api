@@ -97,6 +97,4 @@ jobs:
         run: |
           sudo apt-get install moreutils
           npm install
-          npm run build:client:otomi
-          sudo chmod a+w $PWD/vendors/openapi/otomi-api.json
           npm run release:client
