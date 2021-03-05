@@ -34,14 +34,14 @@ validate() {
 generate_client() {
     echo "Generating client code from openapi specification $openapi_doc.."
 
-    docker run --rm -v $PWD:/local -w /local \
+    docker run --rm -v $PWD:/local -w /local -u $UID \
     openapitools/openapi-generator-cli:v5.0.1 generate \
     -i /local/$openapi_doc \
     -o /local/$target_dir \
     -g typescript-node \
     --additional-properties supportsES6=true,npmName=$target_npm_name
 
-    sudo chmod a+w $target_package_json
+    # sudo chmod a+w $target_package_json
 }
 
 set_package_json() {
