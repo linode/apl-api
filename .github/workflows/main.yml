@@ -96,6 +96,6 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           sudo apt-get install moreutils
+          sudo chmod a+w $PWD/vendors/openapi
           npm install
-          pwd
           npm run release:client
