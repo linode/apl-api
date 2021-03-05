@@ -39,5 +39,4 @@ dist
 
 kms.json*
 
-vendors/openapi/otomi-api.json
 vendors/client/
