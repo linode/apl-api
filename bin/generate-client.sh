@@ -15,11 +15,6 @@ target_npm_name="@$org/$vendor-client-$type"
 
 validate() {
 
-    if ! which sponge > /dev/null; then
-        echo "The sponge binary does not exist. To install it execute: 'brew install moreutils'"
-        exit 1
-    fi
-
     if [ -z "$vendor" ]; then
         echo "No vendor argument supplied.\nUsage:\n\tbin/generate-client.sh <vendor-name>"
         exit 1
