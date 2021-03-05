@@ -102,8 +102,11 @@
     ]
   },
   "main": "dist/app.js",
-  "name": "otomi-api",
+  "name": "@redkubes/otomi-api",
   "private": true,
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/redkubes/otomi-api.git"

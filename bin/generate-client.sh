@@ -9,7 +9,7 @@ vendor="otomi-api"
 type="axios"
 openapi_doc="./vendors/openapi/$vendor.json"
 registry="https://npm.pkg.github.com/"
-target_dir="./vendors/client/$vendor/$type}"
+target_dir="./vendors/client/$vendor/$type"
 target_package_json="$target_dir/package.json"
 target_npm_name="@$org/$vendor-client-$type"
 
@@ -32,14 +32,14 @@ validate() {
 }
 
 generate_client() {
-    echo "Generating client code from openapi specification ${openapi_doc}.."
+    echo "Generating client code from openapi specification $openapi_doc.."
 
     docker run --rm -v $PWD:/local \
     openapitools/openapi-generator-cli generate \
     -i /local/$openapi_doc \
     -o /local/$target_dir \
     -g typescript-node \
-    --additional-properties supportsES6=true,npmName=$=target_npm_name
+    --additional-properties supportsES6=true,npmName=$target_npm_name
 }
 
 set_package_json() {
@@ -48,7 +48,7 @@ set_package_json() {
     jq \
     --arg type 'git' \
     --arg url $repo \
-    --arg directory "packages/vendors/${vendor}" \
+    --arg directory "packages/vendors/$vendor" \
     --arg registry $registry \
     '. + {"repository": {"type": $type, "url": $url, "directory": $directory}, "publishConfig": {"registry": $registry}}' \
     $target_package_json \
@@ -60,7 +60,7 @@ build_npm_package() {
     echo "Building $target_npm_name npm package"
     cd $target_dir
     npm install && npm run build
-    cd $PWD
+    cd -
 }
 
 rm -rf $target_dir >/dev/null
