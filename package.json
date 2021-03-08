@@ -103,8 +103,11 @@
     ]
   },
   "main": "dist/app.js",
-  "name": "otomi-api",
+  "name": "@redkubes/otomi-api",
   "private": true,
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/redkubes/otomi-api.git"
@@ -124,14 +127,14 @@
     "lint": "eslint --ext js,ts .",
     "lint:fix": "eslint --ext js,ts .",
     "release": "standard-version",
+    "release:npm": "npm run build:client:otomi && bin/release-client.sh",
     "start": "node dist/src/app.js",
     "test": "NODE_ENV=test mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit"
   },
   "standard-version": {
     "skip": {
       "tag": true
-    },
-    "postrelease": ". bin/aliases.sh && drun update_openapi_version && release_otomi"
+    }
   },
   "version": "0.4.43"
 }

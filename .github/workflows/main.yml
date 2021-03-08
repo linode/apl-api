@@ -5,6 +5,7 @@
 # * We don't let workflows be triggered by events coming from tags
 # * We use `npm run release` (without automated tagging) which only bumps version and creates changelog and commit message with title 'chore(release): v${semverVersion}'
 # * Pipeline detects the release title and after tests pass, creates artifacts (images) and makes full tag copies (and github release) to allow release patching.
+#   If needed it will also create npm packages
 name: Build test push release
 on:
   push:
@@ -81,7 +82,7 @@ jobs:
           release_name: Release ${{ steps.git_tag.outputs.tag }}
           body: ${{ steps.git_tag.outputs.changes }}
 
-  check-build-push-clients:
+  check-build-push-npm:
     runs-on: ubuntu-latest
     needs: build-test-push-release
     if: "contains(github.event.head_commit.message, 'chore(release)') && github.ref == 'refs/heads/master'"
@@ -91,12 +92,11 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
-          registry-url: 'https://npm.pkg.github.com'
+          registry-url: https://npm.pkg.github.com/
           scope: '@redkubes'
-      - name: Build and publish clients
+      - name: Build and publish packages
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          sudo apt-get install moreutils
-          bin/generate-client.sh
-          bin/release-client.sh
+          npm install
+          npm run release:npm

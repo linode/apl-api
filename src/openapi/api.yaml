@@ -3,7 +3,7 @@ security:
   - groupAuthz: []
 info:
   title: The otomi-stack API
-  version: 0.4.41
+  version: 0.4.43
 
 externalDocs:
   description: 'This is the base url of the external documentation'
