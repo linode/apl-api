@@ -21,6 +21,14 @@ const expectedDbState = {
         slack: {},
       },
     },
+    {
+      alerts: {},
+      clusters: ['onprem/dev'],
+      id: 'dev',
+      name: 'dev',
+      oidc: {},
+      password: 'linux1234',
+    },
   ],
   services: [
     {
