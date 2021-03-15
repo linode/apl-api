@@ -218,20 +218,45 @@ const expectedDbState = {
   ],
   secrets: [
     {
-      name: 'generic-example',
-      type: 'generic',
-      entries: [
-        {
-          key: 'keyyyy',
-          value: 'valueeee',
-        },
-        {
-          key: 'ke2',
-          value: 'val2',
-        },
-      ],
+      clusterId: 'aws/dev',
+      entries: ['aa', 'bb', 'cc'],
       id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf95',
+      name: 'mysecret-generic',
       teamId: 'otomi',
+      type: 'generic',
+    },
+    {
+      clusterId: 'aws/dev',
+      id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf96',
+      name: 'mysecret-registry',
+      teamId: 'otomi',
+      type: 'docker-registry',
+    },
+    {
+      ca: 'ca.crt',
+      clusterId: 'aws/dev',
+      crt: 'tls.crt',
+      id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf97',
+      key: 'tls.key',
+      name: 'mysecret-tls',
+      teamId: 'otomi',
+      type: 'tls',
+    },
+    {
+      clusterId: 'aws/dev',
+      entries: ['HELLO'],
+      id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf98',
+      name: 'hello-otomi',
+      teamId: 'otomi',
+      type: 'generic',
+    },
+    {
+      clusterId: 'onprem/dev',
+      entries: ['dd', 'ee', 'ff'],
+      id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf9A',
+      name: 'mysecret-generic',
+      teamId: 'otomi',
+      type: 'generic',
     },
   ],
 }
