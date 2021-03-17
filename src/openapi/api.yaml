@@ -401,6 +401,19 @@ paths:
         default:
           description: The requested apiDoc.
 
+  /settings:
+    get:
+      security: []
+      description: |
+        Returns root-level settings from the `settings.yaml` file.
+      responses:
+        '200':
+          description: The request is successful.
+          content:
+            'application/json':
+              schema:
+                type: object
+
 # -------------------------------------------- Servers
 
 servers:
