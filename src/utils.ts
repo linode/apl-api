@@ -96,3 +96,11 @@ export function getPublicUrl(serviceDomain, serviceName, teamId, cluster) {
   // Custom domain that is not visible in clusters.yaml values
   return { subdomain: '', domain: serviceDomain }
 }
+
+export function getTeamSecretsFilePath(teamId: string, clusterId: string) {
+  return `./env/clouds/${clusterId}/external-secrets.${teamId}.yaml`
+}
+
+export function getTeamSecretsJsonPath(teamId: string) {
+  return `teamConfig.teams.${teamId}.externalSecrets`
+}
