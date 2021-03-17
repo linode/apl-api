@@ -97,6 +97,10 @@ export default class OtomiStack {
     return true
   }
 
+  getSettings() {
+    return { settings: '' }
+  }
+
   getTeams() {
     return this.db.getCollection('teams')
   }
