@@ -121,7 +121,7 @@
     "build:client:otomi": "ts-node-dev src/build-spec.ts vendors/openapi/otomi-api.json && rm -rf vendors/client/otomi-api >/dev/null && bin/generate-client.sh",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
-    "dev": "nodemon",
+    "dev": "ts-node-dev --watch '**/*.yaml' --inspect=4322 --respawn --transpile-only src/app.ts",
     "dev:docker": "npm install && npm run dev",
     "husky:lint-staged": "lint-staged",
     "husky:pre-commit": "run-p lint husky:lint-staged",

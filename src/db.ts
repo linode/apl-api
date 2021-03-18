@@ -30,6 +30,7 @@ export class Db {
         clouds: [],
         clusters: [],
         secrets: [],
+        settings: [],
       })
       .write()
     this.dirty = false

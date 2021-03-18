@@ -1,6 +1,0 @@
-{
-  "watch": ["src"],
-  "ext": "ts,json",
-  "ignore": [],
-  "exec": "ts-node-dev --inspect=4321 --respawn --transpile-only src/app.ts"
-}
