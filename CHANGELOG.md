@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.44](https://github.com/redkubes/otomi-api/compare/v0.4.43...v0.4.44) (2021-03-18)
+
+### Features
+
+- a user can define external secrets in otomi-api ([#141](https://github.com/redkubes/otomi-api/issues/141)) ([29fe339](https://github.com/redkubes/otomi-api/commit/29fe33940502502ba290297e5ce55be51c416999))
+
+### Bug Fixes
+
+- release step ([406c536](https://github.com/redkubes/otomi-api/commit/406c5368e53344760ec2aa5d6952a35f0e63cd05))
+- unterminated substitute pattern error from sed ([#147](https://github.com/redkubes/otomi-api/issues/147)) ([852108c](https://github.com/redkubes/otomi-api/commit/852108c86a614d5cb5109a23f2545dc01c53354e))
+
+### Build System
+
+- npm run release publishes npm client ([#136](https://github.com/redkubes/otomi-api/issues/136)) ([c365102](https://github.com/redkubes/otomi-api/commit/c365102308f606e5d863dc1fc86d7ff703e9c855))
+
 ### [0.4.43](https://github.com/redkubes/otomi-api/compare/v0.4.42...v0.4.43) (2021-03-04)
 
 ### Features
