@@ -404,8 +404,7 @@ paths:
   /settings:
     get:
       security: []
-      description: |
-        Returns root-level settings from the `settings.yaml` file.
+      description: Get settings from the `settings.yaml` file.
       responses:
         '200':
           description: The request is successful. If the response is `[]`, no data has been found.
@@ -413,7 +412,25 @@ paths:
             'application/json':
               schema:
                 type: object
-
+    patch:
+      operationId: editSettings
+      description: Edits the settings from the `settings.yaml` file
+      x-aclSchema: Settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Settings'
+        description: Settings object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited `settings.yaml`
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Settings'
 # -------------------------------------------- Servers
 
 servers:
@@ -484,6 +501,9 @@ components:
 
     Session:
       $ref: 'session.yaml#/Session'
+
+    Settings:
+      $ref: 'settings.yaml#/Settings'
 
     Team:
       $ref: 'team.yaml#/Team'

@@ -1,0 +1,10 @@
+Settings:
+  type: object
+  readOnly: false
+  x-acl:
+    admin: []
+    team: []
+  properties:
+    alerts:
+      type: string
+      description: Placeholder

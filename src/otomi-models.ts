@@ -83,3 +83,16 @@ export interface Session {
 }
 
 export interface OpenApiRequestExt extends OpenApiRequest, Session {}
+
+export interface Settings {
+  alerts?: {}
+  azure?: {}
+  charts?: {}
+  customer?: {}
+  google?: {}
+  kms?: {}
+  home?: {}
+  oidc?: {}
+  otomi?: {}
+  smtp?: {}
+}
