@@ -7,3 +7,9 @@ teamConfig:
         - onprem/dev
       id: otomi
       oidc: {}
+    dev:
+      alerts: {}
+      clusters:
+        - onprem/dev
+      id: dev
+      oidc: {}

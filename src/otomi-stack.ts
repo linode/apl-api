@@ -14,7 +14,7 @@ import unset from 'lodash/unset'
 import generatePassword from 'password-generator'
 import db, { Db } from './db'
 import { AlreadyExists, NotExistError, PublicUrlExists } from './error'
-import { arrayToObject, getPublicUrl, objectToArray } from './utils'
+import { arrayToObject, getPublicUrl, getTeamSecretsFilePath, getTeamSecretsJsonPath, objectToArray } from './utils'
 import cloneRepo, { Repo } from './repo'
 import {
   cleanEnv,
@@ -358,14 +358,19 @@ export default class OtomiStack {
     return merge(data, secretData)
   }
 
-  loadTeamSecrets(teamId) {
+  loadTeamSecrets(teamId, clusterId) {
     try {
-      const data = this.repo.readFile(`./env/teams/secrets.${teamId}.yaml${this.decryptedFilePostfix}`)
-      const secrets: [any] = get(data, `teamConfig.teams.${teamId}.secrets`, [])
+      const data = this.repo.readFile(getTeamSecretsFilePath(teamId, clusterId))
+      const secrets: [any] = get(data, getTeamSecretsJsonPath(teamId), [])
 
       secrets.forEach((secret) => {
-        const res = this.db.populateItem('secrets', { ...secret, teamId }, { teamId, name: secret.name }, secret.id)
-        console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
+        const res = this.db.populateItem(
+          'secrets',
+          { ...secret, teamId, clusterId },
+          { clusterId, teamId, name: secret.name },
+          secret.id,
+        )
+        console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}, clusterId: ${clusterId}`)
       })
     } catch (e) {
       console.warn(`Team ${teamId} has no secrets yet`)
@@ -382,8 +387,10 @@ export default class OtomiStack {
 
     Object.values(mergedData.teamConfig.teams).forEach((team: any) => {
       this.db.populateItem('teams', { name: team.id, ...team }, undefined, team.id)
-      this.loadTeamSecrets(team.id)
-      team.clusters.forEach((clusterId) => this.loadTeamServices(team.id, clusterId))
+      team.clusters.forEach((clusterId) => {
+        this.loadTeamServices(team.id, clusterId)
+        this.loadTeamSecrets(team.id, clusterId)
+      })
     })
   }
 
@@ -417,9 +424,9 @@ export default class OtomiStack {
     const objectPaths = []
     const teams = this.getTeams()
     teams.forEach((team) => {
-      this.saveTeamSecrets(team.id)
       team.clusters.forEach((clusterId) => {
         this.saveTeamServices(team.id, clusterId)
+        this.saveTeamSecrets(team.id, clusterId)
       })
       if (!team.password) team.password = generatePassword(16, false)
       teamValues[team.id] = omit(team, 'name')
@@ -435,12 +442,12 @@ export default class OtomiStack {
     saveConfig(this.repo, filePath, secretFilePath, values, objectPaths)
   }
 
-  saveTeamSecrets(teamId) {
-    let secrets = this.getSecrets(teamId)
-    secrets = secrets.map((item) => omit(item, 'teamId'))
+  saveTeamSecrets(teamId: string, clusterId: string) {
+    let secrets = this.db.getCollection('secrets', { teamId, clusterId })
+    secrets = secrets.map((item) => omit(item, ['teamId', 'clusterId']))
     const data = {}
-    set(data, `teamConfig.teams.${teamId}.secrets`, secrets)
-    this.repo.writeFile(`./env/teams/secrets.${teamId}.yaml${this.decryptedFilePostfix}`, data)
+    set(data, getTeamSecretsJsonPath(teamId), secrets)
+    this.repo.writeFile(getTeamSecretsFilePath(teamId, clusterId), data)
   }
 
   saveTeamServices(teamId, clusterId) {
