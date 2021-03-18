@@ -1,6 +1,6 @@
 import { Operation } from 'express-openapi'
 import OtomiStack from '../otomi-stack'
-import { OpenApiRequest, Settings } from '../otomi-models'
+import { OpenApiRequest } from '../otomi-models'
 
 export default function (otomi: OtomiStack) {
   const GET: Operation = [(req: OpenApiRequest, res) => res.status(200).json(otomi.getSettings())]
@@ -9,7 +9,7 @@ export default function (otomi: OtomiStack) {
       try {
         res.status(200).json({})
       } catch (e) {
-        console.error('Not available')
+        console.error(e)
         res.status(400).json({})
       }
     },
