@@ -1,3 +1,4 @@
+import cleanDeep, { CleanOptions } from 'clean-deep'
 import cloneDeep from 'lodash/cloneDeep'
 
 interface ResourceBase {
@@ -95,6 +96,16 @@ export function getPublicUrl(serviceDomain, serviceName, teamId, cluster) {
 
   // Custom domain that is not visible in clusters.yaml values
   return { subdomain: '', domain: serviceDomain }
+}
+
+export function removeBlankAttributes(obj) {
+  const options: CleanOptions = {
+    emptyArrays: true,
+    emptyObjects: true,
+    nullValues: true,
+    undefinedValues: true,
+  }
+  return cleanDeep(obj, options)
 }
 
 export function getTeamSecretsFilePath(teamId: string, clusterId: string) {
