@@ -101,6 +101,12 @@ Service:
       title: Name
       description: A service name
       example: some-service
+    port:
+      description: A service port
+      type: integer
+      default: 80
+      minimum: 1
+      maximum: 65535
     clusterId:
       title: Cluster ID
       type: string
@@ -108,12 +114,6 @@ Service:
       x-acl:
         admin: [read, create]
         team: [read, create]
-    port:
-      title: Service port
-      type: integer
-      default: 80
-      minimum: 1
-      maximum: 65535
     ksvc:
       title: Type
       type: object
@@ -141,24 +141,10 @@ Service:
                   type: string
             secrets:
               type: array
-              title: Secrets
-              nullable: true
               items:
-                type: object
-                properties:
-                  name:
-                    type: string
-                  entries:
-                    title: Entries
-                    type: array
-                    items:
-                      type: string
-                    uniqueItems: true
-                required:
-                  - name
-              required:
-                - repository
-                - tag
+                type: string
+              uniqueItems: true
+              title: Secrets
             env:
               title: Environment variables
               # description: Environment variables for containers
