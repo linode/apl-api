@@ -408,7 +408,7 @@ paths:
         Returns root-level settings from the `settings.yaml` file.
       responses:
         '200':
-          description: The request is successful.
+          description: The request is successful. If the response is `[]`, no data has been found.
           content:
             'application/json':
               schema:

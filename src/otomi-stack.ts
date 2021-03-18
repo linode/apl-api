@@ -97,18 +97,8 @@ export default class OtomiStack {
     return true
   }
 
-  // ANCHOR: Settings
   getSettings() {
     return this.db.getCollection('settings')
-  }
-
-  loadSettings() {
-    const data = this.repo.readFile('./env/settings.yaml')
-    console.log(data)
-  }
-
-  saveSettings() {
-    console.log('some setting')
   }
 
   getTeams() {
@@ -360,7 +350,6 @@ export default class OtomiStack {
     }
   }
 
-  // ANCHOR: Load objects from repo
   loadValues() {
     this.loadClusters()
     this.loadSettings()
@@ -398,6 +387,11 @@ export default class OtomiStack {
     this.convertClusterValuesToDb(data)
   }
 
+  loadSettings() {
+    const data = this.repo.readFile('./env/settings.yaml')
+    console.log(data)
+  }
+
   loadTeams() {
     const mergedData = this.loadConfig('./env/teams.yaml', `./env/secrets.teams.yaml${this.decryptedFilePostfix}`)
 
@@ -425,7 +419,10 @@ export default class OtomiStack {
     }
   }
 
-  // ANCHOR: Save objects into repo
+  saveSettings() {
+    console.log('some setting')
+  }
+
   saveTeams() {
     const filePath = './env/teams.yaml'
     const secretFilePath = `./env/secrets.teams.yaml${this.decryptedFilePostfix}`
@@ -481,7 +478,6 @@ export default class OtomiStack {
     this.repo.writeFile(filePath, data)
   }
 
-  // ANCHOR: Convert objects from and to formats supported by either db or repo
   convertDbServiceToValues(svc) {
     const serviceType = svc.ksvc.serviceType
     console.info(`Saving service: serviceId: ${svc.serviceId} serviceType: ${serviceType}`)
@@ -575,6 +571,7 @@ export default class OtomiStack {
   }
 
   saveValues() {
+    // TODO: saveApps()
     this.saveSettings()
     this.saveTeams()
   }
