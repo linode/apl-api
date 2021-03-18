@@ -27,20 +27,19 @@ The @redkubes Github packages repository is a proxy for all NPM packages. Curren
 
 4. `npm install`
 
-### 1.2 Running in docker-compose with all deps
-
-```
-bin/dc.sh up-all
-```
-
-### 1.3 Running with only deps in docker-compose
+### 1.3 Running services in docker-compose
 
 ```
 bin/dc.sh up-deps &
+```
+
+### 1.4 Run dev server
+
+```
 npm run dev
 ```
 
-### 1.4 Running tests
+### 1.5 Running tests
 
 Run all tests
 

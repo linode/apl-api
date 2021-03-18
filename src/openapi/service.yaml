@@ -108,6 +108,12 @@ Service:
       x-acl:
         admin: [read, create]
         team: [read, create]
+    port:
+      title: Service port
+      type: integer
+      default: 80
+      minimum: 1
+      maximum: 65535
     ksvc:
       title: Type
       type: object
@@ -260,12 +266,6 @@ Service:
               type: string
               enum: [svcPredeployed]
               default: svcPredeployed
-            port:
-              title: Service port
-              type: integer
-              default: 80
-              minimum: 1
-              maximum: 65535
           required:
             - serviceType
     ingress:
