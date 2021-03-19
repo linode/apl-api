@@ -369,7 +369,7 @@ export default class OtomiStack {
       './env/settings.yaml',
       `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
     )
-    console.log(data)
+    return data
   }
 
   loadTeamSecrets(teamId, clusterId) {

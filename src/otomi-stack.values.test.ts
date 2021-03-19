@@ -298,10 +298,11 @@ describe('Work with values', () => {
 
 describe('settings() methods', () => {
   describe('loadSettings()', () => {
-    it('prints data', () => {
+    it('is not empty', () => {
       const otomi = new OtomiStack()
       otomi.repo = new Repo('./test', undefined, undefined, undefined, undefined, undefined)
-      otomi.loadSettings()
+      const data = otomi.loadSettings()
+      expect(data).to.not.be.equal({})
     })
   })
 })
