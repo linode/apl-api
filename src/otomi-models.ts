@@ -84,7 +84,6 @@ export interface Session {
 
 export interface OpenApiRequestExt extends OpenApiRequest, Session {}
 
-// ANCHOR: Maybe unnecessary
 export interface Settings {
   alerts?: {}
   azure?: {}
