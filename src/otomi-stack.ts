@@ -364,6 +364,14 @@ export default class OtomiStack {
     return merge(data, secretData)
   }
 
+  loadSettings() {
+    const data: Settings = this.loadConfig(
+      './env/settings.yaml',
+      `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
+    )
+    console.log(data)
+  }
+
   loadTeamSecrets(teamId, clusterId) {
     try {
       const data = this.repo.readFile(getTeamSecretsFilePath(teamId, clusterId))
@@ -386,13 +394,6 @@ export default class OtomiStack {
   loadClusters() {
     const data = this.repo.readFile('./env/clusters.yaml')
     this.convertClusterValuesToDb(data)
-  }
-
-  loadSettings() {
-    const data: Settings = this.loadConfig(
-      './env/settings.yaml',
-      `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
-    )
   }
 
   loadTeams() {

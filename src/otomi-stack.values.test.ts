@@ -295,3 +295,13 @@ describe('Work with values', () => {
     }
   })
 })
+
+describe('settings() methods', () => {
+  describe('loadSettings()', () => {
+    it('prints data', () => {
+      const otomi = new OtomiStack()
+      otomi.repo = new Repo('./test', undefined, undefined, undefined, undefined, undefined)
+      otomi.loadSettings()
+    })
+  })
+})
