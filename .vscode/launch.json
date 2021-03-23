@@ -11,7 +11,7 @@
     {
       "type": "node",
       "request": "attach",
-      "name": "Attach to dev:debug",
+      "name": "Debug 'npm run dev'",
       "protocol": "inspector",
       "port": 4321,
       "restart": true,
@@ -28,7 +28,7 @@
         "--require",
         "ts-node/register",
         "-u",
-        "tdd",
+        "bdd",
         "--timeout",
         "999999",
         "--colors",
@@ -69,7 +69,22 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run-script", "tasks:keycloak-dev"],
       "cwd": "${workspaceRoot}",
+
       "console": "integratedTerminal"
+    },
+    {
+      "type": "pwa-node",
+      "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
+      "request": "launch",
+      "name": "Mocha All (transpiled)",
+      "args": ["--timeout", "999999", "--colors", "${workspaceFolder}/src/**/*.test.ts"],
+      "env": {
+        "NODE_ENV": "test"
+      },
+      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "protocol": "inspector"
     }
   ]
 }

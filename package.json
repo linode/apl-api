@@ -33,6 +33,7 @@
     "simple-git": "^2.20.1",
     "swagger-client": "^3.10.12",
     "swagger-ui-express": "^4.1.4",
+    "ts-mocha": "^8.0.0",
     "uuid": "^8.3.0"
   },
   "description": "The brain of the Otomi Container Platform. Handling console input and talking to core, it knows what to do.",
