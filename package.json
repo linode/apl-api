@@ -130,7 +130,7 @@
     "release": "standard-version",
     "release:npm": "bin/release-client.sh",
     "start": "node dist/src/app.js",
-    "test": "NODE_ENV=test mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit"
+    "test": "TS_NODE_TRANSPILE_ONLY=true NODE_ENV=test mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit"
   },
   "standard-version": {
     "skip": {
