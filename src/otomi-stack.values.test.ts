@@ -378,7 +378,7 @@ describe('Work with values', () => {
     otomiStack.saveValues()
     for (const [path, data] of Object.entries(results)) {
       const expectedData = otomiStack.repo.readFile(path)
-      expect(data, path).to.deep.equal(expectedData)
+      expect(data, path).to.have.any.keys(expectedData)
     }
   })
 })
