@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { Express } from 'express'
 import { initialize } from 'express-openapi'
 import bodyParser from 'body-parser'
 import path from 'path'
@@ -18,7 +18,7 @@ export async function loadOpenApisSpec() {
   return schema
 }
 
-export default async function initApp(otomiStack) {
+export default async function initApp(otomiStack): Promise<Express> {
   const app = express()
   const apiRoutesPath = path.resolve(__dirname, 'api')
   const spec: any = await loadOpenApisSpec()

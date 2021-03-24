@@ -15,8 +15,9 @@ const HttpMethodMapping = {
 
 const noAuthz = !!process.env.NO_AUTHZ
 
-export function errorMiddleware(err, req: OpenApiRequest, res) {
-  console.error('errorMiddleware handler')
+// Note: 4 arguments (no more, no less) must be defined in your errorMiddleware function. Otherwise the function will be silently ignored.
+export function errorMiddleware(err, req: OpenApiRequest, res, next) {
+  console.debug('errorMiddleware handler')
 
   if (err instanceof AlreadyExists) return res.status(409).json({ error: err.message })
   if (err instanceof NotExistError) return res.status(404).json({ error: err.message })
