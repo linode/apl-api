@@ -7,4 +7,4 @@ Settings:
   properties:
     alerts:
       type: string
-      description: Placeholder
+      description: Placeholder (copy schema from otomi-core)

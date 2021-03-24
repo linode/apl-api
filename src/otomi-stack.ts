@@ -30,7 +30,6 @@ import {
   DISABLE_SYNC,
   USE_SOPS,
 } from './validators'
-import { Settings } from './otomi-models'
 
 const env = cleanEnv({
   GIT_REPO_URL,
@@ -98,7 +97,7 @@ export default class OtomiStack {
     return true
   }
 
-  getSettings(): Settings {
+  getSettings() {
     return this.db.getCollection('settings')
   }
 
@@ -423,9 +422,7 @@ export default class OtomiStack {
   }
 
   saveSettings() {
-    saveConfig(this.repo, './env/settings.yaml', `./env/secrets.settings.yaml${this.decryptedFilePostfix}`, {}, [
-      'oidc.clientSecret',
-    ])
+    this.repo.writeFile(`./env/secrets.settings.yaml${this.decryptedFilePostfix}`, this.db.getCollection('settings')[0])
   }
 
   saveTeams() {

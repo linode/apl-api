@@ -11,7 +11,7 @@ export default function (otomi: OtomiStack) {
       } catch (e) {
         console.error(e)
         res.status(400).json({})
-      }
+      } // Not necessary to try catch
     },
   ]
   const api = {
