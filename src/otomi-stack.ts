@@ -365,11 +365,10 @@ export default class OtomiStack {
   }
 
   loadSettings() {
-    const data: Settings = this.loadConfig(
-      './env/settings.yaml',
-      `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
-    )
-    return data
+    this.db.db
+      .get('settings')
+      .push(this.loadConfig('./env/settings.yaml', `./env/secrets.settings.yaml${this.decryptedFilePostfix}`))
+      .write()
   }
 
   loadTeamSecrets(teamId, clusterId) {
@@ -424,7 +423,9 @@ export default class OtomiStack {
   }
 
   saveSettings() {
-    saveConfig(this.repo, './env/settings.yaml', `./env/secrets.settings.yaml${this.decryptedFilePostfix}`, {}, [])
+    saveConfig(this.repo, './env/settings.yaml', `./env/secrets.settings.yaml${this.decryptedFilePostfix}`, {}, [
+      'oidc.clientSecret',
+    ])
   }
 
   saveTeams() {
