@@ -267,6 +267,93 @@ const expectedDbState = {
       type: 'generic',
     },
   ],
+  settings: [
+    {
+      alerts: {
+        drone: 'slack',
+        groupInterval: '5m',
+        receivers: ['slack', 'email'],
+        repeatInterval: '3h',
+        slack: {
+          url: 'https://hooks.slack.com/services/id',
+        },
+        email: {
+          nonCritical: 'admins@yourdoma.in',
+          critical: 'admins@yourdoma.in',
+        },
+      },
+      azure: {
+        appgw: {
+          isManaged: true,
+        },
+        diskType: 'Standard_LRS',
+        resourceGroup: 'somevalue',
+        subscriptionId: 'somevalue',
+        tenantId: 'somevalue',
+        monitor: {
+          clientId: 'somesecretvalue',
+          clientSecret: 'somesecretvalue',
+        },
+      },
+      charts: {
+        hello: {
+          enabled: true,
+        },
+        httpbin: {
+          enabled: true,
+        },
+      },
+      customer: {
+        name: 'demo',
+      },
+      google: {
+        projectId: 'otomi-cloud',
+        cloudDnsKey:
+          '{\n  "type": "service_account",\n  "project_id": "project_id-cloud",\n  "private_key_id": "private_key_id",\n  "private_key": "-----BEGIN PRIVATE KEY-----\\n private_key ----END PRIVATE KEY-----\\n",\n  "client_email": "client_email",\n  "client_id": "client_id",\n  "auth_uri": "https://accounts.google.com/o/oauth2/auth",\n  "token_uri": "https://oauth2.googleapis.com/token",\n  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",\n  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/dnsmanager%40otomi-cloud.iam.gserviceaccount.com"\n}\n',
+      },
+      home: {
+        receivers: ['slack'],
+        slack: {
+          channel: 'mon-otomi',
+          channelCrit: 'mon-otomi-crit',
+          url: 'https://hooks.slack.com/services/id',
+        },
+        email: {
+          critical: 'admins@yourdoma.in',
+        },
+      },
+      oidc: {
+        adminGroupID: 'someAdminGroupID',
+        clientID: 'someClientID',
+        clientSecret: 'somesecretvalue',
+        issuer: 'https://login.microsoftonline.com/xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+        scope: 'openid email profile',
+        teamAdminGroupID: 'xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+        tenantID: 'xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+      },
+      otomi: {
+        hasCloudLB: false,
+        isHomeMonitored: true,
+        isManaged: true,
+        isMultitenant: true,
+        mode: 'ce',
+        teamPrefix: 'team-',
+        addons: {
+          conftest: {
+            enabled: true,
+          },
+        },
+        pullSecret: 'c29tZXNlY3JldHZhbHVlCg==',
+      },
+      smtp: {
+        authUsername: 'no-reply@doma.in',
+        from: 'no-reply@doma.in',
+        hello: 'doma.in',
+        smarthost: 'smtp-relay.gmail.com:587',
+        authPassword: 'somesecretvalue',
+      },
+    },
+  ],
 }
 
 describe('Work with values', () => {
