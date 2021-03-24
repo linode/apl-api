@@ -23,6 +23,38 @@
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "protocol": "inspector"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Mocha Current File",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "args": [
+        "--require",
+        "dotenv/config",
+        "--require",
+        "ts-node/register",
+        "--timeout",
+        "999999",
+        "--colors",
+        "--recursive",
+        "${file}"
+      ],
+      "env": {
+        "NODE_ENV": "test"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Keycloak Tasks",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run-script", "tasks:keycloak-dev"],
+      "cwd": "${workspaceRoot}",
+
+      "console": "integratedTerminal"
     }
   ]
 }

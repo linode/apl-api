@@ -9,6 +9,9 @@
   "mochaExplorer.files": "src/*.test.ts",
   "mochaExplorer.require": "ts-node/register",
   "mochaExplorer.timeout": 20000,
+  "mochaExplorer.env": {
+    "NODE_ENV": "test"
+  },
   "prettier.disableLanguages": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
   "prettier.enable": true,
   "tslint.enable": false
