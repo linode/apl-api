@@ -1,3 +1,61 @@
+alerts:
+  properties:
+    drone:
+      default: slack
+      enum:
+        - slack
+        - msteams
+      type: string
+    email:
+      additionalProperties: false
+      properties:
+        critical:
+          $ref: '#/definitions/email'
+          description: One or more email addresses (comma separated) for critical events.
+        nonCritical:
+          $ref: '#/definitions/email'
+          description: One or more email addresses (comma separated) for non-critical events.
+    groupInterval:
+      default: 5m
+      description: How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.)
+      type: string
+    msteams:
+      additionalProperties: false
+      properties:
+        highPrio:
+          description: The low prio web hook.
+          type: string
+        lowPrio:
+          description: The high prio web hook.
+          type: string
+    receivers:
+      description: Notification receivers.
+      items:
+        enum:
+          - slack
+          - msteams
+          - email
+        type: string
+      type: array
+    repeatInterval:
+      default: 3h
+      description: How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more).
+      type: string
+    slack:
+      additionalProperties: false
+      properties:
+        channel:
+          default: mon-otomi
+          description: The Slack channel for non-critical notifications.
+          type: string
+        channelCrit:
+          default: mon-otomi
+          description: The Slack channel for critical notifications.
+          type: string
+        url:
+          $ref: '#/definitions/url'
+          description: A Slack webhook URL.
+
 Settings:
   readOnly: false
   x-acl:
@@ -5,5 +63,863 @@ Settings:
     team: [update-any, read-any]
   properties:
     alerts:
-      type: string
-      description: Placeholder (copy schema from otomi-core)
+      $ref: '#/definitions/alerts'
+    azure:
+      description: Azure specific configuration.
+      properties:
+        appgw:
+          properties:
+            isManaged:
+              default: true
+              description: Is this appgw installed as AKS addon?
+              type: boolean
+        diskType:
+          description: An Azure disk type (SKU Type).
+          enum:
+            - Standard_LRS
+            - Standard_GRS
+            - Standard_RAGRS
+            - Standard_ZRS
+            - Premium_LRS
+            - Premium_ZRS
+            - Standard_GZRS
+            - Standard_RAGZRS
+          type: string
+        keyVault:
+          description: Azure Key Vault access credentials. Will use azure.tenantId if tenantId is not provided.
+          properties:
+            tenantId:
+              description: An Azure tenant ID.
+              type: string
+            clientId:
+              description: An Azure client ID.
+              type: string
+            clientSecret:
+              description: An Azure client secret.
+              type: string
+          required:
+            - clientId
+            - clientSecret
+        monitor:
+          $ref: '#/definitions/azureMonitor'
+        resourceGroup:
+          description: An Azure resource group.
+          type: string
+        subscriptionId:
+          description: An Azure subscription ID.
+          type: string
+        tenantId:
+          description: An Azure tenant ID.
+          type: string
+      required:
+        - diskType
+        - resourceGroup
+        - subscriptionId
+        - tenantId
+    charts:
+      additionalProperties: true
+      properties:
+        cert-manager:
+          additionalProperties: false
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            azureClientSecret:
+              type: string
+            email:
+              $ref: '#/definitions/email'
+            provider:
+              additionalProperties: false
+              properties:
+                aws:
+                  additionalProperties: false
+                  properties:
+                    route53:
+                      additionalProperties: false
+                      properties:
+                        region:
+                          type: string
+                azure:
+                  additionalProperties: false
+                  properties:
+                    azuredns:
+                      additionalProperties: false
+                      properties:
+                        clientID:
+                          type: string
+                        hostedZoneName:
+                          type: string
+                        resourceGroupName:
+                          type: string
+                        subscriptionID:
+                          type: string
+                        tenantID:
+                          type: string
+                      required:
+                        - clientID
+                        - tenantID
+                        - subscriptionID
+                        - resourceGroupName
+                        - hostedZoneName
+                google:
+                  additionalProperties: false
+                  properties:
+                    clouddns:
+                      additionalProperties: false
+                      properties:
+                        project:
+                          type: string
+                        serviceAccountSecretRef:
+                          additionalProperties: false
+                          properties:
+                            key:
+                              type: string
+                            name:
+                              type: string
+            stage:
+              description: |
+                The Let’s Encrypt environment that is used for issuing certificates.
+                The 'production' environment issues trusted certificates but has narrow rate limits, whereas the 'staging' environment issues untrusted certificates but provides broader rate limits.
+                Read more about rate limits: https://letsencrypt.org/docs/rate-limits/.
+              enum:
+                - staging
+                - production
+              type: string
+        cluster-overprovisioner:
+          additionalProperties: false
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            cpu:
+              $ref: '#/definitions/cpuQuantity'
+            enabled:
+              type: boolean
+            memory:
+              $ref: '#/definitions/memoryQuantity'
+        drone:
+          additionalProperties: false
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            adminUser:
+              type: string
+            adminToken:
+              type: string
+            debug:
+              default: false
+              type: boolean
+            enabled:
+              default: false
+              type: boolean
+            githubAdmins:
+              additionalProperties: false
+              properties:
+                org:
+                  type: string
+                team:
+                  type: string
+                token:
+                  type: string
+            orgsFilter:
+              type: string
+            owner:
+              type: string
+            repo:
+              $ref: '#/definitions/idName'
+            repoFilter:
+              type: string
+            resources:
+              additionalProperties: false
+              properties:
+                runner:
+                  $ref: '#/definitions/resources'
+                server:
+                  $ref: '#/definitions/resources'
+            sharedSecret:
+              description: A secret used by drone-admit-members plugin.
+              type: string
+            sourceControl:
+              additionalProperties: false
+              properties:
+                bitbucketCloud:
+                  $ref: '#/definitions/droneGit'
+                bitbucketServer:
+                  properties:
+                    consumerKey:
+                      default: consumerKey
+                      type: string
+                    passwordKey:
+                      default: password
+                      type: string
+                    privateKey:
+                      default: privateKey
+                      type: string
+                    server:
+                      type: string
+                    username:
+                      type: string
+                gitea:
+                  allOf:
+                    - $ref: '#/definitions/droneGit'
+                    - properties:
+                        server:
+                          type: string
+                github:
+                  allOf:
+                    - $ref: '#/definitions/droneGit'
+                    - properties:
+                        server:
+                          default: 'https://github.com'
+                          type: string
+                gitlab:
+                  allOf:
+                    - $ref: '#/definitions/droneGit'
+                    - properties:
+                        server:
+                          type: string
+                gogs:
+                  properties:
+                    server:
+                      type: string
+                provider:
+                  default: github
+                  enum:
+                    - github
+                    - gitlab
+                    - gitea
+                    - gogs
+                    - bitbucketCloud
+                    - bitbucketServer
+                  type: string
+        external-dns:
+          additionalProperties: false
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            aws:
+              properties:
+                region:
+                  type: string
+              required:
+                - region
+            azure:
+              properties:
+                cloud:
+                  type: string
+                  description: Azure Cloud to use
+                resourceGroup:
+                  type: string
+                  description: Azure resource group to use
+                tenantId:
+                  type: string
+                  description: Azure tenant ID to use (will default to global value)
+                subscriptionId:
+                  type: string
+                  description: Azure subscription ID to use (will default to global value)
+                aadClientId:
+                  type: string
+                  description: Azure Application Client ID to use
+                aadClientSecret:
+                  type: string
+                  description: Azure Application Client Secret to use
+                useManagedIdentityExtension:
+                  type: boolean
+                  description: If you use Azure MSI, this should be set to true
+                  default: false
+            domainFilters:
+              items:
+                type: string
+              type: array
+            zoneIdFilters:
+              items:
+                type: string
+        gatekeeper-operator:
+          additionalProperties: false
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            enabled:
+              type: boolean
+            excludedNamespaces:
+              type: array
+              items:
+                type: string
+            emitAuditEvents:
+              type: boolean
+            emitAdmissionEvents:
+              type: boolean
+            auditFromCache:
+              type: boolean
+            disableValidatingWebhook:
+              type: boolean
+            logLevel:
+              type: string
+            constraintViolationsLimit:
+              type: number
+            auditInterval:
+              type: number
+            replicas:
+              type: number
+            dataSync:
+              type: array
+              items:
+                type: object
+        gitea:
+          properties:
+            enabled:
+              type: boolean
+            admin:
+              properties:
+                password:
+                  type: string
+        harbor:
+          additionalProperties: false
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            adminPassword:
+              type: string
+            enabled:
+              type: boolean
+            persistence:
+              additionalProperties: false
+              properties:
+                imageChartStorage:
+                  additionalProperties: false
+                  properties:
+                    gcs:
+                      additionalProperties: false
+                      properties:
+                        bucket:
+                          type: string
+                        encodedkey:
+                          type: string
+                        rootdirectory:
+                          type: string
+                    type:
+                      type: string
+            resources:
+              additionalProperties: false
+              properties:
+                adapter:
+                  $ref: '#/definitions/resources'
+                chartmuseum:
+                  $ref: '#/definitions/resources'
+                clair:
+                  $ref: '#/definitions/resources'
+                controller:
+                  $ref: '#/definitions/resources'
+                core:
+                  $ref: '#/definitions/resources'
+                database:
+                  $ref: '#/definitions/resources'
+                jobservice:
+                  $ref: '#/definitions/resources'
+                portal:
+                  $ref: '#/definitions/resources'
+            secretKey:
+              type: string
+        hello:
+          properties:
+            enabled:
+              description: Hello world demo chart. When you turn this off you may also have to remove the ingress service.
+              type: boolean
+              default: false
+        httpbin:
+          properties:
+            enabled:
+              description: The famous httpbin application.
+              type: boolean
+              default: false
+        ingress-azure:
+          additionalProperties: false
+          description: A chart for Azure Application Gateway.
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            appgw:
+              additionalProperties: false
+              description: Application Gateway.
+              properties:
+                name:
+                  description: A name of the Application Gateway.
+                  type: string
+                resourceGroup:
+                  description: A name of the Azure Resource Group in which Application Gateway was created.
+                  type: string
+                subnetName:
+                  description: A subnet of the application gateway.
+                  type: string
+                subnetPrefix:
+                  description: A subnet in CIDR notation.
+                  examples:
+                    - 10.1.0.0/16
+                  type: string
+                subscriptionId:
+                  description: The Azure Subscription ID in which Application Gateway resides.
+                  type: string
+                usePrivateIP:
+                  default: false
+                  description: Whether to use a private ip range or not.
+                  type: boolean
+              required:
+                - subscriptionId
+                - resourceGroup
+                - name
+                - subnetName
+                - subnetPrefix
+            armAuth:
+              additionalProperties: false
+              description: A service Principal secret.
+              properties:
+                secretJSON:
+                  description: A service Principal secret JSON key (base64 encoded).
+                  type: string
+              required:
+                - secretJSON
+          required:
+            - armAuth
+            - appgw
+        istio:
+          additionalProperties: false
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            addonComponents:
+              additionalProperties: false
+              properties:
+                grafana:
+                  additionalProperties: false
+                  properties:
+                    enabled:
+                      type: boolean
+                kiali:
+                  additionalProperties: false
+                  properties:
+                    enabled:
+                      type: boolean
+                prometheus:
+                  additionalProperties: false
+                  properties:
+                    enabled:
+                      type: boolean
+                tracing:
+                  additionalProperties: false
+                  properties:
+                    enabled:
+                      type: boolean
+            autoscaling:
+              properties:
+                egressgateway:
+                  $ref: '#/definitions/scaling'
+                gateway-local:
+                  $ref: '#/definitions/scaling'
+                ingressgateway:
+                  $ref: '#/definitions/scaling'
+                ingressgateway-auth:
+                  $ref: '#/definitions/scaling'
+                pilot:
+                  $ref: '#/definitions/scaling'
+            egressGateway:
+              properties:
+                enabled:
+                  default: false
+                  type: boolean
+            global:
+              additionalProperties: false
+              properties:
+                logging:
+                  properties:
+                    level:
+                      type: string
+                mtls:
+                  additionalProperties: false
+                  properties:
+                    enabled:
+                      type: boolean
+                proxy:
+                  additionalProperties: false
+                  properties:
+                    resources:
+                      $ref: '#/definitions/resources'
+                sds:
+                  additionalProperties: false
+                  properties:
+                    enabled:
+                      type: boolean
+            meshConfig:
+              properties:
+                defaultConfig:
+                  type: object
+              required:
+                - defaultConfig
+            resources:
+              properties:
+                egressgateway:
+                  $ref: '#/definitions/resources'
+                gateway-local:
+                  $ref: '#/definitions/resources'
+                ingressgateway:
+                  $ref: '#/definitions/resources'
+                ingressgateway-auth:
+                  $ref: '#/definitions/resources'
+                pilot:
+                  $ref: '#/definitions/resources'
+        jobs:
+          $ref: '#/definitions/jobs'
+        keycloak:
+          additionalProperties: false
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            enabled:
+              type: boolean
+            idp:
+              additionalProperties: false
+              properties:
+                alias:
+                  type: string
+                clientID:
+                  type: string
+                clientSecret:
+                  type: string
+            realm:
+              type: string
+            resources:
+              additionalProperties: false
+              properties:
+                keycloak:
+                  $ref: '#/definitions/resources'
+                postgresql:
+                  $ref: '#/definitions/resources'
+            theme:
+              enum:
+                - default
+                - otomi
+              type: string
+        kubeapps:
+          additionalProperties: false
+          properties:
+            enabled:
+              default: true
+              type: boolean
+        kubernetes-external-secrets:
+          additionalProperties: false
+          properties:
+            logLevel:
+              $ref: '#/definitions/logLevel'
+        kube-descheduler:
+          additionalProperties: false
+          properties:
+            enabled:
+              default: true
+              type: boolean
+            schedule:
+              default: '*/30 * * * *'
+              type: string
+        loki:
+          additionalProperties: false
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            adminPassword:
+              type: string
+            persistence:
+              additionalProperties: false
+              properties:
+                size:
+                  type: string
+            retention:
+              additionalProperties: false
+              properties:
+                duration:
+                  type: string
+                period:
+                  type: string
+            storageType:
+              type: string
+        nginx-ingress:
+          additionalProperties: false
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            autoscaling:
+              additionalProperties: false
+              properties:
+                enabled:
+                  default: true
+                  type: boolean
+            resources:
+              $ref: '#/definitions/resources'
+        oauth2-proxy:
+          additionalProperties: false
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            config:
+              properties:
+                cookieSecret:
+                  description: Cookie secret must be 128 bit base64 encoded string.
+                  pattern: '^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$'
+                  type: string
+        oauth2-proxy-redis:
+          additionalProperties: false
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            resources:
+              additionalProperties: false
+              properties:
+                master:
+                  $ref: '#/definitions/resources'
+                sentinel:
+                  $ref: '#/definitions/resources'
+                slave:
+                  $ref: '#/definitions/resources'
+        otomi-api:
+          additionalProperties: false
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            git:
+              additionalProperties: false
+              properties:
+                branch:
+                  type: string
+                email:
+                  $ref: '#/definitions/email'
+                localPath:
+                  type: string
+                password:
+                  type: string
+                repoUrl:
+                  $ref: '#/definitions/repoUrl'
+                user:
+                  type: string
+            image:
+              $ref: '#/definitions/imageSimple'
+            resources:
+              additionalProperties: false
+              properties:
+                api:
+                  $ref: '#/definitions/resources'
+                tools:
+                  $ref: '#/definitions/resources'
+            tools:
+              additionalProperties: false
+              properties:
+                azureTenantId:
+                  type: string
+                azureClientId:
+                  type: string
+                azureClientSecret:
+                  type: string
+                gcloudServiceKey:
+                  type: string
+                image:
+                  $ref: '#/definitions/imageSimple'
+        otomi-console:
+          additionalProperties: false
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            image:
+              $ref: '#/definitions/imageSimple'
+
+        prometheus-operator:
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            additionalProperties: false
+            grafana:
+              additionalProperties: false
+              properties:
+                adminPassword:
+                  type: string
+            prometheus:
+              additionalProperties: false
+              properties:
+                storageSize:
+                  type: string
+            resources:
+              additionalProperties: false
+              properties:
+                grafana:
+                  $ref: '#/definitions/resources'
+        redis-shared:
+          additionalProperties: false
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            enabled:
+              type: boolean
+            resources:
+              additionalProperties: false
+              properties:
+                master:
+                  $ref: '#/definitions/resources'
+                sentinel:
+                  $ref: '#/definitions/resources'
+                slave:
+                  $ref: '#/definitions/resources'
+        sitespeed:
+          additionalProperties: false
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            enabled:
+              type: boolean
+            pvc:
+              additionalProperties: false
+              properties:
+                graphite:
+                  type: string
+                results:
+                  type: string
+            retention:
+              type: string
+            schedule:
+              type: string
+        vault:
+          type: object
+          additionalProperties: false
+          properties:
+            enabled:
+              type: boolean
+              default: true
+            seal:
+              description: Use Cloud KMS to encrypt and decrypt the master key
+              properties:
+                kmsKeyId:
+                  title: Key name or key ID
+                  description: Cloud KMS key to encrypt and decrypt the Vault master key.
+                  type: string
+                  nullable: true
+            logLevel:
+              $ref: '#/definitions/logLevel'
+        weave-scope:
+          properties:
+            _rawValues:
+              $ref: '#/definitions/rawValues'
+            enabled:
+              type: boolean
+              default: false
+    customer:
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+    google:
+      description: Google specific configuration.
+      properties:
+        cloudDnsKey:
+          description: A service account key for managing a DNS zone.
+          type: string
+        kmsAccount:
+          description: A service account key for managing a KMS vault.
+          type: string
+        projectId:
+          description: A Google Cloud project ID for accessing DNS zone.
+          type: string
+      required:
+        - cloudDnsKey
+        - projectId
+    home:
+      $ref: '#/definitions/alerts'
+    oidc:
+      additionalProperties: false
+      description: 'Holds many parts used in different locations. Please see keycloak, istio and oauth-proxy all consuming parts.'
+      properties:
+        adminGroupID:
+          type: string
+        apiUrl:
+          $ref: '#/definitions/url'
+        authUrl:
+          $ref: '#/definitions/url'
+        clientID:
+          type: string
+        clientSecret:
+          type: string
+        issuer:
+          $ref: '#/definitions/url'
+        scope:
+          type: string
+        teamAdminGroupID:
+          type: string
+        tenantID:
+          type: string
+        tokenUrl:
+          $ref: '#/definitions/url'
+        usernameClaimMapper:
+          type: string
+          description: 'Claim name used by Keycloak to identify incoming users from identity provider'
+        subClaimMapper:
+          type: string
+          description: 'Select OIDC claim to be used as a unique user identifier'
+          default: 'sub'
+    otomi:
+      additionalProperties: false
+      properties:
+        hasCloudLB:
+          default: false
+          description: 'Set this to true when an external LB exists or needs to be started (AWS ALB, Azure AppGW, Google Apigee). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.'
+          type: boolean
+        isHomeMonitored:
+          default: false
+          description: Whether this cluster is home monitored (like when under a Premium SLA). Sends criticals home.
+          type: boolean
+        isManaged:
+          default: true
+          description: Whether masters are managed and not under control. Set this to false when onprem.
+          type: boolean
+        isMultitenant:
+          default: true
+          description: Whether to separate team metrics and logs. Disabling this lets everybody be admin and see everything.
+          type: boolean
+        mode:
+          default: ee
+          description: The otomi-core edition. Either community edition (ce) or enterprise edition (ee).
+          enum:
+            - ce
+            - ee
+          type: string
+        pullSecret:
+          default: ''
+          description: The pullsecret to deploy the Otomi API and Console. Requires an Otomi license.
+          type: string
+        teamPrefix:
+          default: team-
+          description: The prefix to use in URLs for team domains.
+          pattern: '^[a-z]+[-]{1}$'
+          type: string
+        addons:
+          description: Manage addon configuration
+          additionalProperties: false
+          properties:
+            conftest:
+              properties:
+                enabled:
+                  type: boolean
+                  default: true
+                  description: Use this flag to enable conftest for policy validation
+    smtp:
+      additionalProperties: false
+      properties:
+        auth_identity:
+          type: string
+        auth_password:
+          type: string
+        auth_secret:
+          type: string
+        auth_username:
+          type: string
+        from:
+          $ref: '#/definitions/email'
+          description: The "from" address. Defaults to alerts@$clusterDomain.
+        hello:
+          type: string
+        smarthost:
+          $ref: '#/definitions/hostPort'
+          description: 'The smtp host:port combination.'
+      required:
+        - smarthost
