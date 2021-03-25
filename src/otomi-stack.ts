@@ -101,6 +101,10 @@ export default class OtomiStack {
     return this.db.getCollection('settings')
   }
 
+  editSettings(data) {
+    return this.db.db.get('settings[0]').assign(data).write()
+  }
+
   getTeams() {
     return this.db.getCollection('teams')
   }
@@ -364,7 +368,7 @@ export default class OtomiStack {
   }
 
   loadSettings() {
-    this.db.db
+    return this.db.db
       .get('settings')
       .push(this.loadConfig('./env/settings.yaml', `./env/secrets.settings.yaml${this.decryptedFilePostfix}`))
       .write()
