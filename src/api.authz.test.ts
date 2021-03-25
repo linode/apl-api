@@ -14,6 +14,17 @@ describe('Api tests for admin', () => {
     sinon.stub(otomiStack)
     app = await initApp(otomiStack)
   })
+  describe('/settings.ts', () => {
+    it('can GET', (done) => {
+      request(app)
+        .get('/v1/settings')
+        .set('Accept', 'application/json')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .end(done)
+    })
+  })
   it('admin can get all teams', (done) => {
     request(app)
       .get('/v1/teams')

@@ -1,19 +1,12 @@
 import { Operation } from 'express-openapi'
 import OtomiStack from '../otomi-stack'
 import { OpenApiRequest } from '../otomi-models'
+import { map } from 'lodash'
 
 export default function (otomi: OtomiStack) {
   const GET: Operation = [(req: OpenApiRequest, res) => res.status(200).json(otomi.getSettings())]
-  const PATCH: Operation = [
-    (req: OpenApiRequest, res) => {
-      try {
-        res.status(200).json({})
-      } catch (e) {
-        console.error(e)
-        res.status(400).json({})
-      } // Not necessary to try catch
-    },
-  ]
+  const PATCH: Operation = [(req: OpenApiRequest, res) => res.status(200).json({})]
+
   const api = {
     GET,
     PATCH,
