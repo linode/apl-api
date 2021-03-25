@@ -1,9 +1,8 @@
 Settings:
-  type: object
   readOnly: false
   x-acl:
-    admin: []
-    team: []
+    admin: [update-any, read-any]
+    team: [update-any, read-any]
   properties:
     alerts:
       type: string

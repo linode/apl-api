@@ -24,6 +24,16 @@ describe('Api tests for admin', () => {
         .expect('Content-Type', /json/)
         .end(done)
     })
+    it('responds ', (done) => {
+      request(app)
+        .patch('/v1/settings')
+        .send({})
+        .set('Accept', 'application/json')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .end(done)
+    })
   })
   it('admin can get all teams', (done) => {
     request(app)
