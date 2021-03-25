@@ -403,11 +403,11 @@ paths:
 
   /settings:
     get:
-      security: []
       description: Get settings from the `settings.yaml` file.
+      x-aclSchema: Settings
       responses:
         '200':
-          description: The request is successful. If the response is `[]`, no data has been found.
+          description: The request is successful.
           content:
             'application/json':
               schema:
@@ -420,17 +420,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Settings'
+              oneOf:
+                - $ref: '#/components/schemas/Settings'
         description: Settings object that contains updated values
         required: true
       responses:
         <<: *DefaultGetResponses
         '200':
           description: Successfully edited `settings.yaml`
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Settings'
+
 # -------------------------------------------- Servers
 
 servers:

@@ -7,7 +7,7 @@ import getToken from './fixtures/jwt'
 const adminToken = getToken(['team-admin'])
 const teamToken = getToken(['team-team1'])
 
-describe('Api tests for admin', () => {
+describe('Admin API tests', () => {
   let app
   before(async () => {
     const otomiStack = new OtomiStack()
@@ -15,24 +15,52 @@ describe('Api tests for admin', () => {
     app = await initApp(otomiStack)
   })
   describe('/settings.ts', () => {
-    it('is allowed to GET', (done) => {
-      request(app)
-        .get('/v1/settings')
-        .set('Accept', 'application/json')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200)
-        .expect('Content-Type', /json/)
-        .end(done)
+    describe('GET', () => {
+      it('is allowed', (done) => {
+        request(app)
+          .get('/v1/settings')
+          .set('Accept', 'application/json')
+          .set('Authorization', `Bearer ${adminToken}`)
+          .expect(200)
+          .end(done)
+      })
     })
-    it('is allowed to PATCH', (done) => {
-      request(app)
-        .patch('/v1/settings')
-        .send({})
-        .set('Accept', 'application/json')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200)
-        .expect('Content-Type', /json/)
-        .end(done)
+    describe('PATCH', () => {
+      it('is allowed with body that matches the schema', (done) => {
+        request(app)
+          .patch('/v1/settings')
+          .send({
+            alerts: {
+              drone: 'msteams',
+            },
+          })
+          .set('Accept', 'application/json')
+          .set('Authorization', `Bearer ${adminToken}`)
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .end(done)
+      })
+      it('is allowed to PATCH with empty body (empty object is valid JSON Schema 7)', (done) => {
+        request(app)
+          .patch('/v1/settings')
+          .send({})
+          .set('Accept', 'application/json')
+          .set('Authorization', `Bearer ${adminToken}`)
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .end(done)
+      })
+      it(`is NOT allowed to PATCH with keys that don't match settings object`, (done) => {
+        request(app)
+          .patch('/v1/settings')
+          .send({ foo: 'bar' })
+          .set('Accept', 'application/json')
+          .set('Authorization', `Bearer ${adminToken}`)
+          .expect(400)
+          // Something weird going on with the response: https://github.com/visionmedia/supertest/issues/187
+          // .expect('Content-Type', /json/)
+          .end(done)
+      })
     })
   })
   it('admin can get all teams', (done) => {
