@@ -15,7 +15,7 @@ describe('Api tests for admin', () => {
     app = await initApp(otomiStack)
   })
   describe('/settings.ts', () => {
-    it('can GET', (done) => {
+    it('is allowed to GET', (done) => {
       request(app)
         .get('/v1/settings')
         .set('Accept', 'application/json')
@@ -24,7 +24,7 @@ describe('Api tests for admin', () => {
         .expect('Content-Type', /json/)
         .end(done)
     })
-    it('responds ', (done) => {
+    it('is allowed to PATCH', (done) => {
       request(app)
         .patch('/v1/settings')
         .send({})
