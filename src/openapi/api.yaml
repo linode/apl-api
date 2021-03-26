@@ -403,7 +403,7 @@ paths:
 
   /settings:
     get:
-      description: Get settings from the `settings.yaml` file.
+      description: Get settings from the `settings.yaml` and `secret.settings.yaml` file.
       x-aclSchema: Settings
       responses:
         '200':
@@ -411,7 +411,7 @@ paths:
           content:
             'application/json':
               schema:
-                type: object
+                $ref: '#/components/schemas/Settings'
     patch:
       operationId: editSettings
       description: Edits the settings from the `settings.yaml` file
@@ -420,8 +420,7 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-                - $ref: '#/components/schemas/Settings'
+              $ref: '#/components/schemas/Settings'
         description: Settings object that contains updated values
         required: true
       responses:
