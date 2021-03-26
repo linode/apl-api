@@ -7,13 +7,17 @@ import OtomiStack from './otomi-stack'
 import { Repo } from './repo'
 
 describe('Settings', () => {
-  describe('editSettings()', () => {
-    it('should plumb settings', () => {
-      const otomi = new OtomiStack()
-      otomi.repo = new Repo('./test', undefined, undefined, undefined, undefined, undefined)
+  const otomi = new OtomiStack()
+  otomi.repo = new Repo('./test', undefined, undefined, undefined, undefined, undefined)
 
+  describe('getSettings()', () => {
+    it('should equal loadSettings()', () => {
       expect(otomi.loadSettings()).to.deep.equal(otomi.getSettings())
+    })
+  })
 
+  describe('editSettings()', () => {
+    it('should assign a dummy payload', () => {
       const payload = {
         alerts: {
           drone: 'someTeamChat',
