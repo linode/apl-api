@@ -124,7 +124,7 @@
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
     "dev": "ts-node-dev --watch '**/*.yaml' --inspect=4321 --respawn --transpile-only src/app.ts",
-    "dev:NO_AUTHZ": "NO_AUTHZ=true ts-node-dev --watch '**/*.yaml' --inspect=4321 --respawn --transpile-only src/app.ts",
+    "dev:no-authz": "NO_AUTHZ=true npm run dev",
     "dev:docker": "npm install && npm run dev",
     "husky:lint-staged": "lint-staged",
     "husky:pre-commit": "run-p lint husky:lint-staged",

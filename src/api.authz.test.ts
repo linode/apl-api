@@ -14,54 +14,48 @@ describe('Admin API tests', () => {
     sinon.stub(otomiStack)
     app = await initApp(otomiStack)
   })
-  describe('/settings.ts', () => {
-    describe('GET', () => {
-      it('is allowed', (done) => {
-        request(app)
-          .get('/v1/settings')
-          .set('Accept', 'application/json')
-          .set('Authorization', `Bearer ${adminToken}`)
-          .expect(200)
-          .end(done)
+  it('admin can get all settings', (done) => {
+    request(app)
+      .get('/v1/settings')
+      .set('Accept', 'application/json')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200)
+      .end(done)
+  })
+  it('admin can patch with payload that matches the schema', (done) => {
+    request(app)
+      .patch('/v1/settings')
+      .send({
+        alerts: {
+          drone: 'msteams',
+        },
       })
-    })
-    describe('PATCH', () => {
-      it('is allowed with body that matches the schema', (done) => {
-        request(app)
-          .patch('/v1/settings')
-          .send({
-            alerts: {
-              drone: 'msteams',
-            },
-          })
-          .set('Accept', 'application/json')
-          .set('Authorization', `Bearer ${adminToken}`)
-          .expect(200)
-          .expect('Content-Type', /json/)
-          .end(done)
-      })
-      it('is allowed to PATCH with empty body (empty object is valid JSON Schema 7)', (done) => {
-        request(app)
-          .patch('/v1/settings')
-          .send({})
-          .set('Accept', 'application/json')
-          .set('Authorization', `Bearer ${adminToken}`)
-          .expect(200)
-          .expect('Content-Type', /json/)
-          .end(done)
-      })
-      it(`is NOT allowed to PATCH with keys that don't match settings object`, (done) => {
-        request(app)
-          .patch('/v1/settings')
-          .send({ foo: 'bar' })
-          .set('Accept', 'application/json')
-          .set('Authorization', `Bearer ${adminToken}`)
-          .expect(400)
-          // Something weird going on with the response: https://github.com/visionmedia/supertest/issues/187
-          // .expect('Content-Type', /json/)
-          .end(done)
-      })
-    })
+      .set('Accept', 'application/json')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+  it('admin can patch with empty body (empty object is valid JSON Schema 7)', (done) => {
+    request(app)
+      .patch('/v1/settings')
+      .send({})
+      .set('Accept', 'application/json')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+  it(`admin can't patch with keys that don't match settings object`, (done) => {
+    request(app)
+      .patch('/v1/settings')
+      .send({ foo: 'bar' })
+      .set('Accept', 'application/json')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(400)
+      // Something weird going on with the response: https://github.com/visionmedia/supertest/issues/187
+      // .expect('Content-Type', /json/)
+      .end(done)
   })
   it('admin can get all teams', (done) => {
     request(app)
@@ -166,7 +160,8 @@ describe('Admin API tests', () => {
 
   it('team can create its own services', (done) => {
     request(app)
-      .post('/v1/teams/team1/services', {
+      .post('/v1/teams/team1/services')
+      .send({
         name: 'service1',
         clusterId: 'google/dev',
         ksvc: {
@@ -203,7 +198,8 @@ describe('Admin API tests', () => {
 
   it('team can update its own service', (done) => {
     request(app)
-      .put('/v1/teams/team1/services/service1?clusterId=aws/dev', {
+      .put('/v1/teams/team1/services/service1?clusterId=aws/dev')
+      .send({
         name: 'service1',
         clusterId: 'google/dev',
         ksvc: {
@@ -240,7 +236,8 @@ describe('Admin API tests', () => {
   })
   it('team can not update service from other team', (done) => {
     request(app)
-      .put('/v1/teams/team2/services/service1?clusterId=aws/dev', {})
+      .put('/v1/teams/team2/services/service1?clusterId=aws/dev')
+      .send({})
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
       .expect(401)
