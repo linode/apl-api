@@ -53,8 +53,7 @@ describe('Admin API tests', () => {
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(400)
-      // Something weird going on with the response: https://github.com/visionmedia/supertest/issues/187
-      // .expect('Content-Type', /json/)
+      .expect('Content-Type', /text\/html/)
       .end(done)
   })
   it('admin can get all teams', (done) => {
