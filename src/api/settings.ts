@@ -4,7 +4,7 @@ import { OpenApiRequest } from '../otomi-models'
 
 export default function (otomi: OtomiStack) {
   const GET: Operation = [(req: OpenApiRequest, res) => res.status(200).json(otomi.getSettings())]
-  const PATCH: Operation = [
+  const PUT: Operation = [
     (req: OpenApiRequest, res) => {
       otomi.editSettings(req.body)
       res.status(200).json({})
@@ -13,7 +13,7 @@ export default function (otomi: OtomiStack) {
 
   const api = {
     GET,
-    PATCH,
+    PUT,
   }
   return api
 }

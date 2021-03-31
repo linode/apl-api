@@ -5,6 +5,25 @@ interface ResourceBase {
   name: string
 }
 
+export function getKeys(obj) {
+  const keys = []
+
+  const walk = (o, parent = null) => {
+    for (const k in o) {
+      const current = parent ? parent + '.' + k : k
+      keys.push(current)
+
+      // This checks if the current value is an Object
+      if (Object.prototype.toString.call(o[k]) === '[object Object]') {
+        walk(o[k], current)
+      }
+    }
+  }
+
+  walk(obj)
+
+  return keys
+}
 export function setSignalHandlers(server) {
   process.on('SIGTERM', () => {
     console.log('Received SIGTERM signal. \nFinishing all requests')

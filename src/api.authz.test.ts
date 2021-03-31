@@ -22,9 +22,9 @@ describe('Admin API tests', () => {
       .expect(200)
       .end(done)
   })
-  it('admin can patch with payload that matches the schema', (done) => {
+  it('admin can put with payload that matches the schema', (done) => {
     request(app)
-      .patch('/v1/settings')
+      .put('/v1/settings')
       .send({
         alerts: {
           drone: 'msteams',
@@ -36,9 +36,9 @@ describe('Admin API tests', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('admin can patch with empty body (empty object is valid JSON Schema 7)', (done) => {
+  it('admin can put with empty body (empty object is valid JSON Schema 7)', (done) => {
     request(app)
-      .patch('/v1/settings')
+      .put('/v1/settings')
       .send({})
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${adminToken}`)
@@ -46,9 +46,9 @@ describe('Admin API tests', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it(`admin can't patch with keys that don't match settings object`, (done) => {
+  it(`admin can't put with keys that don't match settings object`, (done) => {
     request(app)
-      .patch('/v1/settings')
+      .put('/v1/settings')
       .send({ foo: 'bar' })
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${adminToken}`)

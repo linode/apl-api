@@ -1,20 +1,18 @@
 import * as k8s from '@kubernetes/client-node'
 import fs from 'fs'
 import yaml from 'js-yaml'
-import { findIndex } from 'lodash'
-import cloneDeep from 'lodash/cloneDeep'
-import merge from 'lodash/merge'
-import filter from 'lodash/filter'
-import forIn from 'lodash/forIn'
-import get from 'lodash/get'
-import isEmpty from 'lodash/isEmpty'
-import omit from 'lodash/omit'
-import set from 'lodash/set'
-import unset from 'lodash/unset'
+import { cloneDeep, findIndex, merge, filter, forIn, get, isEmpty, omit, set, unset } from 'lodash'
 import generatePassword from 'password-generator'
 import db, { Db } from './db'
 import { AlreadyExists, NotExistError, PublicUrlExists } from './error'
-import { arrayToObject, getPublicUrl, getTeamSecretsFilePath, getTeamSecretsJsonPath, objectToArray } from './utils'
+import {
+  arrayToObject,
+  getKeys,
+  getPublicUrl,
+  getTeamSecretsFilePath,
+  getTeamSecretsJsonPath,
+  objectToArray,
+} from './utils'
 import cloneRepo, { Repo } from './repo'
 import {
   cleanEnv,
@@ -45,22 +43,6 @@ const env = cleanEnv({
   USE_SOPS,
 })
 
-function saveConfig(repo: Repo, dataPath: string, secretDataPath: string, config, objectPathsForSecrets: string[]) {
-  const secretData = {}
-  const plainData = cloneDeep(config)
-
-  objectPathsForSecrets.forEach((objectPath) => {
-    const val = get(config, objectPath)
-    if (val) {
-      set(secretData, objectPath, val)
-      unset(plainData, objectPath)
-    }
-  })
-
-  repo.writeFile(secretDataPath, secretData)
-  repo.writeFile(dataPath, plainData)
-}
-
 export default class OtomiStack {
   clustersPath: string
 
@@ -70,6 +52,7 @@ export default class OtomiStack {
 
   repo: Repo
   decryptedFilePostfix: string
+  secretData: object
 
   constructor() {
     this.db = db(env.DB_PATH)
@@ -364,7 +347,24 @@ export default class OtomiStack {
   loadConfig(dataPath, secretDataPath): any {
     const data = this.repo.readFile(dataPath)
     const secretData = this.repo.readFile(secretDataPath)
+    this.secretData = merge(this.secretData, secretData)
     return merge(data, secretData)
+  }
+
+  saveConfig(dataPath: string, secretDataPath: string, config, objectPathsForSecrets: string[]) {
+    const secretData = {}
+    const plainData = cloneDeep(config)
+
+    objectPathsForSecrets.forEach((objectPath) => {
+      const val = get(config, objectPath)
+      if (val) {
+        set(secretData, objectPath, val)
+        unset(plainData, objectPath)
+      }
+    })
+
+    this.repo.writeFile(secretDataPath, secretData)
+    this.repo.writeFile(dataPath, plainData)
   }
 
   loadSettings() {
@@ -426,7 +426,14 @@ export default class OtomiStack {
   }
 
   saveSettings() {
-    this.repo.writeFile(`./env/secrets.settings.yaml${this.decryptedFilePostfix}`, this.db.getCollection('settings')[0])
+    const settings = this.db.getCollection('settings')[0]
+    const secretPaths = getKeys(this.secretData)
+    this.saveConfig(
+      './env/settings.yaml',
+      `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
+      settings,
+      secretPaths,
+    )
   }
 
   saveTeams() {
@@ -441,7 +448,7 @@ export default class OtomiStack {
       'alerts.email',
       'alerts.msteams',
     ]
-    const objectPaths = []
+    const secretPaths = []
     const teams = this.getTeams()
     teams.forEach((team) => {
       team.clusters.forEach((clusterId) => {
@@ -452,14 +459,14 @@ export default class OtomiStack {
       teamValues[team.id] = omit(team, 'name')
 
       secretPropertyPaths.forEach((propertyPath) => {
-        objectPaths.push(`teamConfig.teams.${team.id}.${propertyPath}`)
+        secretPaths.push(`teamConfig.teams.${team.id}.${propertyPath}`)
       })
     })
 
     const values = {}
     set(values, 'teamConfig.teams', teamValues)
 
-    saveConfig(this.repo, filePath, secretFilePath, values, objectPaths)
+    this.saveConfig(filePath, secretFilePath, values, secretPaths)
   }
 
   saveTeamSecrets(teamId: string, clusterId: string) {

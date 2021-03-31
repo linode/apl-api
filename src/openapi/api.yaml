@@ -412,7 +412,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Settings'
-    patch:
+    put:
       operationId: editSettings
       description: Edits the settings from the `settings.yaml` file
       x-aclSchema: Settings
