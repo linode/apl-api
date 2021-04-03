@@ -1,46 +1,12 @@
 import cleanDeep, { CleanOptions } from 'clean-deep'
 import cloneDeep from 'lodash/cloneDeep'
+import { Cluster } from './otomi-models'
 
 interface ResourceBase {
   name: string
 }
 
-export function getKeys(obj) {
-  const keys = []
-
-  const walk = (o, parent = null) => {
-    for (const k in o) {
-      const current = parent ? parent + '.' + k : k
-      keys.push(current)
-
-      // This checks if the current value is an Object
-      if (Object.prototype.toString.call(o[k]) === '[object Object]') {
-        walk(o[k], current)
-      }
-    }
-  }
-
-  walk(obj)
-
-  return keys
-}
-export function setSignalHandlers(server) {
-  process.on('SIGTERM', () => {
-    console.log('Received SIGTERM signal. \nFinishing all requests')
-    server.close(() => {
-      console.log('Finished all requests.')
-    })
-  })
-
-  process.on('SIGINT', () => {
-    console.log('Received SIGINT signal \nFinishing all requests')
-    server.close(() => {
-      console.log('Finished all requests')
-    })
-  })
-}
-
-export function arrayToObject(array: [], keyName: string, keyValue: string) {
+export function arrayToObject(array: [], keyName: string, keyValue: string): object {
   const obj = {}
   array.forEach((item) => {
     const cloneItem = cloneDeep(item)
@@ -55,7 +21,7 @@ export function arrayToObject(array: [], keyName: string, keyValue: string) {
   return obj
 }
 
-export function objectToArray(obj, keyName, keyValue) {
+export function objectToArray(obj: object, keyName: string, keyValue: string): Array<object> {
   const arr = Object.keys(obj).map((key) => {
     const tmp = {}
     tmp[keyName] = key
@@ -65,26 +31,24 @@ export function objectToArray(obj, keyName, keyValue) {
   return arr
 }
 
-export function getObjectPaths(tree) {
-  const leaves = []
-  const walk = function (obj, path) {
-    path = path || ''
-
-    for (const n in obj) {
+export function getObjectPaths(tree: object): Array<string> {
+  const leaves: string[] = []
+  function walk(obj, path = ''): void {
+    Object.keys(obj).forEach((n) => {
       // eslint-disable-next-line no-prototype-builtins
       if (obj.hasOwnProperty(n)) {
         if (obj instanceof Array) {
-          if (typeof obj[n] !== 'object') leaves.push(path + '[' + n + ']')
-          else walk(obj[n], path + '[' + n + ']')
+          if (typeof obj[n] !== 'object') leaves.push(`${path}[${n}]`)
+          else walk(obj[n], `${path}[${n}]`)
         } else if (typeof obj[n] === 'object') {
-          walk(obj[n], path + '.' + n)
+          walk(obj[n], `${path}.${n}`)
         } else {
-          leaves.push(path + '.' + n)
+          leaves.push(`${path}.${n}`)
         }
       } else {
         console.error(`No property: ${n}`)
       }
-    }
+    })
   }
   walk(tree, '')
 
@@ -94,16 +58,26 @@ export function getObjectPaths(tree) {
   return rawLeaves
 }
 
-export function getPublicUrl(serviceDomain, serviceName, teamId, cluster) {
+interface PublicUrl {
+  subdomain: string
+  domain: string
+}
+
+export function getPublicUrl(
+  serviceDomain?: string,
+  serviceName?: string,
+  teamId?: string,
+  cluster?: Cluster,
+): PublicUrl {
   if (!serviceDomain) {
     // Fallback mechanism for exposed service that does not have its public url specified in values
     return {
-      subdomain: `${serviceName}.team-${teamId}.${cluster.name}`,
-      domain: cluster.dnsZones[0],
+      subdomain: `${serviceName}.team-${teamId}.${cluster!.name}`,
+      domain: cluster?.dnsZones?.length ? cluster.dnsZones[0] : '',
     }
   }
 
-  const dnsZones = [...cluster.dnsZones]
+  const dnsZones = [...(cluster!.dnsZones || [])]
   // Sort by length descending
   dnsZones.sort((a, b) => b.length - a.length)
   for (let i = 0; i < dnsZones.length; i += 1) {
@@ -117,7 +91,7 @@ export function getPublicUrl(serviceDomain, serviceName, teamId, cluster) {
   return { subdomain: '', domain: serviceDomain }
 }
 
-export function removeBlankAttributes(obj) {
+export function removeBlankAttributes(obj: object): object {
   const options: CleanOptions = {
     emptyArrays: true,
     emptyObjects: true,
@@ -127,10 +101,10 @@ export function removeBlankAttributes(obj) {
   return cleanDeep(obj, options)
 }
 
-export function getTeamSecretsFilePath(teamId: string, clusterId: string) {
+export function getTeamSecretsFilePath(teamId: string, clusterId: string): string {
   return `./env/clouds/${clusterId}/external-secrets.${teamId}.yaml`
 }
 
-export function getTeamSecretsJsonPath(teamId: string) {
+export function getTeamSecretsJsonPath(teamId: string): string {
   return `teamConfig.teams.${teamId}.externalSecrets`
 }

@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 export class NotExistError extends Error {}
 export class AlreadyExists extends Error {}
 export class GitError extends Error {}

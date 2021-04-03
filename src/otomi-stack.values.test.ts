@@ -1,7 +1,7 @@
 import { expect } from 'chai'
+import { merge } from 'lodash'
 import OtomiStack from './otomi-stack'
 import { Repo } from './repo'
-import { merge } from 'lodash'
 import expectedDbState from './fixtures/values'
 import secretSettings from './fixtures/secret-settings'
 
@@ -15,18 +15,19 @@ describe('Work with values', () => {
   it('can load from configuration to database', () => {
     otomiStack.loadValues()
     const dbState = otomiStack.db.db.getState()
-    expectedDbState.settings[0] = merge(expectedDbState.settings[0], secretSettings)
+    expectedDbState.settings = merge(expectedDbState.settings, secretSettings)
     expect(dbState).to.deep.equal(expectedDbState)
   })
   it('can save database state to configuration files', () => {
     const results = {}
-    function writeFileStub(path, data) {
+    function writeFileStub(path, data): void {
       results[path] = data
     }
     otomiStack.db.db.setState(expectedDbState)
     otomiStack.secretData = secretSettings
     otomiStack.repo.writeFile = writeFileStub
     otomiStack.saveValues()
+    // eslint-disable-next-line no-restricted-syntax
     for (const [path, data] of Object.entries(results)) {
       const expectedData = otomiStack.repo.readFile(path)
       expect(data, path).to.have.any.keys(expectedData)

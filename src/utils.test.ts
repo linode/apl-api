@@ -3,13 +3,13 @@ import { getObjectPaths, getPublicUrl, getTeamSecretsFilePath, getTeamSecretsJso
 
 describe('Utils', () => {
   it('should retrieve host part from service domain', (done) => {
-    const x = getPublicUrl('aa.bb.cc.dd.ee', null, null, { dnsZones: ['dd.ee'] })
+    const x = getPublicUrl('aa.bb.cc.dd.ee', undefined, undefined, { dnsZones: ['dd.ee'] })
     expect(x.subdomain).to.equal('aa.bb.cc')
     done()
   })
 
   it('should retrieve only domain', (done) => {
-    const x = getPublicUrl('my.custom.domain', null, null, { dnsZones: ['dd.ee'] })
+    const x = getPublicUrl('my.custom.domain', undefined, undefined, { dnsZones: ['dd.ee'] })
     expect(x.subdomain).to.be.empty
     expect(x.domain).to.equal('my.custom.domain')
     done()

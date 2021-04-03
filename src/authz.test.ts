@@ -1,8 +1,8 @@
 import { expect } from 'chai'
 import Authz from './authz'
-import { OpenApi, SessionRole, SessionUser } from './otomi-models'
+import { OpenAPIDoc, SessionRole, User } from './otomi-models'
 
-const sessionTeam: SessionUser = {
+const sessionTeam: User = {
   isAdmin: false,
   roles: [SessionRole.User],
   name: 'joe',
@@ -10,10 +10,10 @@ const sessionTeam: SessionUser = {
   teams: ['mercury'],
 }
 
-const sessionAdmin: SessionUser = { ...sessionTeam, roles: [SessionRole.Admin] }
+const sessionAdmin: User = { ...sessionTeam, roles: [SessionRole.Admin] }
 
 describe('Schema wise permissions', () => {
-  const spec: OpenApi = {
+  const spec: OpenAPIDoc = {
     components: {
       schemas: {
         Service: {
@@ -60,7 +60,7 @@ describe('Schema wise permissions', () => {
 })
 
 describe('Ownership wise resource permissions', () => {
-  const spec: OpenApi = {
+  const spec: OpenAPIDoc = {
     components: {
       schemas: {
         Service: {
@@ -79,6 +79,8 @@ describe('Ownership wise resource permissions', () => {
         },
       },
     },
+    paths: {},
+    security: [],
   }
 
   it('A team cannot update service from another team', () => {
@@ -100,10 +102,11 @@ describe('Ownership wise resource permissions', () => {
 })
 
 describe('Schema collection wise permissions', () => {
-  const spec: OpenApi = {
+  const spec: OpenAPIDoc = {
     components: {
       schemas: {
         Services: {
+          properties: {},
           type: 'array',
           'x-acl': {
             admin: ['read-any'],
@@ -115,27 +118,29 @@ describe('Schema collection wise permissions', () => {
         },
       },
     },
+    paths: {},
+    security: [],
   }
 
   it('An admin can only get collection of services', () => {
     const authz = new Authz(spec)
-    expect(authz.isUserAuthorized('create', 'Services', sessionAdmin, 'mercury', null)).to.be.false
-    expect(authz.isUserAuthorized('delete', 'Services', sessionAdmin, 'mercury', null)).to.be.false
-    expect(authz.isUserAuthorized('read', 'Services', sessionAdmin, 'mercury', null)).to.be.true
-    expect(authz.isUserAuthorized('update', 'Services', sessionAdmin, 'mercury', null)).to.be.false
+    expect(authz.isUserAuthorized('create', 'Services', sessionAdmin, 'mercury')).to.be.false
+    expect(authz.isUserAuthorized('delete', 'Services', sessionAdmin, 'mercury')).to.be.false
+    expect(authz.isUserAuthorized('read', 'Services', sessionAdmin, 'mercury')).to.be.true
+    expect(authz.isUserAuthorized('update', 'Services', sessionAdmin, 'mercury')).to.be.false
   })
 
   it('A team can only get collection of services', () => {
     const authz = new Authz(spec)
-    expect(authz.isUserAuthorized('create', 'Services', sessionTeam, 'mercury', null)).to.be.false
-    expect(authz.isUserAuthorized('delete', 'Services', sessionTeam, 'mercury', null)).to.be.false
-    expect(authz.isUserAuthorized('read', 'Services', sessionTeam, 'mercury', null)).to.be.true
-    expect(authz.isUserAuthorized('update', 'Services', sessionTeam, 'mercury', null)).to.be.false
+    expect(authz.isUserAuthorized('create', 'Services', sessionTeam, 'mercury')).to.be.false
+    expect(authz.isUserAuthorized('delete', 'Services', sessionTeam, 'mercury')).to.be.false
+    expect(authz.isUserAuthorized('read', 'Services', sessionTeam, 'mercury')).to.be.true
+    expect(authz.isUserAuthorized('update', 'Services', sessionTeam, 'mercury')).to.be.false
   })
 })
 
 describe('Property wise permissions', () => {
-  const spec: OpenApi = {
+  const spec: OpenAPIDoc = {
     components: {
       schemas: {
         Service: {
@@ -157,6 +162,8 @@ describe('Property wise permissions', () => {
         },
       },
     },
+    paths: {},
+    security: [],
   }
 
   const data1 = {

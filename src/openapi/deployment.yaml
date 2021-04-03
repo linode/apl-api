@@ -3,7 +3,6 @@ Deployment:
   x-acl:
     admin: [read-any]
     team: [read-any]
-  type: object
   properties:
     id:
       type: integer

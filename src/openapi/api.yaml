@@ -45,13 +45,6 @@ x-get-responses: &DefaultGetResponses
 
 # -------------------------------------------- Paths
 paths:
-  /readiness:
-    get:
-      security: []
-      description: Check readiness
-      responses:
-        '200':
-          description: Service is ready
   /clusters:
     get:
       operationId: getClusters
@@ -390,7 +383,7 @@ paths:
   /apiDocs:
     get:
       security: []
-      description: Get OpenApi document
+      description: Get OpenAPIDoc document
       responses:
         '200':
           description: The requested apiDoc.
@@ -469,8 +462,8 @@ components:
       in: header
 
   schemas:
-    Teams:
-      $ref: 'teams.yaml#/Teams'
+    Cloud:
+      $ref: 'cloud.yaml#/Cloud'
 
     Cluster:
       $ref: 'cluster.yaml#/Cluster'
@@ -483,6 +476,12 @@ components:
 
     Kubecfg:
       $ref: 'kubecfg.yaml#/Kubecfg'
+
+    OpenApiValidationError:
+      $ref: 'error.yaml#/OpenApiValidationError'
+
+    OtomiStackError:
+      $ref: 'error.yaml#/OtomiStackError'
 
     Secret:
       $ref: 'secret.yaml#/Secret'
@@ -505,11 +504,8 @@ components:
     Team:
       $ref: 'team.yaml#/Team'
 
+    Teams:
+      $ref: 'teams.yaml#/Teams'
+
     User:
       $ref: 'user.yaml#/User'
-
-    OpenApiValidationError:
-      $ref: 'error.yaml#/OpenApiValidationError'
-
-    OtomiStackError:
-      $ref: 'error.yaml#/OtomiStackError'

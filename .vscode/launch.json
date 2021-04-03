@@ -4,11 +4,31 @@
     {
       "type": "node",
       "request": "attach",
-      "name": "Debug 'npm run dev'",
+      "name": "Attach to current script",
       "protocol": "inspector",
       "port": 4321,
       "restart": true,
       "cwd": "${workspaceRoot}"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug npm run dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run-script", "dev"],
+      "cwd": "${workspaceRoot}",
+
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug npm run dev:no-authz",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run-script", "dev:no-authz"],
+      "cwd": "${workspaceRoot}",
+
+      "console": "integratedTerminal"
     },
     {
       "type": "pwa-node",
@@ -45,16 +65,6 @@
       },
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Debug Keycloak Tasks",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run-script", "tasks:keycloak-dev"],
-      "cwd": "${workspaceRoot}",
-
-      "console": "integratedTerminal"
     }
   ]
 }

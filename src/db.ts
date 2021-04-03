@@ -1,22 +1,33 @@
-import lowdb from 'lowdb'
+/* eslint-disable @typescript-eslint/ban-ts-ignore */
+import low from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
 import Memory from 'lowdb/adapters/Memory'
 import findIndex from 'lodash/findIndex'
 import { v4 as uuidv4 } from 'uuid'
 import cloneDeep from 'lodash/cloneDeep'
 import { AlreadyExists, NotExistError } from './error'
+import { Cloud, Cluster, Secret, Service, Settings, Team } from './otomi-models'
 
-export class Db {
-  // db: LowdbSync<any>
-  // db: lowdb.LowdbSync<any>
-  db
+export type DbType = any // Cluster | Secret | Service | Team
+export type Schema = {
+  clouds: Cloud[]
+  clusters: Cluster[]
+  secrets: Secret[]
+  services: Service[]
+  settings: Settings
+  teams: Team[]
+}
+
+export default class Db {
+  db: low.LowdbSync<any>
 
   dirty: boolean
 
   dirtyActive: boolean
 
-  constructor(path = undefined) {
-    this.db = lowdb(path === undefined ? new Memory('') : new FileSync(path))
+  constructor(path?: string) {
+    // @ts-ignore
+    this.db = low(path === undefined ? new Memory<Schema>('') : new FileSync<Schema>(path))
     this.db._.mixin({
       replaceRecord(arr, currentObject, newObject) {
         return arr.splice(findIndex(arr, currentObject), 1, newObject)
@@ -30,72 +41,81 @@ export class Db {
         clouds: [],
         clusters: [],
         secrets: [],
-        settings: [],
+        settings: {},
       })
       .write()
     this.dirty = false
     this.dirtyActive = false
   }
 
-  getItem(name, selectors) {
+  getItem(name: string, selector: object): DbType {
     // By default data is returned by reference, this means that modifications to returned objects may change the database.
     // To avoid such behavior, we use .cloneDeep().
-    const data = this.getItemReference(name, selectors)
+    const data = this.getItemReference(name, selector)
     return cloneDeep(data)
   }
 
-  getItemReference(type, selectors) {
-    const data = this.db.get(type).find(selectors).value()
+  getItemReference(type: string, selector: object): DbType {
+    const coll = this.db.get(type)
+    // @ts-ignore
+    const data = coll.find(selector).value()
+    if (data.length) {
+      throw new NotExistError(`More than one item found for '${type}' with selector: ${JSON.stringify(selector)}`)
+    }
     if (data === undefined) {
-      throw new NotExistError(`Selector props do not exist in '${type}' collection: ${JSON.stringify(selectors)}`)
+      throw new NotExistError(`Selector props do not exist in '${type}': ${JSON.stringify(selector)}`)
     }
     return data
   }
 
-  getCollection(type: string, selectors?: object) {
-    return this.db.get(type).filter(selectors).value()
+  getCollection(type: string, selector?: object): Array<DbType> {
+    // @ts-ignore
+    return this.db.get(type).filter(selector).value()
   }
 
-  populateItem(type, data, selector = undefined, id: string = undefined) {
+  populateItem(type: string, data: DbType, selector?: object, id?: string): Array<DbType> {
+    // @ts-ignore
     if (selector && this.db.get(type).find(selector).value()) return undefined
-    return this.db
-      .get(type)
-      .push(data)
-      .last()
-      .assign({ id: id || uuidv4() })
-      .write()
+    return (
+      this.db
+        .get(type)
+        // @ts-ignore
+        .push(data)
+        .last()
+        .assign({ id: id || uuidv4() })
+        .write()
+    )
   }
 
-  createItem(type, data, selector = undefined, id: string = undefined) {
+  createItem(type: string, data: string | object, selector?: object, id?: string): DbType {
+    // @ts-ignore
     if (selector && this.db.get(type).find(selector).value())
       throw new AlreadyExists(`Item already exists in '${type}' collection: ${JSON.stringify(selector)}`)
     const ret = this.populateItem(type, data, selector, id)
     this.dirty = this.dirtyActive
-    return ret
+    return ret as DbType
   }
 
-  deleteItem(type, selectors) {
-    this.getItemReference(type, selectors)
-    this.db.get(type).remove(selectors).write()
+  deleteItem(type: string, selector: object): void {
+    this.getItemReference(type, selector)
+    // @ts-ignore
+    this.db.get(type).remove(selector).write()
     this.dirty = this.dirtyActive
   }
 
-  updateItem(type, data, selectors) {
-    this.getItemReference(type, selectors)
-    const ret = this.db.get(type).find(selectors).assign(data).write()
+  updateItem(type: string, data: DbType, selector: object): DbType {
+    this.getItemReference(type, selector)
+    // @ts-ignore
+    const ret = this.db.get(type).find(selector).assign(data).write()
     this.dirty = this.dirtyActive
     return ret
   }
 
-  setDirtyActive(active = true) {
+  setDirtyActive(active = true): void {
     this.dirtyActive = active
   }
 
-  isDirty() {
+  isDirty(): boolean {
     return !!this.dirty
   }
-}
-
-export default function db(path) {
-  return new Db(path)
 }

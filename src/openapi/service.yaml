@@ -25,7 +25,6 @@ x-annotations: &K8sAnnotation
   description: Kubernetes annotations with arbitrary metadata
   type: array
   items:
-    type: object
     properties:
       name:
         <<: *k8sAnnotationField
@@ -88,7 +87,6 @@ Service:
   x-acl:
     admin: [delete-any, read-any, create-any, update-any]
     team: [delete, read, create, update]
-  type: object
   properties:
     enabled:
       type: boolean
@@ -116,7 +114,6 @@ Service:
       maximum: 65535
     ksvc:
       title: Type
-      type: object
       oneOf:
         - title: Knative service
           nullable: true
@@ -132,7 +129,6 @@ Service:
               default: false
             image:
               title: Container image
-              type: object
               nullable: true
               properties:
                 repository:
@@ -144,7 +140,6 @@ Service:
               title: Secrets
               nullable: true
               items:
-                type: object
                 properties:
                   name:
                     type: string
@@ -165,7 +160,6 @@ Service:
               type: array
               nullable: true
               items:
-                type: object
                 properties:
                   name:
                     <<: *envField
@@ -178,11 +172,9 @@ Service:
             resources:
               title: Pod resources
               # description: Compute resources for containers
-              type: object
               nullable: true
               properties:
                 requests:
-                  type: object
                   properties:
                     cpu:
                       description: The guaranteed amount of CPU
@@ -196,7 +188,6 @@ Service:
                     - cpu
                     - memory
                 limits:
-                  type: object
                   properties:
                     cpu:
                       description: The maximum amount of CPU
@@ -215,7 +206,6 @@ Service:
             autoCD:
               title: Continuous delivery
               description: Deploys new images based on a tagging strategy
-              type: object
               oneOf:
                 - title: 'Off'
                   nullable: true
@@ -247,8 +237,8 @@ Service:
                     glob:
                       title: Glob string pattern
                       type: string
-                      description: 'Use this filter if you want to make glob-style patterns. E.g.: "master-v1.3.*"'
-                      example: 'master-v1.3.*'
+                      description: 'Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*"'
+                      example: 'main-v1.3.*'
                   required:
                     - glob
                   additionalProperties: false
@@ -270,7 +260,6 @@ Service:
             - serviceType
     ingress:
       title: Exposure
-      type: object
       x-acl:
         team: [read]
       oneOf:
@@ -287,3 +276,4 @@ Service:
   required:
     - name
     - clusterId
+    - teamId

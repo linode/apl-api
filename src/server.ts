@@ -1,44 +1,47 @@
-import express from 'express'
+/* eslint-disable @typescript-eslint/ban-ts-ignore */
+import express, { Express } from 'express'
+import { SecurityHandlers } from 'openapi-security-handler'
 import { initialize } from 'express-openapi'
-import bodyParser from 'body-parser'
+import { json } from 'body-parser'
 import path from 'path'
-import $RefParser from '@apidevtools/json-schema-ref-parser'
+import { bundle } from '@apidevtools/json-schema-ref-parser'
 import cors from 'cors'
 import logger from 'morgan'
 import swaggerUi from 'swagger-ui-express'
 import get from 'lodash/get'
 import { errorMiddleware, jwtMiddleware, isUserAuthorized, getCrudOperation } from './middleware'
 import Authz from './authz'
-import { OpenApiRequestExt } from './otomi-models'
+import { OpenAPIDoc, OpenApiRequestExt } from './otomi-models'
+import OtomiStack from './otomi-stack'
 
-export async function loadOpenApisSpec() {
+export async function loadOpenApisSpec(): Promise<OpenAPIDoc> {
   const openApiPath = path.resolve(__dirname, 'openapi/api.yaml')
   console.info(`Loading api spec from: ${openApiPath}`)
-  const schema = await $RefParser.bundle(openApiPath)
-  return schema
+  const schema = await bundle(openApiPath)
+  return schema as OpenAPIDoc
 }
 
-export default async function initApp(otomiStack) {
+export default async function initApp(otomiStack: OtomiStack): Promise<express.Express> {
   const app = express()
   const apiRoutesPath = path.resolve(__dirname, 'api')
-  const spec: any = await loadOpenApisSpec()
+  const spec: OpenAPIDoc = await loadOpenApisSpec()
   const authz = new Authz(spec)
 
   app.use(logger('dev'))
   app.use(cors())
-  app.use(bodyParser.json())
+  app.use(json())
   app.use(jwtMiddleware())
 
-  function getSecurityHandlers() {
+  function getSecurityHandlers(): SecurityHandlers {
     const securityHandlers = {
-      groupAuthz: (req) => {
+      groupAuthz: (req): boolean => {
         return isUserAuthorized(req, authz)
       },
     }
     return securityHandlers
   }
 
-  function stripNotAllowedAttributes(req: OpenApiRequestExt, res, next) {
+  function stripNotAllowedAttributes(req: OpenApiRequestExt, res, next): void {
     if (req.operationDoc.security === undefined || req.operationDoc.security.length === 0) {
       next()
       return
@@ -54,6 +57,7 @@ export default async function initApp(otomiStack) {
   initialize({
     apiDoc: {
       ...spec,
+      // @ts-ignore
       'x-express-openapi-additional-middleware': [stripNotAllowedAttributes],
     },
     app,
@@ -64,8 +68,8 @@ export default async function initApp(otomiStack) {
     paths: apiRoutesPath,
     errorMiddleware,
     securityHandlers: getSecurityHandlers(),
-    routesGlob: '**/*.{ts,js}',
-    routesIndexFileRegExp: /(?:index)?\.[tj]s$/,
+    routesGlob: '**/*.ts',
+    routesIndexFileRegExp: /(?:index)?\.ts$/,
   })
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(spec))

@@ -6,7 +6,7 @@ export const CLUSTER_NAME = str({ desc: 'The cluster name', default: 'dev' })
 export const CORE_VERSION = str({ desc: 'The otomi-core version', default: 'x.x.x' })
 export const DB_PATH = str({ desc: 'The file path to the db. If not given in-memory db is used.', default: undefined })
 export const DISABLE_SYNC = bool({ desc: 'Whether to disable pushing to the repo', default: false })
-export const GIT_BRANCH = str({ desc: 'The git repo branch', default: 'master' })
+export const GIT_BRANCH = str({ desc: 'The git repo branch', default: 'main' })
 export const GIT_EMAIL = str({ desc: 'The git user email' })
 export const GIT_LOCAL_PATH = str({ desc: 'The local file path to the repo', default: '/tmp/otomi-values' })
 export const GIT_PASSWORD = str({ desc: 'The git password' })
@@ -16,7 +16,7 @@ export const OIDC_ENDPOINT = str()
 export const REGION = str({ desc: 'The cloud region' })
 export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '127.0.0.1' })
 export const USE_SOPS = bool({ desc: 'Whether to use encryption', default: true })
-const env = process.env
+const { env } = process
 export function cleanEnv<T>(
   validators: { [K in keyof T]: ValidatorSpec<T[K]> },
   options: StrictCleanOptions = { strict: true },

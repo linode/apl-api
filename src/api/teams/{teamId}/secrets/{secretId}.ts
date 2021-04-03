@@ -1,27 +1,27 @@
-import { Operation } from 'express-openapi'
+import { Operation, OperationHandlerArray } from 'express-openapi'
 import OtomiStack from '../../../../otomi-stack'
 import { OpenApiRequest } from '../../../../otomi-models'
 
-export default function (otomi: OtomiStack) {
+export default function (otomi: OtomiStack): OperationHandlerArray {
   const DELETE: Operation = [
-    ({ params: { secretId } }: OpenApiRequest, res) => {
+    ({ params: { secretId } }: OpenApiRequest, res): void => {
       console.debug(`Delete secret: ${JSON.stringify({ secretId })}`)
       otomi.deleteSecret(decodeURIComponent(secretId))
-      res.status(200).json({})
+      res.json({})
     },
   ]
   const GET: Operation = [
-    ({ params: { secretId } }: OpenApiRequest, res) => {
+    ({ params: { secretId } }: OpenApiRequest, res): void => {
       console.debug(`Get secret: ${JSON.stringify({ secretId })}`)
       const data = otomi.getSecret(decodeURIComponent(secretId))
-      res.status(200).json(data)
+      res.json(data)
     },
   ]
   const PUT: Operation = [
-    ({ params: { secretId }, body }: OpenApiRequest, res) => {
+    ({ params: { secretId }, body }: OpenApiRequest, res): void => {
       console.debug(`Modify secret: ${JSON.stringify({ secretId })}`)
       const data = otomi.editSecret(decodeURIComponent(secretId), body)
-      res.status(200).json(data)
+      res.json(data)
     },
   ]
   const api = {

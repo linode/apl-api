@@ -1,13 +1,13 @@
-import { Operation } from 'express-openapi'
+import { Operation, OperationHandlerArray } from 'express-openapi'
 import OtomiStack from '../otomi-stack'
 import { OpenApiRequest } from '../otomi-models'
 
-export default function (otomi: OtomiStack) {
-  const GET: Operation = [(req: OpenApiRequest, res) => res.status(200).json(otomi.getSettings())]
+export default function (otomi: OtomiStack): OperationHandlerArray {
+  const GET: Operation = [(req: OpenApiRequest, res): object => res.json(otomi.getSettings())]
   const PUT: Operation = [
-    (req: OpenApiRequest, res) => {
+    (req: OpenApiRequest, res): void => {
       otomi.editSettings(req.body)
-      res.status(200).json({})
+      res.json({})
     },
   ]
 

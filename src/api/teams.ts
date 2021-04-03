@@ -1,18 +1,17 @@
-import { Operation } from 'express-openapi'
+import { Operation, OperationHandlerArray } from 'express-openapi'
 import OtomiStack from '../otomi-stack'
 
-export default function (otomi: OtomiStack) {
+export default function (otomi: OtomiStack): OperationHandlerArray {
   const GET: Operation = [
-    (req, res) => {
+    (req, res): void => {
       const data = otomi.getTeams()
-
-      res.status(200).json(data)
+      res.json(data)
     },
   ]
   const POST: Operation = [
-    ({ body }, res) => {
+    ({ body }, res): void => {
       const data = otomi.createTeam(body)
-      res.status(200).json(data)
+      res.json(data)
     },
   ]
   const api = {

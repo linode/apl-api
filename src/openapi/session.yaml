@@ -1,20 +1,15 @@
-x-available-clusters: &AvailableClusters # description: Select from available clusters
-  type: array
-  items:
-    type: string
-  uniqueItems: true
-
 Session:
   x-acl:
     admin: [read]
     team: [read]
-  type: object
   properties:
     clusters:
       readOnly: true
-      <<: *AvailableClusters
+      type: array
+      items:
+        type: string
+      uniqueItems: true
     core:
-      type: object
       readOnly: true
     currentClusterId:
       type: string
@@ -34,7 +29,6 @@ Session:
         $ref: 'team.yaml#/Team'
     user:
       readOnly: true
-      type: object
       properties:
         name:
           type: string
@@ -52,7 +46,7 @@ Session:
           type: array
           description: A list of teams the user belongs to
           items:
-            $ref: 'team.yaml#/Team'
+            type: string
           readOnly: true
           uniqueItems: true
         roles:

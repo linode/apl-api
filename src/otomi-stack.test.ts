@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-ignore */
 import './test-init'
 import { expect } from 'chai'
 import cloneDeep from 'lodash/cloneDeep'
@@ -10,22 +11,16 @@ describe('Settings', () => {
   const otomi = new OtomiStack()
   otomi.repo = new Repo('./test', undefined, undefined, undefined, undefined, undefined)
 
-  describe('getSettings()', () => {
-    it('should equal loadSettings()', () => {
-      expect(otomi.loadSettings()).to.deep.equal(otomi.getSettings())
-    })
-  })
+  it('should assign a dummy payload', () => {
+    const settings = otomi.getSettings()
+    const payload = {
+      ...settings,
+      alerts: {
+        drone: 'someTeamChat',
+      },
+    }
 
-  describe('editSettings()', () => {
-    it('should assign a dummy payload', () => {
-      const payload = {
-        alerts: {
-          drone: 'someTeamChat',
-        },
-      }
-
-      expect(otomi.editSettings(payload)).to.include(payload)
-    })
+    expect(otomi.editSettings(payload)).to.deep.equal(payload)
   })
 })
 
@@ -111,24 +106,33 @@ describe('Secret creation', () => {
   })
 
   it('should create a valid pull secret and attach it to an SA without pullsecrets', async () => {
+    // @ts-ignore
     sinon.stub(client, 'createNamespacedSecret').returns(secretPromise)
+    // @ts-ignore
     sinon.stub(client, 'readNamespacedServiceAccount').returns(newServiceAccountPromise)
+    // @ts-ignore
     const patchSpy = sinon.stub(client, 'patchNamespacedServiceAccount').returns(undefined)
     await otomiStack.createPullSecret({ teamId, name, server, password: data.password, username: data.username })
     expect(patchSpy).to.have.been.calledWith('default', namespace, saWithExistingSecret)
   })
 
   it('should create a valid pull secret and attach it to an SA that has an empty pullsecrets array', async () => {
+    // @ts-ignore
     sinon.stub(client, 'createNamespacedSecret').returns(secretPromise)
+    // @ts-ignore
     sinon.stub(client, 'readNamespacedServiceAccount').returns(newEmptyServiceAccountPromise)
+    // @ts-ignore
     const patchSpy = sinon.stub(client, 'patchNamespacedServiceAccount').returns(undefined)
     await otomiStack.createPullSecret({ teamId, name, server, password: data.password, username: data.username })
     expect(patchSpy).to.have.been.calledWith('default', namespace, saWithExistingSecret)
   })
 
   it('should create a valid pull secret and attach it to an SA that already has a pullsecret', async () => {
+    // @ts-ignore
     sinon.stub(client, 'createNamespacedSecret').returns(secretPromise)
+    // @ts-ignore
     sinon.stub(client, 'readNamespacedServiceAccount').returns(withOtherSecretServiceAccountPromise)
+    // @ts-ignore
     const patchSpy = sinon.stub(client, 'patchNamespacedServiceAccount').returns(undefined)
     await otomiStack.createPullSecret({ teamId, name, server, password: data.password, username: data.username })
     expect(patchSpy).to.have.been.calledWith('default', namespace, saCombinedWithOtherSecret)
@@ -147,8 +151,11 @@ describe('Secret creation', () => {
   })
 
   it('should delete an existing pull secret successfully', async () => {
+    // @ts-ignore
     sinon.stub(client, 'readNamespacedServiceAccount').returns(withExistingSecretServiceAccountPromise)
+    // @ts-ignore
     const patchSpy = sinon.stub(client, 'patchNamespacedServiceAccount').returns(undefined)
+    // @ts-ignore
     const deleteSpy = sinon.stub(client, 'deleteNamespacedSecret').returns(undefined)
     await otomiStack.deletePullSecret(teamId, name)
     expect(patchSpy).to.have.been.calledWith('default', namespace, saNewEmpty)

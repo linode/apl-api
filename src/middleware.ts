@@ -1,9 +1,9 @@
 import get from 'lodash/get'
-import { AlreadyExists, GitError, NotAuthorized, NotExistError, PublicUrlExists } from './error'
-import { OpenApiRequest, JWT, OpenApiRequestExt, SessionUser } from './otomi-models'
-import Authz from './authz'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
+import { AlreadyExists, GitError, NotAuthorized, NotExistError, PublicUrlExists } from './error'
+import { OpenApiRequest, JWT, OpenApiRequestExt, User } from './otomi-models'
+import Authz from './authz'
 
 const HttpMethodMapping = {
   DELETE: 'delete',
@@ -15,7 +15,7 @@ const HttpMethodMapping = {
 
 const noAuthz = !!process.env.NO_AUTHZ
 
-export function errorMiddleware(err, req: OpenApiRequest, res) {
+export function errorMiddleware(err, req: OpenApiRequest, res): void {
   console.error('errorMiddleware handler')
 
   if (err instanceof AlreadyExists) return res.status(409).json({ error: err.message })
@@ -25,14 +25,16 @@ export function errorMiddleware(err, req: OpenApiRequest, res) {
   if (err instanceof NotAuthorized || err.name === 'UnauthorizedError')
     return res.status(401).json({ error: err.message })
 
-  if (typeof err.status !== 'undefined') return res.status(err.status).json(err)
+  if (typeof err.status !== 'undefined') {
+    return res.status(err.status).json(err)
+  }
 
   console.error(err)
   return res.status(500).json({ error: 'Unexpected error' })
 }
 
-export function getSessionUser(user: JWT): SessionUser {
-  const sessionUser = { ...user, teams: [], groups: user.groups || [], roles: [], isAdmin: false }
+export function getUser(user: JWT): User {
+  const sessionUser: User = { ...user, teams: [], roles: [], isAdmin: false }
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
   if (noAuthz) {
@@ -55,28 +57,28 @@ export function getSessionUser(user: JWT): SessionUser {
 }
 
 export function jwtMiddleware(): RequestHandler {
-  return function (req: OpenApiRequestExt, res, next) {
+  return function nextHandler(req: OpenApiRequestExt, res, next): any {
     const token = req.header('Authorization')
     if (!token) {
       console.log('anonymous request')
       return next()
     }
     const { name, email, roles, groups } = jwtDecode(token)
-    req.user = getSessionUser({ name, email, roles, groups })
-    next()
+    req.user = getUser({ name, email, roles, groups })
+    return next()
   }
 }
 
-export function getCrudOperation(req: OpenApiRequest) {
+export function getCrudOperation(req: OpenApiRequest): string {
   return HttpMethodMapping[req.method]
 }
 
-export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz) {
+export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz): boolean {
   if (noAuthz) return true
   const {
     params: { teamId },
   } = req
-  const user = req.user
+  const { user } = req
   const action = getCrudOperation(req)
   console.debug(
     `Authz: ${action} ${req.path}, session(roles: ${user && JSON.stringify(user.roles)} teams=${
@@ -86,6 +88,6 @@ export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz) {
   if (!user) return false
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
   const schemaName = schema.split('/').pop()
-  const result = authz.isUserAuthorized(action, schemaName, user, teamId, req.body)
+  const result = authz.isUserAuthorized(action, schemaName!, user, teamId, req.body)
   return result
 }

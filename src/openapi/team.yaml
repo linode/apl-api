@@ -14,15 +14,12 @@ x-available-clusters: &AvailableClusters # description: Select from available cl
 
 AzureMonitor: &AzureMonitor
   title: Azure Monitor
-  type: object
   description: Azure Monitor is the platform service that provides a single source for monitoring Azure resources.
   anyOf:
     - title: Use global settings
-      type: object
       nullable: true
       additionalProperties: false
     - title: Override global settings
-      type: object
       properties:
         clientId:
           description: 'An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID)'
@@ -58,7 +55,6 @@ Team:
   x-acl:
     admin: [delete-any, read-any, create-any, update-any]
     team: [read-any, update]
-  type: object
   properties:
     id:
       title: ID
@@ -81,7 +77,6 @@ Team:
       x-acl:
         team: [read]
     oidc:
-      type: object
       title: OIDC
       properties:
         groupMapping:
@@ -107,7 +102,6 @@ Team:
           uniqueItems: true
         slack:
           title: Slack
-          type: object
           properties:
             url:
               title: Web hook
@@ -123,7 +117,6 @@ Team:
               description: Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'.
         msteams:
           title: Microsoft Teams
-          type: object
           properties:
             lowPrio:
               title: Low prio webhook
@@ -135,7 +128,6 @@ Team:
               description: The high prio web hook
         email:
           title: Email
-          type: object
           properties:
             nonCritical:
               title: Non criticals
@@ -148,5 +140,7 @@ Team:
     azureMonitor:
       <<: *AzureMonitor
   required:
+    # - id
     - name
     - clusters
+    - password

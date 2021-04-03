@@ -1,15 +1,14 @@
-import { Operation } from 'express-openapi'
+import { Operation, OperationHandlerArray } from 'express-openapi'
 import OtomiStack from '../otomi-stack'
 import { OpenApiRequest } from '../otomi-models'
 
-export default function (otomi: OtomiStack) {
+export default function (otomi: OtomiStack): OperationHandlerArray {
   const GET: Operation = [
     /* business middleware not expressible by OpenAPI documentation goes here */
-    (req: OpenApiRequest, res) => {
+    (req: OpenApiRequest, res): void => {
       console.info(`Get clusters`)
       const data = otomi.getClusters()
-
-      res.status(200).json(data)
+      res.json(data)
     },
   ]
   const api = {

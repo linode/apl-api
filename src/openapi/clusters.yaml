@@ -1,4 +1,4 @@
-Clusters: &ClustersSchema
+Clusters:
   type: array
   x-acl:
     admin: [read-any]

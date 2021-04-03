@@ -2,7 +2,6 @@ Teams:
   x-acl:
     admin: [read-any]
     team: [read-any]
-  type: object
   properties:
     teams:
       type: array

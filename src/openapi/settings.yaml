@@ -1,10 +1,8 @@
 Settings:
   additionalProperties: false
-  type: object
   x-acl:
     admin: [read-any, update-any]
     team: []
   properties:
     alerts:
-      type: object
       description: Placeholder (copy schema from otomi-core)

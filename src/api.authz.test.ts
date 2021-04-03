@@ -4,8 +4,8 @@ import initApp from './server'
 import OtomiStack from './otomi-stack'
 import getToken from './fixtures/jwt'
 
-const adminToken = getToken(['team-admin'])
-const teamToken = getToken(['team-team1'])
+const adminToken: string = getToken(['team-admin'])
+const teamToken: string = getToken(['team-team1'])
 
 describe('Admin API tests', () => {
   let app
@@ -240,14 +240,6 @@ describe('Admin API tests', () => {
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
       .expect(401)
-      .end(done)
-  })
-  it('anonymous user should get app readiness', (done) => {
-    request(app)
-      .get('/v1/readiness')
-      .set('Accept', 'application/json')
-      .expect(200)
-      .expect('Content-Type', /json/)
       .end(done)
   })
   it('anonymous user should get api spec', (done) => {

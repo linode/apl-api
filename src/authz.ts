@@ -1,21 +1,17 @@
-import { Ability, RawRule, subject } from '@casl/ability'
-import set from 'lodash/set'
-import has from 'lodash/has'
-import get from 'lodash/get'
-import pick from 'lodash/pick'
-
-import isEmpty from 'lodash/isEmpty'
-import { Acl, OpenApi, Schema, Property, AclAction, SessionUser } from './otomi-models'
+/* eslint-disable @typescript-eslint/ban-ts-ignore */
+import { Ability, subject } from '@casl/ability'
+import { set, has, get, isEmpty, pick, forIn } from 'lodash'
+import { Acl, AclAction, OpenAPIDoc, Schema, User } from './otomi-models'
 
 const allowedResourceActions = [
+  'create',
+  'create-any',
+  'delete',
+  'delete-any',
   'read',
   'read-any',
   'update',
   'update-any',
-  'delete',
-  'delete-any',
-  'create',
-  'create-any',
 ]
 const allowedResourceCollectionActions = ['read-any']
 const allowedAttributeActions = ['read', 'read-any', 'update', 'update-any']
@@ -37,13 +33,12 @@ function validatePermissions(acl: Acl, allowedPermissions: string[], path: strin
   return err
 }
 
-export function isValidAuthzSpec(apiSpec: OpenApi): boolean {
+export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
   const err: string[] = []
 
-  if (isEmpty(apiSpec.security)) err.push(`Missing global security definition at 'security'`)
+  if (isEmpty(apiDoc.security)) err.push(`Missing global security definition at 'security'`)
 
-  Object.keys(apiSpec.paths).forEach((pathName: string) => {
-    const pathObj = apiSpec.paths[pathName]
+  forIn(apiDoc, (pathObj: any, pathName: string) => {
     Object.keys(pathObj).forEach((methodName) => {
       if (!httpMethods.includes(methodName)) return
       const methodObj = pathObj[methodName]
@@ -54,14 +49,14 @@ export function isValidAuthzSpec(apiSpec: OpenApi): boolean {
       if (!methodObj['x-aclSchema']) err.push(`Missing x-aclSchema at 'paths.${pathName}.${methodName}'`)
     })
   })
-
-  const schemas = apiSpec.components.schemas
-  Object.keys(schemas).forEach((schemaName: string) => {
+  const { schemas } = apiDoc.components
+  forIn(schemas, (schema: Schema, schemaName: string) => {
     console.debug(`Authz: loading rules for ${schemaName} schema`)
-    const schema: Schema = schemas[schemaName]
+    // @ts-ignore
+    // eslint-disable-next-line no-param-reassign
+    if (!schema.type) schema.type = 'object'
     if (!schema['x-acl'])
       err.push(`schema does not contain x-acl attribute, found at 'components.schemas.${schemaName}'`)
-
     if (schema.type !== 'object' && schema.type !== 'array') {
       err.push(`schema type ${schema.type} is not supported, found at 'components.schemas.${schemaName}'`)
       return
@@ -90,11 +85,11 @@ export function isValidAuthzSpec(apiSpec: OpenApi): boolean {
         return
       }
       Object.keys(schema.properties).forEach((attributeName) => {
-        const property = schema.properties[attributeName]
+        const property = schema.properties![attributeName]
         if (property['x-acl'])
           err.concat(
             validatePermissions(
-              schema['x-acl'],
+              schema['x-acl'] || {},
               allowedAttributeActions,
               `${schemaName}.properties${attributeName}.x-acl`,
             ),
@@ -113,31 +108,31 @@ export function isValidAuthzSpec(apiSpec: OpenApi): boolean {
 export default class Authz {
   specRules
 
-  constructor(apiSpec: OpenApi) {
-    this.specRules = Authz.loadSpecRules(apiSpec)
+  constructor(apiDoc: OpenAPIDoc) {
+    this.specRules = Authz.loadSpecRules(apiDoc)
   }
 
-  static loadSpecRules(apiSpec: OpenApi) {
-    const schemas = apiSpec.components.schemas
+  static loadSpecRules(apiDoc: OpenAPIDoc): object {
+    // @ts-ignore
+    const { schemas } = apiDoc.components
 
     Object.keys(schemas).forEach((schemaName: string) => {
       console.debug(`Authz: loading rules for ${schemaName} schema`)
       const schema: Schema = schemas[schemaName]
 
       if (schema.type === 'array') {
-        // No ABAC for array
         return
       }
       const schemaAcl = {}
-      Object.keys(schema['x-acl']).forEach((role) => {
-        schemaAcl[role] = schema['x-acl'][role].map((action: AclAction) => {
+      Object.keys(schema['x-acl'] || {}).forEach((role) => {
+        schemaAcl[role] = (schema['x-acl'] || {})[role].map((action: AclAction) => {
           if (action.endsWith('-any')) return action.slice(0, -4)
           return action
         })
       })
 
-      Object.keys(schema.properties).forEach((propertyName: string) => {
-        const property: Property = schema.properties[propertyName]
+      Object.keys(schema.properties as object).forEach((propertyName: string) => {
+        const property = schema.properties![propertyName]
         // Attribute wise permission overwrite model wise permissions
         property['x-acl'] = { ...schemaAcl, ...property['x-acl'] }
       })
@@ -146,7 +141,7 @@ export default class Authz {
     return schemas
   }
 
-  getAllowedAttributes = (action: string, schemaName, user: SessionUser, data: any) => {
+  getAllowedAttributes = (action: string, schemaName, user: User, data: object): string[] => {
     const abac = this.getAttributeBasedAccessControl(user)
     const allowedAttributes: string[] = []
     Object.keys(data).forEach((attributeName) => {
@@ -157,15 +152,15 @@ export default class Authz {
     return allowedAttributes
   }
 
-  getDataWithAllowedAttributes = (action: string, schemaName, user: SessionUser, data: any) => {
+  getDataWithAllowedAttributes = (action: string, schemaName, user: User, data: any): any => {
     if (skipABACActions.includes(action)) return data
 
     const attr = this.getAllowedAttributes(action, schemaName, user, data)
     return pick(data, attr)
   }
 
-  getResourceBasedAccessControl(user: SessionUser) {
-    const canRules: RawRule[] = []
+  getResourceBasedAccessControl(user: User): Ability {
+    const canRules: any[] = []
     Object.keys(this.specRules).forEach((schemaName: string) => {
       const schema: Schema = this.specRules[schemaName]
       user.roles.forEach((role) => {
@@ -182,19 +177,18 @@ export default class Authz {
       })
     })
 
-    // console.log(JSON.stringify(canRules))
     return new Ability(canRules)
   }
 
-  getAttributeBasedAccessControl(user: SessionUser) {
+  getAttributeBasedAccessControl(user: User): Ability {
     const specRules: RawRules = {}
 
     Object.keys(this.specRules).forEach((schemaName: string) => {
       const schema: Schema = this.specRules[schemaName]
       if (!(schema.type === 'object' && schema.properties)) return
       user.roles.forEach((role) => {
-        Object.keys(schema.properties).forEach((propertyName: string) => {
-          const property: Property = schema.properties[propertyName]
+        Object.keys(schema.properties as object).forEach((propertyName: string) => {
+          const property = schema.properties![propertyName]
           const actions: string[] = get(property, `x-acl.${role}`, [])
 
           actions.forEach((actionName) => {
@@ -212,7 +206,7 @@ export default class Authz {
       })
     })
 
-    const canRules: RawRule[] = []
+    const canRules: any[] = []
 
     Object.keys(specRules).forEach((action) => {
       const schemas = specRules[action]
@@ -225,9 +219,9 @@ export default class Authz {
     return new Ability(canRules)
   }
 
-  isUserAuthorized = (action: string, schemaName, user: SessionUser, teamId: string, data: object): boolean => {
+  isUserAuthorized = (action: string, schemaName: string, user: User, teamId: string, data?: object): boolean => {
     const rbac = this.getResourceBasedAccessControl(user)
-    const sub = subject(schemaName, { ...data, teamId })
+    const sub = subject(schemaName, { ...(data || {}), teamId })
     if (!rbac.can(action, sub)) {
       // console.debug(rbac.rules)
       console.debug(`Authz: not authorized (RBAC): ${action} ${schemaName}/${teamId}`)

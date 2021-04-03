@@ -17,7 +17,7 @@
   "mochaExplorer.env": {
     "NODE_ENV": "test"
   },
-  "prettier.disableLanguages": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "prettier.disableLanguages": ["javascript", "typescript"],
   "prettier.enable": true,
   "tslint.enable": false
 }
