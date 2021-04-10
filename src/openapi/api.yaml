@@ -3,6 +3,7 @@ security:
   - groupAuthz: []
 info:
   title: The otomi-stack API
+  description: Holds the entire schema needed by console to autogenerate forms
   version: PLACEHOLDER
 
 externalDocs:
@@ -382,6 +383,7 @@ paths:
           description: The requested session.
   /apiDocs:
     get:
+      operationId: 'apiDocs'
       security: []
       description: Get OpenAPIDoc document
       responses:
@@ -396,6 +398,7 @@ paths:
 
   /settings:
     get:
+      operationId: getSettings
       description: Get settings from the `settings.yaml` and `secret.settings.yaml` file.
       x-aclSchema: Settings
       responses:

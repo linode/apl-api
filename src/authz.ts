@@ -55,12 +55,6 @@ export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
     // @ts-ignore
     // eslint-disable-next-line no-param-reassign
     if (!schema.type) schema.type = 'object'
-    if (!schema['x-acl'])
-      err.push(`schema does not contain x-acl attribute, found at 'components.schemas.${schemaName}'`)
-    if (schema.type !== 'object' && schema.type !== 'array') {
-      err.push(`schema type ${schema.type} is not supported, found at 'components.schemas.${schemaName}'`)
-      return
-    }
 
     if (schema.type === 'array') {
       if (schema['x-acl'])
@@ -79,14 +73,15 @@ export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
         err.concat(
           validatePermissions(schema['x-acl'], allowedResourceActions, `components.schemas.${schemaName}.x-acl`),
         )
-
-      if (!schema.properties) {
-        err.push(`schema does not contain properties attribute, found at 'components.schemas.${schemaName}'`)
+      const props = schema.properties || schema['x-patternProperties']
+      if (!props) {
+        err.push(
+          `schema does not contain properties nor x-patternProperties attribute, found at 'components.schemas.${schemaName}'`,
+        )
         return
       }
-      Object.keys(schema.properties).forEach((attributeName) => {
-        const property = schema.properties![attributeName]
-        if (property['x-acl'])
+      forIn(props, (prop, attributeName) => {
+        if (prop['x-acl'])
           err.concat(
             validatePermissions(
               schema['x-acl'] || {},
@@ -130,8 +125,7 @@ export default class Authz {
           return action
         })
       })
-
-      Object.keys(schema.properties as object).forEach((propertyName: string) => {
+      Object.keys(schema.properties || {}).forEach((propertyName: string) => {
         const property = schema.properties![propertyName]
         // Attribute wise permission overwrite model wise permissions
         property['x-acl'] = { ...schemaAcl, ...property['x-acl'] }

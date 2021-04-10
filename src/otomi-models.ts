@@ -11,7 +11,7 @@ export type Secrets = components['schemas']['Secrets']
 export type Service = components['schemas']['Service']
 export type Services = components['schemas']['Services']
 export type Session = components['schemas']['Session']
-export type Settings = components['schemas']['Settings'] & { id?: string }
+export type Settings = components['schemas']['Settings']
 export type Team = components['schemas']['Team']
 export type Teams = components['schemas']['Teams']
 export type User = components['schemas']['User']
@@ -88,4 +88,11 @@ export interface JWT {
 
 export interface OpenApiRequestExt extends OpenApiRequest, Session {
   user: User
+}
+
+export interface Core {
+  teamConfig: {
+    services: object[]
+    teams: Team[]
+  }
 }

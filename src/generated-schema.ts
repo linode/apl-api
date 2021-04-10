@@ -112,34 +112,11 @@ export interface paths {
   };
   "/apiDocs": {
     /** Get OpenAPIDoc document */
-    get: {
-      responses: {
-        /** The requested apiDoc. */
-        200: {
-          content: {
-            "application/json": { [key: string]: any };
-          };
-        };
-        /** The requested apiDoc. */
-        default: unknown;
-      };
-    };
+    get: operations["apiDocs"];
   };
   "/settings": {
     /** Get settings from the `settings.yaml` and `secret.settings.yaml` file. */
-    get: {
-      responses: {
-        /** The request is successful. */
-        200: {
-          content: {
-            "application/json": {
-              /** Placeholder (copy schema from otomi-core) */
-              alerts?: { [key: string]: any };
-            };
-          };
-        };
-      };
-    };
+    get: operations["getSettings"];
     /** Edits the settings from the `settings.yaml` file */
     put: operations["editSettings"];
   };
@@ -259,37 +236,35 @@ export interface components {
       /** A kubernetes cluster for the secret */
       clusterId: string;
     };
-    Secrets: {
-      secrets?: ((
-        | {
-            type: "generic";
-            entries: string[];
-          }
-        | {
-            type: "docker-registry";
-            dockerconfig?: ".dockerconfig.json";
-          }
-        | {
-            type: "tls";
-            /** A Vault property name that contains PEM public key certificate */
-            crt: string;
-            /** A Vault property name that contains PEM private key certificate */
-            key: string;
-            /** A Vault property name that contains CA certificate content */
-            ca?: string;
-          }
-      ) & {
-        id?: string;
-        /** A secret name */
-        name: string;
-        /** A kubernetes cluster for the secret */
-        clusterId: string;
-      })[];
-    };
+    Secrets: ((
+      | {
+          type: "generic";
+          entries: string[];
+        }
+      | {
+          type: "docker-registry";
+          dockerconfig?: ".dockerconfig.json";
+        }
+      | {
+          type: "tls";
+          /** A Vault property name that contains PEM public key certificate */
+          crt: string;
+          /** A Vault property name that contains PEM private key certificate */
+          key: string;
+          /** A Vault property name that contains CA certificate content */
+          ca?: string;
+        }
+    ) & {
+      id?: string;
+      /** A secret name */
+      name: string;
+      /** A kubernetes cluster for the secret */
+      clusterId: string;
+    })[];
     Service: {
       enabled?: boolean;
       id?: string;
-      /** A service name */
+      /** A lowercase name that starts with a letter and may contain dashes. */
       name: string;
       /** A kubernetes cluster for the service */
       clusterId: string;
@@ -300,7 +275,7 @@ export interface components {
             /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
             scaleToZero?: boolean;
             image?: {
-              /** A container image repository */
+              /** A container image repository. */
               repository?: string;
               tag?: string;
             } | null;
@@ -312,29 +287,25 @@ export interface components {
               | null;
             env?:
               | {
-                  name: string;
+                  name: { [key: string]: any } | null;
                   value: string;
                 }[]
               | null;
             resources?: {
               requests?: {
-                /** The guaranteed amount of CPU */
+                /** Amount of cores, or slice of cpu in millis. */
                 cpu: string;
-                /** The guaranteed amount of RAM */
+                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                 memory: string;
               };
               limits?: {
-                /** The maximum amount of CPU */
+                /** Amount of cores, or slice of cpu in millis. */
                 cpu: string;
-                /** The maximum amount of RAM */
+                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                 memory: string;
               };
             } | null;
-            /** Kubernetes annotations with arbitrary metadata */
-            annotations?: {
-              name?: string;
-              value?: string;
-            }[];
+            annotations?: { [key: string]: any };
             /** Deploys new images based on a tagging strategy */
             autoCD?:
               | ({ [key: string]: any } | null)
@@ -361,9 +332,9 @@ export interface components {
             /** Use the team domain so that the URL reveals the owner. */
             useDefaultSubdomain?: boolean;
             /** A host that is used to set DNS 'A' records */
-            subdomain?: string | null;
+            subdomain: string | null;
             /** A managed DNS zone */
-            domain?: string;
+            domain: string;
             /** The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.) */
             path?: string;
             /** Forward the URL path into the service (don't rewrite to /) */
@@ -380,7 +351,7 @@ export interface components {
     Services: {
       enabled?: boolean;
       id?: string;
-      /** A service name */
+      /** A lowercase name that starts with a letter and may contain dashes. */
       name: string;
       /** A kubernetes cluster for the service */
       clusterId: string;
@@ -391,7 +362,7 @@ export interface components {
             /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
             scaleToZero?: boolean;
             image?: {
-              /** A container image repository */
+              /** A container image repository. */
               repository?: string;
               tag?: string;
             } | null;
@@ -403,29 +374,25 @@ export interface components {
               | null;
             env?:
               | {
-                  name: string;
+                  name: { [key: string]: any } | null;
                   value: string;
                 }[]
               | null;
             resources?: {
               requests?: {
-                /** The guaranteed amount of CPU */
+                /** Amount of cores, or slice of cpu in millis. */
                 cpu: string;
-                /** The guaranteed amount of RAM */
+                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                 memory: string;
               };
               limits?: {
-                /** The maximum amount of CPU */
+                /** Amount of cores, or slice of cpu in millis. */
                 cpu: string;
-                /** The maximum amount of RAM */
+                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                 memory: string;
               };
             } | null;
-            /** Kubernetes annotations with arbitrary metadata */
-            annotations?: {
-              name?: string;
-              value?: string;
-            }[];
+            annotations?: { [key: string]: any };
             /** Deploys new images based on a tagging strategy */
             autoCD?:
               | ({ [key: string]: any } | null)
@@ -452,9 +419,9 @@ export interface components {
             /** Use the team domain so that the URL reveals the owner. */
             useDefaultSubdomain?: boolean;
             /** A host that is used to set DNS 'A' records */
-            subdomain?: string | null;
+            subdomain: string | null;
             /** A managed DNS zone */
-            domain?: string;
+            domain: string;
             /** The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.) */
             path?: string;
             /** Forward the URL path into the service (don't rewrite to /) */
@@ -475,8 +442,9 @@ export interface components {
       isDirty?: boolean;
       namespaces?: string[];
       teams?: {
+        /** A lowercase name that starts with a letter and may contain dashes. */
         id?: string;
-        /** A team name */
+        /** A lowercase name that starts with a letter and may contain dashes. */
         name: string;
         clusters: string[];
         oidc?: {
@@ -507,43 +475,240 @@ export interface components {
             critical?: string;
           };
         };
-        /** Azure Monitor is the platform service that provides a single source for monitoring Azure resources. */
-        azureMonitor?: Partial<{ [key: string]: any } | null> &
-          Partial<{
-            /** An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID) */
-            clientId: string;
-            /** An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a key -> Use client secret) */
-            clientSecret: string;
-            /** A dedicated client ID for Azure Log Analytics. Defaults to clientId value. */
-            logAnalyticsClientId?: string;
-            /** A client Secret for Azure Log Analytics. Defaults to clientSecret value. */
-            logAnalyticsClientSecret?: string;
-            /** An app id for use with an Application Insights resource. Defaults to clientId value. */
-            appInsightsAppId?: string;
-            /** An api key for use with an Application Insights resource. Defaults to clientSecret value. */
-            appInsightsApiKey?: string;
-          } | null>;
+        azureMonitor?: {
+          /** An Azure AppInsights client secret (defaults to clientSecret). */
+          appInsightsApiKey?: string;
+          /** An Azure AppInsights client id (defaults to clientId). */
+          appInsightsAppId?: string;
+          /** An Azure client id. */
+          clientId?: string;
+          /** An Azure client secret. */
+          clientSecret?: string;
+          /** An Azure client secret (defaults to clientSecret). */
+          logAnalyticsClientId?: string;
+          /** An Azure client secret (defaults to clientSecret). */
+          logAnalyticsClientSecret?: string;
+          /** An Azure tenant id (defaults to tenantId). */
+          logAnalyticsTenantId?: string;
+          /** An Azure monitor log analytics workspace. */
+          logAnalyticsWorkspace?: string;
+        };
       }[];
       user?: {
         /** A user name */
-        name?: string;
-        /** An email address */
-        email?: string;
+        name: string;
+        email: string;
         /** If the user is admin */
-        isAdmin?: boolean;
+        isAdmin: boolean;
         /** A list of teams the user belongs to */
-        teams?: string[];
+        teams: string[];
         /** A list of roles that the user has */
-        roles?: string[];
+        roles: string[];
       };
     };
     Settings: {
-      /** Placeholder (copy schema from otomi-core) */
-      alerts?: { [key: string]: any };
+      alerts?: {
+        drone?: "slack" | "msteams";
+        email?: {
+          /** One or more email addresses (comma separated) for critical events. */
+          critical?: string;
+          /** One or more email addresses (comma separated) for non-critical events. */
+          nonCritical?: string;
+        };
+        /** How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.) */
+        groupInterval?: string;
+        msteams?: {
+          /** The low prio web hook. */
+          highPrio?: string;
+          /** The high prio web hook. */
+          lowPrio?: string;
+        };
+        /** Notification receivers. */
+        receivers?: ("slack" | "msteams" | "email")[];
+        /** How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more). */
+        repeatInterval?: string;
+        slack?: {
+          /** The Slack channel for non-critical notifications. */
+          channel?: string;
+          /** The Slack channel for critical notifications. */
+          channelCrit?: string;
+          /** A Slack webhook URL. */
+          url?: string;
+        };
+      };
+      /** Azure specific configuration. */
+      azure?: {
+        appgw?: {
+          /** Is this appgw installed as AKS addon? */
+          isManaged?: boolean;
+        };
+        /** An Azure disk type (SKU Type). */
+        diskType:
+          | "Standard_LRS"
+          | "Standard_GRS"
+          | "Standard_RAGRS"
+          | "Standard_ZRS"
+          | "Premium_LRS"
+          | "Premium_ZRS"
+          | "Standard_GZRS"
+          | "Standard_RAGZRS";
+        /** Azure Key Vault access credentials. Will use azure.tenantId if tenantId is not provided. */
+        keyVault?: {
+          /** An Azure tenant ID. */
+          tenantId?: string;
+          /** An Azure client ID. */
+          clientId: string;
+          /** An Azure client secret. */
+          clientSecret: string;
+        };
+        monitor?: {
+          /** An Azure AppInsights client secret (defaults to clientSecret). */
+          appInsightsApiKey?: string;
+          /** An Azure AppInsights client id (defaults to clientId). */
+          appInsightsAppId?: string;
+          /** An Azure client id. */
+          clientId?: string;
+          /** An Azure client secret. */
+          clientSecret?: string;
+          /** An Azure client secret (defaults to clientSecret). */
+          logAnalyticsClientId?: string;
+          /** An Azure client secret (defaults to clientSecret). */
+          logAnalyticsClientSecret?: string;
+          /** An Azure tenant id (defaults to tenantId). */
+          logAnalyticsTenantId?: string;
+          /** An Azure monitor log analytics workspace. */
+          logAnalyticsWorkspace?: string;
+        };
+        /** An Azure resource group. */
+        resourceGroup: string;
+        /** An Azure subscription ID. */
+        subscriptionId: string;
+        /** An Azure tenant ID. */
+        tenantId: string;
+      };
+      customer?: {
+        name?: string;
+      };
+      /** Google specific configuration. */
+      google?: {
+        /** A service account key for managing a DNS zone. */
+        cloudDnsKey: string;
+        /** A service account key for managing a KMS vault. */
+        kmsAccount?: string;
+        /** A Google Cloud project ID for accessing DNS zone. */
+        projectId: string;
+      };
+      home?: {
+        drone?: "slack" | "msteams";
+        email?: {
+          /** One or more email addresses (comma separated) for critical events. */
+          critical?: string;
+          /** One or more email addresses (comma separated) for non-critical events. */
+          nonCritical?: string;
+        };
+        /** How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.) */
+        groupInterval?: string;
+        msteams?: {
+          /** The low prio web hook. */
+          highPrio?: string;
+          /** The high prio web hook. */
+          lowPrio?: string;
+        };
+        /** Notification receivers. */
+        receivers?: ("slack" | "msteams" | "email")[];
+        /** How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more). */
+        repeatInterval?: string;
+        slack?: {
+          /** The Slack channel for non-critical notifications. */
+          channel?: string;
+          /** The Slack channel for critical notifications. */
+          channelCrit?: string;
+          /** A Slack webhook URL. */
+          url?: string;
+        };
+      };
+      /** Use Cloud KMS to encrypt and decrypt the master key */
+      kms?:
+        | {
+            gcpckms: {
+              project: string;
+              region: string;
+              key_ring: string;
+              kmsAccount: string;
+            };
+          }
+        | {
+            awskms: {
+              region: string;
+              access_key: string;
+              secret_key: string;
+              endpoint: string;
+            };
+          }
+        | {
+            azurekeyvault: {
+              vault_name: string;
+              tenant_id: string;
+              client_id: string;
+              client_secret: string;
+            };
+          };
+      /** Holds many parts used in different locations. Please see keycloak, istio and oauth-proxy all consuming parts. */
+      oidc?: {
+        adminGroupID?: string;
+        apiUrl?: string;
+        authUrl?: string;
+        clientID?: string;
+        clientSecret?: string;
+        issuer?: string;
+        scope?: string;
+        teamAdminGroupID?: string;
+        tenantID?: string;
+        tokenUrl?: string;
+        /** Claim name used by Keycloak to identify incoming users from identity provider */
+        usernameClaimMapper?: string;
+        /** Select OIDC claim to be used as a unique user identifier */
+        subClaimMapper?: string;
+      };
+      otomi?: {
+        /** Set this to true when an external LB exists or needs to be started (AWS ALB, Azure AppGW, Google Apigee). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion. */
+        hasCloudLB?: boolean;
+        /** Whether this cluster is home monitored (like when under a Premium SLA). Sends criticals home. */
+        isHomeMonitored?: boolean;
+        /** Whether masters are managed and not under control. Set this to false when onprem. */
+        isManaged?: boolean;
+        /** Whether to separate team metrics and logs. Disabling this lets everybody be admin and see everything. */
+        isMultitenant?: boolean;
+        /** The otomi-core edition. Either community edition (ce) or enterprise edition (ee). */
+        mode?: "ce" | "ee";
+        /** The pullsecret to deploy the Otomi API and Console. Requires an Otomi license. */
+        pullSecret?: string;
+        /** The prefix to use in URLs for team domains. */
+        teamPrefix?: string;
+        /** Manage addon configuration */
+        addons?: {
+          conftest?: {
+            /** Use this flag to enable conftest for policy validation */
+            enabled?: boolean;
+          };
+        };
+      };
+      smtp?: {
+        auth_identity?: string;
+        auth_password?: string;
+        auth_secret?: string;
+        auth_username?: string;
+        /** The "from" address. Defaults to alerts@$clusterDomain. */
+        from?: string;
+        hello?: string;
+        /** The smtp host:port combination. */
+        smarthost: string;
+      };
     };
     Team: {
+      /** A lowercase name that starts with a letter and may contain dashes. */
       id?: string;
-      /** A team name */
+      /** A lowercase name that starts with a letter and may contain dashes. */
       name: string;
       clusters: string[];
       oidc?: {
@@ -574,79 +739,81 @@ export interface components {
           critical?: string;
         };
       };
-      /** Azure Monitor is the platform service that provides a single source for monitoring Azure resources. */
-      azureMonitor?: Partial<{ [key: string]: any } | null> &
-        Partial<{
-          /** An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID) */
-          clientId: string;
-          /** An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a key -> Use client secret) */
-          clientSecret: string;
-          /** A dedicated client ID for Azure Log Analytics. Defaults to clientId value. */
-          logAnalyticsClientId?: string;
-          /** A client Secret for Azure Log Analytics. Defaults to clientSecret value. */
-          logAnalyticsClientSecret?: string;
-          /** An app id for use with an Application Insights resource. Defaults to clientId value. */
-          appInsightsAppId?: string;
-          /** An api key for use with an Application Insights resource. Defaults to clientSecret value. */
-          appInsightsApiKey?: string;
-        } | null>;
+      azureMonitor?: {
+        /** An Azure AppInsights client secret (defaults to clientSecret). */
+        appInsightsApiKey?: string;
+        /** An Azure AppInsights client id (defaults to clientId). */
+        appInsightsAppId?: string;
+        /** An Azure client id. */
+        clientId?: string;
+        /** An Azure client secret. */
+        clientSecret?: string;
+        /** An Azure client secret (defaults to clientSecret). */
+        logAnalyticsClientId?: string;
+        /** An Azure client secret (defaults to clientSecret). */
+        logAnalyticsClientSecret?: string;
+        /** An Azure tenant id (defaults to tenantId). */
+        logAnalyticsTenantId?: string;
+        /** An Azure monitor log analytics workspace. */
+        logAnalyticsWorkspace?: string;
+      };
     };
     Teams: {
-      teams?: {
-        id?: string;
-        /** A team name */
-        name: string;
-        clusters: string[];
-        oidc?: {
-          /** An OIDC group name/id granting access to this team */
-          groupMapping?: string;
+      /** A lowercase name that starts with a letter and may contain dashes. */
+      id?: string;
+      /** A lowercase name that starts with a letter and may contain dashes. */
+      name: string;
+      clusters: string[];
+      oidc?: {
+        /** An OIDC group name/id granting access to this team */
+        groupMapping?: string;
+      };
+      password: string;
+      alerts?: {
+        receivers?: ("slack" | "msteams" | "email")[];
+        slack?: {
+          /** Slack web hook. If none is given the global one is used. */
+          url?: string;
+          /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
+          channel?: string;
+          /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
+          channelCrit?: string;
         };
-        password: string;
-        alerts?: {
-          receivers?: ("slack" | "msteams" | "email")[];
-          slack?: {
-            /** Slack web hook. If none is given the global one is used. */
-            url?: string;
-            /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
-            channel?: string;
-            /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
-            channelCrit?: string;
-          };
-          msteams?: {
-            /** The low prio web hook */
-            lowPrio?: string;
-            /** The high prio web hook */
-            highPrio?: string;
-          };
-          email?: {
-            /** One or more email addresses (comma separated) for non-critical events. */
-            nonCritical?: string;
-            /** Email addresses (comma separated) for critical events. */
-            critical?: string;
-          };
+        msteams?: {
+          /** The low prio web hook */
+          lowPrio?: string;
+          /** The high prio web hook */
+          highPrio?: string;
         };
-        /** Azure Monitor is the platform service that provides a single source for monitoring Azure resources. */
-        azureMonitor?: Partial<{ [key: string]: any } | null> &
-          Partial<{
-            /** An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID) */
-            clientId: string;
-            /** An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a key -> Use client secret) */
-            clientSecret: string;
-            /** A dedicated client ID for Azure Log Analytics. Defaults to clientId value. */
-            logAnalyticsClientId?: string;
-            /** A client Secret for Azure Log Analytics. Defaults to clientSecret value. */
-            logAnalyticsClientSecret?: string;
-            /** An app id for use with an Application Insights resource. Defaults to clientId value. */
-            appInsightsAppId?: string;
-            /** An api key for use with an Application Insights resource. Defaults to clientSecret value. */
-            appInsightsApiKey?: string;
-          } | null>;
-      }[];
-    };
+        email?: {
+          /** One or more email addresses (comma separated) for non-critical events. */
+          nonCritical?: string;
+          /** Email addresses (comma separated) for critical events. */
+          critical?: string;
+        };
+      };
+      azureMonitor?: {
+        /** An Azure AppInsights client secret (defaults to clientSecret). */
+        appInsightsApiKey?: string;
+        /** An Azure AppInsights client id (defaults to clientId). */
+        appInsightsAppId?: string;
+        /** An Azure client id. */
+        clientId?: string;
+        /** An Azure client secret. */
+        clientSecret?: string;
+        /** An Azure client secret (defaults to clientSecret). */
+        logAnalyticsClientId?: string;
+        /** An Azure client secret (defaults to clientSecret). */
+        logAnalyticsClientSecret?: string;
+        /** An Azure tenant id (defaults to tenantId). */
+        logAnalyticsTenantId?: string;
+        /** An Azure monitor log analytics workspace. */
+        logAnalyticsWorkspace?: string;
+      };
+    }[];
     User: {
       /** A user name */
       name: string;
-      /** An email address */
       email: string;
       /** If the user is admin */
       isAdmin: boolean;
@@ -722,33 +889,31 @@ export interface components {
       /** A kubernetes cluster for the secret */
       clusterId: string;
     };
-    secrets_Secrets: {
-      secrets?: ((
-        | {
-            type: "generic";
-            entries: string[];
-          }
-        | {
-            type: "docker-registry";
-            dockerconfig?: ".dockerconfig.json";
-          }
-        | {
-            type: "tls";
-            /** A Vault property name that contains PEM public key certificate */
-            crt: string;
-            /** A Vault property name that contains PEM private key certificate */
-            key: string;
-            /** A Vault property name that contains CA certificate content */
-            ca?: string;
-          }
-      ) & {
-        id?: string;
-        /** A secret name */
-        name: string;
-        /** A kubernetes cluster for the secret */
-        clusterId: string;
-      })[];
-    };
+    secrets_Secrets: ((
+      | {
+          type: "generic";
+          entries: string[];
+        }
+      | {
+          type: "docker-registry";
+          dockerconfig?: ".dockerconfig.json";
+        }
+      | {
+          type: "tls";
+          /** A Vault property name that contains PEM public key certificate */
+          crt: string;
+          /** A Vault property name that contains PEM private key certificate */
+          key: string;
+          /** A Vault property name that contains CA certificate content */
+          ca?: string;
+        }
+    ) & {
+      id?: string;
+      /** A secret name */
+      name: string;
+      /** A kubernetes cluster for the secret */
+      clusterId: string;
+    })[];
     error_OpenApiValidationError: {
       status?: number;
       errors?: {
@@ -758,10 +923,21 @@ export interface components {
         location?: "body" | "path";
       }[];
     };
+    /** A lowercase name that starts with a letter and may contain dashes. */
+    idName: string;
+    /** A container image repository. */
+    repository: string;
+    env: { [key: string]: any } | null;
+    /** Amount of cores, or slice of cpu in millis. */
+    cpuQuantity: string;
+    /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+    memoryQuantity: string;
+    labelsAnnotations: { [key: string]: any };
+    domain: string;
     service_Service: {
       enabled?: boolean;
       id?: string;
-      /** A service name */
+      /** A lowercase name that starts with a letter and may contain dashes. */
       name: string;
       /** A kubernetes cluster for the service */
       clusterId: string;
@@ -772,7 +948,7 @@ export interface components {
             /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
             scaleToZero?: boolean;
             image?: {
-              /** A container image repository */
+              /** A container image repository. */
               repository?: string;
               tag?: string;
             } | null;
@@ -784,29 +960,25 @@ export interface components {
               | null;
             env?:
               | {
-                  name: string;
+                  name: { [key: string]: any } | null;
                   value: string;
                 }[]
               | null;
             resources?: {
               requests?: {
-                /** The guaranteed amount of CPU */
+                /** Amount of cores, or slice of cpu in millis. */
                 cpu: string;
-                /** The guaranteed amount of RAM */
+                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                 memory: string;
               };
               limits?: {
-                /** The maximum amount of CPU */
+                /** Amount of cores, or slice of cpu in millis. */
                 cpu: string;
-                /** The maximum amount of RAM */
+                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                 memory: string;
               };
             } | null;
-            /** Kubernetes annotations with arbitrary metadata */
-            annotations?: {
-              name?: string;
-              value?: string;
-            }[];
+            annotations?: { [key: string]: any };
             /** Deploys new images based on a tagging strategy */
             autoCD?:
               | ({ [key: string]: any } | null)
@@ -833,9 +1005,9 @@ export interface components {
             /** Use the team domain so that the URL reveals the owner. */
             useDefaultSubdomain?: boolean;
             /** A host that is used to set DNS 'A' records */
-            subdomain?: string | null;
+            subdomain: string | null;
             /** A managed DNS zone */
-            domain?: string;
+            domain: string;
             /** The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.) */
             path?: string;
             /** Forward the URL path into the service (don't rewrite to /) */
@@ -852,7 +1024,7 @@ export interface components {
     services_Services: {
       enabled?: boolean;
       id?: string;
-      /** A service name */
+      /** A lowercase name that starts with a letter and may contain dashes. */
       name: string;
       /** A kubernetes cluster for the service */
       clusterId: string;
@@ -863,7 +1035,7 @@ export interface components {
             /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
             scaleToZero?: boolean;
             image?: {
-              /** A container image repository */
+              /** A container image repository. */
               repository?: string;
               tag?: string;
             } | null;
@@ -875,29 +1047,25 @@ export interface components {
               | null;
             env?:
               | {
-                  name: string;
+                  name: { [key: string]: any } | null;
                   value: string;
                 }[]
               | null;
             resources?: {
               requests?: {
-                /** The guaranteed amount of CPU */
+                /** Amount of cores, or slice of cpu in millis. */
                 cpu: string;
-                /** The guaranteed amount of RAM */
+                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                 memory: string;
               };
               limits?: {
-                /** The maximum amount of CPU */
+                /** Amount of cores, or slice of cpu in millis. */
                 cpu: string;
-                /** The maximum amount of RAM */
+                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                 memory: string;
               };
             } | null;
-            /** Kubernetes annotations with arbitrary metadata */
-            annotations?: {
-              name?: string;
-              value?: string;
-            }[];
+            annotations?: { [key: string]: any };
             /** Deploys new images based on a tagging strategy */
             autoCD?:
               | ({ [key: string]: any } | null)
@@ -924,9 +1092,9 @@ export interface components {
             /** Use the team domain so that the URL reveals the owner. */
             useDefaultSubdomain?: boolean;
             /** A host that is used to set DNS 'A' records */
-            subdomain?: string | null;
+            subdomain: string | null;
             /** A managed DNS zone */
-            domain?: string;
+            domain: string;
             /** The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.) */
             path?: string;
             /** Forward the URL path into the service (don't rewrite to /) */
@@ -940,9 +1108,28 @@ export interface components {
           } | null);
       teamId: string;
     }[];
+    azureMonitor: {
+      /** An Azure AppInsights client secret (defaults to clientSecret). */
+      appInsightsApiKey?: string;
+      /** An Azure AppInsights client id (defaults to clientId). */
+      appInsightsAppId?: string;
+      /** An Azure client id. */
+      clientId?: string;
+      /** An Azure client secret. */
+      clientSecret?: string;
+      /** An Azure client secret (defaults to clientSecret). */
+      logAnalyticsClientId?: string;
+      /** An Azure client secret (defaults to clientSecret). */
+      logAnalyticsClientSecret?: string;
+      /** An Azure tenant id (defaults to tenantId). */
+      logAnalyticsTenantId?: string;
+      /** An Azure monitor log analytics workspace. */
+      logAnalyticsWorkspace?: string;
+    };
     team_Team: {
+      /** A lowercase name that starts with a letter and may contain dashes. */
       id?: string;
-      /** A team name */
+      /** A lowercase name that starts with a letter and may contain dashes. */
       name: string;
       clusters: string[];
       oidc?: {
@@ -973,77 +1160,92 @@ export interface components {
           critical?: string;
         };
       };
-      /** Azure Monitor is the platform service that provides a single source for monitoring Azure resources. */
-      azureMonitor?: Partial<{ [key: string]: any } | null> &
-        Partial<{
-          /** An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID) */
-          clientId: string;
-          /** An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a key -> Use client secret) */
-          clientSecret: string;
-          /** A dedicated client ID for Azure Log Analytics. Defaults to clientId value. */
-          logAnalyticsClientId?: string;
-          /** A client Secret for Azure Log Analytics. Defaults to clientSecret value. */
-          logAnalyticsClientSecret?: string;
-          /** An app id for use with an Application Insights resource. Defaults to clientId value. */
-          appInsightsAppId?: string;
-          /** An api key for use with an Application Insights resource. Defaults to clientSecret value. */
-          appInsightsApiKey?: string;
-        } | null>;
+      azureMonitor?: {
+        /** An Azure AppInsights client secret (defaults to clientSecret). */
+        appInsightsApiKey?: string;
+        /** An Azure AppInsights client id (defaults to clientId). */
+        appInsightsAppId?: string;
+        /** An Azure client id. */
+        clientId?: string;
+        /** An Azure client secret. */
+        clientSecret?: string;
+        /** An Azure client secret (defaults to clientSecret). */
+        logAnalyticsClientId?: string;
+        /** An Azure client secret (defaults to clientSecret). */
+        logAnalyticsClientSecret?: string;
+        /** An Azure tenant id (defaults to tenantId). */
+        logAnalyticsTenantId?: string;
+        /** An Azure monitor log analytics workspace. */
+        logAnalyticsWorkspace?: string;
+      };
     };
     teams_Teams: {
-      teams?: {
-        id?: string;
-        /** A team name */
-        name: string;
-        clusters: string[];
-        oidc?: {
-          /** An OIDC group name/id granting access to this team */
-          groupMapping?: string;
+      /** A lowercase name that starts with a letter and may contain dashes. */
+      id?: string;
+      /** A lowercase name that starts with a letter and may contain dashes. */
+      name: string;
+      clusters: string[];
+      oidc?: {
+        /** An OIDC group name/id granting access to this team */
+        groupMapping?: string;
+      };
+      password: string;
+      alerts?: {
+        receivers?: ("slack" | "msteams" | "email")[];
+        slack?: {
+          /** Slack web hook. If none is given the global one is used. */
+          url?: string;
+          /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
+          channel?: string;
+          /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
+          channelCrit?: string;
         };
-        password: string;
-        alerts?: {
-          receivers?: ("slack" | "msteams" | "email")[];
-          slack?: {
-            /** Slack web hook. If none is given the global one is used. */
-            url?: string;
-            /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
-            channel?: string;
-            /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
-            channelCrit?: string;
-          };
-          msteams?: {
-            /** The low prio web hook */
-            lowPrio?: string;
-            /** The high prio web hook */
-            highPrio?: string;
-          };
-          email?: {
-            /** One or more email addresses (comma separated) for non-critical events. */
-            nonCritical?: string;
-            /** Email addresses (comma separated) for critical events. */
-            critical?: string;
-          };
+        msteams?: {
+          /** The low prio web hook */
+          lowPrio?: string;
+          /** The high prio web hook */
+          highPrio?: string;
         };
-        /** Azure Monitor is the platform service that provides a single source for monitoring Azure resources. */
-        azureMonitor?: Partial<{ [key: string]: any } | null> &
-          Partial<{
-            /** An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID) */
-            clientId: string;
-            /** An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a key -> Use client secret) */
-            clientSecret: string;
-            /** A dedicated client ID for Azure Log Analytics. Defaults to clientId value. */
-            logAnalyticsClientId?: string;
-            /** A client Secret for Azure Log Analytics. Defaults to clientSecret value. */
-            logAnalyticsClientSecret?: string;
-            /** An app id for use with an Application Insights resource. Defaults to clientId value. */
-            appInsightsAppId?: string;
-            /** An api key for use with an Application Insights resource. Defaults to clientSecret value. */
-            appInsightsApiKey?: string;
-          } | null>;
-      }[];
-    };
+        email?: {
+          /** One or more email addresses (comma separated) for non-critical events. */
+          nonCritical?: string;
+          /** Email addresses (comma separated) for critical events. */
+          critical?: string;
+        };
+      };
+      azureMonitor?: {
+        /** An Azure AppInsights client secret (defaults to clientSecret). */
+        appInsightsApiKey?: string;
+        /** An Azure AppInsights client id (defaults to clientId). */
+        appInsightsAppId?: string;
+        /** An Azure client id. */
+        clientId?: string;
+        /** An Azure client secret. */
+        clientSecret?: string;
+        /** An Azure client secret (defaults to clientSecret). */
+        logAnalyticsClientId?: string;
+        /** An Azure client secret (defaults to clientSecret). */
+        logAnalyticsClientSecret?: string;
+        /** An Azure tenant id (defaults to tenantId). */
+        logAnalyticsTenantId?: string;
+        /** An Azure monitor log analytics workspace. */
+        logAnalyticsWorkspace?: string;
+      };
+    }[];
     error_OtomiStackError: {
       message?: string;
+    };
+    email: string;
+    user_User: {
+      /** A user name */
+      name: string;
+      email: string;
+      /** If the user is admin */
+      isAdmin: boolean;
+      /** A list of teams the user belongs to */
+      teams: string[];
+      /** A list of roles that the user has */
+      roles: string[];
     };
     session_Session: {
       clusters?: string[];
@@ -1052,8 +1254,9 @@ export interface components {
       isDirty?: boolean;
       namespaces?: string[];
       teams?: {
+        /** A lowercase name that starts with a letter and may contain dashes. */
         id?: string;
-        /** A team name */
+        /** A lowercase name that starts with a letter and may contain dashes. */
         name: string;
         clusters: string[];
         oidc?: {
@@ -1084,39 +1287,266 @@ export interface components {
             critical?: string;
           };
         };
-        /** Azure Monitor is the platform service that provides a single source for monitoring Azure resources. */
-        azureMonitor?: Partial<{ [key: string]: any } | null> &
-          Partial<{
-            /** An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID) */
-            clientId: string;
-            /** An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a key -> Use client secret) */
-            clientSecret: string;
-            /** A dedicated client ID for Azure Log Analytics. Defaults to clientId value. */
-            logAnalyticsClientId?: string;
-            /** A client Secret for Azure Log Analytics. Defaults to clientSecret value. */
-            logAnalyticsClientSecret?: string;
-            /** An app id for use with an Application Insights resource. Defaults to clientId value. */
-            appInsightsAppId?: string;
-            /** An api key for use with an Application Insights resource. Defaults to clientSecret value. */
-            appInsightsApiKey?: string;
-          } | null>;
+        azureMonitor?: {
+          /** An Azure AppInsights client secret (defaults to clientSecret). */
+          appInsightsApiKey?: string;
+          /** An Azure AppInsights client id (defaults to clientId). */
+          appInsightsAppId?: string;
+          /** An Azure client id. */
+          clientId?: string;
+          /** An Azure client secret. */
+          clientSecret?: string;
+          /** An Azure client secret (defaults to clientSecret). */
+          logAnalyticsClientId?: string;
+          /** An Azure client secret (defaults to clientSecret). */
+          logAnalyticsClientSecret?: string;
+          /** An Azure tenant id (defaults to tenantId). */
+          logAnalyticsTenantId?: string;
+          /** An Azure monitor log analytics workspace. */
+          logAnalyticsWorkspace?: string;
+        };
       }[];
       user?: {
         /** A user name */
-        name?: string;
-        /** An email address */
-        email?: string;
+        name: string;
+        email: string;
         /** If the user is admin */
-        isAdmin?: boolean;
+        isAdmin: boolean;
         /** A list of teams the user belongs to */
-        teams?: string[];
+        teams: string[];
         /** A list of roles that the user has */
-        roles?: string[];
+        roles: string[];
       };
     };
+    url: string;
+    alerts: {
+      drone?: "slack" | "msteams";
+      email?: {
+        /** One or more email addresses (comma separated) for critical events. */
+        critical?: string;
+        /** One or more email addresses (comma separated) for non-critical events. */
+        nonCritical?: string;
+      };
+      /** How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.) */
+      groupInterval?: string;
+      msteams?: {
+        /** The low prio web hook. */
+        highPrio?: string;
+        /** The high prio web hook. */
+        lowPrio?: string;
+      };
+      /** Notification receivers. */
+      receivers?: ("slack" | "msteams" | "email")[];
+      /** How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more). */
+      repeatInterval?: string;
+      slack?: {
+        /** The Slack channel for non-critical notifications. */
+        channel?: string;
+        /** The Slack channel for critical notifications. */
+        channelCrit?: string;
+        /** A Slack webhook URL. */
+        url?: string;
+      };
+    };
+    hostPort: string;
     settings_Settings: {
-      /** Placeholder (copy schema from otomi-core) */
-      alerts?: { [key: string]: any };
+      alerts?: {
+        drone?: "slack" | "msteams";
+        email?: {
+          /** One or more email addresses (comma separated) for critical events. */
+          critical?: string;
+          /** One or more email addresses (comma separated) for non-critical events. */
+          nonCritical?: string;
+        };
+        /** How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.) */
+        groupInterval?: string;
+        msteams?: {
+          /** The low prio web hook. */
+          highPrio?: string;
+          /** The high prio web hook. */
+          lowPrio?: string;
+        };
+        /** Notification receivers. */
+        receivers?: ("slack" | "msteams" | "email")[];
+        /** How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more). */
+        repeatInterval?: string;
+        slack?: {
+          /** The Slack channel for non-critical notifications. */
+          channel?: string;
+          /** The Slack channel for critical notifications. */
+          channelCrit?: string;
+          /** A Slack webhook URL. */
+          url?: string;
+        };
+      };
+      /** Azure specific configuration. */
+      azure?: {
+        appgw?: {
+          /** Is this appgw installed as AKS addon? */
+          isManaged?: boolean;
+        };
+        /** An Azure disk type (SKU Type). */
+        diskType:
+          | "Standard_LRS"
+          | "Standard_GRS"
+          | "Standard_RAGRS"
+          | "Standard_ZRS"
+          | "Premium_LRS"
+          | "Premium_ZRS"
+          | "Standard_GZRS"
+          | "Standard_RAGZRS";
+        /** Azure Key Vault access credentials. Will use azure.tenantId if tenantId is not provided. */
+        keyVault?: {
+          /** An Azure tenant ID. */
+          tenantId?: string;
+          /** An Azure client ID. */
+          clientId: string;
+          /** An Azure client secret. */
+          clientSecret: string;
+        };
+        monitor?: {
+          /** An Azure AppInsights client secret (defaults to clientSecret). */
+          appInsightsApiKey?: string;
+          /** An Azure AppInsights client id (defaults to clientId). */
+          appInsightsAppId?: string;
+          /** An Azure client id. */
+          clientId?: string;
+          /** An Azure client secret. */
+          clientSecret?: string;
+          /** An Azure client secret (defaults to clientSecret). */
+          logAnalyticsClientId?: string;
+          /** An Azure client secret (defaults to clientSecret). */
+          logAnalyticsClientSecret?: string;
+          /** An Azure tenant id (defaults to tenantId). */
+          logAnalyticsTenantId?: string;
+          /** An Azure monitor log analytics workspace. */
+          logAnalyticsWorkspace?: string;
+        };
+        /** An Azure resource group. */
+        resourceGroup: string;
+        /** An Azure subscription ID. */
+        subscriptionId: string;
+        /** An Azure tenant ID. */
+        tenantId: string;
+      };
+      customer?: {
+        name?: string;
+      };
+      /** Google specific configuration. */
+      google?: {
+        /** A service account key for managing a DNS zone. */
+        cloudDnsKey: string;
+        /** A service account key for managing a KMS vault. */
+        kmsAccount?: string;
+        /** A Google Cloud project ID for accessing DNS zone. */
+        projectId: string;
+      };
+      home?: {
+        drone?: "slack" | "msteams";
+        email?: {
+          /** One or more email addresses (comma separated) for critical events. */
+          critical?: string;
+          /** One or more email addresses (comma separated) for non-critical events. */
+          nonCritical?: string;
+        };
+        /** How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.) */
+        groupInterval?: string;
+        msteams?: {
+          /** The low prio web hook. */
+          highPrio?: string;
+          /** The high prio web hook. */
+          lowPrio?: string;
+        };
+        /** Notification receivers. */
+        receivers?: ("slack" | "msteams" | "email")[];
+        /** How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more). */
+        repeatInterval?: string;
+        slack?: {
+          /** The Slack channel for non-critical notifications. */
+          channel?: string;
+          /** The Slack channel for critical notifications. */
+          channelCrit?: string;
+          /** A Slack webhook URL. */
+          url?: string;
+        };
+      };
+      /** Use Cloud KMS to encrypt and decrypt the master key */
+      kms?:
+        | {
+            gcpckms: {
+              project: string;
+              region: string;
+              key_ring: string;
+              kmsAccount: string;
+            };
+          }
+        | {
+            awskms: {
+              region: string;
+              access_key: string;
+              secret_key: string;
+              endpoint: string;
+            };
+          }
+        | {
+            azurekeyvault: {
+              vault_name: string;
+              tenant_id: string;
+              client_id: string;
+              client_secret: string;
+            };
+          };
+      /** Holds many parts used in different locations. Please see keycloak, istio and oauth-proxy all consuming parts. */
+      oidc?: {
+        adminGroupID?: string;
+        apiUrl?: string;
+        authUrl?: string;
+        clientID?: string;
+        clientSecret?: string;
+        issuer?: string;
+        scope?: string;
+        teamAdminGroupID?: string;
+        tenantID?: string;
+        tokenUrl?: string;
+        /** Claim name used by Keycloak to identify incoming users from identity provider */
+        usernameClaimMapper?: string;
+        /** Select OIDC claim to be used as a unique user identifier */
+        subClaimMapper?: string;
+      };
+      otomi?: {
+        /** Set this to true when an external LB exists or needs to be started (AWS ALB, Azure AppGW, Google Apigee). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion. */
+        hasCloudLB?: boolean;
+        /** Whether this cluster is home monitored (like when under a Premium SLA). Sends criticals home. */
+        isHomeMonitored?: boolean;
+        /** Whether masters are managed and not under control. Set this to false when onprem. */
+        isManaged?: boolean;
+        /** Whether to separate team metrics and logs. Disabling this lets everybody be admin and see everything. */
+        isMultitenant?: boolean;
+        /** The otomi-core edition. Either community edition (ce) or enterprise edition (ee). */
+        mode?: "ce" | "ee";
+        /** The pullsecret to deploy the Otomi API and Console. Requires an Otomi license. */
+        pullSecret?: string;
+        /** The prefix to use in URLs for team domains. */
+        teamPrefix?: string;
+        /** Manage addon configuration */
+        addons?: {
+          conftest?: {
+            /** Use this flag to enable conftest for policy validation */
+            enabled?: boolean;
+          };
+        };
+      };
+      smtp?: {
+        auth_identity?: string;
+        auth_password?: string;
+        auth_secret?: string;
+        auth_username?: string;
+        /** The "from" address. Defaults to alerts@$clusterDomain. */
+        from?: string;
+        hello?: string;
+        /** The smtp host:port combination. */
+        smarthost: string;
+      };
     };
     cloud_Cloud: {
       /** A cluster name */
@@ -1151,18 +1581,6 @@ export interface components {
       status?: "in-progress" | "completed" | "failed";
     };
     kubecfg_Kubecfg: { [key: string]: any };
-    user_User: {
-      /** A user name */
-      name: string;
-      /** An email address */
-      email: string;
-      /** If the user is admin */
-      isAdmin: boolean;
-      /** A list of teams the user belongs to */
-      teams: string[];
-      /** A list of roles that the user has */
-      roles: string[];
-    };
   };
   parameters: {
     /** ID of team to return */
@@ -1212,33 +1630,31 @@ export interface operations {
       /** Successfully obtained all secrets */
       200: {
         content: {
-          "application/json": {
-            secrets?: ((
-              | {
-                  type: "generic";
-                  entries: string[];
-                }
-              | {
-                  type: "docker-registry";
-                  dockerconfig?: ".dockerconfig.json";
-                }
-              | {
-                  type: "tls";
-                  /** A Vault property name that contains PEM public key certificate */
-                  crt: string;
-                  /** A Vault property name that contains PEM private key certificate */
-                  key: string;
-                  /** A Vault property name that contains CA certificate content */
-                  ca?: string;
-                }
-            ) & {
-              id?: string;
-              /** A secret name */
-              name: string;
-              /** A kubernetes cluster for the secret */
-              clusterId: string;
-            })[];
-          };
+          "application/json": ((
+            | {
+                type: "generic";
+                entries: string[];
+              }
+            | {
+                type: "docker-registry";
+                dockerconfig?: ".dockerconfig.json";
+              }
+            | {
+                type: "tls";
+                /** A Vault property name that contains PEM public key certificate */
+                crt: string;
+                /** A Vault property name that contains PEM private key certificate */
+                key: string;
+                /** A Vault property name that contains CA certificate content */
+                ca?: string;
+              }
+          ) & {
+            id?: string;
+            /** A secret name */
+            name: string;
+            /** A kubernetes cluster for the secret */
+            clusterId: string;
+          })[];
         };
       };
       /** Bad Request */
@@ -1266,7 +1682,7 @@ export interface operations {
           "application/json": {
             enabled?: boolean;
             id?: string;
-            /** A service name */
+            /** A lowercase name that starts with a letter and may contain dashes. */
             name: string;
             /** A kubernetes cluster for the service */
             clusterId: string;
@@ -1277,7 +1693,7 @@ export interface operations {
                   /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
                   scaleToZero?: boolean;
                   image?: {
-                    /** A container image repository */
+                    /** A container image repository. */
                     repository?: string;
                     tag?: string;
                   } | null;
@@ -1289,29 +1705,25 @@ export interface operations {
                     | null;
                   env?:
                     | {
-                        name: string;
+                        name: { [key: string]: any } | null;
                         value: string;
                       }[]
                     | null;
                   resources?: {
                     requests?: {
-                      /** The guaranteed amount of CPU */
+                      /** Amount of cores, or slice of cpu in millis. */
                       cpu: string;
-                      /** The guaranteed amount of RAM */
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                       memory: string;
                     };
                     limits?: {
-                      /** The maximum amount of CPU */
+                      /** Amount of cores, or slice of cpu in millis. */
                       cpu: string;
-                      /** The maximum amount of RAM */
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                       memory: string;
                     };
                   } | null;
-                  /** Kubernetes annotations with arbitrary metadata */
-                  annotations?: {
-                    name?: string;
-                    value?: string;
-                  }[];
+                  annotations?: { [key: string]: any };
                   /** Deploys new images based on a tagging strategy */
                   autoCD?:
                     | ({ [key: string]: any } | null)
@@ -1338,9 +1750,9 @@ export interface operations {
                   /** Use the team domain so that the URL reveals the owner. */
                   useDefaultSubdomain?: boolean;
                   /** A host that is used to set DNS 'A' records */
-                  subdomain?: string | null;
+                  subdomain: string | null;
                   /** A managed DNS zone */
-                  domain?: string;
+                  domain: string;
                   /** The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.) */
                   path?: string;
                   /** Forward the URL path into the service (don't rewrite to /) */
@@ -1379,70 +1791,9 @@ export interface operations {
       200: {
         content: {
           "application/json": {
-            teams?: {
-              id?: string;
-              /** A team name */
-              name: string;
-              clusters: string[];
-              oidc?: {
-                /** An OIDC group name/id granting access to this team */
-                groupMapping?: string;
-              };
-              password: string;
-              alerts?: {
-                receivers?: ("slack" | "msteams" | "email")[];
-                slack?: {
-                  /** Slack web hook. If none is given the global one is used. */
-                  url?: string;
-                  /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
-                  channel?: string;
-                  /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
-                  channelCrit?: string;
-                };
-                msteams?: {
-                  /** The low prio web hook */
-                  lowPrio?: string;
-                  /** The high prio web hook */
-                  highPrio?: string;
-                };
-                email?: {
-                  /** One or more email addresses (comma separated) for non-critical events. */
-                  nonCritical?: string;
-                  /** Email addresses (comma separated) for critical events. */
-                  critical?: string;
-                };
-              };
-              /** Azure Monitor is the platform service that provides a single source for monitoring Azure resources. */
-              azureMonitor?: Partial<{ [key: string]: any } | null> &
-                Partial<{
-                  /** An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID) */
-                  clientId: string;
-                  /** An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a key -> Use client secret) */
-                  clientSecret: string;
-                  /** A dedicated client ID for Azure Log Analytics. Defaults to clientId value. */
-                  logAnalyticsClientId?: string;
-                  /** A client Secret for Azure Log Analytics. Defaults to clientSecret value. */
-                  logAnalyticsClientSecret?: string;
-                  /** An app id for use with an Application Insights resource. Defaults to clientId value. */
-                  appInsightsAppId?: string;
-                  /** An api key for use with an Application Insights resource. Defaults to clientSecret value. */
-                  appInsightsApiKey?: string;
-                } | null>;
-            }[];
-          };
-        };
-      };
-    };
-  };
-  /** Create a team */
-  createTeam: {
-    responses: {
-      /** Successfully obtained teams collection */
-      200: {
-        content: {
-          "application/json": {
+            /** A lowercase name that starts with a letter and may contain dashes. */
             id?: string;
-            /** A team name */
+            /** A lowercase name that starts with a letter and may contain dashes. */
             name: string;
             clusters: string[];
             oidc?: {
@@ -1473,22 +1824,87 @@ export interface operations {
                 critical?: string;
               };
             };
-            /** Azure Monitor is the platform service that provides a single source for monitoring Azure resources. */
-            azureMonitor?: Partial<{ [key: string]: any } | null> &
-              Partial<{
-                /** An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID) */
-                clientId: string;
-                /** An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a key -> Use client secret) */
-                clientSecret: string;
-                /** A dedicated client ID for Azure Log Analytics. Defaults to clientId value. */
-                logAnalyticsClientId?: string;
-                /** A client Secret for Azure Log Analytics. Defaults to clientSecret value. */
-                logAnalyticsClientSecret?: string;
-                /** An app id for use with an Application Insights resource. Defaults to clientId value. */
-                appInsightsAppId?: string;
-                /** An api key for use with an Application Insights resource. Defaults to clientSecret value. */
-                appInsightsApiKey?: string;
-              } | null>;
+            azureMonitor?: {
+              /** An Azure AppInsights client secret (defaults to clientSecret). */
+              appInsightsApiKey?: string;
+              /** An Azure AppInsights client id (defaults to clientId). */
+              appInsightsAppId?: string;
+              /** An Azure client id. */
+              clientId?: string;
+              /** An Azure client secret. */
+              clientSecret?: string;
+              /** An Azure client secret (defaults to clientSecret). */
+              logAnalyticsClientId?: string;
+              /** An Azure client secret (defaults to clientSecret). */
+              logAnalyticsClientSecret?: string;
+              /** An Azure tenant id (defaults to tenantId). */
+              logAnalyticsTenantId?: string;
+              /** An Azure monitor log analytics workspace. */
+              logAnalyticsWorkspace?: string;
+            };
+          }[];
+        };
+      };
+    };
+  };
+  /** Create a team */
+  createTeam: {
+    responses: {
+      /** Successfully obtained teams collection */
+      200: {
+        content: {
+          "application/json": {
+            /** A lowercase name that starts with a letter and may contain dashes. */
+            id?: string;
+            /** A lowercase name that starts with a letter and may contain dashes. */
+            name: string;
+            clusters: string[];
+            oidc?: {
+              /** An OIDC group name/id granting access to this team */
+              groupMapping?: string;
+            };
+            password: string;
+            alerts?: {
+              receivers?: ("slack" | "msteams" | "email")[];
+              slack?: {
+                /** Slack web hook. If none is given the global one is used. */
+                url?: string;
+                /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
+                channel?: string;
+                /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
+                channelCrit?: string;
+              };
+              msteams?: {
+                /** The low prio web hook */
+                lowPrio?: string;
+                /** The high prio web hook */
+                highPrio?: string;
+              };
+              email?: {
+                /** One or more email addresses (comma separated) for non-critical events. */
+                nonCritical?: string;
+                /** Email addresses (comma separated) for critical events. */
+                critical?: string;
+              };
+            };
+            azureMonitor?: {
+              /** An Azure AppInsights client secret (defaults to clientSecret). */
+              appInsightsApiKey?: string;
+              /** An Azure AppInsights client id (defaults to clientId). */
+              appInsightsAppId?: string;
+              /** An Azure client id. */
+              clientId?: string;
+              /** An Azure client secret. */
+              clientSecret?: string;
+              /** An Azure client secret (defaults to clientSecret). */
+              logAnalyticsClientId?: string;
+              /** An Azure client secret (defaults to clientSecret). */
+              logAnalyticsClientSecret?: string;
+              /** An Azure tenant id (defaults to tenantId). */
+              logAnalyticsTenantId?: string;
+              /** An Azure monitor log analytics workspace. */
+              logAnalyticsWorkspace?: string;
+            };
           };
         };
       };
@@ -1519,8 +1935,9 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
+          /** A lowercase name that starts with a letter and may contain dashes. */
           id?: string;
-          /** A team name */
+          /** A lowercase name that starts with a letter and may contain dashes. */
           name: string;
           clusters: string[];
           oidc?: {
@@ -1551,22 +1968,24 @@ export interface operations {
               critical?: string;
             };
           };
-          /** Azure Monitor is the platform service that provides a single source for monitoring Azure resources. */
-          azureMonitor?: Partial<{ [key: string]: any } | null> &
-            Partial<{
-              /** An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID) */
-              clientId: string;
-              /** An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a key -> Use client secret) */
-              clientSecret: string;
-              /** A dedicated client ID for Azure Log Analytics. Defaults to clientId value. */
-              logAnalyticsClientId?: string;
-              /** A client Secret for Azure Log Analytics. Defaults to clientSecret value. */
-              logAnalyticsClientSecret?: string;
-              /** An app id for use with an Application Insights resource. Defaults to clientId value. */
-              appInsightsAppId?: string;
-              /** An api key for use with an Application Insights resource. Defaults to clientSecret value. */
-              appInsightsApiKey?: string;
-            } | null>;
+          azureMonitor?: {
+            /** An Azure AppInsights client secret (defaults to clientSecret). */
+            appInsightsApiKey?: string;
+            /** An Azure AppInsights client id (defaults to clientId). */
+            appInsightsAppId?: string;
+            /** An Azure client id. */
+            clientId?: string;
+            /** An Azure client secret. */
+            clientSecret?: string;
+            /** An Azure client secret (defaults to clientSecret). */
+            logAnalyticsClientId?: string;
+            /** An Azure client secret (defaults to clientSecret). */
+            logAnalyticsClientSecret?: string;
+            /** An Azure tenant id (defaults to tenantId). */
+            logAnalyticsTenantId?: string;
+            /** An Azure monitor log analytics workspace. */
+            logAnalyticsWorkspace?: string;
+          };
         };
       };
     };
@@ -1584,8 +2003,9 @@ export interface operations {
       200: {
         content: {
           "application/json": {
+            /** A lowercase name that starts with a letter and may contain dashes. */
             id?: string;
-            /** A team name */
+            /** A lowercase name that starts with a letter and may contain dashes. */
             name: string;
             clusters: string[];
             oidc?: {
@@ -1616,22 +2036,24 @@ export interface operations {
                 critical?: string;
               };
             };
-            /** Azure Monitor is the platform service that provides a single source for monitoring Azure resources. */
-            azureMonitor?: Partial<{ [key: string]: any } | null> &
-              Partial<{
-                /** An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID) */
-                clientId: string;
-                /** An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a key -> Use client secret) */
-                clientSecret: string;
-                /** A dedicated client ID for Azure Log Analytics. Defaults to clientId value. */
-                logAnalyticsClientId?: string;
-                /** A client Secret for Azure Log Analytics. Defaults to clientSecret value. */
-                logAnalyticsClientSecret?: string;
-                /** An app id for use with an Application Insights resource. Defaults to clientId value. */
-                appInsightsAppId?: string;
-                /** An api key for use with an Application Insights resource. Defaults to clientSecret value. */
-                appInsightsApiKey?: string;
-              } | null>;
+            azureMonitor?: {
+              /** An Azure AppInsights client secret (defaults to clientSecret). */
+              appInsightsApiKey?: string;
+              /** An Azure AppInsights client id (defaults to clientId). */
+              appInsightsAppId?: string;
+              /** An Azure client id. */
+              clientId?: string;
+              /** An Azure client secret. */
+              clientSecret?: string;
+              /** An Azure client secret (defaults to clientSecret). */
+              logAnalyticsClientId?: string;
+              /** An Azure client secret (defaults to clientSecret). */
+              logAnalyticsClientSecret?: string;
+              /** An Azure tenant id (defaults to tenantId). */
+              logAnalyticsTenantId?: string;
+              /** An Azure monitor log analytics workspace. */
+              logAnalyticsWorkspace?: string;
+            };
           };
         };
       };
@@ -1672,8 +2094,9 @@ export interface operations {
       200: {
         content: {
           "application/json": {
+            /** A lowercase name that starts with a letter and may contain dashes. */
             id?: string;
-            /** A team name */
+            /** A lowercase name that starts with a letter and may contain dashes. */
             name: string;
             clusters: string[];
             oidc?: {
@@ -1704,22 +2127,24 @@ export interface operations {
                 critical?: string;
               };
             };
-            /** Azure Monitor is the platform service that provides a single source for monitoring Azure resources. */
-            azureMonitor?: Partial<{ [key: string]: any } | null> &
-              Partial<{
-                /** An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID) */
-                clientId: string;
-                /** An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a key -> Use client secret) */
-                clientSecret: string;
-                /** A dedicated client ID for Azure Log Analytics. Defaults to clientId value. */
-                logAnalyticsClientId?: string;
-                /** A client Secret for Azure Log Analytics. Defaults to clientSecret value. */
-                logAnalyticsClientSecret?: string;
-                /** An app id for use with an Application Insights resource. Defaults to clientId value. */
-                appInsightsAppId?: string;
-                /** An api key for use with an Application Insights resource. Defaults to clientSecret value. */
-                appInsightsApiKey?: string;
-              } | null>;
+            azureMonitor?: {
+              /** An Azure AppInsights client secret (defaults to clientSecret). */
+              appInsightsApiKey?: string;
+              /** An Azure AppInsights client id (defaults to clientId). */
+              appInsightsAppId?: string;
+              /** An Azure client id. */
+              clientId?: string;
+              /** An Azure client secret. */
+              clientSecret?: string;
+              /** An Azure client secret (defaults to clientSecret). */
+              logAnalyticsClientId?: string;
+              /** An Azure client secret (defaults to clientSecret). */
+              logAnalyticsClientSecret?: string;
+              /** An Azure tenant id (defaults to tenantId). */
+              logAnalyticsTenantId?: string;
+              /** An Azure monitor log analytics workspace. */
+              logAnalyticsWorkspace?: string;
+            };
           };
         };
       };
@@ -1750,8 +2175,9 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
+          /** A lowercase name that starts with a letter and may contain dashes. */
           id?: string;
-          /** A team name */
+          /** A lowercase name that starts with a letter and may contain dashes. */
           name: string;
           clusters: string[];
           oidc?: {
@@ -1782,22 +2208,24 @@ export interface operations {
               critical?: string;
             };
           };
-          /** Azure Monitor is the platform service that provides a single source for monitoring Azure resources. */
-          azureMonitor?: Partial<{ [key: string]: any } | null> &
-            Partial<{
-              /** An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID) */
-              clientId: string;
-              /** An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a key -> Use client secret) */
-              clientSecret: string;
-              /** A dedicated client ID for Azure Log Analytics. Defaults to clientId value. */
-              logAnalyticsClientId?: string;
-              /** A client Secret for Azure Log Analytics. Defaults to clientSecret value. */
-              logAnalyticsClientSecret?: string;
-              /** An app id for use with an Application Insights resource. Defaults to clientId value. */
-              appInsightsAppId?: string;
-              /** An api key for use with an Application Insights resource. Defaults to clientSecret value. */
-              appInsightsApiKey?: string;
-            } | null>;
+          azureMonitor?: {
+            /** An Azure AppInsights client secret (defaults to clientSecret). */
+            appInsightsApiKey?: string;
+            /** An Azure AppInsights client id (defaults to clientId). */
+            appInsightsAppId?: string;
+            /** An Azure client id. */
+            clientId?: string;
+            /** An Azure client secret. */
+            clientSecret?: string;
+            /** An Azure client secret (defaults to clientSecret). */
+            logAnalyticsClientId?: string;
+            /** An Azure client secret (defaults to clientSecret). */
+            logAnalyticsClientSecret?: string;
+            /** An Azure tenant id (defaults to tenantId). */
+            logAnalyticsTenantId?: string;
+            /** An Azure monitor log analytics workspace. */
+            logAnalyticsWorkspace?: string;
+          };
         };
       };
     };
@@ -1852,7 +2280,7 @@ export interface operations {
           "application/json": {
             enabled?: boolean;
             id?: string;
-            /** A service name */
+            /** A lowercase name that starts with a letter and may contain dashes. */
             name: string;
             /** A kubernetes cluster for the service */
             clusterId: string;
@@ -1863,7 +2291,7 @@ export interface operations {
                   /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
                   scaleToZero?: boolean;
                   image?: {
-                    /** A container image repository */
+                    /** A container image repository. */
                     repository?: string;
                     tag?: string;
                   } | null;
@@ -1875,29 +2303,25 @@ export interface operations {
                     | null;
                   env?:
                     | {
-                        name: string;
+                        name: { [key: string]: any } | null;
                         value: string;
                       }[]
                     | null;
                   resources?: {
                     requests?: {
-                      /** The guaranteed amount of CPU */
+                      /** Amount of cores, or slice of cpu in millis. */
                       cpu: string;
-                      /** The guaranteed amount of RAM */
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                       memory: string;
                     };
                     limits?: {
-                      /** The maximum amount of CPU */
+                      /** Amount of cores, or slice of cpu in millis. */
                       cpu: string;
-                      /** The maximum amount of RAM */
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                       memory: string;
                     };
                   } | null;
-                  /** Kubernetes annotations with arbitrary metadata */
-                  annotations?: {
-                    name?: string;
-                    value?: string;
-                  }[];
+                  annotations?: { [key: string]: any };
                   /** Deploys new images based on a tagging strategy */
                   autoCD?:
                     | ({ [key: string]: any } | null)
@@ -1924,9 +2348,9 @@ export interface operations {
                   /** Use the team domain so that the URL reveals the owner. */
                   useDefaultSubdomain?: boolean;
                   /** A host that is used to set DNS 'A' records */
-                  subdomain?: string | null;
+                  subdomain: string | null;
                   /** A managed DNS zone */
-                  domain?: string;
+                  domain: string;
                   /** The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.) */
                   path?: string;
                   /** Forward the URL path into the service (don't rewrite to /) */
@@ -1973,7 +2397,7 @@ export interface operations {
           "application/json": {
             enabled?: boolean;
             id?: string;
-            /** A service name */
+            /** A lowercase name that starts with a letter and may contain dashes. */
             name: string;
             /** A kubernetes cluster for the service */
             clusterId: string;
@@ -1984,7 +2408,7 @@ export interface operations {
                   /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
                   scaleToZero?: boolean;
                   image?: {
-                    /** A container image repository */
+                    /** A container image repository. */
                     repository?: string;
                     tag?: string;
                   } | null;
@@ -1996,29 +2420,25 @@ export interface operations {
                     | null;
                   env?:
                     | {
-                        name: string;
+                        name: { [key: string]: any } | null;
                         value: string;
                       }[]
                     | null;
                   resources?: {
                     requests?: {
-                      /** The guaranteed amount of CPU */
+                      /** Amount of cores, or slice of cpu in millis. */
                       cpu: string;
-                      /** The guaranteed amount of RAM */
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                       memory: string;
                     };
                     limits?: {
-                      /** The maximum amount of CPU */
+                      /** Amount of cores, or slice of cpu in millis. */
                       cpu: string;
-                      /** The maximum amount of RAM */
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                       memory: string;
                     };
                   } | null;
-                  /** Kubernetes annotations with arbitrary metadata */
-                  annotations?: {
-                    name?: string;
-                    value?: string;
-                  }[];
+                  annotations?: { [key: string]: any };
                   /** Deploys new images based on a tagging strategy */
                   autoCD?:
                     | ({ [key: string]: any } | null)
@@ -2045,9 +2465,9 @@ export interface operations {
                   /** Use the team domain so that the URL reveals the owner. */
                   useDefaultSubdomain?: boolean;
                   /** A host that is used to set DNS 'A' records */
-                  subdomain?: string | null;
+                  subdomain: string | null;
                   /** A managed DNS zone */
-                  domain?: string;
+                  domain: string;
                   /** The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.) */
                   path?: string;
                   /** Forward the URL path into the service (don't rewrite to /) */
@@ -2092,7 +2512,7 @@ export interface operations {
         "application/json": {
           enabled?: boolean;
           id?: string;
-          /** A service name */
+          /** A lowercase name that starts with a letter and may contain dashes. */
           name: string;
           /** A kubernetes cluster for the service */
           clusterId: string;
@@ -2103,7 +2523,7 @@ export interface operations {
                 /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
                 scaleToZero?: boolean;
                 image?: {
-                  /** A container image repository */
+                  /** A container image repository. */
                   repository?: string;
                   tag?: string;
                 } | null;
@@ -2115,29 +2535,25 @@ export interface operations {
                   | null;
                 env?:
                   | {
-                      name: string;
+                      name: { [key: string]: any } | null;
                       value: string;
                     }[]
                   | null;
                 resources?: {
                   requests?: {
-                    /** The guaranteed amount of CPU */
+                    /** Amount of cores, or slice of cpu in millis. */
                     cpu: string;
-                    /** The guaranteed amount of RAM */
+                    /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                     memory: string;
                   };
                   limits?: {
-                    /** The maximum amount of CPU */
+                    /** Amount of cores, or slice of cpu in millis. */
                     cpu: string;
-                    /** The maximum amount of RAM */
+                    /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                     memory: string;
                   };
                 } | null;
-                /** Kubernetes annotations with arbitrary metadata */
-                annotations?: {
-                  name?: string;
-                  value?: string;
-                }[];
+                annotations?: { [key: string]: any };
                 /** Deploys new images based on a tagging strategy */
                 autoCD?:
                   | ({ [key: string]: any } | null)
@@ -2164,9 +2580,9 @@ export interface operations {
                 /** Use the team domain so that the URL reveals the owner. */
                 useDefaultSubdomain?: boolean;
                 /** A host that is used to set DNS 'A' records */
-                subdomain?: string | null;
+                subdomain: string | null;
                 /** A managed DNS zone */
-                domain?: string;
+                domain: string;
                 /** The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.) */
                 path?: string;
                 /** Forward the URL path into the service (don't rewrite to /) */
@@ -2200,7 +2616,7 @@ export interface operations {
           "application/json": {
             enabled?: boolean;
             id?: string;
-            /** A service name */
+            /** A lowercase name that starts with a letter and may contain dashes. */
             name: string;
             /** A kubernetes cluster for the service */
             clusterId: string;
@@ -2211,7 +2627,7 @@ export interface operations {
                   /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
                   scaleToZero?: boolean;
                   image?: {
-                    /** A container image repository */
+                    /** A container image repository. */
                     repository?: string;
                     tag?: string;
                   } | null;
@@ -2223,29 +2639,25 @@ export interface operations {
                     | null;
                   env?:
                     | {
-                        name: string;
+                        name: { [key: string]: any } | null;
                         value: string;
                       }[]
                     | null;
                   resources?: {
                     requests?: {
-                      /** The guaranteed amount of CPU */
+                      /** Amount of cores, or slice of cpu in millis. */
                       cpu: string;
-                      /** The guaranteed amount of RAM */
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                       memory: string;
                     };
                     limits?: {
-                      /** The maximum amount of CPU */
+                      /** Amount of cores, or slice of cpu in millis. */
                       cpu: string;
-                      /** The maximum amount of RAM */
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                       memory: string;
                     };
                   } | null;
-                  /** Kubernetes annotations with arbitrary metadata */
-                  annotations?: {
-                    name?: string;
-                    value?: string;
-                  }[];
+                  annotations?: { [key: string]: any };
                   /** Deploys new images based on a tagging strategy */
                   autoCD?:
                     | ({ [key: string]: any } | null)
@@ -2272,9 +2684,9 @@ export interface operations {
                   /** Use the team domain so that the URL reveals the owner. */
                   useDefaultSubdomain?: boolean;
                   /** A host that is used to set DNS 'A' records */
-                  subdomain?: string | null;
+                  subdomain: string | null;
                   /** A managed DNS zone */
-                  domain?: string;
+                  domain: string;
                   /** The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.) */
                   path?: string;
                   /** Forward the URL path into the service (don't rewrite to /) */
@@ -2331,7 +2743,7 @@ export interface operations {
           "application/json": {
             enabled?: boolean;
             id?: string;
-            /** A service name */
+            /** A lowercase name that starts with a letter and may contain dashes. */
             name: string;
             /** A kubernetes cluster for the service */
             clusterId: string;
@@ -2342,7 +2754,7 @@ export interface operations {
                   /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
                   scaleToZero?: boolean;
                   image?: {
-                    /** A container image repository */
+                    /** A container image repository. */
                     repository?: string;
                     tag?: string;
                   } | null;
@@ -2354,29 +2766,25 @@ export interface operations {
                     | null;
                   env?:
                     | {
-                        name: string;
+                        name: { [key: string]: any } | null;
                         value: string;
                       }[]
                     | null;
                   resources?: {
                     requests?: {
-                      /** The guaranteed amount of CPU */
+                      /** Amount of cores, or slice of cpu in millis. */
                       cpu: string;
-                      /** The guaranteed amount of RAM */
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                       memory: string;
                     };
                     limits?: {
-                      /** The maximum amount of CPU */
+                      /** Amount of cores, or slice of cpu in millis. */
                       cpu: string;
-                      /** The maximum amount of RAM */
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                       memory: string;
                     };
                   } | null;
-                  /** Kubernetes annotations with arbitrary metadata */
-                  annotations?: {
-                    name?: string;
-                    value?: string;
-                  }[];
+                  annotations?: { [key: string]: any };
                   /** Deploys new images based on a tagging strategy */
                   autoCD?:
                     | ({ [key: string]: any } | null)
@@ -2403,9 +2811,9 @@ export interface operations {
                   /** Use the team domain so that the URL reveals the owner. */
                   useDefaultSubdomain?: boolean;
                   /** A host that is used to set DNS 'A' records */
-                  subdomain?: string | null;
+                  subdomain: string | null;
                   /** A managed DNS zone */
-                  domain?: string;
+                  domain: string;
                   /** The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.) */
                   path?: string;
                   /** Forward the URL path into the service (don't rewrite to /) */
@@ -2450,7 +2858,7 @@ export interface operations {
         "application/json": {
           enabled?: boolean;
           id?: string;
-          /** A service name */
+          /** A lowercase name that starts with a letter and may contain dashes. */
           name: string;
           /** A kubernetes cluster for the service */
           clusterId: string;
@@ -2461,7 +2869,7 @@ export interface operations {
                 /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
                 scaleToZero?: boolean;
                 image?: {
-                  /** A container image repository */
+                  /** A container image repository. */
                   repository?: string;
                   tag?: string;
                 } | null;
@@ -2473,29 +2881,25 @@ export interface operations {
                   | null;
                 env?:
                   | {
-                      name: string;
+                      name: { [key: string]: any } | null;
                       value: string;
                     }[]
                   | null;
                 resources?: {
                   requests?: {
-                    /** The guaranteed amount of CPU */
+                    /** Amount of cores, or slice of cpu in millis. */
                     cpu: string;
-                    /** The guaranteed amount of RAM */
+                    /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                     memory: string;
                   };
                   limits?: {
-                    /** The maximum amount of CPU */
+                    /** Amount of cores, or slice of cpu in millis. */
                     cpu: string;
-                    /** The maximum amount of RAM */
+                    /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
                     memory: string;
                   };
                 } | null;
-                /** Kubernetes annotations with arbitrary metadata */
-                annotations?: {
-                  name?: string;
-                  value?: string;
-                }[];
+                annotations?: { [key: string]: any };
                 /** Deploys new images based on a tagging strategy */
                 autoCD?:
                   | ({ [key: string]: any } | null)
@@ -2522,9 +2926,9 @@ export interface operations {
                 /** Use the team domain so that the URL reveals the owner. */
                 useDefaultSubdomain?: boolean;
                 /** A host that is used to set DNS 'A' records */
-                subdomain?: string | null;
+                subdomain: string | null;
                 /** A managed DNS zone */
-                domain?: string;
+                domain: string;
                 /** The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.) */
                 path?: string;
                 /** Forward the URL path into the service (don't rewrite to /) */
@@ -2590,33 +2994,31 @@ export interface operations {
       /** Successfully obtained secrets */
       200: {
         content: {
-          "application/json": {
-            secrets?: ((
-              | {
-                  type: "generic";
-                  entries: string[];
-                }
-              | {
-                  type: "docker-registry";
-                  dockerconfig?: ".dockerconfig.json";
-                }
-              | {
-                  type: "tls";
-                  /** A Vault property name that contains PEM public key certificate */
-                  crt: string;
-                  /** A Vault property name that contains PEM private key certificate */
-                  key: string;
-                  /** A Vault property name that contains CA certificate content */
-                  ca?: string;
-                }
-            ) & {
-              id?: string;
-              /** A secret name */
-              name: string;
-              /** A kubernetes cluster for the secret */
-              clusterId: string;
-            })[];
-          };
+          "application/json": ((
+            | {
+                type: "generic";
+                entries: string[];
+              }
+            | {
+                type: "docker-registry";
+                dockerconfig?: ".dockerconfig.json";
+              }
+            | {
+                type: "tls";
+                /** A Vault property name that contains PEM public key certificate */
+                crt: string;
+                /** A Vault property name that contains PEM private key certificate */
+                key: string;
+                /** A Vault property name that contains CA certificate content */
+                ca?: string;
+              }
+          ) & {
+            id?: string;
+            /** A secret name */
+            name: string;
+            /** A kubernetes cluster for the secret */
+            clusterId: string;
+          })[];
         };
       };
       /** Bad Request */
@@ -2996,8 +3398,9 @@ export interface operations {
             isDirty?: boolean;
             namespaces?: string[];
             teams?: {
+              /** A lowercase name that starts with a letter and may contain dashes. */
               id?: string;
-              /** A team name */
+              /** A lowercase name that starts with a letter and may contain dashes. */
               name: string;
               clusters: string[];
               oidc?: {
@@ -3028,40 +3431,263 @@ export interface operations {
                   critical?: string;
                 };
               };
-              /** Azure Monitor is the platform service that provides a single source for monitoring Azure resources. */
-              azureMonitor?: Partial<{ [key: string]: any } | null> &
-                Partial<{
-                  /** An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID) */
-                  clientId: string;
-                  /** An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a key -> Use client secret) */
-                  clientSecret: string;
-                  /** A dedicated client ID for Azure Log Analytics. Defaults to clientId value. */
-                  logAnalyticsClientId?: string;
-                  /** A client Secret for Azure Log Analytics. Defaults to clientSecret value. */
-                  logAnalyticsClientSecret?: string;
-                  /** An app id for use with an Application Insights resource. Defaults to clientId value. */
-                  appInsightsAppId?: string;
-                  /** An api key for use with an Application Insights resource. Defaults to clientSecret value. */
-                  appInsightsApiKey?: string;
-                } | null>;
+              azureMonitor?: {
+                /** An Azure AppInsights client secret (defaults to clientSecret). */
+                appInsightsApiKey?: string;
+                /** An Azure AppInsights client id (defaults to clientId). */
+                appInsightsAppId?: string;
+                /** An Azure client id. */
+                clientId?: string;
+                /** An Azure client secret. */
+                clientSecret?: string;
+                /** An Azure client secret (defaults to clientSecret). */
+                logAnalyticsClientId?: string;
+                /** An Azure client secret (defaults to clientSecret). */
+                logAnalyticsClientSecret?: string;
+                /** An Azure tenant id (defaults to tenantId). */
+                logAnalyticsTenantId?: string;
+                /** An Azure monitor log analytics workspace. */
+                logAnalyticsWorkspace?: string;
+              };
             }[];
             user?: {
               /** A user name */
-              name?: string;
-              /** An email address */
-              email?: string;
+              name: string;
+              email: string;
               /** If the user is admin */
-              isAdmin?: boolean;
+              isAdmin: boolean;
               /** A list of teams the user belongs to */
-              teams?: string[];
+              teams: string[];
               /** A list of roles that the user has */
-              roles?: string[];
+              roles: string[];
             };
           };
         };
       };
       /** The requested session. */
       default: unknown;
+    };
+  };
+  /** Get OpenAPIDoc document */
+  apiDocs: {
+    responses: {
+      /** The requested apiDoc. */
+      200: {
+        content: {
+          "application/json": { [key: string]: any };
+        };
+      };
+      /** The requested apiDoc. */
+      default: unknown;
+    };
+  };
+  /** Get settings from the `settings.yaml` and `secret.settings.yaml` file. */
+  getSettings: {
+    responses: {
+      /** The request is successful. */
+      200: {
+        content: {
+          "application/json": {
+            alerts?: {
+              drone?: "slack" | "msteams";
+              email?: {
+                /** One or more email addresses (comma separated) for critical events. */
+                critical?: string;
+                /** One or more email addresses (comma separated) for non-critical events. */
+                nonCritical?: string;
+              };
+              /** How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.) */
+              groupInterval?: string;
+              msteams?: {
+                /** The low prio web hook. */
+                highPrio?: string;
+                /** The high prio web hook. */
+                lowPrio?: string;
+              };
+              /** Notification receivers. */
+              receivers?: ("slack" | "msteams" | "email")[];
+              /** How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more). */
+              repeatInterval?: string;
+              slack?: {
+                /** The Slack channel for non-critical notifications. */
+                channel?: string;
+                /** The Slack channel for critical notifications. */
+                channelCrit?: string;
+                /** A Slack webhook URL. */
+                url?: string;
+              };
+            };
+            /** Azure specific configuration. */
+            azure?: {
+              appgw?: {
+                /** Is this appgw installed as AKS addon? */
+                isManaged?: boolean;
+              };
+              /** An Azure disk type (SKU Type). */
+              diskType:
+                | "Standard_LRS"
+                | "Standard_GRS"
+                | "Standard_RAGRS"
+                | "Standard_ZRS"
+                | "Premium_LRS"
+                | "Premium_ZRS"
+                | "Standard_GZRS"
+                | "Standard_RAGZRS";
+              /** Azure Key Vault access credentials. Will use azure.tenantId if tenantId is not provided. */
+              keyVault?: {
+                /** An Azure tenant ID. */
+                tenantId?: string;
+                /** An Azure client ID. */
+                clientId: string;
+                /** An Azure client secret. */
+                clientSecret: string;
+              };
+              monitor?: {
+                /** An Azure AppInsights client secret (defaults to clientSecret). */
+                appInsightsApiKey?: string;
+                /** An Azure AppInsights client id (defaults to clientId). */
+                appInsightsAppId?: string;
+                /** An Azure client id. */
+                clientId?: string;
+                /** An Azure client secret. */
+                clientSecret?: string;
+                /** An Azure client secret (defaults to clientSecret). */
+                logAnalyticsClientId?: string;
+                /** An Azure client secret (defaults to clientSecret). */
+                logAnalyticsClientSecret?: string;
+                /** An Azure tenant id (defaults to tenantId). */
+                logAnalyticsTenantId?: string;
+                /** An Azure monitor log analytics workspace. */
+                logAnalyticsWorkspace?: string;
+              };
+              /** An Azure resource group. */
+              resourceGroup: string;
+              /** An Azure subscription ID. */
+              subscriptionId: string;
+              /** An Azure tenant ID. */
+              tenantId: string;
+            };
+            customer?: {
+              name?: string;
+            };
+            /** Google specific configuration. */
+            google?: {
+              /** A service account key for managing a DNS zone. */
+              cloudDnsKey: string;
+              /** A service account key for managing a KMS vault. */
+              kmsAccount?: string;
+              /** A Google Cloud project ID for accessing DNS zone. */
+              projectId: string;
+            };
+            home?: {
+              drone?: "slack" | "msteams";
+              email?: {
+                /** One or more email addresses (comma separated) for critical events. */
+                critical?: string;
+                /** One or more email addresses (comma separated) for non-critical events. */
+                nonCritical?: string;
+              };
+              /** How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.) */
+              groupInterval?: string;
+              msteams?: {
+                /** The low prio web hook. */
+                highPrio?: string;
+                /** The high prio web hook. */
+                lowPrio?: string;
+              };
+              /** Notification receivers. */
+              receivers?: ("slack" | "msteams" | "email")[];
+              /** How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more). */
+              repeatInterval?: string;
+              slack?: {
+                /** The Slack channel for non-critical notifications. */
+                channel?: string;
+                /** The Slack channel for critical notifications. */
+                channelCrit?: string;
+                /** A Slack webhook URL. */
+                url?: string;
+              };
+            };
+            /** Use Cloud KMS to encrypt and decrypt the master key */
+            kms?:
+              | {
+                  gcpckms: {
+                    project: string;
+                    region: string;
+                    key_ring: string;
+                    kmsAccount: string;
+                  };
+                }
+              | {
+                  awskms: {
+                    region: string;
+                    access_key: string;
+                    secret_key: string;
+                    endpoint: string;
+                  };
+                }
+              | {
+                  azurekeyvault: {
+                    vault_name: string;
+                    tenant_id: string;
+                    client_id: string;
+                    client_secret: string;
+                  };
+                };
+            /** Holds many parts used in different locations. Please see keycloak, istio and oauth-proxy all consuming parts. */
+            oidc?: {
+              adminGroupID?: string;
+              apiUrl?: string;
+              authUrl?: string;
+              clientID?: string;
+              clientSecret?: string;
+              issuer?: string;
+              scope?: string;
+              teamAdminGroupID?: string;
+              tenantID?: string;
+              tokenUrl?: string;
+              /** Claim name used by Keycloak to identify incoming users from identity provider */
+              usernameClaimMapper?: string;
+              /** Select OIDC claim to be used as a unique user identifier */
+              subClaimMapper?: string;
+            };
+            otomi?: {
+              /** Set this to true when an external LB exists or needs to be started (AWS ALB, Azure AppGW, Google Apigee). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion. */
+              hasCloudLB?: boolean;
+              /** Whether this cluster is home monitored (like when under a Premium SLA). Sends criticals home. */
+              isHomeMonitored?: boolean;
+              /** Whether masters are managed and not under control. Set this to false when onprem. */
+              isManaged?: boolean;
+              /** Whether to separate team metrics and logs. Disabling this lets everybody be admin and see everything. */
+              isMultitenant?: boolean;
+              /** The otomi-core edition. Either community edition (ce) or enterprise edition (ee). */
+              mode?: "ce" | "ee";
+              /** The pullsecret to deploy the Otomi API and Console. Requires an Otomi license. */
+              pullSecret?: string;
+              /** The prefix to use in URLs for team domains. */
+              teamPrefix?: string;
+              /** Manage addon configuration */
+              addons?: {
+                conftest?: {
+                  /** Use this flag to enable conftest for policy validation */
+                  enabled?: boolean;
+                };
+              };
+            };
+            smtp?: {
+              auth_identity?: string;
+              auth_password?: string;
+              auth_secret?: string;
+              auth_username?: string;
+              /** The "from" address. Defaults to alerts@$clusterDomain. */
+              from?: string;
+              hello?: string;
+              /** The smtp host:port combination. */
+              smarthost: string;
+            };
+          };
+        };
+      };
     };
   };
   /** Edits the settings from the `settings.yaml` file */
@@ -3096,8 +3722,203 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
-          /** Placeholder (copy schema from otomi-core) */
-          alerts?: { [key: string]: any };
+          alerts?: {
+            drone?: "slack" | "msteams";
+            email?: {
+              /** One or more email addresses (comma separated) for critical events. */
+              critical?: string;
+              /** One or more email addresses (comma separated) for non-critical events. */
+              nonCritical?: string;
+            };
+            /** How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.) */
+            groupInterval?: string;
+            msteams?: {
+              /** The low prio web hook. */
+              highPrio?: string;
+              /** The high prio web hook. */
+              lowPrio?: string;
+            };
+            /** Notification receivers. */
+            receivers?: ("slack" | "msteams" | "email")[];
+            /** How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more). */
+            repeatInterval?: string;
+            slack?: {
+              /** The Slack channel for non-critical notifications. */
+              channel?: string;
+              /** The Slack channel for critical notifications. */
+              channelCrit?: string;
+              /** A Slack webhook URL. */
+              url?: string;
+            };
+          };
+          /** Azure specific configuration. */
+          azure?: {
+            appgw?: {
+              /** Is this appgw installed as AKS addon? */
+              isManaged?: boolean;
+            };
+            /** An Azure disk type (SKU Type). */
+            diskType:
+              | "Standard_LRS"
+              | "Standard_GRS"
+              | "Standard_RAGRS"
+              | "Standard_ZRS"
+              | "Premium_LRS"
+              | "Premium_ZRS"
+              | "Standard_GZRS"
+              | "Standard_RAGZRS";
+            /** Azure Key Vault access credentials. Will use azure.tenantId if tenantId is not provided. */
+            keyVault?: {
+              /** An Azure tenant ID. */
+              tenantId?: string;
+              /** An Azure client ID. */
+              clientId: string;
+              /** An Azure client secret. */
+              clientSecret: string;
+            };
+            monitor?: {
+              /** An Azure AppInsights client secret (defaults to clientSecret). */
+              appInsightsApiKey?: string;
+              /** An Azure AppInsights client id (defaults to clientId). */
+              appInsightsAppId?: string;
+              /** An Azure client id. */
+              clientId?: string;
+              /** An Azure client secret. */
+              clientSecret?: string;
+              /** An Azure client secret (defaults to clientSecret). */
+              logAnalyticsClientId?: string;
+              /** An Azure client secret (defaults to clientSecret). */
+              logAnalyticsClientSecret?: string;
+              /** An Azure tenant id (defaults to tenantId). */
+              logAnalyticsTenantId?: string;
+              /** An Azure monitor log analytics workspace. */
+              logAnalyticsWorkspace?: string;
+            };
+            /** An Azure resource group. */
+            resourceGroup: string;
+            /** An Azure subscription ID. */
+            subscriptionId: string;
+            /** An Azure tenant ID. */
+            tenantId: string;
+          };
+          customer?: {
+            name?: string;
+          };
+          /** Google specific configuration. */
+          google?: {
+            /** A service account key for managing a DNS zone. */
+            cloudDnsKey: string;
+            /** A service account key for managing a KMS vault. */
+            kmsAccount?: string;
+            /** A Google Cloud project ID for accessing DNS zone. */
+            projectId: string;
+          };
+          home?: {
+            drone?: "slack" | "msteams";
+            email?: {
+              /** One or more email addresses (comma separated) for critical events. */
+              critical?: string;
+              /** One or more email addresses (comma separated) for non-critical events. */
+              nonCritical?: string;
+            };
+            /** How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.) */
+            groupInterval?: string;
+            msteams?: {
+              /** The low prio web hook. */
+              highPrio?: string;
+              /** The high prio web hook. */
+              lowPrio?: string;
+            };
+            /** Notification receivers. */
+            receivers?: ("slack" | "msteams" | "email")[];
+            /** How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more). */
+            repeatInterval?: string;
+            slack?: {
+              /** The Slack channel for non-critical notifications. */
+              channel?: string;
+              /** The Slack channel for critical notifications. */
+              channelCrit?: string;
+              /** A Slack webhook URL. */
+              url?: string;
+            };
+          };
+          /** Use Cloud KMS to encrypt and decrypt the master key */
+          kms?:
+            | {
+                gcpckms: {
+                  project: string;
+                  region: string;
+                  key_ring: string;
+                  kmsAccount: string;
+                };
+              }
+            | {
+                awskms: {
+                  region: string;
+                  access_key: string;
+                  secret_key: string;
+                  endpoint: string;
+                };
+              }
+            | {
+                azurekeyvault: {
+                  vault_name: string;
+                  tenant_id: string;
+                  client_id: string;
+                  client_secret: string;
+                };
+              };
+          /** Holds many parts used in different locations. Please see keycloak, istio and oauth-proxy all consuming parts. */
+          oidc?: {
+            adminGroupID?: string;
+            apiUrl?: string;
+            authUrl?: string;
+            clientID?: string;
+            clientSecret?: string;
+            issuer?: string;
+            scope?: string;
+            teamAdminGroupID?: string;
+            tenantID?: string;
+            tokenUrl?: string;
+            /** Claim name used by Keycloak to identify incoming users from identity provider */
+            usernameClaimMapper?: string;
+            /** Select OIDC claim to be used as a unique user identifier */
+            subClaimMapper?: string;
+          };
+          otomi?: {
+            /** Set this to true when an external LB exists or needs to be started (AWS ALB, Azure AppGW, Google Apigee). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion. */
+            hasCloudLB?: boolean;
+            /** Whether this cluster is home monitored (like when under a Premium SLA). Sends criticals home. */
+            isHomeMonitored?: boolean;
+            /** Whether masters are managed and not under control. Set this to false when onprem. */
+            isManaged?: boolean;
+            /** Whether to separate team metrics and logs. Disabling this lets everybody be admin and see everything. */
+            isMultitenant?: boolean;
+            /** The otomi-core edition. Either community edition (ce) or enterprise edition (ee). */
+            mode?: "ce" | "ee";
+            /** The pullsecret to deploy the Otomi API and Console. Requires an Otomi license. */
+            pullSecret?: string;
+            /** The prefix to use in URLs for team domains. */
+            teamPrefix?: string;
+            /** Manage addon configuration */
+            addons?: {
+              conftest?: {
+                /** Use this flag to enable conftest for policy validation */
+                enabled?: boolean;
+              };
+            };
+          };
+          smtp?: {
+            auth_identity?: string;
+            auth_password?: string;
+            auth_secret?: string;
+            auth_username?: string;
+            /** The "from" address. Defaults to alerts@$clusterDomain. */
+            from?: string;
+            hello?: string;
+            /** The smtp host:port combination. */
+            smarthost: string;
+          };
         };
       };
     };

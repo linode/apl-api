@@ -15,7 +15,7 @@ import { OpenAPIDoc, OpenApiRequestExt } from './otomi-models'
 import OtomiStack from './otomi-stack'
 
 export async function loadOpenApisSpec(): Promise<OpenAPIDoc> {
-  const openApiPath = path.resolve(__dirname, 'openapi/api.yaml')
+  const openApiPath = path.resolve(__dirname, 'openapi.yaml')
   console.info(`Loading api spec from: ${openApiPath}`)
   const schema = await bundle(openApiPath)
   return schema as OpenAPIDoc
@@ -55,9 +55,9 @@ export default async function initApp(otomiStack: OtomiStack): Promise<express.E
   }
 
   initialize({
+    // @ts-ignore
     apiDoc: {
       ...spec,
-      // @ts-ignore
       'x-express-openapi-additional-middleware': [stripNotAllowedAttributes],
     },
     app,
@@ -65,11 +65,12 @@ export default async function initApp(otomiStack: OtomiStack): Promise<express.E
       otomi: otomiStack,
       authz,
     },
+    enableObjectCoercion: true,
     paths: apiRoutesPath,
     errorMiddleware,
     securityHandlers: getSecurityHandlers(),
-    routesGlob: '**/*.ts',
-    routesIndexFileRegExp: /(?:index)?\.ts$/,
+    routesGlob: '**/*.{ts,js}',
+    routesIndexFileRegExp: /(?:index)?\.[tj]s$/,
   })
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(spec))

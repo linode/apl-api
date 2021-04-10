@@ -1,0 +1,5 @@
+lint:
+  rules:
+    info-license: off
+    operation-summary: off
+    no-unused-components: error

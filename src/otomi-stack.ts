@@ -6,7 +6,7 @@ import { cloneDeep, findIndex, merge, filter, forIn, get, isEmpty, omit, set, un
 import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Db, { Schema } from './db'
-import { Cloud, Cluster, Secret, Service, Settings, Team } from './otomi-models'
+import { Cloud, Cluster, Core, Secret, Service, Settings, Team } from './otomi-models'
 import { AlreadyExists, NotExistError, PublicUrlExists } from './error'
 import {
   arrayToObject,
@@ -113,7 +113,7 @@ export default class OtomiStack {
     return this.db.db.get('settings').value()
   }
 
-  editSettings(data: object): Settings {
+  editSettings(data: Settings): Settings {
     this.db.db.set('settings', data).write()
     return this.db.db.get('settings').value()
   }
@@ -355,7 +355,7 @@ export default class OtomiStack {
     const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
     const idx = findIndex(sa.imagePullSecrets, { name })
     if (idx > -1) {
-      ;(sa.imagePullSecrets || []).splice(idx, 1)
+      sa.imagePullSecrets!.splice(idx, 1)
       await client.patchNamespacedServiceAccount('default', namespace, sa, undefined, undefined, undefined, undefined, {
         headers: { 'content-type': 'application/strategic-merge-patch+json' },
       })
@@ -374,11 +374,11 @@ export default class OtomiStack {
     this.db.setDirtyActive()
   }
 
-  loadConfig(dataPath: string, secretDataPath: string): any {
+  loadConfig(dataPath: string, secretDataPath: string): Core {
     const data = this.repo.readFile(dataPath)
     const secretData = this.repo.readFile(secretDataPath)
     this.secretData = merge(this.secretData, secretData)
-    return merge(data, secretData)
+    return merge(data, secretData) as Core
   }
 
   saveConfig(dataPath: string, secretDataPath: string, config: object, objectPathsForSecrets: string[]): void {
@@ -428,19 +428,18 @@ export default class OtomiStack {
   }
 
   loadTeams(): void {
-    const mergedData = this.loadConfig('./env/teams.yaml', `./env/secrets.teams.yaml${this.decryptedFilePostfix}`)
+    const mergedData: Core = this.loadConfig('./env/teams.yaml', `./env/secrets.teams.yaml${this.decryptedFilePostfix}`)
 
-    Object.values(mergedData.teamConfig.teams).forEach((team: any) => {
-      this.db.populateItem('teams', { name: team.id, ...team }, undefined, team.id)
+    Object.values(mergedData.teamConfig.teams).forEach((team: Team) => {
+      this.db.populateItem('teams', { ...team, name: team.id }, undefined, team.id)
       team.clusters.forEach((clusterId) => {
-        this.loadTeamServices(team.id, clusterId)
-        this.loadTeamSecrets(team.id, clusterId)
+        this.loadTeamServices(team.id!, clusterId)
+        this.loadTeamSecrets(team.id!, clusterId)
       })
     })
   }
 
   loadTeamServices(teamId: string, clusterId: string): void {
-    // e.g.: ./env/clouds/google/dev/services.chai.yaml
     const filePath = `./env/clouds/${clusterId}/services.${teamId}.yaml`
     try {
       const data = this.repo.readFile(filePath)
@@ -455,8 +454,7 @@ export default class OtomiStack {
   }
 
   saveSettings(): void {
-    const settings = this.getSettings()
-    delete settings.id
+    const settings: Settings = this.getSettings()
     const secretPaths = getObjectPaths(this.secretData)
     this.saveConfig(
       './env/settings.yaml',

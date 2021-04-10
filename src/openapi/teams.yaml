@@ -1,9 +1,9 @@
 Teams:
+  items:
+    $ref: team.yaml#/Team
+  type: array
   x-acl:
-    admin: [read-any]
-    team: [read-any]
-  properties:
-    teams:
-      type: array
-      items:
-        $ref: 'team.yaml#/Team'
+    admin:
+      - read-any
+    team:
+      - read-any

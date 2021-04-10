@@ -1,70 +1,18 @@
-uuid: &uuidField
-  type: string
-  pattern: ^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$
-
-idName: &idNameField
-  type: string
-  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-
-x-available-clusters: &AvailableClusters # description: Select from available clusters
-  type: array
-  items:
-    type: string
-  uniqueItems: true
-
-AzureMonitor: &AzureMonitor
-  title: Azure Monitor
-  description: Azure Monitor is the platform service that provides a single source for monitoring Azure resources.
-  anyOf:
-    - title: Use global settings
-      nullable: true
-      additionalProperties: false
-    - title: Override global settings
-      properties:
-        clientId:
-          description: 'An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID)'
-          <<: *uuidField
-        clientSecret:
-          type: string
-          writeOnly: true
-          description:
-            An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a
-            key -> Use client secret)
-        logAnalyticsClientId:
-          description: A dedicated client ID for Azure Log Analytics. Defaults to clientId value.
-          <<: *uuidField
-        logAnalyticsClientSecret:
-          description: A client Secret for Azure Log Analytics. Defaults to clientSecret value.
-          type: string
-          writeOnly: true
-        appInsightsAppId:
-          description: An app id for use with an Application Insights resource. Defaults to clientId value.
-          type: string
-        appInsightsApiKey:
-          description: An api key for use with an Application Insights resource. Defaults to clientSecret value.
-          type: string
-          writeOnly: true
-      required:
-        - clientId
-        - clientSecret
-      nullable: true
-      additionalProperties: false
-
 Team:
-  x-externalDocsPath: 'docs/configuring-teams'
+  x-externalDocsPath: docs/configuring-teams
   x-acl:
     admin: [delete-any, read-any, create-any, update-any]
     team: [read-any, update]
   properties:
     id:
       title: ID
-      <<: *idNameField
+      $ref: definitions.yaml#/idName
       x-acl:
         admin: [read]
         team: [read]
     name:
       title: Name
-      <<: *idNameField
+      $ref: definitions.yaml#/idName
       example: 'otomi'
       x-acl:
         admin: [create, read]
@@ -72,7 +20,10 @@ Team:
       description: A team name
     clusters:
       title: Clusters
-      <<: *AvailableClusters
+      type: array
+      items:
+        type: string
+      uniqueItems: true
       minItems: 1
       x-acl:
         team: [read]
@@ -138,9 +89,8 @@ Team:
               type: string
               description: Email addresses (comma separated) for critical events.
     azureMonitor:
-      <<: *AzureMonitor
+      $ref: definitions.yaml#/azureMonitor
   required:
-    # - id
     - name
     - clusters
     - password

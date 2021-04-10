@@ -13,7 +13,7 @@ describe('Settings', () => {
 
   it('should assign a dummy payload', () => {
     const settings = otomi.getSettings()
-    const payload = {
+    const payload: any = {
       ...settings,
       alerts: {
         drone: 'someTeamChat',

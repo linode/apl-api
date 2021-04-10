@@ -1,87 +1,3 @@
-domain: &domainNameField
-  type: string
-  pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
-repository: &repositoryField
-  type: string
-  pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
-  description: A container image repository
-memoryQuantity: &k8sResourceMemoryQuantityField
-  type: string
-  pattern: ^[0-9]+\.?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$
-cpuQuantity: &k8sResourceCpuQuantityField
-  type: string
-  pattern: ^([0-9]+\.[0-9]{1,2})|([0-9]{2,3}m)?$
-env: &envField
-  type: string
-  pattern: ^[a-zA-Z0-9_]*$
-annotation: &k8sAnnotationField
-  type: string
-  pattern: ^((.){1,253}\/)?(.){1,63}$
-idName: &idNameField
-  type: string
-  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-
-x-annotations: &K8sAnnotation
-  description: Kubernetes annotations with arbitrary metadata
-  type: array
-  items:
-    properties:
-      name:
-        <<: *k8sAnnotationField
-      value:
-        type: string
-        maxLength: 32767
-
-ServiceIngress:
-  properties: &ServiceIngress
-    useDefaultSubdomain:
-      title: 'Use team domain (preferred)'
-      type: boolean
-      default: true
-      description: Use the team domain so that the URL reveals the owner.
-    subdomain:
-      title: 'Host'
-      type: string
-      nullable: true
-      description: A host that is used to set DNS 'A' records
-      <<: *domainNameField
-    domain:
-      title: DNS Zone
-      description: A managed DNS zone
-      type: string
-    path:
-      title: URL path
-      description: The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
-      type: string
-    forwardPath:
-      title: Forward path
-      description: Forward the URL path into the service (don't rewrite to /)
-      type: boolean
-    hasSingleSignOn:
-      title: Authenticate with Single Sign On
-      type: boolean
-      default: false
-    hasCert:
-      title: Already has a certificate
-      type: boolean
-      default: false
-      description: If true a certificate should exist already
-    certArn:
-      type: string
-      title: Certificate ARN
-      example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
-    certSelect:
-      type: boolean
-      title: Select existing secret name
-      default: true
-    certName:
-      type: string
-      title: Secret name
-      example: www-example-com
-  required:
-    - domain
-    - subdomain
-
 Service:
   x-externalDocsPath: 'docs/configuring-services'
   x-acl:
@@ -95,7 +11,7 @@ Service:
       type: string
       readOnly: true
     name:
-      <<: *idNameField
+      $ref: definitions.yaml#/idName
       title: Name
       description: A service name
       example: some-service
@@ -132,7 +48,7 @@ Service:
               nullable: true
               properties:
                 repository:
-                  <<: *repositoryField
+                  $ref: definitions.yaml#/repository
                 tag:
                   type: string
             secrets:
@@ -162,7 +78,7 @@ Service:
               items:
                 properties:
                   name:
-                    <<: *envField
+                    $ref: definitions.yaml#/env
                   value:
                     type: string
                     maxLength: 131072
@@ -178,11 +94,11 @@ Service:
                   properties:
                     cpu:
                       description: The guaranteed amount of CPU
-                      <<: *k8sResourceCpuQuantityField
+                      $ref: definitions.yaml#/cpuQuantity
                       default: 50m
                     memory:
                       description: The guaranteed amount of RAM
-                      <<: *k8sResourceMemoryQuantityField
+                      $ref: definitions.yaml#/memoryQuantity
                       default: 64Mi
                   required:
                     - cpu
@@ -191,18 +107,18 @@ Service:
                   properties:
                     cpu:
                       description: The maximum amount of CPU
-                      <<: *k8sResourceCpuQuantityField
+                      $ref: definitions.yaml#/cpuQuantity
                       default: 100m
                     memory:
                       description: The maximum amount of RAM
-                      <<: *k8sResourceMemoryQuantityField
+                      $ref: definitions.yaml#/memoryQuantity
                       default: 128Mi
                   required:
                     - cpu
                     - memory
             annotations:
               title: Pod annotations
-              <<: *K8sAnnotation
+              $ref: definitions.yaml#/annotations
             autoCD:
               title: Continuous delivery
               description: Deploys new images based on a tagging strategy
@@ -269,7 +185,53 @@ Service:
         - title: Public URL
           nullable: true
           properties:
-            <<: *ServiceIngress
+            useDefaultSubdomain:
+              title: Use team domain (preferred)
+              type: boolean
+              default: true
+              description: Use the team domain so that the URL reveals the owner.
+            subdomain:
+              title: 'Host'
+              type: string
+              nullable: true
+              description: A host that is used to set DNS 'A' records
+              $ref: definitions.yaml#/domain
+            domain:
+              title: DNS Zone
+              description: A managed DNS zone
+              type: string
+            path:
+              title: URL path
+              description: The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
+              type: string
+            forwardPath:
+              title: Forward path
+              description: Forward the URL path into the service (don't rewrite to /)
+              type: boolean
+            hasSingleSignOn:
+              title: Authenticate with Single Sign On
+              type: boolean
+              default: false
+            hasCert:
+              title: Already has a certificate
+              type: boolean
+              default: false
+              description: If true a certificate should exist already
+            certArn:
+              type: string
+              title: Certificate ARN
+              example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
+            certSelect:
+              type: boolean
+              title: Select existing secret name
+              default: true
+            certName:
+              type: string
+              title: Secret name
+              example: www-example-com
+          required:
+            - domain
+            - subdomain
     teamId:
       type: string
       readOnly: true
