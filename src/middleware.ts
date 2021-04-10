@@ -15,7 +15,9 @@ const HttpMethodMapping = {
 
 const noAuthz = !!process.env.NO_AUTHZ
 
-export function errorMiddleware(err, req: OpenApiRequest, res): void {
+// Note: 4 arguments (no more, no less) must be defined in your errorMiddleware function. Otherwise the function will be silently ignored.
+// eslint-disable-next-line no-unused-vars
+export function errorMiddleware(err, req: OpenApiRequest, res, next): void {
   console.error('errorMiddleware handler')
 
   if (err instanceof AlreadyExists) return res.status(409).json({ error: err.message })

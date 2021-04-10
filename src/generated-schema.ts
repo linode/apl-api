@@ -266,9 +266,10 @@ export interface components {
       id?: string;
       /** A lowercase name that starts with a letter and may contain dashes. */
       name: string;
+      /** A service port */
+      port?: number;
       /** A kubernetes cluster for the service */
       clusterId: string;
-      port?: number;
       ksvc?:
         | ({
             serviceType?: "ksvc";
@@ -279,12 +280,10 @@ export interface components {
               repository?: string;
               tag?: string;
             } | null;
-            secrets?:
-              | {
-                  name: string;
-                  entries?: string[];
-                }[]
-              | null;
+            secrets?: {
+              name: string;
+              entries?: string[];
+            }[];
             env?:
               | {
                   name: { [key: string]: any } | null;
@@ -353,9 +352,10 @@ export interface components {
       id?: string;
       /** A lowercase name that starts with a letter and may contain dashes. */
       name: string;
+      /** A service port */
+      port?: number;
       /** A kubernetes cluster for the service */
       clusterId: string;
-      port?: number;
       ksvc?:
         | ({
             serviceType?: "ksvc";
@@ -366,12 +366,10 @@ export interface components {
               repository?: string;
               tag?: string;
             } | null;
-            secrets?:
-              | {
-                  name: string;
-                  entries?: string[];
-                }[]
-              | null;
+            secrets?: {
+              name: string;
+              entries?: string[];
+            }[];
             env?:
               | {
                   name: { [key: string]: any } | null;
@@ -939,9 +937,10 @@ export interface components {
       id?: string;
       /** A lowercase name that starts with a letter and may contain dashes. */
       name: string;
+      /** A service port */
+      port?: number;
       /** A kubernetes cluster for the service */
       clusterId: string;
-      port?: number;
       ksvc?:
         | ({
             serviceType?: "ksvc";
@@ -952,12 +951,10 @@ export interface components {
               repository?: string;
               tag?: string;
             } | null;
-            secrets?:
-              | {
-                  name: string;
-                  entries?: string[];
-                }[]
-              | null;
+            secrets?: {
+              name: string;
+              entries?: string[];
+            }[];
             env?:
               | {
                   name: { [key: string]: any } | null;
@@ -1026,9 +1023,10 @@ export interface components {
       id?: string;
       /** A lowercase name that starts with a letter and may contain dashes. */
       name: string;
+      /** A service port */
+      port?: number;
       /** A kubernetes cluster for the service */
       clusterId: string;
-      port?: number;
       ksvc?:
         | ({
             serviceType?: "ksvc";
@@ -1039,12 +1037,10 @@ export interface components {
               repository?: string;
               tag?: string;
             } | null;
-            secrets?:
-              | {
-                  name: string;
-                  entries?: string[];
-                }[]
-              | null;
+            secrets?: {
+              name: string;
+              entries?: string[];
+            }[];
             env?:
               | {
                   name: { [key: string]: any } | null;
@@ -1684,9 +1680,10 @@ export interface operations {
             id?: string;
             /** A lowercase name that starts with a letter and may contain dashes. */
             name: string;
+            /** A service port */
+            port?: number;
             /** A kubernetes cluster for the service */
             clusterId: string;
-            port?: number;
             ksvc?:
               | ({
                   serviceType?: "ksvc";
@@ -1697,12 +1694,10 @@ export interface operations {
                     repository?: string;
                     tag?: string;
                   } | null;
-                  secrets?:
-                    | {
-                        name: string;
-                        entries?: string[];
-                      }[]
-                    | null;
+                  secrets?: {
+                    name: string;
+                    entries?: string[];
+                  }[];
                   env?:
                     | {
                         name: { [key: string]: any } | null;
@@ -2282,9 +2277,10 @@ export interface operations {
             id?: string;
             /** A lowercase name that starts with a letter and may contain dashes. */
             name: string;
+            /** A service port */
+            port?: number;
             /** A kubernetes cluster for the service */
             clusterId: string;
-            port?: number;
             ksvc?:
               | ({
                   serviceType?: "ksvc";
@@ -2295,12 +2291,10 @@ export interface operations {
                     repository?: string;
                     tag?: string;
                   } | null;
-                  secrets?:
-                    | {
-                        name: string;
-                        entries?: string[];
-                      }[]
-                    | null;
+                  secrets?: {
+                    name: string;
+                    entries?: string[];
+                  }[];
                   env?:
                     | {
                         name: { [key: string]: any } | null;
@@ -2399,9 +2393,10 @@ export interface operations {
             id?: string;
             /** A lowercase name that starts with a letter and may contain dashes. */
             name: string;
+            /** A service port */
+            port?: number;
             /** A kubernetes cluster for the service */
             clusterId: string;
-            port?: number;
             ksvc?:
               | ({
                   serviceType?: "ksvc";
@@ -2412,12 +2407,10 @@ export interface operations {
                     repository?: string;
                     tag?: string;
                   } | null;
-                  secrets?:
-                    | {
-                        name: string;
-                        entries?: string[];
-                      }[]
-                    | null;
+                  secrets?: {
+                    name: string;
+                    entries?: string[];
+                  }[];
                   env?:
                     | {
                         name: { [key: string]: any } | null;
@@ -2514,9 +2507,10 @@ export interface operations {
           id?: string;
           /** A lowercase name that starts with a letter and may contain dashes. */
           name: string;
+          /** A service port */
+          port?: number;
           /** A kubernetes cluster for the service */
           clusterId: string;
-          port?: number;
           ksvc?:
             | ({
                 serviceType?: "ksvc";
@@ -2527,12 +2521,10 @@ export interface operations {
                   repository?: string;
                   tag?: string;
                 } | null;
-                secrets?:
-                  | {
-                      name: string;
-                      entries?: string[];
-                    }[]
-                  | null;
+                secrets?: {
+                  name: string;
+                  entries?: string[];
+                }[];
                 env?:
                   | {
                       name: { [key: string]: any } | null;
@@ -2618,9 +2610,10 @@ export interface operations {
             id?: string;
             /** A lowercase name that starts with a letter and may contain dashes. */
             name: string;
+            /** A service port */
+            port?: number;
             /** A kubernetes cluster for the service */
             clusterId: string;
-            port?: number;
             ksvc?:
               | ({
                   serviceType?: "ksvc";
@@ -2631,12 +2624,10 @@ export interface operations {
                     repository?: string;
                     tag?: string;
                   } | null;
-                  secrets?:
-                    | {
-                        name: string;
-                        entries?: string[];
-                      }[]
-                    | null;
+                  secrets?: {
+                    name: string;
+                    entries?: string[];
+                  }[];
                   env?:
                     | {
                         name: { [key: string]: any } | null;
@@ -2745,9 +2736,10 @@ export interface operations {
             id?: string;
             /** A lowercase name that starts with a letter and may contain dashes. */
             name: string;
+            /** A service port */
+            port?: number;
             /** A kubernetes cluster for the service */
             clusterId: string;
-            port?: number;
             ksvc?:
               | ({
                   serviceType?: "ksvc";
@@ -2758,12 +2750,10 @@ export interface operations {
                     repository?: string;
                     tag?: string;
                   } | null;
-                  secrets?:
-                    | {
-                        name: string;
-                        entries?: string[];
-                      }[]
-                    | null;
+                  secrets?: {
+                    name: string;
+                    entries?: string[];
+                  }[];
                   env?:
                     | {
                         name: { [key: string]: any } | null;
@@ -2860,9 +2850,10 @@ export interface operations {
           id?: string;
           /** A lowercase name that starts with a letter and may contain dashes. */
           name: string;
+          /** A service port */
+          port?: number;
           /** A kubernetes cluster for the service */
           clusterId: string;
-          port?: number;
           ksvc?:
             | ({
                 serviceType?: "ksvc";
@@ -2873,12 +2864,10 @@ export interface operations {
                   repository?: string;
                   tag?: string;
                 } | null;
-                secrets?:
-                  | {
-                      name: string;
-                      entries?: string[];
-                    }[]
-                  | null;
+                secrets?: {
+                  name: string;
+                  entries?: string[];
+                }[];
                 env?:
                   | {
                       name: { [key: string]: any } | null;

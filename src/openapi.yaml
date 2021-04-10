@@ -291,6 +291,12 @@ paths:
                       example: some-service
                       pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
                       type: string
+                    port:
+                      description: A service port
+                      type: integer
+                      default: 80
+                      minimum: 1
+                      maximum: 65535
                     clusterId:
                       title: Cluster ID
                       type: string
@@ -302,12 +308,6 @@ paths:
                         team:
                           - read
                           - create
-                    port:
-                      title: Service port
-                      type: integer
-                      default: 80
-                      minimum: 1
-                      maximum: 65535
                     ksvc:
                       title: Type
                       oneOf:
@@ -338,8 +338,6 @@ paths:
                                   type: string
                             secrets:
                               type: array
-                              title: Secrets
-                              nullable: true
                               items:
                                 properties:
                                   name:

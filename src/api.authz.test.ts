@@ -55,7 +55,7 @@ describe('Admin API tests', () => {
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(400)
-      .expect('Content-Type', /text\/html/)
+      .expect('Content-Type', /json/)
       .end(done)
   })
   it('admin can get all teams', (done) => {
