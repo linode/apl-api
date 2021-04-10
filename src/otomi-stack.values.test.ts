@@ -4,6 +4,7 @@ import OtomiStack from './otomi-stack'
 import { Repo } from './repo'
 import expectedDbState from './fixtures/values'
 import secretSettings from './fixtures/secret-settings'
+import { getObjectPaths } from './utils'
 
 describe('Work with values', () => {
   let otomiStack: OtomiStack
@@ -24,7 +25,7 @@ describe('Work with values', () => {
       results[path] = data
     }
     otomiStack.db.db.setState(expectedDbState)
-    otomiStack.secretData = secretSettings
+    otomiStack.secretPaths = getObjectPaths(secretSettings)
     otomiStack.repo.writeFile = writeFileStub
     otomiStack.saveValues()
     // eslint-disable-next-line no-restricted-syntax

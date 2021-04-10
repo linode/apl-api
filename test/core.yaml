@@ -1,23 +1,50 @@
-toolsVersion: 1.3.5
-redkubesSlackUrl: https://hooks.slack.com/services/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
+# NOTE: This file is merged with other values in ./helmfile.d/snippets/env.gotmpl
 
 k8s:
   namespaces:
+    - name: default
+      disableIstioInjection: true
+      disablePolicyChecks: true
     - name: drone-pipelines
       disableIstioInjection: true
-    - name: ingress
-    - name: keycloak
+      disablePolicyChecks: true
+    - name: gatekeeper-system
+      disableIstioInjection: true
+      disablePolicyChecks: true
+    - name: gitea
+      disableIstioInjection: true
     - name: harbor
+    - name: gitea
     - name: istio-system
       disableIstioInjection: true
+    - name: ingress
+      disableIstioInjection: true
+    - name: istio-apps
+    - name: istio-system
+      disableIstioInjection: true
+    - name: keycloak
     - name: knative-serving
+      disableIstioInjection: true
+      disablePolicyChecks: true
+    - name: kubeapps
+      disableIstioInjection: true
     - name: kube-system
       disableIstioInjection: true
+      disablePolicyChecks: true
     - name: maintenance
       disableIstioInjection: true
     - name: monitoring
+    - name: olm
+      disableIstioInjection: true
+      disablePolicyChecks: true
+    - name: operators
+    - name: overprovisioner
+      disableIstioInjection: true
     - name: shared
     - name: team-admin
+    - name: vault
+      disableIstioInjection: true
+    - name: vault
 
 services:
   - name: keycloak
@@ -40,19 +67,34 @@ services:
     svc: harbor-harbor-core
     namespace: harbor
     ownHost: true
-    paths: [/api/, /c/, /chartrepo/, /service/]
+    paths: [/api/, /c/, /chartrepo/]
     forwardPath: true
     hide: true
     isShared: true
   - name: harbor
-    svc: harbor-harbor-registry
+    svc: harbor-harbor-core
     namespace: harbor
     ownHost: true
-    paths: [/v1/, /v2/]
-    port: 5000
+    paths: [/service/, /v1/, /v2/]
     forwardPath: true
     hide: true
     isPublic: true
+  - name: gitea
+    namespace: gitea
+    svc: gitea-http
+    ownHost: true
+    isShared: true
+    port: 3000
+    paths: [/api/, /otomi/values]
+    forwardPath: true
+    isPublic: true
+  - name: gitea
+    namespace: gitea
+    svc: gitea-http
+    ownHost: true
+    isShared: true
+    port: 3000
+    hide: true
   - name: notary
     svc: harbor-harbor-notary-server
     port: 4443
@@ -71,23 +113,22 @@ services:
     namespace: shared
     ownHost: true
     isShared: true
-    svc: otomi-web
+    svc: otomi-console
     paths: [/]
-    authz:
-      forwardOriginalToken: true
-      workload:
-        app.kubernetes.io/name: otomi-web
   - name: loki
     svc: po-grafana
     host: grafana # this service is only specified to generate an icon on the dashboard that opens grafana's loki view
     namespace: monitoring
     path: 'explore?orgId=1&left=%5B"now-1h","now","Loki",%7B%7D,%7B"mode":"Logs"%7D,%7B"ui":%5Btrue,true,true,"none"%5D%7D%5D'
-  - name: scope
+  - name: weave-scope
     svc: weave-scope
     namespace: monitoring
   - name: grafana
     svc: po-grafana
     namespace: monitoring
+    # specifying authz will strip the bearer token by default, unless forwardOriginalToken=true
+    # this mechanism allows us to not bother services that need the same "Bearer" header for their own oidc
+    # it also adds an in-cluster enforcement that only payloads containing the right authn may access it
     authz:
       workload:
         app.kubernetes.io/instance: prometheus-operator
@@ -97,7 +138,11 @@ services:
     port: 3000
     logo:
       name: istio
-    namespace: istio-system
+    namespace: istio-apps
+    authz:
+      workload:
+        app: grafana
+        release: istio-system
   - name: prometheus
     svc: po-prometheus
     port: 9090
@@ -108,7 +153,7 @@ services:
     port: 9090
     logo:
       name: prometheus
-    namespace: istio-system
+    namespace: istio-apps
   - name: alertmanager
     svc: po-alertmanager
     port: 9093
@@ -119,13 +164,13 @@ services:
     svc: kiali
     forwardPath: true
     port: 20001
-    namespace: istio-system
+    namespace: istio-apps
   - name: tracing
     svc: tracing
     forwardPath: true
     logo:
       name: jaeger
-    namespace: istio-system
+    namespace: istio-apps
   - name: drone
     svc: drone
     namespace: team-admin
@@ -134,6 +179,23 @@ services:
       workload:
         app: drone
         component: server
+  - name: vault
+    namespace: vault
+    svc: vault-0
+    port: 8200
+    ownHost: true
+    logo:
+      name: vault
+    isShared: true
+    path: ui/vault/auth?with=oidc
+  - name: kubeapps
+    svc: kubeapps
+    namespace: kubeapps
+    ownHost: true
+    logo:
+      name: kubernetes
+    isPublic: true
+    isShared: true
 
 proxies:
   - name: drone
@@ -152,6 +214,22 @@ teamConfig:
       svc: httpbin
       isShared: true
       host: httpbin
+    - name: vault
+      namespace: vault
+      svc: vault-0
+      port: 8200
+      host: vault
+      logo:
+        name: vault
+      isShared: true
+      path: ui/vault/secrets/secret/list/teams/#NS#/
+    - name: kubeapps
+      namespace: kubeapps
+      svc: kubeapps
+      isShared: true
+      host: kubeapps
+      logo:
+        name: kubernetes
     - name: loki
       svc: po-grafana
       host: grafana # this service is only specified to generate an icon on the dashboard that opens grafana's loki view

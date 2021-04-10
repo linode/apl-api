@@ -87,7 +87,7 @@ export default class OtomiStack {
 
   decryptedFilePostfix: string
 
-  secretData: object
+  secretPaths: string[]
 
   constructor() {
     this.db = new Db(env.DB_PATH)
@@ -377,7 +377,8 @@ export default class OtomiStack {
   loadConfig(dataPath: string, secretDataPath: string): Core {
     const data = this.repo.readFile(dataPath)
     const secretData = this.repo.readFile(secretDataPath)
-    this.secretData = merge(this.secretData, secretData)
+    const secretPaths = getObjectPaths(secretData)
+    this.secretPaths = merge(this.secretPaths, secretPaths)
     return merge(data, secretData) as Core
   }
 
@@ -455,12 +456,11 @@ export default class OtomiStack {
 
   saveSettings(): void {
     const settings: Settings = this.getSettings()
-    const secretPaths = getObjectPaths(this.secretData)
     this.saveConfig(
       './env/settings.yaml',
       `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
       settings,
-      secretPaths,
+      this.secretPaths,
     )
   }
 
