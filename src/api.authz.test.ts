@@ -1,8 +1,10 @@
 import request from 'supertest'
 import sinon from 'sinon'
+import { Express } from 'express'
 import initApp from './server'
 import OtomiStack from './otomi-stack'
 import getToken from './fixtures/jwt'
+import { AlreadyExists } from './error'
 
 const adminToken: string = getToken(['team-admin'])
 const teamToken: string = getToken(['team-team1'])
@@ -303,6 +305,29 @@ describe('Api tests for data validation', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .set('Accept', 'application/json')
       .expect(400)
+      .end(done)
+  })
+})
+
+describe('Error handler', () => {
+  let app: Express
+  let otomiStack: OtomiStack
+  before(async () => {
+    otomiStack = new OtomiStack()
+    app = await initApp(otomiStack)
+  })
+  it('should handle exception and transform it to HTTP response with a proper error code', (done) => {
+    sinon.stub(otomiStack, 'createTeam').callsFake(() => {
+      throw new AlreadyExists('exp')
+    })
+
+    const data = { name: 'otomi', clusters: ['aws/dev'], password: 'test' }
+    request(app)
+      .post('/v1/teams')
+      .send(data)
+      .set('Accept', 'application/json')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(409)
       .end(done)
   })
 })

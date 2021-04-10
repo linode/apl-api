@@ -261,8 +261,8 @@ export default class OtomiStack {
     return config
   }
 
-  createSecret(teamId: string, data: Secret): Secret {
-    return this.db.createItem('secrets', { ...data, teamId }, { teamId, name: data.name })
+  createSecret(teamId, data) {
+    return this.db.createItem('secrets', { ...data, teamId }, { teamId, name: data.name, clusterId: data.clusterId })
   }
 
   editSecret(id: string, data: Secret): Secret {
