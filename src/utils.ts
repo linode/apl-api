@@ -108,8 +108,8 @@ export function removeBlankAttributes(obj) {
   return cleanDeep(obj, options)
 }
 
-export function getTeamSecretsFilePath(teamId: string, clusterId: string) {
-  return `./env/clouds/${clusterId}/external-secrets.${teamId}.yaml`
+export function getTeamSecretsFilePath(teamId: string) {
+  return `./env/teams/external-secrets.${teamId}.yaml`
 }
 
 export function getTeamSecretsJsonPath(teamId: string) {

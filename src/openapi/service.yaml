@@ -90,9 +90,6 @@ Service:
     team: [delete, read, create, update]
   type: object
   properties:
-    enabled:
-      type: boolean
-      default: true
     id:
       type: string
       readOnly: true
@@ -107,13 +104,6 @@ Service:
       default: 80
       minimum: 1
       maximum: 65535
-    clusterId:
-      title: Cluster ID
-      type: string
-      description: A kubernetes cluster for the service
-      x-acl:
-        admin: [read, create]
-        team: [read, create]
     ksvc:
       title: Type
       type: object
@@ -272,4 +262,3 @@ Service:
       readOnly: true
   required:
     - name
-    - clusterId

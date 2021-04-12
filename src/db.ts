@@ -29,6 +29,7 @@ export class Db {
         services: [],
         clouds: [],
         clusters: [],
+        cluster: [],
         secrets: [],
       })
       .write()

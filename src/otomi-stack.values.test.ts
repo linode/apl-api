@@ -3,11 +3,24 @@ import OtomiStack from './otomi-stack'
 import { Repo } from './repo'
 
 const expectedDbState = {
+  cluster: [
+    {
+      id: '1f4e8330-8e85-4da0-9a6d-488c8e192c90',
+      apiName: 'onprem',
+      apiServer: 'apiServer.onprem.example.com',
+      dnsZones: ['onprem.example.com', 'example.com'],
+      domain: 'onprem.example.com',
+      k8sVersion: '1.19',
+      name: 'dev',
+      otomiVersion: 'master',
+      provider: 'onprem',
+      region: 'eu-central-1',
+    },
+  ],
   teams: [
     {
       name: 'otomi',
       id: 'otomi',
-      clusters: ['aws/dev', 'onprem/dev'],
       azureMonitor: {},
       password: 'linux123',
       oidc: {
@@ -23,7 +36,6 @@ const expectedDbState = {
     },
     {
       alerts: {},
-      clusters: ['onprem/dev'],
       id: 'dev',
       name: 'dev',
       oidc: {},
@@ -32,10 +44,8 @@ const expectedDbState = {
   ],
   services: [
     {
-      enabled: true,
       name: 'servant1',
       id: 'fb88a85d-49e6-4c20-98ed-11b3ceff540e',
-      clusterId: 'onprem/dev',
       teamId: 'otomi',
       ksvc: {
         scaleToZero: false,
@@ -78,10 +88,8 @@ const expectedDbState = {
       },
     },
     {
-      enabled: true,
       name: 'hello',
       id: 'f818a64d-25a4-46e0-9eaf-769b78866031',
-      clusterId: 'onprem/dev',
       teamId: 'otomi',
       ksvc: {
         serviceType: 'svcPredeployed',
@@ -98,10 +106,8 @@ const expectedDbState = {
       },
     },
     {
-      enabled: true,
       name: 'servant2',
       id: 'f818a64d-25a4-46e0-9eaf-769b7886603d',
-      clusterId: 'onprem/dev',
       teamId: 'otomi',
       ksvc: {
         scaleToZero: false,
@@ -140,11 +146,9 @@ const expectedDbState = {
       },
     },
     {
-      enabled: true,
       name: 'informant',
       id: '2f18da9a-e659-479d-9d65-2ca82503f43c',
       internal: true,
-      clusterId: 'onprem/dev',
       teamId: 'otomi',
       ksvc: {
         scaleToZero: false,
@@ -176,90 +180,15 @@ const expectedDbState = {
   clouds: [],
   clusters: [
     {
-      enabled: true,
-      cloud: 'aws',
-      name: 'dev',
-      dnsZones: ['eks.example.com'],
-      domain: 'dev.eks.example.com',
-      k8sVersion: 1.16,
-      otomiVersion: 'v0.11.18',
-      hasKnative: true,
-      region: 'eu-central-1',
-      id: 'aws/dev',
-    },
-    {
-      enabled: false,
-      cloud: 'google',
-      name: 'dev',
-      dnsZones: ['gke.example.com'],
-      domain: 'dev.gke.example.com',
-      k8sVersion: 1.17,
-      otomiVersion: 'master',
-      hasKnative: true,
-      region: 'europe-west4',
-      id: 'google/dev',
-    },
-    {
-      enabled: false,
-      cloud: 'azure',
-      name: 'dev',
-      dnsZones: ['aks.example.com'],
-      domain: 'dev.aks.example.com',
-      k8sVersion: 1.17,
-      otomiVersion: 'latest',
-      hasKnative: true,
-      region: 'westeurope',
-      id: 'azure/dev',
-    },
-    {
-      enabled: true,
       cloud: 'onprem',
       name: 'dev',
-      dnsZones: ['onprem.example.com', 'example.com'],
       domain: 'dev.onprem.example.com',
-      k8sVersion: 1.18,
-      otomiVersion: 'v0.11.18',
-      hasKnative: true,
-      region: 'local',
-      id: 'onprem/dev',
+      enabled: true,
+      id: '9a777336-72c0-4dee-9885-55b9ce85c9c2',
     },
   ],
   secrets: [
     {
-      clusterId: 'aws/dev',
-      entries: ['aa', 'bb', 'cc'],
-      id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf95',
-      name: 'mysecret-generic',
-      teamId: 'otomi',
-      type: 'generic',
-    },
-    {
-      clusterId: 'aws/dev',
-      id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf96',
-      name: 'mysecret-registry',
-      teamId: 'otomi',
-      type: 'docker-registry',
-    },
-    {
-      ca: 'ca.crt',
-      clusterId: 'aws/dev',
-      crt: 'tls.crt',
-      id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf97',
-      key: 'tls.key',
-      name: 'mysecret-tls',
-      teamId: 'otomi',
-      type: 'tls',
-    },
-    {
-      clusterId: 'aws/dev',
-      entries: ['HELLO'],
-      id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf98',
-      name: 'hello-otomi',
-      teamId: 'otomi',
-      type: 'generic',
-    },
-    {
-      clusterId: 'onprem/dev',
       entries: ['dd', 'ee', 'ff'],
       id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf9A',
       name: 'mysecret-generic',

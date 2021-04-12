@@ -43,7 +43,7 @@ describe('Utils', () => {
     done()
   })
   it('should return proper file path to team secrets', (done) => {
-    expect(getTeamSecretsFilePath('dev', 'aws/demo')).to.equal('./env/clouds/aws/demo/external-secrets.dev.yaml')
+    expect(getTeamSecretsFilePath('dev')).to.equal('./env/teams/external-secrets.dev.yaml')
     done()
   })
 })

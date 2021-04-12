@@ -13,8 +13,8 @@ export default function (otomi: OtomiStack) {
   const GET: Operation = [
     (req: OpenApiRequestExt, res) => {
       const data = {
-        currentClusterId: env.CLUSTER_ID,
         clusters: otomi.getClusters(),
+        cluster: otomi.getCluster(),
         core: otomi.getCore(),
         user: req.user,
         teams: otomi.getTeams(),

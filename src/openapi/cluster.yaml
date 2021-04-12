@@ -4,9 +4,6 @@ Cluster:
     admin: [read-any]
     team: [read-any]
   properties:
-    enabled:
-      type: boolean
-      default: true
     name:
       type: string
       description: A cluster name
@@ -40,9 +37,5 @@ Cluster:
       readOnly: true
     region:
       description: A physical location of the cluster
-      type: string
-      readOnly: true
-    clusterId:
-      description: An unique cluster identifier
       type: string
       readOnly: true

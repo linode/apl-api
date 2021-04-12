@@ -16,9 +16,6 @@ Session:
     core:
       type: object
       readOnly: true
-    currentClusterId:
-      type: string
-      readOnly: true
     isDirty:
       type: boolean
       readOnly: true

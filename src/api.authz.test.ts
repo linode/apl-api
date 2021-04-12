@@ -35,7 +35,7 @@ describe('Api tests for admin', () => {
       .end(done)
   })
   it('admin can create a team', (done) => {
-    const data = { name: 'otomi', clusters: ['aws/dev'], password: 'test' }
+    const data = { name: 'otomi', password: 'test' }
     request(app)
       .post('/v1/teams')
       .send(data)
@@ -121,7 +121,6 @@ describe('Api tests for admin', () => {
     request(app)
       .post('/v1/teams/team1/services', {
         name: 'service1',
-        clusterId: 'google/dev',
         ksvc: {
           serviceType: 'ksvcPredeployed',
           image: {},
@@ -146,7 +145,7 @@ describe('Api tests for admin', () => {
   })
   it('team can get a specific service', (done) => {
     request(app)
-      .get('/v1/teams/team1/services/service1?clusterId=aws/dev')
+      .get('/v1/teams/team1/services/service1')
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
       .expect(200)
@@ -156,9 +155,8 @@ describe('Api tests for admin', () => {
 
   it('team can update its own service', (done) => {
     request(app)
-      .put('/v1/teams/team1/services/service1?clusterId=aws/dev', {
+      .put('/v1/teams/team1/services/service1', {
         name: 'service1',
-        clusterId: 'google/dev',
         ksvc: {
           serviceType: 'ksvcPredeployed',
           image: {},
@@ -174,7 +172,7 @@ describe('Api tests for admin', () => {
   })
   it('team can delete its own service', (done) => {
     request(app)
-      .delete('/v1/teams/team1/services/service1?clusterId="aws/dev')
+      .delete('/v1/teams/team1/services/service')
       .set('Accept', 'application/json')
       .set('Content-Type', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
@@ -185,7 +183,7 @@ describe('Api tests for admin', () => {
 
   it('team can not delete service from other team', (done) => {
     request(app)
-      .delete('/v1/teams/team2/services/service1?clusterId=aws/dev')
+      .delete('/v1/teams/team2/services/service1')
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
       .expect(401)
@@ -193,7 +191,7 @@ describe('Api tests for admin', () => {
   })
   it('team can not update service from other team', (done) => {
     request(app)
-      .put('/v1/teams/team2/services/service1?clusterId=aws/dev', {})
+      .put('/v1/teams/team2/services/service1', {})
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
       .expect(401)
@@ -284,7 +282,7 @@ describe('Error handler', () => {
       throw new AlreadyExists('exp')
     })
 
-    const data = { name: 'otomi', clusters: ['aws/dev'], password: 'test' }
+    const data = { name: 'otomi', password: 'test' }
     request(app)
       .post('/v1/teams')
       .send(data)
