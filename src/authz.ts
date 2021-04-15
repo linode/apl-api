@@ -125,7 +125,7 @@ export default class Authz {
           return action
         })
       })
-      Object.keys(schema.properties as object).forEach((propertyName: string) => {
+      Object.keys(schema.properties || {}).forEach((propertyName: string) => {
         const property = schema.properties![propertyName]
         // Attribute wise permission overwrite model wise permissions
         property['x-acl'] = { ...schemaAcl, ...property['x-acl'] }
