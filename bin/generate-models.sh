@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
-set -ex
-
-# yq() {
-#   docker run --rm -i -v "${PWD}":/workdir mikefarah/yq "$@"
-# }
+set -e
 
 api_file=src/openapi.yaml
 npx openapi bundle --dereferenced --output src/openapi --ext yaml src/openapi/api.yaml

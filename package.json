@@ -92,6 +92,10 @@
     "watch": "^1.0.2",
     "yaml-prune": "^1.0.1"
   },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
   "homepage": "https://github.com/redkubes/otomi-api#readme",
   "husky": {
     "hooks": {
