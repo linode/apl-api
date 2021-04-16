@@ -1,20 +1,62 @@
 import request from 'supertest'
 import sinon from 'sinon'
+import { Express } from 'express'
 import initApp from './server'
 import OtomiStack from './otomi-stack'
 import getToken from './fixtures/jwt'
-import { Express } from 'express'
 import { AlreadyExists } from './error'
 
-const adminToken = getToken(['team-admin'])
-const teamToken = getToken(['team-team1'])
+const adminToken: string = getToken(['team-admin'])
+const teamToken: string = getToken(['team-team1'])
 
-describe('Api tests for admin', () => {
+describe('Admin API tests', () => {
   let app
   before(async () => {
     const otomiStack = new OtomiStack()
     sinon.stub(otomiStack)
     app = await initApp(otomiStack)
+  })
+  it('admin can get all settings', (done) => {
+    request(app)
+      .get('/v1/settings')
+      .set('Accept', 'application/json')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200)
+      .end(done)
+  })
+  it('admin can put with payload that matches the schema', (done) => {
+    request(app)
+      .put('/v1/settings')
+      .send({
+        alerts: {
+          drone: 'msteams',
+        },
+      })
+      .set('Accept', 'application/json')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+  it('admin can put with empty body (empty object is valid JSON Schema 7)', (done) => {
+    request(app)
+      .put('/v1/settings')
+      .send({})
+      .set('Accept', 'application/json')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+  it(`admin can't put with keys that don't match settings object`, (done) => {
+    request(app)
+      .put('/v1/settings')
+      .send({ foo: 'bar' })
+      .set('Accept', 'application/json')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(400)
+      .expect('Content-Type', /json/)
+      .end(done)
   })
   it('admin can get all teams', (done) => {
     request(app)
@@ -119,7 +161,8 @@ describe('Api tests for admin', () => {
 
   it('team can create its own services', (done) => {
     request(app)
-      .post('/v1/teams/team1/services', {
+      .post('/v1/teams/team1/services')
+      .send({
         name: 'service1',
         clusterId: 'google/dev',
         ksvc: {
@@ -156,7 +199,8 @@ describe('Api tests for admin', () => {
 
   it('team can update its own service', (done) => {
     request(app)
-      .put('/v1/teams/team1/services/service1?clusterId=aws/dev', {
+      .put('/v1/teams/team1/services/service1?clusterId=aws/dev')
+      .send({
         name: 'service1',
         clusterId: 'google/dev',
         ksvc: {
@@ -193,18 +237,11 @@ describe('Api tests for admin', () => {
   })
   it('team can not update service from other team', (done) => {
     request(app)
-      .put('/v1/teams/team2/services/service1?clusterId=aws/dev', {})
+      .put('/v1/teams/team2/services/service1?clusterId=aws/dev')
+      .send({})
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
       .expect(401)
-      .end(done)
-  })
-  it('anonymous user should get app readiness', (done) => {
-    request(app)
-      .get('/v1/readiness')
-      .set('Accept', 'application/json')
-      .expect(200)
-      .expect('Content-Type', /json/)
       .end(done)
   })
   it('anonymous user should get api spec', (done) => {

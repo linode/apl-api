@@ -1,7 +1,7 @@
 import nock from 'nock'
 import jwt from 'jsonwebtoken'
 
-const env = process.env
+const { env } = process
 
 const privateKey = `-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAwaZ3afW0/zYy3HfJwAAr83PDdZvADuSJ6jTZk1+jprdHdG6P
@@ -38,7 +38,7 @@ const nockReply = {
       kty: 'RSA',
       use: 'sig',
       n:
-        'waZ3afW0_zYy3HfJwAAr83PDdZvADuSJ6jTZk1-jprdHdG6PzH9XaB6xhzvwTIJFcWuREkNSC06MDLCuvmZ8fj93FcNaZ2ZJ0LFvY4SODMDqFekE5vD2Y15aSI2Y69qwKlVLphvEEXJ_FRqIHQX9wwCtwVsnqcLt_f5aNWRHyk2jwhz7IBm-dLu9_CV8AsvE5ddgOYYbNk-SMCjznESZcMg1KRzbdawnOklzloc-Q0iCxQK7022ukVxFbmT7U1hTVOTOzrruqBxptPDiutkKfOXebzYyZodlFFL5MWcatCWS3XL51KBIeKWny5mExZPzIf1ofGuJe0zxllw8olgMqQ', //eslint-disable-line max-len
+        'waZ3afW0_zYy3HfJwAAr83PDdZvADuSJ6jTZk1-jprdHdG6PzH9XaB6xhzvwTIJFcWuREkNSC06MDLCuvmZ8fj93FcNaZ2ZJ0LFvY4SODMDqFekE5vD2Y15aSI2Y69qwKlVLphvEEXJ_FRqIHQX9wwCtwVsnqcLt_f5aNWRHyk2jwhz7IBm-dLu9_CV8AsvE5ddgOYYbNk-SMCjznESZcMg1KRzbdawnOklzloc-Q0iCxQK7022ukVxFbmT7U1hTVOTOzrruqBxptPDiutkKfOXebzYyZodlFFL5MWcatCWS3XL51KBIeKWny5mExZPzIf1ofGuJe0zxllw8olgMqQ',
       e: 'AQAB',
       kid: '0',
     },
@@ -48,7 +48,7 @@ env.OIDC_ENDPOINT = 'https://bla.dida'
 
 nock(env.OIDC_ENDPOINT).persist().get('/.well-known/jwks.json').reply(200, nockReply)
 
-export default function getToken(groups = [], roles = []) {
+export default function getToken(groups: string[], roles?: string[]): string {
   const user = {
     email: 'test.user@test.net',
   }

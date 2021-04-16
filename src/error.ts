@@ -1,19 +1,9 @@
-class OtomiError {
-  name: string
-  message: string
-  stack: string
-  constructor(message?) {
-    this.name = this.constructor.name
-    this.message = message
-    this.stack = new Error().stack
-  }
-}
-
-export class NotExistError extends OtomiError {}
-export class AlreadyExists extends OtomiError {}
-export class GitError extends OtomiError {}
-export class GitPushError extends OtomiError {}
-export class GitPullError extends OtomiError {}
-export class PublicUrlExists extends OtomiError {}
-export class NotAuthorized extends OtomiError {}
-export class ToolsError extends OtomiError {}
+/* eslint-disable max-classes-per-file */
+export class NotExistError extends Error {}
+export class AlreadyExists extends Error {}
+export class GitError extends Error {}
+export class GitPushError extends GitError {}
+export class GitPullError extends GitError {}
+export class PublicUrlExists extends Error {}
+export class NotAuthorized extends Error {}
+export class ToolsError extends Error {}

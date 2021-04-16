@@ -1,9 +1,9 @@
-import simpleGit, { CleanOptions, SimpleGit } from 'simple-git/promise'
+import simpleGit, { CleanOptions, CommitResult, SimpleGit } from 'simple-git/promise'
 import yaml from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
+import axios, { AxiosResponse } from 'axios'
 import { GitPullError } from './error'
-import axios from 'axios'
 import { cleanEnv, TOOLS_HOST, USE_SOPS } from './validators'
 import { removeBlankAttributes } from './utils'
 
@@ -16,16 +16,41 @@ const baseUrl = `http://${env.TOOLS_HOST}:17771/`
 const decryptUrl = `${baseUrl}decrypt`
 const encryptUrl = `${baseUrl}encrypt`
 
+async function decrypt(): Promise<AxiosResponse | void> {
+  if (!env.USE_SOPS) return Promise.resolve()
+  const res = await axios.get(decryptUrl)
+  return res
+}
+
+async function encrypt(): Promise<AxiosResponse | void> {
+  if (!env.USE_SOPS) return Promise.resolve()
+  const res = await axios.get(encryptUrl)
+  return res
+}
+
+function getRemotePathAuth(remotPath, protocol, user, password): string {
+  return protocol === 'file' ? `${protocol}://${remotPath}` : `${protocol}://${user}:${password}@${remotPath}`
+}
+
 export class Repo {
   path: string
+
   git: SimpleGit
+
   url: string
+
   user: string
+
   email: string
+
   password: string
+
   branch: string
+
   remote: string
+
   remoteBranch: string
+
   repoPathAuth: string
 
   constructor(localRepoPath, remotePath, user, email, repoPathAuth, branch) {
@@ -40,17 +65,17 @@ export class Repo {
     this.git = simpleGit(this.path)
   }
 
-  async addConfig() {
+  async addConfig(): Promise<void> {
     await this.git.addConfig('user.name', this.user)
     await this.git.addConfig('user.email', this.email)
   }
 
-  async init() {
+  async init(): Promise<void> {
     await this.git.init()
     await this.addRemoteOrigin()
   }
 
-  writeFile(relativePath, data) {
+  writeFile(relativePath, data): void {
     const absolutePath = path.join(this.path, relativePath)
     console.debug(`Writing to file: ${absolutePath}`)
     const cleanedData = removeBlankAttributes(data)
@@ -58,22 +83,22 @@ export class Repo {
     fs.writeFileSync(absolutePath, yamlStr, 'utf8')
   }
 
-  readFile(relativePath) {
+  readFile(relativePath): object {
     const absolutePath = path.join(this.path, relativePath)
     console.info(`Reading from file: ${absolutePath}`)
     const doc = yaml.safeLoad(fs.readFileSync(absolutePath, 'utf8'))
-    return doc
+    return doc as object
   }
 
-  async commit(author: string) {
-    await this.encrypt()
+  async commit(author: string): Promise<CommitResult> {
+    await encrypt()
     await this.git.add('./*')
     const commitSummary = await this.git.commit(`otomi-api<${author}>`)
     console.debug(`Commit summary: ${JSON.stringify(commitSummary)}`)
     return commitSummary
   }
 
-  async clone() {
+  async clone(): Promise<void> {
     console.info(`Checking if repo exists at: ${this.path}`)
 
     const isRepo = await this.git.checkIsRepo()
@@ -93,33 +118,21 @@ export class Repo {
     }
   }
 
-  async decrypt() {
-    if (!env.USE_SOPS) return
-    const res = await axios.get(decryptUrl)
-    return res
-  }
-
-  async encrypt() {
-    if (!env.USE_SOPS) return
-    const res = await axios.get(encryptUrl)
-    return res
-  }
-
-  async pull() {
+  async pull(): Promise<object> {
     const pullSummary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
-    await this.decrypt()
+    await decrypt()
     console.debug(`Pull summary: ${JSON.stringify(pullSummary)}`)
     return pullSummary
   }
 
-  async getCommitSha() {
+  async getCommitSha(): Promise<string> {
     return this.git.revparse(['--verify', 'HEAD'])
   }
 
-  async save(email) {
+  async save(email): Promise<void> {
     const sha = await this.getCommitSha()
 
-    const commitSummary = await this.commit(email)
+    const commitSummary: CommitResult = await this.commit(email)
     if (commitSummary.commit === '') return
     try {
       await this.pull()
@@ -127,7 +140,7 @@ export class Repo {
       console.warn(`Pull error: ${JSON.stringify(e)}`)
       await this.git.rebase(['--abort'])
       await this.git.reset(['--hard', sha])
-      await this.decrypt()
+      await decrypt()
       console.info(`Reset HEAD to ${sha} commit`)
 
       throw new GitPullError()
@@ -137,13 +150,9 @@ export class Repo {
     console.debug('pushed')
   }
 
-  async addRemoteOrigin() {
+  async addRemoteOrigin(): Promise<void> {
     await this.git.addRemote(this.remote, this.url)
   }
-}
-
-function getRemotePathAuth(path, protocol, user, password) {
-  return protocol === 'file' ? `${protocol}://${path}` : `${protocol}://${user}:${password}@${path}`
 }
 
 export default async function cloneRepo(
@@ -181,9 +190,9 @@ export async function initRepo(
   return repo
 }
 
-export async function initRepoBare(path): Promise<SimpleGit> {
-  fs.mkdirSync(path, 0o744)
-  const git = simpleGit(path)
+export async function initRepoBare(location): Promise<SimpleGit> {
+  fs.mkdirSync(location, 0o744)
+  const git = simpleGit(location)
   await git.init(true)
   return git
 }

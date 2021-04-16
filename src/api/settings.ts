@@ -3,16 +3,17 @@ import OtomiStack from '../otomi-stack'
 import { OpenApiRequest } from '../otomi-models'
 
 export default function (otomi: OtomiStack): OperationHandlerArray {
-  const GET: Operation = [
-    /* business middleware not expressible by OpenAPI documentation goes here */
+  const GET: Operation = [(req: OpenApiRequest, res): object => res.json(otomi.getSettings())]
+  const PUT: Operation = [
     (req: OpenApiRequest, res): void => {
-      console.info(`Get clusters`)
-      const data = otomi.getClusters()
-      res.json(data)
+      otomi.editSettings(req.body)
+      res.json({})
     },
   ]
+
   const api = {
     GET,
+    PUT,
   }
   return api
 }

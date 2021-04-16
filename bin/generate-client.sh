@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 set -e
 
@@ -20,15 +20,15 @@ validate() {
         exit 1
     fi
 
-    if [ -d "$target_dir" ]; then
-        echo "The directoy $target_dir already exists. Please choose different vendor name or remove existing directory."
+    if [ ! -f "$openapi_doc" ]; then
+        echo "The file $openapi_doc does not exist."
         exit 1
     fi
 }
 
 generate_client() {
     echo "Generating client code from openapi specification $openapi_doc.."
-
+    rm -rf $target_dir >/dev/null
     docker run --rm -v $PWD:/local -w /local -u "${UID:-1001}" \
     openapitools/openapi-generator-cli:v5.0.1 generate \
     -i /local/$openapi_doc \
@@ -65,5 +65,3 @@ set_package_json
 build_npm_package
 
 echo "The client code has been generated at $target_dir/ directory"
-
-echo "In order to publish an npm package run:\n\t cd $target_dir && npm publish"

@@ -1,5 +1,4 @@
 Cluster:
-  type: object
   x-acl:
     admin: [read-any]
     team: [read-any]

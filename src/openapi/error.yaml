@@ -1,5 +1,4 @@
 ValidationError: &ValidationError
-  type: object
   x-acl: []
   properties:
     path:
@@ -15,7 +14,6 @@ ValidationError: &ValidationError
         - path
 
 OpenApiValidationError:
-  type: object
   x-acl: []
   properties:
     status:
@@ -26,7 +24,6 @@ OpenApiValidationError:
         <<: *ValidationError
 
 OtomiStackError:
-  type: object
   x-acl: []
   properties:
     message:

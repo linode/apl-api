@@ -17,7 +17,7 @@ clouds:
         enabled: false
         apiName: gke_otomi-cloud_europe-west4_otomi-gke-dev
         apiServer: 1.2.3.4
-        otomiVersion: master
+        otomiVersion: main
         k8sVersion: 1.17
         region: europe-west4
   azure:

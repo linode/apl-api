@@ -1,5 +1,4 @@
 User:
-  type: object
   readOnly: true
   x-acl:
     admin: []
@@ -10,24 +9,31 @@ User:
       description: A user name
       readOnly: true
     email:
-      type: string
-      description: An email address
-      readOnly: true
+      $ref: definitions.yaml#/email
     isAdmin:
       type: boolean
+      default: false
       description: If the user is admin
       readOnly: true
     teams:
       type: array
+      default: []
       description: A list of teams the user belongs to
       items:
-        $ref: 'team.yaml#/Team'
+        type: string
       readOnly: true
       uniqueItems: true
     roles:
       type: array
+      default: []
       description: A list of roles that the user has
       items:
         type: string
       readOnly: true
       uniqueItems: true
+  required:
+    - isAdmin
+    - name
+    - email
+    - teams
+    - roles

@@ -14,12 +14,12 @@ describe('Repo scenarios', () => {
   beforeEach(async () => {
     await initRepoBare(bareRepoPath)
 
-    r1 = await initRepo(repo1Path, bareRepoPath, 'test', 'test@test.test', 'pass', 'master', 'file')
+    r1 = await initRepo(repo1Path, bareRepoPath, 'test', 'test@test.test', 'pass', 'main', 'file')
     appendFileSync(join(repo1Path, testFile), 'AAA')
     await r1.git.add(testFile)
     await r1.git.commit('initial value')
-    await r1.git.push('origin', 'master')
-    r2 = await cloneRepo(repo2Path, bareRepoPath, 'test', 'test@test.test', 'pass', 'master', 'file')
+    await r1.git.push('origin', 'main')
+    r2 = await cloneRepo(repo2Path, bareRepoPath, 'test', 'test@test.test', 'pass', 'main', 'file')
   })
 
   afterEach(() => {
@@ -31,7 +31,7 @@ describe('Repo scenarios', () => {
     appendFileSync(join(r1.path, testFile), 'AAB')
     await r1.git.add(testFile)
     await r1.git.commit('initial value')
-    await r1.git.push('origin', 'master')
+    await r1.git.push('origin', 'main')
     appendFileSync(join(r2.path, testFile), 'ABA')
     try {
       await r2.save('')

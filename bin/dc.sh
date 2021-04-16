@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
+
 source .env
-BIN_NAME=$(basename "$0")
-COMMAND_NAME=$1
+
+bin_name=$(basename "$0")
+command=$1
 
 info="(add '-d' to daemonize, or 'logs' for logs on pre-daemonized stack)"
 sub_help () {
-    echo "Usage: $BIN_NAME <command>"
+    echo "Usage: $bin_name <command>"
     echo
     echo "Commands:"
     echo "   help               This help message"
@@ -18,34 +20,34 @@ sub_help () {
 
 
 sub_up () {
-    docker-compose -f docker-compose.yml up ${1-}
+    docker-compose -f docker-compose.yml up ${1}
 }
 
 sub_up-all () {
     local files='-f docker-compose.yml -f docker-compose-deps.yml'
     [ "$USE_SOPS" == "0" ] && echo "The USE_SOPS=$USE_SOPS prevents running deps" && files='-f docker-compose.yml'
 
-    docker-compose $files up ${1-}
+    docker-compose $files up ${1}
 }
 
 sub_up-deps () {
     [ "$USE_SOPS" == "0" ] && echo "The USE_SOPS=$USE_SOPS prevents running deps" && exit 0
-    docker-compose -f docker-compose-deps.yml up ${1-}
+    docker-compose -f docker-compose-deps.yml up ${1}
 }
 
 sub_down () {
     docker-compose -f docker-compose.yml -f docker-compose-deps.yml down --remove-orphans -v
 }
 
-case $COMMAND_NAME in
+case $command in
     "" | "-h" | "--help")
         sub_help
         ;;
     *)
         shift
-        sub_${COMMAND_NAME} $@
+        sub_${command} "$@"
         if [ $? = 127 ]; then
-            echo "'$COMMAND_NAME' is not a known command or has errors." >&2
+            echo "'$command' is not a known command or has errors." >&2
             sub_help
             exit 1
         fi
