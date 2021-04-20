@@ -34,7 +34,7 @@ generate_client() {
     -i /local/$openapi_doc \
     -o /local/$target_dir \
     -g typescript-node \
-    --additional-properties supportsES6=true,npmName=$target_npm_name
+    --additional-properties supportsES6=true,npmName=$target_npm_name,modelPropertyNaming=original
 }
 
 set_package_json() {
