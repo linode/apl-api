@@ -15,7 +15,7 @@ import { OpenAPIDoc, OpenApiRequestExt } from './otomi-models'
 import OtomiStack from './otomi-stack'
 
 export async function loadOpenApisSpec(): Promise<OpenAPIDoc> {
-  const openApiPath = path.resolve(__dirname, 'openapi.yaml')
+  const openApiPath = path.resolve(__dirname, 'openapi-dereferenced.yaml')
   console.info(`Loading api spec from: ${openApiPath}`)
   const schema = await bundle(openApiPath)
   return schema as OpenAPIDoc

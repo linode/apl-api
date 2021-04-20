@@ -22,10 +22,9 @@ COPY . .eslintrc.yml ./
 ARG CI=true
 ENV NODE_ENV=test
 
-RUN npm run lint
-RUN npm run test
-RUN npm run build
-RUN npm run build:client:otomi
+RUN npm run lint && \
+    npm run test && \
+    npm run build
 
 # --------------- Cleanup
 FROM dev as clean
