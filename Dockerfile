@@ -25,6 +25,7 @@ ENV NODE_ENV=test
 RUN npm run lint
 RUN npm run test
 RUN npm run build
+RUN npm run build:client:otomi
 
 # --------------- Cleanup
 FROM dev as clean
