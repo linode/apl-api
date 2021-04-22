@@ -132,7 +132,7 @@
   },
   "scripts": {
     "build": "tsc && copyup --error ./src/openapi/*.yaml ./dist/src",
-    "build:client:otomi": "ts-node-dev src/build-spec.ts vendors/openapi/otomi-api.json && rm -rf vendors/client/otomi-api >/dev/null && bin/generate-client.sh",
+    "build:client:otomi": "bin/generate-client.sh",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
     "dev:watch": "run-p dev watch:openapi watch:ts",
