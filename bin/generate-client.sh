@@ -37,7 +37,8 @@ generate_client() {
     -i /local/$openapi_doc \
     -o /local/$target_dir \
     -g typescript-node \
-    --additional-properties supportsES6=true,npmName=$target_npm_name,modelPropertyNaming=original
+    --additional-properties supportsES6=true,npmName=$target_npm_name,modelPropertyNaming=original \
+    --generate-alias-as-model
 }
 
 set_package_json() {
