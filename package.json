@@ -132,7 +132,7 @@
   },
   "scripts": {
     "build": "tsc && copyup --error ./src/openapi/*.yaml ./dist/src",
-    "build:models": "npm run build:spec && openapi-typescript vendors/openapi/otomi-api.json -o src/generated-schema.ts",
+    "build:models": "npm run build:spec && openapi-typescript src/generated-schema.json -o src/generated-schema.ts",
     "build:spec": "ts-node-dev src/build-spec.ts",
     "build:client": "npm run build:spec && rm -rf vendors/client/otomi-api >/dev/null && bin/generate-client.sh",
     "cz": "git-cz",
@@ -141,7 +141,7 @@
     "dev": "ts-node-dev --watch 'src/openapi.yaml' --inspect=4321 --respawn --transpile-only src/app.ts",
     "dev:docker": "npm install && npm run dev",
     "husky:lint-staged": "lint-staged",
-    "husky:pre-commit": "run-p lint husky:lint-staged",
+    "husky:pre-commit": "run-p lint husky:lint-staged build:models",
     "lint": "run-p types lint:es",
     "lint:es": "eslint --ext ts .",
     "lint:fix": "eslint --ext ts --fix .",

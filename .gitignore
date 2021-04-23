@@ -39,4 +39,5 @@ dist
 
 kms.json*
 
-vendors/client/
+/vendors/client/
+/src/generated-schema.json

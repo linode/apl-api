@@ -475,24 +475,6 @@ export interface components {
             critical?: string;
           };
         };
-        azureMonitor?: {
-          /** An Azure AppInsights client secret (defaults to clientSecret). */
-          appInsightsApiKey?: string;
-          /** An Azure AppInsights client id (defaults to clientId). */
-          appInsightsAppId?: string;
-          /** An Azure client id. */
-          clientId?: string;
-          /** An Azure client secret. */
-          clientSecret?: string;
-          /** An Azure client secret (defaults to clientSecret). */
-          logAnalyticsClientId?: string;
-          /** An Azure client secret (defaults to clientSecret). */
-          logAnalyticsClientSecret?: string;
-          /** An Azure tenant id (defaults to tenantId). */
-          logAnalyticsTenantId?: string;
-          /** An Azure monitor log analytics workspace. */
-          logAnalyticsWorkspace?: string;
-        };
       }[];
       user?: {
         /** A user name */
@@ -739,24 +721,6 @@ export interface components {
           critical?: string;
         };
       };
-      azureMonitor?: {
-        /** An Azure AppInsights client secret (defaults to clientSecret). */
-        appInsightsApiKey?: string;
-        /** An Azure AppInsights client id (defaults to clientId). */
-        appInsightsAppId?: string;
-        /** An Azure client id. */
-        clientId?: string;
-        /** An Azure client secret. */
-        clientSecret?: string;
-        /** An Azure client secret (defaults to clientSecret). */
-        logAnalyticsClientId?: string;
-        /** An Azure client secret (defaults to clientSecret). */
-        logAnalyticsClientSecret?: string;
-        /** An Azure tenant id (defaults to tenantId). */
-        logAnalyticsTenantId?: string;
-        /** An Azure monitor log analytics workspace. */
-        logAnalyticsWorkspace?: string;
-      };
     };
     Teams: {
       /** A lowercase name that starts with a letter and may contain dashes. */
@@ -791,24 +755,6 @@ export interface components {
           /** Email addresses (comma separated) for critical events. */
           critical?: string;
         };
-      };
-      azureMonitor?: {
-        /** An Azure AppInsights client secret (defaults to clientSecret). */
-        appInsightsApiKey?: string;
-        /** An Azure AppInsights client id (defaults to clientId). */
-        appInsightsAppId?: string;
-        /** An Azure client id. */
-        clientId?: string;
-        /** An Azure client secret. */
-        clientSecret?: string;
-        /** An Azure client secret (defaults to clientSecret). */
-        logAnalyticsClientId?: string;
-        /** An Azure client secret (defaults to clientSecret). */
-        logAnalyticsClientSecret?: string;
-        /** An Azure tenant id (defaults to tenantId). */
-        logAnalyticsTenantId?: string;
-        /** An Azure monitor log analytics workspace. */
-        logAnalyticsWorkspace?: string;
       };
     }[];
     User: {
@@ -1065,24 +1011,6 @@ export interface operations {
                 critical?: string;
               };
             };
-            azureMonitor?: {
-              /** An Azure AppInsights client secret (defaults to clientSecret). */
-              appInsightsApiKey?: string;
-              /** An Azure AppInsights client id (defaults to clientId). */
-              appInsightsAppId?: string;
-              /** An Azure client id. */
-              clientId?: string;
-              /** An Azure client secret. */
-              clientSecret?: string;
-              /** An Azure client secret (defaults to clientSecret). */
-              logAnalyticsClientId?: string;
-              /** An Azure client secret (defaults to clientSecret). */
-              logAnalyticsClientSecret?: string;
-              /** An Azure tenant id (defaults to tenantId). */
-              logAnalyticsTenantId?: string;
-              /** An Azure monitor log analytics workspace. */
-              logAnalyticsWorkspace?: string;
-            };
           }[];
         };
       };
@@ -1127,24 +1055,6 @@ export interface operations {
                 /** Email addresses (comma separated) for critical events. */
                 critical?: string;
               };
-            };
-            azureMonitor?: {
-              /** An Azure AppInsights client secret (defaults to clientSecret). */
-              appInsightsApiKey?: string;
-              /** An Azure AppInsights client id (defaults to clientId). */
-              appInsightsAppId?: string;
-              /** An Azure client id. */
-              clientId?: string;
-              /** An Azure client secret. */
-              clientSecret?: string;
-              /** An Azure client secret (defaults to clientSecret). */
-              logAnalyticsClientId?: string;
-              /** An Azure client secret (defaults to clientSecret). */
-              logAnalyticsClientSecret?: string;
-              /** An Azure tenant id (defaults to tenantId). */
-              logAnalyticsTenantId?: string;
-              /** An Azure monitor log analytics workspace. */
-              logAnalyticsWorkspace?: string;
             };
           };
         };
@@ -1209,24 +1119,6 @@ export interface operations {
               critical?: string;
             };
           };
-          azureMonitor?: {
-            /** An Azure AppInsights client secret (defaults to clientSecret). */
-            appInsightsApiKey?: string;
-            /** An Azure AppInsights client id (defaults to clientId). */
-            appInsightsAppId?: string;
-            /** An Azure client id. */
-            clientId?: string;
-            /** An Azure client secret. */
-            clientSecret?: string;
-            /** An Azure client secret (defaults to clientSecret). */
-            logAnalyticsClientId?: string;
-            /** An Azure client secret (defaults to clientSecret). */
-            logAnalyticsClientSecret?: string;
-            /** An Azure tenant id (defaults to tenantId). */
-            logAnalyticsTenantId?: string;
-            /** An Azure monitor log analytics workspace. */
-            logAnalyticsWorkspace?: string;
-          };
         };
       };
     };
@@ -1276,24 +1168,6 @@ export interface operations {
                 /** Email addresses (comma separated) for critical events. */
                 critical?: string;
               };
-            };
-            azureMonitor?: {
-              /** An Azure AppInsights client secret (defaults to clientSecret). */
-              appInsightsApiKey?: string;
-              /** An Azure AppInsights client id (defaults to clientId). */
-              appInsightsAppId?: string;
-              /** An Azure client id. */
-              clientId?: string;
-              /** An Azure client secret. */
-              clientSecret?: string;
-              /** An Azure client secret (defaults to clientSecret). */
-              logAnalyticsClientId?: string;
-              /** An Azure client secret (defaults to clientSecret). */
-              logAnalyticsClientSecret?: string;
-              /** An Azure tenant id (defaults to tenantId). */
-              logAnalyticsTenantId?: string;
-              /** An Azure monitor log analytics workspace. */
-              logAnalyticsWorkspace?: string;
             };
           };
         };
@@ -1368,24 +1242,6 @@ export interface operations {
                 critical?: string;
               };
             };
-            azureMonitor?: {
-              /** An Azure AppInsights client secret (defaults to clientSecret). */
-              appInsightsApiKey?: string;
-              /** An Azure AppInsights client id (defaults to clientId). */
-              appInsightsAppId?: string;
-              /** An Azure client id. */
-              clientId?: string;
-              /** An Azure client secret. */
-              clientSecret?: string;
-              /** An Azure client secret (defaults to clientSecret). */
-              logAnalyticsClientId?: string;
-              /** An Azure client secret (defaults to clientSecret). */
-              logAnalyticsClientSecret?: string;
-              /** An Azure tenant id (defaults to tenantId). */
-              logAnalyticsTenantId?: string;
-              /** An Azure monitor log analytics workspace. */
-              logAnalyticsWorkspace?: string;
-            };
           };
         };
       };
@@ -1448,24 +1304,6 @@ export interface operations {
               /** Email addresses (comma separated) for critical events. */
               critical?: string;
             };
-          };
-          azureMonitor?: {
-            /** An Azure AppInsights client secret (defaults to clientSecret). */
-            appInsightsApiKey?: string;
-            /** An Azure AppInsights client id (defaults to clientId). */
-            appInsightsAppId?: string;
-            /** An Azure client id. */
-            clientId?: string;
-            /** An Azure client secret. */
-            clientSecret?: string;
-            /** An Azure client secret (defaults to clientSecret). */
-            logAnalyticsClientId?: string;
-            /** An Azure client secret (defaults to clientSecret). */
-            logAnalyticsClientSecret?: string;
-            /** An Azure tenant id (defaults to tenantId). */
-            logAnalyticsTenantId?: string;
-            /** An Azure monitor log analytics workspace. */
-            logAnalyticsWorkspace?: string;
           };
         };
       };
@@ -2671,24 +2509,6 @@ export interface operations {
                   /** Email addresses (comma separated) for critical events. */
                   critical?: string;
                 };
-              };
-              azureMonitor?: {
-                /** An Azure AppInsights client secret (defaults to clientSecret). */
-                appInsightsApiKey?: string;
-                /** An Azure AppInsights client id (defaults to clientId). */
-                appInsightsAppId?: string;
-                /** An Azure client id. */
-                clientId?: string;
-                /** An Azure client secret. */
-                clientSecret?: string;
-                /** An Azure client secret (defaults to clientSecret). */
-                logAnalyticsClientId?: string;
-                /** An Azure client secret (defaults to clientSecret). */
-                logAnalyticsClientSecret?: string;
-                /** An Azure tenant id (defaults to tenantId). */
-                logAnalyticsTenantId?: string;
-                /** An Azure monitor log analytics workspace. */
-                logAnalyticsWorkspace?: string;
               };
             }[];
             user?: {
