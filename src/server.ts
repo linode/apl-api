@@ -4,7 +4,7 @@ import { SecurityHandlers } from 'openapi-security-handler'
 import { initialize } from 'express-openapi'
 import { json } from 'body-parser'
 import path from 'path'
-import { bundle } from '@apidevtools/json-schema-ref-parser'
+import { parse } from '@apidevtools/json-schema-ref-parser'
 import cors from 'cors'
 import logger from 'morgan'
 import swaggerUi from 'swagger-ui-express'
@@ -15,9 +15,9 @@ import { OpenAPIDoc, OpenApiRequestExt } from './otomi-models'
 import OtomiStack from './otomi-stack'
 
 export async function loadOpenApisSpec(): Promise<OpenAPIDoc> {
-  const openApiPath = path.resolve(__dirname, 'openapi.yaml')
+  const openApiPath = path.resolve(__dirname, 'generated-schema.json')
   console.info(`Loading api spec from: ${openApiPath}`)
-  const schema = await bundle(openApiPath)
+  const schema = await parse(openApiPath)
   return schema as OpenAPIDoc
 }
 

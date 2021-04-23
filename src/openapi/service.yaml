@@ -30,6 +30,7 @@ Service:
         team: [read, create]
     ksvc:
       title: Type
+      type: object
       oneOf:
         - title: Knative service
           nullable: true
@@ -51,6 +52,10 @@ Service:
                   $ref: definitions.yaml#/repository
                 tag:
                   type: string
+              type: object
+              required:
+                - repository
+                - tag
             secrets:
               type: array
               items:
@@ -65,9 +70,7 @@ Service:
                     uniqueItems: true
                 required:
                   - name
-              required:
-                - repository
-                - tag
+                type: object
             env:
               title: Environment variables
               # description: Environment variables for containers
@@ -83,6 +86,7 @@ Service:
                 required:
                   - name
                   - value
+                type: object
             resources:
               title: Pod resources
               # description: Compute resources for containers
@@ -101,6 +105,7 @@ Service:
                   required:
                     - cpu
                     - memory
+                  type: object
                 limits:
                   properties:
                     cpu:
@@ -114,6 +119,8 @@ Service:
                   required:
                     - cpu
                     - memory
+                  type: object
+              type: object
             annotations:
               title: Pod annotations
               $ref: definitions.yaml#/annotations
@@ -140,9 +147,8 @@ Service:
                         PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
                   required:
                     - semver
-                  # additionalProperties: false
+                  type: object
                 - title: Glob pattern matching
-                  # nullable: true
                   properties:
                     tagMatcher:
                       type: string
@@ -155,6 +161,7 @@ Service:
                       example: 'main-v1.3.*'
                   required:
                     - glob
+                  type: object
                   additionalProperties: false
         - title: Existing Knative service
           properties:
@@ -164,6 +171,7 @@ Service:
               default: ksvcPredeployed
           required:
             - serviceType
+          type: object
         - title: Existing Kubernetes service
           properties:
             serviceType:
@@ -172,6 +180,7 @@ Service:
               default: svcPredeployed
           required:
             - serviceType
+          type: object
     ingress:
       title: Exposure
       x-acl:
@@ -181,7 +190,7 @@ Service:
           nullable: true
           additionalProperties: false
         - title: Public URL
-          nullable: true
+          # nullable: true
           properties:
             useDefaultSubdomain:
               title: Use team domain (preferred)
@@ -230,6 +239,7 @@ Service:
           required:
             - domain
             - subdomain
+          type: object
     teamId:
       type: string
       readOnly: true
@@ -237,3 +247,4 @@ Service:
     - name
     - clusterId
     - teamId
+  type: object

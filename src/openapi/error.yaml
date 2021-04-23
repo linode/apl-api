@@ -12,6 +12,7 @@ ValidationError: &ValidationError
       enum:
         - body
         - path
+  type: object
 
 OpenApiValidationError:
   x-acl: []
@@ -22,9 +23,11 @@ OpenApiValidationError:
       type: array
       items:
         <<: *ValidationError
+  type: object
 
 OtomiStackError:
   x-acl: []
   properties:
     message:
       type: string
+  type: object

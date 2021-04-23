@@ -1,4 +1,5 @@
 alerts:
+  type: object
   properties:
     drone:
       default: slack
@@ -15,6 +16,7 @@ alerts:
         nonCritical:
           $ref: '#/email'
           description: One or more email addresses (comma separated) for non-critical events.
+      type: object
     groupInterval:
       default: 5m
       description: How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.)
@@ -28,6 +30,7 @@ alerts:
         lowPrio:
           description: The high prio web hook.
           type: string
+      type: object
     receivers:
       description: Notification receivers.
       items:
@@ -55,6 +58,7 @@ alerts:
         url:
           $ref: '#/url'
           description: A Slack webhook URL.
+      type: object
 annotations:
   $ref: '#/labelsAnnotations'
   description: A set of annotations.
@@ -291,6 +295,7 @@ jobs:
         patternProperties:
           ^(.*/)|[a-z-]+([^/]*)$:
             type: string
+        type: object
       image:
         $ref: '#/image'
       init:
@@ -303,6 +308,7 @@ jobs:
             $ref: '#/script'
           secrets:
             $ref: '#/secrets'
+        type: object
       name:
         default: foo
         description: Must be a unique name.
@@ -361,6 +367,7 @@ labelsAnnotations:
     ? ^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]){1,253}\/)?([a-z0-9A-Z]+[a-z0-9A-Z-_.]+[a-z0-9A-Z]){1,63}$
     : pattern: ^((.){1,253}\/)?(.){1,63}$
       type: string
+  type: object
 logLevel:
   default: info
   enum:
@@ -392,6 +399,7 @@ podSecurityContext:
       maximum": 65535
       minimum": 0
       type: integer
+  type: object
 portNumber:
   maximum: 32768
   minimum: 80
@@ -420,6 +428,7 @@ resource:
   required:
     - cpu
     - memory
+  type: object
 resources:
   additionalProperties: false
   description: Compute resources for containers.
@@ -431,6 +440,7 @@ resources:
       $ref: '#/resource'
       description: Requested resources (guaranteed).
   title: Pod resources
+  type: object
 scaling:
   description: Min and max number of replicas.
   properties:
@@ -438,6 +448,7 @@ scaling:
       type: number
     minReplicas:
       type: number
+  type: object
 script:
   description: May specify a non-empty string containing an executable script.
   type: string
@@ -460,6 +471,7 @@ secret:
         - username
         - password
       title: Docker Registry
+      type: object
     - properties:
         entries:
           description: Key names and their values.
@@ -485,6 +497,7 @@ secret:
       required:
         - entries
       title: Generic
+      type: object
     - properties:
         ca:
           description: The CA certificate content.
@@ -504,6 +517,7 @@ secret:
         - crt
         - key
       title: TLS
+      type: object
   properties:
     id:
       readOnly: true
@@ -513,6 +527,7 @@ secret:
   required:
     - name
     - type
+  type: object
 secrets:
   items:
     additionalProperties: true
@@ -531,6 +546,7 @@ secrets:
         type: string
     required:
       - name
+    type: object
   nullable: true
   title: Secrets
   type: array
@@ -563,6 +579,7 @@ team:
         groupMapping:
           description: IDP group id to map onto this team.
           type: string
+      type: object
     password:
       description: Will be used to separate team resources.
       type: string
@@ -582,6 +599,7 @@ team:
                 type: boolean
               workload:
                 $ref: '#/labelsAnnotations'
+            type: object
           domain:
             description: A custom service domain name.
             type: string
@@ -616,6 +634,7 @@ team:
                   - additionalProperties: false
                     nullable: true
                     title: 'Off'
+                    type: object
                   - nullable: true
                     properties:
                       additionalProperties: false
@@ -631,6 +650,7 @@ team:
                         type: string
                     required:
                       - semver
+                    type: object
                     title: Semver versioning
                   - additionalProperties: false
                     properties:
@@ -647,6 +667,7 @@ team:
                     required:
                       - glob
                     title: Glob pattern matching
+                    type: object
                 title: Continuous delivery pipeline
               env:
                 $ref: '#/env'
@@ -692,6 +713,7 @@ team:
       type: array
   required:
     - id
+  type: object
 url:
   pattern: ^(https:\/\/)([\w\-])+\.{1}([a-zA-Z]{2,63})([\/\w-]*)*\/?\??([^#\n\r]*)?#?([^\n\r]*)$
   type: string
@@ -703,7 +725,9 @@ volumes:
         properties:
           name:
             type: string
+        type: object
       name:
         description: Name must match mount name.
         type: string
+    type: object
   type: array

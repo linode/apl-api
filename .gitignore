@@ -39,4 +39,4 @@ dist
 
 kms.json*
 
-vendors/client/
+/vendors/client/

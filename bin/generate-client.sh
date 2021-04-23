@@ -7,7 +7,7 @@ repo="ssh://git@github.com/redkubes/otomi-api.git"
 
 vendor="otomi-api"
 type="axios"
-openapi_doc="vendors/openapi/$vendor.json"
+openapi_doc="vendors/openapi/otomi-api.json"
 registry="https://npm.pkg.github.com/"
 target_dir="vendors/client/$vendor/$type"
 target_package_json="$target_dir/package.json"
@@ -29,12 +29,16 @@ validate() {
 generate_client() {
     echo "Generating client code from openapi specification $openapi_doc.."
     rm -rf $target_dir >/dev/null
-    docker run --rm -v $PWD:/local -w /local -u "${UID:-1001}" \
-    openapitools/openapi-generator-cli:v5.0.1 generate \
+
+    # npx openapi bundle --output src/openapi --ext yaml src/openapi/api.yaml
+
+    docker run --rm -v $PWD:/local -w /local -u "$(id -u $USER)" \
+    openapitools/openapi-generator-cli:v5.1.0 generate \
     -i /local/$openapi_doc \
     -o /local/$target_dir \
     -g typescript-node \
-    --additional-properties supportsES6=true,npmName=$target_npm_name,modelPropertyNaming=original
+    --additional-properties supportsES6=true,npmName=$target_npm_name,modelPropertyNaming=original \
+    --generate-alias-as-model
 }
 
 set_package_json() {
