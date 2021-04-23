@@ -33,7 +33,7 @@ generate_client() {
     # npx openapi bundle --output src/openapi --ext yaml src/openapi/api.yaml
 
     docker run --rm -v $PWD:/local -w /local -u "$(id -u $USER)" \
-    openapitools/openapi-generator-cli:v5.0.1 generate \
+    openapitools/openapi-generator-cli:v5.1.0 generate \
     -i /local/$openapi_doc \
     -o /local/$target_dir \
     -g typescript-node \
