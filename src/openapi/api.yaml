@@ -512,10 +512,3 @@ components:
 
     User:
       $ref: 'user.yaml#/User'
-
-    SecretGeneric:
-      $ref: 'secret.yaml#/SecretGeneric'
-    SecretDocker:
-      $ref: 'secret.yaml#/SecretDocker'
-    SecretTLS:
-      $ref: 'secret.yaml#/SecretTLS'

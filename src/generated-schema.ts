@@ -211,61 +211,60 @@ export interface components {
     OtomiStackError: {
       message?: string;
     };
-    Secret:
+    Secret: (
       | {
-          id?: string;
-          /** A secret name */
-          name: string;
-          /** A kubernetes cluster for the secret */
-          clusterId: string;
-          type?: "generic" | "docker-registry" | "tls";
+          type: "generic";
+          entries: string[];
         }
       | {
-          id?: string;
-          /** A secret name */
-          name: string;
-          /** A kubernetes cluster for the secret */
-          clusterId: string;
-          type?: "generic" | "docker-registry" | "tls";
+          type: "docker-registry";
+          dockerconfig?: ".dockerconfig.json";
         }
       | {
-          id?: string;
-          /** A secret name */
-          name: string;
-          /** A kubernetes cluster for the secret */
-          clusterId: string;
-          type?: "generic" | "docker-registry" | "tls";
-        };
-    Secrets: (
+          type: "tls";
+          /** A Vault property name that contains PEM public key certificate */
+          crt: string;
+          /** A Vault property name that contains PEM private key certificate */
+          key: string;
+          /** A Vault property name that contains CA certificate content */
+          ca?: string;
+        }
+    ) & {
+      id?: string;
+      /** A secret name */
+      name: string;
+      /** A kubernetes cluster for the secret */
+      clusterId: string;
+    };
+    Secrets: ((
       | {
-          id?: string;
-          /** A secret name */
-          name: string;
-          /** A kubernetes cluster for the secret */
-          clusterId: string;
-          type?: "generic" | "docker-registry" | "tls";
+          type: "generic";
+          entries: string[];
         }
       | {
-          id?: string;
-          /** A secret name */
-          name: string;
-          /** A kubernetes cluster for the secret */
-          clusterId: string;
-          type?: "generic" | "docker-registry" | "tls";
+          type: "docker-registry";
+          dockerconfig?: ".dockerconfig.json";
         }
       | {
-          id?: string;
-          /** A secret name */
-          name: string;
-          /** A kubernetes cluster for the secret */
-          clusterId: string;
-          type?: "generic" | "docker-registry" | "tls";
+          type: "tls";
+          /** A Vault property name that contains PEM public key certificate */
+          crt: string;
+          /** A Vault property name that contains PEM private key certificate */
+          key: string;
+          /** A Vault property name that contains CA certificate content */
+          ca?: string;
         }
-    )[];
+    ) & {
+      id?: string;
+      /** A secret name */
+      name: string;
+      /** A kubernetes cluster for the secret */
+      clusterId: string;
+    })[];
     Service: {
       enabled?: boolean;
       id?: string;
-      /** A lowercase name that starts with a letter and may contain dashes. */
+      /** A service name */
       name: string;
       /** A service port */
       port?: number;
@@ -293,18 +292,19 @@ export interface components {
               | null;
             resources?: {
               requests?: {
-                /** Amount of cores, or slice of cpu in millis. */
+                /** The guaranteed amount of CPU */
                 cpu: string;
-                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                /** The guaranteed amount of RAM */
                 memory: string;
               };
               limits?: {
-                /** Amount of cores, or slice of cpu in millis. */
+                /** The maximum amount of CPU */
                 cpu: string;
-                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                /** The maximum amount of RAM */
                 memory: string;
               };
             } | null;
+            /** A set of annotations. */
             annotations?: { [key: string]: any };
             /** Deploys new images based on a tagging strategy */
             autoCD?:
@@ -351,7 +351,7 @@ export interface components {
     Services: {
       enabled?: boolean;
       id?: string;
-      /** A lowercase name that starts with a letter and may contain dashes. */
+      /** A service name */
       name: string;
       /** A service port */
       port?: number;
@@ -379,18 +379,19 @@ export interface components {
               | null;
             resources?: {
               requests?: {
-                /** Amount of cores, or slice of cpu in millis. */
+                /** The guaranteed amount of CPU */
                 cpu: string;
-                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                /** The guaranteed amount of RAM */
                 memory: string;
               };
               limits?: {
-                /** Amount of cores, or slice of cpu in millis. */
+                /** The maximum amount of CPU */
                 cpu: string;
-                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                /** The maximum amount of RAM */
                 memory: string;
               };
             } | null;
+            /** A set of annotations. */
             annotations?: { [key: string]: any };
             /** Deploys new images based on a tagging strategy */
             autoCD?:
@@ -443,7 +444,7 @@ export interface components {
       teams?: {
         /** A lowercase name that starts with a letter and may contain dashes. */
         id?: string;
-        /** A lowercase name that starts with a letter and may contain dashes. */
+        /** A team name */
         name: string;
         clusters: string[];
         oidc?: {
@@ -707,7 +708,7 @@ export interface components {
     Team: {
       /** A lowercase name that starts with a letter and may contain dashes. */
       id?: string;
-      /** A lowercase name that starts with a letter and may contain dashes. */
+      /** A team name */
       name: string;
       clusters: string[];
       oidc?: {
@@ -760,7 +761,7 @@ export interface components {
     Teams: {
       /** A lowercase name that starts with a letter and may contain dashes. */
       id?: string;
-      /** A lowercase name that starts with a letter and may contain dashes. */
+      /** A team name */
       name: string;
       clusters: string[];
       oidc?: {
@@ -821,796 +822,6 @@ export interface components {
       /** A list of roles that the user has */
       roles: string[];
     };
-    SecretGeneric: {
-      id?: string;
-      /** A secret name */
-      name: string;
-      /** A kubernetes cluster for the secret */
-      clusterId: string;
-      type?: "generic" | "docker-registry" | "tls";
-    };
-    SecretDocker: {
-      id?: string;
-      /** A secret name */
-      name: string;
-      /** A kubernetes cluster for the secret */
-      clusterId: string;
-      type?: "generic" | "docker-registry" | "tls";
-    };
-    SecretTLS: {
-      id?: string;
-      /** A secret name */
-      name: string;
-      /** A kubernetes cluster for the secret */
-      clusterId: string;
-      type?: "generic" | "docker-registry" | "tls";
-    };
-    cluster_Cluster: {
-      enabled?: boolean;
-      /** A cluster name */
-      name?: string;
-      /** A cloud provider name */
-      cloud?: string;
-      /** A default cluster DNS zone */
-      domain?: string;
-      /** A list of DNS zones that are available to the cluster */
-      dnsZones?: string[];
-      /** A flag that indicates capability for deploying serverless services by using Knative */
-      hasKnative?: boolean;
-      /** A version of kubernetes that is installed on the cluster */
-      k8sVersion?: string;
-      /** A version of kubernetes that is installed on the cluster */
-      otomiVersion?: string;
-      /** A physical location of the cluster */
-      region?: string;
-      /** An unique cluster identifier */
-      clusterId?: string;
-    };
-    clusters_Clusters: {
-      enabled?: boolean;
-      /** A cluster name */
-      name?: string;
-      /** A cloud provider name */
-      cloud?: string;
-      /** A default cluster DNS zone */
-      domain?: string;
-      /** A list of DNS zones that are available to the cluster */
-      dnsZones?: string[];
-      /** A flag that indicates capability for deploying serverless services by using Knative */
-      hasKnative?: boolean;
-      /** A version of kubernetes that is installed on the cluster */
-      k8sVersion?: string;
-      /** A version of kubernetes that is installed on the cluster */
-      otomiVersion?: string;
-      /** A physical location of the cluster */
-      region?: string;
-      /** An unique cluster identifier */
-      clusterId?: string;
-    }[];
-    shared: {
-      id?: string;
-      /** A secret name */
-      name: string;
-      /** A kubernetes cluster for the secret */
-      clusterId: string;
-      type?: "generic" | "docker-registry" | "tls";
-    };
-    secret_Secret:
-      | {
-          id?: string;
-          /** A secret name */
-          name: string;
-          /** A kubernetes cluster for the secret */
-          clusterId: string;
-          type?: "generic" | "docker-registry" | "tls";
-        }
-      | {
-          id?: string;
-          /** A secret name */
-          name: string;
-          /** A kubernetes cluster for the secret */
-          clusterId: string;
-          type?: "generic" | "docker-registry" | "tls";
-        }
-      | {
-          id?: string;
-          /** A secret name */
-          name: string;
-          /** A kubernetes cluster for the secret */
-          clusterId: string;
-          type?: "generic" | "docker-registry" | "tls";
-        };
-    secrets_Secrets: (
-      | {
-          id?: string;
-          /** A secret name */
-          name: string;
-          /** A kubernetes cluster for the secret */
-          clusterId: string;
-          type?: "generic" | "docker-registry" | "tls";
-        }
-      | {
-          id?: string;
-          /** A secret name */
-          name: string;
-          /** A kubernetes cluster for the secret */
-          clusterId: string;
-          type?: "generic" | "docker-registry" | "tls";
-        }
-      | {
-          id?: string;
-          /** A secret name */
-          name: string;
-          /** A kubernetes cluster for the secret */
-          clusterId: string;
-          type?: "generic" | "docker-registry" | "tls";
-        }
-    )[];
-    error_OpenApiValidationError: {
-      status?: number;
-      errors?: {
-        path?: string;
-        errorCode?: string;
-        message?: string;
-        location?: "body" | "path";
-      }[];
-    };
-    /** A lowercase name that starts with a letter and may contain dashes. */
-    idName: string;
-    /** A container image repository. */
-    repository: string;
-    env: { [key: string]: any } | null;
-    /** Amount of cores, or slice of cpu in millis. */
-    cpuQuantity: string;
-    /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
-    memoryQuantity: string;
-    labelsAnnotations: { [key: string]: any };
-    domain: string;
-    service_Service: {
-      enabled?: boolean;
-      id?: string;
-      /** A lowercase name that starts with a letter and may contain dashes. */
-      name: string;
-      /** A service port */
-      port?: number;
-      /** A kubernetes cluster for the service */
-      clusterId: string;
-      ksvc?:
-        | ({
-            serviceType?: "ksvc";
-            /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
-            scaleToZero?: boolean;
-            image?: {
-              /** A container image repository. */
-              repository: string;
-              tag: string;
-            } | null;
-            secrets?: {
-              name: string;
-              entries?: string[];
-            }[];
-            env?:
-              | {
-                  name: { [key: string]: any } | null;
-                  value: string;
-                }[]
-              | null;
-            resources?: {
-              requests?: {
-                /** Amount of cores, or slice of cpu in millis. */
-                cpu: string;
-                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
-                memory: string;
-              };
-              limits?: {
-                /** Amount of cores, or slice of cpu in millis. */
-                cpu: string;
-                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
-                memory: string;
-              };
-            } | null;
-            annotations?: { [key: string]: any };
-            /** Deploys new images based on a tagging strategy */
-            autoCD?:
-              | ({ [key: string]: any } | null)
-              | ({
-                  tagMatcher?: "semver";
-                  /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
-                  semver: string;
-                } | null)
-              | {
-                  tagMatcher?: "glob";
-                  /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
-                  glob: string;
-                };
-          } | null)
-        | {
-            serviceType: "ksvcPredeployed";
-          }
-        | {
-            serviceType: "svcPredeployed";
-          };
-      ingress?:
-        | ({ [key: string]: any } | null)
-        | {
-            /** Use the team domain so that the URL reveals the owner. */
-            useDefaultSubdomain?: boolean;
-            /** A host that is used to set DNS 'A' records */
-            subdomain: string | null;
-            /** A managed DNS zone */
-            domain: string;
-            /** The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.) */
-            path?: string;
-            /** Forward the URL path into the service (don't rewrite to /) */
-            forwardPath?: boolean;
-            hasSingleSignOn?: boolean;
-            /** If true a certificate should exist already */
-            hasCert?: boolean;
-            certArn?: string;
-            certSelect?: boolean;
-            certName?: string;
-          };
-      teamId: string;
-    };
-    services_Services: {
-      enabled?: boolean;
-      id?: string;
-      /** A lowercase name that starts with a letter and may contain dashes. */
-      name: string;
-      /** A service port */
-      port?: number;
-      /** A kubernetes cluster for the service */
-      clusterId: string;
-      ksvc?:
-        | ({
-            serviceType?: "ksvc";
-            /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
-            scaleToZero?: boolean;
-            image?: {
-              /** A container image repository. */
-              repository: string;
-              tag: string;
-            } | null;
-            secrets?: {
-              name: string;
-              entries?: string[];
-            }[];
-            env?:
-              | {
-                  name: { [key: string]: any } | null;
-                  value: string;
-                }[]
-              | null;
-            resources?: {
-              requests?: {
-                /** Amount of cores, or slice of cpu in millis. */
-                cpu: string;
-                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
-                memory: string;
-              };
-              limits?: {
-                /** Amount of cores, or slice of cpu in millis. */
-                cpu: string;
-                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
-                memory: string;
-              };
-            } | null;
-            annotations?: { [key: string]: any };
-            /** Deploys new images based on a tagging strategy */
-            autoCD?:
-              | ({ [key: string]: any } | null)
-              | ({
-                  tagMatcher?: "semver";
-                  /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
-                  semver: string;
-                } | null)
-              | {
-                  tagMatcher?: "glob";
-                  /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
-                  glob: string;
-                };
-          } | null)
-        | {
-            serviceType: "ksvcPredeployed";
-          }
-        | {
-            serviceType: "svcPredeployed";
-          };
-      ingress?:
-        | ({ [key: string]: any } | null)
-        | {
-            /** Use the team domain so that the URL reveals the owner. */
-            useDefaultSubdomain?: boolean;
-            /** A host that is used to set DNS 'A' records */
-            subdomain: string | null;
-            /** A managed DNS zone */
-            domain: string;
-            /** The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.) */
-            path?: string;
-            /** Forward the URL path into the service (don't rewrite to /) */
-            forwardPath?: boolean;
-            hasSingleSignOn?: boolean;
-            /** If true a certificate should exist already */
-            hasCert?: boolean;
-            certArn?: string;
-            certSelect?: boolean;
-            certName?: string;
-          };
-      teamId: string;
-    }[];
-    azureMonitor: {
-      /** An Azure AppInsights client secret (defaults to clientSecret). */
-      appInsightsApiKey?: string;
-      /** An Azure AppInsights client id (defaults to clientId). */
-      appInsightsAppId?: string;
-      /** An Azure client id. */
-      clientId?: string;
-      /** An Azure client secret. */
-      clientSecret?: string;
-      /** An Azure client secret (defaults to clientSecret). */
-      logAnalyticsClientId?: string;
-      /** An Azure client secret (defaults to clientSecret). */
-      logAnalyticsClientSecret?: string;
-      /** An Azure tenant id (defaults to tenantId). */
-      logAnalyticsTenantId?: string;
-      /** An Azure monitor log analytics workspace. */
-      logAnalyticsWorkspace?: string;
-    };
-    team_Team: {
-      /** A lowercase name that starts with a letter and may contain dashes. */
-      id?: string;
-      /** A lowercase name that starts with a letter and may contain dashes. */
-      name: string;
-      clusters: string[];
-      oidc?: {
-        /** An OIDC group name/id granting access to this team */
-        groupMapping?: string;
-      };
-      password: string;
-      alerts?: {
-        receivers?: ("slack" | "msteams" | "email")[];
-        slack?: {
-          /** Slack web hook. If none is given the global one is used. */
-          url?: string;
-          /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
-          channel?: string;
-          /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
-          channelCrit?: string;
-        };
-        msteams?: {
-          /** The low prio web hook */
-          lowPrio?: string;
-          /** The high prio web hook */
-          highPrio?: string;
-        };
-        email?: {
-          /** One or more email addresses (comma separated) for non-critical events. */
-          nonCritical?: string;
-          /** Email addresses (comma separated) for critical events. */
-          critical?: string;
-        };
-      };
-      azureMonitor?: {
-        /** An Azure AppInsights client secret (defaults to clientSecret). */
-        appInsightsApiKey?: string;
-        /** An Azure AppInsights client id (defaults to clientId). */
-        appInsightsAppId?: string;
-        /** An Azure client id. */
-        clientId?: string;
-        /** An Azure client secret. */
-        clientSecret?: string;
-        /** An Azure client secret (defaults to clientSecret). */
-        logAnalyticsClientId?: string;
-        /** An Azure client secret (defaults to clientSecret). */
-        logAnalyticsClientSecret?: string;
-        /** An Azure tenant id (defaults to tenantId). */
-        logAnalyticsTenantId?: string;
-        /** An Azure monitor log analytics workspace. */
-        logAnalyticsWorkspace?: string;
-      };
-    };
-    teams_Teams: {
-      /** A lowercase name that starts with a letter and may contain dashes. */
-      id?: string;
-      /** A lowercase name that starts with a letter and may contain dashes. */
-      name: string;
-      clusters: string[];
-      oidc?: {
-        /** An OIDC group name/id granting access to this team */
-        groupMapping?: string;
-      };
-      password: string;
-      alerts?: {
-        receivers?: ("slack" | "msteams" | "email")[];
-        slack?: {
-          /** Slack web hook. If none is given the global one is used. */
-          url?: string;
-          /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
-          channel?: string;
-          /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
-          channelCrit?: string;
-        };
-        msteams?: {
-          /** The low prio web hook */
-          lowPrio?: string;
-          /** The high prio web hook */
-          highPrio?: string;
-        };
-        email?: {
-          /** One or more email addresses (comma separated) for non-critical events. */
-          nonCritical?: string;
-          /** Email addresses (comma separated) for critical events. */
-          critical?: string;
-        };
-      };
-      azureMonitor?: {
-        /** An Azure AppInsights client secret (defaults to clientSecret). */
-        appInsightsApiKey?: string;
-        /** An Azure AppInsights client id (defaults to clientId). */
-        appInsightsAppId?: string;
-        /** An Azure client id. */
-        clientId?: string;
-        /** An Azure client secret. */
-        clientSecret?: string;
-        /** An Azure client secret (defaults to clientSecret). */
-        logAnalyticsClientId?: string;
-        /** An Azure client secret (defaults to clientSecret). */
-        logAnalyticsClientSecret?: string;
-        /** An Azure tenant id (defaults to tenantId). */
-        logAnalyticsTenantId?: string;
-        /** An Azure monitor log analytics workspace. */
-        logAnalyticsWorkspace?: string;
-      };
-    }[];
-    error_OtomiStackError: {
-      message?: string;
-    };
-    email: string;
-    user_User: {
-      /** A user name */
-      name: string;
-      email: string;
-      /** If the user is admin */
-      isAdmin: boolean;
-      /** A list of teams the user belongs to */
-      teams: string[];
-      /** A list of roles that the user has */
-      roles: string[];
-    };
-    session_Session: {
-      clusters?: string[];
-      core?: { [key: string]: any };
-      currentClusterId?: string;
-      isDirty?: boolean;
-      namespaces?: string[];
-      teams?: {
-        /** A lowercase name that starts with a letter and may contain dashes. */
-        id?: string;
-        /** A lowercase name that starts with a letter and may contain dashes. */
-        name: string;
-        clusters: string[];
-        oidc?: {
-          /** An OIDC group name/id granting access to this team */
-          groupMapping?: string;
-        };
-        password: string;
-        alerts?: {
-          receivers?: ("slack" | "msteams" | "email")[];
-          slack?: {
-            /** Slack web hook. If none is given the global one is used. */
-            url?: string;
-            /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
-            channel?: string;
-            /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
-            channelCrit?: string;
-          };
-          msteams?: {
-            /** The low prio web hook */
-            lowPrio?: string;
-            /** The high prio web hook */
-            highPrio?: string;
-          };
-          email?: {
-            /** One or more email addresses (comma separated) for non-critical events. */
-            nonCritical?: string;
-            /** Email addresses (comma separated) for critical events. */
-            critical?: string;
-          };
-        };
-        azureMonitor?: {
-          /** An Azure AppInsights client secret (defaults to clientSecret). */
-          appInsightsApiKey?: string;
-          /** An Azure AppInsights client id (defaults to clientId). */
-          appInsightsAppId?: string;
-          /** An Azure client id. */
-          clientId?: string;
-          /** An Azure client secret. */
-          clientSecret?: string;
-          /** An Azure client secret (defaults to clientSecret). */
-          logAnalyticsClientId?: string;
-          /** An Azure client secret (defaults to clientSecret). */
-          logAnalyticsClientSecret?: string;
-          /** An Azure tenant id (defaults to tenantId). */
-          logAnalyticsTenantId?: string;
-          /** An Azure monitor log analytics workspace. */
-          logAnalyticsWorkspace?: string;
-        };
-      }[];
-      user?: {
-        /** A user name */
-        name: string;
-        email: string;
-        /** If the user is admin */
-        isAdmin: boolean;
-        /** A list of teams the user belongs to */
-        teams: string[];
-        /** A list of roles that the user has */
-        roles: string[];
-      };
-    };
-    url: string;
-    alerts: {
-      drone?: "slack" | "msteams";
-      email?: {
-        /** One or more email addresses (comma separated) for critical events. */
-        critical?: string;
-        /** One or more email addresses (comma separated) for non-critical events. */
-        nonCritical?: string;
-      };
-      /** How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.) */
-      groupInterval?: string;
-      msteams?: {
-        /** The low prio web hook. */
-        highPrio?: string;
-        /** The high prio web hook. */
-        lowPrio?: string;
-      };
-      /** Notification receivers. */
-      receivers?: ("slack" | "msteams" | "email")[];
-      /** How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more). */
-      repeatInterval?: string;
-      slack?: {
-        /** The Slack channel for non-critical notifications. */
-        channel?: string;
-        /** The Slack channel for critical notifications. */
-        channelCrit?: string;
-        /** A Slack webhook URL. */
-        url?: string;
-      };
-    };
-    hostPort: string;
-    settings_Settings: {
-      alerts?: {
-        drone?: "slack" | "msteams";
-        email?: {
-          /** One or more email addresses (comma separated) for critical events. */
-          critical?: string;
-          /** One or more email addresses (comma separated) for non-critical events. */
-          nonCritical?: string;
-        };
-        /** How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.) */
-        groupInterval?: string;
-        msteams?: {
-          /** The low prio web hook. */
-          highPrio?: string;
-          /** The high prio web hook. */
-          lowPrio?: string;
-        };
-        /** Notification receivers. */
-        receivers?: ("slack" | "msteams" | "email")[];
-        /** How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more). */
-        repeatInterval?: string;
-        slack?: {
-          /** The Slack channel for non-critical notifications. */
-          channel?: string;
-          /** The Slack channel for critical notifications. */
-          channelCrit?: string;
-          /** A Slack webhook URL. */
-          url?: string;
-        };
-      };
-      /** Azure specific configuration. */
-      azure?: {
-        appgw?: {
-          /** Is this appgw installed as AKS addon? */
-          isManaged?: boolean;
-        };
-        /** An Azure disk type (SKU Type). */
-        diskType:
-          | "Standard_LRS"
-          | "Standard_GRS"
-          | "Standard_RAGRS"
-          | "Standard_ZRS"
-          | "Premium_LRS"
-          | "Premium_ZRS"
-          | "Standard_GZRS"
-          | "Standard_RAGZRS";
-        /** Azure Key Vault access credentials. Will use azure.tenantId if tenantId is not provided. */
-        keyVault?: {
-          /** An Azure tenant ID. */
-          tenantId?: string;
-          /** An Azure client ID. */
-          clientId: string;
-          /** An Azure client secret. */
-          clientSecret: string;
-        };
-        monitor?: {
-          /** An Azure AppInsights client secret (defaults to clientSecret). */
-          appInsightsApiKey?: string;
-          /** An Azure AppInsights client id (defaults to clientId). */
-          appInsightsAppId?: string;
-          /** An Azure client id. */
-          clientId?: string;
-          /** An Azure client secret. */
-          clientSecret?: string;
-          /** An Azure client secret (defaults to clientSecret). */
-          logAnalyticsClientId?: string;
-          /** An Azure client secret (defaults to clientSecret). */
-          logAnalyticsClientSecret?: string;
-          /** An Azure tenant id (defaults to tenantId). */
-          logAnalyticsTenantId?: string;
-          /** An Azure monitor log analytics workspace. */
-          logAnalyticsWorkspace?: string;
-        };
-        /** An Azure resource group. */
-        resourceGroup: string;
-        /** An Azure subscription ID. */
-        subscriptionId: string;
-        /** An Azure tenant ID. */
-        tenantId: string;
-      };
-      customer?: {
-        name?: string;
-      };
-      /** Google specific configuration. */
-      google?: {
-        /** A service account key for managing a DNS zone. */
-        cloudDnsKey: string;
-        /** A service account key for managing a KMS vault. */
-        kmsAccount?: string;
-        /** A Google Cloud project ID for accessing DNS zone. */
-        projectId: string;
-      };
-      home?: {
-        drone?: "slack" | "msteams";
-        email?: {
-          /** One or more email addresses (comma separated) for critical events. */
-          critical?: string;
-          /** One or more email addresses (comma separated) for non-critical events. */
-          nonCritical?: string;
-        };
-        /** How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.) */
-        groupInterval?: string;
-        msteams?: {
-          /** The low prio web hook. */
-          highPrio?: string;
-          /** The high prio web hook. */
-          lowPrio?: string;
-        };
-        /** Notification receivers. */
-        receivers?: ("slack" | "msteams" | "email")[];
-        /** How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more). */
-        repeatInterval?: string;
-        slack?: {
-          /** The Slack channel for non-critical notifications. */
-          channel?: string;
-          /** The Slack channel for critical notifications. */
-          channelCrit?: string;
-          /** A Slack webhook URL. */
-          url?: string;
-        };
-      };
-      /** Use Cloud KMS to encrypt and decrypt the master key */
-      kms?:
-        | {
-            gcpckms: {
-              project: string;
-              region: string;
-              key_ring: string;
-              kmsAccount: string;
-            };
-          }
-        | {
-            awskms: {
-              region: string;
-              access_key: string;
-              secret_key: string;
-              endpoint: string;
-            };
-          }
-        | {
-            azurekeyvault: {
-              vault_name: string;
-              tenant_id: string;
-              client_id: string;
-              client_secret: string;
-            };
-          };
-      /** Holds many parts used in different locations. Please see keycloak, istio and oauth-proxy all consuming parts. */
-      oidc?: {
-        adminGroupID?: string;
-        apiUrl?: string;
-        authUrl?: string;
-        clientID?: string;
-        clientSecret?: string;
-        issuer?: string;
-        scope?: string;
-        teamAdminGroupID?: string;
-        tenantID?: string;
-        tokenUrl?: string;
-        /** Claim name used by Keycloak to identify incoming users from identity provider */
-        usernameClaimMapper?: string;
-        /** Select OIDC claim to be used as a unique user identifier */
-        subClaimMapper?: string;
-      };
-      otomi?: {
-        /** Set this to true when an external LB exists or needs to be started (AWS ALB, Azure AppGW, Google Apigee). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion. */
-        hasCloudLB?: boolean;
-        /** Whether this cluster is home monitored (like when under a Premium SLA). Sends criticals home. */
-        isHomeMonitored?: boolean;
-        /** Whether masters are managed and not under control. Set this to false when onprem. */
-        isManaged?: boolean;
-        /** Whether to separate team metrics and logs. Disabling this lets everybody be admin and see everything. */
-        isMultitenant?: boolean;
-        /** The otomi-core edition. Either community edition (ce) or enterprise edition (ee). */
-        mode?: "ce" | "ee";
-        /** The pullsecret to deploy the Otomi API and Console. Requires an Otomi license. */
-        pullSecret?: string;
-        /** The prefix to use in URLs for team domains. */
-        teamPrefix?: string;
-        /** Manage addon configuration */
-        addons?: {
-          conftest?: {
-            /** Use this flag to enable conftest for policy validation */
-            enabled?: boolean;
-          };
-        };
-      };
-      smtp?: {
-        auth_identity?: string;
-        auth_password?: string;
-        auth_secret?: string;
-        auth_username?: string;
-        /** The "from" address. Defaults to alerts@$clusterDomain. */
-        from?: string;
-        hello?: string;
-        /** The smtp host:port combination. */
-        smarthost: string;
-      };
-    };
-    cloud_Cloud: {
-      /** A cluster name */
-      name?: string;
-      clusters?: {
-        enabled?: boolean;
-        /** A cluster name */
-        name?: string;
-        /** A cloud provider name */
-        cloud?: string;
-        /** A default cluster DNS zone */
-        domain?: string;
-        /** A list of DNS zones that are available to the cluster */
-        dnsZones?: string[];
-        /** A flag that indicates capability for deploying serverless services by using Knative */
-        hasKnative?: boolean;
-        /** A version of kubernetes that is installed on the cluster */
-        k8sVersion?: string;
-        /** A version of kubernetes that is installed on the cluster */
-        otomiVersion?: string;
-        /** A physical location of the cluster */
-        region?: string;
-        /** An unique cluster identifier */
-        clusterId?: string;
-      }[];
-      /** A fqdn for the cloud */
-      domain?: string;
-    };
-    deployment_Deployment: {
-      id?: number;
-      /** Deployment status */
-      status?: "in-progress" | "completed" | "failed";
-    };
-    kubecfg_Kubecfg: { [key: string]: any };
   };
   parameters: {
     /** ID of team to return */
@@ -1660,32 +871,31 @@ export interface operations {
       /** Successfully obtained all secrets */
       200: {
         content: {
-          "application/json": (
+          "application/json": ((
             | {
-                id?: string;
-                /** A secret name */
-                name: string;
-                /** A kubernetes cluster for the secret */
-                clusterId: string;
-                type?: "generic" | "docker-registry" | "tls";
+                type: "generic";
+                entries: string[];
               }
             | {
-                id?: string;
-                /** A secret name */
-                name: string;
-                /** A kubernetes cluster for the secret */
-                clusterId: string;
-                type?: "generic" | "docker-registry" | "tls";
+                type: "docker-registry";
+                dockerconfig?: ".dockerconfig.json";
               }
             | {
-                id?: string;
-                /** A secret name */
-                name: string;
-                /** A kubernetes cluster for the secret */
-                clusterId: string;
-                type?: "generic" | "docker-registry" | "tls";
+                type: "tls";
+                /** A Vault property name that contains PEM public key certificate */
+                crt: string;
+                /** A Vault property name that contains PEM private key certificate */
+                key: string;
+                /** A Vault property name that contains CA certificate content */
+                ca?: string;
               }
-          )[];
+          ) & {
+            id?: string;
+            /** A secret name */
+            name: string;
+            /** A kubernetes cluster for the secret */
+            clusterId: string;
+          })[];
         };
       };
       /** Bad Request */
@@ -1713,7 +923,7 @@ export interface operations {
           "application/json": {
             enabled?: boolean;
             id?: string;
-            /** A lowercase name that starts with a letter and may contain dashes. */
+            /** A service name */
             name: string;
             /** A service port */
             port?: number;
@@ -1741,18 +951,19 @@ export interface operations {
                     | null;
                   resources?: {
                     requests?: {
-                      /** Amount of cores, or slice of cpu in millis. */
+                      /** The guaranteed amount of CPU */
                       cpu: string;
-                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      /** The guaranteed amount of RAM */
                       memory: string;
                     };
                     limits?: {
-                      /** Amount of cores, or slice of cpu in millis. */
+                      /** The maximum amount of CPU */
                       cpu: string;
-                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      /** The maximum amount of RAM */
                       memory: string;
                     };
                   } | null;
+                  /** A set of annotations. */
                   annotations?: { [key: string]: any };
                   /** Deploys new images based on a tagging strategy */
                   autoCD?:
@@ -1823,7 +1034,7 @@ export interface operations {
           "application/json": {
             /** A lowercase name that starts with a letter and may contain dashes. */
             id?: string;
-            /** A lowercase name that starts with a letter and may contain dashes. */
+            /** A team name */
             name: string;
             clusters: string[];
             oidc?: {
@@ -1886,7 +1097,7 @@ export interface operations {
           "application/json": {
             /** A lowercase name that starts with a letter and may contain dashes. */
             id?: string;
-            /** A lowercase name that starts with a letter and may contain dashes. */
+            /** A team name */
             name: string;
             clusters: string[];
             oidc?: {
@@ -1967,7 +1178,7 @@ export interface operations {
         "application/json": {
           /** A lowercase name that starts with a letter and may contain dashes. */
           id?: string;
-          /** A lowercase name that starts with a letter and may contain dashes. */
+          /** A team name */
           name: string;
           clusters: string[];
           oidc?: {
@@ -2035,7 +1246,7 @@ export interface operations {
           "application/json": {
             /** A lowercase name that starts with a letter and may contain dashes. */
             id?: string;
-            /** A lowercase name that starts with a letter and may contain dashes. */
+            /** A team name */
             name: string;
             clusters: string[];
             oidc?: {
@@ -2126,7 +1337,7 @@ export interface operations {
           "application/json": {
             /** A lowercase name that starts with a letter and may contain dashes. */
             id?: string;
-            /** A lowercase name that starts with a letter and may contain dashes. */
+            /** A team name */
             name: string;
             clusters: string[];
             oidc?: {
@@ -2207,7 +1418,7 @@ export interface operations {
         "application/json": {
           /** A lowercase name that starts with a letter and may contain dashes. */
           id?: string;
-          /** A lowercase name that starts with a letter and may contain dashes. */
+          /** A team name */
           name: string;
           clusters: string[];
           oidc?: {
@@ -2310,7 +1521,7 @@ export interface operations {
           "application/json": {
             enabled?: boolean;
             id?: string;
-            /** A lowercase name that starts with a letter and may contain dashes. */
+            /** A service name */
             name: string;
             /** A service port */
             port?: number;
@@ -2338,18 +1549,19 @@ export interface operations {
                     | null;
                   resources?: {
                     requests?: {
-                      /** Amount of cores, or slice of cpu in millis. */
+                      /** The guaranteed amount of CPU */
                       cpu: string;
-                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      /** The guaranteed amount of RAM */
                       memory: string;
                     };
                     limits?: {
-                      /** Amount of cores, or slice of cpu in millis. */
+                      /** The maximum amount of CPU */
                       cpu: string;
-                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      /** The maximum amount of RAM */
                       memory: string;
                     };
                   } | null;
+                  /** A set of annotations. */
                   annotations?: { [key: string]: any };
                   /** Deploys new images based on a tagging strategy */
                   autoCD?:
@@ -2426,7 +1638,7 @@ export interface operations {
           "application/json": {
             enabled?: boolean;
             id?: string;
-            /** A lowercase name that starts with a letter and may contain dashes. */
+            /** A service name */
             name: string;
             /** A service port */
             port?: number;
@@ -2454,18 +1666,19 @@ export interface operations {
                     | null;
                   resources?: {
                     requests?: {
-                      /** Amount of cores, or slice of cpu in millis. */
+                      /** The guaranteed amount of CPU */
                       cpu: string;
-                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      /** The guaranteed amount of RAM */
                       memory: string;
                     };
                     limits?: {
-                      /** Amount of cores, or slice of cpu in millis. */
+                      /** The maximum amount of CPU */
                       cpu: string;
-                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      /** The maximum amount of RAM */
                       memory: string;
                     };
                   } | null;
+                  /** A set of annotations. */
                   annotations?: { [key: string]: any };
                   /** Deploys new images based on a tagging strategy */
                   autoCD?:
@@ -2540,7 +1753,7 @@ export interface operations {
         "application/json": {
           enabled?: boolean;
           id?: string;
-          /** A lowercase name that starts with a letter and may contain dashes. */
+          /** A service name */
           name: string;
           /** A service port */
           port?: number;
@@ -2568,18 +1781,19 @@ export interface operations {
                   | null;
                 resources?: {
                   requests?: {
-                    /** Amount of cores, or slice of cpu in millis. */
+                    /** The guaranteed amount of CPU */
                     cpu: string;
-                    /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                    /** The guaranteed amount of RAM */
                     memory: string;
                   };
                   limits?: {
-                    /** Amount of cores, or slice of cpu in millis. */
+                    /** The maximum amount of CPU */
                     cpu: string;
-                    /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                    /** The maximum amount of RAM */
                     memory: string;
                   };
                 } | null;
+                /** A set of annotations. */
                 annotations?: { [key: string]: any };
                 /** Deploys new images based on a tagging strategy */
                 autoCD?:
@@ -2643,7 +1857,7 @@ export interface operations {
           "application/json": {
             enabled?: boolean;
             id?: string;
-            /** A lowercase name that starts with a letter and may contain dashes. */
+            /** A service name */
             name: string;
             /** A service port */
             port?: number;
@@ -2671,18 +1885,19 @@ export interface operations {
                     | null;
                   resources?: {
                     requests?: {
-                      /** Amount of cores, or slice of cpu in millis. */
+                      /** The guaranteed amount of CPU */
                       cpu: string;
-                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      /** The guaranteed amount of RAM */
                       memory: string;
                     };
                     limits?: {
-                      /** Amount of cores, or slice of cpu in millis. */
+                      /** The maximum amount of CPU */
                       cpu: string;
-                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      /** The maximum amount of RAM */
                       memory: string;
                     };
                   } | null;
+                  /** A set of annotations. */
                   annotations?: { [key: string]: any };
                   /** Deploys new images based on a tagging strategy */
                   autoCD?:
@@ -2769,7 +1984,7 @@ export interface operations {
           "application/json": {
             enabled?: boolean;
             id?: string;
-            /** A lowercase name that starts with a letter and may contain dashes. */
+            /** A service name */
             name: string;
             /** A service port */
             port?: number;
@@ -2797,18 +2012,19 @@ export interface operations {
                     | null;
                   resources?: {
                     requests?: {
-                      /** Amount of cores, or slice of cpu in millis. */
+                      /** The guaranteed amount of CPU */
                       cpu: string;
-                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      /** The guaranteed amount of RAM */
                       memory: string;
                     };
                     limits?: {
-                      /** Amount of cores, or slice of cpu in millis. */
+                      /** The maximum amount of CPU */
                       cpu: string;
-                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      /** The maximum amount of RAM */
                       memory: string;
                     };
                   } | null;
+                  /** A set of annotations. */
                   annotations?: { [key: string]: any };
                   /** Deploys new images based on a tagging strategy */
                   autoCD?:
@@ -2883,7 +2099,7 @@ export interface operations {
         "application/json": {
           enabled?: boolean;
           id?: string;
-          /** A lowercase name that starts with a letter and may contain dashes. */
+          /** A service name */
           name: string;
           /** A service port */
           port?: number;
@@ -2911,18 +2127,19 @@ export interface operations {
                   | null;
                 resources?: {
                   requests?: {
-                    /** Amount of cores, or slice of cpu in millis. */
+                    /** The guaranteed amount of CPU */
                     cpu: string;
-                    /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                    /** The guaranteed amount of RAM */
                     memory: string;
                   };
                   limits?: {
-                    /** Amount of cores, or slice of cpu in millis. */
+                    /** The maximum amount of CPU */
                     cpu: string;
-                    /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                    /** The maximum amount of RAM */
                     memory: string;
                   };
                 } | null;
+                /** A set of annotations. */
                 annotations?: { [key: string]: any };
                 /** Deploys new images based on a tagging strategy */
                 autoCD?:
@@ -3018,32 +2235,31 @@ export interface operations {
       /** Successfully obtained secrets */
       200: {
         content: {
-          "application/json": (
+          "application/json": ((
             | {
-                id?: string;
-                /** A secret name */
-                name: string;
-                /** A kubernetes cluster for the secret */
-                clusterId: string;
-                type?: "generic" | "docker-registry" | "tls";
+                type: "generic";
+                entries: string[];
               }
             | {
-                id?: string;
-                /** A secret name */
-                name: string;
-                /** A kubernetes cluster for the secret */
-                clusterId: string;
-                type?: "generic" | "docker-registry" | "tls";
+                type: "docker-registry";
+                dockerconfig?: ".dockerconfig.json";
               }
             | {
-                id?: string;
-                /** A secret name */
-                name: string;
-                /** A kubernetes cluster for the secret */
-                clusterId: string;
-                type?: "generic" | "docker-registry" | "tls";
+                type: "tls";
+                /** A Vault property name that contains PEM public key certificate */
+                crt: string;
+                /** A Vault property name that contains PEM private key certificate */
+                key: string;
+                /** A Vault property name that contains CA certificate content */
+                ca?: string;
               }
-          )[];
+          ) & {
+            id?: string;
+            /** A secret name */
+            name: string;
+            /** A kubernetes cluster for the secret */
+            clusterId: string;
+          })[];
         };
       };
       /** Bad Request */
@@ -3074,31 +2290,31 @@ export interface operations {
       /** Successfully stored secret configuration */
       200: {
         content: {
-          "application/json":
+          "application/json": (
             | {
-                id?: string;
-                /** A secret name */
-                name: string;
-                /** A kubernetes cluster for the secret */
-                clusterId: string;
-                type?: "generic" | "docker-registry" | "tls";
+                type: "generic";
+                entries: string[];
               }
             | {
-                id?: string;
-                /** A secret name */
-                name: string;
-                /** A kubernetes cluster for the secret */
-                clusterId: string;
-                type?: "generic" | "docker-registry" | "tls";
+                type: "docker-registry";
+                dockerconfig?: ".dockerconfig.json";
               }
             | {
-                id?: string;
-                /** A secret name */
-                name: string;
-                /** A kubernetes cluster for the secret */
-                clusterId: string;
-                type?: "generic" | "docker-registry" | "tls";
-              };
+                type: "tls";
+                /** A Vault property name that contains PEM public key certificate */
+                crt: string;
+                /** A Vault property name that contains PEM private key certificate */
+                key: string;
+                /** A Vault property name that contains CA certificate content */
+                ca?: string;
+              }
+          ) & {
+            id?: string;
+            /** A secret name */
+            name: string;
+            /** A kubernetes cluster for the secret */
+            clusterId: string;
+          };
         };
       };
       /** Bad Request */
@@ -3127,31 +2343,31 @@ export interface operations {
     /** Service object */
     requestBody: {
       content: {
-        "application/json":
+        "application/json": (
           | {
-              id?: string;
-              /** A secret name */
-              name: string;
-              /** A kubernetes cluster for the secret */
-              clusterId: string;
-              type?: "generic" | "docker-registry" | "tls";
+              type: "generic";
+              entries: string[];
             }
           | {
-              id?: string;
-              /** A secret name */
-              name: string;
-              /** A kubernetes cluster for the secret */
-              clusterId: string;
-              type?: "generic" | "docker-registry" | "tls";
+              type: "docker-registry";
+              dockerconfig?: ".dockerconfig.json";
             }
           | {
-              id?: string;
-              /** A secret name */
-              name: string;
-              /** A kubernetes cluster for the secret */
-              clusterId: string;
-              type?: "generic" | "docker-registry" | "tls";
-            };
+              type: "tls";
+              /** A Vault property name that contains PEM public key certificate */
+              crt: string;
+              /** A Vault property name that contains PEM private key certificate */
+              key: string;
+              /** A Vault property name that contains CA certificate content */
+              ca?: string;
+            }
+        ) & {
+          id?: string;
+          /** A secret name */
+          name: string;
+          /** A kubernetes cluster for the secret */
+          clusterId: string;
+        };
       };
     };
   };
@@ -3169,31 +2385,31 @@ export interface operations {
       /** Successfully obtained secret configuration */
       200: {
         content: {
-          "application/json":
+          "application/json": (
             | {
-                id?: string;
-                /** A secret name */
-                name: string;
-                /** A kubernetes cluster for the secret */
-                clusterId: string;
-                type?: "generic" | "docker-registry" | "tls";
+                type: "generic";
+                entries: string[];
               }
             | {
-                id?: string;
-                /** A secret name */
-                name: string;
-                /** A kubernetes cluster for the secret */
-                clusterId: string;
-                type?: "generic" | "docker-registry" | "tls";
+                type: "docker-registry";
+                dockerconfig?: ".dockerconfig.json";
               }
             | {
-                id?: string;
-                /** A secret name */
-                name: string;
-                /** A kubernetes cluster for the secret */
-                clusterId: string;
-                type?: "generic" | "docker-registry" | "tls";
-              };
+                type: "tls";
+                /** A Vault property name that contains PEM public key certificate */
+                crt: string;
+                /** A Vault property name that contains PEM private key certificate */
+                key: string;
+                /** A Vault property name that contains CA certificate content */
+                ca?: string;
+              }
+          ) & {
+            id?: string;
+            /** A secret name */
+            name: string;
+            /** A kubernetes cluster for the secret */
+            clusterId: string;
+          };
         };
       };
       /** Bad Request */
@@ -3234,31 +2450,31 @@ export interface operations {
       /** Successfully edited a team secret */
       200: {
         content: {
-          "application/json":
+          "application/json": (
             | {
-                id?: string;
-                /** A secret name */
-                name: string;
-                /** A kubernetes cluster for the secret */
-                clusterId: string;
-                type?: "generic" | "docker-registry" | "tls";
+                type: "generic";
+                entries: string[];
               }
             | {
-                id?: string;
-                /** A secret name */
-                name: string;
-                /** A kubernetes cluster for the secret */
-                clusterId: string;
-                type?: "generic" | "docker-registry" | "tls";
+                type: "docker-registry";
+                dockerconfig?: ".dockerconfig.json";
               }
             | {
-                id?: string;
-                /** A secret name */
-                name: string;
-                /** A kubernetes cluster for the secret */
-                clusterId: string;
-                type?: "generic" | "docker-registry" | "tls";
-              };
+                type: "tls";
+                /** A Vault property name that contains PEM public key certificate */
+                crt: string;
+                /** A Vault property name that contains PEM private key certificate */
+                key: string;
+                /** A Vault property name that contains CA certificate content */
+                ca?: string;
+              }
+          ) & {
+            id?: string;
+            /** A secret name */
+            name: string;
+            /** A kubernetes cluster for the secret */
+            clusterId: string;
+          };
         };
       };
       /** Bad Request */
@@ -3287,31 +2503,31 @@ export interface operations {
     /** Secret object that contains updated values */
     requestBody: {
       content: {
-        "application/json":
+        "application/json": (
           | {
-              id?: string;
-              /** A secret name */
-              name: string;
-              /** A kubernetes cluster for the secret */
-              clusterId: string;
-              type?: "generic" | "docker-registry" | "tls";
+              type: "generic";
+              entries: string[];
             }
           | {
-              id?: string;
-              /** A secret name */
-              name: string;
-              /** A kubernetes cluster for the secret */
-              clusterId: string;
-              type?: "generic" | "docker-registry" | "tls";
+              type: "docker-registry";
+              dockerconfig?: ".dockerconfig.json";
             }
           | {
-              id?: string;
-              /** A secret name */
-              name: string;
-              /** A kubernetes cluster for the secret */
-              clusterId: string;
-              type?: "generic" | "docker-registry" | "tls";
-            };
+              type: "tls";
+              /** A Vault property name that contains PEM public key certificate */
+              crt: string;
+              /** A Vault property name that contains PEM private key certificate */
+              key: string;
+              /** A Vault property name that contains CA certificate content */
+              ca?: string;
+            }
+        ) & {
+          id?: string;
+          /** A secret name */
+          name: string;
+          /** A kubernetes cluster for the secret */
+          clusterId: string;
+        };
       };
     };
   };
@@ -3425,7 +2641,7 @@ export interface operations {
             teams?: {
               /** A lowercase name that starts with a letter and may contain dashes. */
               id?: string;
-              /** A lowercase name that starts with a letter and may contain dashes. */
+              /** A team name */
               name: string;
               clusters: string[];
               oidc?: {

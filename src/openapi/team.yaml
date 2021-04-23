@@ -1,3 +1,8 @@
+idName: &idName
+  description: A lowercase name that starts with a letter and may contain dashes.
+  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+  type: string
+
 Team:
   x-externalDocsPath: docs/configuring-teams
   x-acl:
@@ -5,14 +10,14 @@ Team:
     team: [read-any, update]
   properties:
     id:
+      <<: *idName
       title: ID
-      $ref: definitions.yaml#/idName
       x-acl:
         admin: [read]
         team: [read]
     name:
+      <<: *idName
       title: Name
-      $ref: definitions.yaml#/idName
       example: 'otomi'
       x-acl:
         admin: [create, read]
@@ -93,8 +98,8 @@ Team:
               description: Email addresses (comma separated) for critical events.
           type: object
       type: object
-    azureMonitor:
-      $ref: definitions.yaml#/azureMonitor
+    # azureMonitor:
+    #   $ref: definitions.yaml#/azureMonitor
   required:
     - name
     - clusters

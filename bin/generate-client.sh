@@ -7,7 +7,7 @@ repo="ssh://git@github.com/redkubes/otomi-api.git"
 
 vendor="otomi-api"
 type="axios"
-openapi_doc="src/openapi-dereferenced.json"
+openapi_doc="vendors/openapi/otomi-api.json"
 registry="https://npm.pkg.github.com/"
 target_dir="vendors/client/$vendor/$type"
 target_package_json="$target_dir/package.json"
