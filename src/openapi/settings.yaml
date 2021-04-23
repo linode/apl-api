@@ -15,6 +15,7 @@ Settings:
               default: true
               description: Is this appgw installed as AKS addon?
               type: boolean
+          type: object
         diskType:
           description: An Azure disk type (SKU Type).
           enum:
@@ -42,6 +43,7 @@ Settings:
           required:
             - clientId
             - clientSecret
+          type: object
         monitor:
           $ref: definitions.yaml#/azureMonitor
         resourceGroup:
@@ -58,11 +60,13 @@ Settings:
         - resourceGroup
         - subscriptionId
         - tenantId
+      type: object
     customer:
       additionalProperties: false
       properties:
         name:
           type: string
+      type: object
     google:
       description: Google specific configuration.
       properties:
@@ -78,6 +82,7 @@ Settings:
       required:
         - cloudDnsKey
         - projectId
+      type: object
     home:
       $ref: definitions.yaml#/alerts
     kms:
@@ -100,8 +105,10 @@ Settings:
                 - region
                 - key_ring
                 - kmsAccount
+              type: object
           required:
             - gcpckms
+          type: object
         - title: awskms
           properties:
             awskms:
@@ -119,8 +126,10 @@ Settings:
                 - access_key
                 - secret_key
                 - endpoint
+              type: object
           required:
             - awskms
+          type: object
         - title: azurekeyvault
           properties:
             azurekeyvault:
@@ -138,8 +147,11 @@ Settings:
                 - tenant_id
                 - client_id
                 - client_secret
+              type: object
           required:
             - azurekeyvault
+          type: object
+      type: object
     oidc:
       additionalProperties: false
       description: 'Holds many parts used in different locations. Please see keycloak, istio and oauth-proxy all consuming parts.'
@@ -171,6 +183,7 @@ Settings:
           type: string
           description: Select OIDC claim to be used as a unique user identifier
           default: sub
+      type: object
     otomi:
       additionalProperties: false
       properties:
@@ -216,6 +229,9 @@ Settings:
                   type: boolean
                   default: true
                   description: Use this flag to enable conftest for policy validation
+              type: object
+          type: object
+      type: object
     smtp:
       additionalProperties: false
       properties:
@@ -237,3 +253,5 @@ Settings:
           description: The smtp host:port combination.
       required:
         - smarthost
+      type: object
+  type: object

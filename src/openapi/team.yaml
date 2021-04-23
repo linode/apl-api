@@ -34,6 +34,7 @@ Team:
           title: Group mapping
           type: string
           description: 'An OIDC group name/id granting access to this team'
+      type: object
     password:
       type: string
       # description: "A secret that is used access multi-tenant log aggregation system (Loki)"
@@ -66,6 +67,7 @@ Team:
               title: Channel for criticals
               type: string
               description: Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'.
+          type: object
         msteams:
           title: Microsoft Teams
           properties:
@@ -77,6 +79,7 @@ Team:
               title: High prio webhook
               type: string
               description: The high prio web hook
+          type: object
         email:
           title: Email
           properties:
@@ -88,9 +91,12 @@ Team:
               title: Criticals
               type: string
               description: Email addresses (comma separated) for critical events.
+          type: object
+      type: object
     azureMonitor:
       $ref: definitions.yaml#/azureMonitor
   required:
     - name
     - clusters
     - password
+  type: object

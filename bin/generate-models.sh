@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-api_file=src/openapi.yaml
-npx openapi bundle --dereferenced --output src/openapi-dereferenced --ext yaml src/openapi/api.yaml
-npx openapi-typescript src/openapi-dereferenced.yaml -o src/generated-schema.ts
+api_file=src/openapi-dereferenced.json
+npx openapi bundle --dereferenced --output src/openapi-dereferenced --ext json src/openapi/api.yaml
+npx openapi-typescript $api_file -o src/generated-schema.ts

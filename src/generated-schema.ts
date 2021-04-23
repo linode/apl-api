@@ -211,56 +211,57 @@ export interface components {
     OtomiStackError: {
       message?: string;
     };
-    Secret: (
+    Secret:
       | {
-          type: "generic";
-          entries: string[];
+          id?: string;
+          /** A secret name */
+          name: string;
+          /** A kubernetes cluster for the secret */
+          clusterId: string;
+          type?: "generic" | "docker-registry" | "tls";
         }
       | {
-          type: "docker-registry";
-          dockerconfig?: ".dockerconfig.json";
+          id?: string;
+          /** A secret name */
+          name: string;
+          /** A kubernetes cluster for the secret */
+          clusterId: string;
+          type?: "generic" | "docker-registry" | "tls";
         }
       | {
-          type: "tls";
-          /** A Vault property name that contains PEM public key certificate */
-          crt: string;
-          /** A Vault property name that contains PEM private key certificate */
-          key: string;
-          /** A Vault property name that contains CA certificate content */
-          ca?: string;
-        }
-    ) & {
-      id?: string;
-      /** A secret name */
-      name: string;
-      /** A kubernetes cluster for the secret */
-      clusterId: string;
-    };
-    Secrets: ((
+          id?: string;
+          /** A secret name */
+          name: string;
+          /** A kubernetes cluster for the secret */
+          clusterId: string;
+          type?: "generic" | "docker-registry" | "tls";
+        };
+    Secrets: (
       | {
-          type: "generic";
-          entries: string[];
+          id?: string;
+          /** A secret name */
+          name: string;
+          /** A kubernetes cluster for the secret */
+          clusterId: string;
+          type?: "generic" | "docker-registry" | "tls";
         }
       | {
-          type: "docker-registry";
-          dockerconfig?: ".dockerconfig.json";
+          id?: string;
+          /** A secret name */
+          name: string;
+          /** A kubernetes cluster for the secret */
+          clusterId: string;
+          type?: "generic" | "docker-registry" | "tls";
         }
       | {
-          type: "tls";
-          /** A Vault property name that contains PEM public key certificate */
-          crt: string;
-          /** A Vault property name that contains PEM private key certificate */
-          key: string;
-          /** A Vault property name that contains CA certificate content */
-          ca?: string;
+          id?: string;
+          /** A secret name */
+          name: string;
+          /** A kubernetes cluster for the secret */
+          clusterId: string;
+          type?: "generic" | "docker-registry" | "tls";
         }
-    ) & {
-      id?: string;
-      /** A secret name */
-      name: string;
-      /** A kubernetes cluster for the secret */
-      clusterId: string;
-    })[];
+    )[];
     Service: {
       enabled?: boolean;
       id?: string;
@@ -277,8 +278,8 @@ export interface components {
             scaleToZero?: boolean;
             image?: {
               /** A container image repository. */
-              repository?: string;
-              tag?: string;
+              repository: string;
+              tag: string;
             } | null;
             secrets?: {
               name: string;
@@ -327,7 +328,7 @@ export interface components {
           };
       ingress?:
         | ({ [key: string]: any } | null)
-        | ({
+        | {
             /** Use the team domain so that the URL reveals the owner. */
             useDefaultSubdomain?: boolean;
             /** A host that is used to set DNS 'A' records */
@@ -344,7 +345,7 @@ export interface components {
             certArn?: string;
             certSelect?: boolean;
             certName?: string;
-          } | null);
+          };
       teamId: string;
     };
     Services: {
@@ -363,8 +364,8 @@ export interface components {
             scaleToZero?: boolean;
             image?: {
               /** A container image repository. */
-              repository?: string;
-              tag?: string;
+              repository: string;
+              tag: string;
             } | null;
             secrets?: {
               name: string;
@@ -413,7 +414,7 @@ export interface components {
           };
       ingress?:
         | ({ [key: string]: any } | null)
-        | ({
+        | {
             /** Use the team domain so that the URL reveals the owner. */
             useDefaultSubdomain?: boolean;
             /** A host that is used to set DNS 'A' records */
@@ -430,7 +431,7 @@ export interface components {
             certArn?: string;
             certSelect?: boolean;
             certName?: string;
-          } | null);
+          };
       teamId: string;
     }[];
     Session: {
@@ -820,6 +821,30 @@ export interface components {
       /** A list of roles that the user has */
       roles: string[];
     };
+    SecretGeneric: {
+      id?: string;
+      /** A secret name */
+      name: string;
+      /** A kubernetes cluster for the secret */
+      clusterId: string;
+      type?: "generic" | "docker-registry" | "tls";
+    };
+    SecretDocker: {
+      id?: string;
+      /** A secret name */
+      name: string;
+      /** A kubernetes cluster for the secret */
+      clusterId: string;
+      type?: "generic" | "docker-registry" | "tls";
+    };
+    SecretTLS: {
+      id?: string;
+      /** A secret name */
+      name: string;
+      /** A kubernetes cluster for the secret */
+      clusterId: string;
+      type?: "generic" | "docker-registry" | "tls";
+    };
     cluster_Cluster: {
       enabled?: boolean;
       /** A cluster name */
@@ -862,56 +887,65 @@ export interface components {
       /** An unique cluster identifier */
       clusterId?: string;
     }[];
-    secret_Secret: (
-      | {
-          type: "generic";
-          entries: string[];
-        }
-      | {
-          type: "docker-registry";
-          dockerconfig?: ".dockerconfig.json";
-        }
-      | {
-          type: "tls";
-          /** A Vault property name that contains PEM public key certificate */
-          crt: string;
-          /** A Vault property name that contains PEM private key certificate */
-          key: string;
-          /** A Vault property name that contains CA certificate content */
-          ca?: string;
-        }
-    ) & {
+    shared: {
       id?: string;
       /** A secret name */
       name: string;
       /** A kubernetes cluster for the secret */
       clusterId: string;
+      type?: "generic" | "docker-registry" | "tls";
     };
-    secrets_Secrets: ((
+    secret_Secret:
       | {
-          type: "generic";
-          entries: string[];
+          id?: string;
+          /** A secret name */
+          name: string;
+          /** A kubernetes cluster for the secret */
+          clusterId: string;
+          type?: "generic" | "docker-registry" | "tls";
         }
       | {
-          type: "docker-registry";
-          dockerconfig?: ".dockerconfig.json";
+          id?: string;
+          /** A secret name */
+          name: string;
+          /** A kubernetes cluster for the secret */
+          clusterId: string;
+          type?: "generic" | "docker-registry" | "tls";
         }
       | {
-          type: "tls";
-          /** A Vault property name that contains PEM public key certificate */
-          crt: string;
-          /** A Vault property name that contains PEM private key certificate */
-          key: string;
-          /** A Vault property name that contains CA certificate content */
-          ca?: string;
+          id?: string;
+          /** A secret name */
+          name: string;
+          /** A kubernetes cluster for the secret */
+          clusterId: string;
+          type?: "generic" | "docker-registry" | "tls";
+        };
+    secrets_Secrets: (
+      | {
+          id?: string;
+          /** A secret name */
+          name: string;
+          /** A kubernetes cluster for the secret */
+          clusterId: string;
+          type?: "generic" | "docker-registry" | "tls";
         }
-    ) & {
-      id?: string;
-      /** A secret name */
-      name: string;
-      /** A kubernetes cluster for the secret */
-      clusterId: string;
-    })[];
+      | {
+          id?: string;
+          /** A secret name */
+          name: string;
+          /** A kubernetes cluster for the secret */
+          clusterId: string;
+          type?: "generic" | "docker-registry" | "tls";
+        }
+      | {
+          id?: string;
+          /** A secret name */
+          name: string;
+          /** A kubernetes cluster for the secret */
+          clusterId: string;
+          type?: "generic" | "docker-registry" | "tls";
+        }
+    )[];
     error_OpenApiValidationError: {
       status?: number;
       errors?: {
@@ -948,8 +982,8 @@ export interface components {
             scaleToZero?: boolean;
             image?: {
               /** A container image repository. */
-              repository?: string;
-              tag?: string;
+              repository: string;
+              tag: string;
             } | null;
             secrets?: {
               name: string;
@@ -998,7 +1032,7 @@ export interface components {
           };
       ingress?:
         | ({ [key: string]: any } | null)
-        | ({
+        | {
             /** Use the team domain so that the URL reveals the owner. */
             useDefaultSubdomain?: boolean;
             /** A host that is used to set DNS 'A' records */
@@ -1015,7 +1049,7 @@ export interface components {
             certArn?: string;
             certSelect?: boolean;
             certName?: string;
-          } | null);
+          };
       teamId: string;
     };
     services_Services: {
@@ -1034,8 +1068,8 @@ export interface components {
             scaleToZero?: boolean;
             image?: {
               /** A container image repository. */
-              repository?: string;
-              tag?: string;
+              repository: string;
+              tag: string;
             } | null;
             secrets?: {
               name: string;
@@ -1084,7 +1118,7 @@ export interface components {
           };
       ingress?:
         | ({ [key: string]: any } | null)
-        | ({
+        | {
             /** Use the team domain so that the URL reveals the owner. */
             useDefaultSubdomain?: boolean;
             /** A host that is used to set DNS 'A' records */
@@ -1101,7 +1135,7 @@ export interface components {
             certArn?: string;
             certSelect?: boolean;
             certName?: string;
-          } | null);
+          };
       teamId: string;
     }[];
     azureMonitor: {
@@ -1626,31 +1660,32 @@ export interface operations {
       /** Successfully obtained all secrets */
       200: {
         content: {
-          "application/json": ((
+          "application/json": (
             | {
-                type: "generic";
-                entries: string[];
+                id?: string;
+                /** A secret name */
+                name: string;
+                /** A kubernetes cluster for the secret */
+                clusterId: string;
+                type?: "generic" | "docker-registry" | "tls";
               }
             | {
-                type: "docker-registry";
-                dockerconfig?: ".dockerconfig.json";
+                id?: string;
+                /** A secret name */
+                name: string;
+                /** A kubernetes cluster for the secret */
+                clusterId: string;
+                type?: "generic" | "docker-registry" | "tls";
               }
             | {
-                type: "tls";
-                /** A Vault property name that contains PEM public key certificate */
-                crt: string;
-                /** A Vault property name that contains PEM private key certificate */
-                key: string;
-                /** A Vault property name that contains CA certificate content */
-                ca?: string;
+                id?: string;
+                /** A secret name */
+                name: string;
+                /** A kubernetes cluster for the secret */
+                clusterId: string;
+                type?: "generic" | "docker-registry" | "tls";
               }
-          ) & {
-            id?: string;
-            /** A secret name */
-            name: string;
-            /** A kubernetes cluster for the secret */
-            clusterId: string;
-          })[];
+          )[];
         };
       };
       /** Bad Request */
@@ -1691,8 +1726,8 @@ export interface operations {
                   scaleToZero?: boolean;
                   image?: {
                     /** A container image repository. */
-                    repository?: string;
-                    tag?: string;
+                    repository: string;
+                    tag: string;
                   } | null;
                   secrets?: {
                     name: string;
@@ -1741,7 +1776,7 @@ export interface operations {
                 };
             ingress?:
               | ({ [key: string]: any } | null)
-              | ({
+              | {
                   /** Use the team domain so that the URL reveals the owner. */
                   useDefaultSubdomain?: boolean;
                   /** A host that is used to set DNS 'A' records */
@@ -1758,7 +1793,7 @@ export interface operations {
                   certArn?: string;
                   certSelect?: boolean;
                   certName?: string;
-                } | null);
+                };
             teamId: string;
           }[];
         };
@@ -2288,8 +2323,8 @@ export interface operations {
                   scaleToZero?: boolean;
                   image?: {
                     /** A container image repository. */
-                    repository?: string;
-                    tag?: string;
+                    repository: string;
+                    tag: string;
                   } | null;
                   secrets?: {
                     name: string;
@@ -2338,7 +2373,7 @@ export interface operations {
                 };
             ingress?:
               | ({ [key: string]: any } | null)
-              | ({
+              | {
                   /** Use the team domain so that the URL reveals the owner. */
                   useDefaultSubdomain?: boolean;
                   /** A host that is used to set DNS 'A' records */
@@ -2355,7 +2390,7 @@ export interface operations {
                   certArn?: string;
                   certSelect?: boolean;
                   certName?: string;
-                } | null);
+                };
             teamId: string;
           }[];
         };
@@ -2404,8 +2439,8 @@ export interface operations {
                   scaleToZero?: boolean;
                   image?: {
                     /** A container image repository. */
-                    repository?: string;
-                    tag?: string;
+                    repository: string;
+                    tag: string;
                   } | null;
                   secrets?: {
                     name: string;
@@ -2454,7 +2489,7 @@ export interface operations {
                 };
             ingress?:
               | ({ [key: string]: any } | null)
-              | ({
+              | {
                   /** Use the team domain so that the URL reveals the owner. */
                   useDefaultSubdomain?: boolean;
                   /** A host that is used to set DNS 'A' records */
@@ -2471,7 +2506,7 @@ export interface operations {
                   certArn?: string;
                   certSelect?: boolean;
                   certName?: string;
-                } | null);
+                };
             teamId: string;
           };
         };
@@ -2518,8 +2553,8 @@ export interface operations {
                 scaleToZero?: boolean;
                 image?: {
                   /** A container image repository. */
-                  repository?: string;
-                  tag?: string;
+                  repository: string;
+                  tag: string;
                 } | null;
                 secrets?: {
                   name: string;
@@ -2568,7 +2603,7 @@ export interface operations {
               };
           ingress?:
             | ({ [key: string]: any } | null)
-            | ({
+            | {
                 /** Use the team domain so that the URL reveals the owner. */
                 useDefaultSubdomain?: boolean;
                 /** A host that is used to set DNS 'A' records */
@@ -2585,7 +2620,7 @@ export interface operations {
                 certArn?: string;
                 certSelect?: boolean;
                 certName?: string;
-              } | null);
+              };
           teamId: string;
         };
       };
@@ -2621,8 +2656,8 @@ export interface operations {
                   scaleToZero?: boolean;
                   image?: {
                     /** A container image repository. */
-                    repository?: string;
-                    tag?: string;
+                    repository: string;
+                    tag: string;
                   } | null;
                   secrets?: {
                     name: string;
@@ -2671,7 +2706,7 @@ export interface operations {
                 };
             ingress?:
               | ({ [key: string]: any } | null)
-              | ({
+              | {
                   /** Use the team domain so that the URL reveals the owner. */
                   useDefaultSubdomain?: boolean;
                   /** A host that is used to set DNS 'A' records */
@@ -2688,7 +2723,7 @@ export interface operations {
                   certArn?: string;
                   certSelect?: boolean;
                   certName?: string;
-                } | null);
+                };
             teamId: string;
           };
         };
@@ -2747,8 +2782,8 @@ export interface operations {
                   scaleToZero?: boolean;
                   image?: {
                     /** A container image repository. */
-                    repository?: string;
-                    tag?: string;
+                    repository: string;
+                    tag: string;
                   } | null;
                   secrets?: {
                     name: string;
@@ -2797,7 +2832,7 @@ export interface operations {
                 };
             ingress?:
               | ({ [key: string]: any } | null)
-              | ({
+              | {
                   /** Use the team domain so that the URL reveals the owner. */
                   useDefaultSubdomain?: boolean;
                   /** A host that is used to set DNS 'A' records */
@@ -2814,7 +2849,7 @@ export interface operations {
                   certArn?: string;
                   certSelect?: boolean;
                   certName?: string;
-                } | null);
+                };
             teamId: string;
           };
         };
@@ -2861,8 +2896,8 @@ export interface operations {
                 scaleToZero?: boolean;
                 image?: {
                   /** A container image repository. */
-                  repository?: string;
-                  tag?: string;
+                  repository: string;
+                  tag: string;
                 } | null;
                 secrets?: {
                   name: string;
@@ -2911,7 +2946,7 @@ export interface operations {
               };
           ingress?:
             | ({ [key: string]: any } | null)
-            | ({
+            | {
                 /** Use the team domain so that the URL reveals the owner. */
                 useDefaultSubdomain?: boolean;
                 /** A host that is used to set DNS 'A' records */
@@ -2928,7 +2963,7 @@ export interface operations {
                 certArn?: string;
                 certSelect?: boolean;
                 certName?: string;
-              } | null);
+              };
           teamId: string;
         };
       };
@@ -2983,31 +3018,32 @@ export interface operations {
       /** Successfully obtained secrets */
       200: {
         content: {
-          "application/json": ((
+          "application/json": (
             | {
-                type: "generic";
-                entries: string[];
+                id?: string;
+                /** A secret name */
+                name: string;
+                /** A kubernetes cluster for the secret */
+                clusterId: string;
+                type?: "generic" | "docker-registry" | "tls";
               }
             | {
-                type: "docker-registry";
-                dockerconfig?: ".dockerconfig.json";
+                id?: string;
+                /** A secret name */
+                name: string;
+                /** A kubernetes cluster for the secret */
+                clusterId: string;
+                type?: "generic" | "docker-registry" | "tls";
               }
             | {
-                type: "tls";
-                /** A Vault property name that contains PEM public key certificate */
-                crt: string;
-                /** A Vault property name that contains PEM private key certificate */
-                key: string;
-                /** A Vault property name that contains CA certificate content */
-                ca?: string;
+                id?: string;
+                /** A secret name */
+                name: string;
+                /** A kubernetes cluster for the secret */
+                clusterId: string;
+                type?: "generic" | "docker-registry" | "tls";
               }
-          ) & {
-            id?: string;
-            /** A secret name */
-            name: string;
-            /** A kubernetes cluster for the secret */
-            clusterId: string;
-          })[];
+          )[];
         };
       };
       /** Bad Request */
@@ -3038,31 +3074,31 @@ export interface operations {
       /** Successfully stored secret configuration */
       200: {
         content: {
-          "application/json": (
+          "application/json":
             | {
-                type: "generic";
-                entries: string[];
+                id?: string;
+                /** A secret name */
+                name: string;
+                /** A kubernetes cluster for the secret */
+                clusterId: string;
+                type?: "generic" | "docker-registry" | "tls";
               }
             | {
-                type: "docker-registry";
-                dockerconfig?: ".dockerconfig.json";
+                id?: string;
+                /** A secret name */
+                name: string;
+                /** A kubernetes cluster for the secret */
+                clusterId: string;
+                type?: "generic" | "docker-registry" | "tls";
               }
             | {
-                type: "tls";
-                /** A Vault property name that contains PEM public key certificate */
-                crt: string;
-                /** A Vault property name that contains PEM private key certificate */
-                key: string;
-                /** A Vault property name that contains CA certificate content */
-                ca?: string;
-              }
-          ) & {
-            id?: string;
-            /** A secret name */
-            name: string;
-            /** A kubernetes cluster for the secret */
-            clusterId: string;
-          };
+                id?: string;
+                /** A secret name */
+                name: string;
+                /** A kubernetes cluster for the secret */
+                clusterId: string;
+                type?: "generic" | "docker-registry" | "tls";
+              };
         };
       };
       /** Bad Request */
@@ -3091,31 +3127,31 @@ export interface operations {
     /** Service object */
     requestBody: {
       content: {
-        "application/json": (
+        "application/json":
           | {
-              type: "generic";
-              entries: string[];
+              id?: string;
+              /** A secret name */
+              name: string;
+              /** A kubernetes cluster for the secret */
+              clusterId: string;
+              type?: "generic" | "docker-registry" | "tls";
             }
           | {
-              type: "docker-registry";
-              dockerconfig?: ".dockerconfig.json";
+              id?: string;
+              /** A secret name */
+              name: string;
+              /** A kubernetes cluster for the secret */
+              clusterId: string;
+              type?: "generic" | "docker-registry" | "tls";
             }
           | {
-              type: "tls";
-              /** A Vault property name that contains PEM public key certificate */
-              crt: string;
-              /** A Vault property name that contains PEM private key certificate */
-              key: string;
-              /** A Vault property name that contains CA certificate content */
-              ca?: string;
-            }
-        ) & {
-          id?: string;
-          /** A secret name */
-          name: string;
-          /** A kubernetes cluster for the secret */
-          clusterId: string;
-        };
+              id?: string;
+              /** A secret name */
+              name: string;
+              /** A kubernetes cluster for the secret */
+              clusterId: string;
+              type?: "generic" | "docker-registry" | "tls";
+            };
       };
     };
   };
@@ -3133,31 +3169,31 @@ export interface operations {
       /** Successfully obtained secret configuration */
       200: {
         content: {
-          "application/json": (
+          "application/json":
             | {
-                type: "generic";
-                entries: string[];
+                id?: string;
+                /** A secret name */
+                name: string;
+                /** A kubernetes cluster for the secret */
+                clusterId: string;
+                type?: "generic" | "docker-registry" | "tls";
               }
             | {
-                type: "docker-registry";
-                dockerconfig?: ".dockerconfig.json";
+                id?: string;
+                /** A secret name */
+                name: string;
+                /** A kubernetes cluster for the secret */
+                clusterId: string;
+                type?: "generic" | "docker-registry" | "tls";
               }
             | {
-                type: "tls";
-                /** A Vault property name that contains PEM public key certificate */
-                crt: string;
-                /** A Vault property name that contains PEM private key certificate */
-                key: string;
-                /** A Vault property name that contains CA certificate content */
-                ca?: string;
-              }
-          ) & {
-            id?: string;
-            /** A secret name */
-            name: string;
-            /** A kubernetes cluster for the secret */
-            clusterId: string;
-          };
+                id?: string;
+                /** A secret name */
+                name: string;
+                /** A kubernetes cluster for the secret */
+                clusterId: string;
+                type?: "generic" | "docker-registry" | "tls";
+              };
         };
       };
       /** Bad Request */
@@ -3198,31 +3234,31 @@ export interface operations {
       /** Successfully edited a team secret */
       200: {
         content: {
-          "application/json": (
+          "application/json":
             | {
-                type: "generic";
-                entries: string[];
+                id?: string;
+                /** A secret name */
+                name: string;
+                /** A kubernetes cluster for the secret */
+                clusterId: string;
+                type?: "generic" | "docker-registry" | "tls";
               }
             | {
-                type: "docker-registry";
-                dockerconfig?: ".dockerconfig.json";
+                id?: string;
+                /** A secret name */
+                name: string;
+                /** A kubernetes cluster for the secret */
+                clusterId: string;
+                type?: "generic" | "docker-registry" | "tls";
               }
             | {
-                type: "tls";
-                /** A Vault property name that contains PEM public key certificate */
-                crt: string;
-                /** A Vault property name that contains PEM private key certificate */
-                key: string;
-                /** A Vault property name that contains CA certificate content */
-                ca?: string;
-              }
-          ) & {
-            id?: string;
-            /** A secret name */
-            name: string;
-            /** A kubernetes cluster for the secret */
-            clusterId: string;
-          };
+                id?: string;
+                /** A secret name */
+                name: string;
+                /** A kubernetes cluster for the secret */
+                clusterId: string;
+                type?: "generic" | "docker-registry" | "tls";
+              };
         };
       };
       /** Bad Request */
@@ -3251,31 +3287,31 @@ export interface operations {
     /** Secret object that contains updated values */
     requestBody: {
       content: {
-        "application/json": (
+        "application/json":
           | {
-              type: "generic";
-              entries: string[];
+              id?: string;
+              /** A secret name */
+              name: string;
+              /** A kubernetes cluster for the secret */
+              clusterId: string;
+              type?: "generic" | "docker-registry" | "tls";
             }
           | {
-              type: "docker-registry";
-              dockerconfig?: ".dockerconfig.json";
+              id?: string;
+              /** A secret name */
+              name: string;
+              /** A kubernetes cluster for the secret */
+              clusterId: string;
+              type?: "generic" | "docker-registry" | "tls";
             }
           | {
-              type: "tls";
-              /** A Vault property name that contains PEM public key certificate */
-              crt: string;
-              /** A Vault property name that contains PEM private key certificate */
-              key: string;
-              /** A Vault property name that contains CA certificate content */
-              ca?: string;
-            }
-        ) & {
-          id?: string;
-          /** A secret name */
-          name: string;
-          /** A kubernetes cluster for the secret */
-          clusterId: string;
-        };
+              id?: string;
+              /** A secret name */
+              name: string;
+              /** A kubernetes cluster for the secret */
+              clusterId: string;
+              type?: "generic" | "docker-registry" | "tls";
+            };
       };
     };
   };

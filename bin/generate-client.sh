@@ -7,7 +7,7 @@ repo="ssh://git@github.com/redkubes/otomi-api.git"
 
 vendor="otomi-api"
 type="axios"
-openapi_doc="src/openapi.yaml"
+openapi_doc="src/openapi-dereferenced.json"
 registry="https://npm.pkg.github.com/"
 target_dir="vendors/client/$vendor/$type"
 target_package_json="$target_dir/package.json"
@@ -30,7 +30,7 @@ generate_client() {
     echo "Generating client code from openapi specification $openapi_doc.."
     rm -rf $target_dir >/dev/null
 
-    npx openapi bundle --output src/openapi --ext yaml src/openapi/api.yaml
+    # npx openapi bundle --output src/openapi --ext yaml src/openapi/api.yaml
 
     docker run --rm -v $PWD:/local -w /local -u "$(id -u $USER)" \
     openapitools/openapi-generator-cli:v5.0.1 generate \
