@@ -1,0 +1,323 @@
+url: &url
+  pattern: ^(https:\/\/)([\w\-])+\.{1}([a-zA-Z]{2,63})([\/\w-]*)*\/?\??([^#\n\r]*)?#?([^\n\r]*)$
+  type: string
+
+alerts: &alerts
+  type: object
+  properties:
+    drone:
+      default: slack
+      enum:
+        - slack
+        - msteams
+      type: string
+    email:
+      additionalProperties: false
+      properties:
+        critical:
+          $ref: 'definitions.yaml#/email'
+          description: One or more email addresses (comma separated) for critical events.
+        nonCritical:
+          $ref: 'definitions.yaml#/email'
+          description: One or more email addresses (comma separated) for non-critical events.
+      type: object
+    groupInterval:
+      default: 5m
+      description: How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.)
+      type: string
+    msteams:
+      additionalProperties: false
+      properties:
+        highPrio:
+          description: The low prio web hook.
+          type: string
+        lowPrio:
+          description: The high prio web hook.
+          type: string
+      type: object
+    receivers:
+      description: Notification receivers.
+      items:
+        enum:
+          - slack
+          - msteams
+          - email
+        type: string
+      type: array
+    repeatInterval:
+      default: 3h
+      description: How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more).
+      type: string
+    slack:
+      additionalProperties: false
+      properties:
+        channel:
+          default: mon-otomi
+          description: The Slack channel for non-critical notifications.
+          type: string
+        channelCrit:
+          default: mon-otomi
+          description: The Slack channel for critical notifications.
+          type: string
+        url:
+          <<: *url
+          description: A Slack webhook URL.
+      type: object
+
+Settings:
+  x-acl:
+    admin: [read-any, update-any]
+    team: []
+  additionalProperties: false
+  properties:
+    alerts:
+      <<: *alerts
+    azure:
+      description: Azure specific configuration.
+      properties:
+        appgw:
+          properties:
+            isManaged:
+              default: true
+              description: Is this appgw installed as AKS addon?
+              type: boolean
+          type: object
+        diskType:
+          description: An Azure disk type (SKU Type).
+          enum:
+            - Standard_LRS
+            - Standard_GRS
+            - Standard_RAGRS
+            - Standard_ZRS
+            - Premium_LRS
+            - Premium_ZRS
+            - Standard_GZRS
+            - Standard_RAGZRS
+          type: string
+        keyVault:
+          description: Azure Key Vault access credentials. Will use azure.tenantId if tenantId is not provided.
+          properties:
+            tenantId:
+              description: An Azure tenant ID.
+              type: string
+            clientId:
+              description: An Azure client ID.
+              type: string
+            clientSecret:
+              description: An Azure client secret.
+              type: string
+          required:
+            - clientId
+            - clientSecret
+          type: object
+        monitor:
+          $ref: definitions.yaml#/azureMonitor
+        resourceGroup:
+          description: An Azure resource group.
+          type: string
+        subscriptionId:
+          description: An Azure subscription ID.
+          type: string
+        tenantId:
+          description: An Azure tenant ID.
+          type: string
+      required:
+        - diskType
+        - resourceGroup
+        - subscriptionId
+        - tenantId
+      type: object
+    customer:
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+      type: object
+    google:
+      description: Google specific configuration.
+      properties:
+        cloudDnsKey:
+          description: A service account key for managing a DNS zone.
+          type: string
+        kmsAccount:
+          description: A service account key for managing a KMS vault.
+          type: string
+        projectId:
+          description: A Google Cloud project ID for accessing DNS zone.
+          type: string
+      required:
+        - cloudDnsKey
+        - projectId
+      type: object
+    home:
+      <<: *alerts
+    kms:
+      description: Use Cloud KMS to encrypt and decrypt the master key
+      oneOf:
+        - title: gcpckms
+          properties:
+            gcpckms:
+              properties:
+                project:
+                  type: string
+                region:
+                  type: string
+                key_ring:
+                  type: string
+                kmsAccount:
+                  type: string
+              required:
+                - project
+                - region
+                - key_ring
+                - kmsAccount
+              type: object
+          required:
+            - gcpckms
+          type: object
+        - title: awskms
+          properties:
+            awskms:
+              properties:
+                region:
+                  type: string
+                access_key:
+                  type: string
+                secret_key:
+                  type: string
+                endpoint:
+                  type: string
+              required:
+                - region
+                - access_key
+                - secret_key
+                - endpoint
+              type: object
+          required:
+            - awskms
+          type: object
+        - title: azurekeyvault
+          properties:
+            azurekeyvault:
+              properties:
+                vault_name:
+                  type: string
+                tenant_id:
+                  type: string
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+              required:
+                - vault_name
+                - tenant_id
+                - client_id
+                - client_secret
+              type: object
+          required:
+            - azurekeyvault
+          type: object
+      type: object
+    oidc:
+      additionalProperties: false
+      description: 'Holds many parts used in different locations. Please see keycloak, istio and oauth-proxy all consuming parts.'
+      properties:
+        adminGroupID:
+          type: string
+        apiUrl:
+          <<: *url
+        authUrl:
+          <<: *url
+        clientID:
+          type: string
+        clientSecret:
+          type: string
+        issuer:
+          <<: *url
+        scope:
+          type: string
+        teamAdminGroupID:
+          type: string
+        tenantID:
+          type: string
+        tokenUrl:
+          <<: *url
+        usernameClaimMapper:
+          type: string
+          description: Claim name used by Keycloak to identify incoming users from identity provider
+        subClaimMapper:
+          type: string
+          description: Select OIDC claim to be used as a unique user identifier
+          default: sub
+      type: object
+    otomi:
+      additionalProperties: false
+      properties:
+        hasCloudLB:
+          default: false
+          description: Set this to true when an external LB exists or needs to be started (AWS ALB, Azure AppGW, Google Apigee). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.
+          type: boolean
+        isHomeMonitored:
+          default: false
+          description: Whether this cluster is home monitored (like when under a Premium SLA). Sends criticals home.
+          type: boolean
+        isManaged:
+          default: true
+          description: Whether masters are managed and not under control. Set this to false when onprem.
+          type: boolean
+        isMultitenant:
+          default: true
+          description: Whether to separate team metrics and logs. Disabling this lets everybody be admin and see everything.
+          type: boolean
+        mode:
+          default: ee
+          description: The otomi-core edition. Either community edition (ce) or enterprise edition (ee).
+          enum:
+            - ce
+            - ee
+          type: string
+        pullSecret:
+          default: ''
+          description: The pullsecret to deploy the Otomi API and Console. Requires an Otomi license.
+          type: string
+        teamPrefix:
+          default: team-
+          description: The prefix to use in URLs for team domains.
+          pattern: ^[a-z]+[-]{1}$
+          type: string
+        addons:
+          description: Manage addon configuration
+          additionalProperties: false
+          properties:
+            conftest:
+              properties:
+                enabled:
+                  type: boolean
+                  default: true
+                  description: Use this flag to enable conftest for policy validation
+              type: object
+          type: object
+      type: object
+    smtp:
+      additionalProperties: false
+      properties:
+        auth_identity:
+          type: string
+        auth_password:
+          type: string
+        auth_secret:
+          type: string
+        auth_username:
+          type: string
+        from:
+          $ref: definitions.yaml#/email
+          description: The "from" address. Defaults to alerts@$clusterDomain.
+        hello:
+          type: string
+        smarthost:
+          $ref: definitions.yaml#/hostPort
+          description: The smtp host:port combination.
+      required:
+        - smarthost
+      type: object
+  type: object

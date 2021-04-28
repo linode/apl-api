@@ -1,15 +1,15 @@
-import { Operation } from 'express-openapi'
+import { Operation, OperationHandlerArray } from 'express-openapi'
 import OtomiStack from '../otomi-stack'
 import { OpenApiRequestExt } from '../otomi-models'
 
-export default function (otomi: OtomiStack) {
+export default function (otomi: OtomiStack): OperationHandlerArray {
   const GET: Operation = [
-    async (req: OpenApiRequestExt, res) => {
+    async (req: OpenApiRequestExt, res): Promise<void> => {
       console.debug(`Trigger deployment: ${JSON.stringify(req.params)}`)
-      const email = req.user.email
+      const { email } = req.user
       try {
-        await otomi.triggerDeployment(email)
-        res.status(200).json({})
+        await otomi.triggerDeployment(email || '')
+        res.json({})
       } catch (err) {
         console.error(err)
         res.status(409).json({ error: err.message })

@@ -1,74 +1,23 @@
-uuid: &uuidField
-  type: string
-  pattern: ^[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}$
-
-idName: &idNameField
-  type: string
+idName: &idName
+  description: A lowercase name that starts with a letter and may contain dashes.
   pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-
-x-available-clusters: &AvailableClusters # description: Select from available clusters
-  type: array
-  items:
-    type: string
-  uniqueItems: true
-
-AzureMonitor: &AzureMonitor
-  title: Azure Monitor
-  type: object
-  description: Azure Monitor is the platform service that provides a single source for monitoring Azure resources.
-  anyOf:
-    - title: Use global settings
-      type: object
-      nullable: true
-      additionalProperties: false
-    - title: Override global settings
-      type: object
-      properties:
-        clientId:
-          description: 'An Azure client ID (Azure Active Directory -> App Registrations -> Choose your app -> Application ID)'
-          <<: *uuidField
-        clientSecret:
-          type: string
-          writeOnly: true
-          description:
-            An Azure client secret (Azure Active Directory -> App Registrations -> Choose your app -> Keys -> Create a
-            key -> Use client secret)
-        logAnalyticsClientId:
-          description: A dedicated client ID for Azure Log Analytics. Defaults to clientId value.
-          <<: *uuidField
-        logAnalyticsClientSecret:
-          description: A client Secret for Azure Log Analytics. Defaults to clientSecret value.
-          type: string
-          writeOnly: true
-        appInsightsAppId:
-          description: An app id for use with an Application Insights resource. Defaults to clientId value.
-          type: string
-        appInsightsApiKey:
-          description: An api key for use with an Application Insights resource. Defaults to clientSecret value.
-          type: string
-          writeOnly: true
-      required:
-        - clientId
-        - clientSecret
-      nullable: true
-      additionalProperties: false
+  type: string
 
 Team:
-  x-externalDocsPath: 'docs/configuring-teams'
+  x-externalDocsPath: docs/configuring-teams
   x-acl:
     admin: [delete-any, read-any, create-any, update-any]
     team: [read-any, update]
-  type: object
   properties:
     id:
+      <<: *idName
       title: ID
-      <<: *idNameField
       x-acl:
         admin: [read]
         team: [read]
     name:
+      <<: *idName
       title: Name
-      <<: *idNameField
       example: 'otomi'
       x-acl:
         admin: [create, read]
@@ -76,18 +25,21 @@ Team:
       description: A team name
     clusters:
       title: Clusters
-      <<: *AvailableClusters
+      type: array
+      items:
+        type: string
+      uniqueItems: true
       minItems: 1
       x-acl:
         team: [read]
     oidc:
-      type: object
       title: OIDC
       properties:
         groupMapping:
           title: Group mapping
           type: string
           description: 'An OIDC group name/id granting access to this team'
+      type: object
     password:
       type: string
       # description: "A secret that is used access multi-tenant log aggregation system (Loki)"
@@ -107,7 +59,6 @@ Team:
           uniqueItems: true
         slack:
           title: Slack
-          type: object
           properties:
             url:
               title: Web hook
@@ -121,9 +72,9 @@ Team:
               title: Channel for criticals
               type: string
               description: Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'.
+          type: object
         msteams:
           title: Microsoft Teams
-          type: object
           properties:
             lowPrio:
               title: Low prio webhook
@@ -133,9 +84,9 @@ Team:
               title: High prio webhook
               type: string
               description: The high prio web hook
+          type: object
         email:
           title: Email
-          type: object
           properties:
             nonCritical:
               title: Non criticals
@@ -145,8 +96,12 @@ Team:
               title: Criticals
               type: string
               description: Email addresses (comma separated) for critical events.
-    azureMonitor:
-      <<: *AzureMonitor
+          type: object
+      type: object
+    # azureMonitor:
+    #   $ref: definitions.yaml#/azureMonitor
   required:
     - name
     - clusters
+    - password
+  type: object

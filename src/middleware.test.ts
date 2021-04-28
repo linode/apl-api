@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { getSessionUser } from './middleware'
+import { getUser } from './middleware'
 import { JWT } from './otomi-models'
 
 const email = 'test@user.net'
@@ -15,11 +15,11 @@ const multiTeamJWT: JWT = { ...adminJWT, groups: multiTeamGroups }
 
 describe('JWT claims mapping', () => {
   it('A user in either admin or team-admin group should get admin role and have isAdmin', () => {
-    const user = getSessionUser(adminJWT)
+    const user = getUser(adminJWT)
     expect(user.isAdmin).to.be.true
   })
   it('Multiple team groups should result in the same amount of teams', () => {
-    const user = getSessionUser(multiTeamJWT)
+    const user = getUser(multiTeamJWT)
     expect(user.teams).to.deep.equal(multiTeamUser)
     expect(user.isAdmin).to.be.false
   })

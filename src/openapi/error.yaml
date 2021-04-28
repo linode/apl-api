@@ -1,5 +1,4 @@
 ValidationError: &ValidationError
-  type: object
   x-acl: []
   properties:
     path:
@@ -13,9 +12,9 @@ ValidationError: &ValidationError
       enum:
         - body
         - path
+  type: object
 
 OpenApiValidationError:
-  type: object
   x-acl: []
   properties:
     status:
@@ -24,10 +23,11 @@ OpenApiValidationError:
       type: array
       items:
         <<: *ValidationError
+  type: object
 
 OtomiStackError:
-  type: object
   x-acl: []
   properties:
     message:
       type: string
+  type: object

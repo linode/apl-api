@@ -3,6 +3,7 @@ security:
   - groupAuthz: []
 info:
   title: The otomi-stack API
+  description: Holds the entire schema needed by console to autogenerate forms
   version: PLACEHOLDER
 
 externalDocs:
@@ -45,13 +46,6 @@ x-get-responses: &DefaultGetResponses
 
 # -------------------------------------------- Paths
 paths:
-  /readiness:
-    get:
-      security: []
-      description: Check readiness
-      responses:
-        '200':
-          description: Service is ready
   /clusters:
     get:
       operationId: getClusters
@@ -389,8 +383,9 @@ paths:
           description: The requested session.
   /apiDocs:
     get:
+      operationId: 'apiDocs'
       security: []
-      description: Get OpenApi document
+      description: Get OpenAPIDoc document
       responses:
         '200':
           description: The requested apiDoc.
@@ -400,6 +395,34 @@ paths:
                 type: object
         default:
           description: The requested apiDoc.
+
+  /settings:
+    get:
+      operationId: getSettings
+      description: Get settings from the `settings.yaml` and `secret.settings.yaml` file.
+      x-aclSchema: Settings
+      responses:
+        '200':
+          description: The request is successful.
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Settings'
+    put:
+      operationId: editSettings
+      description: Edits the settings from the `settings.yaml` file
+      x-aclSchema: Settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Settings'
+        description: Settings object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited `settings.yaml`
 
 # -------------------------------------------- Servers
 
@@ -442,8 +465,8 @@ components:
       in: header
 
   schemas:
-    Teams:
-      $ref: 'teams.yaml#/Teams'
+    Cloud:
+      $ref: 'cloud.yaml#/Cloud'
 
     Cluster:
       $ref: 'cluster.yaml#/Cluster'
@@ -456,6 +479,12 @@ components:
 
     Kubecfg:
       $ref: 'kubecfg.yaml#/Kubecfg'
+
+    OpenApiValidationError:
+      $ref: 'error.yaml#/OpenApiValidationError'
+
+    OtomiStackError:
+      $ref: 'error.yaml#/OtomiStackError'
 
     Secret:
       $ref: 'secret.yaml#/Secret'
@@ -472,14 +501,14 @@ components:
     Session:
       $ref: 'session.yaml#/Session'
 
+    Settings:
+      $ref: 'settings.yaml#/Settings'
+
     Team:
       $ref: 'team.yaml#/Team'
 
+    Teams:
+      $ref: 'teams.yaml#/Teams'
+
     User:
       $ref: 'user.yaml#/User'
-
-    OpenApiValidationError:
-      $ref: 'error.yaml#/OpenApiValidationError'
-
-    OtomiStackError:
-      $ref: 'error.yaml#/OtomiStackError'

@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 set -e
 
@@ -7,7 +7,7 @@ repo="ssh://git@github.com/redkubes/otomi-api.git"
 
 vendor="otomi-api"
 type="axios"
-openapi_doc="vendors/openapi/$vendor.json"
+openapi_doc="vendors/openapi/otomi-api.json"
 registry="https://npm.pkg.github.com/"
 target_dir="vendors/client/$vendor/$type"
 target_package_json="$target_dir/package.json"
@@ -20,21 +20,25 @@ validate() {
         exit 1
     fi
 
-    if [ -d "$target_dir" ]; then
-        echo "The directoy $target_dir already exists. Please choose different vendor name or remove existing directory."
+    if [ ! -f "$openapi_doc" ]; then
+        echo "The file $openapi_doc does not exist."
         exit 1
     fi
 }
 
 generate_client() {
     echo "Generating client code from openapi specification $openapi_doc.."
+    rm -rf $target_dir >/dev/null
 
-    docker run --rm -v $PWD:/local -w /local -u "${UID:-1001}" \
-    openapitools/openapi-generator-cli:v5.0.1 generate \
+    # npx openapi bundle --output src/openapi --ext yaml src/openapi/api.yaml
+
+    docker run --rm -v $PWD:/local -w /local -u "$(id -u $USER)" \
+    openapitools/openapi-generator-cli:v5.1.0 generate \
     -i /local/$openapi_doc \
     -o /local/$target_dir \
     -g typescript-node \
-    --additional-properties supportsES6=true,npmName=$target_npm_name
+    --additional-properties supportsES6=true,npmName=$target_npm_name,modelPropertyNaming=original \
+    --generate-alias-as-model
 }
 
 set_package_json() {
@@ -65,5 +69,3 @@ set_package_json
 build_npm_package
 
 echo "The client code has been generated at $target_dir/ directory"
-
-echo "In order to publish an npm package run:\n\t cd $target_dir && npm publish"

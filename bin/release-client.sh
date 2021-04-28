@@ -12,4 +12,3 @@ for type in 'axios'; do
   npm publish --access public
   cd -
 done
-exit 0

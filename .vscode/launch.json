@@ -3,15 +3,8 @@
   "configurations": [
     {
       "type": "node",
-      "request": "launch",
-      "name": "Launch Program",
-      "program": "${workspaceFolder}/${relativeFile}",
-      "skipFiles": ["<node_internals>/**"]
-    },
-    {
-      "type": "node",
       "request": "attach",
-      "name": "Attach to dev:debug",
+      "name": "Attach to current script",
       "protocol": "inspector",
       "port": 4321,
       "restart": true,
@@ -20,25 +13,36 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Mocha Tests",
-      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-      "args": [
-        "--require",
-        "dotenv/config",
-        "--require",
-        "ts-node/register",
-        "-u",
-        "tdd",
-        "--timeout",
-        "999999",
-        "--colors",
-        "--recursive",
-        "${workspaceFolder}/src/**/*.ts"
-      ],
+      "name": "Debug npm run dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run-script", "dev"],
+      "cwd": "${workspaceRoot}",
+
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug npm run dev:no-authz",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run-script", "dev:no-authz"],
+      "cwd": "${workspaceRoot}",
+
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "pwa-node",
+      "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
+      "request": "launch",
+      "name": "Mocha All (transpiled)",
+      "args": ["--timeout", "999999", "--colors", "${workspaceFolder}/src/**/*.test.ts"],
       "env": {
         "NODE_ENV": "test"
       },
-      "internalConsoleOptions": "openOnSessionStart"
+      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "protocol": "inspector"
     },
     {
       "type": "node",
@@ -61,15 +65,6 @@
       },
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Debug Keycloak Tasks",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run-script", "tasks:keycloak-dev"],
-      "cwd": "${workspaceRoot}",
-      "console": "integratedTerminal"
     }
   ]
 }
