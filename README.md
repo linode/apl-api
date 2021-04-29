@@ -265,3 +265,9 @@ Moreover the `openapi.yaml` file can be used with `Postman` (File -> Import).
 ## 3. Models generated from spec
 
 When any of the `src/openapi/*.yaml` files change, new models will be generated into `src/generated-schema.ts`. These models are exported as types in `src/otomi-models.ts` and used throughout the code.
+
+**IMPORTANT:**
+
+Because openapi bundler optimizes by re-using schema blocks but does not take into account depth of the schema, it creates a schema that is not usable by the `npm run build:client` task. This only happens when a subschema references root schemas, and only for certain props. We had to apply some yaml anchor hacking to make it work.
+
+When you encounter errors during client generation, instead of referencing the faulty props by `$ref` use a yaml anchor. Example file: `src/openapi/team.yaml`.

@@ -1,3 +1,69 @@
+url: &url
+  pattern: ^(https:\/\/)([\w\-])+\.{1}([a-zA-Z]{2,63})([\/\w-]*)*\/?\??([^#\n\r]*)?#?([^\n\r]*)$
+  type: string
+
+alerts: &alerts
+  type: object
+  properties:
+    drone:
+      default: slack
+      enum:
+        - slack
+        - msteams
+      type: string
+    email:
+      additionalProperties: false
+      properties:
+        critical:
+          $ref: 'definitions.yaml#/email'
+          description: One or more email addresses (comma separated) for critical events.
+        nonCritical:
+          $ref: 'definitions.yaml#/email'
+          description: One or more email addresses (comma separated) for non-critical events.
+      type: object
+    groupInterval:
+      default: 5m
+      description: How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.)
+      type: string
+    msteams:
+      additionalProperties: false
+      properties:
+        highPrio:
+          description: The low prio web hook.
+          type: string
+        lowPrio:
+          description: The high prio web hook.
+          type: string
+      type: object
+    receivers:
+      description: Notification receivers.
+      items:
+        enum:
+          - slack
+          - msteams
+          - email
+        type: string
+      type: array
+    repeatInterval:
+      default: 3h
+      description: How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more).
+      type: string
+    slack:
+      additionalProperties: false
+      properties:
+        channel:
+          default: mon-otomi
+          description: The Slack channel for non-critical notifications.
+          type: string
+        channelCrit:
+          default: mon-otomi
+          description: The Slack channel for critical notifications.
+          type: string
+        url:
+          <<: *url
+          description: A Slack webhook URL.
+      type: object
+
 Settings:
   x-acl:
     admin: [read-any, update-any]
@@ -5,7 +71,7 @@ Settings:
   additionalProperties: false
   properties:
     alerts:
-      $ref: definitions.yaml#/alerts
+      <<: *alerts
     azure:
       description: Azure specific configuration.
       properties:
@@ -15,6 +81,7 @@ Settings:
               default: true
               description: Is this appgw installed as AKS addon?
               type: boolean
+          type: object
         diskType:
           description: An Azure disk type (SKU Type).
           enum:
@@ -42,6 +109,7 @@ Settings:
           required:
             - clientId
             - clientSecret
+          type: object
         monitor:
           $ref: definitions.yaml#/azureMonitor
         resourceGroup:
@@ -58,11 +126,13 @@ Settings:
         - resourceGroup
         - subscriptionId
         - tenantId
+      type: object
     customer:
       additionalProperties: false
       properties:
         name:
           type: string
+      type: object
     google:
       description: Google specific configuration.
       properties:
@@ -78,8 +148,9 @@ Settings:
       required:
         - cloudDnsKey
         - projectId
+      type: object
     home:
-      $ref: definitions.yaml#/alerts
+      <<: *alerts
     kms:
       description: Use Cloud KMS to encrypt and decrypt the master key
       oneOf:
@@ -100,8 +171,10 @@ Settings:
                 - region
                 - key_ring
                 - kmsAccount
+              type: object
           required:
             - gcpckms
+          type: object
         - title: awskms
           properties:
             awskms:
@@ -119,8 +192,10 @@ Settings:
                 - access_key
                 - secret_key
                 - endpoint
+              type: object
           required:
             - awskms
+          type: object
         - title: azurekeyvault
           properties:
             azurekeyvault:
@@ -138,8 +213,11 @@ Settings:
                 - tenant_id
                 - client_id
                 - client_secret
+              type: object
           required:
             - azurekeyvault
+          type: object
+      type: object
     oidc:
       additionalProperties: false
       description: 'Holds many parts used in different locations. Please see keycloak, istio and oauth-proxy all consuming parts.'
@@ -147,15 +225,15 @@ Settings:
         adminGroupID:
           type: string
         apiUrl:
-          $ref: definitions.yaml#/url
+          <<: *url
         authUrl:
-          $ref: definitions.yaml#/url
+          <<: *url
         clientID:
           type: string
         clientSecret:
           type: string
         issuer:
-          $ref: definitions.yaml#/url
+          <<: *url
         scope:
           type: string
         teamAdminGroupID:
@@ -163,7 +241,7 @@ Settings:
         tenantID:
           type: string
         tokenUrl:
-          $ref: definitions.yaml#/url
+          <<: *url
         usernameClaimMapper:
           type: string
           description: Claim name used by Keycloak to identify incoming users from identity provider
@@ -171,6 +249,7 @@ Settings:
           type: string
           description: Select OIDC claim to be used as a unique user identifier
           default: sub
+      type: object
     otomi:
       additionalProperties: false
       properties:
@@ -216,6 +295,9 @@ Settings:
                   type: boolean
                   default: true
                   description: Use this flag to enable conftest for policy validation
+              type: object
+          type: object
+      type: object
     smtp:
       additionalProperties: false
       properties:
@@ -237,3 +319,5 @@ Settings:
           description: The smtp host:port combination.
       required:
         - smarthost
+      type: object
+  type: object

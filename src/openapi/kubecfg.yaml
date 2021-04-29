@@ -3,3 +3,4 @@ Kubecfg:
     admin: [read-any]
     team: [read]
   properties: {}
+  type: object

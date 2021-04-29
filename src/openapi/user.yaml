@@ -37,3 +37,4 @@ User:
     - email
     - teams
     - roles
+  type: object
