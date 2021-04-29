@@ -19,8 +19,11 @@ charts:
     enabled: true
 customer:
   name: demo
-google:
-  projectId: otomi-cloud
+dns:
+  dnsZones: [example.com]
+  domain: onprem.example.com
+  aws:
+    region: eu-central-1
 home:
   receivers:
     - slack

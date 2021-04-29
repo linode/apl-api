@@ -23,15 +23,6 @@ Team:
         admin: [create, read]
         team: [read]
       description: A team name
-    clusters:
-      title: Clusters
-      type: array
-      items:
-        type: string
-      uniqueItems: true
-      minItems: 1
-      x-acl:
-        team: [read]
     oidc:
       title: OIDC
       properties:
@@ -102,6 +93,5 @@ Team:
     #   $ref: definitions.yaml#/azureMonitor
   required:
     - name
-    - clusters
     - password
   type: object

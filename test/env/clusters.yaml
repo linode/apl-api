@@ -1,7 +1,0 @@
-clouds:
-  onprem:
-    domain: onprem.example.com
-    clusters:
-      dev:
-        id: '9a777336-72c0-4dee-9885-55b9ce85c9c2'
-        enabled: true

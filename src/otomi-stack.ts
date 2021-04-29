@@ -49,7 +49,7 @@ const env = cleanEnv({
 function convertDbServiceToValues(svc): object {
   const { serviceType } = svc.ksvc
   console.info(`Saving service: id: ${svc.id} serviceType: ${serviceType}`)
-  const svcCloned = omit(svc, ['teamId', 'clusterId', 'ksvc', 'ingress', 'internal', 'path'])
+  const svcCloned = omit(svc, ['teamId', 'ksvc', 'ingress', 'internal', 'path'])
   const ksvc = cloneDeep(svc.ksvc)
   if (serviceType === 'ksvc') {
     svcCloned.ksvc = ksvc
@@ -77,8 +77,6 @@ function convertDbServiceToValues(svc): object {
 }
 
 export default class OtomiStack {
-  clustersPath: string
-
   private coreValues: object
 
   db: Db
@@ -91,7 +89,6 @@ export default class OtomiStack {
 
   constructor() {
     this.db = new Db(env.DB_PATH)
-    this.clustersPath = './env/clusters.yaml'
     const corePath = env.isProd ? '/etc/otomi/core.yaml' : './test/core.yaml'
     this.coreValues = yaml.safeLoad(fs.readFileSync(corePath, 'utf8')) as object
     this.decryptedFilePostfix = env.USE_SOPS ? '.dec' : ''
@@ -255,7 +252,6 @@ export default class OtomiStack {
       cluster: cluster.name,
     }
     const options = {
-      clusters: [cluster],
       users: [user],
       contexts: [context],
       currentContext: context.name,
@@ -440,10 +436,8 @@ export default class OtomiStack {
 
     Object.values(mergedData.teamConfig.teams).forEach((team: Team) => {
       this.db.populateItem('teams', { ...team, name: team.id }, undefined, team.id)
-      team.clusters.forEach(() => {
-        this.loadTeamServices(team.id!)
-        this.loadTeamSecrets(team.id!)
-      })
+      this.loadTeamServices(team.id!)
+      this.loadTeamSecrets(team.id!)
     })
   }
 
