@@ -131,7 +131,7 @@
     "src/openapi/*": "npm run build:models"
   },
   "scripts": {
-    "build": "tsc && copyup --error ./src/openapi/*.yaml ./dist/src",
+    "build": "tsc && copyup --error src/openapi/*.yaml dist/src && copyup src/*.json dist/src",
     "build:models": "npm run build:spec && openapi-typescript src/generated-schema.json -o src/generated-schema.ts",
     "build:spec": "ts-node-dev src/build-spec.ts",
     "build:client": "npm run build:spec && rm -rf vendors/client/otomi-api >/dev/null && bin/generate-client.sh",
