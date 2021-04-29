@@ -426,7 +426,6 @@ export interface components {
         id?: string;
         /** A team name */
         name: string;
-        clusters: string[];
         oidc?: {
           /** An OIDC group name/id granting access to this team */
           groupMapping?: string;
@@ -672,7 +671,6 @@ export interface components {
       id?: string;
       /** A team name */
       name: string;
-      clusters: string[];
       oidc?: {
         /** An OIDC group name/id granting access to this team */
         groupMapping?: string;
@@ -707,7 +705,6 @@ export interface components {
       id?: string;
       /** A team name */
       name: string;
-      clusters: string[];
       oidc?: {
         /** An OIDC group name/id granting access to this team */
         groupMapping?: string;
@@ -954,7 +951,6 @@ export interface operations {
             id?: string;
             /** A team name */
             name: string;
-            clusters: string[];
             oidc?: {
               /** An OIDC group name/id granting access to this team */
               groupMapping?: string;
@@ -999,7 +995,6 @@ export interface operations {
             id?: string;
             /** A team name */
             name: string;
-            clusters: string[];
             oidc?: {
               /** An OIDC group name/id granting access to this team */
               groupMapping?: string;
@@ -1062,7 +1057,6 @@ export interface operations {
           id?: string;
           /** A team name */
           name: string;
-          clusters: string[];
           oidc?: {
             /** An OIDC group name/id granting access to this team */
             groupMapping?: string;
@@ -1112,7 +1106,6 @@ export interface operations {
             id?: string;
             /** A team name */
             name: string;
-            clusters: string[];
             oidc?: {
               /** An OIDC group name/id granting access to this team */
               groupMapping?: string;
@@ -1185,7 +1178,6 @@ export interface operations {
             id?: string;
             /** A team name */
             name: string;
-            clusters: string[];
             oidc?: {
               /** An OIDC group name/id granting access to this team */
               groupMapping?: string;
@@ -1248,7 +1240,6 @@ export interface operations {
           id?: string;
           /** A team name */
           name: string;
-          clusters: string[];
           oidc?: {
             /** An OIDC group name/id granting access to this team */
             groupMapping?: string;
@@ -2422,7 +2413,6 @@ export interface operations {
               id?: string;
               /** A team name */
               name: string;
-              clusters: string[];
               oidc?: {
                 /** An OIDC group name/id granting access to this team */
                 groupMapping?: string;

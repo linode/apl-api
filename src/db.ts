@@ -38,8 +38,6 @@ export default class Db {
       .defaults({
         teams: [],
         services: [],
-        clouds: [],
-        clusters: [],
         cluster: [],
         secrets: [],
         settings: {},

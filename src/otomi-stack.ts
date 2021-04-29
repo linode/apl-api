@@ -377,8 +377,6 @@ export default class OtomiStack {
   loadCluster() {
     const data: any = this.repo.readFile('./env/cluster.yaml')
     const { cluster } = data
-    // cluster.domain = `${cluster.name}.${cluster.domain}`
-    cluster.dnsZones = [cluster.domain].concat(get(cluster, 'dnsZones', []))
     this.db.populateItem('cluster', cluster, undefined, cluster.id)
   }
 
@@ -446,9 +444,9 @@ export default class OtomiStack {
     try {
       const data = this.repo.readFile(filePath)
       const services = get(data, `teamConfig.teams.${teamId}.services`, [])
-      const cluster = this.getCluster()
+      const dns = this.getSettings().dns
       services.forEach((svc) => {
-        this.convertServiceToDb(svc, teamId, cluster)
+        this.convertServiceToDb(svc, teamId, dns)
       })
     } catch (e) {
       console.warn(`Team ${teamId} has no services on cluster`)
@@ -550,7 +548,7 @@ export default class OtomiStack {
     return svcCloned
   }
 
-  convertServiceToDb(svcRaw, teamId, cluster): void {
+  convertServiceToDb(svcRaw, teamId, dns): void {
     // Create service
     const svc = omit(svcRaw, 'ksvc', 'isPublic', 'hasCert', 'domain', 'paths', 'forwardPath')
     svc.teamId = teamId
@@ -569,7 +567,7 @@ export default class OtomiStack {
     } else set(svc, 'ksvc.serviceType', 'svcPredeployed')
 
     if (!('internal' in svcRaw)) {
-      const publicUrl = getPublicUrl(svcRaw.domain, svcRaw.name, teamId, cluster)
+      const publicUrl = getPublicUrl(svcRaw.domain, svcRaw.name, teamId, dns)
       svc.ingress = {
         hasCert: 'hasCert' in svcRaw,
         hasSingleSignOn: !('isPublic' in svcRaw),

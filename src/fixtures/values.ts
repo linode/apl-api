@@ -1,14 +1,16 @@
 export default {
-  cluster: {
-    id: '1f4e8330-8e85-4da0-9a6d-488c8e192c90',
-    apiName: 'onprem',
-    apiServer: 'apiServer.onprem.example.com',
-    k8sVersion: '1.19',
-    name: 'dev',
-    otomiVersion: 'master',
-    provider: 'onprem',
-    region: 'eu-central-1',
-  },
+  cluster: [
+    {
+      id: '1f4e8330-8e85-4da0-9a6d-488c8e192c90',
+      apiName: 'onprem',
+      apiServer: 'apiServer.onprem.example.com',
+      k8sVersion: '1.19',
+      name: 'dev',
+      otomiVersion: 'master',
+      provider: 'onprem',
+      region: 'eu-central-1',
+    },
+  ],
   teams: [
     {
       name: 'otomi',
@@ -36,7 +38,6 @@ export default {
   ],
   services: [
     {
-      enabled: true,
       name: 'servant1',
       id: 'fb88a85d-49e6-4c20-98ed-11b3ceff540e',
       teamId: 'otomi',
@@ -81,7 +82,6 @@ export default {
       },
     },
     {
-      enabled: true,
       name: 'hello',
       id: 'f818a64d-25a4-46e0-9eaf-769b78866031',
       teamId: 'otomi',
@@ -100,7 +100,6 @@ export default {
       },
     },
     {
-      enabled: true,
       name: 'servant2',
       id: 'f818a64d-25a4-46e0-9eaf-769b7886603d',
       teamId: 'otomi',
@@ -141,7 +140,6 @@ export default {
       },
     },
     {
-      enabled: true,
       name: 'informant',
       id: '2f18da9a-e659-479d-9d65-2ca82503f43c',
       internal: true,
@@ -173,21 +171,20 @@ export default {
       },
     },
   ],
-  clouds: [],
   secrets: [
-    {
-      type: 'generic',
-      teamId: 'dev',
-      id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf9C',
-      name: 'dev-generic',
-      entries: ['aa', 'bb', 'cc'],
-    },
     {
       type: 'generic',
       teamId: 'otomi',
       id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf9A',
       name: 'mysecret-generic',
       entries: ['dd', 'ee', 'ff'],
+    },
+    {
+      type: 'generic',
+      teamId: 'dev',
+      id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf9C',
+      name: 'dev-generic',
+      entries: ['aa', 'bb', 'cc'],
     },
   ],
   settings: {

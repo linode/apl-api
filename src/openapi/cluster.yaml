@@ -1,41 +1,43 @@
 Cluster:
-  type: object
-  x-acl:
-    admin: [read-any]
-    team: [read-any]
   properties:
+    apiName:
+      description: Only used for API/UI to show in app.
+      type: string
+    apiServer:
+      description: Used by kubectl for local deployment to target cluster.
+      type: string
+    entrypoint:
+      description: A Kubernetes API public IP address (onprem only).
+      type: string
+    k8sVersion:
+      $ref: 'definitions.yaml#/k8sVersion'
     name:
       type: string
-      description: A cluster name
-      readOnly: true
-    cloud:
-      type: string
-      description: A cloud provider name
-      readOnly: true
-    domain:
-      type: string
-      description: A default cluster DNS zone
-      readOnly: true
-    dnsZones:
-      type: array
-      description: A list of DNS zones that are available to the cluster
-      items:
-        type: string
-      readOnly: true
-      uniqueItems: true
-    hasKnative:
-      description: A flag that indicates capability for deploying serverless services by using Knative
-      type: boolean
-      readOnly: true
-    k8sVersion:
-      description: A version of kubernetes that is installed on the cluster
-      type: string
-      readOnly: true
     otomiVersion:
-      description: A version of kubernetes that is installed on the cluster
+      default: latest
+      description: 'Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version.'
       type: string
-      readOnly: true
+    provider:
+      type: string
+      enum:
+        - aws
+        - azure
+        - google
+        - oneprem
     region:
-      description: A physical location of the cluster
+      description: Dependent on provider.
+      examples:
+        - europe-west4
+        - eu-central-1
+        - westeurope
       type: string
-      readOnly: true
+    vpcID:
+      description: AWS only. If provided will override autodiscovery from metadata.
+      type: string
+  required:
+    - apiServer
+    - k8sVersion
+    - name
+    - otomiVersion
+    - provider
+    - region

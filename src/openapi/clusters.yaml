@@ -1,9 +1,0 @@
-Clusters:
-  items:
-    $ref: cluster.yaml#/Cluster
-  type: array
-  x-acl:
-    admin:
-      - read-any
-    team:
-      - read-any

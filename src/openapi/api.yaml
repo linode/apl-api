@@ -46,19 +46,6 @@ x-get-responses: &DefaultGetResponses
 
 # -------------------------------------------- Paths
 paths:
-  /clusters:
-    get:
-      operationId: getClusters
-      description: Get available clusters
-      x-aclSchema: Clusters
-      responses:
-        '200':
-          description: Successfully obtained cluster collection
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Clusters'
-
   /secrets:
     get:
       operationId: getAllSecrets
@@ -465,14 +452,8 @@ components:
       in: header
 
   schemas:
-    Cloud:
-      $ref: 'cloud.yaml#/Cloud'
-
     Cluster:
       $ref: 'cluster.yaml#/Cluster'
-
-    Clusters:
-      $ref: 'clusters.yaml#/Clusters'
 
     Deployment:
       $ref: 'deployment.yaml#/Deployment'
