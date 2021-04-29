@@ -6,11 +6,10 @@ import findIndex from 'lodash/findIndex'
 import { v4 as uuidv4 } from 'uuid'
 import cloneDeep from 'lodash/cloneDeep'
 import { AlreadyExists, NotExistError } from './error'
-import { Cloud, Cluster, Secret, Service, Settings, Team } from './otomi-models'
+import { Cluster, Secret, Service, Settings, Team } from './otomi-models'
 
 export type DbType = any // Cluster | Secret | Service | Team
 export type Schema = {
-  clouds: Cloud[]
   clusters: Cluster[]
   secrets: Secret[]
   services: Service[]

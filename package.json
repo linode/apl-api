@@ -96,6 +96,7 @@
     "node": ">=14.0.0",
     "npm": ">=6.0.0"
   },
+  "engineStrict": true,
   "homepage": "https://github.com/redkubes/otomi-api#readme",
   "husky": {
     "hooks": {

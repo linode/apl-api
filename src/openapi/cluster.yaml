@@ -26,10 +26,6 @@ Cluster:
         - oneprem
     region:
       description: Dependent on provider.
-      examples:
-        - europe-west4
-        - eu-central-1
-        - westeurope
       type: string
     vpcID:
       description: AWS only. If provided will override autodiscovery from metadata.

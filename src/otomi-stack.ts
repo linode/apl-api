@@ -6,7 +6,7 @@ import { cloneDeep, findIndex, merge, filter, get, isEmpty, omit, set, unset } f
 import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Db from './db'
-import { Cluster, Core, Secret, Service, Settings, Team } from './otomi-models'
+import { Cluster, Core, Dns, Secret, Service, Settings, Team } from './otomi-models'
 import { AlreadyExists, NotExistError, PublicUrlExists } from './error'
 import {
   arrayToObject,
@@ -380,7 +380,7 @@ export default class OtomiStack {
     this.db.populateItem('cluster', cluster, undefined, cluster.id)
   }
 
-  loadConfig(dataPath: string, secretDataPath: string): Core {
+  loadConfig(dataPath: string, secretDataPath: string): any {
     const data = this.repo.readFile(dataPath)
     const secretData = this.repo.readFile(secretDataPath)
     const secretPaths = getObjectPaths(secretData)
@@ -405,7 +405,11 @@ export default class OtomiStack {
   }
 
   loadSettings(): void {
-    const data = this.loadConfig('./env/settings.yaml', `./env/secrets.settings.yaml${this.decryptedFilePostfix}`)
+    const data = this.loadConfig(
+      './env/settings.yaml',
+      `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
+    ) as Settings
+    data.dns?.dnsZones?.push(data.dns.domain)
     this.db.db.set('settings', data).write()
   }
 
@@ -439,7 +443,7 @@ export default class OtomiStack {
     })
   }
 
-  loadTeamServices(teamId) {
+  loadTeamServices(teamId: string) {
     const filePath = `./env/teams/services.${teamId}.yaml`
     try {
       const data = this.repo.readFile(filePath)
@@ -518,7 +522,7 @@ export default class OtomiStack {
     this.repo.writeFile(filePath, data)
   }
 
-  convertDbServiceToValues(svc) {
+  convertDbServiceToValues(svc: any): void {
     const serviceType = svc.ksvc.serviceType
     console.info(`Saving service: serviceId: ${svc.serviceId} serviceType: ${serviceType}`)
     const svcCloned = omit(svc, ['teamId', 'ksvc', 'ingress', 'internal', 'path'])
@@ -548,7 +552,7 @@ export default class OtomiStack {
     return svcCloned
   }
 
-  convertServiceToDb(svcRaw, teamId, dns): void {
+  convertServiceToDb(svcRaw, teamId, dns: Dns): void {
     // Create service
     const svc = omit(svcRaw, 'ksvc', 'isPublic', 'hasCert', 'domain', 'paths', 'forwardPath')
     svc.teamId = teamId

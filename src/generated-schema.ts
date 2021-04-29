@@ -4,10 +4,6 @@
  */
 
 export interface paths {
-  "/clusters": {
-    /** Get available clusters */
-    get: operations["getClusters"];
-  };
   "/secrets": {
     /** Get all secrets */
     get: operations["getAllSecrets"];
@@ -124,66 +120,24 @@ export interface paths {
 
 export interface components {
   schemas: {
-    Cloud: {
-      /** A cluster name */
-      name?: string;
-      clusters?: {
-        /** A cluster name */
-        name?: string;
-        /** A cloud provider name */
-        cloud?: string;
-        /** A default cluster DNS zone */
-        domain?: string;
-        /** A list of DNS zones that are available to the cluster */
-        dnsZones?: string[];
-        /** A flag that indicates capability for deploying serverless services by using Knative */
-        hasKnative?: boolean;
-        /** A version of kubernetes that is installed on the cluster */
-        k8sVersion?: string;
-        /** A version of kubernetes that is installed on the cluster */
-        otomiVersion?: string;
-        /** A physical location of the cluster */
-        region?: string;
-      }[];
-      /** A fqdn for the cloud */
-      domain?: string;
-    };
     Cluster: {
-      /** A cluster name */
-      name?: string;
-      /** A cloud provider name */
-      cloud?: string;
-      /** A default cluster DNS zone */
-      domain?: string;
-      /** A list of DNS zones that are available to the cluster */
-      dnsZones?: string[];
-      /** A flag that indicates capability for deploying serverless services by using Knative */
-      hasKnative?: boolean;
-      /** A version of kubernetes that is installed on the cluster */
-      k8sVersion?: string;
-      /** A version of kubernetes that is installed on the cluster */
-      otomiVersion?: string;
-      /** A physical location of the cluster */
-      region?: string;
+      /** Only used for API/UI to show in app. */
+      apiName?: string;
+      /** Used by kubectl for local deployment to target cluster. */
+      apiServer: string;
+      /** A Kubernetes API public IP address (onprem only). */
+      entrypoint?: string;
+      /** The cluster k8s version. Otomi supports 2 minor versions backwards compatibility from the suggested default. */
+      k8sVersion: "1.17" | "1.18" | "1.19";
+      name: string;
+      /** Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version. */
+      otomiVersion: string;
+      provider: "aws" | "azure" | "google" | "oneprem";
+      /** Dependent on provider. */
+      region: string;
+      /** AWS only. If provided will override autodiscovery from metadata. */
+      vpcID?: string;
     };
-    Clusters: {
-      /** A cluster name */
-      name?: string;
-      /** A cloud provider name */
-      cloud?: string;
-      /** A default cluster DNS zone */
-      domain?: string;
-      /** A list of DNS zones that are available to the cluster */
-      dnsZones?: string[];
-      /** A flag that indicates capability for deploying serverless services by using Knative */
-      hasKnative?: boolean;
-      /** A version of kubernetes that is installed on the cluster */
-      k8sVersion?: string;
-      /** A version of kubernetes that is installed on the cluster */
-      otomiVersion?: string;
-      /** A physical location of the cluster */
-      region?: string;
-    }[];
     Deployment: {
       id?: number;
       /** Deployment status */
@@ -559,6 +513,44 @@ export interface components {
         /** A Google Cloud project ID for accessing DNS zone. */
         projectId: string;
       };
+      dns?: (
+        | {
+            aws: {
+              region: string;
+            };
+          }
+        | {
+            azure: {
+              /** Azure Cloud to use */
+              cloud?: string;
+              /** Azure resource group to use */
+              resourceGroup: string;
+              hostedZoneName?: string;
+              /** Azure tenant ID to use (will default to global value) */
+              tenantId: string;
+              /** Azure subscription ID to use (will default to global value) */
+              subscriptionId: string;
+              /** Azure Application Client ID to use */
+              aadClientId: string;
+              /** Azure Application Client Secret to use */
+              aadClientSecret: string;
+              /** If you use Azure MSI, this should be set to true */
+              useManagedIdentityExtension?: boolean;
+            };
+          }
+        | {
+            google: {
+              /** A service account key for managing a DNS zone. */
+              serviceAccountKey: string;
+              project: string;
+            };
+          }
+      ) & {
+        /** Extra dns zones that the cluster can administer (see dns). Team services can use this to publish their URLs on. */
+        dnsZones?: string[];
+        /** A fqdn for the cluster */
+        domain: string;
+      };
       home?: {
         drone?: "slack" | "msteams";
         email?: {
@@ -757,34 +749,6 @@ export interface components {
 }
 
 export interface operations {
-  /** Get available clusters */
-  getClusters: {
-    responses: {
-      /** Successfully obtained cluster collection */
-      200: {
-        content: {
-          "application/json": {
-            /** A cluster name */
-            name?: string;
-            /** A cloud provider name */
-            cloud?: string;
-            /** A default cluster DNS zone */
-            domain?: string;
-            /** A list of DNS zones that are available to the cluster */
-            dnsZones?: string[];
-            /** A flag that indicates capability for deploying serverless services by using Knative */
-            hasKnative?: boolean;
-            /** A version of kubernetes that is installed on the cluster */
-            k8sVersion?: string;
-            /** A version of kubernetes that is installed on the cluster */
-            otomiVersion?: string;
-            /** A physical location of the cluster */
-            region?: string;
-          }[];
-        };
-      };
-    };
-  };
   /** Get all secrets */
   getAllSecrets: {
     responses: {
@@ -2571,6 +2535,44 @@ export interface operations {
               /** A Google Cloud project ID for accessing DNS zone. */
               projectId: string;
             };
+            dns?: (
+              | {
+                  aws: {
+                    region: string;
+                  };
+                }
+              | {
+                  azure: {
+                    /** Azure Cloud to use */
+                    cloud?: string;
+                    /** Azure resource group to use */
+                    resourceGroup: string;
+                    hostedZoneName?: string;
+                    /** Azure tenant ID to use (will default to global value) */
+                    tenantId: string;
+                    /** Azure subscription ID to use (will default to global value) */
+                    subscriptionId: string;
+                    /** Azure Application Client ID to use */
+                    aadClientId: string;
+                    /** Azure Application Client Secret to use */
+                    aadClientSecret: string;
+                    /** If you use Azure MSI, this should be set to true */
+                    useManagedIdentityExtension?: boolean;
+                  };
+                }
+              | {
+                  google: {
+                    /** A service account key for managing a DNS zone. */
+                    serviceAccountKey: string;
+                    project: string;
+                  };
+                }
+            ) & {
+              /** Extra dns zones that the cluster can administer (see dns). Team services can use this to publish their URLs on. */
+              dnsZones?: string[];
+              /** A fqdn for the cluster */
+              domain: string;
+            };
             home?: {
               drone?: "slack" | "msteams";
               email?: {
@@ -2804,6 +2806,44 @@ export interface operations {
             kmsAccount?: string;
             /** A Google Cloud project ID for accessing DNS zone. */
             projectId: string;
+          };
+          dns?: (
+            | {
+                aws: {
+                  region: string;
+                };
+              }
+            | {
+                azure: {
+                  /** Azure Cloud to use */
+                  cloud?: string;
+                  /** Azure resource group to use */
+                  resourceGroup: string;
+                  hostedZoneName?: string;
+                  /** Azure tenant ID to use (will default to global value) */
+                  tenantId: string;
+                  /** Azure subscription ID to use (will default to global value) */
+                  subscriptionId: string;
+                  /** Azure Application Client ID to use */
+                  aadClientId: string;
+                  /** Azure Application Client Secret to use */
+                  aadClientSecret: string;
+                  /** If you use Azure MSI, this should be set to true */
+                  useManagedIdentityExtension?: boolean;
+                };
+              }
+            | {
+                google: {
+                  /** A service account key for managing a DNS zone. */
+                  serviceAccountKey: string;
+                  project: string;
+                };
+              }
+          ) & {
+            /** Extra dns zones that the cluster can administer (see dns). Team services can use this to publish their URLs on. */
+            dnsZones?: string[];
+            /** A fqdn for the cluster */
+            domain: string;
           };
           home?: {
             drone?: "slack" | "msteams";

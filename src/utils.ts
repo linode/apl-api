@@ -1,6 +1,6 @@
 import cleanDeep, { CleanOptions } from 'clean-deep'
 import cloneDeep from 'lodash/cloneDeep'
-import { Cluster } from './otomi-models'
+import { Dns } from './otomi-models'
 
 interface ResourceBase {
   name: string
@@ -12,12 +12,6 @@ export function arrayToObject(array: [], keyName: string, keyValue: string): obj
     const cloneItem = cloneDeep(item)
     obj[cloneItem[keyName]] = cloneItem[keyValue]
   })
-  // const obj = array.reduce((accumulator, currentValue: ResourceBase) => {
-  //   const cloneItem = cloneDeep(currentValue)
-  //   obj[cloneItem[keyField]] = cloneItem[keyValue]
-  //   delete cloneItem.name
-  //   return obj
-  // }, {})
   return obj
 }
 
@@ -63,21 +57,17 @@ interface PublicUrl {
   domain: string
 }
 
-export function getPublicUrl(
-  serviceDomain?: string,
-  serviceName?: string,
-  teamId?: string,
-  cluster?: Cluster,
-): PublicUrl {
+export function getPublicUrl(serviceDomain?: string, serviceName?: string, teamId?: string, dns?: Dns): PublicUrl {
   if (!serviceDomain) {
     // Fallback mechanism for exposed service that does not have its public url specified in values
     return {
-      subdomain: `${serviceName}.team-${teamId}.${cluster!.name}`,
-      domain: cluster?.dnsZones?.length ? cluster.dnsZones[0] : '',
+      subdomain: `${serviceName}.team-${teamId}`,
+      domain: dns?.domain || '',
     }
   }
 
-  const dnsZones = [...(cluster!.dnsZones || [])]
+  const dnsZones = [...(dns!.dnsZones || [])]
+  dnsZones.push(dns?.domain || '')
   // Sort by length descending
   dnsZones.sort((a, b) => b.length - a.length)
   for (let i = 0; i < dnsZones.length; i += 1) {
