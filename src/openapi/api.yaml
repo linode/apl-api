@@ -57,7 +57,9 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Clusters'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cluster'
 
   /secrets:
     get:
@@ -473,9 +475,6 @@ components:
     Cluster:
       $ref: 'cluster.yaml#/Cluster'
 
-    Clusters:
-      $ref: 'clusters.yaml#/Clusters'
-
     Deployment:
       $ref: 'deployment.yaml#/Deployment'
 
@@ -508,9 +507,6 @@ components:
 
     Team:
       $ref: 'team.yaml#/Team'
-
-    Teams:
-      $ref: 'teams.yaml#/Teams'
 
     User:
       $ref: 'user.yaml#/User'
