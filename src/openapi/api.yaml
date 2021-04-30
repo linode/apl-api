@@ -50,7 +50,7 @@ paths:
     get:
       operationId: getClusters
       description: Get available clusters
-      x-aclSchema: Clusters
+      x-aclSchema: Cluster
       responses:
         '200':
           description: Successfully obtained cluster collection
@@ -65,7 +65,7 @@ paths:
     get:
       operationId: getAllSecrets
       description: Get all secrets
-      x-aclSchema: Secrets
+      x-aclSchema: Secret
       responses:
         '200':
           description: Successfully obtained all secrets
@@ -82,7 +82,7 @@ paths:
     get:
       operationId: getAllServices
       description: Get services from a given team
-      x-aclSchema: Services
+      x-aclSchema: Service
       responses:
         '200':
           description: Successfully obtained all services
@@ -99,7 +99,7 @@ paths:
     get:
       operationId: getTeams
       description: Get teams collection
-      x-aclSchema: Teams
+      x-aclSchema: Team
       responses:
         '200':
           description: Successfully obtained teams collection
@@ -178,7 +178,7 @@ paths:
     get:
       operationId: getTeamServices
       description: Get services from a given team
-      x-aclSchema: Services
+      x-aclSchema: Service
       responses:
         '200':
           description: Successfully obtained services
@@ -261,7 +261,7 @@ paths:
     get:
       operationId: getSecrets
       description: Get secrets from a given team
-      x-aclSchema: Secrets
+      x-aclSchema: Secret
       responses:
         '200':
           description: Successfully obtained secrets

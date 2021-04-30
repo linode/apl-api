@@ -19,5 +19,6 @@
   },
   "prettier.disableLanguages": ["javascript", "typescript"],
   "prettier.enable": true,
-  "tslint.enable": false
+  "tslint.enable": false,
+  "cSpell.diagnosticLevel": "Hint"
 }
