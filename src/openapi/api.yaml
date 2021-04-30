@@ -89,7 +89,9 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Services'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
         '400':
           <<: *BadRequest
 
@@ -183,7 +185,9 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Services'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
         '400':
           <<: *BadRequest
 
@@ -496,9 +500,6 @@ components:
 
     Service:
       $ref: 'service.yaml#/Service'
-
-    Services:
-      $ref: 'services.yaml#/Services'
 
     Session:
       $ref: 'session.yaml#/Session'
