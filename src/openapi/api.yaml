@@ -72,7 +72,9 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Secrets'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Secret'
         '400':
           <<: *BadRequest
 
@@ -262,7 +264,9 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Secrets'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Secret'
         '400':
           description: Bad Request
           content:
@@ -489,9 +493,6 @@ components:
 
     Secret:
       $ref: 'secret.yaml#/Secret'
-
-    Secrets:
-      $ref: 'secrets.yaml#/Secrets'
 
     Service:
       $ref: 'service.yaml#/Service'
