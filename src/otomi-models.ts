@@ -15,6 +15,7 @@ export type User = components['schemas']['User']
 export interface OpenApiRequest extends Request {
   operationDoc: {
     responses: { '200'?: { content: { 'application/json': { schema: { $ref: string } } } } }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     security: any[]
   }
   apiDoc: OpenAPIDoc
