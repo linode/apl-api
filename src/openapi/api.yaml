@@ -100,7 +100,9 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Teams'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Team'
     post:
       operationId: createTeam
       description: Create a team
