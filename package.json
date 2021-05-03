@@ -9,6 +9,7 @@
     }
   },
   "dependencies": {
+    "@apidevtools/json-schema-ref-parser": "^9.0.7",
     "@casl/ability": "^5.2.2",
     "@kubernetes/client-node": "^0.14.1",
     "ajv": "^8.0.5",
@@ -39,7 +40,6 @@
   },
   "description": "The brain of the Otomi Container Platform. Handling console input and talking to core, it knows what to do.",
   "devDependencies": {
-    "@apidevtools/json-schema-ref-parser": "^9.0.7",
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
     "@hkdobrev/run-if-changed": "^0.3.1",
@@ -132,7 +132,7 @@
     "src/openapi/*": "npm run build:models"
   },
   "scripts": {
-    "build": "tsc && copyup --error ./src/openapi/*.yaml ./dist/src",
+    "build": "tsc && copyup --error src/openapi/*.yaml dist/src && copyup src/*.json dist/src",
     "build:models": "npm run build:spec && openapi-typescript src/generated-schema.json -o src/generated-schema.ts",
     "build:spec": "ts-node-dev src/build-spec.ts",
     "build:client": "npm run build:spec && rm -rf vendors/client/otomi-api >/dev/null && bin/generate-client.sh",
