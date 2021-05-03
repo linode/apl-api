@@ -154,7 +154,7 @@ export default class OtomiStack {
     return this.db.getCollection('services', ids) as Array<Service>
   }
 
-  getCluster() {
+  getCluster(): Cluster {
     return this.db.getCollection('cluster')[0]
   }
 
@@ -261,7 +261,7 @@ export default class OtomiStack {
     return config
   }
 
-  createSecret(teamId, data) {
+  createSecret(teamId, data): Secret {
     return this.db.createItem('secrets', { ...data, teamId }, { teamId, name: data.name })
   }
 
@@ -374,7 +374,7 @@ export default class OtomiStack {
     this.db.setDirtyActive()
   }
 
-  loadCluster() {
+  loadCluster(): void {
     const data: any = this.repo.readFile('./env/cluster.yaml')
     const { cluster } = data
     this.db.populateItem('cluster', cluster, undefined, cluster.id)
@@ -409,6 +409,7 @@ export default class OtomiStack {
       './env/settings.yaml',
       `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
     ) as Settings
+    // eslint-disable-next-line chai-friendly/no-unused-expressions
     data.dns?.dnsZones?.push(data.dns.domain)
     this.db.db.set('settings', data).write()
   }
@@ -443,12 +444,12 @@ export default class OtomiStack {
     })
   }
 
-  loadTeamServices(teamId: string) {
+  loadTeamServices(teamId: string): void {
     const filePath = `./env/teams/services.${teamId}.yaml`
     try {
       const data = this.repo.readFile(filePath)
       const services = get(data, `teamConfig.teams.${teamId}.services`, [])
-      const dns = this.getSettings().dns
+      const { dns } = this.getSettings()
       services.forEach((svc) => {
         this.convertServiceToDb(svc, teamId, dns)
       })
@@ -485,7 +486,7 @@ export default class OtomiStack {
       // TODO: fix this ugly team.id || ''
       this.saveTeamServices(team.id || '')
       this.saveTeamSecrets(team.id || '')
-      /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["password"] }] */
+      // eslint-disable-next-line no-param-reassign
       if (!team.password) team.password = generatePassword(16, false)
       teamValues[team.id || ''] = omit(team, 'name')
 
@@ -500,7 +501,7 @@ export default class OtomiStack {
     this.saveConfig(filePath, secretFilePath, values, secretPaths)
   }
 
-  saveTeamSecrets(teamId: string) {
+  saveTeamSecrets(teamId: string): void {
     let secrets = this.db.getCollection('secrets', { teamId })
     secrets = secrets.map((item) => omit(item, ['teamId']))
     const data = {}
@@ -520,36 +521,6 @@ export default class OtomiStack {
     set(data, `teamConfig.teams.${teamId}.services`, values)
     const filePath = `./env/teams/services.${teamId}.yaml`
     this.repo.writeFile(filePath, data)
-  }
-
-  convertDbServiceToValues(svc: any): void {
-    const serviceType = svc.ksvc.serviceType
-    console.info(`Saving service: serviceId: ${svc.serviceId} serviceType: ${serviceType}`)
-    const svcCloned = omit(svc, ['teamId', 'ksvc', 'ingress', 'internal', 'path'])
-    const ksvc = cloneDeep(svc.ksvc)
-    if (serviceType === 'ksvc') {
-      svcCloned.ksvc = ksvc
-      delete svcCloned.ksvc.serviceType
-      const annotations = get(svc.ksvc, 'annotations', [])
-      svcCloned.ksvc.annotations = arrayToObject(annotations, 'name', 'value')
-    } else if (serviceType === 'ksvcPredeployed') {
-      svcCloned.ksvc = { predeployed: true }
-    } else if (serviceType !== 'svcPredeployed') {
-      console.warn(`Saving service failure: Not supported service type: ${serviceType}`)
-    }
-    if (svc.ingress && !isEmpty(svc.ingress)) {
-      if (svc.ingress.useDefaultSubdomain) svcCloned.ownHost = true
-      else svcCloned.domain = `${svc.ingress.subdomain}.${svc.ingress.domain}`
-
-      if (!svc.ingress.hasSingleSignOn) svcCloned.isPublic = true
-
-      if (svc.ingress.hasCert) svcCloned.hasCert = true
-      if (svc.ingress.certArn) svcCloned.certArn = svc.ingress.certArn
-      if (svc.ingress.path) svcCloned.paths = [svc.ingress.path]
-      if (svc.ingress.forwardPath) svcCloned.forwardPath = true
-    } else svcCloned.internal = true
-    delete svcCloned.enabled
-    return svcCloned
   }
 
   convertServiceToDb(svcRaw, teamId, dns: Dns): void {
