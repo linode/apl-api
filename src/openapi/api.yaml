@@ -46,18 +46,35 @@ x-get-responses: &DefaultGetResponses
 
 # -------------------------------------------- Paths
 paths:
+  /clusters:
+    get:
+      operationId: getClusters
+      description: Get available clusters
+      x-aclSchema: Cluster
+      responses:
+        '200':
+          description: Successfully obtained cluster collection
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cluster'
+
   /secrets:
     get:
       operationId: getAllSecrets
       description: Get all secrets
-      x-aclSchema: Secrets
+      x-aclSchema: Secret
       responses:
         '200':
           description: Successfully obtained all secrets
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Secrets'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Secret'
         '400':
           <<: *BadRequest
 
@@ -65,14 +82,16 @@ paths:
     get:
       operationId: getAllServices
       description: Get services from a given team
-      x-aclSchema: Services
+      x-aclSchema: Service
       responses:
         '200':
           description: Successfully obtained all services
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Services'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
         '400':
           <<: *BadRequest
 
@@ -80,14 +99,16 @@ paths:
     get:
       operationId: getTeams
       description: Get teams collection
-      x-aclSchema: Teams
+      x-aclSchema: Team
       responses:
         '200':
           description: Successfully obtained teams collection
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Teams'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Team'
     post:
       operationId: createTeam
       description: Create a team
@@ -157,14 +178,16 @@ paths:
     get:
       operationId: getTeamServices
       description: Get services from a given team
-      x-aclSchema: Services
+      x-aclSchema: Service
       responses:
         '200':
           description: Successfully obtained services
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Services'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
         '400':
           <<: *BadRequest
 
@@ -238,14 +261,16 @@ paths:
     get:
       operationId: getSecrets
       description: Get secrets from a given team
-      x-aclSchema: Secrets
+      x-aclSchema: Secret
       responses:
         '200':
           description: Successfully obtained secrets
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Secrets'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Secret'
         '400':
           description: Bad Request
           content:
@@ -470,14 +495,8 @@ components:
     Secret:
       $ref: 'secret.yaml#/Secret'
 
-    Secrets:
-      $ref: 'secrets.yaml#/Secrets'
-
     Service:
       $ref: 'service.yaml#/Service'
-
-    Services:
-      $ref: 'services.yaml#/Services'
 
     Session:
       $ref: 'session.yaml#/Session'
@@ -487,9 +506,6 @@ components:
 
     Team:
       $ref: 'team.yaml#/Team'
-
-    Teams:
-      $ref: 'teams.yaml#/Teams'
 
     User:
       $ref: 'user.yaml#/User'

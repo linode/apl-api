@@ -4,6 +4,10 @@
  */
 
 export interface paths {
+  "/clusters": {
+    /** Get available clusters */
+    get: operations["getClusters"];
+  };
   "/secrets": {
     /** Get all secrets */
     get: operations["getAllSecrets"];
@@ -179,29 +183,6 @@ export interface components {
       /** A secret name */
       name: string;
     };
-    Secrets: ((
-      | {
-          type: "generic";
-          entries: string[];
-        }
-      | {
-          type: "docker-registry";
-          dockerconfig?: ".dockerconfig.json";
-        }
-      | {
-          type: "tls";
-          /** A Vault property name that contains PEM public key certificate */
-          crt: string;
-          /** A Vault property name that contains PEM private key certificate */
-          key: string;
-          /** A Vault property name that contains CA certificate content */
-          ca?: string;
-        }
-    ) & {
-      id?: string;
-      /** A secret name */
-      name: string;
-    })[];
     Service: {
       id?: string;
       /** A service name */
@@ -286,92 +267,25 @@ export interface components {
           };
       teamId: string;
     };
-    Services: {
-      id?: string;
-      /** A service name */
-      name: string;
-      /** A service port */
-      port?: number;
-      ksvc?:
-        | ({
-            serviceType?: "ksvc";
-            /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
-            scaleToZero?: boolean;
-            image?: {
-              /** A container image repository. */
-              repository: string;
-              tag: string;
-            } | null;
-            secrets?: {
-              name: string;
-              entries?: string[];
-            }[];
-            env?:
-              | {
-                  name: { [key: string]: any } | null;
-                  value: string;
-                }[]
-              | null;
-            resources?: {
-              requests?: {
-                /** The guaranteed amount of CPU */
-                cpu: string;
-                /** The guaranteed amount of RAM */
-                memory: string;
-              };
-              limits?: {
-                /** The maximum amount of CPU */
-                cpu: string;
-                /** The maximum amount of RAM */
-                memory: string;
-              };
-            } | null;
-            /** A set of annotations. */
-            annotations?: { [key: string]: any };
-            /** Deploys new images based on a tagging strategy */
-            autoCD?:
-              | ({ [key: string]: any } | null)
-              | ({
-                  tagMatcher?: "semver";
-                  /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
-                  semver: string;
-                } | null)
-              | {
-                  tagMatcher?: "glob";
-                  /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
-                  glob: string;
-                };
-          } | null)
-        | {
-            serviceType: "ksvcPredeployed";
-          }
-        | {
-            serviceType: "svcPredeployed";
-          };
-      ingress?:
-        | ({ [key: string]: any } | null)
-        | {
-            /** Use the team domain so that the URL reveals the owner. */
-            useDefaultSubdomain?: boolean;
-            /** A host that is used to set DNS 'A' records */
-            subdomain: string | null;
-            /** A managed DNS zone */
-            domain: string;
-            /** The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.) */
-            path?: string;
-            /** Forward the URL path into the service (don't rewrite to /) */
-            forwardPath?: boolean;
-            hasSingleSignOn?: boolean;
-            /** If true a certificate should exist already */
-            hasCert?: boolean;
-            certArn?: string;
-            certSelect?: boolean;
-            certName?: string;
-          };
-      teamId: string;
-    }[];
     Session: {
-      cluster?: string[];
+      cluster?: {
+        /** Only used for API/UI to show in app. */
+        apiName?: string;
+        /** Used by kubectl for local deployment to target cluster. */
+        apiServer: string;
+        /** A Kubernetes API public IP address (onprem only). */
+        entrypoint?: string;
+        /** The cluster k8s version. Otomi supports 2 minor versions backwards compatibility from the suggested default. */
+        k8sVersion: "1.17" | "1.18" | "1.19";
+        name: string;
+        /** Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version. */
+        otomiVersion: string;
+        provider: "aws" | "azure" | "google" | "oneprem";
+        /** Dependent on provider. */
+        region: string;
+        /** AWS only. If provided will override autodiscovery from metadata. */
+        vpcID?: string;
+      };
       dns?: { [key: string]: any };
       core?: { [key: string]: any };
       isDirty?: boolean;
@@ -693,40 +607,6 @@ export interface components {
         };
       };
     };
-    Teams: {
-      /** A lowercase name that starts with a letter and may contain dashes. */
-      id?: string;
-      /** A team name */
-      name: string;
-      oidc?: {
-        /** An OIDC group name/id granting access to this team */
-        groupMapping?: string;
-      };
-      password: string;
-      alerts?: {
-        receivers?: ("slack" | "msteams" | "email")[];
-        slack?: {
-          /** Slack web hook. If none is given the global one is used. */
-          url?: string;
-          /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
-          channel?: string;
-          /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
-          channelCrit?: string;
-        };
-        msteams?: {
-          /** The low prio web hook */
-          lowPrio?: string;
-          /** The high prio web hook */
-          highPrio?: string;
-        };
-        email?: {
-          /** One or more email addresses (comma separated) for non-critical events. */
-          nonCritical?: string;
-          /** Email addresses (comma separated) for critical events. */
-          critical?: string;
-        };
-      };
-    }[];
     User: {
       /** A user name */
       name: string;
@@ -750,6 +630,34 @@ export interface components {
 }
 
 export interface operations {
+  /** Get available clusters */
+  getClusters: {
+    responses: {
+      /** Successfully obtained cluster collection */
+      200: {
+        content: {
+          "application/json": {
+            /** Only used for API/UI to show in app. */
+            apiName?: string;
+            /** Used by kubectl for local deployment to target cluster. */
+            apiServer: string;
+            /** A Kubernetes API public IP address (onprem only). */
+            entrypoint?: string;
+            /** The cluster k8s version. Otomi supports 2 minor versions backwards compatibility from the suggested default. */
+            k8sVersion: "1.17" | "1.18" | "1.19";
+            name: string;
+            /** Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version. */
+            otomiVersion: string;
+            provider: "aws" | "azure" | "google" | "oneprem";
+            /** Dependent on provider. */
+            region: string;
+            /** AWS only. If provided will override autodiscovery from metadata. */
+            vpcID?: string;
+          }[];
+        };
+      };
+    };
+  };
   /** Get all secrets */
   getAllSecrets: {
     responses: {
@@ -2369,7 +2277,24 @@ export interface operations {
       200: {
         content: {
           "application/json": {
-            cluster?: string[];
+            cluster?: {
+              /** Only used for API/UI to show in app. */
+              apiName?: string;
+              /** Used by kubectl for local deployment to target cluster. */
+              apiServer: string;
+              /** A Kubernetes API public IP address (onprem only). */
+              entrypoint?: string;
+              /** The cluster k8s version. Otomi supports 2 minor versions backwards compatibility from the suggested default. */
+              k8sVersion: "1.17" | "1.18" | "1.19";
+              name: string;
+              /** Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version. */
+              otomiVersion: string;
+              provider: "aws" | "azure" | "google" | "oneprem";
+              /** Dependent on provider. */
+              region: string;
+              /** AWS only. If provided will override autodiscovery from metadata. */
+              vpcID?: string;
+            };
             dns?: { [key: string]: any };
             core?: { [key: string]: any };
             isDirty?: boolean;

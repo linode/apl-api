@@ -132,7 +132,7 @@
     "src/openapi/*": "npm run build:models"
   },
   "scripts": {
-    "build": "tsc && copyup --error src/openapi/*.yaml dist/src && copyup src/*.json dist/src",
+    "build": "tsc && copyup --error src/openapi/*.yaml src/*.json dist/src",
     "build:models": "npm run build:spec && openapi-typescript src/generated-schema.json -o src/generated-schema.ts",
     "build:spec": "ts-node-dev src/build-spec.ts",
     "build:client": "npm run build:spec && rm -rf vendors/client/otomi-api >/dev/null && bin/generate-client.sh",
@@ -149,7 +149,7 @@
     "release": "standard-version",
     "release:npm": "bin/release-client.sh",
     "start": "node dist/src/app.js",
-    "test": "TS_NODE_TRANSPILE_ONLY=true NODE_ENV=test mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit",
+    "test": "npm run build:models && TS_NODE_TRANSPILE_ONLY=true NODE_ENV=test mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit",
     "types": "tsc --noEmit",
     "watch:openapi": "watch 'npm run build:models' ./src/openapi",
     "watch:ts": "tsc -w --noEmit"

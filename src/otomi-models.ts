@@ -6,18 +6,16 @@ export type Deployment = components['schemas']['Deployment']
 export type Dns = components['schemas']['Settings']['dns']
 export type Kubecfg = components['schemas']['Kubecfg']
 export type Secret = components['schemas']['Secret'] & { teamId?: string }
-export type Secrets = components['schemas']['Secrets']
 export type Service = components['schemas']['Service']
-export type Services = components['schemas']['Services']
 export type Session = components['schemas']['Session']
 export type Settings = components['schemas']['Settings']
 export type Team = components['schemas']['Team']
-export type Teams = components['schemas']['Teams']
 export type User = components['schemas']['User']
 
 export interface OpenApiRequest extends Request {
   operationDoc: {
     responses: { '200'?: { content: { 'application/json': { schema: { $ref: string } } } } }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     security: any[]
   }
   apiDoc: OpenAPIDoc
