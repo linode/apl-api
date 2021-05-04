@@ -1,9 +1,0 @@
-Teams:
-  items:
-    $ref: team.yaml#/Team
-  type: array
-  x-acl:
-    admin:
-      - read-any
-    team:
-      - read-any
