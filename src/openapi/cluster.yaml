@@ -37,3 +37,4 @@ Cluster:
     - otomiVersion
     - provider
     - region
+  type: object

@@ -371,7 +371,8 @@ export interface components {
       teamId: string;
     }[];
     Session: {
-      clusters?: string[];
+      cluster?: string[];
+      dns?: { [key: string]: any };
       core?: { [key: string]: any };
       isDirty?: boolean;
       namespaces?: string[];
@@ -2368,7 +2369,8 @@ export interface operations {
       200: {
         content: {
           "application/json": {
-            clusters?: string[];
+            cluster?: string[];
+            dns?: { [key: string]: any };
             core?: { [key: string]: any };
             isDirty?: boolean;
             namespaces?: string[];

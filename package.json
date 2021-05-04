@@ -151,7 +151,7 @@
     "start": "node dist/src/app.js",
     "test": "TS_NODE_TRANSPILE_ONLY=true NODE_ENV=test mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit",
     "types": "tsc --noEmit",
-    "watch:openapi": "watch 'npm run models' ./src/openapi",
+    "watch:openapi": "watch 'npm run build:models' ./src/openapi",
     "watch:ts": "tsc -w --noEmit"
   },
   "standard-version": {
