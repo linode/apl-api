@@ -59,11 +59,21 @@ Run test by name (regex) in watch mode
 npm test -- -g repo --watch
 ```
 
-# Overview
+### 1.6 Linking client to be used by console
 
-## 1. Api
+In order to work with the dev version of the generated client:
 
-### 1.1 Specification
+```bash
+npm run build:client
+cd vendors/client/otomi-api/axios/
+npm link
+```
+
+And the go to the otomi-console folder and link with `npm link @redkubes/otomi-api-client-axios`
+
+## 2. Api design
+
+### 2.1 Specification
 
 The API is defined in [src/openapi/api.yaml](src/openapi/api.yaml) file in OpenApi v3 format.
 
@@ -111,7 +121,7 @@ From above:
 
 - the GET /clusters request handler authenticate it by using security schema defined under global `security` property.
 
-### 1.3 Authorization
+### 2.3 Authorization
 
 An authorization is defined in `src/api.yaml` file as an extension to OpenApiV3 spec.
 
@@ -143,7 +153,7 @@ From above:
 
 The authorization is only applied if authentication is enabled, so required header are available.
 
-#### 1.3.1 Resource Based Access Control (RBAC)
+#### 2.3.1 Resource Based Access Control (RBAC)
 
 The RBAC is used to define allowed CRUD operations on resource level. It also guards resource ownership by comparing
 `teamId` from HTTP request parameter against content of `Auth-Group` HTTP header.
@@ -171,7 +181,7 @@ From above:
 - use `-any` if a given role grands permission to perform operations regardless resource ownership
 - the `-any` is supported only for RBAC permissions
 
-#### 1.3.2 Attribute Based Access Control (ABAC)
+#### 2.3.2 Attribute Based Access Control (ABAC)
 
 The ABAC permissions are used to limit RBAC permissions (never the other way round)
 
@@ -215,7 +225,7 @@ A user with team role can:
 - perform all CRUD operations only withing its own team (RBAC)
 - all attributes can be edited except ingress that isn be only read (ABAC)
 
-#### 1.3.3 Limitations
+#### 2.3.3 Limitations
 
 - nested ABAC is NOT supported E.g.:
 
@@ -247,7 +257,7 @@ A user with team role can:
         $ref: '#/components/schemas/Service'     # even if the components/schemas/Service defines ABAC it will NOT be applied
 ```
 
-## 2. View openapi spec
+## 2. Viewing/consuming openapi spec
 
 In order to inspect the api file it is recommended to either:
 
