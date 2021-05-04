@@ -15,7 +15,7 @@
     "strict": false,
     "target": "esnext"
   },
-  "exclude": ["node_modules", "dist", "src/generated-schema.ts"],
+  "exclude": ["node_modules", "dist"],
   "include": ["./src/**/*.ts"],
   "parserOptions": {
     "ecmaVersion": 2018,
