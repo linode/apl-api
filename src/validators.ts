@@ -12,6 +12,7 @@ export const GIT_LOCAL_PATH = str({ desc: 'The local file path to the repo', def
 export const GIT_PASSWORD = str({ desc: 'The git password' })
 export const GIT_REPO_URL = str({ desc: 'The git repo url', default: 'github.com/redkubes/otomi-values-demo.git' })
 export const GIT_USER = str({ desc: 'The git username' })
+export const NO_AUTHZ = bool({ desc: 'Whether to disable authorization in the middleware', default: false })
 export const OIDC_ENDPOINT = str()
 export const REGION = str({ desc: 'The cloud region' })
 export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '127.0.0.1' })

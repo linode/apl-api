@@ -4,6 +4,11 @@ import jwtDecode from 'jwt-decode'
 import { AlreadyExists, GitError, NotAuthorized, NotExistError, PublicUrlExists } from './error'
 import { OpenApiRequest, JWT, OpenApiRequestExt, User } from './otomi-models'
 import Authz from './authz'
+import { cleanEnv, NO_AUTHZ } from './validators'
+
+const env = cleanEnv({
+  NO_AUTHZ,
+})
 
 const HttpMethodMapping = {
   DELETE: 'delete',
@@ -12,8 +17,6 @@ const HttpMethodMapping = {
   POST: 'create',
   PUT: 'update',
 }
-
-const noAuthz = !!process.env.NO_AUTHZ
 
 // Note: 4 arguments (no more, no less) must be defined in your errorMiddleware function. Otherwise the function will be silently ignored.
 // eslint-disable-next-line no-unused-vars
@@ -39,7 +42,7 @@ export function getUser(user: JWT): User {
   const sessionUser: User = { ...user, teams: [], roles: [], isAdmin: false }
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
-  if (noAuthz) {
+  if (env.NO_AUTHZ) {
     sessionUser.isAdmin = true
   } else {
     user.groups.forEach((group) => {
@@ -76,7 +79,7 @@ export function getCrudOperation(req: OpenApiRequest): string {
 }
 
 export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz): boolean {
-  if (noAuthz) return true
+  if (env.NO_AUTHZ) return true
   const {
     params: { teamId },
   } = req
