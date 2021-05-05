@@ -11,7 +11,7 @@ export class OtomiError extends CustomError {
 }
 export class NotExistError extends OtomiError {
   public constructor(err?: string) {
-    super('Does not exist', err)
+    super('Not Found', err)
     this.code = 404
   }
 }
