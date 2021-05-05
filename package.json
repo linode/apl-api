@@ -138,7 +138,7 @@
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
     "dev:watch": "run-p dev watch:openapi watch:ts",
-    "dev": "ts-node-dev --watch 'src/openapi.yaml' --inspect=4321 --respawn --transpile-only src/app.ts",
+    "dev": "ts-node-dev --watch 'src/openapi/*.yaml' --inspect=4321 --respawn --transpile-only src/app.ts",
     "dev:docker": "npm install && npm run dev",
     "husky:lint-staged": "lint-staged",
     "husky:pre-commit": "run-p lint husky:lint-staged build:models",

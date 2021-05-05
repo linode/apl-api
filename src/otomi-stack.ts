@@ -177,7 +177,7 @@ export default class OtomiStack {
       this.deleteService(id)
       // eslint-disable-next-line no-param-reassign
       delete data.id
-      return this.createService(data.teamId, data)
+      return this.createService(data.teamId!, data)
     }
     return this.db.updateItem('services', data, { id }) as Service
   }
@@ -199,7 +199,7 @@ export default class OtomiStack {
       return existingUrl === url && svc.id !== data.id
     })
 
-    if (servicesFiltered.length !== 0) throw new PublicUrlExists('Public URL is already used')
+    if (servicesFiltered.length !== 0) throw new PublicUrlExists()
   }
 
   async triggerDeployment(email: string): Promise<void> {
