@@ -171,14 +171,9 @@ droneGit:
 email:
   pattern: ^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$
   type: string
-env:
-  additionalProperties: false
-  nullable: true
-  x-patternProperties:
-    '[a-zA-Z_]{1,}[a-zA-Z0-9_]*':
-      maxLength: 131072
-      type: string
-  title: Environment variables
+envName:
+  type: string
+  pattern: '[a-zA-Z_]{1,}[a-zA-Z0-9_]*'
 externalSecret:
   oneOf:
     - properties:
@@ -363,11 +358,15 @@ labels:
   description: A set of labels.
 labelsAnnotations:
   additionalProperties: false
-  x-patternProperties:
-    ? ^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]){1,253}\/)?([a-z0-9A-Z]+[a-z0-9A-Z-_.]+[a-z0-9A-Z]){1,63}$
-    : pattern: ^((.){1,253}\/)?(.){1,63}$
-      type: string
-  type: object
+  items:
+    properties:
+      name:
+        type: string
+        pattern: ^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]){1,253}\/)?([a-z0-9A-Z]+[a-z0-9A-Z-_.]+[a-z0-9A-Z]){1,63}$
+      values:
+        type: string
+        pattern: ^((.){1,253}\/)?(.){1,63}$
+  type: array
 logLevel:
   default: info
   enum:
@@ -598,7 +597,7 @@ team:
                 description: If true istio will forward the bearer token instead of removing it from the headers.
                 type: boolean
               workload:
-                $ref: '#/labelsAnnotations'
+                $ref: '#/labels'
             type: object
           domain:
             description: A custom service domain name.

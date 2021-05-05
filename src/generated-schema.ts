@@ -205,7 +205,7 @@ export interface components {
             }[];
             env?:
               | {
-                  name: { [key: string]: any } | null;
+                  name: string;
                   value: string;
                 }[]
               | null;
@@ -224,7 +224,10 @@ export interface components {
               };
             } | null;
             /** A set of annotations. */
-            annotations?: { [key: string]: any };
+            annotations?: {
+              name?: string;
+              values?: string;
+            }[];
             /** Deploys new images based on a tagging strategy */
             autoCD?:
               | ({ [key: string]: any } | null)
@@ -733,7 +736,7 @@ export interface operations {
                   }[];
                   env?:
                     | {
-                        name: { [key: string]: any } | null;
+                        name: string;
                         value: string;
                       }[]
                     | null;
@@ -752,7 +755,10 @@ export interface operations {
                     };
                   } | null;
                   /** A set of annotations. */
-                  annotations?: { [key: string]: any };
+                  annotations?: {
+                    name?: string;
+                    values?: string;
+                  }[];
                   /** Deploys new images based on a tagging strategy */
                   autoCD?:
                     | ({ [key: string]: any } | null)
@@ -1214,7 +1220,7 @@ export interface operations {
                   }[];
                   env?:
                     | {
-                        name: { [key: string]: any } | null;
+                        name: string;
                         value: string;
                       }[]
                     | null;
@@ -1233,7 +1239,10 @@ export interface operations {
                     };
                   } | null;
                   /** A set of annotations. */
-                  annotations?: { [key: string]: any };
+                  annotations?: {
+                    name?: string;
+                    values?: string;
+                  }[];
                   /** Deploys new images based on a tagging strategy */
                   autoCD?:
                     | ({ [key: string]: any } | null)
@@ -1328,7 +1337,7 @@ export interface operations {
                   }[];
                   env?:
                     | {
-                        name: { [key: string]: any } | null;
+                        name: string;
                         value: string;
                       }[]
                     | null;
@@ -1347,7 +1356,10 @@ export interface operations {
                     };
                   } | null;
                   /** A set of annotations. */
-                  annotations?: { [key: string]: any };
+                  annotations?: {
+                    name?: string;
+                    values?: string;
+                  }[];
                   /** Deploys new images based on a tagging strategy */
                   autoCD?:
                     | ({ [key: string]: any } | null)
@@ -1440,7 +1452,7 @@ export interface operations {
                 }[];
                 env?:
                   | {
-                      name: { [key: string]: any } | null;
+                      name: string;
                       value: string;
                     }[]
                   | null;
@@ -1459,7 +1471,10 @@ export interface operations {
                   };
                 } | null;
                 /** A set of annotations. */
-                annotations?: { [key: string]: any };
+                annotations?: {
+                  name?: string;
+                  values?: string;
+                }[];
                 /** Deploys new images based on a tagging strategy */
                 autoCD?:
                   | ({ [key: string]: any } | null)
@@ -1541,7 +1556,7 @@ export interface operations {
                   }[];
                   env?:
                     | {
-                        name: { [key: string]: any } | null;
+                        name: string;
                         value: string;
                       }[]
                     | null;
@@ -1560,7 +1575,10 @@ export interface operations {
                     };
                   } | null;
                   /** A set of annotations. */
-                  annotations?: { [key: string]: any };
+                  annotations?: {
+                    name?: string;
+                    values?: string;
+                  }[];
                   /** Deploys new images based on a tagging strategy */
                   autoCD?:
                     | ({ [key: string]: any } | null)
@@ -1665,7 +1683,7 @@ export interface operations {
                   }[];
                   env?:
                     | {
-                        name: { [key: string]: any } | null;
+                        name: string;
                         value: string;
                       }[]
                     | null;
@@ -1684,7 +1702,10 @@ export interface operations {
                     };
                   } | null;
                   /** A set of annotations. */
-                  annotations?: { [key: string]: any };
+                  annotations?: {
+                    name?: string;
+                    values?: string;
+                  }[];
                   /** Deploys new images based on a tagging strategy */
                   autoCD?:
                     | ({ [key: string]: any } | null)
@@ -1777,7 +1798,7 @@ export interface operations {
                 }[];
                 env?:
                   | {
-                      name: { [key: string]: any } | null;
+                      name: string;
                       value: string;
                     }[]
                   | null;
@@ -1796,7 +1817,10 @@ export interface operations {
                   };
                 } | null;
                 /** A set of annotations. */
-                annotations?: { [key: string]: any };
+                annotations?: {
+                  name?: string;
+                  values?: string;
+                }[];
                 /** Deploys new images based on a tagging strategy */
                 autoCD?:
                   | ({ [key: string]: any } | null)

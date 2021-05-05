@@ -69,7 +69,7 @@ Service:
               items:
                 properties:
                   name:
-                    $ref: definitions.yaml#/env
+                    $ref: definitions.yaml#/envName
                   value:
                     type: string
                     maxLength: 131072
@@ -121,6 +121,7 @@ Service:
                 - title: 'Off'
                   nullable: true
                   additionalProperties: false
+                  type: object
                 - title: Semver versioning
                   nullable: true
                   properties:
@@ -232,7 +233,6 @@ Service:
           type: object
     teamId:
       type: string
-      readOnly: true
   required:
     - name
     - teamId
