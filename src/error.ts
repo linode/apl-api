@@ -17,7 +17,7 @@ export class NotExistError extends OtomiError {
 }
 export class AlreadyExists extends OtomiError {
   public constructor(err?: string) {
-    super('Already exists', err)
+    super('Conflict', err)
     this.code = 409
   }
 }
