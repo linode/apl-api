@@ -16,6 +16,7 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
         clusters: otomi.getClusters(),
         cluster: otomi.getCluster(),
         core: otomi.getCore(),
+        dns: otomi.getSettings().dns,
         user: req.user,
         teams: otomi.getTeams(),
         isDirty: otomi.db.isDirty(),
