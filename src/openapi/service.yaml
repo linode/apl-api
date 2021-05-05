@@ -52,7 +52,7 @@ Service:
                   $ref: definitions.yaml#/repository
                 tag:
                   type: string
-                  pattern: ^(([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])\\.)*([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])(:[0-9]+\\/)?(?:[0-9a-z-]+[/@])(?:([0-9a-z-]+))[/@]?(?:([0-9a-z-]+))?(?::[a-z0-9\\.-]+)?$
+                  pattern: '[\w][\w.-]{0,127}'
               type: object
               required:
                 - repository
@@ -249,5 +249,4 @@ Service:
   required:
     - name
     - clusterId
-    - teamId
   type: object

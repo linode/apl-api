@@ -20,21 +20,21 @@ const HttpMethodMapping = {
 
 // Note: 4 arguments (no more, no less) must be defined in your errorMiddleware function. Otherwise the function will be silently ignored.
 // eslint-disable-next-line no-unused-vars
-export function errorMiddleware(err, req: OpenApiRequest, res, next): void {
-  console.error('errorMiddleware handler')
+export function errorMiddleware(e, req: OpenApiRequest, res, next): void {
+  console.error('errorMiddleware error', e)
 
-  if (err instanceof AlreadyExists) return res.status(409).json({ error: err.message })
-  if (err instanceof NotExistError) return res.status(404).json({ error: err.message })
-  if (err instanceof PublicUrlExists) return res.status(400).json({ error: err.message })
-  if (err instanceof GitError) return res.status(409).json({ error: err.message })
-  if (err instanceof NotAuthorized || err.name === 'UnauthorizedError')
-    return res.status(401).json({ error: err.message })
+  const msg = e.message ?? e.errors
+  const err = { error: msg }
+  if (e instanceof AlreadyExists || e instanceof PublicUrlExists || e instanceof GitError)
+    return res.status(409).json(err)
+  if (e instanceof NotExistError) return res.status(404).json(err)
+  if (e instanceof NotAuthorized || e?.name === 'UnauthorizedError') return res.status(401).json(err)
 
-  if (typeof err.status !== 'undefined') {
-    return res.status(err.status).json(err)
+  if (typeof e.status !== 'undefined') {
+    return res.status(e.status).json(err)
   }
 
-  console.error(err)
+  console.error(msg)
   return res.status(500).json({ error: 'Unexpected error' })
 }
 
