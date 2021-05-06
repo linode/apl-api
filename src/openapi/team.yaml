@@ -91,7 +91,6 @@ Team:
               title: Channel for criticals
               type: string
               format: email
-              description: One or more email addresses (comma separated) for non-critical events.
             critical:
               title: Criticals
               type: string
