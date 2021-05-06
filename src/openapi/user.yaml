@@ -9,7 +9,8 @@ User:
       description: A user name
       readOnly: true
     email:
-      $ref: definitions.yaml#/email
+      type: string
+      format: email
     isAdmin:
       type: boolean
       default: false

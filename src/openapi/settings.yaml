@@ -15,10 +15,12 @@ alerts: &alerts
       additionalProperties: false
       properties:
         critical:
-          $ref: 'definitions.yaml#/email'
+          type: string
+          format: email
           description: One or more email addresses (comma separated) for critical events.
         nonCritical:
-          $ref: 'definitions.yaml#/email'
+          type: string
+          format: email
           description: One or more email addresses (comma separated) for non-critical events.
       type: object
     groupInterval:
@@ -310,7 +312,8 @@ Settings:
         auth_username:
           type: string
         from:
-          $ref: definitions.yaml#/email
+          type: string
+          format: email
           description: The "from" address. Defaults to alerts@$clusterDomain.
         hello:
           type: string

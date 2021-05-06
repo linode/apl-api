@@ -11,10 +11,12 @@ alerts:
       additionalProperties: false
       properties:
         critical:
-          $ref: '#/email'
+          type: string
+          format: email
           description: One or more email addresses (comma separated) for critical events.
         nonCritical:
-          $ref: '#/email'
+          type: string
+          format: email
           description: One or more email addresses (comma separated) for non-critical events.
       type: object
     groupInterval:
@@ -168,9 +170,6 @@ droneGit:
       type: string
     clientSecretValue:
       type: string
-email:
-  pattern: ^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$
-  type: string
 env:
   items:
     properties:

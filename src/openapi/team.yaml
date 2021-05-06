@@ -90,11 +90,13 @@ Team:
               description: Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'.
               title: Channel for criticals
               type: string
-            url:
-              description: Slack web hook. If none is given the global one is used.
-              title: Web hook
+              format: email
+              description: One or more email addresses (comma separated) for non-critical events.
+            critical:
+              title: Criticals
               type: string
-          title: Slack
+              format: email
+              description: Email addresses (comma separated) for critical events.
           type: object
       title: Alerting endpoints
       type: object
