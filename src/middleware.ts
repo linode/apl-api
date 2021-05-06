@@ -1,7 +1,7 @@
 import get from 'lodash/get'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
-import { AlreadyExists, GitError, NotAuthorized, NotExistError, PublicUrlExists } from './error'
+import { HttpError, OtomiError } from './error'
 import { OpenApiRequest, JWT, OpenApiRequestExt, User } from './otomi-models'
 import Authz from './authz'
 import { cleanEnv, NO_AUTHZ } from './validators'
@@ -20,22 +20,14 @@ const HttpMethodMapping = {
 
 // Note: 4 arguments (no more, no less) must be defined in your errorMiddleware function. Otherwise the function will be silently ignored.
 // eslint-disable-next-line no-unused-vars
-export function errorMiddleware(err, req: OpenApiRequest, res, next): void {
-  console.error('errorMiddleware handler')
-
-  if (err instanceof AlreadyExists) return res.status(409).json({ error: err.message })
-  if (err instanceof NotExistError) return res.status(404).json({ error: err.message })
-  if (err instanceof PublicUrlExists) return res.status(400).json({ error: err.message })
-  if (err instanceof GitError) return res.status(409).json({ error: err.message })
-  if (err instanceof NotAuthorized || err.name === 'UnauthorizedError')
-    return res.status(401).json({ error: err.message })
-
-  if (typeof err.status !== 'undefined') {
-    return res.status(err.status).json(err)
+export function errorMiddleware(e, req: OpenApiRequest, res, next): void {
+  console.error('errorMiddleware error', JSON.stringify(e))
+  let err = e
+  if (!(e instanceof OtomiError)) {
+    const code = e.code ?? e.statusCode ?? e.status ?? 500
+    err = HttpError.fromCode(code)
   }
-
-  console.error(err)
-  return res.status(500).json({ error: 'Unexpected error' })
+  return res.status(err.code).json({ error: err.message })
 }
 
 export function getUser(user: JWT): User {

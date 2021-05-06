@@ -59,11 +59,13 @@ export default class Db {
     const coll = this.db.get(type)
     // @ts-ignore
     const data = coll.find(selector).value()
-    if (data.length) {
-      throw new NotExistError(`More than one item found for '${type}' with selector: ${JSON.stringify(selector)}`)
-    }
     if (data === undefined) {
-      throw new NotExistError(`Selector props do not exist in '${type}': ${JSON.stringify(selector)}`)
+      console.error(`Selector props do not exist in '${type}': ${JSON.stringify(selector)}`)
+      throw new NotExistError()
+    }
+    if (data.length) {
+      console.error(`More than one item found for '${type}' with selector: ${JSON.stringify(selector)}`)
+      throw new NotExistError()
     }
     return data
   }
