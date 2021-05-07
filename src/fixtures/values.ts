@@ -282,14 +282,6 @@ export default {
         clientId: 'somesecretvalue',
       },
     },
-    charts: {
-      hello: {
-        enabled: true,
-      },
-      httpbin: {
-        enabled: true,
-      },
-    },
     customer: {
       name: 'demo',
     },
