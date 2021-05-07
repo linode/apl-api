@@ -1,0 +1,76 @@
+idName: &idNameField
+  type: string
+  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+
+Job:
+  additionalProperties: false
+  properties:
+    enabled:
+      default: true
+      type: boolean
+    env:
+      $ref: 'definitions.yaml#/env'
+    files:
+      description: May mount files directly into the container. The mount path is /, so a user can specify anything that comes after it. E.g. foo/bar.log -> /foo/bar.log foo.log -> /foo.log
+      items:
+        properties:
+          name:
+            type: string
+            pattern: ^(.*/)|[a-z-]+([^/]*)$
+          value:
+            type: string
+      type: array
+    image:
+      $ref: 'definitions.yaml#/image'
+    init:
+      properties:
+        env:
+          $ref: 'definitions.yaml#/env'
+        image:
+          $ref: 'definitions.yaml#/image'
+        script:
+          $ref: 'definitions.yaml#/script'
+        secrets:
+          $ref: 'definitions.yaml#/secrets'
+      type: object
+    name:
+      <<: *idNameField
+      title: Name
+      description: A job name
+      example: some-job
+    podSecurityContext:
+      $ref: 'definitions.yaml#/podSecurityContext'
+    resources:
+      $ref: 'definitions.yaml#/resources'
+    runPolicy:
+      default: OnSpecChange
+      description: |
+        If runPolicy is set to 'Always', the job controller will always be re-deployed after a successful deployment with Helm.
+        If runPolicy is set to 'OnSpecChange', the job controller will only be re-deployed if one changes this specification.
+      enum:
+        - Always
+        - OnSpecChange
+      type: string
+    schedule:
+      default: 0 1 * * *
+      description: Must give a cron-type expression if the job-type is 'cronjob' (job.type).
+      type: string
+    script:
+      $ref: 'definitions.yaml#/script'
+    secrets:
+      $ref: 'definitions.yaml#/secrets'
+    ttlSecondsAfterFinished:
+      default: 86400
+      type: number
+    type:
+      # default: Job
+      enum:
+        - Job
+        - CronJob
+      type: string
+  required:
+    - image
+    - name
+    - script
+    - type
+  type: object

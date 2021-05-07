@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/ban-ts-ignore */
-import express, { Express } from 'express'
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+import express from 'express'
 import { SecurityHandlers } from 'openapi-security-handler'
 import { initialize } from 'express-openapi'
 import { json } from 'body-parser'

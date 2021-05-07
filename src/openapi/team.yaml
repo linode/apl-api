@@ -1,107 +1,115 @@
-idName: &idName
-  description: A lowercase name that starts with a letter and may contain dashes.
-  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+idName: &idNameField
   type: string
+  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 
 Team:
-  x-externalDocsPath: docs/configuring-teams
-  x-acl:
-    admin: [delete-any, read-any, create-any, update-any]
-    team: [read-any, update]
   properties:
     id:
-      <<: *idName
+      <<: *idNameField
       title: ID
       x-acl:
-        admin: [read]
-        team: [read]
+        admin:
+          - read
+        team:
+          - read
     name:
-      <<: *idName
+      <<: *idNameField
       title: Name
-      example: 'otomi'
-      x-acl:
-        admin: [create, read]
-        team: [read]
       description: A team name
+      example: some-team
+      x-acl:
+        admin:
+          - create
+          - read
+        team:
+          - read
     clusters:
-      title: Clusters
-      type: array
       items:
         type: string
-      uniqueItems: true
       minItems: 1
+      title: Clusters
+      type: array
+      uniqueItems: true
       x-acl:
-        team: [read]
+        team:
+          - read
     oidc:
-      title: OIDC
       properties:
         groupMapping:
+          description: An OIDC group name/id granting access to this team
           title: Group mapping
           type: string
-          description: 'An OIDC group name/id granting access to this team'
+      title: OIDC
       type: object
     password:
       type: string
-      # description: "A secret that is used access multi-tenant log aggregation system (Loki)"
       writeOnly: true
     alerts:
-      title: Alerting endpoints
       properties:
+        email:
+          properties:
+            critical:
+              description: Email addresses (comma separated) for critical events.
+              title: Criticals
+              type: string
+            nonCritical:
+              description: One or more email addresses (comma separated) for non-critical events.
+              title: Non criticals
+              type: string
+          title: Email
+          type: object
+        msteams:
+          properties:
+            highPrio:
+              description: The high prio web hook
+              title: High prio webhook
+              type: string
+            lowPrio:
+              description: The low prio web hook
+              title: Low prio webhook
+              type: string
+          title: Microsoft Teams
+          type: object
         receivers:
-          title: Receivers
-          type: array
           items:
-            type: string
             enum:
               - slack
               - msteams
               - email
+            type: string
+          title: Receivers
+          type: array
           uniqueItems: true
         slack:
-          title: Slack
           properties:
-            url:
-              title: Web hook
-              type: string
-              description: Slack web hook. If none is given the global one is used.
             channel:
+              description: Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'.
               title: Channel for non-criticals
               type: string
-              description: Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'.
             channelCrit:
+              description: Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'.
               title: Channel for criticals
               type: string
-              description: Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'.
+            url:
+              description: Slack web hook. If none is given the global one is used.
+              title: Web hook
+              type: string
+          title: Slack
           type: object
-        msteams:
-          title: Microsoft Teams
-          properties:
-            lowPrio:
-              title: Low prio webhook
-              type: string
-              description: The low prio web hook
-            highPrio:
-              title: High prio webhook
-              type: string
-              description: The high prio web hook
-          type: object
-        email:
-          title: Email
-          properties:
-            nonCritical:
-              title: Non criticals
-              type: string
-              description: One or more email addresses (comma separated) for non-critical events.
-            critical:
-              title: Criticals
-              type: string
-              description: Email addresses (comma separated) for critical events.
-          type: object
+      title: Alerting endpoints
       type: object
-    # azureMonitor:
-    #   $ref: definitions.yaml#/azureMonitor
   required:
     - name
     - clusters
     - password
   type: object
+  x-acl:
+    admin:
+      - delete-any
+      - read-any
+      - create-any
+      - update-any
+    team:
+      - read-any
+      - update
+  x-externalDocsPath: docs/configuring-teams

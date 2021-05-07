@@ -1,7 +1,6 @@
 import { Request } from 'express'
 import { components } from './generated-schema'
 
-export type Cloud = components['schemas']['Cloud']
 export type Cluster = components['schemas']['Cluster']
 export type Deployment = components['schemas']['Deployment']
 export type Kubecfg = components['schemas']['Kubecfg']
@@ -53,7 +52,7 @@ export interface Schema {
   properties?: {
     [propertyName: string]: Property
   }
-  items?: object
+  items?: any
   required?: string[]
 }
 
@@ -71,8 +70,10 @@ export type AclAction =
   | 'update'
   | 'update-any'
 
+// eslint-disable-next-line no-shadow
 export enum SessionRole {
   Admin = 'admin',
+  // eslint-disable-next-line no-shadow
   User = 'team',
 }
 
@@ -89,7 +90,7 @@ export interface OpenApiRequestExt extends OpenApiRequest, Session {
 
 export interface Core {
   teamConfig: {
-    services: object[]
+    services: any[]
     teams: Team[]
   }
 }

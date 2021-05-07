@@ -1,12 +1,7 @@
-import cleanDeep, { CleanOptions } from 'clean-deep'
 import cloneDeep from 'lodash/cloneDeep'
 import { Cluster } from './otomi-models'
 
-interface ResourceBase {
-  name: string
-}
-
-export function arrayToObject(array: [], keyName: string, keyValue: string): object {
+export function arrayToObject(array: [], keyName: string, keyValue: string): any {
   const obj = {}
   array.forEach((item) => {
     const cloneItem = cloneDeep(item)
@@ -21,7 +16,7 @@ export function arrayToObject(array: [], keyName: string, keyValue: string): obj
   return obj
 }
 
-export function objectToArray(obj: object, keyName: string, keyValue: string): Array<object> {
+export function objectToArray(obj: any, keyName: string, keyValue: string): Array<any> {
   const arr = Object.keys(obj).map((key) => {
     const tmp = {}
     tmp[keyName] = key
@@ -31,7 +26,7 @@ export function objectToArray(obj: object, keyName: string, keyValue: string): A
   return arr
 }
 
-export function getObjectPaths(tree: object): Array<string> {
+export function getObjectPaths(tree: any): Array<string> {
   const leaves: string[] = []
   function walk(obj, path = ''): void {
     Object.keys(obj).forEach((n) => {
@@ -89,16 +84,6 @@ export function getPublicUrl(
 
   // Custom domain that is not visible in clusters.yaml values
   return { subdomain: '', domain: serviceDomain }
-}
-
-export function removeBlankAttributes(obj: object): object {
-  const options: CleanOptions = {
-    emptyArrays: true,
-    emptyObjects: true,
-    nullValues: true,
-    undefinedValues: true,
-  }
-  return cleanDeep(obj, options)
 }
 
 export function getTeamSecretsFilePath(teamId: string, clusterId: string): string {

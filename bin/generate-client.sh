@@ -16,7 +16,7 @@ target_npm_name="@$org/$vendor-client-$type"
 validate() {
 
     if [ -z "$vendor" ]; then
-        echo "No vendor argument supplied.\nUsage:\n\tbin/generate-client.sh <vendor-name>"
+        printf "No vendor argument supplied.\nUsage:\n\tbin/generate-client.sh <vendor-name>\n"
         exit 1
     fi
 

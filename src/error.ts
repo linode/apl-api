@@ -4,9 +4,12 @@ import { CustomError } from 'ts-custom-error'
 export class OtomiError extends CustomError {
   public code
 
+  public publicMessage
+
   public constructor(msg, err?) {
     if (err) console.error(err)
-    super(msg)
+    super(err)
+    this.publicMessage = msg
   }
 }
 export class NotExistError extends OtomiError {

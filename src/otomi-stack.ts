@@ -1,13 +1,12 @@
-/* eslint-disable @typescript-eslint/ban-ts-ignore */
 import * as k8s from '@kubernetes/client-node'
 import fs from 'fs'
 import yaml from 'js-yaml'
-import { cloneDeep, findIndex, merge, filter, forIn, get, isEmpty, omit, set, unset } from 'lodash'
+import { cloneDeep, merge, filter, forIn, get, isEmpty, omit, set, unset, isEqual } from 'lodash'
 import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Db, { Schema } from './db'
-import { Cloud, Cluster, Core, Secret, Service, Settings, Team } from './otomi-models'
-import { AlreadyExists, NotExistError, PublicUrlExists } from './error'
+import { Cluster, Core, Secret, Service, Settings, Team } from './otomi-models'
+import { PublicUrlExists } from './error'
 import {
   arrayToObject,
   getObjectPaths,
@@ -46,14 +45,14 @@ const env = cleanEnv({
   USE_SOPS,
 })
 
-function convertDbServiceToValues(svc): object {
+function convertDbServiceToValues(svc: any): any {
   const { serviceType } = svc.ksvc
   console.info(`Saving service: id: ${svc.id} serviceType: ${serviceType}`)
   const svcCloned = omit(svc, ['teamId', 'clusterId', 'ksvc', 'ingress', 'internal', 'path'])
   const ksvc = cloneDeep(svc.ksvc)
   if (serviceType === 'ksvc') {
     svcCloned.ksvc = ksvc
-    delete svcCloned.ksvc.serviceType
+    delete svcCloned?.ksvc?.serviceType
     const annotations = get(svc.ksvc, 'annotations', [])
     svcCloned.ksvc.annotations = arrayToObject(annotations, 'name', 'value')
   } else if (serviceType === 'ksvcPredeployed') {
@@ -79,7 +78,7 @@ function convertDbServiceToValues(svc): object {
 export default class OtomiStack {
   clustersPath: string
 
-  private coreValues: object
+  private coreValues: any
 
   db: Db
 
@@ -93,7 +92,7 @@ export default class OtomiStack {
     this.db = new Db(env.DB_PATH)
     this.clustersPath = './env/clusters.yaml'
     const corePath = env.isProd ? '/etc/otomi/core.yaml' : './test/core.yaml'
-    this.coreValues = yaml.safeLoad(fs.readFileSync(corePath, 'utf8')) as object
+    this.coreValues = yaml.safeLoad(fs.readFileSync(corePath, 'utf8')) as any
     this.decryptedFilePostfix = env.USE_SOPS ? '.dec' : ''
   }
 
@@ -110,12 +109,12 @@ export default class OtomiStack {
   }
 
   getSettings(): Settings {
-    return this.db.db.get('settings').value()
+    return this.db.db.get('settings').value() as Settings
   }
 
   editSettings(data: Settings): Settings {
     this.db.db.set('settings', data).write()
-    return this.db.db.get('settings').value()
+    return this.db.db.get('settings').value() as Settings
   }
 
   getTeams(): Array<Team> {
@@ -126,7 +125,7 @@ export default class OtomiStack {
     return this.db.getCollection('clusters')
   }
 
-  getCore(): object {
+  getCore(): any {
     return this.coreValues
   }
 
@@ -170,14 +169,17 @@ export default class OtomiStack {
     return this.db.getItem('services', { id }) as Service
   }
 
-  editService(id: string, data: Service): Service {
-    this.checkPublicUrlInUse(data)
-    const oldData = this.getService(id)
+  editService(id: string, data: any): Service {
+    const oldData = this.getService(id) as any
+    const { domain, subdomain, path } = data.ingress
+    const oldi = oldData.ingress
+    if (!isEqual({ domain, subdomain, path }, { domain: oldi.domain, subdomain: oldi.subdomain, path: oldi.path }))
+      this.checkPublicUrlInUse(data)
     if (data.name !== oldData.name) {
       this.deleteService(id)
       // eslint-disable-next-line no-param-reassign
       delete data.id
-      return this.createService(data.teamId!, data)
+      return this.createService(oldData.teamId!, data)
     }
     return this.db.updateItem('services', data, { id }) as Service
   }
@@ -195,7 +197,7 @@ export default class OtomiStack {
       if (!svc.ingress) return false
       const { domain, subdomain, path } = svc.ingress
       const existingUrl = `${subdomain}.${domain}${path || ''}`
-      const url = `${data?.ingress?.subdomain}.${data?.ingress?.domain}${data?.ingress?.path || ''}`
+      const url = `${data.ingress!.subdomain}.${data.ingress!.domain}${data.ingress!.path || ''}`
       return existingUrl === url && svc.id !== data.id
     })
 
@@ -261,12 +263,16 @@ export default class OtomiStack {
     return config
   }
 
-  createSecret(teamId, data) {
-    return this.db.createItem('secrets', { ...data, teamId }, { teamId, name: data.name, clusterId: data.clusterId })
+  createSecret(teamId, data): Secret {
+    return this.db.createItem(
+      'secrets',
+      { ...data, teamId },
+      { teamId, name: data.name, clusterId: data.clusterId },
+    ) as Secret
   }
 
   editSecret(id: string, data: Secret): Secret {
-    return this.db.updateItem('secrets', data, { id })
+    return this.db.updateItem('secrets', data, { id }) as Secret
   }
 
   deleteSecret(id: string): void {
@@ -274,97 +280,15 @@ export default class OtomiStack {
   }
 
   getSecret(id: string): Secret {
-    return this.db.getItem('secrets', { id })
+    return this.db.getItem('secrets', { id }) as Secret
   }
 
   getAllSecrets(): Array<Secret> {
-    return this.db.getCollection('secrets', {})
+    return this.db.getCollection('secrets', {}) as Array<Secret>
   }
 
   getSecrets(teamId: string): Array<Secret> {
-    return this.db.getCollection('secrets', { teamId })
-  }
-
-  async createPullSecret({
-    teamId,
-    name,
-    server,
-    password,
-    username = '_json_key',
-  }: {
-    teamId: string
-    name: string
-    server: string
-    password: string
-    username?: string
-  }): Promise<void> {
-    const client = this.getApiClient()
-    const namespace = `team-${teamId}`
-    // create data structure for secret
-    const data = {
-      auths: {
-        [server]: {
-          username,
-          password,
-          email: 'not@val.id',
-          auth: username + Buffer.from(password).toString('base64'),
-        },
-      },
-    }
-    // create the secret
-    const secret = {
-      ...new k8s.V1Secret(),
-      metadata: { ...new k8s.V1ObjectMeta(), name },
-      type: 'docker-registry',
-      data: {
-        '.dockerconfigjson': Buffer.from(JSON.stringify(data)).toString('base64'),
-      },
-    }
-    // eslint-disable-next-line no-useless-catch
-    try {
-      await client.createNamespacedSecret(namespace, secret)
-    } catch (e) {
-      throw new AlreadyExists(`Secret '${name}' already exists in namespace '${namespace}'`)
-    }
-    // get service account we want to add the secret to as pull secret
-    const saRes = await client.readNamespacedServiceAccount('default', namespace)
-    const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
-    // add to service account if needed
-    if (!sa.imagePullSecrets) sa.imagePullSecrets = []
-    const idx = findIndex(sa.imagePullSecrets, { name })
-    if (idx === -1) {
-      sa.imagePullSecrets.push({ name })
-      await client.patchNamespacedServiceAccount('default', namespace, sa, undefined, undefined, undefined, undefined, {
-        headers: { 'content-type': 'application/strategic-merge-patch+json' },
-      })
-    }
-  }
-
-  async getPullSecrets(teamId: string): Promise<Array<Secret>> {
-    const client = this.getApiClient()
-    const namespace = `team-${teamId}`
-    const saRes = await client.readNamespacedServiceAccount('default', namespace)
-    const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
-    return (sa.imagePullSecrets || []) as Array<Secret>
-  }
-
-  async deletePullSecret(teamId: string, name: string): Promise<void> {
-    const client = this.getApiClient()
-    const namespace = `team-${teamId}`
-    const saRes = await client.readNamespacedServiceAccount('default', namespace)
-    const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
-    const idx = findIndex(sa.imagePullSecrets, { name })
-    if (idx > -1) {
-      sa.imagePullSecrets!.splice(idx, 1)
-      await client.patchNamespacedServiceAccount('default', namespace, sa, undefined, undefined, undefined, undefined, {
-        headers: { 'content-type': 'application/strategic-merge-patch+json' },
-      })
-    }
-    try {
-      await client.deleteNamespacedSecret(name, namespace)
-    } catch (e) {
-      throw new NotExistError(`Secret '${name}' does not exist in namespace '${namespace}'`)
-    }
+    return this.db.getCollection('secrets', { teamId }) as Array<Secret>
   }
 
   loadValues(): void {
@@ -382,7 +306,7 @@ export default class OtomiStack {
     return merge(data, secretData) as Core
   }
 
-  saveConfig(dataPath: string, secretDataPath: string, config: object, objectPathsForSecrets: string[]): void {
+  saveConfig(dataPath: string, secretDataPath: string, config: any, objectPathsForSecrets: string[]): void {
     const secretData = {}
     const plainData = cloneDeep(config)
 
@@ -510,7 +434,7 @@ export default class OtomiStack {
   saveTeamServices(teamId: string, clusterId: string): void {
     const services = this.db.getCollection('services', { teamId, clusterId })
     const data = {}
-    const values: object[] = []
+    const values: any[] = []
     services.forEach((service) => {
       const value = convertDbServiceToValues(service)
       values.push(value)
@@ -523,12 +447,12 @@ export default class OtomiStack {
 
   convertClusterValuesToDb(values: Schema): void {
     const cs = values.clouds
-    forIn(cs, (cloudObj: Cloud, cloud: string) => {
+    forIn(cs, (cloudObj: any, cloud: string) => {
       forIn(cloudObj.clusters, (clusterObject: Cluster, cluster) => {
         const domain = `${cluster}.${cloudObj.domain}`
-        const dnsZones = [cloudObj.domain].concat(get(cloudObj, 'dnsZones', []))
+        const dnsZones = [cloudObj.domain].concat(get(cloudObj, 'dnsZones', [])) as string[]
 
-        const clusterObj = {
+        const clusterObj: Cluster = {
           enabled: clusterObject.enabled === undefined ? true : clusterObject.enabled,
           cloud,
           name: cluster,
