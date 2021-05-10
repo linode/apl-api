@@ -375,9 +375,8 @@ Settings:
     otomiInstanceUrls:
       description: Use this property to indicate other otomi instances and easily navigate between them from otomi-console
       type: array
-      properties:
-        items:
-          type: string
+      items:
+        type: string
       default: []
     smtp:
       additionalProperties: false
