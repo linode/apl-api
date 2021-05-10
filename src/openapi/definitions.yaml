@@ -179,7 +179,8 @@ env:
   items:
     properties:
       name:
-        $ref: definitions.yaml#/envName
+        type: string
+        pattern: ^[a-zA-Z0-9_]*$
       value:
         type: string
         maxLength: 131072
@@ -187,9 +188,6 @@ env:
       - name
       - value
     type: object
-envName:
-  type: string
-  pattern: '[a-zA-Z_]{1,}[a-zA-Z0-9_]*'
 externalSecret:
   oneOf:
     - properties:

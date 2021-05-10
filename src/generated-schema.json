@@ -538,7 +538,7 @@
                                   "properties": {
                                     "name": {
                                       "type": "string",
-                                      "pattern": "[a-zA-Z_]{1,}[a-zA-Z0-9_]*"
+                                      "pattern": "^[a-zA-Z0-9_]*$"
                                     },
                                     "value": {
                                       "type": "string",
@@ -570,6 +570,28 @@
                                 "additionalProperties": false,
                                 "description": "Compute resources for containers.",
                                 "properties": {
+                                  "limits": {
+                                    "description": "Requested resources (best effort).",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "cpu": {
+                                        "description": "Amount of cores, or slice of cpu in millis.",
+                                        "default": "50m",
+                                        "example": ["1", "200m"],
+                                        "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
+                                        "type": "string"
+                                      },
+                                      "memory": {
+                                        "description": "Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki.",
+                                        "default": "64Mi",
+                                        "example": ["1Mi", "0.5M"],
+                                        "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["cpu", "memory"],
+                                    "type": "object"
+                                  },
                                   "requests": {
                                     "description": "Requested resources (guaranteed).",
                                     "additionalProperties": false,
@@ -1890,7 +1912,7 @@
                                   "properties": {
                                     "name": {
                                       "type": "string",
-                                      "pattern": "[a-zA-Z_]{1,}[a-zA-Z0-9_]*"
+                                      "pattern": "^[a-zA-Z0-9_]*$"
                                     },
                                     "value": {
                                       "type": "string",
@@ -1922,6 +1944,28 @@
                                 "additionalProperties": false,
                                 "description": "Compute resources for containers.",
                                 "properties": {
+                                  "limits": {
+                                    "description": "Requested resources (best effort).",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "cpu": {
+                                        "description": "Amount of cores, or slice of cpu in millis.",
+                                        "default": "50m",
+                                        "example": ["1", "200m"],
+                                        "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
+                                        "type": "string"
+                                      },
+                                      "memory": {
+                                        "description": "Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki.",
+                                        "default": "64Mi",
+                                        "example": ["1Mi", "0.5M"],
+                                        "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["cpu", "memory"],
+                                    "type": "object"
+                                  },
                                   "requests": {
                                     "description": "Requested resources (guaranteed).",
                                     "additionalProperties": false,
@@ -2255,7 +2299,7 @@
                               "properties": {
                                 "name": {
                                   "type": "string",
-                                  "pattern": "[a-zA-Z_]{1,}[a-zA-Z0-9_]*"
+                                  "pattern": "^[a-zA-Z0-9_]*$"
                                 },
                                 "value": {
                                   "type": "string",
@@ -2287,6 +2331,28 @@
                             "additionalProperties": false,
                             "description": "Compute resources for containers.",
                             "properties": {
+                              "limits": {
+                                "description": "Requested resources (best effort).",
+                                "additionalProperties": false,
+                                "properties": {
+                                  "cpu": {
+                                    "description": "Amount of cores, or slice of cpu in millis.",
+                                    "default": "50m",
+                                    "example": ["1", "200m"],
+                                    "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
+                                    "type": "string"
+                                  },
+                                  "memory": {
+                                    "description": "Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki.",
+                                    "default": "64Mi",
+                                    "example": ["1Mi", "0.5M"],
+                                    "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["cpu", "memory"],
+                                "type": "object"
+                              },
                               "requests": {
                                 "description": "Requested resources (guaranteed).",
                                 "additionalProperties": false,
@@ -2579,7 +2645,7 @@
                                 "properties": {
                                   "name": {
                                     "type": "string",
-                                    "pattern": "[a-zA-Z_]{1,}[a-zA-Z0-9_]*"
+                                    "pattern": "^[a-zA-Z0-9_]*$"
                                   },
                                   "value": {
                                     "type": "string",
@@ -2611,6 +2677,28 @@
                               "additionalProperties": false,
                               "description": "Compute resources for containers.",
                               "properties": {
+                                "limits": {
+                                  "description": "Requested resources (best effort).",
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "cpu": {
+                                      "description": "Amount of cores, or slice of cpu in millis.",
+                                      "default": "50m",
+                                      "example": ["1", "200m"],
+                                      "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
+                                      "type": "string"
+                                    },
+                                    "memory": {
+                                      "description": "Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki.",
+                                      "default": "64Mi",
+                                      "example": ["1Mi", "0.5M"],
+                                      "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["cpu", "memory"],
+                                  "type": "object"
+                                },
                                 "requests": {
                                   "description": "Requested resources (guaranteed).",
                                   "additionalProperties": false,
@@ -2983,7 +3071,7 @@
                                 "properties": {
                                   "name": {
                                     "type": "string",
-                                    "pattern": "[a-zA-Z_]{1,}[a-zA-Z0-9_]*"
+                                    "pattern": "^[a-zA-Z0-9_]*$"
                                   },
                                   "value": {
                                     "type": "string",
@@ -3015,6 +3103,28 @@
                               "additionalProperties": false,
                               "description": "Compute resources for containers.",
                               "properties": {
+                                "limits": {
+                                  "description": "Requested resources (best effort).",
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "cpu": {
+                                      "description": "Amount of cores, or slice of cpu in millis.",
+                                      "default": "50m",
+                                      "example": ["1", "200m"],
+                                      "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
+                                      "type": "string"
+                                    },
+                                    "memory": {
+                                      "description": "Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki.",
+                                      "default": "64Mi",
+                                      "example": ["1Mi", "0.5M"],
+                                      "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["cpu", "memory"],
+                                  "type": "object"
+                                },
                                 "requests": {
                                   "description": "Requested resources (guaranteed).",
                                   "additionalProperties": false,
@@ -3363,7 +3473,7 @@
                               "properties": {
                                 "name": {
                                   "type": "string",
-                                  "pattern": "[a-zA-Z_]{1,}[a-zA-Z0-9_]*"
+                                  "pattern": "^[a-zA-Z0-9_]*$"
                                 },
                                 "value": {
                                   "type": "string",
@@ -3395,6 +3505,28 @@
                             "additionalProperties": false,
                             "description": "Compute resources for containers.",
                             "properties": {
+                              "limits": {
+                                "description": "Requested resources (best effort).",
+                                "additionalProperties": false,
+                                "properties": {
+                                  "cpu": {
+                                    "description": "Amount of cores, or slice of cpu in millis.",
+                                    "default": "50m",
+                                    "example": ["1", "200m"],
+                                    "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
+                                    "type": "string"
+                                  },
+                                  "memory": {
+                                    "description": "Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki.",
+                                    "default": "64Mi",
+                                    "example": ["1Mi", "0.5M"],
+                                    "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["cpu", "memory"],
+                                "type": "object"
+                              },
                               "requests": {
                                 "description": "Requested resources (guaranteed).",
                                 "additionalProperties": false,
@@ -3687,7 +3819,7 @@
                                 "properties": {
                                   "name": {
                                     "type": "string",
-                                    "pattern": "[a-zA-Z_]{1,}[a-zA-Z0-9_]*"
+                                    "pattern": "^[a-zA-Z0-9_]*$"
                                   },
                                   "value": {
                                     "type": "string",
@@ -3719,6 +3851,28 @@
                               "additionalProperties": false,
                               "description": "Compute resources for containers.",
                               "properties": {
+                                "limits": {
+                                  "description": "Requested resources (best effort).",
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "cpu": {
+                                      "description": "Amount of cores, or slice of cpu in millis.",
+                                      "default": "50m",
+                                      "example": ["1", "200m"],
+                                      "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
+                                      "type": "string"
+                                    },
+                                    "memory": {
+                                      "description": "Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki.",
+                                      "default": "64Mi",
+                                      "example": ["1Mi", "0.5M"],
+                                      "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["cpu", "memory"],
+                                  "type": "object"
+                                },
                                 "requests": {
                                   "description": "Requested resources (guaranteed).",
                                   "additionalProperties": false,
@@ -7041,7 +7195,7 @@
                       "properties": {
                         "name": {
                           "type": "string",
-                          "pattern": "[a-zA-Z_]{1,}[a-zA-Z0-9_]*"
+                          "pattern": "^[a-zA-Z0-9_]*$"
                         },
                         "value": {
                           "type": "string",
@@ -7073,6 +7227,28 @@
                     "additionalProperties": false,
                     "description": "Compute resources for containers.",
                     "properties": {
+                      "limits": {
+                        "description": "Requested resources (best effort).",
+                        "additionalProperties": false,
+                        "properties": {
+                          "cpu": {
+                            "description": "Amount of cores, or slice of cpu in millis.",
+                            "default": "50m",
+                            "example": ["1", "200m"],
+                            "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
+                            "type": "string"
+                          },
+                          "memory": {
+                            "description": "Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki.",
+                            "default": "64Mi",
+                            "example": ["1Mi", "0.5M"],
+                            "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
+                            "type": "string"
+                          }
+                        },
+                        "required": ["cpu", "memory"],
+                        "type": "object"
+                      },
                       "requests": {
                         "description": "Requested resources (guaranteed).",
                         "additionalProperties": false,
