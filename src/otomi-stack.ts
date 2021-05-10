@@ -383,8 +383,7 @@ export default class OtomiStack {
   loadConfig(dataPath: string, secretDataPath: string): any {
     const data = this.repo.readFile(dataPath)
     const secretData = this.repo.readFile(secretDataPath)
-    const secretPaths = getObjectPaths(secretData)
-    this.secretPaths = merge(this.secretPaths, secretPaths)
+    this.secretPaths = getObjectPaths(secretData)
     return merge(data, secretData) as Core
   }
 

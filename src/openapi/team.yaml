@@ -93,5 +93,4 @@ Team:
     #   $ref: definitions.yaml#/azureMonitor
   required:
     - name
-    - password
   type: object

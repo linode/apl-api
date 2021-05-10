@@ -41,7 +41,10 @@
                     },
                     "location": {
                       "type": "string",
-                      "enum": ["body", "path"]
+                      "enum": [
+                        "body",
+                        "path"
+                      ]
                     }
                   },
                   "type": "object"
@@ -113,7 +116,10 @@
                     },
                     "location": {
                       "type": "string",
-                      "enum": ["body", "path"]
+                      "enum": [
+                        "body",
+                        "path"
+                      ]
                     }
                   },
                   "type": "object"
@@ -169,7 +175,10 @@
                     },
                     "location": {
                       "type": "string",
-                      "enum": ["body", "path"]
+                      "enum": [
+                        "body",
+                        "path"
+                      ]
                     }
                   },
                   "type": "object"
@@ -228,7 +237,11 @@
                       "k8sVersion": {
                         "default": "1.19",
                         "description": "The cluster k8s version. Otomi supports 2 minor versions backwards compatibility from the suggested default.",
-                        "enum": ["1.17", "1.18", "1.19"],
+                        "enum": [
+                          "1.17",
+                          "1.18",
+                          "1.19"
+                        ],
                         "type": "string"
                       },
                       "name": {
@@ -241,7 +254,12 @@
                       },
                       "provider": {
                         "type": "string",
-                        "enum": ["aws", "azure", "google", "oneprem"]
+                        "enum": [
+                          "aws",
+                          "azure",
+                          "google",
+                          "oneprem"
+                        ]
                       },
                       "region": {
                         "description": "Dependent on provider.",
@@ -252,7 +270,14 @@
                         "type": "string"
                       }
                     },
-                    "required": ["apiServer", "k8sVersion", "name", "otomiVersion", "provider", "region"],
+                    "required": [
+                      "apiServer",
+                      "k8sVersion",
+                      "name",
+                      "otomiVersion",
+                      "provider",
+                      "region"
+                    ],
                     "type": "object"
                   }
                 }
@@ -276,8 +301,18 @@
                   "type": "array",
                   "items": {
                     "x-acl": {
-                      "admin": ["read-any", "create-any", "update-any", "delete-any"],
-                      "team": ["read", "create", "update", "delete"]
+                      "admin": [
+                        "read-any",
+                        "create-any",
+                        "update-any",
+                        "delete-any"
+                      ],
+                      "team": [
+                        "read",
+                        "create",
+                        "update",
+                        "delete"
+                      ]
                     },
                     "properties": {
                       "id": {
@@ -292,14 +327,18 @@
                         "example": "secret01"
                       }
                     },
-                    "required": ["name"],
+                    "required": [
+                      "name"
+                    ],
                     "oneOf": [
                       {
                         "title": "Generic",
                         "properties": {
                           "type": {
                             "default": "generic",
-                            "enum": ["generic"]
+                            "enum": [
+                              "generic"
+                            ]
                           },
                           "entries": {
                             "type": "array",
@@ -312,7 +351,10 @@
                             }
                           }
                         },
-                        "required": ["type", "entries"],
+                        "required": [
+                          "type",
+                          "entries"
+                        ],
                         "type": "object"
                       },
                       {
@@ -320,17 +362,23 @@
                         "properties": {
                           "type": {
                             "default": "docker-registry",
-                            "enum": ["docker-registry"],
+                            "enum": [
+                              "docker-registry"
+                            ],
                             "type": "string"
                           },
                           "dockerconfig": {
                             "type": "string",
-                            "enum": [".dockerconfig.json"],
+                            "enum": [
+                              ".dockerconfig.json"
+                            ],
                             "default": ".dockerconfig.json",
                             "readOnly": true
                           }
                         },
-                        "required": ["type"],
+                        "required": [
+                          "type"
+                        ],
                         "type": "object"
                       },
                       {
@@ -338,7 +386,9 @@
                         "properties": {
                           "type": {
                             "default": "tls",
-                            "enum": ["tls"],
+                            "enum": [
+                              "tls"
+                            ],
                             "type": "string"
                           },
                           "crt": {
@@ -357,7 +407,11 @@
                             "description": "A Vault property name that contains CA certificate content"
                           }
                         },
-                        "required": ["type", "crt", "key"],
+                        "required": [
+                          "type",
+                          "crt",
+                          "key"
+                        ],
                         "type": "object"
                       }
                     ],
@@ -393,7 +447,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -423,8 +480,18 @@
                   "items": {
                     "x-externalDocsPath": "docs/configuring-services",
                     "x-acl": {
-                      "admin": ["delete-any", "read-any", "create-any", "update-any"],
-                      "team": ["delete", "read", "create", "update"]
+                      "admin": [
+                        "delete-any",
+                        "read-any",
+                        "create-any",
+                        "update-any"
+                      ],
+                      "team": [
+                        "delete",
+                        "read",
+                        "create",
+                        "update"
+                      ]
                     },
                     "properties": {
                       "id": {
@@ -455,7 +522,9 @@
                             "properties": {
                               "serviceType": {
                                 "type": "string",
-                                "enum": ["ksvc"],
+                                "enum": [
+                                  "ksvc"
+                                ],
                                 "default": "ksvc"
                               },
                               "scaleToZero": {
@@ -478,7 +547,10 @@
                                   }
                                 },
                                 "type": "object",
-                                "required": ["repository", "tag"]
+                                "required": [
+                                  "repository",
+                                  "tag"
+                                ]
                               },
                               "secrets": {
                                 "type": "array",
@@ -496,7 +568,9 @@
                                       "uniqueItems": true
                                     }
                                   },
-                                  "required": ["name"],
+                                  "required": [
+                                    "name"
+                                  ],
                                   "type": "object"
                                 }
                               },
@@ -515,7 +589,10 @@
                                       "maxLength": 131072
                                     }
                                   },
-                                  "required": ["name", "value"],
+                                  "required": [
+                                    "name",
+                                    "value"
+                                  ],
                                   "type": "object"
                                 }
                               },
@@ -528,19 +605,28 @@
                                       "cpu": {
                                         "description": "The guaranteed amount of CPU",
                                         "default": "50m",
-                                        "example": ["1", "200m"],
+                                        "example": [
+                                          "1",
+                                          "200m"
+                                        ],
                                         "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
                                         "type": "string"
                                       },
                                       "memory": {
                                         "description": "The guaranteed amount of RAM",
                                         "default": "64Mi",
-                                        "example": ["1Mi", "0.5M"],
+                                        "example": [
+                                          "1Mi",
+                                          "0.5M"
+                                        ],
                                         "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
                                         "type": "string"
                                       }
                                     },
-                                    "required": ["cpu", "memory"],
+                                    "required": [
+                                      "cpu",
+                                      "memory"
+                                    ],
                                     "type": "object"
                                   },
                                   "limits": {
@@ -548,19 +634,28 @@
                                       "cpu": {
                                         "description": "The maximum amount of CPU",
                                         "default": "100m",
-                                        "example": ["1", "200m"],
+                                        "example": [
+                                          "1",
+                                          "200m"
+                                        ],
                                         "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
                                         "type": "string"
                                       },
                                       "memory": {
                                         "description": "The maximum amount of RAM",
                                         "default": "128Mi",
-                                        "example": ["1Mi", "0.5M"],
+                                        "example": [
+                                          "1Mi",
+                                          "0.5M"
+                                        ],
                                         "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
                                         "type": "string"
                                       }
                                     },
-                                    "required": ["cpu", "memory"],
+                                    "required": [
+                                      "cpu",
+                                      "memory"
+                                    ],
                                     "type": "object"
                                   }
                                 },
@@ -600,7 +695,9 @@
                                     "properties": {
                                       "tagMatcher": {
                                         "type": "string",
-                                        "enum": ["semver"],
+                                        "enum": [
+                                          "semver"
+                                        ],
                                         "default": "semver"
                                       },
                                       "semver": {
@@ -610,7 +707,9 @@
                                         "description": "Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: \"~1.1\", MINOR and PATCH only \"~1\", ALL \"*\""
                                       }
                                     },
-                                    "required": ["semver"],
+                                    "required": [
+                                      "semver"
+                                    ],
                                     "type": "object"
                                   },
                                   {
@@ -618,7 +717,9 @@
                                     "properties": {
                                       "tagMatcher": {
                                         "type": "string",
-                                        "enum": ["glob"],
+                                        "enum": [
+                                          "glob"
+                                        ],
                                         "default": "glob"
                                       },
                                       "glob": {
@@ -628,7 +729,9 @@
                                         "example": "main-v1.3.*"
                                       }
                                     },
-                                    "required": ["glob"],
+                                    "required": [
+                                      "glob"
+                                    ],
                                     "type": "object",
                                     "additionalProperties": false
                                   }
@@ -641,11 +744,15 @@
                             "properties": {
                               "serviceType": {
                                 "type": "string",
-                                "enum": ["ksvcPredeployed"],
+                                "enum": [
+                                  "ksvcPredeployed"
+                                ],
                                 "default": "ksvcPredeployed"
                               }
                             },
-                            "required": ["serviceType"],
+                            "required": [
+                              "serviceType"
+                            ],
                             "type": "object"
                           },
                           {
@@ -653,11 +760,15 @@
                             "properties": {
                               "serviceType": {
                                 "type": "string",
-                                "enum": ["svcPredeployed"],
+                                "enum": [
+                                  "svcPredeployed"
+                                ],
                                 "default": "svcPredeployed"
                               }
                             },
-                            "required": ["serviceType"],
+                            "required": [
+                              "serviceType"
+                            ],
                             "type": "object"
                           }
                         ]
@@ -665,7 +776,9 @@
                       "ingress": {
                         "title": "Exposure",
                         "x-acl": {
-                          "team": ["read"]
+                          "team": [
+                            "read"
+                          ]
                         },
                         "oneOf": [
                           {
@@ -731,7 +844,10 @@
                                 "example": "www-example-com"
                               }
                             },
-                            "required": ["domain", "subdomain"],
+                            "required": [
+                              "domain",
+                              "subdomain"
+                            ],
                             "type": "object"
                           }
                         ]
@@ -740,7 +856,10 @@
                         "type": "string"
                       }
                     },
-                    "required": ["name", "teamId"],
+                    "required": [
+                      "name",
+                      "teamId"
+                    ],
                     "type": "object"
                   }
                 }
@@ -773,7 +892,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -803,8 +925,16 @@
                   "items": {
                     "x-externalDocsPath": "docs/configuring-teams",
                     "x-acl": {
-                      "admin": ["delete-any", "read-any", "create-any", "update-any"],
-                      "team": ["read-any", "update"]
+                      "admin": [
+                        "delete-any",
+                        "read-any",
+                        "create-any",
+                        "update-any"
+                      ],
+                      "team": [
+                        "read-any",
+                        "update"
+                      ]
                     },
                     "properties": {
                       "id": {
@@ -813,8 +943,12 @@
                         "type": "string",
                         "title": "ID",
                         "x-acl": {
-                          "admin": ["read"],
-                          "team": ["read"]
+                          "admin": [
+                            "read"
+                          ],
+                          "team": [
+                            "read"
+                          ]
                         }
                       },
                       "name": {
@@ -824,8 +958,13 @@
                         "title": "Name",
                         "example": "otomi",
                         "x-acl": {
-                          "admin": ["create", "read"],
-                          "team": ["read"]
+                          "admin": [
+                            "create",
+                            "read"
+                          ],
+                          "team": [
+                            "read"
+                          ]
                         }
                       },
                       "oidc": {
@@ -851,7 +990,11 @@
                             "type": "array",
                             "items": {
                               "type": "string",
-                              "enum": ["slack", "msteams", "email"]
+                              "enum": [
+                                "slack",
+                                "msteams",
+                                "email"
+                              ]
                             },
                             "uniqueItems": true
                           },
@@ -912,7 +1055,9 @@
                         "type": "object"
                       }
                     },
-                    "required": ["name", "password"],
+                    "required": [
+                      "name"
+                    ],
                     "type": "object"
                   }
                 }
@@ -931,8 +1076,16 @@
               "schema": {
                 "x-externalDocsPath": "docs/configuring-teams",
                 "x-acl": {
-                  "admin": ["delete-any", "read-any", "create-any", "update-any"],
-                  "team": ["read-any", "update"]
+                  "admin": [
+                    "delete-any",
+                    "read-any",
+                    "create-any",
+                    "update-any"
+                  ],
+                  "team": [
+                    "read-any",
+                    "update"
+                  ]
                 },
                 "properties": {
                   "id": {
@@ -941,8 +1094,12 @@
                     "type": "string",
                     "title": "ID",
                     "x-acl": {
-                      "admin": ["read"],
-                      "team": ["read"]
+                      "admin": [
+                        "read"
+                      ],
+                      "team": [
+                        "read"
+                      ]
                     }
                   },
                   "name": {
@@ -952,8 +1109,13 @@
                     "title": "Name",
                     "example": "otomi",
                     "x-acl": {
-                      "admin": ["create", "read"],
-                      "team": ["read"]
+                      "admin": [
+                        "create",
+                        "read"
+                      ],
+                      "team": [
+                        "read"
+                      ]
                     }
                   },
                   "oidc": {
@@ -979,7 +1141,11 @@
                         "type": "array",
                         "items": {
                           "type": "string",
-                          "enum": ["slack", "msteams", "email"]
+                          "enum": [
+                            "slack",
+                            "msteams",
+                            "email"
+                          ]
                         },
                         "uniqueItems": true
                       },
@@ -1040,7 +1206,9 @@
                     "type": "object"
                   }
                 },
-                "required": ["name", "password"],
+                "required": [
+                  "name"
+                ],
                 "type": "object"
               }
             }
@@ -1056,8 +1224,16 @@
                 "schema": {
                   "x-externalDocsPath": "docs/configuring-teams",
                   "x-acl": {
-                    "admin": ["delete-any", "read-any", "create-any", "update-any"],
-                    "team": ["read-any", "update"]
+                    "admin": [
+                      "delete-any",
+                      "read-any",
+                      "create-any",
+                      "update-any"
+                    ],
+                    "team": [
+                      "read-any",
+                      "update"
+                    ]
                   },
                   "properties": {
                     "id": {
@@ -1066,8 +1242,12 @@
                       "type": "string",
                       "title": "ID",
                       "x-acl": {
-                        "admin": ["read"],
-                        "team": ["read"]
+                        "admin": [
+                          "read"
+                        ],
+                        "team": [
+                          "read"
+                        ]
                       }
                     },
                     "name": {
@@ -1077,8 +1257,13 @@
                       "title": "Name",
                       "example": "otomi",
                       "x-acl": {
-                        "admin": ["create", "read"],
-                        "team": ["read"]
+                        "admin": [
+                          "create",
+                          "read"
+                        ],
+                        "team": [
+                          "read"
+                        ]
                       }
                     },
                     "oidc": {
@@ -1104,7 +1289,11 @@
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "enum": ["slack", "msteams", "email"]
+                            "enum": [
+                              "slack",
+                              "msteams",
+                              "email"
+                            ]
                           },
                           "uniqueItems": true
                         },
@@ -1165,7 +1354,9 @@
                       "type": "object"
                     }
                   },
-                  "required": ["name", "password"],
+                  "required": [
+                    "name"
+                  ],
                   "type": "object"
                 }
               }
@@ -1197,7 +1388,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -1252,8 +1446,16 @@
                 "schema": {
                   "x-externalDocsPath": "docs/configuring-teams",
                   "x-acl": {
-                    "admin": ["delete-any", "read-any", "create-any", "update-any"],
-                    "team": ["read-any", "update"]
+                    "admin": [
+                      "delete-any",
+                      "read-any",
+                      "create-any",
+                      "update-any"
+                    ],
+                    "team": [
+                      "read-any",
+                      "update"
+                    ]
                   },
                   "properties": {
                     "id": {
@@ -1262,8 +1464,12 @@
                       "type": "string",
                       "title": "ID",
                       "x-acl": {
-                        "admin": ["read"],
-                        "team": ["read"]
+                        "admin": [
+                          "read"
+                        ],
+                        "team": [
+                          "read"
+                        ]
                       }
                     },
                     "name": {
@@ -1273,8 +1479,13 @@
                       "title": "Name",
                       "example": "otomi",
                       "x-acl": {
-                        "admin": ["create", "read"],
-                        "team": ["read"]
+                        "admin": [
+                          "create",
+                          "read"
+                        ],
+                        "team": [
+                          "read"
+                        ]
                       }
                     },
                     "oidc": {
@@ -1300,7 +1511,11 @@
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "enum": ["slack", "msteams", "email"]
+                            "enum": [
+                              "slack",
+                              "msteams",
+                              "email"
+                            ]
                           },
                           "uniqueItems": true
                         },
@@ -1361,7 +1576,9 @@
                       "type": "object"
                     }
                   },
-                  "required": ["name", "password"],
+                  "required": [
+                    "name"
+                  ],
                   "type": "object"
                 }
               }
@@ -1393,7 +1610,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -1433,8 +1653,16 @@
               "schema": {
                 "x-externalDocsPath": "docs/configuring-teams",
                 "x-acl": {
-                  "admin": ["delete-any", "read-any", "create-any", "update-any"],
-                  "team": ["read-any", "update"]
+                  "admin": [
+                    "delete-any",
+                    "read-any",
+                    "create-any",
+                    "update-any"
+                  ],
+                  "team": [
+                    "read-any",
+                    "update"
+                  ]
                 },
                 "properties": {
                   "id": {
@@ -1443,8 +1671,12 @@
                     "type": "string",
                     "title": "ID",
                     "x-acl": {
-                      "admin": ["read"],
-                      "team": ["read"]
+                      "admin": [
+                        "read"
+                      ],
+                      "team": [
+                        "read"
+                      ]
                     }
                   },
                   "name": {
@@ -1454,8 +1686,13 @@
                     "title": "Name",
                     "example": "otomi",
                     "x-acl": {
-                      "admin": ["create", "read"],
-                      "team": ["read"]
+                      "admin": [
+                        "create",
+                        "read"
+                      ],
+                      "team": [
+                        "read"
+                      ]
                     }
                   },
                   "oidc": {
@@ -1481,7 +1718,11 @@
                         "type": "array",
                         "items": {
                           "type": "string",
-                          "enum": ["slack", "msteams", "email"]
+                          "enum": [
+                            "slack",
+                            "msteams",
+                            "email"
+                          ]
                         },
                         "uniqueItems": true
                       },
@@ -1542,7 +1783,9 @@
                     "type": "object"
                   }
                 },
-                "required": ["name", "password"],
+                "required": [
+                  "name"
+                ],
                 "type": "object"
               }
             }
@@ -1558,8 +1801,16 @@
                 "schema": {
                   "x-externalDocsPath": "docs/configuring-teams",
                   "x-acl": {
-                    "admin": ["delete-any", "read-any", "create-any", "update-any"],
-                    "team": ["read-any", "update"]
+                    "admin": [
+                      "delete-any",
+                      "read-any",
+                      "create-any",
+                      "update-any"
+                    ],
+                    "team": [
+                      "read-any",
+                      "update"
+                    ]
                   },
                   "properties": {
                     "id": {
@@ -1568,8 +1819,12 @@
                       "type": "string",
                       "title": "ID",
                       "x-acl": {
-                        "admin": ["read"],
-                        "team": ["read"]
+                        "admin": [
+                          "read"
+                        ],
+                        "team": [
+                          "read"
+                        ]
                       }
                     },
                     "name": {
@@ -1579,8 +1834,13 @@
                       "title": "Name",
                       "example": "otomi",
                       "x-acl": {
-                        "admin": ["create", "read"],
-                        "team": ["read"]
+                        "admin": [
+                          "create",
+                          "read"
+                        ],
+                        "team": [
+                          "read"
+                        ]
                       }
                     },
                     "oidc": {
@@ -1606,7 +1866,11 @@
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "enum": ["slack", "msteams", "email"]
+                            "enum": [
+                              "slack",
+                              "msteams",
+                              "email"
+                            ]
                           },
                           "uniqueItems": true
                         },
@@ -1667,7 +1931,9 @@
                       "type": "object"
                     }
                   },
-                  "required": ["name", "password"],
+                  "required": [
+                    "name"
+                  ],
                   "type": "object"
                 }
               }
@@ -1699,7 +1965,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -1763,7 +2032,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -1820,8 +2092,18 @@
                   "items": {
                     "x-externalDocsPath": "docs/configuring-services",
                     "x-acl": {
-                      "admin": ["delete-any", "read-any", "create-any", "update-any"],
-                      "team": ["delete", "read", "create", "update"]
+                      "admin": [
+                        "delete-any",
+                        "read-any",
+                        "create-any",
+                        "update-any"
+                      ],
+                      "team": [
+                        "delete",
+                        "read",
+                        "create",
+                        "update"
+                      ]
                     },
                     "properties": {
                       "id": {
@@ -1852,7 +2134,9 @@
                             "properties": {
                               "serviceType": {
                                 "type": "string",
-                                "enum": ["ksvc"],
+                                "enum": [
+                                  "ksvc"
+                                ],
                                 "default": "ksvc"
                               },
                               "scaleToZero": {
@@ -1875,7 +2159,10 @@
                                   }
                                 },
                                 "type": "object",
-                                "required": ["repository", "tag"]
+                                "required": [
+                                  "repository",
+                                  "tag"
+                                ]
                               },
                               "secrets": {
                                 "type": "array",
@@ -1893,7 +2180,9 @@
                                       "uniqueItems": true
                                     }
                                   },
-                                  "required": ["name"],
+                                  "required": [
+                                    "name"
+                                  ],
                                   "type": "object"
                                 }
                               },
@@ -1912,7 +2201,10 @@
                                       "maxLength": 131072
                                     }
                                   },
-                                  "required": ["name", "value"],
+                                  "required": [
+                                    "name",
+                                    "value"
+                                  ],
                                   "type": "object"
                                 }
                               },
@@ -1925,19 +2217,28 @@
                                       "cpu": {
                                         "description": "The guaranteed amount of CPU",
                                         "default": "50m",
-                                        "example": ["1", "200m"],
+                                        "example": [
+                                          "1",
+                                          "200m"
+                                        ],
                                         "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
                                         "type": "string"
                                       },
                                       "memory": {
                                         "description": "The guaranteed amount of RAM",
                                         "default": "64Mi",
-                                        "example": ["1Mi", "0.5M"],
+                                        "example": [
+                                          "1Mi",
+                                          "0.5M"
+                                        ],
                                         "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
                                         "type": "string"
                                       }
                                     },
-                                    "required": ["cpu", "memory"],
+                                    "required": [
+                                      "cpu",
+                                      "memory"
+                                    ],
                                     "type": "object"
                                   },
                                   "limits": {
@@ -1945,19 +2246,28 @@
                                       "cpu": {
                                         "description": "The maximum amount of CPU",
                                         "default": "100m",
-                                        "example": ["1", "200m"],
+                                        "example": [
+                                          "1",
+                                          "200m"
+                                        ],
                                         "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
                                         "type": "string"
                                       },
                                       "memory": {
                                         "description": "The maximum amount of RAM",
                                         "default": "128Mi",
-                                        "example": ["1Mi", "0.5M"],
+                                        "example": [
+                                          "1Mi",
+                                          "0.5M"
+                                        ],
                                         "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
                                         "type": "string"
                                       }
                                     },
-                                    "required": ["cpu", "memory"],
+                                    "required": [
+                                      "cpu",
+                                      "memory"
+                                    ],
                                     "type": "object"
                                   }
                                 },
@@ -1997,7 +2307,9 @@
                                     "properties": {
                                       "tagMatcher": {
                                         "type": "string",
-                                        "enum": ["semver"],
+                                        "enum": [
+                                          "semver"
+                                        ],
                                         "default": "semver"
                                       },
                                       "semver": {
@@ -2007,7 +2319,9 @@
                                         "description": "Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: \"~1.1\", MINOR and PATCH only \"~1\", ALL \"*\""
                                       }
                                     },
-                                    "required": ["semver"],
+                                    "required": [
+                                      "semver"
+                                    ],
                                     "type": "object"
                                   },
                                   {
@@ -2015,7 +2329,9 @@
                                     "properties": {
                                       "tagMatcher": {
                                         "type": "string",
-                                        "enum": ["glob"],
+                                        "enum": [
+                                          "glob"
+                                        ],
                                         "default": "glob"
                                       },
                                       "glob": {
@@ -2025,7 +2341,9 @@
                                         "example": "main-v1.3.*"
                                       }
                                     },
-                                    "required": ["glob"],
+                                    "required": [
+                                      "glob"
+                                    ],
                                     "type": "object",
                                     "additionalProperties": false
                                   }
@@ -2038,11 +2356,15 @@
                             "properties": {
                               "serviceType": {
                                 "type": "string",
-                                "enum": ["ksvcPredeployed"],
+                                "enum": [
+                                  "ksvcPredeployed"
+                                ],
                                 "default": "ksvcPredeployed"
                               }
                             },
-                            "required": ["serviceType"],
+                            "required": [
+                              "serviceType"
+                            ],
                             "type": "object"
                           },
                           {
@@ -2050,11 +2372,15 @@
                             "properties": {
                               "serviceType": {
                                 "type": "string",
-                                "enum": ["svcPredeployed"],
+                                "enum": [
+                                  "svcPredeployed"
+                                ],
                                 "default": "svcPredeployed"
                               }
                             },
-                            "required": ["serviceType"],
+                            "required": [
+                              "serviceType"
+                            ],
                             "type": "object"
                           }
                         ]
@@ -2062,7 +2388,9 @@
                       "ingress": {
                         "title": "Exposure",
                         "x-acl": {
-                          "team": ["read"]
+                          "team": [
+                            "read"
+                          ]
                         },
                         "oneOf": [
                           {
@@ -2128,7 +2456,10 @@
                                 "example": "www-example-com"
                               }
                             },
-                            "required": ["domain", "subdomain"],
+                            "required": [
+                              "domain",
+                              "subdomain"
+                            ],
                             "type": "object"
                           }
                         ]
@@ -2137,7 +2468,10 @@
                         "type": "string"
                       }
                     },
-                    "required": ["name", "teamId"],
+                    "required": [
+                      "name",
+                      "teamId"
+                    ],
                     "type": "object"
                   }
                 }
@@ -2170,7 +2504,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -2194,8 +2531,18 @@
               "schema": {
                 "x-externalDocsPath": "docs/configuring-services",
                 "x-acl": {
-                  "admin": ["delete-any", "read-any", "create-any", "update-any"],
-                  "team": ["delete", "read", "create", "update"]
+                  "admin": [
+                    "delete-any",
+                    "read-any",
+                    "create-any",
+                    "update-any"
+                  ],
+                  "team": [
+                    "delete",
+                    "read",
+                    "create",
+                    "update"
+                  ]
                 },
                 "properties": {
                   "id": {
@@ -2226,7 +2573,9 @@
                         "properties": {
                           "serviceType": {
                             "type": "string",
-                            "enum": ["ksvc"],
+                            "enum": [
+                              "ksvc"
+                            ],
                             "default": "ksvc"
                           },
                           "scaleToZero": {
@@ -2249,7 +2598,10 @@
                               }
                             },
                             "type": "object",
-                            "required": ["repository", "tag"]
+                            "required": [
+                              "repository",
+                              "tag"
+                            ]
                           },
                           "secrets": {
                             "type": "array",
@@ -2267,7 +2619,9 @@
                                   "uniqueItems": true
                                 }
                               },
-                              "required": ["name"],
+                              "required": [
+                                "name"
+                              ],
                               "type": "object"
                             }
                           },
@@ -2286,7 +2640,10 @@
                                   "maxLength": 131072
                                 }
                               },
-                              "required": ["name", "value"],
+                              "required": [
+                                "name",
+                                "value"
+                              ],
                               "type": "object"
                             }
                           },
@@ -2299,19 +2656,28 @@
                                   "cpu": {
                                     "description": "The guaranteed amount of CPU",
                                     "default": "50m",
-                                    "example": ["1", "200m"],
+                                    "example": [
+                                      "1",
+                                      "200m"
+                                    ],
                                     "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
                                     "type": "string"
                                   },
                                   "memory": {
                                     "description": "The guaranteed amount of RAM",
                                     "default": "64Mi",
-                                    "example": ["1Mi", "0.5M"],
+                                    "example": [
+                                      "1Mi",
+                                      "0.5M"
+                                    ],
                                     "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
                                     "type": "string"
                                   }
                                 },
-                                "required": ["cpu", "memory"],
+                                "required": [
+                                  "cpu",
+                                  "memory"
+                                ],
                                 "type": "object"
                               },
                               "limits": {
@@ -2319,19 +2685,28 @@
                                   "cpu": {
                                     "description": "The maximum amount of CPU",
                                     "default": "100m",
-                                    "example": ["1", "200m"],
+                                    "example": [
+                                      "1",
+                                      "200m"
+                                    ],
                                     "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
                                     "type": "string"
                                   },
                                   "memory": {
                                     "description": "The maximum amount of RAM",
                                     "default": "128Mi",
-                                    "example": ["1Mi", "0.5M"],
+                                    "example": [
+                                      "1Mi",
+                                      "0.5M"
+                                    ],
                                     "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
                                     "type": "string"
                                   }
                                 },
-                                "required": ["cpu", "memory"],
+                                "required": [
+                                  "cpu",
+                                  "memory"
+                                ],
                                 "type": "object"
                               }
                             },
@@ -2371,7 +2746,9 @@
                                 "properties": {
                                   "tagMatcher": {
                                     "type": "string",
-                                    "enum": ["semver"],
+                                    "enum": [
+                                      "semver"
+                                    ],
                                     "default": "semver"
                                   },
                                   "semver": {
@@ -2381,7 +2758,9 @@
                                     "description": "Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: \"~1.1\", MINOR and PATCH only \"~1\", ALL \"*\""
                                   }
                                 },
-                                "required": ["semver"],
+                                "required": [
+                                  "semver"
+                                ],
                                 "type": "object"
                               },
                               {
@@ -2389,7 +2768,9 @@
                                 "properties": {
                                   "tagMatcher": {
                                     "type": "string",
-                                    "enum": ["glob"],
+                                    "enum": [
+                                      "glob"
+                                    ],
                                     "default": "glob"
                                   },
                                   "glob": {
@@ -2399,7 +2780,9 @@
                                     "example": "main-v1.3.*"
                                   }
                                 },
-                                "required": ["glob"],
+                                "required": [
+                                  "glob"
+                                ],
                                 "type": "object",
                                 "additionalProperties": false
                               }
@@ -2412,11 +2795,15 @@
                         "properties": {
                           "serviceType": {
                             "type": "string",
-                            "enum": ["ksvcPredeployed"],
+                            "enum": [
+                              "ksvcPredeployed"
+                            ],
                             "default": "ksvcPredeployed"
                           }
                         },
-                        "required": ["serviceType"],
+                        "required": [
+                          "serviceType"
+                        ],
                         "type": "object"
                       },
                       {
@@ -2424,11 +2811,15 @@
                         "properties": {
                           "serviceType": {
                             "type": "string",
-                            "enum": ["svcPredeployed"],
+                            "enum": [
+                              "svcPredeployed"
+                            ],
                             "default": "svcPredeployed"
                           }
                         },
-                        "required": ["serviceType"],
+                        "required": [
+                          "serviceType"
+                        ],
                         "type": "object"
                       }
                     ]
@@ -2436,7 +2827,9 @@
                   "ingress": {
                     "title": "Exposure",
                     "x-acl": {
-                      "team": ["read"]
+                      "team": [
+                        "read"
+                      ]
                     },
                     "oneOf": [
                       {
@@ -2502,7 +2895,10 @@
                             "example": "www-example-com"
                           }
                         },
-                        "required": ["domain", "subdomain"],
+                        "required": [
+                          "domain",
+                          "subdomain"
+                        ],
                         "type": "object"
                       }
                     ]
@@ -2511,7 +2907,10 @@
                     "type": "string"
                   }
                 },
-                "required": ["name", "teamId"],
+                "required": [
+                  "name",
+                  "teamId"
+                ],
                 "type": "object"
               }
             }
@@ -2527,8 +2926,18 @@
                 "schema": {
                   "x-externalDocsPath": "docs/configuring-services",
                   "x-acl": {
-                    "admin": ["delete-any", "read-any", "create-any", "update-any"],
-                    "team": ["delete", "read", "create", "update"]
+                    "admin": [
+                      "delete-any",
+                      "read-any",
+                      "create-any",
+                      "update-any"
+                    ],
+                    "team": [
+                      "delete",
+                      "read",
+                      "create",
+                      "update"
+                    ]
                   },
                   "properties": {
                     "id": {
@@ -2559,7 +2968,9 @@
                           "properties": {
                             "serviceType": {
                               "type": "string",
-                              "enum": ["ksvc"],
+                              "enum": [
+                                "ksvc"
+                              ],
                               "default": "ksvc"
                             },
                             "scaleToZero": {
@@ -2582,7 +2993,10 @@
                                 }
                               },
                               "type": "object",
-                              "required": ["repository", "tag"]
+                              "required": [
+                                "repository",
+                                "tag"
+                              ]
                             },
                             "secrets": {
                               "type": "array",
@@ -2600,7 +3014,9 @@
                                     "uniqueItems": true
                                   }
                                 },
-                                "required": ["name"],
+                                "required": [
+                                  "name"
+                                ],
                                 "type": "object"
                               }
                             },
@@ -2619,7 +3035,10 @@
                                     "maxLength": 131072
                                   }
                                 },
-                                "required": ["name", "value"],
+                                "required": [
+                                  "name",
+                                  "value"
+                                ],
                                 "type": "object"
                               }
                             },
@@ -2632,19 +3051,28 @@
                                     "cpu": {
                                       "description": "The guaranteed amount of CPU",
                                       "default": "50m",
-                                      "example": ["1", "200m"],
+                                      "example": [
+                                        "1",
+                                        "200m"
+                                      ],
                                       "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
                                       "type": "string"
                                     },
                                     "memory": {
                                       "description": "The guaranteed amount of RAM",
                                       "default": "64Mi",
-                                      "example": ["1Mi", "0.5M"],
+                                      "example": [
+                                        "1Mi",
+                                        "0.5M"
+                                      ],
                                       "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
                                       "type": "string"
                                     }
                                   },
-                                  "required": ["cpu", "memory"],
+                                  "required": [
+                                    "cpu",
+                                    "memory"
+                                  ],
                                   "type": "object"
                                 },
                                 "limits": {
@@ -2652,19 +3080,28 @@
                                     "cpu": {
                                       "description": "The maximum amount of CPU",
                                       "default": "100m",
-                                      "example": ["1", "200m"],
+                                      "example": [
+                                        "1",
+                                        "200m"
+                                      ],
                                       "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
                                       "type": "string"
                                     },
                                     "memory": {
                                       "description": "The maximum amount of RAM",
                                       "default": "128Mi",
-                                      "example": ["1Mi", "0.5M"],
+                                      "example": [
+                                        "1Mi",
+                                        "0.5M"
+                                      ],
                                       "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
                                       "type": "string"
                                     }
                                   },
-                                  "required": ["cpu", "memory"],
+                                  "required": [
+                                    "cpu",
+                                    "memory"
+                                  ],
                                   "type": "object"
                                 }
                               },
@@ -2704,7 +3141,9 @@
                                   "properties": {
                                     "tagMatcher": {
                                       "type": "string",
-                                      "enum": ["semver"],
+                                      "enum": [
+                                        "semver"
+                                      ],
                                       "default": "semver"
                                     },
                                     "semver": {
@@ -2714,7 +3153,9 @@
                                       "description": "Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: \"~1.1\", MINOR and PATCH only \"~1\", ALL \"*\""
                                     }
                                   },
-                                  "required": ["semver"],
+                                  "required": [
+                                    "semver"
+                                  ],
                                   "type": "object"
                                 },
                                 {
@@ -2722,7 +3163,9 @@
                                   "properties": {
                                     "tagMatcher": {
                                       "type": "string",
-                                      "enum": ["glob"],
+                                      "enum": [
+                                        "glob"
+                                      ],
                                       "default": "glob"
                                     },
                                     "glob": {
@@ -2732,7 +3175,9 @@
                                       "example": "main-v1.3.*"
                                     }
                                   },
-                                  "required": ["glob"],
+                                  "required": [
+                                    "glob"
+                                  ],
                                   "type": "object",
                                   "additionalProperties": false
                                 }
@@ -2745,11 +3190,15 @@
                           "properties": {
                             "serviceType": {
                               "type": "string",
-                              "enum": ["ksvcPredeployed"],
+                              "enum": [
+                                "ksvcPredeployed"
+                              ],
                               "default": "ksvcPredeployed"
                             }
                           },
-                          "required": ["serviceType"],
+                          "required": [
+                            "serviceType"
+                          ],
                           "type": "object"
                         },
                         {
@@ -2757,11 +3206,15 @@
                           "properties": {
                             "serviceType": {
                               "type": "string",
-                              "enum": ["svcPredeployed"],
+                              "enum": [
+                                "svcPredeployed"
+                              ],
                               "default": "svcPredeployed"
                             }
                           },
-                          "required": ["serviceType"],
+                          "required": [
+                            "serviceType"
+                          ],
                           "type": "object"
                         }
                       ]
@@ -2769,7 +3222,9 @@
                     "ingress": {
                       "title": "Exposure",
                       "x-acl": {
-                        "team": ["read"]
+                        "team": [
+                          "read"
+                        ]
                       },
                       "oneOf": [
                         {
@@ -2835,7 +3290,10 @@
                               "example": "www-example-com"
                             }
                           },
-                          "required": ["domain", "subdomain"],
+                          "required": [
+                            "domain",
+                            "subdomain"
+                          ],
                           "type": "object"
                         }
                       ]
@@ -2844,7 +3302,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["name", "teamId"],
+                  "required": [
+                    "name",
+                    "teamId"
+                  ],
                   "type": "object"
                 }
               }
@@ -2876,7 +3337,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -2940,8 +3404,18 @@
                 "schema": {
                   "x-externalDocsPath": "docs/configuring-services",
                   "x-acl": {
-                    "admin": ["delete-any", "read-any", "create-any", "update-any"],
-                    "team": ["delete", "read", "create", "update"]
+                    "admin": [
+                      "delete-any",
+                      "read-any",
+                      "create-any",
+                      "update-any"
+                    ],
+                    "team": [
+                      "delete",
+                      "read",
+                      "create",
+                      "update"
+                    ]
                   },
                   "properties": {
                     "id": {
@@ -2972,7 +3446,9 @@
                           "properties": {
                             "serviceType": {
                               "type": "string",
-                              "enum": ["ksvc"],
+                              "enum": [
+                                "ksvc"
+                              ],
                               "default": "ksvc"
                             },
                             "scaleToZero": {
@@ -2995,7 +3471,10 @@
                                 }
                               },
                               "type": "object",
-                              "required": ["repository", "tag"]
+                              "required": [
+                                "repository",
+                                "tag"
+                              ]
                             },
                             "secrets": {
                               "type": "array",
@@ -3013,7 +3492,9 @@
                                     "uniqueItems": true
                                   }
                                 },
-                                "required": ["name"],
+                                "required": [
+                                  "name"
+                                ],
                                 "type": "object"
                               }
                             },
@@ -3032,7 +3513,10 @@
                                     "maxLength": 131072
                                   }
                                 },
-                                "required": ["name", "value"],
+                                "required": [
+                                  "name",
+                                  "value"
+                                ],
                                 "type": "object"
                               }
                             },
@@ -3045,19 +3529,28 @@
                                     "cpu": {
                                       "description": "The guaranteed amount of CPU",
                                       "default": "50m",
-                                      "example": ["1", "200m"],
+                                      "example": [
+                                        "1",
+                                        "200m"
+                                      ],
                                       "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
                                       "type": "string"
                                     },
                                     "memory": {
                                       "description": "The guaranteed amount of RAM",
                                       "default": "64Mi",
-                                      "example": ["1Mi", "0.5M"],
+                                      "example": [
+                                        "1Mi",
+                                        "0.5M"
+                                      ],
                                       "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
                                       "type": "string"
                                     }
                                   },
-                                  "required": ["cpu", "memory"],
+                                  "required": [
+                                    "cpu",
+                                    "memory"
+                                  ],
                                   "type": "object"
                                 },
                                 "limits": {
@@ -3065,19 +3558,28 @@
                                     "cpu": {
                                       "description": "The maximum amount of CPU",
                                       "default": "100m",
-                                      "example": ["1", "200m"],
+                                      "example": [
+                                        "1",
+                                        "200m"
+                                      ],
                                       "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
                                       "type": "string"
                                     },
                                     "memory": {
                                       "description": "The maximum amount of RAM",
                                       "default": "128Mi",
-                                      "example": ["1Mi", "0.5M"],
+                                      "example": [
+                                        "1Mi",
+                                        "0.5M"
+                                      ],
                                       "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
                                       "type": "string"
                                     }
                                   },
-                                  "required": ["cpu", "memory"],
+                                  "required": [
+                                    "cpu",
+                                    "memory"
+                                  ],
                                   "type": "object"
                                 }
                               },
@@ -3117,7 +3619,9 @@
                                   "properties": {
                                     "tagMatcher": {
                                       "type": "string",
-                                      "enum": ["semver"],
+                                      "enum": [
+                                        "semver"
+                                      ],
                                       "default": "semver"
                                     },
                                     "semver": {
@@ -3127,7 +3631,9 @@
                                       "description": "Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: \"~1.1\", MINOR and PATCH only \"~1\", ALL \"*\""
                                     }
                                   },
-                                  "required": ["semver"],
+                                  "required": [
+                                    "semver"
+                                  ],
                                   "type": "object"
                                 },
                                 {
@@ -3135,7 +3641,9 @@
                                   "properties": {
                                     "tagMatcher": {
                                       "type": "string",
-                                      "enum": ["glob"],
+                                      "enum": [
+                                        "glob"
+                                      ],
                                       "default": "glob"
                                     },
                                     "glob": {
@@ -3145,7 +3653,9 @@
                                       "example": "main-v1.3.*"
                                     }
                                   },
-                                  "required": ["glob"],
+                                  "required": [
+                                    "glob"
+                                  ],
                                   "type": "object",
                                   "additionalProperties": false
                                 }
@@ -3158,11 +3668,15 @@
                           "properties": {
                             "serviceType": {
                               "type": "string",
-                              "enum": ["ksvcPredeployed"],
+                              "enum": [
+                                "ksvcPredeployed"
+                              ],
                               "default": "ksvcPredeployed"
                             }
                           },
-                          "required": ["serviceType"],
+                          "required": [
+                            "serviceType"
+                          ],
                           "type": "object"
                         },
                         {
@@ -3170,11 +3684,15 @@
                           "properties": {
                             "serviceType": {
                               "type": "string",
-                              "enum": ["svcPredeployed"],
+                              "enum": [
+                                "svcPredeployed"
+                              ],
                               "default": "svcPredeployed"
                             }
                           },
-                          "required": ["serviceType"],
+                          "required": [
+                            "serviceType"
+                          ],
                           "type": "object"
                         }
                       ]
@@ -3182,7 +3700,9 @@
                     "ingress": {
                       "title": "Exposure",
                       "x-acl": {
-                        "team": ["read"]
+                        "team": [
+                          "read"
+                        ]
                       },
                       "oneOf": [
                         {
@@ -3248,7 +3768,10 @@
                               "example": "www-example-com"
                             }
                           },
-                          "required": ["domain", "subdomain"],
+                          "required": [
+                            "domain",
+                            "subdomain"
+                          ],
                           "type": "object"
                         }
                       ]
@@ -3257,7 +3780,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["name", "teamId"],
+                  "required": [
+                    "name",
+                    "teamId"
+                  ],
                   "type": "object"
                 }
               }
@@ -3289,7 +3815,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -3329,8 +3858,18 @@
               "schema": {
                 "x-externalDocsPath": "docs/configuring-services",
                 "x-acl": {
-                  "admin": ["delete-any", "read-any", "create-any", "update-any"],
-                  "team": ["delete", "read", "create", "update"]
+                  "admin": [
+                    "delete-any",
+                    "read-any",
+                    "create-any",
+                    "update-any"
+                  ],
+                  "team": [
+                    "delete",
+                    "read",
+                    "create",
+                    "update"
+                  ]
                 },
                 "properties": {
                   "id": {
@@ -3361,7 +3900,9 @@
                         "properties": {
                           "serviceType": {
                             "type": "string",
-                            "enum": ["ksvc"],
+                            "enum": [
+                              "ksvc"
+                            ],
                             "default": "ksvc"
                           },
                           "scaleToZero": {
@@ -3384,7 +3925,10 @@
                               }
                             },
                             "type": "object",
-                            "required": ["repository", "tag"]
+                            "required": [
+                              "repository",
+                              "tag"
+                            ]
                           },
                           "secrets": {
                             "type": "array",
@@ -3402,7 +3946,9 @@
                                   "uniqueItems": true
                                 }
                               },
-                              "required": ["name"],
+                              "required": [
+                                "name"
+                              ],
                               "type": "object"
                             }
                           },
@@ -3421,7 +3967,10 @@
                                   "maxLength": 131072
                                 }
                               },
-                              "required": ["name", "value"],
+                              "required": [
+                                "name",
+                                "value"
+                              ],
                               "type": "object"
                             }
                           },
@@ -3434,19 +3983,28 @@
                                   "cpu": {
                                     "description": "The guaranteed amount of CPU",
                                     "default": "50m",
-                                    "example": ["1", "200m"],
+                                    "example": [
+                                      "1",
+                                      "200m"
+                                    ],
                                     "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
                                     "type": "string"
                                   },
                                   "memory": {
                                     "description": "The guaranteed amount of RAM",
                                     "default": "64Mi",
-                                    "example": ["1Mi", "0.5M"],
+                                    "example": [
+                                      "1Mi",
+                                      "0.5M"
+                                    ],
                                     "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
                                     "type": "string"
                                   }
                                 },
-                                "required": ["cpu", "memory"],
+                                "required": [
+                                  "cpu",
+                                  "memory"
+                                ],
                                 "type": "object"
                               },
                               "limits": {
@@ -3454,19 +4012,28 @@
                                   "cpu": {
                                     "description": "The maximum amount of CPU",
                                     "default": "100m",
-                                    "example": ["1", "200m"],
+                                    "example": [
+                                      "1",
+                                      "200m"
+                                    ],
                                     "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
                                     "type": "string"
                                   },
                                   "memory": {
                                     "description": "The maximum amount of RAM",
                                     "default": "128Mi",
-                                    "example": ["1Mi", "0.5M"],
+                                    "example": [
+                                      "1Mi",
+                                      "0.5M"
+                                    ],
                                     "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
                                     "type": "string"
                                   }
                                 },
-                                "required": ["cpu", "memory"],
+                                "required": [
+                                  "cpu",
+                                  "memory"
+                                ],
                                 "type": "object"
                               }
                             },
@@ -3506,7 +4073,9 @@
                                 "properties": {
                                   "tagMatcher": {
                                     "type": "string",
-                                    "enum": ["semver"],
+                                    "enum": [
+                                      "semver"
+                                    ],
                                     "default": "semver"
                                   },
                                   "semver": {
@@ -3516,7 +4085,9 @@
                                     "description": "Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: \"~1.1\", MINOR and PATCH only \"~1\", ALL \"*\""
                                   }
                                 },
-                                "required": ["semver"],
+                                "required": [
+                                  "semver"
+                                ],
                                 "type": "object"
                               },
                               {
@@ -3524,7 +4095,9 @@
                                 "properties": {
                                   "tagMatcher": {
                                     "type": "string",
-                                    "enum": ["glob"],
+                                    "enum": [
+                                      "glob"
+                                    ],
                                     "default": "glob"
                                   },
                                   "glob": {
@@ -3534,7 +4107,9 @@
                                     "example": "main-v1.3.*"
                                   }
                                 },
-                                "required": ["glob"],
+                                "required": [
+                                  "glob"
+                                ],
                                 "type": "object",
                                 "additionalProperties": false
                               }
@@ -3547,11 +4122,15 @@
                         "properties": {
                           "serviceType": {
                             "type": "string",
-                            "enum": ["ksvcPredeployed"],
+                            "enum": [
+                              "ksvcPredeployed"
+                            ],
                             "default": "ksvcPredeployed"
                           }
                         },
-                        "required": ["serviceType"],
+                        "required": [
+                          "serviceType"
+                        ],
                         "type": "object"
                       },
                       {
@@ -3559,11 +4138,15 @@
                         "properties": {
                           "serviceType": {
                             "type": "string",
-                            "enum": ["svcPredeployed"],
+                            "enum": [
+                              "svcPredeployed"
+                            ],
                             "default": "svcPredeployed"
                           }
                         },
-                        "required": ["serviceType"],
+                        "required": [
+                          "serviceType"
+                        ],
                         "type": "object"
                       }
                     ]
@@ -3571,7 +4154,9 @@
                   "ingress": {
                     "title": "Exposure",
                     "x-acl": {
-                      "team": ["read"]
+                      "team": [
+                        "read"
+                      ]
                     },
                     "oneOf": [
                       {
@@ -3637,7 +4222,10 @@
                             "example": "www-example-com"
                           }
                         },
-                        "required": ["domain", "subdomain"],
+                        "required": [
+                          "domain",
+                          "subdomain"
+                        ],
                         "type": "object"
                       }
                     ]
@@ -3646,7 +4234,10 @@
                     "type": "string"
                   }
                 },
-                "required": ["name", "teamId"],
+                "required": [
+                  "name",
+                  "teamId"
+                ],
                 "type": "object"
               }
             }
@@ -3662,8 +4253,18 @@
                 "schema": {
                   "x-externalDocsPath": "docs/configuring-services",
                   "x-acl": {
-                    "admin": ["delete-any", "read-any", "create-any", "update-any"],
-                    "team": ["delete", "read", "create", "update"]
+                    "admin": [
+                      "delete-any",
+                      "read-any",
+                      "create-any",
+                      "update-any"
+                    ],
+                    "team": [
+                      "delete",
+                      "read",
+                      "create",
+                      "update"
+                    ]
                   },
                   "properties": {
                     "id": {
@@ -3694,7 +4295,9 @@
                           "properties": {
                             "serviceType": {
                               "type": "string",
-                              "enum": ["ksvc"],
+                              "enum": [
+                                "ksvc"
+                              ],
                               "default": "ksvc"
                             },
                             "scaleToZero": {
@@ -3717,7 +4320,10 @@
                                 }
                               },
                               "type": "object",
-                              "required": ["repository", "tag"]
+                              "required": [
+                                "repository",
+                                "tag"
+                              ]
                             },
                             "secrets": {
                               "type": "array",
@@ -3735,7 +4341,9 @@
                                     "uniqueItems": true
                                   }
                                 },
-                                "required": ["name"],
+                                "required": [
+                                  "name"
+                                ],
                                 "type": "object"
                               }
                             },
@@ -3754,7 +4362,10 @@
                                     "maxLength": 131072
                                   }
                                 },
-                                "required": ["name", "value"],
+                                "required": [
+                                  "name",
+                                  "value"
+                                ],
                                 "type": "object"
                               }
                             },
@@ -3767,19 +4378,28 @@
                                     "cpu": {
                                       "description": "The guaranteed amount of CPU",
                                       "default": "50m",
-                                      "example": ["1", "200m"],
+                                      "example": [
+                                        "1",
+                                        "200m"
+                                      ],
                                       "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
                                       "type": "string"
                                     },
                                     "memory": {
                                       "description": "The guaranteed amount of RAM",
                                       "default": "64Mi",
-                                      "example": ["1Mi", "0.5M"],
+                                      "example": [
+                                        "1Mi",
+                                        "0.5M"
+                                      ],
                                       "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
                                       "type": "string"
                                     }
                                   },
-                                  "required": ["cpu", "memory"],
+                                  "required": [
+                                    "cpu",
+                                    "memory"
+                                  ],
                                   "type": "object"
                                 },
                                 "limits": {
@@ -3787,19 +4407,28 @@
                                     "cpu": {
                                       "description": "The maximum amount of CPU",
                                       "default": "100m",
-                                      "example": ["1", "200m"],
+                                      "example": [
+                                        "1",
+                                        "200m"
+                                      ],
                                       "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
                                       "type": "string"
                                     },
                                     "memory": {
                                       "description": "The maximum amount of RAM",
                                       "default": "128Mi",
-                                      "example": ["1Mi", "0.5M"],
+                                      "example": [
+                                        "1Mi",
+                                        "0.5M"
+                                      ],
                                       "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
                                       "type": "string"
                                     }
                                   },
-                                  "required": ["cpu", "memory"],
+                                  "required": [
+                                    "cpu",
+                                    "memory"
+                                  ],
                                   "type": "object"
                                 }
                               },
@@ -3839,7 +4468,9 @@
                                   "properties": {
                                     "tagMatcher": {
                                       "type": "string",
-                                      "enum": ["semver"],
+                                      "enum": [
+                                        "semver"
+                                      ],
                                       "default": "semver"
                                     },
                                     "semver": {
@@ -3849,7 +4480,9 @@
                                       "description": "Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: \"~1.1\", MINOR and PATCH only \"~1\", ALL \"*\""
                                     }
                                   },
-                                  "required": ["semver"],
+                                  "required": [
+                                    "semver"
+                                  ],
                                   "type": "object"
                                 },
                                 {
@@ -3857,7 +4490,9 @@
                                   "properties": {
                                     "tagMatcher": {
                                       "type": "string",
-                                      "enum": ["glob"],
+                                      "enum": [
+                                        "glob"
+                                      ],
                                       "default": "glob"
                                     },
                                     "glob": {
@@ -3867,7 +4502,9 @@
                                       "example": "main-v1.3.*"
                                     }
                                   },
-                                  "required": ["glob"],
+                                  "required": [
+                                    "glob"
+                                  ],
                                   "type": "object",
                                   "additionalProperties": false
                                 }
@@ -3880,11 +4517,15 @@
                           "properties": {
                             "serviceType": {
                               "type": "string",
-                              "enum": ["ksvcPredeployed"],
+                              "enum": [
+                                "ksvcPredeployed"
+                              ],
                               "default": "ksvcPredeployed"
                             }
                           },
-                          "required": ["serviceType"],
+                          "required": [
+                            "serviceType"
+                          ],
                           "type": "object"
                         },
                         {
@@ -3892,11 +4533,15 @@
                           "properties": {
                             "serviceType": {
                               "type": "string",
-                              "enum": ["svcPredeployed"],
+                              "enum": [
+                                "svcPredeployed"
+                              ],
                               "default": "svcPredeployed"
                             }
                           },
-                          "required": ["serviceType"],
+                          "required": [
+                            "serviceType"
+                          ],
                           "type": "object"
                         }
                       ]
@@ -3904,7 +4549,9 @@
                     "ingress": {
                       "title": "Exposure",
                       "x-acl": {
-                        "team": ["read"]
+                        "team": [
+                          "read"
+                        ]
                       },
                       "oneOf": [
                         {
@@ -3970,7 +4617,10 @@
                               "example": "www-example-com"
                             }
                           },
-                          "required": ["domain", "subdomain"],
+                          "required": [
+                            "domain",
+                            "subdomain"
+                          ],
                           "type": "object"
                         }
                       ]
@@ -3979,7 +4629,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["name", "teamId"],
+                  "required": [
+                    "name",
+                    "teamId"
+                  ],
                   "type": "object"
                 }
               }
@@ -4011,7 +4664,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -4075,7 +4731,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -4131,8 +4790,18 @@
                   "type": "array",
                   "items": {
                     "x-acl": {
-                      "admin": ["read-any", "create-any", "update-any", "delete-any"],
-                      "team": ["read", "create", "update", "delete"]
+                      "admin": [
+                        "read-any",
+                        "create-any",
+                        "update-any",
+                        "delete-any"
+                      ],
+                      "team": [
+                        "read",
+                        "create",
+                        "update",
+                        "delete"
+                      ]
                     },
                     "properties": {
                       "id": {
@@ -4147,14 +4816,18 @@
                         "example": "secret01"
                       }
                     },
-                    "required": ["name"],
+                    "required": [
+                      "name"
+                    ],
                     "oneOf": [
                       {
                         "title": "Generic",
                         "properties": {
                           "type": {
                             "default": "generic",
-                            "enum": ["generic"]
+                            "enum": [
+                              "generic"
+                            ]
                           },
                           "entries": {
                             "type": "array",
@@ -4167,7 +4840,10 @@
                             }
                           }
                         },
-                        "required": ["type", "entries"],
+                        "required": [
+                          "type",
+                          "entries"
+                        ],
                         "type": "object"
                       },
                       {
@@ -4175,17 +4851,23 @@
                         "properties": {
                           "type": {
                             "default": "docker-registry",
-                            "enum": ["docker-registry"],
+                            "enum": [
+                              "docker-registry"
+                            ],
                             "type": "string"
                           },
                           "dockerconfig": {
                             "type": "string",
-                            "enum": [".dockerconfig.json"],
+                            "enum": [
+                              ".dockerconfig.json"
+                            ],
                             "default": ".dockerconfig.json",
                             "readOnly": true
                           }
                         },
-                        "required": ["type"],
+                        "required": [
+                          "type"
+                        ],
                         "type": "object"
                       },
                       {
@@ -4193,7 +4875,9 @@
                         "properties": {
                           "type": {
                             "default": "tls",
-                            "enum": ["tls"],
+                            "enum": [
+                              "tls"
+                            ],
                             "type": "string"
                           },
                           "crt": {
@@ -4212,7 +4896,11 @@
                             "description": "A Vault property name that contains CA certificate content"
                           }
                         },
-                        "required": ["type", "crt", "key"],
+                        "required": [
+                          "type",
+                          "crt",
+                          "key"
+                        ],
                         "type": "object"
                       }
                     ],
@@ -4248,7 +4936,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -4282,8 +4973,18 @@
             "application/json": {
               "schema": {
                 "x-acl": {
-                  "admin": ["read-any", "create-any", "update-any", "delete-any"],
-                  "team": ["read", "create", "update", "delete"]
+                  "admin": [
+                    "read-any",
+                    "create-any",
+                    "update-any",
+                    "delete-any"
+                  ],
+                  "team": [
+                    "read",
+                    "create",
+                    "update",
+                    "delete"
+                  ]
                 },
                 "properties": {
                   "id": {
@@ -4298,14 +4999,18 @@
                     "example": "secret01"
                   }
                 },
-                "required": ["name"],
+                "required": [
+                  "name"
+                ],
                 "oneOf": [
                   {
                     "title": "Generic",
                     "properties": {
                       "type": {
                         "default": "generic",
-                        "enum": ["generic"]
+                        "enum": [
+                          "generic"
+                        ]
                       },
                       "entries": {
                         "type": "array",
@@ -4318,7 +5023,10 @@
                         }
                       }
                     },
-                    "required": ["type", "entries"],
+                    "required": [
+                      "type",
+                      "entries"
+                    ],
                     "type": "object"
                   },
                   {
@@ -4326,17 +5034,23 @@
                     "properties": {
                       "type": {
                         "default": "docker-registry",
-                        "enum": ["docker-registry"],
+                        "enum": [
+                          "docker-registry"
+                        ],
                         "type": "string"
                       },
                       "dockerconfig": {
                         "type": "string",
-                        "enum": [".dockerconfig.json"],
+                        "enum": [
+                          ".dockerconfig.json"
+                        ],
                         "default": ".dockerconfig.json",
                         "readOnly": true
                       }
                     },
-                    "required": ["type"],
+                    "required": [
+                      "type"
+                    ],
                     "type": "object"
                   },
                   {
@@ -4344,7 +5058,9 @@
                     "properties": {
                       "type": {
                         "default": "tls",
-                        "enum": ["tls"],
+                        "enum": [
+                          "tls"
+                        ],
                         "type": "string"
                       },
                       "crt": {
@@ -4363,7 +5079,11 @@
                         "description": "A Vault property name that contains CA certificate content"
                       }
                     },
-                    "required": ["type", "crt", "key"],
+                    "required": [
+                      "type",
+                      "crt",
+                      "key"
+                    ],
                     "type": "object"
                   }
                 ],
@@ -4381,8 +5101,18 @@
               "application/json": {
                 "schema": {
                   "x-acl": {
-                    "admin": ["read-any", "create-any", "update-any", "delete-any"],
-                    "team": ["read", "create", "update", "delete"]
+                    "admin": [
+                      "read-any",
+                      "create-any",
+                      "update-any",
+                      "delete-any"
+                    ],
+                    "team": [
+                      "read",
+                      "create",
+                      "update",
+                      "delete"
+                    ]
                   },
                   "properties": {
                     "id": {
@@ -4397,14 +5127,18 @@
                       "example": "secret01"
                     }
                   },
-                  "required": ["name"],
+                  "required": [
+                    "name"
+                  ],
                   "oneOf": [
                     {
                       "title": "Generic",
                       "properties": {
                         "type": {
                           "default": "generic",
-                          "enum": ["generic"]
+                          "enum": [
+                            "generic"
+                          ]
                         },
                         "entries": {
                           "type": "array",
@@ -4417,7 +5151,10 @@
                           }
                         }
                       },
-                      "required": ["type", "entries"],
+                      "required": [
+                        "type",
+                        "entries"
+                      ],
                       "type": "object"
                     },
                     {
@@ -4425,17 +5162,23 @@
                       "properties": {
                         "type": {
                           "default": "docker-registry",
-                          "enum": ["docker-registry"],
+                          "enum": [
+                            "docker-registry"
+                          ],
                           "type": "string"
                         },
                         "dockerconfig": {
                           "type": "string",
-                          "enum": [".dockerconfig.json"],
+                          "enum": [
+                            ".dockerconfig.json"
+                          ],
                           "default": ".dockerconfig.json",
                           "readOnly": true
                         }
                       },
-                      "required": ["type"],
+                      "required": [
+                        "type"
+                      ],
                       "type": "object"
                     },
                     {
@@ -4443,7 +5186,9 @@
                       "properties": {
                         "type": {
                           "default": "tls",
-                          "enum": ["tls"],
+                          "enum": [
+                            "tls"
+                          ],
                           "type": "string"
                         },
                         "crt": {
@@ -4462,7 +5207,11 @@
                           "description": "A Vault property name that contains CA certificate content"
                         }
                       },
-                      "required": ["type", "crt", "key"],
+                      "required": [
+                        "type",
+                        "crt",
+                        "key"
+                      ],
                       "type": "object"
                     }
                   ],
@@ -4497,7 +5246,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -4560,8 +5312,18 @@
               "application/json": {
                 "schema": {
                   "x-acl": {
-                    "admin": ["read-any", "create-any", "update-any", "delete-any"],
-                    "team": ["read", "create", "update", "delete"]
+                    "admin": [
+                      "read-any",
+                      "create-any",
+                      "update-any",
+                      "delete-any"
+                    ],
+                    "team": [
+                      "read",
+                      "create",
+                      "update",
+                      "delete"
+                    ]
                   },
                   "properties": {
                     "id": {
@@ -4576,14 +5338,18 @@
                       "example": "secret01"
                     }
                   },
-                  "required": ["name"],
+                  "required": [
+                    "name"
+                  ],
                   "oneOf": [
                     {
                       "title": "Generic",
                       "properties": {
                         "type": {
                           "default": "generic",
-                          "enum": ["generic"]
+                          "enum": [
+                            "generic"
+                          ]
                         },
                         "entries": {
                           "type": "array",
@@ -4596,7 +5362,10 @@
                           }
                         }
                       },
-                      "required": ["type", "entries"],
+                      "required": [
+                        "type",
+                        "entries"
+                      ],
                       "type": "object"
                     },
                     {
@@ -4604,17 +5373,23 @@
                       "properties": {
                         "type": {
                           "default": "docker-registry",
-                          "enum": ["docker-registry"],
+                          "enum": [
+                            "docker-registry"
+                          ],
                           "type": "string"
                         },
                         "dockerconfig": {
                           "type": "string",
-                          "enum": [".dockerconfig.json"],
+                          "enum": [
+                            ".dockerconfig.json"
+                          ],
                           "default": ".dockerconfig.json",
                           "readOnly": true
                         }
                       },
-                      "required": ["type"],
+                      "required": [
+                        "type"
+                      ],
                       "type": "object"
                     },
                     {
@@ -4622,7 +5397,9 @@
                       "properties": {
                         "type": {
                           "default": "tls",
-                          "enum": ["tls"],
+                          "enum": [
+                            "tls"
+                          ],
                           "type": "string"
                         },
                         "crt": {
@@ -4641,7 +5418,11 @@
                           "description": "A Vault property name that contains CA certificate content"
                         }
                       },
-                      "required": ["type", "crt", "key"],
+                      "required": [
+                        "type",
+                        "crt",
+                        "key"
+                      ],
                       "type": "object"
                     }
                   ],
@@ -4676,7 +5457,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -4715,8 +5499,18 @@
             "application/json": {
               "schema": {
                 "x-acl": {
-                  "admin": ["read-any", "create-any", "update-any", "delete-any"],
-                  "team": ["read", "create", "update", "delete"]
+                  "admin": [
+                    "read-any",
+                    "create-any",
+                    "update-any",
+                    "delete-any"
+                  ],
+                  "team": [
+                    "read",
+                    "create",
+                    "update",
+                    "delete"
+                  ]
                 },
                 "properties": {
                   "id": {
@@ -4731,14 +5525,18 @@
                     "example": "secret01"
                   }
                 },
-                "required": ["name"],
+                "required": [
+                  "name"
+                ],
                 "oneOf": [
                   {
                     "title": "Generic",
                     "properties": {
                       "type": {
                         "default": "generic",
-                        "enum": ["generic"]
+                        "enum": [
+                          "generic"
+                        ]
                       },
                       "entries": {
                         "type": "array",
@@ -4751,7 +5549,10 @@
                         }
                       }
                     },
-                    "required": ["type", "entries"],
+                    "required": [
+                      "type",
+                      "entries"
+                    ],
                     "type": "object"
                   },
                   {
@@ -4759,17 +5560,23 @@
                     "properties": {
                       "type": {
                         "default": "docker-registry",
-                        "enum": ["docker-registry"],
+                        "enum": [
+                          "docker-registry"
+                        ],
                         "type": "string"
                       },
                       "dockerconfig": {
                         "type": "string",
-                        "enum": [".dockerconfig.json"],
+                        "enum": [
+                          ".dockerconfig.json"
+                        ],
                         "default": ".dockerconfig.json",
                         "readOnly": true
                       }
                     },
-                    "required": ["type"],
+                    "required": [
+                      "type"
+                    ],
                     "type": "object"
                   },
                   {
@@ -4777,7 +5584,9 @@
                     "properties": {
                       "type": {
                         "default": "tls",
-                        "enum": ["tls"],
+                        "enum": [
+                          "tls"
+                        ],
                         "type": "string"
                       },
                       "crt": {
@@ -4796,7 +5605,11 @@
                         "description": "A Vault property name that contains CA certificate content"
                       }
                     },
-                    "required": ["type", "crt", "key"],
+                    "required": [
+                      "type",
+                      "crt",
+                      "key"
+                    ],
                     "type": "object"
                   }
                 ],
@@ -4814,8 +5627,18 @@
               "application/json": {
                 "schema": {
                   "x-acl": {
-                    "admin": ["read-any", "create-any", "update-any", "delete-any"],
-                    "team": ["read", "create", "update", "delete"]
+                    "admin": [
+                      "read-any",
+                      "create-any",
+                      "update-any",
+                      "delete-any"
+                    ],
+                    "team": [
+                      "read",
+                      "create",
+                      "update",
+                      "delete"
+                    ]
                   },
                   "properties": {
                     "id": {
@@ -4830,14 +5653,18 @@
                       "example": "secret01"
                     }
                   },
-                  "required": ["name"],
+                  "required": [
+                    "name"
+                  ],
                   "oneOf": [
                     {
                       "title": "Generic",
                       "properties": {
                         "type": {
                           "default": "generic",
-                          "enum": ["generic"]
+                          "enum": [
+                            "generic"
+                          ]
                         },
                         "entries": {
                           "type": "array",
@@ -4850,7 +5677,10 @@
                           }
                         }
                       },
-                      "required": ["type", "entries"],
+                      "required": [
+                        "type",
+                        "entries"
+                      ],
                       "type": "object"
                     },
                     {
@@ -4858,17 +5688,23 @@
                       "properties": {
                         "type": {
                           "default": "docker-registry",
-                          "enum": ["docker-registry"],
+                          "enum": [
+                            "docker-registry"
+                          ],
                           "type": "string"
                         },
                         "dockerconfig": {
                           "type": "string",
-                          "enum": [".dockerconfig.json"],
+                          "enum": [
+                            ".dockerconfig.json"
+                          ],
                           "default": ".dockerconfig.json",
                           "readOnly": true
                         }
                       },
-                      "required": ["type"],
+                      "required": [
+                        "type"
+                      ],
                       "type": "object"
                     },
                     {
@@ -4876,7 +5712,9 @@
                       "properties": {
                         "type": {
                           "default": "tls",
-                          "enum": ["tls"],
+                          "enum": [
+                            "tls"
+                          ],
                           "type": "string"
                         },
                         "crt": {
@@ -4895,7 +5733,11 @@
                           "description": "A Vault property name that contains CA certificate content"
                         }
                       },
-                      "required": ["type", "crt", "key"],
+                      "required": [
+                        "type",
+                        "crt",
+                        "key"
+                      ],
                       "type": "object"
                     }
                   ],
@@ -4930,7 +5772,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -4994,7 +5839,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -5113,7 +5961,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -5156,8 +6007,12 @@
               "application/json": {
                 "schema": {
                   "x-acl": {
-                    "admin": ["read"],
-                    "team": ["read"]
+                    "admin": [
+                      "read"
+                    ],
+                    "team": [
+                      "read"
+                    ]
                   },
                   "properties": {
                     "cluster": {
@@ -5178,7 +6033,11 @@
                         "k8sVersion": {
                           "default": "1.19",
                           "description": "The cluster k8s version. Otomi supports 2 minor versions backwards compatibility from the suggested default.",
-                          "enum": ["1.17", "1.18", "1.19"],
+                          "enum": [
+                            "1.17",
+                            "1.18",
+                            "1.19"
+                          ],
                           "type": "string"
                         },
                         "name": {
@@ -5191,7 +6050,12 @@
                         },
                         "provider": {
                           "type": "string",
-                          "enum": ["aws", "azure", "google", "oneprem"]
+                          "enum": [
+                            "aws",
+                            "azure",
+                            "google",
+                            "oneprem"
+                          ]
                         },
                         "region": {
                           "description": "Dependent on provider.",
@@ -5202,7 +6066,14 @@
                           "type": "string"
                         }
                       },
-                      "required": ["apiServer", "k8sVersion", "name", "otomiVersion", "provider", "region"],
+                      "required": [
+                        "apiServer",
+                        "k8sVersion",
+                        "name",
+                        "otomiVersion",
+                        "provider",
+                        "region"
+                      ],
                       "type": "object"
                     },
                     "dns": {
@@ -5228,8 +6099,16 @@
                       "items": {
                         "x-externalDocsPath": "docs/configuring-teams",
                         "x-acl": {
-                          "admin": ["delete-any", "read-any", "create-any", "update-any"],
-                          "team": ["read-any", "update"]
+                          "admin": [
+                            "delete-any",
+                            "read-any",
+                            "create-any",
+                            "update-any"
+                          ],
+                          "team": [
+                            "read-any",
+                            "update"
+                          ]
                         },
                         "properties": {
                           "id": {
@@ -5238,8 +6117,12 @@
                             "type": "string",
                             "title": "ID",
                             "x-acl": {
-                              "admin": ["read"],
-                              "team": ["read"]
+                              "admin": [
+                                "read"
+                              ],
+                              "team": [
+                                "read"
+                              ]
                             }
                           },
                           "name": {
@@ -5249,8 +6132,13 @@
                             "title": "Name",
                             "example": "otomi",
                             "x-acl": {
-                              "admin": ["create", "read"],
-                              "team": ["read"]
+                              "admin": [
+                                "create",
+                                "read"
+                              ],
+                              "team": [
+                                "read"
+                              ]
                             }
                           },
                           "oidc": {
@@ -5276,7 +6164,11 @@
                                 "type": "array",
                                 "items": {
                                   "type": "string",
-                                  "enum": ["slack", "msteams", "email"]
+                                  "enum": [
+                                    "slack",
+                                    "msteams",
+                                    "email"
+                                  ]
                                 },
                                 "uniqueItems": true
                               },
@@ -5337,7 +6229,9 @@
                             "type": "object"
                           }
                         },
-                        "required": ["name", "password"],
+                        "required": [
+                          "name"
+                        ],
                         "type": "object"
                       }
                     },
@@ -5384,7 +6278,13 @@
                           "uniqueItems": true
                         }
                       },
-                      "required": ["isAdmin", "name", "email", "teams", "roles"],
+                      "required": [
+                        "isAdmin",
+                        "name",
+                        "email",
+                        "teams",
+                        "roles"
+                      ],
                       "type": "object"
                     }
                   },
@@ -5433,7 +6333,10 @@
               "application/json": {
                 "schema": {
                   "x-acl": {
-                    "admin": ["read-any", "update-any"],
+                    "admin": [
+                      "read-any",
+                      "update-any"
+                    ],
                     "team": []
                   },
                   "additionalProperties": false,
@@ -5443,7 +6346,10 @@
                       "properties": {
                         "drone": {
                           "default": "slack",
-                          "enum": ["slack", "msteams"],
+                          "enum": [
+                            "slack",
+                            "msteams"
+                          ],
                           "type": "string"
                         },
                         "email": {
@@ -5484,7 +6390,11 @@
                         "receivers": {
                           "description": "Notification receivers.",
                           "items": {
-                            "enum": ["slack", "msteams", "email"],
+                            "enum": [
+                              "slack",
+                              "msteams",
+                              "email"
+                            ],
                             "type": "string"
                           },
                           "type": "array"
@@ -5560,7 +6470,10 @@
                               "type": "string"
                             }
                           },
-                          "required": ["clientId", "clientSecret"],
+                          "required": [
+                            "clientId",
+                            "clientSecret"
+                          ],
                           "type": "object"
                         },
                         "monitor": {
@@ -5612,7 +6525,12 @@
                           "type": "string"
                         }
                       },
-                      "required": ["diskType", "resourceGroup", "subscriptionId", "tenantId"],
+                      "required": [
+                        "diskType",
+                        "resourceGroup",
+                        "subscriptionId",
+                        "tenantId"
+                      ],
                       "type": "object"
                     },
                     "customer": {
@@ -5640,7 +6558,10 @@
                           "type": "string"
                         }
                       },
-                      "required": ["cloudDnsKey", "projectId"],
+                      "required": [
+                        "cloudDnsKey",
+                        "projectId"
+                      ],
                       "type": "object"
                     },
                     "dns": {
@@ -5667,10 +6588,14 @@
                                   "type": "string"
                                 }
                               },
-                              "required": ["region"]
+                              "required": [
+                                "region"
+                              ]
                             }
                           },
-                          "required": ["aws"]
+                          "required": [
+                            "aws"
+                          ]
                         },
                         {
                           "title": "azure",
@@ -5719,7 +6644,9 @@
                               ]
                             }
                           },
-                          "required": ["azure"]
+                          "required": [
+                            "azure"
+                          ]
                         },
                         {
                           "title": "google",
@@ -5734,13 +6661,20 @@
                                   "type": "string"
                                 }
                               },
-                              "required": ["serviceAccountKey", "project"]
+                              "required": [
+                                "serviceAccountKey",
+                                "project"
+                              ]
                             }
                           },
-                          "required": ["google"]
+                          "required": [
+                            "google"
+                          ]
                         }
                       ],
-                      "required": ["domain"],
+                      "required": [
+                        "domain"
+                      ],
                       "type": "object"
                     },
                     "home": {
@@ -5748,7 +6682,10 @@
                       "properties": {
                         "drone": {
                           "default": "slack",
-                          "enum": ["slack", "msteams"],
+                          "enum": [
+                            "slack",
+                            "msteams"
+                          ],
                           "type": "string"
                         },
                         "email": {
@@ -5789,7 +6726,11 @@
                         "receivers": {
                           "description": "Notification receivers.",
                           "items": {
-                            "enum": ["slack", "msteams", "email"],
+                            "enum": [
+                              "slack",
+                              "msteams",
+                              "email"
+                            ],
                             "type": "string"
                           },
                           "type": "array"
@@ -5843,11 +6784,18 @@
                                   "type": "string"
                                 }
                               },
-                              "required": ["project", "region", "key_ring", "kmsAccount"],
+                              "required": [
+                                "project",
+                                "region",
+                                "key_ring",
+                                "kmsAccount"
+                              ],
                               "type": "object"
                             }
                           },
-                          "required": ["gcpckms"],
+                          "required": [
+                            "gcpckms"
+                          ],
                           "type": "object"
                         },
                         {
@@ -5868,11 +6816,18 @@
                                   "type": "string"
                                 }
                               },
-                              "required": ["region", "access_key", "secret_key", "endpoint"],
+                              "required": [
+                                "region",
+                                "access_key",
+                                "secret_key",
+                                "endpoint"
+                              ],
                               "type": "object"
                             }
                           },
-                          "required": ["awskms"],
+                          "required": [
+                            "awskms"
+                          ],
                           "type": "object"
                         },
                         {
@@ -5893,11 +6848,18 @@
                                   "type": "string"
                                 }
                               },
-                              "required": ["vault_name", "tenant_id", "client_id", "client_secret"],
+                              "required": [
+                                "vault_name",
+                                "tenant_id",
+                                "client_id",
+                                "client_secret"
+                              ],
                               "type": "object"
                             }
                           },
-                          "required": ["azurekeyvault"],
+                          "required": [
+                            "azurekeyvault"
+                          ],
                           "type": "object"
                         }
                       ],
@@ -5979,7 +6941,10 @@
                         "mode": {
                           "default": "ee",
                           "description": "The otomi-core edition. Either community edition (ce) or enterprise edition (ee).",
-                          "enum": ["ce", "ee"],
+                          "enum": [
+                            "ce",
+                            "ee"
+                          ],
                           "type": "string"
                         },
                         "pullSecret": {
@@ -6042,7 +7007,9 @@
                           "type": "string"
                         }
                       },
-                      "required": ["smarthost"],
+                      "required": [
+                        "smarthost"
+                      ],
                       "type": "object"
                     }
                   },
@@ -6062,7 +7029,10 @@
             "application/json": {
               "schema": {
                 "x-acl": {
-                  "admin": ["read-any", "update-any"],
+                  "admin": [
+                    "read-any",
+                    "update-any"
+                  ],
                   "team": []
                 },
                 "additionalProperties": false,
@@ -6072,7 +7042,10 @@
                     "properties": {
                       "drone": {
                         "default": "slack",
-                        "enum": ["slack", "msteams"],
+                        "enum": [
+                          "slack",
+                          "msteams"
+                        ],
                         "type": "string"
                       },
                       "email": {
@@ -6113,7 +7086,11 @@
                       "receivers": {
                         "description": "Notification receivers.",
                         "items": {
-                          "enum": ["slack", "msteams", "email"],
+                          "enum": [
+                            "slack",
+                            "msteams",
+                            "email"
+                          ],
                           "type": "string"
                         },
                         "type": "array"
@@ -6189,7 +7166,10 @@
                             "type": "string"
                           }
                         },
-                        "required": ["clientId", "clientSecret"],
+                        "required": [
+                          "clientId",
+                          "clientSecret"
+                        ],
                         "type": "object"
                       },
                       "monitor": {
@@ -6241,7 +7221,12 @@
                         "type": "string"
                       }
                     },
-                    "required": ["diskType", "resourceGroup", "subscriptionId", "tenantId"],
+                    "required": [
+                      "diskType",
+                      "resourceGroup",
+                      "subscriptionId",
+                      "tenantId"
+                    ],
                     "type": "object"
                   },
                   "customer": {
@@ -6269,7 +7254,10 @@
                         "type": "string"
                       }
                     },
-                    "required": ["cloudDnsKey", "projectId"],
+                    "required": [
+                      "cloudDnsKey",
+                      "projectId"
+                    ],
                     "type": "object"
                   },
                   "dns": {
@@ -6296,10 +7284,14 @@
                                 "type": "string"
                               }
                             },
-                            "required": ["region"]
+                            "required": [
+                              "region"
+                            ]
                           }
                         },
-                        "required": ["aws"]
+                        "required": [
+                          "aws"
+                        ]
                       },
                       {
                         "title": "azure",
@@ -6348,7 +7340,9 @@
                             ]
                           }
                         },
-                        "required": ["azure"]
+                        "required": [
+                          "azure"
+                        ]
                       },
                       {
                         "title": "google",
@@ -6363,13 +7357,20 @@
                                 "type": "string"
                               }
                             },
-                            "required": ["serviceAccountKey", "project"]
+                            "required": [
+                              "serviceAccountKey",
+                              "project"
+                            ]
                           }
                         },
-                        "required": ["google"]
+                        "required": [
+                          "google"
+                        ]
                       }
                     ],
-                    "required": ["domain"],
+                    "required": [
+                      "domain"
+                    ],
                     "type": "object"
                   },
                   "home": {
@@ -6377,7 +7378,10 @@
                     "properties": {
                       "drone": {
                         "default": "slack",
-                        "enum": ["slack", "msteams"],
+                        "enum": [
+                          "slack",
+                          "msteams"
+                        ],
                         "type": "string"
                       },
                       "email": {
@@ -6418,7 +7422,11 @@
                       "receivers": {
                         "description": "Notification receivers.",
                         "items": {
-                          "enum": ["slack", "msteams", "email"],
+                          "enum": [
+                            "slack",
+                            "msteams",
+                            "email"
+                          ],
                           "type": "string"
                         },
                         "type": "array"
@@ -6472,11 +7480,18 @@
                                 "type": "string"
                               }
                             },
-                            "required": ["project", "region", "key_ring", "kmsAccount"],
+                            "required": [
+                              "project",
+                              "region",
+                              "key_ring",
+                              "kmsAccount"
+                            ],
                             "type": "object"
                           }
                         },
-                        "required": ["gcpckms"],
+                        "required": [
+                          "gcpckms"
+                        ],
                         "type": "object"
                       },
                       {
@@ -6497,11 +7512,18 @@
                                 "type": "string"
                               }
                             },
-                            "required": ["region", "access_key", "secret_key", "endpoint"],
+                            "required": [
+                              "region",
+                              "access_key",
+                              "secret_key",
+                              "endpoint"
+                            ],
                             "type": "object"
                           }
                         },
-                        "required": ["awskms"],
+                        "required": [
+                          "awskms"
+                        ],
                         "type": "object"
                       },
                       {
@@ -6522,11 +7544,18 @@
                                 "type": "string"
                               }
                             },
-                            "required": ["vault_name", "tenant_id", "client_id", "client_secret"],
+                            "required": [
+                              "vault_name",
+                              "tenant_id",
+                              "client_id",
+                              "client_secret"
+                            ],
                             "type": "object"
                           }
                         },
-                        "required": ["azurekeyvault"],
+                        "required": [
+                          "azurekeyvault"
+                        ],
                         "type": "object"
                       }
                     ],
@@ -6608,7 +7637,10 @@
                       "mode": {
                         "default": "ee",
                         "description": "The otomi-core edition. Either community edition (ce) or enterprise edition (ee).",
-                        "enum": ["ce", "ee"],
+                        "enum": [
+                          "ce",
+                          "ee"
+                        ],
                         "type": "string"
                       },
                       "pullSecret": {
@@ -6671,7 +7703,9 @@
                         "type": "string"
                       }
                     },
-                    "required": ["smarthost"],
+                    "required": [
+                      "smarthost"
+                    ],
                     "type": "object"
                   }
                 },
@@ -6712,7 +7746,10 @@
                           },
                           "location": {
                             "type": "string",
-                            "enum": ["body", "path"]
+                            "enum": [
+                              "body",
+                              "path"
+                            ]
                           }
                         },
                         "type": "object"
@@ -6809,7 +7846,11 @@
           "k8sVersion": {
             "default": "1.19",
             "description": "The cluster k8s version. Otomi supports 2 minor versions backwards compatibility from the suggested default.",
-            "enum": ["1.17", "1.18", "1.19"],
+            "enum": [
+              "1.17",
+              "1.18",
+              "1.19"
+            ],
             "type": "string"
           },
           "name": {
@@ -6822,7 +7863,12 @@
           },
           "provider": {
             "type": "string",
-            "enum": ["aws", "azure", "google", "oneprem"]
+            "enum": [
+              "aws",
+              "azure",
+              "google",
+              "oneprem"
+            ]
           },
           "region": {
             "description": "Dependent on provider.",
@@ -6833,14 +7879,25 @@
             "type": "string"
           }
         },
-        "required": ["apiServer", "k8sVersion", "name", "otomiVersion", "provider", "region"],
+        "required": [
+          "apiServer",
+          "k8sVersion",
+          "name",
+          "otomiVersion",
+          "provider",
+          "region"
+        ],
         "type": "object"
       },
       "Deployment": {
         "x-externalDocsPath": "docs/deployment",
         "x-acl": {
-          "admin": ["read-any"],
-          "team": ["read-any"]
+          "admin": [
+            "read-any"
+          ],
+          "team": [
+            "read-any"
+          ]
         },
         "properties": {
           "id": {
@@ -6850,15 +7907,23 @@
             "type": "string",
             "readOnly": true,
             "description": "Deployment status",
-            "enum": ["in-progress", "completed", "failed"]
+            "enum": [
+              "in-progress",
+              "completed",
+              "failed"
+            ]
           }
         },
         "type": "object"
       },
       "Kubecfg": {
         "x-acl": {
-          "admin": ["read-any"],
-          "team": ["read"]
+          "admin": [
+            "read-any"
+          ],
+          "team": [
+            "read"
+          ]
         },
         "properties": {},
         "type": "object"
@@ -6885,7 +7950,10 @@
                 },
                 "location": {
                   "type": "string",
-                  "enum": ["body", "path"]
+                  "enum": [
+                    "body",
+                    "path"
+                  ]
                 }
               },
               "type": "object"
@@ -6905,8 +7973,18 @@
       },
       "Secret": {
         "x-acl": {
-          "admin": ["read-any", "create-any", "update-any", "delete-any"],
-          "team": ["read", "create", "update", "delete"]
+          "admin": [
+            "read-any",
+            "create-any",
+            "update-any",
+            "delete-any"
+          ],
+          "team": [
+            "read",
+            "create",
+            "update",
+            "delete"
+          ]
         },
         "properties": {
           "id": {
@@ -6921,14 +7999,18 @@
             "example": "secret01"
           }
         },
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "oneOf": [
           {
             "title": "Generic",
             "properties": {
               "type": {
                 "default": "generic",
-                "enum": ["generic"]
+                "enum": [
+                  "generic"
+                ]
               },
               "entries": {
                 "type": "array",
@@ -6941,7 +8023,10 @@
                 }
               }
             },
-            "required": ["type", "entries"],
+            "required": [
+              "type",
+              "entries"
+            ],
             "type": "object"
           },
           {
@@ -6949,17 +8034,23 @@
             "properties": {
               "type": {
                 "default": "docker-registry",
-                "enum": ["docker-registry"],
+                "enum": [
+                  "docker-registry"
+                ],
                 "type": "string"
               },
               "dockerconfig": {
                 "type": "string",
-                "enum": [".dockerconfig.json"],
+                "enum": [
+                  ".dockerconfig.json"
+                ],
                 "default": ".dockerconfig.json",
                 "readOnly": true
               }
             },
-            "required": ["type"],
+            "required": [
+              "type"
+            ],
             "type": "object"
           },
           {
@@ -6967,7 +8058,9 @@
             "properties": {
               "type": {
                 "default": "tls",
-                "enum": ["tls"],
+                "enum": [
+                  "tls"
+                ],
                 "type": "string"
               },
               "crt": {
@@ -6986,7 +8079,11 @@
                 "description": "A Vault property name that contains CA certificate content"
               }
             },
-            "required": ["type", "crt", "key"],
+            "required": [
+              "type",
+              "crt",
+              "key"
+            ],
             "type": "object"
           }
         ],
@@ -6995,8 +8092,18 @@
       "Service": {
         "x-externalDocsPath": "docs/configuring-services",
         "x-acl": {
-          "admin": ["delete-any", "read-any", "create-any", "update-any"],
-          "team": ["delete", "read", "create", "update"]
+          "admin": [
+            "delete-any",
+            "read-any",
+            "create-any",
+            "update-any"
+          ],
+          "team": [
+            "delete",
+            "read",
+            "create",
+            "update"
+          ]
         },
         "properties": {
           "id": {
@@ -7027,7 +8134,9 @@
                 "properties": {
                   "serviceType": {
                     "type": "string",
-                    "enum": ["ksvc"],
+                    "enum": [
+                      "ksvc"
+                    ],
                     "default": "ksvc"
                   },
                   "scaleToZero": {
@@ -7050,7 +8159,10 @@
                       }
                     },
                     "type": "object",
-                    "required": ["repository", "tag"]
+                    "required": [
+                      "repository",
+                      "tag"
+                    ]
                   },
                   "secrets": {
                     "type": "array",
@@ -7068,7 +8180,9 @@
                           "uniqueItems": true
                         }
                       },
-                      "required": ["name"],
+                      "required": [
+                        "name"
+                      ],
                       "type": "object"
                     }
                   },
@@ -7087,7 +8201,10 @@
                           "maxLength": 131072
                         }
                       },
-                      "required": ["name", "value"],
+                      "required": [
+                        "name",
+                        "value"
+                      ],
                       "type": "object"
                     }
                   },
@@ -7100,19 +8217,28 @@
                           "cpu": {
                             "description": "The guaranteed amount of CPU",
                             "default": "50m",
-                            "example": ["1", "200m"],
+                            "example": [
+                              "1",
+                              "200m"
+                            ],
                             "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
                             "type": "string"
                           },
                           "memory": {
                             "description": "The guaranteed amount of RAM",
                             "default": "64Mi",
-                            "example": ["1Mi", "0.5M"],
+                            "example": [
+                              "1Mi",
+                              "0.5M"
+                            ],
                             "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
                             "type": "string"
                           }
                         },
-                        "required": ["cpu", "memory"],
+                        "required": [
+                          "cpu",
+                          "memory"
+                        ],
                         "type": "object"
                       },
                       "limits": {
@@ -7120,19 +8246,28 @@
                           "cpu": {
                             "description": "The maximum amount of CPU",
                             "default": "100m",
-                            "example": ["1", "200m"],
+                            "example": [
+                              "1",
+                              "200m"
+                            ],
                             "pattern": "^([0-9]+\\.[0-9]{1,2})|([0-9]{2,3}m)?$",
                             "type": "string"
                           },
                           "memory": {
                             "description": "The maximum amount of RAM",
                             "default": "128Mi",
-                            "example": ["1Mi", "0.5M"],
+                            "example": [
+                              "1Mi",
+                              "0.5M"
+                            ],
                             "pattern": "^([0-9]+\\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$",
                             "type": "string"
                           }
                         },
-                        "required": ["cpu", "memory"],
+                        "required": [
+                          "cpu",
+                          "memory"
+                        ],
                         "type": "object"
                       }
                     },
@@ -7172,7 +8307,9 @@
                         "properties": {
                           "tagMatcher": {
                             "type": "string",
-                            "enum": ["semver"],
+                            "enum": [
+                              "semver"
+                            ],
                             "default": "semver"
                           },
                           "semver": {
@@ -7182,7 +8319,9 @@
                             "description": "Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: \"~1.1\", MINOR and PATCH only \"~1\", ALL \"*\""
                           }
                         },
-                        "required": ["semver"],
+                        "required": [
+                          "semver"
+                        ],
                         "type": "object"
                       },
                       {
@@ -7190,7 +8329,9 @@
                         "properties": {
                           "tagMatcher": {
                             "type": "string",
-                            "enum": ["glob"],
+                            "enum": [
+                              "glob"
+                            ],
                             "default": "glob"
                           },
                           "glob": {
@@ -7200,7 +8341,9 @@
                             "example": "main-v1.3.*"
                           }
                         },
-                        "required": ["glob"],
+                        "required": [
+                          "glob"
+                        ],
                         "type": "object",
                         "additionalProperties": false
                       }
@@ -7213,11 +8356,15 @@
                 "properties": {
                   "serviceType": {
                     "type": "string",
-                    "enum": ["ksvcPredeployed"],
+                    "enum": [
+                      "ksvcPredeployed"
+                    ],
                     "default": "ksvcPredeployed"
                   }
                 },
-                "required": ["serviceType"],
+                "required": [
+                  "serviceType"
+                ],
                 "type": "object"
               },
               {
@@ -7225,11 +8372,15 @@
                 "properties": {
                   "serviceType": {
                     "type": "string",
-                    "enum": ["svcPredeployed"],
+                    "enum": [
+                      "svcPredeployed"
+                    ],
                     "default": "svcPredeployed"
                   }
                 },
-                "required": ["serviceType"],
+                "required": [
+                  "serviceType"
+                ],
                 "type": "object"
               }
             ]
@@ -7237,7 +8388,9 @@
           "ingress": {
             "title": "Exposure",
             "x-acl": {
-              "team": ["read"]
+              "team": [
+                "read"
+              ]
             },
             "oneOf": [
               {
@@ -7303,7 +8456,10 @@
                     "example": "www-example-com"
                   }
                 },
-                "required": ["domain", "subdomain"],
+                "required": [
+                  "domain",
+                  "subdomain"
+                ],
                 "type": "object"
               }
             ]
@@ -7312,13 +8468,20 @@
             "type": "string"
           }
         },
-        "required": ["name", "teamId"],
+        "required": [
+          "name",
+          "teamId"
+        ],
         "type": "object"
       },
       "Session": {
         "x-acl": {
-          "admin": ["read"],
-          "team": ["read"]
+          "admin": [
+            "read"
+          ],
+          "team": [
+            "read"
+          ]
         },
         "properties": {
           "cluster": {
@@ -7339,7 +8502,11 @@
               "k8sVersion": {
                 "default": "1.19",
                 "description": "The cluster k8s version. Otomi supports 2 minor versions backwards compatibility from the suggested default.",
-                "enum": ["1.17", "1.18", "1.19"],
+                "enum": [
+                  "1.17",
+                  "1.18",
+                  "1.19"
+                ],
                 "type": "string"
               },
               "name": {
@@ -7352,7 +8519,12 @@
               },
               "provider": {
                 "type": "string",
-                "enum": ["aws", "azure", "google", "oneprem"]
+                "enum": [
+                  "aws",
+                  "azure",
+                  "google",
+                  "oneprem"
+                ]
               },
               "region": {
                 "description": "Dependent on provider.",
@@ -7363,7 +8535,14 @@
                 "type": "string"
               }
             },
-            "required": ["apiServer", "k8sVersion", "name", "otomiVersion", "provider", "region"],
+            "required": [
+              "apiServer",
+              "k8sVersion",
+              "name",
+              "otomiVersion",
+              "provider",
+              "region"
+            ],
             "type": "object"
           },
           "dns": {
@@ -7389,8 +8568,16 @@
             "items": {
               "x-externalDocsPath": "docs/configuring-teams",
               "x-acl": {
-                "admin": ["delete-any", "read-any", "create-any", "update-any"],
-                "team": ["read-any", "update"]
+                "admin": [
+                  "delete-any",
+                  "read-any",
+                  "create-any",
+                  "update-any"
+                ],
+                "team": [
+                  "read-any",
+                  "update"
+                ]
               },
               "properties": {
                 "id": {
@@ -7399,8 +8586,12 @@
                   "type": "string",
                   "title": "ID",
                   "x-acl": {
-                    "admin": ["read"],
-                    "team": ["read"]
+                    "admin": [
+                      "read"
+                    ],
+                    "team": [
+                      "read"
+                    ]
                   }
                 },
                 "name": {
@@ -7410,8 +8601,13 @@
                   "title": "Name",
                   "example": "otomi",
                   "x-acl": {
-                    "admin": ["create", "read"],
-                    "team": ["read"]
+                    "admin": [
+                      "create",
+                      "read"
+                    ],
+                    "team": [
+                      "read"
+                    ]
                   }
                 },
                 "oidc": {
@@ -7437,7 +8633,11 @@
                       "type": "array",
                       "items": {
                         "type": "string",
-                        "enum": ["slack", "msteams", "email"]
+                        "enum": [
+                          "slack",
+                          "msteams",
+                          "email"
+                        ]
                       },
                       "uniqueItems": true
                     },
@@ -7498,7 +8698,9 @@
                   "type": "object"
                 }
               },
-              "required": ["name", "password"],
+              "required": [
+                "name"
+              ],
               "type": "object"
             }
           },
@@ -7545,7 +8747,13 @@
                 "uniqueItems": true
               }
             },
-            "required": ["isAdmin", "name", "email", "teams", "roles"],
+            "required": [
+              "isAdmin",
+              "name",
+              "email",
+              "teams",
+              "roles"
+            ],
             "type": "object"
           }
         },
@@ -7553,7 +8761,10 @@
       },
       "Settings": {
         "x-acl": {
-          "admin": ["read-any", "update-any"],
+          "admin": [
+            "read-any",
+            "update-any"
+          ],
           "team": []
         },
         "additionalProperties": false,
@@ -7563,7 +8774,10 @@
             "properties": {
               "drone": {
                 "default": "slack",
-                "enum": ["slack", "msteams"],
+                "enum": [
+                  "slack",
+                  "msteams"
+                ],
                 "type": "string"
               },
               "email": {
@@ -7604,7 +8818,11 @@
               "receivers": {
                 "description": "Notification receivers.",
                 "items": {
-                  "enum": ["slack", "msteams", "email"],
+                  "enum": [
+                    "slack",
+                    "msteams",
+                    "email"
+                  ],
                   "type": "string"
                 },
                 "type": "array"
@@ -7680,7 +8898,10 @@
                     "type": "string"
                   }
                 },
-                "required": ["clientId", "clientSecret"],
+                "required": [
+                  "clientId",
+                  "clientSecret"
+                ],
                 "type": "object"
               },
               "monitor": {
@@ -7732,7 +8953,12 @@
                 "type": "string"
               }
             },
-            "required": ["diskType", "resourceGroup", "subscriptionId", "tenantId"],
+            "required": [
+              "diskType",
+              "resourceGroup",
+              "subscriptionId",
+              "tenantId"
+            ],
             "type": "object"
           },
           "customer": {
@@ -7760,7 +8986,10 @@
                 "type": "string"
               }
             },
-            "required": ["cloudDnsKey", "projectId"],
+            "required": [
+              "cloudDnsKey",
+              "projectId"
+            ],
             "type": "object"
           },
           "dns": {
@@ -7787,10 +9016,14 @@
                         "type": "string"
                       }
                     },
-                    "required": ["region"]
+                    "required": [
+                      "region"
+                    ]
                   }
                 },
-                "required": ["aws"]
+                "required": [
+                  "aws"
+                ]
               },
               {
                 "title": "azure",
@@ -7830,10 +9063,18 @@
                         "default": false
                       }
                     },
-                    "required": ["resourceGroup", "tenantId", "subscriptionId", "aadClientId", "aadClientSecret"]
+                    "required": [
+                      "resourceGroup",
+                      "tenantId",
+                      "subscriptionId",
+                      "aadClientId",
+                      "aadClientSecret"
+                    ]
                   }
                 },
-                "required": ["azure"]
+                "required": [
+                  "azure"
+                ]
               },
               {
                 "title": "google",
@@ -7848,13 +9089,20 @@
                         "type": "string"
                       }
                     },
-                    "required": ["serviceAccountKey", "project"]
+                    "required": [
+                      "serviceAccountKey",
+                      "project"
+                    ]
                   }
                 },
-                "required": ["google"]
+                "required": [
+                  "google"
+                ]
               }
             ],
-            "required": ["domain"],
+            "required": [
+              "domain"
+            ],
             "type": "object"
           },
           "home": {
@@ -7862,7 +9110,10 @@
             "properties": {
               "drone": {
                 "default": "slack",
-                "enum": ["slack", "msteams"],
+                "enum": [
+                  "slack",
+                  "msteams"
+                ],
                 "type": "string"
               },
               "email": {
@@ -7903,7 +9154,11 @@
               "receivers": {
                 "description": "Notification receivers.",
                 "items": {
-                  "enum": ["slack", "msteams", "email"],
+                  "enum": [
+                    "slack",
+                    "msteams",
+                    "email"
+                  ],
                   "type": "string"
                 },
                 "type": "array"
@@ -7957,11 +9212,18 @@
                         "type": "string"
                       }
                     },
-                    "required": ["project", "region", "key_ring", "kmsAccount"],
+                    "required": [
+                      "project",
+                      "region",
+                      "key_ring",
+                      "kmsAccount"
+                    ],
                     "type": "object"
                   }
                 },
-                "required": ["gcpckms"],
+                "required": [
+                  "gcpckms"
+                ],
                 "type": "object"
               },
               {
@@ -7982,11 +9244,18 @@
                         "type": "string"
                       }
                     },
-                    "required": ["region", "access_key", "secret_key", "endpoint"],
+                    "required": [
+                      "region",
+                      "access_key",
+                      "secret_key",
+                      "endpoint"
+                    ],
                     "type": "object"
                   }
                 },
-                "required": ["awskms"],
+                "required": [
+                  "awskms"
+                ],
                 "type": "object"
               },
               {
@@ -8007,11 +9276,18 @@
                         "type": "string"
                       }
                     },
-                    "required": ["vault_name", "tenant_id", "client_id", "client_secret"],
+                    "required": [
+                      "vault_name",
+                      "tenant_id",
+                      "client_id",
+                      "client_secret"
+                    ],
                     "type": "object"
                   }
                 },
-                "required": ["azurekeyvault"],
+                "required": [
+                  "azurekeyvault"
+                ],
                 "type": "object"
               }
             ],
@@ -8093,7 +9369,10 @@
               "mode": {
                 "default": "ee",
                 "description": "The otomi-core edition. Either community edition (ce) or enterprise edition (ee).",
-                "enum": ["ce", "ee"],
+                "enum": [
+                  "ce",
+                  "ee"
+                ],
                 "type": "string"
               },
               "pullSecret": {
@@ -8156,7 +9435,9 @@
                 "type": "string"
               }
             },
-            "required": ["smarthost"],
+            "required": [
+              "smarthost"
+            ],
             "type": "object"
           }
         },
@@ -8165,8 +9446,16 @@
       "Team": {
         "x-externalDocsPath": "docs/configuring-teams",
         "x-acl": {
-          "admin": ["delete-any", "read-any", "create-any", "update-any"],
-          "team": ["read-any", "update"]
+          "admin": [
+            "delete-any",
+            "read-any",
+            "create-any",
+            "update-any"
+          ],
+          "team": [
+            "read-any",
+            "update"
+          ]
         },
         "properties": {
           "id": {
@@ -8175,8 +9464,12 @@
             "type": "string",
             "title": "ID",
             "x-acl": {
-              "admin": ["read"],
-              "team": ["read"]
+              "admin": [
+                "read"
+              ],
+              "team": [
+                "read"
+              ]
             }
           },
           "name": {
@@ -8186,8 +9479,13 @@
             "title": "Name",
             "example": "otomi",
             "x-acl": {
-              "admin": ["create", "read"],
-              "team": ["read"]
+              "admin": [
+                "create",
+                "read"
+              ],
+              "team": [
+                "read"
+              ]
             }
           },
           "oidc": {
@@ -8213,7 +9511,11 @@
                 "type": "array",
                 "items": {
                   "type": "string",
-                  "enum": ["slack", "msteams", "email"]
+                  "enum": [
+                    "slack",
+                    "msteams",
+                    "email"
+                  ]
                 },
                 "uniqueItems": true
               },
@@ -8274,7 +9576,9 @@
             "type": "object"
           }
         },
-        "required": ["name", "password"],
+        "required": [
+          "name"
+        ],
         "type": "object"
       },
       "User": {
@@ -8320,7 +9624,13 @@
             "uniqueItems": true
           }
         },
-        "required": ["isAdmin", "name", "email", "teams", "roles"],
+        "required": [
+          "isAdmin",
+          "name",
+          "email",
+          "teams",
+          "roles"
+        ],
         "type": "object"
       }
     }

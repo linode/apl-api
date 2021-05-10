@@ -302,7 +302,7 @@ export interface components {
           /** An OIDC group name/id granting access to this team */
           groupMapping?: string;
         };
-        password: string;
+        password?: string;
         alerts?: {
           receivers?: ("slack" | "msteams" | "email")[];
           slack?: {
@@ -585,7 +585,7 @@ export interface components {
         /** An OIDC group name/id granting access to this team */
         groupMapping?: string;
       };
-      password: string;
+      password?: string;
       alerts?: {
         receivers?: ("slack" | "msteams" | "email")[];
         slack?: {
@@ -834,7 +834,7 @@ export interface operations {
               /** An OIDC group name/id granting access to this team */
               groupMapping?: string;
             };
-            password: string;
+            password?: string;
             alerts?: {
               receivers?: ("slack" | "msteams" | "email")[];
               slack?: {
@@ -878,7 +878,7 @@ export interface operations {
               /** An OIDC group name/id granting access to this team */
               groupMapping?: string;
             };
-            password: string;
+            password?: string;
             alerts?: {
               receivers?: ("slack" | "msteams" | "email")[];
               slack?: {
@@ -940,7 +940,7 @@ export interface operations {
             /** An OIDC group name/id granting access to this team */
             groupMapping?: string;
           };
-          password: string;
+          password?: string;
           alerts?: {
             receivers?: ("slack" | "msteams" | "email")[];
             slack?: {
@@ -989,7 +989,7 @@ export interface operations {
               /** An OIDC group name/id granting access to this team */
               groupMapping?: string;
             };
-            password: string;
+            password?: string;
             alerts?: {
               receivers?: ("slack" | "msteams" | "email")[];
               slack?: {
@@ -1061,7 +1061,7 @@ export interface operations {
               /** An OIDC group name/id granting access to this team */
               groupMapping?: string;
             };
-            password: string;
+            password?: string;
             alerts?: {
               receivers?: ("slack" | "msteams" | "email")[];
               slack?: {
@@ -1123,7 +1123,7 @@ export interface operations {
             /** An OIDC group name/id granting access to this team */
             groupMapping?: string;
           };
-          password: string;
+          password?: string;
           alerts?: {
             receivers?: ("slack" | "msteams" | "email")[];
             slack?: {
@@ -2332,7 +2332,7 @@ export interface operations {
                 /** An OIDC group name/id granting access to this team */
                 groupMapping?: string;
               };
-              password: string;
+              password?: string;
               alerts?: {
                 receivers?: ("slack" | "msteams" | "email")[];
                 slack?: {
