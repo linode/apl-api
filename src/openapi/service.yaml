@@ -180,6 +180,7 @@ Service:
         - title: Private
           nullable: true
           additionalProperties: false
+          type: object
         - title: Public URL
           # nullable: true
           properties:
