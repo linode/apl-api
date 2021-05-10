@@ -194,7 +194,6 @@ Service:
           - read
     teamId:
       <<: *idNameField
-      readOnly: true
   required:
     - name
     - teamId
