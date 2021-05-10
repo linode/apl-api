@@ -128,17 +128,17 @@ export interface components {
       /** Only used for API/UI to show in app. */
       apiName?: string;
       /** Used by kubectl for local deployment to target cluster. */
-      apiServer: string;
+      apiServer?: string;
       /** A Kubernetes API public IP address (onprem only). */
       entrypoint?: string;
       /** The cluster k8s version. Otomi supports 2 minor versions backwards compatibility from the suggested default. */
-      k8sVersion: "1.17" | "1.18" | "1.19";
-      name: string;
+      k8sVersion?: "1.17" | "1.18" | "1.19";
+      name?: string;
       /** Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version. */
       otomiVersion: string;
-      provider: "aws" | "azure" | "google" | "oneprem";
+      provider?: "aws" | "azure" | "google" | "oneprem";
       /** Dependent on provider. */
-      region: string;
+      region?: string;
       /** AWS only. If provided will override autodiscovery from metadata. */
       vpcID?: string;
     };
@@ -279,17 +279,17 @@ export interface components {
         /** Only used for API/UI to show in app. */
         apiName?: string;
         /** Used by kubectl for local deployment to target cluster. */
-        apiServer: string;
+        apiServer?: string;
         /** A Kubernetes API public IP address (onprem only). */
         entrypoint?: string;
         /** The cluster k8s version. Otomi supports 2 minor versions backwards compatibility from the suggested default. */
-        k8sVersion: "1.17" | "1.18" | "1.19";
-        name: string;
+        k8sVersion?: "1.17" | "1.18" | "1.19";
+        name?: string;
         /** Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version. */
         otomiVersion: string;
-        provider: "aws" | "azure" | "google" | "oneprem";
+        provider?: "aws" | "azure" | "google" | "oneprem";
         /** Dependent on provider. */
-        region: string;
+        region?: string;
         /** AWS only. If provided will override autodiscovery from metadata. */
         vpcID?: string;
       };
@@ -567,6 +567,8 @@ export interface components {
           };
         };
       };
+      /** Use this property to indicate other otomi instances and easily navigate between them from otomi-console */
+      otomiInstanceUrls?: any[];
       smtp?: {
         auth_identity?: string;
         auth_password?: string;
@@ -645,17 +647,17 @@ export interface operations {
             /** Only used for API/UI to show in app. */
             apiName?: string;
             /** Used by kubectl for local deployment to target cluster. */
-            apiServer: string;
+            apiServer?: string;
             /** A Kubernetes API public IP address (onprem only). */
             entrypoint?: string;
             /** The cluster k8s version. Otomi supports 2 minor versions backwards compatibility from the suggested default. */
-            k8sVersion: "1.17" | "1.18" | "1.19";
-            name: string;
+            k8sVersion?: "1.17" | "1.18" | "1.19";
+            name?: string;
             /** Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version. */
             otomiVersion: string;
-            provider: "aws" | "azure" | "google" | "oneprem";
+            provider?: "aws" | "azure" | "google" | "oneprem";
             /** Dependent on provider. */
-            region: string;
+            region?: string;
             /** AWS only. If provided will override autodiscovery from metadata. */
             vpcID?: string;
           }[];
@@ -2329,17 +2331,17 @@ export interface operations {
               /** Only used for API/UI to show in app. */
               apiName?: string;
               /** Used by kubectl for local deployment to target cluster. */
-              apiServer: string;
+              apiServer?: string;
               /** A Kubernetes API public IP address (onprem only). */
               entrypoint?: string;
               /** The cluster k8s version. Otomi supports 2 minor versions backwards compatibility from the suggested default. */
-              k8sVersion: "1.17" | "1.18" | "1.19";
-              name: string;
+              k8sVersion?: "1.17" | "1.18" | "1.19";
+              name?: string;
               /** Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version. */
               otomiVersion: string;
-              provider: "aws" | "azure" | "google" | "oneprem";
+              provider?: "aws" | "azure" | "google" | "oneprem";
               /** Dependent on provider. */
-              region: string;
+              region?: string;
               /** AWS only. If provided will override autodiscovery from metadata. */
               vpcID?: string;
             };
@@ -2642,6 +2644,8 @@ export interface operations {
                 };
               };
             };
+            /** Use this property to indicate other otomi instances and easily navigate between them from otomi-console */
+            otomiInstanceUrls?: any[];
             smtp?: {
               auth_identity?: string;
               auth_password?: string;
@@ -2914,6 +2918,8 @@ export interface operations {
               };
             };
           };
+          /** Use this property to indicate other otomi instances and easily navigate between them from otomi-console */
+          otomiInstanceUrls?: any[];
           smtp?: {
             auth_identity?: string;
             auth_password?: string;
