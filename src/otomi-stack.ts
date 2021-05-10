@@ -299,8 +299,9 @@ export default class OtomiStack {
 
   loadCluster(): void {
     const data: any = this.repo.readFile('./env/cluster.yaml')
-    const { cluster } = data
+    const { cluster, clusters } = data
     this.db.populateItem('cluster', cluster, undefined, cluster.id)
+    clusters.map((c) => this.db.populateItem('clusters', c, undefined, c))
   }
 
   loadConfig(dataPath: string, secretDataPath: string): any {
@@ -332,7 +333,7 @@ export default class OtomiStack {
       `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
     ) as Settings
     // eslint-disable-next-line chai-friendly/no-unused-expressions
-    data.dns?.dnsZones?.push(data.dns.domain)
+    data.dns?.zones?.push(data.dns.domain)
     this.db.db.set('settings', data).write()
   }
 

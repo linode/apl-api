@@ -66,14 +66,14 @@ export function getPublicUrl(serviceDomain?: string, serviceName?: string, teamI
     }
   }
 
-  const dnsZones = [...(dns!.dnsZones || [])]
-  dnsZones.push(dns?.domain || '')
+  const zones = [...(dns!.zones || [])]
+  zones.push(dns?.domain || '')
   // Sort by length descending
-  dnsZones.sort((a, b) => b.length - a.length)
-  for (let i = 0; i < dnsZones.length; i += 1) {
-    if (serviceDomain.endsWith(dnsZones[i])) {
-      const subdomainLength = serviceDomain.length - dnsZones[i].length - 1
-      return { subdomain: serviceDomain.substring(0, subdomainLength), domain: dnsZones[i] }
+  zones.sort((a, b) => b.length - a.length)
+  for (let i = 0; i < zones.length; i += 1) {
+    if (serviceDomain.endsWith(zones[i])) {
+      const subdomainLength = serviceDomain.length - zones[i].length - 1
+      return { subdomain: serviceDomain.substring(0, subdomainLength), domain: zones[i] }
     }
   }
 
@@ -96,5 +96,5 @@ export function getTeamSecretsFilePath(teamId: string): string {
 }
 
 export function getTeamSecretsJsonPath(teamId: string): string {
-  return `teamConfig.teams.${teamId}.externalSecrets`
+  return `teamConfig.teams.${teamId}.secrets`
 }

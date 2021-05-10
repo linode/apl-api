@@ -5,7 +5,7 @@ describe('Utils', () => {
   it('should retrieve host part from service domain', (done) => {
     const x = getPublicUrl('aa.bb.cc.dd.ee', undefined, undefined, {
       domain: 'dev.otomi.cloud',
-      dnsZones: ['dd.ee'],
+      zones: ['dd.ee'],
       aws: { region: 'r' },
     })
     expect(x.subdomain).to.equal('aa.bb.cc')
@@ -15,7 +15,7 @@ describe('Utils', () => {
   it('should retrieve only domain', (done) => {
     const x = getPublicUrl('my.custom.domain', undefined, undefined, {
       domain: 'aa.otomi.cloud',
-      dnsZones: ['dd.ee'],
+      zones: ['dd.ee'],
       aws: { region: 'r' },
     })
     expect(x.subdomain).to.be.empty
@@ -25,17 +25,17 @@ describe('Utils', () => {
   it('should retrieve default host if service domain not defined', (done) => {
     const x = getPublicUrl(undefined, 'aa', 'bb', {
       domain: 'dev.otomi.cloud',
-      dnsZones: ['dd.ee'],
+      zones: ['dd.ee'],
       aws: { region: 'r' },
     })
     expect(x.subdomain).to.equal('aa.team-bb')
     expect(x.domain).to.equal('dev.otomi.cloud')
     done()
   })
-  it('should retrieve host and domain part from service domai (many dnsZones)n', (done) => {
+  it('should retrieve host and domain part from service domai (many zones)n', (done) => {
     const x = getPublicUrl('aa.bb.cc.dd.ee', 'aa', 'bb', {
       domain: 'dev.otomi.cloud',
-      dnsZones: ['cc.dd.ee', 'dd.ee', 'bb.cc.dd.ee'],
+      zones: ['cc.dd.ee', 'dd.ee', 'bb.cc.dd.ee'],
       aws: { region: 'r' },
     })
     expect(x.subdomain).to.equal('aa')
@@ -55,7 +55,7 @@ describe('Utils', () => {
     done()
   })
   it('should return proper json path to team secrets', (done) => {
-    expect(getTeamSecretsJsonPath('dev')).to.equal('teamConfig.teams.dev.externalSecrets')
+    expect(getTeamSecretsJsonPath('dev')).to.equal('teamConfig.teams.dev.secrets')
     done()
   })
   it('should return proper file path to team secrets', (done) => {

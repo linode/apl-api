@@ -210,7 +210,7 @@ export default {
       name: 'demo',
     },
     dns: {
-      dnsZones: ['example.com', 'onprem.example.com'],
+      zones: ['example.com', 'onprem.example.com'],
       domain: 'onprem.example.com',
       aws: {
         region: 'eu-central-1',

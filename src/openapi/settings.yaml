@@ -25,6 +25,29 @@ alerts: &alerts
       default: 5m
       description: How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.)
       type: string
+    kms:
+      additionalProperties: false
+      properties:
+        sops:
+          oneOf:
+            - aws:
+                $ref: definitions.yaml#/awsCreds
+              required:
+                - aws
+            - azure:
+                $ref: definitions.yaml#/azureCreds
+              required:
+                - azure
+            - google:
+                $ref: definitions.yaml#/googleCreds
+              required:
+                - google
+            - vault:
+                $ref: definitions.yaml#/vaultCreds
+              required:
+                - vault
+          type: object
+      type: object
     msteams:
       additionalProperties: false
       properties:
@@ -82,34 +105,6 @@ Settings:
               description: Is this appgw installed as AKS addon?
               type: boolean
           type: object
-        diskType:
-          description: An Azure disk type (SKU Type).
-          enum:
-            - Standard_LRS
-            - Standard_GRS
-            - Standard_RAGRS
-            - Standard_ZRS
-            - Premium_LRS
-            - Premium_ZRS
-            - Standard_GZRS
-            - Standard_RAGZRS
-          type: string
-        keyVault:
-          description: Azure Key Vault access credentials. Will use azure.tenantId if tenantId is not provided.
-          properties:
-            tenantId:
-              description: An Azure tenant ID.
-              type: string
-            clientId:
-              description: An Azure client ID.
-              type: string
-            clientSecret:
-              description: An Azure client secret.
-              type: string
-          required:
-            - clientId
-            - clientSecret
-          type: object
         monitor:
           $ref: definitions.yaml#/azureMonitor
         resourceGroup:
@@ -122,7 +117,6 @@ Settings:
           description: An Azure tenant ID.
           type: string
       required:
-        - diskType
         - resourceGroup
         - subscriptionId
         - tenantId
@@ -133,25 +127,9 @@ Settings:
         name:
           type: string
       type: object
-    google:
-      description: Google specific configuration.
-      properties:
-        cloudDnsKey:
-          description: A service account key for managing a DNS zone.
-          type: string
-        kmsAccount:
-          description: A service account key for managing a KMS vault.
-          type: string
-        projectId:
-          description: A Google Cloud project ID for accessing DNS zone.
-          type: string
-      required:
-        - cloudDnsKey
-        - projectId
-      type: object
     dns:
       properties:
-        dnsZones:
+        zones:
           description: Extra dns zones that the cluster can administer (see dns). Team services can use this to publish their URLs on.
           items:
             type: string
@@ -168,6 +146,8 @@ Settings:
                   type: string
               required:
                 - region
+              type: object
+          type: object
           required:
             - aws
         - title: azure
@@ -175,26 +155,34 @@ Settings:
             azure:
               properties:
                 cloud:
+                  title: Cloud
                   type: string
-                  description: Azure Cloud to use
+                  description: Azure Cloud
                 resourceGroup:
+                  title: Resource group
                   type: string
-                  description: Azure resource group to use
+                  description: Azure resource group
                 hostedZoneName:
+                  title: Hosted zone name
                   type: string
                 tenantId:
+                  title: Tenant ID
                   type: string
-                  description: Azure tenant ID to use (will default to global value)
+                  description: Azure tenant ID
                 subscriptionId:
+                  title: Subscription ID
                   type: string
-                  description: Azure subscription ID to use (will default to global value)
+                  description: Azure subscription ID
                 aadClientId:
+                  title: Client ID
                   type: string
-                  description: Azure Application Client ID to use
+                  description: Azure Application Client ID
                 aadClientSecret:
+                  title: Client secret
                   type: string
-                  description: Azure Application Client Secret to use
+                  description: Azure Application Client Secret
                 useManagedIdentityExtension:
+                  title: Using managed identities?
                   type: boolean
                   description: If you use Azure MSI, this should be set to true
                   default: false
@@ -204,6 +192,8 @@ Settings:
                 - subscriptionId
                 - aadClientId
                 - aadClientSecret
+              type: object
+          type: object
           required:
             - azure
         - title: google
@@ -218,6 +208,8 @@ Settings:
               required:
                 - serviceAccountKey
                 - project
+              type: object
+          type: object
           required:
             - google
       required:
@@ -225,73 +217,6 @@ Settings:
       type: object
     home:
       <<: *alerts
-    kms:
-      description: Use Cloud KMS to encrypt and decrypt the master key
-      oneOf:
-        - title: gcpckms
-          properties:
-            gcpckms:
-              properties:
-                project:
-                  type: string
-                region:
-                  type: string
-                key_ring:
-                  type: string
-                kmsAccount:
-                  type: string
-              required:
-                - project
-                - region
-                - key_ring
-                - kmsAccount
-              type: object
-          required:
-            - gcpckms
-          type: object
-        - title: awskms
-          properties:
-            awskms:
-              properties:
-                region:
-                  type: string
-                access_key:
-                  type: string
-                secret_key:
-                  type: string
-                endpoint:
-                  type: string
-              required:
-                - region
-                - access_key
-                - secret_key
-                - endpoint
-              type: object
-          required:
-            - awskms
-          type: object
-        - title: azurekeyvault
-          properties:
-            azurekeyvault:
-              properties:
-                vault_name:
-                  type: string
-                tenant_id:
-                  type: string
-                client_id:
-                  type: string
-                client_secret:
-                  type: string
-              required:
-                - vault_name
-                - tenant_id
-                - client_id
-                - client_secret
-              type: object
-          required:
-            - azurekeyvault
-          type: object
-      type: object
     oidc:
       additionalProperties: false
       description: 'Holds many parts used in different locations. Please see keycloak, istio and oauth-proxy all consuming parts.'

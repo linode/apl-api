@@ -7,8 +7,10 @@ Session:
       readOnly: true
       $ref: cluster.yaml#/Cluster
     dns:
+      type: object
       readOnly: true
     core:
+      type: object
       readOnly: true
     isDirty:
       type: boolean
