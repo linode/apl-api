@@ -13,7 +13,7 @@ export interface paths {
     get: operations["getAllSecrets"];
   };
   "/services": {
-    /** Get services from a given team */
+    /** Get all services running on the cluster */
     get: operations["getAllServices"];
   };
   "/teams": {
@@ -184,6 +184,7 @@ export interface components {
       name: string;
     };
     Service: {
+      enabled?: boolean;
       id?: string;
       /** A service name */
       name: string;
@@ -191,56 +192,59 @@ export interface components {
       port?: number;
       ksvc?:
         | ({
-            serviceType?: "ksvc";
-            /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
-            scaleToZero?: boolean;
-            image?: {
-              /** A container image repository. */
-              repository: string;
-              tag: string;
-            } | null;
-            secrets?: {
-              name: string;
-              entries?: string[];
+            /** Kubernetes annotations with arbitrary metadata */
+            annotations?: {
+              name?: string;
+              value?: string;
             }[];
+            /** Deploys new images based on a tagging strategy */
+            autoCD?:
+              | ({ [key: string]: any } | null)
+              | ({
+                  /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
+                  semver: string;
+                  tagMatcher?: "semver";
+                } | null)
+              | {
+                  /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
+                  glob: string;
+                  tagMatcher?: "glob";
+                };
             env?:
               | {
                   name: string;
                   value: string;
                 }[]
               | null;
-            resources?: {
-              requests?: {
-                /** The guaranteed amount of CPU */
-                cpu: string;
-                /** The guaranteed amount of RAM */
-                memory: string;
-              };
-              limits?: {
-                /** The maximum amount of CPU */
-                cpu: string;
-                /** The maximum amount of RAM */
-                memory: string;
-              };
+            image?: {
+              /** A container image repository. */
+              repository: string;
+              tag: string;
             } | null;
-            /** A set of annotations. */
-            annotations?: {
-              name?: string;
-              values?: string;
+            /** Compute resources for containers. */
+            resources?: {
+              /** Requested resources (best effort). */
+              limits?: {
+                /** Amount of cores, or slice of cpu in millis. */
+                cpu: string;
+                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                memory: string;
+              };
+              /** Requested resources (guaranteed). */
+              requests?: {
+                /** Amount of cores, or slice of cpu in millis. */
+                cpu: string;
+                /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                memory: string;
+              };
+            };
+            /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
+            scaleToZero?: boolean;
+            secrets?: {
+              name: string;
+              entries?: string[];
             }[];
-            /** Deploys new images based on a tagging strategy */
-            autoCD?:
-              | ({ [key: string]: any } | null)
-              | ({
-                  tagMatcher?: "semver";
-                  /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
-                  semver: string;
-                } | null)
-              | {
-                  tagMatcher?: "glob";
-                  /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
-                  glob: string;
-                };
+            serviceType?: "ksvc";
           } | null)
         | {
             serviceType: "ksvcPredeployed";
@@ -294,7 +298,6 @@ export interface components {
       isDirty?: boolean;
       namespaces?: string[];
       teams?: {
-        /** A lowercase name that starts with a letter and may contain dashes. */
         id?: string;
         /** A team name */
         name: string;
@@ -304,26 +307,26 @@ export interface components {
         };
         password?: string;
         alerts?: {
+          email?: {
+            /** Email addresses (comma separated) for critical events. */
+            critical?: string;
+            /** One or more email addresses (comma separated) for non-critical events. */
+            nonCritical?: string;
+          };
+          msteams?: {
+            /** The high prio web hook */
+            highPrio?: string;
+            /** The low prio web hook */
+            lowPrio?: string;
+          };
           receivers?: ("slack" | "msteams" | "email")[];
           slack?: {
-            /** Slack web hook. If none is given the global one is used. */
-            url?: string;
             /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
             channel?: string;
             /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
             channelCrit?: string;
-          };
-          msteams?: {
-            /** The low prio web hook */
-            lowPrio?: string;
-            /** The high prio web hook */
-            highPrio?: string;
-          };
-          email?: {
-            /** One or more email addresses (comma separated) for non-critical events. */
-            nonCritical?: string;
-            /** Email addresses (comma separated) for critical events. */
-            critical?: string;
+            /** Slack web hook. If none is given the global one is used. */
+            url?: string;
           };
         };
       }[];
@@ -577,7 +580,6 @@ export interface components {
       };
     };
     Team: {
-      /** A lowercase name that starts with a letter and may contain dashes. */
       id?: string;
       /** A team name */
       name: string;
@@ -587,26 +589,26 @@ export interface components {
       };
       password?: string;
       alerts?: {
+        email?: {
+          /** Email addresses (comma separated) for critical events. */
+          critical?: string;
+          /** One or more email addresses (comma separated) for non-critical events. */
+          nonCritical?: string;
+        };
+        msteams?: {
+          /** The high prio web hook */
+          highPrio?: string;
+          /** The low prio web hook */
+          lowPrio?: string;
+        };
         receivers?: ("slack" | "msteams" | "email")[];
         slack?: {
-          /** Slack web hook. If none is given the global one is used. */
-          url?: string;
           /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
           channel?: string;
           /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
           channelCrit?: string;
-        };
-        msteams?: {
-          /** The low prio web hook */
-          lowPrio?: string;
-          /** The high prio web hook */
-          highPrio?: string;
-        };
-        email?: {
-          /** One or more email addresses (comma separated) for non-critical events. */
-          nonCritical?: string;
-          /** Email addresses (comma separated) for critical events. */
-          critical?: string;
+          /** Slack web hook. If none is given the global one is used. */
+          url?: string;
         };
       };
     };
@@ -708,13 +710,14 @@ export interface operations {
       };
     };
   };
-  /** Get services from a given team */
+  /** Get all services running on the cluster */
   getAllServices: {
     responses: {
       /** Successfully obtained all services */
       200: {
         content: {
           "application/json": {
+            enabled?: boolean;
             id?: string;
             /** A service name */
             name: string;
@@ -722,56 +725,59 @@ export interface operations {
             port?: number;
             ksvc?:
               | ({
-                  serviceType?: "ksvc";
-                  /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
-                  scaleToZero?: boolean;
-                  image?: {
-                    /** A container image repository. */
-                    repository: string;
-                    tag: string;
-                  } | null;
-                  secrets?: {
-                    name: string;
-                    entries?: string[];
+                  /** Kubernetes annotations with arbitrary metadata */
+                  annotations?: {
+                    name?: string;
+                    value?: string;
                   }[];
+                  /** Deploys new images based on a tagging strategy */
+                  autoCD?:
+                    | ({ [key: string]: any } | null)
+                    | ({
+                        /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
+                        semver: string;
+                        tagMatcher?: "semver";
+                      } | null)
+                    | {
+                        /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
+                        glob: string;
+                        tagMatcher?: "glob";
+                      };
                   env?:
                     | {
                         name: string;
                         value: string;
                       }[]
                     | null;
-                  resources?: {
-                    requests?: {
-                      /** The guaranteed amount of CPU */
-                      cpu: string;
-                      /** The guaranteed amount of RAM */
-                      memory: string;
-                    };
-                    limits?: {
-                      /** The maximum amount of CPU */
-                      cpu: string;
-                      /** The maximum amount of RAM */
-                      memory: string;
-                    };
+                  image?: {
+                    /** A container image repository. */
+                    repository: string;
+                    tag: string;
                   } | null;
-                  /** A set of annotations. */
-                  annotations?: {
-                    name?: string;
-                    values?: string;
+                  /** Compute resources for containers. */
+                  resources?: {
+                    /** Requested resources (best effort). */
+                    limits?: {
+                      /** Amount of cores, or slice of cpu in millis. */
+                      cpu: string;
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      memory: string;
+                    };
+                    /** Requested resources (guaranteed). */
+                    requests?: {
+                      /** Amount of cores, or slice of cpu in millis. */
+                      cpu: string;
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      memory: string;
+                    };
+                  };
+                  /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
+                  scaleToZero?: boolean;
+                  secrets?: {
+                    name: string;
+                    entries?: string[];
                   }[];
-                  /** Deploys new images based on a tagging strategy */
-                  autoCD?:
-                    | ({ [key: string]: any } | null)
-                    | ({
-                        tagMatcher?: "semver";
-                        /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
-                        semver: string;
-                      } | null)
-                    | {
-                        tagMatcher?: "glob";
-                        /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
-                        glob: string;
-                      };
+                  serviceType?: "ksvc";
                 } | null)
               | {
                   serviceType: "ksvcPredeployed";
@@ -826,7 +832,6 @@ export interface operations {
       200: {
         content: {
           "application/json": {
-            /** A lowercase name that starts with a letter and may contain dashes. */
             id?: string;
             /** A team name */
             name: string;
@@ -836,26 +841,26 @@ export interface operations {
             };
             password?: string;
             alerts?: {
+              email?: {
+                /** Email addresses (comma separated) for critical events. */
+                critical?: string;
+                /** One or more email addresses (comma separated) for non-critical events. */
+                nonCritical?: string;
+              };
+              msteams?: {
+                /** The high prio web hook */
+                highPrio?: string;
+                /** The low prio web hook */
+                lowPrio?: string;
+              };
               receivers?: ("slack" | "msteams" | "email")[];
               slack?: {
-                /** Slack web hook. If none is given the global one is used. */
-                url?: string;
                 /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
                 channel?: string;
                 /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
                 channelCrit?: string;
-              };
-              msteams?: {
-                /** The low prio web hook */
-                lowPrio?: string;
-                /** The high prio web hook */
-                highPrio?: string;
-              };
-              email?: {
-                /** One or more email addresses (comma separated) for non-critical events. */
-                nonCritical?: string;
-                /** Email addresses (comma separated) for critical events. */
-                critical?: string;
+                /** Slack web hook. If none is given the global one is used. */
+                url?: string;
               };
             };
           }[];
@@ -870,7 +875,6 @@ export interface operations {
       200: {
         content: {
           "application/json": {
-            /** A lowercase name that starts with a letter and may contain dashes. */
             id?: string;
             /** A team name */
             name: string;
@@ -880,26 +884,26 @@ export interface operations {
             };
             password?: string;
             alerts?: {
+              email?: {
+                /** Email addresses (comma separated) for critical events. */
+                critical?: string;
+                /** One or more email addresses (comma separated) for non-critical events. */
+                nonCritical?: string;
+              };
+              msteams?: {
+                /** The high prio web hook */
+                highPrio?: string;
+                /** The low prio web hook */
+                lowPrio?: string;
+              };
               receivers?: ("slack" | "msteams" | "email")[];
               slack?: {
-                /** Slack web hook. If none is given the global one is used. */
-                url?: string;
                 /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
                 channel?: string;
                 /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
                 channelCrit?: string;
-              };
-              msteams?: {
-                /** The low prio web hook */
-                lowPrio?: string;
-                /** The high prio web hook */
-                highPrio?: string;
-              };
-              email?: {
-                /** One or more email addresses (comma separated) for non-critical events. */
-                nonCritical?: string;
-                /** Email addresses (comma separated) for critical events. */
-                critical?: string;
+                /** Slack web hook. If none is given the global one is used. */
+                url?: string;
               };
             };
           };
@@ -932,7 +936,6 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
-          /** A lowercase name that starts with a letter and may contain dashes. */
           id?: string;
           /** A team name */
           name: string;
@@ -942,26 +945,26 @@ export interface operations {
           };
           password?: string;
           alerts?: {
+            email?: {
+              /** Email addresses (comma separated) for critical events. */
+              critical?: string;
+              /** One or more email addresses (comma separated) for non-critical events. */
+              nonCritical?: string;
+            };
+            msteams?: {
+              /** The high prio web hook */
+              highPrio?: string;
+              /** The low prio web hook */
+              lowPrio?: string;
+            };
             receivers?: ("slack" | "msteams" | "email")[];
             slack?: {
-              /** Slack web hook. If none is given the global one is used. */
-              url?: string;
               /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
               channel?: string;
               /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
               channelCrit?: string;
-            };
-            msteams?: {
-              /** The low prio web hook */
-              lowPrio?: string;
-              /** The high prio web hook */
-              highPrio?: string;
-            };
-            email?: {
-              /** One or more email addresses (comma separated) for non-critical events. */
-              nonCritical?: string;
-              /** Email addresses (comma separated) for critical events. */
-              critical?: string;
+              /** Slack web hook. If none is given the global one is used. */
+              url?: string;
             };
           };
         };
@@ -981,7 +984,6 @@ export interface operations {
       200: {
         content: {
           "application/json": {
-            /** A lowercase name that starts with a letter and may contain dashes. */
             id?: string;
             /** A team name */
             name: string;
@@ -991,26 +993,26 @@ export interface operations {
             };
             password?: string;
             alerts?: {
+              email?: {
+                /** Email addresses (comma separated) for critical events. */
+                critical?: string;
+                /** One or more email addresses (comma separated) for non-critical events. */
+                nonCritical?: string;
+              };
+              msteams?: {
+                /** The high prio web hook */
+                highPrio?: string;
+                /** The low prio web hook */
+                lowPrio?: string;
+              };
               receivers?: ("slack" | "msteams" | "email")[];
               slack?: {
-                /** Slack web hook. If none is given the global one is used. */
-                url?: string;
                 /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
                 channel?: string;
                 /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
                 channelCrit?: string;
-              };
-              msteams?: {
-                /** The low prio web hook */
-                lowPrio?: string;
-                /** The high prio web hook */
-                highPrio?: string;
-              };
-              email?: {
-                /** One or more email addresses (comma separated) for non-critical events. */
-                nonCritical?: string;
-                /** Email addresses (comma separated) for critical events. */
-                critical?: string;
+                /** Slack web hook. If none is given the global one is used. */
+                url?: string;
               };
             };
           };
@@ -1053,7 +1055,6 @@ export interface operations {
       200: {
         content: {
           "application/json": {
-            /** A lowercase name that starts with a letter and may contain dashes. */
             id?: string;
             /** A team name */
             name: string;
@@ -1063,26 +1064,26 @@ export interface operations {
             };
             password?: string;
             alerts?: {
+              email?: {
+                /** Email addresses (comma separated) for critical events. */
+                critical?: string;
+                /** One or more email addresses (comma separated) for non-critical events. */
+                nonCritical?: string;
+              };
+              msteams?: {
+                /** The high prio web hook */
+                highPrio?: string;
+                /** The low prio web hook */
+                lowPrio?: string;
+              };
               receivers?: ("slack" | "msteams" | "email")[];
               slack?: {
-                /** Slack web hook. If none is given the global one is used. */
-                url?: string;
                 /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
                 channel?: string;
                 /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
                 channelCrit?: string;
-              };
-              msteams?: {
-                /** The low prio web hook */
-                lowPrio?: string;
-                /** The high prio web hook */
-                highPrio?: string;
-              };
-              email?: {
-                /** One or more email addresses (comma separated) for non-critical events. */
-                nonCritical?: string;
-                /** Email addresses (comma separated) for critical events. */
-                critical?: string;
+                /** Slack web hook. If none is given the global one is used. */
+                url?: string;
               };
             };
           };
@@ -1115,7 +1116,6 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
-          /** A lowercase name that starts with a letter and may contain dashes. */
           id?: string;
           /** A team name */
           name: string;
@@ -1125,26 +1125,26 @@ export interface operations {
           };
           password?: string;
           alerts?: {
+            email?: {
+              /** Email addresses (comma separated) for critical events. */
+              critical?: string;
+              /** One or more email addresses (comma separated) for non-critical events. */
+              nonCritical?: string;
+            };
+            msteams?: {
+              /** The high prio web hook */
+              highPrio?: string;
+              /** The low prio web hook */
+              lowPrio?: string;
+            };
             receivers?: ("slack" | "msteams" | "email")[];
             slack?: {
-              /** Slack web hook. If none is given the global one is used. */
-              url?: string;
               /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
               channel?: string;
               /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
               channelCrit?: string;
-            };
-            msteams?: {
-              /** The low prio web hook */
-              lowPrio?: string;
-              /** The high prio web hook */
-              highPrio?: string;
-            };
-            email?: {
-              /** One or more email addresses (comma separated) for non-critical events. */
-              nonCritical?: string;
-              /** Email addresses (comma separated) for critical events. */
-              critical?: string;
+              /** Slack web hook. If none is given the global one is used. */
+              url?: string;
             };
           };
         };
@@ -1199,6 +1199,7 @@ export interface operations {
       200: {
         content: {
           "application/json": {
+            enabled?: boolean;
             id?: string;
             /** A service name */
             name: string;
@@ -1206,56 +1207,59 @@ export interface operations {
             port?: number;
             ksvc?:
               | ({
-                  serviceType?: "ksvc";
-                  /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
-                  scaleToZero?: boolean;
-                  image?: {
-                    /** A container image repository. */
-                    repository: string;
-                    tag: string;
-                  } | null;
-                  secrets?: {
-                    name: string;
-                    entries?: string[];
+                  /** Kubernetes annotations with arbitrary metadata */
+                  annotations?: {
+                    name?: string;
+                    value?: string;
                   }[];
+                  /** Deploys new images based on a tagging strategy */
+                  autoCD?:
+                    | ({ [key: string]: any } | null)
+                    | ({
+                        /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
+                        semver: string;
+                        tagMatcher?: "semver";
+                      } | null)
+                    | {
+                        /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
+                        glob: string;
+                        tagMatcher?: "glob";
+                      };
                   env?:
                     | {
                         name: string;
                         value: string;
                       }[]
                     | null;
-                  resources?: {
-                    requests?: {
-                      /** The guaranteed amount of CPU */
-                      cpu: string;
-                      /** The guaranteed amount of RAM */
-                      memory: string;
-                    };
-                    limits?: {
-                      /** The maximum amount of CPU */
-                      cpu: string;
-                      /** The maximum amount of RAM */
-                      memory: string;
-                    };
+                  image?: {
+                    /** A container image repository. */
+                    repository: string;
+                    tag: string;
                   } | null;
-                  /** A set of annotations. */
-                  annotations?: {
-                    name?: string;
-                    values?: string;
+                  /** Compute resources for containers. */
+                  resources?: {
+                    /** Requested resources (best effort). */
+                    limits?: {
+                      /** Amount of cores, or slice of cpu in millis. */
+                      cpu: string;
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      memory: string;
+                    };
+                    /** Requested resources (guaranteed). */
+                    requests?: {
+                      /** Amount of cores, or slice of cpu in millis. */
+                      cpu: string;
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      memory: string;
+                    };
+                  };
+                  /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
+                  scaleToZero?: boolean;
+                  secrets?: {
+                    name: string;
+                    entries?: string[];
                   }[];
-                  /** Deploys new images based on a tagging strategy */
-                  autoCD?:
-                    | ({ [key: string]: any } | null)
-                    | ({
-                        tagMatcher?: "semver";
-                        /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
-                        semver: string;
-                      } | null)
-                    | {
-                        tagMatcher?: "glob";
-                        /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
-                        glob: string;
-                      };
+                  serviceType?: "ksvc";
                 } | null)
               | {
                   serviceType: "ksvcPredeployed";
@@ -1316,6 +1320,7 @@ export interface operations {
       200: {
         content: {
           "application/json": {
+            enabled?: boolean;
             id?: string;
             /** A service name */
             name: string;
@@ -1323,56 +1328,59 @@ export interface operations {
             port?: number;
             ksvc?:
               | ({
-                  serviceType?: "ksvc";
-                  /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
-                  scaleToZero?: boolean;
-                  image?: {
-                    /** A container image repository. */
-                    repository: string;
-                    tag: string;
-                  } | null;
-                  secrets?: {
-                    name: string;
-                    entries?: string[];
+                  /** Kubernetes annotations with arbitrary metadata */
+                  annotations?: {
+                    name?: string;
+                    value?: string;
                   }[];
+                  /** Deploys new images based on a tagging strategy */
+                  autoCD?:
+                    | ({ [key: string]: any } | null)
+                    | ({
+                        /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
+                        semver: string;
+                        tagMatcher?: "semver";
+                      } | null)
+                    | {
+                        /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
+                        glob: string;
+                        tagMatcher?: "glob";
+                      };
                   env?:
                     | {
                         name: string;
                         value: string;
                       }[]
                     | null;
-                  resources?: {
-                    requests?: {
-                      /** The guaranteed amount of CPU */
-                      cpu: string;
-                      /** The guaranteed amount of RAM */
-                      memory: string;
-                    };
-                    limits?: {
-                      /** The maximum amount of CPU */
-                      cpu: string;
-                      /** The maximum amount of RAM */
-                      memory: string;
-                    };
+                  image?: {
+                    /** A container image repository. */
+                    repository: string;
+                    tag: string;
                   } | null;
-                  /** A set of annotations. */
-                  annotations?: {
-                    name?: string;
-                    values?: string;
+                  /** Compute resources for containers. */
+                  resources?: {
+                    /** Requested resources (best effort). */
+                    limits?: {
+                      /** Amount of cores, or slice of cpu in millis. */
+                      cpu: string;
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      memory: string;
+                    };
+                    /** Requested resources (guaranteed). */
+                    requests?: {
+                      /** Amount of cores, or slice of cpu in millis. */
+                      cpu: string;
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      memory: string;
+                    };
+                  };
+                  /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
+                  scaleToZero?: boolean;
+                  secrets?: {
+                    name: string;
+                    entries?: string[];
                   }[];
-                  /** Deploys new images based on a tagging strategy */
-                  autoCD?:
-                    | ({ [key: string]: any } | null)
-                    | ({
-                        tagMatcher?: "semver";
-                        /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
-                        semver: string;
-                      } | null)
-                    | {
-                        tagMatcher?: "glob";
-                        /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
-                        glob: string;
-                      };
+                  serviceType?: "ksvc";
                 } | null)
               | {
                   serviceType: "ksvcPredeployed";
@@ -1431,6 +1439,7 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
+          enabled?: boolean;
           id?: string;
           /** A service name */
           name: string;
@@ -1438,56 +1447,59 @@ export interface operations {
           port?: number;
           ksvc?:
             | ({
-                serviceType?: "ksvc";
-                /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
-                scaleToZero?: boolean;
-                image?: {
-                  /** A container image repository. */
-                  repository: string;
-                  tag: string;
-                } | null;
-                secrets?: {
-                  name: string;
-                  entries?: string[];
+                /** Kubernetes annotations with arbitrary metadata */
+                annotations?: {
+                  name?: string;
+                  value?: string;
                 }[];
+                /** Deploys new images based on a tagging strategy */
+                autoCD?:
+                  | ({ [key: string]: any } | null)
+                  | ({
+                      /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
+                      semver: string;
+                      tagMatcher?: "semver";
+                    } | null)
+                  | {
+                      /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
+                      glob: string;
+                      tagMatcher?: "glob";
+                    };
                 env?:
                   | {
                       name: string;
                       value: string;
                     }[]
                   | null;
-                resources?: {
-                  requests?: {
-                    /** The guaranteed amount of CPU */
-                    cpu: string;
-                    /** The guaranteed amount of RAM */
-                    memory: string;
-                  };
-                  limits?: {
-                    /** The maximum amount of CPU */
-                    cpu: string;
-                    /** The maximum amount of RAM */
-                    memory: string;
-                  };
+                image?: {
+                  /** A container image repository. */
+                  repository: string;
+                  tag: string;
                 } | null;
-                /** A set of annotations. */
-                annotations?: {
-                  name?: string;
-                  values?: string;
+                /** Compute resources for containers. */
+                resources?: {
+                  /** Requested resources (best effort). */
+                  limits?: {
+                    /** Amount of cores, or slice of cpu in millis. */
+                    cpu: string;
+                    /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                    memory: string;
+                  };
+                  /** Requested resources (guaranteed). */
+                  requests?: {
+                    /** Amount of cores, or slice of cpu in millis. */
+                    cpu: string;
+                    /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                    memory: string;
+                  };
+                };
+                /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
+                scaleToZero?: boolean;
+                secrets?: {
+                  name: string;
+                  entries?: string[];
                 }[];
-                /** Deploys new images based on a tagging strategy */
-                autoCD?:
-                  | ({ [key: string]: any } | null)
-                  | ({
-                      tagMatcher?: "semver";
-                      /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
-                      semver: string;
-                    } | null)
-                  | {
-                      tagMatcher?: "glob";
-                      /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
-                      glob: string;
-                    };
+                serviceType?: "ksvc";
               } | null)
             | {
                 serviceType: "ksvcPredeployed";
@@ -1535,6 +1547,7 @@ export interface operations {
       200: {
         content: {
           "application/json": {
+            enabled?: boolean;
             id?: string;
             /** A service name */
             name: string;
@@ -1542,56 +1555,59 @@ export interface operations {
             port?: number;
             ksvc?:
               | ({
-                  serviceType?: "ksvc";
-                  /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
-                  scaleToZero?: boolean;
-                  image?: {
-                    /** A container image repository. */
-                    repository: string;
-                    tag: string;
-                  } | null;
-                  secrets?: {
-                    name: string;
-                    entries?: string[];
+                  /** Kubernetes annotations with arbitrary metadata */
+                  annotations?: {
+                    name?: string;
+                    value?: string;
                   }[];
+                  /** Deploys new images based on a tagging strategy */
+                  autoCD?:
+                    | ({ [key: string]: any } | null)
+                    | ({
+                        /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
+                        semver: string;
+                        tagMatcher?: "semver";
+                      } | null)
+                    | {
+                        /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
+                        glob: string;
+                        tagMatcher?: "glob";
+                      };
                   env?:
                     | {
                         name: string;
                         value: string;
                       }[]
                     | null;
-                  resources?: {
-                    requests?: {
-                      /** The guaranteed amount of CPU */
-                      cpu: string;
-                      /** The guaranteed amount of RAM */
-                      memory: string;
-                    };
-                    limits?: {
-                      /** The maximum amount of CPU */
-                      cpu: string;
-                      /** The maximum amount of RAM */
-                      memory: string;
-                    };
+                  image?: {
+                    /** A container image repository. */
+                    repository: string;
+                    tag: string;
                   } | null;
-                  /** A set of annotations. */
-                  annotations?: {
-                    name?: string;
-                    values?: string;
+                  /** Compute resources for containers. */
+                  resources?: {
+                    /** Requested resources (best effort). */
+                    limits?: {
+                      /** Amount of cores, or slice of cpu in millis. */
+                      cpu: string;
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      memory: string;
+                    };
+                    /** Requested resources (guaranteed). */
+                    requests?: {
+                      /** Amount of cores, or slice of cpu in millis. */
+                      cpu: string;
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      memory: string;
+                    };
+                  };
+                  /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
+                  scaleToZero?: boolean;
+                  secrets?: {
+                    name: string;
+                    entries?: string[];
                   }[];
-                  /** Deploys new images based on a tagging strategy */
-                  autoCD?:
-                    | ({ [key: string]: any } | null)
-                    | ({
-                        tagMatcher?: "semver";
-                        /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
-                        semver: string;
-                      } | null)
-                    | {
-                        tagMatcher?: "glob";
-                        /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
-                        glob: string;
-                      };
+                  serviceType?: "ksvc";
                 } | null)
               | {
                   serviceType: "ksvcPredeployed";
@@ -1662,6 +1678,7 @@ export interface operations {
       200: {
         content: {
           "application/json": {
+            enabled?: boolean;
             id?: string;
             /** A service name */
             name: string;
@@ -1669,56 +1686,59 @@ export interface operations {
             port?: number;
             ksvc?:
               | ({
-                  serviceType?: "ksvc";
-                  /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
-                  scaleToZero?: boolean;
-                  image?: {
-                    /** A container image repository. */
-                    repository: string;
-                    tag: string;
-                  } | null;
-                  secrets?: {
-                    name: string;
-                    entries?: string[];
+                  /** Kubernetes annotations with arbitrary metadata */
+                  annotations?: {
+                    name?: string;
+                    value?: string;
                   }[];
+                  /** Deploys new images based on a tagging strategy */
+                  autoCD?:
+                    | ({ [key: string]: any } | null)
+                    | ({
+                        /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
+                        semver: string;
+                        tagMatcher?: "semver";
+                      } | null)
+                    | {
+                        /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
+                        glob: string;
+                        tagMatcher?: "glob";
+                      };
                   env?:
                     | {
                         name: string;
                         value: string;
                       }[]
                     | null;
-                  resources?: {
-                    requests?: {
-                      /** The guaranteed amount of CPU */
-                      cpu: string;
-                      /** The guaranteed amount of RAM */
-                      memory: string;
-                    };
-                    limits?: {
-                      /** The maximum amount of CPU */
-                      cpu: string;
-                      /** The maximum amount of RAM */
-                      memory: string;
-                    };
+                  image?: {
+                    /** A container image repository. */
+                    repository: string;
+                    tag: string;
                   } | null;
-                  /** A set of annotations. */
-                  annotations?: {
-                    name?: string;
-                    values?: string;
+                  /** Compute resources for containers. */
+                  resources?: {
+                    /** Requested resources (best effort). */
+                    limits?: {
+                      /** Amount of cores, or slice of cpu in millis. */
+                      cpu: string;
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      memory: string;
+                    };
+                    /** Requested resources (guaranteed). */
+                    requests?: {
+                      /** Amount of cores, or slice of cpu in millis. */
+                      cpu: string;
+                      /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                      memory: string;
+                    };
+                  };
+                  /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
+                  scaleToZero?: boolean;
+                  secrets?: {
+                    name: string;
+                    entries?: string[];
                   }[];
-                  /** Deploys new images based on a tagging strategy */
-                  autoCD?:
-                    | ({ [key: string]: any } | null)
-                    | ({
-                        tagMatcher?: "semver";
-                        /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
-                        semver: string;
-                      } | null)
-                    | {
-                        tagMatcher?: "glob";
-                        /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
-                        glob: string;
-                      };
+                  serviceType?: "ksvc";
                 } | null)
               | {
                   serviceType: "ksvcPredeployed";
@@ -1777,6 +1797,7 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
+          enabled?: boolean;
           id?: string;
           /** A service name */
           name: string;
@@ -1784,56 +1805,59 @@ export interface operations {
           port?: number;
           ksvc?:
             | ({
-                serviceType?: "ksvc";
-                /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
-                scaleToZero?: boolean;
-                image?: {
-                  /** A container image repository. */
-                  repository: string;
-                  tag: string;
-                } | null;
-                secrets?: {
-                  name: string;
-                  entries?: string[];
+                /** Kubernetes annotations with arbitrary metadata */
+                annotations?: {
+                  name?: string;
+                  value?: string;
                 }[];
+                /** Deploys new images based on a tagging strategy */
+                autoCD?:
+                  | ({ [key: string]: any } | null)
+                  | ({
+                      /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
+                      semver: string;
+                      tagMatcher?: "semver";
+                    } | null)
+                  | {
+                      /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
+                      glob: string;
+                      tagMatcher?: "glob";
+                    };
                 env?:
                   | {
                       name: string;
                       value: string;
                     }[]
                   | null;
-                resources?: {
-                  requests?: {
-                    /** The guaranteed amount of CPU */
-                    cpu: string;
-                    /** The guaranteed amount of RAM */
-                    memory: string;
-                  };
-                  limits?: {
-                    /** The maximum amount of CPU */
-                    cpu: string;
-                    /** The maximum amount of RAM */
-                    memory: string;
-                  };
+                image?: {
+                  /** A container image repository. */
+                  repository: string;
+                  tag: string;
                 } | null;
-                /** A set of annotations. */
-                annotations?: {
-                  name?: string;
-                  values?: string;
+                /** Compute resources for containers. */
+                resources?: {
+                  /** Requested resources (best effort). */
+                  limits?: {
+                    /** Amount of cores, or slice of cpu in millis. */
+                    cpu: string;
+                    /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                    memory: string;
+                  };
+                  /** Requested resources (guaranteed). */
+                  requests?: {
+                    /** Amount of cores, or slice of cpu in millis. */
+                    cpu: string;
+                    /** Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki. */
+                    memory: string;
+                  };
+                };
+                /** Scales to zero after 60 seconds and needs approximately 8 seconds to start back up. */
+                scaleToZero?: boolean;
+                secrets?: {
+                  name: string;
+                  entries?: string[];
                 }[];
-                /** Deploys new images based on a tagging strategy */
-                autoCD?:
-                  | ({ [key: string]: any } | null)
-                  | ({
-                      tagMatcher?: "semver";
-                      /** Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*" */
-                      semver: string;
-                    } | null)
-                  | {
-                      tagMatcher?: "glob";
-                      /** Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*" */
-                      glob: string;
-                    };
+                serviceType?: "ksvc";
               } | null)
             | {
                 serviceType: "ksvcPredeployed";
@@ -2324,7 +2348,6 @@ export interface operations {
             isDirty?: boolean;
             namespaces?: string[];
             teams?: {
-              /** A lowercase name that starts with a letter and may contain dashes. */
               id?: string;
               /** A team name */
               name: string;
@@ -2334,26 +2357,26 @@ export interface operations {
               };
               password?: string;
               alerts?: {
+                email?: {
+                  /** Email addresses (comma separated) for critical events. */
+                  critical?: string;
+                  /** One or more email addresses (comma separated) for non-critical events. */
+                  nonCritical?: string;
+                };
+                msteams?: {
+                  /** The high prio web hook */
+                  highPrio?: string;
+                  /** The low prio web hook */
+                  lowPrio?: string;
+                };
                 receivers?: ("slack" | "msteams" | "email")[];
                 slack?: {
-                  /** Slack web hook. If none is given the global one is used. */
-                  url?: string;
                   /** Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'. */
                   channel?: string;
                   /** Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'. */
                   channelCrit?: string;
-                };
-                msteams?: {
-                  /** The low prio web hook */
-                  lowPrio?: string;
-                  /** The high prio web hook */
-                  highPrio?: string;
-                };
-                email?: {
-                  /** One or more email addresses (comma separated) for non-critical events. */
-                  nonCritical?: string;
-                  /** Email addresses (comma separated) for critical events. */
-                  critical?: string;
+                  /** Slack web hook. If none is given the global one is used. */
+                  url?: string;
                 };
               };
             }[];

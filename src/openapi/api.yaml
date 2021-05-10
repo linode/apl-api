@@ -78,10 +78,27 @@ paths:
         '400':
           <<: *BadRequest
 
+  # /jobs:
+  #   get:
+  #     operationId: getAllJobs
+  #     description: Get all jobs running on the cluster
+  #     x-aclSchema: Job
+  #     responses:
+  #       '200':
+  #         description: Successfully obtained all jobs
+  #         content:
+  #           'application/json':
+  #             schema:
+  #               type: array
+  #               items:
+  #                 $ref: '#/components/schemas/Job'
+  #       '400':
+  #         <<: *BadRequest
+
   /services:
     get:
       operationId: getAllServices
-      description: Get services from a given team
+      description: Get all services running on the cluster
       x-aclSchema: Service
       responses:
         '200':
@@ -482,6 +499,9 @@ components:
 
     Deployment:
       $ref: 'deployment.yaml#/Deployment'
+
+    # Job:
+    #   $ref: 'job.yaml#/Job'
 
     Kubecfg:
       $ref: 'kubecfg.yaml#/Kubecfg'

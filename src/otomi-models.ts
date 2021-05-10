@@ -53,7 +53,7 @@ export interface Schema {
   properties?: {
     [propertyName: string]: Property
   }
-  items?: object
+  items?: any
   required?: string[]
 }
 
@@ -71,8 +71,10 @@ export type AclAction =
   | 'update'
   | 'update-any'
 
+// eslint-disable-next-line no-shadow
 export enum SessionRole {
   Admin = 'admin',
+  // eslint-disable-next-line no-shadow
   User = 'team',
 }
 
@@ -89,7 +91,7 @@ export interface OpenApiRequestExt extends OpenApiRequest, Session {
 
 export interface Core {
   teamConfig: {
-    services: object[]
+    services: any[]
     teams: Team[]
   }
 }

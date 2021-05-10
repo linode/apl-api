@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.48](https://github.com/redkubes/otomi-api/compare/v0.4.47...v0.4.48) (2021-05-04)
+
+### Features
+
+- add option ([#157](https://github.com/redkubes/otomi-api/issues/157)) ([035a74c](https://github.com/redkubes/otomi-api/commit/035a74c03cc02daa90f6d3d5dd60a4c9424033a2))
+- Expose settings in api ([#152](https://github.com/redkubes/otomi-api/issues/152)) ([85d3695](https://github.com/redkubes/otomi-api/commit/85d369586183716b21d4f7e8f632f67458d51560))
+
+### Bug Fixes
+
+- build before lint ([f42ab5e](https://github.com/redkubes/otomi-api/commit/f42ab5e31e78b4551a246027f1daa5975f1e3859))
+- build would not resolve inline-schema (only $ref) ([#158](https://github.com/redkubes/otomi-api/issues/158)) ([9893a56](https://github.com/redkubes/otomi-api/commit/9893a5652c4bddced9033c82ecbd362978c35337))
+- input pattern for ksvc image tag ([b40843c](https://github.com/redkubes/otomi-api/commit/b40843cbaa9c0a23b7f71d2987393c2b014d84b5))
+- missing apidevtools ([8c77407](https://github.com/redkubes/otomi-api/commit/8c7740795c11a329142a03021dc02b259bc17ec3))
+- missing schema file now copied ([ebf96cd](https://github.com/redkubes/otomi-api/commit/ebf96cdd19a4e3cfe204b6b6ee18c91cf55902cc))
+- postinstall for models ([8cfd418](https://github.com/redkubes/otomi-api/commit/8cfd4187cc59b6a8ddf52eebbc32ce72cf34cacb))
+- repo pull not needed for fresh repo ([f50309e](https://github.com/redkubes/otomi-api/commit/f50309e12a3179c6996ed8ecd9a9dfac127399a3))
+- test core.yaml [ci skip] ([dc26606](https://github.com/redkubes/otomi-api/commit/dc266060f44ee3bd6ede7883c62499ea7abbb7f3))
+
+### Build System
+
+- **deps:** bump y18n from 4.0.0 to 4.0.1 ([#153](https://github.com/redkubes/otomi-api/issues/153)) ([4c29fee](https://github.com/redkubes/otomi-api/commit/4c29fee695866add2e6769a12158ce64ef54fe67))
+
+### Docs
+
+- added info on npm link ([1dfb88d](https://github.com/redkubes/otomi-api/commit/1dfb88d350e3dd3e3bb0dd90633d48b500f40558))
+
 ### [0.4.47](https://github.com/redkubes/otomi-api/compare/v0.4.46...v0.4.47) (2021-03-18)
 
 ### Bug Fixes

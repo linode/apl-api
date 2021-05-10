@@ -3,9 +3,9 @@ import yaml from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
 import axios, { AxiosResponse } from 'axios'
+import cleanDeep from 'clean-deep'
 import { GitPullError } from './error'
 import { cleanEnv, TOOLS_HOST, USE_SOPS } from './validators'
-import { removeBlankAttributes } from './utils'
 
 const env = cleanEnv({
   TOOLS_HOST,
@@ -78,16 +78,16 @@ export class Repo {
   writeFile(relativePath, data): void {
     const absolutePath = path.join(this.path, relativePath)
     console.debug(`Writing to file: ${absolutePath}`)
-    const cleanedData = removeBlankAttributes(data)
+    const cleanedData = cleanDeep(data)
     const yamlStr = yaml.safeDump(cleanedData)
     fs.writeFileSync(absolutePath, yamlStr, 'utf8')
   }
 
-  readFile(relativePath): object {
+  readFile(relativePath): any {
     const absolutePath = path.join(this.path, relativePath)
     console.info(`Reading from file: ${absolutePath}`)
     const doc = yaml.safeLoad(fs.readFileSync(absolutePath, 'utf8'))
-    return doc as object
+    return doc as any
   }
 
   async commit(author: string): Promise<CommitResult> {
@@ -105,10 +105,11 @@ export class Repo {
     if (!isRepo) {
       console.info(`Repo does not exist. Cloning from: ${this.url} to: ${this.path}`)
       await this.git.clone(this.repoPathAuth, this.path)
-    } else {
-      console.log('Repo already exists. Checking out correct branch.')
-      await this.git.checkout(this.branch)
+      await decrypt()
+      return
     }
+    console.log('Repo already exists. Checking out correct branch.')
+    await this.git.checkout(this.branch)
 
     try {
       await this.pull()
@@ -118,7 +119,7 @@ export class Repo {
     }
   }
 
-  async pull(): Promise<object> {
+  async pull(): Promise<any> {
     const pullSummary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
     await decrypt()
     console.debug(`Pull summary: ${JSON.stringify(pullSummary)}`)

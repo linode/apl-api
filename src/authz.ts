@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-ignore */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Ability, subject } from '@casl/ability'
 import { set, has, get, isEmpty, pick, forIn } from 'lodash'
 import { Acl, AclAction, OpenAPIDoc, Schema, User } from './otomi-models'
@@ -18,7 +18,7 @@ const allowedAttributeActions = ['read', 'read-any', 'update', 'update-any']
 const skipABACActions = ['create', 'read', 'delete']
 const httpMethods = ['post', 'delete', 'get', 'patch', 'update']
 interface RawRules {
-  [actionName: string]: { [schemaName: string]: { fields: string[]; conditions: object } }
+  [actionName: string]: { [schemaName: string]: { fields: string[]; conditions: any } }
 }
 
 function validatePermissions(acl: Acl, allowedPermissions: string[], path: string): string[] {
@@ -107,7 +107,7 @@ export default class Authz {
     this.specRules = Authz.loadSpecRules(apiDoc)
   }
 
-  static loadSpecRules(apiDoc: OpenAPIDoc): object {
+  static loadSpecRules(apiDoc: OpenAPIDoc): any {
     // @ts-ignore
     const { schemas } = apiDoc.components
 
@@ -135,7 +135,7 @@ export default class Authz {
     return schemas
   }
 
-  getAllowedAttributes = (action: string, schemaName, user: User, data: object): string[] => {
+  getAllowedAttributes = (action: string, schemaName, user: User, data: any): string[] => {
     const abac = this.getAttributeBasedAccessControl(user)
     const allowedAttributes: string[] = []
     Object.keys(data).forEach((attributeName) => {
@@ -181,7 +181,7 @@ export default class Authz {
       const schema: Schema = this.specRules[schemaName]
       if (!(schema.type === 'object' && schema.properties)) return
       user.roles.forEach((role) => {
-        Object.keys(schema.properties as object).forEach((propertyName: string) => {
+        Object.keys(schema.properties as any).forEach((propertyName: string) => {
           const property = schema.properties![propertyName]
           const actions: string[] = get(property, `x-acl.${role}`, [])
 
@@ -213,7 +213,7 @@ export default class Authz {
     return new Ability(canRules)
   }
 
-  isUserAuthorized = (action: string, schemaName: string, user: User, teamId: string, data?: object): boolean => {
+  isUserAuthorized = (action: string, schemaName: string, user: User, teamId: string, data?: any): boolean => {
     const rbac = this.getResourceBasedAccessControl(user)
     const sub = subject(schemaName, { ...(data || {}), teamId })
     if (!rbac.can(action, sub)) {

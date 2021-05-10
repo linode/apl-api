@@ -1,4 +1,4 @@
-ValidationError: &ValidationError
+ValidationError:
   x-acl: []
   properties:
     path:
@@ -22,7 +22,7 @@ OpenApiValidationError:
     errors:
       type: array
       items:
-        <<: *ValidationError
+        $ref: '#/ValidationError'
   type: object
 
 OtomiStackError:

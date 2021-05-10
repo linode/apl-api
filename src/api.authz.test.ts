@@ -166,8 +166,6 @@ describe('Admin API tests', () => {
         name: 'service1',
         ksvc: {
           serviceType: 'ksvcPredeployed',
-          image: {},
-          resources: { requests: { cpu: '50m', memory: '64Mi' }, limits: { cpu: '100m', memory: '128Mi' } },
         },
       })
       .set('Content-Type', 'application/json')

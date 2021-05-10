@@ -40,3 +40,4 @@ dist
 kms.json*
 
 /vendors/client/
+/src/generated-*

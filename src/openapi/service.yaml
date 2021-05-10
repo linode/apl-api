@@ -1,14 +1,29 @@
+idName: &idNameField
+  type: string
+  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+
 Service:
-  x-externalDocsPath: 'docs/configuring-services'
   x-acl:
-    admin: [delete-any, read-any, create-any, update-any]
-    team: [delete, read, create, update]
+    admin:
+      - delete-any
+      - read-any
+      - create-any
+      - update-any
+    team:
+      - delete
+      - read
+      - create
+      - update
+  x-externalDocsPath: docs/configuring-services
   properties:
+    enabled:
+      default: true
+      type: boolean
     id:
-      type: string
       readOnly: true
+      type: string
     name:
-      $ref: definitions.yaml#/idName
+      <<: *idNameField
       title: Name
       description: A service name
       example: some-service
@@ -19,220 +34,167 @@ Service:
       minimum: 1
       maximum: 65535
     ksvc:
-      title: Type
-      type: object
       oneOf:
-        - title: Knative service
-          nullable: true
+        - nullable: true
           properties:
-            serviceType:
-              type: string
-              enum: [ksvc]
-              default: ksvc
-            scaleToZero:
-              title: Scale to zero
-              description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
-              type: boolean
-              default: false
+            annotations:
+              $ref: definitions.yaml#/annotations
+              title: Pod annotations
+            autoCD:
+              description: Deploys new images based on a tagging strategy
+              oneOf:
+                - additionalProperties: false
+                  nullable: true
+                  title: 'Off'
+                  type: object
+                - nullable: true
+                  properties:
+                    semver:
+                      description: 'Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
+                      example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
+                      title: Semver version pattern
+                      type: string
+                    tagMatcher:
+                      default: semver
+                      enum:
+                        - semver
+                      type: string
+                  required:
+                    - semver
+                  title: Semver versioning
+                  type: object
+                - additionalProperties: false
+                  properties:
+                    glob:
+                      description: 'Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*"'
+                      example: main-v1.3.*
+                      title: Glob string pattern
+                      type: string
+                    tagMatcher:
+                      default: glob
+                      enum:
+                        - glob
+                      type: string
+                  required:
+                    - glob
+                  title: Glob pattern matching
+                  type: object
+              title: Continuous delivery
+            env:
+              $ref: definitions.yaml#/env
             image:
-              title: Container image
               nullable: true
               properties:
                 repository:
                   $ref: definitions.yaml#/repository
                 tag:
+                  pattern: '[\w][\w.-]{0,127}'
                   type: string
-              type: object
               required:
                 - repository
                 - tag
-            secrets:
-              type: array
-              items:
-                properties:
-                  name:
-                    type: string
-                  entries:
-                    title: Entries
-                    type: array
-                    items:
-                      type: string
-                    uniqueItems: true
-                required:
-                  - name
-                type: object
-            env:
-              title: Environment variables
-              # description: Environment variables for containers
-              type: array
-              nullable: true
-              items:
-                properties:
-                  name:
-                    $ref: definitions.yaml#/envName
-                  value:
-                    type: string
-                    maxLength: 131072
-                required:
-                  - name
-                  - value
-                type: object
-            resources:
-              title: Pod resources
-              # description: Compute resources for containers
-              nullable: true
-              properties:
-                requests:
-                  properties:
-                    cpu:
-                      description: The guaranteed amount of CPU
-                      $ref: definitions.yaml#/cpuQuantity
-                      default: 50m
-                    memory:
-                      description: The guaranteed amount of RAM
-                      $ref: definitions.yaml#/memoryQuantity
-                      default: 64Mi
-                  required:
-                    - cpu
-                    - memory
-                  type: object
-                limits:
-                  properties:
-                    cpu:
-                      description: The maximum amount of CPU
-                      $ref: definitions.yaml#/cpuQuantity
-                      default: 100m
-                    memory:
-                      description: The maximum amount of RAM
-                      $ref: definitions.yaml#/memoryQuantity
-                      default: 128Mi
-                  required:
-                    - cpu
-                    - memory
-                  type: object
+              title: Container image
               type: object
-            annotations:
-              title: Pod annotations
-              $ref: definitions.yaml#/annotations
-            autoCD:
-              title: Continuous delivery
-              description: Deploys new images based on a tagging strategy
-              oneOf:
-                - title: 'Off'
-                  nullable: true
-                  additionalProperties: false
-                  type: object
-                - title: Semver versioning
-                  nullable: true
-                  properties:
-                    tagMatcher:
-                      type: string
-                      enum: [semver]
-                      default: semver
-                    semver:
-                      title: Semver version pattern
-                      type: string
-                      example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
-                      description:
-                        'Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.:
-                        PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
-                  required:
-                    - semver
-                  type: object
-                - title: Glob pattern matching
-                  properties:
-                    tagMatcher:
-                      type: string
-                      enum: [glob]
-                      default: glob
-                    glob:
-                      title: Glob string pattern
-                      type: string
-                      description: 'Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*"'
-                      example: 'main-v1.3.*'
-                  required:
-                    - glob
-                  type: object
-                  additionalProperties: false
-        - title: Existing Knative service
-          properties:
-            serviceType:
-              type: string
-              enum: [ksvcPredeployed]
-              default: ksvcPredeployed
-          required:
-            - serviceType
-          type: object
-        - title: Existing Kubernetes service
-          properties:
-            serviceType:
-              type: string
-              enum: [svcPredeployed]
-              default: svcPredeployed
-          required:
-            - serviceType
-          type: object
-    ingress:
-      title: Exposure
-      x-acl:
-        team: [read]
-      oneOf:
-        - title: Private
-          nullable: true
-          additionalProperties: false
-        - title: Public URL
-          # nullable: true
-          properties:
-            useDefaultSubdomain:
-              title: Use team domain (preferred)
+            resources:
+              $ref: definitions.yaml#/resources
+            scaleToZero:
+              default: false
+              description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
+              title: Scale to zero
               type: boolean
+            secrets:
+              $ref: definitions.yaml#/secrets
+            serviceType:
+              default: ksvc
+              enum:
+                - ksvc
+              type: string
+          title: Knative service
+        - properties:
+            serviceType:
+              default: ksvcPredeployed
+              enum:
+                - ksvcPredeployed
+              type: string
+          required:
+            - serviceType
+          title: Existing Knative service
+          type: object
+        - properties:
+            serviceType:
+              default: svcPredeployed
+              enum:
+                - svcPredeployed
+              type: string
+          required:
+            - serviceType
+          title: Existing Kubernetes service
+          type: object
+      title: Type
+      type: object
+    ingress:
+      oneOf:
+        - additionalProperties: false
+          nullable: true
+          title: Private
+          type: object
+        - properties:
+            useDefaultSubdomain:
               default: true
               description: Use the team domain so that the URL reveals the owner.
+              title: Use team domain (preferred)
+              type: boolean
             subdomain:
-              title: 'Host'
-              type: string
-              nullable: true
-              description: A host that is used to set DNS 'A' records
               $ref: definitions.yaml#/domain
+              description: A host that is used to set DNS 'A' records
+              nullable: true
+              title: Host
+              type: string
             domain:
-              title: DNS Zone
               description: A managed DNS zone
+              title: DNS Zone
               type: string
             path:
-              title: URL path
               description: The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
+              title: URL path
               type: string
             forwardPath:
-              title: Forward path
               description: Forward the URL path into the service (don't rewrite to /)
+              title: Forward path
               type: boolean
             hasSingleSignOn:
+              default: false
               title: Authenticate with Single Sign On
               type: boolean
-              default: false
             hasCert:
-              title: Already has a certificate
-              type: boolean
               default: false
               description: If true a certificate should exist already
-            certArn:
-              type: string
-              title: Certificate ARN
-              example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
-            certSelect:
+              title: Already has a certificate
               type: boolean
-              title: Select existing secret name
-              default: true
-            certName:
+            certArn:
+              example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
+              title: Certificate ARN
               type: string
-              title: Secret name
+            certSelect:
+              default: true
+              title: Select existing secret name
+              type: boolean
+            certName:
               example: www-example-com
+              title: Secret name
+              type: string
           required:
             - domain
             - subdomain
+          title: Public URL
           type: object
+      title: Exposure
+      x-acl:
+        team:
+          - read
     teamId:
-      type: string
+      <<: *idNameField
+      readOnly: true
   required:
     - name
     - teamId

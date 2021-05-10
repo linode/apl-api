@@ -59,9 +59,21 @@ alerts:
           $ref: '#/url'
           description: A Slack webhook URL.
       type: object
+annotation:
+  type: string
+  pattern: ^((.){1,253}\/)?(.){1,63}$
 annotations:
-  $ref: '#/labelsAnnotations'
-  description: A set of annotations.
+  description: Kubernetes annotations with arbitrary metadata
+  type: array
+  items:
+    type: object
+    properties:
+      name:
+        $ref: '#/annotation'
+      value:
+        type: string
+        maxLength: 32767
+
 azureMonitor:
   properties:
     appInsightsApiKey:
@@ -88,19 +100,6 @@ azureMonitor:
     logAnalyticsWorkspace:
       description: An Azure monitor log analytics workspace.
       type: string
-cloud:
-  description: A common cloud configuration.
-  properties:
-    clusters:
-      additionalProperties: false
-      patternProperties:
-        ^[a-z-]+$:
-          $ref: '#/cluster'
-    domain:
-      $ref: '#/domain'
-  required:
-    - domain
-    - clusters
 cluster:
   additionalProperties: false
   properties:
@@ -154,6 +153,7 @@ cluster:
     - region
 cpuQuantity:
   description: Amount of cores, or slice of cpu in millis.
+  default: 50m
   example:
     - '1'
     - 200m
@@ -171,6 +171,22 @@ droneGit:
 email:
   pattern: ^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$
   type: string
+env:
+  title: Environment variables
+  # description: Environment variables for containers
+  type: array
+  nullable: true
+  items:
+    properties:
+      name:
+        $ref: definitions.yaml#/envName
+      value:
+        type: string
+        maxLength: 131072
+    required:
+      - name
+      - value
+    type: object
 envName:
   type: string
   pattern: '[a-zA-Z_]{1,}[a-zA-Z0-9_]*'
@@ -270,81 +286,6 @@ imageSimple:
     tag:
       type: string
   title: Container image
-jobs:
-  additionalProperties: false
-  description: You may pass an array of Job objects. The Kubernetes API accepts a Job specification, which is meant for run-to-completion apps (e.g. batch Jobs).
-  items:
-    additionalProperties: false
-    properties:
-      enabled:
-        default: true
-        type: boolean
-      env:
-        $ref: '#/env'
-        default:
-          foo: bar
-      files:
-        default:
-          foo: bar.log
-        description: May mount files directly into the container. The mount path is /, so a user can specify anything that comes after it. E.g. foo/bar.log -> /foo/bar.log foo.log -> /foo.log
-        patternProperties:
-          ^(.*/)|[a-z-]+([^/]*)$:
-            type: string
-        type: object
-      image:
-        $ref: '#/image'
-      init:
-        properties:
-          env:
-            $ref: '#/env'
-          image:
-            $ref: '#/image'
-          script:
-            $ref: '#/script'
-          secrets:
-            $ref: '#/secrets'
-        type: object
-      name:
-        default: foo
-        description: Must be a unique name.
-        pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-        type: string
-      podSecurityContext:
-        $ref: '#/podSecurityContext'
-      resources:
-        $ref: '#/resources'
-      runPolicy:
-        default: OnSpecChange
-        description: |
-          If runPolicy is set to 'Always', the job controller will always be re-deployed after a successful deployment with Helm.
-          If runPolicy is set to 'OnSpecChange', the job controller will only be re-deployed if one changes this specification.
-        enum:
-          - Always
-          - OnSpecChange
-        type: string
-      schedule:
-        default: 0 1 * * *
-        description: Must give a cron-type expression if the job-type is 'cronjob' (job.type).
-        type: string
-      script:
-        $ref: '#/script'
-      secrets:
-        $ref: '#/secrets'
-      ttlSecondsAfterFinished:
-        default: 86400
-        type: number
-      type:
-        default: Job
-        enum:
-          - Job
-          - CronJob
-        type: string
-  required:
-    - image
-    - name
-    - script
-    - type
-  type: array
 k8sVersion:
   default: '1.19'
   description: The cluster k8s version. Otomi supports 2 minor versions backwards compatibility from the suggested default.
@@ -354,7 +295,7 @@ k8sVersion:
     - '1.19'
   type: string
 labels:
-  $ref: '#/labelsAnnotations'
+  $ref: '#/annotations'
   description: A set of labels.
 labelsAnnotations:
   additionalProperties: false
@@ -378,6 +319,7 @@ logLevel:
   type: string
 memoryQuantity:
   description: Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki.
+  default: 64Mi
   example:
     - 1Mi
     - 0.5M
@@ -402,6 +344,7 @@ podSecurityContext:
 portNumber:
   maximum: 32768
   minimum: 80
+  default: 80
   type: number
 rawValues:
   description: "May define value overrides for a chart. WARNING: these values currently have no schema and can't be validated as such, and may break deployment. You are on your own here."
@@ -451,268 +394,24 @@ scaling:
 script:
   description: May specify a non-empty string containing an executable script.
   type: string
-secret:
-  oneOf:
-    - properties:
-        password:
-          type: string
-        server:
-          $ref: '#/registry'
-        type:
-          default: docker-registry
-          enum:
-            - docker-registry
-          type: string
-        username:
-          type: string
-      required:
-        - server
-        - username
-        - password
-      title: Docker Registry
-      type: object
-    - properties:
-        entries:
-          description: Key names and their values.
-          items:
-            properties:
-              key:
-                description: Key or file name.
-                example: secretstuff.conf
-                type: string
-              value:
-                description: Value to be encrypted.
-                example: password=yoursecretpassword
-                type: string
-            required:
-              - key
-              - value
-          type: array
-        type:
-          default: generic
-          enum:
-            - generic
-          type: string
-      required:
-        - entries
-      title: Generic
-      type: object
-    - properties:
-        ca:
-          description: The CA certificate content.
-          type: string
-        crt:
-          description: The PEM encoded public key certificate content.
-          type: string
-        key:
-          description: The private key certificate content.
-          type: string
-        type:
-          default: tls
-          enum:
-            - tls
-          type: string
-      required:
-        - crt
-        - key
-      title: TLS
-      type: object
-  properties:
-    id:
-      readOnly: true
-      type: string
-    name:
-      $ref: '#/idName'
-  required:
-    - name
-    - type
-  type: object
 secrets:
   items:
-    additionalProperties: true
     properties:
+      name:
+        type: string
       entries:
         items:
-          properties:
-            key:
-              type: string
-            value:
-              type: string
+          type: string
         title: Entries
         type: array
         uniqueItems: true
-      name:
-        type: string
     required:
       - name
     type: object
-  nullable: true
-  title: Secrets
   type: array
 subdomainType:
   pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
   type: string
-team:
-  additionalProperties: false
-  properties:
-    alerts:
-      $ref: '#/alerts'
-    azureMonitor:
-      $ref: '#/azureMonitor'
-    clusters:
-      items:
-        type: string
-      type: array
-    externalSecrets:
-      items:
-        $ref: '#/externalSecret'
-      type: array
-    id:
-      $ref: '#/idName'
-      description: Must be the same as the name.
-    jobs:
-      $ref: '#/jobs'
-    oidc:
-      additionalProperties: false
-      properties:
-        groupMapping:
-          description: IDP group id to map onto this team.
-          type: string
-      type: object
-    password:
-      description: Will be used to separate team resources.
-      type: string
-    secrets:
-      $ref: '#/secrets'
-    services:
-      items:
-        additionalProperties: false
-        properties:
-          authz:
-            additionalProperties: false
-            description: Identifies a workload to authorize.
-            properties:
-              forwardOriginalToken:
-                default: false
-                description: If true istio will forward the bearer token instead of removing it from the headers.
-                type: boolean
-              workload:
-                $ref: '#/labels'
-            type: object
-          domain:
-            description: A custom service domain name.
-            type: string
-          forwardPath:
-            default: false
-            description: Whether to forward the path into the service, or 'terminate' it.
-            type: boolean
-          id:
-            description: Unique identifier created by and used in API. Optional.
-            type: string
-          internal:
-            default: false
-            description: If true, service is not going to be exposed to the public domain.
-            type: boolean
-          isPublic:
-            default: false
-            description: If true then no SSO will be used.
-            type: boolean
-          isShared:
-            description: When true the service will get it's own domain by prefixing the app name to the cluster domain. Mostly used by core apps.
-            type: boolean
-          ksvc:
-            additionalProperties: false
-            description: Details for a knative service that will be deployed and operated.
-            properties:
-              annotations:
-                $ref: '#/annotations'
-              autoCD:
-                additionalProperties: false
-                description: NOT IN USE YET! Deploys new images based on a tagging strategy.
-                oneOf:
-                  - additionalProperties: false
-                    nullable: true
-                    title: 'Off'
-                    type: object
-                  - nullable: true
-                    properties:
-                      additionalProperties: false
-                      semver:
-                        description: 'Use this filter if your images tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*".'
-                        example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
-                        title: Semver version pattern
-                        type: string
-                      tagMatcher:
-                        default: semver
-                        enum:
-                          - semver
-                        type: string
-                    required:
-                      - semver
-                    type: object
-                    title: Semver versioning
-                  - additionalProperties: false
-                    properties:
-                      glob:
-                        description: 'Use this filter if you want to make simple non-standard patterns. E.g.: "master-v1.*.*".'
-                        example: master-v1.*.*
-                        title: Glob string pattern
-                        type: string
-                      tagMatcher:
-                        default: glob
-                        enum:
-                          - glob
-                        type: string
-                    required:
-                      - glob
-                    title: Glob pattern matching
-                    type: object
-                title: Continuous delivery pipeline
-              env:
-                $ref: '#/env'
-              image:
-                $ref: '#/image'
-              predeployed:
-                default: false
-                description: Has this service been predeployed? Otherwise otomi will start it with the configuration given.
-                type: boolean
-              resources:
-                $ref: '#/resources'
-              scaleToZero:
-                default: false
-                description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
-                title: Scale to zero
-                type: boolean
-              secrets:
-                $ref: '#/secrets'
-          name:
-            $ref: '#/idName'
-            description: Short name. Will be used for generation of knative service name, as well as service URL.
-          ownHost:
-            default: true
-            description: When true the service will get it's own domain by prefixing the app name to the team domain. Mostly set to true. This will probably be removed soon.
-            type: boolean
-          paths:
-            items:
-              description: |
-                Path mapping to only let this path go to the service. This allows micro services to operate on the same domain and port.
-                When left empty all paths will go to this service.
-              type: string
-            type: array
-          port:
-            $ref: '#/portNumber'
-            default: 80
-            description: Points to the backing k8s service (only used when 'svc' is set).
-          svc:
-            $ref: '#/idName'
-            description: When given a backing k8s service is expected to be deployed with this name, which will be exposed through this team service.
-        required:
-          - id
-          - name
-      type: array
-  required:
-    - id
-  type: object
 url:
   pattern: ^(https:\/\/)([\w\-])+\.{1}([a-zA-Z]{2,63})([\/\w-]*)*\/?\??([^#\n\r]*)?#?([^\n\r]*)$
   type: string

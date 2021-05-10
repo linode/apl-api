@@ -12,11 +12,6 @@ azure:
   resourceGroup: somevalue
   subscriptionId: somevalue
   tenantId: somevalue
-charts:
-  hello:
-    enabled: true
-  httpbin:
-    enabled: true
 customer:
   name: demo
 dns:
