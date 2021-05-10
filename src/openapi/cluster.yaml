@@ -3,16 +3,21 @@ Cluster:
     apiName:
       description: Only used for API/UI to show in app.
       type: string
+      readOnly: true
     apiServer:
       description: Used by kubectl for local deployment to target cluster.
       type: string
+      readOnly: true
     entrypoint:
       description: A Kubernetes API public IP address (onprem only).
       type: string
+      readOnly: true
     k8sVersion:
       $ref: 'definitions.yaml#/k8sVersion'
+      readOnly: true
     name:
       type: string
+      readOnly: true
     otomiVersion:
       default: latest
       description: 'Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version.'
@@ -24,17 +29,15 @@ Cluster:
         - azure
         - google
         - oneprem
+      readOnly: true
     region:
       description: Dependent on provider.
       type: string
+      readOnly: true
     vpcID:
       description: AWS only. If provided will override autodiscovery from metadata.
       type: string
+      readOnly: true
   required:
-    - apiServer
-    - k8sVersion
-    - name
     - otomiVersion
-    - provider
-    - region
   type: object
