@@ -244,6 +244,7 @@ export default {
         },
       },
     },
+    otomiInstanceUrls: ['a.otomi.cloud', 'b.otomi.cloud', 'c.otomi.cloud'],
     smtp: {
       from: 'no-reply@doma.in',
       hello: 'doma.in',

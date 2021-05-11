@@ -299,9 +299,8 @@ export default class OtomiStack {
 
   loadCluster(): void {
     const data: any = this.repo.readFile('./env/cluster.yaml')
-    const { cluster, clusters } = data
+    const { cluster } = data
     this.db.populateItem('cluster', cluster, undefined, cluster.id)
-    clusters.map((c) => this.db.populateItem('clusters', c, undefined, c))
   }
 
   loadConfig(dataPath: string, secretDataPath: string): any {

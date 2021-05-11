@@ -145,11 +145,12 @@ azureMonitor:
       title: LogAnalytics tenant id
       description: An Azure monitor log analytics workspace.
       type: string
-    required:
-      - clientId
-      - clientSecret
-      - subscriptionId
-      - tenantId
+  required:
+    - clientId
+    - clientSecret
+    - subscriptionId
+    - tenantId
+  type: object
 cluster:
   additionalProperties: false
   properties:
