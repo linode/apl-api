@@ -39,5 +39,10 @@ Cluster:
       type: string
       readOnly: true
   required:
+    - apiServer
+    - k8sVersion
+    - name
     - otomiVersion
+    - provider
+    - region
   type: object
