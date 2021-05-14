@@ -1,48 +1,48 @@
 Cluster:
-  type: object
-  x-acl:
-    admin: [read-any]
-    team: [read-any]
   properties:
-    enabled:
-      type: boolean
-      default: true
-    name:
+    apiName:
+      description: Only used for API/UI to show in app.
       type: string
-      description: A cluster name
       readOnly: true
-    cloud:
+    apiServer:
+      description: Used by kubectl for local deployment to target cluster.
       type: string
-      description: A cloud provider name
       readOnly: true
-    domain:
+    entrypoint:
+      description: A Kubernetes API public IP address (onprem only).
       type: string
-      description: A default cluster DNS zone
-      readOnly: true
-    dnsZones:
-      type: array
-      description: A list of DNS zones that are available to the cluster
-      items:
-        type: string
-      readOnly: true
-      uniqueItems: true
-    hasKnative:
-      description: A flag that indicates capability for deploying serverless services by using Knative
-      type: boolean
       readOnly: true
     k8sVersion:
-      description: A version of kubernetes that is installed on the cluster
+      $ref: 'definitions.yaml#/k8sVersion'
+      readOnly: true
+    name:
       type: string
       readOnly: true
     otomiVersion:
-      description: A version of kubernetes that is installed on the cluster
+      default: latest
+      description: 'Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version.'
       type: string
+    provider:
+      type: string
+      enum:
+        - aws
+        - azure
+        - google
+        - oneprem
       readOnly: true
     region:
-      description: A physical location of the cluster
+      description: Dependent on provider.
       type: string
       readOnly: true
-    clusterId:
-      description: An unique cluster identifier
+    vpcID:
+      description: AWS only. If provided will override autodiscovery from metadata.
       type: string
       readOnly: true
+  required:
+    - apiServer
+    - k8sVersion
+    - name
+    - otomiVersion
+    - provider
+    - region
+  type: object

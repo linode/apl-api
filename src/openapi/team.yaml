@@ -16,23 +16,6 @@ Team:
       <<: *idNameField
       title: Name
       description: A team name
-      example: some-team
-      x-acl:
-        admin:
-          - create
-          - read
-        team:
-          - read
-    clusters:
-      items:
-        type: string
-      minItems: 1
-      title: Clusters
-      type: array
-      uniqueItems: true
-      x-acl:
-        team:
-          - read
     oidc:
       properties:
         groupMapping:
@@ -100,8 +83,6 @@ Team:
       type: object
   required:
     - name
-    - clusters
-    - password
   type: object
   x-acl:
     admin:

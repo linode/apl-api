@@ -1,11 +1,11 @@
 import * as k8s from '@kubernetes/client-node'
 import fs from 'fs'
 import yaml from 'js-yaml'
-import { cloneDeep, merge, filter, forIn, get, isEmpty, omit, set, unset, isEqual } from 'lodash'
+import { cloneDeep, merge, filter, get, isEmpty, omit, set, unset, isEqual } from 'lodash'
 import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
-import Db, { Schema } from './db'
-import { Cluster, Core, Secret, Service, Settings, Team } from './otomi-models'
+import Db from './db'
+import { Cluster, Core, Dns, Secret, Service, Settings, Team } from './otomi-models'
 import { PublicUrlExists } from './error'
 import {
   arrayToObject,
@@ -48,7 +48,7 @@ const env = cleanEnv({
 function convertDbServiceToValues(svc: any): any {
   const { serviceType } = svc.ksvc
   console.info(`Saving service: id: ${svc.id} serviceType: ${serviceType}`)
-  const svcCloned = omit(svc, ['teamId', 'clusterId', 'ksvc', 'ingress', 'internal', 'path'])
+  const svcCloned = omit(svc, ['teamId', 'ksvc', 'ingress', 'internal', 'path'])
   const ksvc = cloneDeep(svc.ksvc)
   if (serviceType === 'ksvc') {
     svcCloned.ksvc = ksvc
@@ -76,8 +76,6 @@ function convertDbServiceToValues(svc: any): any {
 }
 
 export default class OtomiStack {
-  clustersPath: string
-
   private coreValues: any
 
   db: Db
@@ -90,7 +88,6 @@ export default class OtomiStack {
 
   constructor() {
     this.db = new Db(env.DB_PATH)
-    this.clustersPath = './env/clusters.yaml'
     const corePath = env.isProd ? '/etc/otomi/core.yaml' : './test/core.yaml'
     this.coreValues = yaml.safeLoad(fs.readFileSync(corePath, 'utf8')) as any
     this.decryptedFilePostfix = env.USE_SOPS ? '.dec' : ''
@@ -122,7 +119,7 @@ export default class OtomiStack {
   }
 
   getClusters(): Array<Cluster> {
-    return this.db.getCollection('clusters')
+    return this.db.getCollection('clusters') as Array<Cluster>
   }
 
   getCore(): any {
@@ -156,6 +153,10 @@ export default class OtomiStack {
     return this.db.getCollection('services', ids) as Array<Service>
   }
 
+  getCluster(): Cluster {
+    return this.db.getCollection('cluster')[0] as Cluster
+  }
+
   getAllServices(): Array<Service> {
     return this.db.getCollection('services') as Array<Service>
   }
@@ -171,10 +172,13 @@ export default class OtomiStack {
 
   editService(id: string, data: any): Service {
     const oldData = this.getService(id) as any
-    const { domain, subdomain, path } = data.ingress
-    const oldi = oldData.ingress
-    if (!isEqual({ domain, subdomain, path }, { domain: oldi.domain, subdomain: oldi.subdomain, path: oldi.path }))
-      this.checkPublicUrlInUse(data)
+    if (data.ingress) {
+      const { domain, subdomain, path } = data.ingress
+      const oldi = oldData.ingress
+      if (!isEqual({ domain, subdomain, path }, { domain: oldi.domain, subdomain: oldi.subdomain, path: oldi.path }))
+        this.checkPublicUrlInUse(data)
+    }
+
     if (data.name !== oldData.name) {
       this.deleteService(id)
       // eslint-disable-next-line no-param-reassign
@@ -189,7 +193,7 @@ export default class OtomiStack {
   }
 
   checkPublicUrlInUse(data: Service): void {
-    if (!data.ingress) return
+    if (isEmpty(data.ingress)) return
 
     const services = this.db.getCollection('services')
 
@@ -253,7 +257,6 @@ export default class OtomiStack {
       cluster: cluster.name,
     }
     const options = {
-      clusters: [cluster],
       users: [user],
       contexts: [context],
       currentContext: context.name,
@@ -264,11 +267,7 @@ export default class OtomiStack {
   }
 
   createSecret(teamId, data): Secret {
-    return this.db.createItem(
-      'secrets',
-      { ...data, teamId },
-      { teamId, name: data.name, clusterId: data.clusterId },
-    ) as Secret
+    return this.db.createItem('secrets', { ...data, teamId }, { teamId, name: data.name }) as Secret
   }
 
   editSecret(id: string, data: Secret): Secret {
@@ -292,17 +291,22 @@ export default class OtomiStack {
   }
 
   loadValues(): void {
-    this.loadClusters()
+    this.loadCluster()
     this.loadSettings()
     this.loadTeams()
     this.db.setDirtyActive()
   }
 
-  loadConfig(dataPath: string, secretDataPath: string): Core {
+  loadCluster(): void {
+    const data: any = this.repo.readFile('./env/cluster.yaml')
+    const { cluster } = data
+    this.db.populateItem('cluster', cluster, undefined, cluster.id)
+  }
+
+  loadConfig(dataPath: string, secretDataPath: string): any {
     const data = this.repo.readFile(dataPath)
     const secretData = this.repo.readFile(secretDataPath)
-    const secretPaths = getObjectPaths(secretData)
-    this.secretPaths = merge(this.secretPaths, secretPaths)
+    this.secretPaths = getObjectPaths(secretData)
     return merge(data, secretData) as Core
   }
 
@@ -323,58 +327,56 @@ export default class OtomiStack {
   }
 
   loadSettings(): void {
-    const data = this.loadConfig('./env/settings.yaml', `./env/secrets.settings.yaml${this.decryptedFilePostfix}`)
+    const data = this.loadConfig(
+      './env/settings.yaml',
+      `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
+    ) as Settings
+    // eslint-disable-next-line chai-friendly/no-unused-expressions
+    data.dns?.zones?.push(data.dns.domain)
     this.db.db.set('settings', data).write()
   }
 
-  loadTeamSecrets(teamId: string, clusterId: string): void {
+  loadTeamSecrets(teamId: string): void {
     try {
-      const data = this.repo.readFile(getTeamSecretsFilePath(teamId, clusterId))
+      const data = this.repo.readFile(getTeamSecretsFilePath(teamId))
       const secrets: Array<Secret> = get(data, getTeamSecretsJsonPath(teamId), [])
 
       secrets.forEach((secret) => {
         // @ts-ignore
         const res: Secret = this.db.populateItem(
           'secrets',
-          { ...secret, teamId, clusterId },
-          { clusterId, teamId, name: secret.name },
+          { ...secret, teamId },
+          { teamId, name: secret.name },
           secret.id,
         )
-        console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}, clusterId: ${clusterId}`)
+        console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
       })
     } catch (e) {
       console.warn(`Team ${teamId} has no secrets yet`)
     }
   }
 
-  loadClusters(): void {
-    const data = this.repo.readFile('./env/clusters.yaml') as Schema
-    this.convertClusterValuesToDb(data)
-  }
-
   loadTeams(): void {
     const mergedData: Core = this.loadConfig('./env/teams.yaml', `./env/secrets.teams.yaml${this.decryptedFilePostfix}`)
 
     Object.values(mergedData.teamConfig.teams).forEach((team: Team) => {
-      this.db.populateItem('teams', { ...team, name: team.id }, undefined, team.id)
-      team.clusters.forEach((clusterId) => {
-        this.loadTeamServices(team.id!, clusterId)
-        this.loadTeamSecrets(team.id!, clusterId)
-      })
+      this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id)
+      this.loadTeamServices(team.id!)
+      this.loadTeamSecrets(team.id!)
     })
   }
 
-  loadTeamServices(teamId: string, clusterId: string): void {
-    const filePath = `./env/clouds/${clusterId}/services.${teamId}.yaml`
+  loadTeamServices(teamId: string): void {
+    const filePath = `./env/teams/services.${teamId}.yaml`
     try {
       const data = this.repo.readFile(filePath)
       const services = get(data, `teamConfig.teams.${teamId}.services`, [])
-      const cluster = this.db.getItem('clusters', { id: clusterId })
+      const { dns } = this.getSettings()
       services.forEach((svc) => {
-        this.convertServiceToDb(svc, teamId, cluster)
+        this.convertServiceToDb(svc, teamId, dns)
       })
     } catch (e) {
-      console.warn(`Team ${teamId} has no services on cluster ${clusterId}`)
+      console.warn(`Team ${teamId} has no services on cluster`)
     }
   }
 
@@ -402,12 +404,10 @@ export default class OtomiStack {
     ]
     const secretPaths: string[] = []
     const teams = this.getTeams()
-    teams.forEach((team: Team) => {
-      team.clusters.forEach((clusterId) => {
-        // TODO: fix this uggly team.id || ''
-        this.saveTeamServices(team.id || '', clusterId)
-        this.saveTeamSecrets(team.id || '', clusterId)
-      })
+    teams.forEach((team) => {
+      // TODO: fix this ugly team.id || ''
+      this.saveTeamServices(team.id || '')
+      this.saveTeamSecrets(team.id || '')
       // eslint-disable-next-line no-param-reassign
       if (!team.password) team.password = generatePassword(16, false)
       teamValues[team.id || ''] = omit(team, 'name')
@@ -423,16 +423,16 @@ export default class OtomiStack {
     this.saveConfig(filePath, secretFilePath, values, secretPaths)
   }
 
-  saveTeamSecrets(teamId: string, clusterId: string): void {
-    let secrets = this.db.getCollection('secrets', { teamId, clusterId })
-    secrets = secrets.map((item) => omit(item, ['teamId', 'clusterId']))
+  saveTeamSecrets(teamId: string): void {
+    const secrets = this.db.getCollection('secrets', { teamId })
+    const secretsRaw = secrets.map((item) => omit(item, ['teamId']))
     const data = {}
-    set(data, getTeamSecretsJsonPath(teamId), secrets)
-    this.repo.writeFile(getTeamSecretsFilePath(teamId, clusterId), data)
+    set(data, getTeamSecretsJsonPath(teamId), secretsRaw)
+    this.repo.writeFile(getTeamSecretsFilePath(teamId), data)
   }
 
-  saveTeamServices(teamId: string, clusterId: string): void {
-    const services = this.db.getCollection('services', { teamId, clusterId })
+  saveTeamServices(teamId: string): void {
+    const services = this.db.getCollection('services', { teamId })
     const data = {}
     const values: any[] = []
     services.forEach((service) => {
@@ -441,39 +441,13 @@ export default class OtomiStack {
     })
 
     set(data, `teamConfig.teams.${teamId}.services`, values)
-    const filePath = `./env/clouds/${clusterId}/services.${teamId}.yaml`
+    const filePath = `./env/teams/services.${teamId}.yaml`
     this.repo.writeFile(filePath, data)
   }
 
-  convertClusterValuesToDb(values: Schema): void {
-    const cs = values.clouds
-    forIn(cs, (cloudObj: any, cloud: string) => {
-      forIn(cloudObj.clusters, (clusterObject: Cluster, cluster) => {
-        const domain = `${cluster}.${cloudObj.domain}`
-        const dnsZones = [cloudObj.domain].concat(get(cloudObj, 'dnsZones', [])) as string[]
-
-        const clusterObj: Cluster = {
-          enabled: clusterObject.enabled === undefined ? true : clusterObject.enabled,
-          cloud,
-          name: cluster,
-          dnsZones,
-          domain,
-          otomiVersion: clusterObject.otomiVersion,
-          k8sVersion: clusterObject.k8sVersion,
-          hasKnative: clusterObject.hasKnative !== undefined ? clusterObject.hasKnative : true,
-          region: clusterObject.region,
-        }
-        const id = `${cloud}/${cluster}`
-        this.db.populateItem('clusters', clusterObj, undefined, id)
-      })
-    })
-  }
-
-  convertServiceToDb(svcRaw, teamId, cluster): void {
+  convertServiceToDb(svcRaw, teamId, dns: Dns): void {
     // Create service
     const svc = omit(svcRaw, 'ksvc', 'isPublic', 'hasCert', 'domain', 'paths', 'forwardPath')
-    svc.enabled = !!cluster.enabled
-    svc.clusterId = cluster.id
     svc.teamId = teamId
     if (!('name' in svcRaw)) {
       console.warn('Unknown service structure')
@@ -490,7 +464,7 @@ export default class OtomiStack {
     } else set(svc, 'ksvc.serviceType', 'svcPredeployed')
 
     if (!('internal' in svcRaw)) {
-      const publicUrl = getPublicUrl(svcRaw.domain, svcRaw.name, teamId, cluster)
+      const publicUrl = getPublicUrl(svcRaw.domain, svcRaw.name, teamId, dns)
       svc.ingress = {
         hasCert: 'hasCert' in svcRaw,
         hasSingleSignOn: !('isPublic' in svcRaw),

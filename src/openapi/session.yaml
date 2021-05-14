@@ -3,16 +3,14 @@ Session:
     admin: [read]
     team: [read]
   properties:
-    clusters:
+    cluster:
       readOnly: true
-      type: array
-      items:
-        type: string
-      uniqueItems: true
+      $ref: cluster.yaml#/Cluster
+    dns:
+      type: object
+      readOnly: true
     core:
-      readOnly: true
-    currentClusterId:
-      type: string
+      type: object
       readOnly: true
     isDirty:
       type: boolean

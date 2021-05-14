@@ -1,22 +1,21 @@
+import cleanDeep, { CleanOptions } from 'clean-deep'
 import cloneDeep from 'lodash/cloneDeep'
-import { Cluster } from './otomi-models'
+import { Dns } from './otomi-models'
 
-export function arrayToObject(array: [], keyName: string, keyValue: string): any {
+export function arrayToObject(array: [], keyName: string, keyValue: string): Record<string, unknown> {
   const obj = {}
   array.forEach((item) => {
     const cloneItem = cloneDeep(item)
     obj[cloneItem[keyName]] = cloneItem[keyValue]
   })
-  // const obj = array.reduce((accumulator, currentValue: ResourceBase) => {
-  //   const cloneItem = cloneDeep(currentValue)
-  //   obj[cloneItem[keyField]] = cloneItem[keyValue]
-  //   delete cloneItem.name
-  //   return obj
-  // }, {})
   return obj
 }
 
-export function objectToArray(obj: any, keyName: string, keyValue: string): Array<any> {
+export function objectToArray(
+  obj: Record<string, unknown>,
+  keyName: string,
+  keyValue: string,
+): Array<Record<string, unknown>> {
   const arr = Object.keys(obj).map((key) => {
     const tmp = {}
     tmp[keyName] = key
@@ -26,7 +25,7 @@ export function objectToArray(obj: any, keyName: string, keyValue: string): Arra
   return arr
 }
 
-export function getObjectPaths(tree: any): Array<string> {
+export function getObjectPaths(tree: Record<string, unknown>): Array<string> {
   const leaves: string[] = []
   function walk(obj, path = ''): void {
     Object.keys(obj).forEach((n) => {
@@ -58,27 +57,23 @@ interface PublicUrl {
   domain: string
 }
 
-export function getPublicUrl(
-  serviceDomain?: string,
-  serviceName?: string,
-  teamId?: string,
-  cluster?: Cluster,
-): PublicUrl {
+export function getPublicUrl(serviceDomain?: string, serviceName?: string, teamId?: string, dns?: Dns): PublicUrl {
   if (!serviceDomain) {
     // Fallback mechanism for exposed service that does not have its public url specified in values
     return {
-      subdomain: `${serviceName}.team-${teamId}.${cluster!.name}`,
-      domain: cluster?.dnsZones?.length ? cluster.dnsZones[0] : '',
+      subdomain: `${serviceName}.team-${teamId}`,
+      domain: dns?.domain || '',
     }
   }
 
-  const dnsZones = [...(cluster!.dnsZones || [])]
+  const zones = [...(dns!.zones || [])]
+  zones.push(dns?.domain || '')
   // Sort by length descending
-  dnsZones.sort((a, b) => b.length - a.length)
-  for (let i = 0; i < dnsZones.length; i += 1) {
-    if (serviceDomain.endsWith(dnsZones[i])) {
-      const subdomainLength = serviceDomain.length - dnsZones[i].length - 1
-      return { subdomain: serviceDomain.substring(0, subdomainLength), domain: dnsZones[i] }
+  zones.sort((a, b) => b.length - a.length)
+  for (let i = 0; i < zones.length; i += 1) {
+    if (serviceDomain.endsWith(zones[i])) {
+      const subdomainLength = serviceDomain.length - zones[i].length - 1
+      return { subdomain: serviceDomain.substring(0, subdomainLength), domain: zones[i] }
     }
   }
 
@@ -86,10 +81,20 @@ export function getPublicUrl(
   return { subdomain: '', domain: serviceDomain }
 }
 
-export function getTeamSecretsFilePath(teamId: string, clusterId: string): string {
-  return `./env/clouds/${clusterId}/external-secrets.${teamId}.yaml`
+export function removeBlankAttributes(obj: Record<string, unknown>): Record<string, unknown> {
+  const options: CleanOptions = {
+    emptyArrays: true,
+    emptyObjects: true,
+    nullValues: true,
+    undefinedValues: true,
+  }
+  return cleanDeep(obj, options)
+}
+
+export function getTeamSecretsFilePath(teamId: string): string {
+  return `./env/teams/external-secrets.${teamId}.yaml`
 }
 
 export function getTeamSecretsJsonPath(teamId: string): string {
-  return `teamConfig.teams.${teamId}.externalSecrets`
+  return `teamConfig.teams.${teamId}.secrets`
 }
