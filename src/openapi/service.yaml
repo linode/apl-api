@@ -27,23 +27,15 @@ Service:
       title: Name
       description: A service name
       example: some-service
-    clusterId:
-      description: A kubernetes cluster for the service
-      title: Cluster ID
-      type: string
-      x-acl:
-        admin:
-          - read
-          - create
-        team:
-          - read
-          - create
     port:
-      $ref: definitions.yaml#/portNumber
+      description: A service port
+      type: integer
+      default: 80
+      minimum: 1
+      maximum: 65535
     ksvc:
       oneOf:
-        - nullable: true
-          properties:
+        - properties:
             annotations:
               $ref: definitions.yaml#/annotations
               title: Pod annotations
@@ -90,7 +82,6 @@ Service:
             env:
               $ref: definitions.yaml#/env
             image:
-              nullable: true
               properties:
                 repository:
                   $ref: definitions.yaml#/repository
@@ -116,6 +107,8 @@ Service:
               enum:
                 - ksvc
               type: string
+          required:
+            - serviceType
           title: Knative service
         - properties:
             serviceType:
@@ -204,5 +197,4 @@ Service:
       readOnly: true
   required:
     - name
-    - clusterId
   type: object

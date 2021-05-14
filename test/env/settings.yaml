@@ -14,8 +14,11 @@ azure:
   tenantId: somevalue
 customer:
   name: demo
-google:
-  projectId: otomi-cloud
+dns:
+  zones: [example.com]
+  domain: onprem.example.com
+  aws:
+    region: eu-central-1
 home:
   receivers:
     - slack
@@ -40,6 +43,10 @@ otomi:
   addons:
     conftest:
       enabled: true
+otomiInstanceUrls:
+  - a.otomi.cloud
+  - b.otomi.cloud
+  - c.otomi.cloud
 smtp:
   authUsername: no-reply@doma.in
   from: no-reply@doma.in

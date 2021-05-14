@@ -2,14 +2,9 @@ teamConfig:
   teams:
     otomi:
       alerts: {}
-      clusters:
-        - aws/dev
-        - onprem/dev
       id: otomi
       oidc: {}
     dev:
       alerts: {}
-      clusters:
-        - onprem/dev
       id: dev
       oidc: {}

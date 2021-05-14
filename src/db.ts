@@ -7,9 +7,8 @@ import cloneDeep from 'lodash/cloneDeep'
 import { AlreadyExists, NotExistError } from './error'
 import { Cluster, Secret, Service, Settings, Team } from './otomi-models'
 
-export type DbType = Cluster | Secret | Service | Team
+export type DbType = Cluster | Secret | Service | Team | Settings
 export type Schema = {
-  clouds: any[]
   clusters: Cluster[]
   secrets: Secret[]
   services: Service[]
@@ -37,8 +36,7 @@ export default class Db {
       .defaults({
         teams: [],
         services: [],
-        clouds: [],
-        clusters: [],
+        cluster: [],
         secrets: [],
         settings: {},
       })

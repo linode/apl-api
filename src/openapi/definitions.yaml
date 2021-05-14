@@ -75,33 +75,84 @@ annotations:
       value:
         type: string
         maxLength: 32767
-
+awsCreds:
+  properties:
+    accessKey:
+      type: string
+    secretKey:
+      type: string
+    region:
+      type: string
+  required:
+    - accessKey
+    - secretKey
+    - region
+azureCreds:
+  properties:
+    clientId:
+      type: string
+    clientSecret:
+      type: string
+    environment:
+      type: string
+    tenantId:
+      type: string
+  required:
+    - clientId
+    - clientSecret
+    - tenantId
 azureMonitor:
   properties:
     appInsightsApiKey:
-      description: An Azure AppInsights client secret (defaults to clientSecret).
+      title: AppInsights api key
+      description: An Azure AppInsights client secret.
       type: string
     appInsightsAppId:
-      description: An Azure AppInsights client id (defaults to clientId).
+      title: AppInsights app id
+      description: An Azure AppInsights client id.
       type: string
+    azureLogAnalyticsSameAs:
+      title: LogAnalytics using same creds?
+      type: boolean
+      default: true
     clientId:
+      title: Azure client id
       description: An Azure client id.
       type: string
     clientSecret:
+      title: Azure client secret
       description: An Azure client secret.
       type: string
     logAnalyticsClientId:
-      description: An Azure client secret (defaults to clientSecret).
+      title: LogAnalytics client id
+      description: An Azure client secret.
       type: string
     logAnalyticsClientSecret:
-      description: An Azure client secret (defaults to clientSecret).
+      title: LogAnalytics client secret
+      description: An Azure client secret.
       type: string
     logAnalyticsTenantId:
-      description: An Azure tenant id (defaults to tenantId).
+      title: LogAnalytics tenant id
+      description: An Azure tenant id.
       type: string
-    logAnalyticsWorkspace:
+    logAnalyticsDefaultWorkspace:
+      title: LogAnalytics client id
+      description: An Azure LogAnalytics workspace.
+      type: string
+    subscriptionId:
+      title: Azure subscription id
+      description: An Azure subscription id.
+      type: string
+    tenantId:
+      title: LogAnalytics tenant id
       description: An Azure monitor log analytics workspace.
       type: string
+  required:
+    - clientId
+    - clientSecret
+    - subscriptionId
+    - tenantId
+  type: object
 cluster:
   additionalProperties: false
   properties:
@@ -118,7 +169,7 @@ cluster:
         - google
         - aws
       type: string
-    dnsZones:
+    zones:
       description: Extra dns zones that the cluster can administer (see dns). Team services can use this to publish their URLs on.
       items:
         $ref: '#/domain'
@@ -171,21 +222,90 @@ droneGit:
     clientSecretValue:
       type: string
 env:
+  title: Environment variables
+  # description: Environment variables for containers
+  type: array
+  nullable: true
   items:
     properties:
       name:
         type: string
         pattern: ^[a-zA-Z0-9_]*$
       value:
-        maxLength: 131072
         type: string
+        maxLength: 131072
     required:
       - name
       - value
     type: object
-  nullable: true
-  title: Environment variables
-  type: array
+secret:
+  oneOf:
+    - properties:
+        entries:
+          items:
+            description: A property name at vaultPath
+            minItems: 1
+            pattern: ^[a-zA-Z0-9_]*$
+            type: string
+            uniqueItems: true
+          type: array
+        type:
+          default: generic
+          enum:
+            - generic
+      required:
+        - type
+        - entries
+      title: Generic
+    - properties:
+        dockerconfig:
+          enum:
+            - .dockerconfig.json
+          readOnly: true
+          type: string
+        type:
+          default: docker-registry
+          enum:
+            - docker-registry
+          type: string
+      required:
+        - type
+      title: Docker registry
+    - properties:
+        ca:
+          default: ca.crt
+          type: string
+        crt:
+          default: tls.crt
+          type: string
+        key:
+          default: tls.key
+          type: string
+        type:
+          default: tls
+          enum:
+            - tls
+          type: string
+      required:
+        - type
+        - crt
+        - key
+      title: TLS
+  properties:
+    id:
+      readOnly: true
+      type: string
+    name:
+      $ref: '#/subdomainType'
+  required:
+    - name
+  type: object
+googleCreds:
+  properties:
+    accountJson:
+      type: string
+    project:
+      type: string
 hostPort:
   pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):()([1-9]|[1-5]?[0-9]{2,4}|6[1-4][0-9]{3}|65[1-4][0-9]{2}|655[1-2][0-9]|6553[1-5])$
   type: string
@@ -231,6 +351,17 @@ k8sVersion:
 labels:
   $ref: '#/annotations'
   description: A set of labels.
+labelsAnnotations:
+  additionalProperties: false
+  items:
+    properties:
+      name:
+        type: string
+        pattern: ^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]){1,253}\/)?([a-z0-9A-Z]+[a-z0-9A-Z-_.]+[a-z0-9A-Z]){1,63}$
+      values:
+        type: string
+        pattern: ^((.){1,253}\/)?(.){1,63}$
+  type: array
 logLevel:
   default: info
   enum:
@@ -338,6 +469,12 @@ subdomainType:
 url:
   pattern: ^(https:\/\/)([\w\-])+\.{1}([a-zA-Z]{2,63})([\/\w-]*)*\/?\??([^#\n\r]*)?#?([^\n\r]*)$
   type: string
+vaultCreds:
+  properties:
+    token:
+      type: string
+  required:
+    - token
 volumes:
   items:
     additionalProperties: false

@@ -13,9 +13,10 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
   const GET: Operation = [
     (req: OpenApiRequestExt, res): void => {
       const data = {
-        currentClusterId: env.CLUSTER_ID,
         clusters: otomi.getClusters(),
+        cluster: otomi.getCluster(),
         core: otomi.getCore(),
+        dns: otomi.getSettings().dns,
         user: req.user,
         teams: otomi.getTeams(),
         isDirty: otomi.db.isDirty(),

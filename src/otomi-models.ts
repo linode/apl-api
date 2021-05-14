@@ -3,6 +3,7 @@ import { components } from './generated-schema'
 
 export type Cluster = components['schemas']['Cluster']
 export type Deployment = components['schemas']['Deployment']
+export type Dns = components['schemas']['Settings']['dns']
 export type Kubecfg = components['schemas']['Kubecfg']
 export type Secret = components['schemas']['Secret'] & { teamId?: string }
 export type Service = components['schemas']['Service']
