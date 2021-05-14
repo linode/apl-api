@@ -51,10 +51,12 @@ Team:
             critical:
               description: Email addresses (comma separated) for critical events.
               title: Criticals
+              format: email
               type: string
             nonCritical:
               description: One or more email addresses (comma separated) for non-critical events.
               title: Non criticals
+              format: email
               type: string
           title: Email
           type: object
