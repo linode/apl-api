@@ -193,7 +193,7 @@ export default class OtomiStack {
   }
 
   checkPublicUrlInUse(data: Service): void {
-    if (!data.ingress) return
+    if (isEmpty(data.ingress)) return
 
     const services = this.db.getCollection('services')
 
