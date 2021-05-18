@@ -145,7 +145,6 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Team'
-
   '/teams/{teamId}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
@@ -188,6 +187,44 @@ paths:
         <<: *DefaultGetResponses
         '200':
           description: Successfully deleted a team
+
+  '/teams/{teamId}/permissions':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamPermissions
+      description: Get team permissions
+      x-aclSchema: TeamPermissions
+      responses:
+        '200':
+          description: Successfully obtained team permissions
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamPermissions'
+        '400':
+          <<: *BadRequest
+    put:
+      operationId: editTeamPermissions
+      description: Edit team permission flags
+      x-aclSchema: TeamPermissions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamPermissions'
+        description: Team Permissions object
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited service
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/TeamPermissions'
 
   '/teams/{teamId}/services':
     parameters:
@@ -511,6 +548,9 @@ components:
 
     OtomiStackError:
       $ref: 'error.yaml#/OtomiStackError'
+
+    TeamPermissions:
+      $ref: 'permissions.yaml#/TeamPermissions'
 
     Secret:
       $ref: 'secret.yaml#/Secret'
