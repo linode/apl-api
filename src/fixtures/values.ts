@@ -244,7 +244,11 @@ export default {
         },
       },
     },
-    otomiInstanceUrls: ['a.otomi.cloud', 'b.otomi.cloud', 'c.otomi.cloud'],
+    clusters: [
+      { name: 'a', url: 'a.otomi.cloud' },
+      { name: 'b', url: 'b.otomi.cloud' },
+      { name: 'c', url: 'c.otomi.cloud' },
+    ],
     smtp: {
       from: 'no-reply@doma.in',
       hello: 'doma.in',

@@ -46,20 +46,6 @@ x-get-responses: &DefaultGetResponses
 
 # -------------------------------------------- Paths
 paths:
-  /clusters:
-    get:
-      operationId: getClusters
-      description: Get available clusters
-      x-aclSchema: Cluster
-      responses:
-        '200':
-          description: Successfully obtained cluster collection
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Cluster'
 
   /secrets:
     get:

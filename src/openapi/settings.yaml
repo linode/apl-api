@@ -121,6 +121,16 @@ Settings:
         - subscriptionId
         - tenantId
       type: object
+    clusters:
+      description: Make otomi aware of other otomi instancies.
+      type: array
+      items:
+        properties:
+          name:
+            type: string
+          url:
+            type: string
+      default: []
     customer:
       additionalProperties: false
       properties:
@@ -297,12 +307,6 @@ Settings:
               type: object
           type: object
       type: object
-    otomiInstanceUrls:
-      description: Use this property to indicate other otomi instances and easily navigate between them from otomi-console
-      type: array
-      items:
-        type: string
-      default: []
     smtp:
       additionalProperties: false
       properties:

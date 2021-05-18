@@ -118,10 +118,6 @@ export default class OtomiStack {
     return this.db.getCollection('teams') as Array<Team>
   }
 
-  getClusters(): Array<Cluster> {
-    return this.db.getCollection('clusters') as Array<Cluster>
-  }
-
   getCore(): any {
     return this.coreValues
   }

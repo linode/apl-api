@@ -9,7 +9,6 @@ import { Cluster, Secret, Service, Settings, Team } from './otomi-models'
 
 export type DbType = Cluster | Secret | Service | Team | Settings
 export type Schema = {
-  clusters: Cluster[]
   secrets: Secret[]
   services: Service[]
   settings: Settings
