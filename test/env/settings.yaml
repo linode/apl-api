@@ -12,6 +12,13 @@ azure:
   resourceGroup: somevalue
   subscriptionId: somevalue
   tenantId: somevalue
+clusters:
+  - name: a
+    url: a.otomi.cloud
+  - name: b
+    url: b.otomi.cloud
+  - name: c
+    url: c.otomi.cloud
 customer:
   name: demo
 dns:
@@ -43,10 +50,6 @@ otomi:
   addons:
     conftest:
       enabled: true
-otomiInstanceUrls:
-  - a.otomi.cloud
-  - b.otomi.cloud
-  - c.otomi.cloud
 smtp:
   authUsername: no-reply@doma.in
   from: no-reply@doma.in
