@@ -57,6 +57,7 @@ set_package_json() {
 
 # Anyone may delete this function if the breaking change is no longer present
 # But please check by running `tsc` in client library package.json.
+# TODO https://github.com/DefinitelyTyped/DefinitelyTyped/issues/53100
 set_bluebird() {
     if [ -f "$target_package_json" ]; then
         echo "Setting @types/bluebird to 3.5.34..."
