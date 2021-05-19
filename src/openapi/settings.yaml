@@ -6,28 +6,34 @@ alerts: &alerts
   type: object
   properties:
     drone:
+      title: Drone
       default: slack
       enum:
         - slack
         - msteams
       type: string
     email:
+      title: E-Mail
       additionalProperties: false
       properties:
         critical:
+          title: Critical
           type: string
           format: email
           description: One or more email addresses (comma separated) for critical events.
         nonCritical:
+          title: Non-Critical
           type: string
           format: email
           description: One or more email addresses (comma separated) for non-critical events.
       type: object
     groupInterval:
+      title: Group Interval
       default: 5m
       description: How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.)
       type: string
     receivers:
+      title: Notification receivers
       description: Notification receivers.
       items:
         enum:
@@ -37,33 +43,36 @@ alerts: &alerts
         type: string
       type: array
     msteams:
+      title: Microsoft Teams
       additionalProperties: false
       properties:
         highPrio:
-          description: The low prio web hook.
+          title: High priority web hook
           type: string
         lowPrio:
-          description: The high prio web hook.
+          title: Low priority web hook
           type: string
       type: object
     repeatInterval:
+      title: Repeat Interval
       default: 3h
       description: How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more).
       type: string
     slack:
+      title: Slack
       additionalProperties: false
       properties:
         channel:
           default: mon-otomi
-          description: The Slack channel for non-critical notifications.
+          title: Slack channel for non-critical notifications.
           type: string
         channelCrit:
           default: mon-otomi
-          description: The Slack channel for critical notifications.
+          title: Slack channel for critical notifications.
           type: string
         url:
           <<: *url
-          description: A Slack webhook URL.
+          title: Slack webhook URL
       type: object
 kms: &kms
   additionalProperties: false
@@ -88,8 +97,10 @@ Settings:
   additionalProperties: false
   properties:
     alerts:
+      title: Alerts
       <<: *alerts
     azure:
+      title: Azure
       description: Azure specific configuration.
       properties:
         appgw:
@@ -116,12 +127,14 @@ Settings:
         - tenantId
       type: object
     customer:
+      title: Customer
       additionalProperties: false
       properties:
         name:
           type: string
       type: object
     dns:
+      title: DNS
       properties:
         zones:
           description: Extra dns zones that the cluster can administer (see dns). Team services can use this to publish their URLs on.
@@ -132,7 +145,7 @@ Settings:
           type: string
           description: A fqdn for the cluster
       oneOf:
-        - title: aws
+        - title: AWS
           properties:
             aws:
               properties:
@@ -144,7 +157,7 @@ Settings:
           type: object
           required:
             - aws
-        - title: azure
+        - title: Azure
           properties:
             azure:
               properties:
@@ -190,14 +203,16 @@ Settings:
           type: object
           required:
             - azure
-        - title: google
+        - title: Google
           properties:
             google:
               properties:
                 serviceAccountKey:
+                  title: Service Account Key
                   description: A service account key for managing a DNS zone.
                   type: string
                 project:
+                  title: Project
                   type: string
               required:
                 - serviceAccountKey
@@ -210,61 +225,82 @@ Settings:
         - domain
       type: object
     home:
+      title: Home
       <<: *alerts
     kms:
+      title: KMS
       <<: *kms
     oidc:
+      title: OIDC
       additionalProperties: false
       description: 'Holds many parts used in different locations. Please see keycloak, istio and oauth-proxy all consuming parts.'
       properties:
         adminGroupID:
+          title: Admin Group ID
           type: string
         apiUrl:
+          title: API URL
           <<: *url
         authUrl:
+          title: Authentication URL
           <<: *url
         clientID:
+          title: Client ID
           type: string
         clientSecret:
+          title: Client Secret
           type: string
         issuer:
+          title: Issuer URL
           <<: *url
         scope:
+          title: Scope
           type: string
         teamAdminGroupID:
+          title: Team Admin Group ID
           type: string
         tenantID:
+          title: Tenant ID
           type: string
         tokenUrl:
+          title: Token URL
           <<: *url
         usernameClaimMapper:
+          title: Keycloak Username Claim Mapper
           type: string
           description: Claim name used by Keycloak to identify incoming users from identity provider
         subClaimMapper:
+          title: UUID Claim Mapper
           type: string
           description: Select OIDC claim to be used as a unique user identifier
           default: sub
       type: object
     otomi:
+      title: Otomi
       additionalProperties: false
       properties:
         hasCloudLB:
+          title: Cloud Load Balancer
           default: false
           description: Set this to true when an external LB exists or needs to be started (AWS ALB, Azure AppGW, Google Apigee). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.
           type: boolean
         isHomeMonitored:
+          title: Home Monitor
           default: false
           description: Whether this cluster is home monitored (like when under a Premium SLA). Sends criticals home.
           type: boolean
         isManaged:
+          title: Managed Masters
           default: true
           description: Whether masters are managed and not under control. Set this to false when onprem.
           type: boolean
         isMultitenant:
+          title: Multi-tenancy
           default: true
           description: Whether to separate team metrics and logs. Disabling this lets everybody be admin and see everything.
           type: boolean
         mode:
+          title: Edition
           default: ee
           description: The otomi-core edition. Either community edition (ce) or enterprise edition (ee).
           enum:
@@ -272,21 +308,26 @@ Settings:
             - ee
           type: string
         pullSecret:
+          title: Pull Secret
           default: ''
           description: The pullsecret to deploy the Otomi API and Console. Requires an Otomi license.
           type: string
         teamPrefix:
+          title: Team Prefix
           default: team-
           description: The prefix to use in URLs for team domains.
           pattern: ^[a-z]+[-]{1}$
           type: string
         addons:
+          title: Addons
           description: Manage addon configuration
           additionalProperties: false
           properties:
             conftest:
+              title: Conftest
               properties:
                 enabled:
+                  title: Enabled
                   type: boolean
                   default: true
                   description: Use this flag to enable conftest for policy validation
@@ -294,31 +335,39 @@ Settings:
           type: object
       type: object
     otomiInstanceUrls:
+      title: Otomi Instance URLs
       description: Use this property to indicate other otomi instances and easily navigate between them from otomi-console
       type: array
       items:
         type: string
       default: []
     smtp:
+      title: SMTP
       additionalProperties: false
       properties:
         auth_identity:
+          title: Authentication identity
           type: string
         auth_password:
+          title: Authentication password
           type: string
         auth_secret:
+          title: Authentication Secret
           type: string
         auth_username:
+          title: Authentication username
           type: string
         from:
+          title: From-address
           type: string
           format: email
           description: The "from" address. Defaults to alerts@$clusterDomain.
         hello:
+          title: Hello
           type: string
         smarthost:
+          title: Host-port combination
           $ref: definitions.yaml#/hostPort
-          description: The smtp host:port combination.
       required:
         - smarthost
       type: object
