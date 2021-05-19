@@ -28,62 +28,7 @@ Team:
       type: string
       writeOnly: true
     alerts:
-      properties:
-        email:
-          properties:
-            critical:
-              description: Email addresses (comma separated) for critical events.
-              title: Criticals
-              format: email
-              type: string
-            nonCritical:
-              description: One or more email addresses (comma separated) for non-critical events.
-              title: Non criticals
-              format: email
-              type: string
-          title: Email
-          type: object
-        msteams:
-          properties:
-            highPrio:
-              description: The high prio web hook
-              title: High prio webhook
-              type: string
-            lowPrio:
-              description: The low prio web hook
-              title: Low prio webhook
-              type: string
-          title: Microsoft Teams
-          type: object
-        receivers:
-          items:
-            enum:
-              - slack
-              - msteams
-              - email
-            type: string
-          title: Receivers
-          type: array
-          uniqueItems: true
-        slack:
-          properties:
-            channel:
-              description: Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'.
-              title: Channel for non-criticals
-              type: string
-            channelCrit:
-              description: Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'.
-              title: Channel for criticals
-              type: string
-              format: email
-            critical:
-              title: Criticals
-              type: string
-              format: email
-              description: Email addresses (comma separated) for critical events.
-          type: object
-      title: Alerting endpoints
-      type: object
+      $ref: definitions.yaml#/alerts
   required:
     - name
   type: object

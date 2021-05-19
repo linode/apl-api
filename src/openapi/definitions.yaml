@@ -2,38 +2,34 @@ alerts:
   type: object
   properties:
     drone:
+      title: Drone
       default: slack
       enum:
         - slack
         - msteams
       type: string
     email:
+      title: E-Mail
       additionalProperties: false
       properties:
         critical:
+          title: Critical
           type: string
-          format: email
+          $ref: '#/email'
           description: One or more email addresses (comma separated) for critical events.
         nonCritical:
+          title: Non-Critical
           type: string
-          format: email
+          $ref: '#/email'
           description: One or more email addresses (comma separated) for non-critical events.
       type: object
     groupInterval:
+      title: Group Interval
       default: 5m
       description: How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.)
       type: string
-    msteams:
-      additionalProperties: false
-      properties:
-        highPrio:
-          description: The low prio web hook.
-          type: string
-        lowPrio:
-          description: The high prio web hook.
-          type: string
-      type: object
     receivers:
+      title: Notification receivers
       description: Notification receivers.
       items:
         enum:
@@ -42,24 +38,37 @@ alerts:
           - email
         type: string
       type: array
+    msteams:
+      title: Microsoft Teams
+      additionalProperties: false
+      properties:
+        highPrio:
+          title: High priority web hook
+          type: string
+        lowPrio:
+          title: Low priority web hook
+          type: string
+      type: object
     repeatInterval:
+      title: Repeat Interval
       default: 3h
       description: How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more).
       type: string
     slack:
+      title: Slack
       additionalProperties: false
       properties:
         channel:
           default: mon-otomi
-          description: The Slack channel for non-critical notifications.
+          title: Slack channel for non-critical notifications.
           type: string
         channelCrit:
           default: mon-otomi
-          description: The Slack channel for critical notifications.
+          title: Slack channel for critical notifications.
           type: string
         url:
           $ref: '#/url'
-          description: A Slack webhook URL.
+          title: Slack webhook URL
       type: object
 annotation:
   type: string
@@ -231,6 +240,9 @@ droneGit:
       type: string
     clientSecretValue:
       type: string
+email:
+  pattern: ^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$
+  type: string
 env:
   title: Environment variables
   # description: Environment variables for containers
