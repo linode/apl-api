@@ -33,7 +33,7 @@ generate_client() {
     # npx openapi bundle --output src/openapi --ext yaml src/openapi/api.yaml
 
     docker run --rm -v $PWD:/local -w /local -u "$(id -u $USER)" \
-    openapitools/openapi-generator-cli:v5.1.0 generate \
+    openapitools/openapi-generator-cli:v5.0.1 generate \
     -i /local/$openapi_doc \
     -o /local/$target_dir \
     -g typescript-node \
@@ -55,6 +55,17 @@ set_package_json() {
 
 }
 
+# Anyone may delete this function if the breaking change is no longer present
+# But please check by running `tsc` in client library package.json.
+set_bluebird() {
+    if [ -f "$target_package_json" ]; then
+        echo "Setting @types/bluebird to 3.5.34..."
+
+        cat <<< "$(jq '.dependencies."@types/bluebird" = "3.5.34"' $target_package_json)" > /tmp/pkg.json && \
+        mv /tmp/pkg.json $target_package_json
+    fi
+}
+
 build_npm_package() {
     echo "Building $target_npm_name npm package"
     cd $target_dir
@@ -66,6 +77,7 @@ rm -rf $target_dir >/dev/null
 validate
 generate_client 
 set_package_json
+set_bluebird
 build_npm_package
 
 echo "The client code has been generated at $target_dir/ directory"
