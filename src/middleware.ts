@@ -74,7 +74,7 @@ export function jwtMiddleware(): RequestHandler {
 export function getCrudOperation(req: OpenApiRequest): string {
   return HttpMethodMapping[req.method]
 }
-
+// eslint-disable-next-line no-unused-vars
 export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz, otomi: OtomiStack): boolean {
   if (env.NO_AUTHZ) return true
   const {
@@ -83,8 +83,6 @@ export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz, otomi: Ot
   const { user } = req
   // const permissions = otomi.getTeamPermissions(teamId)
   // const possiblePermissions = undefined
-  const operationId = req.operationDoc.operationId
-
   const action = getCrudOperation(req)
   console.debug(
     `Authz: ${action} ${req.path}, session(roles: ${user && JSON.stringify(user.roles)} teams=${

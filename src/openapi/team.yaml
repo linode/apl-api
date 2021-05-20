@@ -84,13 +84,13 @@ Team:
     selfService:
       type: object
       properties:
-        service:
+        Service:
           type: array
           items:
             type: string
             enum: [ingress]
           uniqueItems: true
-        team:
+        Team:
           type: array
           items:
             type: string
@@ -98,6 +98,7 @@ Team:
           uniqueItems: true
   required:
     - name
+    - selfService
   type: object
   x-acl:
     admin:

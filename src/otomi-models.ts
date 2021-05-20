@@ -50,6 +50,15 @@ export interface Property {
 
 export type SchemaType = 'object' | 'array'
 
+export interface PermissionSchema {
+  properties: {
+    [propertyName: string]: {
+      items: {
+        enum: Array<string>
+      }
+    }
+  }
+}
 export interface Schema {
   'x-acl'?: Acl
   type: SchemaType
