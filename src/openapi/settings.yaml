@@ -25,29 +25,6 @@ alerts: &alerts
       default: 5m
       description: How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.)
       type: string
-kms:
-  additionalProperties: false
-  properties:
-    sops:
-      oneOf:
-        - aws:
-            $ref: definitions.yaml#/awsCreds
-          required:
-            - aws
-        - azure:
-            $ref: definitions.yaml#/azureCreds
-          required:
-            - azure
-        - google:
-            $ref: definitions.yaml#/googleCreds
-          required:
-            - google
-        - vault:
-            $ref: definitions.yaml#/vaultCreds
-          required:
-            - vault
-      type: object
-  type: object
 msteams:
   additionalProperties: false
   properties:
@@ -215,6 +192,15 @@ Settings:
       required:
         - domain
       type: object
+    kms:
+      additionalProperties: false
+      properties:
+        sops:
+          oneOf:
+            - $ref: definitions.yaml#/awsCreds
+            - $ref: definitions.yaml#/azureCreds
+            - $ref: definitions.yaml#/googleCreds
+            - $ref: definitions.yaml#/vaultCreds
     home:
       <<: *alerts
     oidc:
