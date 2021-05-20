@@ -1,4 +1,4 @@
-import { set } from 'lodash'
+import { has, set } from 'lodash'
 import { PermissionSchema } from './otomi-models'
 import OtomiStack from './otomi-stack'
 
@@ -24,4 +24,12 @@ export default function getPermissionMap(
     })
   })
   return permissionMap
+}
+
+export function getViolatedAuthorizationPaths(prohibitedAttributes: Array<string>, data: any): Array<string> {
+  const notAllowed: Array<string> = []
+  prohibitedAttributes.forEach((path) => {
+    if (has(data, path)) notAllowed.push(path)
+  })
+  return notAllowed
 }

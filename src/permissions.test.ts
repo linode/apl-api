@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import sinon from 'sinon'
 import OtomiStack from './otomi-stack'
 
-import getPermissionMap from './permission'
+import getPermissionMap, { getViolatedAuthorizationPaths } from './permission'
 
 describe('Permissions tests', () => {
   it('should render correct permission map', () => {
@@ -32,5 +32,10 @@ describe('Permissions tests', () => {
       },
     }
     expect(m).to.deep.equal(expected)
+  })
+
+  it('should get violated authorization paths', () => {
+    const d = getViolatedAuthorizationPaths(['a.b', 'c', 'd'], { a: { b: 1, c: 2 }, d: 4, e: 5 })
+    expect(d).to.deep.equal(['a.b', 'd'])
   })
 })

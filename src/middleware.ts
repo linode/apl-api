@@ -2,10 +2,11 @@ import get from 'lodash/get'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
 import { HttpError, OtomiError } from './error'
-import { OpenApiRequest, JWT, OpenApiRequestExt, User } from './otomi-models'
+import { OpenApiRequest, JWT, OpenApiRequestExt, User, PermissionSchema } from './otomi-models'
 import Authz from './authz'
 import { cleanEnv, NO_AUTHZ } from './validators'
 import OtomiStack from './otomi-stack'
+import getPermissionMap from './permission'
 
 const env = cleanEnv({
   NO_AUTHZ,
@@ -58,7 +59,7 @@ export function getUser(user: JWT): User {
   return sessionUser
 }
 
-export function jwtMiddleware(): RequestHandler {
+export function jwtMiddleware(otomi: OtomiStack): RequestHandler {
   return function nextHandler(req: OpenApiRequestExt, res, next): any {
     const token = req.header('Authorization')
     if (!token) {
@@ -66,7 +67,13 @@ export function jwtMiddleware(): RequestHandler {
       return next()
     }
     const { name, email, roles, groups } = jwtDecode(token)
-    req.user = getUser({ name, email, roles, groups })
+    const user = getUser({ name, email, roles, groups })
+    user.permissions = getPermissionMap(
+      user.teams,
+      (req.apiDoc.components.schemas.TeamPermissions as unknown) as PermissionSchema,
+      otomi,
+    )
+    req.user = user
     return next()
   }
 }

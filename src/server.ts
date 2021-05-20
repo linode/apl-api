@@ -30,7 +30,7 @@ export default async function initApp(otomiStack: OtomiStack): Promise<express.E
   app.use(logger('dev'))
   app.use(cors())
   app.use(json())
-  app.use(jwtMiddleware())
+  app.use(jwtMiddleware(otomiStack))
 
   function getSecurityHandlers(otomi: OtomiStack): SecurityHandlers {
     const securityHandlers = {
