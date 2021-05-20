@@ -10,6 +10,7 @@ export type Service = components['schemas']['Service']
 export type Session = components['schemas']['Session']
 export type Settings = components['schemas']['Settings']
 export type Team = components['schemas']['Team']
+export type TeamPermissions = components['schemas']['TeamPermissions']
 export type User = components['schemas']['User']
 
 export interface OpenApiRequest extends Request {
@@ -17,9 +18,11 @@ export interface OpenApiRequest extends Request {
     responses: { '200'?: { content: { 'application/json': { schema: { $ref: string } } } } }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     security: any[]
+    operationId: string
   }
   apiDoc: OpenAPIDoc
   session: Session
+  user?: User
 }
 
 type HttpMethodType = 'delete' | 'read' | 'create' | 'update'
@@ -53,7 +56,10 @@ export interface Schema {
   properties?: {
     [propertyName: string]: Property
   }
-  items?: any
+  items?: {
+    type: string
+    enum?: Array<string>
+  }
   required?: string[]
 }
 

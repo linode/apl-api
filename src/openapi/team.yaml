@@ -81,6 +81,21 @@ Team:
           type: object
       title: Alerting endpoints
       type: object
+    selfService:
+      type: object
+      properties:
+        service:
+          type: array
+          items:
+            type: string
+            enum: [ingress]
+          uniqueItems: true
+        team:
+          type: array
+          items:
+            type: string
+            enum: [alerts, oidc, resourceQuota]
+          uniqueItems: true
   required:
     - name
   type: object

@@ -5,6 +5,7 @@ import { HttpError, OtomiError } from './error'
 import { OpenApiRequest, JWT, OpenApiRequestExt, User } from './otomi-models'
 import Authz from './authz'
 import { cleanEnv, NO_AUTHZ } from './validators'
+import OtomiStack from './otomi-stack'
 
 const env = cleanEnv({
   NO_AUTHZ,
@@ -74,12 +75,16 @@ export function getCrudOperation(req: OpenApiRequest): string {
   return HttpMethodMapping[req.method]
 }
 
-export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz): boolean {
+export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz, otomi: OtomiStack): boolean {
   if (env.NO_AUTHZ) return true
   const {
     params: { teamId },
   } = req
   const { user } = req
+  // const permissions = otomi.getTeamPermissions(teamId)
+  // const possiblePermissions = undefined
+  const operationId = req.operationDoc.operationId
+
   const action = getCrudOperation(req)
   console.debug(
     `Authz: ${action} ${req.path}, session(roles: ${user && JSON.stringify(user.roles)} teams=${
