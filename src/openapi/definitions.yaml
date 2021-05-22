@@ -102,19 +102,9 @@ azureCreds:
     - clientSecret
     - tenantId
 azureMonitor:
+  title: Azure Monitor
+  description: Azure Monitor data can be made available in Grafana.
   properties:
-    appInsightsApiKey:
-      title: AppInsights api key
-      description: An Azure AppInsights client secret.
-      type: string
-    appInsightsAppId:
-      title: AppInsights app id
-      description: An Azure AppInsights client id.
-      type: string
-    azureLogAnalyticsSameAs:
-      title: LogAnalytics using same creds?
-      type: boolean
-      default: true
     clientId:
       title: Azure client id
       description: An Azure client id.
@@ -123,6 +113,18 @@ azureMonitor:
       title: Azure client secret
       description: An Azure client secret.
       type: string
+    tenantId:
+      title: LogAnalytics tenant id
+      description: An Azure monitor log analytics workspace.
+      type: string
+    subscriptionId:
+      title: Azure subscription id
+      description: An Azure subscription id.
+      type: string
+    azureLogAnalyticsSameAs:
+      title: LogAnalytics using same creds?
+      type: boolean
+      default: true
     logAnalyticsClientId:
       title: LogAnalytics client id
       description: An Azure client secret.
@@ -136,22 +138,20 @@ azureMonitor:
       description: An Azure tenant id.
       type: string
     logAnalyticsDefaultWorkspace:
-      title: LogAnalytics client id
+      title: LogAnalytics workspace
       description: An Azure LogAnalytics workspace.
       type: string
-    subscriptionId:
-      title: Azure subscription id
-      description: An Azure subscription id.
+    appInsightsApiKey:
+      title: AppInsights api key
+      description: An Azure AppInsights client secret.
       type: string
-    tenantId:
-      title: LogAnalytics tenant id
-      description: An Azure monitor log analytics workspace.
+    appInsightsAppId:
+      title: AppInsights app id
+      description: An Azure AppInsights client id.
       type: string
   required:
     - clientId
     - clientSecret
-    - subscriptionId
-    - tenantId
   type: object
 cpuQuantity:
   description: Amount of cores, or slice of cpu in millis.

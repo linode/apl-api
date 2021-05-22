@@ -107,6 +107,7 @@ Service:
                   title: Glob pattern matching
                   type: object
               title: Continuous delivery
+              type: object
           required:
             - serviceType
           title: Knative service
