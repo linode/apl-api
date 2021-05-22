@@ -36,9 +36,37 @@ Service:
     ksvc:
       oneOf:
         - properties:
+            serviceType:
+              default: ksvc
+              enum:
+                - ksvc
+              type: string
+            image:
+              properties:
+                repository:
+                  $ref: definitions.yaml#/repository
+                tag:
+                  pattern: '[\w][\w.-]{0,127}'
+                  type: string
+              required:
+                - repository
+                - tag
+              title: Container image
+              type: object
+            scaleToZero:
+              default: false
+              description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
+              title: Scale to zero
+              type: boolean
+            env:
+              $ref: definitions.yaml#/env
             annotations:
               $ref: definitions.yaml#/annotations
               title: Pod annotations
+            resources:
+              $ref: definitions.yaml#/resources
+            secrets:
+              $ref: definitions.yaml#/secrets
             autoCD:
               description: Deploys new images based on a tagging strategy
               oneOf:
@@ -79,34 +107,6 @@ Service:
                   title: Glob pattern matching
                   type: object
               title: Continuous delivery
-            env:
-              $ref: definitions.yaml#/env
-            image:
-              properties:
-                repository:
-                  $ref: definitions.yaml#/repository
-                tag:
-                  pattern: '[\w][\w.-]{0,127}'
-                  type: string
-              required:
-                - repository
-                - tag
-              title: Container image
-              type: object
-            resources:
-              $ref: definitions.yaml#/resources
-            scaleToZero:
-              default: false
-              description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
-              title: Scale to zero
-              type: boolean
-            secrets:
-              $ref: definitions.yaml#/secrets
-            serviceType:
-              default: ksvc
-              enum:
-                - ksvc
-              type: string
           required:
             - serviceType
           title: Knative service

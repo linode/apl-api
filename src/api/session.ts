@@ -13,7 +13,7 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
   const GET: Operation = [
     (req: OpenApiRequestExt, res): void => {
       const data = {
-        clusters: otomi.getClusters(),
+        clusters: otomi.getSettings().otomi!.additionalClusters,
         cluster: otomi.getCluster(),
         core: otomi.getCore(),
         dns: otomi.getSettings().dns,
