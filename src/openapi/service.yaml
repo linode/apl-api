@@ -133,6 +133,8 @@ Service:
       title: Type
       type: object
     ingress:
+      title: Exposure
+      type: object
       oneOf:
         - additionalProperties: false
           nullable: true
@@ -188,7 +190,6 @@ Service:
             - subdomain
           title: Public URL
           type: object
-      title: Exposure
       x-acl:
         team:
           - read
