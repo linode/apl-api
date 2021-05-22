@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.50](https://github.com/redkubes/otomi-api/compare/v0.4.49...v0.4.50) (2021-05-22)
+
+
+### Bug Fixes
+
+* missing type object leads to hiding of title in rjsf ([5ec1453](https://github.com/redkubes/otomi-api/commit/5ec1453c1dbbec875417e987344c54c06b8a32ce))
+
 ### [0.4.49](https://github.com/redkubes/otomi-api/compare/v0.4.48...v0.4.49) (2021-05-22)
 
 ### Bug Fixes
