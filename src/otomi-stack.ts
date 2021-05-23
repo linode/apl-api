@@ -122,10 +122,6 @@ export default class OtomiStack {
     return this.db.getItem('teamsSelfService', { id }) as TeamSelfService
   }
 
-  getClusters(): Array<Cluster> {
-    return this.db.getCollection('clusters') as Array<Cluster>
-  }
-
   getCore(): any {
     return this.coreValues
   }

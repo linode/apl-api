@@ -1,4 +1,4 @@
-import simpleGit, { CleanOptions, CommitResult, SimpleGit } from 'simple-git/promise'
+import simpleGit, { CleanOptions, CommitResult, SimpleGit, SimpleGitOptions } from 'simple-git'
 import yaml from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
@@ -193,7 +193,11 @@ export async function initRepo(
 
 export async function initRepoBare(location): Promise<SimpleGit> {
   fs.mkdirSync(location, 0o744)
-  const git = simpleGit(location)
+  const options: Partial<SimpleGitOptions> = {
+    baseDir: location,
+    config: process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0' ? ['http.sslVerify=false'] : undefined,
+  }
+  const git = simpleGit(options)
   await git.init(true)
   return git
 }
