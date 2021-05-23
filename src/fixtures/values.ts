@@ -36,6 +36,17 @@ export default {
       password: 'linux1234',
     },
   ],
+  teamsSelfService: [
+    {
+      id: 'otomi',
+      Team: ['resourceQuota'],
+    },
+    {
+      id: 'dev',
+      Service: ['ingress'],
+      Team: ['resourceQuota'],
+    },
+  ],
   services: [
     {
       name: 'servant1',

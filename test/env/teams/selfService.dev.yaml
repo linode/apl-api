@@ -1,0 +1,8 @@
+teamConfig:
+  teams:
+    dev:
+      selfService:
+        Team:
+          - resourceQuota
+        Service:
+          - ingress

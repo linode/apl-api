@@ -118,8 +118,8 @@ export default class OtomiStack {
     return this.db.getCollection('teams') as Array<Team>
   }
 
-  getTeamSelfServiceFlags(teamId: string): TeamSelfService {
-    return this.db.getItem('selfServiceFlags', { teamId }) as TeamSelfService
+  getTeamSelfServiceFlags(id: string): TeamSelfService {
+    return this.db.getItem('teamsSelfService', { id }) as TeamSelfService
   }
 
   getClusters(): Array<Cluster> {
@@ -360,6 +360,11 @@ export default class OtomiStack {
     }
   }
 
+  loadTeamSelfServiceFlags(teamId: string): void {
+    const data = this.repo.readFile(`./env/teams/selfService.${teamId}.yaml`)
+    this.db.populateItem('teamsSelfService', data.teamConfig.teams[teamId].selfService, undefined, teamId)
+  }
+
   loadTeams(): void {
     const mergedData: Core = this.loadConfig('./env/teams.yaml', `./env/secrets.teams.yaml${this.decryptedFilePostfix}`)
 
@@ -367,6 +372,7 @@ export default class OtomiStack {
       this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id)
       this.loadTeamServices(team.id!)
       this.loadTeamSecrets(team.id!)
+      this.loadTeamSelfServiceFlags(team.id!)
     })
   }
 
@@ -412,6 +418,7 @@ export default class OtomiStack {
       // TODO: fix this ugly team.id || ''
       this.saveTeamServices(team.id || '')
       this.saveTeamSecrets(team.id || '')
+      this.saveTeamSelfServiceFlags(team.id!)
       // eslint-disable-next-line no-param-reassign
       if (!team.password) team.password = generatePassword(16, false)
       teamValues[team.id || ''] = omit(team, 'name')
@@ -425,6 +432,14 @@ export default class OtomiStack {
     set(values, 'teamConfig.teams', teamValues)
 
     this.saveConfig(filePath, secretFilePath, values, secretPaths)
+  }
+
+  saveTeamSelfServiceFlags(teamId: string): void {
+    const path = `./env/teams/selfService.${teamId}.yaml`
+    const selfService = this.getTeamSelfServiceFlags(teamId)
+    const data = {}
+    set(data, `teamConfig.teams.${teamId}.selfService`, omit(selfService, ['id']))
+    this.repo.writeFile(path, data)
   }
 
   saveTeamSecrets(teamId: string): void {
