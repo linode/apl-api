@@ -70,7 +70,7 @@ export function jwtMiddleware(otomi: OtomiStack): RequestHandler {
     const user = getUser({ name, email, roles, groups })
     user.authz = getUserAuthz(
       user.teams,
-      (req.apiDoc.components.schemas.TeamPermissions as unknown) as PermissionSchema,
+      (req.apiDoc.components.schemas.TeamSelfService as unknown) as PermissionSchema,
       otomi,
     )
     req.user = user

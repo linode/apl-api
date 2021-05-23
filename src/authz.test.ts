@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import Authz, { getTeamAuthz, getViolatedAttributes } from './authz'
-import { OpenAPIDoc, SessionRole, User, TeamPermissions } from './otomi-models'
+import { OpenAPIDoc, SessionRole, User, TeamSelfService } from './otomi-models'
 
 const sessionTeam: User = {
   authz: {},
@@ -183,7 +183,7 @@ describe('Property wise permissions', () => {
 
 describe('Permissions tests', () => {
   it('should render correct team authz', () => {
-    const selfServiceFlags: TeamPermissions = {
+    const selfServiceFlags: TeamSelfService = {
       Team: ['resourceQuota'],
       Service: ['ingress'],
     }

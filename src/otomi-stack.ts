@@ -5,7 +5,7 @@ import { cloneDeep, merge, filter, get, isEmpty, omit, set, unset, isEqual } fro
 import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Db from './db'
-import { Cluster, Core, Dns, Secret, Service, Settings, Team, TeamPermissions } from './otomi-models'
+import { Cluster, Core, Dns, Secret, Service, Settings, Team, TeamSelfService } from './otomi-models'
 import { PublicUrlExists } from './error'
 import {
   arrayToObject,
@@ -118,8 +118,8 @@ export default class OtomiStack {
     return this.db.getCollection('teams') as Array<Team>
   }
 
-  getTeamSelfServiceFlags(teamId: string): TeamPermissions {
-    return this.db.getItem('selfServiceFlags', { teamId }) as TeamPermissions
+  getTeamSelfServiceFlags(teamId: string): TeamSelfService {
+    return this.db.getItem('selfServiceFlags', { teamId }) as TeamSelfService
   }
 
   getClusters(): Array<Cluster> {

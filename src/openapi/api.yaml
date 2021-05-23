@@ -188,34 +188,34 @@ paths:
         '200':
           description: Successfully deleted a team
 
-  '/teams/{teamId}/permissions':
+  '/teams/{teamId}/selfServiceFlags':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: getTeamSelfServiceFlags
+      operationId: getTeamSelfService
       description: Get team permissions
-      x-aclSchema: TeamPermissions
+      x-aclSchema: TeamSelfServiceFlags
       responses:
         '200':
-          description: Successfully obtained team permissions
+          description: Successfully obtained team self service flags
           content:
             'application/json':
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TeamPermissions'
+                  $ref: '#/components/schemas/TeamSelfService'
         '400':
           <<: *BadRequest
     put:
-      operationId: editTeamPermissions
-      description: Edit team permission flags
-      x-aclSchema: TeamPermissions
+      operationId: editTeamSelfService
+      description: Edit team self service flags
+      x-aclSchema: TeamSelfService
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TeamPermissions'
-        description: Team Permissions object
+              $ref: '#/components/schemas/TeamSelfService'
+        description: TeamSelfService object
         required: true
       responses:
         <<: *DefaultGetResponses
@@ -224,7 +224,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/TeamPermissions'
+                $ref: '#/components/schemas/TeamSelfService'
 
   '/teams/{teamId}/services':
     parameters:
@@ -549,8 +549,8 @@ components:
     OtomiStackError:
       $ref: 'error.yaml#/OtomiStackError'
 
-    TeamPermissions:
-      $ref: 'permissions.yaml#/TeamPermissions'
+    TeamSelfService:
+      $ref: 'selfService.yaml#/TeamSelfService'
 
     Secret:
       $ref: 'secret.yaml#/Secret'

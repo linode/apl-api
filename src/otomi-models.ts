@@ -10,7 +10,7 @@ export type Service = components['schemas']['Service']
 export type Session = components['schemas']['Session']
 export type Settings = components['schemas']['Settings']
 export type Team = components['schemas']['Team']
-export type TeamPermissions = components['schemas']['TeamPermissions']
+export type TeamSelfService = components['schemas']['TeamSelfService']
 export type User = components['schemas']['User']
 export type UserAuthz = components['schemas']['UserAuthz']
 
