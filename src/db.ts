@@ -34,6 +34,7 @@ export default class Db {
     // Set some defaults (required if your JSON file is empty)
     this.db
       .defaults({
+        selfServiceFlags: [],
         teams: [],
         services: [],
         cluster: [],

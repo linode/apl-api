@@ -118,8 +118,8 @@ export default class OtomiStack {
     return this.db.getCollection('teams') as Array<Team>
   }
 
-  getTeamPermissions(teamId: string): TeamPermissions {
-    return this.getTeam(teamId).selfService
+  getTeamSelfServiceFlags(teamId: string): TeamPermissions {
+    return this.db.getItem('selfServiceFlags', { teamId }) as TeamPermissions
   }
 
   getClusters(): Array<Cluster> {

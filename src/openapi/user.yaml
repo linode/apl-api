@@ -1,3 +1,17 @@
+UserAuthz:
+  type: object
+  description: Authorization for a team that user is a member
+  properties:
+    deniedAttributes:
+      type: object
+      description: Attribute paths that are not allowed to be modified by a user
+      additionalProperties:
+        description: Schema name
+        type: array
+        items:
+          type: string
+  required:
+    - deniedAttributes
 User:
   readOnly: true
   x-acl:
@@ -15,8 +29,11 @@ User:
       default: false
       description: If the user is admin
       readOnly: true
-    permissions:
-      $ref: permissions.yaml#/TeamPermissions
+    authz:
+      type: object
+      additionalProperties:
+        description: Team ID
+        $ref: 'user.yaml#/UserAuthz'
     teams:
       type: array
       default: []
@@ -34,9 +51,11 @@ User:
       readOnly: true
       uniqueItems: true
   required:
+    - authz
     - isAdmin
     - name
     - email
     - teams
+    - permissions
     - roles
   type: object

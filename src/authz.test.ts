@@ -1,8 +1,9 @@
 import { expect } from 'chai'
-import Authz from './authz'
-import { OpenAPIDoc, SessionRole, User } from './otomi-models'
+import Authz, { getTeamAuthz, getViolatedAttributes } from './authz'
+import { OpenAPIDoc, SessionRole, User, TeamPermissions } from './otomi-models'
 
 const sessionTeam: User = {
+  authz: {},
   isAdmin: false,
   roles: [SessionRole.User],
   name: 'joe',
@@ -177,5 +178,32 @@ describe('Property wise permissions', () => {
     const authz = new Authz(spec)
     expect(authz.getAllowedAttributes('update', 'Service', sessionTeam, data1)).to.eql(['name'])
     expect(authz.getAllowedAttributes('update', 'Service', sessionTeam, data2)).to.eql(['name'])
+  })
+})
+
+describe('Permissions tests', () => {
+  it('should render correct team authz', () => {
+    const selfServiceFlags: TeamPermissions = {
+      Team: ['resourceQuota'],
+      Service: ['ingress'],
+    }
+
+    const schema = {
+      properties: {
+        Team: { items: { enum: ['alerts', 'oidc', 'resourceQuota'] } },
+        Service: { items: { enum: ['ingress'] } },
+      },
+    }
+    const authz = getTeamAuthz(selfServiceFlags, schema)
+    const expected = {
+      Team: ['alerts', 'oidc'],
+      Service: [],
+    }
+    expect(authz).to.deep.equal(expected)
+  })
+
+  it('should get violated authorization paths', () => {
+    const d = getViolatedAttributes(['a.b', 'c', 'd'], { a: { b: 1, c: 2 }, d: 4, e: 5 })
+    expect(d).to.deep.equal(['a.b', 'd'])
   })
 })

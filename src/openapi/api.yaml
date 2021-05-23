@@ -192,7 +192,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: getTeamPermissions
+      operationId: getTeamSelfServiceFlags
       description: Get team permissions
       x-aclSchema: TeamPermissions
       responses:
@@ -569,3 +569,6 @@ components:
 
     User:
       $ref: 'user.yaml#/User'
+
+    UserAuthz:
+      $ref: 'user.yaml#/UserAuthz'

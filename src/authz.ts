@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Ability, subject } from '@casl/ability'
 import { set, has, get, isEmpty, pick, forIn } from 'lodash'
-import { Acl, AclAction, OpenAPIDoc, Schema, User } from './otomi-models'
+import { Acl, AclAction, OpenAPIDoc, Schema, User, UserAuthz, PermissionSchema, TeamPermissions } from './otomi-models'
+
+import OtomiStack from './otomi-stack'
 
 const allowedResourceActions = [
   'create',
@@ -224,4 +226,30 @@ export default class Authz {
 
     return true
   }
+}
+
+export function getTeamAuthz(teamPermissions: TeamPermissions, schema: PermissionSchema): UserAuthz {
+  const authz: UserAuthz = {} as UserAuthz
+  Object.keys(schema.properties).forEach((schemaName) => {
+    const possiblePermissions = schema.properties[schemaName].items.enum
+    authz[schemaName] = possiblePermissions.filter((name) => !teamPermissions[schemaName].includes(name))
+  })
+  return authz
+}
+
+export function getUserAuthz(teams: Array<string>, schema: PermissionSchema, otomi: OtomiStack): any {
+  const permissionMap = {}
+
+  teams.forEach((teamId) => {
+    permissionMap[teamId] = getTeamAuthz(otomi.getTeamSelfServiceFlags(teamId), schema)
+  })
+  return permissionMap
+}
+
+export function getViolatedAttributes(deniedAttributePaths: Array<string>, data: any): Array<string> {
+  const notAllowed: Array<string> = []
+  deniedAttributePaths.forEach((path) => {
+    if (has(data, path)) notAllowed.push(path)
+  })
+  return notAllowed
 }

@@ -32,10 +32,10 @@ export default async function initApp(otomiStack: OtomiStack): Promise<express.E
   app.use(json())
   app.use(jwtMiddleware(otomiStack))
 
-  function getSecurityHandlers(otomi: OtomiStack): SecurityHandlers {
+  function getSecurityHandlers(): SecurityHandlers {
     const securityHandlers = {
       groupAuthz: (req): boolean => {
-        return isUserAuthorized(req, authz, otomi)
+        return isUserAuthorized(req, authz)
       },
     }
     return securityHandlers
@@ -68,7 +68,7 @@ export default async function initApp(otomiStack: OtomiStack): Promise<express.E
     enableObjectCoercion: true,
     paths: apiRoutesPath,
     errorMiddleware,
-    securityHandlers: getSecurityHandlers(otomiStack),
+    securityHandlers: getSecurityHandlers(),
     routesGlob: '**/*.{ts,js}',
     routesIndexFileRegExp: /(?:index)?\.[tj]s$/,
   })

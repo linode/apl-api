@@ -1,12 +1,12 @@
 import get from 'lodash/get'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
+import { isEmpty } from 'lodash'
 import { HttpError, OtomiError } from './error'
 import { OpenApiRequest, JWT, OpenApiRequestExt, User, PermissionSchema } from './otomi-models'
-import Authz from './authz'
+import Authz, { getUserAuthz, getViolatedAttributes } from './authz'
 import { cleanEnv, NO_AUTHZ } from './validators'
 import OtomiStack from './otomi-stack'
-import getPermissionMap from './permission'
 
 const env = cleanEnv({
   NO_AUTHZ,
@@ -37,7 +37,7 @@ export function errorMiddleware(e, req: OpenApiRequest, res, next): void {
 }
 
 export function getUser(user: JWT): User {
-  const sessionUser: User = { ...user, teams: [], roles: [], isAdmin: false }
+  const sessionUser: User = { ...user, teams: [], roles: [], isAdmin: false, authz: {} }
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
   if (env.NO_AUTHZ) {
@@ -68,7 +68,7 @@ export function jwtMiddleware(otomi: OtomiStack): RequestHandler {
     }
     const { name, email, roles, groups } = jwtDecode(token)
     const user = getUser({ name, email, roles, groups })
-    user.permissions = getPermissionMap(
+    user.authz = getUserAuthz(
       user.teams,
       (req.apiDoc.components.schemas.TeamPermissions as unknown) as PermissionSchema,
       otomi,
@@ -82,14 +82,14 @@ export function getCrudOperation(req: OpenApiRequest): string {
   return HttpMethodMapping[req.method]
 }
 // eslint-disable-next-line no-unused-vars
-export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz, otomi: OtomiStack): boolean {
+export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz): boolean {
   if (env.NO_AUTHZ) return true
+  let valid = false
+
   const {
     params: { teamId },
   } = req
   const { user } = req
-  // const permissions = otomi.getTeamPermissions(teamId)
-  // const possiblePermissions = undefined
   const action = getCrudOperation(req)
   console.debug(
     `Authz: ${action} ${req.path}, session(roles: ${user && JSON.stringify(user.roles)} teams=${
@@ -98,7 +98,14 @@ export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz, otomi: Ot
   )
   if (!user) return false
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
-  const schemaName = schema.split('/').pop()
-  const result = authz.isUserAuthorized(action, schemaName!, user, teamId, req.body)
-  return result
+  const schemaName = schema.split('/').pop() || ''
+  valid = authz.isUserAuthorized(action, schemaName, user, teamId, req.body)
+  if (!valid) return valid
+
+  const deniedAttributes = user.authz[teamId].deniedAttributes[schemaName]
+  if (['create', 'update'].includes(action) && deniedAttributes) {
+    const attributes = getViolatedAttributes(deniedAttributes, req.body)
+    valid = !isEmpty(attributes)
+  }
+  return valid
 }
