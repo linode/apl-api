@@ -59,7 +59,7 @@ export function getUser(user: JWT): User {
   return sessionUser
 }
 
-export function jwtMiddleware(otomi: OtomiStack): RequestHandler {
+export function jwtMiddleware(): RequestHandler {
   return function nextHandler(req: OpenApiRequestExt, res, next): any {
     const token = req.header('Authorization')
     if (!token) {
@@ -67,13 +67,7 @@ export function jwtMiddleware(otomi: OtomiStack): RequestHandler {
       return next()
     }
     const { name, email, roles, groups } = jwtDecode(token)
-    const user = getUser({ name, email, roles, groups })
-    user.authz = getUserAuthz(
-      user.teams,
-      (req.apiDoc.components.schemas.TeamSelfService as unknown) as PermissionSchema,
-      otomi,
-    )
-    req.user = user
+    req.user = getUser({ name, email, roles, groups })
     return next()
   }
 }
@@ -82,7 +76,7 @@ export function getCrudOperation(req: OpenApiRequest): string {
   return HttpMethodMapping[req.method]
 }
 // eslint-disable-next-line no-unused-vars
-export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz): boolean {
+export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz, otomi: OtomiStack): boolean {
   if (env.NO_AUTHZ) return true
   let valid = false
 
@@ -99,10 +93,18 @@ export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz): boolean 
   if (!user) return false
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
   const schemaName = schema.split('/').pop() || ''
+
   valid = authz.isUserAuthorized(action, schemaName, user, teamId, req.body)
   if (!valid) return valid
 
-  const deniedAttributes = user.authz[teamId].deniedAttributes[schemaName]
+  // Attribute based access controll
+  const userAuthz = getUserAuthz(
+    user.teams,
+    (req.apiDoc.components.schemas.TeamSelfService as unknown) as PermissionSchema,
+    otomi,
+  )
+
+  const deniedAttributes = get(userAuthz, `${teamId}.deniedAttributes.${schemaName}`)
   if (['create', 'update'].includes(action) && deniedAttributes) {
     const attributes = getViolatedAttributes(deniedAttributes, req.body)
     valid = !isEmpty(attributes)

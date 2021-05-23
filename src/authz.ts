@@ -232,7 +232,10 @@ export function getTeamAuthz(teamPermissions: TeamSelfService, schema: Permissio
   const authz: UserAuthz = {} as UserAuthz
   Object.keys(schema.properties).forEach((schemaName) => {
     const possiblePermissions = schema.properties[schemaName].items.enum
-    authz[schemaName] = possiblePermissions.filter((name) => !teamPermissions[schemaName].includes(name))
+    authz[schemaName] = possiblePermissions.filter((name) => {
+      const flags = get(teamPermissions, schemaName, [])
+      return !flags.includes(name)
+    })
   })
   return authz
 }

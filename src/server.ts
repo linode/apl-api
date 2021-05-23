@@ -30,12 +30,12 @@ export default async function initApp(otomiStack: OtomiStack): Promise<express.E
   app.use(logger('dev'))
   app.use(cors())
   app.use(json())
-  app.use(jwtMiddleware(otomiStack))
+  app.use(jwtMiddleware())
 
   function getSecurityHandlers(): SecurityHandlers {
     const securityHandlers = {
       groupAuthz: (req): boolean => {
-        return isUserAuthorized(req, authz)
+        return isUserAuthorized(req, authz, otomiStack)
       },
     }
     return securityHandlers
