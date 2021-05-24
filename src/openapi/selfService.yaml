@@ -1,4 +1,10 @@
 TeamSelfService:
+  x-acl:
+    admin:
+      - read-any
+      - update-any
+    team:
+      - read
   type: object
   properties:
     Service:

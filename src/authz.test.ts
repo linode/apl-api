@@ -41,7 +41,6 @@ describe('Schema wise permissions', () => {
     name: 'svc',
     ingress: { f1: 'test' },
   }
-
   it('An admin can get and update all services', () => {
     const authz = new Authz(spec)
     expect(authz.isUserAuthorized('create', 'Service', sessionAdmin, 'mercury', data)).to.be.false

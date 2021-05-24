@@ -122,6 +122,10 @@ export default class OtomiStack {
     return this.db.getItem('teamsSelfService', { id }) as TeamSelfService
   }
 
+  editTeamSelfServiceFlags(id: string, data: TeamSelfService): TeamSelfService {
+    return this.db.updateItem('teamsSelfService', data, { id }) as TeamSelfService
+  }
+
   getCore(): any {
     return this.coreValues
   }

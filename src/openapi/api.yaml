@@ -173,22 +173,20 @@ paths:
         '200':
           description: Successfully deleted a team
 
-  '/teams/{teamId}/selfServiceFlags':
+  '/teams/{teamId}/selfService':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamSelfService
       description: Get team permissions
-      x-aclSchema: TeamSelfServiceFlags
+      x-aclSchema: TeamSelfService
       responses:
         '200':
           description: Successfully obtained team self service flags
           content:
             'application/json':
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TeamSelfService'
+                $ref: '#/components/schemas/TeamSelfService'
         '400':
           <<: *BadRequest
     put:
