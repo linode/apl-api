@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.53](https://github.com/redkubes/otomi-api/compare/v0.4.52...v0.4.53) (2021-05-24)
+
+
+### Bug Fixes
+
+* description [ci skip] ([319401e](https://github.com/redkubes/otomi-api/commit/319401e19e34910745c5e8e9787b038b4dfb77a4))
+* missing files ([f7c62a2](https://github.com/redkubes/otomi-api/commit/f7c62a262c72cacdaf76ce888e637b5232020d53))
+* secrets, dns dupe ([2059aa7](https://github.com/redkubes/otomi-api/commit/2059aa73f9f58d82603a5ea3d9d553c70ba14f8e))
+
 ### [0.4.52](https://github.com/redkubes/otomi-api/compare/v0.4.51...v0.4.52) (2021-05-24)
 
 
