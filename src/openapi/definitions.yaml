@@ -400,9 +400,11 @@ secret:
   type: object
 secrets:
   description: A list of team secrets that will be mounted into the knative service as env vars.
-  type: array
   items:
     type: string
+  title: Secrets
+  type: array
+  uniqueItems: true
 subdomainType:
   pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
   type: string
