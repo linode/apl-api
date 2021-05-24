@@ -1,7 +1,17 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Ability, subject } from '@casl/ability'
 import { set, has, get, isEmpty, pick, forIn } from 'lodash'
-import { Acl, AclAction, OpenAPIDoc, Schema, User, UserAuthz, PermissionSchema, TeamSelfService } from './otomi-models'
+import {
+  Acl,
+  AclAction,
+  OpenAPIDoc,
+  Schema,
+  User,
+  TeamAuthz,
+  PermissionSchema,
+  TeamSelfService,
+  UserAuthz,
+} from './otomi-models'
 
 import OtomiStack from './otomi-stack'
 
@@ -228,8 +238,8 @@ export default class Authz {
   }
 }
 
-export function getTeamAuthz(teamPermissions: TeamSelfService, schema: PermissionSchema): UserAuthz {
-  const authz: UserAuthz = {} as UserAuthz
+export function getTeamAuthz(teamPermissions: TeamSelfService, schema: PermissionSchema): TeamAuthz {
+  const authz: TeamAuthz = {} as TeamAuthz
   Object.keys(schema.properties).forEach((schemaName) => {
     const possiblePermissions = schema.properties[schemaName].items.enum
     authz[schemaName] = possiblePermissions.filter((name) => {
@@ -240,7 +250,7 @@ export function getTeamAuthz(teamPermissions: TeamSelfService, schema: Permissio
   return authz
 }
 
-export function getUserAuthz(teams: Array<string>, schema: PermissionSchema, otomi: OtomiStack): any {
+export function getUserAuthz(teams: Array<string>, schema: PermissionSchema, otomi: OtomiStack): UserAuthz {
   const permissionMap = {}
 
   teams.forEach((teamId) => {

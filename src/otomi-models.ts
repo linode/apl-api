@@ -12,7 +12,8 @@ export type Settings = components['schemas']['Settings']
 export type Team = components['schemas']['Team']
 export type TeamSelfService = components['schemas']['TeamSelfService']
 export type User = components['schemas']['User']
-export type UserAuthz = components['schemas']['UserAuthz']
+export type UserAuthz = components['schemas']['User']['authz']
+export type TeamAuthz = components['schemas']['TeamAuthz']
 
 export interface OpenApiRequest extends Request {
   operationDoc: {

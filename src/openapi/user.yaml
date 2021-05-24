@@ -1,4 +1,4 @@
-UserAuthz:
+TeamAuthz:
   type: object
   description: Authorization for a team that user is a member
   properties:
@@ -33,7 +33,7 @@ User:
       type: object
       additionalProperties:
         description: Team ID
-        $ref: 'user.yaml#/UserAuthz'
+        $ref: 'user.yaml#/TeamAuthz'
     teams:
       type: array
       default: []

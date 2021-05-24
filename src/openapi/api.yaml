@@ -553,5 +553,5 @@ components:
     User:
       $ref: 'user.yaml#/User'
 
-    UserAuthz:
-      $ref: 'user.yaml#/UserAuthz'
+    TeamAuthz:
+      $ref: 'user.yaml#/TeamAuthz'

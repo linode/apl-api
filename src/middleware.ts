@@ -104,7 +104,7 @@ export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz, otomi: Ot
     otomi,
   )
 
-  const deniedAttributes = get(userAuthz, `${teamId}.deniedAttributes.${schemaName}`)
+  const deniedAttributes = get(userAuthz, `${teamId}.deniedAttributes.${schemaName}`) as any
   if (['create', 'update'].includes(action) && deniedAttributes) {
     const attributes = getViolatedAttributes(deniedAttributes, req.body)
     valid = !isEmpty(attributes)
