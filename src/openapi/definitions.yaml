@@ -399,7 +399,7 @@ secret:
     - name
   type: object
 secrets:
-  description: A list of team secrets that will be mounted into the knative service as env vars.
+  description: A list of team secrets that will be mounted into the pod as env vars.
   items:
     type: string
   title: Secrets
