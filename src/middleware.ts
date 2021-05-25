@@ -109,7 +109,8 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): any 
 
 export function authzMiddleware(authz: Authz, otomi: OtomiStack): RequestHandler {
   return function nextHandler(req: OpenApiRequestExt, res, next): any {
-    if (!req.user) next()
+    if (req.operationDoc.security === undefined || req.operationDoc.security.length === 0) return next()
+    if (!req.user) return next()
     req.user.authz = getUserAuthz(
       req.user.teams,
       (req.apiDoc.components.schemas.TeamSelfService as unknown) as PermissionSchema,
