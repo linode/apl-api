@@ -35,7 +35,8 @@ Service:
       maximum: 65535
     ksvc:
       oneOf:
-        - properties:
+        - description: Will create a new knative service from the input gathered here.
+          properties:
             serviceType:
               default: ksvc
               enum:
@@ -111,7 +112,8 @@ Service:
           required:
             - serviceType
           title: Knative service
-        - properties:
+        - description: Wether to map onto a predeployed knative service. Will take care of rewriting to the existing knative url.
+          properties:
             serviceType:
               default: ksvcPredeployed
               enum:
@@ -121,7 +123,8 @@ Service:
             - serviceType
           title: Existing Knative service
           type: object
-        - properties:
+        - description: Wether to map onto a predeployed k8s service.
+          properties:
             serviceType:
               default: svcPredeployed
               enum:
@@ -134,14 +137,11 @@ Service:
       title: Type
       type: object
     ingress:
-      title: Exposure
+      title: Exposure (ingress)
       type: object
       oneOf:
-        - additionalProperties: false
-          nullable: true
-          title: Private
-          type: object
-        - properties:
+        - description: Will accept all incoming traffic and expose the service in the public domain.
+          properties:
             useDefaultSubdomain:
               default: true
               description: Use the team domain so that the URL reveals the owner.
@@ -189,7 +189,17 @@ Service:
           required:
             - domain
             - subdomain
-          title: Public URL
+          title: Public
+          type: object
+        - additionalProperties: false
+          description: Will only accept traffic coming from the private-network loadbalancer. (Coming soon!)
+          nullable: true
+          title: Private
+          type: object
+        - additionalProperties: false
+          description: 'Will only accept traffic via the cluster-local knative gateway.'
+          nullable: true
+          title: In cluster
           type: object
       x-acl:
         team:

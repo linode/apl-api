@@ -62,6 +62,8 @@ teamConfig:
             env:
               - name: TARGET
                 value: head servant, I have a version number
+            secrets:
+              - mysecret-generic
             resources:
               requests:
                 cpu: 50m

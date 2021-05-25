@@ -184,68 +184,6 @@ env:
       - name
       - value
     type: object
-secret:
-  oneOf:
-    - properties:
-        entries:
-          items:
-            description: A property name at vaultPath
-            minItems: 1
-            pattern: ^[a-zA-Z0-9_]*$
-            type: string
-            uniqueItems: true
-          type: array
-        type:
-          default: generic
-          enum:
-            - generic
-      required:
-        - type
-        - entries
-      title: Generic
-    - properties:
-        dockerconfig:
-          enum:
-            - .dockerconfig.json
-          readOnly: true
-          type: string
-        type:
-          default: docker-registry
-          enum:
-            - docker-registry
-          type: string
-      required:
-        - type
-      title: Docker registry
-    - properties:
-        ca:
-          default: ca.crt
-          type: string
-        crt:
-          default: tls.crt
-          type: string
-        key:
-          default: tls.key
-          type: string
-        type:
-          default: tls
-          enum:
-            - tls
-          type: string
-      required:
-        - type
-        - crt
-        - key
-      title: TLS
-  properties:
-    id:
-      readOnly: true
-      type: string
-    name:
-      $ref: '#/subdomainType'
-  required:
-    - name
-  type: object
 googleCreds:
   properties:
     accountJson:
@@ -398,21 +336,75 @@ scaling:
 script:
   description: May specify a non-empty string containing an executable script.
   type: string
-secrets:
-  items:
-    properties:
-      name:
-        type: string
-      entries:
-        items:
+secret:
+  oneOf:
+    - properties:
+        entries:
+          items:
+            description: A property name at vaultPath
+            minItems: 1
+            pattern: ^[a-zA-Z0-9_]*$
+            type: string
+            uniqueItems: true
+          type: array
+        type:
+          default: generic
+          enum:
+            - generic
+      required:
+        - type
+        - entries
+      title: Generic
+    - properties:
+        dockerconfig:
+          enum:
+            - .dockerconfig.json
+          readOnly: true
           type: string
-        title: Entries
-        type: array
-        uniqueItems: true
-    required:
-      - name
-    type: object
+        type:
+          default: docker-registry
+          enum:
+            - docker-registry
+          type: string
+      required:
+        - type
+      title: Docker registry
+    - properties:
+        ca:
+          default: ca.crt
+          type: string
+        crt:
+          default: tls.crt
+          type: string
+        key:
+          default: tls.key
+          type: string
+        type:
+          default: tls
+          enum:
+            - tls
+          type: string
+      required:
+        - type
+        - crt
+        - key
+      title: TLS
+  properties:
+    id:
+      readOnly: true
+      type: string
+    name:
+      $ref: '#/subdomainType'
+  required:
+    - name
+  type: object
+secrets:
+  description: A list of team secrets that will be mounted into the pod as env vars.
+  items:
+    type: string
+  title: Secrets
   type: array
+  uniqueItems: true
 subdomainType:
   pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
   type: string
