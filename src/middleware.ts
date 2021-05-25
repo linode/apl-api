@@ -19,7 +19,9 @@ const HttpMethodMapping = {
   POST: 'create',
   PUT: 'update',
 }
-
+export function getCrudOperation(req: OpenApiRequest): string {
+  return HttpMethodMapping[req.method]
+}
 // Note: 4 arguments (no more, no less) must be defined in your errorMiddleware function. Otherwise the function will be silently ignored.
 // eslint-disable-next-line no-unused-vars
 export function errorMiddleware(e, req: OpenApiRequest, res, next): void {
@@ -72,42 +74,54 @@ export function jwtMiddleware(): RequestHandler {
   }
 }
 
-export function getCrudOperation(req: OpenApiRequest): string {
-  return HttpMethodMapping[req.method]
-}
-// eslint-disable-next-line no-unused-vars
-export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz, otomi: OtomiStack): boolean {
-  if (env.NO_AUTHZ) return true
+export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): any {
   let valid = false
 
   const {
     params: { teamId },
   } = req
+  if (!req.user) return next()
   const { user } = req
   const action = getCrudOperation(req)
-  console.debug(
-    `Authz: ${action} ${req.path}, session(roles: ${user && JSON.stringify(user.roles)} teams=${
-      user && JSON.stringify(user.teams)
-    })`,
-  )
-  if (!user) return false
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
   const schemaName = schema.split('/').pop() || ''
 
   valid = authz.isUserAuthorized(action, schemaName, user, teamId, req.body)
-  if (!valid) return valid
+  if (!valid)
+    return res
+      .status(403)
+      .send({ auth: false, message: `User not allowed to perform ${action} on ${schemaName} resource` })
 
   // Attribute based access controll
-  const userAuthz = getUserAuthz(
-    user.teams,
-    (req.apiDoc.components.schemas.TeamSelfService as unknown) as PermissionSchema,
-    otomi,
-  )
-
-  const deniedAttributes = get(userAuthz, `${teamId}.deniedAttributes.${schemaName}`) as any
+  const deniedAttributes = get(user.authz, `${teamId}.deniedAttributes.${schemaName}`) as any
   if (['create', 'update'].includes(action) && deniedAttributes) {
-    const attributes = getViolatedAttributes(deniedAttributes, req.body)
-    valid = !isEmpty(attributes)
+    const violatedAttributes = getViolatedAttributes(deniedAttributes, req.body)
+    if (isEmpty(violatedAttributes)) return next()
+
+    return res.status(403).send({
+      auth: false,
+      message: 'User not allowed to modifiy attributes',
+      attributes: `${JSON.stringify(violatedAttributes)}`,
+    })
   }
-  return valid
+  return next()
+}
+
+export function authzMiddleware(authz: Authz, otomi: OtomiStack): RequestHandler {
+  return function nextHandler(req: OpenApiRequestExt, res, next): any {
+    if (!req.user) next()
+    req.user.authz = getUserAuthz(
+      req.user.teams,
+      (req.apiDoc.components.schemas.TeamSelfService as unknown) as PermissionSchema,
+      otomi,
+    )
+    return authorize(req, res, next, authz)
+  }
+}
+
+// eslint-disable-next-line no-unused-vars
+export function isUserAuthorized(req: OpenApiRequestExt): boolean {
+  if (env.NO_AUTHZ) return true
+  if (req.user) return true
+  return false
 }

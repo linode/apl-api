@@ -9,7 +9,7 @@ import cors from 'cors'
 import logger from 'morgan'
 import swaggerUi from 'swagger-ui-express'
 import get from 'lodash/get'
-import { errorMiddleware, jwtMiddleware, isUserAuthorized, getCrudOperation } from './middleware'
+import { errorMiddleware, jwtMiddleware, isUserAuthorized, getCrudOperation, authzMiddleware } from './middleware'
 import Authz from './authz'
 import { OpenAPIDoc, OpenApiRequestExt } from './otomi-models'
 import OtomiStack from './otomi-stack'
@@ -35,7 +35,7 @@ export default async function initApp(otomiStack: OtomiStack): Promise<express.E
   function getSecurityHandlers(): SecurityHandlers {
     const securityHandlers = {
       groupAuthz: (req): boolean => {
-        return isUserAuthorized(req, authz, otomiStack)
+        return isUserAuthorized(req)
       },
     }
     return securityHandlers
@@ -58,7 +58,7 @@ export default async function initApp(otomiStack: OtomiStack): Promise<express.E
     // @ts-ignore
     apiDoc: {
       ...spec,
-      'x-express-openapi-additional-middleware': [stripNotAllowedAttributes],
+      'x-express-openapi-additional-middleware': [authzMiddleware(authz, otomiStack), stripNotAllowedAttributes],
     },
     app,
     dependencies: {

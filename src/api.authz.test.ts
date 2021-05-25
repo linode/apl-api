@@ -63,7 +63,7 @@ describe('Admin API tests', () => {
       })
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
-      .expect(401)
+      .expect(403)
       .end(done)
   })
   it('admin can put with payload that matches the schema', (done) => {
@@ -176,9 +176,10 @@ describe('Admin API tests', () => {
   it('team cannot create a new team', (done) => {
     request(app)
       .post('/v1/teams')
+      .send({ name: 'otomi', password: 'test' })
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
-      .expect(401)
+      .expect(403)
       .end(done)
   })
 
@@ -270,16 +271,21 @@ describe('Admin API tests', () => {
       .delete('/v1/teams/team2/services/service1')
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
-      .expect(401)
+      .expect(403)
       .end(done)
   })
   it('team can not update service from other team', (done) => {
     request(app)
       .put('/v1/teams/team2/services/service1')
-      .send({})
+      .send({
+        name: 'service1',
+        ksvc: {
+          serviceType: 'ksvcPredeployed',
+        },
+      })
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
-      .expect(401)
+      .expect(403)
       .end(done)
   })
   it('anonymous user should get api spec', (done) => {
