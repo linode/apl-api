@@ -361,8 +361,13 @@ export default class OtomiStack {
   }
 
   loadTeamSelfServiceFlags(teamId: string): void {
-    const data = this.repo.readFile(`./env/teams/selfService.${teamId}.yaml`)
-    this.db.populateItem('teamsSelfService', data.teamConfig.teams[teamId].selfService, undefined, teamId)
+    try {
+      const data = this.repo.readFile(`./env/teams/selfService.${teamId}.yaml`)
+      this.db.populateItem('teamsSelfService', data.teamConfig.teams[teamId].selfService, undefined, teamId)
+    } catch (e) {
+      console.warn(`Team ${teamId} has no selfService flags yet`)
+      this.db.populateItem('teamsSelfService', {}, undefined, teamId)
+    }
   }
 
   loadTeams(): void {
