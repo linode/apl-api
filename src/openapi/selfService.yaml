@@ -19,6 +19,3 @@ TeamSelfService:
         type: string
         enum: [alerts, oidc, resourceQuota]
       uniqueItems: true
-  required:
-    - Team
-    - Service
