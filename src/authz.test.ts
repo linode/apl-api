@@ -43,19 +43,19 @@ describe('Schema wise permissions', () => {
   }
   it('An admin can get and update all services', () => {
     const authz = new Authz(spec)
-    expect(authz.isUserAuthorized('create', 'Service', sessionAdmin, 'mercury', data)).to.be.false
-    expect(authz.isUserAuthorized('delete', 'Service', sessionAdmin, 'mercury', data)).to.be.false
-    expect(authz.isUserAuthorized('read', 'Service', sessionAdmin, 'mercury', data)).to.be.true
-    expect(authz.isUserAuthorized('update', 'Service', sessionAdmin, 'mercury', data)).to.be.true
+    expect(authz.validateWithRbac('create', 'Service', sessionAdmin, 'mercury', data)).to.be.false
+    expect(authz.validateWithRbac('delete', 'Service', sessionAdmin, 'mercury', data)).to.be.false
+    expect(authz.validateWithRbac('read', 'Service', sessionAdmin, 'mercury', data)).to.be.true
+    expect(authz.validateWithRbac('update', 'Service', sessionAdmin, 'mercury', data)).to.be.true
   })
 
   it('A team can only get its own service', () => {
     const authz = new Authz(spec)
 
-    expect(authz.isUserAuthorized('create', 'Service', sessionTeam, 'mercury', data)).to.be.false
-    expect(authz.isUserAuthorized('delete', 'Service', sessionTeam, 'mercury', data)).to.be.false
-    expect(authz.isUserAuthorized('read', 'Service', sessionTeam, 'mercury', data)).to.be.true
-    expect(authz.isUserAuthorized('update', 'Service', sessionTeam, 'mercury', data)).to.be.false
+    expect(authz.validateWithRbac('create', 'Service', sessionTeam, 'mercury', data)).to.be.false
+    expect(authz.validateWithRbac('delete', 'Service', sessionTeam, 'mercury', data)).to.be.false
+    expect(authz.validateWithRbac('read', 'Service', sessionTeam, 'mercury', data)).to.be.true
+    expect(authz.validateWithRbac('update', 'Service', sessionTeam, 'mercury', data)).to.be.false
   })
 })
 
@@ -89,7 +89,7 @@ describe('Ownership wise resource permissions', () => {
       // teamId: 'venus',
     }
     const authz = new Authz(spec)
-    expect(authz.isUserAuthorized('update', 'Service', sessionTeam, 'venus', data)).to.be.false
+    expect(authz.validateWithRbac('update', 'Service', sessionTeam, 'venus', data)).to.be.false
   })
   it('A team can update its own service', () => {
     const data = {
@@ -97,7 +97,7 @@ describe('Ownership wise resource permissions', () => {
       // teamId: 'mercury',
     }
     const authz = new Authz(spec)
-    expect(authz.isUserAuthorized('update', 'Service', sessionTeam, 'mercury', data)).to.be.true
+    expect(authz.validateWithRbac('update', 'Service', sessionTeam, 'mercury', data)).to.be.true
   })
 })
 
@@ -124,18 +124,18 @@ describe('Schema collection wise permissions', () => {
 
   it('An admin can only get collection of services', () => {
     const authz = new Authz(spec)
-    expect(authz.isUserAuthorized('create', 'Services', sessionAdmin, 'mercury')).to.be.false
-    expect(authz.isUserAuthorized('delete', 'Services', sessionAdmin, 'mercury')).to.be.false
-    expect(authz.isUserAuthorized('read', 'Services', sessionAdmin, 'mercury')).to.be.true
-    expect(authz.isUserAuthorized('update', 'Services', sessionAdmin, 'mercury')).to.be.false
+    expect(authz.validateWithRbac('create', 'Services', sessionAdmin, 'mercury')).to.be.false
+    expect(authz.validateWithRbac('delete', 'Services', sessionAdmin, 'mercury')).to.be.false
+    expect(authz.validateWithRbac('read', 'Services', sessionAdmin, 'mercury')).to.be.true
+    expect(authz.validateWithRbac('update', 'Services', sessionAdmin, 'mercury')).to.be.false
   })
 
   it('A team can only get collection of services', () => {
     const authz = new Authz(spec)
-    expect(authz.isUserAuthorized('create', 'Services', sessionTeam, 'mercury')).to.be.false
-    expect(authz.isUserAuthorized('delete', 'Services', sessionTeam, 'mercury')).to.be.false
-    expect(authz.isUserAuthorized('read', 'Services', sessionTeam, 'mercury')).to.be.true
-    expect(authz.isUserAuthorized('update', 'Services', sessionTeam, 'mercury')).to.be.false
+    expect(authz.validateWithRbac('create', 'Services', sessionTeam, 'mercury')).to.be.false
+    expect(authz.validateWithRbac('delete', 'Services', sessionTeam, 'mercury')).to.be.false
+    expect(authz.validateWithRbac('read', 'Services', sessionTeam, 'mercury')).to.be.true
+    expect(authz.validateWithRbac('update', 'Services', sessionTeam, 'mercury')).to.be.false
   })
 })
 

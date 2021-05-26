@@ -1,10 +1,9 @@
 import get from 'lodash/get'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
-import { isEmpty } from 'lodash'
 import { HttpError, OtomiError } from './error'
 import { OpenApiRequest, JWT, OpenApiRequestExt, User, PermissionSchema } from './otomi-models'
-import Authz, { getUserAuthz, getViolatedAttributes } from './authz'
+import Authz, { getUserAuthz, validateWithAbac } from './authz'
 import { cleanEnv, NO_AUTHZ } from './validators'
 import OtomiStack from './otomi-stack'
 
@@ -85,27 +84,24 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): any 
   const action = getCrudOperation(req)
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
   const schemaName = schema.split('/').pop() || null
+
   // If there is no RBAC then we also skip ABAC
   if (!schemaName) return next()
-  valid = authz.isUserAuthorized(action, schemaName, user, teamId, req.body)
+
+  valid = authz.validateWithRbac(action, schemaName, user, teamId, req.body)
   if (!valid)
     return res
       .status(403)
-      .send({ auth: false, message: `User not allowed to perform ${action} on ${schemaName} resource` })
+      .send({ authz: false, message: `User not allowed to perform ${action} on ${schemaName} resource` })
 
-  // Attribute based access control
-  if (user.roles.includes('admin')) return next()
-  const deniedAttributes = get(user.authz, `${teamId}.deniedAttributes.${schemaName}`) as any
-  if (['create', 'update'].includes(action) && deniedAttributes) {
-    const violatedAttributes = getViolatedAttributes(deniedAttributes, req.body)
-    if (isEmpty(violatedAttributes)) return next()
-
+  const violatedAttributes = validateWithAbac(action, schemaName, user, teamId, req.body)
+  if (violatedAttributes.length > 0)
     return res.status(403).send({
-      auth: false,
+      authz: false,
       message: 'User not allowed to modifiy attributes',
       attributes: `${JSON.stringify(violatedAttributes)}`,
     })
-  }
+
   return next()
 }
 

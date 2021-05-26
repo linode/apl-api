@@ -225,7 +225,7 @@ export default class Authz {
     return new Ability(canRules)
   }
 
-  isUserAuthorized = (action: string, schemaName: string, user: User, teamId: string, data?: any): boolean => {
+  validateWithRbac = (action: string, schemaName: string, user: User, teamId: string, data?: any): boolean => {
     const rbac = this.getResourceBasedAccessControl(user)
     const sub = subject(schemaName, { ...(data || {}), teamId })
     if (!rbac.can(action, sub)) {
@@ -265,4 +265,14 @@ export function getViolatedAttributes(deniedAttributePaths: Array<string>, data:
     if (has(data, path)) notAllowed.push(path)
   })
   return notAllowed
+}
+
+export function validateWithAbac(action: string, schemaName: string, user: User, teamId: string, body: any) {
+  let violatedAttributes: Array<string> = []
+  if (user.roles.includes('admin')) return violatedAttributes
+  const deniedAttributes = get(user.authz, `${teamId}.deniedAttributes.${schemaName}`) as any
+  if (['create', 'update'].includes(action) && deniedAttributes) {
+    violatedAttributes = getViolatedAttributes(deniedAttributes, body)
+  }
+  return violatedAttributes
 }
