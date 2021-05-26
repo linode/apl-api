@@ -27,6 +27,9 @@ export default {
         msteams: {},
         slack: {},
       },
+      selfService: {
+        Team: ['resourceQuota'],
+      },
     },
     {
       alerts: {},
@@ -34,17 +37,10 @@ export default {
       name: 'dev',
       oidc: {},
       password: 'linux1234',
-    },
-  ],
-  teamsSelfService: [
-    {
-      id: 'otomi',
-      Team: ['resourceQuota'],
-    },
-    {
-      id: 'dev',
-      Service: ['ingress'],
-      Team: ['resourceQuota'],
+      selfService: {
+        Service: ['ingress'],
+        Team: ['resourceQuota'],
+      },
     },
   ],
   services: [

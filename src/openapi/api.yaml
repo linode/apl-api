@@ -173,42 +173,6 @@ paths:
         '200':
           description: Successfully deleted a team
 
-  '/teams/{teamId}/selfService':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-    get:
-      operationId: getTeamSelfService
-      description: Get team permissions
-      x-aclSchema: TeamSelfService
-      responses:
-        '200':
-          description: Successfully obtained team self service flags
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/TeamSelfService'
-        '400':
-          <<: *BadRequest
-    put:
-      operationId: editTeamSelfService
-      description: Edit team self service flags
-      x-aclSchema: TeamSelfService
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TeamSelfService'
-        description: TeamSelfService object
-        required: true
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully edited service
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/TeamSelfService'
-
   '/teams/{teamId}/services':
     parameters:
       - $ref: '#/components/parameters/teamParams'
@@ -532,7 +496,7 @@ components:
       $ref: 'error.yaml#/OtomiStackError'
 
     TeamSelfService:
-      $ref: 'selfService.yaml#/TeamSelfService'
+      $ref: 'team.yaml#/TeamSelfService'
 
     Secret:
       $ref: 'secret.yaml#/Secret'

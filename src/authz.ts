@@ -272,6 +272,7 @@ export function validateWithAbac(action: string, schemaName: string, user: User,
   if (user.roles.includes('admin')) return violatedAttributes
   if (['create', 'update'].includes(action)) {
     const deniedAttributes = get(user.authz, `${teamId}.deniedAttributes.${schemaName}`, []) as Array<string>
+    if (schemaName === 'Team') deniedAttributes.push('selfService')
     violatedAttributes = getViolatedAttributes(deniedAttributes, body)
   }
   return violatedAttributes

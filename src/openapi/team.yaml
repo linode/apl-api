@@ -2,6 +2,22 @@ idName: &idNameField
   type: string
   pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 
+TeamSelfService:
+  type: object
+  properties:
+    Service:
+      type: array
+      items:
+        type: string
+        enum: [ingress]
+      uniqueItems: true
+    Team:
+      type: array
+      items:
+        type: string
+        enum: [alerts, oidc, resourceQuota]
+      uniqueItems: true
+
 Team:
   properties:
     id:
@@ -83,6 +99,8 @@ Team:
       type: object
     azureMonitor:
       $ref: definitions.yaml#/azureMonitor
+    selfService:
+      $ref: team.yaml#/TeamSelfService
   required:
     - name
   type: object

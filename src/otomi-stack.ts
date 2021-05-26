@@ -119,11 +119,8 @@ export default class OtomiStack {
   }
 
   getTeamSelfServiceFlags(id: string): TeamSelfService {
-    return this.db.getItem('teamsSelfService', { id }) as TeamSelfService
-  }
-
-  editTeamSelfServiceFlags(id: string, data: TeamSelfService): TeamSelfService {
-    return this.db.updateItem('teamsSelfService', data, { id }) as TeamSelfService
+    const data = this.db.getItem('team', { id }) as Team
+    return data.selfService
   }
 
   getCore(): any {
@@ -360,16 +357,6 @@ export default class OtomiStack {
     }
   }
 
-  loadTeamSelfServiceFlags(teamId: string): void {
-    try {
-      const data = this.repo.readFile(`./env/teams/selfService.${teamId}.yaml`)
-      this.db.populateItem('teamsSelfService', data.teamConfig.teams[teamId].selfService, undefined, teamId)
-    } catch (e) {
-      console.warn(`Team ${teamId} has no selfService flags yet`)
-      this.db.populateItem('teamsSelfService', {}, undefined, teamId)
-    }
-  }
-
   loadTeams(): void {
     const mergedData: Core = this.loadConfig('./env/teams.yaml', `./env/secrets.teams.yaml${this.decryptedFilePostfix}`)
 
@@ -377,7 +364,6 @@ export default class OtomiStack {
       this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id)
       this.loadTeamServices(team.id!)
       this.loadTeamSecrets(team.id!)
-      this.loadTeamSelfServiceFlags(team.id!)
     })
   }
 
@@ -418,7 +404,6 @@ export default class OtomiStack {
       // TODO: fix this ugly team.id || ''
       this.saveTeamServices(team.id || '')
       this.saveTeamSecrets(team.id || '')
-      this.saveTeamSelfServiceFlags(team.id!)
       // eslint-disable-next-line no-param-reassign
       if (!team.password) team.password = generatePassword(16, false)
       teamValues[team.id || ''] = omit(team, 'name')
@@ -432,14 +417,6 @@ export default class OtomiStack {
     set(values, 'teamConfig.teams', teamValues)
 
     this.saveConfig(filePath, secretFilePath, values, secretPaths)
-  }
-
-  saveTeamSelfServiceFlags(teamId: string): void {
-    const path = `./env/teams/selfService.${teamId}.yaml`
-    const selfService = this.getTeamSelfServiceFlags(teamId)
-    const data = {}
-    set(data, `teamConfig.teams.${teamId}.selfService`, omit(selfService, ['id']))
-    this.repo.writeFile(path, data)
   }
 
   saveTeamSecrets(teamId: string): void {

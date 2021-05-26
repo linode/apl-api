@@ -24,48 +24,38 @@ describe('Admin API tests', () => {
       .expect(200)
       .end(done)
   })
-  it('admin can get team self-service-flags', (done) => {
-    request(app)
-      .get('/v1/teams/team1/selfService')
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(200)
-      .end(done)
-  })
   it('admin can update team self-service-flags', (done) => {
     request(app)
-      .put('/v1/teams/team1/selfService')
+      .put('/v1/teams/team1')
       .send({
-        Team: [],
-        Service: [],
+        name: 'team1',
+        selfService: {
+          Team: [],
+          Service: [],
+        },
       })
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${adminToken}`)
-      .expect(200)
-      .end(done)
-  })
-
-  it('team can get team self-service-flags', (done) => {
-    request(app)
-      .get('/v1/teams/team1/selfService')
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${teamToken}`)
       .expect(200)
       .end(done)
   })
 
   it('team cannot update team self-service-flags', (done) => {
     request(app)
-      .put('/v1/teams/team1/selfService')
+      .put('/v1/teams/team1')
       .send({
-        Team: [],
-        Service: [],
+        name: 'team1',
+        selfService: {
+          Team: [],
+          Service: [],
+        },
       })
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
       .expect(403)
       .end(done)
   })
+
   it('admin can put with payload that matches the schema', (done) => {
     request(app)
       .put('/v1/settings')

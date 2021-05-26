@@ -1,6 +1,0 @@
-teamConfig:
-  teams:
-    otomi:
-      selfService:
-        Team:
-          - resourceQuota

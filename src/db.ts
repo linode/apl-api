@@ -39,7 +39,6 @@ export default class Db {
         services: [],
         settings: {},
         teams: [],
-        teamsSelfService: [],
       })
       .write()
     this.dirty = false
