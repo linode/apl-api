@@ -196,7 +196,7 @@ describe('Permissions tests', () => {
     const authz = getTeamAuthz(selfServiceFlags, schema)
     const expected = {
       deniedAttributes: {
-        Team: ['alerts', 'oidc'],
+        Team: ['alerts', 'oidc', 'selfService'],
         Service: [],
       },
     }
