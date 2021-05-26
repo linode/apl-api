@@ -138,48 +138,6 @@ describe('Schema collection wise permissions', () => {
     expect(authz.validateWithRbac('update', 'Services', sessionTeam, 'mercury')).to.be.false
   })
 })
-
-describe('Property wise permissions', () => {
-  const spec: OpenAPIDoc = {
-    components: {
-      schemas: {
-        Service: {
-          type: 'object',
-          'x-acl': {
-            team: ['read', 'update'],
-          },
-          properties: {
-            name: {
-              type: 'string',
-            },
-            ingress: {
-              'x-acl': {
-                team: ['read'],
-              },
-              type: 'string',
-            },
-          },
-        },
-      },
-    },
-    paths: {},
-    security: [],
-  }
-
-  const data1 = {
-    name: 'svcName',
-  }
-  const data2 = {
-    name: 'svcName',
-    ingress: 'test',
-  }
-  it('A team can update all service properties except ingress', () => {
-    const authz = new Authz(spec)
-    expect(authz.getAllowedAttributes('update', 'Service', sessionTeam, data1)).to.eql(['name'])
-    expect(authz.getAllowedAttributes('update', 'Service', sessionTeam, data2)).to.eql(['name'])
-  })
-})
-
 describe('Permissions tests', () => {
   it('should render correct team authz', () => {
     const selfServiceFlags: TeamSelfService = {

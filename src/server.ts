@@ -8,10 +8,9 @@ import { parse } from '@apidevtools/json-schema-ref-parser'
 import cors from 'cors'
 import logger from 'morgan'
 import swaggerUi from 'swagger-ui-express'
-import get from 'lodash/get'
-import { errorMiddleware, jwtMiddleware, isUserAuthenticated, getCrudOperation, authzMiddleware } from './middleware'
+import { errorMiddleware, jwtMiddleware, isUserAuthenticated, authzMiddleware } from './middleware'
 import Authz from './authz'
-import { OpenAPIDoc, OpenApiRequestExt } from './otomi-models'
+import { OpenAPIDoc } from './otomi-models'
 import OtomiStack from './otomi-stack'
 
 export async function loadOpenApisSpec(): Promise<OpenAPIDoc> {
@@ -41,24 +40,11 @@ export default async function initApp(otomiStack: OtomiStack): Promise<express.E
     return securityHandlers
   }
 
-  function stripNotAllowedAttributes(req: OpenApiRequestExt, res, next): void {
-    if (!req.isSecurityHandler) {
-      next()
-      return
-    }
-
-    const schema: string = get(req, 'operationDoc.x-aclSchema', '')
-    const schemaName = schema.split('/').pop()
-    const action = getCrudOperation(req)
-    req.body = authz.getDataWithAllowedAttributes(action, schemaName, req.user, req.body)
-    next()
-  }
-
   initialize({
     // @ts-ignore
     apiDoc: {
       ...spec,
-      'x-express-openapi-additional-middleware': [authzMiddleware(authz, otomiStack), stripNotAllowedAttributes],
+      'x-express-openapi-additional-middleware': [authzMiddleware(authz, otomiStack)],
     },
     app,
     dependencies: {

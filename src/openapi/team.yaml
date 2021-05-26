@@ -23,11 +23,6 @@ Team:
     id:
       <<: *idNameField
       title: ID
-      x-acl:
-        admin:
-          - read
-        team:
-          - read
     name:
       <<: *idNameField
       title: Name

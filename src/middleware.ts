@@ -95,6 +95,7 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): any 
       .send({ authz: false, message: `User not allowed to perform ${action} on ${schemaName} resource` })
 
   const violatedAttributes = validateWithAbac(action, schemaName, user, teamId, req.body)
+
   if (violatedAttributes.length > 0)
     return res.status(403).send({
       authz: false,
