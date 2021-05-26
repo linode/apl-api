@@ -288,6 +288,34 @@ describe('Admin API tests', () => {
       .expect(403)
       .end(done)
   })
+
+  it('authenticated user should get api spec', (done) => {
+    request(app)
+      .get('/v1/apiDocs')
+      .set('Accept', 'application/json')
+      .expect(200)
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+  it('authenticated user can get session', (done) => {
+    request(app)
+      .get('/v1/session')
+      .set('Accept', 'application/json')
+      .expect(200)
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+  it('anonymous cannot get session', (done) => {
+    request(app)
+      .get('/v1/session')
+      .set('Accept', 'application/json')
+      .expect(401)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+
   it('anonymous user should get api spec', (done) => {
     request(app)
       .get('/v1/apiDocs')

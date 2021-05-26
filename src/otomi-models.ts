@@ -104,6 +104,8 @@ export interface JWT {
 
 export interface OpenApiRequestExt extends OpenApiRequest, Session {
   user: User
+  // Flag that indicates if experess-openapi middleware take up further authorization action
+  isSecurityHandler?: boolean
 }
 
 export interface Core {

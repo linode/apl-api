@@ -84,15 +84,17 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): any 
   const { user } = req
   const action = getCrudOperation(req)
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
-  const schemaName = schema.split('/').pop() || ''
-
+  const schemaName = schema.split('/').pop() || null
+  // If there is no RBAC then we also skip ABAC
+  if (!schemaName) return next()
   valid = authz.isUserAuthorized(action, schemaName, user, teamId, req.body)
   if (!valid)
     return res
       .status(403)
       .send({ auth: false, message: `User not allowed to perform ${action} on ${schemaName} resource` })
 
-  // Attribute based access controll
+  // Attribute based access control
+  if (user.roles.includes('admin')) return next()
   const deniedAttributes = get(user.authz, `${teamId}.deniedAttributes.${schemaName}`) as any
   if (['create', 'update'].includes(action) && deniedAttributes) {
     const violatedAttributes = getViolatedAttributes(deniedAttributes, req.body)
@@ -109,7 +111,7 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): any 
 
 export function authzMiddleware(authz: Authz, otomi: OtomiStack): RequestHandler {
   return function nextHandler(req: OpenApiRequestExt, res, next): any {
-    if (req.operationDoc.security === undefined || req.operationDoc.security.length === 0) return next()
+    if (!req.isSecurityHandler) return next()
     if (!req.user) return next()
     req.user.authz = getUserAuthz(
       req.user.teams,
@@ -121,8 +123,11 @@ export function authzMiddleware(authz: Authz, otomi: OtomiStack): RequestHandler
 }
 
 // eslint-disable-next-line no-unused-vars
-export function isUserAuthorized(req: OpenApiRequestExt): boolean {
+export function isUserAuthenticated(req: OpenApiRequestExt): boolean {
   if (env.NO_AUTHZ) return true
-  if (req.user) return true
+  if (req.user) {
+    req.isSecurityHandler = true
+    return true
+  }
   return false
 }
