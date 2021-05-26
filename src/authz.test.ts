@@ -195,10 +195,12 @@ describe('Permissions tests', () => {
     }
     const authz = getTeamAuthz(selfServiceFlags, schema)
     const expected = {
-      Team: ['alerts', 'oidc'],
-      Service: [],
+      deniedAttributes: {
+        Team: ['alerts', 'oidc'],
+        Service: [],
+      },
     }
-    expect(authz).to.deep.equal(expected)
+    expect(expected).to.deep.equal(authz)
   })
 
   it('should get violated authorization paths', () => {

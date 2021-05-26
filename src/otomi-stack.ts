@@ -119,7 +119,7 @@ export default class OtomiStack {
   }
 
   getTeamSelfServiceFlags(id: string): TeamSelfService {
-    const data = this.db.getItem('team', { id }) as Team
+    const data = this.getTeam(id)
     return data.selfService
   }
 

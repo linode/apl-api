@@ -242,7 +242,8 @@ export function getTeamAuthz(teamPermissions: TeamSelfService, schema: Permissio
   const authz: TeamAuthz = {} as TeamAuthz
   Object.keys(schema.properties).forEach((schemaName) => {
     const possiblePermissions = schema.properties[schemaName].items.enum
-    authz[schemaName] = possiblePermissions.filter((name) => {
+    set(authz, `deniedAttributes.${schemaName}`, [])
+    authz.deniedAttributes[schemaName] = possiblePermissions.filter((name) => {
       const flags = get(teamPermissions, schemaName, [])
       return !flags.includes(name)
     })
@@ -251,7 +252,7 @@ export function getTeamAuthz(teamPermissions: TeamSelfService, schema: Permissio
 }
 
 export function getUserAuthz(teams: Array<string>, schema: PermissionSchema, otomi: OtomiStack): UserAuthz {
-  const permissionMap = {}
+  const permissionMap: UserAuthz = {}
 
   teams.forEach((teamId) => {
     permissionMap[teamId] = getTeamAuthz(otomi.getTeamSelfServiceFlags(teamId), schema)
