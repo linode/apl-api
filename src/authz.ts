@@ -270,8 +270,8 @@ export function getViolatedAttributes(deniedAttributePaths: Array<string>, data:
 export function validateWithAbac(action: string, schemaName: string, user: User, teamId: string, body: any) {
   let violatedAttributes: Array<string> = []
   if (user.roles.includes('admin')) return violatedAttributes
-  const deniedAttributes = get(user.authz, `${teamId}.deniedAttributes.${schemaName}`) as any
-  if (['create', 'update'].includes(action) && deniedAttributes) {
+  if (['create', 'update'].includes(action)) {
+    const deniedAttributes = get(user.authz, `${teamId}.deniedAttributes.${schemaName}`, []) as Array<string>
     violatedAttributes = getViolatedAttributes(deniedAttributes, body)
   }
   return violatedAttributes
