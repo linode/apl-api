@@ -1,11 +1,10 @@
 import { Operation, OperationHandlerArray } from 'express-openapi'
 import OtomiStack from '../otomi-stack'
 import { OpenApiRequestExt } from '../otomi-models'
-import { cleanEnv, CLUSTER_ID, CORE_VERSION } from '../validators'
+import { cleanEnv, CORE_VERSION } from '../validators'
 import pkg from '../../package.json'
 
 const env = cleanEnv({
-  CLUSTER_ID,
   CORE_VERSION,
 })
 
