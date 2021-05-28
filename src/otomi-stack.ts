@@ -1,7 +1,7 @@
 import * as k8s from '@kubernetes/client-node'
 import fs from 'fs'
 import yaml from 'js-yaml'
-import { cloneDeep, merge, filter, get, isEmpty, omit, set, unset, isEqual } from 'lodash'
+import { cloneDeep, merge, filter, get, isEmpty, omit, set, unset, isEqual, union } from 'lodash'
 import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Db from './db'
@@ -116,10 +116,6 @@ export default class OtomiStack {
 
   getTeams(): Array<Team> {
     return this.db.getCollection('teams') as Array<Team>
-  }
-
-  getClusters(): Array<Cluster> {
-    return this.db.getCollection('clusters') as Array<Cluster>
   }
 
   getCore(): any {
@@ -306,15 +302,15 @@ export default class OtomiStack {
   loadConfig(dataPath: string, secretDataPath: string): any {
     const data = this.repo.readFile(dataPath)
     const secretData = this.repo.readFile(secretDataPath)
-    this.secretPaths = getObjectPaths(secretData)
+    this.secretPaths = union(this.secretPaths, getObjectPaths(secretData))
     return merge(data, secretData) as Core
   }
 
-  saveConfig(dataPath: string, secretDataPath: string, config: any, objectPathsForSecrets: string[]): void {
+  saveConfig(dataPath: string, secretDataPath: string, config: any, inSecretPaths?: string[]): void {
     const secretData = {}
     const plainData = cloneDeep(config)
-
-    objectPathsForSecrets.forEach((objectPath) => {
+    const secretPaths = inSecretPaths ?? this.secretPaths
+    secretPaths.forEach((objectPath) => {
       const val = get(config, objectPath)
       if (val) {
         set(secretData, objectPath, val)
@@ -332,7 +328,7 @@ export default class OtomiStack {
       `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
     ) as Settings
     // eslint-disable-next-line chai-friendly/no-unused-expressions
-    data.dns?.zones?.push(data.dns.domain)
+    data.dns!.zones = union(data.dns!.zones, [data.dns!.domain])
     this.db.db.set('settings', data).write()
   }
 
@@ -382,12 +378,7 @@ export default class OtomiStack {
 
   saveSettings(): void {
     const settings: Settings = this.getSettings()
-    this.saveConfig(
-      './env/settings.yaml',
-      `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
-      settings,
-      this.secretPaths,
-    )
+    this.saveConfig('./env/settings.yaml', `./env/secrets.settings.yaml${this.decryptedFilePostfix}`, settings)
   }
 
   saveTeams(): void {
@@ -460,6 +451,7 @@ export default class OtomiStack {
         svc.ksvc.serviceType = 'ksvc'
         const annotations = get(svcRaw.ksvc, 'annotations', {})
         svc.ksvc.annotations = objectToArray(annotations, 'name', 'value')
+        svc.ksvc.secrets = svcRaw.ksvc.secrets ?? []
       }
     } else set(svc, 'ksvc.serviceType', 'svcPredeployed')
 

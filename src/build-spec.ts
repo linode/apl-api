@@ -8,14 +8,12 @@ const modelsPath = 'src/generated-schema.json'
 async function buildOpenApisSpec(): Promise<void> {
   const openApiPath = path.resolve(__dirname, 'openapi/api.yaml')
   console.log(`Loading api spec from: ${openApiPath}`)
-  await Promise.allSettled([
-    $RefParser.dereference(openApiPath).then((schema) => {
-      fs.writeFileSync(modelsPath, JSON.stringify(schema, undefined, '  '), 'utf8')
-    }),
-    $RefParser.bundle(openApiPath).then((schema) => {
-      fs.writeFileSync(clientPath, JSON.stringify(schema, undefined, '  '), 'utf8')
-    }),
-  ])
+  await $RefParser.dereference(openApiPath).then((schema) => {
+    fs.writeFileSync(modelsPath, JSON.stringify(schema, undefined, '  '), 'utf8')
+  })
+  await $RefParser.bundle(openApiPath).then((schema) => {
+    fs.writeFileSync(clientPath, JSON.stringify(schema, undefined, '  '), 'utf8')
+  })
 }
 
 buildOpenApisSpec()

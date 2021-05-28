@@ -2,6 +2,57 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.53](https://github.com/redkubes/otomi-api/compare/v0.4.52...v0.4.53) (2021-05-24)
+
+
+### Bug Fixes
+
+* description [ci skip] ([319401e](https://github.com/redkubes/otomi-api/commit/319401e19e34910745c5e8e9787b038b4dfb77a4))
+* missing files ([f7c62a2](https://github.com/redkubes/otomi-api/commit/f7c62a262c72cacdaf76ce888e637b5232020d53))
+* secrets, dns dupe ([2059aa7](https://github.com/redkubes/otomi-api/commit/2059aa73f9f58d82603a5ea3d9d553c70ba14f8e))
+
+### [0.4.52](https://github.com/redkubes/otomi-api/compare/v0.4.51...v0.4.52) (2021-05-24)
+
+
+### Bug Fixes
+
+* schema descriptions [ci skip] ([a48ef96](https://github.com/redkubes/otomi-api/commit/a48ef96fce9505c180435db3f43ef4e55a9d6b46))
+
+### [0.4.51](https://github.com/redkubes/otomi-api/compare/v0.4.50...v0.4.51) (2021-05-22)
+
+
+### Bug Fixes
+
+* schema layout and decription [ci skip] ([096132d](https://github.com/redkubes/otomi-api/commit/096132dc484fb75e733b9b1167884ad4b5103c39))
+
+### [0.4.50](https://github.com/redkubes/otomi-api/compare/v0.4.49...v0.4.50) (2021-05-22)
+
+
+### Bug Fixes
+
+* missing type object leads to hiding of title in rjsf ([5ec1453](https://github.com/redkubes/otomi-api/commit/5ec1453c1dbbec875417e987344c54c06b8a32ce))
+
+### [0.4.49](https://github.com/redkubes/otomi-api/compare/v0.4.48...v0.4.49) (2021-05-22)
+
+### Bug Fixes
+
+- conditional ssl verify ([fe98bb2](https://github.com/redkubes/otomi-api/commit/fe98bb2cf372aee4765319d3e283fb526db51dfe))
+- error handling ([3d28d18](https://github.com/redkubes/otomi-api/commit/3d28d1874e9be83ceb79b38bd18f880d9d9ff8a8))
+- image tag pattern, middleware error handling ([3064231](https://github.com/redkubes/otomi-api/commit/3064231d457c7387e8c80b82996fa700fc80ac5c))
+- missing ts-custom-error ([f8dc552](https://github.com/redkubes/otomi-api/commit/f8dc55268e5c6159e1c6d7cff4fe3b62cc96b8d7))
+- ordering schema, tests, conflicts, url exists, errors ([64542b3](https://github.com/redkubes/otomi-api/commit/64542b33a0f06522a42332b67856bdc845cfc938))
+- schema, tests ([193e356](https://github.com/redkubes/otomi-api/commit/193e356c220f0c07b913d403c91fced7c8fae79f))
+
+### Code Refactoring
+
+- error code for already exists ([0071c62](https://github.com/redkubes/otomi-api/commit/0071c626fdcb045ed38fd0f3463b8590828eaa60))
+- error for not existing ([388d807](https://github.com/redkubes/otomi-api/commit/388d80790ddc7eba0a8498da7cad8b52f52561f8))
+
+### Others
+
+- remove charts property from test data ([#161](https://github.com/redkubes/otomi-api/issues/161)) ([72ce45b](https://github.com/redkubes/otomi-api/commit/72ce45b9f03eafccceead6ac133a58a0c298cebd))
+- **release:** 0.4.48 ([b1c4abd](https://github.com/redkubes/otomi-api/commit/b1c4abd30d8eabe7a34639749ac34698b79f2010))
+
 ### [0.4.48](https://github.com/redkubes/otomi-api/compare/v0.4.47...v0.4.48) (2021-05-04)
 
 ### Features

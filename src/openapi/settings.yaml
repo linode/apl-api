@@ -194,8 +194,12 @@ Settings:
       type: object
     kms:
       additionalProperties: false
+      description: Holds KMS settings like credentials for retrieving enc/decyption keys.
+      title: KMS settings
       properties:
         sops:
+          description: Encryption credentials for SOPS to encrypt the platform secrets.
+          title: SOPS credentials
           oneOf:
             - $ref: definitions.yaml#/awsCreds
             - $ref: definitions.yaml#/azureCreds
@@ -238,6 +242,14 @@ Settings:
     otomi:
       additionalProperties: false
       properties:
+        additionalClusters:
+          type: array
+          items:
+            $ref: cluster.yaml#/Cluster
+            required:
+              - domainSuffix
+              - name
+              - provider
         hasCloudLB:
           default: false
           description: Set this to true when an external LB exists or needs to be started (AWS ALB, Azure AppGW, Google Apigee). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.
@@ -283,12 +295,6 @@ Settings:
               type: object
           type: object
       type: object
-    otomiInstanceUrls:
-      description: Use this property to indicate other otomi instances and easily navigate between them from otomi-console
-      type: array
-      items:
-        type: string
-      default: []
     smtp:
       additionalProperties: false
       properties:

@@ -104,19 +104,9 @@ azureCreds:
         - clientSecret
         - tenantId
 azureMonitor:
+  title: Azure Monitor
+  description: Azure Monitor data can be made available in Grafana.
   properties:
-    appInsightsApiKey:
-      title: AppInsights api key
-      description: An Azure AppInsights client secret.
-      type: string
-    appInsightsAppId:
-      title: AppInsights app id
-      description: An Azure AppInsights client id.
-      type: string
-    azureLogAnalyticsSameAs:
-      title: LogAnalytics using same creds?
-      type: boolean
-      default: true
     clientId:
       title: Azure client id
       description: An Azure client id.
@@ -125,6 +115,18 @@ azureMonitor:
       title: Azure client secret
       description: An Azure client secret.
       type: string
+    tenantId:
+      title: LogAnalytics tenant id
+      description: An Azure monitor log analytics workspace.
+      type: string
+    subscriptionId:
+      title: Azure subscription id
+      description: An Azure subscription id.
+      type: string
+    azureLogAnalyticsSameAs:
+      title: LogAnalytics using same creds?
+      type: boolean
+      default: true
     logAnalyticsClientId:
       title: LogAnalytics client id
       description: An Azure client secret.
@@ -138,74 +140,21 @@ azureMonitor:
       description: An Azure tenant id.
       type: string
     logAnalyticsDefaultWorkspace:
-      title: LogAnalytics client id
+      title: LogAnalytics workspace
       description: An Azure LogAnalytics workspace.
       type: string
-    subscriptionId:
-      title: Azure subscription id
-      description: An Azure subscription id.
+    appInsightsApiKey:
+      title: AppInsights api key
+      description: An Azure AppInsights client secret.
       type: string
-    tenantId:
-      title: LogAnalytics tenant id
-      description: An Azure monitor log analytics workspace.
+    appInsightsAppId:
+      title: AppInsights app id
+      description: An Azure AppInsights client id.
       type: string
   required:
     - clientId
     - clientSecret
-    - subscriptionId
-    - tenantId
   type: object
-cluster:
-  additionalProperties: false
-  properties:
-    apiName:
-      description: Only used for API/UI to show in app.
-      type: string
-    apiServer:
-      description: Used by kubectl for local deployment to target cluster.
-      type: string
-    dnsProvider:
-      description: Only set it if you want DNS provider to be different than cloud provider of this cluster.
-      enum:
-        - azure
-        - google
-        - aws
-      type: string
-    zones:
-      description: Extra dns zones that the cluster can administer (see dns). Team services can use this to publish their URLs on.
-      items:
-        $ref: '#/domain'
-      type: array
-    domain:
-      $ref: '#/domain'
-      description: Base cloud domain for the cluster domain. Also added to list of dns zones in the Otomi Console.
-    enabled:
-      default: true
-      type: boolean
-    entrypoint:
-      description: A Kubernetes API public IP address (onprem only).
-      type: string
-    k8sVersion:
-      $ref: '#/k8sVersion'
-    otomiVersion:
-      default: latest
-      description: 'Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version.'
-      type: string
-    region:
-      description: Dependent on provider.
-      example:
-        - europe-west4
-        - eu-central-1
-        - westeurope
-      type: string
-    vpcID:
-      description: AWS only. If provided will override autodiscovery from metadata.
-      type: string
-  required:
-    - apiServer
-    - k8sVersion
-    - otomiVersion
-    - region
 cpuQuantity:
   description: Amount of cores, or slice of cpu in millis.
   default: 50m
@@ -217,12 +166,6 @@ cpuQuantity:
 domain:
   pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
   type: string
-droneGit:
-  properties:
-    clientID:
-      type: string
-    clientSecretValue:
-      type: string
 email:
   pattern: ^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$
   type: string
@@ -243,68 +186,6 @@ env:
       - name
       - value
     type: object
-secret:
-  oneOf:
-    - properties:
-        entries:
-          items:
-            description: A property name at vaultPath
-            minItems: 1
-            pattern: ^[a-zA-Z0-9_]*$
-            type: string
-            uniqueItems: true
-          type: array
-        type:
-          default: generic
-          enum:
-            - generic
-      required:
-        - type
-        - entries
-      title: Generic
-    - properties:
-        dockerconfig:
-          enum:
-            - .dockerconfig.json
-          readOnly: true
-          type: string
-        type:
-          default: docker-registry
-          enum:
-            - docker-registry
-          type: string
-      required:
-        - type
-      title: Docker registry
-    - properties:
-        ca:
-          default: ca.crt
-          type: string
-        crt:
-          default: tls.crt
-          type: string
-        key:
-          default: tls.key
-          type: string
-        type:
-          default: tls
-          enum:
-            - tls
-          type: string
-      required:
-        - type
-        - crt
-        - key
-      title: TLS
-  properties:
-    id:
-      readOnly: true
-      type: string
-    name:
-      $ref: '#/subdomainType'
-  required:
-    - name
-  type: object
 googleCreds:
   properties:
     google:
@@ -334,6 +215,7 @@ image:
     tag:
       default: latest
       type: string
+  type: object
   title: Container image
 imageSimple:
   additionalProperties: false
@@ -346,6 +228,7 @@ imageSimple:
       type: string
     tag:
       type: string
+  type: object
   title: Container image
 k8sVersion:
   default: '1.19'
@@ -368,6 +251,7 @@ labelsAnnotations:
       values:
         type: string
         pattern: ^((.){1,253}\/)?(.){1,63}$
+    type: object
   type: array
 logLevel:
   default: info
@@ -455,21 +339,75 @@ scaling:
 script:
   description: May specify a non-empty string containing an executable script.
   type: string
-secrets:
-  items:
-    properties:
-      name:
-        type: string
-      entries:
-        items:
+secret:
+  oneOf:
+    - properties:
+        entries:
+          items:
+            description: A property name at vaultPath
+            minItems: 1
+            pattern: ^[a-zA-Z0-9_]*$
+            type: string
+            uniqueItems: true
+          type: array
+        type:
+          default: generic
+          enum:
+            - generic
+      required:
+        - type
+        - entries
+      title: Generic
+    - properties:
+        dockerconfig:
+          enum:
+            - .dockerconfig.json
+          readOnly: true
           type: string
-        title: Entries
-        type: array
-        uniqueItems: true
-    required:
-      - name
-    type: object
+        type:
+          default: docker-registry
+          enum:
+            - docker-registry
+          type: string
+      required:
+        - type
+      title: Docker registry
+    - properties:
+        ca:
+          default: ca.crt
+          type: string
+        crt:
+          default: tls.crt
+          type: string
+        key:
+          default: tls.key
+          type: string
+        type:
+          default: tls
+          enum:
+            - tls
+          type: string
+      required:
+        - type
+        - crt
+        - key
+      title: TLS
+  properties:
+    id:
+      readOnly: true
+      type: string
+    name:
+      $ref: '#/subdomainType'
+  required:
+    - name
+  type: object
+secrets:
+  description: A list of team secrets that will be mounted into the pod as env vars.
+  items:
+    type: string
+  title: Secrets
   type: array
+  uniqueItems: true
 subdomainType:
   pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
   type: string

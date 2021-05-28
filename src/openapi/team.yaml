@@ -81,6 +81,8 @@ Team:
           type: object
       title: Alerting endpoints
       type: object
+    azureMonitor:
+      $ref: definitions.yaml#/azureMonitor
   required:
     - name
   type: object

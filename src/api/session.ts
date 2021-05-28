@@ -1,11 +1,10 @@
 import { Operation, OperationHandlerArray } from 'express-openapi'
 import OtomiStack from '../otomi-stack'
 import { OpenApiRequestExt } from '../otomi-models'
-import { cleanEnv, CLUSTER_ID, CORE_VERSION } from '../validators'
+import { cleanEnv, CORE_VERSION } from '../validators'
 import pkg from '../../package.json'
 
 const env = cleanEnv({
-  CLUSTER_ID,
   CORE_VERSION,
 })
 
@@ -13,7 +12,7 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
   const GET: Operation = [
     (req: OpenApiRequestExt, res): void => {
       const data = {
-        clusters: otomi.getClusters(),
+        clusters: otomi.getSettings().otomi!.additionalClusters,
         cluster: otomi.getCluster(),
         core: otomi.getCore(),
         dns: otomi.getSettings().dns,

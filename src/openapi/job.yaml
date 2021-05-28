@@ -19,6 +19,7 @@ Job:
             pattern: ^(.*/)|[a-z-]+([^/]*)$
           value:
             type: string
+        type: object
       type: array
     image:
       $ref: 'definitions.yaml#/image'

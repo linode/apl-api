@@ -57,6 +57,7 @@ export default {
             value: 'http://informant.team-otomi.svc.cluster.local',
           },
         ],
+        secrets: [],
         resources: {
           requests: {
             cpu: '50m',
@@ -115,6 +116,7 @@ export default {
             value: 'master, I am servant 2',
           },
         ],
+        secrets: [],
         resources: {
           requests: {
             cpu: '50m',
@@ -156,6 +158,7 @@ export default {
             value: 'head servant, I have a version number',
           },
         ],
+        secrets: ['mysecret-generic'],
         resources: {
           requests: {
             cpu: '50m',
@@ -243,8 +246,19 @@ export default {
           enabled: true,
         },
       },
+      additionalClusters: [
+        {
+          name: 'dev',
+          domainSuffix: 'dev.eks.otomi.cloud',
+          provider: 'aws',
+        },
+        {
+          name: 'demo',
+          domainSuffix: 'demo.eks.otomi.cloud',
+          provider: 'aws',
+        },
+      ],
     },
-    otomiInstanceUrls: ['a.otomi.cloud', 'b.otomi.cloud', 'c.otomi.cloud'],
     smtp: {
       from: 'no-reply@doma.in',
       hello: 'doma.in',
