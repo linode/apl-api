@@ -1,6 +1,7 @@
 import get from 'lodash/get'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
+import { omit } from 'lodash'
 import { HttpError, OtomiError } from './error'
 import { OpenApiRequest, JWT, OpenApiRequestExt, User, PermissionSchema } from './otomi-models'
 import Authz, { getUserAuthz, validateWithAbac } from './authz'
@@ -94,12 +95,8 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): any 
 
   const violatedAttributes = validateWithAbac(action, schemaName, user, teamId, req.body)
 
-  if (violatedAttributes.length > 0)
-    return res.status(403).send({
-      authz: false,
-      message: 'User not allowed to modifiy attributes',
-      attributes: `${JSON.stringify(violatedAttributes)}`,
-    })
+  // A users sends valid form abac is ised to remove these fields that are not allowed to be set
+  req.body = omit(req.body, violatedAttributes)
 
   return next()
 }

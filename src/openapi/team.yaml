@@ -12,7 +12,7 @@ TeamSelfService:
       type: array
       items:
         type: string
-        enum: [ingress]
+        enum: [ingress.public]
       uniqueItems: true
     Team:
       title: Team

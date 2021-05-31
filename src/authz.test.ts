@@ -142,7 +142,7 @@ describe('Permissions tests', () => {
   it('should render correct team authz', () => {
     const selfServiceFlags: TeamSelfService = {
       Team: ['resourceQuota'],
-      Service: ['ingress'],
+      Service: ['ingress.public'],
     }
 
     const schema = {
