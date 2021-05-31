@@ -64,16 +64,16 @@ function convertDbServiceToValues(svc: any): any {
   } else if (serviceType !== 'svcPredeployed') {
     console.warn(`Saving service failure: Not supported service type: ${serviceType}`)
   }
-  if (svc.ingress && !isEmpty(svc.ingress)) {
-    if (svc.ingress.useDefaultSubdomain) svcCloned.ownHost = true
-    else svcCloned.domain = `${svc.ingress.subdomain}.${svc.ingress.domain}`
+  if (svc.ingress.public) {
+    if (svc.ingress.public.useDefaultSubdomain) svcCloned.ownHost = true
+    else svcCloned.domain = `${svc.ingress.public.subdomain}.${svc.ingress.public.domain}`
 
-    if (!svc.ingress.hasSingleSignOn) svcCloned.isPublic = true
+    if (!svc.ingress.public.hasSingleSignOn) svcCloned.isPublic = true
 
-    if (svc.ingress.hasCert) svcCloned.hasCert = true
-    if (svc.ingress.certArn) svcCloned.certArn = svc.ingress.certArn
-    if (svc.ingress.path) svcCloned.paths = [svc.ingress.path]
-    if (svc.ingress.forwardPath) svcCloned.forwardPath = true
+    if (svc.ingress.public.hasCert) svcCloned.hasCert = true
+    if (svc.ingress.public.certArn) svcCloned.certArn = svc.ingress.public.certArn
+    if (svc.ingress.public.path) svcCloned.paths = [svc.ingress.public.path]
+    if (svc.ingress.public.forwardPath) svcCloned.forwardPath = true
   } else svcCloned.internal = true
   delete svcCloned.enabled
   return svcCloned
@@ -203,10 +203,12 @@ export default class OtomiStack {
     const services = this.db.getCollection('services')
 
     const servicesFiltered = filter(services, (svc: Service) => {
-      if (!svc.ingress) return false
-      const { domain, subdomain, path } = svc.ingress
+      // @ts-ignore
+      const ingressPublic = svc.ingress.public
+      if (!ingressPublic) return false
+      const { domain, subdomain, path } = ingressPublic
       const existingUrl = `${subdomain}.${domain}${path || ''}`
-      const url = `${data.ingress!.subdomain}.${data.ingress!.domain}${data.ingress!.path || ''}`
+      const url = `${ingressPublic.subdomain}.${ingressPublic.domain}${ingressPublic.path || ''}`
       return existingUrl === url && svc.id !== data.id
     })
 
@@ -465,17 +467,21 @@ export default class OtomiStack {
       }
     } else set(svc, 'ksvc.serviceType', 'svcPredeployed')
 
-    if (!('internal' in svcRaw)) {
+    if ('internal' in svcRaw) {
+      svc.ingress = {}
+    } else {
       const publicUrl = getPublicUrl(svcRaw.domain, svcRaw.name, teamId, dns)
       svc.ingress = {
-        hasCert: 'hasCert' in svcRaw,
-        hasSingleSignOn: !('isPublic' in svcRaw),
-        certArn: svcRaw.certArn || undefined,
-        domain: publicUrl.domain,
-        subdomain: publicUrl.subdomain,
-        useDefaultSubdomain: !svcRaw.domain && svcRaw.ownHost,
-        path: svcRaw.paths && svcRaw.paths.length ? svcRaw.paths[0] : undefined,
-        forwardPath: 'forwardPath' in svcRaw,
+        public: {
+          hasCert: 'hasCert' in svcRaw,
+          hasSingleSignOn: !('isPublic' in svcRaw),
+          certArn: svcRaw.certArn || undefined,
+          domain: publicUrl.domain,
+          subdomain: publicUrl.subdomain,
+          useDefaultSubdomain: !svcRaw.domain && svcRaw.ownHost,
+          path: svcRaw.paths && svcRaw.paths.length ? svcRaw.paths[0] : undefined,
+          forwardPath: 'forwardPath' in svcRaw,
+        },
       }
     }
 
