@@ -18,6 +18,7 @@ import {
 import cloneRepo, { Repo } from './repo'
 import {
   cleanEnv,
+  CORE_VERSION,
   GIT_REPO_URL,
   GIT_LOCAL_PATH,
   GIT_BRANCH,
@@ -31,7 +32,10 @@ import {
   USE_SOPS,
 } from './validators'
 
+import pkg from '../package.json'
+
 const env = cleanEnv({
+  CORE_VERSION,
   GIT_REPO_URL,
   GIT_LOCAL_PATH,
   GIT_BRANCH,
@@ -484,7 +488,7 @@ export default class OtomiStack {
     this.saveTeams()
   }
 
-  getSession(user: User, apiVersion: string, coreVersion: string): Session {
+  getSession(user: User): Session {
     const data = {
       clusters: get(this.getSettings(), 'otomi.additionalClusters', []),
       cluster: this.getCluster(),
@@ -494,8 +498,8 @@ export default class OtomiStack {
       teams: this.getTeams(),
       isDirty: this.db.isDirty(),
       versions: {
-        core: coreVersion,
-        api: apiVersion,
+        core: env.CORE_VERSION,
+        api: pkg.version,
       },
     }
     return data

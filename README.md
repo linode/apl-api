@@ -184,9 +184,9 @@ From above:
 #### 2.3.2 Attribute Based Access Control (ABAC)
 
 By default all resource attributes can be modified by any user that is allowed to access the resource (RBAC)
-The ABAC is aimed to restict abillity of changing specific attribtute paths that belong to a given resource.
+ABAC aims to restrict control of changing specific attributes that belong to a given resource.
 
-All possible ABAC configurations are defined in `TeamSelfService` schema. This schema can be used to define team's `selfService` configuration. Only a user with admin role can modify that property.
+All possible ABAC configurations are defined in the `TeamSelfService` schema. This schema can be used to define a team's `selfService` configuration. Only one with `admin` role can modify that property.
 
 The `TeamSelfService` schema is composed by:
 

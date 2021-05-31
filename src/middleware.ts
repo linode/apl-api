@@ -18,9 +18,7 @@ const HttpMethodMapping = {
   POST: 'create',
   PUT: 'update',
 }
-export function getCrudOperation(req: OpenApiRequest): string {
-  return HttpMethodMapping[req.method]
-}
+
 // Note: 4 arguments (no more, no less) must be defined in your errorMiddleware function. Otherwise the function will be silently ignored.
 // eslint-disable-next-line no-unused-vars
 export function errorMiddleware(e, req: OpenApiRequest, res, next): void {
@@ -81,7 +79,7 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): any 
   } = req
   if (!req.user) return next()
   const { user } = req
-  const action = getCrudOperation(req)
+  const action = HttpMethodMapping[req.method]
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
   const schemaName = schema.split('/').pop() || null
 
