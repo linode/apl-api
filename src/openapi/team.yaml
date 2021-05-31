@@ -3,15 +3,19 @@ idName: &idNameField
   pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 
 TeamSelfService:
+  title: Team self service flags
+  description: Grant team permissions to modify critical configuration parameters
   type: object
   properties:
     Service:
+      title: Service
       type: array
       items:
         type: string
         enum: [ingress]
       uniqueItems: true
     Team:
+      title: Team
       type: array
       items:
         type: string
