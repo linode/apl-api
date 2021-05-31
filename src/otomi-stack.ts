@@ -342,23 +342,24 @@ export default class OtomiStack {
   }
 
   loadTeamSecrets(teamId: string): void {
-    try {
-      const data = this.repo.readFile(getTeamSecretsFilePath(teamId))
-      const secrets: Array<Secret> = get(data, getTeamSecretsJsonPath(teamId), [])
-
-      secrets.forEach((secret) => {
-        // @ts-ignore
-        const res: Secret = this.db.populateItem(
-          'secrets',
-          { ...secret, teamId },
-          { teamId, name: secret.name },
-          secret.id,
-        )
-        console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
-      })
-    } catch (e) {
+    const relativePath = getTeamSecretsFilePath(teamId)
+    if (!this.repo.fileExists(relativePath)) {
       console.warn(`Team ${teamId} has no secrets yet`)
+      return
     }
+    const data = this.repo.readFile(relativePath)
+    const secrets: Array<Secret> = get(data, getTeamSecretsJsonPath(teamId), [])
+
+    secrets.forEach((secret) => {
+      // @ts-ignore
+      const res: Secret = this.db.populateItem(
+        'secrets',
+        { ...secret, teamId },
+        { teamId, name: secret.name },
+        secret.id,
+      )
+      console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
+    })
   }
 
   loadTeams(): void {
@@ -372,17 +373,17 @@ export default class OtomiStack {
   }
 
   loadTeamServices(teamId: string): void {
-    const filePath = `./env/teams/services.${teamId}.yaml`
-    try {
-      const data = this.repo.readFile(filePath)
-      const services = get(data, `teamConfig.teams.${teamId}.services`, [])
-      const { dns } = this.getSettings()
-      services.forEach((svc) => {
-        this.convertServiceToDb(svc, teamId, dns)
-      })
-    } catch (e) {
-      console.warn(`Team ${teamId} has no services on cluster`)
+    const relativePath = `./env/teams/services.${teamId}.yaml`
+    if (!this.repo.fileExists(relativePath)) {
+      console.warn(`Team ${teamId} has no services yet`)
+      return
     }
+    const data = this.repo.readFile(relativePath)
+    const services = get(data, `teamConfig.teams.${teamId}.services`, [])
+    const { dns } = this.getSettings()
+    services.forEach((svc) => {
+      this.convertServiceToDb(svc, teamId, dns)
+    })
   }
 
   saveSettings(): void {

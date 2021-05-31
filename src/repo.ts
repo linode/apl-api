@@ -83,6 +83,11 @@ export class Repo {
     fs.writeFileSync(absolutePath, yamlStr, 'utf8')
   }
 
+  fileExists(relativePath: string): boolean {
+    const absolutePath = path.join(this.path, relativePath)
+    return fs.existsSync(absolutePath)
+  }
+
   readFile(relativePath): any {
     const absolutePath = path.join(this.path, relativePath)
     console.info(`Reading from file: ${absolutePath}`)
