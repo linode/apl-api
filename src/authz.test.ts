@@ -148,7 +148,7 @@ describe('Permissions tests', () => {
     const schema = {
       properties: {
         Team: { items: { enum: ['alerts', 'oidc', 'resourceQuota'] } },
-        Service: { items: { enum: ['ingress'] } },
+        Service: { items: { enum: ['ingress.public'] } },
       },
     }
     const authz = getTeamAuthz(selfServiceFlags, schema)

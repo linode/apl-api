@@ -40,22 +40,6 @@ describe('Admin API tests', () => {
       .end(done)
   })
 
-  it('team cannot update team self-service-flags', (done) => {
-    request(app)
-      .put('/v1/teams/team1')
-      .send({
-        name: 'team1',
-        selfService: {
-          Team: [],
-          Service: [],
-        },
-      })
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${teamToken}`)
-      .expect(403)
-      .end(done)
-  })
-
   it('admin can put with payload that matches the schema', (done) => {
     request(app)
       .put('/v1/settings')
@@ -200,6 +184,7 @@ describe('Admin API tests', () => {
         ksvc: {
           serviceType: 'ksvcPredeployed',
         },
+        ingress: {},
       })
       .set('Content-Type', 'application/json')
       .set('Accept', 'application/json')
@@ -237,6 +222,7 @@ describe('Admin API tests', () => {
           image: {},
           resources: { requests: { cpu: '50m', memory: '64Mi' }, limits: { cpu: '100m', memory: '128Mi' } },
         },
+        ingress: {},
       })
       .set('Content-Type', 'application/json')
       .set('Accept', 'application/json')
@@ -272,6 +258,7 @@ describe('Admin API tests', () => {
         ksvc: {
           serviceType: 'ksvcPredeployed',
         },
+        ingress: {},
       })
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
