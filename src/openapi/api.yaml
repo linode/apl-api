@@ -501,6 +501,15 @@ components:
     Secret:
       $ref: 'secret.yaml#/Secret'
 
+    Generic:
+      $ref: 'secret.yaml#/Generic'
+
+    DockerRegistry:
+      $ref: 'secret.yaml#/DockerRegistry'
+
+    TLS:
+      $ref: 'secret.yaml#/TLS'
+    # -------------------------------------------- Misc.
     Service:
       $ref: 'service.yaml#/Service'
 
