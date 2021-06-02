@@ -142,13 +142,13 @@ describe('Permissions tests', () => {
   it('should render correct team authz', () => {
     const selfServiceFlags: TeamSelfService = {
       Team: ['resourceQuota'],
-      Service: ['ingress.public'],
+      Service: ['ingress'],
     }
 
     const schema = {
       properties: {
         Team: { items: { enum: ['alerts', 'oidc', 'resourceQuota'] } },
-        Service: { items: { enum: ['ingress.public'] } },
+        Service: { items: { enum: ['ingress'] } },
       },
     }
     const authz = getTeamAuthz(selfServiceFlags, schema)

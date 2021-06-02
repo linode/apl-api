@@ -1,7 +1,7 @@
 import * as k8s from '@kubernetes/client-node'
 import fs from 'fs'
 import yaml from 'js-yaml'
-import { cloneDeep, merge, filter, get, isEmpty, omit, set, unset, isEqual, union } from 'lodash'
+import { cloneDeep, merge, filter, get, isEmpty, omit, set, unset, isEqual, union, has } from 'lodash'
 import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Db from './db'
@@ -177,11 +177,13 @@ export default class OtomiStack {
 
   editService(id: string, data: any): Service {
     const oldData = this.getService(id) as any
-    if (data.ingress) {
-      const { domain, subdomain, path } = data.ingress
-      const oldi = oldData.ingress
-      if (!isEqual({ domain, subdomain, path }, { domain: oldi.domain, subdomain: oldi.subdomain, path: oldi.path }))
-        this.checkPublicUrlInUse(data)
+    if (has(data, 'ingress.public')) {
+      const { domain, subdomain, path } = data.ingress.public
+      if (has(oldData, 'ingress.public')) {
+        const oldi = oldData.ingress.public
+        if (!isEqual({ domain, subdomain, path }, { domain: oldi.domain, subdomain: oldi.subdomain, path: oldi.path }))
+          this.checkPublicUrlInUse(data)
+      }
     }
 
     if (data.name !== oldData.name) {
