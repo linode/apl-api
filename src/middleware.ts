@@ -72,7 +72,7 @@ export function jwtMiddleware(): RequestHandler {
   }
 }
 
-export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): any {
+export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): RequestHandler {
   let valid = false
 
   const {
