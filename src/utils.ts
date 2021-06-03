@@ -92,7 +92,7 @@ export function removeBlankAttributes(obj: Record<string, unknown>): Record<stri
 }
 
 export function getTeamSecretsFilePath(teamId: string): string {
-  return `./env/teams/secrets.${teamId}.yaml`
+  return `./env/teams/external-secrets.${teamId}.yaml`
 }
 
 export function getTeamSecretsJsonPath(teamId: string): string {
