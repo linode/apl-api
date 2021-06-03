@@ -12,15 +12,22 @@ lightship.registerShutdownHandler(() => {
   server.close()
 })
 
-otomiStack.init().then(async () => {
-  const app = await initApp(otomiStack)
-  const { PORT = 8080 } = process.env
-  server = app
-    .listen(PORT, () => {
-      console.info(`Listening on port: http://127.0.0.1:${PORT}`)
-      lightship.signalReady()
-    })
-    .on('error', () => {
-      lightship.shutdown()
-    })
-})
+otomiStack
+  .init()
+  .then(async () => {
+    const app = await initApp(otomiStack)
+    const { PORT = 8080 } = process.env
+    server = app
+      .listen(PORT, () => {
+        console.info(`Listening on port: http://127.0.0.1:${PORT}`)
+        lightship.signalReady()
+      })
+      .on('error', () => {
+        lightship.shutdown()
+      })
+  })
+  .catch((e) => {
+    console.error(e)
+    server.close()
+    process.exit(1)
+  })
