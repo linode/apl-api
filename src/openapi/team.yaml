@@ -2,16 +2,31 @@ idName: &idNameField
   type: string
   pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 
+TeamSelfService:
+  title: Team self service flags
+  description: Grant team permissions to modify critical configuration parameters
+  type: object
+  properties:
+    Service:
+      title: Service
+      type: array
+      items:
+        type: string
+        enum: [ingress]
+      uniqueItems: true
+    Team:
+      title: Team
+      type: array
+      items:
+        type: string
+        enum: [alerts, oidc, resourceQuota]
+      uniqueItems: true
+
 Team:
   properties:
     id:
       <<: *idNameField
       title: ID
-      x-acl:
-        admin:
-          - read
-        team:
-          - read
     name:
       <<: *idNameField
       title: Name
@@ -83,6 +98,8 @@ Team:
       type: object
     azureMonitor:
       $ref: definitions.yaml#/azureMonitor
+    selfService:
+      $ref: team.yaml#/TeamSelfService
   required:
     - name
   type: object

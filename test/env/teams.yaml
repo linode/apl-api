@@ -4,7 +4,15 @@ teamConfig:
       alerts: {}
       id: otomi
       oidc: {}
+      selfService:
+        Team:
+          - resourceQuota
     dev:
       alerts: {}
       id: dev
       oidc: {}
+      selfService:
+        Team:
+          - resourceQuota
+        Service:
+          - ingress

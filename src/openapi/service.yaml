@@ -112,7 +112,7 @@ Service:
           required:
             - serviceType
           title: Knative service
-        - description: Wether to map onto a predeployed knative service. Will take care of rewriting to the existing knative url.
+        - description: Whether to map onto a predeployed knative service. Will take care of rewriting to the existing knative url.
           properties:
             serviceType:
               default: ksvcPredeployed
@@ -123,7 +123,7 @@ Service:
             - serviceType
           title: Existing Knative service
           type: object
-        - description: Wether to map onto a predeployed k8s service.
+        - description: Whether to map onto a predeployed k8s service.
           properties:
             serviceType:
               default: svcPredeployed
@@ -139,74 +139,15 @@ Service:
     ingress:
       title: Exposure (ingress)
       type: object
+      # Note: the order matters first schma must be nullable empty object
       oneOf:
-        - description: Will accept all incoming traffic and expose the service in the public domain.
-          properties:
-            useDefaultSubdomain:
-              default: true
-              description: Use the team domain so that the URL reveals the owner.
-              title: Use team domain (preferred)
-              type: boolean
-            subdomain:
-              $ref: definitions.yaml#/domain
-              description: A host that is used to set DNS 'A' records
-              nullable: true
-              title: Host
-              type: string
-            domain:
-              description: A managed DNS zone
-              title: DNS Zone
-              type: string
-            path:
-              description: The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
-              title: URL path
-              type: string
-            forwardPath:
-              description: Forward the URL path into the service (don't rewrite to /)
-              title: Forward path
-              type: boolean
-            hasSingleSignOn:
-              default: false
-              title: Authenticate with Single Sign On
-              type: boolean
-            hasCert:
-              default: false
-              description: If true a certificate should exist already
-              title: Already has a certificate
-              type: boolean
-            certArn:
-              example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
-              title: Certificate ARN
-              type: string
-            certSelect:
-              default: true
-              title: Select existing secret name
-              type: boolean
-            certName:
-              example: www-example-com
-              title: Secret name
-              type: string
-          required:
-            - domain
-            - subdomain
-          title: Public
-          type: object
-        - additionalProperties: false
-          description: Will only accept traffic coming from the private-network loadbalancer. (Coming soon!)
-          nullable: true
-          title: Private
-          type: object
-        - additionalProperties: false
-          description: 'Will only accept traffic via the cluster-local knative gateway.'
-          nullable: true
-          title: In cluster
-          type: object
-      x-acl:
-        team:
-          - read
+        - $ref: 'definitions.yaml#/ingressCluster'
+        - $ref: 'definitions.yaml#/ingressPrivate'
+        - $ref: 'definitions.yaml#/ingressPublic'
     teamId:
       <<: *idNameField
       readOnly: true
   required:
     - name
+    - ingress
   type: object

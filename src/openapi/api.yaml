@@ -130,7 +130,6 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Team'
-
   '/teams/{teamId}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
@@ -383,7 +382,6 @@ paths:
 
   /session:
     get:
-      security: []
       operationId: getSession
       description: Get the session for the current user
       responses:
@@ -496,7 +494,10 @@ components:
 
     OtomiStackError:
       $ref: 'error.yaml#/OtomiStackError'
-    # -------------------------------------------- Secrets
+
+    TeamSelfService:
+      $ref: 'team.yaml#/TeamSelfService'
+
     Secret:
       $ref: 'secret.yaml#/Secret'
 
@@ -523,3 +524,6 @@ components:
 
     User:
       $ref: 'user.yaml#/User'
+
+    TeamAuthz:
+      $ref: 'user.yaml#/TeamAuthz'

@@ -1,10 +1,12 @@
 import get from 'lodash/get'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
+import { omit } from 'lodash'
 import { HttpError, OtomiError } from './error'
-import { OpenApiRequest, JWT, OpenApiRequestExt, User } from './otomi-models'
-import Authz from './authz'
+import { OpenApiRequest, JWT, OpenApiRequestExt, User, PermissionSchema } from './otomi-models'
+import Authz, { getUserAuthz, validateWithAbac } from './authz'
 import { cleanEnv, NO_AUTHZ } from './validators'
+import OtomiStack from './otomi-stack'
 
 const env = cleanEnv({
   NO_AUTHZ,
@@ -35,7 +37,7 @@ export function errorMiddleware(e, req: OpenApiRequest, res, next): void {
 }
 
 export function getUser(user: JWT): User {
-  const sessionUser: User = { ...user, teams: [], roles: [], isAdmin: false }
+  const sessionUser: User = { ...user, teams: [], roles: [], isAdmin: false, authz: {} }
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
   if (env.NO_AUTHZ) {
@@ -70,25 +72,54 @@ export function jwtMiddleware(): RequestHandler {
   }
 }
 
-export function getCrudOperation(req: OpenApiRequest): string {
-  return HttpMethodMapping[req.method]
-}
+export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): RequestHandler {
+  let valid = false
 
-export function isUserAuthorized(req: OpenApiRequestExt, authz: Authz): boolean {
-  if (env.NO_AUTHZ) return true
   const {
     params: { teamId },
   } = req
+  if (!req.user) return next()
   const { user } = req
-  const action = getCrudOperation(req)
-  console.debug(
-    `Authz: ${action} ${req.path}, session(roles: ${user && JSON.stringify(user.roles)} teams=${
-      user && JSON.stringify(user.teams)
-    })`,
-  )
-  if (!user) return false
+  const action = HttpMethodMapping[req.method]
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
-  const schemaName = schema.split('/').pop()
-  const result = authz.isUserAuthorized(action, schemaName!, user, teamId, req.body)
-  return result
+  const schemaName = schema.split('/').pop() || null
+
+  // If there is no RBAC then we also skip ABAC
+  if (!schemaName) return next()
+
+  valid = authz.validateWithRbac(action, schemaName, user, teamId, req.body)
+  if (!valid)
+    return res
+      .status(403)
+      .send({ authz: false, message: `User not allowed to perform ${action} on ${schemaName} resource` })
+
+  const violatedAttributes = validateWithAbac(action, schemaName, user, teamId, req.body)
+
+  // A users sends valid form abac is ised to remove these fields that are not allowed to be set
+  req.body = omit(req.body, violatedAttributes)
+
+  return next()
+}
+
+export function authzMiddleware(authz: Authz, otomi: OtomiStack): RequestHandler {
+  return function nextHandler(req: OpenApiRequestExt, res, next): any {
+    if (!req.isSecurityHandler) return next()
+    if (!req.user) return next()
+    req.user.authz = getUserAuthz(
+      req.user.teams,
+      (req.apiDoc.components.schemas.TeamSelfService as unknown) as PermissionSchema,
+      otomi,
+    )
+    return authorize(req, res, next, authz)
+  }
+}
+
+// eslint-disable-next-line no-unused-vars
+export function isUserAuthenticated(req: OpenApiRequestExt): boolean {
+  if (env.NO_AUTHZ) return true
+  if (req.user) {
+    req.isSecurityHandler = true
+    return true
+  }
+  return false
 }

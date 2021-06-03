@@ -24,6 +24,22 @@ describe('Admin API tests', () => {
       .expect(200)
       .end(done)
   })
+  it('admin can update team self-service-flags', (done) => {
+    request(app)
+      .put('/v1/teams/team1')
+      .send({
+        name: 'team1',
+        selfService: {
+          Team: [],
+          Service: [],
+        },
+      })
+      .set('Accept', 'application/json')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200)
+      .end(done)
+  })
+
   it('admin can put with payload that matches the schema', (done) => {
     request(app)
       .put('/v1/settings')
@@ -134,9 +150,10 @@ describe('Admin API tests', () => {
   it('team cannot create a new team', (done) => {
     request(app)
       .post('/v1/teams')
+      .send({ name: 'otomi', password: 'test' })
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
-      .expect(401)
+      .expect(403)
       .end(done)
   })
 
@@ -167,6 +184,7 @@ describe('Admin API tests', () => {
         ksvc: {
           serviceType: 'ksvcPredeployed',
         },
+        ingress: {},
       })
       .set('Content-Type', 'application/json')
       .set('Accept', 'application/json')
@@ -204,6 +222,7 @@ describe('Admin API tests', () => {
           image: {},
           resources: { requests: { cpu: '50m', memory: '64Mi' }, limits: { cpu: '100m', memory: '128Mi' } },
         },
+        ingress: {},
       })
       .set('Content-Type', 'application/json')
       .set('Accept', 'application/json')
@@ -228,18 +247,52 @@ describe('Admin API tests', () => {
       .delete('/v1/teams/team2/services/service1')
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
-      .expect(401)
+      .expect(403)
       .end(done)
   })
   it('team can not update service from other team', (done) => {
     request(app)
       .put('/v1/teams/team2/services/service1')
-      .send({})
+      .send({
+        name: 'service1',
+        ksvc: {
+          serviceType: 'ksvcPredeployed',
+        },
+        ingress: {},
+      })
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
-      .expect(401)
+      .expect(403)
       .end(done)
   })
+
+  it('authenticated user should get api spec', (done) => {
+    request(app)
+      .get('/v1/apiDocs')
+      .set('Accept', 'application/json')
+      .expect(200)
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+  it('authenticated user can get session', (done) => {
+    request(app)
+      .get('/v1/session')
+      .set('Accept', 'application/json')
+      .expect(200)
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+  it('anonymous cannot get session', (done) => {
+    request(app)
+      .get('/v1/session')
+      .set('Accept', 'application/json')
+      .expect(401)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+
   it('anonymous user should get api spec', (done) => {
     request(app)
       .get('/v1/apiDocs')
