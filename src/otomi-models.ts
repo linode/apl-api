@@ -10,16 +10,21 @@ export type Service = components['schemas']['Service']
 export type Session = components['schemas']['Session']
 export type Settings = components['schemas']['Settings']
 export type Team = components['schemas']['Team']
+export type TeamSelfService = components['schemas']['Team']['selfService']
 export type User = components['schemas']['User']
+export type UserAuthz = components['schemas']['User']['authz']
+export type TeamAuthz = components['schemas']['TeamAuthz']
 
 export interface OpenApiRequest extends Request {
   operationDoc: {
     responses: { '200'?: { content: { 'application/json': { schema: { $ref: string } } } } }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     security: any[]
+    operationId: string
   }
   apiDoc: OpenAPIDoc
   session: Session
+  user?: User
 }
 
 type HttpMethodType = 'delete' | 'read' | 'create' | 'update'
@@ -47,13 +52,25 @@ export interface Property {
 
 export type SchemaType = 'object' | 'array'
 
+export interface PermissionSchema {
+  properties: {
+    [propertyName: string]: {
+      items: {
+        enum: Array<string>
+      }
+    }
+  }
+}
 export interface Schema {
   'x-acl'?: Acl
   type: SchemaType
   properties?: {
     [propertyName: string]: Property
   }
-  items?: any
+  items?: {
+    type: string
+    enum?: Array<string>
+  }
   required?: string[]
 }
 
@@ -87,6 +104,8 @@ export interface JWT {
 
 export interface OpenApiRequestExt extends OpenApiRequest, Session {
   user: User
+  // Flag that indicates if experess-openapi middleware take up further authorization action
+  isSecurityHandler?: boolean
 }
 
 export interface Core {

@@ -1,7 +1,4 @@
 Session:
-  x-acl:
-    admin: [read]
-    team: [read]
   properties:
     cluster:
       readOnly: true

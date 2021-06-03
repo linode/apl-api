@@ -34,11 +34,11 @@ export default class Db {
     // Set some defaults (required if your JSON file is empty)
     this.db
       .defaults({
-        teams: [],
-        services: [],
         cluster: [],
         secrets: [],
+        services: [],
         settings: {},
+        teams: [],
       })
       .write()
     this.dirty = false

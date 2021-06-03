@@ -27,6 +27,9 @@ export default {
         msteams: {},
         slack: {},
       },
+      selfService: {
+        Team: ['resourceQuota'],
+      },
     },
     {
       alerts: {},
@@ -34,6 +37,10 @@ export default {
       name: 'dev',
       oidc: {},
       password: 'linux1234',
+      selfService: {
+        Service: ['ingress'],
+        Team: ['resourceQuota'],
+      },
     },
   ],
   services: [
@@ -72,14 +79,16 @@ export default {
         serviceType: 'ksvc',
       },
       ingress: {
-        certArn: undefined,
-        hasCert: false,
-        hasSingleSignOn: false,
-        domain: 'onprem.example.com',
-        subdomain: 'master',
-        useDefaultSubdomain: false,
-        path: '/servant-1',
-        forwardPath: false,
+        public: {
+          certArn: undefined,
+          hasCert: false,
+          hasSingleSignOn: false,
+          domain: 'onprem.example.com',
+          subdomain: 'master',
+          useDefaultSubdomain: false,
+          path: '/servant-1',
+          forwardPath: false,
+        },
       },
     },
     {
@@ -90,14 +99,16 @@ export default {
         serviceType: 'svcPredeployed',
       },
       ingress: {
-        certArn: undefined,
-        hasCert: false,
-        hasSingleSignOn: false,
-        domain: 'onprem.example.com',
-        path: undefined,
-        subdomain: 'hello.team-otomi.dev',
-        useDefaultSubdomain: false,
-        forwardPath: false,
+        public: {
+          certArn: undefined,
+          hasCert: false,
+          hasSingleSignOn: false,
+          domain: 'onprem.example.com',
+          path: undefined,
+          subdomain: 'hello.team-otomi.dev',
+          useDefaultSubdomain: false,
+          forwardPath: false,
+        },
       },
     },
     {
@@ -131,14 +142,16 @@ export default {
         serviceType: 'ksvc',
       },
       ingress: {
-        certArn: undefined,
-        hasCert: false,
-        hasSingleSignOn: false,
-        domain: 'onprem.example.com',
-        subdomain: 'master',
-        useDefaultSubdomain: false,
-        path: '/servant-2',
-        forwardPath: false,
+        public: {
+          certArn: undefined,
+          hasCert: false,
+          hasSingleSignOn: false,
+          domain: 'onprem.example.com',
+          subdomain: 'master',
+          useDefaultSubdomain: false,
+          path: '/servant-2',
+          forwardPath: false,
+        },
       },
     },
     {
@@ -146,6 +159,7 @@ export default {
       id: '2f18da9a-e659-479d-9d65-2ca82503f43c',
       internal: true,
       teamId: 'otomi',
+      ingress: {},
       ksvc: {
         scaleToZero: false,
         image: {

@@ -5,7 +5,7 @@ import { cloneDeep, merge, filter, get, isEmpty, omit, set, unset, isEqual, unio
 import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Db from './db'
-import { Cluster, Core, Dns, Secret, Service, Settings, Team } from './otomi-models'
+import { Cluster, Core, Dns, Secret, Service, Session, Settings, Team, TeamSelfService, User } from './otomi-models'
 import { PublicUrlExists } from './error'
 import {
   arrayToObject,
@@ -18,6 +18,7 @@ import {
 import cloneRepo, { Repo } from './repo'
 import {
   cleanEnv,
+  CORE_VERSION,
   GIT_REPO_URL,
   GIT_LOCAL_PATH,
   GIT_BRANCH,
@@ -31,7 +32,10 @@ import {
   USE_SOPS,
 } from './validators'
 
+import pkg from '../package.json'
+
 const env = cleanEnv({
+  CORE_VERSION,
   GIT_REPO_URL,
   GIT_LOCAL_PATH,
   GIT_BRANCH,
@@ -60,16 +64,16 @@ function convertDbServiceToValues(svc: any): any {
   } else if (serviceType !== 'svcPredeployed') {
     console.warn(`Saving service failure: Not supported service type: ${serviceType}`)
   }
-  if (svc.ingress && !isEmpty(svc.ingress)) {
-    if (svc.ingress.useDefaultSubdomain) svcCloned.ownHost = true
-    else svcCloned.domain = `${svc.ingress.subdomain}.${svc.ingress.domain}`
+  if (svc.ingress.public) {
+    if (svc.ingress.public.useDefaultSubdomain) svcCloned.ownHost = true
+    else svcCloned.domain = `${svc.ingress.public.subdomain}.${svc.ingress.public.domain}`
 
-    if (!svc.ingress.hasSingleSignOn) svcCloned.isPublic = true
+    if (!svc.ingress.public.hasSingleSignOn) svcCloned.isPublic = true
 
-    if (svc.ingress.hasCert) svcCloned.hasCert = true
-    if (svc.ingress.certArn) svcCloned.certArn = svc.ingress.certArn
-    if (svc.ingress.path) svcCloned.paths = [svc.ingress.path]
-    if (svc.ingress.forwardPath) svcCloned.forwardPath = true
+    if (svc.ingress.public.hasCert) svcCloned.hasCert = true
+    if (svc.ingress.public.certArn) svcCloned.certArn = svc.ingress.public.certArn
+    if (svc.ingress.public.path) svcCloned.paths = [svc.ingress.public.path]
+    if (svc.ingress.public.forwardPath) svcCloned.forwardPath = true
   } else svcCloned.internal = true
   delete svcCloned.enabled
   return svcCloned
@@ -116,6 +120,11 @@ export default class OtomiStack {
 
   getTeams(): Array<Team> {
     return this.db.getCollection('teams') as Array<Team>
+  }
+
+  getTeamSelfServiceFlags(id: string): TeamSelfService {
+    const data = this.getTeam(id)
+    return data.selfService
   }
 
   getCore(): any {
@@ -168,11 +177,13 @@ export default class OtomiStack {
 
   editService(id: string, data: any): Service {
     const oldData = this.getService(id) as any
-    if (data.ingress) {
-      const { domain, subdomain, path } = data.ingress
-      const oldi = oldData.ingress
-      if (!isEqual({ domain, subdomain, path }, { domain: oldi.domain, subdomain: oldi.subdomain, path: oldi.path }))
-        this.checkPublicUrlInUse(data)
+    if (data?.ingress?.public) {
+      const { domain, subdomain, path } = data.ingress.public
+      if (oldData?.ingress?.public) {
+        const oldi = oldData.ingress.public
+        if (!isEqual({ domain, subdomain, path }, { domain: oldi.domain, subdomain: oldi.subdomain, path: oldi.path }))
+          this.checkPublicUrlInUse(data)
+      }
     }
 
     if (data.name !== oldData.name) {
@@ -194,10 +205,12 @@ export default class OtomiStack {
     const services = this.db.getCollection('services')
 
     const servicesFiltered = filter(services, (svc: Service) => {
-      if (!svc.ingress) return false
-      const { domain, subdomain, path } = svc.ingress
+      // @ts-ignore
+      const ingressPublic = svc.ingress.public
+      if (!ingressPublic) return false
+      const { domain, subdomain, path } = ingressPublic
       const existingUrl = `${subdomain}.${domain}${path || ''}`
-      const url = `${data.ingress!.subdomain}.${data.ingress!.domain}${data.ingress!.path || ''}`
+      const url = `${ingressPublic.subdomain}.${ingressPublic.domain}${ingressPublic.path || ''}`
       return existingUrl === url && svc.id !== data.id
     })
 
@@ -333,23 +346,24 @@ export default class OtomiStack {
   }
 
   loadTeamSecrets(teamId: string): void {
-    try {
-      const data = this.repo.readFile(getTeamSecretsFilePath(teamId))
-      const secrets: Array<Secret> = get(data, getTeamSecretsJsonPath(teamId), [])
-
-      secrets.forEach((secret) => {
-        // @ts-ignore
-        const res: Secret = this.db.populateItem(
-          'secrets',
-          { ...secret, teamId },
-          { teamId, name: secret.name },
-          secret.id,
-        )
-        console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
-      })
-    } catch (e) {
+    const relativePath = getTeamSecretsFilePath(teamId)
+    if (!this.repo.fileExists(relativePath)) {
       console.warn(`Team ${teamId} has no secrets yet`)
+      return
     }
+    const data = this.repo.readFile(relativePath)
+    const secrets: Array<Secret> = get(data, getTeamSecretsJsonPath(teamId), [])
+
+    secrets.forEach((secret) => {
+      // @ts-ignore
+      const res: Secret = this.db.populateItem(
+        'secrets',
+        { ...secret, teamId },
+        { teamId, name: secret.name },
+        secret.id,
+      )
+      console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
+    })
   }
 
   loadTeams(): void {
@@ -363,17 +377,17 @@ export default class OtomiStack {
   }
 
   loadTeamServices(teamId: string): void {
-    const filePath = `./env/teams/services.${teamId}.yaml`
-    try {
-      const data = this.repo.readFile(filePath)
-      const services = get(data, `teamConfig.teams.${teamId}.services`, [])
-      const { dns } = this.getSettings()
-      services.forEach((svc) => {
-        this.convertServiceToDb(svc, teamId, dns)
-      })
-    } catch (e) {
-      console.warn(`Team ${teamId} has no services on cluster`)
+    const relativePath = `./env/teams/services.${teamId}.yaml`
+    if (!this.repo.fileExists(relativePath)) {
+      console.warn(`Team ${teamId} has no services yet`)
+      return
     }
+    const data = this.repo.readFile(relativePath)
+    const services = get(data, `teamConfig.teams.${teamId}.services`, [])
+    const { dns } = this.getSettings()
+    services.forEach((svc) => {
+      this.convertServiceToDb(svc, teamId, dns)
+    })
   }
 
   saveSettings(): void {
@@ -455,17 +469,21 @@ export default class OtomiStack {
       }
     } else set(svc, 'ksvc.serviceType', 'svcPredeployed')
 
-    if (!('internal' in svcRaw)) {
+    if ('internal' in svcRaw) {
+      svc.ingress = {}
+    } else {
       const publicUrl = getPublicUrl(svcRaw.domain, svcRaw.name, teamId, dns)
       svc.ingress = {
-        hasCert: 'hasCert' in svcRaw,
-        hasSingleSignOn: !('isPublic' in svcRaw),
-        certArn: svcRaw.certArn || undefined,
-        domain: publicUrl.domain,
-        subdomain: publicUrl.subdomain,
-        useDefaultSubdomain: !svcRaw.domain && svcRaw.ownHost,
-        path: svcRaw.paths && svcRaw.paths.length ? svcRaw.paths[0] : undefined,
-        forwardPath: 'forwardPath' in svcRaw,
+        public: {
+          hasCert: 'hasCert' in svcRaw,
+          hasSingleSignOn: !('isPublic' in svcRaw),
+          certArn: svcRaw.certArn || undefined,
+          domain: publicUrl.domain,
+          subdomain: publicUrl.subdomain,
+          useDefaultSubdomain: !svcRaw.domain && svcRaw.ownHost,
+          path: svcRaw.paths && svcRaw.paths.length ? svcRaw.paths[0] : undefined,
+          forwardPath: 'forwardPath' in svcRaw,
+        },
       }
     }
 
@@ -477,5 +495,22 @@ export default class OtomiStack {
     // TODO: saveApps()
     this.saveSettings()
     this.saveTeams()
+  }
+
+  getSession(user: User): Session {
+    const data = {
+      clusters: get(this.getSettings(), 'otomi.additionalClusters', []),
+      cluster: this.getCluster(),
+      core: this.getCore(),
+      dns: this.getSettings().dns,
+      user,
+      teams: this.getTeams(),
+      isDirty: this.db.isDirty(),
+      versions: {
+        core: env.CORE_VERSION,
+        api: pkg.version,
+      },
+    }
+    return data
   }
 }

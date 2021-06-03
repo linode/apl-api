@@ -183,79 +183,15 @@ From above:
 
 #### 2.3.2 Attribute Based Access Control (ABAC)
 
-The ABAC permissions are used to limit RBAC permissions (never the other way round)
+By default all resource attributes can be modified by any user that is allowed to access the resource (RBAC)
+ABAC aims to restrict control of changing specific attributes that belong to a given resource.
 
-The following permissions can be set for a given resource attribute:
+All possible ABAC configurations are defined in the `TeamSelfService` schema. This schema can be used to define a team's `selfService` configuration. Only one with `admin` role can modify that property.
 
-- `create` - a user can set attribute while creating a new resource
-- `read` - a user can obtain this field
-- `update` - a user can set attribute while updating an existing resource
+The `TeamSelfService` schema is composed by:
 
-**Note:**
-
-- `delete` permission cannot be set for ABAC
-
-For example:
-
-```
-    Service:
-      x-acl:
-        admin: [delete-any, read-any, create-any, update-any]
-        team: [delete, read, create, update]
-      type: object
-      properties:
-        name:
-          type: string
-        ingress:
-          type: object
-          x-acl:
-            admin: [read, create]
-            team: [read]
-```
-
-From above:
-
-A user with admin role can:
-
-- perform all CRUD operations regardless resource ownership (RBAC)
-- all attributes can be edited except ingress that can be only set on resource creation event (ABAC)
-
-A user with team role can:
-
-- perform all CRUD operations only withing its own team (RBAC)
-- all attributes can be edited except ingress that isn be only read (ABAC)
-
-#### 2.3.3 Limitations
-
-- nested ABAC is NOT supported E.g.:
-
-```
-    Service:
-      type: object
-      properties:
-        name:
-          type: object
-          properties:
-            name:
-              type: string
-              x-acl: [read]       # nested x-acl not supported
-        ingress:
-          type: object
-          x-acl:
-            team: [read]
-```
-
-- ABAC is not applied for resource collections, e.g.:
-
-```
-    Services:
-      x-acl:
-        admin: [read-any]
-        team: [read-any]
-      type: array
-      items:
-        $ref: '#/components/schemas/Service'     # even if the components/schemas/Service defines ABAC it will NOT be applied
-```
+- property that corresponds to a schema name from `api.yaml` file.
+- `enum` property that indicates JSON paths for attributes that shall be controlled.
 
 ## 2. Viewing/consuming openapi spec
 
