@@ -16,14 +16,6 @@ describe('Admin API tests', () => {
     sinon.stub(otomiStack)
     app = await initApp(otomiStack)
   })
-  it('admin can get all settings', (done) => {
-    request(app)
-      .get('/v1/settings')
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(200)
-      .end(done)
-  })
   it('admin can update team self-service-flags', (done) => {
     request(app)
       .put('/v1/teams/team1')
@@ -37,41 +29,6 @@ describe('Admin API tests', () => {
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200)
-      .end(done)
-  })
-
-  it('admin can put with payload that matches the schema', (done) => {
-    request(app)
-      .put('/v1/settings')
-      .send({
-        alerts: {
-          drone: 'msteams',
-        },
-      })
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-      .end(done)
-  })
-  it('admin can put with empty body (empty object is valid JSON Schema 7)', (done) => {
-    request(app)
-      .put('/v1/settings')
-      .send({})
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-      .end(done)
-  })
-  it(`admin can't put with keys that don't match settings object`, (done) => {
-    request(app)
-      .put('/v1/settings')
-      .send({ foo: 'bar' })
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(400)
-      .expect('Content-Type', /json/)
       .end(done)
   })
   it('admin can get all teams', (done) => {

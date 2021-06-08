@@ -109,12 +109,26 @@ export default class OtomiStack {
     this.loadValues()
   }
 
-  getSettings(): Settings {
-    return this.db.db.get('settings').value() as Settings
+  getSubSetting(type, key) {
+    return { settings: this.db.db.get([type, key]).value() }
   }
 
-  editSettings(data: Settings): Settings {
-    this.db.db.set('settings', data).write()
+  setSubSetting(type, data, key) {
+    if (!isEmpty(data)) {
+      return (
+        this.db.db
+          .get([type, key])
+          // @ts-ignore
+          .assign(data[type])
+          .write()
+      )
+    }
+    // If it returns the same object, unchanged, then you'll know that there is no successful PUT,
+    // at least it will not write empty values.
+    return this.db.db.get([type, key]).value()
+  }
+
+  getSettings(): Settings {
     return this.db.db.get('settings').value() as Settings
   }
 

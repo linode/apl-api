@@ -7,18 +7,6 @@ import { Repo } from './repo'
 describe('Settings', () => {
   const otomi = new OtomiStack()
   otomi.repo = new Repo('./test', undefined, undefined, undefined, undefined, undefined)
-
-  it('should assign a dummy payload', () => {
-    const settings = otomi.getSettings()
-    const payload: any = {
-      ...settings,
-      alerts: {
-        drone: 'someTeamChat',
-      },
-    }
-
-    expect(otomi.editSettings(payload)).to.deep.equal(payload)
-  })
 })
 
 describe('Data validation', () => {
