@@ -18,9 +18,9 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
     },
   ]
   const PUT: Operation = [
-    ({ params: { serviceId }, body }: OpenApiRequest, res): void => {
+    ({ params: { teamId, serviceId }, body }: OpenApiRequest, res): void => {
       console.debug(`Modify service: ${JSON.stringify({ serviceId })}`)
-      const data = otomi.editService(decodeURIComponent(serviceId), body)
+      const data = otomi.editService(decodeURIComponent(serviceId), { ...body, teamId: decodeURIComponent(teamId) })
       res.json(data)
     },
   ]

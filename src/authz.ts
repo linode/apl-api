@@ -81,13 +81,12 @@ export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
         err.concat(
           validatePermissions(schema['x-acl'], allowedResourceActions, `components.schemas.${schemaName}.x-acl`),
         )
-      const props = schema.properties || schema['x-patternProperties']
-      if (!props) {
-        err.push(
-          `schema does not contain properties nor x-patternProperties attribute, found at 'components.schemas.${schemaName}'`,
-        )
+      const props = schema.properties
+      if (!schema.nullable && !props) {
+        err.push(`schema does not contain properties, found at 'components.schemas.${schemaName}'`)
         return
       }
+      if (schema.nullable && !props) return
       forIn(props, (prop, attributeName) => {
         if (prop['x-acl'])
           err.concat(

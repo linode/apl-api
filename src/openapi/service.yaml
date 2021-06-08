@@ -11,7 +11,7 @@ Service:
       - update-any
     team:
       - delete
-      - read
+      - read-any
       - create
       - update
   x-externalDocsPath: docs/configuring-services
@@ -35,83 +35,64 @@ Service:
       maximum: 65535
     ksvc:
       oneOf:
-        - description: Will create a new knative service from the input gathered here.
-          properties:
-            serviceType:
-              default: ksvc
-              enum:
-                - ksvc
-              type: string
-            image:
+        - title: Knative service
+          allOf:
+            - $ref: definitions.yaml#/podSpec
+            - description: Will create a new knative service from the input gathered here.
               properties:
-                repository:
-                  $ref: definitions.yaml#/repository
-                tag:
-                  pattern: '[\w][\w.-]{0,127}'
+                serviceType:
+                  default: ksvc
+                  enum:
+                    - ksvc
                   type: string
-              required:
-                - repository
-                - tag
-              title: Container image
-              type: object
-            scaleToZero:
-              default: false
-              description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
-              title: Scale to zero
-              type: boolean
-            env:
-              $ref: definitions.yaml#/env
-            annotations:
-              $ref: definitions.yaml#/annotations
-              title: Pod annotations
-            resources:
-              $ref: definitions.yaml#/resources
-            secrets:
-              $ref: definitions.yaml#/secrets
-            autoCD:
-              description: Deploys new images based on a tagging strategy
-              oneOf:
-                - additionalProperties: false
-                  nullable: true
-                  title: 'Off'
-                  type: object
-                - nullable: true
-                  properties:
-                    semver:
-                      description: 'Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
-                      example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
-                      title: Semver version pattern
-                      type: string
-                    tagMatcher:
-                      default: semver
-                      enum:
+                scaleToZero:
+                  default: false
+                  description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
+                  title: Scale to zero
+                  type: boolean
+                autoCD:
+                  description: Deploys new images based on a tagging strategy
+                  oneOf:
+                    - $ref: definitions.yaml#/offChoice
+                    - nullable: true
+                      properties:
+                        semver:
+                          description: 'Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
+                          example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
+                          title: Semver version pattern
+                          type: string
+                        tagMatcher:
+                          default: semver
+                          enum:
+                            - semver
+                          type: string
+                      required:
                         - semver
-                      type: string
-                  required:
-                    - semver
-                  title: Semver versioning
-                  type: object
-                - additionalProperties: false
-                  properties:
-                    glob:
-                      description: 'Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*"'
-                      example: main-v1.3.*
-                      title: Glob string pattern
-                      type: string
-                    tagMatcher:
-                      default: glob
-                      enum:
+                      title: Semver versioning
+                      type: object
+                    - properties:
+                        glob:
+                          description: 'Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*"'
+                          example: main-v1.3.*
+                          title: Glob string pattern
+                          type: string
+                        tagMatcher:
+                          default: glob
+                          enum:
+                            - glob
+                          type: string
+                      required:
                         - glob
-                      type: string
-                  required:
-                    - glob
-                  title: Glob pattern matching
+                      title: Glob pattern matching
+                      type: object
+                      additionalProperties: false
+                  title: Continuous delivery
                   type: object
-              title: Continuous delivery
+              required:
+                - serviceType
+              title: Knative service
               type: object
-          required:
-            - serviceType
-          title: Knative service
+          type: object
         - description: Whether to map onto a predeployed knative service. Will take care of rewriting to the existing knative url.
           properties:
             serviceType:
@@ -134,16 +115,18 @@ Service:
             - serviceType
           title: Existing Kubernetes service
           type: object
-      title: Type
+      # nullable: true
       type: object
+      title: Type
     ingress:
       title: Exposure (ingress)
       type: object
-      # Note: the order matters first schma must be nullable empty object
+      # Note: the order matters first schema must be nullable empty object
       oneOf:
-        - $ref: 'definitions.yaml#/ingressCluster'
-        - $ref: 'definitions.yaml#/ingressPrivate'
-        - $ref: 'definitions.yaml#/ingressPublic'
+        - $ref: api.yaml#/components/schemas/ingressCluster
+        - $ref: api.yaml#/components/schemas/ingressPublic
+        - $ref: api.yaml#/components/schemas/ingressPrivate
+
     teamId:
       <<: *idNameField
       readOnly: true

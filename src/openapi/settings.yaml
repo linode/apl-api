@@ -1,7 +1,3 @@
-url: &url
-  pattern: ^(https:\/\/)([\w\-])+\.{1}([a-zA-Z]{2,63})([\/\w-]*)*\/?\??([^#\n\r]*)?#?([^\n\r]*)$
-  type: string
-
 alerts: &alerts
   type: object
   properties:
@@ -83,7 +79,7 @@ slack:
       description: The Slack channel for critical notifications.
       type: string
     url:
-      <<: *url
+      $ref: 'api.yaml#/components/schemas/url'
       description: A Slack webhook URL.
   type: object
 
@@ -107,19 +103,6 @@ Settings:
           type: object
         monitor:
           $ref: definitions.yaml#/azureMonitor
-        resourceGroup:
-          description: An Azure resource group.
-          type: string
-        subscriptionId:
-          description: An Azure subscription ID.
-          type: string
-        tenantId:
-          description: An Azure tenant ID.
-          type: string
-      required:
-        - resourceGroup
-        - subscriptionId
-        - tenantId
       type: object
     customer:
       additionalProperties: false
@@ -134,9 +117,76 @@ Settings:
           items:
             type: string
           type: array
-        domain:
-          type: string
-          description: A fqdn for the cluster
+          nullable: true
+        provider:
+          description: The DNS provider managing the domains.
+          oneOf:
+            - title: AWS
+              properties:
+                aws:
+                  properties:
+                    region:
+                      type: string
+                  required:
+                    - region
+              required:
+                - aws
+            - title: Azure
+              properties:
+                azure:
+                  properties:
+                    cloud:
+                      title: Cloud
+                      type: string
+                      description: Azure Cloud
+                    resourceGroup:
+                      title: Resource group
+                      type: string
+                      description: Azure resource group
+                    hostedZoneName:
+                      title: Hosted zone name
+                      type: string
+                    tenantId:
+                      title: Tenant ID
+                      type: string
+                      description: Azure tenant ID
+                    subscriptionId:
+                      title: Subscription ID
+                      type: string
+                      description: Azure subscription ID
+                    aadClientId:
+                      title: Client ID
+                      type: string
+                      description: Azure Application Client ID
+                    aadClientSecret:
+                      title: Client secret
+                      type: string
+                      description: Azure Application Client Secret
+                    useManagedIdentityExtension:
+                      title: Using managed identities?
+                      type: boolean
+                      description: If you use Azure MSI, this should be set to true
+                      default: false
+                  required:
+                    - resourceGroup
+                    - aadClientId
+                    - aadClientSecret
+              required:
+                - azure
+            - title: Google
+              properties:
+                google:
+                  properties:
+                    serviceAccountKey:
+                      description: A service account key for managing a DNS zone.
+                      type: string
+                    project:
+                      type: string
+                  required:
+                    - serviceAccountKey
+                    - project
+              required:
+                - google
       oneOf:
         - title: aws
           properties:
@@ -237,15 +287,15 @@ Settings:
         adminGroupID:
           type: string
         apiUrl:
-          <<: *url
+          $ref: 'api.yaml#/components/schemas/url'
         authUrl:
-          <<: *url
+          $ref: 'api.yaml#/components/schemas/url'
         clientID:
           type: string
         clientSecret:
           type: string
         issuer:
-          <<: *url
+          $ref: 'api.yaml#/components/schemas/url'
         scope:
           type: string
         teamAdminGroupID:
@@ -253,7 +303,7 @@ Settings:
         tenantID:
           type: string
         tokenUrl:
-          <<: *url
+          $ref: 'api.yaml#/components/schemas/url'
         usernameClaimMapper:
           type: string
           description: Claim name used by Keycloak to identify incoming users from identity provider

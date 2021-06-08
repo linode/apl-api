@@ -8,15 +8,10 @@ alerts:
 azure:
   appgw:
     isManaged: true
-  diskType: Standard_LRS
-  resourceGroup: somevalue
-  subscriptionId: somevalue
-  tenantId: somevalue
 customer:
   name: demo
 dns:
   zones: [example.com]
-  domain: onprem.example.com
   aws:
     region: eu-central-1
 home:

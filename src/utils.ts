@@ -1,6 +1,6 @@
 import cleanDeep, { CleanOptions } from 'clean-deep'
 import cloneDeep from 'lodash/cloneDeep'
-import { Dns } from './otomi-models'
+import { Cluster, Dns } from './otomi-models'
 
 export function arrayToObject(array: [], keyName: string, keyValue: string): Record<string, unknown> {
   const obj = {}
@@ -56,29 +56,39 @@ interface PublicUrl {
   subdomain: string
   domain: string
 }
-
-export function getPublicUrl(serviceDomain?: string, serviceName?: string, teamId?: string, dns?: Dns): PublicUrl {
-  if (!serviceDomain) {
+export function getServiceUrl({
+  domain,
+  name,
+  teamId,
+  cluster,
+  dns,
+}: {
+  domain?: string
+  name?: string
+  teamId?: string
+  dns?: Dns
+  cluster: Cluster
+}): PublicUrl {
+  if (!domain) {
     // Fallback mechanism for exposed service that does not have its public url specified in values
     return {
-      subdomain: `${serviceName}.team-${teamId}`,
-      domain: dns?.domain || '',
+      subdomain: `${name}.team-${teamId}`,
+      domain: cluster.domainSuffix || '',
     }
   }
 
-  const zones = [...(dns!.zones || [])]
-  zones.push(dns?.domain || '')
+  const zones = [cluster.domainSuffix, ...(dns?.zones || [])]
   // Sort by length descending
   zones.sort((a, b) => b.length - a.length)
   for (let i = 0; i < zones.length; i += 1) {
-    if (serviceDomain.endsWith(zones[i])) {
-      const subdomainLength = serviceDomain.length - zones[i].length - 1
-      return { subdomain: serviceDomain.substring(0, subdomainLength), domain: zones[i] }
+    if (domain.endsWith(zones[i])) {
+      const subdomainLength = domain.length - zones[i].length - 1
+      return { subdomain: domain.substring(0, subdomainLength), domain: zones[i] }
     }
   }
 
   // Custom domain that is not visible in clusters.yaml values
-  return { subdomain: '', domain: serviceDomain }
+  return { subdomain: '', domain }
 }
 
 export function removeBlankAttributes(obj: Record<string, unknown>): Record<string, unknown> {
@@ -91,10 +101,26 @@ export function removeBlankAttributes(obj: Record<string, unknown>): Record<stri
   return cleanDeep(obj, options)
 }
 
+export function getTeamJobsFilePath(teamId: string): string {
+  return `./env/teams/jobs.${teamId}.yaml`
+}
+
+export function getTeamJobsJsonPath(teamId: string): string {
+  return `teamConfig.teams.${teamId}.jobs`
+}
+
 export function getTeamSecretsFilePath(teamId: string): string {
   return `./env/teams/external-secrets.${teamId}.yaml`
 }
 
 export function getTeamSecretsJsonPath(teamId: string): string {
   return `teamConfig.teams.${teamId}.secrets`
+}
+
+export function getTeamServicesFilePath(teamId: string): string {
+  return `./env/teams/services.${teamId}.yaml`
+}
+
+export function getTeamServicesJsonPath(teamId: string): string {
+  return `teamConfig.teams.${teamId}.services`
 }
