@@ -26,11 +26,18 @@ validate() {
     fi
 }
 
+clean_up() {
+    if [ -f vendors/openapi/otomi-api.json ]; then
+        rm vendors/openapi/otomi-api.json
+    fi 
+    rm -rf vendors/client/otomi-api >/dev/null || exit 1
+}
+
 generate_client() {
-    echo "Generating client code from openapi specification $openapi_doc.."
-    rm -rf $target_dir >/dev/null
+    echo "Generating client code from openapi specification $openapi_doc..."
 
     # npx openapi bundle --output src/openapi --ext yaml src/openapi/api.yaml
+    npm run build:spec
 
     docker run --rm -v $PWD:/local -w /local -u "$(id -u $USER)" \
     openapitools/openapi-generator-cli:v5.1.0 generate \
@@ -42,7 +49,7 @@ generate_client() {
 }
 
 set_package_json() {
-    echo "Updating  $target_package_json file.."
+    echo "Updating $target_package_json file..."
 
     jq \
     --arg type 'git' \
@@ -68,17 +75,16 @@ set_bluebird() {
 }
 
 build_npm_package() {
-    echo "Building $target_npm_name npm package"
-    cd $target_dir
+    cd $target_dir && echo "Building $target_npm_name npm package..."
     npm install && npm run build
     cd -
 }
 
-rm -rf $target_dir >/dev/null
 validate
+clean_up
 generate_client 
 set_package_json
 set_bluebird
 build_npm_package
 
-echo "The client code has been generated at $target_dir/ directory"
+echo "The client code has been generated at $target_dir/ directory."

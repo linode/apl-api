@@ -99,7 +99,7 @@ method.
 For the api client there is an `operationId` property defined. It can be used to client with expected method names (see
 relevant usage in otomi-web repo)
 
-### 1.2 Authentication
+### 2.2 Authentication
 
 The authentication ensures that a user is identified, so the request contains required headers.
 
@@ -192,6 +192,112 @@ The `TeamSelfService` schema is composed by:
 
 - property that corresponds to a schema name from `api.yaml` file.
 - `enum` property that indicates JSON paths for attributes that shall be controlled.
+
+**Note:**
+
+- `delete` permission cannot be set for ABAC
+
+For example:
+
+```
+    Service:
+      x-acl:
+        admin: [delete-any, read-any, create-any, update-any]
+        team: [delete, read, create, update]
+      type: object
+      properties:
+        name:
+          type: string
+        ingress:
+          type: object
+          x-acl:
+            admin: [read, create]
+            team: [read]
+```
+
+From above:
+
+A user with admin role can:
+
+- perform all CRUD operations regardless resource ownership (RBAC)
+- all attributes can be edited except ingress that can be only set on resource creation event (ABAC)
+
+A user with team role can:
+
+- perform all CRUD operations only withing its own team (RBAC)
+- all attributes can be edited except ingress that isn be only read (ABAC)
+
+#### 2.3.3 Limitations
+
+##### 2.3.3.1 OpenAPI-generator limitations
+
+<!-- Add more issues if you spot them and know the limitations/work-arounds -->
+
+Known issues:
+
+- https://github.com/redkubes/otomi-api/issues/155
+
+###### Problem
+
+It doesn't matter if you've entered a valid OpenAPI specification, it isn't useful as long as it isn't generated as a client library.
+
+###### Cause
+
+There are too many variations of this problem to be listed here and still make sense, but they follow the following cycle in general:
+
+1. `src/openapi/\*.yaml` cannot be dereferenced/bundled by parsing JSON `$refs`.
+2. Dereferenced/bundled OpenAPI spec cannot be generated
+3. Client libary in `vendors/client/otomi-api/axios/...` cannot be compiled with `tsc`
+4. Code cannot be committed in version control (Git)
+5. Consume API methods and/or models
+
+###### Solutions
+
+In this paragraph the causes are addressed by the corresponding number under "Cause":
+
+1. In the `npm run ...` scripts, `vendors/openapi/otomi-api.json` may be deleted to see if the spec can be successfully dereferenced/bundled and used as input for `openapi-generator`.
+2. The `openapi-generator` can throw useful/meaningful errors. But there are errors under known issues (see above) that need a work-around.
+3. These errors happen the most arbitrarily. See if you can go back in your small increments in `src/openapi/...` until you can successfully build the client library again.
+4. These errors are often due to our own code. E.g.: a generated model is used, and by changing the OpenAPI spec you change the schema. Models used to rely on the schema and now they are missing.
+5. If you change the name of a schema, add a title, etc., the respective reference might change. Then the consumption in the API library might break.
+
+###### Note
+
+- Also check if you can successfully generate the client library again after committing, just as a pre-caution.
+- To determine a successful generation of the client library, please check out the generated models in `vendors/client/otomi-api/axios/models` if they make sense or not.
+- As general advice, make sure to increment the specification VERY slowly and always see if a spec can be generated or not.
+
+##### 2.3.3.2 Specific limitations
+
+- nested ABAC is NOT supported E.g.:
+
+```
+    Service:
+      type: object
+      properties:
+        name:
+          type: object
+          properties:
+            name:
+              type: string
+              x-acl: [read]       # nested x-acl not supported
+        ingress:
+          type: object
+          x-acl:
+            team: [read]
+```
+
+- ABAC is not applied for resource collections, e.g.:
+
+```
+    Services:
+      x-acl:
+        admin: [read-any]
+        team: [read-any]
+      type: array
+      items:
+        $ref: '#/components/schemas/Service'     # even if the components/schemas/Service defines ABAC it will NOT be applied
+```
 
 ## 2. Viewing/consuming openapi spec
 
