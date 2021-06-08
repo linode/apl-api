@@ -110,7 +110,7 @@ export default class OtomiStack {
   }
 
   getSubSetting(type, key) {
-    return { settings: this.db.db.get([type, key]).value() }
+    return { [key]: this.db.db.get([type, key]).value() }
   }
 
   setSubSetting(type, data, key) {
@@ -119,7 +119,7 @@ export default class OtomiStack {
         this.db.db
           .get([type, key])
           // @ts-ignore
-          .assign(data[type])
+          .assign(data[key])
           .write()
       )
     }

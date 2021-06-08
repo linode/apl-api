@@ -28,6 +28,5 @@ otomiStack
   })
   .catch((e) => {
     console.error(e)
-    server.close()
     process.exit(1)
   })
