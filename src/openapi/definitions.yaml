@@ -235,6 +235,19 @@ k8sVersion:
     - '1.18'
     - '1.19'
   type: string
+kms:
+  additionalProperties: false
+  description: Holds KMS settings like credentials for retrieving enc/decyption keys.
+  title: KMS settings
+  properties:
+    sops:
+      description: Encryption credentials for SOPS to encrypt the platform secrets.
+      title: SOPS credentials
+      oneOf:
+        - $ref: definitions.yaml#/awsCreds
+        - $ref: definitions.yaml#/azureCreds
+        - $ref: definitions.yaml#/googleCreds
+        - $ref: definitions.yaml#/vaultCreds
 labels:
   $ref: '#/annotations'
   description: A set of labels.
@@ -432,7 +445,6 @@ volumes:
         type: string
     type: object
   type: array
-
 ingressPublic:
   type: object
   title: Public
@@ -490,7 +502,6 @@ ingressPublic:
         - subdomain
   required:
     - public
-
 ingressPrivate:
   type: object
   title: Private
@@ -504,7 +515,6 @@ ingressPrivate:
   required:
     - private
   additionalProperties: false
-
 ingressCluster:
   title: Cluster
   type: object

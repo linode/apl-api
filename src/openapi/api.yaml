@@ -408,7 +408,14 @@ paths:
         default:
           description: The requested apiDoc.
 
-  /settings:
+  /settings/{setting}:
+    parameters:
+      - in: path
+        name: setting
+        required: true
+        schema:
+          type: string
+        example: oidc
     get:
       operationId: getSettings
       description: Get settings from the `settings.yaml` and `secret.settings.yaml` file.
@@ -420,6 +427,8 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Settings'
+
+    # TODO: https://github.com/redkubes/otomi-api/issues/155
     put:
       operationId: editSettings
       description: Edits the settings from the `settings.yaml` file
@@ -476,12 +485,44 @@ components:
       name: Authorization
       in: header
 
+  # -------------------------------------------- Schemas
+  # Indicate root schemas with UpperCamelCase (e.g. Cluster)
+  # Indicate definition references with camelCase (e.g. azureCreds)
+  # This is the way to properly generate polymorphic schemas (e.g. oneOf, allOf).
+  #
+  # Please stick to: alphabetical sorting,
+  # and after that: capital letters before lower case letters.
+  # --------------------------------------------
   schemas:
+    alerts:
+      $ref: 'definitions.yaml#/alerts'
+
+    awsCreds:
+      $ref: 'definitions.yaml#/awsCreds'
+
+    azureCreds:
+      $ref: 'definitions.yaml#/azureCreds'
+
+    azureMonitor:
+      $ref: 'definitions.yaml#/azureMonitor'
+
     Cluster:
       $ref: 'cluster.yaml#/Cluster'
 
     Deployment:
       $ref: 'deployment.yaml#/Deployment'
+
+    DockerRegistry:
+      $ref: 'secret.yaml#/DockerRegistry'
+
+    email:
+      $ref: 'definitions.yaml#/email'
+
+    Generic:
+      $ref: 'secret.yaml#/Generic'
+
+    googleCreds:
+      $ref: 'definitions.yaml#/googleCreds'
 
     # Job:
     #   $ref: 'job.yaml#/Job'
@@ -489,27 +530,18 @@ components:
     Kubecfg:
       $ref: 'kubecfg.yaml#/Kubecfg'
 
+    kms:
+      $ref: 'definitions.yaml#/kms'
+
     OpenApiValidationError:
       $ref: 'error.yaml#/OpenApiValidationError'
 
     OtomiStackError:
       $ref: 'error.yaml#/OtomiStackError'
 
-    TeamSelfService:
-      $ref: 'team.yaml#/TeamSelfService'
-
     Secret:
       $ref: 'secret.yaml#/Secret'
 
-    Generic:
-      $ref: 'secret.yaml#/Generic'
-
-    DockerRegistry:
-      $ref: 'secret.yaml#/DockerRegistry'
-
-    TLS:
-      $ref: 'secret.yaml#/TLS'
-    # -------------------------------------------- Misc.
     Service:
       $ref: 'service.yaml#/Service'
 
@@ -522,8 +554,20 @@ components:
     Team:
       $ref: 'team.yaml#/Team'
 
+    TeamAuthz:
+      $ref: 'user.yaml#/TeamAuthz'
+
+    TeamSelfService:
+      $ref: 'team.yaml#/TeamSelfService'
+
+    TLS:
+      $ref: 'secret.yaml#/TLS'
+
+    url:
+      $ref: 'definitions.yaml#/url'
+
     User:
       $ref: 'user.yaml#/User'
 
-    TeamAuthz:
-      $ref: 'user.yaml#/TeamAuthz'
+    vaultCreds:
+      $ref: 'definitions.yaml#/vaultCreds'
