@@ -5,8 +5,10 @@ Settings:
   additionalProperties: false
   properties:
     alerts:
+      additionalProperties: false
       $ref: definitions.yaml#/alerts
     azure:
+      additionalProperties: false
       description: Azure specific configuration.
       properties:
         appgw:
@@ -39,6 +41,7 @@ Settings:
           type: string
       type: object
     dns:
+      additionalProperties: false
       properties:
         zones:
           description: Extra dns zones that the cluster can administer (see dns). Team services can use this to publish their URLs on.
@@ -127,8 +130,10 @@ Settings:
         - domain
       type: object
     kms:
+      additionalProperties: false
       $ref: 'definitions.yaml#/kms'
     home:
+      additionalProperties: false
       $ref: definitions.yaml#/alerts
     oidc:
       additionalProperties: false

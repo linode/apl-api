@@ -7,6 +7,10 @@ import { Repo } from './repo'
 describe('Settings', () => {
   const otomi = new OtomiStack()
   otomi.repo = new Repo('./test', undefined, undefined, undefined, undefined, undefined)
+  it('admin can put empty payload, but it wont change anything', (done) => {
+    expect(() => otomi.setSubSetting('settings', {}, 'alerts').to.not.be.empty)
+    done()
+  })
 })
 
 describe('Data validation', () => {

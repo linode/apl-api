@@ -16,6 +16,76 @@ describe('Admin API tests', () => {
     sinon.stub(otomiStack)
     app = await initApp(otomiStack)
   })
+
+  describe('Admin /settings/{setting} endpoint tests', () => {
+    const endpoints = ['alerts', 'azure', 'customer', 'dns', 'kms', 'home', 'oidc', 'otomi', 'smtp']
+    endpoints.forEach((ep) => {
+      it(`admin can get /settings/${ep}`, (done) => {
+        request(app)
+          .get(`/v1/settings/${ep}`)
+          .set('Accept', 'application/json')
+          .set('Authorization', `Bearer ${adminToken}`)
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .end(done)
+      })
+    })
+
+    it('admin can put /settings/alerts with correct payload', (done) => {
+      request(app)
+        .put('/v1/settings/alerts')
+        .send({
+          alerts: {
+            drone: 'msteams',
+            groupInterval: '5m',
+            msteams: {
+              highPrio: 'bla',
+              lowPrio: 'bla',
+            },
+            receivers: ['slack'],
+            repeatInterval: '3h',
+          },
+        })
+        .set('Accept', 'application/json')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+        .end(done)
+    })
+    it('admin cannot put /settings/alerts with extra properties', (done) => {
+      request(app)
+        .put('/v1/settings/alerts')
+        .send({
+          alerts: {
+            drone: 'msteams',
+            groupInterval: '5m',
+            msteams: {
+              highPrio: 'bla',
+              lowPrio: 'bla',
+            },
+            receivers: ['slack'],
+            repeatInterval: '3h',
+            randomProp: 'randomValue',
+          },
+        })
+        .set('Accept', 'application/json')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(400)
+        .end(done)
+    })
+
+    it('admin can put empty payload, but it wont change anything', (done) => {
+      request(app)
+        .put('/v1/settings/dns')
+        .send({
+          zones: ['someZoneOne', 'someZoneTwo'],
+        })
+        .set('Accept', 'application/json')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(400)
+        .end(done)
+    })
+  })
+
   it('admin can update team self-service-flags', (done) => {
     request(app)
       .put('/v1/teams/team1')
