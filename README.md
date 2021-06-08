@@ -267,38 +267,6 @@ In this paragraph the causes are addressed by the corresponding number under "Ca
 - To determine a successful generation of the client library, please check out the generated models in `vendors/client/otomi-api/axios/models` if they make sense or not.
 - As general advice, make sure to increment the specification VERY slowly and always see if a spec can be generated or not.
 
-##### 2.3.3.2 Specific limitations
-
-- nested ABAC is NOT supported E.g.:
-
-```
-    Service:
-      type: object
-      properties:
-        name:
-          type: object
-          properties:
-            name:
-              type: string
-              x-acl: [read]       # nested x-acl not supported
-        ingress:
-          type: object
-          x-acl:
-            team: [read]
-```
-
-- ABAC is not applied for resource collections, e.g.:
-
-```
-    Services:
-      x-acl:
-        admin: [read-any]
-        team: [read-any]
-      type: array
-      items:
-        $ref: '#/components/schemas/Service'     # even if the components/schemas/Service defines ABAC it will NOT be applied
-```
-
 ## 2. Viewing/consuming openapi spec
 
 In order to inspect the api file it is recommended to either:

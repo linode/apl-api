@@ -30,7 +30,7 @@ clean_up() {
     if [ -f vendors/openapi/otomi-api.json ]; then
         rm vendors/openapi/otomi-api.json
     fi 
-    rm -rf vendors/client/otomi-api >/dev/null || exit 1
+    rm -rf vendors/client/otomi-api >/dev/null
 }
 
 generate_client() {
