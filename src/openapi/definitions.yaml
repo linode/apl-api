@@ -158,7 +158,6 @@ azureMonitor:
       type: object
   type: object
 containerSpec:
-  # additionalProperties: false
   properties:
     image:
       $ref: '#/image'
@@ -172,6 +171,8 @@ containerSpec:
       $ref: '#/env'
     secrets:
       $ref: '#/secrets'
+    secretMounts:
+      $ref: '#/secretMounts'
     files:
       $ref: '#/files'
   required:
@@ -218,7 +219,7 @@ files:
     properties:
       name:
         type: string
-        pattern: ^[a-zA-Z0-9_]*$
+        pattern: ^\/([A-z0-9-_+]+\/).*$
       value:
         type: string
         maxLength: 131072
@@ -438,6 +439,10 @@ offChoice:
   nullable: true
   title: 'Off'
   type: object
+path:
+  description: An absolute path
+  type: string
+  pattern: '^[/].*$'
 podSpec:
   allOf:
     - properties:
@@ -526,6 +531,17 @@ secrets:
   title: Secrets
   type: array
   uniqueItems: true
+secretMounts:
+  description: Pairs of absolute folder path > secret name. Will mount the contents of the secret in the container at the specified folder path.
+  title: Secret mounts
+  type: array
+  items:
+    properties:
+      name:
+        $ref: '#/idName'
+      path:
+        $ref: '#/path'
+    type: object
 subdomainType:
   pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
   type: string

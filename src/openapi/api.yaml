@@ -575,8 +575,14 @@ components:
     domain:
       $ref: definitions.yaml#/domain
 
+    email:
+      $ref: definitions.yaml#/email
+
     env:
       $ref: definitions.yaml#/env
+
+    idName:
+      $ref: definitions.yaml#/idName
 
     image:
       $ref: definitions.yaml#/image
@@ -592,6 +598,9 @@ components:
 
     ingressPrivate:
       $ref: definitions.yaml#/ingressPrivate
+
+    path:
+      $ref: definitions.yaml#/path
 
     ingressPublic:
       $ref: definitions.yaml#/ingressPublic
