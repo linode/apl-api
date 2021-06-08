@@ -599,11 +599,14 @@ components:
     ingressPrivate:
       $ref: definitions.yaml#/ingressPrivate
 
-    path:
-      $ref: definitions.yaml#/path
-
     ingressPublic:
       $ref: definitions.yaml#/ingressPublic
+
+    ingressTls:
+      $ref: definitions.yaml#/ingressTls
+
+    path:
+      $ref: definitions.yaml#/path
 
     resource:
       $ref: definitions.yaml#/resource

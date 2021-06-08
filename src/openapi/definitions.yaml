@@ -324,6 +324,12 @@ ingressCluster:
   type: object
   nullable: true
   additionalProperties: false
+  properties:
+    type:
+      type: string
+      enum:
+        - cluster
+      default: cluster
 ingressPrivate:
   allOf:
     - $ref: '#/ingress'
@@ -350,6 +356,18 @@ ingressPublic:
   description: Will only accept traffic coming from the public loadbalancer.
   title: Public
   type: object
+ingressTls:
+  description: Will let the TLS encrypted service pass through to the handling service.
+  title: TLS passthrough
+  type: object
+  nullable: true
+  additionalProperties: false
+  properties:
+    type:
+      type: string
+      enum:
+        - tlsPass
+      default: tlsPass
 jobSpec:
   properties:
     type:

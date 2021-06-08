@@ -127,6 +127,7 @@ Service:
         - $ref: api.yaml#/components/schemas/ingressCluster
         - $ref: api.yaml#/components/schemas/ingressPrivate
         - $ref: api.yaml#/components/schemas/ingressPublic
+        - $ref: api.yaml#/components/schemas/ingressTls
 
     teamId:
       <<: *idNameField
