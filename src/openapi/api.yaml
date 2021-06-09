@@ -415,6 +415,16 @@ paths:
         required: true
         schema:
           type: string
+          enum:
+            - alerts
+            - azure
+            - customer
+            - dns
+            - home
+            - kms
+            - oidc
+            - otomi
+            - smtp
         example: oidc
     get:
       operationId: getSettings

@@ -5,9 +5,11 @@ Settings:
   additionalProperties: false
   properties:
     alerts:
+      title: Alerts
       additionalProperties: false
       $ref: definitions.yaml#/alerts
     azure:
+      title: Azure
       additionalProperties: false
       description: Azure specific configuration.
       properties:
@@ -15,31 +17,31 @@ Settings:
           properties:
             isManaged:
               default: true
-              description: Is this appgw installed as AKS addon?
+              description: Determines whether this AppGW Ingress Controller is installed as an AKS addon.
               type: boolean
           type: object
         monitor:
           $ref: definitions.yaml#/azureMonitor
         resourceGroup:
-          description: An Azure resource group.
+          title: Azure Resource Group
           type: string
         subscriptionId:
-          description: An Azure subscription ID.
+          title: Subscription ID
           type: string
         tenantId:
-          description: An Azure tenant ID.
+          title: Tenant ID
           type: string
       required:
         - resourceGroup
         - subscriptionId
         - tenantId
-      type: object
     customer:
+      title: Customer
       additionalProperties: false
       properties:
         name:
           type: string
-      type: object
+          title: Name
     dns:
       additionalProperties: false
       properties:
@@ -47,17 +49,22 @@ Settings:
           description: Extra dns zones that the cluster can administer (see dns). Team services can use this to publish their URLs on.
           items:
             type: string
+            title: Zone
+          title: Zones
           type: array
         domain:
+          description: Define a FQDN for this Kubernetes cluster.
+          title: Fully Qualified Domain Name (FQDN)
           type: string
-          description: A fqdn for the cluster
       oneOf:
-        - title: aws
+        - title: AWS
           properties:
             aws:
+              title: AWS
               properties:
                 region:
                   type: string
+                  title: Region
               required:
                 - region
               type: object
@@ -106,71 +113,84 @@ Settings:
                 - subscriptionId
                 - aadClientId
                 - aadClientSecret
-              type: object
-          type: object
           required:
             - azure
-        - title: google
+        - title: Google
           properties:
             google:
+              title: Google
               properties:
                 serviceAccountKey:
                   description: A service account key for managing a DNS zone.
+                  title: Service Account Key
                   type: string
                 project:
+                  title: Project
                   type: string
               required:
                 - serviceAccountKey
                 - project
-              type: object
-          type: object
           required:
             - google
       required:
         - domain
-      type: object
     kms:
       additionalProperties: false
       $ref: 'definitions.yaml#/kms'
     home:
+      title: Home Alerts
       additionalProperties: false
       $ref: definitions.yaml#/alerts
     oidc:
+      title: OIDC
       additionalProperties: false
-      description: 'Holds many parts used in different locations. Please see keycloak, istio and oauth-proxy all consuming parts.'
+      description: Holds many parts used in different locations. Please see keycloak, istio and oauth-proxy all consuming parts.
       properties:
         adminGroupID:
+          title: Admin Group ID
           type: string
         apiUrl:
-          $ref: 'definitions.yaml#/url'
+          title: API URL
+          type: string
         authUrl:
-          $ref: 'definitions.yaml#/url'
+          title: Authentication URL
+          type: string
         clientID:
+          title: Client ID
           type: string
         clientSecret:
+          title: Client Secret
           type: string
         issuer:
-          $ref: 'definitions.yaml#/url'
+          title: Issuer
+          type: string
         scope:
+          title: Scope
+          type: string
+        subClaimMapper:
+          default: sub
+          description: Select OIDC claim to be used as a unique user identifier.
+          title: Sub Claim Mapper
           type: string
         teamAdminGroupID:
+          title: Team Admin Group ID
           type: string
         tenantID:
+          title: Tenant ID
           type: string
         tokenUrl:
-          $ref: 'definitions.yaml#/url'
+          title: Token URL
+          type: string
         usernameClaimMapper:
+          description: Claim name used by Keycloak to identify incoming users from identity provider.
+          title: Username Claim Mapper
           type: string
-          description: Claim name used by Keycloak to identify incoming users from identity provider
-        subClaimMapper:
-          type: string
-          description: Select OIDC claim to be used as a unique user identifier
-          default: sub
-      type: object
     otomi:
       additionalProperties: false
       properties:
         additionalClusters:
+          title: Additional Clusters
+          description: Enter other k8s clusters, if there are any.
           type: array
           items:
             $ref: cluster.yaml#/Cluster
@@ -178,21 +198,39 @@ Settings:
               - domainSuffix
               - name
               - provider
+        addons:
+          additionalProperties: false
+          description: Manage addon configuration.
+          properties:
+            conftest:
+              description: Manage Conftest configuration.
+              properties:
+                enabled:
+                  default: true
+                  description: Use this flag to enable conftest for policy validation
+                  title: Enabled
+                  type: boolean
+              title: Conftest
+          title: Addons
         hasCloudLB:
           default: false
           description: Set this to true when an external LB exists or needs to be started (AWS ALB, Azure AppGW, Google Apigee). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.
+          title: Cloud Load Balancer
           type: boolean
         isHomeMonitored:
           default: false
           description: Whether this cluster is home monitored (like when under a Premium SLA). Sends criticals home.
+          title: Home Monitored
           type: boolean
         isManaged:
           default: true
           description: Whether masters are managed and not under control. Set this to false when onprem.
+          title: Managed Masters
           type: boolean
         isMultitenant:
           default: true
           description: Whether to separate team metrics and logs. Disabling this lets everybody be admin and see everything.
+          title: Multi Tenancy
           type: boolean
         mode:
           default: ee
@@ -200,49 +238,45 @@ Settings:
           enum:
             - ce
             - ee
+          title: Otomi Core Edition
           type: string
         pullSecret:
           default: ''
           description: The pullsecret to deploy the Otomi API and Console. Requires an Otomi license.
+          title: Pull Secret
           type: string
         teamPrefix:
           default: team-
           description: The prefix to use in URLs for team domains.
           pattern: ^[a-z]+[-]{1}$
+          title: Team Prefix
           type: string
-        addons:
-          description: Manage addon configuration
-          additionalProperties: false
-          properties:
-            conftest:
-              properties:
-                enabled:
-                  type: boolean
-                  default: true
-                  description: Use this flag to enable conftest for policy validation
-              type: object
-          type: object
-      type: object
     smtp:
       additionalProperties: false
+      description: Define SMTP settings.
       properties:
         auth_identity:
+          title: Authentication Identity
           type: string
         auth_password:
+          title: Authentication Password
           type: string
         auth_secret:
+          title: Authentication Secret
           type: string
         auth_username:
+          title: Authentication Username
           type: string
         from:
           $ref: definitions.yaml#/email
           description: The "from" address. Defaults to alerts@$clusterDomain.
+          title: From Address
         hello:
+          title: Hello
           type: string
         smarthost:
-          $ref: definitions.yaml#/hostPort
           description: The smtp host:port combination.
+          pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):()([1-9]|[1-5]?[0-9]{2,4}|6[1-4][0-9]{3}|65[1-4][0-9]{2}|655[1-2][0-9]|6553[1-5])$
+          title: Smart Host
       required:
         - smarthost
-      type: object
-  type: object
