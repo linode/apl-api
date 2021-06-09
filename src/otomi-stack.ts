@@ -491,7 +491,7 @@ export default class OtomiStack {
 
   convertServiceToDb(svcRaw, teamId): void {
     // Create service
-    const svc = omit(svcRaw, 'domain', 'forwardPath', 'hasCert', 'auth', 'ksvc', 'paths')
+    const svc = omit(svcRaw, 'domain', 'forwardPath', 'hasCert', 'auth', 'ksvc', 'paths', 'type')
     svc.teamId = teamId
     if (!('name' in svcRaw)) {
       console.warn('Unknown service structure')
@@ -511,7 +511,7 @@ export default class OtomiStack {
     } else set(svc, 'ksvc.serviceType', 'svcPredeployed')
 
     if (svcRaw.type === 'cluster') {
-      svc.ingress = undefined
+      svc.ingress = { type: 'cluster' }
     } else {
       const { dns } = this.getSettings()
       const cluster = this.getCluster()
@@ -525,6 +525,7 @@ export default class OtomiStack {
         useDefaultSubdomain: !svcRaw.domain && svcRaw.ownHost,
         path: svcRaw.paths && svcRaw.paths.length ? svcRaw.paths[0] : undefined,
         forwardPath: 'forwardPath' in svcRaw,
+        type: svcRaw.type,
       }
     }
 
@@ -550,7 +551,7 @@ export default class OtomiStack {
     } else if (serviceType !== 'svcPredeployed') {
       console.warn(`Saving service failure: Not supported service type: ${serviceType}`)
     }
-    if (svc.ingress) {
+    if (svc.ingress && svc.ingress.type !== 'cluster') {
       const ing = svc.ingress
       if (ing.useDefaultSubdomain) svcCloned.ownHost = true
       else svcCloned.domain = `${ing.subdomain}.${ing.domain}`

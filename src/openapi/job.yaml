@@ -7,9 +7,9 @@ Job:
       type: string
       readOnly: true
     teamId:
-      type: string
+      $ref: definitions.yaml#/idName
       readOnly: true
   type: object
   allOf:
-    - $ref: 'api.yaml#/components/schemas/jobSpec'
-    - $ref: 'api.yaml#/components/schemas/podSpec'
+    - $ref: definitions.yaml#/jobSpec
+    - $ref: definitions.yaml#/podSpec

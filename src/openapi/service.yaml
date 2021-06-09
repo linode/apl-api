@@ -21,7 +21,7 @@ Service:
     name:
       $ref: definitions.yaml#/idName
       title: Name
-      description: A service name
+      description: A kubernetes service name.
       example: some-service
     port:
       description: A service port
@@ -44,7 +44,6 @@ Service:
         - $ref: api.yaml#/components/schemas/ingressPrivate
         - $ref: api.yaml#/components/schemas/ingressPublic
         - $ref: api.yaml#/components/schemas/ingressTls
-
     teamId:
       $ref: definitions.yaml#/idName
       readOnly: true
