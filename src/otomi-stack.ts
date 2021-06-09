@@ -361,7 +361,7 @@ export default class OtomiStack {
     jobs.forEach((job) => {
       // @ts-ignore
       const res: Job = this.db.populateItem('jobs', { ...job, teamId }, { teamId, name: job.name }, job.id)
-      console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
+      console.log(`Loaded job: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
     })
   }
 

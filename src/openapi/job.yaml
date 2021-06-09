@@ -2,14 +2,14 @@ Job:
   x-acl:
     admin: [read-any, create-any, update-any, delete-any]
     team: [read-any, create, update, delete]
+  properties:
+    id:
+      type: string
+      readOnly: true
+    teamId:
+      type: string
+      readOnly: true
+  type: object
   allOf:
-    - properties:
-        id:
-          type: string
-          readOnly: true
-        teamId:
-          type: string
-          readOnly: true
-      type: object
     - $ref: 'api.yaml#/components/schemas/jobSpec'
     - $ref: 'api.yaml#/components/schemas/podSpec'

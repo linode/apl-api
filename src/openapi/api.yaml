@@ -182,7 +182,7 @@ paths:
       x-aclSchema: Job
       responses:
         '200':
-          description: Successfully obtained services
+          description: Successfully obtained jobs
           content:
             'application/json':
               schema:
