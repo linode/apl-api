@@ -12,6 +12,69 @@ export default {
       region: 'eu-central-1',
     },
   ],
+  jobs: [
+    {
+      type: 'Job',
+      name: 'aba',
+      enabled: true,
+      env: {
+        TARGET: 'job world',
+      },
+      runPolicy: 'OnSpecChange',
+      schedule: '0 1 * * *',
+      script: 'echo Hello $TARGET',
+      ttlSecondsAfterFinished: 86400,
+      init: {
+        image: {
+          repository: 'otomi/nodejs-helloworld',
+          tag: 'latest',
+          pullPolicy: 'IfNotPresent',
+        },
+        securityContext: {
+          runAsUser: 1001,
+          runAsGroup: 1001,
+          runAsNonRoot: true,
+        },
+        resources: {
+          limits: {
+            cpu: '50m',
+            memory: '64Mi',
+          },
+          requests: {
+            cpu: '50m',
+            memory: '64Mi',
+          },
+        },
+      },
+      podSecurityContext: {
+        runAsUser: 1001,
+        runAsGroup: 1001,
+        runAsNonRoot: true,
+      },
+      image: {
+        repository: 'otomi/helloworld-nodejs',
+        tag: 'latest',
+        pullPolicy: 'IfNotPresent',
+      },
+      securityContext: {
+        runAsUser: 1001,
+        runAsGroup: 1001,
+        runAsNonRoot: true,
+      },
+      resources: {
+        limits: {
+          cpu: '50m',
+          memory: '64Mi',
+        },
+        requests: {
+          cpu: '50m',
+          memory: '64Mi',
+        },
+      },
+      teamId: 'dev',
+      id: '1c4774f5-9ee0-49af-9080-ffd494e7a06a',
+    },
+  ],
   teams: [
     {
       name: 'otomi',
@@ -81,16 +144,14 @@ export default {
         annotations: [],
       },
       ingress: {
-        public: {
-          certArn: undefined,
-          domain: 'onprem.example.com',
-          forwardPath: false,
-          hasCert: false,
-          auth: false,
-          path: '/servant-1',
-          subdomain: 'master',
-          useDefaultSubdomain: false,
-        },
+        certArn: undefined,
+        domain: 'onprem.example.com',
+        forwardPath: false,
+        hasCert: false,
+        auth: false,
+        path: '/servant-1',
+        subdomain: 'master',
+        useDefaultSubdomain: false,
       },
     },
     {
@@ -102,16 +163,14 @@ export default {
         serviceType: 'svcPredeployed',
       },
       ingress: {
-        public: {
-          certArn: undefined,
-          domain: 'onprem.example.com',
-          forwardPath: false,
-          hasCert: false,
-          auth: false,
-          path: undefined,
-          subdomain: 'hello.team-otomi.dev',
-          useDefaultSubdomain: false,
-        },
+        certArn: undefined,
+        domain: 'onprem.example.com',
+        forwardPath: false,
+        hasCert: false,
+        auth: false,
+        path: undefined,
+        subdomain: 'hello.team-otomi.dev',
+        useDefaultSubdomain: false,
       },
     },
     {
@@ -146,16 +205,14 @@ export default {
         annotations: [],
       },
       ingress: {
-        public: {
-          certArn: undefined,
-          domain: 'onprem.example.com',
-          forwardPath: false,
-          hasCert: false,
-          auth: true,
-          path: '/servant-2',
-          subdomain: 'master',
-          useDefaultSubdomain: false,
-        },
+        certArn: undefined,
+        domain: 'onprem.example.com',
+        forwardPath: false,
+        hasCert: false,
+        auth: true,
+        path: '/servant-2',
+        subdomain: 'master',
+        useDefaultSubdomain: false,
       },
     },
     {
@@ -163,7 +220,7 @@ export default {
       id: '2f18da9a-e659-479d-9d65-2ca82503f43c',
       type: 'cluster',
       teamId: 'otomi',
-      ingress: {},
+      ingress: undefined,
       ksvc: {
         serviceType: 'ksvc',
         scaleToZero: false,

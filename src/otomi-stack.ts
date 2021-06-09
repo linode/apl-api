@@ -305,10 +305,10 @@ export default class OtomiStack {
     return this.db.getCollection('secrets', { teamId }) as Array<Secret>
   }
 
-  loadValues(): void {
+  loadValues(skipAdmin = false): void {
     this.loadCluster()
     this.loadSettings()
-    this.loadTeams()
+    this.loadTeams(skipAdmin)
     this.db.setDirtyActive()
   }
 
@@ -386,12 +386,12 @@ export default class OtomiStack {
     })
   }
 
-  loadTeams(): void {
+  loadTeams(skipAdmin = false): void {
     const mergedData: Core = this.loadConfig('./env/teams.yaml', `./env/secrets.teams.yaml${this.decryptedFilePostfix}`)
 
     Object.values(mergedData.teamConfig.teams).forEach((team: Team) => {
       this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id)
-      this.loadCoreServices()
+      if (!skipAdmin) this.loadCoreServices()
       this.loadTeamJobs(team.id!)
       this.loadTeamServices(team.id!)
       this.loadTeamSecrets(team.id!)
@@ -517,7 +517,6 @@ export default class OtomiStack {
       const cluster = this.getCluster()
       const url = getServiceUrl({ domain: svcRaw.domain, name: svcRaw.name, teamId, cluster, dns })
       svc.ingress = {
-        type: svcRaw.type,
         hasCert: 'hasCert' in svcRaw,
         auth: 'auth' in svcRaw,
         certArn: svcRaw.certArn || undefined,

@@ -605,8 +605,20 @@ components:
     ingressTls:
       $ref: definitions.yaml#/ingressTls
 
+    ksvcNew:
+      $ref: definitions.yaml#/ksvcNew
+
+    ksvcPredeployed:
+      $ref: definitions.yaml#/ksvcPredeployed
+
+    offChoice:
+      $ref: definitions.yaml#/offChoice
+
     path:
       $ref: definitions.yaml#/path
+
+    podSpec:
+      $ref: definitions.yaml#/podSpec
 
     resource:
       $ref: definitions.yaml#/resource
@@ -623,11 +635,11 @@ components:
     securityContext:
       $ref: definitions.yaml#/securityContext
 
+    svcPredeployed:
+      $ref: definitions.yaml#/svcPredeployed
+
     url:
       $ref: definitions.yaml#/url
-
-    podSpec:
-      $ref: definitions.yaml#/podSpec
 
     Cluster:
       $ref: 'cluster.yaml#/Cluster'

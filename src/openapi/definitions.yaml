@@ -156,7 +156,6 @@ azureMonitor:
         - clientSecret
       title: 'On'
       type: object
-  type: object
 containerSpec:
   properties:
     image:
@@ -211,16 +210,16 @@ env:
       - value
     type: object
 files:
-  description: Entries of absolute path > content pairs.
+  description: 'Entries of absolute path > content pairs. One caveat: content can be 131072 chars max.'
   title: Files
   type: array
   nullable: true
   items:
     properties:
-      name:
+      path:
         type: string
         pattern: ^\/([A-z0-9-_+]+\/).*$
-      value:
+      content:
         type: string
         maxLength: 131072
     required:
@@ -319,11 +318,13 @@ ingress:
     - domain
     - subdomain
 ingressCluster:
-  description: Will expose the knative service on a local istio gateway, so other services can access them at their internal "$svc.$namespace" host name.
+  additionalProperties: false
+  description:
+    'If backend is a ksvc, this will expose a knative service on a local istio gateway, so other services can access it at their "$svc.$namespace" host name.
+    (Coming soon: ability to choose endpoints to connect to, so network policies are automatically generated.)'
   title: Cluster
   type: object
   nullable: true
-  additionalProperties: false
   properties:
     type:
       type: string
@@ -357,17 +358,18 @@ ingressPublic:
   title: Public
   type: object
 ingressTls:
+  allOf:
+    - $ref: '#/ingress'
+    - properties:
+        type:
+          type: string
+          enum:
+            - tlsPass
+          default: tlsPass
+  nullable: true
   description: Will let the TLS encrypted service pass through to the handling service.
   title: TLS passthrough
   type: object
-  nullable: true
-  additionalProperties: false
-  properties:
-    type:
-      type: string
-      enum:
-        - tlsPass
-      default: tlsPass
 jobSpec:
   properties:
     type:
@@ -420,6 +422,74 @@ k8sVersion:
     - '1.18'
     - '1.19'
   type: string
+ksvcNew:
+  title: New knative service
+  allOf:
+    - $ref: '#/podSpec'
+    - description: Will create a new knative service from the input gathered here.
+      properties:
+        serviceType:
+          default: ksvc
+          enum:
+            - ksvc
+          type: string
+        scaleToZero:
+          default: false
+          description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
+          title: Scale to zero
+          type: boolean
+        autoCD:
+          description: Deploys new images based on a tagging strategy
+          oneOf:
+            - $ref: '#/offChoice'
+            - nullable: true
+              properties:
+                semver:
+                  description: 'Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
+                  example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
+                  title: Semver version pattern
+                  type: string
+                tagMatcher:
+                  default: semver
+                  enum:
+                    - semver
+                  type: string
+              required:
+                - semver
+              title: Semver versioning
+              type: object
+            - properties:
+                glob:
+                  description: 'Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*"'
+                  example: main-v1.3.*
+                  title: Glob string pattern
+                  type: string
+                tagMatcher:
+                  default: glob
+                  enum:
+                    - glob
+                  type: string
+              required:
+                - glob
+              title: Glob pattern matching
+              type: object
+              additionalProperties: false
+          title: Continuous delivery
+          type: object
+      required:
+        - serviceType
+      title: Knative service
+      type: object
+ksvcPredeployed:
+  description: Whether to map onto a predeployed knative service. Will take care of rewriting to the existing knative url.
+  properties:
+    serviceType:
+      default: ksvcPredeployed
+      enum:
+        - ksvcPredeployed
+      type: string
+  title: Existing Knative service
+  type: object
 labels:
   $ref: '#/annotations'
   description: A set of labels.
@@ -550,7 +620,7 @@ secrets:
   type: array
   uniqueItems: true
 secretMounts:
-  description: Pairs of absolute folder path > secret name. Will mount the contents of the secret in the container at the specified folder path.
+  description: Pairs of secret name > absolute folder path. Will mount the contents of the secret in the container at the specified folder path.
   title: Secret mounts
   type: array
   items:
@@ -563,6 +633,16 @@ secretMounts:
 subdomainType:
   pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
   type: string
+svcPredeployed:
+  description: Whether to map onto a predeployed k8s service.
+  properties:
+    serviceType:
+      default: svcPredeployed
+      enum:
+        - svcPredeployed
+      type: string
+  title: Existing Kubernetes service
+  type: object
 url:
   pattern: ^(https:\/\/)([\w\-])+\.{1}([a-zA-Z]{2,63})([\/\w-]*)*\/?\??([^#\n\r]*)?#?([^\n\r]*)$
   type: string
