@@ -23,7 +23,7 @@ Settings:
         monitor:
           $ref: definitions.yaml#/azureMonitor
         resourceGroup:
-          title: Azure Resource Group
+          title: Azure resource group
           type: string
         subscriptionId:
           title: Subscription ID
@@ -71,7 +71,7 @@ Settings:
           type: object
           required:
             - aws
-        - title: azure
+        - title: Azure
           properties:
             azure:
               properties:
@@ -89,23 +89,23 @@ Settings:
                 tenantId:
                   title: Tenant ID
                   type: string
-                  description: Azure tenant ID
+                  description: Azure tenant ID.
                 subscriptionId:
                   title: Subscription ID
                   type: string
-                  description: Azure subscription ID
+                  description: Azure subscription ID.
                 aadClientId:
                   title: Client ID
                   type: string
-                  description: Azure Application Client ID
+                  description: Azure Application Client ID.
                 aadClientSecret:
                   title: Client secret
                   type: string
-                  description: Azure Application Client Secret
+                  description: Azure Application Client Secret.
                 useManagedIdentityExtension:
-                  title: Using managed identities?
+                  title: Managed identities
                   type: boolean
-                  description: If you use Azure MSI, this should be set to true
+                  description: If you use Azure MSI, this should be set to true.
                   default: false
               required:
                 - resourceGroup
@@ -122,7 +122,7 @@ Settings:
               properties:
                 serviceAccountKey:
                   description: A service account key for managing a DNS zone.
-                  title: Service Account Key
+                  title: Service account key
                   type: string
                 project:
                   title: Project
@@ -138,7 +138,7 @@ Settings:
       additionalProperties: false
       $ref: 'definitions.yaml#/kms'
     home:
-      title: Home Alerts
+      title: Home alerts
       additionalProperties: false
       $ref: definitions.yaml#/alerts
     oidc:
@@ -147,7 +147,7 @@ Settings:
       description: Holds many parts used in different locations. Please see keycloak, istio and oauth-proxy all consuming parts.
       properties:
         adminGroupID:
-          title: Admin Group ID
+          title: Admin group ID
           type: string
         apiUrl:
           title: API URL
@@ -170,10 +170,10 @@ Settings:
         subClaimMapper:
           default: sub
           description: Select OIDC claim to be used as a unique user identifier.
-          title: Sub Claim Mapper
+          title: Sub claim mapper
           type: string
         teamAdminGroupID:
-          title: Team Admin Group ID
+          title: Team admin group ID
           type: string
         tenantID:
           title: Tenant ID
@@ -182,14 +182,14 @@ Settings:
           title: Token URL
           type: string
         usernameClaimMapper:
-          description: Claim name used by Keycloak to identify incoming users from identity provider.
-          title: Username Claim Mapper
+          description: Claim name used by Keycloak to identify incoming users from the identity provider.
+          title: Username claim mapper
           type: string
     otomi:
       additionalProperties: false
       properties:
         additionalClusters:
-          title: Additional Clusters
+          title: Additional clusters
           description: Enter other k8s clusters, if there are any.
           type: array
           items:
@@ -215,22 +215,22 @@ Settings:
         hasCloudLB:
           default: false
           description: Set this to true when an external LB exists or needs to be started (AWS ALB, Azure AppGW, Google Apigee). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.
-          title: Cloud Load Balancer
+          title: Cloud load balancer
           type: boolean
         isHomeMonitored:
           default: false
           description: Whether this cluster is home monitored (like when under a Premium SLA). Sends criticals home.
-          title: Home Monitored
+          title: Home monitored
           type: boolean
         isManaged:
           default: true
           description: Whether masters are managed and not under control. Set this to false when onprem.
-          title: Managed Masters
+          title: Managed masters
           type: boolean
         isMultitenant:
           default: true
           description: Whether to separate team metrics and logs. Disabling this lets everybody be admin and see everything.
-          title: Multi Tenancy
+          title: Multi-tenancy
           type: boolean
         mode:
           default: ee
@@ -238,40 +238,42 @@ Settings:
           enum:
             - ce
             - ee
-          title: Otomi Core Edition
+          title: Otomi core edition
           type: string
         pullSecret:
           default: ''
           description: The pullsecret to deploy the Otomi API and Console. Requires an Otomi license.
-          title: Pull Secret
+          title: Pull secret
           type: string
         teamPrefix:
           default: team-
           description: The prefix to use in URLs for team domains.
           pattern: ^[a-z]+[-]{1}$
-          title: Team Prefix
+          title: Team prefix
           type: string
     smtp:
+      # https://prometheus.io/docs/alerting/latest/configuration/#tmpl_string
       additionalProperties: false
       description: Define SMTP settings.
       properties:
         auth_identity:
-          title: Authentication Identity
+          title: Authentication identity
           type: string
         auth_password:
-          title: Authentication Password
+          title: Authentication password
           type: string
         auth_secret:
-          title: Authentication Secret
+          title: Authentication secret
           type: string
         auth_username:
-          title: Authentication Username
+          title: Authentication username
           type: string
         from:
           $ref: definitions.yaml#/email
           description: The "from" address. Defaults to alerts@$clusterDomain.
-          title: From Address
+          title: From address
         hello:
+          description: The hostname to identify to the SMTP server.
           title: Hello
           type: string
         smarthost:
