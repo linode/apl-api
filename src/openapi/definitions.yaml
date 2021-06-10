@@ -1,48 +1,57 @@
 alerts:
-  type: object
+  description: Define Alerts for communication channels.
   properties:
     drone:
       default: slack
+      description: Select default notification channel for Drone.
       enum:
         - slack
         - msteams
+      title: Drone Notifications
       type: string
     email:
       additionalProperties: false
       properties:
         critical:
+          title: Critical Events
           $ref: '#/email'
           description: One or more email addresses (comma separated) for critical events.
         nonCritical:
+          title: Non-critical Events
           $ref: '#/email'
           description: One or more email addresses (comma separated) for non-critical events.
       type: object
     groupInterval:
       default: 5m
       description: How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.)
+      title: Group Interval
       type: string
     msteams:
       additionalProperties: false
+      description: Select Microsoft Teams notification settings.
       properties:
         highPrio:
-          description: The low prio web hook.
+          title: High prio web hook
           type: string
         lowPrio:
-          description: The high prio web hook.
+          title: Low prio web hook
           type: string
+      title: Microsoft Teams
       type: object
     receivers:
-      description: Notification receivers.
+      description: Select default notification channel for receiving notifications.
       items:
         enum:
           - slack
           - msteams
           - email
         type: string
+      title: Notification Receivers
       type: array
     repeatInterval:
       default: 3h
-      description: How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more).
+      description: Indicates waiting time before sending a notification again after it was sent successfully for an alert. (Usually ~3h or more).
+      title: Repeat Interval
       type: string
     slack:
       additionalProperties: false
@@ -76,10 +85,13 @@ annotations:
 awsCreds:
   properties:
     accessKey:
+      title: Access Key
       type: string
     secretKey:
+      title: Secret Key
       type: string
     region:
+      title: Region
       type: string
   type: object
   required:
@@ -89,12 +101,20 @@ awsCreds:
 azureCreds:
   properties:
     clientId:
+      description: Enter client ID.
+      title: Client ID
       type: string
     clientSecret:
+      description: Enter client secret.
+      title: Client Secret
       type: string
     environment:
+      description: Enter Azure environment.
+      title: Environment
       type: string
     tenantId:
+      description: Enter tenant ID.
+      title: Tenant ID
       type: string
   type: object
   required:
@@ -228,12 +248,17 @@ files:
       - content
     type: object
 googleCreds:
+  title: Google Credentials
+  description: Enter Google credentials.
   properties:
     accountJson:
+      description: Enter GCP account JSON for authentication.
+      title: Account JSON
       type: string
     project:
+      description: Enter GCP project.
+      title: GCP Project
       type: string
-  type: object
 hostPort:
   pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):()([1-9]|[1-5]?[0-9]{2,4}|6[1-4][0-9]{3}|65[1-4][0-9]{2}|655[1-2][0-9]|6553[1-5])$
   type: string
@@ -422,6 +447,19 @@ k8sVersion:
     - '1.18'
     - '1.19'
   type: string
+kms:
+  additionalProperties: false
+  description: Holds KMS settings like credentials for retrieving encryption/decryption keys.
+  title: KMS settings
+  properties:
+    sops:
+      description: Encryption credentials for SOPS to encrypt the platform secrets.
+      title: SOPS credentials
+      oneOf:
+        - $ref: definitions.yaml#/awsCreds
+        - $ref: definitions.yaml#/azureCreds
+        - $ref: definitions.yaml#/googleCreds
+        - $ref: definitions.yaml#/vaultCreds
 ksvcNew:
   title: New knative service
   allOf:
@@ -647,12 +685,14 @@ url:
   pattern: ^(https:\/\/)([\w\-])+\.{1}([a-zA-Z]{2,63})([\/\w-]*)*\/?\??([^#\n\r]*)?#?([^\n\r]*)$
   type: string
 vaultCreds:
+  description: Hashicorp's Vault credentials.
   properties:
     token:
+      title: Token
       type: string
-  type: object
   required:
     - token
+  title: Vault Credentials
 volumes:
   items:
     additionalProperties: false
