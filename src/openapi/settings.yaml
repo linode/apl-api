@@ -56,6 +56,76 @@ Settings:
           description: Define a FQDN for this Kubernetes cluster.
           title: Fully Qualified Domain Name (FQDN)
           type: string
+          nullable: true
+        provider:
+          description: The DNS provider managing the domains.
+          oneOf:
+            - title: AWS
+              properties:
+                aws:
+                  properties:
+                    region:
+                      type: string
+                  required:
+                    - region
+              required:
+                - aws
+            - title: Azure
+              properties:
+                azure:
+                  properties:
+                    cloud:
+                      title: Cloud
+                      type: string
+                      description: Azure Cloud
+                    resourceGroup:
+                      title: Resource group
+                      type: string
+                      description: Azure resource group
+                    hostedZoneName:
+                      title: Hosted zone name
+                      type: string
+                    tenantId:
+                      title: Tenant ID
+                      type: string
+                      description: Azure tenant ID
+                    subscriptionId:
+                      title: Subscription ID
+                      type: string
+                      description: Azure subscription ID
+                    aadClientId:
+                      title: Client ID
+                      type: string
+                      description: Azure Application Client ID
+                    aadClientSecret:
+                      title: Client secret
+                      type: string
+                      description: Azure Application Client Secret
+                    useManagedIdentityExtension:
+                      title: Using managed identities?
+                      type: boolean
+                      description: If you use Azure MSI, this should be set to true
+                      default: false
+                  required:
+                    - resourceGroup
+                    - aadClientId
+                    - aadClientSecret
+              required:
+                - azure
+            - title: Google
+              properties:
+                google:
+                  properties:
+                    serviceAccountKey:
+                      description: A service account key for managing a DNS zone.
+                      type: string
+                    project:
+                      type: string
+                  required:
+                    - serviceAccountKey
+                    - project
+              required:
+                - google
       oneOf:
         - title: AWS
           properties:
@@ -155,6 +225,7 @@ Settings:
         authUrl:
           title: Authentication URL
           type: string
+          $ref: definitions.yaml#/url
         clientID:
           title: Client ID
           type: string
@@ -164,6 +235,7 @@ Settings:
         issuer:
           title: Issuer
           type: string
+          $ref: definitions.yaml#/url
         scope:
           title: Scope
           type: string
@@ -180,7 +252,7 @@ Settings:
           type: string
         tokenUrl:
           title: Token URL
-          type: string
+          $ref: definitions.yaml#/url
         usernameClaimMapper:
           description: Claim name used by Keycloak to identify incoming users from the identity provider.
           title: Username claim mapper

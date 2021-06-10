@@ -1,5 +1,8 @@
 Cluster:
   properties:
+    id:
+      type: string
+      readOnly: true
     apiName:
       title: API Name
       description: Only used for API/UI to show in app.

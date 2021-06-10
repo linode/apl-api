@@ -5,11 +5,12 @@ import findIndex from 'lodash/findIndex'
 import { v4 as uuidv4 } from 'uuid'
 import cloneDeep from 'lodash/cloneDeep'
 import { AlreadyExists, NotExistError } from './error'
-import { Cluster, Secret, Service, Settings, Team } from './otomi-models'
+import { Cluster, Job, Secret, Service, Settings, Team } from './otomi-models'
 
-export type DbType = Cluster | Secret | Service | Team | Settings
+export type DbType = Cluster | Job | Secret | Service | Team | Settings
 export type Schema = {
   clusters: Cluster[]
+  jobs: Job[]
   secrets: Secret[]
   services: Service[]
   settings: Settings
@@ -35,6 +36,7 @@ export default class Db {
     this.db
       .defaults({
         cluster: [],
+        jobs: [],
         secrets: [],
         services: [],
         settings: {},
@@ -104,10 +106,13 @@ export default class Db {
 
   updateItem(type: string, data: any, selector: any): DbType {
     this.getItemReference(type, selector)
+    const col = this.db.get(type)
     // @ts-ignore
-    const ret = this.db.get(type).find(selector).assign(data).write()
+    const idx = col.findIndex(selector).value()
+    const iData = { ...data, ...selector }
+    col.value().splice(idx, 1, iData)
     this.dirty = this.dirtyActive
-    return ret as DbType
+    return iData
   }
 
   setDirtyActive(active = true): void {

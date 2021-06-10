@@ -1,10 +1,6 @@
-idName: &idNameField
-  type: string
-  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-
 TeamSelfService:
   title: Team self service flags
-  description: Grant team permissions to modify critical configuration parameters
+  description: Grant team permissions to modify certain configuration parameters.
   type: object
   properties:
     Service:
@@ -25,10 +21,10 @@ TeamSelfService:
 Team:
   properties:
     id:
-      <<: *idNameField
+      $ref: definitions.yaml#/idName
       title: ID
     name:
-      <<: *idNameField
+      $ref: definitions.yaml#/idName
       title: Name
       description: A team name
     oidc:

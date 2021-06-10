@@ -45,7 +45,7 @@ generate_client() {
     -o /local/$target_dir \
     -g typescript-node \
     --additional-properties supportsES6=true,npmName=$target_npm_name,modelPropertyNaming=original,enumPropertyNaming=original \
-    --generate-alias-as-model
+    --generate-alias-as-model 
 }
 
 set_package_json() {

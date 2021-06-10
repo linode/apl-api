@@ -14,7 +14,7 @@ describe('Work with values', () => {
   })
 
   it('can load from configuration to database', () => {
-    otomiStack.loadValues()
+    otomiStack.loadValues(true)
     const dbState = otomiStack.db.db.getState()
     expectedDbState.settings = merge(expectedDbState.settings, secretSettings)
     expect(dbState).to.deep.equal(expectedDbState)

@@ -5,7 +5,7 @@ Deployment:
     team: [read-any]
   properties:
     id:
-      type: integer
+      type: string
     status:
       type: string
       readOnly: true
