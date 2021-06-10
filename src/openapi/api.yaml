@@ -587,152 +587,103 @@ components:
   # -------------------------------------------- Schemas
   # Indicate root schemas with UpperCamelCase (e.g. Cluster)
   # Indicate definition references with camelCase (e.g. azureCreds)
-  # This is the way to properly generate polymorphic schemas (e.g. oneOf, allOf).
   #
-  # Please stick to: alphabetical sorting,
-  # and after that: capital letters before lower case letters.
+  # Please stick to: alphabetical sorting, all Uppercase first and then lowercase.
   # --------------------------------------------
   schemas:
+    Cluster:
+      $ref: cluster.yaml#/Cluster
+    Deployment:
+      $ref: deployment.yaml#/Deployment
+    Job:
+      $ref: job.yaml#/Job
+    Kubecfg:
+      $ref: kubecfg.yaml#/Kubecfg
+    OpenApiValidationError:
+      $ref: error.yaml#/OpenApiValidationError
+    OtomiStackError:
+      $ref: error.yaml#/OtomiStackError
+    Secret:
+      $ref: secret.yaml#/Secret
+    SecretDockerRegistry:
+      $ref: secret.yaml#/SecretDockerRegistry
+    SecretGeneric:
+      $ref: secret.yaml#/SecretGeneric
+    SecretTLS:
+      $ref: secret.yaml#/SecretTLS
+    Service:
+      $ref: service.yaml#/Service
+    Session:
+      $ref: session.yaml#/Session
+    Settings:
+      $ref: settings.yaml#/Settings
+    Team:
+      $ref: team.yaml#/Team
+    TeamAuthz:
+      $ref: user.yaml#/TeamAuthz
+    TeamSelfService:
+      $ref: team.yaml#/TeamSelfService
+    User:
+      $ref: user.yaml#/User
     alerts:
-      $ref: 'definitions.yaml#/alerts'
-
+      $ref: definitions.yaml#/alerts
     awsCreds:
-      $ref: 'definitions.yaml#/awsCreds'
-
+      $ref: definitions.yaml#/awsCreds
     azureCreds:
-      $ref: 'definitions.yaml#/azureCreds'
-
+      $ref: definitions.yaml#/azureCreds
     azureMonitor:
-      $ref: 'definitions.yaml#/azureMonitor'
-
+      $ref: definitions.yaml#/azureMonitor
     containerSpec:
       $ref: definitions.yaml#/containerSpec
-
-    Cluster:
-      $ref: 'cluster.yaml#/Cluster'
-
     domain:
       $ref: definitions.yaml#/domain
-
+    email:
+      $ref: definitions.yaml#/email
     env:
       $ref: definitions.yaml#/env
-
+    googleCreds:
+      $ref: definitions.yaml#/googleCreds
     idName:
       $ref: definitions.yaml#/idName
-
     image:
       $ref: definitions.yaml#/image
-
-    jobSpec:
-      $ref: definitions.yaml#/jobSpec
-
     ingress:
       $ref: definitions.yaml#/ingress
-
     ingressCluster:
       $ref: definitions.yaml#/ingressCluster
-
     ingressPrivate:
       $ref: definitions.yaml#/ingressPrivate
-
     ingressPublic:
       $ref: definitions.yaml#/ingressPublic
-
     ingressTls:
       $ref: definitions.yaml#/ingressTls
-
+    jobSpec:
+      $ref: definitions.yaml#/jobSpec
+    kms:
+      $ref: definitions.yaml#/kms
     ksvcNew:
       $ref: definitions.yaml#/ksvcNew
-
     ksvcPredeployed:
       $ref: definitions.yaml#/ksvcPredeployed
-
     offChoice:
       $ref: definitions.yaml#/offChoice
-
     path:
       $ref: definitions.yaml#/path
-
     podSpec:
       $ref: definitions.yaml#/podSpec
-
     resource:
       $ref: definitions.yaml#/resource
-
     resources:
       $ref: definitions.yaml#/resources
-
-    secrets:
-      $ref: definitions.yaml#/secrets
-
     script:
       $ref: definitions.yaml#/script
-
+    secrets:
+      $ref: definitions.yaml#/secrets
     securityContext:
       $ref: definitions.yaml#/securityContext
-
     svcPredeployed:
       $ref: definitions.yaml#/svcPredeployed
-
-    Deployment:
-      $ref: 'deployment.yaml#/Deployment'
-
-    email:
-      $ref: 'definitions.yaml#/email'
-
-    googleCreds:
-      $ref: 'definitions.yaml#/googleCreds'
-
-    Job:
-      $ref: 'job.yaml#/Job'
-
-    Kubecfg:
-      $ref: 'kubecfg.yaml#/Kubecfg'
-
-    kms:
-      $ref: 'definitions.yaml#/kms'
-
-    OpenApiValidationError:
-      $ref: 'error.yaml#/OpenApiValidationError'
-
-    OtomiStackError:
-      $ref: 'error.yaml#/OtomiStackError'
-
-    Secret:
-      $ref: 'secret.yaml#/Secret'
-
-    SecretGeneric:
-      $ref: 'secret.yaml#/SecretGeneric'
-
-    SecretDockerRegistry:
-      $ref: 'secret.yaml#/SecretDockerRegistry'
-
-    SecretTLS:
-      $ref: 'secret.yaml#/SecretTLS'
-
-    Service:
-      $ref: 'service.yaml#/Service'
-
-    Session:
-      $ref: 'session.yaml#/Session'
-
-    Settings:
-      $ref: 'settings.yaml#/Settings'
-
-    Team:
-      $ref: 'team.yaml#/Team'
-
-    TeamAuthz:
-      $ref: 'user.yaml#/TeamAuthz'
-
-    TeamSelfService:
-      $ref: 'team.yaml#/TeamSelfService'
-
     url:
-      $ref: 'definitions.yaml#/url'
-
-    User:
-      $ref: 'user.yaml#/User'
-
+      $ref: definitions.yaml#/url
     vaultCreds:
-      $ref: 'definitions.yaml#/vaultCreds'
+      $ref: definitions.yaml#/vaultCreds
