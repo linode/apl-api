@@ -427,8 +427,8 @@ paths:
             - smtp
         example: oidc
     get:
-      operationId: getSettings
-      description: Get settings from the `settings.yaml` and `secret.settings.yaml` file.
+      operationId: getSubSetting
+      description: Get a setting from the `settings.yaml` or `secret.settings.yaml` file.
       x-aclSchema: Settings
       responses:
         '200':
@@ -440,20 +440,20 @@ paths:
 
     # TODO: https://github.com/redkubes/otomi-api/issues/155
     put:
-      operationId: editSettings
-      description: Edits the settings from the `settings.yaml` file
+      operationId: editSubSetting
+      description: Edit a setting from the `settings.yaml` or `secret.settings.yaml` file.
       x-aclSchema: Settings
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Settings'
-        description: Settings object that contains updated values
+        description: Given a setting parameter, put new setting for a given rootprop.
         required: true
       responses:
         <<: *DefaultGetResponses
         '200':
-          description: Successfully edited `settings.yaml`
+          description: Successfully edited this setting.
 
 # -------------------------------------------- Servers
 

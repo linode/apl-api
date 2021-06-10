@@ -31,10 +31,10 @@ alerts:
       description: Select Microsoft Teams notification settings.
       properties:
         highPrio:
-          title: High Priority Web Hook
+          title: High prio web hook
           type: string
         lowPrio:
-          title: Low Priority Web Hook
+          title: Low prio web hook
           type: string
       title: Microsoft Teams
       type: object
@@ -208,18 +208,14 @@ googleCreds:
   title: Google Credentials
   description: Enter Google credentials.
   properties:
-    google:
-      description: Enter GCP details.
-      properties:
-        accountJson:
-          description: Enter GCP account JSON for authentication.
-          title: Account JSON
-          type: string
-        project:
-          description: Enter GCP project.
-          title: GCP Project
-          type: string
-      title: Google
+    accountJson:
+      description: Enter GCP account JSON for authentication.
+      title: Account JSON
+      type: string
+    project:
+      description: Enter GCP project.
+      title: GCP Project
+      type: string
 hostPort:
   pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):()([1-9]|[1-5]?[0-9]{2,4}|6[1-4][0-9]{3}|65[1-4][0-9]{2}|655[1-2][0-9]|6553[1-5])$
   type: string
@@ -456,17 +452,11 @@ url:
 vaultCreds:
   description: Hashicorp's Vault credentials.
   properties:
-    vault:
-      title: Vault Credentials
-      description: Hashicorp's Vault credentials.
-      properties:
-        token:
-          title: Token
-          type: string
-      required:
-        - token
+    token:
+      title: Token
+      type: string
   required:
-    - vault
+    - token
   title: Vault Credentials
 volumes:
   items:
