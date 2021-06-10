@@ -502,10 +502,10 @@ export default class OtomiStack {
       } else {
         svc.ksvc = cloneDeep(svcRaw.ksvc)
         svc.ksvc.serviceType = 'ksvc'
-        const annotations = get(svcRaw.ksvc, 'annotations', {})
-        svc.ksvc.annotations = objectToArray(annotations, 'name', 'value')
-        const ksvcEnv = get(svcRaw.ksvc, 'env', {})
-        svc.ksvc.env = objectToArray(ksvcEnv, 'name', 'value')
+        svc.ksvc.annotations = objectToArray(svcRaw.ksvc.annotations, 'name', 'value')
+        svc.ksvc.env = objectToArray(svcRaw.ksvc.env, 'name', 'value')
+        svc.ksvc.files = objectToArray(svcRaw.ksvc.files, 'path', 'content')
+        svc.ksvc.secretMounts = objectToArray(svcRaw.ksvc.secretMounts, 'name', 'path')
         svc.ksvc.secrets = svcRaw.ksvc.secrets ?? []
       }
     } else set(svc, 'ksvc.serviceType', 'svcPredeployed')
@@ -542,10 +542,10 @@ export default class OtomiStack {
     delete ksvc.serviceType
     if (serviceType === 'ksvc') {
       svcCloned.ksvc = ksvc
-      const annotations = get(svc.ksvc, 'annotations', [])
-      const ksvcEnv = get(svc.ksvc, 'env', [])
-      svcCloned.ksvc.annotations = arrayToObject(annotations, 'name', 'value')
-      svcCloned.ksvc.env = arrayToObject(ksvcEnv, 'name', 'value')
+      svcCloned.ksvc.annotations = arrayToObject(svc.ksvc.annotations ?? [], 'name', 'value')
+      svcCloned.ksvc.env = arrayToObject(svc.ksvc.env ?? [], 'name', 'value')
+      svcCloned.ksvc.files = arrayToObject(svc.ksvc.files ?? [], 'path', 'content')
+      svcCloned.ksvc.secretMounts = arrayToObject(svc.ksvc.secretMounts ?? [], 'name', 'path')
     } else if (serviceType === 'ksvcPredeployed') {
       svcCloned.ksvc = { predeployed: true }
     } else if (serviceType !== 'svcPredeployed') {

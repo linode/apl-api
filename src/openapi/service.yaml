@@ -34,10 +34,12 @@ Service:
         - $ref: definitions.yaml#/svcPredeployed
         - $ref: definitions.yaml#/ksvcPredeployed
         - $ref: definitions.yaml#/ksvcNew
-      title: Type
+      title: Workload
+      description: Type of workload. Can be a knative service or a regular service.
     ingress:
       nullable: true
       title: Exposure (ingress)
+      description: Determines loadbalancer related configuratin for handling the service ingress.
       # Note: the order matters first schema must be nullable empty object
       oneOf:
         - $ref: definitions.yaml#/ingressCluster

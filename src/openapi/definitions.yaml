@@ -224,8 +224,8 @@ files:
         type: string
         maxLength: 131072
     required:
-      - name
-      - value
+      - path
+      - content
     type: object
 googleCreds:
   properties:

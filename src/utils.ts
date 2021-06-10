@@ -2,7 +2,7 @@ import cleanDeep, { CleanOptions } from 'clean-deep'
 import cloneDeep from 'lodash/cloneDeep'
 import { Cluster, Dns } from './otomi-models'
 
-export function arrayToObject(array: [], keyName: string, keyValue: string): Record<string, unknown> {
+export function arrayToObject(array: [] = [], keyName: string, keyValue: string): Record<string, unknown> {
   const obj = {}
   array.forEach((item) => {
     const cloneItem = cloneDeep(item)
@@ -12,7 +12,7 @@ export function arrayToObject(array: [], keyName: string, keyValue: string): Rec
 }
 
 export function objectToArray(
-  obj: Record<string, unknown>,
+  obj: Record<string, unknown> = {},
   keyName: string,
   keyValue: string,
 ): Array<Record<string, unknown>> {
