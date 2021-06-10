@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.54](https://github.com/redkubes/otomi-api/compare/v0.4.53...v0.4.54) (2021-06-10)
+
+
+### Features
+
+* enhanced jobs config ([#177](https://github.com/redkubes/otomi-api/issues/177)) ([5a56992](https://github.com/redkubes/otomi-api/commit/5a569922104895442e54d5ea41c2f75d14233989))
+* workaround ([#173](https://github.com/redkubes/otomi-api/issues/173)) ([69f0852](https://github.com/redkubes/otomi-api/commit/69f08521afb11a681e2ed2ddcec445a64dbadb80))
+
+
+### Bug Fixes
+
+* external secrets path prefix needed to avoid encryption ([d6a2d0f](https://github.com/redkubes/otomi-api/commit/d6a2d0f6f4a1873d91b28301ea36895ccf417728))
+* now exiting on unhandled promise exception ([06d23a3](https://github.com/redkubes/otomi-api/commit/06d23a3ca50c79f37c1fe2bf2ec0e2c9bf8c4811))
+* tests ([002a718](https://github.com/redkubes/otomi-api/commit/002a71880e13b5c43a4ac86c48ae8c361d246aa7))
+
+
+### Code Refactoring
+
+* cleaned up ([98f8493](https://github.com/redkubes/otomi-api/commit/98f8493e297ed270a20749831010f43f83f9af99))
+
 ### [0.4.53](https://github.com/redkubes/otomi-api/compare/v0.4.52...v0.4.53) (2021-05-24)
 
 
