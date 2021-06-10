@@ -1,4 +1,29 @@
 teamConfig:
   teams:
     dev:
-      services: []
+      services:
+        - name: tlspass
+          port: 8080
+          id: d611a6be-3898-406d-9b5a-44ee2ba14dfb
+          ksvc:
+            podSecurityContext:
+              runAsUser: 1001
+              runAsGroup: 1001
+              runAsNonRoot: true
+            image:
+              tag: latest
+              pullPolicy: IfNotPresent
+              repository: nginx
+            resources:
+              limits:
+                cpu: 100m
+                memory: 128Mi
+              requests:
+                cpu: 50m
+                memory: 64Mi
+            scaleToZero: false
+            files:
+              '/foo': |-
+                bar
+          ownHost: true
+          type: tlsPass

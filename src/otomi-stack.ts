@@ -505,7 +505,7 @@ export default class OtomiStack {
 
   convertServiceToDb(svcRaw, teamId): void {
     // Create service
-    const svc = omit(svcRaw, 'domain', 'forwardPath', 'hasCert', 'auth', 'ksvc', 'paths', 'type')
+    const svc = omit(svcRaw, 'domain', 'forwardPath', 'hasCert', 'auth', 'ksvc', 'paths', 'type', 'ownHost')
     svc.teamId = teamId
     if (!('name' in svcRaw)) {
       console.warn('Unknown service structure')

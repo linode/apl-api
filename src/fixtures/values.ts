@@ -130,6 +130,8 @@ export default {
           },
         ],
         secrets: [],
+        secretMounts: [],
+        files: [],
         resources: {
           requests: {
             cpu: '50m',
@@ -191,6 +193,8 @@ export default {
           },
         ],
         secrets: [],
+        secretMounts: [],
+        files: [],
         resources: {
           requests: {
             cpu: '50m',
@@ -232,7 +236,9 @@ export default {
             value: 'head servant, I have a version number',
           },
         ],
+        files: [],
         secrets: ['mysecret-generic'],
+        secretMounts: [],
         resources: {
           requests: {
             cpu: '50m',
@@ -248,6 +254,52 @@ export default {
       ingress: {
         type: 'cluster',
       },
+    },
+    {
+      name: 'tlspass',
+      id: 'd611a6be-3898-406d-9b5a-44ee2ba14dfb',
+      teamId: 'dev',
+      ksvc: {
+        serviceType: 'ksvc',
+        scaleToZero: false,
+        image: {
+          pullPolicy: 'IfNotPresent',
+          repository: 'nginx',
+          tag: 'latest',
+        },
+        env: [],
+        files: [{ path: '/foo', content: 'bar' }],
+        secrets: [],
+        secretMounts: [],
+        podSecurityContext: {
+          runAsUser: 1001,
+          runAsGroup: 1001,
+          runAsNonRoot: true,
+        },
+        resources: {
+          requests: {
+            cpu: '50m',
+            memory: '64Mi',
+          },
+          limits: {
+            cpu: '100m',
+            memory: '128Mi',
+          },
+        },
+        annotations: [],
+      },
+      ingress: {
+        auth: false,
+        certArn: undefined,
+        domain: 'onprem.example.com',
+        forwardPath: false,
+        hasCert: false,
+        path: undefined,
+        subdomain: 'tlspass.team-dev',
+        type: 'tlsPass',
+        useDefaultSubdomain: true,
+      },
+      port: 8080,
     },
   ],
   secrets: [
