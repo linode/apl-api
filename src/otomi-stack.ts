@@ -1,7 +1,7 @@
 import * as k8s from '@kubernetes/client-node'
 import fs from 'fs'
 import yaml from 'js-yaml'
-import { cloneDeep, merge, filter, get, omit, set, unset, isEqual, union } from 'lodash'
+import { cloneDeep, merge, filter, get, omit, set, unset, isEqual, union, isEmpty } from 'lodash'
 import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Db from './db'
@@ -83,12 +83,26 @@ export default class OtomiStack {
     this.loadValues()
   }
 
-  getSettings(): Settings {
-    return this.db.db.get('settings').value() as Settings
+  getSubSetting(type, key) {
+    return { [key]: this.db.db.get([type, key]).value() }
   }
 
-  editSettings(data: Settings): Settings {
-    this.db.db.set('settings', data).write()
+  setSubSetting(type, data, key) {
+    if (!isEmpty(data)) {
+      return (
+        this.db.db
+          .get([type, key])
+          // @ts-ignore
+          .assign(data[key])
+          .write()
+      )
+    }
+    // If it returns the same object, unchanged, then you'll know that there is no successful PUT,
+    // at least it will not write empty values.
+    return this.db.db.get([type, key]).value()
+  }
+
+  getSettings(): Settings {
     return this.db.db.get('settings').value() as Settings
   }
 

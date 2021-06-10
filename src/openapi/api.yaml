@@ -490,10 +490,27 @@ paths:
         default:
           description: The requested apiDoc.
 
-  /settings:
+  /settings/{setting}:
+    parameters:
+      - in: path
+        name: setting
+        required: true
+        schema:
+          type: string
+          enum:
+            - alerts
+            - azure
+            - customer
+            - dns
+            - home
+            - kms
+            - oidc
+            - otomi
+            - smtp
+        example: oidc
     get:
-      operationId: getSettings
-      description: Get settings from the `settings.yaml` and `secret.settings.yaml` file.
+      operationId: getSubSetting
+      description: Get a setting from the `settings.yaml` or `secret.settings.yaml` file.
       x-aclSchema: Settings
       responses:
         '200':
@@ -502,21 +519,23 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Settings'
+
+    # TODO: https://github.com/redkubes/otomi-api/issues/155
     put:
-      operationId: editSettings
-      description: Edits the settings from the `settings.yaml` file
+      operationId: editSubSetting
+      description: Edit a setting from the `settings.yaml` or `secret.settings.yaml` file.
       x-aclSchema: Settings
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Settings'
-        description: Settings object that contains updated values
+        description: Given a setting parameter, put new setting for a given rootprop.
         required: true
       responses:
         <<: *DefaultGetResponses
         '200':
-          description: Successfully edited `settings.yaml`
+          description: Successfully edited this setting.
 
 # -------------------------------------------- Servers
 
@@ -565,129 +584,106 @@ components:
       name: Authorization
       in: header
 
+  # -------------------------------------------- Schemas
+  # Indicate root schemas with UpperCamelCase (e.g. Cluster)
+  # Indicate definition references with camelCase (e.g. azureCreds)
+  #
+  # Please stick to: alphabetical sorting, all Uppercase first and then lowercase.
+  # --------------------------------------------
   schemas:
+    Cluster:
+      $ref: cluster.yaml#/Cluster
+    Deployment:
+      $ref: deployment.yaml#/Deployment
+    Job:
+      $ref: job.yaml#/Job
+    Kubecfg:
+      $ref: kubecfg.yaml#/Kubecfg
+    OpenApiValidationError:
+      $ref: error.yaml#/OpenApiValidationError
+    OtomiStackError:
+      $ref: error.yaml#/OtomiStackError
+    Secret:
+      $ref: secret.yaml#/Secret
+    SecretDockerRegistry:
+      $ref: secret.yaml#/SecretDockerRegistry
+    SecretGeneric:
+      $ref: secret.yaml#/SecretGeneric
+    SecretTLS:
+      $ref: secret.yaml#/SecretTLS
+    Service:
+      $ref: service.yaml#/Service
+    Session:
+      $ref: session.yaml#/Session
+    Settings:
+      $ref: settings.yaml#/Settings
+    Team:
+      $ref: team.yaml#/Team
+    TeamAuthz:
+      $ref: user.yaml#/TeamAuthz
+    TeamSelfService:
+      $ref: team.yaml#/TeamSelfService
+    User:
+      $ref: user.yaml#/User
+    alerts:
+      $ref: definitions.yaml#/alerts
+    awsCreds:
+      $ref: definitions.yaml#/awsCreds
+    azureCreds:
+      $ref: definitions.yaml#/azureCreds
     azureMonitor:
       $ref: definitions.yaml#/azureMonitor
-
     containerSpec:
       $ref: definitions.yaml#/containerSpec
-
     domain:
       $ref: definitions.yaml#/domain
-
     email:
       $ref: definitions.yaml#/email
-
     env:
       $ref: definitions.yaml#/env
-
+    googleCreds:
+      $ref: definitions.yaml#/googleCreds
     idName:
       $ref: definitions.yaml#/idName
-
     image:
       $ref: definitions.yaml#/image
-
-    jobSpec:
-      $ref: definitions.yaml#/jobSpec
-
     ingress:
       $ref: definitions.yaml#/ingress
-
     ingressCluster:
       $ref: definitions.yaml#/ingressCluster
-
     ingressPrivate:
       $ref: definitions.yaml#/ingressPrivate
-
     ingressPublic:
       $ref: definitions.yaml#/ingressPublic
-
     ingressTls:
       $ref: definitions.yaml#/ingressTls
-
+    jobSpec:
+      $ref: definitions.yaml#/jobSpec
+    kms:
+      $ref: definitions.yaml#/kms
     ksvcNew:
       $ref: definitions.yaml#/ksvcNew
-
     ksvcPredeployed:
       $ref: definitions.yaml#/ksvcPredeployed
-
     offChoice:
       $ref: definitions.yaml#/offChoice
-
     path:
       $ref: definitions.yaml#/path
-
     podSpec:
       $ref: definitions.yaml#/podSpec
-
     resource:
       $ref: definitions.yaml#/resource
-
     resources:
       $ref: definitions.yaml#/resources
-
-    secrets:
-      $ref: definitions.yaml#/secrets
-
     script:
       $ref: definitions.yaml#/script
-
+    secrets:
+      $ref: definitions.yaml#/secrets
     securityContext:
       $ref: definitions.yaml#/securityContext
-
     svcPredeployed:
       $ref: definitions.yaml#/svcPredeployed
-
     url:
       $ref: definitions.yaml#/url
-
-    Cluster:
-      $ref: 'cluster.yaml#/Cluster'
-
-    Deployment:
-      $ref: 'deployment.yaml#/Deployment'
-
-    Job:
-      $ref: 'job.yaml#/Job'
-
-    Kubecfg:
-      $ref: 'kubecfg.yaml#/Kubecfg'
-
-    OpenApiValidationError:
-      $ref: 'error.yaml#/OpenApiValidationError'
-
-    OtomiStackError:
-      $ref: 'error.yaml#/OtomiStackError'
-
-    TeamSelfService:
-      $ref: 'team.yaml#/TeamSelfService'
-
-    Secret:
-      $ref: 'secret.yaml#/Secret'
-
-    SecretGeneric:
-      $ref: 'secret.yaml#/SecretGeneric'
-
-    SecretDockerRegistry:
-      $ref: 'secret.yaml#/SecretDockerRegistry'
-
-    SecretTLS:
-      $ref: 'secret.yaml#/SecretTLS'
-
-    Service:
-      $ref: 'service.yaml#/Service'
-
-    Session:
-      $ref: 'session.yaml#/Session'
-
-    Settings:
-      $ref: 'settings.yaml#/Settings'
-
-    Team:
-      $ref: 'team.yaml#/Team'
-
-    User:
-      $ref: 'user.yaml#/User'
-
-    TeamAuthz:
-      $ref: 'user.yaml#/TeamAuthz'
+    vaultCreds:
+      $ref: definitions.yaml#/vaultCreds
