@@ -3,7 +3,7 @@ import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
 import { omit } from 'lodash'
 import { HttpError, OtomiError } from './error'
-import { OpenApiRequest, JWT, OpenApiRequestExt, User, PermissionSchema } from './otomi-models'
+import { OpenApiRequest, JWT, OpenApiRequestExt, User, PermissionSchema, TeamSelfService } from './otomi-models'
 import Authz, { getUserAuthz, validateWithAbac } from './authz'
 import { cleanEnv, NO_AUTHZ } from './validators'
 import OtomiStack from './otomi-stack'
@@ -107,7 +107,7 @@ export function authzMiddleware(authz: Authz, otomi: OtomiStack): RequestHandler
     if (!req.user) return next()
     req.user.authz = getUserAuthz(
       req.user.teams,
-      (req.apiDoc.components.schemas.TeamSelfService as unknown) as PermissionSchema,
+      (req.apiDoc.components.schemas.TeamSelfService as TeamSelfService) as PermissionSchema,
       otomi,
     )
     return authorize(req, res, next, authz)

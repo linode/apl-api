@@ -181,9 +181,7 @@ describe('Admin API tests', () => {
       .post('/v1/teams/team1/services')
       .send({
         name: 'service1',
-        ksvc: {
-          serviceType: 'ksvcPredeployed',
-        },
+        serviceType: 'ksvcPredeployed',
         ingress: {},
       })
       .set('Content-Type', 'application/json')
@@ -218,8 +216,8 @@ describe('Admin API tests', () => {
       .send({
         name: 'service1',
         ksvc: {
-          serviceType: 'ksvcPredeployed',
           image: {},
+          serviceType: 'ksvcPredeployed',
           resources: { requests: { cpu: '50m', memory: '64Mi' }, limits: { cpu: '100m', memory: '128Mi' } },
         },
         ingress: {},
@@ -255,9 +253,7 @@ describe('Admin API tests', () => {
       .put('/v1/teams/team2/services/service1')
       .send({
         name: 'service1',
-        ksvc: {
-          serviceType: 'ksvcPredeployed',
-        },
+        serviceType: 'ksvcPredeployed',
         ingress: {},
       })
       .set('Accept', 'application/json')

@@ -1,7 +1,3 @@
-idName: &idNameField
-  type: string
-  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-
 Service:
   x-acl:
     admin:
@@ -11,7 +7,7 @@ Service:
       - update-any
     team:
       - delete
-      - read
+      - read-any
       - create
       - update
   x-externalDocsPath: docs/configuring-services
@@ -23,9 +19,9 @@ Service:
       readOnly: true
       type: string
     name:
-      <<: *idNameField
+      $ref: definitions.yaml#/idName
       title: Name
-      description: A service name
+      description: A kubernetes service name.
       example: some-service
     port:
       description: A service port
@@ -35,117 +31,23 @@ Service:
       maximum: 65535
     ksvc:
       oneOf:
-        - description: Will create a new knative service from the input gathered here.
-          properties:
-            serviceType:
-              default: ksvc
-              enum:
-                - ksvc
-              type: string
-            image:
-              properties:
-                repository:
-                  $ref: definitions.yaml#/repository
-                tag:
-                  pattern: '[\w][\w.-]{0,127}'
-                  type: string
-              required:
-                - repository
-                - tag
-              title: Container image
-              type: object
-            scaleToZero:
-              default: false
-              description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
-              title: Scale to zero
-              type: boolean
-            env:
-              $ref: definitions.yaml#/env
-            annotations:
-              $ref: definitions.yaml#/annotations
-              title: Pod annotations
-            resources:
-              $ref: definitions.yaml#/resources
-            secrets:
-              $ref: definitions.yaml#/secrets
-            autoCD:
-              description: Deploys new images based on a tagging strategy
-              oneOf:
-                - additionalProperties: false
-                  nullable: true
-                  title: 'Off'
-                  type: object
-                - nullable: true
-                  properties:
-                    semver:
-                      description: 'Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
-                      example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
-                      title: Semver version pattern
-                      type: string
-                    tagMatcher:
-                      default: semver
-                      enum:
-                        - semver
-                      type: string
-                  required:
-                    - semver
-                  title: Semver versioning
-                  type: object
-                - additionalProperties: false
-                  properties:
-                    glob:
-                      description: 'Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*"'
-                      example: main-v1.3.*
-                      title: Glob string pattern
-                      type: string
-                    tagMatcher:
-                      default: glob
-                      enum:
-                        - glob
-                      type: string
-                  required:
-                    - glob
-                  title: Glob pattern matching
-                  type: object
-              title: Continuous delivery
-              type: object
-          required:
-            - serviceType
-          title: Knative service
-        - description: Whether to map onto a predeployed knative service. Will take care of rewriting to the existing knative url.
-          properties:
-            serviceType:
-              default: ksvcPredeployed
-              enum:
-                - ksvcPredeployed
-              type: string
-          required:
-            - serviceType
-          title: Existing Knative service
-          type: object
-        - description: Whether to map onto a predeployed k8s service.
-          properties:
-            serviceType:
-              default: svcPredeployed
-              enum:
-                - svcPredeployed
-              type: string
-          required:
-            - serviceType
-          title: Existing Kubernetes service
-          type: object
-      title: Type
-      type: object
+        - $ref: definitions.yaml#/svcPredeployed
+        - $ref: definitions.yaml#/ksvcPredeployed
+        - $ref: definitions.yaml#/ksvcNew
+      title: Workload
+      description: Type of workload. Can be a knative service or a regular service.
     ingress:
+      nullable: true
       title: Exposure (ingress)
-      type: object
-      # Note: the order matters first schma must be nullable empty object
+      description: Determines loadbalancer related configuratin for handling the service ingress.
+      # Note: the order matters first schema must be nullable empty object
       oneOf:
-        - $ref: 'definitions.yaml#/ingressCluster'
-        - $ref: 'definitions.yaml#/ingressPrivate'
-        - $ref: 'definitions.yaml#/ingressPublic'
+        - $ref: definitions.yaml#/ingressCluster
+        - $ref: definitions.yaml#/ingressPrivate
+        - $ref: definitions.yaml#/ingressPublic
+        - $ref: definitions.yaml#/ingressTls
     teamId:
-      <<: *idNameField
+      $ref: definitions.yaml#/idName
       readOnly: true
   required:
     - name

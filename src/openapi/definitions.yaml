@@ -102,56 +102,82 @@ azureCreds:
     - clientSecret
     - tenantId
 azureMonitor:
-  title: Azure Monitor
   description: Azure Monitor data can be made available in Grafana.
+  nullable: true
+  oneOf:
+    - $ref: '#/offChoice'
+    - properties:
+        clientId:
+          title: Azure client id
+          description: An Azure client id.
+          type: string
+        clientSecret:
+          title: Azure client secret
+          description: An Azure client secret.
+          type: string
+        tenantId:
+          title: LogAnalytics tenant id
+          description: An Azure monitor log analytics workspace.
+          type: string
+        subscriptionId:
+          title: Azure subscription id
+          description: An Azure subscription id.
+          type: string
+        azureLogAnalyticsSameAs:
+          title: LogAnalytics using same creds?
+          type: boolean
+          default: true
+        logAnalyticsClientId:
+          title: LogAnalytics client id
+          description: An Azure client secret.
+          type: string
+        logAnalyticsClientSecret:
+          title: LogAnalytics client secret
+          description: An Azure client secret.
+          type: string
+        logAnalyticsTenantId:
+          title: LogAnalytics tenant id
+          description: An Azure tenant id.
+          type: string
+        logAnalyticsDefaultWorkspace:
+          title: LogAnalytics workspace
+          description: An Azure LogAnalytics workspace.
+          type: string
+        appInsightsApiKey:
+          title: AppInsights api key
+          description: An Azure AppInsights client secret.
+          type: string
+        appInsightsAppId:
+          title: AppInsights app id
+          description: An Azure AppInsights client id.
+          type: string
+      required:
+        - clientId
+        - clientSecret
+      title: 'On'
+      type: object
+containerSpec:
   properties:
-    clientId:
-      title: Azure client id
-      description: An Azure client id.
-      type: string
-    clientSecret:
-      title: Azure client secret
-      description: An Azure client secret.
-      type: string
-    tenantId:
-      title: LogAnalytics tenant id
-      description: An Azure monitor log analytics workspace.
-      type: string
-    subscriptionId:
-      title: Azure subscription id
-      description: An Azure subscription id.
-      type: string
-    azureLogAnalyticsSameAs:
-      title: LogAnalytics using same creds?
-      type: boolean
-      default: true
-    logAnalyticsClientId:
-      title: LogAnalytics client id
-      description: An Azure client secret.
-      type: string
-    logAnalyticsClientSecret:
-      title: LogAnalytics client secret
-      description: An Azure client secret.
-      type: string
-    logAnalyticsTenantId:
-      title: LogAnalytics tenant id
-      description: An Azure tenant id.
-      type: string
-    logAnalyticsDefaultWorkspace:
-      title: LogAnalytics workspace
-      description: An Azure LogAnalytics workspace.
-      type: string
-    appInsightsApiKey:
-      title: AppInsights api key
-      description: An Azure AppInsights client secret.
-      type: string
-    appInsightsAppId:
-      title: AppInsights app id
-      description: An Azure AppInsights client id.
-      type: string
+    image:
+      $ref: '#/image'
+    securityContext:
+      $ref: '#/securityContext'
+      description: Security context for the container.
+      title: Security context
+    resources:
+      $ref: '#/resources'
+      title: Container resources
+    env:
+      $ref: '#/env'
+    secrets:
+      $ref: '#/secrets'
+    secretMounts:
+      $ref: '#/secretMounts'
+    files:
+      $ref: '#/files'
   required:
-    - clientId
-    - clientSecret
+    - image
+    - resources
   type: object
 cpuQuantity:
   description: Amount of cores, or slice of cpu in millis.
@@ -169,7 +195,7 @@ email:
   type: string
 env:
   title: Environment variables
-  # description: Environment variables for containers
+  description: Environment variables for containers.
   type: array
   nullable: true
   items:
@@ -184,6 +210,23 @@ env:
       - name
       - value
     type: object
+files:
+  description: 'Entries of absolute path > content pairs. One caveat: content can be 131072 chars max.'
+  title: Files
+  type: array
+  nullable: true
+  items:
+    properties:
+      path:
+        type: string
+        pattern: ^\/([A-z0-9-_+]+\/).*$
+      content:
+        type: string
+        maxLength: 131072
+    required:
+      - path
+      - content
+    type: object
 googleCreds:
   properties:
     accountJson:
@@ -195,38 +238,182 @@ hostPort:
   pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):()([1-9]|[1-5]?[0-9]{2,4}|6[1-4][0-9]{3}|65[1-4][0-9]{2}|655[1-2][0-9]|6553[1-5])$
   type: string
 idName:
-  description: A lowercase name that starts with a letter and may contain dashes.
   pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
   type: string
 image:
-  additionalProperties: false
-  properties:
-    pullPolicy:
-      default: IfNotPresent
-      enum:
-        - IfNotPresent
-        - Always
-      type: string
-    repository:
-      $ref: '#/repository'
-    tag:
-      default: latest
-      type: string
-  type: object
+  allOf:
+    - properties:
+        repository:
+          description: A container image repository.
+          pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
+          type: string
+      required:
+        - repository
+    - $ref: '#/imageSimple'
   title: Container image
 imageSimple:
-  additionalProperties: false
   properties:
+    tag:
+      default: latest
+      pattern: '[\w][\w.-]{0,127}'
+      type: string
     pullPolicy:
       default: IfNotPresent
       enum:
         - IfNotPresent
         - Always
       type: string
-    tag:
-      type: string
+  required:
+    - tag
   type: object
   title: Container image
+ingress:
+  type: object
+  properties:
+    useDefaultSubdomain:
+      default: true
+      description: Use the team domain so that the URL reveals the owner.
+      title: Use team domain (preferred)
+      type: boolean
+    subdomain:
+      $ref: '#/domain'
+      description: A host that is used to set DNS 'A' records
+      title: Host
+      type: string
+    domain:
+      $ref: '#/domain'
+      description: A managed DNS zone
+      title: DNS Zone
+      type: string
+    path:
+      description: The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
+      title: URL path
+      type: string
+    forwardPath:
+      description: Forward the URL path into the service (don't rewrite to /)
+      title: Forward path
+      type: boolean
+    auth:
+      default: false
+      title: Authenticate with Single Sign On
+      type: boolean
+    hasCert:
+      default: false
+      description: If true a certificate should exist already
+      title: Already has a certificate
+      type: boolean
+    certArn:
+      example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
+      title: Certificate ARN
+      type: string
+    certSelect:
+      default: true
+      title: Select existing secret name
+      type: boolean
+    certName:
+      example: www-example-com
+      title: Secret name
+      type: string
+  required:
+    - domain
+    - subdomain
+ingressCluster:
+  additionalProperties: false
+  description:
+    'If backend is a ksvc, this will expose a knative service on a local istio gateway, so other services can access it at their "$svc.$namespace" host name.
+    (Coming soon: ability to choose endpoints to connect to, so network policies are automatically generated.)'
+  title: Cluster
+  type: object
+  nullable: true
+  properties:
+    type:
+      type: string
+      enum:
+        - cluster
+      default: cluster
+ingressPrivate:
+  allOf:
+    - $ref: '#/ingress'
+    - properties:
+        type:
+          type: string
+          enum:
+            - private
+          default: private
+  nullable: true
+  description: Will only accept traffic coming from the private-network loadbalancer. (Coming soon!)
+  title: Private
+  type: object
+ingressPublic:
+  allOf:
+    - $ref: '#/ingress'
+    - properties:
+        type:
+          type: string
+          enum:
+            - public
+          default: public
+  nullable: true
+  description: Will only accept traffic coming from the public loadbalancer.
+  title: Public
+  type: object
+ingressTls:
+  allOf:
+    - $ref: '#/ingress'
+    - properties:
+        type:
+          type: string
+          enum:
+            - tlsPass
+          default: tlsPass
+  nullable: true
+  description: Will let the TLS encrypted service pass through to the handling service.
+  title: TLS passthrough
+  type: object
+jobSpec:
+  properties:
+    type:
+      default: Job
+      enum:
+        - Job
+        - CronJob
+      type: string
+    name:
+      $ref: '#/idName'
+      title: Name
+      description: A job name
+      example: some-job
+    enabled:
+      default: true
+      type: boolean
+    runPolicy:
+      default: OnSpecChange
+      description: |
+        If runPolicy is set to 'Always', the job controller will always be re-deployed after a successful deployment with Helm.
+        If runPolicy is set to 'OnSpecChange', the job controller will only be re-deployed if one changes this specification.
+      enum:
+        - Always
+        - OnSpecChange
+      type: string
+    schedule:
+      default: 0 1 * * *
+      description: Must give a cron-type expression if the job-type is 'cronjob' (job.type).
+      type: string
+    script:
+      $ref: '#/script'
+    ttlSecondsAfterFinished:
+      default: 86400
+      description: Time To Live after job is finished in seconds. Will be removed afterwards.
+      title: TTL after finished
+      type: integer
+    init:
+      $ref: '#/containerSpec'
+      nullable: true
+  required:
+    - name
+    - script
+    - type
+  type: object
 k8sVersion:
   default: '1.19'
   description: The cluster k8s version. Otomi supports 2 minor versions backwards compatibility from the suggested default.
@@ -235,6 +422,74 @@ k8sVersion:
     - '1.18'
     - '1.19'
   type: string
+ksvcNew:
+  title: New knative service
+  allOf:
+    - $ref: '#/podSpec'
+    - description: Will create a new knative service from the input gathered here.
+      properties:
+        serviceType:
+          default: ksvc
+          enum:
+            - ksvc
+          type: string
+        scaleToZero:
+          default: false
+          description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
+          title: Scale to zero
+          type: boolean
+        autoCD:
+          description: Deploys new images based on a tagging strategy
+          oneOf:
+            - $ref: '#/offChoice'
+            - nullable: true
+              properties:
+                semver:
+                  description: 'Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
+                  example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
+                  title: Semver version pattern
+                  type: string
+                tagMatcher:
+                  default: semver
+                  enum:
+                    - semver
+                  type: string
+              required:
+                - semver
+              title: Semver versioning
+              type: object
+            - properties:
+                glob:
+                  description: 'Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*"'
+                  example: main-v1.3.*
+                  title: Glob string pattern
+                  type: string
+                tagMatcher:
+                  default: glob
+                  enum:
+                    - glob
+                  type: string
+              required:
+                - glob
+              title: Glob pattern matching
+              type: object
+              additionalProperties: false
+          title: Continuous delivery
+          type: object
+      required:
+        - serviceType
+      title: Knative service
+      type: object
+ksvcPredeployed:
+  description: Whether to map onto a predeployed knative service. Will take care of rewriting to the existing knative url.
+  properties:
+    serviceType:
+      default: ksvcPredeployed
+      enum:
+        - ksvcPredeployed
+      type: string
+  title: Existing Knative service
+  type: object
 labels:
   $ref: '#/annotations'
   description: A set of labels.
@@ -267,27 +522,35 @@ memoryQuantity:
     - 0.5M
   pattern: ^([0-9]+\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)?$
   type: string
-podSecurityContext:
-  properties:
-    runAsGroup:
-      default: 1001
-      maximum": 65535
-      minimum": 0
-      type: integer
-    runAsNonRoot:
-      default: true
-      type: boolean
-    runAsUser:
-      default: 1001
-      maximum": 65535
-      minimum": 0
-      type: integer
+offChoice:
+  additionalProperties: false
+  nullable: true
+  title: 'Off'
+  type: object
+path:
+  description: An absolute path
+  type: string
+  pattern: '^[/].*$'
+podSpec:
+  allOf:
+    - properties:
+        annotations:
+          $ref: '#/annotations'
+          title: Pod annotations
+        podSecurityContext:
+          $ref: '#/securityContext'
+          description: Security context for the pod.
+          title: Pod security context
+      required:
+        - podSecurityContext
+      type: object
+    - $ref: '#/containerSpec'
   type: object
 portNumber:
   maximum: 32768
   minimum: 80
   default: 80
-  type: number
+  type: integer
 rawValues:
   description: "May define value overrides for a chart. WARNING: these values currently have no schema and can't be validated as such, and may break deployment. You are on your own here."
   type: object
@@ -298,12 +561,7 @@ repoUrl:
   description: Path to a remote git repo without protocol. Will use https to access.
   pattern: ^(.+@)*([\w\d\.]+)(:[\d]+){0,1}/*(.*)$
   type: string
-repository:
-  description: A container image repository.
-  pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
-  type: string
 resource:
-  additionalProperties: false
   properties:
     cpu:
       $ref: '#/cpuQuantity'
@@ -314,7 +572,6 @@ resource:
     - memory
   type: object
 resources:
-  additionalProperties: false
   description: Compute resources for containers.
   properties:
     limits:
@@ -323,80 +580,37 @@ resources:
     requests:
       $ref: '#/resource'
       description: Requested resources (guaranteed).
-  title: Pod resources
+  title: Resources
   type: object
 scaling:
   description: Min and max number of replicas.
   properties:
     maxReplicas:
-      type: number
+      type: integer
     minReplicas:
-      type: number
+      type: integer
   type: object
 script:
   description: May specify a non-empty string containing an executable script.
   type: string
-secret:
-  oneOf:
-    - properties:
-        entries:
-          items:
-            description: A property name at vaultPath
-            minItems: 1
-            pattern: ^[a-zA-Z0-9_]*$
-            type: string
-            uniqueItems: true
-          type: array
-        type:
-          default: generic
-          enum:
-            - generic
-      required:
-        - type
-        - entries
-      title: Generic
-    - properties:
-        dockerconfig:
-          enum:
-            - .dockerconfig.json
-          readOnly: true
-          type: string
-        type:
-          default: docker-registry
-          enum:
-            - docker-registry
-          type: string
-      required:
-        - type
-      title: Docker registry
-    - properties:
-        ca:
-          default: ca.crt
-          type: string
-        crt:
-          default: tls.crt
-          type: string
-        key:
-          default: tls.key
-          type: string
-        type:
-          default: tls
-          enum:
-            - tls
-          type: string
-      required:
-        - type
-        - crt
-        - key
-      title: TLS
+securityContext:
   properties:
-    id:
-      readOnly: true
-      type: string
-    name:
-      $ref: '#/subdomainType'
-  required:
-    - name
+    runAsUser:
+      default: 1001
+      # maximum": 65535
+      # minimum": 0
+      title: Run as user
+      type: integer
+    runAsGroup:
+      default: 1001
+      # maximum": 65535
+      # minimum": 0
+      title: Run as group
+      type: integer
+    runAsNonRoot:
+      default: true
+      title: Run as non-root
+      type: boolean
   type: object
 secrets:
   description: A list of team secrets that will be mounted into the pod as env vars.
@@ -405,9 +619,30 @@ secrets:
   title: Secrets
   type: array
   uniqueItems: true
+secretMounts:
+  description: Pairs of secret name > absolute folder path. Will mount the contents of the secret in the container at the specified folder path.
+  title: Secret mounts
+  type: array
+  items:
+    properties:
+      name:
+        $ref: '#/idName'
+      path:
+        $ref: '#/path'
+    type: object
 subdomainType:
   pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
   type: string
+svcPredeployed:
+  description: Whether to map onto a predeployed k8s service.
+  properties:
+    serviceType:
+      default: svcPredeployed
+      enum:
+        - svcPredeployed
+      type: string
+  title: Existing Kubernetes service
+  type: object
 url:
   pattern: ^(https:\/\/)([\w\-])+\.{1}([a-zA-Z]{2,63})([\/\w-]*)*\/?\??([^#\n\r]*)?#?([^\n\r]*)$
   type: string
@@ -432,81 +667,3 @@ volumes:
         type: string
     type: object
   type: array
-
-ingressPublic:
-  type: object
-  title: Public
-  properties:
-    public:
-      type: object
-      description: Will accept all incoming traffic and expose the service in the public domain.
-      properties:
-        useDefaultSubdomain:
-          default: true
-          description: Use the team domain so that the URL reveals the owner.
-          title: Use team domain (preferred)
-          type: boolean
-        subdomain:
-          $ref: definitions.yaml#/domain
-          description: A host that is used to set DNS 'A' records
-          nullable: true
-          title: Host
-          type: string
-        domain:
-          description: A managed DNS zone
-          title: DNS Zone
-          type: string
-        path:
-          description: The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
-          title: URL path
-          type: string
-        forwardPath:
-          description: Forward the URL path into the service (don't rewrite to /)
-          title: Forward path
-          type: boolean
-        hasSingleSignOn:
-          default: false
-          title: Authenticate with Single Sign On
-          type: boolean
-        hasCert:
-          default: false
-          description: If true a certificate should exist already
-          title: Already has a certificate
-          type: boolean
-        certArn:
-          example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
-          title: Certificate ARN
-          type: string
-        certSelect:
-          default: true
-          title: Select existing secret name
-          type: boolean
-        certName:
-          example: www-example-com
-          title: Secret name
-          type: string
-      required:
-        - domain
-        - subdomain
-  required:
-    - public
-
-ingressPrivate:
-  type: object
-  title: Private
-  properties:
-    private:
-      type: object
-      nullable: true
-      description: Will only accept traffic coming from the private-network loadbalancer. (Coming soon!)
-      title: Private
-      additionalProperties: false
-  required:
-    - private
-  additionalProperties: false
-
-ingressCluster:
-  title: Cluster
-  type: object
-  nullable: true
-  additionalProperties: false

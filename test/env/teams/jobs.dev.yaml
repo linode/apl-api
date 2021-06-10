@@ -1,0 +1,50 @@
+teamConfig:
+  teams:
+    dev:
+      jobs:
+        - type: Job
+          name: aba
+          enabled: true
+          env:
+            TARGET: job world
+          runPolicy: OnSpecChange
+          schedule: 0 1 * * *
+          script: |-
+            echo Hello $TARGET
+          ttlSecondsAfterFinished: 86400
+          init:
+            image:
+              repository: otomi/nodejs-helloworld
+              tag: latest
+              pullPolicy: IfNotPresent
+            securityContext:
+              runAsUser: 1001
+              runAsGroup: 1001
+              runAsNonRoot: true
+            resources:
+              limits:
+                cpu: 50m
+                memory: 64Mi
+              requests:
+                cpu: 50m
+                memory: 64Mi
+          podSecurityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
+            runAsNonRoot: true
+          image:
+            repository: otomi/helloworld-nodejs
+            tag: latest
+            pullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
+            runAsNonRoot: true
+          resources:
+            limits:
+              cpu: 50m
+              memory: 64Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          id: 1c4774f5-9ee0-49af-9080-ffd494e7a06a

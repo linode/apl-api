@@ -1,14 +1,78 @@
 export default {
   cluster: [
     {
-      id: '1f4e8330-8e85-4da0-9a6d-488c8e192c90',
       apiName: 'onprem',
       apiServer: 'apiServer.onprem.example.com',
+      domainSuffix: 'onprem.example.com',
+      id: '1f4e8330-8e85-4da0-9a6d-488c8e192c90',
       k8sVersion: '1.19',
       name: 'dev',
       otomiVersion: 'master',
       provider: 'onprem',
       region: 'eu-central-1',
+    },
+  ],
+  jobs: [
+    {
+      type: 'Job',
+      name: 'aba',
+      enabled: true,
+      env: {
+        TARGET: 'job world',
+      },
+      runPolicy: 'OnSpecChange',
+      schedule: '0 1 * * *',
+      script: 'echo Hello $TARGET',
+      ttlSecondsAfterFinished: 86400,
+      init: {
+        image: {
+          repository: 'otomi/nodejs-helloworld',
+          tag: 'latest',
+          pullPolicy: 'IfNotPresent',
+        },
+        securityContext: {
+          runAsUser: 1001,
+          runAsGroup: 1001,
+          runAsNonRoot: true,
+        },
+        resources: {
+          limits: {
+            cpu: '50m',
+            memory: '64Mi',
+          },
+          requests: {
+            cpu: '50m',
+            memory: '64Mi',
+          },
+        },
+      },
+      podSecurityContext: {
+        runAsUser: 1001,
+        runAsGroup: 1001,
+        runAsNonRoot: true,
+      },
+      image: {
+        repository: 'otomi/helloworld-nodejs',
+        tag: 'latest',
+        pullPolicy: 'IfNotPresent',
+      },
+      securityContext: {
+        runAsUser: 1001,
+        runAsGroup: 1001,
+        runAsNonRoot: true,
+      },
+      resources: {
+        limits: {
+          cpu: '50m',
+          memory: '64Mi',
+        },
+        requests: {
+          cpu: '50m',
+          memory: '64Mi',
+        },
+      },
+      teamId: 'dev',
+      id: '1c4774f5-9ee0-49af-9080-ffd494e7a06a',
     },
   ],
   teams: [
@@ -49,6 +113,7 @@ export default {
       id: 'fb88a85d-49e6-4c20-98ed-11b3ceff540e',
       teamId: 'otomi',
       ksvc: {
+        serviceType: 'ksvc',
         scaleToZero: false,
         image: {
           repository: 'otomi/helloworld-nodejs',
@@ -76,19 +141,17 @@ export default {
           },
         },
         annotations: [],
-        serviceType: 'ksvc',
       },
       ingress: {
-        public: {
-          certArn: undefined,
-          hasCert: false,
-          hasSingleSignOn: false,
-          domain: 'onprem.example.com',
-          subdomain: 'master',
-          useDefaultSubdomain: false,
-          path: '/servant-1',
-          forwardPath: false,
-        },
+        certArn: undefined,
+        domain: 'onprem.example.com',
+        forwardPath: false,
+        hasCert: false,
+        auth: false,
+        path: '/servant-1',
+        subdomain: 'master',
+        useDefaultSubdomain: false,
+        type: 'public',
       },
     },
     {
@@ -99,16 +162,15 @@ export default {
         serviceType: 'svcPredeployed',
       },
       ingress: {
-        public: {
-          certArn: undefined,
-          hasCert: false,
-          hasSingleSignOn: false,
-          domain: 'onprem.example.com',
-          path: undefined,
-          subdomain: 'hello.team-otomi.dev',
-          useDefaultSubdomain: false,
-          forwardPath: false,
-        },
+        certArn: undefined,
+        domain: 'onprem.example.com',
+        forwardPath: false,
+        hasCert: false,
+        auth: false,
+        path: undefined,
+        subdomain: 'hello.team-otomi.dev',
+        useDefaultSubdomain: false,
+        type: 'public',
       },
     },
     {
@@ -116,6 +178,7 @@ export default {
       id: 'f818a64d-25a4-46e0-9eaf-769b7886603d',
       teamId: 'otomi',
       ksvc: {
+        serviceType: 'ksvc',
         scaleToZero: false,
         image: {
           repository: 'otomi/helloworld-nodejs',
@@ -139,28 +202,25 @@ export default {
           },
         },
         annotations: [],
-        serviceType: 'ksvc',
       },
       ingress: {
-        public: {
-          certArn: undefined,
-          hasCert: false,
-          hasSingleSignOn: false,
-          domain: 'onprem.example.com',
-          subdomain: 'master',
-          useDefaultSubdomain: false,
-          path: '/servant-2',
-          forwardPath: false,
-        },
+        certArn: undefined,
+        domain: 'onprem.example.com',
+        forwardPath: false,
+        hasCert: false,
+        auth: true,
+        path: '/servant-2',
+        subdomain: 'master',
+        useDefaultSubdomain: false,
+        type: 'public',
       },
     },
     {
       name: 'informant',
       id: '2f18da9a-e659-479d-9d65-2ca82503f43c',
-      internal: true,
       teamId: 'otomi',
-      ingress: {},
       ksvc: {
+        serviceType: 'ksvc',
         scaleToZero: false,
         image: {
           repository: 'otomi/helloworld-nodejs',
@@ -184,7 +244,9 @@ export default {
           },
         },
         annotations: [],
-        serviceType: 'ksvc',
+      },
+      ingress: {
+        type: 'cluster',
       },
     },
   ],
@@ -192,16 +254,24 @@ export default {
     {
       type: 'generic',
       teamId: 'otomi',
-      id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf9A',
+      id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf9a',
       name: 'mysecret-generic',
       entries: ['dd', 'ee', 'ff'],
     },
     {
-      type: 'generic',
-      teamId: 'dev',
-      id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf9C',
-      name: 'dev-generic',
-      entries: ['aa', 'bb', 'cc'],
+      type: 'docker-registry',
+      teamId: 'otomi',
+      id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf9b',
+      name: 'mysecret-registry',
+    },
+    {
+      type: 'tls',
+      teamId: 'otomi',
+      id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf9c',
+      name: 'mysecret-tls',
+      key: 'tls.key',
+      crt: 'tls.crt',
+      ca: 'ca.crt',
     },
   ],
   settings: {
@@ -215,10 +285,6 @@ export default {
       appgw: {
         isManaged: true,
       },
-      diskType: 'Standard_LRS',
-      resourceGroup: 'somevalue',
-      subscriptionId: 'somevalue',
-      tenantId: 'somevalue',
       monitor: {
         clientId: 'somesecretvalue',
       },
@@ -227,8 +293,7 @@ export default {
       name: 'demo',
     },
     dns: {
-      zones: ['example.com', 'onprem.example.com'],
-      domain: 'onprem.example.com',
+      zones: ['example.com'],
       aws: {
         region: 'eu-central-1',
       },

@@ -1,5 +1,8 @@
 Cluster:
   properties:
+    id:
+      type: string
+      readOnly: true
     apiName:
       description: Only used for API/UI to show in app.
       type: string
@@ -9,7 +12,7 @@ Cluster:
       type: string
       readOnly: true
     domainSuffix:
-      $ref: 'definitions.yaml#/domain'
+      $ref: definitions.yaml#/domain
       description: Domain suffix for the cluster. Also added to list of dns zones in the Otomi Console.
     entrypoint:
       description: A Kubernetes API public IP address (onprem only).

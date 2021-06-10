@@ -4,6 +4,7 @@ import { components } from './generated-schema'
 export type Cluster = components['schemas']['Cluster']
 export type Deployment = components['schemas']['Deployment']
 export type Dns = components['schemas']['Settings']['dns']
+export type Job = components['schemas']['Job']
 export type Kubecfg = components['schemas']['Kubecfg']
 export type Secret = components['schemas']['Secret'] & { teamId?: string }
 export type Service = components['schemas']['Service']
@@ -63,6 +64,7 @@ export interface PermissionSchema {
 }
 export interface Schema {
   'x-acl'?: Acl
+  nullable?: boolean
   type: SchemaType
   properties?: {
     [propertyName: string]: Property
@@ -109,6 +111,9 @@ export interface OpenApiRequestExt extends OpenApiRequest, Session {
 }
 
 export interface Core {
+  apps: any
+  k8s: any
+  services: any[]
   teamConfig: {
     services: any[]
     teams: Team[]
