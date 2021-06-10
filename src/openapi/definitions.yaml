@@ -266,7 +266,7 @@ k8sVersion:
   type: string
 kms:
   additionalProperties: false
-  description: Holds KMS settings like credentials for retrieving enc/decyption keys.
+  description: Holds KMS settings like credentials for retrieving encryption/decryption keys.
   title: KMS settings
   properties:
     sops:
