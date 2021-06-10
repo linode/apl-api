@@ -677,14 +677,8 @@ components:
     Deployment:
       $ref: 'deployment.yaml#/Deployment'
 
-    DockerRegistry:
-      $ref: 'secret.yaml#/DockerRegistry'
-
     email:
       $ref: 'definitions.yaml#/email'
-
-    Generic:
-      $ref: 'secret.yaml#/Generic'
 
     googleCreds:
       $ref: 'definitions.yaml#/googleCreds'
@@ -733,9 +727,6 @@ components:
 
     TeamSelfService:
       $ref: 'team.yaml#/TeamSelfService'
-
-    TLS:
-      $ref: 'secret.yaml#/TLS'
 
     url:
       $ref: 'definitions.yaml#/url'
