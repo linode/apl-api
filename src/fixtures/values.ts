@@ -112,7 +112,6 @@ export default {
       name: 'servant1',
       id: 'fb88a85d-49e6-4c20-98ed-11b3ceff540e',
       teamId: 'otomi',
-      type: 'public',
       ksvc: {
         serviceType: 'ksvc',
         scaleToZero: false,
@@ -152,13 +151,13 @@ export default {
         path: '/servant-1',
         subdomain: 'master',
         useDefaultSubdomain: false,
+        type: 'public',
       },
     },
     {
       name: 'hello',
       id: 'f818a64d-25a4-46e0-9eaf-769b78866031',
       teamId: 'otomi',
-      type: 'public',
       ksvc: {
         serviceType: 'svcPredeployed',
       },
@@ -171,13 +170,13 @@ export default {
         path: undefined,
         subdomain: 'hello.team-otomi.dev',
         useDefaultSubdomain: false,
+        type: 'public',
       },
     },
     {
       name: 'servant2',
       id: 'f818a64d-25a4-46e0-9eaf-769b7886603d',
       teamId: 'otomi',
-      type: 'public',
       ksvc: {
         serviceType: 'ksvc',
         scaleToZero: false,
@@ -213,14 +212,13 @@ export default {
         path: '/servant-2',
         subdomain: 'master',
         useDefaultSubdomain: false,
+        type: 'public',
       },
     },
     {
       name: 'informant',
       id: '2f18da9a-e659-479d-9d65-2ca82503f43c',
-      type: 'cluster',
       teamId: 'otomi',
-      ingress: undefined,
       ksvc: {
         serviceType: 'ksvc',
         scaleToZero: false,
@@ -246,6 +244,9 @@ export default {
           },
         },
         annotations: [],
+      },
+      ingress: {
+        type: 'cluster',
       },
     },
   ],
