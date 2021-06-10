@@ -40,10 +40,10 @@ Service:
       title: Exposure (ingress)
       # Note: the order matters first schema must be nullable empty object
       oneOf:
-        - $ref: api.yaml#/components/schemas/ingressCluster
-        - $ref: api.yaml#/components/schemas/ingressPrivate
-        - $ref: api.yaml#/components/schemas/ingressPublic
-        - $ref: api.yaml#/components/schemas/ingressTls
+        - $ref: definitions.yaml#/ingressCluster
+        - $ref: definitions.yaml#/ingressPrivate
+        - $ref: definitions.yaml#/ingressPublic
+        - $ref: definitions.yaml#/ingressTls
     teamId:
       $ref: definitions.yaml#/idName
       readOnly: true

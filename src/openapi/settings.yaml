@@ -11,10 +11,10 @@ alerts: &alerts
       additionalProperties: false
       properties:
         critical:
-          $ref: 'definitions.yaml#/email'
+          $ref: definitions.yaml#/email
           description: One or more email addresses (comma separated) for critical events.
         nonCritical:
-          $ref: 'definitions.yaml#/email'
+          $ref: definitions.yaml#/email
           description: One or more email addresses (comma separated) for non-critical events.
       type: object
     groupInterval:
@@ -79,7 +79,7 @@ slack:
       description: The Slack channel for critical notifications.
       type: string
     url:
-      $ref: 'api.yaml#/components/schemas/url'
+      $ref: definitions.yaml#/url
       description: A Slack webhook URL.
   type: object
 
@@ -287,15 +287,15 @@ Settings:
         adminGroupID:
           type: string
         apiUrl:
-          $ref: 'api.yaml#/components/schemas/url'
+          $ref: definitions.yaml#/url
         authUrl:
-          $ref: 'api.yaml#/components/schemas/url'
+          $ref: definitions.yaml#/url
         clientID:
           type: string
         clientSecret:
           type: string
         issuer:
-          $ref: 'api.yaml#/components/schemas/url'
+          $ref: definitions.yaml#/url
         scope:
           type: string
         teamAdminGroupID:
@@ -303,7 +303,7 @@ Settings:
         tenantID:
           type: string
         tokenUrl:
-          $ref: 'api.yaml#/components/schemas/url'
+          $ref: definitions.yaml#/url
         usernameClaimMapper:
           type: string
           description: Claim name used by Keycloak to identify incoming users from identity provider

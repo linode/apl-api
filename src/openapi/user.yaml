@@ -23,7 +23,7 @@ User:
       description: A user name
       readOnly: true
     email:
-      $ref: api.yaml#/components/schemas/email
+      $ref: definitions.yaml#/email
     isAdmin:
       type: boolean
       default: false

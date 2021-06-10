@@ -666,13 +666,13 @@ components:
       $ref: 'secret.yaml#/Secret'
 
     SecretGeneric:
-      $ref: 'secret.yaml#/Generic'
+      $ref: 'secret.yaml#/SecretGeneric'
 
     SecretDockerRegistry:
-      $ref: 'secret.yaml#/DockerRegistry'
+      $ref: 'secret.yaml#/SecretDockerRegistry'
 
     SecretTLS:
-      $ref: 'secret.yaml#/TLS'
+      $ref: 'secret.yaml#/SecretTLS'
 
     Service:
       $ref: 'service.yaml#/Service'
