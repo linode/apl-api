@@ -52,11 +52,6 @@ Settings:
             title: Zone
           title: Zones
           type: array
-        domain:
-          description: Define a FQDN for this Kubernetes cluster.
-          title: Fully Qualified Domain Name (FQDN)
-          type: string
-          nullable: true
         provider:
           description: The DNS provider managing the domains.
           oneOf:
