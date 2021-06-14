@@ -342,7 +342,7 @@ ingress:
       title: Secret name
       type: string
     certArn:
-      description: Only available on AWS when external LB is configured. Will be registered on the ALB.
+      description: Only available on AWS when an external LB is configured. The cert ARN will be registered on the load balancer for SSL termination.
       example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
       title: Certificate ARN
       type: string
