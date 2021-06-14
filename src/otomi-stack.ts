@@ -9,6 +9,9 @@ import Db from './db'
 import { Cluster, Core, Job, Secret, Service, Session, Settings, Team, TeamSelfService, User } from './otomi-models'
 import { PublicUrlExists } from './error'
 import {
+  argQuoteJoin,
+  argQuoteSplit,
+  argSplit,
   arrayToObject,
   getObjectPaths,
   getServiceUrl,
@@ -39,7 +42,7 @@ import {
 
 import pkg from '../package.json'
 
-const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'docker-config']
+const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'dockerconfig']
 
 const env = cleanEnv({
   CORE_VERSION,
@@ -513,7 +516,7 @@ export default class OtomiStack {
   convertDbSecretToValues(inSecret: any): void {
     const secret: any = omit(inSecret, 'secret')
     secretTransferProps.forEach((prop) => {
-      if (inSecret[prop] !== undefined) secret[prop] = inSecret[prop]
+      if (inSecret.secret[prop] !== undefined) secret[prop] = inSecret.secret[prop]
     })
     return secret
   }
@@ -536,6 +539,8 @@ export default class OtomiStack {
         svc.ksvc.files = objectToArray(svcRaw.ksvc.files, 'path', 'content')
         svc.ksvc.secretMounts = objectToArray(svcRaw.ksvc.secretMounts, 'name', 'path')
         svc.ksvc.secrets = svcRaw.ksvc.secrets ?? []
+        if (svcRaw.ksvc.command?.length) svc.ksvc.command = argQuoteJoin(svcRaw.ksvc.command)
+        if (svcRaw.ksvc.args?.length) svc.ksvc.args = argQuoteJoin(svcRaw.ksvc.args)
       }
     } else set(svc, 'ksvc.serviceType', 'svcPredeployed')
 
@@ -576,6 +581,12 @@ export default class OtomiStack {
       svcCloned.ksvc.env = arrayToObject(svc.ksvc.env ?? [], 'name', 'value')
       svcCloned.ksvc.files = arrayToObject(svc.ksvc.files ?? [], 'path', 'content')
       svcCloned.ksvc.secretMounts = arrayToObject(svc.ksvc.secretMounts ?? [], 'name', 'path')
+      svcCloned.ksvc.command = svc.ksvc.command?.length > 1 ? svc.ksvc.command.split(' ') : svc.ksvc.command
+      // conveniently split the command string (which might contain args as well) by space
+      svcCloned.ksvc.command =
+        svc.ksvc.command?.length > 1 ? svc.ksvc.command.match(argSplit).map(argQuoteSplit) : svc.ksvc.command
+      // same for args
+      svcCloned.ksvc.args = svc.ksvc.args?.length > 1 ? svc.ksvc.args.match(argSplit).map(argQuoteSplit) : svc.ksvc.args
     } else if (serviceType === 'ksvcPredeployed') {
       svcCloned.ksvc = { predeployed: true }
     } else if (serviceType !== 'svcPredeployed') {
@@ -593,7 +604,6 @@ export default class OtomiStack {
       if (ing.tlsPass) svcCloned.tlsPass = true
       svcCloned.type = svc.ingress.type
     } else svcCloned.type = 'cluster'
-    delete svcCloned.enabled
     return svcCloned
   }
 

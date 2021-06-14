@@ -25,6 +25,11 @@ teamConfig:
             files:
               '/foo': |-
                 bar
+            command:
+              - bash
+            args:
+              - -c
+              - echo 'bla'
           ownHost: true
           tlsPass: true
           type: public

@@ -330,6 +330,8 @@ export default {
           },
         },
         annotations: [],
+        command: "'bash'",
+        args: "'-c' \"echo 'bla'\"",
       },
       ingress: {
         auth: false,

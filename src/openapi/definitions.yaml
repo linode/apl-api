@@ -195,6 +195,14 @@ containerSpec:
       $ref: '#/secretMounts'
     files:
       $ref: '#/files'
+    command:
+      type: string
+      title: Command
+      description: Override the entrypoint/command of the container.
+    args:
+      type: string
+      title: Command arguments
+      description: Override the arguments given to the entrypoint/command of the container.
   required:
     - image
     - resources
@@ -410,7 +418,7 @@ ksvcNew:
               title: Glob pattern matching
               type: object
               additionalProperties: false
-          title: Continuous delivery
+          title: Continuous delivery (coming soon!)
           type: object
       required:
         - serviceType

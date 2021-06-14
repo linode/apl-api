@@ -12,12 +12,12 @@ Service:
       - update
   x-externalDocsPath: docs/configuring-services
   properties:
-    enabled:
-      default: true
-      type: boolean
     id:
       readOnly: true
       type: string
+    teamId:
+      $ref: definitions.yaml#/idName
+      readOnly: true
     name:
       $ref: definitions.yaml#/idName
       title: Name
@@ -29,14 +29,6 @@ Service:
       default: 80
       minimum: 1
       maximum: 65535
-    ksvc:
-      oneOf:
-        - $ref: definitions.yaml#/svcPredeployed
-        - $ref: definitions.yaml#/ksvcPredeployed
-        - $ref: definitions.yaml#/ksvcNew
-      title: Service type
-      description: Type of service. Can be a knative service or a regular service.
-      x-externalDocsPath: https://otomi.io/docs/console/configuring-services/#type
     ingress:
       # nullable: true
       title: Exposure (ingress)
@@ -47,9 +39,14 @@ Service:
         - $ref: '#/IngressPrivate'
         - $ref: '#/IngressPublic'
       x-externalDocsPath: https://otomi.io/docs/console/configuring-services/#exposure
-    teamId:
-      $ref: definitions.yaml#/idName
-      readOnly: true
+    ksvc:
+      oneOf:
+        - $ref: definitions.yaml#/svcPredeployed
+        - $ref: definitions.yaml#/ksvcPredeployed
+        - $ref: definitions.yaml#/ksvcNew
+      title: Service type
+      description: Type of service. Can be a knative service or a regular service.
+      x-externalDocsPath: https://otomi.io/docs/console/configuring-services/#type
   required:
     - name
     - ingress
@@ -87,19 +84,20 @@ Ingress:
       title: Forward path
       type: boolean
     auth:
-      default: false
+      description: Will check if the user is logged in to one of keycloak's OIDC providers.
       title: Authenticate with Single Sign On
       type: boolean
     hasCert:
-      default: false
-      description: If true a certificate should exist already
+      description: Select when a certificate exists and should not be generated.
       title: Already has a certificate
       type: boolean
     certSelect:
       default: true
-      title: Select existing secret
+      description: Select one of the TLS secrets created in Otomi.
+      title: Select team secret
       type: boolean
     certName:
+      description: The name of a TLS secret known to exist in the team namespace.
       example: www-example-com
       title: Secret name
       type: string

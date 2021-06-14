@@ -20,7 +20,7 @@
     "envalid": "^6.0.2",
     "eslint-config-airbnb-base": "^14.2.1",
     "express": "^4.17.1",
-    "express-openapi": "^8.0.0",
+    "express-openapi": "^9.0.3",
     "js-yaml": "^3.14.1",
     "jwt-decode": "^2.2.0",
     "lightship": "^6.7.2",

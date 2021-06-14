@@ -124,3 +124,20 @@ export function getTeamServicesFilePath(teamId: string): string {
 export function getTeamServicesJsonPath(teamId: string): string {
   return `teamConfig.teams.${teamId}.services`
 }
+
+export const argSplit = /[^\s"']+|("[^"]*")|('[^']*')/g
+
+export const argQuoteJoin = (a) =>
+  a
+    .map((s: string) => {
+      const q = s.includes("'") && !s.includes("\\'") ? '"' : "'"
+      return `${q}${s}${q}`
+    })
+    .join(' ')
+
+const doubleQuoteMatcher = /"/g
+const singleQuoteMatcher = /'/g
+export const argQuoteSplit = (s) => {
+  if (s.includes("'") && !s.includes("\\'")) return s.replace(doubleQuoteMatcher, '')
+  return s.replace(singleQuoteMatcher, '')
+}
