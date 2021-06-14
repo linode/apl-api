@@ -100,7 +100,6 @@
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
       "post-checkout": "run-if-changed",
-      "post-commit": "run-if-changed",
       "post-merge": "run-if-changed",
       "post-rewrite": "run-if-changed",
       "pre-commit": "npm run husky:pre-commit"
