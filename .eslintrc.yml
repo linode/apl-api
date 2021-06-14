@@ -61,3 +61,7 @@ rules:
   no-console: 'off'
   object-shorthand: error
   no-debugger: error
+  no-param-reassign:
+    - error
+    - props: true
+      ignorePropertyModificationsFor: [memo]

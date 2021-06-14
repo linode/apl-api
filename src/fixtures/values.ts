@@ -348,26 +348,32 @@ export default {
   ],
   secrets: [
     {
-      type: 'generic',
       teamId: 'otomi',
       id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf9a',
       name: 'mysecret-generic',
-      entries: ['dd', 'ee', 'ff'],
+      secret: {
+        type: 'generic',
+        entries: ['dd', 'ee', 'ff'],
+      },
     },
     {
-      type: 'docker-registry',
       teamId: 'otomi',
       id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf9b',
       name: 'mysecret-registry',
+      secret: {
+        type: 'docker-registry',
+      },
     },
     {
-      type: 'tls',
       teamId: 'otomi',
       id: 'f7f9def1-cc52-465b-9da2-87e9fec4cf9c',
       name: 'mysecret-tls',
-      key: 'tls.key',
-      crt: 'tls.crt',
-      ca: 'ca.crt',
+      secret: {
+        type: 'tls',
+        key: 'tls.key',
+        crt: 'tls.crt',
+        ca: 'ca.crt',
+      },
     },
   ],
   settings: {

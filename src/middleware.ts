@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import get from 'lodash/get'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'

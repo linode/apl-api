@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 import * as k8s from '@kubernetes/client-node'
 import fs from 'fs'
 import yaml from 'js-yaml'
@@ -37,6 +38,8 @@ import {
 } from './validators'
 
 import pkg from '../package.json'
+
+const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'docker-config']
 
 const env = cleanEnv({
   CORE_VERSION,
@@ -388,14 +391,10 @@ export default class OtomiStack {
     const data = this.repo.readFile(relativePath)
     const secrets: Array<Secret> = get(data, getTeamSecretsJsonPath(teamId), [])
 
-    secrets.forEach((secret) => {
+    secrets.forEach((inSecret) => {
       // @ts-ignore
-      const res: Secret = this.db.populateItem(
-        'secrets',
-        { ...secret, teamId },
-        { teamId, name: secret.name },
-        secret.id,
-      )
+      const secret: Secret = this.convertSecretToDb(inSecret, teamId)
+      const res: any = this.db.populateItem('secrets', secret, { teamId, name: secret.name }, secret.id)
       console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
     })
   }
@@ -473,10 +472,8 @@ export default class OtomiStack {
 
   saveTeamSecrets(teamId: string): void {
     const secrets = this.db.getCollection('secrets', { teamId })
-    const secretsRaw = secrets.map((item) => omit(item, ['teamId']))
-    const data = {}
-    set(data, getTeamSecretsJsonPath(teamId), secretsRaw)
-    this.repo.writeFile(getTeamSecretsFilePath(teamId), data)
+    const values: any[] = secrets.map((secret) => this.convertDbSecretToValues(secret))
+    this.repo.writeFile(getTeamSecretsFilePath(teamId), set({}, getTeamSecretsJsonPath(teamId), values))
   }
 
   saveTeamJobs(teamId: string): void {
@@ -501,6 +498,24 @@ export default class OtomiStack {
     set(data, getTeamServicesJsonPath(teamId), values)
     const filePath = getTeamServicesFilePath(teamId)
     this.repo.writeFile(filePath, data)
+  }
+
+  convertSecretToDb(inSecret, teamId): void {
+    const secret: any = omit(inSecret, ...secretTransferProps)
+    secret.teamId = teamId
+    secret.secret = secretTransferProps.reduce((memo: any, prop) => {
+      if (inSecret[prop] !== undefined) memo[prop] = inSecret[prop]
+      return memo
+    }, {})
+    return secret
+  }
+
+  convertDbSecretToValues(inSecret: any): void {
+    const secret: any = omit(inSecret, 'secret')
+    secretTransferProps.forEach((prop) => {
+      if (inSecret[prop] !== undefined) secret[prop] = inSecret[prop]
+    })
+    return secret
   }
 
   convertServiceToDb(svcRaw, teamId): void {
