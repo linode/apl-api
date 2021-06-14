@@ -34,18 +34,19 @@ Service:
         - $ref: definitions.yaml#/svcPredeployed
         - $ref: definitions.yaml#/ksvcPredeployed
         - $ref: definitions.yaml#/ksvcNew
-      title: Workload
-      description: Type of workload. Can be a knative service or a regular service.
+      title: Service type
+      description: Type of service. Can be a knative service or a regular service.
+      x-externalDocsPath: https://otomi.io/docs/console/configuring-services/#type
     ingress:
-      nullable: true
+      # nullable: true
       title: Exposure (ingress)
-      description: Determines loadbalancer related configuratin for handling the service ingress.
+      description: Determines loadbalancer related configuration for handling the service ingress.
       # Note: the order matters first schema must be nullable empty object
       oneOf:
         - $ref: definitions.yaml#/ingressCluster
         - $ref: definitions.yaml#/ingressPrivate
         - $ref: definitions.yaml#/ingressPublic
-        - $ref: definitions.yaml#/ingressTls
+      x-externalDocsPath: https://otomi.io/docs/console/configuring-services/#exposure
     teamId:
       $ref: definitions.yaml#/idName
       readOnly: true

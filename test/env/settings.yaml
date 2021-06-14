@@ -11,7 +11,7 @@ azure:
 customer:
   name: demo
 dns:
-  zones: [example.com]
+  zones: [some.com, onprem.example.com, onprem.private.net]
   aws:
     region: eu-central-1
 home:

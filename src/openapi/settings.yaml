@@ -296,7 +296,7 @@ Settings:
           type: boolean
         isMultitenant:
           default: true
-          description: Whether to separate team metrics and logs. Disabling this lets everybody be admin and see everything.
+          description: Will separate team metrics and logs. Disabling this lets everybody be admin and see everything.
           title: Multi-tenancy
           type: boolean
         mode:

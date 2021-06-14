@@ -26,4 +26,5 @@ teamConfig:
               '/foo': |-
                 bar
           ownHost: true
-          type: tlsPass
+          tlsPass: true
+          type: public

@@ -505,7 +505,7 @@ export default class OtomiStack {
 
   convertServiceToDb(svcRaw, teamId): void {
     // Create service
-    const svc = omit(svcRaw, 'domain', 'forwardPath', 'hasCert', 'auth', 'ksvc', 'paths', 'type', 'ownHost')
+    const svc = omit(svcRaw, 'domain', 'forwardPath', 'hasCert', 'auth', 'ksvc', 'paths', 'type', 'ownHost', 'tlsPass')
     svc.teamId = teamId
     if (!('name' in svcRaw)) {
       console.warn('Unknown service structure')
@@ -539,6 +539,7 @@ export default class OtomiStack {
         useDefaultSubdomain: !svcRaw.domain && svcRaw.ownHost,
         path: svcRaw.paths && svcRaw.paths.length ? svcRaw.paths[0] : undefined,
         forwardPath: 'forwardPath' in svcRaw,
+        tlsPass: 'tlsPass' in svcRaw,
         type: svcRaw.type,
       }
     }
@@ -574,6 +575,7 @@ export default class OtomiStack {
       if (ing.certArn) svcCloned.certArn = ing.certArn
       if (ing.path) svcCloned.paths = [ing.path]
       if (ing.forwardPath) svcCloned.forwardPath = true
+      if (ing.tlsPass) svcCloned.tlsPass = true
       svcCloned.type = svc.ingress.type
     } else svcCloned.type = 'cluster'
     delete svcCloned.enabled

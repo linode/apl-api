@@ -276,6 +276,7 @@ image:
         - repository
     - $ref: '#/imageSimple'
   title: Container image
+  type: object
 imageSimple:
   properties:
     tag:
@@ -295,6 +296,11 @@ imageSimple:
 ingress:
   type: object
   properties:
+    tlsPass:
+      default: false
+      description: Pass through the request as is to the backing service.
+      title: TLS passthrough
+      type: boolean
     useDefaultSubdomain:
       default: true
       description: Use the team domain so that the URL reveals the owner.
@@ -328,6 +334,7 @@ ingress:
       title: Already has a certificate
       type: boolean
     certArn:
+      description: Only available on AWS when external LB is configured. Will be registered on the ALB.
       example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
       title: Certificate ARN
       type: string
@@ -381,19 +388,6 @@ ingressPublic:
   nullable: true
   description: Will only accept traffic coming from the public loadbalancer.
   title: Public
-  type: object
-ingressTls:
-  allOf:
-    - $ref: '#/ingress'
-    - properties:
-        type:
-          type: string
-          enum:
-            - tlsPass
-          default: tlsPass
-  nullable: true
-  description: Will let the TLS encrypted service pass through to the handling service.
-  title: TLS passthrough
   type: object
 jobSpec:
   properties:
@@ -518,8 +512,9 @@ ksvcNew:
         - serviceType
       title: Knative service
       type: object
+  x-externalDocsPath: https://otomi.io/docs/console/configuring-services#1-new-knative-service
 ksvcPredeployed:
-  description: Whether to map onto a predeployed knative service. Will take care of rewriting to the existing knative url.
+  description: Will map onto a predeployed knative service. Will take care of rewriting to the existing knative url.
   properties:
     serviceType:
       default: ksvcPredeployed
@@ -632,6 +627,7 @@ script:
   description: May specify a non-empty string containing an executable script.
   type: string
 securityContext:
+  additionalProperties: true
   properties:
     runAsUser:
       default: 1001
@@ -672,7 +668,7 @@ subdomainType:
   pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
   type: string
 svcPredeployed:
-  description: Whether to map onto a predeployed k8s service.
+  description: Will map onto a predeployed k8s service.
   properties:
     serviceType:
       default: svcPredeployed

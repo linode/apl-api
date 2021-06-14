@@ -655,8 +655,6 @@ components:
       $ref: definitions.yaml#/ingressPrivate
     ingressPublic:
       $ref: definitions.yaml#/ingressPublic
-    ingressTls:
-      $ref: definitions.yaml#/ingressTls
     jobSpec:
       $ref: definitions.yaml#/jobSpec
     kms:
