@@ -333,11 +333,6 @@ ingress:
       description: If true a certificate should exist already
       title: Already has a certificate
       type: boolean
-    certArn:
-      description: Only available on AWS when external LB is configured. Will be registered on the ALB.
-      example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
-      title: Certificate ARN
-      type: string
     certSelect:
       default: true
       title: Select existing secret name
@@ -345,6 +340,11 @@ ingress:
     certName:
       example: www-example-com
       title: Secret name
+      type: string
+    certArn:
+      description: Only available on AWS when external LB is configured. Will be registered on the ALB.
+      example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
+      title: Certificate ARN
       type: string
   required:
     - domain
