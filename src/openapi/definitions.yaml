@@ -335,7 +335,7 @@ ingress:
       type: boolean
     certSelect:
       default: true
-      title: Select existing secret name
+      title: Select existing secret
       type: boolean
     certName:
       example: www-example-com
