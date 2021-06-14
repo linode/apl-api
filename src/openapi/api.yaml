@@ -595,6 +595,14 @@ components:
       $ref: cluster.yaml#/Cluster
     Deployment:
       $ref: deployment.yaml#/Deployment
+    Ingress:
+      $ref: service.yaml#/Ingress
+    IngressCluster:
+      $ref: service.yaml#/IngressCluster
+    IngressPrivate:
+      $ref: service.yaml#/IngressPrivate
+    IngressPublic:
+      $ref: service.yaml#/IngressPublic
     Job:
       $ref: job.yaml#/Job
     Kubecfg:
@@ -647,14 +655,6 @@ components:
       $ref: definitions.yaml#/idName
     image:
       $ref: definitions.yaml#/image
-    ingress:
-      $ref: definitions.yaml#/ingress
-    ingressCluster:
-      $ref: definitions.yaml#/ingressCluster
-    ingressPrivate:
-      $ref: definitions.yaml#/ingressPrivate
-    ingressPublic:
-      $ref: definitions.yaml#/ingressPublic
     jobSpec:
       $ref: definitions.yaml#/jobSpec
     kms:

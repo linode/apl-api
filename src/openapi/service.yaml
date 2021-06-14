@@ -21,7 +21,7 @@ Service:
     name:
       $ref: definitions.yaml#/idName
       title: Name
-      description: A kubernetes service name.
+      description: A service name.
       example: some-service
     port:
       description: A service port
@@ -43,9 +43,9 @@ Service:
       description: Determines loadbalancer related configuration for handling the service ingress.
       # Note: the order matters first schema must be nullable empty object
       oneOf:
-        - $ref: definitions.yaml#/ingressCluster
-        - $ref: definitions.yaml#/ingressPrivate
-        - $ref: definitions.yaml#/ingressPublic
+        - $ref: '#/IngressCluster'
+        - $ref: '#/IngressPrivate'
+        - $ref: '#/IngressPublic'
       x-externalDocsPath: https://otomi.io/docs/console/configuring-services/#exposure
     teamId:
       $ref: definitions.yaml#/idName
@@ -53,4 +53,101 @@ Service:
   required:
     - name
     - ingress
+  type: object
+
+Ingress:
+  type: object
+  properties:
+    tlsPass:
+      default: false
+      description: Pass through the request as is to the backing service.
+      title: TLS passthrough
+      type: boolean
+    useDefaultSubdomain:
+      default: true
+      description: Use the team domain so that the URL reveals the owner.
+      title: Use team domain (preferred)
+      type: boolean
+    subdomain:
+      $ref: definitions.yaml#/domain
+      description: A host that is used to set DNS 'A' records
+      title: Host
+      type: string
+    domain:
+      $ref: definitions.yaml#/domain
+      description: A managed DNS zone
+      title: DNS Zone
+      type: string
+    path:
+      description: The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
+      title: URL path
+      type: string
+    forwardPath:
+      description: Forward the URL path into the service (don't rewrite to /)
+      title: Forward path
+      type: boolean
+    auth:
+      default: false
+      title: Authenticate with Single Sign On
+      type: boolean
+    hasCert:
+      default: false
+      description: If true a certificate should exist already
+      title: Already has a certificate
+      type: boolean
+    certSelect:
+      default: true
+      title: Select existing secret
+      type: boolean
+    certName:
+      example: www-example-com
+      title: Secret name
+      type: string
+    certArn:
+      description: Only available on AWS when an external LB is configured. The cert ARN will be registered on the load balancer for SSL termination.
+      example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
+      title: Certificate ARN
+      type: string
+  required:
+    - domain
+    - subdomain
+IngressCluster:
+  additionalProperties: false
+  description:
+    'If backend is a ksvc, this will expose a knative service on a local istio gateway, so other services can access it at their "$svc.$namespace" host name.
+    (Coming soon: ability to choose endpoints to connect to, so network policies are automatically generated.)'
+  title: Cluster
+  type: object
+  nullable: true
+  properties:
+    type:
+      type: string
+      enum:
+        - cluster
+      default: cluster
+IngressPrivate:
+  allOf:
+    - $ref: '#/Ingress'
+    - properties:
+        type:
+          type: string
+          enum:
+            - private
+          default: private
+  nullable: true
+  description: Will only accept traffic coming from the private-network loadbalancer. (Coming soon!)
+  title: Private
+  type: object
+IngressPublic:
+  allOf:
+    - $ref: '#/Ingress'
+    - properties:
+        type:
+          type: string
+          enum:
+            - public
+          default: public
+  nullable: true
+  description: Will only accept traffic coming from the public loadbalancer.
+  title: Public
   type: object
