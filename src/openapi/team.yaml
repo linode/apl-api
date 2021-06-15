@@ -40,6 +40,16 @@ Team:
       writeOnly: true
     alerts:
       properties:
+        receivers:
+          items:
+            enum:
+              - slack
+              - msteams
+              - email
+            type: string
+          title: Receivers
+          type: array
+          uniqueItems: true
         email:
           properties:
             critical:
@@ -55,25 +65,15 @@ Team:
         msteams:
           properties:
             highPrio:
-              description: The high prio web hook
+              description: A webhook to send high prio alerts to.
               title: High prio webhook
               type: string
             lowPrio:
-              description: The low prio web hook
+              description: A webhook to send low prio alerts to.
               title: Low prio webhook
               type: string
           title: Microsoft Teams
           type: object
-        receivers:
-          items:
-            enum:
-              - slack
-              - msteams
-              - email
-            type: string
-          title: Receivers
-          type: array
-          uniqueItems: true
         slack:
           properties:
             channel:

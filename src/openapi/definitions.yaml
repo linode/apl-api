@@ -123,6 +123,7 @@ azureCreds:
     - tenantId
 azureMonitor:
   description: Azure Monitor data can be made available in Grafana.
+  title: Azure Monitor
   nullable: true
   oneOf:
     - $ref: '#/offChoice'
