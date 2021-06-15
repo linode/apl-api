@@ -10,7 +10,7 @@ import { Cluster, Core, Job, Secret, Service, Session, Settings, Team, TeamSelfS
 import { PublicUrlExists } from './error'
 import {
   argQuoteJoin,
-  argQuoteSplit,
+  argQuoteStrip,
   argSplit,
   arrayToObject,
   getObjectPaths,
@@ -584,9 +584,9 @@ export default class OtomiStack {
       svcCloned.ksvc.command = svc.ksvc.command?.length > 1 ? svc.ksvc.command.split(' ') : svc.ksvc.command
       // conveniently split the command string (which might contain args as well) by space
       svcCloned.ksvc.command =
-        svc.ksvc.command?.length > 1 ? svc.ksvc.command.match(argSplit).map(argQuoteSplit) : svc.ksvc.command
+        svc.ksvc.command?.length > 1 ? svc.ksvc.command.match(argSplit).map(argQuoteStrip) : svc.ksvc.command
       // same for args
-      svcCloned.ksvc.args = svc.ksvc.args?.length > 1 ? svc.ksvc.args.match(argSplit).map(argQuoteSplit) : svc.ksvc.args
+      svcCloned.ksvc.args = svc.ksvc.args?.length > 1 ? svc.ksvc.args.match(argSplit).map(argQuoteStrip) : svc.ksvc.args
     } else if (serviceType === 'ksvcPredeployed') {
       svcCloned.ksvc = { predeployed: true }
     } else if (serviceType !== 'svcPredeployed') {

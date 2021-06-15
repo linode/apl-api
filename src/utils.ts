@@ -130,6 +130,7 @@ export const argSplit = /[^\s"']+|("[^"]*")|('[^']*')/g
 export const argQuoteJoin = (a) =>
   a
     .map((s: string) => {
+      if (['"', "'"].includes(s.charAt(0))) return s.substr(1, s.length - 2)
       const q = s.includes("'") && !s.includes("\\'") ? '"' : "'"
       return `${q}${s}${q}`
     })
@@ -137,7 +138,8 @@ export const argQuoteJoin = (a) =>
 
 const doubleQuoteMatcher = /"/g
 const singleQuoteMatcher = /'/g
-export const argQuoteSplit = (s) => {
+export const argQuoteStrip = (s) => {
+  if (['"', "'"].includes(s.charAt(0))) return s.substr(1, s.length - 2)
   if (s.includes("'") && !s.includes("\\'")) return s.replace(doubleQuoteMatcher, '')
   return s.replace(singleQuoteMatcher, '')
 }
