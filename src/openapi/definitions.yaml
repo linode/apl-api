@@ -124,7 +124,7 @@ azureCreds:
 azureMonitor:
   description: Azure Monitor data can be made available in Grafana.
   nullable: true
-  oneOf:
+  anyOf:
     - $ref: '#/offChoice'
     - properties:
         clientId:
@@ -455,7 +455,7 @@ kms:
     sops:
       description: Encryption credentials for SOPS to encrypt the platform secrets.
       title: SOPS credentials
-      oneOf:
+      anyOf:
         - $ref: definitions.yaml#/awsCreds
         - $ref: definitions.yaml#/azureCreds
         - $ref: definitions.yaml#/googleCreds
@@ -478,7 +478,7 @@ ksvcNew:
           type: boolean
         autoCD:
           description: Deploys new images based on a tagging strategy
-          oneOf:
+          anyOf:
             - $ref: '#/offChoice'
             - nullable: true
               properties:

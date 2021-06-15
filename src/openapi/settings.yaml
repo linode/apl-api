@@ -54,7 +54,7 @@ Settings:
           type: array
         provider:
           description: The DNS provider managing the domains.
-          oneOf:
+          anyOf:
             - title: AWS
               properties:
                 aws:
@@ -121,7 +121,7 @@ Settings:
                     - project
               required:
                 - google
-      oneOf:
+      anyOf:
         - title: AWS
           properties:
             aws:
