@@ -486,8 +486,10 @@ podSpec:
           $ref: '#/securityContext'
           description: Security context for the pod.
           title: Pod security context
-      required:
-        - podSecurityContext
+      # just commenting podSecurityContext out here in required to make form work
+      # TODO: enable after we upgrade knative to support podSecurityContext
+      # required:
+      #   - podSecurityContext
       type: object
     - $ref: '#/containerSpec'
   type: object
