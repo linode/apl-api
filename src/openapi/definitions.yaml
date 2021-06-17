@@ -1,5 +1,4 @@
 alerts:
-  description: Define Alerts for communication channels.
   properties:
     drone:
       default: slack

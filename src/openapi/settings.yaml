@@ -6,7 +6,7 @@ Settings:
   properties:
     alerts:
       title: Alerts
-      additionalProperties: false
+      description: Customer communication channel settings.
       $ref: definitions.yaml#/alerts
     azure:
       title: Azure
@@ -37,12 +37,15 @@ Settings:
         - tenantId
     customer:
       title: Customer
+      description: A customer's settings.
       additionalProperties: false
       properties:
         name:
           type: string
           title: Name
     dns:
+      title: DNS
+      description: Domain name server settings.
       additionalProperties: false
       properties:
         zones:
@@ -127,12 +130,13 @@ Settings:
       $ref: 'definitions.yaml#/kms'
     home:
       title: Home alerts
+      description: Communication channel settings to share with an organization.
       additionalProperties: false
       $ref: definitions.yaml#/alerts
     oidc:
       title: OIDC
+      description: OpenID Connect settings.
       additionalProperties: false
-      description: Holds many parts used in different locations. Please see keycloak, istio and oauth-proxy all consuming parts.
       properties:
         adminGroupID:
           title: Admin group ID
@@ -176,6 +180,8 @@ Settings:
           title: Username claim mapper
           type: string
     otomi:
+      title: Otomi
+      description: Settings for Otomi.
       additionalProperties: false
       properties:
         additionalClusters:
@@ -242,9 +248,10 @@ Settings:
           title: Team prefix
           type: string
     smtp:
+      title: SMTP
+      description: Mail server settings.
       # https://prometheus.io/docs/alerting/latest/configuration/#tmpl_string
       additionalProperties: false
-      description: Define SMTP settings.
       properties:
         auth_identity:
           title: Authentication identity
