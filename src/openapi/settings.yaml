@@ -54,10 +54,11 @@ Settings:
           type: array
         provider:
           description: The DNS provider managing the domains.
-          anyOf:
+          oneOf:
             - title: AWS
               properties:
                 aws:
+                  title: AWS
                   properties:
                     region:
                       type: string
@@ -121,84 +122,6 @@ Settings:
                     - project
               required:
                 - google
-      anyOf:
-        - title: AWS
-          properties:
-            aws:
-              title: AWS
-              properties:
-                region:
-                  type: string
-                  title: Region
-              required:
-                - region
-              type: object
-          type: object
-          required:
-            - aws
-        - title: Azure
-          properties:
-            azure:
-              properties:
-                cloud:
-                  title: Cloud
-                  type: string
-                  description: Azure Cloud
-                resourceGroup:
-                  title: Resource group
-                  type: string
-                  description: Azure resource group
-                hostedZoneName:
-                  title: Hosted zone name
-                  type: string
-                tenantId:
-                  title: Tenant ID
-                  type: string
-                  description: Azure tenant ID.
-                subscriptionId:
-                  title: Subscription ID
-                  type: string
-                  description: Azure subscription ID.
-                aadClientId:
-                  title: Client ID
-                  type: string
-                  description: Azure Application Client ID.
-                aadClientSecret:
-                  title: Client secret
-                  type: string
-                  description: Azure Application Client Secret.
-                useManagedIdentityExtension:
-                  title: Managed identities
-                  type: boolean
-                  description: If you use Azure MSI, this should be set to true.
-                  default: false
-              required:
-                - resourceGroup
-                - tenantId
-                - subscriptionId
-                - aadClientId
-                - aadClientSecret
-          required:
-            - azure
-        - title: Google
-          properties:
-            google:
-              title: Google
-              properties:
-                serviceAccountKey:
-                  description: A service account key for managing a DNS zone.
-                  title: Service account key
-                  type: string
-                project:
-                  title: Project
-                  type: string
-              required:
-                - serviceAccountKey
-                - project
-          required:
-            - google
-      required:
-        - domain
     kms:
       additionalProperties: false
       $ref: 'definitions.yaml#/kms'
