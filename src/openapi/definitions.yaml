@@ -1,5 +1,5 @@
 alerts:
-  description: Define Alerts for communication channels.
+  additionalProperties: false
   properties:
     drone:
       default: slack
@@ -83,6 +83,8 @@ annotations:
         type: string
         maxLength: 32767
 awsCreds:
+  title: AWS credentials
+  description: Amazon Web Services credentials.
   properties:
     accessKey:
       title: Access Key
@@ -99,6 +101,8 @@ awsCreds:
     - secretKey
     - region
 azureCreds:
+  title: Azure credentials
+  description: Microsoft's Azure credentials.
   properties:
     clientId:
       description: Enter client ID.
@@ -257,8 +261,8 @@ files:
       - content
     type: object
 googleCreds:
-  title: Google Credentials
-  description: Enter Google credentials.
+  title: Google credentials
+  description: Google's GCP credentials.
   properties:
     accountJson:
       description: Enter GCP account JSON for authentication.
@@ -596,6 +600,7 @@ url:
   pattern: ^(https:\/\/)([\w\-])+\.{1}([a-zA-Z]{2,63})([\/\w-]*)*\/?\??([^#\n\r]*)?#?([^\n\r]*)$
   type: string
 vaultCreds:
+  title: Vault credentials
   description: Hashicorp's Vault credentials.
   properties:
     token:
@@ -603,7 +608,6 @@ vaultCreds:
       type: string
   required:
     - token
-  title: Vault Credentials
 volumes:
   items:
     additionalProperties: false

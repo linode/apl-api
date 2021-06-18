@@ -6,7 +6,7 @@ Settings:
   properties:
     alerts:
       title: Alerts
-      additionalProperties: false
+      description: Customer communication channel settings.
       $ref: definitions.yaml#/alerts
     azure:
       title: Azure
@@ -37,12 +37,15 @@ Settings:
         - tenantId
     customer:
       title: Customer
+      description: A customer's settings.
       additionalProperties: false
       properties:
         name:
           type: string
           title: Name
     dns:
+      title: DNS
+      description: Domain name server settings.
       additionalProperties: false
       properties:
         zones:
@@ -58,6 +61,7 @@ Settings:
             - title: AWS
               properties:
                 aws:
+                  title: AWS
                   properties:
                     region:
                       type: string
@@ -121,95 +125,18 @@ Settings:
                     - project
               required:
                 - google
-      oneOf:
-        - title: AWS
-          properties:
-            aws:
-              title: AWS
-              properties:
-                region:
-                  type: string
-                  title: Region
-              required:
-                - region
-              type: object
-          type: object
-          required:
-            - aws
-        - title: Azure
-          properties:
-            azure:
-              properties:
-                cloud:
-                  title: Cloud
-                  type: string
-                  description: Azure Cloud
-                resourceGroup:
-                  title: Resource group
-                  type: string
-                  description: Azure resource group
-                hostedZoneName:
-                  title: Hosted zone name
-                  type: string
-                tenantId:
-                  title: Tenant ID
-                  type: string
-                  description: Azure tenant ID.
-                subscriptionId:
-                  title: Subscription ID
-                  type: string
-                  description: Azure subscription ID.
-                aadClientId:
-                  title: Client ID
-                  type: string
-                  description: Azure Application Client ID.
-                aadClientSecret:
-                  title: Client secret
-                  type: string
-                  description: Azure Application Client Secret.
-                useManagedIdentityExtension:
-                  title: Managed identities
-                  type: boolean
-                  description: If you use Azure MSI, this should be set to true.
-                  default: false
-              required:
-                - resourceGroup
-                - tenantId
-                - subscriptionId
-                - aadClientId
-                - aadClientSecret
-          required:
-            - azure
-        - title: Google
-          properties:
-            google:
-              title: Google
-              properties:
-                serviceAccountKey:
-                  description: A service account key for managing a DNS zone.
-                  title: Service account key
-                  type: string
-                project:
-                  title: Project
-                  type: string
-              required:
-                - serviceAccountKey
-                - project
-          required:
-            - google
-      required:
-        - domain
     kms:
       additionalProperties: false
       $ref: 'definitions.yaml#/kms'
     home:
       title: Home alerts
+      description: Communication channel settings to share with an organization.
       additionalProperties: false
       $ref: definitions.yaml#/alerts
     oidc:
       title: OIDC
+      description: OpenID Connect settings.
       additionalProperties: false
-      description: Holds many parts used in different locations. Please see keycloak, istio and oauth-proxy all consuming parts.
       properties:
         adminGroupID:
           title: Admin group ID
@@ -253,6 +180,8 @@ Settings:
           title: Username claim mapper
           type: string
     otomi:
+      title: Otomi
+      description: Settings for Otomi.
       additionalProperties: false
       properties:
         additionalClusters:
@@ -319,9 +248,10 @@ Settings:
           title: Team prefix
           type: string
     smtp:
+      title: SMTP
+      description: Mail server settings.
       # https://prometheus.io/docs/alerting/latest/configuration/#tmpl_string
       additionalProperties: false
-      description: Define SMTP settings.
       properties:
         auth_identity:
           title: Authentication identity
@@ -346,6 +276,7 @@ Settings:
         smarthost:
           description: The smtp host:port combination.
           pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):()([1-9]|[1-5]?[0-9]{2,4}|6[1-4][0-9]{3}|65[1-4][0-9]{2}|655[1-2][0-9]|6553[1-5])$
+          type: string
           title: Smart Host
       required:
         - smarthost
