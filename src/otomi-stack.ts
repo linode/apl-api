@@ -95,13 +95,13 @@ export default class OtomiStack {
 
   setSubSetting(type, data, key) {
     if (!isEmpty(data)) {
-      return (
-        this.db.db
-          .get([type, key])
-          // @ts-ignore
-          .assign(data[key])
-          .write()
-      )
+      const ret = this.db.db
+        .get([type, key])
+        // @ts-ignore
+        .assign(data[key])
+        .write()
+      this.db.dirty = true
+      return ret
     }
     // If it returns the same object, unchanged, then you'll know that there is no successful PUT,
     // at least it will not write empty values.
