@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.59](https://github.com/redkubes/otomi-api/compare/v0.4.58...v0.4.59) (2021-06-21)
+
+
+### Features
+
+* titles for otomi-console ([#179](https://github.com/redkubes/otomi-api/issues/179)) ([dda0d43](https://github.com/redkubes/otomi-api/commit/dda0d436cdf42ad0c3ae895bcdbf52c78aa5be44))
+
+
+### Bug Fixes
+
+* dirty settings ([a047e9e](https://github.com/redkubes/otomi-api/commit/a047e9e5acdf1a7f65b08c39e34d638178f17f32))
+* schema ([d3b19f3](https://github.com/redkubes/otomi-api/commit/d3b19f3f8d955cb679e667a51aed622dadff741e))
+* schema [ci skip] ([83c4616](https://github.com/redkubes/otomi-api/commit/83c4616ceec3bff89e117df9b2ac3ea41a79c199))
+
 ### [0.4.58](https://github.com/redkubes/otomi-api/compare/v0.4.57...v0.4.58) (2021-06-15)
 
 
