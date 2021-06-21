@@ -1,14 +1,33 @@
 alerts:
   additionalProperties: false
   properties:
-    drone:
-      default: slack
-      description: Select default notification channel for Drone.
-      enum:
-        - slack
-        - msteams
-      title: Drone Notifications
+    repeatInterval:
+      default: 3h
+      description: Indicates waiting time before sending a notification again after it was sent successfully for an alert. (Usually ~3h or more).
+      title: Repeat Interval
       type: string
+    groupInterval:
+      default: 5m
+      description: How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.)
+      title: Group Interval
+      type: string
+    slack:
+      additionalProperties: false
+      properties:
+        channel:
+          default: mon-otomi
+          description: The Slack channel for non-critical notifications.
+          title: Non-critical
+          type: string
+        channelCrit:
+          default: mon-otomi
+          description: The Slack channel for critical notifications.
+          title: Critical
+          type: string
+        url:
+          $ref: '#/url'
+          description: A Slack webhook URL.
+      type: object
     email:
       additionalProperties: false
       properties:
@@ -21,11 +40,6 @@ alerts:
           $ref: '#/email'
           description: One or more email addresses (comma separated) for non-critical events.
       type: object
-    groupInterval:
-      default: 5m
-      description: How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.)
-      title: Group Interval
-      type: string
     msteams:
       additionalProperties: false
       description: Select Microsoft Teams notification settings.
@@ -46,28 +60,17 @@ alerts:
           - msteams
           - email
         type: string
-      title: Notification Receivers
+      title: Notification receivers
       type: array
-    repeatInterval:
-      default: 3h
-      description: Indicates waiting time before sending a notification again after it was sent successfully for an alert. (Usually ~3h or more).
-      title: Repeat Interval
+      uniqueItems: true
+    drone:
+      default: slack
+      description: Select default notification channel for Drone.
+      enum:
+        - slack
+        - msteams
+      title: Drone Notifications
       type: string
-    slack:
-      additionalProperties: false
-      properties:
-        channel:
-          default: mon-otomi
-          description: The Slack channel for non-critical notifications.
-          type: string
-        channelCrit:
-          default: mon-otomi
-          description: The Slack channel for critical notifications.
-          type: string
-        url:
-          $ref: '#/url'
-          description: A Slack webhook URL.
-      type: object
 annotation:
   type: string
   pattern: ^((.){1,253}\/)?(.){1,63}$
@@ -344,6 +347,8 @@ jobSpec:
       type: integer
     init:
       $ref: '#/containerSpec'
+      title: Init container
+      description: May specify an init container, allowing to do preparations like checking for conditions.
       nullable: true
   required:
     - name
@@ -352,7 +357,7 @@ jobSpec:
   type: object
 k8sVersion:
   default: '1.19'
-  description: The cluster k8s version. Otomi supports 2 minor versions backwards compatibility from the suggested default.
+  description: The cluster k8s version. Otomi supports 2 minor versions backwards from the suggested default.
   enum:
     - '1.17'
     - '1.18'

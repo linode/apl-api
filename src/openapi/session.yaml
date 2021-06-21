@@ -17,6 +17,7 @@ Session:
       type: array
       items:
         type: string
+      uniqueItems: true
     teams:
       readOnly: true
       type: array

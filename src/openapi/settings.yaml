@@ -22,19 +22,19 @@ Settings:
           type: object
         monitor:
           $ref: definitions.yaml#/azureMonitor
-        resourceGroup:
-          title: Azure resource group
-          type: string
-        subscriptionId:
-          title: Subscription ID
-          type: string
-        tenantId:
-          title: Tenant ID
-          type: string
+        storageType:
+          title: Storage types
+          description: Storage types for classes used in Otomi.
+          properties:
+            fast:
+              type: string
+            standard:
+              type: string
       required:
         - resourceGroup
         - subscriptionId
         - tenantId
+      x-provider: azure
     customer:
       title: Customer
       description: A customer's settings.
@@ -55,8 +55,10 @@ Settings:
             title: Zone
           title: Zones
           type: array
+          uniqueItems: true
         provider:
           description: The DNS provider managing the domains.
+          title: Provider
           oneOf:
             - title: AWS
               properties:
@@ -240,12 +242,6 @@ Settings:
           default: ''
           description: The pullsecret to deploy the Otomi API and Console. Requires an Otomi license.
           title: Pull secret
-          type: string
-        teamPrefix:
-          default: team-
-          description: The prefix to use in URLs for team domains.
-          pattern: ^[a-z]+[-]{1}$
-          title: Team prefix
           type: string
     smtp:
       title: SMTP

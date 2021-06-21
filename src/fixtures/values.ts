@@ -423,7 +423,6 @@ export default {
       isManaged: true,
       isMultitenant: true,
       mode: 'ce',
-      teamPrefix: 'team-',
       addons: {
         conftest: {
           enabled: true,
