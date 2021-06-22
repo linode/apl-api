@@ -509,7 +509,7 @@ paths:
             - smtp
         example: oidc
     get:
-      operationId: getSubSetting
+      operationId: getSetting
       description: Get a setting from the `settings.yaml` or `secret.settings.yaml` file.
       x-aclSchema: Settings
       responses:
@@ -522,7 +522,7 @@ paths:
 
     # TODO: https://github.com/redkubes/otomi-api/issues/155
     put:
-      operationId: editSubSetting
+      operationId: editSetting
       description: Edit a setting from the `settings.yaml` or `secret.settings.yaml` file.
       x-aclSchema: Settings
       requestBody:
@@ -643,6 +643,8 @@ components:
       $ref: definitions.yaml#/azureMonitor
     containerSpec:
       $ref: definitions.yaml#/containerSpec
+    cpu:
+      $ref: definitions.yaml#/cpuQuantity
     domain:
       $ref: definitions.yaml#/domain
     email:
@@ -663,12 +665,16 @@ components:
       $ref: definitions.yaml#/ksvcNew
     ksvcPredeployed:
       $ref: definitions.yaml#/ksvcPredeployed
+    memory:
+      $ref: definitions.yaml#/memoryQuantity
     offChoice:
       $ref: definitions.yaml#/offChoice
     path:
       $ref: definitions.yaml#/path
     podSpec:
       $ref: definitions.yaml#/podSpec
+    policies:
+      $ref: policies.yaml#/policies
     resource:
       $ref: definitions.yaml#/resource
     resources:

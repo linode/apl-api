@@ -89,11 +89,11 @@ export default class OtomiStack {
     this.loadValues()
   }
 
-  getSubSetting(type, key) {
+  getSetting(type, key) {
     return { [key]: this.db.db.get([type, key]).value() }
   }
 
-  setSubSetting(type, data, key) {
+  setSetting(type, data, key) {
     if (!isEmpty(data)) {
       const ret = this.db.db
         .get([type, key])
@@ -327,6 +327,7 @@ export default class OtomiStack {
 
   loadValues(skipAdmin = false): void {
     this.loadCluster()
+    this.loadPolicies()
     this.loadSettings()
     this.loadTeams(skipAdmin)
     this.db.setDirtyActive()
@@ -361,12 +362,19 @@ export default class OtomiStack {
     this.repo.writeFile(dataPath, plainData)
   }
 
+  loadPolicies(): void {
+    const data = this.loadConfig('./env/policies.yaml', './env/policies.yaml') as Settings
+    // @ts-ignore
+    this.db.db.get('settings').assign(data).write()
+  }
+
   loadSettings(): void {
     const data = this.loadConfig(
       './env/settings.yaml',
       `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
     ) as Settings
-    this.db.db.set('settings', data).write()
+    // @ts-ignore
+    this.db.db.get('settings').assign(data).write()
   }
 
   loadTeamJobs(teamId: string): void {
