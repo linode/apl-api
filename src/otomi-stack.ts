@@ -442,9 +442,18 @@ export default class OtomiStack {
     })
   }
 
+  savePolicies(): void {
+    const settings: Settings = this.getSettings()
+    this.repo.writeFile('./env/policies.yaml', { policies: settings.policies })
+  }
+
   saveSettings(): void {
     const settings: Settings = this.getSettings()
-    this.saveConfig('./env/settings.yaml', `./env/secrets.settings.yaml${this.decryptedFilePostfix}`, settings)
+    this.saveConfig(
+      './env/settings.yaml',
+      `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
+      omit(settings, 'policies'),
+    )
   }
 
   saveTeams(): void {
@@ -617,6 +626,7 @@ export default class OtomiStack {
 
   saveValues(): void {
     // TODO: saveApps()
+    this.savePolicies()
     this.saveSettings()
     this.saveTeams()
   }
