@@ -94,7 +94,7 @@ export default class OtomiStack {
   }
 
   setSetting(type, data, key) {
-    if (!isEmpty(data)) {
+    if (!(isEmpty(data) || isEmpty(data[key]))) {
       const ret = this.db.db
         .get([type, key])
         // @ts-ignore
@@ -103,9 +103,7 @@ export default class OtomiStack {
       this.db.dirty = true
       return ret
     }
-    // If it returns the same object, unchanged, then you'll know that there is no successful PUT,
-    // at least it will not write empty values.
-    return this.db.db.get([type, key]).value()
+    throw new Error('Received empty payload...')
   }
 
   getSettings(): Settings {
