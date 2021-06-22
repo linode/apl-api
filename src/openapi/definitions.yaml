@@ -216,6 +216,7 @@ containerSpec:
     - resources
   type: object
 cpuQuantity:
+  title: CPU Quantity
   description: Amount of cores, or slice of cpu in millis.
   default: 50m
   example:

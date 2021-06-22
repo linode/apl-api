@@ -506,6 +506,7 @@ paths:
             - kms
             - oidc
             - otomi
+            - policies
             - smtp
         example: oidc
     get:
