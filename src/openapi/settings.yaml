@@ -196,6 +196,8 @@ Settings:
               - domainSuffix
               - name
               - provider
+        adminPassword:
+          type: string
         addons:
           additionalProperties: false
           description: Manage addon configuration.
