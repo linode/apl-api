@@ -291,6 +291,7 @@ export default class OtomiStack {
     }
     const options = {
       users: [user],
+      clusters: [cluster],
       contexts: [context],
       currentContext: context.name,
     }

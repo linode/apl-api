@@ -63,6 +63,21 @@ export function getUser(user: JWT): User {
 export function jwtMiddleware(): RequestHandler {
   return function nextHandler(req: OpenApiRequestExt, res, next): any {
     const token = req.header('Authorization')
+    if (!token && env.isDev) {
+      // allow the client to specify a group to be in
+      const { team = 'otomi' } = req.query
+      // default to admin unless team is given
+      const isAdmin = !team || team === 'admin'
+      const groups = ['team-demo', 'team-otomi']
+      if (team && !groups.includes(`team-${team}`)) groups.push(`team-${team}`)
+      req.user = getUser({
+        name: isAdmin ? 'Bob Admin' : 'Joe Team',
+        email: isAdmin ? 'bob.admin@otomi.cloud' : `joe.team@otomi.cloud`,
+        groups,
+        roles: [],
+      })
+      return next()
+    }
     if (!token) {
       console.log('anonymous request')
       return next()
