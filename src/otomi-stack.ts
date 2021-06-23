@@ -94,16 +94,16 @@ export default class OtomiStack {
   }
 
   setSetting(type, data, key) {
-    if (!(isEmpty(data) || isEmpty(data[key]))) {
-      const ret = this.db.db
-        .get([type, key])
-        // @ts-ignore
-        .assign(data[key])
-        .write()
-      this.db.dirty = true
-      return ret
+    if (isEmpty(data) || isEmpty(data[key])) {
+      throw new Error('Received empty payload...')
     }
-    throw new Error('Received empty payload...')
+    const ret = this.db.db
+      .get([type, key])
+      // @ts-ignore
+      .assign(data[key])
+      .write()
+    this.db.dirty = true
+    return ret
   }
 
   getSettings(): Settings {
