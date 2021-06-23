@@ -89,23 +89,21 @@ export default class OtomiStack {
     this.loadValues()
   }
 
-  getSubSetting(type, key) {
+  getSetting(type, key) {
     return { [key]: this.db.db.get([type, key]).value() }
   }
 
-  setSubSetting(type, data, key) {
-    if (!isEmpty(data)) {
-      const ret = this.db.db
-        .get([type, key])
-        // @ts-ignore
-        .assign(data[key])
-        .write()
-      this.db.dirty = true
-      return ret
+  setSetting(type, data, key) {
+    if (isEmpty(data) || isEmpty(data[key])) {
+      throw new Error('Received empty payload...')
     }
-    // If it returns the same object, unchanged, then you'll know that there is no successful PUT,
-    // at least it will not write empty values.
-    return this.db.db.get([type, key]).value()
+    const ret = this.db.db
+      .get([type, key])
+      // @ts-ignore
+      .assign(data[key])
+      .write()
+    this.db.dirty = true
+    return ret
   }
 
   getSettings(): Settings {
@@ -328,6 +326,7 @@ export default class OtomiStack {
 
   loadValues(skipAdmin = false): void {
     this.loadCluster()
+    this.loadPolicies()
     this.loadSettings()
     this.loadTeams(skipAdmin)
     this.db.setDirtyActive()
@@ -362,12 +361,19 @@ export default class OtomiStack {
     this.repo.writeFile(dataPath, plainData)
   }
 
+  loadPolicies(): void {
+    const data = this.loadConfig('./env/policies.yaml', './env/policies.yaml') as Settings
+    // @ts-ignore
+    this.db.db.get('settings').assign(data).write()
+  }
+
   loadSettings(): void {
     const data = this.loadConfig(
       './env/settings.yaml',
       `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
     ) as Settings
-    this.db.db.set('settings', data).write()
+    // @ts-ignore
+    this.db.db.get('settings').assign(data).write()
   }
 
   loadTeamJobs(teamId: string): void {
@@ -435,9 +441,18 @@ export default class OtomiStack {
     })
   }
 
+  savePolicies(): void {
+    const settings: Settings = this.getSettings()
+    this.repo.writeFile('./env/policies.yaml', { policies: settings.policies })
+  }
+
   saveSettings(): void {
     const settings: Settings = this.getSettings()
-    this.saveConfig('./env/settings.yaml', `./env/secrets.settings.yaml${this.decryptedFilePostfix}`, settings)
+    this.saveConfig(
+      './env/settings.yaml',
+      `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
+      omit(settings, 'policies'),
+    )
   }
 
   saveTeams(): void {
@@ -610,6 +625,7 @@ export default class OtomiStack {
 
   saveValues(): void {
     // TODO: saveApps()
+    this.savePolicies()
     this.saveSettings()
     this.saveTeams()
   }

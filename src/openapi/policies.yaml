@@ -1,0 +1,313 @@
+policies:
+  title: Policies
+  description: |
+    List of policy objects used by Open Policy Agent tools (Conftest, Gatekeeper) to run policy based validation against both in-cluster Kubernetes contexts and plain Yaml resources
+  additionalProperties: false
+  properties:
+    banned-image-tags:
+      title: Banned image tags
+      description: Add any image tags for containers that are not allowed in your cluster.
+      additionalProperties: false
+      required: [enabled]
+      properties:
+        tags:
+          title: Tags
+          description: E.g. `latest`, `v0.1.0`, `0.1.0`.
+          type: array
+          items:
+            type: string
+        enabled:
+          title: Enabled
+          description: Enable or disable the `banned-image-tags` policy.
+          type: boolean
+          default: false
+    container-limits:
+      title: Container limits
+      description: Set global compute limits for your containers.
+      additionalProperties: false
+      required: [enabled]
+      properties:
+        cpu:
+          $ref: definitions.yaml#/cpuQuantity
+        memory:
+          $ref: definitions.yaml#/memoryQuantity
+        enabled:
+          title: Enabled
+          description: Enable or disable the `container-limits` policy.
+          type: boolean
+          default: false
+    psp-allowed-repos:
+      title: Allowed repositories
+      description: Add globally allowed repositories for version control.
+      additionalProperties: false
+      required: [enabled]
+      properties:
+        repos:
+          title: Repositories
+          description: Enter a list of allowed repositories.
+          type: array
+          items:
+            type: string
+        enabled:
+          title: Enabled
+          description: Enable or disable the `allowed-repos` policy.
+          type: boolean
+          default: false
+    psp-host-filesystem:
+      title: Host Filesystem
+      description: Set policies for the host filesystem of all Kubernetes cluster nodes.
+      additionalProperties: false
+      required: [enabled]
+      properties:
+        allowedHostPaths:
+          title: Allowed host paths
+          type: array
+          items:
+            required: [pathPrefix, readOnly]
+            properties:
+              pathPrefix:
+                title: Path prefix
+                description: E.g. `/opt` or `/tmp` or `/home`
+                type: string
+              readOnly:
+                title: Read-only
+                description: If enabled, files can only be read and not written or executed.
+                type: boolean
+            additionalProperties: false
+        enabled:
+          title: Enabled
+          description: Enable or disable the `host-filesystem` policy.
+          type: boolean
+          default: false
+    psp-allowed-users:
+      title: Allowed users
+      additionalProperties: false
+      required: [enabled]
+      properties:
+        runAsUser:
+          title: Run as user
+          additionalProperties: false
+          required: [rule]
+          properties:
+            rule:
+              title: Rule
+              description: Choose one rule to apply.
+              type: string
+              enum: [RunAsAny, MustRunAsNonRoot, MustRunAs]
+            ranges:
+              title: Ranges
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                required: [min, max]
+                properties:
+                  min:
+                    title: Minimal
+                    type: integer
+                  max:
+                    title: Maximal
+                    type: integer
+        runAsGroup:
+          title: Run as group
+          properties:
+            rule:
+              type: string
+              enum: [RunAsAny, MayRunAs, MustRunAs]
+            ranges:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                required: [min, max]
+                properties:
+                  min:
+                    title: Minimal
+                    type: integer
+                  max:
+                    title: Maximal
+                    type: integer
+        supplementalGroups:
+          title: Supplemental groups
+          properties:
+            rule:
+              title: Rule
+              description: Choose one rule to apply.
+              type: string
+              enum: [RunAsAny, MayRunAs, MustRunAs]
+            ranges:
+              title: Ranges
+              type: array
+              items:
+                additionalProperties: false
+                required: [min, max]
+                properties:
+                  min:
+                    title: Minimal
+                    type: integer
+                  max:
+                    title: Maximal
+                    type: integer
+        fsGroup:
+          title: Filesystem group
+          properties:
+            rule:
+              title: Rule
+              type: string
+              enum: [RunAsAny, MayRunAs, MustRunAs]
+            ranges:
+              title: Ranges
+              type: array
+              items:
+                additionalProperties: false
+                required: [min, max]
+                properties:
+                  min:
+                    title: Minimal
+                    type: integer
+                  max:
+                    title: Maximal
+                    type: integer
+        enabled:
+          title: Enabled
+          description: Enable or disable the `allowed-users` policy.
+          type: boolean
+          default: false
+    psp-host-security:
+      title: Host security
+      description: Whether a pod is allowed to access the host PID namespace/host IPC, or if a pod defines host aliases.
+      additionalProperties: false
+      required: [enabled]
+      properties:
+        enabled:
+          title: Enabled
+          description: Enable or disable the `host-security` policy.
+          type: boolean
+          default: false
+    psp-host-networking-ports:
+      title: Container host networking ports
+      description: Whether a pod can access ports on the host.
+      additionalProperties: false
+      required: [enabled]
+      properties:
+        enabled:
+          title: Enabled
+          description: Enable or disable the `host-networking-ports` policy.
+          type: boolean
+          default: false
+    psp-privileged:
+      title: Privileged containers
+      description: Whether privileged containers can escalate to root privileges on the node.
+      additionalProperties: false
+      required: [enabled]
+      properties:
+        enabled:
+          title: Enabled
+          description: Enable or disable the `privileged` policy.
+          type: boolean
+          default: false
+    psp-capabilities:
+      title: Container capabilities
+      description: Whether to allow containers with sufficient capabilities granted to obtain escalated access.
+      additionalProperties: false
+      required: [enabled]
+      properties:
+        enabled:
+          title: Enabled
+          description: Enable or disable the `capabilities` policy.
+          type: boolean
+          default: false
+        allowedCapabilities:
+          title: Allowed capabilities
+          type: array
+          items:
+            type: string
+        requiredDropCapabilities:
+          title: Required capabilities to drop
+          type: array
+          items:
+            type: string
+    psp-forbidden-sysctls:
+      title: Forbidden system controls (sysctls)
+      description: Determine what system controls are allowed or not.
+      additionalProperties: false
+      required: [enabled]
+      properties:
+        enabled:
+          title: Enabled
+          description: Enable or disable the `forbidden-sysctls` policy.
+          type: boolean
+          default: false
+        forbiddenSysctls:
+          title: Forbidden system controls
+          description: List the forbidden system controls here.
+          type: array
+          items:
+            type: string
+    psp-apparmor:
+      title: AppArmor
+      description: Prevents an application from accessing files it should not access.
+      additionalProperties: false
+      required: [enabled]
+      properties:
+        enabled:
+          title: Enabled
+          description: Enable or disable the `forbidden-sysctls` policy.
+          type: boolean
+          default: false
+        allowedProfiles:
+          title: Allowed profiles
+          type: array
+          items:
+            type: string
+    psp-seccomp:
+      title: Seccomp
+      description: Reduces the chance that a kernel vulnerability will be successfully exploited.
+      additionalProperties: false
+      required: [enabled]
+      properties:
+        enabled:
+          title: Enabled
+          description: Enable or disable the `seccomp` policy.
+          type: boolean
+          default: false
+        allowedProfiles:
+          title: Allowed profiles
+          type: array
+          items:
+            type: string
+    psp-selinux:
+      title: SELinux
+      description: Security-enhanced Linux
+      additionalProperties: false
+      required: [enabled]
+      properties:
+        enabled:
+          title: Enabled
+          description: Enable or disable the `selinux` policy.
+          type: boolean
+          default: false
+        seLinuxContext:
+          title: SELinux context
+          description: Choose one rule to apply.
+          type: string
+          enum: [MustRunAs, RunAsAny]
+        allowedSELinuxOptions:
+          title: Allowed SELinux options
+          description: Enter SELinux options for this context.
+          type: array
+          items:
+            additionalProperties: false
+            properties:
+              level:
+                title: Level
+                type: string
+              role:
+                title: Role
+                type: string
+              type:
+                title: Type
+                type: string
+              user:
+                title: User
+                type: string

@@ -196,6 +196,8 @@ Settings:
               - domainSuffix
               - name
               - provider
+        adminPassword:
+          type: string
         addons:
           additionalProperties: false
           description: Manage addon configuration.
@@ -243,6 +245,8 @@ Settings:
           description: The pullsecret to deploy the Otomi API and Console. Requires an Otomi license.
           title: Pull secret
           type: string
+    policies:
+      $ref: policies.yaml#/policies
     smtp:
       title: SMTP
       description: Mail server settings.
