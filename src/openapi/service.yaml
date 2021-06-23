@@ -38,7 +38,7 @@ Service:
         - $ref: '#/IngressCluster'
         - $ref: '#/IngressPrivate'
         - $ref: '#/IngressPublic'
-      x-externalDocsPath: https://otomi.io/docs/console/configuring-services/#exposure
+      x-externalDocsPath: docs/console/configuring-services/#exposure
     ksvc:
       oneOf:
         - $ref: definitions.yaml#/svcPredeployed
@@ -46,7 +46,7 @@ Service:
         - $ref: definitions.yaml#/ksvcNew
       title: Service type
       description: Type of service. Can be a knative service or a regular service.
-      x-externalDocsPath: https://otomi.io/docs/console/configuring-services/#type
+      x-externalDocsPath: docs/console/configuring-services/#type
   required:
     - name
     - ingress

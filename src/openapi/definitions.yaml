@@ -434,7 +434,7 @@ ksvcNew:
         - serviceType
       title: Knative service
       type: object
-  x-externalDocsPath: https://otomi.io/docs/console/configuring-services#1-new-knative-service
+  x-externalDocsPath: docs/console/configuring-services#1-new-knative-service
 ksvcPredeployed:
   description: Will map onto a predeployed knative service. Will take care of rewriting to the existing knative url.
   properties:
