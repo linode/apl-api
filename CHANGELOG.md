@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.60](https://github.com/redkubes/otomi-api/compare/v0.4.59...v0.4.60) (2021-06-24)
+
+
+### Features
+
+* manage policies in api ([#184](https://github.com/redkubes/otomi-api/issues/184)) ([2e0e040](https://github.com/redkubes/otomi-api/commit/2e0e040512f870eb3921bf112b3c0a320b671618))
+
+
+### Bug Fixes
+
+* kubecfg needed cluster input, fixes [#180](https://github.com/redkubes/otomi-api/issues/180) ([eac55fb](https://github.com/redkubes/otomi-api/commit/eac55fb034001b344be7690a909b1b1d9fd670e4))
+
 ### [0.4.59](https://github.com/redkubes/otomi-api/compare/v0.4.58...v0.4.59) (2021-06-21)
 
 
