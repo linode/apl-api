@@ -50,10 +50,8 @@ Service:
   required:
     - name
     - ingress
-  type: object
 
 Ingress:
-  type: object
   properties:
     tlsPass:
       default: false
