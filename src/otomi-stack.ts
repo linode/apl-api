@@ -333,7 +333,7 @@ export default class OtomiStack {
   }
 
   loadCluster(): void {
-    const data: any = this.repo.readFile('./env/cluster.yaml')
+    const data = this.repo.readFile('./env/cluster.yaml')
     const { cluster } = data
     this.db.populateItem('cluster', cluster, undefined, cluster.id)
   }
@@ -362,7 +362,7 @@ export default class OtomiStack {
   }
 
   loadPolicies(): void {
-    const data = this.loadConfig('./env/policies.yaml', './env/policies.yaml') as Settings
+    const data = this.repo.readFile('./env/policies.yaml') as Settings
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
