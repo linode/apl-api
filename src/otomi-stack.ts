@@ -636,14 +636,19 @@ export default class OtomiStack {
   }
 
   getSession(user: User): Session {
-    const cluster = this.getSetting('cluster') as Session['cluster']
     const data: Session = {
-      cluster,
+      // Need to
+      cluster: this.getSetting('cluster') as Session['cluster'],
+      clusters: get(this.getSetting('otomi'), 'additionalClusters') as Session['clusters'],
       core: this.getCore(),
-      dns: this.getSetting('dns'),
+      dns: this.getSetting('dns') as Session['dns'],
       user,
       teams: this.getTeams(),
       isDirty: this.db.isDirty(),
+      versions: {
+        core: env.CORE_VERSION,
+        api: process.env.npm_package_version,
+      },
     }
     return data
   }

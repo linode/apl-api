@@ -649,6 +649,8 @@ components:
       $ref: definitions.yaml#/containerSpec
     cpu:
       $ref: definitions.yaml#/cpuQuantity
+    dns:
+      $ref: definitions.yaml#/dns_
     domain:
       $ref: definitions.yaml#/domain
     email:
