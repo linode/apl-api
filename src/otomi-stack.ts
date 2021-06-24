@@ -14,6 +14,7 @@ import {
   Secret,
   Service,
   Session,
+  Setting,
   Settings,
   Team,
   TeamSelfService,
@@ -99,17 +100,17 @@ export default class OtomiStack {
     this.loadValues()
   }
 
-  getSetting(key?: string): Settings {
+  getSetting(key?: string): Setting | Settings {
     if (key) return this.db.db.get(['settings', key]).value()
     return this.db.db.get('settings').value()
   }
 
-  setSetting(type: string, data: Settings, key: string) {
-    if (isEmpty(data) || isEmpty(data[key])) {
+  setSetting(data: Setting, key: string) {
+    if (isEmpty(data)) {
       throw new Error('Received empty payload...')
     }
     const ret = this.db.db
-      .get([type, key])
+      .get(['settings', key])
       // @ts-ignore
       .assign(data[key])
       .write()
@@ -160,10 +161,6 @@ export default class OtomiStack {
   getTeamJobs(teamId: string): Array<Job> {
     const ids = { teamId }
     return this.db.getCollection('jobs', ids) as Array<Job>
-  }
-
-  getCluster(): Cluster {
-    return this.db.db.get('cluster').value()
   }
 
   getAllServices(): Array<Service> {
@@ -369,16 +366,13 @@ export default class OtomiStack {
   }
 
   loadPolicies(): void {
-    const data = this.repo.readFile('./env/policies.yaml') as Settings
+    const data = this.repo.readFile('./env/policies.yaml')
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
 
   loadSettings(): void {
-    const data = this.loadConfig(
-      './env/settings.yaml',
-      `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
-    ) as Settings
+    const data = this.loadConfig('./env/settings.yaml', `./env/secrets.settings.yaml${this.decryptedFilePostfix}`)
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
@@ -448,12 +442,16 @@ export default class OtomiStack {
     })
   }
 
+  saveCluster(): void {
+    this.repo.writeFile('./env/cluster.yaml', { cluster: this.getSetting('cluster') as Setting })
+  }
+
   savePolicies(): void {
-    this.repo.writeFile('./env/policies.yaml', this.getSetting('policies'))
+    this.repo.writeFile('./env/policies.yaml', { policies: this.getSetting('policies') as Setting })
   }
 
   saveSettings(): void {
-    const settings: Settings = this.getSetting()
+    const settings = this.getSetting() as Settings
     this.saveConfig(
       './env/settings.yaml',
       `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
@@ -570,7 +568,7 @@ export default class OtomiStack {
       svc.ingress = { type: 'cluster' }
     } else {
       const dns: Dns = this.getSetting('dns') as Dns
-      const cluster = this.getCluster()
+      const cluster: Cluster = this.getSetting('cluster') as Cluster
       const url = getServiceUrl({ domain: svcRaw.domain, name: svcRaw.name, teamId, cluster, dns })
       svc.ingress = {
         hasCert: 'hasCert' in svcRaw,
@@ -631,14 +629,16 @@ export default class OtomiStack {
 
   saveValues(): void {
     // TODO: saveApps()
+    this.saveCluster()
     this.savePolicies()
     this.saveSettings()
     this.saveTeams()
   }
 
   getSession(user: User): Session {
+    const cluster = this.getSetting('cluster') as Session['cluster']
     const data: Session = {
-      cluster: this.getCluster(),
+      cluster,
       core: this.getCore(),
       dns: this.getSetting('dns'),
       user,
