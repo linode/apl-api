@@ -1,8 +1,7 @@
 Session:
   properties:
     cluster:
-      readOnly: true
-      $ref: cluster.yaml#/Cluster
+      $ref: cluster_.yaml#/BaseCluster
     dns:
       type: object
       readOnly: true

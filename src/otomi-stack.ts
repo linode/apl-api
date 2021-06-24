@@ -333,7 +333,7 @@ export default class OtomiStack {
   }
 
   loadCluster(): void {
-    const data = this.repo.readFile('./env/cluster.yaml')
+    const data: any = this.repo.readFile('./env/cluster_.yaml')
     const { cluster } = data
     this.db.populateItem('cluster', cluster, undefined, cluster.id)
   }

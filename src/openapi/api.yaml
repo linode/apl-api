@@ -500,6 +500,7 @@ paths:
           enum:
             - alerts
             - azure
+            - cluster
             - customer
             - dns
             - home
@@ -592,8 +593,10 @@ components:
   # Please stick to: alphabetical sorting, all Uppercase first and then lowercase.
   # --------------------------------------------
   schemas:
-    Cluster:
-      $ref: cluster.yaml#/Cluster
+    AdditionalCluster:
+      $ref: cluster_.yaml#/AdditionalCluster
+    BaseCluster:
+      $ref: cluster_.yaml#/BaseCluster
     Deployment:
       $ref: deployment.yaml#/Deployment
     Ingress:
@@ -660,6 +663,8 @@ components:
       $ref: definitions.yaml#/image
     jobSpec:
       $ref: definitions.yaml#/jobSpec
+    k8sVersion:
+      $ref: definitions.yaml#/k8sVersion
     kms:
       $ref: definitions.yaml#/kms
     ksvcNew:

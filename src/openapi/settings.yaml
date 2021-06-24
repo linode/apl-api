@@ -35,6 +35,8 @@ Settings:
         - subscriptionId
         - tenantId
       x-provider: azure
+    cluster:
+      $ref: cluster_.yaml#/BaseCluster
     customer:
       title: Customer
       description: A customer's settings.
@@ -191,7 +193,7 @@ Settings:
           description: Enter other k8s clusters, if there are any.
           type: array
           items:
-            $ref: cluster.yaml#/Cluster
+            $ref: cluster_.yaml#/AdditionalCluster
             required:
               - domainSuffix
               - name
