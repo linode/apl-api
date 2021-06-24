@@ -1,3 +1,4 @@
+# If this file is called "cluster.yaml", it gets validated by yaml-schema and it keeps thinking it is a proprietory file
 AdditionalCluster:
   x-acl:
     admin:

@@ -6,7 +6,8 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
   const GET: Operation = [
     ({ params: { setting } }: OpenApiRequest, res): void => {
       console.debug(`Get settings: ${JSON.stringify({ setting })}`)
-      res.json(otomi.getSetting('settings', setting))
+      // Hacky work-around because can't use oneOf in OpenAPI Schema object
+      res.json({ [setting]: otomi.getSetting(setting) })
     },
   ]
   const PUT: Operation = [

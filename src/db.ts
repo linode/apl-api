@@ -9,7 +9,7 @@ import { Cluster, Job, Secret, Service, Settings, Team } from './otomi-models'
 
 export type DbType = Cluster | Job | Secret | Service | Team | Settings
 export type Schema = {
-  cluster: Cluster[]
+  cluster: Cluster
   jobs: Job[]
   secrets: Secret[]
   services: Service[]
@@ -33,15 +33,16 @@ export default class Db {
       },
     })
     // Set some defaults (required if your JSON file is empty)
-    const defaults: Schema = {
-      cluster: [],
-      jobs: [],
-      secrets: [],
-      services: [],
-      settings: {},
-      teams: [],
-    }
-    this.db.defaults(defaults).write()
+    this.db
+      .defaults({
+        cluster: {},
+        jobs: [],
+        secrets: [],
+        services: [],
+        settings: {},
+        teams: [],
+      })
+      .write()
     this.dirty = false
     this.dirtyActive = false
   }
