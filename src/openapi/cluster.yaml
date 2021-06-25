@@ -1,9 +1,6 @@
 # If this file is called "cluster.yaml", it gets validated by yaml-schema and it keeps thinking it is a proprietory file
 BaseCluster:
   properties:
-    id:
-      title: ID
-      type: string
     apiName:
       title: API name
       description: Only used for API/UI to show in app.

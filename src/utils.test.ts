@@ -5,7 +5,6 @@ import { getObjectPaths, getServiceUrl, getTeamSecretsFilePath, getTeamSecretsJs
 describe('Utils', () => {
   const cluster: Cluster = {
     domainSuffix: 'dev.otomi.cloud',
-    id: '1f4e8330-8e85-4da0-9a6d-488c8e192c90',
     apiName: 'onprem',
     apiServer: 'apiServer.onprem.example.com',
     k8sVersion: '1.19',

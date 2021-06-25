@@ -7,14 +7,12 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
     ({ params: { setting } }: OpenApiRequest, res): void => {
       // Hacky work-around (`[setting]: obj`) because one can't use oneOf directly in OpenAPI Schema object
       // TODO https://stackoverflow.com/a/64467369/8357826
-      const resBody = { [setting]: otomi.getSetting(setting) }
-      if (res.json(resBody)) console.debug(`DEBUG response: ${JSON.stringify(resBody, null, 2)}`)
+      res.json({ [setting]: otomi.getSetting(setting) })
     },
   ]
   const PUT: Operation = [
     ({ params: { setting }, body }: OpenApiRequest, res): void => {
-      const payload = otomi.setSetting(body, setting)
-      if (res.json(payload)) console.debug(`DEBUG payload: ${JSON.stringify(payload, null, 2)}`)
+      res.json(otomi.setSetting(body, setting))
     },
   ]
   const api = {
