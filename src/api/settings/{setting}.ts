@@ -5,15 +5,16 @@ import { OpenApiRequest } from '../../otomi-models'
 export default function (otomi: OtomiStack): OperationHandlerArray {
   const GET: Operation = [
     ({ params: { setting } }: OpenApiRequest, res): void => {
-      console.debug(`Response: ${JSON.stringify({ setting })}`)
-      // Hacky work-around because can't use oneOf in OpenAPI Schema object
-      res.json({ [setting]: otomi.getSetting(setting) })
+      // Hacky work-around (`[setting]: obj`) because one can't use oneOf directly in OpenAPI Schema object
+      // TODO https://stackoverflow.com/a/64467369/8357826
+      const resBody = { [setting]: otomi.getSetting(setting) }
+      if (res.json(resBody)) console.debug(`DEBUG response: ${JSON.stringify(resBody, null, 2)}`)
     },
   ]
   const PUT: Operation = [
     ({ params: { setting }, body }: OpenApiRequest, res): void => {
-      console.debug(`Payload: ${JSON.stringify({ [setting]: body })}`)
-      res.json(otomi.setSetting(body, setting))
+      const payload = otomi.setSetting(body, setting)
+      if (res.json(payload)) console.debug(`DEBUG payload: ${JSON.stringify(payload, null, 2)}`)
     },
   ]
   const api = {
