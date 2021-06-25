@@ -36,7 +36,7 @@ Settings:
         - tenantId
       x-provider: azure
     cluster:
-      $ref: cluster.yaml#/BaseCluster
+      $ref: cluster.yaml#/Cluster
     customer:
       title: Customer
       description: A customer's settings.
