@@ -1,11 +1,11 @@
 Session:
   properties:
     cluster:
-      $ref: cluster_.yaml#/BaseCluster
+      $ref: cluster.yaml#/Cluster
     clusters:
       type: array
       items:
-        $ref: cluster_.yaml#/AdditionalCluster
+        $ref: cluster.yaml#/AdditionalCluster
     dns:
       $ref: definitions.yaml#/dns_
       readOnly: true

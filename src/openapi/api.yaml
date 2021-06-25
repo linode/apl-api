@@ -594,9 +594,11 @@ components:
   # --------------------------------------------
   schemas:
     AdditionalCluster:
-      $ref: cluster_.yaml#/AdditionalCluster
+      $ref: cluster.yaml#/AdditionalCluster
     BaseCluster:
-      $ref: cluster_.yaml#/BaseCluster
+      $ref: cluster.yaml#/BaseCluster
+    Cluster:
+      $ref: cluster.yaml#/Cluster
     Deployment:
       $ref: deployment.yaml#/Deployment
     Ingress:
