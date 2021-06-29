@@ -16,14 +16,16 @@ const baseUrl = `http://${env.TOOLS_HOST}:17771/`
 const decryptUrl = `${baseUrl}decrypt`
 const encryptUrl = `${baseUrl}encrypt`
 
-async function decrypt(): Promise<AxiosResponse | void> {
+export async function decrypt(): Promise<AxiosResponse | void> {
   if (!env.USE_SOPS) return Promise.resolve()
+  console.info('Requesting decrypt action')
   const res = await axios.get(decryptUrl)
   return res
 }
 
-async function encrypt(): Promise<AxiosResponse | void> {
+export async function encrypt(): Promise<AxiosResponse | void> {
   if (!env.USE_SOPS) return Promise.resolve()
+  console.info('Requesting encrypt action')
   const res = await axios.get(encryptUrl)
   return res
 }
@@ -110,15 +112,17 @@ export class Repo {
     if (!isRepo) {
       console.info(`Repo does not exist. Cloning from: ${this.url} to: ${this.path}`)
       await this.git.clone(this.repoPathAuth, this.path)
-      await decrypt()
       return
     }
     console.log('Repo already exists. Checking out correct branch.')
     await this.git.checkout(this.branch)
 
+    if (env.isDev) await decrypt() // do it now because pull usually fails because of dirty state of git
     try {
       await this.pull()
+      if (!env.isDev) await decrypt()
     } catch (e) {
+      console.error(e)
       if (env.isDev) await this.git.clean(CleanOptions.FORCE)
       else throw e
     }

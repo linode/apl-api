@@ -680,6 +680,8 @@ components:
       $ref: definitions.yaml#/resource
     resources:
       $ref: definitions.yaml#/resources
+    resourceQuota:
+      $ref: definitions.yaml#/resourceQuota
     script:
       $ref: definitions.yaml#/script
     secrets:

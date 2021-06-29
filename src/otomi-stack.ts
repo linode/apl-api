@@ -23,7 +23,7 @@ import {
   getTeamServicesJsonPath,
   objectToArray,
 } from './utils'
-import cloneRepo, { Repo } from './repo'
+import cloneRepo, { encrypt, Repo } from './repo'
 import {
   cleanEnv,
   CORE_VERSION,
@@ -244,6 +244,7 @@ export default class OtomiStack {
   async triggerDeployment(email: string): Promise<void> {
     console.log('DISABLE_SYNC: ', env.DISABLE_SYNC)
     this.saveValues()
+    encrypt()
 
     if (!env.DISABLE_SYNC) {
       await this.repo.save(email)
@@ -402,10 +403,7 @@ export default class OtomiStack {
     const secrets: Array<Secret> = get(data, getTeamSecretsJsonPath(teamId), [])
 
     secrets.forEach((inSecret) => {
-      // @ts-ignore
-      const secret: Secret = this.convertSecretToDb(inSecret, teamId)
-      const res: any = this.db.populateItem('secrets', secret, { teamId, name: secret.name }, secret.id)
-      console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
+      this.loadSecret(inSecret, teamId)
     })
   }
 
@@ -413,7 +411,7 @@ export default class OtomiStack {
     const mergedData: Core = this.loadConfig('./env/teams.yaml', `./env/secrets.teams.yaml${this.decryptedFilePostfix}`)
 
     Object.values(mergedData.teamConfig.teams).forEach((team: Team) => {
-      this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id)
+      this.loadTeam(team)
       if (!skipAdmin) this.loadCoreServices()
       this.loadTeamJobs(team.id!)
       this.loadTeamServices(team.id!)
@@ -424,7 +422,7 @@ export default class OtomiStack {
   loadCoreServices(): void {
     const { services } = this.coreValues
     services.forEach((svc) => {
-      this.convertServiceToDb(svc, 'admin')
+      this.loadService(svc, 'admin')
     })
   }
 
@@ -437,7 +435,7 @@ export default class OtomiStack {
     const data = this.repo.readFile(relativePath)
     const services = get(data, getTeamServicesJsonPath(teamId), [])
     services.forEach((svc) => {
-      this.convertServiceToDb(svc, teamId)
+      this.loadService(svc, teamId)
     })
   }
 
@@ -469,23 +467,20 @@ export default class OtomiStack {
     ]
     const secretPaths: string[] = []
     const teams = this.getTeams()
-    teams.forEach((team) => {
-      // TODO: fix this ugly team.id || ''
-      this.saveTeamJobs(team.id || '')
-      this.saveTeamServices(team.id || '')
-      this.saveTeamSecrets(team.id || '')
-      // eslint-disable-next-line no-param-reassign
+    teams.forEach((inTeam) => {
+      const team: any = omit(inTeam, 'name')
+      this.saveTeamJobs(team.id!)
+      this.saveTeamServices(team.id!)
+      this.saveTeamSecrets(team.id!)
       if (!team.password) team.password = generatePassword(16, false)
-      teamValues[team.id || ''] = omit(team, 'name')
+      team.resourceQuota = arrayToObject(team.resourceQuota ?? [])
 
       secretPropertyPaths.forEach((propertyPath) => {
         secretPaths.push(`teamConfig.teams.${team.id}.${propertyPath}`)
       })
+      teamValues[team.id!] = team
     })
-
-    const values = {}
-    set(values, 'teamConfig.teams', teamValues)
-
+    const values = set({}, 'teamConfig.teams', teamValues)
     this.saveConfig(filePath, secretFilePath, values, secretPaths)
   }
 
@@ -499,7 +494,6 @@ export default class OtomiStack {
     const jobs = this.db.getCollection('jobs', { teamId })
     const jobsRaw = jobs.map((item) => omit(item, ['teamId']))
     const data = {}
-
     set(data, getTeamJobsJsonPath(teamId), jobsRaw)
     const filePath = getTeamJobsFilePath(teamId)
     this.repo.writeFile(filePath, data)
@@ -519,17 +513,25 @@ export default class OtomiStack {
     this.repo.writeFile(filePath, data)
   }
 
-  convertSecretToDb(inSecret, teamId): void {
+  loadTeam(inTeam): any {
+    const team = { ...inTeam }
+    team.resourceQuota = objectToArray(inTeam.resourceQuota)
+    const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id)
+    console.log(`Loaded team: ${res.name}, id: ${res.id}`)
+  }
+
+  loadSecret(inSecret, teamId): void {
     const secret: any = omit(inSecret, ...secretTransferProps)
     secret.teamId = teamId
     secret.secret = secretTransferProps.reduce((memo: any, prop) => {
       if (inSecret[prop] !== undefined) memo[prop] = inSecret[prop]
       return memo
     }, {})
-    return secret
+    const res: any = this.db.populateItem('secrets', secret, { teamId, name: secret.name }, secret.id)
+    console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
   }
 
-  convertDbSecretToValues(inSecret: any): void {
+  convertDbSecretToValues(inSecret: any): any {
     const secret: any = omit(inSecret, 'secret')
     secretTransferProps.forEach((prop) => {
       if (inSecret.secret[prop] !== undefined) secret[prop] = inSecret.secret[prop]
@@ -537,7 +539,7 @@ export default class OtomiStack {
     return secret
   }
 
-  convertServiceToDb(svcRaw, teamId): void {
+  loadService(svcRaw, teamId): void {
     // Create service
     const svc = omit(svcRaw, 'domain', 'forwardPath', 'hasCert', 'auth', 'ksvc', 'paths', 'type', 'ownHost', 'tlsPass')
     svc.teamId = teamId
@@ -550,7 +552,7 @@ export default class OtomiStack {
       } else {
         svc.ksvc = cloneDeep(svcRaw.ksvc)
         svc.ksvc.serviceType = 'ksvc'
-        svc.ksvc.annotations = objectToArray(svcRaw.ksvc.annotations, 'name', 'value')
+        svc.ksvc.annotations = objectToArray(svcRaw.ksvc.annotations)
         svc.ksvc.env = objectToArray(svcRaw.ksvc.env, 'name', 'value')
         svc.ksvc.files = objectToArray(svcRaw.ksvc.files, 'path', 'content')
         svc.ksvc.secretMounts = objectToArray(svcRaw.ksvc.secretMounts, 'name', 'path')
@@ -593,8 +595,8 @@ export default class OtomiStack {
     delete ksvc.serviceType
     if (serviceType === 'ksvc') {
       svcCloned.ksvc = ksvc
-      svcCloned.ksvc.annotations = arrayToObject(svc.ksvc.annotations ?? [], 'name', 'value')
-      svcCloned.ksvc.env = arrayToObject(svc.ksvc.env ?? [], 'name', 'value')
+      svcCloned.ksvc.annotations = arrayToObject(svc.ksvc.annotations!)
+      svcCloned.ksvc.env = arrayToObject(svc.ksvc.env ?? [])
       svcCloned.ksvc.files = arrayToObject(svc.ksvc.files ?? [], 'path', 'content')
       svcCloned.ksvc.secretMounts = arrayToObject(svc.ksvc.secretMounts ?? [], 'name', 'path')
       svcCloned.ksvc.command = svc.ksvc.command?.length > 1 ? svc.ksvc.command.split(' ') : svc.ksvc.command

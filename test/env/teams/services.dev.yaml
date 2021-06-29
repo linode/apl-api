@@ -3,9 +3,10 @@ teamConfig:
     dev:
       services:
         - name: tlspass
-          port: 8080
+          port: 80
           id: d611a6be-3898-406d-9b5a-44ee2ba14dfb
           ksvc:
+            containerPort: 80
             podSecurityContext:
               runAsUser: 1001
               runAsGroup: 1001

@@ -393,6 +393,10 @@ ksvcNew:
           description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
           title: Scale to zero
           type: boolean
+        containerPort:
+          $ref: '#/portNumber'
+          description: Container port the knative pod will connect with. Leaving this empty will let knative infer the port from the container, which usually works, but might be problematic when the container does not specifically expose a port. (As is the case with nginx derived images!)
+          title: Container port
         autoCD:
           description: Deploys new images based on a tagging strategy
           oneOf:
@@ -541,6 +545,17 @@ resources:
       description: Requested resources (guaranteed).
   title: Resources
   type: object
+resourceQuota:
+  description: 'List of kubernetes resource quota. Should adhere to the "spec.hard" format as described here: https://kubernetes.io/docs/concepts/policy/resource-quotas/. Not validated as there is no schema published. Change at your own risk.'
+  title: Resource quota
+  type: array
+  items:
+    type: object
+    properties:
+      name:
+        type: string
+      value:
+        type: string
 scaling:
   description: Min and max number of replicas.
   properties:
