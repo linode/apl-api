@@ -81,7 +81,7 @@ export class Repo {
     const absolutePath = path.join(this.path, relativePath)
     console.debug(`Writing to file: ${absolutePath}`)
     const cleanedData = cleanDeep(data)
-    const yamlStr = yaml.safeDump(cleanedData)
+    const yamlStr = yaml.safeDump(cleanedData, { indent: 4 })
     fs.writeFileSync(absolutePath, yamlStr, 'utf8')
   }
 

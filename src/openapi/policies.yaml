@@ -12,13 +12,13 @@ policies:
       properties:
         tags:
           title: Tags
-          description: E.g. `latest`, `v0.1.0`, `0.1.0`.
+          description: Docker image tags that should be banned. E.g. 'latest', 'master'.
           type: array
           items:
             type: string
         enabled:
           title: Enabled
-          description: Enable or disable the `banned-image-tags` policy.
+          description: Enable or disable the 'banned-image-tags' policy.
           type: boolean
           default: false
     container-limits:
@@ -33,7 +33,7 @@ policies:
           $ref: definitions.yaml#/memoryQuantity
         enabled:
           title: Enabled
-          description: Enable or disable the `container-limits` policy.
+          description: Enable or disable the 'container-limits' policy.
           type: boolean
           default: false
     psp-allowed-repos:
@@ -50,7 +50,7 @@ policies:
             type: string
         enabled:
           title: Enabled
-          description: Enable or disable the `allowed-repos` policy.
+          description: Enable or disable the 'allowed-repos' policy.
           type: boolean
           default: false
     psp-host-filesystem:
@@ -67,7 +67,7 @@ policies:
             properties:
               pathPrefix:
                 title: Path prefix
-                description: E.g. `/opt` or `/tmp` or `/home`
+                description: E.g. '/opt', '/tmp' or '/home'
                 type: string
               readOnly:
                 title: Read-only
@@ -76,7 +76,7 @@ policies:
             additionalProperties: false
         enabled:
           title: Enabled
-          description: Enable or disable the `host-filesystem` policy.
+          description: Enable or disable the 'host-filesystem' policy.
           type: boolean
           default: false
     psp-allowed-users:
@@ -170,7 +170,7 @@ policies:
                     type: integer
         enabled:
           title: Enabled
-          description: Enable or disable the `allowed-users` policy.
+          description: Enable or disable the 'allowed-users' policy.
           type: boolean
           default: false
     psp-host-security:
@@ -181,7 +181,7 @@ policies:
       properties:
         enabled:
           title: Enabled
-          description: Enable or disable the `host-security` policy.
+          description: Enable or disable the 'host-security' policy.
           type: boolean
           default: false
     psp-host-networking-ports:
@@ -192,7 +192,7 @@ policies:
       properties:
         enabled:
           title: Enabled
-          description: Enable or disable the `host-networking-ports` policy.
+          description: Enable or disable the 'host-networking-ports' policy.
           type: boolean
           default: false
     psp-privileged:
@@ -203,7 +203,7 @@ policies:
       properties:
         enabled:
           title: Enabled
-          description: Enable or disable the `privileged` policy.
+          description: Enable or disable the 'privileged' policy.
           type: boolean
           default: false
     psp-capabilities:
@@ -214,7 +214,7 @@ policies:
       properties:
         enabled:
           title: Enabled
-          description: Enable or disable the `capabilities` policy.
+          description: Enable or disable the 'capabilities' policy.
           type: boolean
           default: false
         allowedCapabilities:
@@ -235,7 +235,7 @@ policies:
       properties:
         enabled:
           title: Enabled
-          description: Enable or disable the `forbidden-sysctls` policy.
+          description: Enable or disable the 'forbidden-sysctls' policy.
           type: boolean
           default: false
         forbiddenSysctls:
@@ -252,7 +252,7 @@ policies:
       properties:
         enabled:
           title: Enabled
-          description: Enable or disable the `forbidden-sysctls` policy.
+          description: Enable or disable the 'forbidden-sysctls' policy.
           type: boolean
           default: false
         allowedProfiles:
@@ -268,7 +268,7 @@ policies:
       properties:
         enabled:
           title: Enabled
-          description: Enable or disable the `seccomp` policy.
+          description: Enable or disable the 'seccomp' policy.
           type: boolean
           default: false
         allowedProfiles:
@@ -284,7 +284,7 @@ policies:
       properties:
         enabled:
           title: Enabled
-          description: Enable or disable the `selinux` policy.
+          description: Enable or disable the 'selinux' policy.
           type: boolean
           default: false
         seLinuxContext:

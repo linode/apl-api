@@ -511,7 +511,7 @@ paths:
         example: oidc
     get:
       operationId: getSetting
-      description: Get a setting from the `settings.yaml` or `secret.settings.yaml` file.
+      description: Get a setting from the 'settings.yaml' or 'secret.settings.yaml' file.
       x-aclSchema: Settings
       responses:
         '200':
@@ -524,7 +524,7 @@ paths:
     # TODO: https://github.com/redkubes/otomi-api/issues/155
     put:
       operationId: editSetting
-      description: Edit a setting from the `settings.yaml` or `secret.settings.yaml` file.
+      description: Edit a setting from the 'settings.yaml' or 'secret.settings.yaml' file.
       x-aclSchema: Settings
       requestBody:
         content:
@@ -680,8 +680,6 @@ components:
       $ref: definitions.yaml#/resource
     resources:
       $ref: definitions.yaml#/resources
-    resourceQuota:
-      $ref: definitions.yaml#/resourceQuota
     script:
       $ref: definitions.yaml#/script
     secrets:
