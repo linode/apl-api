@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.61](https://github.com/redkubes/otomi-api/compare/v0.4.60...v0.4.61) (2021-06-29)
+
+
+### Features
+
+* ksvc containerPort, resourceQuota [ci skip] ([a7c8487](https://github.com/redkubes/otomi-api/commit/a7c8487cab053cdfabc3f371f311fa5fbae18b9f))
+
 ### [0.4.60](https://github.com/redkubes/otomi-api/compare/v0.4.59...v0.4.60) (2021-06-24)
 
 
