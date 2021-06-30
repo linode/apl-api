@@ -1,3 +1,4 @@
+# Please leave the following line so yaml-language-server doesn't incorrectly validate this file according to its cluster.yaml schema:
 # yaml-language-server: $schema=https://raw.githubusercontent.com/json-schema-org/json-schema-spec/draft-04/schema.json
 apiName:
   title: API name
