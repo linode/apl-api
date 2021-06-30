@@ -1,4 +1,5 @@
 import { Request } from 'express'
+import { JSONSchema4 } from 'json-schema'
 import { components } from './generated-schema'
 
 export type Cluster = components['schemas']['Cluster']
@@ -59,11 +60,6 @@ export interface OpenAPIDoc {
   }
   security?: string[]
 }
-export interface Property {
-  type: string
-  'x-acl'?: Acl
-}
-
 export type SchemaType = 'object' | 'array'
 
 export interface PermissionSchema {
@@ -75,18 +71,9 @@ export interface PermissionSchema {
     }
   }
 }
-export interface Schema {
+export interface Schema extends JSONSchema4 {
   'x-acl'?: Acl
-  nullable?: boolean
-  type: SchemaType
-  properties?: {
-    [propertyName: string]: Property
-  }
-  items?: {
-    type: string
-    enum?: Array<string>
-  }
-  required?: string[]
+  'x-readOnly'?: Acl
 }
 
 export interface Acl {
