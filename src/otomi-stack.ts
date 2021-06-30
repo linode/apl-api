@@ -275,7 +275,7 @@ export default class OtomiStack {
     const token = Buffer.from(secret.data?.token || '', 'base64').toString('ascii')
     const cluster = {
       name: env.CLUSTER_NAME,
-      server: `https://${env.CLUSTER_APISERVER}`,
+      server: `${env.CLUSTER_APISERVER}`,
       skipTLSVerify: true,
     }
 
