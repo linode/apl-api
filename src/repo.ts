@@ -130,7 +130,6 @@ export class Repo {
 
   async pull(): Promise<any> {
     const pullSummary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
-    await decrypt()
     console.debug(`Pull summary: ${JSON.stringify(pullSummary)}`)
     return pullSummary
   }
