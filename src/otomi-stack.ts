@@ -11,6 +11,7 @@ import {
   Core,
   Dns,
   Job,
+  Policies,
   Secret,
   Service,
   Session,
@@ -366,13 +367,16 @@ export default class OtomiStack {
   }
 
   loadPolicies(): void {
-    const data = this.repo.readFile('./env/policies.yaml')
+    const data: Policies = this.repo.readFile('./env/policies.yaml')
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
 
   loadSettings(): void {
-    const data = this.loadConfig('./env/settings.yaml', `./env/secrets.settings.yaml${this.decryptedFilePostfix}`)
+    const data: Settings = this.loadConfig(
+      './env/settings.yaml',
+      `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
+    )
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }

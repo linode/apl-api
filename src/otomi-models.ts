@@ -7,6 +7,7 @@ export type Deployment = components['schemas']['Deployment']
 export type Dns = components['schemas']['Settings']['dns']
 export type Job = components['schemas']['Job']
 export type Kubecfg = components['schemas']['Kubecfg']
+export type Policies = components['schemas']['Settings']['policies']
 export type Secret = components['schemas']['Secret'] & { teamId?: string }
 export type Service = components['schemas']['Service']
 export type Session = components['schemas']['Session']
