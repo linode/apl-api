@@ -72,7 +72,7 @@ export default class Db {
     return this.db.get(type).filter(selector).value()
   }
 
-  populateItem(type: string, data: DbType, selector?: any, id?: string): Array<DbType> | undefined {
+  populateItem(type: string, data: DbType, selector?: any, id?: string): DbType | undefined {
     // @ts-ignore
     if (selector && this.db.get(type).find(selector).value()) return undefined
     return (

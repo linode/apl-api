@@ -1,4 +1,6 @@
 alerts:
+  title: Alerts
+  description: Configure alerting endpoints to receive notifications from Alertmanager and Otomi deployments.
   additionalProperties: false
   properties:
     repeatInterval:
@@ -12,6 +14,8 @@ alerts:
       title: Group Interval
       type: string
     slack:
+      title: Slack
+      description: Configure Slack endpoints for alerts.
       additionalProperties: false
       properties:
         channel:
@@ -29,6 +33,8 @@ alerts:
           description: A Slack webhook URL.
       type: object
     email:
+      title: Email
+      description: Configure email endpoints for alerts.
       additionalProperties: false
       properties:
         critical:
@@ -42,7 +48,7 @@ alerts:
       type: object
     msteams:
       additionalProperties: false
-      description: Select Microsoft Teams notification settings.
+      description: Configure Microsoft Teams endpoints for alerts.
       properties:
         highPrio:
           title: High prio web hook
@@ -53,7 +59,7 @@ alerts:
       title: Microsoft Teams
       type: object
     receivers:
-      description: Select default notification channel for receiving notifications.
+      description: Select default notification channel for receiving alerts.
       items:
         enum:
           - slack
@@ -65,11 +71,11 @@ alerts:
       uniqueItems: true
     drone:
       default: slack
-      description: Select default notification channel for Drone.
+      description: Select default notification channel for Otomi deployments in Drone.
       enum:
         - slack
         - msteams
-      title: Drone Notifications
+      title: Drone notifications
       type: string
 annotation:
   type: string
@@ -478,6 +484,10 @@ ksvcNew:
           description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
           title: Scale to zero
           type: boolean
+        containerPort:
+          $ref: '#/portNumber'
+          description: Container port the knative pod will connect with. Leaving this empty will let knative infer the port from the container, which usually works, but might be problematic when the container does not specifically expose a port. (As is the case with nginx derived images!)
+          title: Container port
         autoCD:
           description: Deploys new images based on a tagging strategy
           oneOf:
@@ -626,6 +636,20 @@ resources:
       description: Requested resources (guaranteed).
   title: Resources
   type: object
+resourceQuota:
+  description: 'List of kubernetes resource quota. Should adhere to the "spec.hard" format as described here: https://kubernetes.io/docs/concepts/policy/resource-quotas/. Not validated as there is no schema published. Change at your own risk.'
+  title: Resource quota
+  type: array
+  items:
+    type: object
+    properties:
+      name:
+        type: string
+      value:
+        type: string
+    required:
+      - name
+      - value
 scaling:
   description: Min and max number of replicas.
   properties:

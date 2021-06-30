@@ -78,6 +78,12 @@ export default {
         msteams: {},
         slack: {},
       },
+      resourceQuota: [
+        {
+          name: 'services.loadbalancers',
+          value: '0',
+        },
+      ],
       selfService: {
         Team: ['resourceQuota'],
       },
@@ -88,6 +94,7 @@ export default {
       name: 'dev',
       oidc: {},
       password: 'linux1234',
+      resourceQuota: [],
       selfService: {
         Service: ['ingress'],
         Team: ['resourceQuota'],
@@ -291,6 +298,7 @@ export default {
       id: 'd611a6be-3898-406d-9b5a-44ee2ba14dfb',
       teamId: 'dev',
       ksvc: {
+        containerPort: 80,
         serviceType: 'ksvc',
         scaleToZero: false,
         image: {
@@ -333,7 +341,7 @@ export default {
         type: 'public',
         useDefaultSubdomain: true,
       },
-      port: 8080,
+      port: 80,
     },
   ],
 

@@ -5,8 +5,6 @@ Settings:
   additionalProperties: false
   properties:
     alerts:
-      title: Alerts
-      description: Customer communication channel settings.
       $ref: definitions.yaml#/alerts
     azure:
       title: Azure
@@ -106,6 +104,10 @@ Settings:
       description: Settings for Otomi.
       additionalProperties: false
       properties:
+        adminPassword:
+          type: string
+          title: Admin password
+          description: Otomi global admin password. Will be used as default for all apps that are not provide with a password. Easy for access and quick to rotate.
         additionalClusters:
           title: Additional clusters
           description: Enter other k8s clusters, if there are any.
@@ -116,22 +118,6 @@ Settings:
               - domainSuffix
               - name
               - provider
-        adminPassword:
-          type: string
-        addons:
-          additionalProperties: false
-          description: Manage addon configuration.
-          properties:
-            conftest:
-              description: Manage Conftest configuration.
-              properties:
-                enabled:
-                  default: true
-                  description: Use this flag to enable conftest for policy validation
-                  title: Enabled
-                  type: boolean
-              title: Conftest
-          title: Addons
         hasCloudLB:
           default: false
           description: Set this to true when an external LB exists or needs to be started (AWS ALB, Azure AppGW, Google Apigee). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.

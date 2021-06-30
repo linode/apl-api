@@ -4,6 +4,8 @@ teamConfig:
       alerts: {}
       id: otomi
       oidc: {}
+      resourceQuota:
+        services.loadbalancers: '0'
       selfService:
         Team:
           - resourceQuota
