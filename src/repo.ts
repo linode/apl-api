@@ -98,7 +98,6 @@ export class Repo {
   }
 
   async commit(author: string): Promise<CommitResult> {
-    await encrypt()
     await this.git.add('./*')
     const commitSummary = await this.git.commit(`otomi-api<${author}>`)
     console.debug(`Commit summary: ${JSON.stringify(commitSummary)}`)
@@ -130,7 +129,6 @@ export class Repo {
 
   async pull(): Promise<any> {
     const pullSummary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
-    await decrypt()
     console.debug(`Pull summary: ${JSON.stringify(pullSummary)}`)
     return pullSummary
   }

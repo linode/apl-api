@@ -4,14 +4,14 @@ TeamSelfService:
   type: object
   properties:
     Service:
-      title: ''
+      title: Service
       type: array
       items:
         type: string
         enum: [ingress]
       uniqueItems: true
     Team:
-      title: ''
+      title: Team
       type: array
       items:
         type: string
