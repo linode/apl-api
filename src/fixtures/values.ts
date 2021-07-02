@@ -396,7 +396,6 @@ export default {
       domainSuffix: 'dev.onprem.example.com',
       k8sVersion: '1.19',
       name: 'dev',
-      otomiVersion: 'master',
       provider: 'onprem',
       region: 'eu-central-1',
     },
@@ -425,6 +424,7 @@ export default {
       tenantID: 'xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
     },
     otomi: {
+      version: 'latest',
       hasCloudLB: false,
       isHomeMonitored: true,
       isManaged: true,

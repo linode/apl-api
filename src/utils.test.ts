@@ -9,7 +9,6 @@ describe('Utils', () => {
     apiServer: 'apiServer.onprem.example.com',
     k8sVersion: '1.19',
     name: 'dev',
-    otomiVersion: 'master',
     provider: 'onprem',
     region: 'eu-central-1',
   }

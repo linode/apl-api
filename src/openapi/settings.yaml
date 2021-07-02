@@ -151,6 +151,12 @@ Settings:
           description: The pullsecret to deploy the Otomi API and Console. Requires an Otomi license.
           title: Pull secret
           type: string
+        version:
+          title: Otomi version
+          default: latest
+          description: |
+            Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version.
+          type: string
     policies:
       $ref: policies.yaml#/policies
     smtp:

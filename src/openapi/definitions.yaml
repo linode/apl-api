@@ -251,7 +251,7 @@ dns_:
         - title: AWS
           properties:
             aws:
-              title: AWS
+              title: ''
               properties:
                 region:
                   type: string
@@ -262,6 +262,7 @@ dns_:
         - title: Azure
           properties:
             azure:
+              title: ''
               properties:
                 cloud:
                   title: Cloud
@@ -304,6 +305,7 @@ dns_:
         - title: Google
           properties:
             google:
+              title: ''
               properties:
                 serviceAccountKey:
                   description: A service account key for managing a DNS zone.

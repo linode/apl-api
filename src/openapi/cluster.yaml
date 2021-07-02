@@ -19,12 +19,6 @@ entrypoint:
 name:
   title: Name
   type: string
-otomiVersion:
-  title: Otomi version
-  default: master
-  description: |
-    Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version.
-  type: string
 provider:
   title: Provider
   description: Enter the cloud provider of this cluster.
@@ -44,6 +38,7 @@ vpcID:
   type: string
 
 AdditionalCluster:
+  additionalProperties: false
   x-acl:
     admin:
       - read
@@ -67,8 +62,6 @@ AdditionalCluster:
       $ref: definitions.yaml#/k8sVersion
     name:
       $ref: '#/name'
-    otomiVersion:
-      $ref: '#/otomiVersion'
     provider:
       $ref: '#/provider'
     region:
@@ -80,11 +73,11 @@ AdditionalCluster:
     - domainSuffix
     - k8sVersion
     - name
-    - otomiVersion
     - provider
     - region
 
 Cluster:
+  additionalProperties: false
   x-acl:
     admin:
       - read
@@ -112,8 +105,6 @@ Cluster:
     name:
       $ref: '#/name'
       x-readOnly: true
-    otomiVersion:
-      $ref: '#/otomiVersion'
     provider:
       $ref: '#/provider'
       x-readOnly: true
@@ -128,6 +119,5 @@ Cluster:
     - domainSuffix
     - k8sVersion
     - name
-    - otomiVersion
     - provider
     - region

@@ -687,8 +687,6 @@ components:
       $ref: cluster.yaml#/name
     offChoice:
       $ref: definitions.yaml#/offChoice
-    otomiVersion:
-      $ref: cluster.yaml#/otomiVersion
     path:
       $ref: definitions.yaml#/path
     podSpec:
