@@ -81,11 +81,13 @@ policies:
           default: false
     psp-allowed-users:
       title: Allowed users
+      description: Default user (UID) and group (GID) settings to force containers to run with.
       additionalProperties: false
       required: [enabled]
       properties:
         runAsUser:
           title: Run as user
+          description: It is recommended to at least set 'runAsUser' to 'MustRunAsNonRoot' to disallow root.
           additionalProperties: false
           required: [rule]
           properties:
@@ -311,3 +313,4 @@ policies:
               user:
                 title: User
                 type: string
+  x-externalDocsPath: docs/console/settings#policies
