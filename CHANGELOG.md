@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.63](https://github.com/redkubes/otomi-api/compare/v0.4.62...v0.4.63) (2021-07-03)
+
+
+### Bug Fixes
+
+* api server schema validation ([89ec575](https://github.com/redkubes/otomi-api/commit/89ec575211393dae90b82a1733c994875003cbca))
+* removed duplicate decrypt call ([2a00312](https://github.com/redkubes/otomi-api/commit/2a00312112e43086b2da339bec7d304f32fadf9f))
+* removed duplicate encrypt call ([d87ce66](https://github.com/redkubes/otomi-api/commit/d87ce66fdcb0bbef3ee8aabfcd29ee041d1af75c))
+* schema additions [ci skip] ([a69dcb1](https://github.com/redkubes/otomi-api/commit/a69dcb1c4950a2ded69db09360d333c2b2f0dd72))
+
+
+### Others
+
+* **release:** 0.4.62 ([16f3055](https://github.com/redkubes/otomi-api/commit/16f305590aaa482a7e496853bf261164bfad49ba))
+
 ### [0.4.62](https://github.com/redkubes/otomi-api/compare/v0.4.61...v0.4.62) (2021-06-29)
 
 
