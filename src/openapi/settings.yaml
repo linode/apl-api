@@ -60,7 +60,7 @@ Settings:
       x-externalDocsPath: docs/console/settings#kms
     home:
       title: Home alerts
-      description: Communication channel settings to share with an organization.
+      description: Same setup as 'Alerts', but to send copies of alerts "home". Useful for co-monitoring managed clusters of customers.
       additionalProperties: false
       $ref: definitions.yaml#/alerts
       x-externalDocsPath: docs/console/settings#home
