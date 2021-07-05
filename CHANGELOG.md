@@ -2,6 +2,54 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.64](https://github.com/redkubes/otomi-api/compare/v0.4.63...v0.4.64) (2021-07-04)
+
+
+### Bug Fixes
+
+* schema descriptions [ci skip] ([a4d5b99](https://github.com/redkubes/otomi-api/commit/a4d5b994f98c0b88e7058c00045c82e2b44bdf0c))
+
+### [0.4.63](https://github.com/redkubes/otomi-api/compare/v0.4.62...v0.4.63) (2021-07-03)
+
+
+### Bug Fixes
+
+* api server schema validation ([89ec575](https://github.com/redkubes/otomi-api/commit/89ec575211393dae90b82a1733c994875003cbca))
+* removed duplicate decrypt call ([2a00312](https://github.com/redkubes/otomi-api/commit/2a00312112e43086b2da339bec7d304f32fadf9f))
+* removed duplicate encrypt call ([d87ce66](https://github.com/redkubes/otomi-api/commit/d87ce66fdcb0bbef3ee8aabfcd29ee041d1af75c))
+* schema additions [ci skip] ([a69dcb1](https://github.com/redkubes/otomi-api/commit/a69dcb1c4950a2ded69db09360d333c2b2f0dd72))
+
+
+### Others
+
+* **release:** 0.4.62 ([16f3055](https://github.com/redkubes/otomi-api/commit/16f305590aaa482a7e496853bf261164bfad49ba))
+
+### [0.4.62](https://github.com/redkubes/otomi-api/compare/v0.4.61...v0.4.62) (2021-06-29)
+
+
+### Bug Fixes
+
+* schema, yaml indent [ci skip] ([8708d63](https://github.com/redkubes/otomi-api/commit/8708d63314bec0628d96f1bf48b42de213be7adf))
+
+### [0.4.61](https://github.com/redkubes/otomi-api/compare/v0.4.60...v0.4.61) (2021-06-29)
+
+
+### Features
+
+* ksvc containerPort, resourceQuota [ci skip] ([a7c8487](https://github.com/redkubes/otomi-api/commit/a7c8487cab053cdfabc3f371f311fa5fbae18b9f))
+
+### [0.4.60](https://github.com/redkubes/otomi-api/compare/v0.4.59...v0.4.60) (2021-06-24)
+
+
+### Features
+
+* manage policies in api ([#184](https://github.com/redkubes/otomi-api/issues/184)) ([2e0e040](https://github.com/redkubes/otomi-api/commit/2e0e040512f870eb3921bf112b3c0a320b671618))
+
+
+### Bug Fixes
+
+* kubecfg needed cluster input, fixes [#180](https://github.com/redkubes/otomi-api/issues/180) ([eac55fb](https://github.com/redkubes/otomi-api/commit/eac55fb034001b344be7690a909b1b1d9fd670e4))
+
 ### [0.4.59](https://github.com/redkubes/otomi-api/compare/v0.4.58...v0.4.59) (2021-06-21)
 
 

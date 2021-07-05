@@ -2,34 +2,29 @@ Cluster:
   properties:
     id:
       type: string
-      readOnly: true
     apiName:
       title: API Name
-      description: Only used for API/UI to show in app.
+      description: Used to generate kube context file.
       type: string
-      readOnly: true
     apiServer:
+      description: Full url to a kubernetes api server (including https://). Used to generate kube context file.
       title: API Server
-      description: Used by kubectl for local deployment to target cluster.
       $ref: 'api.yaml#/components/schemas/url'
       readOnly: true
     domainSuffix:
       title: Domain Suffix
-      $ref: 'definitions.yaml#/domain'
+      $ref: definitions.yaml#/domain
       description: Domain suffix for the cluster. Also added to list of dns zones in the Otomi Console.
     entrypoint:
       title: Entrypoint
       description: A Kubernetes API public IP address (onprem only).
       type: string
-      readOnly: true
     k8sVersion:
       title: Kubernetes Version
-      $ref: 'definitions.yaml#/k8sVersion'
-      readOnly: true
+      $ref: definitions.yaml#/k8sVersion
     name:
       title: Name
       type: string
-      readOnly: true
     otomiVersion:
       title: Otomi Version
       default: latest
@@ -43,17 +38,14 @@ Cluster:
         - azure
         - google
         - onprem
-      readOnly: true
     region:
       title: Region
       description: Dependent on provider.
       type: string
-      readOnly: true
     vpcID:
       title: VPC ID
       description: AWS only. If provided will override autodiscovery from metadata.
       type: string
-      readOnly: true
   required:
     - apiServer
     - domainSuffix

@@ -91,6 +91,12 @@ export default {
         msteams: {},
         slack: {},
       },
+      resourceQuota: [
+        {
+          name: 'services.loadbalancers',
+          value: '0',
+        },
+      ],
       selfService: {
         Team: ['resourceQuota'],
       },
@@ -101,12 +107,14 @@ export default {
       name: 'dev',
       oidc: {},
       password: 'linux1234',
+      resourceQuota: [],
       selfService: {
         Service: ['ingress'],
         Team: ['resourceQuota'],
       },
     },
   ],
+
   services: [
     {
       name: 'servant1',
@@ -303,6 +311,7 @@ export default {
       id: 'd611a6be-3898-406d-9b5a-44ee2ba14dfb',
       teamId: 'dev',
       ksvc: {
+        containerPort: 80,
         serviceType: 'ksvc',
         scaleToZero: false,
         image: {
@@ -345,9 +354,10 @@ export default {
         type: 'public',
         useDefaultSubdomain: true,
       },
-      port: 8080,
+      port: 80,
     },
   ],
+
   secrets: [
     {
       teamId: 'otomi',
@@ -440,6 +450,93 @@ export default {
           provider: 'aws',
         },
       ],
+    },
+    policies: {
+      'banned-image-tags': {
+        enabled: true,
+        tags: ['latest'],
+      },
+      'container-limits': {
+        cpu: '2',
+        enabled: false,
+        memory: '2000Mi',
+      },
+      'psp-allowed-repos': {
+        enabled: false,
+        repos: ['harbor.demo.gke.otomi.cloud', 'harbor.demo.aks.otomi.cloud', 'harbor.demo.eks.otomi.cloud'],
+      },
+      'psp-allowed-users': {
+        enabled: true,
+        fsGroup: {
+          ranges: [
+            {
+              max: 65535,
+              min: 1,
+            },
+          ],
+          rule: 'MayRunAs',
+        },
+        runAsGroup: {
+          ranges: [
+            {
+              max: 65535,
+              min: 1,
+            },
+          ],
+          rule: 'MayRunAs',
+        },
+        runAsUser: {
+          rule: 'MustRunAsNonRoot',
+        },
+        supplementalGroups: {
+          ranges: [
+            {
+              max: 65535,
+              min: 1,
+            },
+          ],
+          rule: 'MayRunAs',
+        },
+      },
+      'psp-apparmor': {
+        allowedProfiles: ['runtime/default'],
+        enabled: false,
+      },
+      'psp-capabilities': {
+        allowedCapabilities: ['NET_BIND_SERVICE', 'NET_RAW'],
+        enabled: false,
+        requiredDropCapabilities: ['ALL'],
+      },
+      'psp-forbidden-sysctls': {
+        enabled: true,
+        forbiddenSysctls: ['*'],
+      },
+      'psp-host-filesystem': {
+        allowedHostPaths: [
+          {
+            pathPrefix: '/tmp/',
+            readOnly: false,
+          },
+        ],
+        enabled: true,
+      },
+      'psp-host-networking-ports': {
+        enabled: true,
+      },
+      'psp-host-security': {
+        enabled: true,
+      },
+      'psp-privileged': {
+        enabled: true,
+      },
+      'psp-seccomp': {
+        allowedProfiles: ['runtime/default'],
+        enabled: false,
+      },
+      'psp-selinux': {
+        enabled: true,
+        seLinuxContext: 'RunAsAny',
+      },
     },
     smtp: {
       from: 'no-reply@doma.in',

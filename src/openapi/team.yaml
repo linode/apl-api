@@ -92,6 +92,8 @@ Team:
           type: object
       title: Alerting endpoints
       type: object
+    resourceQuota:
+      $ref: definitions.yaml#/resourceQuota
     azureMonitor:
       $ref: definitions.yaml#/azureMonitor
     selfService:

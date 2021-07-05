@@ -18,7 +18,7 @@ describe('Admin API tests', () => {
   })
 
   describe('Admin /settings/{setting} endpoint tests', () => {
-    const endpoints = ['alerts', 'azure', 'customer', 'dns', 'kms', 'home', 'oidc', 'otomi', 'smtp']
+    const endpoints = ['alerts', 'azure', 'customer', 'dns', 'kms', 'home', 'oidc', 'otomi', 'policies', 'smtp']
     endpoints.forEach((ep) => {
       it(`admin can get /settings/${ep}`, (done) => {
         request(app)

@@ -5,36 +5,43 @@ Settings:
   additionalProperties: false
   properties:
     alerts:
-      title: Alerts
-      description: Customer communication channel settings.
       $ref: definitions.yaml#/alerts
+      x-externalDocsPath: docs/console/settings#alerts
     azure:
       title: Azure
       additionalProperties: false
-      description: Azure specific configuration.
+      description: Azure specific configuration. Only applicable on Azure clusters.
       properties:
         appgw:
           properties:
             isManaged:
               default: true
-              description: Determines whether this AppGW Ingress Controller is installed as an AKS addon.
+              title: Managed by AKS
+              description:
+                In case `otomi.hasExternalLB` is set, this setting indicates that an Azure AppGW Ingress Controller was already installed by AKS as an addon (only available on "Preview" clusters).
+                Turning this off will let Otomi install an AppGW controller.
               type: boolean
           type: object
         monitor:
           $ref: definitions.yaml#/azureMonitor
         storageType:
           title: Storage types
-          description: Storage types for classes used in Otomi.
+          description: Disk types used for storage classes in Otomi.
           properties:
             fast:
               type: string
+              default: StandardSSD_LRS
             standard:
               type: string
+              default: StandardLRS
       required:
         - resourceGroup
         - subscriptionId
         - tenantId
       x-provider: azure
+    cluster:
+      $ref: cluster.yaml#/Cluster
+      x-externalDocsPath: docs/console/settings#cluster
     customer:
       title: Customer
       description: A customer's settings.
@@ -43,98 +50,20 @@ Settings:
         name:
           type: string
           title: Name
+          description: Used in alerts/reports to distinguish between resources for different customers.
     dns:
-      title: DNS
-      description: Domain name server settings.
-      additionalProperties: false
-      properties:
-        zones:
-          description: Extra dns zones that the cluster can administer (see dns). Team services can use this to publish their URLs on.
-          items:
-            type: string
-            title: Zone
-          title: Zones
-          type: array
-          uniqueItems: true
-        provider:
-          description: The DNS provider managing the domains.
-          title: Provider
-          oneOf:
-            - title: AWS
-              properties:
-                aws:
-                  title: AWS
-                  properties:
-                    region:
-                      type: string
-                  required:
-                    - region
-              required:
-                - aws
-            - title: Azure
-              properties:
-                azure:
-                  properties:
-                    cloud:
-                      title: Cloud
-                      type: string
-                      description: Azure Cloud
-                    resourceGroup:
-                      title: Resource group
-                      type: string
-                      description: Azure resource group
-                    hostedZoneName:
-                      title: Hosted zone name
-                      type: string
-                    tenantId:
-                      title: Tenant ID
-                      type: string
-                      description: Azure tenant ID
-                    subscriptionId:
-                      title: Subscription ID
-                      type: string
-                      description: Azure subscription ID
-                    aadClientId:
-                      title: Client ID
-                      type: string
-                      description: Azure Application Client ID
-                    aadClientSecret:
-                      title: Client secret
-                      type: string
-                      description: Azure Application Client Secret
-                    useManagedIdentityExtension:
-                      title: Using managed identities?
-                      type: boolean
-                      description: If you use Azure MSI, this should be set to true
-                      default: false
-                  required:
-                    - resourceGroup
-                    - aadClientId
-                    - aadClientSecret
-              required:
-                - azure
-            - title: Google
-              properties:
-                google:
-                  properties:
-                    serviceAccountKey:
-                      description: A service account key for managing a DNS zone.
-                      type: string
-                    project:
-                      type: string
-                  required:
-                    - serviceAccountKey
-                    - project
-              required:
-                - google
+      $ref: definitions.yaml#/dns
+      x-externalDocsPath: docs/console/settings#dns
     kms:
       additionalProperties: false
-      $ref: 'definitions.yaml#/kms'
+      $ref: definitions.yaml#/kms
+      x-externalDocsPath: docs/console/settings#kms
     home:
       title: Home alerts
-      description: Communication channel settings to share with an organization.
+      description: Same setup as 'Alerts', but to send copies of alerts "home". Useful for co-monitoring managed clusters of customers.
       additionalProperties: false
       $ref: definitions.yaml#/alerts
+      x-externalDocsPath: docs/console/settings#home
     oidc:
       title: OIDC
       description: OpenID Connect settings.
@@ -150,6 +79,7 @@ Settings:
           title: Authentication URL
           type: string
           $ref: definitions.yaml#/url
+          description: Only used for grafana when Keycloak is disabled.
         clientID:
           title: Client ID
           type: string
@@ -163,11 +93,8 @@ Settings:
         scope:
           title: Scope
           type: string
-        subClaimMapper:
-          default: sub
-          description: Select OIDC claim to be used as a unique user identifier.
-          title: Sub claim mapper
-          type: string
+          default: openid email profile
+          description: Default values are used by keycloak. May be overridden in case keycloak is disabled.
         teamAdminGroupID:
           title: Team admin group ID
           type: string
@@ -177,43 +104,54 @@ Settings:
         tokenUrl:
           title: Token URL
           $ref: definitions.yaml#/url
+          description: Only used for grafana when Keycloak is disabled.
         usernameClaimMapper:
           description: Claim name used by Keycloak to identify incoming users from the identity provider.
           title: Username claim mapper
           type: string
+        subClaimMapper:
+          type: string
+          description: Select OIDC claim to be passed by Keycloak as a unique user identifier. Best to not change this from the default.
+          default: sub
+      x-externalDocsPath: docs/console/settings#oidc
     otomi:
       title: Otomi
       description: Settings for Otomi.
       additionalProperties: false
       properties:
+        adminPassword:
+          type: string
+          title: Admin password
+          description: Otomi global admin password. Will be used as default for all apps that are not provide with a password. Easy for access and quick to rotate.
         additionalClusters:
           title: Additional clusters
           description: Enter other k8s clusters, if there are any.
           type: array
           items:
-            $ref: cluster.yaml#/Cluster
+            properties:
+              name:
+                title: Name
+                type: string
+              provider:
+                title: Provider
+                type: string
+                enum:
+                  - aws
+                  - azure
+                  - google
+                  - onprem
+              domainSuffix:
+                title: Domain Suffix
+                $ref: definitions.yaml#/domain
+                description: Domain suffix for the cluster. Also added to list of dns zones in the Otomi Console.
             required:
               - domainSuffix
               - name
               - provider
-        addons:
-          additionalProperties: false
-          description: Manage addon configuration.
-          properties:
-            conftest:
-              description: Manage Conftest configuration.
-              properties:
-                enabled:
-                  default: true
-                  description: Use this flag to enable conftest for policy validation
-                  title: Enabled
-                  type: boolean
-              title: Conftest
-          title: Addons
         hasCloudLB:
           default: false
-          description: Set this to true when an external LB exists or needs to be started (AWS ALB, Azure AppGW, Google Apigee). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.
-          title: Cloud load balancer
+          description: Set this to true when an external load balancer exists (Azure AppGW, Google Apigee) or needs to be started (AWS ALB). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.
+          title: External load balancer
           type: boolean
         isHomeMonitored:
           default: false
@@ -243,6 +181,15 @@ Settings:
           description: The pullsecret to deploy the Otomi API and Console. Requires an Otomi license.
           title: Pull secret
           type: string
+        version:
+          title: Otomi version
+          default: latest
+          description: |
+            Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version.
+          type: string
+      x-externalDocsPath: docs/console/settings#otomi
+    policies:
+      $ref: policies.yaml#/policies
     smtp:
       title: SMTP
       description: Mail server settings.
@@ -276,3 +223,4 @@ Settings:
           title: Smart Host
       required:
         - smarthost
+      x-externalDocsPath: docs/console/settings#smtp
