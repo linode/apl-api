@@ -54,7 +54,7 @@ Ingress:
   properties:
     tlsPass:
       default: false
-      description: Pass through the request as is to the backing service.
+      description: Pass through the request as is to the backing service. Only available for predeployed regular (non-knative) services.
       title: TLS passthrough
       type: boolean
     useDefaultSubdomain:
