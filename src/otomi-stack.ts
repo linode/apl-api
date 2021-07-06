@@ -457,7 +457,7 @@ export default class OtomiStack {
     this.saveConfig(
       './env/settings.yaml',
       `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
-      omit(settings, 'policies'),
+      omit(settings, ['cluster', 'policies']),
     )
   }
 
@@ -643,7 +643,6 @@ export default class OtomiStack {
 
   getSession(user: User): Session {
     const data: Session = {
-      // Need to
       cluster: this.getSetting('cluster') as Session['cluster'],
       clusters: get(this.getSetting('otomi'), 'additionalClusters') as Session['clusters'],
       core: this.getCore(),
