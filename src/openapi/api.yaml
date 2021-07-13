@@ -500,6 +500,7 @@ paths:
           enum:
             - alerts
             - azure
+            - cluster
             - customer
             - dns
             - home
@@ -592,6 +593,8 @@ components:
   # Please stick to: alphabetical sorting, all Uppercase first and then lowercase.
   # --------------------------------------------
   schemas:
+    AdditionalCluster:
+      $ref: cluster.yaml#/AdditionalCluster
     Cluster:
       $ref: cluster.yaml#/Cluster
     Deployment:
@@ -636,6 +639,10 @@ components:
       $ref: user.yaml#/User
     alerts:
       $ref: definitions.yaml#/alerts
+    apiName:
+      $ref: cluster.yaml#/apiName
+    apiServer:
+      $ref: cluster.yaml#/apiServer
     awsCreds:
       $ref: definitions.yaml#/awsCreds
     azureCreds:
@@ -646,10 +653,16 @@ components:
       $ref: definitions.yaml#/containerSpec
     cpu:
       $ref: definitions.yaml#/cpuQuantity
+    dns:
+      $ref: definitions.yaml#/dns
     domain:
       $ref: definitions.yaml#/domain
+    domainSuffix:
+      $ref: cluster.yaml#/domainSuffix
     email:
       $ref: definitions.yaml#/email
+    entrypoint:
+      $ref: cluster.yaml#/entrypoint
     env:
       $ref: definitions.yaml#/env
     googleCreds:
@@ -660,6 +673,8 @@ components:
       $ref: definitions.yaml#/image
     jobSpec:
       $ref: definitions.yaml#/jobSpec
+    k8sVersion:
+      $ref: definitions.yaml#/k8sVersion
     kms:
       $ref: definitions.yaml#/kms
     ksvcNew:
@@ -668,6 +683,8 @@ components:
       $ref: definitions.yaml#/ksvcPredeployed
     memory:
       $ref: definitions.yaml#/memoryQuantity
+    name:
+      $ref: cluster.yaml#/name
     offChoice:
       $ref: definitions.yaml#/offChoice
     path:
@@ -676,6 +693,10 @@ components:
       $ref: definitions.yaml#/podSpec
     policies:
       $ref: policies.yaml#/policies
+    provider:
+      $ref: cluster.yaml#/provider
+    region:
+      $ref: cluster.yaml#/region
     resource:
       $ref: definitions.yaml#/resource
     resources:
@@ -692,3 +713,5 @@ components:
       $ref: definitions.yaml#/url
     vaultCreds:
       $ref: definitions.yaml#/vaultCreds
+    vpcID:
+      $ref: cluster.yaml#/vpcID

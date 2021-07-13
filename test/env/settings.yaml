@@ -29,6 +29,7 @@ oidc:
   teamAdminGroupID: xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
   tenantID: xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 otomi:
+  version: latest
   hasCloudLB: false
   isHomeMonitored: true
   isManaged: true

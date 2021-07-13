@@ -1,17 +1,4 @@
 export default {
-  cluster: [
-    {
-      apiName: 'onprem',
-      apiServer: 'apiServer.onprem.example.com',
-      domainSuffix: 'dev.onprem.example.com',
-      id: '1f4e8330-8e85-4da0-9a6d-488c8e192c90',
-      k8sVersion: '1.19',
-      name: 'dev',
-      otomiVersion: 'master',
-      provider: 'onprem',
-      region: 'eu-central-1',
-    },
-  ],
   jobs: [
     {
       type: 'Job',
@@ -403,6 +390,15 @@ export default {
         clientId: 'somesecretvalue',
       },
     },
+    cluster: {
+      apiName: 'onprem',
+      apiServer: 'apiServer.onprem.example.com',
+      domainSuffix: 'dev.onprem.example.com',
+      k8sVersion: '1.19',
+      name: 'dev',
+      provider: 'onprem',
+      region: 'eu-central-1',
+    },
     customer: {
       name: 'demo',
     },
@@ -428,6 +424,7 @@ export default {
       tenantID: 'xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
     },
     otomi: {
+      version: 'latest',
       hasCloudLB: false,
       isHomeMonitored: true,
       isManaged: true,

@@ -111,7 +111,7 @@ For example:
 
 ```
 paths:
-  /clusters:
+  /secrets:
     get:
       responses:
         '200':
@@ -119,7 +119,7 @@ paths:
 
 From above:
 
-- the GET /clusters request handler authenticate it by using security schema defined under global `security` property.
+- the GET /secrets request handler authenticate it by using security schema defined under global `security` property.
 
 ### 2.3 Authorization
 

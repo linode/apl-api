@@ -1,10 +1,13 @@
 Session:
   properties:
     cluster:
-      readOnly: true
       $ref: cluster.yaml#/Cluster
+    clusters:
+      type: array
+      items:
+        $ref: cluster.yaml#/AdditionalCluster
     dns:
-      type: object
+      $ref: definitions.yaml#/dns
       readOnly: true
     core:
       type: object
@@ -25,4 +28,9 @@ Session:
         $ref: team.yaml#/Team
     user:
       $ref: user.yaml#/User
-  type: object
+    versions:
+      properties:
+        core:
+          type: string
+        api:
+          type: string

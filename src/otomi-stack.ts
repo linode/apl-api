@@ -6,7 +6,21 @@ import { cloneDeep, merge, filter, get, omit, set, unset, isEqual, union, isEmpt
 import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Db from './db'
-import { Cluster, Core, Job, Secret, Service, Session, Settings, Team, TeamSelfService, User } from './otomi-models'
+import {
+  Cluster,
+  Core,
+  Dns,
+  Job,
+  Policies,
+  Secret,
+  Service,
+  Session,
+  Setting,
+  Settings,
+  Team,
+  TeamSelfService,
+  User,
+} from './otomi-models'
 import { PublicUrlExists } from './error'
 import {
   argQuoteJoin,
@@ -37,8 +51,6 @@ import {
   DISABLE_SYNC,
   USE_SOPS,
 } from './validators'
-
-import pkg from '../package.json'
 
 const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'dockerconfig']
 
@@ -85,25 +97,22 @@ export default class OtomiStack {
     this.loadValues()
   }
 
-  getSetting(type, key) {
-    return { [key]: this.db.db.get([type, key]).value() }
+  getSetting(key?: string): Setting | Settings {
+    if (key) return this.db.db.get(['settings', key]).value()
+    return this.db.db.get('settings').value()
   }
 
-  setSetting(type, data, key) {
-    if (isEmpty(data) || isEmpty(data[key])) {
+  setSetting(data: Setting, key: string) {
+    if (isEmpty(data)) {
       throw new Error('Received empty payload...')
     }
     const ret = this.db.db
-      .get([type, key])
+      .get(['settings', key])
       // @ts-ignore
       .assign(data[key])
       .write()
     this.db.dirty = true
     return ret
-  }
-
-  getSettings(): Settings {
-    return this.db.db.get('settings').value() as Settings
   }
 
   getTeams(): Array<Team> {
@@ -149,10 +158,6 @@ export default class OtomiStack {
   getTeamJobs(teamId: string): Array<Job> {
     const ids = { teamId }
     return this.db.getCollection('jobs', ids) as Array<Job>
-  }
-
-  getCluster(): Cluster {
-    return this.db.getCollection('cluster')[0] as Cluster
   }
 
   getAllServices(): Array<Service> {
@@ -331,9 +336,9 @@ export default class OtomiStack {
   }
 
   loadCluster(): void {
-    const data: any = this.repo.readFile('./env/cluster.yaml')
-    const { cluster } = data
-    this.db.populateItem('cluster', cluster, undefined, cluster.id)
+    const data: Cluster = this.repo.readFile('./env/cluster.yaml')
+    // @ts-ignore
+    this.db.db.get('settings').assign(data).write()
   }
 
   loadConfig(dataPath: string, secretDataPath: string): any {
@@ -360,16 +365,16 @@ export default class OtomiStack {
   }
 
   loadPolicies(): void {
-    const data = this.loadConfig('./env/policies.yaml', './env/policies.yaml') as Settings
+    const data: Policies = this.repo.readFile('./env/policies.yaml')
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
 
   loadSettings(): void {
-    const data = this.loadConfig(
+    const data: Settings = this.loadConfig(
       './env/settings.yaml',
       `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
-    ) as Settings
+    )
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
@@ -436,17 +441,20 @@ export default class OtomiStack {
     })
   }
 
+  saveCluster(): void {
+    this.repo.writeFile('./env/cluster.yaml', { cluster: this.getSetting('cluster') as Setting })
+  }
+
   savePolicies(): void {
-    const settings: Settings = this.getSettings()
-    this.repo.writeFile('./env/policies.yaml', { policies: settings.policies })
+    this.repo.writeFile('./env/policies.yaml', { policies: this.getSetting('policies') as Setting })
   }
 
   saveSettings(): void {
-    const settings: Settings = this.getSettings()
+    const settings = this.getSetting() as Settings
     this.saveConfig(
       './env/settings.yaml',
       `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
-      omit(settings, 'policies'),
+      omit(settings, ['cluster', 'policies']),
     )
   }
 
@@ -562,8 +570,8 @@ export default class OtomiStack {
     if (svcRaw.type === 'cluster') {
       svc.ingress = { type: 'cluster' }
     } else {
-      const { dns } = this.getSettings()
-      const cluster = this.getCluster()
+      const dns: Dns = this.getSetting('dns') as Dns
+      const cluster: Cluster = this.getSetting('cluster') as Cluster
       const url = getServiceUrl({ domain: svcRaw.domain, name: svcRaw.name, teamId, cluster, dns })
       svc.ingress = {
         hasCert: 'hasCert' in svcRaw,
@@ -624,23 +632,24 @@ export default class OtomiStack {
 
   saveValues(): void {
     // TODO: saveApps()
+    this.saveCluster()
     this.savePolicies()
     this.saveSettings()
     this.saveTeams()
   }
 
   getSession(user: User): Session {
-    const data = {
-      clusters: get(this.getSettings(), 'otomi.additionalClusters', []),
-      cluster: this.getCluster(),
+    const data: Session = {
+      cluster: this.getSetting('cluster') as Session['cluster'],
+      clusters: get(this.getSetting('otomi'), 'additionalClusters') as Session['clusters'],
       core: this.getCore(),
-      dns: this.getSettings().dns,
+      dns: this.getSetting('dns') as Session['dns'],
       user,
       teams: this.getTeams(),
       isDirty: this.db.isDirty(),
       versions: {
         core: env.CORE_VERSION,
-        api: pkg.version,
+        api: process.env.npm_package_version,
       },
     }
     return data

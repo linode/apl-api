@@ -100,7 +100,6 @@ Team:
       $ref: team.yaml#/TeamSelfService
   required:
     - name
-  type: object
   x-acl:
     admin:
       - delete-any

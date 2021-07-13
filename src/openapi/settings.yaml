@@ -128,22 +128,7 @@ Settings:
           description: Enter other k8s clusters, if there are any.
           type: array
           items:
-            properties:
-              name:
-                title: Name
-                type: string
-              provider:
-                title: Provider
-                type: string
-                enum:
-                  - aws
-                  - azure
-                  - google
-                  - onprem
-              domainSuffix:
-                title: Domain Suffix
-                $ref: definitions.yaml#/domain
-                description: Domain suffix for the cluster. Also added to list of dns zones in the Otomi Console.
+            $ref: cluster.yaml#/AdditionalCluster
             required:
               - domainSuffix
               - name
