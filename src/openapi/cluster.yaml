@@ -78,6 +78,8 @@ Cluster:
     apiServer:
       $ref: '#/apiServer'
       x-readOnly: true
+      description: Full url to a kubernetes api server (including https://). Used to generate kube context file.
+      title: API Server
     domainSuffix:
       $ref: '#/domainSuffix'
       x-readOnly: true

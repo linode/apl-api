@@ -1,7 +1,5 @@
 import { str, bool, cleanEnv as clean, CleanEnv, StrictCleanOptions, ValidatorSpec } from 'envalid'
 
-export const CLUSTER_APISERVER = str({ desc: 'The cluster api server ip/host', default: 'http://127.0.0.1:8080' })
-export const CLUSTER_NAME = str({ desc: 'The cluster name', default: 'dev' })
 export const CORE_VERSION = str({ desc: 'The otomi-core version', default: 'x.x.x' })
 export const DB_PATH = str({ desc: 'The file path to the db. If not given in-memory db is used.', default: undefined })
 export const DISABLE_SYNC = bool({ desc: 'Will disable pushing to the repo', default: false })
