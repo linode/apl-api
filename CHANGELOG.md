@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.65](https://github.com/redkubes/otomi-api/compare/v0.4.64...v0.4.65) (2021-07-05)
+
+
+### Bug Fixes
+
+* api server url ([#187](https://github.com/redkubes/otomi-api/issues/187)) ([a898028](https://github.com/redkubes/otomi-api/commit/a8980286f91ff6254273c7e6872915547a42e4f8))
+
 ### [0.4.64](https://github.com/redkubes/otomi-api/compare/v0.4.63...v0.4.64) (2021-07-04)
 
 
