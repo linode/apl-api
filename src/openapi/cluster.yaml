@@ -50,31 +50,16 @@ AdditionalCluster:
   title: Additional cluster
   description: A k8s cluster to manage by Otomi.
   properties:
-    apiName:
-      $ref: '#/apiName'
-    apiServer:
-      $ref: '#/apiServer'
     domainSuffix:
       $ref: '#/domainSuffix'
-    entrypoint:
-      $ref: '#/entrypoint'
-    k8sVersion:
-      $ref: definitions.yaml#/k8sVersion
     name:
       $ref: '#/name'
     provider:
       $ref: '#/provider'
-    region:
-      $ref: '#/region'
-    vpcID:
-      $ref: '#/vpcID'
   required:
-    - apiServer
     - domainSuffix
-    - k8sVersion
     - name
     - provider
-    - region
 
 Cluster:
   additionalProperties: false
