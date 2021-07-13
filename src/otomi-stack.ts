@@ -274,7 +274,7 @@ export default class OtomiStack {
     const secretRes = await client.readNamespacedSecret(secretName || '', namespace)
     const { body: secret }: { body: k8s.V1Secret } = secretRes
     const token = Buffer.from(secret.data?.token || '', 'base64').toString('ascii')
-    const clusterData = this.getCluster()
+    const clusterData = this.getSetting('cluster') as Cluster
     const cluster = {
       name: clusterData.apiName,
       server: clusterData.apiServer,

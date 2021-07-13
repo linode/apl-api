@@ -41,7 +41,6 @@ Settings:
       x-provider: azure
     cluster:
       $ref: cluster.yaml#/Cluster
-      x-externalDocsPath: docs/console/settings#cluster
     customer:
       title: Customer
       description: A customer's settings.
