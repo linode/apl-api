@@ -654,7 +654,7 @@ components:
     cpu:
       $ref: definitions.yaml#/cpuQuantity
     dns:
-      $ref: definitions.yaml#/dns_
+      $ref: definitions.yaml#/dns
     domain:
       $ref: definitions.yaml#/domain
     domainSuffix:
