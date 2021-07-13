@@ -34,8 +34,6 @@ import {
   GIT_PASSWORD,
   GIT_EMAIL,
   DB_PATH,
-  CLUSTER_NAME,
-  CLUSTER_APISERVER,
   DISABLE_SYNC,
   USE_SOPS,
 } from './validators'
@@ -53,8 +51,6 @@ const env = cleanEnv({
   GIT_PASSWORD,
   GIT_EMAIL,
   DB_PATH,
-  CLUSTER_NAME,
-  CLUSTER_APISERVER,
   DISABLE_SYNC,
   USE_SOPS,
 })
@@ -273,19 +269,20 @@ export default class OtomiStack {
     const secretRes = await client.readNamespacedSecret(secretName || '', namespace)
     const { body: secret }: { body: k8s.V1Secret } = secretRes
     const token = Buffer.from(secret.data?.token || '', 'base64').toString('ascii')
+    const clusterData = this.getCluster()
     const cluster = {
-      name: env.CLUSTER_NAME,
-      server: `${env.CLUSTER_APISERVER}`,
+      name: clusterData.apiName,
+      server: clusterData.apiServer,
       skipTLSVerify: true,
     }
 
     const user = {
-      name: `${namespace}-${env.CLUSTER_NAME}`,
+      name: `${namespace}-${clusterData.apiName}`,
       token,
     }
 
     const context = {
-      name: `${namespace}-${env.CLUSTER_NAME}`,
+      name: `${namespace}-${clusterData.apiName}`,
       namespace,
       user: user.name,
       cluster: cluster.name,

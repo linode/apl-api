@@ -7,9 +7,10 @@ Cluster:
       description: Used to generate kube context file.
       type: string
     apiServer:
-      $ref: definitions.yaml#/url
-      title: API Server
       description: Full url to a kubernetes api server (including https://). Used to generate kube context file.
+      title: API Server
+      $ref: 'api.yaml#/components/schemas/url'
+      readOnly: true
     domainSuffix:
       title: Domain Suffix
       $ref: definitions.yaml#/domain
