@@ -2,7 +2,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/json-schema-org/json-schema-spec/draft-04/schema.json
 apiName:
   title: API name
-  description: Only used for API/UI to show in app.
+  description: Used by kubecontext. Also used by API/UI to show in app.
   type: string
 apiServer:
   title: API server
@@ -78,7 +78,7 @@ Cluster:
     apiServer:
       $ref: '#/apiServer'
       x-readOnly: true
-      description: Full url to a kubernetes api server (including https://). Used to generate kube context file.
+      description: Full url to a kubernetes api server. Used to generate kube context file.
       title: API Server
     domainSuffix:
       $ref: '#/domainSuffix'
