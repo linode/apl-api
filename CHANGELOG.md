@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.66](https://github.com/redkubes/otomi-api/compare/v0.4.65...v0.4.66) (2021-07-15)
+
+
+### Features
+
+* add cluster.yaml to api ([#186](https://github.com/redkubes/otomi-api/issues/186)) ([4da09e0](https://github.com/redkubes/otomi-api/commit/4da09e09b41a8dbc7a69a8f0841b00bf1da41f22))
+
+
+### Bug Fixes
+
+* build ([#189](https://github.com/redkubes/otomi-api/issues/189)) ([2e9378c](https://github.com/redkubes/otomi-api/commit/2e9378c94e84599ffb45b375b4f1c71b75f9573c))
+* kube config generation ([#188](https://github.com/redkubes/otomi-api/issues/188)) ([8f01048](https://github.com/redkubes/otomi-api/commit/8f01048486e75f881f3b475fbe97c5edf0850b1c))
+
 ### [0.4.65](https://github.com/redkubes/otomi-api/compare/v0.4.64...v0.4.65) (2021-07-05)
 
 
