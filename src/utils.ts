@@ -1,3 +1,4 @@
+import cleanDeep, { CleanOptions } from 'clean-deep'
 import cloneDeep from 'lodash/cloneDeep'
 import { Cluster, Dns } from './otomi-models'
 
@@ -88,6 +89,16 @@ export function getServiceUrl({
 
   // Custom domain that is not visible in clusters.yaml values
   return { subdomain: '', domain }
+}
+
+export function removeBlankAttributes(obj: Record<string, unknown>): Record<string, unknown> {
+  const options: CleanOptions = {
+    emptyArrays: true,
+    emptyObjects: true,
+    nullValues: true,
+    undefinedValues: true,
+  }
+  return cleanDeep(obj, options)
 }
 
 export function getTeamJobsFilePath(teamId: string): string {

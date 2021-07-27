@@ -3,6 +3,7 @@ import yaml from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
 import axios, { AxiosResponse } from 'axios'
+import cleanDeep from 'clean-deep'
 import { GitPullError } from './error'
 import { cleanEnv, TOOLS_HOST, USE_SOPS } from './validators'
 
@@ -79,7 +80,8 @@ export class Repo {
   writeFile(relativePath, data): void {
     const absolutePath = path.join(this.path, relativePath)
     console.debug(`Writing to file: ${absolutePath}`)
-    const yamlStr = yaml.safeDump(data, { indent: 4 })
+    const cleanedData = cleanDeep(data)
+    const yamlStr = yaml.safeDump(cleanedData, { indent: 4 })
     fs.writeFileSync(absolutePath, yamlStr, 'utf8')
   }
 
