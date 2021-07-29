@@ -606,15 +606,14 @@ podSpec:
         annotations:
           $ref: '#/annotations'
           title: Pod annotations
-        # podSecurityContext:
-        #   $ref: '#/securityContext'
-        #   description: Security context for the pod.
-        #   title: Pod security context
+        podSecurityContext:
+          $ref: '#/securityContext'
+          description: Security context for the pod.
+          title: Pod security context
       # just commenting podSecurityContext out here is required to make form work
       # TODO: enable after we upgrade knative to support podSecurityContext
       # required:
       #   - podSecurityContext
-      type: object
     - $ref: '#/containerSpec'
   type: object
 portNumber:
