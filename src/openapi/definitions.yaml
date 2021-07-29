@@ -220,7 +220,6 @@ containerSpec:
   required:
     - image
     - resources
-  type: object
 cpuQuantity:
   title: CPU quantity
   description: Amount of cores, or slice of cpu in millis.
@@ -440,15 +439,15 @@ jobSpec:
       title: TTL after finished
       type: integer
     init:
-      $ref: '#/containerSpec'
-      title: Init container
-      description: May specify an init container, allowing to do preparations like checking for conditions.
-      nullable: true
+      type: array
+      items:
+        $ref: '#/containerSpec'
+      title: Init containers
+      description: May specify an array of init containers, allowing to do preparations like checking for conditions.
   required:
     - name
     - script
     - type
-  type: object
 k8sVersion:
   default: '1.19'
   description: The cluster k8s version. Otomi supports 2 minor versions backwards from the suggested default.

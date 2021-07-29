@@ -11,28 +11,30 @@ export default {
       schedule: '0 1 * * *',
       script: 'echo Hello $TARGET',
       ttlSecondsAfterFinished: 86400,
-      init: {
-        image: {
-          repository: 'otomi/nodejs-helloworld',
-          tag: 'latest',
-          pullPolicy: 'IfNotPresent',
-        },
-        securityContext: {
-          runAsUser: 1001,
-          runAsGroup: 1001,
-          runAsNonRoot: true,
-        },
-        resources: {
-          limits: {
-            cpu: '50m',
-            memory: '64Mi',
+      init: [
+        {
+          image: {
+            repository: 'otomi/nodejs-helloworld',
+            tag: 'latest',
+            pullPolicy: 'IfNotPresent',
           },
-          requests: {
-            cpu: '50m',
-            memory: '64Mi',
+          securityContext: {
+            runAsUser: 1001,
+            runAsGroup: 1001,
+            runAsNonRoot: true,
+          },
+          resources: {
+            limits: {
+              cpu: '50m',
+              memory: '64Mi',
+            },
+            requests: {
+              cpu: '50m',
+              memory: '64Mi',
+            },
           },
         },
-      },
+      ],
       podSecurityContext: {
         runAsUser: 1001,
         runAsGroup: 1001,
