@@ -195,7 +195,23 @@ containerSpec:
     image:
       $ref: '#/image'
     securityContext:
-      $ref: '#/securityContext'
+      properties:
+        runAsUser:
+          default: 1001
+          # maximum": 65535
+          # minimum": 0
+          title: Run as user
+          type: integer
+        runAsGroup:
+          default: 1001
+          # maximum": 65535
+          # minimum": 0
+          title: Run as group
+          type: integer
+        runAsNonRoot:
+          default: true
+          title: Run as non-root
+          type: boolean
       description: Security context for the container.
       title: Security context
     resources:
@@ -590,11 +606,11 @@ podSpec:
         annotations:
           $ref: '#/annotations'
           title: Pod annotations
-        podSecurityContext:
-          $ref: '#/securityContext'
-          description: Security context for the pod.
-          title: Pod security context
-      # just commenting podSecurityContext out here in required to make form work
+        # podSecurityContext:
+        #   $ref: '#/securityContext'
+        #   description: Security context for the pod.
+        #   title: Pod security context
+      # just commenting podSecurityContext out here is required to make form work
       # TODO: enable after we upgrade knative to support podSecurityContext
       # required:
       #   - podSecurityContext
