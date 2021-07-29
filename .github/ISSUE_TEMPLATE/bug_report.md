@@ -22,7 +22,7 @@ A clear and concise description of what you expected to happen
 **Screenshots:**
 If applicable, add screenshots to help explain your problem
 
-**Versions:** (seen in console's `/settings`)
+**Version:** (seen in `package.json`)
 
 - Core Version [e.g. 0.12.34]
 - Console Version: [e.g. aws]
