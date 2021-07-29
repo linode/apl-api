@@ -24,9 +24,6 @@ If applicable, add screenshots to help explain your problem
 
 **Version:** (seen in `package.json`)
 
-- Core Version [e.g. 0.12.34]
-- Console Version: [e.g. aws]
-- API version: [e.g. 0.4.56]
 
 **Additional context:**
 Add any other context about the problem here
