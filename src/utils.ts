@@ -95,6 +95,7 @@ export function removeBlankAttributes(obj: Record<string, unknown>): Record<stri
   const options: CleanOptions = {
     emptyArrays: false,
     emptyObjects: false,
+    emptyStrings: true,
     nullValues: false,
     undefinedValues: true,
   }
