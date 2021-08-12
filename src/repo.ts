@@ -121,8 +121,7 @@ export class Repo {
       await this.pull()
       if (!env.isDev) await decrypt()
     } catch (e) {
-      console.error(e)
-      if (env.isDev) await this.git.clean(CleanOptions.FORCE)
+      if (!env.isDev) await this.git.clean(CleanOptions.FORCE)
       else throw e
     }
   }

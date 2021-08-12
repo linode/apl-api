@@ -86,14 +86,24 @@ export default class OtomiStack {
   }
 
   async init(): Promise<void> {
-    this.repo = await cloneRepo(
-      env.GIT_LOCAL_PATH,
-      env.GIT_REPO_URL,
-      env.GIT_USER,
-      env.GIT_EMAIL,
-      env.GIT_PASSWORD,
-      env.GIT_BRANCH,
-    )
+    for (;;) {
+      try {
+        /* eslint-disable no-await-in-loop */
+        this.repo = await cloneRepo(
+          env.GIT_LOCAL_PATH,
+          env.GIT_REPO_URL,
+          env.GIT_USER,
+          env.GIT_EMAIL,
+          env.GIT_PASSWORD,
+          env.GIT_BRANCH,
+        )
+        break
+      } catch (e) {
+        console.error(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
+      }
+      console.info('Waiting for values to be available')
+      await new Promise((resolve) => setTimeout(resolve, 5000))
+    }
     this.loadValues()
   }
 
