@@ -97,13 +97,17 @@ export default class OtomiStack {
           env.GIT_PASSWORD,
           env.GIT_BRANCH,
         )
-        break
+        if (this.repo.fileExists('env/cluster.yaml')) break
+        console.info(`Values are not present at ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
       } catch (e) {
         console.error(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
+        console.info(`Git repository is not ready ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
       }
-      console.info('Waiting for values to be available')
-      await new Promise((resolve) => setTimeout(resolve, 5000))
+      const tiemoutMs = 5000
+      console.info(`Waiting (${tiemoutMs})`)
+      await new Promise((resolve) => setTimeout(resolve, tiemoutMs))
     }
+
     this.loadValues()
   }
 
