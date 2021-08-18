@@ -86,14 +86,28 @@ export default class OtomiStack {
   }
 
   async init(): Promise<void> {
-    this.repo = await cloneRepo(
-      env.GIT_LOCAL_PATH,
-      env.GIT_REPO_URL,
-      env.GIT_USER,
-      env.GIT_EMAIL,
-      env.GIT_PASSWORD,
-      env.GIT_BRANCH,
-    )
+    for (;;) {
+      try {
+        /* eslint-disable no-await-in-loop */
+        this.repo = await cloneRepo(
+          env.GIT_LOCAL_PATH,
+          env.GIT_REPO_URL,
+          env.GIT_USER,
+          env.GIT_EMAIL,
+          env.GIT_PASSWORD,
+          env.GIT_BRANCH,
+        )
+        if (this.repo.fileExists('env/cluster.yaml')) break
+        console.info(`Values are not present at ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
+      } catch (e) {
+        console.error(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
+        console.info(`Git repository is not ready ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
+      }
+      const tiemoutMs = 5000
+      console.info(`Trying again in (${tiemoutMs}) ms`)
+      await new Promise((resolve) => setTimeout(resolve, tiemoutMs))
+    }
+
     this.loadValues()
   }
 
