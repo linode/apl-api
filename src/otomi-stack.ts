@@ -104,7 +104,7 @@ export default class OtomiStack {
         console.info(`Git repository is not ready ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
       }
       const tiemoutMs = 5000
-      console.info(`Trying again in (${tiemoutMs}) ms`)
+      console.info(`Trying again in ${tiemoutMs} ms`)
       await new Promise((resolve) => setTimeout(resolve, tiemoutMs))
     }
 
