@@ -111,13 +111,12 @@ export class Repo {
     if (!isRepo) {
       console.info(`Local git repository does not exist. Cloning from '${this.url}' to '${this.path}'`)
       await this.git.clone(this.repoPathAuth, this.path)
-      return
+    } else {
+      console.log('Repo already exists. Checking out correct branch.')
+      // Git fetch ensures that local git repository is synced with remote repository
+      await this.git.fetch()
+      await this.git.checkout(this.branch)
     }
-    console.log(`Local git repository already exists. Fetching and checking out branch '${this.branch}'.`)
-    // Git fetch ensures that local git repository is synced with remote repository
-    await this.git.fetch()
-    await this.git.checkout(this.branch)
-
     if (env.isDev) await decrypt() // do it now because pull usually fails because of dirty state of git
     try {
       await this.pull()
