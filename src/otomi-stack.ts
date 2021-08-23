@@ -103,9 +103,9 @@ export default class OtomiStack {
         console.error(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
         console.info(`Git repository is not ready ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
       }
-      const tiemoutMs = 5000
-      console.info(`Trying again in ${tiemoutMs} ms`)
-      await new Promise((resolve) => setTimeout(resolve, tiemoutMs))
+      const timeoutMs = 15000
+      console.info(`Trying again in ${timeoutMs} ms`)
+      await new Promise((resolve) => setTimeout(resolve, timeoutMs))
     }
 
     this.loadValues()
