@@ -48,7 +48,7 @@ AdditionalCluster:
     team:
       - read
   title: Additional cluster
-  description: A k8s cluster to manage by Otomi.
+  description: A k8s cluster managed by Otomi.
   properties:
     domainSuffix:
       $ref: '#/domainSuffix'

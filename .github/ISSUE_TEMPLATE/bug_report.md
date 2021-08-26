@@ -22,6 +22,5 @@ If applicable, add screenshots to help explain your problem
 
 **Version:** (seen in `package.json`)
 
-
 **Additional context:**
 Add any other context about the problem here
