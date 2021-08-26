@@ -5,7 +5,7 @@ services:
     container_name: tools
     image: otomi/core:${TOOLS_TAG:-master}
     user: ${USER_ID}
-    command: bin/server.sh
+    command: binzx/otomi server -vv
     expose:
       - 17771
     ports:
