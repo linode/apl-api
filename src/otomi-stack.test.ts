@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import './test-init'
+// import './test-init'
 import { expect } from 'chai'
 import OtomiStack from './otomi-stack'
 
