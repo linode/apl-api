@@ -3,9 +3,9 @@ import yaml from 'js-yaml'
 import fs from 'fs'
 import path from 'path'
 import axios, { AxiosResponse } from 'axios'
-import cleanDeep from 'clean-deep'
 import { GitPullError } from './error'
 import { cleanEnv, TOOLS_HOST, USE_SOPS } from './validators'
+import { removeBlankAttributes } from './utils'
 
 const env = cleanEnv({
   TOOLS_HOST,
@@ -80,7 +80,7 @@ export class Repo {
   writeFile(relativePath, data): void {
     const absolutePath = path.join(this.path, relativePath)
     console.debug(`Writing to file: ${absolutePath}`)
-    const cleanedData = cleanDeep(data)
+    const cleanedData = removeBlankAttributes(data)
     const yamlStr = yaml.safeDump(cleanedData, { indent: 4 })
     fs.writeFileSync(absolutePath, yamlStr, 'utf8')
   }
@@ -105,23 +105,23 @@ export class Repo {
   }
 
   async clone(): Promise<void> {
-    console.info(`Checking if repo exists at: ${this.path}`)
+    console.info(`Checking if local git repository exists at: ${this.path}`)
 
     const isRepo = await this.git.checkIsRepo()
     if (!isRepo) {
-      console.info(`Repo does not exist. Cloning from: ${this.url} to: ${this.path}`)
+      console.info(`Local git repository does not exist. Cloning from '${this.url}' to '${this.path}'`)
       await this.git.clone(this.repoPathAuth, this.path)
-      return
+    } else {
+      console.log('Repo already exists. Checking out correct branch.')
+      // Git fetch ensures that local git repository is synced with remote repository
+      await this.git.fetch()
+      await this.git.checkout(this.branch)
     }
-    console.log('Repo already exists. Checking out correct branch.')
-    await this.git.checkout(this.branch)
-
     if (env.isDev) await decrypt() // do it now because pull usually fails because of dirty state of git
     try {
       await this.pull()
       if (!env.isDev) await decrypt()
     } catch (e) {
-      console.error(e)
       if (env.isDev) await this.git.clean(CleanOptions.FORCE)
       else throw e
     }
