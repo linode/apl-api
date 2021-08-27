@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.67](https://github.com/redkubes/otomi-api/compare/v0.4.66...v0.4.67) (2021-08-27)
+
+
+### Features
+
+* use new alpine image ([#196](https://github.com/redkubes/otomi-api/issues/196)) ([149b6f9](https://github.com/redkubes/otomi-api/commit/149b6f9d2b665a9018e6e660c6832829a5e3df7a))
+
+
+### Bug Fixes
+
+* app.js does not exist in /app/dist/src/app.js  ([#190](https://github.com/redkubes/otomi-api/issues/190)) ([3abfc8c](https://github.com/redkubes/otomi-api/commit/3abfc8cc70316e8ac0df478a6fedc62f8b3457a9))
+* copy generated-schema.json to right location ([#198](https://github.com/redkubes/otomi-api/issues/198)) ([6b22d3e](https://github.com/redkubes/otomi-api/commit/6b22d3e0208190b3e467a075dbffc3a87d91e82b))
+* do not remove attributes ([#192](https://github.com/redkubes/otomi-api/issues/192)) ([b59f0d7](https://github.com/redkubes/otomi-api/commit/b59f0d718ad937b7ecf83da1e45333fee11eb047))
+* fetch before checking out branch in local git  repo ([#204](https://github.com/redkubes/otomi-api/issues/204)) ([63f5dd8](https://github.com/redkubes/otomi-api/commit/63f5dd883c63a9394a071dbf6ee4a193292ef305))
+* jobs in otomi cnsole do not work ([#194](https://github.com/redkubes/otomi-api/issues/194)) ([cb3aea2](https://github.com/redkubes/otomi-api/commit/cb3aea2a1906bf6a36f25c0b93c954211b563f2e))
+* podspec, docker-compose ([#206](https://github.com/redkubes/otomi-api/issues/206)) ([ada1609](https://github.com/redkubes/otomi-api/commit/ada16095e1e744138064f57ba736216dddc4d559))
+* return additional clusters as empty array, fixes [#92](https://github.com/redkubes/otomi-api/issues/92) ([#205](https://github.com/redkubes/otomi-api/issues/205)) ([8f1af8c](https://github.com/redkubes/otomi-api/commit/8f1af8cca9d09ffc64fc01311741ff4ab2476ef3))
+
+
+### Others
+
+* add issue templates ([#193](https://github.com/redkubes/otomi-api/issues/193)) ([0cf993e](https://github.com/redkubes/otomi-api/commit/0cf993eb20d073f06e97b6df56b0891ef0826943))
+
+### [0.4.69](https://github.com/redkubes/otomi-api/compare/v0.4.65...v0.4.69) (2021-07-15)
+
+
+### Others
+
+* **release:** 0.4.69 ([a1aa9cb](https://github.com/redkubes/otomi-api/commit/a1aa9cb4949e15678e972caece0ee29e71f46dff))
+
 ### [0.4.66](https://github.com/redkubes/otomi-api/compare/v0.4.65...v0.4.66) (2021-07-15)
 
 
