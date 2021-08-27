@@ -5,14 +5,15 @@ services:
     container_name: tools
     image: otomi/core:${TOOLS_TAG:-master}
     user: ${USER_ID}
-    command: binzx/otomi server -vv
+    command: binzx/otomi server
     expose:
       - 17771
     ports:
       - 17771:17771
     volumes:
-      - /tmp:/tmp
+      - $ENV_DIR:$ENV_DIR
     environment:
-      ENV_DIR: /tmp/otomi-values
+      ENV_DIR: $ENV_DIR
+      VERBOSITY: 2
     env_file:
       - .env
