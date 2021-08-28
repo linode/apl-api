@@ -1,8 +1,8 @@
 import simpleGit, { CleanOptions, CommitResult, SimpleGit, SimpleGitOptions } from 'simple-git'
 import yaml from 'js-yaml'
-import fs from 'fs'
-import path from 'path'
+import path, { dirname } from 'path'
 import axios, { AxiosResponse } from 'axios'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { GitPullError } from './error'
 import { cleanEnv, TOOLS_HOST, USE_SOPS } from './validators'
 import { removeBlankAttributes } from './utils'
@@ -82,18 +82,20 @@ export class Repo {
     console.debug(`Writing to file: ${absolutePath}`)
     const cleanedData = removeBlankAttributes(data)
     const yamlStr = yaml.safeDump(cleanedData, { indent: 4 })
-    fs.writeFileSync(absolutePath, yamlStr, 'utf8')
+    const dir = dirname(absolutePath)
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+    writeFileSync(absolutePath, yamlStr, 'utf8')
   }
 
   fileExists(relativePath: string): boolean {
     const absolutePath = path.join(this.path, relativePath)
-    return fs.existsSync(absolutePath)
+    return existsSync(absolutePath)
   }
 
   readFile(relativePath): any {
     const absolutePath = path.join(this.path, relativePath)
     console.info(`Reading from file: ${absolutePath}`)
-    const doc = yaml.safeLoad(fs.readFileSync(absolutePath, 'utf8'))
+    const doc = yaml.safeLoad(readFileSync(absolutePath, 'utf8'))
     return doc as any
   }
 
@@ -172,7 +174,7 @@ export default async function cloneRepo(
   branch,
   protocol = 'https',
 ): Promise<Repo> {
-  if (!fs.existsSync(localPath)) fs.mkdirSync(localPath, 0o744)
+  if (!existsSync(localPath)) mkdirSync(localPath, 0o744)
   const remotePathAuth = getRemotePathAuth(remotePath, protocol, user, password)
   const repo = new Repo(localPath, remotePath, user, email, remotePathAuth, branch)
   await repo.clone()
@@ -189,7 +191,7 @@ export async function initRepo(
   branch,
   protocol = 'https',
 ): Promise<Repo> {
-  if (!fs.existsSync(localPath)) fs.mkdirSync(localPath, 0o744)
+  if (!existsSync(localPath)) mkdirSync(localPath, 0o744)
   const remotePathAuth = getRemotePathAuth(remotePath, protocol, user, password)
 
   const repo = new Repo(localPath, remotePath, user, email, remotePathAuth, branch)
@@ -199,7 +201,7 @@ export async function initRepo(
 }
 
 export async function initRepoBare(location): Promise<SimpleGit> {
-  fs.mkdirSync(location, 0o744)
+  mkdirSync(location, 0o744)
   const options: Partial<SimpleGitOptions> = {
     baseDir: location,
     config: process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0' ? ['http.sslVerify=false'] : undefined,

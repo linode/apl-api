@@ -1,6 +1,6 @@
 /* eslint-disable class-methods-use-this */
 import * as k8s from '@kubernetes/client-node'
-import fs from 'fs'
+import { readFileSync } from 'fs'
 import yaml from 'js-yaml'
 import { cloneDeep, merge, filter, get, omit, set, unset, isEqual, union, isEmpty } from 'lodash'
 import generatePassword from 'password-generator'
@@ -81,7 +81,7 @@ export default class OtomiStack {
   constructor() {
     this.db = new Db(env.DB_PATH)
     const corePath = env.isProd ? '/etc/otomi/core.yaml' : './test/core.yaml'
-    this.coreValues = yaml.safeLoad(fs.readFileSync(corePath, 'utf8')) as any
+    this.coreValues = yaml.safeLoad(readFileSync(corePath, 'utf8')) as any
     this.decryptedFilePostfix = env.USE_SOPS ? '.dec' : ''
   }
 
