@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.69](https://github.com/redkubes/otomi-api/compare/v0.4.68...v0.4.69) (2021-08-30)
+
+
+### Bug Fixes
+
+* await encrypt ([babd448](https://github.com/redkubes/otomi-api/commit/babd448a01af133b0a50796a5d0823cb2521e817))
+* docker ignore vendor ([a2718d9](https://github.com/redkubes/otomi-api/commit/a2718d9f740979fa151d319d526f61da1cfbb077))
+
 ### [0.4.68](https://github.com/redkubes/otomi-api/compare/v0.4.67...v0.4.68) (2021-08-28)
 
 
