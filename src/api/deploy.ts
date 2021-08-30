@@ -11,12 +11,11 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
         await otomi.triggerDeployment(email || '')
         res.json({})
       } catch (err) {
-        console.error(err)
-        res.status(409).json({ error: err.message })
+        res.status(err.code).json({ error: err.publicMessage })
         // TODO: remove this part after we know how to merge (if ever):
-        setTimeout(() => {
-          process.exit()
-        }, 1000)
+        // setTimeout(() => {
+        //   process.exit()
+        // }, 1000)
       }
     },
   ]

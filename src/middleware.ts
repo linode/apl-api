@@ -31,8 +31,10 @@ export function errorMiddleware(e, req: OpenApiRequest, res, next): void {
     code = e.code
     msg = e.publicMessage
   } else {
-    code = e.code ?? e.statusCode ?? e.status ?? 500
-    msg = HttpError.fromCode(code).message
+    code = e.code ?? e.statusCode ?? e.status ?? e.response?.status ?? 500
+    const errMsg = e.message ?? e.response?.data
+    msg = `${HttpError.fromCode(code).message}`
+    if (errMsg) msg += `: ${errMsg}`
   }
   return res.status(code).json({ error: msg })
 }

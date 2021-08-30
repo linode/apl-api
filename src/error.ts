@@ -37,6 +37,12 @@ export class PublicUrlExists extends OtomiError {
     this.code = 409
   }
 }
+export class ValidationError extends OtomiError {
+  public constructor(err?: string) {
+    super('Invalid values detected', err)
+    this.code = 422
+  }
+}
 
 export class HttpError extends OtomiError {
   protected static messages = {
@@ -76,8 +82,9 @@ export class HttpError extends OtomiError {
     511: 'Network Authentication Required', // RFC 6585
   }
 
-  public constructor(public code: number, message: string) {
+  public constructor(public code: number, message?: string) {
     super(message)
+    // this.code = code
   }
 
   public static fromCode(code: number): HttpError {

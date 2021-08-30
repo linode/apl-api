@@ -21,7 +21,7 @@ import {
   TeamSelfService,
   User,
 } from './otomi-models'
-import { PublicUrlExists } from './error'
+import { HttpError, PublicUrlExists, ValidationError } from './error'
 import {
   argQuoteJoin,
   argQuoteStrip,
@@ -259,7 +259,13 @@ export default class OtomiStack {
   async triggerDeployment(email: string): Promise<void> {
     console.log('DISABLE_SYNC: ', env.DISABLE_SYNC)
     this.saveValues()
-    await encrypt()
+    try {
+      await encrypt()
+    } catch (e) {
+      const { status } = e.response
+      if (status === 422) throw new ValidationError()
+      throw HttpError.fromCode(status)
+    }
 
     if (!env.DISABLE_SYNC) {
       await this.repo.save(email)
