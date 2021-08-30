@@ -5,6 +5,7 @@ RUN test -n "$NPM_TOKEN"
 
 ENV NODE_ENV=development
 ENV BLUEBIRD_DEBUG=0
+ENV HUSKY_SKIP_INSTALL=true
 
 RUN mkdir /app
 WORKDIR /app

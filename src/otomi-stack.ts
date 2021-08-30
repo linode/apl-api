@@ -259,7 +259,7 @@ export default class OtomiStack {
   async triggerDeployment(email: string): Promise<void> {
     console.log('DISABLE_SYNC: ', env.DISABLE_SYNC)
     this.saveValues()
-    encrypt()
+    await encrypt()
 
     if (!env.DISABLE_SYNC) {
       await this.repo.save(email)
@@ -491,7 +491,11 @@ export default class OtomiStack {
       this.saveTeamJobs(team.id!)
       this.saveTeamServices(team.id!)
       this.saveTeamSecrets(team.id!)
-      if (!team.password) team.password = generatePassword(16, false)
+      if (isEmpty(team.password)) {
+        console.debug(`creating password for team '${team.id}'`)
+        team.password = generatePassword(16, false)
+      } else console.debug(`already found a password for team '${team.id}'`)
+
       team.resourceQuota = arrayToObject(team.resourceQuota ?? [])
 
       secretPropertyPaths.forEach((propertyPath) => {
