@@ -2,7 +2,8 @@ import simpleGit, { CleanOptions, CommitResult, SimpleGit, SimpleGitOptions } fr
 import yaml from 'js-yaml'
 import path, { dirname } from 'path'
 import axios, { AxiosResponse } from 'axios'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'fs'
+import { isEmpty } from 'lodash'
 import { GitPullError } from './error'
 import { cleanEnv, TOOLS_HOST, USE_SOPS } from './validators'
 import { removeBlankAttributes } from './utils'
@@ -77,14 +78,21 @@ export class Repo {
     await this.addRemoteOrigin()
   }
 
-  writeFile(relativePath, data): void {
+  writeFile(relativePath, data): boolean {
     const absolutePath = path.join(this.path, relativePath)
-    console.debug(`Writing to file: ${absolutePath}`)
     const cleanedData = removeBlankAttributes(data)
+    if (isEmpty(cleanedData) && existsSync(absolutePath) && absolutePath.includes('secrets.')) {
+      console.debug(`Removing file: ${absolutePath}`)
+      // Remove empty secret file due to https://github.com/mozilla/sops/issues/926 issue
+      unlinkSync(absolutePath)
+      return false
+    }
+    console.debug(`Writing to file: ${absolutePath}`)
     const yamlStr = yaml.safeDump(cleanedData, { indent: 4 })
     const dir = dirname(absolutePath)
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
     writeFileSync(absolutePath, yamlStr, 'utf8')
+    return true
   }
 
   fileExists(relativePath: string): boolean {
