@@ -96,7 +96,7 @@ export function removeBlankAttributes(obj: Record<string, unknown>): Record<stri
     emptyArrays: false,
     emptyObjects: true,
     emptyStrings: true,
-    nullValues: false,
+    nullValues: true,
     undefinedValues: true,
   }
   return cleanDeep(obj, options)
