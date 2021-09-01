@@ -94,9 +94,9 @@ export function getServiceUrl({
 export function removeBlankAttributes(obj: Record<string, unknown>): Record<string, unknown> {
   const options: CleanOptions = {
     emptyArrays: false,
-    emptyObjects: false,
+    emptyObjects: true,
     emptyStrings: true,
-    nullValues: false,
+    nullValues: true,
     undefinedValues: true,
   }
   return cleanDeep(obj, options)
