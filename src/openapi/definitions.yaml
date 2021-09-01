@@ -218,7 +218,9 @@ containerSpecNoSec:
     - resources
 containerSpec:
   allOf:
-    - $ref: '#/securityContext'
+    - properties:
+        securityContext:
+          $ref: '#/securityContext'
     - $ref: '#/containerSpecNoSec'
 cpuQuantity:
   title: CPU quantity
@@ -599,6 +601,32 @@ path:
   description: An absolute path
   type: string
   pattern: '^[/].*$'
+podSecurityContext:
+  properties:
+    runAsUser:
+      $ref: '#/runAsUser'
+      description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+    runAsGroup:
+      $ref: '#/runAsGroup'
+      description: The GID to run the entrypoint of the container process. Defaults to group specified in image metadata if unspecified. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+    runAsNonRoot:
+      $ref: '#/runAsNonRoot'
+      description: Will prevent any container from starting with UID 0.
+    fsGroup:
+      description: Supplementary group ID. Volumes that support ownership management are modified to be owned and writable by this ID.
+      type: string
+    fsGroupChangePolicy:
+      description:
+        'Defines behavior for changing ownership and permission of the volume before being exposed inside a Pod. This field only applies to volume types that support fsGroup controlled ownership and permissions.
+        This field has two possible values:
+        OnRootMismatch: Only change permissions and ownership if permission and ownership of root directory does not match with expected permissions of the volume. This could help shorten the time it takes to change ownership and permission of a volume.
+        Always: Always change permission and ownership of the volume when volume is mounted.'
+      enum:
+        # - null
+        - Always
+        - OnRootMismatch
+  description: Security context for the pod.
+  title: Pod security context
 podSpec:
   allOf:
     - properties:
@@ -607,31 +635,7 @@ podSpec:
           title: Pod annotations
     - properties:
         podSecurityContext:
-          properties:
-            runAsUser:
-              $ref: '#/runAsUser'
-              description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
-            runAsGroup:
-              $ref: '#/runAsGroup'
-              description: The GID to run the entrypoint of the container process. Defaults to group specified in image metadata if unspecified. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
-            runAsNonRoot:
-              $ref: '#/runAsNonRoot'
-              description: Will prevent any container from starting with UID 0.
-            fsGroup:
-              description: Supplementary group ID. Volumes that support ownership management are modified to be owned and writable by this ID.
-              type: string
-            fsGroupChangePolicy:
-              description:
-                'Defines behavior for changing ownership and permission of the volume before being exposed inside a Pod. This field only applies to volume types that support fsGroup controlled ownership and permissions.
-                This field has two possible values:
-                OnRootMismatch: Only change permissions and ownership if permission and ownership of root directory does not match with expected permissions of the volume. This could help shorten the time it takes to change ownership and permission of a volume.
-                Always: Always change permission and ownership of the volume when volume is mounted.'
-              enum:
-                - null
-                - Always
-                - OnRootMismatch
-          description: Security context for the pod.
-          title: Pod security context
+          $ref: '#/podSecurityContext'
     - $ref: '#/containerSpec'
   type: object
 portNumber:
@@ -714,7 +718,8 @@ script:
   description: May specify a non-empty string containing an executable script.
   type: string
 securityContext:
-  additionalProperties: true
+  additionalProperties:
+    uniqueItems: true
   properties:
     runAsUser:
       $ref: '#/runAsUser'

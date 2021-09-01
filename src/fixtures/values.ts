@@ -314,8 +314,6 @@ export default {
         secretMounts: [],
         podSecurityContext: {
           runAsUser: 1001,
-          runAsGroup: 1001,
-          runAsNonRoot: true,
         },
         resources: {
           requests: {

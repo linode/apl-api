@@ -2,14 +2,14 @@ Job:
   x-acl:
     admin: [read-any, create-any, update-any, delete-any]
     team: [read-any, create, update, delete]
-  properties:
-    id:
-      type: string
-      readOnly: true
-    teamId:
-      $ref: definitions.yaml#/idName
-      readOnly: true
   type: object
   allOf:
+    - properties:
+        id:
+          type: string
+          readOnly: true
+        teamId:
+          $ref: definitions.yaml#/idName
+          readOnly: true
     - $ref: definitions.yaml#/jobSpec
     - $ref: definitions.yaml#/podSpec

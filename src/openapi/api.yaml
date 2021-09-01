@@ -693,6 +693,8 @@ components:
       $ref: definitions.yaml#/offChoice
     path:
       $ref: definitions.yaml#/path
+    podSecurityContext:
+      $ref: definitions.yaml#/podSecurityContext
     podSpec:
       $ref: definitions.yaml#/podSpec
     policies:
@@ -715,8 +717,6 @@ components:
       $ref: definitions.yaml#/script
     secrets:
       $ref: definitions.yaml#/secrets
-    securityContext:
-      $ref: definitions.yaml#/securityContext
     svcPredeployed:
       $ref: definitions.yaml#/svcPredeployed
     url:
