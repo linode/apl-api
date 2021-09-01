@@ -81,7 +81,7 @@ export class Repo {
   writeFile(relativePath, data): void {
     const absolutePath = path.join(this.path, relativePath)
     const cleanedData = removeBlankAttributes(data)
-    if (isEmpty(cleanedData) && existsSync(absolutePath) && absolutePath.includes('secrets.')) {
+    if (isEmpty(cleanedData) && existsSync(absolutePath) && absolutePath.includes('/secrets.')) {
       console.debug(`Removing file: ${absolutePath}`)
       // Remove empty secret file due to https://github.com/mozilla/sops/issues/926 issue
       unlinkSync(absolutePath)
