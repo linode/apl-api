@@ -639,6 +639,8 @@ components:
       $ref: user.yaml#/User
     alerts:
       $ref: definitions.yaml#/alerts
+    annotations:
+      $ref: definitions.yaml#/annotations
     apiName:
       $ref: cluster.yaml#/apiName
     apiServer:
@@ -651,6 +653,8 @@ components:
       $ref: definitions.yaml#/azureMonitor
     containerSpec:
       $ref: definitions.yaml#/containerSpec
+    containerSpecNoSec:
+      $ref: definitions.yaml#/containerSpecNoSec
     cpu:
       $ref: definitions.yaml#/cpuQuantity
     dns:
@@ -699,6 +703,12 @@ components:
       $ref: cluster.yaml#/region
     resource:
       $ref: definitions.yaml#/resource
+    runAsGroup:
+      $ref: definitions.yaml#/runAsGroup
+    runAsNonRoot:
+      $ref: definitions.yaml#/runAsNonRoot
+    runAsUser:
+      $ref: definitions.yaml#/runAsUser
     resources:
       $ref: definitions.yaml#/resources
     script:

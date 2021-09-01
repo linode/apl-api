@@ -101,7 +101,7 @@ export default class OtomiStack {
         console.info(`Values are not present at ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
       } catch (e) {
         console.error(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
-        console.info(`Git repository is not ready ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
+        console.info(`Git repository is not ready: ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
       }
       const timeoutMs = 15000
       console.info(`Trying again in ${timeoutMs} ms`)

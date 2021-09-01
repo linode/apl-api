@@ -190,30 +190,10 @@ azureMonitor:
         - clientSecret
       title: 'On'
       type: object
-containerSpec:
+containerSpecNoSec:
   properties:
     image:
       $ref: '#/image'
-    securityContext:
-      properties:
-        runAsUser:
-          default: 1001
-          # maximum": 65535
-          # minimum": 0
-          title: Run as user
-          type: integer
-        runAsGroup:
-          default: 1001
-          # maximum": 65535
-          # minimum": 0
-          title: Run as group
-          type: integer
-        runAsNonRoot:
-          default: true
-          title: Run as non-root
-          type: boolean
-      description: Security context for the container.
-      title: Security context
     resources:
       $ref: '#/resources'
       title: Container resources
@@ -236,6 +216,10 @@ containerSpec:
   required:
     - image
     - resources
+containerSpec:
+  allOf:
+    - $ref: '#/securityContext'
+    - $ref: '#/containerSpecNoSec'
 cpuQuantity:
   title: CPU quantity
   description: Amount of cores, or slice of cpu in millis.
@@ -486,11 +470,26 @@ kms:
         - $ref: definitions.yaml#/googleCreds
         - $ref: definitions.yaml#/vaultCreds
 ksvcNew:
+  description: Will create a new knative service from the input gathered here.
   title: New knative service
   allOf:
-    - $ref: '#/podSpec'
-    - description: Will create a new knative service from the input gathered here.
-      properties:
+    - properties:
+        annotations:
+          $ref: '#/annotations'
+          title: Pod annotations
+      type: object
+    - properties:
+        securityContext:
+          properties:
+            runAsUser:
+              $ref: '#/runAsUser'
+            readOnlyRootFilesystem:
+              description: Whether this container has a read-only root filesystem. Default is false.
+              type: boolean
+              default: false
+      type: object
+    - $ref: '#/containerSpecNoSec'
+    - properties:
         serviceType:
           default: ksvc
           enum:
@@ -606,24 +605,18 @@ podSpec:
         annotations:
           $ref: '#/annotations'
           title: Pod annotations
+    - properties:
         podSecurityContext:
           properties:
             runAsUser:
-              default: 1001
-              # maximum": 65535
-              # minimum": 0
-              title: Run as user
-              type: integer
+              $ref: '#/runAsUser'
+              description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
             runAsGroup:
-              default: 1001
-              # maximum": 65535
-              # minimum": 0
-              title: Run as group
-              type: integer
+              $ref: '#/runAsGroup'
+              description: The GID to run the entrypoint of the container process. Defaults to group specified in image metadata if unspecified. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
             runAsNonRoot:
-              default: true
-              title: Run as non-root
-              type: boolean
+              $ref: '#/runAsNonRoot'
+              description: Will prevent any container from starting with UID 0.
             fsGroup:
               description: Supplementary group ID. Volumes that support ownership management are modified to be owned and writable by this ID.
               type: string
@@ -639,15 +632,11 @@ podSpec:
                 - OnRootMismatch
           description: Security context for the pod.
           title: Pod security context
-      # just commenting podSecurityContext out here is required to make form work
-      # required:
-      #   - podSecurityContext
     - $ref: '#/containerSpec'
   type: object
 portNumber:
   maximum: 32768
   minimum: 80
-  default: 80
   type: integer
 rawValues:
   description: "May define value overrides for a chart. WARNING: these values currently have no schema and can't be validated as such, and may break deployment. You are on your own here."
@@ -694,6 +683,25 @@ resourceQuota:
     required:
       - name
       - value
+runAsUser:
+  description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified.
+  default: 1001
+  maximum: 65535
+  minimum: 0
+  title: Run as user
+  type: integer
+runAsGroup:
+  description: The GID to run the entrypoint of the container process. Defaults to group specified in image metadata if unspecified.
+  default: 1001
+  maximum: 65535
+  minimum: 0
+  title: Run as group
+  type: integer
+runAsNonRoot:
+  description: Will prevent the container from starting with UID 0.
+  default: true
+  title: Run as non-root
+  type: boolean
 scaling:
   description: Min and max number of replicas.
   properties:
@@ -709,21 +717,11 @@ securityContext:
   additionalProperties: true
   properties:
     runAsUser:
-      default: 1001
-      # maximum": 65535
-      # minimum": 0
-      title: Run as user
-      type: integer
+      $ref: '#/runAsUser'
     runAsGroup:
-      default: 1001
-      # maximum": 65535
-      # minimum": 0
-      title: Run as group
-      type: integer
+      $ref: '#/runAsGroup'
     runAsNonRoot:
-      default: true
-      title: Run as non-root
-      type: boolean
+      $ref: '#/runAsNonRoot'
   type: object
 secrets:
   description: A list of team secrets that will be mounted into the pod as env vars.

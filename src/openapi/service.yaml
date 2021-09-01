@@ -24,7 +24,7 @@ Service:
       description: A service name.
       example: some-service
     port:
-      description: A service port.
+      description: A service port. Defaults to 80.
       type: integer
       minimum: 1
       maximum: 65535

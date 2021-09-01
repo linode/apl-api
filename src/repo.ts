@@ -5,10 +5,11 @@ import axios, { AxiosResponse } from 'axios'
 import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'fs'
 import { isEmpty } from 'lodash'
 import { GitPullError } from './error'
-import { cleanEnv, TOOLS_HOST, USE_SOPS } from './validators'
+import { cleanEnv, DISABLE_SYNC, TOOLS_HOST, USE_SOPS } from './validators'
 import { removeBlankAttributes } from './utils'
 
 const env = cleanEnv({
+  DISABLE_SYNC,
   TOOLS_HOST,
   USE_SOPS,
 })
@@ -120,7 +121,7 @@ export class Repo {
     if (!isRepo) {
       console.info(`Local git repository does not exist. Cloning from '${this.url}' to '${this.path}'`)
       await this.git.clone(this.repoPathAuth, this.path)
-    } else {
+    } else if (!env.DISABLE_SYNC) {
       console.log('Repo already exists. Checking out correct branch.')
       // Git fetch ensures that local git repository is synced with remote repository
       await this.git.fetch()

@@ -9,8 +9,6 @@ teamConfig:
             containerPort: 80
             podSecurityContext:
               runAsUser: 1001
-              runAsGroup: 1001
-              runAsNonRoot: true
             image:
               tag: latest
               pullPolicy: IfNotPresent
