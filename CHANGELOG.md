@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.70](https://github.com/redkubes/otomi-api/compare/v0.4.68...v0.4.70) (2021-09-02)
+
+
+### Bug Fixes
+
+* await encrypt ([babd448](https://github.com/redkubes/otomi-api/commit/babd448a01af133b0a50796a5d0823cb2521e817))
+* docker ignore vendor ([a2718d9](https://github.com/redkubes/otomi-api/commit/a2718d9f740979fa151d319d526f61da1cfbb077))
+* dry schema, sec context for ksvc ([b9b4f9d](https://github.com/redkubes/otomi-api/commit/b9b4f9d02bca3d700676c6e1c5b39350bde29e0e))
+* job spec ([c632624](https://github.com/redkubes/otomi-api/commit/c632624eb90da95eda5fb22a313e2048fc959d21))
+* pruning empty objects, strings and nulls ([#209](https://github.com/redkubes/otomi-api/issues/209)) ([ab3b4cf](https://github.com/redkubes/otomi-api/commit/ab3b4cf6034a303361c87022dbd2f88590696f73))
+* values valiation error ([8e99fd3](https://github.com/redkubes/otomi-api/commit/8e99fd394cec529bde41f3d54397fe72e05cbbe1))
+
+
+### Others
+
+* **release:** 0.4.69 ([0ff594e](https://github.com/redkubes/otomi-api/commit/0ff594ec1b9b802333cfb6160749dff0ca1b79d8))
+
 ### [0.4.69](https://github.com/redkubes/otomi-api/compare/v0.4.68...v0.4.69) (2021-08-30)
 
 
