@@ -1,5 +1,5 @@
 Deployment:
-  x-externalDocsPath: docs/deployment
+  x-externalDocsPath: docs/console/deploy-changes
   x-acl:
     admin: [read-any]
     team: [read-any]
