@@ -109,4 +109,4 @@ Team:
     team:
       - read-any
       - update
-  x-externalDocsPath: docs/configuring-teams
+  x-externalDocsPath: docs/console/teams

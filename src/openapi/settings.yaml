@@ -6,7 +6,7 @@ Settings:
   properties:
     alerts:
       $ref: definitions.yaml#/alerts
-      x-externalDocsPath: docs/console/settings#alerts
+      x-externalDocsPath: docs/console/settings/alerts
     azure:
       title: Azure
       additionalProperties: false
@@ -52,17 +52,17 @@ Settings:
           description: Used in alerts/reports to distinguish between resources for different customers.
     dns:
       $ref: definitions.yaml#/dns
-      x-externalDocsPath: docs/console/settings#dns
+      x-externalDocsPath: docs/console/settings/dns
     kms:
       additionalProperties: false
       $ref: definitions.yaml#/kms
-      x-externalDocsPath: docs/console/settings#kms
+      x-externalDocsPath: docs/console/settings/kms
     home:
       title: Home alerts
       description: Same setup as 'Alerts', but to send copies of alerts "home". Useful for co-monitoring managed clusters of customers.
       additionalProperties: false
       $ref: definitions.yaml#/alerts
-      x-externalDocsPath: docs/console/settings#home
+      x-externalDocsPath: docs/console/settings/home
     oidc:
       title: OIDC
       description: OpenID Connect settings.
@@ -112,7 +112,7 @@ Settings:
           type: string
           description: Select OIDC claim to be passed by Keycloak as a unique user identifier. Best to not change this from the default.
           default: sub
-      x-externalDocsPath: docs/console/settings#oidc
+      x-externalDocsPath: docs/console/settings/oidc
     otomi:
       title: Otomi
       description: Settings for Otomi.
@@ -132,6 +132,27 @@ Settings:
               - domainSuffix
               - name
               - provider
+        globalPullSecret:
+          title: Global pullsecret
+          description: Will be connected to each "default" service account in all otomi app namespaces.
+            Handy for authenticating with DockerHub to avoid rate limiting.
+            Also useful when pulling all otomi images from a private repo. (One would need to override all the images in the config first.)
+          additionalProperties: false
+          properties:
+            username:
+              type: string
+            password:
+              type: string
+              x-secret: ''
+            email:
+              type: string
+              default: not@us.ed
+            server:
+              type: string
+              default: docker.io
+          required:
+            - username
+            - password
         hasCloudLB:
           default: false
           description: Set this to true when an external load balancer exists (Azure AppGW, Google Apigee) or needs to be started (AWS ALB). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.
@@ -152,32 +173,18 @@ Settings:
           description: Will separate team metrics and logs. Disabling this lets everybody be admin and see everything.
           title: Multi-tenancy
           type: boolean
-        mode:
-          default: ee
-          description: The otomi-core edition. Either community edition (ce) or enterprise edition (ee).
-          enum:
-            - ce
-            - ee
-          title: Otomi core edition
-          type: string
-        pullSecret:
-          default: ''
-          description: The pullsecret to deploy the Otomi API and Console. Requires an Otomi license.
-          title: Pull secret
-          type: string
         version:
           title: Otomi version
           default: latest
           description: |
             Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version.
           type: string
-      x-externalDocsPath: docs/console/settings#otomi
+      x-externalDocsPath: docs/console/settings/otomi
     policies:
       $ref: policies.yaml#/policies
     smtp:
       title: SMTP
       description: Mail server settings.
-      # https://prometheus.io/docs/alerting/latest/configuration/#tmpl_string
       additionalProperties: false
       properties:
         auth_identity:
@@ -207,4 +214,4 @@ Settings:
           title: Smart Host
       required:
         - smarthost
-      x-externalDocsPath: docs/console/settings#smtp
+      x-externalDocsPath: docs/console/settings/smtp

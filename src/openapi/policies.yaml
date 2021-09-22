@@ -313,4 +313,4 @@ policies:
               user:
                 title: User
                 type: string
-  x-externalDocsPath: docs/console/settings#policies
+  x-externalDocsPath: docs/console/settings/policies
