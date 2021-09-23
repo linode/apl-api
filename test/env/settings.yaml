@@ -20,6 +20,13 @@ home:
   slack:
     channel: mon-otomi
     channelCrit: mon-otomi-crit
+kms:
+  sops:
+    google:
+      accountJson: '{"some":"json"}'
+      keys: some/key
+      project: some-project
+    provider: google
 oidc:
   adminGroupID: someAdminGroupID
   clientID: someClientID
