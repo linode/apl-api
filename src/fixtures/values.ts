@@ -415,6 +415,16 @@ export default {
         channelCrit: 'mon-otomi-crit',
       },
     },
+    kms: {
+      sops: {
+        provider: 'google',
+        google: {
+          keys: 'some/key',
+          accountJson: '{"some":"json"}',
+          project: 'some-project',
+        },
+      },
+    },
     oidc: {
       adminGroupID: 'someAdminGroupID',
       clientID: 'someClientID',

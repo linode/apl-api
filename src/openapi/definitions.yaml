@@ -91,49 +91,44 @@ annotations:
       value:
         type: string
         maxLength: 32767
-awsCreds:
-  title: AWS credentials
-  description: Amazon Web Services credentials.
-  properties:
-    accessKey:
-      title: Access Key
-      type: string
-    secretKey:
-      title: Secret Key
-      type: string
-    region:
-      title: Region
-      type: string
-  type: object
-  required:
-    - accessKey
-    - secretKey
-    - region
-azureCreds:
-  title: Azure credentials
-  description: Microsoft's Azure credentials.
-  properties:
-    clientId:
-      description: Enter client ID.
-      title: Client ID
-      type: string
-    clientSecret:
-      description: Enter client secret.
-      title: Client Secret
-      type: string
-    environment:
-      description: Enter Azure environment.
-      title: Environment
-      type: string
-    tenantId:
-      description: Enter tenant ID.
-      title: Tenant ID
-      type: string
-  type: object
-  required:
-    - clientId
-    - clientSecret
-    - tenantId
+awsAccessKey:
+  title: AWS access key
+  description: An AWS access key ID.
+  type: string
+  x-secret: ''
+awsSecretKey:
+  title: AWS secret key
+  description: An AWS secret key.
+  type: string
+  x-secret: ''
+awsRegion:
+  title: AWS region
+  description: An AWS region.
+  type: string
+awsRole:
+  description: Role may be set explicitly if no metadata can be accessed.
+  example: arn:aws:iam::YYYYYYYYYYYY:role/dns-manager
+  type: string
+azureClientId:
+  title: Azure client id
+  description: An Azure client id.
+  type: string
+  x-secret: ''
+azureClientSecret:
+  title: Azure client secret
+  description: An Azure client secret.
+  type: string
+  x-secret: ''
+azureEnvironment:
+  title: Azure environment
+  description: An Azure environment. Don't specify this if you don't know what you are doing!
+  type: string
+  default: AzureCloud
+  enum:
+    - AzureCloud
+    - AzureChinaCloud
+    - AzureUSGovernment
+    - AzureGermanCloud
 azureMonitor:
   description: Azure Monitor data can be made available in Grafana.
   title: Azure Monitor
@@ -141,55 +136,53 @@ azureMonitor:
   oneOf:
     - $ref: '#/offChoice'
     - properties:
-        clientId:
-          title: Azure client id
-          description: An Azure client id.
-          type: string
-        clientSecret:
-          title: Azure client secret
-          description: An Azure client secret.
-          type: string
-        tenantId:
-          title: LogAnalytics tenant id
-          description: An Azure monitor log analytics workspace.
-          type: string
-        subscriptionId:
-          title: Azure subscription id
-          description: An Azure subscription id.
-          type: string
+        appInsightsApiKey:
+          $ref: '#/azureClientSecret'
+          title: AppInsights api key
+          description: An Azure AppInsights client secret.
+        appInsightsAppId:
+          $ref: '#/azureClientId'
+          title: AppInsights app id
         azureLogAnalyticsSameAs:
           title: LogAnalytics using same creds?
           type: boolean
           default: true
+        clientId:
+          $ref: '#/azureClientId'
+        clientSecret:
+          $ref: '#/azureClientSecret'
         logAnalyticsClientId:
+          $ref: '#/azureClientId'
           title: LogAnalytics client id
           description: An Azure client secret.
-          type: string
         logAnalyticsClientSecret:
+          $ref: '#/azureClientSecret'
           title: LogAnalytics client secret
           description: An Azure client secret.
-          type: string
         logAnalyticsTenantId:
+          $ref: '#/azureTenantId'
           title: LogAnalytics tenant id
           description: An Azure tenant id.
-          type: string
         logAnalyticsDefaultWorkspace:
-          title: LogAnalytics workspace
+          title: LogAnalytics default workspace to show
           description: An Azure LogAnalytics workspace.
           type: string
-        appInsightsApiKey:
-          title: AppInsights api key
-          description: An Azure AppInsights client secret.
-          type: string
-        appInsightsAppId:
-          title: AppInsights app id
-          description: An Azure AppInsights client id.
-          type: string
-      required:
-        - clientId
-        - clientSecret
+        subscriptionId:
+          $ref: '#/azureSubscriptionId'
+        tenantId:
+          $ref: '#/azureTenantId'
       title: 'On'
-      type: object
+  required:
+    - clientId
+    - clientSecret
+azureSubscriptionId:
+  title: Azure subscription id
+  description: An Azure subscription id.
+  type: string
+azureTenantId:
+  title: Azure tenant id
+  description: An Azure tenant id.
+  type: string
 containerSpecNoSec:
   properties:
     image:
@@ -358,18 +351,14 @@ files:
       - path
       - content
     type: object
-googleCreds:
-  title: Google credentials
-  description: Google's GCP credentials.
-  properties:
-    accountJson:
-      description: Enter GCP account JSON for authentication.
-      title: Account JSON
-      type: string
-    project:
-      description: Enter GCP project.
-      title: GCP Project
-      type: string
+googleAccountJson:
+  description: Enter GCP account JSON for authentication.
+  title: Account JSON
+  type: string
+googleProject:
+  description: Enter GCP project.
+  title: GCP Project
+  type: string
 hostPort:
   pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):()([1-9]|[1-5]?[0-9]{2,4}|6[1-4][0-9]{3}|65[1-4][0-9]{2}|655[1-2][0-9]|6553[1-5])$
   type: string
@@ -467,10 +456,105 @@ kms:
       description: Encryption credentials for SOPS to encrypt the platform secrets.
       title: SOPS credentials
       oneOf:
-        - $ref: definitions.yaml#/awsCreds
-        - $ref: definitions.yaml#/azureCreds
-        - $ref: definitions.yaml#/googleCreds
-        - $ref: definitions.yaml#/vaultCreds
+        - properties:
+            provider:
+              type: string
+              enum:
+                - aws
+              default: aws
+            aws:
+              properties:
+                keys:
+                  description: Comma separated list of one or two ARNs to keys as defined in AWS KMS. One if used for both enc+dec. Two if one for enc, other for dec.
+                  title: AWS KMS keys
+                  type: string
+                accessKey:
+                  $ref: '#/awsAccessKey'
+                secretKey:
+                  $ref: '#/awsSecretKey'
+                region:
+                  $ref: '#/awsRegion'
+              required:
+                - accessKey
+                - keys
+                - region
+                - secretKey
+              title: ''
+          required:
+            - aws
+          title: AWS
+        - properties:
+            provider:
+              type: string
+              default: azure
+              enum:
+                - azure
+            azure:
+              properties:
+                keys:
+                  description: Comma separated list of one or two paths to keys as defined in Azure Keyvault. One if used for both enc+dec. Two if one for enc, other for dec.
+                  title: Azure Keyvault keys
+                  type: string
+                clientId:
+                  $ref: '#/azureClientId'
+                clientSecret:
+                  $ref: '#/azureClientSecret'
+                tenantId:
+                  $ref: '#/azureTenantId'
+              required:
+                - clientId
+                - clientSecret
+                - keys
+                - tenantId
+              title: ''
+          required:
+            - azure
+          title: Azure
+        - properties:
+            provider:
+              type: string
+              default: google
+              enum:
+                - google
+            google:
+              properties:
+                keys:
+                  description: Comma separated list of one or two paths to keys as defined in GCP KMS. One if used for both enc+dec. Two if one for enc, other for dec.
+                  title: GCP KMS keys
+                  type: string
+                accountJson:
+                  $ref: '#/googleAccountJson'
+                project:
+                  $ref: '#/googleProject'
+              required:
+                - keys
+                - accountJson
+                - project
+              title: ''
+          required:
+            - google
+          title: Google
+        - properties:
+            provider:
+              type: string
+              default: vault
+              enum:
+                - vault
+            vault:
+              properties:
+                keys:
+                  description: Comma separated list of one or two paths to keys as defined in Vault. One if used for both enc+dec. Two if one for enc, other for dec.
+                  title: Vault keys
+                  type: string
+                token:
+                  $ref: '#/vaultToken'
+              required:
+                - keys
+                - token
+              title: ''
+          required:
+            - vault
+          title: Vault
 ksvcNew:
   description: Will create a new knative service from the input gathered here.
   title: New knative service
@@ -762,15 +846,9 @@ svcPredeployed:
 url:
   pattern: ^(https:\/\/)([\w\-])+\.{1}([a-zA-Z]{2,63})([\/\w-]*)*\/?\??([^#\n\r]*)?#?([^\n\r]*)$
   type: string
-vaultCreds:
-  title: Vault credentials
-  description: Hashicorp's Vault credentials.
-  properties:
-    token:
-      title: Token
-      type: string
-  required:
-    - token
+vaultToken:
+  title: Token
+  type: string
 volumes:
   items:
     additionalProperties: false

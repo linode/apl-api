@@ -54,7 +54,6 @@ Settings:
       $ref: definitions.yaml#/dns
       x-externalDocsPath: docs/console/settings/dns
     kms:
-      additionalProperties: false
       $ref: definitions.yaml#/kms
       x-externalDocsPath: docs/console/settings/kms
     home:
