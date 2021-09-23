@@ -645,12 +645,26 @@ components:
       $ref: cluster.yaml#/apiName
     apiServer:
       $ref: cluster.yaml#/apiServer
-    awsCreds:
-      $ref: definitions.yaml#/awsCreds
-    azureCreds:
-      $ref: definitions.yaml#/azureCreds
+    awsAccessKey:
+      $ref: definitions.yaml#/awsAccessKey
+    awsSecretKey:
+      $ref: definitions.yaml#/awsSecretKey
+    awsRegion:
+      $ref: definitions.yaml#/awsRegion
+    awsRole:
+      $ref: definitions.yaml#/awsRole
+    azureClientId:
+      $ref: definitions.yaml#/azureClientId
+    azureClientSecret:
+      $ref: definitions.yaml#/azureClientSecret
+    azureEnvironment:
+      $ref: definitions.yaml#/azureEnvironment
     azureMonitor:
       $ref: definitions.yaml#/azureMonitor
+    azureSubscriptionId:
+      $ref: definitions.yaml#/azureSubscriptionId
+    azureTenantId:
+      $ref: definitions.yaml#/azureTenantId
     containerSpec:
       $ref: definitions.yaml#/containerSpec
     containerSpecNoSec:
@@ -669,8 +683,10 @@ components:
       $ref: cluster.yaml#/entrypoint
     env:
       $ref: definitions.yaml#/env
-    googleCreds:
-      $ref: definitions.yaml#/googleCreds
+    googleAccountJson:
+      $ref: definitions.yaml#/googleAccountJson
+    googleProject:
+      $ref: definitions.yaml#/googleProject
     idName:
       $ref: definitions.yaml#/idName
     image:
@@ -721,7 +737,5 @@ components:
       $ref: definitions.yaml#/svcPredeployed
     url:
       $ref: definitions.yaml#/url
-    vaultCreds:
-      $ref: definitions.yaml#/vaultCreds
     vpcID:
       $ref: cluster.yaml#/vpcID
