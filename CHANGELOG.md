@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.71](https://github.com/redkubes/otomi-api/compare/v0.4.70...v0.4.71) (2021-09-23)
+
+
+### Bug Fixes
+
+* kms validation ([#212](https://github.com/redkubes/otomi-api/issues/212)) ([c0c7637](https://github.com/redkubes/otomi-api/commit/c0c76376fe9ef005c4e8bd10c9918a1f3bdcdf6e))
+* removed old schema settings and added globalPullSecret (fixes [#210](https://github.com/redkubes/otomi-api/issues/210)) ([#211](https://github.com/redkubes/otomi-api/issues/211)) ([0bcd93d](https://github.com/redkubes/otomi-api/commit/0bcd93daccd2854d7c46a4c59ed9c37a5ed4a2d6))
+* test ([4ca50b3](https://github.com/redkubes/otomi-api/commit/4ca50b3ff29dae4b662588b85ac71921fb71c6b4))
+
 ### [0.4.70](https://github.com/redkubes/otomi-api/compare/v0.4.68...v0.4.70) (2021-09-02)
 
 
