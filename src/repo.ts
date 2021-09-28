@@ -6,7 +6,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from '
 import { isEmpty } from 'lodash'
 import { GitPullError } from './error'
 import { cleanEnv, DISABLE_SYNC, TOOLS_HOST, USE_SOPS } from './validators'
-import { removeBlankAttributes } from './utils'
+import { decryptedFilePostfix, removeBlankAttributes } from './utils'
+
+const decryptedFilePostfixRegex = new RegExp(`${decryptedFilePostfix}$`)
 
 const env = cleanEnv({
   DISABLE_SYNC,
@@ -86,6 +88,11 @@ export class Repo {
       console.debug(`Removing file: ${absolutePath}`)
       // Remove empty secret file due to https://github.com/mozilla/sops/issues/926 issue
       unlinkSync(absolutePath)
+      if (decryptedFilePostfix !== '') {
+        const absolutePathEncFile = absolutePath.replace(decryptedFilePostfixRegex, '')
+        // also remove the encrypted file as they are operated on in pairs
+        if (existsSync(absolutePathEncFile)) unlinkSync(absolutePathEncFile)
+      }
       return
     }
     console.debug(`Writing to file: ${absolutePath}`)

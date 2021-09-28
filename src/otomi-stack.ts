@@ -1,6 +1,6 @@
 /* eslint-disable class-methods-use-this */
 import * as k8s from '@kubernetes/client-node'
-import { readFileSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import yaml from 'js-yaml'
 import { cloneDeep, merge, filter, get, omit, set, unset, isEqual, union, isEmpty } from 'lodash'
 import generatePassword from 'password-generator'
@@ -27,6 +27,7 @@ import {
   argQuoteStrip,
   argSplit,
   arrayToObject,
+  decryptedFilePostfix,
   getObjectPaths,
   getServiceUrl,
   getTeamJobsFilePath,
@@ -74,15 +75,12 @@ export default class OtomiStack {
 
   repo: Repo
 
-  decryptedFilePostfix: string
-
   secretPaths: string[]
 
   constructor() {
     this.db = new Db(env.DB_PATH)
     const corePath = env.isProd ? '/etc/otomi/core.yaml' : './test/core.yaml'
     this.coreValues = yaml.safeLoad(readFileSync(corePath, 'utf8')) as any
-    this.decryptedFilePostfix = env.USE_SOPS ? '.dec' : ''
   }
 
   async init(): Promise<void> {
@@ -363,8 +361,11 @@ export default class OtomiStack {
 
   loadConfig(dataPath: string, secretDataPath: string): any {
     const data = this.repo.readFile(dataPath)
-    const secretData = this.repo.readFile(secretDataPath)
-    this.secretPaths = union(this.secretPaths, getObjectPaths(secretData))
+    let secretData = {}
+    if (existsSync(secretDataPath)) {
+      secretData = this.repo.readFile(secretDataPath)
+      this.secretPaths = union(this.secretPaths, getObjectPaths(secretData))
+    }
     return merge(data, secretData) as Core
   }
 
@@ -391,10 +392,7 @@ export default class OtomiStack {
   }
 
   loadSettings(): void {
-    const data: Settings = this.loadConfig(
-      './env/settings.yaml',
-      `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
-    )
+    const data: Settings = this.loadConfig('./env/settings.yaml', `./env/secrets.settings.yaml${decryptedFilePostfix}`)
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
@@ -430,7 +428,7 @@ export default class OtomiStack {
   }
 
   loadTeams(skipAdmin = false): void {
-    const mergedData: Core = this.loadConfig('./env/teams.yaml', `./env/secrets.teams.yaml${this.decryptedFilePostfix}`)
+    const mergedData: Core = this.loadConfig('./env/teams.yaml', `./env/secrets.teams.yaml${decryptedFilePostfix}`)
 
     Object.values(mergedData.teamConfig.teams).forEach((team: Team) => {
       this.loadTeam(team)
@@ -473,14 +471,14 @@ export default class OtomiStack {
     const settings = this.getSetting() as Settings
     this.saveConfig(
       './env/settings.yaml',
-      `./env/secrets.settings.yaml${this.decryptedFilePostfix}`,
+      `./env/secrets.settings.yaml${decryptedFilePostfix}`,
       omit(settings, ['cluster', 'policies']),
     )
   }
 
   saveTeams(): void {
     const filePath = './env/teams.yaml'
-    const secretFilePath = `./env/secrets.teams.yaml${this.decryptedFilePostfix}`
+    const secretFilePath = `./env/secrets.teams.yaml${decryptedFilePostfix}`
     const teamValues = {}
     const secretPropertyPaths = [
       'password',

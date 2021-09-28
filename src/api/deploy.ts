@@ -11,7 +11,8 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
         await otomi.triggerDeployment(email || '')
         res.json({})
       } catch (err) {
-        res.status(err.code).json({ error: err.publicMessage })
+        console.error(err)
+        res.status(err.code || 500).json({ error: err.publicMessage ?? 'Internal Server Error' })
         // TODO: remove this part after we know how to merge (if ever):
         // setTimeout(() => {
         //   process.exit()

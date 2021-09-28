@@ -1,6 +1,11 @@
 import cleanDeep, { CleanOptions } from 'clean-deep'
 import cloneDeep from 'lodash/cloneDeep'
 import { Cluster, Dns } from './otomi-models'
+import { cleanEnv, USE_SOPS } from './validators'
+
+const env = cleanEnv({
+  USE_SOPS,
+})
 
 export function arrayToObject(array: [] = [], keyName = 'name', keyValue = 'value'): Record<string, unknown> {
   const obj = {}
@@ -144,3 +149,5 @@ export const argQuoteStrip = (s) => {
   if (s.includes("'") && !s.includes("\\'")) return s.replace(doubleQuoteMatcher, '')
   return s.replace(singleQuoteMatcher, '')
 }
+
+export const decryptedFilePostfix = env.USE_SOPS ? '.dec' : ''
