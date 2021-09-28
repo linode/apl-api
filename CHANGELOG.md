@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.72](https://github.com/redkubes/otomi-api/compare/v0.4.71...v0.4.72) (2021-09-28)
+
+
+### Bug Fixes
+
+* don't load missing files ([35b87ce](https://github.com/redkubes/otomi-api/commit/35b87ce4cf7f32baf99fa0725605da2526a243aa))
+* encryption error upon missing dec file ([c51ee26](https://github.com/redkubes/otomi-api/commit/c51ee2696061c4095b95a2e146c0c301a2989e40))
+* team data when no teams exist ([7b24f33](https://github.com/redkubes/otomi-api/commit/7b24f3368adc4400aa395d81eb23d3da306fa85c))
+
 ### [0.4.71](https://github.com/redkubes/otomi-api/compare/v0.4.70...v0.4.71) (2021-09-23)
 
 
