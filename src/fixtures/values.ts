@@ -439,7 +439,6 @@ export default {
       isHomeMonitored: true,
       isManaged: true,
       isMultitenant: true,
-      mode: 'ce',
       addons: {
         conftest: {
           enabled: true,

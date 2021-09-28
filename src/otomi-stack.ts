@@ -362,7 +362,7 @@ export default class OtomiStack {
   loadConfig(dataPath: string, secretDataPath: string): any {
     const data = this.repo.readFile(dataPath)
     let secretData = {}
-    if (existsSync(secretDataPath)) {
+    if (this.repo.fileExists(secretDataPath)) {
       secretData = this.repo.readFile(secretDataPath)
       this.secretPaths = union(this.secretPaths, getObjectPaths(secretData))
     }

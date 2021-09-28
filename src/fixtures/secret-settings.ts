@@ -26,10 +26,13 @@ export default {
     },
   },
   oidc: {
-    clientSecret: 'somesecretvalue',
+    clientSecret: 'someClientSecret',
   },
   otomi: {
-    pullSecret: 'c29tZXNlY3JldHZhbHVlCg==',
+    globalPullSecret: {
+      username: 'otomi',
+      password: 'bla12345',
+    },
   },
   smtp: {
     authUsername: 'no-reply@doma.in',
