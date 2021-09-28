@@ -176,7 +176,7 @@ Settings:
           title: Otomi version
           default: latest
           description: |
-            Please pin this a valid release version found in the repo. Suggestion: try the most recent stable version.
+            Please pin this to a valid release version found in the repo. Suggestion: try the most recent stable version.
           type: string
       x-externalDocsPath: docs/console/settings/otomi
     policies:
