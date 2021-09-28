@@ -430,7 +430,7 @@ export default class OtomiStack {
   loadTeams(skipAdmin = false): void {
     const mergedData: Core = this.loadConfig('./env/teams.yaml', `./env/secrets.teams.yaml${decryptedFilePostfix}`)
 
-    Object.values(mergedData.teamConfig.teams).forEach((team: Team) => {
+    Object.values(mergedData?.teamConfig?.teams || {}).forEach((team: Team) => {
       this.loadTeam(team)
       if (!skipAdmin) this.loadCoreServices()
       this.loadTeamJobs(team.id!)
