@@ -114,7 +114,7 @@ export default class OtomiStack {
     return this.db.db.get('settings').value()
   }
 
-  setSetting(data: Setting, key: string) {
+  setSetting(data: Setting) {
     if (isEmpty(data)) {
       throw new Error('Received empty payload...')
     }

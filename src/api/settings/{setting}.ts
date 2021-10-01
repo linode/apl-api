@@ -11,8 +11,8 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
     },
   ]
   const PUT: Operation = [
-    ({ params: { setting }, body }: OpenApiRequest, res): void => {
-      res.json(otomi.setSetting(body, setting))
+    ({ body }: OpenApiRequest, res): void => {
+      res.json(otomi.setSetting(body))
     },
   ]
   const api = {
