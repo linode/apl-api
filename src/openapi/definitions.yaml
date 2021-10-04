@@ -4,12 +4,12 @@ alerts:
   additionalProperties: false
   properties:
     repeatInterval:
-      default: 3h
+      x-default: 3h
       description: Indicates waiting time before sending a notification again after it was sent successfully for an alert. (Usually ~3h or more).
       title: Repeat Interval
       type: string
     groupInterval:
-      default: 5m
+      x-default: 5m
       description: How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.)
       title: Group Interval
       type: string
@@ -19,12 +19,12 @@ alerts:
       additionalProperties: false
       properties:
         channel:
-          default: mon-otomi
+          x-default: mon-otomi
           description: The Slack channel for non-critical notifications.
           title: Non-critical
           type: string
         channelCrit:
-          default: mon-otomi
+          x-default: mon-otomi-crit
           description: The Slack channel for critical notifications.
           title: Critical
           type: string
@@ -70,7 +70,7 @@ alerts:
       type: array
       uniqueItems: true
     drone:
-      default: slack
+      x-default: slack
       description: Select default notification channel for Otomi deployments in Drone.
       enum:
         - slack
@@ -123,7 +123,7 @@ azureEnvironment:
   title: Azure environment
   description: An Azure environment. Don't specify this if you don't know what you are doing!
   type: string
-  default: AzureCloud
+  x-default: AzureCloud
   enum:
     - AzureCloud
     - AzureChinaCloud
@@ -146,7 +146,7 @@ azureMonitor:
         azureLogAnalyticsSameAs:
           title: LogAnalytics using same creds?
           type: boolean
-          default: true
+          x-default: true
         clientId:
           $ref: '#/azureClientId'
         clientSecret:
@@ -172,9 +172,10 @@ azureMonitor:
         tenantId:
           $ref: '#/azureTenantId'
       title: 'On'
-  required:
-    - clientId
-    - clientSecret
+      type: object
+      required:
+        - clientId
+        - clientSecret
 azureSubscriptionId:
   title: Azure subscription id
   description: An Azure subscription id.
@@ -209,16 +210,18 @@ containerSpecNoSec:
   required:
     - image
     - resources
+  type: object
 containerSpec:
   allOf:
     - properties:
         securityContext:
           $ref: '#/securityContext'
     - $ref: '#/containerSpecNoSec'
+  type: object
 cpuQuantity:
   title: CPU quantity
   description: Amount of cores, or slice of cpu in millis.
-  default: 50m
+  x-default: 50m
   example:
     - '1'
     - 200m
@@ -289,7 +292,7 @@ dns:
                   title: Using managed identities?
                   type: boolean
                   description: If you use Azure MSI, this should be set to true
-                  default: false
+                  x-default: false
               required:
                 - resourceGroup
                 - aadClientId
@@ -380,7 +383,7 @@ image:
 imageSimple:
   properties:
     tag:
-      default: latest
+      x-default: latest
       pattern: '[\w][\w.-]{0,127}'
       type: string
     pullPolicy:
@@ -440,12 +443,12 @@ jobSpec:
     - script
     - type
 k8sVersion:
-  default: '1.19'
+  default: '1.20'
   description: The cluster k8s version. Otomi supports 2 minor versions backwards from the suggested default.
   enum:
-    - '1.17'
     - '1.18'
     - '1.19'
+    - '1.20'
   type: string
 kms:
   additionalProperties: false
@@ -477,7 +480,6 @@ kms:
               required:
                 - accessKey
                 - keys
-                - region
                 - secretKey
               title: ''
           required:
@@ -505,7 +507,6 @@ kms:
                 - clientId
                 - clientSecret
                 - keys
-                - tenantId
               title: ''
           required:
             - azure
@@ -658,19 +659,10 @@ labelsAnnotations:
         pattern: ^((.){1,253}\/)?(.){1,63}$
     type: object
   type: array
-logLevel:
-  default: info
-  enum:
-    - error
-    - warn
-    - info
-    - debug
-    - trace
-  type: string
 memoryQuantity:
   title: Memory quantity
   description: Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki.
-  default: 64Mi
+  x-default: 64Mi
   example:
     - 1Mi
     - 0.5M
@@ -773,14 +765,14 @@ resourceQuota:
       - value
 runAsUser:
   description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified.
-  default: 1001
+  x-default: 1001
   maximum: 65535
   minimum: 0
   title: Run as user
   type: integer
 runAsGroup:
   description: The GID to run the entrypoint of the container process. Defaults to group specified in image metadata if unspecified.
-  default: 1001
+  x-default: 1001
   maximum: 65535
   minimum: 0
   title: Run as group

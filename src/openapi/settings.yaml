@@ -91,7 +91,7 @@ Settings:
         scope:
           title: Scope
           type: string
-          default: openid email profile
+          x-default: openid email profile
           description: Default values are used by keycloak. May be overridden in case keycloak is disabled.
         teamAdminGroupID:
           title: Team admin group ID
@@ -105,12 +105,14 @@ Settings:
           description: Only used for grafana when Keycloak is disabled.
         usernameClaimMapper:
           description: Claim name used by Keycloak to identify incoming users from the identity provider.
+          x-default: '${CLAIM.email}'
           title: Username claim mapper
           type: string
         subClaimMapper:
           type: string
+          title: Sub claim mapper
           description: Select OIDC claim to be passed by Keycloak as a unique user identifier. Best to not change this from the default.
-          default: sub
+          x-default: sub
       x-externalDocsPath: docs/console/settings/oidc
     otomi:
       title: Otomi
@@ -145,10 +147,10 @@ Settings:
               x-secret: ''
             email:
               type: string
-              default: not@us.ed
+              x-default: not@us.ed
             server:
               type: string
-              default: docker.io
+              x-default: docker.io
           required:
             - username
             - password
@@ -185,6 +187,7 @@ Settings:
       title: SMTP
       description: Mail server settings.
       additionalProperties: false
+      nullable: true
       properties:
         auth_identity:
           title: Authentication identity

@@ -114,15 +114,12 @@ export default class OtomiStack {
     return this.db.db.get('settings').value()
   }
 
-  setSetting(data: Setting, key: string) {
+  setSetting(data: Setting) {
     if (isEmpty(data)) {
       throw new Error('Received empty payload...')
     }
-    const ret = this.db.db
-      .get(['settings', key])
-      // @ts-ignore
-      .assign(data[key])
-      .write()
+    const settings = this.db.db.get('settings').value()
+    const ret = this.db.db.set('settings', { ...settings, ...data }).write()
     this.db.dirty = true
     return ret
   }

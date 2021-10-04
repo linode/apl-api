@@ -9,6 +9,7 @@ TeamSelfService:
       items:
         type: string
         enum: [ingress]
+      default: [ingress]
       uniqueItems: true
     Team:
       title: Team
@@ -16,6 +17,7 @@ TeamSelfService:
       items:
         type: string
         enum: [alerts, oidc, resourceQuota]
+      default: [alerts]
       uniqueItems: true
 
 Team:
@@ -39,59 +41,7 @@ Team:
       type: string
       writeOnly: true
     alerts:
-      properties:
-        receivers:
-          items:
-            enum:
-              - slack
-              - msteams
-              - email
-            type: string
-          title: Receivers
-          type: array
-          uniqueItems: true
-        email:
-          properties:
-            critical:
-              description: Email addresses (comma separated) for critical events.
-              title: Criticals
-              type: string
-            nonCritical:
-              description: One or more email addresses (comma separated) for non-critical events.
-              title: Non criticals
-              type: string
-          title: Email
-          type: object
-        msteams:
-          properties:
-            highPrio:
-              description: A webhook to send high prio alerts to.
-              title: High prio webhook
-              type: string
-            lowPrio:
-              description: A webhook to send low prio alerts to.
-              title: Low prio webhook
-              type: string
-          title: Microsoft Teams
-          type: object
-        slack:
-          properties:
-            channel:
-              description: Slack channel for non-criticals. If none is given the global one is used, which defaults to 'mon-otomi'.
-              title: Channel for non-criticals
-              type: string
-            channelCrit:
-              description: Slack channel for critical alerts. If none is given the global one is used, which defaults to 'mon-otomi-crit'.
-              title: Channel for criticals
-              type: string
-            url:
-              description: Slack web hook. If none is given the global one is used.
-              title: Web hook
-              type: string
-          title: Slack
-          type: object
-      title: Alerting endpoints
-      type: object
+      $ref: definitions.yaml#/alerts
     resourceQuota:
       $ref: definitions.yaml#/resourceQuota
     azureMonitor:
