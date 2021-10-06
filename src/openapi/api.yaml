@@ -501,7 +501,6 @@ paths:
             - alerts
             - azure
             - cluster
-            - customer
             - dns
             - home
             - kms
