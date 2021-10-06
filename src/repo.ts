@@ -4,12 +4,13 @@ import path, { dirname } from 'path'
 import axios, { AxiosResponse } from 'axios'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { GitPullError } from './error'
-import { cleanEnv, TOOLS_HOST, USE_SOPS } from './validators'
+import { cleanEnv, DISABLE_SYNC, TOOLS_HOST, USE_SOPS } from './validators'
 import { removeBlankAttributes } from './utils'
 
 const env = cleanEnv({
   TOOLS_HOST,
   USE_SOPS,
+  DISABLE_SYNC,
 })
 
 const baseUrl = `http://${env.TOOLS_HOST}:17771/`
@@ -112,11 +113,11 @@ export class Repo {
     const isRepo = await this.git.checkIsRepo()
     if (!isRepo) {
       console.info(`Local git repository does not exist. Cloning from '${this.url}' to '${this.path}'`)
-      await this.git.clone(this.repoPathAuth, this.path)
+      if (!env.DISABLE_SYNC) await this.git.clone(this.repoPathAuth, this.path)
     } else {
       console.log('Repo already exists. Checking out correct branch.')
       // Git fetch ensures that local git repository is synced with remote repository
-      await this.git.fetch()
+      if (!env.DISABLE_SYNC) await this.git.fetch()
       await this.git.checkout(this.branch)
     }
     if (env.isDev) await decrypt() // do it now because pull usually fails because of dirty state of git
@@ -143,6 +144,7 @@ export class Repo {
     const sha = await this.getCommitSha()
 
     const commitSummary: CommitResult = await this.commit(email)
+    if (env.DISABLE_SYNC) return
     if (commitSummary.commit === '') return
     try {
       await this.pull()
@@ -155,6 +157,7 @@ export class Repo {
 
       throw new GitPullError()
     }
+
     console.debug('pushing')
     await this.git.push(this.remote, this.branch)
     console.debug('pushed')

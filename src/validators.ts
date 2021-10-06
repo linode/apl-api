@@ -2,7 +2,7 @@ import { str, bool, cleanEnv as clean, CleanEnv, StrictCleanOptions, ValidatorSp
 
 export const CORE_VERSION = str({ desc: 'The otomi-core version', default: 'x.x.x' })
 export const DB_PATH = str({ desc: 'The file path to the db. If not given in-memory db is used.', default: undefined })
-export const DISABLE_SYNC = bool({ desc: 'Will disable pushing to the repo', default: false })
+export const DISABLE_SYNC = bool({ desc: 'Will disable pulling and pushing to the repo', default: false })
 export const GIT_BRANCH = str({ desc: 'The git repo branch', default: 'main' })
 export const GIT_EMAIL = str({ desc: 'The git user email', default: 'not@us.ed' })
 export const GIT_LOCAL_PATH = str({ desc: 'The local file path to the repo', default: '/tmp/otomi-values' })
