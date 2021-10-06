@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.73](https://github.com/redkubes/otomi-api/compare/v0.4.71...v0.4.73) (2021-10-06)
+
+
+### Features
+
+* **schema:** 🎸 added new x-default field to not force strings in forms ([#213](https://github.com/redkubes/otomi-api/issues/213)) ([76197bc](https://github.com/redkubes/otomi-api/commit/76197bc684073880dd5bfec29487893c15f335d3))
+
+
+### Bug Fixes
+
+* don't load missing files ([35b87ce](https://github.com/redkubes/otomi-api/commit/35b87ce4cf7f32baf99fa0725605da2526a243aa))
+* encryption error upon missing dec file ([c51ee26](https://github.com/redkubes/otomi-api/commit/c51ee2696061c4095b95a2e146c0c301a2989e40))
+* husky [ci skip] ([05b6521](https://github.com/redkubes/otomi-api/commit/05b6521cfb892edc22e1315b961298dc0d143caf))
+* schema wording [ci skip] ([fc3466f](https://github.com/redkubes/otomi-api/commit/fc3466f0762c6231b5704e9d0b60d0e0be2ae43b))
+* team data when no teams exist ([7b24f33](https://github.com/redkubes/otomi-api/commit/7b24f3368adc4400aa395d81eb23d3da306fa85c))
+
+
+### Others
+
+* **release:** 0.4.72 ([81a05cc](https://github.com/redkubes/otomi-api/commit/81a05cc1d7ed7e9dde63689fb8e2b971a22106ab))
+
 ### [0.4.72](https://github.com/redkubes/otomi-api/compare/v0.4.71...v0.4.72) (2021-09-28)
 
 
