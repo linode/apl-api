@@ -17,7 +17,6 @@ export type Setting =
   | components['schemas']['Settings']['azure']
   | components['schemas']['Settings']['cluster']
   | components['schemas']['Session']['cluster']
-  | components['schemas']['Settings']['customer']
   | components['schemas']['Settings']['dns']
   | components['schemas']['Settings']['home']
   | components['schemas']['Settings']['kms']

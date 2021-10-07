@@ -41,15 +41,6 @@ Settings:
       x-provider: azure
     cluster:
       $ref: cluster.yaml#/Cluster
-    customer:
-      title: Customer
-      description: A customer's settings.
-      additionalProperties: false
-      properties:
-        name:
-          type: string
-          title: Name
-          description: Used in alerts/reports to distinguish between resources for different customers.
     dns:
       $ref: definitions.yaml#/dns
       x-externalDocsPath: docs/console/settings/dns
