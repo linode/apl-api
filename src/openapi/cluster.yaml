@@ -18,6 +18,11 @@ entrypoint:
   type: string
 name:
   title: Name
+  description: A cluster name.
+  type: string
+owner:
+  title: Name
+  descrption: A cluster owner. Used in alerts/reports to distinguish between resources for different customers.
   type: string
 provider:
   title: Provider
@@ -91,6 +96,9 @@ Cluster:
       $ref: definitions.yaml#/k8sVersion
       x-readOnly: true
     name:
+      $ref: '#/name'
+      x-readOnly: true
+    owner:
       $ref: '#/name'
       x-readOnly: true
     provider:

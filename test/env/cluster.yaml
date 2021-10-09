@@ -4,5 +4,6 @@ cluster:
   domainSuffix: dev.onprem.example.com
   k8sVersion: '1.19'
   name: dev
+  owner: demo
   provider: onprem
   region: eu-central-1

@@ -395,12 +395,10 @@ export default {
       apiServer: 'apiServer.onprem.example.com',
       domainSuffix: 'dev.onprem.example.com',
       k8sVersion: '1.19',
+      owner: 'demo',
       name: 'dev',
       provider: 'onprem',
       region: 'eu-central-1',
-    },
-    customer: {
-      name: 'demo',
     },
     dns: {
       zones: ['some.com', 'onprem.example.com', 'onprem.private.net'],

@@ -8,8 +8,6 @@ alerts:
 azure:
   appgw:
     isManaged: true
-customer:
-  name: demo
 dns:
   zones: [some.com, onprem.example.com, onprem.private.net]
   aws:
