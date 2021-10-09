@@ -1,11 +1,13 @@
 policies:
   title: Policies
+  type: object
   description: |
     List of policy objects used by Open Policy Agent tools (Conftest, Gatekeeper) to run policy based validation against both in-cluster Kubernetes contexts and plain Yaml resources
   additionalProperties: false
   properties:
     banned-image-tags:
       title: Banned image tags
+      type: object
       description: Add any image tags for containers that are not allowed in your cluster.
       additionalProperties: false
       required: [enabled]
@@ -23,6 +25,7 @@ policies:
           default: false
     container-limits:
       title: Container limits
+      type: object
       description: Set global compute limits for your containers.
       additionalProperties: false
       required: [enabled]
@@ -38,6 +41,7 @@ policies:
           default: false
     psp-allowed-repos:
       title: Allowed repositories
+      type: object
       description: Add globally allowed repositories for version control.
       additionalProperties: false
       required: [enabled]
@@ -55,6 +59,7 @@ policies:
           default: false
     psp-host-filesystem:
       title: Host Filesystem
+      type: object
       description: Set policies for the host filesystem of all Kubernetes cluster nodes.
       additionalProperties: false
       required: [enabled]
@@ -81,6 +86,7 @@ policies:
           default: false
     psp-allowed-users:
       title: Allowed users
+      type: object
       description: Default user (UID) and group (GID) settings to force containers to run with.
       additionalProperties: false
       required: [enabled]
@@ -112,6 +118,7 @@ policies:
                     type: integer
         runAsGroup:
           title: Run as group
+          type: object
           properties:
             rule:
               type: string
@@ -131,6 +138,7 @@ policies:
                     type: integer
         supplementalGroups:
           title: Supplemental groups
+          type: object
           properties:
             rule:
               title: Rule
@@ -152,6 +160,7 @@ policies:
                     type: integer
         fsGroup:
           title: Filesystem group
+          type: object
           properties:
             rule:
               title: Rule
@@ -177,6 +186,7 @@ policies:
           default: false
     psp-host-security:
       title: Host security
+      type: object
       description: Whether a pod is allowed to access the host PID namespace/host IPC, or if a pod defines host aliases.
       additionalProperties: false
       required: [enabled]
@@ -188,6 +198,7 @@ policies:
           default: false
     psp-host-networking-ports:
       title: Container host networking ports
+      type: object
       description: Whether a pod can access ports on the host.
       additionalProperties: false
       required: [enabled]
@@ -199,6 +210,7 @@ policies:
           default: false
     psp-privileged:
       title: Privileged containers
+      type: object
       description: Whether privileged containers can escalate to root privileges on the node.
       additionalProperties: false
       required: [enabled]
@@ -210,6 +222,7 @@ policies:
           default: false
     psp-capabilities:
       title: Container capabilities
+      type: object
       description: Whether to allow containers with sufficient capabilities granted to obtain escalated access.
       additionalProperties: false
       required: [enabled]
@@ -231,6 +244,7 @@ policies:
             type: string
     psp-forbidden-sysctls:
       title: Forbidden system controls (sysctls)
+      type: object
       description: Determine what system controls are allowed or not.
       additionalProperties: false
       required: [enabled]
@@ -248,6 +262,7 @@ policies:
             type: string
     psp-apparmor:
       title: AppArmor
+      type: object
       description: Prevents an application from accessing files it should not access.
       additionalProperties: false
       required: [enabled]
@@ -264,6 +279,7 @@ policies:
             type: string
     psp-seccomp:
       title: Seccomp
+      type: object
       description: Reduces the chance that a kernel vulnerability will be successfully exploited.
       additionalProperties: false
       required: [enabled]
@@ -280,6 +296,7 @@ policies:
             type: string
     psp-selinux:
       title: SELinux
+      type: object
       description: Security-enhanced Linux
       additionalProperties: false
       required: [enabled]

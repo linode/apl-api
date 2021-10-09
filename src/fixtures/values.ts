@@ -428,10 +428,9 @@ export default {
     oidc: {
       adminGroupID: 'someAdminGroupID',
       clientID: 'someClientID',
+      clientSecret: 'someClientSecret',
       issuer: 'https://login.microsoftonline.com/xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-      scope: 'openid email profile',
       teamAdminGroupID: 'xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-      tenantID: 'xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
     },
     otomi: {
       version: 'latest',

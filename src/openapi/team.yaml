@@ -59,4 +59,5 @@ Team:
     team:
       - read-any
       - update
+  type: object
   x-externalDocsPath: docs/console/teams

@@ -109,15 +109,15 @@ export default class OtomiStack {
     this.loadValues()
   }
 
-  getSetting(key?: string): Setting | Settings {
-    if (key) return this.db.db.get(['settings', key]).value()
+  getSetting(key: string): Setting {
+    return this.db.db.get(['settings', key]).value()
+  }
+
+  getAllSettings(): Settings {
     return this.db.db.get('settings').value()
   }
 
   setSetting(data: Setting) {
-    if (isEmpty(data)) {
-      throw new Error('Received empty payload...')
-    }
     const settings = this.db.db.get('settings').value()
     const ret = this.db.db.set('settings', { ...settings, ...data }).write()
     this.db.dirty = true
@@ -369,7 +369,7 @@ export default class OtomiStack {
   saveConfig(dataPath: string, secretDataPath: string, config: any, inSecretPaths?: string[]): void {
     const secretData = {}
     const plainData = cloneDeep(config)
-    const secretPaths = inSecretPaths ?? this.secretPaths
+    const secretPaths = inSecretPaths ?? (this.secretPaths || [])
     secretPaths.forEach((objectPath) => {
       const val = get(config, objectPath)
       if (val) {
@@ -457,19 +457,19 @@ export default class OtomiStack {
   }
 
   saveCluster(): void {
-    this.repo.writeFile('./env/cluster.yaml', { cluster: this.getSetting('cluster') as Setting })
+    this.repo.writeFile('./env/cluster.yaml', { cluster: this.getSetting('cluster') })
   }
 
   savePolicies(): void {
-    this.repo.writeFile('./env/policies.yaml', { policies: this.getSetting('policies') as Setting })
+    this.repo.writeFile('./env/policies.yaml', { policies: this.getSetting('policies') })
   }
 
   saveSettings(): void {
-    const settings = this.getSetting() as Settings
+    const settings = this.getAllSettings()
     this.saveConfig(
       './env/settings.yaml',
       `./env/secrets.settings.yaml${decryptedFilePostfix}`,
-      omit(settings, ['cluster', 'policies']),
+      omit(settings, ['cluster']),
     )
   }
 

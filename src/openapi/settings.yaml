@@ -6,7 +6,14 @@ Settings:
   properties:
     alerts:
       $ref: definitions.yaml#/alerts
+      title: Alerts
+      description: Configure alerting endpoints to receive notifications from Alertmanager and Otomi deployments.
       x-externalDocsPath: docs/console/settings/alerts
+    home:
+      $ref: definitions.yaml#/alerts
+      title: Home alerts
+      description: Same setup as 'Alerts', but to send copies of alerts "home". Useful for co-monitoring managed clusters of customers.
+      x-externalDocsPath: docs/console/settings/home
     azure:
       title: Azure
       additionalProperties: false
@@ -34,11 +41,12 @@ Settings:
             standard:
               type: string
               default: StandardLRS
+          type: object
       required:
         - resourceGroup
         - subscriptionId
         - tenantId
-      x-provider: azure
+      type: object
     cluster:
       $ref: cluster.yaml#/Cluster
     customer:
@@ -56,53 +64,27 @@ Settings:
     kms:
       $ref: definitions.yaml#/kms
       x-externalDocsPath: docs/console/settings/kms
-    home:
-      title: Home alerts
-      description: Same setup as 'Alerts', but to send copies of alerts "home". Useful for co-monitoring managed clusters of customers.
-      additionalProperties: false
-      $ref: definitions.yaml#/alerts
-      x-externalDocsPath: docs/console/settings/home
     oidc:
       title: OIDC
       description: OpenID Connect settings.
       additionalProperties: false
       properties:
-        adminGroupID:
-          title: Admin group ID
-          type: string
-        apiUrl:
-          title: API URL
-          type: string
-        authUrl:
-          title: Authentication URL
+        issuer:
+          title: Issuer
           type: string
           $ref: definitions.yaml#/url
-          description: Only used for grafana when Keycloak is disabled.
         clientID:
           title: Client ID
           type: string
         clientSecret:
           title: Client Secret
           type: string
-        issuer:
-          title: Issuer
+        adminGroupID:
+          title: Admin group ID
           type: string
-          $ref: definitions.yaml#/url
-        scope:
-          title: Scope
-          type: string
-          x-default: openid email profile
-          description: Default values are used by keycloak. May be overridden in case keycloak is disabled.
         teamAdminGroupID:
           title: Team admin group ID
           type: string
-        tenantID:
-          title: Tenant ID
-          type: string
-        tokenUrl:
-          title: Token URL
-          $ref: definitions.yaml#/url
-          description: Only used for grafana when Keycloak is disabled.
         usernameClaimMapper:
           description: Claim name used by Keycloak to identify incoming users from the identity provider.
           x-default: '${CLAIM.email}'
@@ -113,9 +95,11 @@ Settings:
           title: Sub claim mapper
           description: Select OIDC claim to be passed by Keycloak as a unique user identifier. Best to not change this from the default.
           x-default: sub
+      type: object
       x-externalDocsPath: docs/console/settings/oidc
     otomi:
       title: Otomi
+      type: object
       description: Settings for Otomi.
       additionalProperties: false
       properties:
@@ -154,6 +138,7 @@ Settings:
           required:
             - username
             - password
+          type: object
         hasCloudLB:
           default: false
           description: Set this to true when an external load balancer exists (Azure AppGW, Google Apigee) or needs to be started (AWS ALB). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.
@@ -216,4 +201,6 @@ Settings:
           title: Smart Host
       required:
         - smarthost
+      type: object
       x-externalDocsPath: docs/console/settings/smtp
+  type: object

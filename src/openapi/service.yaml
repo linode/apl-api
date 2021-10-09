@@ -29,7 +29,6 @@ Service:
       minimum: 1
       maximum: 65535
     ingress:
-      # nullable: true
       title: Exposure (ingress)
       description: Determines loadbalancer related configuration for handling the service ingress.
       # Note: the order matters first schema must be nullable empty object
@@ -49,6 +48,7 @@ Service:
   required:
     - name
     - ingress
+  type: object
 
 Ingress:
   properties:
@@ -106,6 +106,8 @@ Ingress:
   required:
     - domain
     - subdomain
+  type: object
+
 IngressCluster:
   additionalProperties: false
   description:
@@ -120,6 +122,7 @@ IngressCluster:
       enum:
         - cluster
       default: cluster
+
 IngressPrivate:
   allOf:
     - $ref: '#/Ingress'
@@ -133,6 +136,7 @@ IngressPrivate:
   description: Will only accept traffic coming from the private-network loadbalancer. (Coming soon!)
   title: Private
   type: object
+
 IngressPublic:
   allOf:
     - $ref: '#/Ingress'

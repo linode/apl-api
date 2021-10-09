@@ -60,6 +60,7 @@ AdditionalCluster:
     - domainSuffix
     - name
     - provider
+  type: object
 
 Cluster:
   additionalProperties: false
@@ -108,3 +109,4 @@ Cluster:
     - name
     - provider
     - region
+  type: object

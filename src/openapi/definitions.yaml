@@ -1,6 +1,4 @@
 alerts:
-  title: Alerts
-  description: Configure alerting endpoints to receive notifications from Alertmanager and Otomi deployments.
   additionalProperties: false
   properties:
     repeatInterval:
@@ -13,6 +11,17 @@ alerts:
       description: How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.)
       title: Group Interval
       type: string
+    receivers:
+      description: Select default notification channel(s) for receiving alerts.
+      items:
+        enum:
+          - slack
+          - msteams
+          - email
+        type: string
+      title: Notification receivers
+      type: array
+      uniqueItems: true
     slack:
       title: Slack
       description: Configure Slack endpoints for alerts.
@@ -31,6 +40,23 @@ alerts:
         url:
           $ref: '#/url'
           description: A Slack webhook URL.
+      required:
+        - url
+      type: object
+    msteams:
+      additionalProperties: false
+      description: Configure Microsoft Teams endpoints for alerts.
+      properties:
+        highPrio:
+          title: High prio web hook
+          type: string
+        lowPrio:
+          title: Low prio web hook
+          type: string
+      required:
+        - highPrio
+        - lowPrio
+      title: Microsoft Teams
       type: object
     email:
       title: Email
@@ -45,32 +71,11 @@ alerts:
           title: Non-critical Events
           $ref: '#/email'
           description: One or more email addresses (comma separated) for non-critical events.
+      required:
+        - critical
+        - nonCritical
       type: object
-    msteams:
-      additionalProperties: false
-      description: Configure Microsoft Teams endpoints for alerts.
-      properties:
-        highPrio:
-          title: High prio web hook
-          type: string
-        lowPrio:
-          title: Low prio web hook
-          type: string
-      title: Microsoft Teams
-      type: object
-    receivers:
-      description: Select default notification channel for receiving alerts.
-      items:
-        enum:
-          - slack
-          - msteams
-          - email
-        type: string
-      title: Notification receivers
-      type: array
-      uniqueItems: true
     drone:
-      x-default: slack
       description: Select default notification channel for Otomi deployments in Drone.
       enum:
         - slack
@@ -164,7 +169,7 @@ azureMonitor:
           title: LogAnalytics tenant id
           description: An Azure tenant id.
         logAnalyticsDefaultWorkspace:
-          title: LogAnalytics default workspace to show
+          title: LogAnalytics workspace
           description: An Azure LogAnalytics workspace.
           type: string
         subscriptionId:
@@ -182,7 +187,7 @@ azureSubscriptionId:
   type: string
 azureTenantId:
   title: Azure tenant id
-  description: An Azure tenant id.
+  description: An Azure tenant id. Defaults to one found in metadata.
   type: string
 containerSpecNoSec:
   properties:
@@ -230,6 +235,7 @@ cpuQuantity:
 # _ because it creates a duplicate dns model for some reason
 dns:
   title: DNS
+  type: object
   description: Domain name server settings.
   additionalProperties: false
   properties:
@@ -244,6 +250,7 @@ dns:
     provider:
       description: The DNS provider managing the domains.
       title: Provider
+      type: object
       oneOf:
         - title: AWS
           properties:
@@ -251,11 +258,13 @@ dns:
               title: ''
               properties:
                 region:
-                  type: string
+                  $ref: '#/awsRegion'
               required:
                 - region
+              type: object
           required:
             - aws
+          type: object
         - title: Azure
           properties:
             azure:
@@ -280,6 +289,16 @@ dns:
                   title: Subscription ID
                   type: string
                   description: Azure subscription ID
+                useManagedIdentityExtension:
+                  title: Using managed identities?
+                  type: boolean
+                  description: If you use Azure MSI, this should be set to true
+                  x-default: false
+                userAssignedIdentityID:
+                  title: MSI id
+                  type: string
+                  description: If you use Azure MSI, this is the Client ID of a Azure user-assigned managed identity (optional, system-assigned managed identity is used if empty)
+                  x-secret: ''
                 aadClientId:
                   title: Client ID
                   type: string
@@ -288,17 +307,10 @@ dns:
                   title: Client secret
                   type: string
                   description: Azure Application Client Secret
-                useManagedIdentityExtension:
-                  title: Using managed identities?
-                  type: boolean
-                  description: If you use Azure MSI, this should be set to true
-                  x-default: false
-              required:
-                - resourceGroup
-                - aadClientId
-                - aadClientSecret
+              type: object
           required:
             - azure
+          type: object
         - title: Google
           properties:
             google:
@@ -312,8 +324,23 @@ dns:
               required:
                 - serviceAccountKey
                 - project
+              type: object
           required:
             - google
+          type: object
+  x-rules:
+    - conditions:
+        - provider:
+            has: azure.useManagedIdentityExtension
+        - provider.azure.useManagedIdentityExtension:
+            eq: true
+      event:
+        type: remove
+        params:
+          field:
+            - provider.azure.aadClientId
+            - provider.azure.aadClientSecret
+
 domain:
   pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
   type: string
@@ -377,6 +404,7 @@ image:
           type: string
       required:
         - repository
+      type: object
     - $ref: '#/imageSimple'
   title: Container image
   type: object
@@ -398,12 +426,6 @@ imageSimple:
   title: Container image
 jobSpec:
   properties:
-    type:
-      default: Job
-      enum:
-        - Job
-        - CronJob
-      type: string
     name:
       $ref: '#/idName'
       title: Name
@@ -412,18 +434,12 @@ jobSpec:
     enabled:
       default: true
       type: boolean
-    runPolicy:
-      default: OnSpecChange
-      description: |
-        If runPolicy is set to 'Always', the job controller will always be re-deployed after a successful deployment with Helm.
-        If runPolicy is set to 'OnSpecChange', the job controller will only be re-deployed if one changes this specification.
+    type:
+      default: Job
       enum:
-        - Always
-        - OnSpecChange
-      type: string
-    schedule:
-      default: 0 1 * * *
-      description: Must give a cron-type expression if the job-type is 'cronjob' (job.type).
+        - Job
+        - CronJob
+      title: Job type
       type: string
     script:
       $ref: '#/script'
@@ -432,6 +448,20 @@ jobSpec:
       description: Time To Live after job is finished in seconds. Will be removed afterwards.
       title: TTL after finished
       type: integer
+    schedule:
+      default: 0 1 * * *
+      description: Must give a cron-type expression if the job-type is 'cronjob' (job.type).
+      type: string
+    runPolicy:
+      default: OnSpecChange
+      description: |
+        If runPolicy is set to 'Always', the job controller will always be re-deployed after a successful deployment with Helm.
+        If runPolicy is set to 'OnSpecChange', the job controller will only be re-deployed if one changes this specification.
+      enum:
+        - Always
+        - OnSpecChange
+      title: Run policy
+      type: string
     init:
       type: array
       items:
@@ -442,6 +472,7 @@ jobSpec:
     - name
     - script
     - type
+  type: object
 k8sVersion:
   default: '1.20'
   description: The cluster k8s version. Otomi supports 2 minor versions backwards from the suggested default.
@@ -454,6 +485,7 @@ kms:
   additionalProperties: false
   description: Holds KMS settings like credentials for retrieving encryption/decryption keys.
   title: KMS settings
+  type: object
   properties:
     sops:
       description: Encryption credentials for SOPS to encrypt the platform secrets.
@@ -574,6 +606,7 @@ ksvcNew:
               description: Whether this container has a read-only root filesystem. Default is false.
               type: boolean
               default: false
+          title: Security context
       type: object
     - $ref: '#/containerSpecNoSec'
     - properties:
@@ -698,20 +731,23 @@ podSecurityContext:
         OnRootMismatch: Only change permissions and ownership if permission and ownership of root directory does not match with expected permissions of the volume. This could help shorten the time it takes to change ownership and permission of a volume.
         Always: Always change permission and ownership of the volume when volume is mounted.'
       enum:
-        # - null
         - Always
         - OnRootMismatch
+      type: string
   description: Security context for the pod.
   title: Pod security context
+  type: object
 podSpec:
   allOf:
     - properties:
         annotations:
           $ref: '#/annotations'
           title: Pod annotations
+      type: object
     - properties:
         podSecurityContext:
           $ref: '#/podSecurityContext'
+      type: object
     - $ref: '#/containerSpec'
   type: object
 portNumber:

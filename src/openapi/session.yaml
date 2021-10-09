@@ -34,3 +34,4 @@ Session:
           type: string
         api:
           type: string
+  type: object

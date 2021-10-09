@@ -11,5 +11,6 @@ Job:
         teamId:
           $ref: definitions.yaml#/idName
           readOnly: true
+      type: object
     - $ref: definitions.yaml#/jobSpec
     - $ref: definitions.yaml#/podSpec
