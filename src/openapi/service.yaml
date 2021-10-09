@@ -28,6 +28,7 @@ Service:
       type: integer
       minimum: 1
       maximum: 65535
+      x-default: 80
     ingress:
       title: Exposure (ingress)
       description: Determines loadbalancer related configuration for handling the service ingress.

@@ -469,7 +469,7 @@ export default class OtomiStack {
     this.saveConfig(
       './env/settings.yaml',
       `./env/secrets.settings.yaml${decryptedFilePostfix}`,
-      omit(settings, ['cluster']),
+      omit(settings, ['cluster', 'policies']),
     )
   }
 

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.75](https://github.com/redkubes/otomi-api/compare/v0.4.74...v0.4.75) (2021-10-09)
+
+
+### Bug Fixes
+
+* always process data on deploy, renamed encrypt func to process [ci skip] ([e229101](https://github.com/redkubes/otomi-api/commit/e229101a9b8cba418d4f3444b887942fbe36f480))
+
 ### [0.4.74](https://github.com/redkubes/otomi-api/compare/v0.4.73...v0.4.74) (2021-10-09)
 
 
