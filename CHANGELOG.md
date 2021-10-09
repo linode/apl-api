@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.74](https://github.com/redkubes/otomi-api/compare/v0.4.73...v0.4.74) (2021-10-09)
+
+
+### Features
+
+* drone home alerts, fixed schema [ci skip] ([0ccf644](https://github.com/redkubes/otomi-api/commit/0ccf6444ca68f5d0b775e000b72e7be8df7159a5))
+
+
+### Code Refactoring
+
+* moved customer to cluster.owner ([#216](https://github.com/redkubes/otomi-api/issues/216)) ([2a7fe7a](https://github.com/redkubes/otomi-api/commit/2a7fe7a64eb7876de482976b569df03859bac304))
+
 ### [0.4.73](https://github.com/redkubes/otomi-api/compare/v0.4.71...v0.4.73) (2021-10-06)
 
 
