@@ -18,7 +18,7 @@ const env = cleanEnv({
 
 const baseUrl = `http://${env.TOOLS_HOST}:17771/`
 const decryptUrl = `${baseUrl}decrypt`
-const encryptUrl = `${baseUrl}encrypt`
+const processUrl = `${baseUrl}encrypt`
 
 export async function decrypt(): Promise<AxiosResponse | void> {
   if (!env.USE_SOPS) return Promise.resolve()
@@ -27,10 +27,9 @@ export async function decrypt(): Promise<AxiosResponse | void> {
   return res
 }
 
-export async function encrypt(): Promise<AxiosResponse | void> {
-  if (!env.USE_SOPS) return Promise.resolve()
-  console.info('Requesting encrypt action')
-  const res = await axios.get(encryptUrl)
+export async function processValues(): Promise<AxiosResponse | void> {
+  console.info('Requesting process action')
+  const res = await axios.get(processUrl)
   return res
 }
 

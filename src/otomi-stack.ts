@@ -1,6 +1,6 @@
 /* eslint-disable class-methods-use-this */
 import * as k8s from '@kubernetes/client-node'
-import { existsSync, readFileSync } from 'fs'
+import { readFileSync } from 'fs'
 import yaml from 'js-yaml'
 import { cloneDeep, merge, filter, get, omit, set, unset, isEqual, union, isEmpty } from 'lodash'
 import generatePassword from 'password-generator'
@@ -38,7 +38,7 @@ import {
   getTeamServicesJsonPath,
   objectToArray,
 } from './utils'
-import cloneRepo, { encrypt, Repo } from './repo'
+import cloneRepo, { processValues, Repo } from './repo'
 import {
   cleanEnv,
   CORE_VERSION,
@@ -255,7 +255,7 @@ export default class OtomiStack {
     console.log('DISABLE_SYNC: ', env.DISABLE_SYNC)
     this.saveValues()
     try {
-      await encrypt()
+      await processValues()
     } catch (e) {
       const { status } = e.response
       if (status === 422) throw new ValidationError()
