@@ -99,13 +99,13 @@ export default class OtomiStack {
           env.GIT_BRANCH,
         )
         if (this.repo.fileExists('env/cluster.yaml')) break
-        console.info(`Values are not present at ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
+        debug(`Values are not present at ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
       } catch (e) {
         console.error(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
-        console.info(`Git repository is not ready: ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
+        debug(`Git repository is not ready: ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
       }
       const timeoutMs = 15000
-      console.info(`Trying again in ${timeoutMs} ms`)
+      debug(`Trying again in ${timeoutMs} ms`)
       await new Promise((resolve) => setTimeout(resolve, timeoutMs))
     }
 
@@ -255,7 +255,7 @@ export default class OtomiStack {
   }
 
   async triggerDeployment(email: string): Promise<void> {
-    console.log('DISABLE_SYNC: ', env.DISABLE_SYNC)
+    debug('DISABLE_SYNC: ', env.DISABLE_SYNC)
     this.saveValues()
     try {
       await processValues()
@@ -404,7 +404,7 @@ export default class OtomiStack {
   loadTeamJobs(teamId: string): void {
     const relativePath = getTeamJobsFilePath(teamId)
     if (!this.repo.fileExists(relativePath)) {
-      console.warn(`Team ${teamId} has no jobs yet`)
+      debug(`Team ${teamId} has no jobs yet`)
       return
     }
     const data = this.repo.readFile(relativePath)
@@ -413,14 +413,14 @@ export default class OtomiStack {
     jobs.forEach((job) => {
       // @ts-ignore
       const res: Job = this.db.populateItem('jobs', { ...job, teamId }, { teamId, name: job.name }, job.id)
-      console.log(`Loaded job: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
+      debug(`Loaded job: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
     })
   }
 
   loadTeamSecrets(teamId: string): void {
     const relativePath = getTeamSecretsFilePath(teamId)
     if (!this.repo.fileExists(relativePath)) {
-      console.warn(`Team ${teamId} has no secrets yet`)
+      debug(`Team ${teamId} has no secrets yet`)
       return
     }
     const data = this.repo.readFile(relativePath)
@@ -453,7 +453,7 @@ export default class OtomiStack {
   loadTeamServices(teamId: string): void {
     const relativePath = getTeamServicesFilePath(teamId)
     if (!this.repo.fileExists(relativePath)) {
-      console.warn(`Team ${teamId} has no services yet`)
+      debug(`Team ${teamId} has no services yet`)
       return
     }
     const data = this.repo.readFile(relativePath)
@@ -500,9 +500,9 @@ export default class OtomiStack {
       this.saveTeamServices(team.id!)
       this.saveTeamSecrets(team.id!)
       if (isEmpty(team.password)) {
-        console.debug(`creating password for team '${team.id}'`)
+        debug(`creating password for team '${team.id}'`)
         team.password = generatePassword(16, false)
-      } else console.debug(`already found a password for team '${team.id}'`)
+      } else debug(`already found a password for team '${team.id}'`)
 
       team.resourceQuota = arrayToObject(team.resourceQuota ?? [])
 
@@ -548,7 +548,7 @@ export default class OtomiStack {
     const team = { ...inTeam }
     team.resourceQuota = objectToArray(inTeam.resourceQuota)
     const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id)
-    console.log(`Loaded team: ${res.name}, id: ${res.id}`)
+    debug(`Loaded team: ${res.name}, id: ${res.id}`)
   }
 
   loadSecret(inSecret, teamId): void {
@@ -559,7 +559,7 @@ export default class OtomiStack {
       return memo
     }, {})
     const res: any = this.db.populateItem('secrets', secret, { teamId, name: secret.name }, secret.id)
-    console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
+    debug(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
   }
 
   convertDbSecretToValues(inSecret: any): any {
@@ -575,7 +575,7 @@ export default class OtomiStack {
     const svc = omit(svcRaw, 'domain', 'forwardPath', 'hasCert', 'auth', 'ksvc', 'paths', 'type', 'ownHost', 'tlsPass')
     svc.teamId = teamId
     if (!('name' in svcRaw)) {
-      console.warn('Unknown service structure')
+      debug('Unknown service structure')
     }
     if ('ksvc' in svcRaw) {
       if ('predeployed' in svcRaw.ksvc) {
@@ -614,13 +614,13 @@ export default class OtomiStack {
     }
 
     const res: any = this.db.populateItem('services', svc, undefined, svc.id)
-    console.log(`Loaded service: name: ${res.name}, id: ${res.id}`)
+    debug(`Loaded service: name: ${res.name}, id: ${res.id}`)
   }
 
   // eslint-disable-next-line class-methods-use-this
   convertDbServiceToValues(svc: any): any {
     const { serviceType } = svc.ksvc
-    console.info(`Saving service: id: ${svc.id} serviceType: ${serviceType}`)
+    debug(`Saving service: id: ${svc.id} serviceType: ${serviceType}`)
     const svcCloned = omit(svc, ['teamId', 'ksvc', 'ingress', 'path'])
     const ksvc = cloneDeep(svc.ksvc)
     delete ksvc.serviceType
@@ -639,7 +639,7 @@ export default class OtomiStack {
     } else if (serviceType === 'ksvcPredeployed') {
       svcCloned.ksvc = { predeployed: true }
     } else if (serviceType !== 'svcPredeployed') {
-      console.warn(`Saving service failure: Not supported service type: ${serviceType}`)
+      debug(`Saving service failure: Not supported service type: ${serviceType}`)
     }
     if (svc.ingress && svc.ingress.type !== 'cluster') {
       const ing = svc.ingress
