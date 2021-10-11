@@ -261,9 +261,12 @@ export default class OtomiStack {
       await processValues()
     } catch (e) {
       debug(e)
-      const { status } = e.response
-      if (status === 422) throw new ValidationError()
-      throw HttpError.fromCode(status)
+      if (e.response) {
+        const { status } = e.response
+        if (status === 422) throw new ValidationError()
+        throw HttpError.fromCode(status)
+      }
+      throw new HttpError(500, e)
     }
 
     if (!env.DISABLE_SYNC) {
