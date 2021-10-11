@@ -9,7 +9,7 @@ import { GitPullError } from './error'
 import { cleanEnv, DISABLE_SYNC, TOOLS_HOST, USE_SOPS } from './validators'
 import { decryptedFilePostfix, removeBlankAttributes } from './utils'
 
-const debug = Debug('otomi:repo.ts')
+const debug = Debug('otomi:repo')
 
 const decryptedFilePostfixRegex = new RegExp(`${decryptedFilePostfix}$`)
 

@@ -54,7 +54,7 @@ import {
   USE_SOPS,
 } from './validators'
 
-const debug = Debug('otomi:otomi-stack.ts')
+const debug = Debug('otomi:otomi-stack')
 
 const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'dockerconfig']
 
