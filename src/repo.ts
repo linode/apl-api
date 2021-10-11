@@ -4,9 +4,12 @@ import path, { dirname } from 'path'
 import axios, { AxiosResponse } from 'axios'
 import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'fs'
 import { isEmpty } from 'lodash'
+import Debug from 'debug'
 import { GitPullError } from './error'
 import { cleanEnv, DISABLE_SYNC, TOOLS_HOST, USE_SOPS } from './validators'
 import { decryptedFilePostfix, removeBlankAttributes } from './utils'
+
+const debug = Debug('otomi:repo.ts')
 
 const decryptedFilePostfixRegex = new RegExp(`${decryptedFilePostfix}$`)
 
@@ -22,13 +25,13 @@ const processUrl = `${baseUrl}encrypt`
 
 export async function decrypt(): Promise<AxiosResponse | void> {
   if (!env.USE_SOPS) return Promise.resolve()
-  console.info('Requesting decrypt action')
+  debug('Requesting decrypt action')
   const res = await axios.get(decryptUrl)
   return res
 }
 
 export async function processValues(): Promise<AxiosResponse | void> {
-  console.info('Requesting process action')
+  debug('Requesting process action')
   const res = await axios.get(processUrl)
   return res
 }
@@ -84,7 +87,7 @@ export class Repo {
     const absolutePath = path.join(this.path, relativePath)
     const cleanedData = removeBlankAttributes(data)
     if (isEmpty(cleanedData) && existsSync(absolutePath) && absolutePath.includes('/secrets.')) {
-      console.debug(`Removing file: ${absolutePath}`)
+      debug(`Removing file: ${absolutePath}`)
       // Remove empty secret file due to https://github.com/mozilla/sops/issues/926 issue
       unlinkSync(absolutePath)
       if (decryptedFilePostfix !== '') {
@@ -94,7 +97,7 @@ export class Repo {
       }
       return
     }
-    console.debug(`Writing to file: ${absolutePath}`)
+    debug(`Writing to file: ${absolutePath}`)
     const yamlStr = yaml.safeDump(cleanedData, { indent: 4 })
     const dir = dirname(absolutePath)
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
@@ -108,7 +111,7 @@ export class Repo {
 
   readFile(relativePath): any {
     const absolutePath = path.join(this.path, relativePath)
-    console.info(`Reading from file: ${absolutePath}`)
+    debug(`Reading from file: ${absolutePath}`)
     const doc = yaml.safeLoad(readFileSync(absolutePath, 'utf8'))
     return doc as any
   }
@@ -116,16 +119,16 @@ export class Repo {
   async commit(author: string): Promise<CommitResult> {
     await this.git.add('./*')
     const commitSummary = await this.git.commit(`otomi-api<${author}>`)
-    console.debug(`Commit summary: ${JSON.stringify(commitSummary)}`)
+    debug(`Commit summary: ${JSON.stringify(commitSummary)}`)
     return commitSummary
   }
 
   async clone(): Promise<void> {
-    console.info(`Checking if local git repository exists at: ${this.path}`)
+    debug(`Checking if local git repository exists at: ${this.path}`)
 
     const isRepo = await this.git.checkIsRepo()
     if (!isRepo) {
-      console.info(`Local git repository does not exist. Cloning from '${this.url}' to '${this.path}'`)
+      debug(`Local git repository does not exist. Cloning from '${this.url}' to '${this.path}'`)
       await this.git.clone(this.repoPathAuth, this.path)
     } else if (!env.DISABLE_SYNC) {
       console.log('Repo already exists. Checking out correct branch.')
@@ -145,7 +148,7 @@ export class Repo {
 
   async pull(): Promise<any> {
     const pullSummary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
-    console.debug(`Pull summary: ${JSON.stringify(pullSummary)}`)
+    debug(`Pull summary: ${JSON.stringify(pullSummary)}`)
     return pullSummary
   }
 
@@ -165,13 +168,13 @@ export class Repo {
       await this.git.rebase(['--abort'])
       await this.git.reset(['--hard', sha])
       await decrypt()
-      console.info(`Reset HEAD to ${sha} commit`)
+      debug(`Reset HEAD to ${sha} commit`)
 
       throw new GitPullError()
     }
-    console.debug('pushing')
+    debug('pushing')
     await this.git.push(this.remote, this.branch)
-    console.debug('pushed')
+    debug('pushed')
   }
 
   async addRemoteOrigin(): Promise<void> {

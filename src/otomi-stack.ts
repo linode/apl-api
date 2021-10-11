@@ -5,6 +5,7 @@ import yaml from 'js-yaml'
 import { cloneDeep, merge, filter, get, omit, set, unset, isEqual, union, isEmpty } from 'lodash'
 import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
+import Debug from 'debug'
 import Db from './db'
 import {
   Cluster,
@@ -52,6 +53,8 @@ import {
   DISABLE_SYNC,
   USE_SOPS,
 } from './validators'
+
+const debug = Debug('otomi:otomi-stack.ts')
 
 const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'dockerconfig']
 
@@ -257,6 +260,7 @@ export default class OtomiStack {
     try {
       await processValues()
     } catch (e) {
+      debug(e)
       const { status } = e.response
       if (status === 422) throw new ValidationError()
       throw HttpError.fromCode(status)
