@@ -177,7 +177,6 @@ export default class OtomiStack {
   }
 
   createService(teamId: string, data: Service): Service {
-    this.checkPublicUrlInUse(data)
     return this.db.createItem('services', { ...data, teamId }) as Service
   }
 
@@ -185,16 +184,10 @@ export default class OtomiStack {
     return this.db.getItem('services', { id }) as Service
   }
 
-  editService(id: string, data: any): Service {
-    const oldData = this.getService(id) as any
-    if (data?.ingress?.public) {
-      const { domain, subdomain, path } = data.ingress.public
-      if (oldData?.ingress?.public) {
-        const oldi = oldData.ingress.public
-        if (!isEqual({ domain, subdomain, path }, { domain: oldi.domain, subdomain: oldi.subdomain, path: oldi.path }))
-          this.checkPublicUrlInUse(data)
-      }
-    }
+  editService(id: string, data: Service): Service {
+    // only interested in everything NOT type cluster
+    this.checkPublicUrlInUse(data)
+    const oldData = this.getService(id)
 
     if (data.name !== oldData.name) {
       this.deleteService(id)
@@ -236,23 +229,48 @@ export default class OtomiStack {
     return this.db.deleteItem('jobs', { id })
   }
 
+  // publicUrlInUse(data: Service): boolean {
+  //   this.db.getCollection('services').forEach((svc: Service) => {
+  //     if (data.ingress?.type !== 'public' && svc.ingress?.type !== 'public') {
+  //       return true
+  //     }
+  //     return false
+  //   })
+  //   return false
+  // }
+
   checkPublicUrlInUse(data: any): void {
-    if (!data?.ingress?.public) return
-    const newSvc = data.ingress.public
+    if (data?.ingress?.type === 'cluster') return
+    const newSvc = data.ingress
     const services = this.db.getCollection('services')
 
     const servicesFiltered = filter(services, (svc: Service) => {
-      // @ts-ignore
-      const ingressPublic = svc.ingress.public
-      if (!ingressPublic) return false
-      const { domain, subdomain, path } = ingressPublic
-      const existingUrl = `${subdomain}.${domain}${path || ''}`
-      const url = `${newSvc.subdomain}.${newSvc.domain}${newSvc.path || ''}`
-      return existingUrl === url && svc.id !== data.id
+      if (svc.ingress?.type === 'public' || svc.ingress?.type === 'private') {
+        const { domain, subdomain, path } = svc.ingress
+        const existingUrl = `${subdomain}.${domain}${path || ''}`
+        const url = `${newSvc.subdomain}.${newSvc.domain}${newSvc.path || ''}`
+        return existingUrl === url
+      }
+      return false
     })
 
-    if (servicesFiltered.length !== 0) throw new PublicUrlExists()
+    if (servicesFiltered.length > 0) throw new PublicUrlExists()
   }
+
+  // publicUrlInUse(data: Service): boolean {
+  //   let newSvc: Service
+  //   if (data.ingress != null && data.ingress?.type !== 'cluster') {
+  //     newSvc = data.ingress
+  //     filter(this.db.getCollection('services'), (svc: Service) => {
+  //       if (svc.ingress?.type === 'public' || svc.ingress?.type === 'private') {
+  //         const { domain, subdomain, path } = svc.ingress
+  //         return `${subdomain}.${domain}${path || ''}` === `${newSvc.subdomain}.${newSvc.domain}${newSvc.path || ''}`
+  //       }
+  //       return false
+  //     })
+  //   }
+  //   return false
+  // }
 
   async triggerDeployment(email: string): Promise<void> {
     debug('DISABLE_SYNC: ', env.DISABLE_SYNC)
