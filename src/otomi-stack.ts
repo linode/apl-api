@@ -5,6 +5,7 @@ import yaml from 'js-yaml'
 import { cloneDeep, merge, filter, get, omit, set, unset, isEqual, union, isEmpty } from 'lodash'
 import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
+import Debug from 'debug'
 import Db from './db'
 import {
   Cluster,
@@ -53,6 +54,8 @@ import {
   USE_SOPS,
 } from './validators'
 
+const debug = Debug('otomi:otomi-stack')
+
 const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'dockerconfig']
 
 const env = cleanEnv({
@@ -96,13 +99,13 @@ export default class OtomiStack {
           env.GIT_BRANCH,
         )
         if (this.repo.fileExists('env/cluster.yaml')) break
-        console.info(`Values are not present at ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
+        debug(`Values are not present at ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
       } catch (e) {
         console.error(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
-        console.info(`Git repository is not ready: ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
+        debug(`Git repository is not ready: ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
       }
       const timeoutMs = 15000
-      console.info(`Trying again in ${timeoutMs} ms`)
+      debug(`Trying again in ${timeoutMs} ms`)
       await new Promise((resolve) => setTimeout(resolve, timeoutMs))
     }
 
@@ -174,7 +177,6 @@ export default class OtomiStack {
   }
 
   createService(teamId: string, data: Service): Service {
-    this.checkPublicUrlInUse(data)
     return this.db.createItem('services', { ...data, teamId }) as Service
   }
 
@@ -182,16 +184,10 @@ export default class OtomiStack {
     return this.db.getItem('services', { id }) as Service
   }
 
-  editService(id: string, data: any): Service {
-    const oldData = this.getService(id) as any
-    if (data?.ingress?.public) {
-      const { domain, subdomain, path } = data.ingress.public
-      if (oldData?.ingress?.public) {
-        const oldi = oldData.ingress.public
-        if (!isEqual({ domain, subdomain, path }, { domain: oldi.domain, subdomain: oldi.subdomain, path: oldi.path }))
-          this.checkPublicUrlInUse(data)
-      }
-    }
+  editService(id: string, data: Service): Service {
+    // only interested in everything NOT type cluster
+    this.checkPublicUrlInUse(data)
+    const oldData = this.getService(id)
 
     if (data.name !== oldData.name) {
       this.deleteService(id)
@@ -234,32 +230,36 @@ export default class OtomiStack {
   }
 
   checkPublicUrlInUse(data: any): void {
-    if (!data?.ingress?.public) return
-    const newSvc = data.ingress.public
+    if (data?.ingress?.type === 'cluster') return
+    const newSvc = data.ingress
     const services = this.db.getCollection('services')
 
     const servicesFiltered = filter(services, (svc: Service) => {
-      // @ts-ignore
-      const ingressPublic = svc.ingress.public
-      if (!ingressPublic) return false
-      const { domain, subdomain, path } = ingressPublic
-      const existingUrl = `${subdomain}.${domain}${path || ''}`
-      const url = `${newSvc.subdomain}.${newSvc.domain}${newSvc.path || ''}`
-      return existingUrl === url && svc.id !== data.id
+      if (svc.ingress?.type === 'public' || svc.ingress?.type === 'private') {
+        const { domain, subdomain, path } = svc.ingress
+        const existingUrl = `${subdomain}.${domain}${path || ''}`
+        const url = `${newSvc.subdomain}.${newSvc.domain}${newSvc.path || ''}`
+        return existingUrl === url
+      }
+      return false
     })
 
-    if (servicesFiltered.length !== 0) throw new PublicUrlExists()
+    if (servicesFiltered.length > 0) throw new PublicUrlExists()
   }
 
   async triggerDeployment(email: string): Promise<void> {
-    console.log('DISABLE_SYNC: ', env.DISABLE_SYNC)
+    debug('DISABLE_SYNC: ', env.DISABLE_SYNC)
     this.saveValues()
     try {
       await processValues()
     } catch (e) {
-      const { status } = e.response
-      if (status === 422) throw new ValidationError()
-      throw HttpError.fromCode(status)
+      debug(e)
+      if (e.response) {
+        const { status } = e.response
+        if (status === 422) throw new ValidationError()
+        throw HttpError.fromCode(status)
+      }
+      throw new HttpError(500, e)
     }
 
     if (!env.DISABLE_SYNC) {
@@ -397,7 +397,7 @@ export default class OtomiStack {
   loadTeamJobs(teamId: string): void {
     const relativePath = getTeamJobsFilePath(teamId)
     if (!this.repo.fileExists(relativePath)) {
-      console.warn(`Team ${teamId} has no jobs yet`)
+      debug(`Team ${teamId} has no jobs yet`)
       return
     }
     const data = this.repo.readFile(relativePath)
@@ -406,14 +406,14 @@ export default class OtomiStack {
     jobs.forEach((job) => {
       // @ts-ignore
       const res: Job = this.db.populateItem('jobs', { ...job, teamId }, { teamId, name: job.name }, job.id)
-      console.log(`Loaded job: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
+      debug(`Loaded job: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
     })
   }
 
   loadTeamSecrets(teamId: string): void {
     const relativePath = getTeamSecretsFilePath(teamId)
     if (!this.repo.fileExists(relativePath)) {
-      console.warn(`Team ${teamId} has no secrets yet`)
+      debug(`Team ${teamId} has no secrets yet`)
       return
     }
     const data = this.repo.readFile(relativePath)
@@ -446,7 +446,7 @@ export default class OtomiStack {
   loadTeamServices(teamId: string): void {
     const relativePath = getTeamServicesFilePath(teamId)
     if (!this.repo.fileExists(relativePath)) {
-      console.warn(`Team ${teamId} has no services yet`)
+      debug(`Team ${teamId} has no services yet`)
       return
     }
     const data = this.repo.readFile(relativePath)
@@ -493,9 +493,9 @@ export default class OtomiStack {
       this.saveTeamServices(team.id!)
       this.saveTeamSecrets(team.id!)
       if (isEmpty(team.password)) {
-        console.debug(`creating password for team '${team.id}'`)
+        debug(`creating password for team '${team.id}'`)
         team.password = generatePassword(16, false)
-      } else console.debug(`already found a password for team '${team.id}'`)
+      } else debug(`already found a password for team '${team.id}'`)
 
       team.resourceQuota = arrayToObject(team.resourceQuota ?? [])
 
@@ -541,7 +541,7 @@ export default class OtomiStack {
     const team = { ...inTeam }
     team.resourceQuota = objectToArray(inTeam.resourceQuota)
     const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id)
-    console.log(`Loaded team: ${res.name}, id: ${res.id}`)
+    debug(`Loaded team: ${res.name}, id: ${res.id}`)
   }
 
   loadSecret(inSecret, teamId): void {
@@ -552,7 +552,7 @@ export default class OtomiStack {
       return memo
     }, {})
     const res: any = this.db.populateItem('secrets', secret, { teamId, name: secret.name }, secret.id)
-    console.log(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
+    debug(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
   }
 
   convertDbSecretToValues(inSecret: any): any {
@@ -568,7 +568,7 @@ export default class OtomiStack {
     const svc = omit(svcRaw, 'domain', 'forwardPath', 'hasCert', 'auth', 'ksvc', 'paths', 'type', 'ownHost', 'tlsPass')
     svc.teamId = teamId
     if (!('name' in svcRaw)) {
-      console.warn('Unknown service structure')
+      debug('Unknown service structure')
     }
     if ('ksvc' in svcRaw) {
       if ('predeployed' in svcRaw.ksvc) {
@@ -607,13 +607,13 @@ export default class OtomiStack {
     }
 
     const res: any = this.db.populateItem('services', svc, undefined, svc.id)
-    console.log(`Loaded service: name: ${res.name}, id: ${res.id}`)
+    debug(`Loaded service: name: ${res.name}, id: ${res.id}`)
   }
 
   // eslint-disable-next-line class-methods-use-this
   convertDbServiceToValues(svc: any): any {
     const { serviceType } = svc.ksvc
-    console.info(`Saving service: id: ${svc.id} serviceType: ${serviceType}`)
+    debug(`Saving service: id: ${svc.id} serviceType: ${serviceType}`)
     const svcCloned = omit(svc, ['teamId', 'ksvc', 'ingress', 'path'])
     const ksvc = cloneDeep(svc.ksvc)
     delete ksvc.serviceType
@@ -632,7 +632,7 @@ export default class OtomiStack {
     } else if (serviceType === 'ksvcPredeployed') {
       svcCloned.ksvc = { predeployed: true }
     } else if (serviceType !== 'svcPredeployed') {
-      console.warn(`Saving service failure: Not supported service type: ${serviceType}`)
+      debug(`Saving service failure: Not supported service type: ${serviceType}`)
     }
     if (svc.ingress && svc.ingress.type !== 'cluster') {
       const ing = svc.ingress
