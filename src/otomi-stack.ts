@@ -229,16 +229,6 @@ export default class OtomiStack {
     return this.db.deleteItem('jobs', { id })
   }
 
-  // publicUrlInUse(data: Service): boolean {
-  //   this.db.getCollection('services').forEach((svc: Service) => {
-  //     if (data.ingress?.type !== 'public' && svc.ingress?.type !== 'public') {
-  //       return true
-  //     }
-  //     return false
-  //   })
-  //   return false
-  // }
-
   checkPublicUrlInUse(data: any): void {
     if (data?.ingress?.type === 'cluster') return
     const newSvc = data.ingress
@@ -256,21 +246,6 @@ export default class OtomiStack {
 
     if (servicesFiltered.length > 0) throw new PublicUrlExists()
   }
-
-  // publicUrlInUse(data: Service): boolean {
-  //   let newSvc: Service
-  //   if (data.ingress != null && data.ingress?.type !== 'cluster') {
-  //     newSvc = data.ingress
-  //     filter(this.db.getCollection('services'), (svc: Service) => {
-  //       if (svc.ingress?.type === 'public' || svc.ingress?.type === 'private') {
-  //         const { domain, subdomain, path } = svc.ingress
-  //         return `${subdomain}.${domain}${path || ''}` === `${newSvc.subdomain}.${newSvc.domain}${newSvc.path || ''}`
-  //       }
-  //       return false
-  //     })
-  //   }
-  //   return false
-  // }
 
   async triggerDeployment(email: string): Promise<void> {
     debug('DISABLE_SYNC: ', env.DISABLE_SYNC)
