@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.76](https://github.com/redkubes/otomi-api/compare/v0.4.74...v0.4.76) (2021-10-13)
+
+
+### Bug Fixes
+
+* always process data on deploy, renamed encrypt func to process [ci skip] ([e229101](https://github.com/redkubes/otomi-api/commit/e229101a9b8cba418d4f3444b887942fbe36f480))
+* duplicate urls ([#217](https://github.com/redkubes/otomi-api/issues/217)) ([ddd982e](https://github.com/redkubes/otomi-api/commit/ddd982ef879be6c104256de79dc788e83fbc9fb1))
+* hasExternalIDP needed to be added to schema [ci skip] ([4eb4509](https://github.com/redkubes/otomi-api/commit/4eb45091e5ac9db2cbeb783d05790fd012adf744))
+
+
+### Others
+
+* **release:** 0.4.75 ([288dcd8](https://github.com/redkubes/otomi-api/commit/288dcd8729ca642cde2f93b30aee691fb1faf3ed))
+
 ### [0.4.75](https://github.com/redkubes/otomi-api/compare/v0.4.74...v0.4.75) (2021-10-09)
 
 
