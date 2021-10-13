@@ -135,6 +135,11 @@ Settings:
           description: Set this to true when an external load balancer exists (Azure AppGW, Google Apigee) or needs to be started (AWS ALB). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.
           title: External load balancer
           type: boolean
+        hasExternalIDP:
+          default: false
+          description: Set this to true when you bring your own IDP that supports OIDC. (Then you must also fill in the OIDC settings.)
+          title: External IDP
+          type: boolean
         isHomeMonitored:
           default: false
           description: Whether this cluster is home monitored (like when under a Premium SLA). Sends criticals home.
