@@ -25,13 +25,11 @@ sub_up () {
 
 sub_up-all () {
     local files='-f docker-compose.yml -f docker-compose-deps.yml'
-    [ "$USE_SOPS" == "0" ] && echo "The USE_SOPS=$USE_SOPS prevents running deps" && files='-f docker-compose.yml'
 
     docker-compose $files up ${1}
 }
 
 sub_up-deps () {
-    [ "$USE_SOPS" == "0" ] && echo "The USE_SOPS=$USE_SOPS prevents running deps" && exit 0
     docker-compose -f docker-compose-deps.yml up ${1}
 }
 

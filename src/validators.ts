@@ -2,6 +2,7 @@ import { str, bool, cleanEnv as clean, CleanEnv, StrictCleanOptions, ValidatorSp
 
 export const CORE_VERSION = str({ desc: 'The otomi-core version', default: 'x.x.x' })
 export const DB_PATH = str({ desc: 'The file path to the db. If not given in-memory db is used.', default: undefined })
+export const DISABLE_PROCESSING = bool({ desc: 'Will disable processing by core', default: false })
 export const DISABLE_SYNC = bool({ desc: 'Will disable pushing to the repo', default: false })
 export const GIT_BRANCH = str({ desc: 'The git repo branch', default: 'main' })
 export const GIT_EMAIL = str({ desc: 'The git user email', default: 'not@us.ed' })
@@ -13,14 +14,12 @@ export const NO_AUTHZ = bool({ desc: 'Will disable authorization in the middlewa
 export const OIDC_ENDPOINT = str()
 export const REGION = str({ desc: 'The cloud region' })
 export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '127.0.0.1' })
-export const USE_SOPS = bool({ desc: 'Will use encryption', default: true })
 const { env } = process
 export function cleanEnv<T>(
   validators: { [K in keyof T]: ValidatorSpec<T[K]> },
   options: StrictCleanOptions = { strict: true },
 ): Readonly<T> & CleanEnv & { readonly [varName: string]: string | undefined } {
   if (env.NODE_ENV === 'test') {
-    process.env.USE_SOPS = 'false'
     process.env.GIT_EMAIL = 'testUser@redkubes.com'
     process.env.GIT_USER = 'testUser'
     process.env.GIT_PASSWORD = 'testUserPassword'

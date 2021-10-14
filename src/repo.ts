@@ -6,17 +6,17 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from '
 import { isEmpty } from 'lodash'
 import Debug from 'debug'
 import { GitPullError } from './error'
-import { cleanEnv, DISABLE_SYNC, TOOLS_HOST, USE_SOPS } from './validators'
+import { cleanEnv, DISABLE_PROCESSING, DISABLE_SYNC, TOOLS_HOST } from './validators'
 import { decryptedFilePostfix, removeBlankAttributes } from './utils'
 
 const debug = Debug('otomi:repo')
 
-const decryptedFilePostfixRegex = new RegExp(`${decryptedFilePostfix}$`)
+const decryptedFilePostfixRegex = new RegExp(`${decryptedFilePostfix()}$`)
 
 const env = cleanEnv({
+  DISABLE_PROCESSING,
   DISABLE_SYNC,
   TOOLS_HOST,
-  USE_SOPS,
 })
 
 const baseUrl = `http://${env.TOOLS_HOST}:17771/`
@@ -24,7 +24,7 @@ const decryptUrl = `${baseUrl}decrypt`
 const processUrl = `${baseUrl}encrypt`
 
 export async function decrypt(): Promise<AxiosResponse | void> {
-  if (!env.USE_SOPS) return Promise.resolve()
+  if (!env.DISABLE_PROCESSING) return Promise.resolve()
   debug('Requesting decrypt action')
   const res = await axios.get(decryptUrl)
   return res
@@ -90,7 +90,7 @@ export class Repo {
       debug(`Removing file: ${absolutePath}`)
       // Remove empty secret file due to https://github.com/mozilla/sops/issues/926 issue
       unlinkSync(absolutePath)
-      if (decryptedFilePostfix !== '') {
+      if (decryptedFilePostfix() !== '') {
         const absolutePathEncFile = absolutePath.replace(decryptedFilePostfixRegex, '')
         // also remove the encrypted file as they are operated on in pairs
         if (existsSync(absolutePathEncFile)) unlinkSync(absolutePathEncFile)
@@ -139,7 +139,7 @@ export class Repo {
     if (env.isDev) await decrypt() // do it now because pull usually fails because of dirty state of git
     try {
       await this.pull()
-      if (!env.isDev) await decrypt()
+      await decrypt()
     } catch (e) {
       if (env.isDev) await this.git.clean(CleanOptions.FORCE)
       else throw e

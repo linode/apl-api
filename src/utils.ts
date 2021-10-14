@@ -1,10 +1,11 @@
 import cleanDeep, { CleanOptions } from 'clean-deep'
+import { existsSync } from 'fs'
 import cloneDeep from 'lodash/cloneDeep'
 import { Cluster, Dns } from './otomi-models'
-import { cleanEnv, USE_SOPS } from './validators'
+import { cleanEnv, GIT_LOCAL_PATH } from './validators'
 
 const env = cleanEnv({
-  USE_SOPS,
+  GIT_LOCAL_PATH,
 })
 
 export function arrayToObject(array: [] = [], keyName = 'name', keyValue = 'value'): Record<string, unknown> {
@@ -150,4 +151,8 @@ export const argQuoteStrip = (s) => {
   return s.replace(singleQuoteMatcher, '')
 }
 
-export const decryptedFilePostfix = env.USE_SOPS ? '.dec' : ''
+let hasSops
+export const decryptedFilePostfix = () => {
+  if (hasSops === undefined) hasSops = existsSync(`${env.GIT_LOCAL_PATH}/.sops.yaml`) ? '.dec' : ''
+  return hasSops
+}

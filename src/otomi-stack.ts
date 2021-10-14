@@ -50,8 +50,8 @@ import {
   GIT_PASSWORD,
   GIT_EMAIL,
   DB_PATH,
+  DISABLE_PROCESSING,
   DISABLE_SYNC,
-  USE_SOPS,
 } from './validators'
 
 const debug = Debug('otomi:otomi-stack')
@@ -67,8 +67,8 @@ const env = cleanEnv({
   GIT_PASSWORD,
   GIT_EMAIL,
   DB_PATH,
+  DISABLE_PROCESSING,
   DISABLE_SYNC,
-  USE_SOPS,
 })
 
 export default class OtomiStack {
@@ -249,9 +249,10 @@ export default class OtomiStack {
 
   async triggerDeployment(email: string): Promise<void> {
     debug('DISABLE_SYNC: ', env.DISABLE_SYNC)
+    debug('DISABLE_PROCESSING: ', env.DISABLE_PROCESSING)
     this.saveValues()
     try {
-      await processValues()
+      if (!env.DISABLE_PROCESSING) await processValues()
     } catch (e) {
       debug(e)
       if (e.response) {
@@ -389,7 +390,10 @@ export default class OtomiStack {
   }
 
   loadSettings(): void {
-    const data: Settings = this.loadConfig('./env/settings.yaml', `./env/secrets.settings.yaml${decryptedFilePostfix}`)
+    const data: Settings = this.loadConfig(
+      './env/settings.yaml',
+      `./env/secrets.settings.yaml${decryptedFilePostfix()}`,
+    )
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
@@ -425,7 +429,7 @@ export default class OtomiStack {
   }
 
   loadTeams(skipAdmin = false): void {
-    const mergedData: Core = this.loadConfig('./env/teams.yaml', `./env/secrets.teams.yaml${decryptedFilePostfix}`)
+    const mergedData: Core = this.loadConfig('./env/teams.yaml', `./env/secrets.teams.yaml${decryptedFilePostfix()}`)
 
     Object.values(mergedData?.teamConfig?.teams || {}).forEach((team: Team) => {
       this.loadTeam(team)
@@ -468,14 +472,14 @@ export default class OtomiStack {
     const settings = this.getAllSettings()
     this.saveConfig(
       './env/settings.yaml',
-      `./env/secrets.settings.yaml${decryptedFilePostfix}`,
+      `./env/secrets.settings.yaml${decryptedFilePostfix()}`,
       omit(settings, ['cluster', 'policies']),
     )
   }
 
   saveTeams(): void {
     const filePath = './env/teams.yaml'
-    const secretFilePath = `./env/secrets.teams.yaml${decryptedFilePostfix}`
+    const secretFilePath = `./env/secrets.teams.yaml${decryptedFilePostfix()}`
     const teamValues = {}
     const secretPropertyPaths = [
       'password',
