@@ -106,6 +106,7 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): Requ
   if (!schemaName) return next()
 
   valid = authz.validateWithRbac(action, schemaName, user, teamId, req.body)
+  valid = valid && authz.validateRbacWithSelfServiceFlags(action, schemaName, user, teamId)
   if (!valid)
     return res
       .status(403)
@@ -113,7 +114,7 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): Requ
 
   const violatedAttributes = validateWithAbac(action, schemaName, user, teamId, req.body)
 
-  // A users sends valid form abac is ised to remove these fields that are not allowed to be set
+  // A users sends valid form abac is used to remove these fields that are not allowed to be set
   req.body = omit(req.body, violatedAttributes)
 
   return next()

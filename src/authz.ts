@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Ability, subject } from '@casl/ability'
+import { KubeConfig } from '@kubernetes/client-node'
 import { set, has, get, isEmpty, forIn } from 'lodash'
 import {
   Acl,
@@ -168,6 +169,14 @@ export default class Authz {
       return false
     }
 
+    return true
+  }
+
+  validateRbacWithSelfServiceFlags = (action: string, schemaName: string, user: User, teamId: string) => {
+    if (action === 'read' && schemaName === 'Kubecfg') {
+      const deniedAttributes = get(user.authz, `${teamId}.deniedAttributes.Team`, []) as Array<string>
+      if (deniedAttributes.includes('downloadKubeConfig')) return false
+    }
     return true
   }
 }
