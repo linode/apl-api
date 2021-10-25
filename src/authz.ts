@@ -172,11 +172,9 @@ export default class Authz {
     return true
   }
 
-  validateRbacWithSelfServiceFlags = (action: string, schemaName: string, user: User, teamId: string) => {
-    if (action === 'read' && schemaName === 'Kubecfg') {
-      const deniedAttributes = get(user.authz, `${teamId}.deniedAttributes.Team`, []) as Array<string>
-      if (deniedAttributes.includes('downloadKubeConfig')) return false
-    }
+  validateAgainstServiceFlags = (user: User, teamId: string, schema, attribute: string) => {
+    const deniedAttributes = get(user.authz, `${teamId}.deniedAttributes.${schema}`, []) as Array<string>
+    if (deniedAttributes.includes(attribute)) return false
     return true
   }
 }

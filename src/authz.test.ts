@@ -144,13 +144,13 @@ describe('Schema collection wise permissions', () => {
       authz: { teamA: { deniedAttributes: { Team: ['a', 'b'] } } },
     } as unknown) as User
 
-    authz.validateRbacWithSelfServiceFlags('read', 'Kubecfg', user, 'teamA')
+    authz.validateAgainstServiceFlags(user, 'teamA', 'Team', 'downloadKubeConfig')
   })
   it('A team can not download kubecfg', () => {
     const authz = new Authz(spec)
     const user = ({
       authz: { teamA: { deniedAttributes: { Team: ['a', 'b', 'downloadKubeConfig'] } } },
     } as unknown) as User
-    authz.validateRbacWithSelfServiceFlags('read', 'Kubecfg', user, 'teamA')
+    authz.validateAgainstServiceFlags(user, 'teamA', 'Team', 'downloadKubeConfig')
   })
 })
