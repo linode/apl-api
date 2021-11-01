@@ -2,7 +2,7 @@
 import * as k8s from '@kubernetes/client-node'
 import { readFileSync } from 'fs'
 import yaml from 'js-yaml'
-import { cloneDeep, merge, filter, get, omit, set, unset, isEqual, union, isEmpty } from 'lodash'
+import { cloneDeep, merge, filter, get, omit, set, unset, union, isEmpty } from 'lodash'
 import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
@@ -185,7 +185,7 @@ export default class OtomiStack {
   }
 
   editService(id: string, data: Service): Service {
-    // only interested in everything NOT type cluster
+    // check public url in use when new data is given and ingress is not of type cluster
     this.checkPublicUrlInUse(data)
     const oldData = this.getService(id)
 
@@ -230,12 +230,13 @@ export default class OtomiStack {
   }
 
   checkPublicUrlInUse(data: any): void {
-    if (data?.ingress?.type === 'cluster') return
+    // skip when editing or when svc is of type "cluster" as it has no url
+    if (data.id || data?.ingress?.type === 'cluster') return
     const newSvc = data.ingress
     const services = this.db.getCollection('services')
 
-    const servicesFiltered = filter(services, (svc: Service) => {
-      if (svc.ingress?.type === 'public' || svc.ingress?.type === 'private') {
+    const servicesFiltered = filter(services, (svc: any) => {
+      if (svc.ingress?.type !== 'cluster') {
         const { domain, subdomain, path } = svc.ingress
         const existingUrl = `${subdomain}.${domain}${path || ''}`
         const url = `${newSvc.subdomain}.${newSvc.domain}${newSvc.path || ''}`
@@ -243,7 +244,6 @@ export default class OtomiStack {
       }
       return false
     })
-
     if (servicesFiltered.length > 0) throw new PublicUrlExists()
   }
 
