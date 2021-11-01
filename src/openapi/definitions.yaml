@@ -411,7 +411,7 @@ image:
 imageSimple:
   properties:
     tag:
-      x-default: latest
+      x-default: stable
       pattern: '[\w][\w.-]{0,127}'
       type: string
     pullPolicy:
