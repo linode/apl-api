@@ -1,4 +1,8 @@
 {
+  "[dotenv]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "cSpell.diagnosticLevel": "Hint",
   "editor.codeActionsOnSave": {
     "source.fixAll": true
   },
@@ -11,14 +15,11 @@
     "**/.git/subtree-cache/**": true,
     "**/node_modules/*/**": true
   },
-  "mochaExplorer.files": "src/*.test.ts",
-  "mochaExplorer.require": "ts-node/register",
-  "mochaExplorer.timeout": 20000,
   "mochaExplorer.env": {
     "NODE_ENV": "test"
   },
-  "prettier.disableLanguages": ["javascript", "typescript"],
-  "prettier.enable": true,
-  "tslint.enable": false,
-  "cSpell.diagnosticLevel": "Hint"
+  "mochaExplorer.files": "src/*.test.ts",
+  "mochaExplorer.require": "ts-node/register",
+  "mochaExplorer.timeout": 20000,
+  "prettier.enable": true
 }
