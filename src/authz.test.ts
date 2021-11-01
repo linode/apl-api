@@ -138,19 +138,19 @@ describe('Schema collection wise permissions', () => {
     expect(authz.validateWithRbac('update', 'Services', sessionTeam, 'mercury')).to.be.false
   })
 
-  it('A team can download kubecfg', () => {
+  it('A team can doSomething', () => {
     const authz = new Authz(spec)
     const user = ({
       authz: { teamA: { deniedAttributes: { Team: ['a', 'b'] } } },
     } as unknown) as User
 
-    authz.validateAgainstServiceFlags(user, 'teamA', 'Team', 'downloadKubeConfig')
+    authz.hasSelfService(user, 'teamA', 'Team', 'doSomething')
   })
-  it('A team can not download kubecfg', () => {
+  it('A team can not doSomething', () => {
     const authz = new Authz(spec)
     const user = ({
-      authz: { teamA: { deniedAttributes: { Team: ['a', 'b', 'downloadKubeConfig'] } } },
+      authz: { teamA: { deniedAttributes: { Team: ['a', 'b', 'doSomething'] } } },
     } as unknown) as User
-    authz.validateAgainstServiceFlags(user, 'teamA', 'Team', 'downloadKubeConfig')
+    authz.hasSelfService(user, 'teamA', 'Team', 'doSomething')
   })
 })

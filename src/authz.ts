@@ -172,7 +172,7 @@ export default class Authz {
     return true
   }
 
-  validateAgainstServiceFlags = (user: User, teamId: string, schema, attribute: string) => {
+  hasSelfService = (user: User, teamId: string, schema, attribute: string) => {
     const deniedAttributes = get(user.authz, `${teamId}.deniedAttributes.${schema}`, []) as Array<string>
     if (deniedAttributes.includes(attribute)) return false
     return true
