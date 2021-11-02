@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.79](https://github.com/redkubes/otomi-api/compare/v0.4.78...v0.4.79) (2021-11-02)
+
+
+### Features
+
+* selfservice kubecfg ([#219](https://github.com/redkubes/otomi-api/issues/219)) ([6e01c11](https://github.com/redkubes/otomi-api/commit/6e01c118495c2e25256b3ddd26394d4e5d9434f8))
+
 ### [0.4.78](https://github.com/redkubes/otomi-api/compare/v0.4.77...v0.4.78) (2021-11-01)
 
 
