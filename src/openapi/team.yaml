@@ -16,10 +16,10 @@ TeamSelfService:
       type: array
       items:
         type: string
-        enum: [alerts, oidc, resourceQuota]
+        # downloadKubeConfig - is an action that a user can perform, not an attribute of the input form
+        enum: [alerts, oidc, resourceQuota, downloadKubeConfig]
       default: [alerts]
       uniqueItems: true
-
 Team:
   properties:
     id:

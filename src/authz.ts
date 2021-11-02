@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Ability, subject } from '@casl/ability'
+import { KubeConfig } from '@kubernetes/client-node'
 import { set, has, get, isEmpty, forIn } from 'lodash'
 import {
   Acl,
@@ -168,6 +169,12 @@ export default class Authz {
       return false
     }
 
+    return true
+  }
+
+  hasSelfService = (user: User, teamId: string, schema, attribute: string) => {
+    const deniedAttributes = get(user.authz, `${teamId}.deniedAttributes.${schema}`, []) as Array<string>
+    if (deniedAttributes.includes(attribute)) return false
     return true
   }
 }

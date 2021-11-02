@@ -460,7 +460,7 @@ paths:
           content:
             'application/yaml':
               schema:
-                type: object
+                $ref: '#/components/schemas/Kubecfg'
 
   /session:
     get:

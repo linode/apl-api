@@ -1,6 +1,6 @@
 import { expect } from 'chai'
-import Authz, { getTeamAuthz, getViolatedAttributes } from './authz'
-import { OpenAPIDoc, SessionRole, User, TeamSelfService } from './otomi-models'
+import Authz from './authz'
+import { OpenAPIDoc, SessionRole, User } from './otomi-models'
 
 const sessionTeam: User = {
   authz: {},
@@ -137,32 +137,20 @@ describe('Schema collection wise permissions', () => {
     expect(authz.validateWithRbac('read', 'Services', sessionTeam, 'mercury')).to.be.true
     expect(authz.validateWithRbac('update', 'Services', sessionTeam, 'mercury')).to.be.false
   })
-})
-describe('Permissions tests', () => {
-  it('should render correct team authz', () => {
-    const selfServiceFlags: TeamSelfService = {
-      Team: ['resourceQuota'],
-      Service: ['ingress'],
-    }
 
-    const schema = {
-      properties: {
-        Team: { items: { enum: ['alerts', 'oidc', 'resourceQuota'] } },
-        Service: { items: { enum: ['ingress'] } },
-      },
-    }
-    const authz = getTeamAuthz(selfServiceFlags, schema)
-    const expected = {
-      deniedAttributes: {
-        Team: ['alerts', 'oidc', 'selfService'],
-        Service: [],
-      },
-    }
-    expect(expected).to.deep.equal(authz)
+  it('A team can doSomething', () => {
+    const authz = new Authz(spec)
+    const user = ({
+      authz: { teamA: { deniedAttributes: { Team: ['a', 'b'] } } },
+    } as unknown) as User
+
+    authz.hasSelfService(user, 'teamA', 'Team', 'doSomething')
   })
-
-  it('should get violated authorization paths', () => {
-    const d = getViolatedAttributes(['a.b', 'c', 'd'], { a: { b: 1, c: 2 }, d: 4, e: 5 })
-    expect(d).to.deep.equal(['a.b', 'd'])
+  it('A team can not doSomething', () => {
+    const authz = new Authz(spec)
+    const user = ({
+      authz: { teamA: { deniedAttributes: { Team: ['a', 'b', 'doSomething'] } } },
+    } as unknown) as User
+    authz.hasSelfService(user, 'teamA', 'Team', 'doSomething')
   })
 })
