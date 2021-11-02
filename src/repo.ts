@@ -24,7 +24,10 @@ const decryptUrl = `${baseUrl}decrypt`
 const processUrl = `${baseUrl}encrypt`
 
 export async function decrypt(): Promise<AxiosResponse | void> {
-  if (!env.DISABLE_PROCESSING) return Promise.resolve()
+  if (env.DISABLE_PROCESSING) {
+    debug('Skipping processing')
+    return Promise.resolve()
+  }
   debug('Requesting decrypt action')
   const res = await axios.get(decryptUrl)
   return res
