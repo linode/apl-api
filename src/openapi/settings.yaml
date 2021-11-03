@@ -78,7 +78,7 @@ Settings:
           type: string
         usernameClaimMapper:
           description: Claim name used by Keycloak to identify incoming users from the identity provider.
-          x-default: '${CLAIM.email}'
+          x-default: '${CLAIM.upn}'
           title: Username claim mapper
           type: string
         subClaimMapper:
