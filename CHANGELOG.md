@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.80](https://github.com/redkubes/otomi-api/compare/v0.4.79...v0.4.80) (2021-11-03)
+
+
+### Bug Fixes
+
+* race condition when checking sops yaml existence ([b4a4dd7](https://github.com/redkubes/otomi-api/commit/b4a4dd70b2cfa136d9f816080eebb2bef90d2755))
+
 ### [0.4.79](https://github.com/redkubes/otomi-api/compare/v0.4.78...v0.4.79) (2021-11-02)
 
 
