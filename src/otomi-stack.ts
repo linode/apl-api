@@ -483,10 +483,10 @@ export default class OtomiStack {
     const teamValues = {}
     const secretPropertyPaths = [
       'password',
-      'oidc.groupMapping',
-      'azureMonitor',
-      'alerts.slack',
-      'alerts.email',
+      'azureMonitor.appInsightsApiKey',
+      'azureMonitor.clientSecret',
+      'azureMonitor.logAnalyticsClientSecret',
+      'alerts.slack.url',
       'alerts.msteams',
     ]
     const secretPaths: string[] = []
