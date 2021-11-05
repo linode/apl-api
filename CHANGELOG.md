@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.81](https://github.com/redkubes/otomi-api/compare/v0.4.80...v0.4.81) (2021-11-05)
+
+
+### Features
+
+* added ca to session [ci skip] ([c7ed873](https://github.com/redkubes/otomi-api/commit/c7ed873f6bcdf0d9ce20ee6a303cd0b5358326fb))
+
+
+### Bug Fixes
+
+* default username claim mapper [ci skip] ([850f036](https://github.com/redkubes/otomi-api/commit/850f03600e7fca257a27e024a96a967b1c4b870e))
+
 ### [0.4.80](https://github.com/redkubes/otomi-api/compare/v0.4.79...v0.4.80) (2021-11-03)
 
 
