@@ -42,6 +42,7 @@ import {
 import cloneRepo, { processValues, Repo } from './repo'
 import {
   cleanEnv,
+  CUSTOM_ROOT_CA,
   CORE_VERSION,
   GIT_REPO_URL,
   GIT_LOCAL_PATH,
@@ -59,6 +60,7 @@ const debug = Debug('otomi:otomi-stack')
 const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'dockerconfig']
 
 const env = cleanEnv({
+  CUSTOM_ROOT_CA,
   CORE_VERSION,
   GIT_REPO_URL,
   GIT_LOCAL_PATH,
@@ -663,6 +665,7 @@ export default class OtomiStack {
 
   getSession(user: User): Session {
     const data: Session = {
+      ca: env.CUSTOM_ROOT_CA,
       cluster: this.getSetting('cluster') as Session['cluster'],
       clusters: get(this.getSetting('otomi'), 'additionalClusters', []) as Session['clusters'],
       core: this.getCore(),

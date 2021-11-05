@@ -1,6 +1,7 @@
 import { str, bool, cleanEnv as clean, CleanEnv, StrictCleanOptions, ValidatorSpec } from 'envalid'
 
 export const CORE_VERSION = str({ desc: 'The otomi-core version', default: 'x.x.x' })
+export const CUSTOM_ROOT_CA = str({ desc: 'The root CA used for certs', default: undefined })
 export const DB_PATH = str({ desc: 'The file path to the db. If not given in-memory db is used.', default: undefined })
 export const DISABLE_PROCESSING = bool({ desc: 'Will disable processing by core', default: false })
 export const DISABLE_SYNC = bool({ desc: 'Will disable pushing to the repo', default: false })

@@ -1,5 +1,8 @@
 Session:
   properties:
+    ca:
+      type: string
+      readOnly: true
     cluster:
       $ref: cluster.yaml#/Cluster
     clusters:
