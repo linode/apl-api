@@ -180,7 +180,7 @@ export default class OtomiStack {
 
   createService(teamId: string, data: Service): Service {
     this.checkPublicUrlInUse(data)
-    return this.db.createItem('services', { ...data, teamId }) as Service
+    return this.db.createItem('services', { ...data, teamId }, undefined, data?.id) as Service
   }
 
   getService(id: string): Service {
@@ -188,15 +188,8 @@ export default class OtomiStack {
   }
 
   editService(id: string, data: Service): Service {
-    const oldData = this.getService(id)
-
-    if (data.name !== oldData.name) {
-      this.deleteService(id)
-      // eslint-disable-next-line no-param-reassign
-      delete data.id
-      return this.createService(oldData.teamId!, data)
-    }
-    return this.db.updateItem('services', data, { id }) as Service
+    this.deleteService(id)
+    return this.createService(data.teamId!, { ...data, id })
   }
 
   deleteService(id: string): void {
