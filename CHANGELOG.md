@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.82](https://github.com/redkubes/otomi-api/compare/v0.4.81...v0.4.82) (2021-11-09)
+
+
+### Bug Fixes
+
+* dupe logic ([a29b2c6](https://github.com/redkubes/otomi-api/commit/a29b2c64c7e2732f79f97e25e260cfe7b662b298))
+* dupe url check should only run on create ([6bb2568](https://github.com/redkubes/otomi-api/commit/6bb25682dcfd8c54be44b4d15c54da6820176189))
+* missing schema entries [ci skip] ([10ec7af](https://github.com/redkubes/otomi-api/commit/10ec7af5de54ed1d161b8bfc410d045706f88d97))
+
 ### [0.4.81](https://github.com/redkubes/otomi-api/compare/v0.4.80...v0.4.81) (2021-11-05)
 
 
