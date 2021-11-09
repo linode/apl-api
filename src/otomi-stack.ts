@@ -179,6 +179,7 @@ export default class OtomiStack {
   }
 
   createService(teamId: string, data: Service): Service {
+    this.checkPublicUrlInUse(data)
     return this.db.createItem('services', { ...data, teamId }) as Service
   }
 
@@ -187,8 +188,6 @@ export default class OtomiStack {
   }
 
   editService(id: string, data: Service): Service {
-    // check public url in use when new data is given and ingress is not of type cluster
-    this.checkPublicUrlInUse(data)
     const oldData = this.getService(id)
 
     if (data.name !== oldData.name) {
