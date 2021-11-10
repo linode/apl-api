@@ -39,7 +39,7 @@ export function errorMiddleware(e, req: OpenApiRequest, res, next): void {
   return res.status(code).json({ error: msg })
 }
 
-export function getUser(user: JWT): User {
+export function getUser(user: JWT, otomi: OtomiStack): User {
   const sessionUser: User = { ...user, teams: [], roles: [], isAdmin: false, authz: {} }
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
@@ -54,15 +54,20 @@ export function getUser(user: JWT): User {
         }
       } else if (!sessionUser.roles.includes('team')) sessionUser.roles.push('team')
       // if in team-(not admin), remove 'team-' prefix
-      const team = group.substr(5)
-      if (group.substr(0, 5) === 'team-' && group !== 'team-admin' && !sessionUser.teams.includes(team))
-        sessionUser.teams.push(team)
+      const teamId = group.substr(5)
+      if (group.substr(0, 5) === 'team-' && group !== 'team-admin' && !sessionUser.teams.includes(teamId)) {
+        // we might be assigned team-* without that team yet existing in the values, so ignore those
+        const coll = otomi.db.db.get('teams')
+        // @ts-ignore
+        const idx = coll.find({ id: teamId }).value()
+        if (idx) sessionUser.teams.push(teamId)
+      }
     })
   }
   return sessionUser
 }
 
-export function jwtMiddleware(): RequestHandler {
+export function jwtMiddleware(otomi: OtomiStack): RequestHandler {
   return function nextHandler(req: OpenApiRequestExt, res, next): any {
     const token = req.header('Authorization')
     if (!token && env.isDev) {
@@ -72,12 +77,15 @@ export function jwtMiddleware(): RequestHandler {
       const isAdmin = !team || team === 'admin'
       const groups = ['team-demo', 'team-otomi']
       if (team && !groups.includes(`team-${team}`)) groups.push(`team-${team}`)
-      req.user = getUser({
-        name: isAdmin ? 'Bob Admin' : 'Joe Team',
-        email: isAdmin ? 'bob.admin@otomi.cloud' : `joe.team@otomi.cloud`,
-        groups,
-        roles: [],
-      })
+      req.user = getUser(
+        {
+          name: isAdmin ? 'Bob Admin' : 'Joe Team',
+          email: isAdmin ? 'bob.admin@otomi.cloud' : `joe.team@otomi.cloud`,
+          groups,
+          roles: [],
+        },
+        otomi,
+      )
       return next()
     }
     if (!token) {
@@ -85,7 +93,7 @@ export function jwtMiddleware(): RequestHandler {
       return next()
     }
     const { name, email, roles, groups } = jwtDecode(token)
-    req.user = getUser({ name, email, roles, groups })
+    req.user = getUser({ name, email, roles, groups }, otomi)
     return next()
   }
 }

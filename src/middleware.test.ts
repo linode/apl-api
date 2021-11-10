@@ -1,6 +1,8 @@
 import { expect } from 'chai'
+import sinon from 'sinon'
 import { getUser } from './middleware'
 import { JWT } from './otomi-models'
+import OtomiStack from './otomi-stack'
 
 const email = 'test@user.net'
 const adminGroups = ['team-admin', 'admin']
@@ -14,12 +16,24 @@ const adminJWT: JWT = {
 const multiTeamJWT: JWT = { ...adminJWT, groups: multiTeamGroups }
 
 describe('JWT claims mapping', () => {
+  let otomi: OtomiStack
+  beforeEach(() => {
+    otomi = new OtomiStack()
+  })
   it('A user in either admin or team-admin group should get admin role and have isAdmin', () => {
-    const user = getUser(adminJWT)
+    const user = getUser(adminJWT, otomi)
     expect(user.isAdmin).to.be.true
   })
-  it('Multiple team groups should result in the same amount of teams', () => {
-    const user = getUser(multiTeamJWT)
+  it('Multiple team groups should result in the same amount of teams existing', () => {
+    multiTeamUser.forEach((teamId) => otomi.createTeam({ name: teamId }))
+    const user = getUser(multiTeamJWT, otomi)
+    expect(user.teams).to.deep.equal(multiTeamUser)
+    expect(user.isAdmin).to.be.false
+  })
+  it("Non existing team groups should not be added to the user's list of teams", () => {
+    const extraneousTeamsList = [...multiTeamUser, 'nonexisting']
+    extraneousTeamsList.forEach((teamId) => otomi.createTeam({ name: teamId }))
+    const user = getUser(multiTeamJWT, otomi)
     expect(user.teams).to.deep.equal(multiTeamUser)
     expect(user.isAdmin).to.be.false
   })
