@@ -13,6 +13,7 @@ describe('Admin API tests', () => {
   let app
   before(async () => {
     const otomiStack = new OtomiStack()
+    otomiStack.createTeam({ name: 'team1' })
     sinon.stub(otomiStack)
     app = await initApp(otomiStack)
   })
