@@ -398,7 +398,7 @@ export default {
     },
     cluster: {
       apiName: 'onprem',
-      apiserver: 'apiserver.onprem.example.com',
+      apiServer: 'apiServer.onprem.example.com',
       domainSuffix: 'dev.onprem.example.com',
       k8sVersion: '1.19',
       owner: 'demo',

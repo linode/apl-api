@@ -6,7 +6,7 @@ describe('Utils', () => {
   const cluster: Cluster = {
     domainSuffix: 'dev.otomi.cloud',
     apiName: 'onprem',
-    apiserver: 'apiserver.onprem.example.com',
+    apiServer: 'apiServer.onprem.example.com',
     k8sVersion: '1.19',
     name: 'dev',
     provider: 'onprem',
