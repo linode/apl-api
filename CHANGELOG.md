@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.84](https://github.com/redkubes/otomi-api/compare/v0.4.83...v0.4.84) (2021-11-16)
+
+
+### Bug Fixes
+
+* cert arn and name ([#223](https://github.com/redkubes/otomi-api/issues/223)) ([a64adad](https://github.com/redkubes/otomi-api/commit/a64adad173b823bf5c5789abe2fd42d456b49514))
+
+
+### Others
+
+* **deps-dev:** bump @redocly/openapi-cli [ci skip] ([#221](https://github.com/redkubes/otomi-api/issues/221)) ([258dfa9](https://github.com/redkubes/otomi-api/commit/258dfa98cd02701b6b7941ba2600cb6293a4ebb7))
+* **release:** 0.4.83 ([c920056](https://github.com/redkubes/otomi-api/commit/c9200565759d283e10eba1b39ab800b234d7d0da))
+
 ### [0.4.83](https://github.com/redkubes/otomi-api/compare/v0.4.82...v0.4.83) (2021-11-10)
 
 ### [0.4.82](https://github.com/redkubes/otomi-api/compare/v0.4.81...v0.4.82) (2021-11-09)
