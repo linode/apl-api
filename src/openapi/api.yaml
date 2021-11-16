@@ -658,8 +658,8 @@ components:
       $ref: definitions.yaml#/annotations
     apiName:
       $ref: cluster.yaml#/apiName
-    apiServer:
-      $ref: cluster.yaml#/apiServer
+    apiserver:
+      $ref: cluster.yaml#/apiserver
     awsAccessKey:
       $ref: definitions.yaml#/awsAccessKey
     awsSecretKey:

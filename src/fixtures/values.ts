@@ -143,6 +143,7 @@ export default {
       },
       ingress: {
         certArn: undefined,
+        certName: undefined,
         domain: 'onprem.example.com',
         forwardPath: false,
         hasCert: false,
@@ -162,10 +163,11 @@ export default {
         serviceType: 'svcPredeployed',
       },
       ingress: {
-        certArn: undefined,
+        certArn: 'some-arn',
+        certName: undefined,
         domain: 'dev.onprem.example.com',
         forwardPath: false,
-        hasCert: false,
+        hasCert: true,
         auth: false,
         path: undefined,
         subdomain: 'hello.team-otomi',
@@ -183,6 +185,7 @@ export default {
       },
       ingress: {
         certArn: undefined,
+        certName: undefined,
         domain: 'onprem.private.net',
         forwardPath: false,
         hasCert: false,
@@ -203,9 +206,10 @@ export default {
       },
       ingress: {
         certArn: undefined,
+        certName: 'bla',
         domain: 'some.com',
         forwardPath: false,
-        hasCert: false,
+        hasCert: true,
         auth: false,
         path: undefined,
         subdomain: 'hello',
@@ -248,6 +252,7 @@ export default {
       },
       ingress: {
         certArn: undefined,
+        certName: undefined,
         domain: 'onprem.example.com',
         forwardPath: false,
         hasCert: false,
@@ -332,6 +337,7 @@ export default {
       ingress: {
         auth: false,
         certArn: undefined,
+        certName: undefined,
         domain: 'dev.onprem.example.com',
         forwardPath: false,
         hasCert: false,
@@ -392,7 +398,7 @@ export default {
     },
     cluster: {
       apiName: 'onprem',
-      apiServer: 'apiServer.onprem.example.com',
+      apiserver: 'apiserver.onprem.example.com',
       domainSuffix: 'dev.onprem.example.com',
       k8sVersion: '1.19',
       owner: 'demo',
@@ -442,11 +448,6 @@ export default {
         },
       },
       additionalClusters: [
-        {
-          name: 'dev',
-          domainSuffix: 'dev.eks.otomi.cloud',
-          provider: 'aws',
-        },
         {
           name: 'demo',
           domainSuffix: 'demo.eks.otomi.cloud',

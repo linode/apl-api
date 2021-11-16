@@ -96,7 +96,7 @@ Ingress:
       type: boolean
     certName:
       description: The name of a TLS secret known to exist in the team namespace.
-      example: www-example-com
+      example: example-com
       title: Secret name
       type: string
     certArn:

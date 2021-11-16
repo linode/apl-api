@@ -41,9 +41,6 @@ otomi:
     conftest:
       enabled: true
   additionalClusters:
-    - name: dev
-      domainSuffix: dev.eks.otomi.cloud
-      provider: aws
     - name: demo
       domainSuffix: demo.eks.otomi.cloud
       provider: aws

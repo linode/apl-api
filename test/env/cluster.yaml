@@ -1,6 +1,6 @@
 cluster:
   apiName: onprem
-  apiServer: apiServer.onprem.example.com
+  apiserver: apiserver.onprem.example.com
   domainSuffix: dev.onprem.example.com
   k8sVersion: '1.19'
   name: dev
