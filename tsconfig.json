@@ -12,8 +12,8 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
-    "strictNullChecks": true,
     "strict": false,
+    "strictNullChecks": true,
     "target": "esnext"
   },
   "exclude": ["node_modules", "dist"],
