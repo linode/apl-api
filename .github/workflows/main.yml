@@ -20,7 +20,7 @@ env:
   REPO: otomi/api
   GIT_USER: redkubesbot
   GIT_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-  DOCKER_PASSWORD: '${{ secrets.DOCKER_PASSWORD }}'
+  DOCKER_PASSWORD: '${{ secrets.DOCKERHUB_OTOMI_TOKEN }}'
 
 jobs:
   build-test-push-release:
