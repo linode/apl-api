@@ -624,44 +624,44 @@ ksvcNew:
           $ref: '#/portNumber'
           description: Container port the knative pod will connect with. Leaving this empty will let knative infer the port from the container, which usually works, but might be problematic when the container does not specifically expose a port. (As is the case with nginx derived images!)
           title: Container port
-        autoCD:
-          description: Deploys new images based on a tagging strategy
-          oneOf:
-            - $ref: '#/offChoice'
-            - nullable: true
-              properties:
-                semver:
-                  description: 'Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
-                  example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
-                  title: Semver version pattern
-                  type: string
-                tagMatcher:
-                  default: semver
-                  enum:
-                    - semver
-                  type: string
-              required:
-                - semver
-              title: Semver versioning
-              type: object
-            - properties:
-                glob:
-                  description: 'Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*"'
-                  example: main-v1.3.*
-                  title: Glob string pattern
-                  type: string
-                tagMatcher:
-                  default: glob
-                  enum:
-                    - glob
-                  type: string
-              required:
-                - glob
-              title: Glob pattern matching
-              type: object
-              additionalProperties: false
-          title: Continuous delivery (coming soon!)
-          type: object
+        # autoCD:
+        #   description: Deploys new images based on a tagging strategy
+        #   oneOf:
+        #     - $ref: '#/offChoice'
+        #     - nullable: true
+        #       properties:
+        #         semver:
+        #           description: 'Use this filter if your image tags follow semantic versioning rules (MAJOR.MINOR.PATCH). E.g.: PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*"'
+        #           example: 'PATCH only: "~1.1", MINOR and PATCH only "~1", ALL "*",  ">=1.2.3-0"'
+        #           title: Semver version pattern
+        #           type: string
+        #         tagMatcher:
+        #           default: semver
+        #           enum:
+        #             - semver
+        #           type: string
+        #       required:
+        #         - semver
+        #       title: Semver versioning
+        #       type: object
+        #     - properties:
+        #         glob:
+        #           description: 'Use this filter if you want to make glob-style patterns. E.g.: "main-v1.3.*"'
+        #           example: main-v1.3.*
+        #           title: Glob string pattern
+        #           type: string
+        #         tagMatcher:
+        #           default: glob
+        #           enum:
+        #             - glob
+        #           type: string
+        #       required:
+        #         - glob
+        #       title: Glob pattern matching
+        #       type: object
+        #       additionalProperties: false
+        #   title: Continuous delivery (coming soon!)
+        #   type: object
       required:
         - serviceType
       title: Knative service
