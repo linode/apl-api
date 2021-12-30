@@ -600,6 +600,8 @@ ksvcNew:
     - properties:
         securityContext:
           properties:
+            runAsNonRoot:
+              $ref: '#/runAsNonRoot'
             runAsUser:
               $ref: '#/runAsUser'
             readOnlyRootFilesystem:
@@ -714,13 +716,10 @@ podSecurityContext:
   properties:
     runAsUser:
       $ref: '#/runAsUser'
-      description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
     runAsGroup:
       $ref: '#/runAsGroup'
-      description: The GID to run the entrypoint of the container process. Defaults to group specified in image metadata if unspecified. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
     runAsNonRoot:
       $ref: '#/runAsNonRoot'
-      description: Will prevent any container from starting with UID 0.
     fsGroup:
       description: Supplementary group ID. Volumes that support ownership management are modified to be owned and writable by this ID.
       type: string
@@ -799,25 +798,25 @@ resourceQuota:
     required:
       - name
       - value
+runAsNonRoot:
+  description: Will prevent the container from starting with UID 0. This implies that k8s must be able to infer the UID from the image. If it complains the UID must be explicitly set with runAsUser.
+  default: true
+  title: Run as non-root
+  type: boolean
 runAsUser:
-  description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified.
+  description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May be set in both SecurityContext and PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
   x-default: 1001
   maximum: 65535
   minimum: 0
   title: Run as user
   type: integer
 runAsGroup:
-  description: The GID to run the entrypoint of the container process. Defaults to group specified in image metadata if unspecified.
+  description: The GID to run the entrypoint of the container process. Defaults to group specified in image metadata if unspecified. May be set in both SecurityContext and PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
   x-default: 1001
   maximum: 65535
   minimum: 0
   title: Run as group
   type: integer
-runAsNonRoot:
-  description: Will prevent the container from starting with UID 0.
-  default: true
-  title: Run as non-root
-  type: boolean
 scaling:
   description: Min and max number of replicas.
   properties:

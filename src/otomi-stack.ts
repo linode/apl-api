@@ -124,7 +124,7 @@ export default class OtomiStack {
 
   setSetting(data: Setting) {
     const settings = this.db.db.get('settings').value()
-    const ret = this.db.db.set('settings', { ...settings, ...data }).write()
+    const ret = this.db.db.set('settings', merge(settings, data)).write()
     this.db.dirty = true
     return ret
   }
