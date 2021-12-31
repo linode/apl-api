@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.87](https://github.com/redkubes/otomi-api/compare/v0.4.85...v0.4.87) (2021-12-31)
+
+
+### Bug Fixes
+
+* settings merge for policies, added runAsNonRoot, shuffled service<>ingress ([4873d4c](https://github.com/redkubes/otomi-api/commit/4873d4c59932a239a2223eebd665fe497158027a))
+
+
+### Code Refactoring
+
+* removed autoCD, reordered service items [ci skip] ([e21166a](https://github.com/redkubes/otomi-api/commit/e21166ac2e491eb9a4d5223c8dfead7d28361fcb))
+
+
+### Others
+
+* **release:** 0.4.86 ([fd775a7](https://github.com/redkubes/otomi-api/commit/fd775a7230a36c82a0c783e89439d258d64294bd))
+
 ### [0.4.86](https://github.com/redkubes/otomi-api/compare/v0.4.85...v0.4.86) (2021-12-30)
 
 
