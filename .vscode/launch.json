@@ -32,7 +32,7 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run-script", "dev"],
       "cwd": "${workspaceRoot}",
-
+      "envFile": ".env",
       "console": "integratedTerminal"
     },
     {

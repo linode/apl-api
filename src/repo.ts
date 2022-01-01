@@ -127,19 +127,21 @@ export class Repo {
   }
 
   async clone(): Promise<void> {
+    if (env.isDev && env.DISABLE_SYNC) await decrypt()
+    if (env.DISABLE_SYNC) return
+
     debug(`Checking if local git repository exists at: ${this.path}`)
 
     const isRepo = await this.git.checkIsRepo()
     if (!isRepo) {
       debug(`Local git repository does not exist. Cloning from '${this.url}' to '${this.path}'`)
       await this.git.clone(this.repoPathAuth, this.path)
-    } else if (!env.DISABLE_SYNC) {
+    } else {
       console.log('Repo already exists. Checking out correct branch.')
       // Git fetch ensures that local git repository is synced with remote repository
       await this.git.fetch()
       await this.git.checkout(this.branch)
     }
-    if (env.isDev) await decrypt() // do it now because pull usually fails because of dirty state of git
     try {
       await this.pull()
       await decrypt()
@@ -198,7 +200,7 @@ export default async function cloneRepo(
   const remotePathAuth = getRemotePathAuth(remotePath, protocol, user, password)
   const repo = new Repo(localPath, remotePath, user, email, remotePathAuth, branch)
   await repo.clone()
-  await repo.addConfig()
+  if (!env.DISABLE_SYNC) await repo.addConfig()
   return repo
 }
 
