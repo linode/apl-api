@@ -47,6 +47,7 @@ Service:
         - $ref: '#/IngressPublic'
       x-externalDocsPath: docs/console/services/#configuring-exposure-ingress
     networkPolicy:
+      title: Network policies
       $ref: '#/networkPolicy'
   required:
     - name
