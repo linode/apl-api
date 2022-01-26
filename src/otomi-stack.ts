@@ -155,7 +155,7 @@ export default class OtomiStack {
       dataToSave.password = generatePassword(16, false)
     }
 
-    return this.db.createItem('teams', data, { id }, id) as Team
+    return this.db.createItem('teams', dataToSave, { id }, id) as Team
   }
 
   editTeam(id: string, data: Team): Team {
