@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.92](https://github.com/redkubes/otomi-api/compare/v0.4.91...v0.4.92) (2022-01-26)
+
+
+### Bug Fixes
+
+* package lock issue ([c86bddf](https://github.com/redkubes/otomi-api/commit/c86bddf45233ff440177873b52e70e440ad1a82a))
+
 ### [0.4.91](https://github.com/redkubes/otomi-api/compare/v0.4.90...v0.4.91) (2022-01-26)
 
 
