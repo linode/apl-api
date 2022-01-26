@@ -31,7 +31,7 @@
     "morgan": "^1.10.0",
     "openapi-client-axios": "^3.13.1",
     "password-generator": "^2.3.2",
-    "shelljs": "^0.8.4",
+    "shelljs": "^0.8.5",
     "simple-git": "^2.37.0",
     "swagger-client": "^3.13.2",
     "swagger-ui-express": "^4.1.6",
@@ -154,5 +154,5 @@
       "tag": true
     }
   },
-  "version": "0.4.90"
+  "version": "0.4.92"
 }
