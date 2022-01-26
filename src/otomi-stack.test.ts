@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // import './test-init'
 import { expect } from 'chai'
+import sinon from 'sinon'
 import OtomiStack from './otomi-stack'
 
 describe('Data validation', () => {
@@ -40,6 +41,19 @@ describe('Data validation', () => {
     otomiStack.createService('A', svc)
     const svc1 = { id: 'x1', name: 'svc', ingress: { domain: 'a.com', subdomain: 'c' } }
     expect(() => otomiStack.checkPublicUrlInUse(svc1)).to.not.throw
+    done()
+  })
+  it('should create password when password is not specified', (done) => {
+    const stub = sinon.stub(otomiStack.db, 'createItem')
+    otomiStack.createTeam({ name: 'test' })
+    expect(stub.getCall(0).args[1].password).to.not.be.empty
+    done()
+  })
+  it('should not create password when password is specified', (done) => {
+    const stub = sinon.stub(otomiStack.db, 'createItem')
+    const myPassword = 'someAwesomePassword'
+    otomiStack.createTeam({ name: 'test', password: myPassword })
+    expect(stub.getCall(0).args[1].password).to.equal(myPassword)
     done()
   })
 })
