@@ -125,6 +125,7 @@
     "src/openapi/*": "npm run build:models"
   },
   "scripts": {
+    "bootstrap:values": "bin/bootstrap-values.sh",
     "build": "tsc && copyup --error src/generated-schema.json dist/",
     "build:models": "npm run build:spec && openapi-typescript src/generated-schema.json -o src/generated-schema.ts",
     "build:spec": "ts-node-dev src/build-spec.ts",

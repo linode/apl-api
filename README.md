@@ -26,7 +26,10 @@ The @redkubes Github packages repository is a proxy for all NPM packages. Curren
 - otomi-tasks
 
 4. `npm install`
-
+5. Bootstap values
+```
+npm run bootstrap:values
+```
 ### 1.3 Running services in docker-compose
 
 ```
