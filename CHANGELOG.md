@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.91](https://github.com/redkubes/otomi-api/compare/v0.4.90...v0.4.91) (2022-01-26)
+
+
+### Others
+
+* **deps:** bump shelljs from 0.8.4 to 0.8.5 ([#227](https://github.com/redkubes/otomi-api/issues/227)) ([acc4625](https://github.com/redkubes/otomi-api/commit/acc46253de76fb904a06fc7efa23958c1a870fbf))
+
 ### [0.4.90](https://github.com/redkubes/otomi-api/compare/v0.4.89...v0.4.90) (2022-01-02)
 
 
