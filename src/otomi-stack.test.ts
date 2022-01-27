@@ -43,13 +43,13 @@ describe('Data validation', () => {
     expect(() => otomiStack.checkPublicUrlInUse(svc1)).to.not.throw
     done()
   })
-  it('should create password when password is not specified', (done) => {
+  it('should create a password when password is not specified', (done) => {
     const stub = sinon.stub(otomiStack.db, 'createItem')
     otomiStack.createTeam({ name: 'test' })
     expect(stub.getCall(0).args[1].password).to.not.be.empty
     done()
   })
-  it('should not create password when password is specified', (done) => {
+  it('should not create a password when password is specified', (done) => {
     const stub = sinon.stub(otomiStack.db, 'createItem')
     const myPassword = 'someAwesomePassword'
     otomiStack.createTeam({ name: 'test', password: myPassword })
