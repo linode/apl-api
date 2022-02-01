@@ -148,7 +148,14 @@ export default class OtomiStack {
 
   createTeam(data: Team): Team {
     const id = data.name
-    return this.db.createItem('teams', data, { id }, id) as Team
+    const dataToSave = data
+
+    if (isEmpty(data.password)) {
+      debug(`creating password for team '${dataToSave.name}'`)
+      dataToSave.password = generatePassword(16, false)
+    }
+
+    return this.db.createItem('teams', dataToSave, { id }, id) as Team
   }
 
   editTeam(id: string, data: Team): Team {
@@ -490,10 +497,6 @@ export default class OtomiStack {
       this.saveTeamJobs(team.id!)
       this.saveTeamServices(team.id!)
       this.saveTeamSecrets(team.id!)
-      if (isEmpty(team.password)) {
-        debug(`creating password for team '${team.id}'`)
-        team.password = generatePassword(16, false)
-      } else debug(`already found a password for team '${team.id}'`)
 
       team.resourceQuota = arrayToObject(team.resourceQuota ?? [])
 
