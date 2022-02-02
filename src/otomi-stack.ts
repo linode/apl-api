@@ -687,6 +687,7 @@ export default class OtomiStack {
         core: env.CORE_VERSION,
         api: process.env.npm_package_version,
       },
+      isMultitenant: get(this.getSetting('otomi'), 'isMultitenant', true) as Session['isMultitenant'],
     }
     return data
   }

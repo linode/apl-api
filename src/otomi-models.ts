@@ -118,4 +118,5 @@ export interface Core {
     services: any[]
     teams: Team[]
   }
+  isMultitenant: boolean
 }
