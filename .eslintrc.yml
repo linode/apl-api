@@ -55,7 +55,7 @@ rules:
   eol-last: ['error', 'always']
   no-shadow: warn
   no-unused-vars: warn
-  prefer-destructuring: error
+  prefer-destructuring: warn
   no-use-before-define: 'off'
   no-console: 'off'
   object-shorthand: error

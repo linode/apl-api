@@ -1,13 +1,15 @@
 /* eslint-disable class-methods-use-this */
 import * as k8s from '@kubernetes/client-node'
-import { readFileSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import yaml from 'js-yaml'
-import { cloneDeep, merge, filter, get, omit, set, unset, union, isEmpty } from 'lodash'
+import { cloneDeep, merge, filter, get, omit, set, unset, union, isEmpty, each } from 'lodash'
 import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
+import { components } from './generated-schema'
 import Db from './db'
 import {
+  App,
   Cluster,
   Core,
   Dns,
@@ -127,6 +129,21 @@ export default class OtomiStack {
     const ret = this.db.db.set('settings', merge(settings, data)).write()
     this.db.dirty = true
     return ret
+  }
+
+  getApp(teamId: string, id: string): App {
+    // @ts-ignore
+    return this.db.getItem('apps', { teamId, id })
+  }
+
+  getApps(teamId): Array<App> {
+    // @ts-ignore
+    return this.db.getCollection('apps', { teamId })
+  }
+
+  editApp(teamId, id, data: App): App {
+    // @ts-ignore
+    return this.db.updateItem('apps', data, { teamId, id })
   }
 
   getTeams(): Array<Team> {
@@ -337,11 +354,12 @@ export default class OtomiStack {
     return this.db.getCollection('secrets', { teamId }) as Array<Secret>
   }
 
-  loadValues(skipAdmin = false): void {
+  loadValues(): void {
     this.loadCluster()
     this.loadPolicies()
     this.loadSettings()
-    this.loadTeams(skipAdmin)
+    this.loadTeams()
+    this.loadApps()
     this.db.setDirtyActive()
   }
 
@@ -422,23 +440,69 @@ export default class OtomiStack {
     })
   }
 
-  loadTeams(skipAdmin = false): void {
-    const mergedData: Core = this.loadConfig('./env/teams.yaml', `./env/secrets.teams.yaml${decryptedFilePostfix()}`)
+  loadTeams(): void {
+    const mergedData: Core = this.loadConfig('env/teams.yaml', `env/secrets.teams.yaml${decryptedFilePostfix()}`)
 
     Object.values(mergedData?.teamConfig?.teams || {}).forEach((team: Team) => {
       this.loadTeam(team)
-      if (!skipAdmin) this.loadCoreServices()
       this.loadTeamJobs(team.id!)
       this.loadTeamServices(team.id!)
       this.loadTeamSecrets(team.id!)
     })
   }
 
-  loadCoreServices(): void {
-    const { services } = this.coreValues
-    services.forEach((svc) => {
-      this.loadService(svc, 'admin')
+  loadApps(): void {
+    // @ts-ignore
+    const apps = components.schemas.AppList.items.enum as any
+    apps.forEach((appId) => {
+      const path = `env/charts/${appId}.yaml`
+      if (!this.repo.fileExists(path)) return // might not exist initially
+      const secretsPath = `env/charts/secrets.${appId}.yaml${decryptedFilePostfix()}`
+      const content = this.loadConfig(path, secretsPath)
+      const values = content.charts[appId] || {}
+      let rawValues = {}
+      // eslint-disable-next-line no-underscore-dangle
+      if (values._rawValues) {
+        // eslint-disable-next-line no-underscore-dangle
+        rawValues = values._rawValues
+        // eslint-disable-next-line no-underscore-dangle
+        delete values._rawValues
+      }
+      let enabled
+      if (values.enabled !== undefined) {
+        enabled = values.enabled
+        delete values.enabled
+      }
+      const teamId = 'admin'
+      this.db.populateItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId }, appId)
+      // give the same apps to teams if isShared or in team apps list
+      if (
+        this.coreValues.apps.find((a) => a.name === appId).isShared ||
+        this.coreValues.teamConfig.apps.find((a) => a.name === appId)
+      )
+        this.getTeams().forEach((t) => {
+          this.db.populateItem('apps', { enabled, teamId: t.id }, { teamId: t.id, id: appId }, appId)
+        })
     })
+    // now also load the shortcuts that teams created and were stored in apps.* files
+    this.getTeams()
+      .map((t) => t.id)
+      .concat(['admin'])
+      .forEach((teamId) => {
+        const teamAppsFile = `env/apps/apps.${teamId}.yaml`
+        if (!this.repo.fileExists(teamAppsFile)) return
+        const content = this.repo.readFile(teamAppsFile)
+        const {
+          teamConfig: {
+            teams: {
+              [`${teamId}`]: { apps },
+            },
+          },
+        } = content
+        each(apps, ({ shortcuts }, appId) => {
+          this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
+        })
+      })
   }
 
   loadTeamServices(teamId: string): void {
@@ -460,6 +524,27 @@ export default class OtomiStack {
 
   savePolicies(): void {
     this.repo.writeFile('./env/policies.yaml', { policies: this.getSetting('policies') })
+  }
+
+  saveTeamApps(teamId): void {
+    const apps = {}
+    this.getApps(teamId).forEach((app) => {
+      const { id, shortcuts } = app
+      if (!shortcuts?.length) return
+      apps[id as string] = {
+        shortcuts: shortcuts && shortcuts.length ? shortcuts : undefined,
+      }
+      const content = {
+        teamConfig: {
+          teams: {
+            [teamId]: {
+              apps,
+            },
+          },
+        },
+      }
+      this.repo.writeFile(`./env/apps/apps.${teamId}.yaml`, content)
+    })
   }
 
   saveSettings(): void {
@@ -487,20 +572,22 @@ export default class OtomiStack {
     const teams = this.getTeams()
     teams.forEach((inTeam) => {
       const team: any = omit(inTeam, 'name')
-      this.saveTeamJobs(team.id!)
-      this.saveTeamServices(team.id!)
-      this.saveTeamSecrets(team.id!)
+      const teamId = team.id!
+      this.saveTeamApps(teamId)
+      this.saveTeamJobs(teamId)
+      this.saveTeamServices(teamId)
+      this.saveTeamSecrets(teamId)
       if (isEmpty(team.password)) {
-        debug(`creating password for team '${team.id}'`)
+        debug(`creating password for team '${teamId}'`)
         team.password = generatePassword(16, false)
-      } else debug(`already found a password for team '${team.id}'`)
+      } else debug(`already found a password for team '${teamId}'`)
 
       team.resourceQuota = arrayToObject(team.resourceQuota ?? [])
 
       secretPropertyPaths.forEach((propertyPath) => {
-        secretPaths.push(`teamConfig.teams.${team.id}.${propertyPath}`)
+        secretPaths.push(`teamConfig.teams.${teamId}.${propertyPath}`)
       })
-      teamValues[team.id!] = team
+      teamValues[teamId] = team
     })
     const values = set({}, 'teamConfig.teams', teamValues)
     this.saveConfig(filePath, secretFilePath, values, secretPaths)
@@ -663,11 +750,12 @@ export default class OtomiStack {
   }
 
   saveValues(): void {
-    // TODO: saveApps()
     this.saveCluster()
     this.savePolicies()
     this.saveSettings()
     this.saveTeams()
+    // also save admin apps
+    this.saveTeamApps('admin')
   }
 
   getSession(user: User): Session {

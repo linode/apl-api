@@ -2,28 +2,30 @@ import { Request } from 'express'
 import { JSONSchema4 } from 'json-schema'
 import { components } from './generated-schema'
 
+export type Apps = components['schemas']['Apps']
+export type App = components['schemas']['App']
 export type Cluster = components['schemas']['Cluster']
 export type Deployment = components['schemas']['Deployment']
-export type Dns = components['schemas']['Settings']['dns']
+export type Dns = Settings['dns']
 export type Job = components['schemas']['Job']
 export type Kubecfg = components['schemas']['Kubecfg']
-export type Policies = components['schemas']['Settings']['policies']
+export type Policies = Settings['policies']
 export type Secret = components['schemas']['Secret'] & { teamId?: string }
 export type Service = components['schemas']['Service']
 export type Session = components['schemas']['Session']
 export type Settings = components['schemas']['Settings']
 export type Setting =
-  | components['schemas']['Settings']['alerts']
-  | components['schemas']['Settings']['azure']
-  | components['schemas']['Settings']['cluster']
+  | Settings['alerts']
+  | Settings['azure']
+  | Settings['cluster']
   | components['schemas']['Session']['cluster']
-  | components['schemas']['Settings']['dns']
-  | components['schemas']['Settings']['home']
-  | components['schemas']['Settings']['kms']
-  | components['schemas']['Settings']['oidc']
-  | components['schemas']['Settings']['otomi']
-  | components['schemas']['Settings']['policies']
-  | components['schemas']['Settings']['smtp']
+  | Settings['dns']
+  | Settings['home']
+  | Settings['kms']
+  | Settings['oidc']
+  | Settings['otomi']
+  | Settings['policies']
+  | Settings['smtp']
 export type Team = components['schemas']['Team']
 export type TeamSelfService = components['schemas']['Team']['selfService']
 export type User = components['schemas']['User']
@@ -111,11 +113,10 @@ export interface OpenApiRequestExt extends OpenApiRequest, Session {
 }
 
 export interface Core {
-  apps: any
   k8s: any
-  services: any[]
+  apps: any[]
   teamConfig: {
-    services: any[]
+    apps: any[]
     teams: Team[]
   }
 }

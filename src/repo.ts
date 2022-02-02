@@ -89,14 +89,19 @@ export class Repo {
   writeFile(relativePath, data): void {
     const absolutePath = path.join(this.path, relativePath)
     const cleanedData = removeBlankAttributes(data)
-    if (isEmpty(cleanedData) && existsSync(absolutePath) && absolutePath.includes('/secrets.')) {
-      debug(`Removing file: ${absolutePath}`)
-      // Remove empty secret file due to https://github.com/mozilla/sops/issues/926 issue
-      unlinkSync(absolutePath)
+    if (isEmpty(cleanedData)) {
+      if (existsSync(absolutePath) && absolutePath.includes('/secrets.')) {
+        debug(`Removing file: ${absolutePath}`)
+        // Remove empty secret file due to https://github.com/mozilla/sops/issues/926 issue
+        unlinkSync(absolutePath)
+      }
       if (decryptedFilePostfix() !== '') {
         const absolutePathEncFile = absolutePath.replace(decryptedFilePostfixRegex, '')
         // also remove the encrypted file as they are operated on in pairs
-        if (existsSync(absolutePathEncFile)) unlinkSync(absolutePathEncFile)
+        if (existsSync(absolutePathEncFile)) {
+          debug(`Removing file: ${absolutePath}`)
+          unlinkSync(absolutePathEncFile)
+        }
       }
       return
     }

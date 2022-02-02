@@ -1,0 +1,64 @@
+AppGatekeeper:
+  additionalProperties: false
+  x-externalDocsPath: https://open-policy-agent.github.io/gatekeeper/website/docs/
+  x-short: Policy Controller for Kubernetes
+  description: Every organization has policies. Some are essential to meet governance and legal requirements. Others help ensure adherence to best practices and institutional conventions. Attempting to ensure compliance manually would be error-prone and frustrating. Automating policy enforcement ensures consistency, lowers development latency through immediate feedback, and helps with agility by allowing developers to operate independently without sacrificing compliance.
+  title: Gatekeeper
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      default: false
+      type: boolean
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/console/apps/gatekeeper
+      additionalProperties: false
+      type: object
+      properties:
+        auditInterval:
+          type: integer
+          default: 60
+        auditFromCache:
+          type: boolean
+          default: false
+        constraintViolationsLimit:
+          type: integer
+          default: 20
+        dataSync:
+          type: array
+          items:
+            type: object
+        disableValidatingWebhook:
+          type: boolean
+          default: true
+        excludedNamespaces:
+          type: array
+          items:
+            type: string
+        emitAuditEvents:
+          type: boolean
+          default: false
+        emitAdmissionEvents:
+          type: boolean
+          default: false
+        logLevel:
+          type: string
+          default: 'INFO'
+          enum:
+            - TRACE
+            - DEBUG
+            - INFO
+            - WARN
+            - ERROR
+        replicas:
+          type: integer
+          x-default: 1

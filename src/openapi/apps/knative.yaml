@@ -1,0 +1,34 @@
+AppKnative:
+  additionalProperties: false
+  x-externalDocsPath: https://knative.dev/docs/
+  x-short: Enterprise-grade Serverless on your own terms.
+  description: Kubernetes-based platform to deploy and manage modern serverless workloads.
+  title: Knative
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      default: false
+      type: boolean
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/console/apps/knative
+      additionalProperties: false
+      type: object
+      properties:
+        serving:
+          type: object
+          properties:
+            replicas:
+              description: For HA mode set to 5. Read more at https://github.com/knative/operator/issues/376
+              default: 1
+              type: integer
+              minimum: 1

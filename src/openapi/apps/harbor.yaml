@@ -1,0 +1,163 @@
+AppHarbor:
+  additionalProperties: false
+  x-externalDocsPath: https://goharbor.io
+  x-short: Our mission is to be the trusted cloud native repository for Kubernetes
+  description: Harbor is an open source registry that secures artifacts with policies and role-based access control, ensures images are scanned and free from vulnerabilities, and signs images as trusted. Harbor, a CNCF Graduated project, delivers compliance, performance, and interoperability to help you consistently and securely manage artifacts across cloud native compute platforms like Kubernetes and Docker.
+  title: Harbor
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      default: false
+      type: boolean
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/console/apps/harbor
+      additionalProperties: false
+      type: object
+      properties:
+        adminPassword:
+          $ref: ../definitions.yaml#/adminPassword
+        core:
+          properties:
+            secret:
+              type: string
+              x-secret: 'randAlphaNum 16'
+            xsrfKey:
+              type: string
+              x-secret: 'randAlphaNum 32'
+        enabled:
+          type: boolean
+          default: true
+        jobservice:
+          properties:
+            secret:
+              type: string
+              x-secret: 'randAlphaNum 16'
+        persistence:
+          additionalProperties: false
+          properties:
+            imageChartStorage:
+              additionalProperties: false
+              description: For reference go to https://github.com/distribution/distribution/blob/main/docs/configuration.md#storage
+              properties:
+                aws:
+                  additionalProperties: false
+                  properties:
+                    accesskey:
+                      $ref: ../definitions.yaml#/awsAccessKey
+                    secretkey:
+                      $ref: ../definitions.yaml#/awsSecretKey
+                    region:
+                      $ref: ../definitions.yaml#/awsRegion
+                    regionendpoint:
+                      type: string
+                    bucket:
+                      type: string
+                    encrypt:
+                      type: boolean
+                    keyid:
+                      type: string
+                    secure:
+                      type: boolean
+                    v4auth:
+                      type: boolean
+                    chunksize:
+                      type: integer
+                    multipartcopychunksize:
+                      type: integer
+                    multipartcopymaxconcurrency:
+                      type: integer
+                    multipartcopythresholdsize:
+                      type: integer
+                    rootdirectory:
+                      type: string
+                azure:
+                  additionalProperties: false
+                  properties:
+                    accountname:
+                      type: string
+                    accountkey:
+                      type: string
+                      x-secret: ''
+                    container:
+                      type: string
+                    realm:
+                      type: string
+                gcs:
+                  additionalProperties: false
+                  properties:
+                    bucket:
+                      type: string
+                    encodedkey:
+                      type: string
+                      x-secret: ''
+                    rootdirectory:
+                      type: string
+                type:
+                  type: string
+        registry:
+          properties:
+            secret:
+              type: string
+              x-secret: 'randAlpha 16'
+            credentials:
+              properties:
+                htpasswd:
+                  type: string
+                  x-secret: 'htpasswd .dot.username .dot.password'
+                username:
+                  $ref: ../definitions.yaml#/otomiAdminUsername
+                password:
+                  type: string
+                  x-secret: 'randAlphaNum 32'
+          required:
+            - secret
+            - credentials
+        secretKey:
+          type: string
+          x-secret: 'randAlpha 16'
+        resources:
+          additionalProperties: false
+          properties:
+            adapter:
+              allOf: [$ref: ../definitions.yaml#/resources]
+              title: Adapter
+            chartmuseum:
+              allOf: [$ref: ../definitions.yaml#/resources]
+              title: Chart Museum
+            clair:
+              allOf: [$ref: ../definitions.yaml#/resources]
+              title: Clair
+            controller:
+              $ref: ../definitions.yaml#/resources
+              title: Controller
+            core:
+              allOf: [$ref: ../definitions.yaml#/resources]
+              title: Core
+            database:
+              allOf: [$ref: ../definitions.yaml#/resources]
+              title: Database
+            jobservice:
+              allOf: [$ref: ../definitions.yaml#/resources]
+              title: Job service
+            portal:
+              allOf: [$ref: ../definitions.yaml#/resources]
+              title: Portal
+            redis:
+              allOf: [$ref: ../definitions.yaml#/resources]
+              title: Redis
+            registry:
+              allOf: [$ref: ../definitions.yaml#/resources]
+              title: Registry
+            registry-controller:
+              allOf: [$ref: ../definitions.yaml#/resources]
+              title: Registry controller

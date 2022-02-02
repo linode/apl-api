@@ -1,0 +1,71 @@
+# appList: &appList
+#   - $ref: apps/cert-manager.yaml#/AppCertManager
+#   - $ref: apps/loki.yaml#/AppLoki
+
+AppList:
+  type: array
+  uniqueItems: true
+  items:
+    type: string
+    enum:
+      - alertmanager
+      - cert-manager
+      - drone
+      - external-dns
+      - gatekeeper
+      - gitea
+      - grafana
+      - harbor
+      - httpbin
+      - ingress-nginx
+      - istio
+      - jaeger
+      - keycloak
+      - kiali
+      - knative
+      - kubeapps
+      - loki
+      - prometheus
+      - vault
+
+# AppBase:
+#   x-acl:
+#     admin: [read-any, update-any]
+#     team: [read, update]
+#   type: object
+#   properties:
+#     id:
+#       $ref: definitions.yaml#/idName
+#     rawValues:
+#       $ref: definitions.yaml#/rawValues
+#     shortcuts:
+#       description: Resource URL that lands the user in a place of interest within an app.
+#       type: array
+#       nullable: true
+#       items:
+#         $ref: definitions.yaml#/shortcut
+
+App:
+  x-acl:
+    admin: [read-any, update-any]
+    team: [read, update]
+  type: object
+  properties:
+    enabled:
+      type: boolean
+    id:
+      $ref: definitions.yaml#/idName
+    rawValues:
+      $ref: definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: definitions.yaml#/shortcut
+    values:
+      nullable: true
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
+      type: object

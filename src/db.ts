@@ -5,10 +5,11 @@ import findIndex from 'lodash/findIndex'
 import { v4 as uuidv4 } from 'uuid'
 import cloneDeep from 'lodash/cloneDeep'
 import { AlreadyExists, NotExistError } from './error'
-import { Cluster, Job, Secret, Service, Settings, Team } from './otomi-models'
+import { App, Cluster, Job, Secret, Service, Settings, Team } from './otomi-models'
 
-export type DbType = Cluster | Job | Secret | Service | Team | Settings
+export type DbType = Cluster | Job | Secret | Service | Team | Settings | App
 export type Schema = {
+  apps: App[]
   jobs: Job[]
   secrets: Secret[]
   services: Service[]
@@ -34,6 +35,7 @@ export default class Db {
     // Set some defaults (required if your JSON file is empty)
     this.db
       .defaults({
+        apps: [],
         jobs: [],
         secrets: [],
         services: [],
@@ -92,7 +94,7 @@ export default class Db {
       throw new AlreadyExists(`Item already exists in '${type}' collection: ${JSON.stringify(selector)}`)
     const ret = this.populateItem(type, data, selector, id)
     this.dirty = this.dirtyActive
-    return ret as DbType
+    return ret
   }
 
   deleteItem(type: string, selector: any): void {
@@ -102,12 +104,13 @@ export default class Db {
     this.dirty = this.dirtyActive
   }
 
-  updateItem(type: string, data: any, selector: any): DbType {
-    this.getItemReference(type, selector)
+  updateItem(type: string, data: any, selector: any, merge = false): DbType {
+    const prev = this.getItemReference(type, selector)
     const col = this.db.get(type)
     // @ts-ignore
     const idx = col.findIndex(selector).value()
-    const iData = { ...data, ...selector }
+    const mergeData = merge ? prev : {}
+    const iData = { ...mergeData, ...data, ...selector }
     col.value().splice(idx, 1, iData)
     this.dirty = this.dirtyActive
     return iData

@@ -109,6 +109,7 @@ Settings:
               - name
               - provider
         globalPullSecret:
+          nullable: true
           title: Global pullsecret
           description: Will be connected to each "default" service account in all otomi app namespaces.
             Handy for authenticating with DockerHub to avoid rate limiting.

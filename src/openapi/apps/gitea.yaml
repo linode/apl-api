@@ -1,0 +1,34 @@
+AppGitea:
+  additionalProperties: false
+  x-externalDocsPath: https://gitea.io/en-us/
+  x-short: A painless self-hosted Git service.
+  description: Gitea is a community managed lightweight code hosting solution written in Go. It is published under the MIT license.
+  title: Gitea
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      default: true
+      type: boolean
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/console/apps/gitea
+      additionalProperties: false
+      type: object
+      properties:
+        adminPassword:
+          $ref: ../definitions.yaml#/adminPassword
+        postgresqlPassword:
+          type: string
+          description: Once set and deployed it cannot be changed with manual intervention.
+          x-secret: 'randAlphaNum 20'
+      required:
+        - postgresqlPassword

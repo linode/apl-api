@@ -1,0 +1,84 @@
+AppIngressNginx:
+  additionalProperties: false
+  x-externalDocsPath: https://kubernetes.github.io/ingress-nginx/
+  x-short: NGINX Ingress Controller
+  description: Ingress-NGINX is an Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer.
+  title: Ingress-NGINX
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/console/apps/ingress-nginx
+      additionalProperties: false
+      type: object
+      properties:
+        loadBalancerIP:
+          type: string
+        loadBalancerRG:
+          type: string
+        maxBodySize:
+          type: string
+          default: 1024m
+        maxBodySizeBytes:
+          type: integer
+          minimum: 0
+          default: 1073741824
+          description: Needed for modsecurity. Should correspond to maxBodySize, but expressed in bytes.
+        autoscaling:
+          allOf: [$ref: ../definitions.yaml#/autoscaling]
+          type: object
+          title: Autoscaling
+        modsecurity:
+          title: MOD Security
+          description: Enables MOD Security functionality.
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            block:
+              description: Makes nginx block requests that are marked as violating the modsec rules.
+              type: boolean
+              default: true
+            owasp:
+              description: Turns on the default OWASP rule set for modsec. See https://owasp.org/www-project-modsecurity-core-rule-set/.
+              type: boolean
+              default: true
+          type: object
+        service:
+          type: object
+          properties:
+            annotations:
+              $ref: ../definitions.yaml#/annotations
+        resources:
+          $ref: ../definitions.yaml#/resources
+        private:
+          description: Private loadbalancer configuration.
+          properties:
+            enabled:
+              title: Enable private loadbalancer
+              description: Enable to start an extra loadbalancer for private network traffic.
+              type: boolean
+              default: false
+            autoscaling:
+              $ref: ../definitions.yaml#/autoscaling
+            loadBalancerIP:
+              type: string
+            loadBalancerRG:
+              type: string
+            resources:
+              $ref: ../definitions.yaml#/resources
+            service:
+              properties:
+                annotations:
+                  $ref: ../definitions.yaml#/annotations
+          title: Private loadbalancer
+          type: object

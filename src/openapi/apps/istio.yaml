@@ -1,0 +1,92 @@
+AppIstio:
+  additionalProperties: false
+  x-externalDocsPath: https://istio.io
+  x-short: Simplify observability, traffic management, security, and policy with the leading service mesh.
+  description: Istio extends Kubernetes to establish a programmable, application-aware network using the powerful Envoy service proxy. Working with both Kubernetes and traditional workloads, Istio brings standard, universal traffic management, telemetry, and security to complex deployments.
+  title: Istio
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      default: true
+      type: boolean
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/console/apps/istio
+      additionalProperties: false
+      type: object
+      properties:
+        autoscaling:
+          additionalProperties: false
+          properties:
+            egressgateway:
+              $ref: ../definitions.yaml#/scaling
+            gateway-local:
+              $ref: ../definitions.yaml#/scaling
+            ingressgateway:
+              $ref: ../definitions.yaml#/scaling
+            ingressgateway-auth:
+              $ref: ../definitions.yaml#/scaling
+            pilot:
+              $ref: ../definitions.yaml#/scaling
+        egressGateway:
+          additionalProperties: false
+          properties:
+            enabled:
+              default: false
+              type: boolean
+        global:
+          additionalProperties: false
+          properties:
+            logging:
+              properties:
+                level:
+                  type: string
+            mtls:
+              additionalProperties: false
+              properties:
+                enabled:
+                  type: boolean
+            proxy:
+              additionalProperties: false
+              properties:
+                resources:
+                  $ref: ../definitions.yaml#/resources
+            sds:
+              additionalProperties: false
+              properties:
+                enabled:
+                  type: boolean
+        meshConfig:
+          properties:
+            defaultConfig:
+              type: object
+              properties:
+                outboundTrafficPolicy:
+                  type: string
+                  enum:
+                    - ALLOW_ANY
+                    - REGISTRY_ONLY
+                  default: ALLOW_ANY
+          required:
+            - defaultConfig
+        resources:
+          properties:
+            egressgateway:
+              $ref: ../definitions.yaml#/resources
+            gateway-local:
+              $ref: ../definitions.yaml#/resources
+            ingressgateway:
+              $ref: ../definitions.yaml#/resources
+            ingressgateway-auth:
+              $ref: ../definitions.yaml#/resources
+            pilot:
+              $ref: ../definitions.yaml#/resources

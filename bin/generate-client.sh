@@ -40,7 +40,7 @@ generate_client() {
     npm run build:spec
 
     docker run --rm -v $PWD:/local -w /local -u "$(id -u $USER)" \
-    openapitools/openapi-generator-cli:v5.1.0 generate \
+    openapitools/openapi-generator-cli:v5.2.1 generate \
     -i /local/$openapi_doc \
     -o /local/$target_dir \
     -g typescript-node \

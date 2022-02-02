@@ -1,0 +1,21 @@
+AppKiali:
+  additionalProperties: false
+  x-externalDocsPath: https://kiali.io
+  x-short: The Console for Istio Service Mesh.
+  description: Manage, visualize, validate and troubleshoot your mesh!
+  title: Kiali
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      default: false
+      type: boolean
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut

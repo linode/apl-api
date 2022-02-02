@@ -1,0 +1,46 @@
+AppPrometheus:
+  additionalProperties: false
+  x-externalDocsPath: https://prometheus.io
+  x-short: From metrics to insight
+  description: Power your metrics and alerting with the leading open-source monitoring solution.
+  title: Prometheus
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/console/apps/prometheus
+      additionalProperties: false
+      type: object
+      properties:
+        grafana:
+          additionalProperties: false
+          properties:
+            adminPassword:
+              $ref: ../definitions.yaml#/adminPassword
+        prometheus:
+          additionalProperties: false
+          properties:
+            retention:
+              $ref: ../definitions.yaml#/duration
+            retentionSize:
+              type: string
+              description: 'The maximum number of bytes of storage blocks to retain. The oldest data will be removed first. Defaults to 0 or disabled. Units supported: B, KB, MB, GB, TB, PB, EB'
+              default: 4GB
+              pattern: '^([0-9]+\.)?[0-9]+(B|KB|MB|GB|TB|PB|EB)?$'
+            storageSize:
+              $ref: ../definitions.yaml#/size
+              default: 5Gi
+        resources:
+          additionalProperties: false
+          properties:
+            grafana:
+              $ref: ../definitions.yaml#/resources

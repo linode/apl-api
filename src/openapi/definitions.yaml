@@ -1,3 +1,8 @@
+adminPassword:
+  type: string
+  title: Admin password
+  description: Uses `otomi.adminPassword` when left empty.
+  x-secret: ''
 alerts:
   additionalProperties: false
   properties:
@@ -17,6 +22,7 @@ alerts:
         enum:
           - slack
           - msteams
+          - opsgenie
           - email
         type: string
       title: Notification receivers
@@ -58,6 +64,54 @@ alerts:
         - lowPrio
       title: Microsoft Teams
       type: object
+    opsgenie:
+      title: OpsGenie
+      description: Configure OpsGenie endpoints for alerts. Criticals will get level P1, and non-crits P2.
+      additionalProperties: false
+      properties:
+        apiKey:
+          description: The api key to use for authn.
+          title: Api key
+          type: string
+          x-secret: ''
+        url:
+          $ref: '#/url'
+          description: An opsgenie URL without the '?apiKey' part.
+        responders:
+          type: array
+          items:
+            allOf:
+              - properties:
+                  type:
+                    type: string
+                    enum:
+                      - team
+                      - user
+                      - escalation
+                      - schedule
+                    default: team
+                required: [type]
+              - title: Responder
+                oneOf:
+                  - title: ID
+                    required: [id]
+                    properties:
+                      id:
+                        $ref: '#/idName'
+                  - title: Name
+                    required: [name]
+                    properties:
+                      name:
+                        $ref: '#/idName'
+                  - title: Username
+                    required: [username]
+                    properties:
+                      username:
+                        $ref: '#/idName'
+      required:
+        - apiKey
+        - url
+      type: object
     email:
       title: Email
       description: Configure email endpoints for alerts.
@@ -80,6 +134,7 @@ alerts:
       enum:
         - slack
         - msteams
+        - opsgenie
       title: Drone notifications
       type: string
 annotation:
@@ -96,6 +151,18 @@ annotations:
       value:
         type: string
         maxLength: 32767
+autoscaling:
+  additionalProperties: false
+  properties:
+    enabled:
+      default: true
+      type: boolean
+    maxReplicas:
+      type: integer
+      default: 10
+    minReplicas:
+      type: integer
+      default: 2
 awsAccessKey:
   title: AWS access key
   description: An AWS access key ID.
@@ -328,24 +395,25 @@ dns:
           required:
             - google
           type: object
-  x-rules:
-    - conditions:
-        - provider:
-            has: azure.useManagedIdentityExtension
-        - provider.azure.useManagedIdentityExtension:
-            eq: true
-      event:
-        type: remove
-        params:
-          field:
-            - provider.azure.aadClientId
-            - provider.azure.aadClientSecret
 
 domain:
   pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
+  x-message: a valid fully qualified domain name (FQDN)
+  type: string
+droneGit:
+  properties:
+    clientID:
+      $ref: '#/wordCharacterPattern'
+    clientSecretValue:
+      type: string
+      x-secret: ''
+duration:
+  description: 'Prometheus duration (See: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#configuration-file)'
+  pattern: '((([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?|0)'
   type: string
 email:
   pattern: ^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$
+  x-message: a valid email address
   type: string
 env:
   title: Environment variables
@@ -357,6 +425,7 @@ env:
       name:
         type: string
         pattern: ^[a-zA-Z0-9_]*$
+        x-message: a valid environment variable name that consists of letters and underscores
       value:
         type: string
         maxLength: 131072
@@ -374,6 +443,7 @@ files:
       path:
         type: string
         pattern: ^\/([A-z0-9-_+]+\/).*$
+        x-message: a valid file name
       content:
         type: string
         maxLength: 131072
@@ -392,15 +462,18 @@ googleProject:
 hostPort:
   pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):()([1-9]|[1-5]?[0-9]{2,4}|6[1-4][0-9]{3}|65[1-4][0-9]{2}|655[1-2][0-9]|6553[1-5])$
   type: string
+  x-message: a valid host port
 idName:
   pattern: ^[a-z]([-a-z0-9]*[a-z0-9])+$
   type: string
+  x-message: a valid name that consists of lowercase letters and dashes
 image:
   allOf:
     - properties:
         repository:
           description: A container image repository.
           pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
+          x-message: a valid container registry repository
           type: string
       required:
         - repository
@@ -414,6 +487,7 @@ imageSimple:
       x-default: stable
       pattern: '[\w][\w.-]{0,127}'
       type: string
+      x-message: a valid container registry image tag
     pullPolicy:
       default: IfNotPresent
       enum:
@@ -687,11 +761,24 @@ labelsAnnotations:
       name:
         type: string
         pattern: ^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]){1,253}\/)?([a-z0-9A-Z]+[a-z0-9A-Z-_.]+[a-z0-9A-Z]){1,63}$
+        description: A k8s annotation (see https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/)
+        x-message: a valid annotation
       values:
         type: string
         pattern: ^((.){1,253}\/)?(.){1,63}$
+        description: A k8s annotation value
+        x-message: a valid annotation value
     type: object
   type: array
+logLevel:
+  type: string
+  default: info
+  enum:
+    - error
+    - warn
+    - info
+    - debug
+    - trace
 memoryQuantity:
   title: Memory quantity
   description: Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki.
@@ -754,13 +841,14 @@ portNumber:
 rawValues:
   description: "May define value overrides for a chart. WARNING: these values currently have no schema and can't be validated as such, and may break deployment. You are on your own here."
   type: object
-registry:
-  pattern: ^[a-z0-9]+(?:[._-][a-z0-9]+)*$
-  type: string
+  x-acl:
+    admin: [read-any, update-any]
+    team: []
 repoUrl:
   description: Path to a remote git repo without protocol. Will use https to access.
   pattern: ^(.+@)*([\w\d\.]+)(:[\d]+){0,1}/*(.*)$
   type: string
+  x-message: a valid git repo URL
 resource:
   properties:
     cpu:
@@ -821,10 +909,12 @@ runAsGroup:
 scaling:
   description: Min and max number of replicas.
   properties:
-    maxReplicas:
-      type: integer
     minReplicas:
       type: integer
+      title: Minimum nr of replicas
+    maxReplicas:
+      type: integer
+      title: Maximum nr of replicas
   type: object
 script:
   description: May specify a non-empty string containing an executable script.
@@ -858,8 +948,31 @@ secretMounts:
       path:
         $ref: '#/path'
     type: object
-subdomainType:
-  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+otomiAdminUsername:
+  type: string
+  x-secret: '"admin"'
+s3Url:
+  type: string
+  description: An url to an AWS S3 bucket
+shortcut:
+  additionalProperties: false
+  properties:
+    title:
+      type: string
+      description: Title for the shortcut
+    description:
+      type: string
+      description: A short decription about the target of this shortcut.
+    path:
+      $ref: '#/path'
+  required:
+    - title
+    - description
+    - path
+  type: object
+size:
+  description: Disk size. Valid units are E|P|T|G|Ti|Gi.
+  pattern: '^([0-9]+\.)?[0-9]+(E|P|T|G||Ti|Gi)?$'
   type: string
 svcPredeployed:
   description: Will map onto a predeployed k8s service.
@@ -891,3 +1004,7 @@ volumes:
         type: string
     type: object
   type: array
+wordCharacterPattern:
+  type: string
+  pattern: ^[^\s]+$
+  x-error: At least one non whitespace character

@@ -2,6 +2,7 @@ import cleanDeep, { CleanOptions } from 'clean-deep'
 import { existsSync } from 'fs'
 import cloneDeep from 'lodash/cloneDeep'
 import Debug from 'debug'
+import { each } from 'lodash'
 import { Cluster, Dns } from './otomi-models'
 import { cleanEnv, GIT_LOCAL_PATH } from './validators'
 
@@ -32,6 +33,41 @@ export function objectToArray(
     return tmp
   })
   return arr
+}
+
+export const flattenObject = (obj: Record<string, any>, path = ''): { [key: string]: string } => {
+  return Object.entries(obj)
+    .flatMap(([key, value]) => {
+      const subPath = path.length ? `${path}.${key}` : key
+      if (typeof value === 'object' && !Array.isArray(value) && value !== null) return flattenObject(value, subPath)
+      return { [subPath]: value }
+    })
+    .reduce((acc, base) => {
+      return { ...acc, ...base }
+    }, {})
+}
+
+export const extract = (schema: Record<string, any>, leaf: string, mapValue = (val: any) => val): any => {
+  const schemaKeywords = ['properties', 'anyOf', 'allOf', 'oneOf', 'default', 'x-secret']
+  return Object.keys(schema)
+    .map((key) => {
+      const childObj = schema[key]
+      if (key === leaf) return schemaKeywords.includes(key) ? mapValue(childObj) : { [key]: mapValue(childObj) }
+      if (typeof childObj !== 'object') return {}
+      const obj = extract(childObj, leaf, mapValue)
+      if ('extractedValue' in obj) return { [key]: obj.extractedValue }
+      // eslint-disable-next-line no-nested-ternary
+      return schemaKeywords.includes(key) || !Object.keys(obj).length || !Number.isNaN(Number(key))
+        ? obj === '{}'
+          ? undefined
+          : obj
+        : { [key]: obj }
+    })
+    .reduce((accumulator, extractedValue) => {
+      return typeof extractedValue !== 'object'
+        ? { ...accumulator, extractedValue }
+        : { ...accumulator, ...extractedValue }
+    }, {})
 }
 
 export function getObjectPaths(tree: Record<string, unknown>): Array<string> {
@@ -157,3 +193,23 @@ export const argQuoteStrip = (s) => {
 export const decryptedFilePostfix = () => {
   return existsSync(`${env.GIT_LOCAL_PATH}/.sops.yaml`) ? '.dec' : ''
 }
+
+export const traverse = (o, func) => {
+  func(o)
+  Object.getOwnPropertyNames(o).forEach((i) => {
+    if (o[i] !== null && typeof o[i] === 'object') {
+      // going one step down in the object tree!!
+      traverse(o[i], func)
+    }
+  })
+}
+
+// export const nullify = (schema) =>
+//   traverse(schema, (o) => {
+//     if (o.nullable) {
+//       // eslint-disable-next-line no-param-reassign
+//       if (!o.type) o.type = 'object'
+//       // eslint-disable-next-line no-param-reassign
+//       if (typeof o.type === 'string') o.type = [o.type, 'null']
+//     }
+//   })
