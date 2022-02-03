@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.93](https://github.com/redkubes/otomi-api/compare/v0.4.92...v0.4.93) (2022-02-02)
+
+
+### Features
+
+* enhance network policy descriptions ([#234](https://github.com/redkubes/otomi-api/issues/234)) ([566cf0d](https://github.com/redkubes/otomi-api/commit/566cf0d02de4f4b5d5f1ed2244c53090daacfc6e))
+
+
+### Bug Fixes
+
+* **bug 226 github:** Move password creation functionality to team creation ([#229](https://github.com/redkubes/otomi-api/issues/229)) ([96d8176](https://github.com/redkubes/otomi-api/commit/96d8176961fdcda671476db614104b471b06fe51))
+
+### [0.4.92](https://github.com/redkubes/otomi-api/compare/v0.4.91...v0.4.92) (2022-01-26)
+
+
+### Bug Fixes
+
+* package lock issue ([c86bddf](https://github.com/redkubes/otomi-api/commit/c86bddf45233ff440177873b52e70e440ad1a82a))
+
+### [0.4.91](https://github.com/redkubes/otomi-api/compare/v0.4.90...v0.4.91) (2022-01-26)
+
+
+### Others
+
+* **deps:** bump shelljs from 0.8.4 to 0.8.5 ([#227](https://github.com/redkubes/otomi-api/issues/227)) ([acc4625](https://github.com/redkubes/otomi-api/commit/acc46253de76fb904a06fc7efa23958c1a870fbf))
+
 ### [0.4.90](https://github.com/redkubes/otomi-api/compare/v0.4.89...v0.4.90) (2022-01-02)
 
 

@@ -46,6 +46,9 @@ Service:
         - $ref: '#/IngressPrivate'
         - $ref: '#/IngressPublic'
       x-externalDocsPath: docs/console/services/#configuring-exposure-ingress
+    networkPolicy:
+      title: Network policies
+      $ref: '#/networkPolicy'
   required:
     - name
     - ingress
@@ -151,3 +154,47 @@ IngressPublic:
   description: Will only accept traffic coming from the public loadbalancer.
   title: Public
   type: object
+
+networkPolicy:
+  additionalProperties: false
+  properties:
+    ingressPrivate:
+      title: Ingress traffic inside the cluster
+      description: 'Pods belonging to this service must contain "app: <service name>" label'
+      oneOf:
+        - title: Deny all
+          description: Deny traffic from all teams (including this one)
+          properties:
+            mode:
+              default: denyAll
+              enum:
+                - denyAll
+        - title: Allow selected
+          properties:
+            mode:
+              default: allowOnly
+              enum:
+                - allowOnly
+            allow:
+              title: Add team or team with service
+              type: array
+              items:
+                type: object
+                properties:
+                  team:
+                    title: Team name
+                    description: 'Allow traffic from a given team'
+                    type: string
+                  service:
+                    title: Service name
+                    description: 'Allow traffic from pods with "app: <some service name>" label'
+                    type: string
+                required:
+                  - team
+        - title: Allow all
+          description: Allow traffic from all teams
+          properties:
+            mode:
+              default: allowAll
+              enum:
+                - allowAll

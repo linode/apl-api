@@ -165,6 +165,13 @@ export default class OtomiStack {
 
   createTeam(data: Team): Team {
     const id = data.name
+
+    if (isEmpty(data.password)) {
+      debug(`creating password for team '${data.name}'`)
+      // eslint-disable-next-line no-param-reassign
+      data.password = generatePassword(16, false)
+    }
+
     return this.db.createItem('teams', data, { id }, id) as Team
   }
 
@@ -577,13 +584,7 @@ export default class OtomiStack {
       this.saveTeamJobs(teamId)
       this.saveTeamServices(teamId)
       this.saveTeamSecrets(teamId)
-      if (isEmpty(team.password)) {
-        debug(`creating password for team '${teamId}'`)
-        team.password = generatePassword(16, false)
-      } else debug(`already found a password for team '${teamId}'`)
-
       team.resourceQuota = arrayToObject(team.resourceQuota ?? [])
-
       secretPropertyPaths.forEach((propertyPath) => {
         secretPaths.push(`teamConfig.teams.${teamId}.${propertyPath}`)
       })
@@ -772,6 +773,7 @@ export default class OtomiStack {
         core: env.CORE_VERSION,
         api: process.env.npm_package_version,
       },
+      isMultitenant: get(this.getSetting('otomi'), 'isMultitenant', true) as Session['isMultitenant'],
     }
     return data
   }
