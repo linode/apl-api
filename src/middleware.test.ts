@@ -1,5 +1,4 @@
 import { expect } from 'chai'
-import sinon from 'sinon'
 import { getUser } from './middleware'
 import { JWT } from './otomi-models'
 import OtomiStack from './otomi-stack'

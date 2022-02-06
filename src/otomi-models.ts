@@ -100,10 +100,8 @@ export type AclAction =
   | 'update'
   | 'update-any'
 
-// eslint-disable-next-line no-shadow
 export enum SessionRole {
   Admin = 'admin',
-  // eslint-disable-next-line no-shadow
   User = 'team',
 }
 

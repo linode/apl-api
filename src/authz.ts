@@ -1,17 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Ability, subject } from '@casl/ability'
 import { set, has, get, isEmpty, forIn, omit, each } from 'lodash'
-import {
-  Acl,
-  AclAction,
-  OpenAPIDoc,
-  Schema,
-  User,
-  TeamAuthz,
-  PermissionSchema,
-  TeamSelfService,
-  UserAuthz,
-} from './otomi-models'
+import { Acl, AclAction, OpenAPIDoc, Schema, User, TeamAuthz, PermissionSchema, UserAuthz } from './otomi-models'
 
 import OtomiStack from './otomi-stack'
 import { extract, flattenObject } from './utils'

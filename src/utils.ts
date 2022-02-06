@@ -1,12 +1,8 @@
 import cleanDeep, { CleanOptions } from 'clean-deep'
 import { existsSync } from 'fs'
 import cloneDeep from 'lodash/cloneDeep'
-import Debug from 'debug'
-import { each } from 'lodash'
 import { Cluster, Dns } from './otomi-models'
 import { cleanEnv, GIT_LOCAL_PATH } from './validators'
-
-const debug = Debug('otomi:utils')
 
 const env = cleanEnv({
   GIT_LOCAL_PATH,

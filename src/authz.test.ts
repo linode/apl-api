@@ -140,17 +140,14 @@ describe('Schema collection wise permissions', () => {
 
   it('A team can doSomething', () => {
     const authz = new Authz(spec).init(sessionTeam)
-    const user = {
-      authz: { teamA: { deniedAttributes: { Team: ['a', 'b'] } } },
-    } as unknown as User
-
+    sessionTeam.authz = { teamA: { deniedAttributes: { Team: ['a', 'b'] } } }
     authz.hasSelfService('teamA', 'Team', 'doSomething')
+    sessionTeam.authz = {}
   })
   it('A team can not doSomething', () => {
     const authz = new Authz(spec).init(sessionTeam)
-    const user = {
-      authz: { teamA: { deniedAttributes: { Team: ['a', 'b', 'doSomething'] } } },
-    } as unknown as User
+    sessionTeam.authz = { teamA: { deniedAttributes: { Team: ['a', 'b', 'doSomething'] } } }
     authz.hasSelfService('teamA', 'Team', 'doSomething')
+    sessionTeam.authz = {}
   })
 })
