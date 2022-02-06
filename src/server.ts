@@ -10,20 +10,14 @@ import logger from 'morgan'
 import swaggerUi from 'swagger-ui-express'
 import { errorMiddleware, jwtMiddleware, isUserAuthenticated, authzMiddleware } from './middleware'
 import Authz from './authz'
-import { OpenAPIDoc } from './otomi-models'
-import OtomiStack from './otomi-stack'
-
-export async function loadOpenApisSpec(): Promise<OpenAPIDoc> {
-  const openApiPath = path.resolve(__dirname, 'generated-schema.json')
-  console.info(`Loading api spec from: ${openApiPath}`)
-  const schema = await parse(openApiPath)
-  return schema as OpenAPIDoc
-}
+import { OpenAPIDoc, OtomiSpec } from './otomi-models'
+import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
 
 export default async function initApp(otomiStack: OtomiStack): Promise<express.Express> {
   const app = express()
   const apiRoutesPath = path.resolve(__dirname, 'api')
   const spec: OpenAPIDoc = await loadOpenApisSpec()
+  otomiStack.setSpec(spec as unknown as OtomiSpec)
   const authz = new Authz(spec)
 
   app.use(logger('dev'))

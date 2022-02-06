@@ -3,10 +3,9 @@ import get from 'lodash/get'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
 import { omit } from 'lodash'
-import { resolveTxt } from 'dns'
 import { HttpError, OtomiError } from './error'
 import { OpenApiRequest, JWT, OpenApiRequestExt, User, PermissionSchema, TeamSelfService } from './otomi-models'
-import Authz, { filterWithAbac, getTeamSelfServiceAuthz, validateWithAbac } from './authz'
+import Authz, { getTeamSelfServiceAuthz } from './authz'
 import { cleanEnv, NO_AUTHZ } from './validators'
 import OtomiStack from './otomi-stack'
 
@@ -101,7 +100,7 @@ export function jwtMiddleware(otomi: OtomiStack): RequestHandler {
   }
 }
 
-const wrap = (filter, orig) => {
+const wrapResponse = (filter, orig) => {
   return function (obj, ...rest) {
     if (arguments.length === 1) {
       if (badCode(this.statusCode)) {
@@ -139,24 +138,27 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): Requ
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
   const schemaName = schema.split('/').pop() || null
 
-  // If there is no RBAC then we also skip ABAC
+  // If there is no RBAC then we bail
   if (!schemaName) return next()
 
+  // init rules for the user
+  authz.init(user)
+
   if (action === 'read' && schemaName === 'Kubecfg')
-    valid = valid && authz.hasSelfService(user, teamId, 'Team', 'downloadKubeConfig')
-  else valid = authz.initResourceBasedAccessControl(user).validateWithRbac(action, schemaName, user, teamId, req.body)
+    valid = valid && authz.hasSelfService(teamId, 'Team', 'downloadKubeConfig')
+  else valid = authz.validateWithRbac(action, schemaName, teamId, req.body)
   if (!valid)
     return res
       .status(403)
       .send({ authz: false, message: `User not allowed to perform ${action} on ${schemaName} resource` })
 
-  const violatedAttributes = validateWithAbac(action, schemaName, user, teamId, authz, req.body)
+  const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body)
 
   // A users sends valid form, but abac is used to remove fields that are not allowed to be set
   req.body = omit(req.body, violatedAttributes)
 
   // filter response based on abac
-  res.json = wrap((obj) => filterWithAbac(schemaName, user, authz, teamId, obj), res.json.bind(res))
+  res.json = wrapResponse((obj) => authz.filterWithAbac(schemaName, teamId, obj), res.json.bind(res))
 
   return next()
 }
@@ -167,7 +169,7 @@ export function authzMiddleware(authz: Authz, otomi: OtomiStack): RequestHandler
     if (!req.user) return next()
     req.user.authz = getTeamSelfServiceAuthz(
       req.user.teams,
-      (req.apiDoc.components.schemas.TeamSelfService as TeamSelfService) as PermissionSchema,
+      req.apiDoc.components.schemas.TeamSelfService as TeamSelfService as PermissionSchema,
       otomi,
     )
     return authorize(req, res, next, authz)

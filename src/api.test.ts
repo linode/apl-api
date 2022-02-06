@@ -1,8 +1,8 @@
 import { expect } from 'chai'
 import OpenAPISchemaValidator from 'openapi-schema-validator'
-import { loadOpenApisSpec } from './server'
 import { isValidAuthzSpec } from './authz'
 import { OpenAPIDoc } from './otomi-models'
+import { loadOpenApisSpec } from './otomi-stack'
 
 describe('Api spec validation', () => {
   it('should indicate that api spec is valid', async () => {

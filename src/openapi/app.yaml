@@ -1,32 +1,28 @@
-# appList: &appList
-#   - $ref: apps/cert-manager.yaml#/AppCertManager
-#   - $ref: apps/loki.yaml#/AppLoki
-
 AppList:
-  type: array
-  uniqueItems: true
-  items:
-    type: string
-    enum:
-      - alertmanager
-      - cert-manager
-      - drone
-      - external-dns
-      - gatekeeper
-      - gitea
-      - grafana
-      - harbor
-      - httpbin
-      - ingress-nginx
-      - istio
-      - jaeger
-      - keycloak
-      - kiali
-      - knative
-      - kubeapps
-      - loki
-      - prometheus
-      - vault
+  type: string
+  # uniqueItems: true
+  # items:
+  #   type: string
+  enum:
+    - alertmanager
+    - cert-manager
+    - drone
+    - external-dns
+    - gatekeeper
+    - gitea
+    - grafana
+    - harbor
+    - httpbin
+    - ingress-nginx
+    - istio
+    - jaeger
+    - keycloak
+    - kiali
+    - knative
+    - kubeapps
+    - loki
+    - prometheus
+    - vault
 
 # AppBase:
 #   x-acl:

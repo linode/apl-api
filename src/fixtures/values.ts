@@ -1,4 +1,57 @@
 export default {
+  apps: [
+    {
+      id: 'gatekeeper',
+      teamId: 'admin',
+      enabled: false,
+      values: {},
+      rawValues: {},
+    },
+    {
+      id: 'keycloak',
+      teamId: 'admin',
+      enabled: true,
+      values: {
+        bla: 'dida',
+      },
+      rawValues: {},
+      shortcuts: [
+        {
+          title: 'o',
+          description: 'ki',
+          path: '/doki',
+        },
+      ],
+    },
+    {
+      id: 'loki',
+      teamId: 'admin',
+      enabled: true,
+      values: {
+        oki: 'doki',
+      },
+      rawValues: {
+        somesing: 'raw',
+      },
+    },
+    {
+      id: 'loki',
+      teamId: 'otomi',
+      enabled: true,
+      shortcuts: [
+        {
+          title: 'bla',
+          description: 'di',
+          path: '/bla',
+        },
+      ],
+    },
+    {
+      enabled: true,
+      id: 'loki',
+      teamId: 'dev',
+    },
+  ],
   jobs: [
     {
       type: 'Job',

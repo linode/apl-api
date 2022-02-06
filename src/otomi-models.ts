@@ -1,9 +1,9 @@
 import { Request } from 'express'
 import { JSONSchema4 } from 'json-schema'
-import { components } from './generated-schema'
+import { components, operations, paths, external } from './generated-schema'
 
-export type Apps = components['schemas']['Apps']
 export type App = components['schemas']['App']
+export type AppList = components['schemas']['AppList']
 export type Cluster = components['schemas']['Cluster']
 export type Deployment = components['schemas']['Deployment']
 export type Dns = Settings['dns']
@@ -62,6 +62,14 @@ export interface OpenAPIDoc {
   }
   security?: string[]
 }
+
+export interface OtomiSpec {
+  components: components
+  paths: paths
+  operations: operations
+  external: external
+}
+
 export type SchemaType = 'object' | 'array'
 
 export interface PermissionSchema {

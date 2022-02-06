@@ -92,7 +92,7 @@ export default class Db {
     // @ts-ignore
     if (selector && this.db.get(type).find(selector).value())
       throw new AlreadyExists(`Item already exists in '${type}' collection: ${JSON.stringify(selector)}`)
-    const ret = this.populateItem(type, data, selector, id)
+    const ret = this.populateItem(type, data, selector, id) as DbType
     this.dirty = this.dirtyActive
     return ret
   }

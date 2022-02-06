@@ -1,12 +1,13 @@
 /* eslint-disable class-methods-use-this */
 import * as k8s from '@kubernetes/client-node'
-import { existsSync, readFileSync } from 'fs'
+import { readFileSync } from 'fs'
 import yaml from 'js-yaml'
 import { cloneDeep, merge, filter, get, omit, set, unset, union, isEmpty, each } from 'lodash'
 import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
-import { components } from './generated-schema'
+import path from 'path'
+import { parse } from '@apidevtools/json-schema-ref-parser'
 import Db from './db'
 import {
   App,
@@ -14,6 +15,7 @@ import {
   Core,
   Dns,
   Job,
+  OpenAPIDoc,
   Policies,
   Secret,
   Service,
@@ -23,7 +25,9 @@ import {
   Team,
   TeamSelfService,
   User,
+  OtomiSpec,
 } from './otomi-models'
+
 import { HttpError, PublicUrlExists, ValidationError } from './error'
 import {
   argQuoteJoin,
@@ -75,10 +79,18 @@ const env = cleanEnv({
   DISABLE_SYNC,
 })
 
+export const loadOpenApisSpec = async (): Promise<OpenAPIDoc> => {
+  const openApiPath = path.resolve(__dirname, 'generated-schema.json')
+  console.info(`Loading api spec from: ${openApiPath}`)
+  return (await parse(openApiPath)) as OpenAPIDoc
+}
+
 export default class OtomiStack {
   private coreValues: Core
 
   db: Db
+
+  spec: OtomiSpec
 
   repo: Repo
 
@@ -114,6 +126,10 @@ export default class OtomiStack {
     }
 
     this.loadValues()
+  }
+
+  setSpec(spec): void {
+    this.spec = spec
   }
 
   getSetting(key: string): Setting {
@@ -459,8 +475,7 @@ export default class OtomiStack {
   }
 
   loadApps(): void {
-    // @ts-ignore
-    const apps = components.schemas.AppList.items.enum as any
+    const apps = (this.spec as any).components.schemas.AppList.enum
     apps.forEach((appId) => {
       const path = `env/charts/${appId}.yaml`
       if (!this.repo.fileExists(path)) return // might not exist initially

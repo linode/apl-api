@@ -1,8 +1,13 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// import './test-init'
+import './test-init'
+import { merge } from 'lodash'
 import { expect } from 'chai'
 import sinon from 'sinon'
-import OtomiStack from './otomi-stack'
+import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
+import expectedDbState from './fixtures/values'
+import secretSettings from './fixtures/secret-settings'
+import { Repo } from './repo'
+import { OtomiSpec } from './otomi-models'
+import { getObjectPaths } from './utils'
 
 describe('Data validation', () => {
   let otomiStack: OtomiStack
@@ -55,5 +60,36 @@ describe('Data validation', () => {
     otomiStack.createTeam({ name: 'test', password: myPassword })
     expect(stub.getCall(0).args[1].password).to.equal(myPassword)
     done()
+  })
+})
+
+describe('Work with values', () => {
+  let otomiStack: OtomiStack
+  beforeEach(() => {
+    otomiStack = new OtomiStack()
+    otomiStack.repo = new Repo('./test', undefined, undefined, undefined, undefined, undefined)
+  })
+
+  it('can load from configuration to database', async () => {
+    const spec = (await loadOpenApisSpec()) as unknown as OtomiSpec
+    otomiStack.setSpec(spec as unknown as OtomiSpec)
+    otomiStack.loadValues()
+    const dbState = otomiStack.db.db.getState()
+    expectedDbState.settings = merge(expectedDbState.settings, secretSettings)
+    expect(dbState).to.deep.equal(expectedDbState)
+  })
+  it('can save database state to configuration files', () => {
+    const results = {}
+    function writeFileStub(path, data): void {
+      results[path] = data
+    }
+    otomiStack.db.db.setState(expectedDbState)
+    otomiStack.secretPaths = getObjectPaths(secretSettings)
+    otomiStack.repo.writeFile = writeFileStub
+    otomiStack.saveValues()
+    Object.entries(results).forEach(([path, data]) => {
+      const expectedData = otomiStack.repo.readFile(path)
+      expect(data, path).to.have.any.keys(expectedData)
+    })
   })
 })

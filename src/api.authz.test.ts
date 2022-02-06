@@ -1,6 +1,8 @@
 import request from 'supertest'
 import sinon from 'sinon'
 import { Express } from 'express'
+import { assert } from 'chai'
+import { isEqual } from 'lodash'
 import initApp from './server'
 import OtomiStack from './otomi-stack'
 import getToken from './fixtures/jwt'
@@ -9,27 +11,25 @@ import { AlreadyExists } from './error'
 const adminToken: string = getToken(['team-admin'])
 const teamToken: string = getToken(['team-team1'])
 
-describe('Admin API tests', () => {
+describe('API authz tests', () => {
   let app
+  let otomiStack
   before(async () => {
-    const otomiStack = new OtomiStack()
+    otomiStack = new OtomiStack()
     otomiStack.createTeam({ name: 'team1' })
     sinon.stub(otomiStack)
     app = await initApp(otomiStack)
   })
 
   describe('Admin /settings/{setting} endpoint tests', () => {
-    const endpoints = ['alerts', 'azure', 'dns', 'kms', 'home', 'oidc', 'otomi', 'policies', 'smtp']
-    endpoints.forEach((ep) => {
-      it(`admin can get /settings/${ep}`, (done) => {
-        request(app)
-          .get(`/v1/settings/${ep}`)
-          .set('Accept', 'application/json')
-          .set('Authorization', `Bearer ${adminToken}`)
-          .expect(200)
-          .expect('Content-Type', /json/)
-          .end(done)
-      })
+    it(`admin can get /settings/alerts`, (done) => {
+      request(app)
+        .get(`/v1/settings/alerts`)
+        .set('Accept', 'application/json')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .end(done)
     })
 
     it('admin can put /settings/alerts with correct payload', (done) => {
@@ -146,6 +146,20 @@ describe('Admin API tests', () => {
       .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
+  })
+  it('admin can see values from an app', (done) => {
+    const values = { shown: true }
+    otomiStack.getApp.callsFake(() => ({ values }))
+    request(app)
+      .get('/v1/apps/admin/loki')
+      .set('Accept', 'application/json')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200)
+      .then((response) => {
+        assert(isEqual(response.body.values, values), 'values property is not filtered')
+        done()
+      })
+      .catch((err) => done(err))
   })
 
   it('team cannot get all teams', (done) => {
@@ -289,6 +303,19 @@ describe('Admin API tests', () => {
       .expect(403)
       .end(done)
   })
+  it('team can not see values from an app', (done) => {
+    otomiStack.getApp.callsFake(() => ({ values: { hidden: true } }))
+    request(app)
+      .get('/v1/apps/team1/loki')
+      .set('Accept', 'application/json')
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect(200)
+      .then((response) => {
+        assert(response.body.values === undefined, 'values property is filtered')
+        done()
+      })
+      .catch((err) => done(err))
+  })
 
   it('authenticated user should get api spec', (done) => {
     request(app)
@@ -352,33 +379,6 @@ describe('Admin API tests', () => {
   })
   it('anonymous user cannot add a new service', (done) => {
     request(app).post('/v1/teams/team1/services').set('Accept', 'application/json').expect(401).end(done)
-  })
-})
-
-describe('Api tests for data validation', () => {
-  let app
-  before(async () => {
-    const otomiStack = new OtomiStack()
-    sinon.stub(otomiStack)
-    app = await initApp(otomiStack)
-  })
-  it('invalid team name data', (done) => {
-    request(app)
-      .post('/v1/teams')
-      .send({ name: 'test_1', password: 'pass' })
-      .set('Authorization', `Bearer ${adminToken}`)
-      .set('Accept', 'application/json')
-      .expect(400)
-      .end(done)
-  })
-  it('invalid slackUrl  data', (done) => {
-    request(app)
-      .post('/v1/teams')
-      .send({ name: 'test_1', password: 'pass', slackUrl: 'aaa.lll' })
-      .set('Authorization', `Bearer ${adminToken}`)
-      .set('Accept', 'application/json')
-      .expect(400)
-      .end(done)
   })
 })
 

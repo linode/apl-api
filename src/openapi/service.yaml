@@ -166,15 +166,15 @@ networkPolicy:
           description: Deny traffic from all teams (including this one)
           properties:
             mode:
-              default: denyAll
+              default: DenyAll
               enum:
-                - denyAll
+                - DenyAll
         - title: Allow selected
           properties:
             mode:
-              default: allowOnly
+              default: AllowOnly
               enum:
-                - allowOnly
+                - AllowOnly
             allow:
               title: Add team or team with service
               type: array
@@ -195,6 +195,6 @@ networkPolicy:
           description: Allow traffic from all teams
           properties:
             mode:
-              default: allowAll
+              default: AllowAll
               enum:
-                - allowAll
+                - AllowAll

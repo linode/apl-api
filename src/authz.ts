@@ -42,6 +42,13 @@ function validatePermissions(acl: Acl, allowedPermissions: string[], path: strin
   return err
 }
 
+export const getAclProps = (schema) =>
+  Object.keys(flattenObject(extract(schema, 'x-acl', () => true))).reduce((memo: string[], item) => {
+    const trimmed = item.replace('.x-acl', '').replace('x-acl', '')
+    if (trimmed !== '') memo.push(trimmed)
+    return memo
+  }, [])
+
 export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
   const err: string[] = []
 
@@ -107,12 +114,11 @@ export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
 
 export const getAclHolder = (schema: Schema): Schema | undefined => {
   if (schema['x-acl']) return schema
-  // we support composition of schemas througout, so we expect also the following
+  // we support composition of schemas througout, so we may also expect the following
   return schema.allOf && schema.allOf.find((o) => !!o['x-acl'])
 }
 
 export const loadSpecRules = (apiDoc: OpenAPIDoc): any => {
-  // @ts-ignore
   const { schemas } = apiDoc.components
 
   Object.keys(schemas).forEach((schemaName: string) => {
@@ -129,15 +135,13 @@ export const loadSpecRules = (apiDoc: OpenAPIDoc): any => {
         return action
       })
     })
-    // Object.keys(schema.properties || {}).forEach((propertyName: string) => {
-    //   const property = schema.properties![propertyName]
-    //   property['x-acl'] = { ...schemaAcl, ...property['x-acl'] }
-    // })
   })
   return schemas
 }
 
 export default class Authz {
+  user: User
+
   specRules: any[]
 
   rbac: Ability
@@ -146,18 +150,21 @@ export default class Authz {
     this.specRules = loadSpecRules(apiDoc)
   }
 
-  initResourceBasedAccessControl(user: User) {
+  init(user: User) {
+    this.user = user
     const canRules: any[] = []
-    const createRule = (schemaName, prop = '') => (action) => {
-      const subject = `${schemaName}${prop ? `.${prop}` : ''}`
-      if (action.endsWith('-any')) {
-        canRules.push({ action: action.slice(0, -4), subject })
-      } else {
-        user.teams.forEach((teamId) => {
-          canRules.push({ action, subject, conditions: { teamId: { $eq: teamId } } })
-        })
+    const createRule =
+      (schemaName, prop = '') =>
+      (action) => {
+        const subject = `${schemaName}${prop ? `.${prop}` : ''}`
+        if (action.endsWith('-any')) {
+          canRules.push({ action: action.slice(0, -4), subject })
+        } else {
+          user.teams.forEach((teamId) => {
+            canRules.push({ action, subject, conditions: { teamId: { $eq: teamId } } })
+          })
+        }
       }
-    }
     Object.keys(this.specRules).forEach((schemaName: string) => {
       const schema: Schema = this.specRules[schemaName]
       user.roles.forEach((role) => {
@@ -177,26 +184,65 @@ export default class Authz {
     return this
   }
 
-  validateWithRbac = (action: string, schemaName: string, user: User, teamId: string, data?: any): boolean => {
+  validateWithRbac = (action: string, schemaName: string, teamId: string, data?: any): boolean => {
     const sub = subject(schemaName, { ...(data || {}), teamId })
-    const rule = this.rbac.relevantRuleFor(action, schemaName)
-    const iCan = this.rbac.can(action, schemaName)
+    const iCan = this.rbac.can(action, sub)
     if (!iCan) {
       console.debug(`Authz: not authorized (RBAC): ${action} ${schemaName}/${teamId}`)
-      return false
     }
-
-    return true
+    return iCan
   }
 
-  hasSelfService = (user: User, teamId: string, schema, attribute: string) => {
-    const deniedAttributes = get(user.authz, `${teamId}.deniedAttributes.${schema}`, []) as Array<string>
+  validateWithAbac = (action: string, schemaName: string, teamId: string, body: any) => {
+    const violatedAttributes: Array<string> = []
+    if (this.user.roles.includes('admin')) return violatedAttributes
+    if (['create', 'update'].includes(action)) {
+      // check if we are denied any attributes by role
+      const deniedRoleAttributes = this.getAbacDenied(action, schemaName, teamId)
+      // also check if we are denied by lack of self service
+      const deniedSelfServiceAttributes = get(
+        this.user.authz,
+        `${teamId}.deniedAttributes.${schemaName}`,
+        [],
+      ) as Array<string>
+      // the two above denied lists should be mutually exclusive, because a schema design should not
+      // have have both self service as well as acl set for the same property, so we can merge the result
+      const deniedAttributes = [...deniedRoleAttributes, ...deniedSelfServiceAttributes]
+      deniedAttributes.forEach((path) => {
+        if (has(body, path)) violatedAttributes.push(path)
+      })
+    }
+    return violatedAttributes
+  }
+
+  getAbacDenied = (action: string, schemaName: string, teamId: string): string[] => {
+    const schema = this.specRules[schemaName]
+    const aclProps = getAclProps(schema)
+    const violatedAttributes: Array<string> = aclProps.filter(
+      (prop) => !this.validateWithRbac(action, `${schemaName}.${prop}`, teamId),
+    )
+    return violatedAttributes
+  }
+
+  filterWithAbac = (schemaName: string, teamId: string, body: any): any => {
+    if (typeof body !== 'object') return body
+    const deniedRoleAttributes = this.getAbacDenied('read', schemaName, teamId)
+    const ret = (body.length !== undefined ? body : [body]).map((obj) => omit(obj, deniedRoleAttributes))
+    return body.length !== undefined ? ret : ret[0]
+  }
+
+  hasSelfService = (teamId: string, schema, attribute: string) => {
+    const deniedAttributes = get(this.user.authz, `${teamId}.deniedAttributes.${schema}`, []) as Array<string>
     if (deniedAttributes.includes(attribute)) return false
     return true
   }
 }
 
-export function getTeamSelfServiceAuthz(teams: Array<string>, schema: PermissionSchema, otomi: OtomiStack): UserAuthz {
+export const getTeamSelfServiceAuthz = (
+  teams: Array<string>,
+  schema: PermissionSchema,
+  otomi: OtomiStack,
+): UserAuthz => {
   const permissionMap: UserAuthz = {}
 
   teams.forEach((teamId) => {
@@ -213,58 +259,4 @@ export function getTeamSelfServiceAuthz(teams: Array<string>, schema: Permission
     permissionMap[teamId] = authz
   })
   return permissionMap
-}
-
-export const getAclProps = (schema) =>
-  Object.keys(flattenObject(extract(schema, 'x-acl', () => true))).reduce((memo: string[], item) => {
-    const trimmed = item.replace('.x-acl', '').replace('x-acl', '')
-    if (trimmed !== '') memo.push(trimmed)
-    return memo
-  }, [])
-
-export const getAbacDenied = (
-  action: string,
-  schemaName: string,
-  user: User,
-  teamId: string,
-  authz: Authz,
-): string[] => {
-  const schema = authz.specRules[schemaName]
-  const aclProps = getAclProps(schema)
-  const violatedAttributes: Array<string> = aclProps.filter(
-    (prop) => !authz.validateWithRbac(action, `${schemaName}.${prop}`, user, teamId),
-  )
-  return violatedAttributes
-}
-
-export function validateWithAbac(
-  action: string,
-  schemaName: string,
-  user: User,
-  teamId: string,
-  authz: Authz,
-  body: any,
-) {
-  const violatedAttributes: Array<string> = []
-  if (user.roles.includes('admin')) return violatedAttributes
-  if (['create', 'update'].includes(action)) {
-    // check if we are denied any attributes by role
-    const deniedRoleAttributes = getAbacDenied(action, schemaName, user, teamId, authz)
-    // also check if we are denied by lack of self service
-    const deniedSelfServiceAttributes = get(user.authz, `${teamId}.deniedAttributes.${schemaName}`, []) as Array<string>
-    // the two above denied lists should be mutually exclusive, because a schema design should not
-    // have have both self service as well as acl set for the same property, so we can merge the result
-    const deniedAttributes = [...deniedRoleAttributes, ...deniedSelfServiceAttributes]
-    deniedAttributes.forEach((path) => {
-      if (has(body, path)) violatedAttributes.push(path)
-    })
-  }
-  return violatedAttributes
-}
-
-export const filterWithAbac = (schemaName: string, user: User, authz: Authz, teamId: string, body: any): any => {
-  if (typeof body !== 'object') return body
-  const deniedRoleAttributes = getAbacDenied('read', schemaName, user, teamId, authz)
-  const ret = (body.length !== undefined ? body : [body]).map((obj) => omit(obj, deniedRoleAttributes))
-  return body.length !== undefined ? ret : ret[0]
 }

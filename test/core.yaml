@@ -164,6 +164,7 @@ apps:
         svc: keycloak-http
         ownHost: true
         type: public
+        path: /realms/master
   - name: kiali
     enabled: false
     tags: [tracing, telemetry, observability]

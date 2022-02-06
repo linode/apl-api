@@ -56,6 +56,5 @@ User:
     - name
     - email
     - teams
-    - permissions
     - roles
   type: object
