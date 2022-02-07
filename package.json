@@ -15,7 +15,7 @@
     "@types/json-schema": "7.0.7",
     "aws-sdk": "2.902.0",
     "axios": "0.21.2",
-    "body-parser": "1.19.0",
+    "body-parser": "1.19.1",
     "clean-deep": "3.4.0",
     "cors": "2.8.5",
     "debug": "4.3.1",
