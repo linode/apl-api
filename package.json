@@ -73,7 +73,7 @@
     "eslint-plugin-prettier": "3.4.0",
     "git-branch-is": "4.0.0",
     "git-cz": "4.7.6",
-    "husky": "7.0.2",
+    "husky": "7.0.4",
     "jsonwebtoken": "8.5.1",
     "lint-staged": "10.5.4",
     "mocha": "7.2.0",
