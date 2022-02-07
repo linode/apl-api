@@ -56,11 +56,9 @@ App:
     shortcuts:
       description: Resource URL that lands the user in a place of interest within an app.
       type: array
-      nullable: true
       items:
         $ref: definitions.yaml#/shortcut
     values:
-      nullable: true
       x-acl:
         admin: [read-any, update-any]
         team: []

@@ -21,26 +21,17 @@ AppPrometheus:
       additionalProperties: false
       type: object
       properties:
-        grafana:
-          additionalProperties: false
-          properties:
-            adminPassword:
-              $ref: ../definitions.yaml#/adminPassword
-        prometheus:
-          additionalProperties: false
-          properties:
-            retention:
-              $ref: ../definitions.yaml#/duration
-            retentionSize:
-              type: string
-              description: 'The maximum number of bytes of storage blocks to retain. The oldest data will be removed first. Defaults to 0 or disabled. Units supported: B, KB, MB, GB, TB, PB, EB'
-              default: 4GB
-              pattern: '^([0-9]+\.)?[0-9]+(B|KB|MB|GB|TB|PB|EB)?$'
-            storageSize:
-              $ref: ../definitions.yaml#/size
-              default: 5Gi
+        retention:
+          $ref: ../definitions.yaml#/duration
+        retentionSize:
+          type: string
+          description: 'The maximum number of bytes of storage blocks to retain. The oldest data will be removed first. Defaults to 0 or disabled. Units supported: B, KB, MB, GB, TB, PB, EB'
+          default: 4GB
+          pattern: '^([0-9]+\.)?[0-9]+(B|KB|MB|GB|TB|PB|EB)?$'
+        storageSize:
+          $ref: ../definitions.yaml#/size
+          default: 5Gi
+        image:
+          $ref: ../definitions.yaml#/image
         resources:
-          additionalProperties: false
-          properties:
-            grafana:
-              $ref: ../definitions.yaml#/resources
+          $ref: ../definitions.yaml#/resources

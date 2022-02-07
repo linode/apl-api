@@ -480,6 +480,7 @@ image:
       type: object
     - $ref: '#/imageSimple'
   title: Container image
+  decription: Anything specified here overrides image specs from the release
   type: object
 imageSimple:
   properties:

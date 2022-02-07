@@ -19,3 +19,11 @@ AppAlertmanager:
       nullable: true
       items:
         $ref: ../definitions.yaml#/shortcut
+    values:
+      additionalProperties: false
+      type: object
+      properties:
+        image:
+          $ref: ../definitions.yaml#/image
+        resources:
+          $ref: ../definitions.yaml#/resources

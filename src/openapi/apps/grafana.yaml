@@ -19,3 +19,12 @@ AppGrafana:
       nullable: true
       items:
         $ref: ../definitions.yaml#/shortcut
+    values:
+      type: object
+      properties:
+        adminPassword:
+          $ref: ../definitions.yaml#/adminPassword
+        image:
+          $ref: ../definitions.yaml#/image
+        resources:
+          $ref: ../definitions.yaml#/resources
