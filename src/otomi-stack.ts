@@ -251,7 +251,6 @@ export default class OtomiStack {
 
   checkServiceNameInUse(teamId: string, serviceName: string): void {
     const services = this.db.getCollection('services')
-    console.log(JSON.stringify(services))
     const servicesFiltered = filter(services, (svc: any) => {
       if (svc.teamId === teamId) {
         return svc.name === serviceName
