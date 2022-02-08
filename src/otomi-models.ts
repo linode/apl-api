@@ -120,10 +120,6 @@ export interface OpenApiRequestExt extends OpenApiRequest, Session {
 
 export interface Core {
   k8s: any
-  apps: any[]
-  teamConfig: {
-    apps: any[]
-    teams: Team[]
-  }
-  isMultitenant: boolean
+  adminApps: any[]
+  teamApps: any[]
 }

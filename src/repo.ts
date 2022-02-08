@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from '
 import { isEmpty } from 'lodash'
 import Debug from 'debug'
 import { GitPullError } from './error'
-import { cleanEnv, DISABLE_PROCESSING, DISABLE_SYNC, TOOLS_HOST } from './validators'
+import { cleanEnv, DISABLE_SYNC, TOOLS_HOST } from './validators'
 import { decryptedFilePostfix, removeBlankAttributes } from './utils'
 
 const debug = Debug('otomi:repo')
@@ -14,28 +14,23 @@ const debug = Debug('otomi:repo')
 const decryptedFilePostfixRegex = new RegExp(`${decryptedFilePostfix()}$`)
 
 const env = cleanEnv({
-  DISABLE_PROCESSING,
   DISABLE_SYNC,
   TOOLS_HOST,
 })
 
 const baseUrl = `http://${env.TOOLS_HOST}:17771/`
-const decryptUrl = `${baseUrl}decrypt`
-const processUrl = `${baseUrl}encrypt`
+const prepareUrl = `${baseUrl}prepare`
+const initUrl = `${baseUrl}init`
 
-export async function decrypt(): Promise<AxiosResponse | void> {
-  if (env.DISABLE_PROCESSING) {
-    debug('Skipping processing')
-    return Promise.resolve()
-  }
-  debug('Requesting decrypt action')
-  const res = await axios.get(decryptUrl)
+async function initValues(): Promise<AxiosResponse | void> {
+  debug('Requesting values repo "init" action')
+  const res = await axios.get(initUrl)
   return res
 }
 
-export async function processValues(): Promise<AxiosResponse | void> {
-  debug('Requesting process action')
-  const res = await axios.get(processUrl)
+export async function prepareValues(): Promise<AxiosResponse | void> {
+  debug('Requesting values repo "prepare" action')
+  const res = await axios.get(prepareUrl)
   return res
 }
 
@@ -132,7 +127,7 @@ export class Repo {
   }
 
   async clone(): Promise<void> {
-    if (env.isDev && env.DISABLE_SYNC) await decrypt()
+    if (env.isDev && env.DISABLE_SYNC) await initValues()
     if (env.DISABLE_SYNC) return
 
     debug(`Checking if local git repository exists at: ${this.path}`)
@@ -149,7 +144,7 @@ export class Repo {
     }
     try {
       await this.pull()
-      await decrypt()
+      await initValues()
     } catch (e) {
       if (env.isDev) await this.git.clean(CleanOptions.FORCE)
       else throw e
@@ -177,7 +172,7 @@ export class Repo {
       console.warn(`Pull error: ${JSON.stringify(e)}`)
       await this.git.rebase(['--abort'])
       await this.git.reset(['--hard', sha])
-      await decrypt()
+      await initValues()
       debug(`Reset HEAD to ${sha} commit`)
 
       throw new GitPullError()

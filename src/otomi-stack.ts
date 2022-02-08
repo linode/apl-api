@@ -45,7 +45,7 @@ import {
   getTeamServicesJsonPath,
   objectToArray,
 } from './utils'
-import cloneRepo, { processValues, Repo } from './repo'
+import cloneRepo, { prepareValues, Repo } from './repo'
 import {
   cleanEnv,
   CUSTOM_ROOT_CA,
@@ -57,7 +57,6 @@ import {
   GIT_PASSWORD,
   GIT_EMAIL,
   DB_PATH,
-  DISABLE_PROCESSING,
   DISABLE_SYNC,
 } from './validators'
 
@@ -75,7 +74,6 @@ const env = cleanEnv({
   GIT_PASSWORD,
   GIT_EMAIL,
   DB_PATH,
-  DISABLE_PROCESSING,
   DISABLE_SYNC,
 })
 
@@ -124,7 +122,6 @@ export default class OtomiStack {
       debug(`Trying again in ${timeoutMs} ms`)
       await new Promise((resolve) => setTimeout(resolve, timeoutMs))
     }
-
     this.loadValues()
   }
 
@@ -283,10 +280,9 @@ export default class OtomiStack {
 
   async triggerDeployment(email: string): Promise<void> {
     debug('DISABLE_SYNC: ', env.DISABLE_SYNC)
-    debug('DISABLE_PROCESSING: ', env.DISABLE_PROCESSING)
     this.saveValues()
     try {
-      if (!env.DISABLE_PROCESSING) await processValues()
+      await prepareValues()
     } catch (e) {
       debug(e)
       if (e.response) {
@@ -477,11 +473,11 @@ export default class OtomiStack {
   loadApps(): void {
     const apps = (this.spec as any).components.schemas.AppList.enum
     apps.forEach((appId) => {
-      const path = `env/charts/${appId}.yaml`
+      const path = `env/apps/${appId}.yaml`
       if (!this.repo.fileExists(path)) return // might not exist initially
-      const secretsPath = `env/charts/secrets.${appId}.yaml${decryptedFilePostfix()}`
+      const secretsPath = `env/apps/secrets.${appId}.yaml${decryptedFilePostfix()}`
       const content = this.loadConfig(path, secretsPath)
-      const values = content.charts[appId] || {}
+      const values = (content?.apps && content.apps[appId]) || {}
       let rawValues = {}
       // eslint-disable-next-line no-underscore-dangle
       if (values._rawValues) {
@@ -499,8 +495,8 @@ export default class OtomiStack {
       this.db.populateItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId }, appId)
       // give the same apps to teams if isShared or in team apps list
       if (
-        this.coreValues.apps.find((a) => a.name === appId).isShared ||
-        this.coreValues.teamConfig.apps.find((a) => a.name === appId)
+        this.coreValues.adminApps.find((a) => a.name === appId).isShared ||
+        this.coreValues.teamApps.find((a) => a.name === appId)
       )
         this.getTeams().forEach((t) => {
           this.db.populateItem('apps', { enabled, teamId: t.id }, { teamId: t.id, id: appId }, appId)
@@ -511,7 +507,7 @@ export default class OtomiStack {
       .map((t) => t.id)
       .concat(['admin'])
       .forEach((teamId) => {
-        const teamAppsFile = `env/apps/apps.${teamId}.yaml`
+        const teamAppsFile = `env/teams/apps.${teamId}.yaml`
         if (!this.repo.fileExists(teamAppsFile)) return
         const content = this.repo.readFile(teamAppsFile)
         const {
@@ -565,7 +561,7 @@ export default class OtomiStack {
           },
         },
       }
-      this.repo.writeFile(`./env/apps/apps.${teamId}.yaml`, content)
+      this.repo.writeFile(`./env/teams/apps.${teamId}.yaml`, content)
     })
   }
 

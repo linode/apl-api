@@ -28,6 +28,7 @@ k8s:
       disableIstioInjection: true
     - name: knative-serving
       disablePolicyChecks: true
+      disableIstioInjection: true
     - name: kubeapps
       disableIstioInjection: true
       disablePolicyChecks: true
@@ -44,7 +45,7 @@ k8s:
     - name: team-admin
     - name: vault
 
-apps:
+adminApps:
   - name: alertmanager
     tags: [alerting, observability]
     deps: [prometheus]
@@ -78,7 +79,6 @@ apps:
   - name: external-dns
     tags: [ingress, security, tls]
   - name: gatekeeper
-    enabled: false
     tags: [security, policies, observability]
     deps: [prometheus]
   - name: gitea
@@ -103,7 +103,6 @@ apps:
         type: public
         auth: true
   - name: harbor
-    enabled: false
     tags: [security]
     deps: [istio]
     isShared: true
@@ -131,7 +130,6 @@ apps:
     tags: [demo]
     deps: []
   - name: httpbin
-    enabled: false
     tags: [dev, testing, debugging]
     isShared: true
     ingress:
@@ -146,7 +144,6 @@ apps:
     tags: [ingress, egress, routing, security, tls, observability, policies]
     deps: [grafana, prometheus]
   - name: jaeger
-    enabled: false
     tags: [ingress, telemetry, observability]
     deps: [istio]
     ingress:
@@ -164,9 +161,7 @@ apps:
         svc: keycloak-http
         ownHost: true
         type: public
-        path: /realms/master
   - name: kiali
-    enabled: false
     tags: [tracing, telemetry, observability]
     deps: [istio]
     ingress:
@@ -181,9 +176,8 @@ apps:
     deps: [istio]
     logo: knative_logo.png
   - name: kubeapps
-    enabled: false
     tags: [dev, apps]
-    deps: [olm]
+    deps: [operator-lifecycle-manager]
     isShared: true
     ingress:
       - svc: kubeapps
@@ -215,11 +209,7 @@ apps:
   #       hide: true
   #       type: public
   #       auth: true
-  - name: olm
-    hide: true
-    tags: [operators, lifecycle]
-    deps: []
-  - name: otomi
+  - name: otomi-api
     hide: true
     isShared: true
     ingress:
@@ -229,6 +219,10 @@ apps:
         paths: [/api/]
         type: public
         auth: true
+  - name: otomi-console
+    hide: true
+    isShared: true
+    ingress:
       - svc: otomi-console
         namespace: otomi
         ownHost: true
@@ -244,9 +238,8 @@ apps:
         type: public
         auth: true
   - name: vault
-    enabled: false
     tags: [secrets, security, observability]
-    deps: [istio]
+    deps: [kubernetes-external-secrets]
     isShared: true
     ingress:
       - namespace: vault
@@ -259,43 +252,35 @@ apps:
         type: public
         auth: true
 
-teamConfig:
-  apps:
-    - name: alertmanager
-      ingress:
-        - svc: po-alertmanager
-          hasPrefix: true
-          port: 9093
-          logo:
-            name: prometheus
-          type: public
-          auth: true
-    - name: grafana
-      ingress:
-        - svc: po-grafana
-          hasPrefix: true
-          removeRequestHeaders:
-            - authorization
-          type: public
-          auth: true
-    - name: loki
-      ingress:
-        - svc: po-grafana
-          host: grafana
-          path: explore?orgId=1&left=%5B%22now-1h%22,%22now%22,%22Loki%22,%7B%22expr%22:%22%7Bnamespace%3D%5C%22#NS#%5C%22%7D%22%7D,%7B%22mode%22:%22Logs%22%7D,%7B%22ui%22:%5Btrue,true,true,%22none%22%5D%7D%5D
-          type: public
-          auth: true
-      shortcuts:
-        - title: OWASP violations
-          description: ingress traffic triggering OWASP rules
-          path: /explore?orgId=1&left=%5B"now-1h","now","Loki",%7B"expr":"%7Bnamespace%3D%5C"ingress%5C"%7D%20%7C%3D%5C"ModSecurity:%20%5C""%7D%5D
-        - title: Gatekeeper violations
-          description: Kube API violations logged by OPA gatekepeer
-          path: /explore?orgId=1&left=%5B"now-1h","now","Loki",%7B"expr":"%7Bnamespace%3D%5C"gatekeeper-system%5C"%7D%20%7C%3D%5C"Policy:%20%5C""%7D%5D
-    - name: prometheus
-      ingress:
-        - svc: po-prometheus
-          hasPrefix: true
-          port: 9090
-          type: public
-          auth: true
+teamApps:
+  - name: alertmanager
+    ingress:
+      - svc: po-alertmanager
+        hasPrefix: true
+        port: 9093
+        logo:
+          name: prometheus
+        type: public
+        auth: true
+  - name: grafana
+    ingress:
+      - svc: po-grafana
+        hasPrefix: true
+        removeRequestHeaders:
+          - authorization
+        type: public
+        auth: true
+  - name: loki
+    ingress:
+      - svc: po-grafana
+        host: grafana
+        path: explore?orgId=1&left=%5B%22now-1h%22,%22now%22,%22Loki%22,%7B%22expr%22:%22%7Bnamespace%3D%5C%22#NS#%5C%22%7D%22%7D,%7B%22mode%22:%22Logs%22%7D,%7B%22ui%22:%5Btrue,true,true,%22none%22%5D%7D%5D
+        type: public
+        auth: true
+  - name: prometheus
+    ingress:
+      - svc: po-prometheus
+        hasPrefix: true
+        port: 9090
+        type: public
+        auth: true

@@ -480,7 +480,7 @@ image:
       type: object
     - $ref: '#/imageSimple'
   title: Container image
-  decription: Anything specified here overrides image specs from the release
+  description: Anything specified here overrides image specs from the release
   type: object
 imageSimple:
   properties:
@@ -963,7 +963,7 @@ shortcut:
       description: Title for the shortcut
     description:
       type: string
-      description: A short decription about the target of this shortcut.
+      description: A short description about the target of this shortcut.
     path:
       $ref: '#/path'
   required:
