@@ -1,0 +1,9 @@
+teamConfig:
+  teams:
+    otomi:
+      apps:
+        loki:
+          shortcuts:
+            - title: bla
+              description: di
+              path: /bla

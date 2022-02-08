@@ -1,0 +1,4 @@
+apps:
+  keycloak:
+    enabled: true
+    bla: dida
