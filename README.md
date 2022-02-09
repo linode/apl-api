@@ -9,67 +9,50 @@ Every api deployment will result in a commit to the values repo with the author'
 ### 1.1 Prerequisites
 
 - npm@~10.0 installed
-
+- a valid values repo: follow these [instructions in otomi-core](https://github.com/redkubes/otomi-core/blob/master/docs/setup.md#a-valid-values-repo)
 ### 1.2 Setting up environment
 
+The following two steps only need to be performed once:
 1. Copy `.env.sample` to `.env` and edit accordingly.
 2. Download `otomi-api/.secrets` file from [Google Drive secrets](https://drive.google.com/drive/folders/1N802vs0IplKehkZq8SxMi67RipyO1pHN) and put content in `.env`.
-3. Setup access to GitHub Packages in this directory and repository:
 
+The last step is running `npm install`.
+
+### 1.3 Running dependencies
+
+The api depends on a running `otomi-core` tools server. It can be started from the `otomi-core` repo with:
+```bash
+export ENV_DIR={location of your values repo}
+otomi server
 ```
-source .env && echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
-```
 
-The @redkubes Github packages repository is a proxy for all NPM packages. Currently in use for these repositories:
-
-- otomi-api
-- otomi-tasks
-
-4. `npm install`
-
-### 1.3 Running services in docker-compose
+Another way to start it in docker-compose (from within this repo):
 
 ```
 bin/dc.sh up-deps &
 ```
+(This setup and fragile and might be broken. If that is the case just clone `otomi-core` and follow the first suggestion.)
 
-### 1.4 Run dev server
+### 1.4 Run the dev server
 
-```
+From the root of this project:
+```bash
+export ENV_DIR={location of your values repo}
+export GIT_LOCAL_PATH=$ENV_DIR
 npm run dev
 ```
 
-### 1.5 Running tests
+### 1.5 Linking client to be used by console
 
-Run all tests
-
-```
-npm test
-```
-
-Run test by name (regex)
-
-```
-npm test -- -g repo
-```
-
-Run test by name (regex) in watch mode
-
-```
-npm test -- -g repo --watch
-```
-
-### 1.6 Linking client to be used by console
-
-In order to work with the dev version of the generated client:
+In order to make console work with the dev version of the generated client:
 
 ```bash
 npm run build:client
-cd vendors/client/otomi-api/axios/
-npm link
+npm link vendors/client/otomi-api/axios/
 ```
 
-And the go to the otomi-console folder and link with `npm link @redkubes/otomi-api-client-axios`
+Then go to your `otomi-console` repo clone and link to it with `npm link @redkubes/otomi-api-client-axios`
+(The console can then be started just by running `npm run dev` from the `otomi-console` folder)
 
 ## 2. Api design
 
@@ -267,7 +250,7 @@ In this paragraph the causes are addressed by the corresponding number under "Ca
 - To determine a successful generation of the client library, please check out the generated models in `vendors/client/otomi-api/axios/models` if they make sense or not.
 - As general advice, make sure to increment the specification VERY slowly and always see if a spec can be generated or not.
 
-## 2. Viewing/consuming openapi spec
+## 3. Viewing/consuming openapi spec
 
 In order to inspect the api file it is recommended to either:
 
@@ -282,7 +265,7 @@ GET http://127.0.0.1:8080/v1/apiDocs
 
 Moreover the `openapi.yaml` file can be used with `Postman` (File -> Import).
 
-## 3. Models generated from spec
+## 4. Models generated from spec
 
 When any of the `src/openapi/*.yaml` files change, new models will be generated into `src/generated-schema.ts`. These models are exported as types in `src/otomi-models.ts` and used throughout the code.
 
