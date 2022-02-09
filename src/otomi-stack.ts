@@ -22,7 +22,7 @@ import {
   TeamSelfService,
   User,
 } from './otomi-models'
-import { HttpError, PublicUrlExists, ServiceNameExists, ValidationError } from './error'
+import { HttpError, PublicUrlExists, ValidationError } from './error'
 import {
   argQuoteJoin,
   argQuoteStrip,
@@ -187,8 +187,7 @@ export default class OtomiStack {
 
   createService(teamId: string, data: Service): Service {
     this.checkPublicUrlInUse(data)
-    this.checkServiceNameInUse(teamId, data.name)
-    return this.db.createItem('services', { ...data, teamId }, undefined, data?.id) as Service
+    return this.db.createItem('services', { ...data, teamId }, { teamId, name: data.name }, data?.id) as Service
   }
 
   getService(id: string): Service {
@@ -247,17 +246,6 @@ export default class OtomiStack {
       return false
     })
     if (servicesFiltered.length > 0) throw new PublicUrlExists()
-  }
-
-  checkServiceNameInUse(teamId: string, serviceName: string): void {
-    const services = this.db.getCollection('services')
-    const servicesFiltered = filter(services, (svc: any) => {
-      if (svc.teamId === teamId) {
-        return svc.name === serviceName
-      }
-      return false
-    })
-    if (servicesFiltered.length > 0) throw new ServiceNameExists()
   }
 
   async triggerDeployment(email: string): Promise<void> {

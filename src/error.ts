@@ -37,12 +37,7 @@ export class PublicUrlExists extends OtomiError {
     this.code = 409
   }
 }
-export class ServiceNameExists extends OtomiError {
-  public constructor(err?: string) {
-    super('The service name is already in use', err)
-    this.code = 409
-  }
-}
+
 export class ValidationError extends OtomiError {
   public constructor(err?: string) {
     super('Invalid values detected', err)
