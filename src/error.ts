@@ -37,7 +37,6 @@ export class PublicUrlExists extends OtomiError {
     this.code = 409
   }
 }
-
 export class ValidationError extends OtomiError {
   public constructor(err?: string) {
     super('Invalid values detected', err)
