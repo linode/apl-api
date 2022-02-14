@@ -187,7 +187,7 @@ export default class OtomiStack {
 
   createService(teamId: string, data: Service): Service {
     this.checkPublicUrlInUse(data)
-    return this.db.createItem('services', { ...data, teamId }, undefined, data?.id) as Service
+    return this.db.createItem('services', { ...data, teamId }, { teamId, name: data.name }, data?.id) as Service
   }
 
   getService(id: string): Service {
