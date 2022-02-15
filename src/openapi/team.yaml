@@ -8,8 +8,9 @@ TeamSelfService:
       type: array
       items:
         type: string
-        enum: [ingress]
-      default: [ingress]
+        enum: [ingress, networkPolicy.ingressPrivate, networkPolicy.egressPublic]
+        # enum
+      default: [ingress, networkPolicy.ingressPrivate, networkPolicy.egressPublic]
       uniqueItems: true
     Team:
       title: Team
@@ -46,6 +47,19 @@ Team:
       $ref: definitions.yaml#/resourceQuota
     azureMonitor:
       $ref: definitions.yaml#/azureMonitor
+    networkPolicy:
+      properties:
+        ingressPrivate:
+          title: Internal ingress filtering
+          description: When enabled a user can define network policies for incoming traffic per service
+          type: boolean
+          default: true
+        egressPublic:
+          title: External egress filtering
+          description: When enabled a user can define public endpoints a service can access
+          type: boolean
+          default: true
+      type: object
     selfService:
       $ref: team.yaml#/TeamSelfService
   required:
