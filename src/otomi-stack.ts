@@ -613,7 +613,7 @@ export default class OtomiStack {
         domain: url.domain,
         forwardPath: 'forwardPath' in svcRaw,
         hasCert: 'hasCert' in svcRaw,
-        path: svcRaw.paths && svcRaw.paths.length ? svcRaw.paths[0] : undefined,
+        paths: svcRaw.paths ? svcRaw.paths : [],
         subdomain: url.subdomain,
         tlsPass: 'tlsPass' in svcRaw,
         type: svcRaw.type,
@@ -657,7 +657,7 @@ export default class OtomiStack {
       if (ing.hasCert) svcCloned.hasCert = true
       if (ing.certName) svcCloned.certName = ing.certName
       if (ing.certArn) svcCloned.certArn = ing.certArn
-      if (ing.path) svcCloned.paths = [ing.path]
+      if (ing.paths) svcCloned.paths = ing.paths
       if (ing.forwardPath) svcCloned.forwardPath = true
       if (ing.tlsPass) svcCloned.tlsPass = true
       svcCloned.type = svc.ingress.type

@@ -76,10 +76,12 @@ Ingress:
       description: A managed DNS zone
       title: DNS Zone
       type: string
-    path:
-      description: The path in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
-      title: URL path
-      type: string
+    paths:
+      description: The paths in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
+      title: URL paths
+      type: array
+      items:
+        type: string
     forwardPath:
       description: Forward the URL path into the service (don't rewrite to /)
       title: Forward path
