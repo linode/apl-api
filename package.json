@@ -139,6 +139,7 @@
     "lint:fix": "eslint --ext ts --fix .",
     "lint-staged": "lint-staged",
     "postinstall": "npm run build:models",
+    "pre-release:npm": "npm version prerelease --preid rc --no-commit-hooks --no-git-tag-version && bin/release-client.sh",
     "release": "standard-version",
     "release:npm": "bin/release-client.sh",
     "run-if-changed": "run-if-changed",

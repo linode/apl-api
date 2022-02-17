@@ -71,6 +71,11 @@ npm link
 
 And the go to the otomi-console folder and link with `npm link @redkubes/otomi-api-client-axios`
 
+### 17. Preprelease of the client
+In order to publish pre-released npm package execute:
+```
+npm run pre-release:npm
+```
 ## 2. Api design
 
 ### 2.1 Specification
