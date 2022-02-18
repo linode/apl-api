@@ -187,7 +187,14 @@ export default class OtomiStack {
 
   createService(teamId: string, data: Service): Service {
     this.checkPublicUrlInUse(data)
-    return this.db.createItem('services', { ...data, teamId }, { teamId, name: data.name }, data?.id) as Service
+    try {
+      return this.db.createItem('services', { ...data, teamId }, { teamId, name: data.name }, data?.id) as Service
+    } catch (err) {
+      if (err.code === 409) {
+        err.publicMessage = 'Service name already exists'
+      }
+      throw err
+    }
   }
 
   getService(id: string): Service {
