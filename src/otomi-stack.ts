@@ -217,7 +217,14 @@ export default class OtomiStack {
 
   createService(teamId: string, data: Service): Service {
     this.checkPublicUrlInUse(data)
-    return this.db.createItem('services', { ...data, teamId }, undefined, data?.id) as Service
+    try {
+      return this.db.createItem('services', { ...data, teamId }, { teamId, name: data.name }, data?.id) as Service
+    } catch (err) {
+      if (err.code === 409) {
+        err.publicMessage = 'Service name already exists'
+      }
+      throw err
+    }
   }
 
   getService(id: string): Service {
@@ -709,7 +716,7 @@ export default class OtomiStack {
         domain: url.domain,
         forwardPath: 'forwardPath' in svcRaw,
         hasCert: 'hasCert' in svcRaw,
-        path: svcRaw.paths && svcRaw.paths.length ? svcRaw.paths[0] : undefined,
+        paths: svcRaw.paths ? svcRaw.paths : [],
         subdomain: url.subdomain,
         tlsPass: 'tlsPass' in svcRaw,
         type: svcRaw.type,
@@ -753,7 +760,7 @@ export default class OtomiStack {
       if (ing.hasCert) svcCloned.hasCert = true
       if (ing.certName) svcCloned.certName = ing.certName
       if (ing.certArn) svcCloned.certArn = ing.certArn
-      if (ing.path) svcCloned.paths = [ing.path]
+      if (ing.paths) svcCloned.paths = ing.paths
       if (ing.forwardPath) svcCloned.forwardPath = true
       if (ing.tlsPass) svcCloned.tlsPass = true
       svcCloned.type = svc.ingress.type

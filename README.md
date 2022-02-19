@@ -54,6 +54,11 @@ npm link vendors/client/otomi-api/axios/
 Then go to your `otomi-console` repo clone and link to it with `npm link @redkubes/otomi-api-client-axios`
 (The console can then be started just by running `npm run dev` from the `otomi-console` folder)
 
+### 17. Preprelease of the client
+In order to publish pre-released npm package execute:
+```
+npm run pre-release:npm
+```
 ## 2. Api design
 
 ### 2.1 Specification
