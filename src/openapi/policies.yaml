@@ -31,9 +31,9 @@ policies:
       required: [enabled]
       properties:
         cpu:
-          $ref: definitions.yaml#/cpuQuantity
+          $ref: definitions.yaml#/quantityCpu
         memory:
-          $ref: definitions.yaml#/memoryQuantity
+          $ref: definitions.yaml#/quantityMem
         enabled:
           title: Enabled
           description: Enable or disable the 'container-limits' policy.

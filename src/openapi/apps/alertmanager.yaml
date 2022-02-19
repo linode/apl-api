@@ -24,6 +24,30 @@ AppAlertmanager:
       type: object
       properties:
         image:
-          $ref: ../definitions.yaml#/image
+          properties:
+            tag:
+              $ref: ../definitions.yaml#/imageTag
+              x-default: v0.23.0
+            pullPolicy:
+              $ref: ../definitions.yaml#/imagePullPolicy
         resources:
-          $ref: ../definitions.yaml#/resources
+          properties:
+            limits:
+              properties:
+                cpu:
+                  $ref: '../definitions.yaml#/quantityCpu'
+                  x-default: 500m
+                memory:
+                  $ref: '../definitions.yaml#/quantityMem'
+                  x-default: 256Mi
+            requests:
+              properties:
+                cpu:
+                  $ref: '../definitions.yaml#/quantityCpu'
+                  x-default: 100m
+                memory:
+                  $ref: '../definitions.yaml#/quantityMem'
+                  x-default: 128Mi
+          required:
+            - limits
+            - requests

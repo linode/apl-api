@@ -765,6 +765,8 @@ components:
       $ref: cluster.yaml#/apiServer
     autoscaling:
       $ref: definitions.yaml#/autoscaling
+    autoscalingEnabled:
+      $ref: definitions.yaml#/autoscalingEnabled
     awsAccessKey:
       $ref: definitions.yaml#/awsAccessKey
     awsSecretKey:
@@ -789,8 +791,6 @@ components:
       $ref: definitions.yaml#/containerSpec
     containerSpecNoSec:
       $ref: definitions.yaml#/containerSpecNoSec
-    cpu:
-      $ref: definitions.yaml#/cpuQuantity
     dns:
       $ref: definitions.yaml#/dns
     domain:
@@ -813,6 +813,12 @@ components:
       $ref: definitions.yaml#/idName
     image:
       $ref: definitions.yaml#/image
+    imageTag:
+      $ref: definitions.yaml#/imageTag
+    imagePullPolicy:
+      $ref: definitions.yaml#/imagePullPolicy
+    imageSimple:
+      $ref: definitions.yaml#/imageSimple
     jobSpec:
       $ref: definitions.yaml#/jobSpec
     k8sVersion:
@@ -823,8 +829,10 @@ components:
       $ref: definitions.yaml#/ksvcNew
     ksvcPredeployed:
       $ref: definitions.yaml#/ksvcPredeployed
-    memory:
-      $ref: definitions.yaml#/memoryQuantity
+    lokiStorageProvider:
+      $ref: apps/loki.yaml#/lokiStorageProvider
+    lokiValues:
+      $ref: apps/loki.yaml#/lokiValues
     name:
       $ref: cluster.yaml#/name
     offChoice:
@@ -839,6 +847,10 @@ components:
       $ref: policies.yaml#/policies
     provider:
       $ref: cluster.yaml#/provider
+    quantityCpu:
+      $ref: definitions.yaml#/quantityCpu
+    quantityMem:
+      $ref: definitions.yaml#/quantityMem
     rawValues:
       $ref: definitions.yaml#/rawValues
     region:

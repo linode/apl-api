@@ -25,13 +25,13 @@ AppDrone:
       type: object
       properties:
         adminUser:
-          allOf: [$ref: ../definitions.yaml#/wordCharacterPattern]
+          $ref: ../definitions.yaml#/wordCharacterPattern
           title: Admin username
-          description: Username used by machine user to connect to remote git repo.
+          description: Username used to connect to remote git repo.
         adminToken:
-          allOf: [$ref: ../definitions.yaml#/wordCharacterPattern]
-          title: Admin Token
-          description: Token used by machine user to connect to remote git repo.
+          $ref: ../definitions.yaml#/wordCharacterPattern
+          title: Admin token
+          description: Token used by to connect to remote git repo.
           x-secret: ''
         debug:
           default: false
@@ -41,39 +41,21 @@ AppDrone:
           default: false
           type: boolean
           description: Turns on tracing
-        githubAdmins:
-          additionalProperties: false
-          title: Github admin group
-          description: '[GitHub only] The name of a github group given admin access in drone.'
-          properties:
-            org:
-              allOf: [$ref: ../definitions.yaml#/wordCharacterPattern]
-              title: Organization
-              description: The name of the github organisation
-            team:
-              allOf: [$ref: ../definitions.yaml#/wordCharacterPattern]
-              title: Team
-              description: The name of the team
-            token:
-              allOf: [$ref: ../definitions.yaml#/wordCharacterPattern]
-              title: Token
-              description: The oauth secret used to identify with the github oauth app.
         orgsFilter:
-          allOf: [$ref: ../definitions.yaml#/wordCharacterPattern]
+          $ref: ../definitions.yaml#/wordCharacterPattern
           title: Organization filter
           description: A comma separated list of github organisations that drone will manage.
         repo:
-          allOf: [$ref: ../definitions.yaml#/idName]
+          $ref: ../definitions.yaml#/idName
           description: A git repository
         repoFilter:
-          allOf: [$ref: ../definitions.yaml#/wordCharacterPattern]
+          $ref: ../definitions.yaml#/wordCharacterPattern
           description: A comma separated list of git repositories that drone will manage.
         sharedSecret:
           description: A secret used by drone-admit-members plugin. https://docs.drone.io/runner/kubernetes/configuration/reference/drone-secret-plugin-token/
           type: string
           x-secret: 'randAlphaNum 32'
         sourceControl:
-          additionalProperties: false
           title: Source control
           description: Provide data to connect to a remote git repo
           allOf:
@@ -85,9 +67,14 @@ AppDrone:
                   x-secret: ''
                 secret:
                   type: string
+                  description: K8S secret containing your source control provider secrets, with same keys as asked below. When left blank a secret will be created from the credentials given below.
+                  x-secret: ''
             - title: Provider
+              nullable: true
               oneOf:
+                - $ref: ../definitions.yaml#/offChoice
                 - title: Bitbucket Cloud
+                  required: [bitbucketCloud]
                   properties:
                     provider:
                       default: bitbucketcloud
@@ -96,9 +83,10 @@ AppDrone:
                       type: string
                     bitbucketCloud:
                       title: Bitbucket Cloud
-                      allOf: [$ref: ../definitions.yaml#/droneGit]
+                      $ref: ../definitions.yaml#/droneGit
                       type: object
                 - title: Bitbucket Server
+                  required: [bitbucketServer]
                   properties:
                     provider:
                       default: bitbucketserver
@@ -124,6 +112,7 @@ AppDrone:
                           type: string
                           x-secret: ''
                 - title: Gitea
+                  required: [gitea]
                   properties:
                     provider:
                       default: gitea
@@ -138,6 +127,7 @@ AppDrone:
                             server:
                               type: string
                 - title: GitHub
+                  required: [github]
                   properties:
                     provider:
                       default: github
@@ -154,6 +144,7 @@ AppDrone:
                               default: 'https://github.com'
                               type: string
                 - title: GitLab
+                  required: [gitlab]
                   properties:
                     provider:
                       default: gitlab
@@ -168,6 +159,7 @@ AppDrone:
                             server:
                               type: string
                 - title: Gogs
+                  required: [gogs]
                   properties:
                     provider:
                       default: gogs
@@ -180,16 +172,42 @@ AppDrone:
                       properties:
                         server:
                           type: string
-        resources:
+        githubAdmins:
           additionalProperties: false
-          type: object
+          title: Github admin group
+          description: '[GitHub only] The name of a github group given admin access in drone.'
+          properties:
+            org:
+              $ref: ../definitions.yaml#/wordCharacterPattern
+              title: Organization
+              description: The name of the github organisation
+            team:
+              $ref: ../definitions.yaml#/wordCharacterPattern
+              title: Team
+              description: The name of the team
+            token:
+              $ref: ../definitions.yaml#/wordCharacterPattern
+              title: Token
+              description: The oauth secret used to identify with the github oauth app.
+        image:
           properties:
             agent:
-              allOf: [$ref: ../definitions.yaml#/resources]
-              title: Agent
+              properties:
+                tag:
+                  $ref: ../definitions.yaml#/imageTag
+                  x-default: latest
+                pullPolicy:
+                  $ref: ../definitions.yaml#/imagePullPolicy
+                  default: Always
             server:
-              allOf: [$ref: ../definitions.yaml#/resources]
-              title: Server
+              properties:
+                tag:
+                  $ref: ../definitions.yaml#/imageTag
+                  x-default: 2.7.3
+                pullPolicy:
+                  $ref: ../definitions.yaml#/imagePullPolicy
+        resources:
+          properties:
             runner:
               title: Runner
               type: object
@@ -198,8 +216,53 @@ AppDrone:
                   type: object
                   properties:
                     cpu:
+                      title: CPU quantity
                       description: Requested compute resources for all the containers started by the runner (guaranteed), expressed in millicores.
                       type: integer
                     memory:
-                      $ref: ../definitions.yaml#/memoryQuantity
+                      $ref: ../definitions.yaml#/quantityMem
                       description: Requested memory resources for all the containers started by the runner (guaranteed).
+              required:
+                - requests
+            agent:
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 200m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 40m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 32Mi
+              required:
+                - limits
+                - requests
+            server:
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 200m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 40m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 32Mi
+              required:
+                - limits
+                - requests

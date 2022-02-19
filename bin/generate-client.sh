@@ -4,6 +4,7 @@ set -e
 
 org=redkubes
 repo="ssh://git@github.com/redkubes/otomi-api.git"
+tag="v5.2.1"
 
 vendor="otomi-api"
 type="axios"
@@ -40,7 +41,7 @@ generate_client() {
     npm run build:spec
 
     docker run --rm -v $PWD:/local -w /local -u "$(id -u $USER)" \
-    openapitools/openapi-generator-cli:v5.2.1 generate \
+    openapitools/openapi-generator-cli:$tag generate \
     -i /local/$openapi_doc \
     -o /local/$target_dir \
     -g typescript-node \

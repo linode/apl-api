@@ -7,7 +7,7 @@ import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 import path from 'path'
-import { parse } from '@apidevtools/json-schema-ref-parser'
+import $parser from '@apidevtools/json-schema-ref-parser'
 import Db from './db'
 import {
   App,
@@ -80,7 +80,7 @@ const env = cleanEnv({
 export const loadOpenApisSpec = async (): Promise<OpenAPIDoc> => {
   const openApiPath = path.resolve(__dirname, 'generated-schema.json')
   console.info(`Loading api spec from: ${openApiPath}`)
-  return (await parse(openApiPath)) as OpenAPIDoc
+  return (await $parser.parse(openApiPath)) as OpenAPIDoc
 }
 
 export default class OtomiStack {

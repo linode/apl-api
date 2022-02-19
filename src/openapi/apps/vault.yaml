@@ -89,7 +89,31 @@ AppVault:
               required:
                 - azurekeyvault
         storage:
-          description: Storage configuration. See https://www.vaultproject.io/docs/configuration/storage.
+          description: Storage configuration. See https://www.vaultproject.io/docs/configuration/storage. Defaults to PVC.
           type: object
-          additionalProperties: true
-          # @TODO: create yaml editor from props of type object without any props and additionalProperties: true
+        image:
+          properties:
+            tag:
+              $ref: ../definitions.yaml#/imageTag
+              x-default: 1.14.4
+        resources:
+          properties:
+            limits:
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  x-default: 1
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  x-default: 512Mi
+            requests:
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  x-default: 500m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  x-default: 256Mi
+          required:
+            - limits
+            - requests

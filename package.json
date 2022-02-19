@@ -9,7 +9,7 @@
     }
   },
   "dependencies": {
-    "@apidevtools/json-schema-ref-parser": "^9.0.7",
+    "@apidevtools/json-schema-ref-parser": "^9.0.9",
     "@casl/ability": "^5.2.2",
     "@kubernetes/client-node": "^0.14.3",
     "@types/json-schema": "^7.0.7",
@@ -29,14 +29,14 @@
     "lodash": "^4.17.21",
     "lowdb": "^1.0.0",
     "morgan": "^1.10.0",
-    "openapi-client-axios": "^3.13.1",
+    "openapi-client-axios": "^4.4.9",
     "password-generator": "^2.3.2",
     "shelljs": "^0.8.5",
     "simple-git": "^2.37.0",
     "swagger-client": "^3.13.2",
     "swagger-ui-express": "^4.1.6",
     "ts-custom-error": "^3.2.0",
-    "ts-mocha": "^8.0.0",
+    "ts-mocha": "^9.0.0",
     "uuid": "^8.3.2"
   },
   "description": "The brain of the Otomi Container Platform. Handling console input and talking to core, it knows what to do.",
@@ -65,7 +65,7 @@
     "cz-conventional-changelog": "^3.0.1",
     "dotenv": "^8.2.0",
     "eslint": "^7.25.0",
-    "eslint-config-prettier": "^6.15.0",
+    "eslint-config-prettier": "^7.0.0",
     "eslint-plugin-chai-expect": "^2.2.0",
     "eslint-plugin-chai-friendly": "^0.6.0",
     "eslint-plugin-import": "^2.22.1",
@@ -81,7 +81,7 @@
     "nodemon": "^2.0.7",
     "npm-run-all": "^4.1.5",
     "openapi-schema-validator": "^3.0.3",
-    "openapi-typescript": "^5.1.1",
+    "openapi-typescript": "^5.2.0",
     "prettier": "^2.2.1",
     "sinon": "^8.1.1",
     "sinon-chai": "^3.6.0",
@@ -103,11 +103,8 @@
   "homepage": "https://github.com/redkubes/otomi-api#readme",
   "license": "ISC",
   "lint-staged": {
-    "*.{json,md,yml,yaml}": [
+    "*.{js,ts,json,md,yml,yaml}": [
       "prettier --write"
-    ],
-    "*.{js,ts}": [
-      "eslint --fix"
     ]
   },
   "main": "dist/app.js",

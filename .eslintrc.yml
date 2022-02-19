@@ -1,33 +1,33 @@
 ---
 root: true
 
+parser: '@typescript-eslint/parser'
 parserOptions:
   project: ['./tsconfig.json']
   ecmaVersion: 2021
 
 extends:
+  # - airbnb-base
   - eslint:recommended
   - plugin:@typescript-eslint/eslint-recommended
   - plugin:@typescript-eslint/recommended
   - plugin:@typescript-eslint/recommended-requiring-type-checking
-  - airbnb-base
-  - plugin:prettier/recommended
-  - prettier
-  - prettier/@typescript-eslint
-  - plugin:import/errors
-  - plugin:import/warnings
-  - plugin:import/typescript
   - plugin:chai-friendly/recommended
+  - plugin:import/errors
+  - plugin:import/typescript
+  - plugin:import/warnings
+  - plugin:prettier/recommended
+  # - prettier/@typescript-eslint
 
 plugins:
   - import
-  - prettier
   - '@typescript-eslint'
 
 settings:
   import/resolver:
     node:
       extensions: ['.ts']
+      pathsd: [src]
 
 env:
   es6: true
@@ -49,18 +49,19 @@ rules:
   '@typescript-eslint/no-unsafe-call': off
   '@typescript-eslint/no-non-null-assertion': off
   '@typescript-eslint/no-floating-promises': off
-  func-names: 'off'
-  import/no-extraneous-dependencies: off
-  import/extensions: off
   eol-last: ['error', 'always']
-  no-shadow: warn
-  no-unused-vars: warn
-  prefer-destructuring: warn
-  no-use-before-define: 'off'
-  no-console: 'off'
-  object-shorthand: error
-  no-debugger: error
+  func-names: off
+  import/extensions: off
+  import/no-extraneous-dependencies: off
+  no-console: off
+  no-debugger: warn
+  no-fallthrough: warn
   no-param-reassign:
     - error
     - props: true
       ignorePropertyModificationsFor: [memo]
+  no-shadow: warn
+  no-unused-vars: warn
+  no-use-before-define: off
+  object-shorthand: error
+  prefer-destructuring: warn

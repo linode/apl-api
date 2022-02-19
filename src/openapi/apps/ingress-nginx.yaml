@@ -34,9 +34,7 @@ AppIngressNginx:
           default: 1073741824
           description: Needed for modsecurity. Should correspond to maxBodySize, but expressed in bytes.
         autoscaling:
-          allOf: [$ref: ../definitions.yaml#/autoscaling]
-          type: object
-          title: Autoscaling
+          $ref: ../definitions.yaml#/autoscalingEnabled
         modsecurity:
           title: MOD Security
           description: Enables MOD Security functionality.
@@ -58,8 +56,34 @@ AppIngressNginx:
           properties:
             annotations:
               $ref: ../definitions.yaml#/annotations
+        image:
+          properties:
+            tag:
+              $ref: ../definitions.yaml#/imageTag
+              x-default: v1.0.5
+            pullPolicy:
+              $ref: ../definitions.yaml#/imagePullPolicy
         resources:
-          $ref: ../definitions.yaml#/resources
+          properties:
+            limits:
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  x-default: '2'
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  x-default: 1.5Gi
+            requests:
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  x-default: 200m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  x-default: 512Mi
+          required:
+            - limits
+            - requests
         private:
           description: Private loadbalancer configuration.
           properties:
@@ -69,13 +93,32 @@ AppIngressNginx:
               type: boolean
               default: false
             autoscaling:
-              $ref: ../definitions.yaml#/autoscaling
+              $ref: ../definitions.yaml#/autoscalingEnabled
             loadBalancerIP:
               type: string
             loadBalancerRG:
               type: string
             resources:
-              $ref: ../definitions.yaml#/resources
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: '2'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 1.5Gi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 200m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 512Mi
+              required:
+                - limits
+                - requests
             service:
               properties:
                 annotations:

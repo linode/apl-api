@@ -21,7 +21,6 @@ AppKubeapps:
         $ref: ../definitions.yaml#/shortcut
     values:
       x-externalDocsPath: docs/console/apps/kubeapps
-      additionalProperties: false
       type: object
       properties:
         postgresqlPassword:

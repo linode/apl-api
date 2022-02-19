@@ -139,7 +139,6 @@ IngressPrivate:
   nullable: true
   description: Will only accept traffic coming from the private-network loadbalancer. (Coming soon!)
   title: Private
-  type: object
 
 IngressPublic:
   allOf:
@@ -153,7 +152,6 @@ IngressPublic:
   nullable: true
   description: Will only accept traffic coming from the public loadbalancer.
   title: Public
-  type: object
 
 networkPolicy:
   additionalProperties: false
@@ -166,12 +164,14 @@ networkPolicy:
           description: Deny traffic from all teams (including this one)
           properties:
             mode:
+              type: string
               default: DenyAll
               enum:
                 - DenyAll
         - title: Allow selected
           properties:
             mode:
+              type: string
               default: AllowOnly
               enum:
                 - AllowOnly
@@ -195,6 +195,7 @@ networkPolicy:
           description: Allow traffic from all teams
           properties:
             mode:
+              type: string
               default: AllowAll
               enum:
                 - AllowAll

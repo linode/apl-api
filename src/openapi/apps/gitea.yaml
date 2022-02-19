@@ -25,10 +25,97 @@ AppGitea:
       type: object
       properties:
         adminPassword:
-          $ref: ../definitions.yaml#/adminPassword
+          type: string
+          x-secret: ''
         postgresqlPassword:
           type: string
           description: Once set and deployed it cannot be changed with manual intervention.
           x-secret: 'randAlphaNum 20'
-      required:
-        - postgresqlPassword
+        image:
+          properties:
+            gitea:
+              properties:
+                tag:
+                  $ref: ../definitions.yaml#/imageTag
+                  x-default: 1.15.8
+                pullPolicy:
+                  $ref: ../definitions.yaml#/imagePullPolicy
+            postgres:
+              properties:
+                tag:
+                  $ref: ../definitions.yaml#/imageTag
+                  x-default: 13.5.0
+                pullPolicy:
+                  $ref: ../definitions.yaml#/imagePullPolicy
+            memcaches:
+              properties:
+                tag:
+                  $ref: ../definitions.yaml#/imageTag
+                  x-default: 1.6.12
+                pullPolicy:
+                  $ref: ../definitions.yaml#/imagePullPolicy
+        resources:
+          properties:
+            gitea:
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 1Gi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests
+            memcached:
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 256m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests
+            postgresql:
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 500m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 512Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 250m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+              required:
+                - limits
+                - requests

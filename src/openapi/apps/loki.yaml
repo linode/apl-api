@@ -1,3 +1,134 @@
+lokiValues:
+  type: object
+  properties:
+    adminPassword:
+      type: string
+      x-secret: 'randAlphaNum 20'
+    persistence:
+      properties:
+        size:
+          x-default: 20Gi
+          type: string
+    retention:
+      properties:
+        duration:
+          x-default: 24h
+          type: string
+        period:
+          x-default: 24h
+          description: Should be a multiple of 24h. See https://grafana.com/docs/loki/latest/operations/storage/boltdb-shipper/.
+          type: string
+      required:
+        - duration
+    v11StartDate:
+      description: Set this to a date just after deployment in case of an upgrade. (Only needed when running v9 and wanting to upgrade schema.)
+      title: Schema v11 start date
+      type: string
+  required:
+    - adminPassword
+
+lokiStorageProvider:
+  title: Storage provider
+  oneOf:
+    - title: Filesystem
+      description: Creates a k8s pvc.
+      properties:
+        storageType:
+          type: string
+          enum:
+            - filesystem
+          default: filesystem
+    - title: AWS
+      description: Amazon storage options.
+      properties:
+        storageType:
+          type: string
+          enum:
+            - aws
+          default: aws
+        aws:
+          properties:
+            s3:
+              $ref: ../definitions.yaml#/s3Url
+            bucketnames:
+              type: string
+              title: Bucket names
+              description: A comma separated list of bucket names.
+            dynamodb:
+              $ref: ../definitions.yaml#/s3Url
+    - title: Azure
+      description: Azure storage container.
+      properties:
+        storageType:
+          type: string
+          enum:
+            - azure
+          default: azure
+        azure:
+          description: Missing from docs but available with this schema.
+          properties:
+            account_key:
+              type: string
+              x-secret: ''
+            account_name:
+              type: string
+            container_name:
+              type: string
+          required:
+            - account_key
+            - account_name
+            - container_name
+    - title: Bigtable
+      description: 'Google Cloud Bigtable: nosql database service.'
+      properties:
+        storageType:
+          type: string
+          enum:
+            - bigtable
+          default: bigtable
+        bigtable:
+          type: object
+    - title: Cassandra
+      description: Apache Cassandra is an open source NoSQL distributed database.
+      properties:
+        storageType:
+          type: string
+          enum:
+            - cassandra
+          default: cassandra
+        cassandra:
+          type: object
+    - title: GCS
+      description: Google Cloud blob Storage.
+      properties:
+        storageType:
+          type: string
+          enum:
+            - gcs
+          default: gcs
+        gcs:
+          type: object
+    - title: Swift
+      description: OpenStack Object Storage.
+      properties:
+        storageType:
+          type: string
+          enum:
+            - swift
+          default: swift
+        swift:
+          type: object
+    - title: Local
+      description: Host volume.
+      properties:
+        storageType:
+          type: string
+          enum:
+            - local
+          default: local
+        local:
+          type: object
+
 AppLoki:
   additionalProperties: false
   x-externalDocsPath: https://grafana.com/oss/loki/
@@ -21,115 +152,6 @@ AppLoki:
         $ref: ../definitions.yaml#/shortcut
     values:
       x-externalDocsPath: docs/console/apps/loki
-      additionalProperties: false
       allOf:
-        - properties:
-            adminPassword:
-              type: string
-              x-secret: 'randAlphaNum 20'
-            persistence:
-              additionalProperties: false
-              properties:
-                size:
-                  x-default: 20Gi
-                  type: string
-            retention:
-              additionalProperties: false
-              nullable: true
-              type: object
-              properties:
-                duration:
-                  x-default: 24h
-                  type: string
-                period:
-                  x-default: 24h
-                  description: Should be a multiple of 24h. See https://grafana.com/docs/loki/latest/operations/storage/boltdb-shipper/.
-                  type: string
-              required:
-                - duration
-            v11StartDate:
-              description: Set this to a date just after deployment in case of an upgrade. (Otomi started at v9 with filesystem.)
-              title: Schema v11 start date
-              type: string
-          required:
-            - adminPassword
-      oneOf:
-        - properties:
-            storageType:
-              type: string
-              enum:
-                - aws
-              default: aws
-            aws:
-              description: 'No schema, but example found here: '
-              type: object
-              properties:
-                s3:
-                  $ref: ../definitions.yaml#/s3Url
-                bucketnames:
-                  type: string
-                  title: Bucket names
-                  description: A comma separated list of bucket names.
-                dynamodb:
-                  $ref: ../definitions.yaml#/s3Url
-        - properties:
-            storageType:
-              type: string
-              enum:
-                - azure
-              default: azure
-            azure:
-              description: Missing from docs but available with this schema.
-              type: object
-              properties:
-                account_key:
-                  type: string
-                  x-secret: ''
-                account_name:
-                  type: string
-                container_name:
-                  type: string
-              required:
-                - account_key
-                - account_name
-                - container_name
-        - properties:
-            storageType:
-              type: string
-              enum:
-                - bigtable
-              default: bigtable
-            bigtable:
-              type: object
-        - properties:
-            storageType:
-              type: string
-              enum:
-                - cassandra
-              default: cassandra
-            cassandra:
-              type: object
-        - properties:
-            storageType:
-              type: string
-              enum:
-                - gcs
-              default: gcs
-            gcs:
-              type: object
-        - properties:
-            storageType:
-              type: string
-              enum:
-                - swift
-              default: swift
-            swift:
-              type: object
-        - properties:
-            storageType:
-              type: string
-              enum:
-                - local
-              default: local
-            local:
-              type: object
+        - $ref: '#/lokiValues'
+        - $ref: '#/lokiStorageProvider'

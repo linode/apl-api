@@ -32,6 +32,90 @@ AppPrometheus:
           $ref: ../definitions.yaml#/size
           default: 5Gi
         image:
-          $ref: ../definitions.yaml#/image
+          properties:
+            prometheus:
+              properties:
+                tag:
+                  $ref: ../definitions.yaml#/imageTag
+                  x-default: v2.30.3
+                pullPolicy:
+                  $ref: ../definitions.yaml#/imagePullPolicy
+            kube-state-metrics:
+              properties:
+                tag:
+                  $ref: ../definitions.yaml#/imageTag
+                  x-default: v1.8.0
+                pullPolicy:
+                  $ref: ../definitions.yaml#/imagePullPolicy
+            node-exporter:
+              properties:
+                tag:
+                  $ref: ../definitions.yaml#/imageTag
+                  x-default: v1.3.1
+                pullPolicy:
+                  $ref: ../definitions.yaml#/imagePullPolicy
         resources:
-          $ref: ../definitions.yaml#/resources
+          properties:
+            prometheus:
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 500m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests
+            kube-state-metrics:
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests
+            node-exporter:
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 500m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests

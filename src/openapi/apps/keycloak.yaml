@@ -49,9 +49,47 @@ AppKeycloak:
           additionalProperties: false
           properties:
             keycloak:
-              $ref: ../definitions.yaml#/resources
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 1.5Gi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 1Gi
+              required:
+                - limits
+                - requests
             postgresql:
-              $ref: ../definitions.yaml#/resources
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 1.5Gi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 1Gi
+              required:
+                - limits
+                - requests
         theme:
           enum:
             - default

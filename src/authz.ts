@@ -22,8 +22,8 @@ const httpMethods = ['post', 'delete', 'get', 'patch', 'update']
 
 function validatePermissions(acl: Acl, allowedPermissions: string[], path: string): string[] {
   const err: string[] = []
-  Object.keys(acl).forEach((role) => {
-    acl[role].forEach((permission) => {
+  Object.keys(acl).forEach(role => {
+    acl[role].forEach(permission => {
       if (!allowedPermissions.includes(permission))
         err.push(`the resource permission supports only [${allowedPermissions}], found at ${path}`)
     })
@@ -32,7 +32,7 @@ function validatePermissions(acl: Acl, allowedPermissions: string[], path: strin
   return err
 }
 
-export const getAclProps = (schema) =>
+export const getAclProps = schema =>
   Object.keys(flattenObject(extract(schema, 'x-acl', () => true))).reduce((memo: string[], item) => {
     const trimmed = item.replace('.x-acl', '').replace('x-acl', '')
     if (trimmed !== '') memo.push(trimmed)
@@ -45,7 +45,7 @@ export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
   if (isEmpty(apiDoc.security)) err.push(`Missing global security definition at 'security'`)
 
   forIn(apiDoc, (pathObj: any, pathName: string) => {
-    Object.keys(pathObj).forEach((methodName) => {
+    Object.keys(pathObj).forEach(methodName => {
       if (!httpMethods.includes(methodName)) return
       const methodObj = pathObj[methodName]
 
@@ -60,7 +60,7 @@ export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
     console.debug(`Authz: loading rules for ${schemaName} schema`)
     // @ts-ignore
     // eslint-disable-next-line no-param-reassign
-    if (!schema.type) schema.type = 'object'
+    // if (!schema.type) schema.type = 'object'
 
     if (schema.type === 'array') {
       if (schema['x-acl'])
@@ -95,7 +95,7 @@ export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
   })
   if (err.length !== 0) {
     console.log('Authz config validation errors:')
-    err.forEach((error) => console.error(error))
+    err.forEach(error => console.error(error))
     return false
   }
   console.log('Authz config validation succeeded')
@@ -105,7 +105,7 @@ export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
 export const getAclHolder = (schema: Schema): Schema | undefined => {
   if (schema['x-acl']) return schema
   // we support composition of schemas througout, so we may also expect the following
-  return schema.allOf && schema.allOf.find((o) => !!o['x-acl'])
+  return schema.allOf && schema.allOf.find(o => !!o['x-acl'])
 }
 
 export const loadSpecRules = (apiDoc: OpenAPIDoc): any => {
@@ -119,7 +119,7 @@ export const loadSpecRules = (apiDoc: OpenAPIDoc): any => {
       return
     }
     const schemaAcl = {}
-    Object.keys(schema['x-acl'] || {}).forEach((role) => {
+    Object.keys(schema['x-acl'] || {}).forEach(role => {
       schemaAcl[role] = (schema['x-acl'] || {})[role].map((action: AclAction) => {
         if (action.endsWith('-any')) return action.slice(0, -4)
         return action
@@ -145,19 +145,19 @@ export default class Authz {
     const canRules: any[] = []
     const createRule =
       (schemaName, prop = '') =>
-      (action) => {
+      action => {
         const subject = `${schemaName}${prop ? `.${prop}` : ''}`
         if (action.endsWith('-any')) {
           canRules.push({ action: action.slice(0, -4), subject })
         } else {
-          user.teams.forEach((teamId) => {
+          user.teams.forEach(teamId => {
             canRules.push({ action, subject, conditions: { teamId: { $eq: teamId } } })
           })
         }
       }
     Object.keys(this.specRules).forEach((schemaName: string) => {
       const schema: Schema = this.specRules[schemaName]
-      user.roles.forEach((role) => {
+      user.roles.forEach(role => {
         const aclHolder = getAclHolder(schema)
         const actions: string[] = get(aclHolder, `x-acl.${role}`, [])
         actions.forEach(createRule(schemaName))
@@ -198,7 +198,7 @@ export default class Authz {
       // the two above denied lists should be mutually exclusive, because a schema design should not
       // have have both self service as well as acl set for the same property, so we can merge the result
       const deniedAttributes = [...deniedRoleAttributes, ...deniedSelfServiceAttributes]
-      deniedAttributes.forEach((path) => {
+      deniedAttributes.forEach(path => {
         if (has(body, path)) violatedAttributes.push(path)
       })
     }
@@ -209,7 +209,7 @@ export default class Authz {
     const schema = this.specRules[schemaName]
     const aclProps = getAclProps(schema)
     const violatedAttributes: Array<string> = aclProps.filter(
-      (prop) => !this.validateWithRbac(action, `${schemaName}.${prop}`, teamId),
+      prop => !this.validateWithRbac(action, `${schemaName}.${prop}`, teamId),
     )
     return violatedAttributes
   }
@@ -217,7 +217,7 @@ export default class Authz {
   filterWithAbac = (schemaName: string, teamId: string, body: any): any => {
     if (typeof body !== 'object') return body
     const deniedRoleAttributes = this.getAbacDenied('read', schemaName, teamId)
-    const ret = (body.length !== undefined ? body : [body]).map((obj) => omit(obj, deniedRoleAttributes))
+    const ret = (body.length !== undefined ? body : [body]).map(obj => omit(obj, deniedRoleAttributes))
     return body.length !== undefined ? ret : ret[0]
   }
 
@@ -235,12 +235,12 @@ export const getTeamSelfServiceAuthz = (
 ): UserAuthz => {
   const permissionMap: UserAuthz = {}
 
-  teams.forEach((teamId) => {
+  teams.forEach(teamId => {
     const authz: TeamAuthz = {} as TeamAuthz
-    Object.keys(schema.properties).forEach((schemaName) => {
+    Object.keys(schema.properties).forEach(schemaName => {
       const possiblePermissions = schema.properties[schemaName].items.enum
       set(authz, `deniedAttributes.${schemaName}`, [])
-      authz.deniedAttributes[schemaName] = possiblePermissions.filter((name) => {
+      authz.deniedAttributes[schemaName] = possiblePermissions.filter(name => {
         const flags = get(otomi.getTeamSelfServiceFlags(teamId), schemaName, [])
         return !flags.includes(name)
       })

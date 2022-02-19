@@ -28,15 +28,13 @@ AppIstio:
           additionalProperties: false
           properties:
             egressgateway:
-              $ref: ../definitions.yaml#/scaling
-            gateway-local:
-              $ref: ../definitions.yaml#/scaling
+              $ref: ../definitions.yaml#/autoscaling
             ingressgateway:
-              $ref: ../definitions.yaml#/scaling
-            ingressgateway-auth:
-              $ref: ../definitions.yaml#/scaling
+              $ref: ../definitions.yaml#/autoscaling
+            ingressgateway-private:
+              $ref: ../definitions.yaml#/autoscaling
             pilot:
-              $ref: ../definitions.yaml#/scaling
+              $ref: ../definitions.yaml#/autoscaling
         egressGateway:
           additionalProperties: false
           properties:
@@ -78,15 +76,96 @@ AppIstio:
                   default: ALLOW_ANY
           required:
             - defaultConfig
+        image:
+          properties:
+            tag:
+              $ref: ../definitions.yaml#/imageTag
+              x-default: 1.10.1
+            pullPolicy:
+              $ref: ../definitions.yaml#/imagePullPolicy
         resources:
           properties:
             egressgateway:
-              $ref: ../definitions.yaml#/resources
-            gateway-local:
-              $ref: ../definitions.yaml#/resources
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests
             ingressgateway:
-              $ref: ../definitions.yaml#/resources
-            ingressgateway-auth:
-              $ref: ../definitions.yaml#/resources
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests
+            ingressgateway-private:
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests
             pilot:
-              $ref: ../definitions.yaml#/resources
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: '2'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 2Gi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests

@@ -152,17 +152,20 @@ annotations:
         type: string
         maxLength: 32767
 autoscaling:
-  additionalProperties: false
   properties:
-    enabled:
-      default: true
-      type: boolean
     maxReplicas:
       type: integer
-      default: 10
+      x-default: 10
     minReplicas:
       type: integer
-      default: 2
+      x-default: 1
+autoscalingEnabled:
+  allOf:
+    - properties:
+        enabled:
+          default: true
+          type: boolean
+    - $ref: '#/autoscaling'
 awsAccessKey:
   title: AWS access key
   description: An AWS access key ID.
@@ -290,16 +293,6 @@ containerSpec:
           $ref: '#/securityContext'
     - $ref: '#/containerSpecNoSec'
   type: object
-cpuQuantity:
-  title: CPU quantity
-  description: Amount of cores, or slice of cpu in millis.
-  x-default: 50m
-  example:
-    - '1'
-    - 200m
-  pattern: (^[1-9][0-9]*(?!<.*)$)|(^([0]|[1-9]+)\.[0-9]{1,3}(?!<.*)$)|(^[1-9][0-9]*m$)
-  type: string
-# _ because it creates a duplicate dns model for some reason
 dns:
   title: DNS
   type: object
@@ -317,7 +310,6 @@ dns:
     provider:
       description: The DNS provider managing the domains.
       title: Provider
-      type: object
       oneOf:
         - title: AWS
           properties:
@@ -481,20 +473,23 @@ image:
     - $ref: '#/imageSimple'
   title: Container image
   description: Anything specified here overrides image specs from the release
-  type: object
+imagePullPolicy:
+  default: IfNotPresent
+  enum:
+    - IfNotPresent
+    - Always
+  type: string
+imageTag:
+  x-default: stable
+  pattern: '[\w][\w.-]{0,127}'
+  type: string
+  x-message: a valid container registry image tag
 imageSimple:
   properties:
     tag:
-      x-default: stable
-      pattern: '[\w][\w.-]{0,127}'
-      type: string
-      x-message: a valid container registry image tag
+      $ref: '#/imageTag'
     pullPolicy:
-      default: IfNotPresent
-      enum:
-        - IfNotPresent
-        - Always
-      type: string
+      $ref: '#/imagePullPolicy'
   required:
     - tag
   type: object
@@ -519,13 +514,13 @@ jobSpec:
     script:
       $ref: '#/script'
     ttlSecondsAfterFinished:
-      default: 86400
+      x-default: 86400
       description: Time To Live after job is finished in seconds. Will be removed afterwards.
       title: TTL after finished
       type: integer
     schedule:
-      default: 0 1 * * *
-      description: Must give a cron-type expression if the job-type is 'cronjob' (job.type).
+      x-default: 0 1 * * *
+      description: Must give a cron-type expression if the job-type is 'cronjob' (job.type). Defaults to once a day at 1am.
       type: string
     runPolicy:
       default: OnSpecChange
@@ -549,7 +544,6 @@ jobSpec:
     - type
   type: object
 k8sVersion:
-  default: '1.20'
   description: The cluster k8s version. Otomi supports 2 minor versions backwards from the suggested default.
   enum:
     - '1.18'
@@ -665,7 +659,7 @@ kms:
           title: Vault
 ksvcNew:
   description: Will create a new knative service from the input gathered here.
-  title: New knative service
+  title: New Knative service
   allOf:
     - properties:
         annotations:
@@ -780,20 +774,14 @@ logLevel:
     - info
     - debug
     - trace
-memoryQuantity:
-  title: Memory quantity
-  description: Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki.
-  x-default: 64Mi
-  example:
-    - 1Mi
-    - 0.5M
-  pattern: ^([0-9]+\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)$
-  type: string
 offChoice:
   additionalProperties: false
   nullable: true
   title: 'Off'
   type: object
+otomiAdminUsername:
+  type: string
+  x-secret: '"admin"'
 path:
   description: An absolute path
   type: string
@@ -839,6 +827,18 @@ portNumber:
   maximum: 32768
   minimum: 80
   type: integer
+quantityCpu:
+  title: CPU quantity
+  description: Amount of cores, or slice of cpu in millis.
+  example: 50m
+  pattern: (^[1-9][0-9]*(?!<.*)$)|(^([0]|[1-9]+)\.[0-9]{1,3}(?!<.*)$)|(^[1-9][0-9]*m$)
+  type: string
+quantityMem:
+  title: Memory quantity
+  description: Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki.
+  example: 1Gi
+  pattern: ^([0-9]+\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)$
+  type: string
 rawValues:
   description: "May define value overrides for a chart. WARNING: these values currently have no schema and can't be validated as such, and may break deployment. You are on your own here."
   type: object
@@ -853,9 +853,9 @@ repoUrl:
 resource:
   properties:
     cpu:
-      $ref: '#/cpuQuantity'
+      $ref: '#/quantityCpu'
     memory:
-      $ref: '#/memoryQuantity'
+      $ref: '#/quantityMem'
   required:
     - cpu
     - memory
@@ -872,7 +872,6 @@ resources:
   required:
     - limits
     - requests
-  title: Resources
   type: object
 resourceQuota:
   description: 'List of kubernetes resource quota. Should adhere to the "spec.hard" format as described here: https://kubernetes.io/docs/concepts/policy/resource-quotas/. Not validated as there is no schema published. Change at your own risk.'
@@ -949,9 +948,6 @@ secretMounts:
       path:
         $ref: '#/path'
     type: object
-otomiAdminUsername:
-  type: string
-  x-secret: '"admin"'
 s3Url:
   type: string
   description: An url to an AWS S3 bucket

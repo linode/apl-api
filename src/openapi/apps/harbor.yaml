@@ -47,63 +47,90 @@ AppHarbor:
           properties:
             imageChartStorage:
               additionalProperties: false
-              description: For reference go to https://github.com/distribution/distribution/blob/main/docs/configuration.md#storage
-              properties:
-                aws:
-                  additionalProperties: false
+              title: Image Chart Storage
+              oneOf:
+                - title: File
                   properties:
-                    accesskey:
-                      $ref: ../definitions.yaml#/awsAccessKey
-                    secretkey:
-                      $ref: ../definitions.yaml#/awsSecretKey
-                    region:
-                      $ref: ../definitions.yaml#/awsRegion
-                    regionendpoint:
+                    type:
                       type: string
-                    bucket:
-                      type: string
-                    encrypt:
-                      type: boolean
-                    keyid:
-                      type: string
-                    secure:
-                      type: boolean
-                    v4auth:
-                      type: boolean
-                    chunksize:
-                      type: integer
-                    multipartcopychunksize:
-                      type: integer
-                    multipartcopymaxconcurrency:
-                      type: integer
-                    multipartcopythresholdsize:
-                      type: integer
-                    rootdirectory:
-                      type: string
-                azure:
-                  additionalProperties: false
+                      enum:
+                        - file
+                      default: file
+                - title: AWS
                   properties:
-                    accountname:
+                    aws:
+                      additionalProperties: false
+                      properties:
+                        accesskey:
+                          $ref: ../definitions.yaml#/awsAccessKey
+                        secretkey:
+                          $ref: ../definitions.yaml#/awsSecretKey
+                        region:
+                          $ref: ../definitions.yaml#/awsRegion
+                        regionendpoint:
+                          type: string
+                        bucket:
+                          type: string
+                        encrypt:
+                          type: boolean
+                        keyid:
+                          type: string
+                        secure:
+                          type: boolean
+                        v4auth:
+                          type: boolean
+                        chunksize:
+                          type: integer
+                        multipartcopychunksize:
+                          type: integer
+                        multipartcopymaxconcurrency:
+                          type: integer
+                        multipartcopythresholdsize:
+                          type: integer
+                        rootdirectory:
+                          type: string
+                    type:
                       type: string
-                    accountkey:
-                      type: string
-                      x-secret: ''
-                    container:
-                      type: string
-                    realm:
-                      type: string
-                gcs:
-                  additionalProperties: false
+                      enum:
+                        - aws
+                      default: aws
+                - title: Azure
                   properties:
-                    bucket:
+                    azure:
+                      additionalProperties: false
+                      properties:
+                        accountname:
+                          type: string
+                        accountkey:
+                          type: string
+                          x-secret: ''
+                        container:
+                          type: string
+                        realm:
+                          type: string
+                    type:
                       type: string
-                    encodedkey:
+                      enum:
+                        - azure
+                      default: azure
+                - title: GCS
+                  properties:
+                    gcs:
+                      additionalProperties: false
+                      properties:
+                        bucket:
+                          type: string
+                        encodedkey:
+                          type: string
+                          description: A base64 encoded json file which contains the key
+                          x-secret: ''
+                        rootdirectory:
+                          type: string
+                    type:
                       type: string
-                      x-secret: ''
-                    rootdirectory:
-                      type: string
-                type:
-                  type: string
+                      enum:
+                        - gcs
+                      default: gcs
         registry:
           properties:
             secret:
@@ -125,39 +152,226 @@ AppHarbor:
         secretKey:
           type: string
           x-secret: 'randAlpha 16'
+        image:
+          properties:
+            tag:
+              $ref: ../definitions.yaml#/imageTag
+              x-default: v2.4.0
+            pullPolicy:
+              $ref: ../definitions.yaml#/imagePullPolicy
         resources:
           additionalProperties: false
           properties:
-            adapter:
-              allOf: [$ref: ../definitions.yaml#/resources]
-              title: Adapter
             chartmuseum:
-              allOf: [$ref: ../definitions.yaml#/resources]
               title: Chart Museum
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 400m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+              required:
+                - limits
+                - requests
             clair:
-              allOf: [$ref: ../definitions.yaml#/resources]
-              title: Clair
-            controller:
-              $ref: ../definitions.yaml#/resources
-              title: Controller
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 1Gi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 400m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 2Gi
+              required:
+                - limits
+                - requests
+            clair-adapter:
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 400m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+              required:
+                - limits
+                - requests
             core:
-              allOf: [$ref: ../definitions.yaml#/resources]
-              title: Core
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 512Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+              required:
+                - limits
+                - requests
             database:
-              allOf: [$ref: ../definitions.yaml#/resources]
-              title: Database
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 512Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+              required:
+                - limits
+                - requests
             jobservice:
-              allOf: [$ref: ../definitions.yaml#/resources]
               title: Job service
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 512Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+              required:
+                - limits
+                - requests
             portal:
-              allOf: [$ref: ../definitions.yaml#/resources]
-              title: Portal
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 400m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests
             redis:
-              allOf: [$ref: ../definitions.yaml#/resources]
-              title: Redis
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 400m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests
             registry:
-              allOf: [$ref: ../definitions.yaml#/resources]
-              title: Registry
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 64Mi
+              required:
+                - limits
+                - requests
             registry-controller:
-              allOf: [$ref: ../definitions.yaml#/resources]
               title: Registry controller
+              properties:
+                limits:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 400m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+              required:
+                - limits
+                - requests
