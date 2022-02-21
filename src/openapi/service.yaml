@@ -207,7 +207,7 @@ networkPolicy:
       items:
         type: object
         properties:
-          host:
+          domain:
             title: FQDN or IP address
             $ref: definitions.yaml#/domain
           ports:
