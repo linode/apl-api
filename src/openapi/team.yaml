@@ -18,7 +18,7 @@ TeamSelfService:
       items:
         type: string
         # downloadKubeConfig - is an action that a user can perform, not an attribute of the input form
-        enum: [alerts, oidc, resourceQuota, downloadKubeConfig]
+        enum: [alerts, oidc, resourceQuota, downloadKubeConfig, networkPolicy]
       default: [alerts]
       uniqueItems: true
 Team:
