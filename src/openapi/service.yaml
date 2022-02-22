@@ -213,6 +213,7 @@ networkPolicy:
           ports:
             type: array
             items:
+              type: object
               properties:
                 number:
                   title: Port number
