@@ -69,6 +69,7 @@ AdditionalCluster:
 
 Cluster:
   additionalProperties: false
+  type: object
   x-acl:
     admin:
       - read
@@ -117,4 +118,3 @@ Cluster:
     - name
     - provider
     - region
-  type: object

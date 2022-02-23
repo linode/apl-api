@@ -41,15 +41,15 @@ AppIngressNginx:
           properties:
             enabled:
               type: boolean
-              default: false
+              x-default: false
             block:
               description: Makes nginx block requests that are marked as violating the modsec rules.
               type: boolean
-              default: true
+              x-default: true
             owasp:
               description: Turns on the default OWASP rule set for modsec. See https://owasp.org/www-project-modsecurity-core-rule-set/.
               type: boolean
-              default: true
+              x-default: true
           type: object
         service:
           type: object
@@ -57,6 +57,7 @@ AppIngressNginx:
             annotations:
               $ref: ../definitions.yaml#/annotations
         image:
+          type: object
           properties:
             tag:
               $ref: ../definitions.yaml#/imageTag
@@ -64,8 +65,10 @@ AppIngressNginx:
             pullPolicy:
               $ref: ../definitions.yaml#/imagePullPolicy
         resources:
+          type: object
           properties:
             limits:
+              type: object
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
@@ -74,6 +77,7 @@ AppIngressNginx:
                   $ref: ../definitions.yaml#/quantityMem
                   x-default: 1.5Gi
             requests:
+              type: object
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
@@ -85,13 +89,15 @@ AppIngressNginx:
             - limits
             - requests
         private:
+          title: Private loadbalancer
           description: Private loadbalancer configuration.
+          type: object
           properties:
             enabled:
               title: Enable private loadbalancer
               description: Enable to start an extra loadbalancer for private network traffic.
               type: boolean
-              default: false
+              x-default: false
             autoscaling:
               $ref: ../definitions.yaml#/autoscalingEnabled
             loadBalancerIP:
@@ -99,8 +105,10 @@ AppIngressNginx:
             loadBalancerRG:
               type: string
             resources:
+              type: object
               properties:
                 limits:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -109,6 +117,7 @@ AppIngressNginx:
                       $ref: ../definitions.yaml#/quantityMem
                       x-default: 1.5Gi
                 requests:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -120,8 +129,7 @@ AppIngressNginx:
                 - limits
                 - requests
             service:
+              type: object
               properties:
                 annotations:
                   $ref: ../definitions.yaml#/annotations
-          title: Private loadbalancer
-          type: object

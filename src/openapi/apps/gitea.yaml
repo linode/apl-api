@@ -3,13 +3,16 @@ AppGitea:
   x-externalDocsPath: https://gitea.io/en-us/
   x-short: A painless self-hosted Git service.
   description: Gitea is a community managed lightweight code hosting solution written in Go. It is published under the MIT license.
+  x-info:
+    Because Otomi uses Drone to deploy changes to the values repo, it needs a git hosting solution. When no source control is configured, Otomi will deploy Gitea for Drone to target as a git repo.
+    Gitea may be used for other purposes, and is especially useful in combination with Drone as a CI/CD solution. Just like Otomi uses it ;)
   title: Gitea
   type: object
   properties:
     id:
       $ref: ../definitions.yaml#/idName
     enabled:
-      default: true
+      x-default: true
       type: boolean
     rawValues:
       $ref: ../definitions.yaml#/rawValues
@@ -32,8 +35,10 @@ AppGitea:
           description: Once set and deployed it cannot be changed with manual intervention.
           x-secret: 'randAlphaNum 20'
         image:
+          type: object
           properties:
             gitea:
+              type: object
               properties:
                 tag:
                   $ref: ../definitions.yaml#/imageTag
@@ -41,6 +46,7 @@ AppGitea:
                 pullPolicy:
                   $ref: ../definitions.yaml#/imagePullPolicy
             postgres:
+              type: object
               properties:
                 tag:
                   $ref: ../definitions.yaml#/imageTag
@@ -48,6 +54,7 @@ AppGitea:
                 pullPolicy:
                   $ref: ../definitions.yaml#/imagePullPolicy
             memcaches:
+              type: object
               properties:
                 tag:
                   $ref: ../definitions.yaml#/imageTag
@@ -55,10 +62,13 @@ AppGitea:
                 pullPolicy:
                   $ref: ../definitions.yaml#/imagePullPolicy
         resources:
+          type: object
           properties:
             gitea:
+              type: object
               properties:
                 limits:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -67,6 +77,7 @@ AppGitea:
                       $ref: ../definitions.yaml#/quantityMem
                       x-default: 1Gi
                 requests:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -78,8 +89,10 @@ AppGitea:
                 - limits
                 - requests
             memcached:
+              type: object
               properties:
                 limits:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -88,6 +101,7 @@ AppGitea:
                       $ref: ../definitions.yaml#/quantityMem
                       x-default: 256Mi
                 requests:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -99,8 +113,10 @@ AppGitea:
                 - limits
                 - requests
             postgresql:
+              type: object
               properties:
                 limits:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -109,6 +125,7 @@ AppGitea:
                       $ref: ../definitions.yaml#/quantityMem
                       x-default: 512Mi
                 requests:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu

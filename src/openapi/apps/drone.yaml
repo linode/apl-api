@@ -3,13 +3,17 @@ AppDrone:
   x-externalDocsPath: https://drone.io
   x-short: Automate Software Build and Testing
   description: Drone is a self-service Continuous Integration platform for busy development teams.
+  x-info: |
+    Otomi uses Drone to deploy changes to the values repo. As such, it is installed and configured by default. When no source control is configured, Otomi will deploy Gitea as Drone's git hosting dependency.
+
+    You may use Otomi's installment of Drone for other purposes if so desired, with the limitation that it can't be configured for multiple git repos.
   title: Drone
   type: object
   properties:
     id:
       $ref: ../definitions.yaml#/idName
     enabled:
-      default: false
+      x-default: false
       type: boolean
     rawValues:
       $ref: ../definitions.yaml#/rawValues
@@ -34,17 +38,17 @@ AppDrone:
           description: Token used by to connect to remote git repo.
           x-secret: ''
         debug:
-          default: false
+          x-default: false
           type: boolean
           description: Turns on debugging
         trace:
-          default: false
+          x-default: false
           type: boolean
           description: Turns on tracing
         orgsFilter:
           $ref: ../definitions.yaml#/wordCharacterPattern
           title: Organization filter
-          description: A comma separated list of github organisations that drone will manage.
+          description: A comma separated list of git organisations that drone will manage.
         repo:
           $ref: ../definitions.yaml#/idName
           description: A git repository
@@ -58,123 +62,120 @@ AppDrone:
         sourceControl:
           title: Source control
           description: Provide data to connect to a remote git repo
-          allOf:
-            - properties:
-                username:
+          type: object
+          oneOf:
+            - $ref: ../definitions.yaml#/offChoice
+            - title: Bitbucket Cloud
+              type: object
+              required: [bitbucketCloud]
+              properties:
+                provider:
+                  default: bitbucketcloud
+                  enum:
+                    - bitbucketcloud
                   type: string
-                password:
+                bitbucketCloud:
+                  title: Bitbucket Cloud
+                  $ref: ../definitions.yaml#/droneGit
+                  type: object
+            - title: Bitbucket Server
+              type: object
+              required: [bitbucketServer]
+              properties:
+                provider:
+                  default: bitbucketserver
+                  enum:
+                    - bitbucketserver
                   type: string
-                  x-secret: ''
-                secret:
-                  type: string
-                  description: K8S secret containing your source control provider secrets, with same keys as asked below. When left blank a secret will be created from the credentials given below.
-                  x-secret: ''
-            - title: Provider
-              nullable: true
-              oneOf:
-                - $ref: ../definitions.yaml#/offChoice
-                - title: Bitbucket Cloud
-                  required: [bitbucketCloud]
+                bitbucketServer:
+                  type: object
+                  title: Bitbucket Server
                   properties:
-                    provider:
-                      default: bitbucketcloud
-                      enum:
-                        - bitbucketcloud
+                    consumerKey:
                       type: string
-                    bitbucketCloud:
-                      title: Bitbucket Cloud
-                      $ref: ../definitions.yaml#/droneGit
-                      type: object
-                - title: Bitbucket Server
-                  required: [bitbucketServer]
-                  properties:
-                    provider:
-                      default: bitbucketserver
-                      enum:
-                        - bitbucketserver
+                      x-secret: ''
+                    passwordKey:
                       type: string
-                    bitbucketServer:
-                      type: object
-                      title: Bitbucket Server
-                      properties:
-                        consumerKey:
-                          type: string
-                          x-secret: ''
-                        passwordKey:
-                          type: string
-                          x-secret: ''
-                        privateKey:
-                          type: string
-                          x-secret: ''
+                      x-secret: ''
+                    privateKey:
+                      type: string
+                      x-secret: ''
+                    server:
+                      type: string
+                    username:
+                      type: string
+                      x-secret: ''
+            - title: Gitea
+              type: object
+              required: [gitea]
+              properties:
+                provider:
+                  default: gitea
+                  enum:
+                    - gitea
+                  type: string
+                gitea:
+                  title: Gitea
+                  type: object
+                  allOf:
+                    - $ref: ../definitions.yaml#/droneGit
+                    - properties:
                         server:
                           type: string
-                        username:
+            - title: GitHub
+              type: object
+              required: [github]
+              properties:
+                provider:
+                  default: github
+                  enum:
+                    - github
+                  type: string
+                github:
+                  title: GitHub
+                  type: object
+                  allOf:
+                    - $ref: ../definitions.yaml#/droneGit
+                    - properties:
+                        server:
+                          default: 'https://github.com'
                           type: string
-                          x-secret: ''
-                - title: Gitea
-                  required: [gitea]
-                  properties:
-                    provider:
-                      default: gitea
-                      enum:
-                        - gitea
-                      type: string
-                    gitea:
-                      title: Gitea
-                      allOf:
-                        - $ref: ../definitions.yaml#/droneGit
-                        - properties:
-                            server:
-                              type: string
-                - title: GitHub
-                  required: [github]
-                  properties:
-                    provider:
-                      default: github
-                      enum:
-                        - github
-                      type: string
-                    github:
-                      title: GitHub
-                      type: object
-                      allOf:
-                        - $ref: ../definitions.yaml#/droneGit
-                        - properties:
-                            server:
-                              default: 'https://github.com'
-                              type: string
-                - title: GitLab
-                  required: [gitlab]
-                  properties:
-                    provider:
-                      default: gitlab
-                      enum:
-                        - gitlab
-                      type: string
-                    gitlab:
-                      title: GitLab
-                      allOf:
-                        - $ref: ../definitions.yaml#/droneGit
-                        - properties:
-                            server:
-                              type: string
-                - title: Gogs
-                  required: [gogs]
-                  properties:
-                    provider:
-                      default: gogs
-                      enum:
-                        - gogs
-                      type: string
-                    gogs:
-                      title: Gogs
-                      type: object
-                      properties:
+            - title: GitLab
+              type: object
+              required: [gitlab]
+              properties:
+                provider:
+                  default: gitlab
+                  enum:
+                    - gitlab
+                  type: string
+                gitlab:
+                  title: GitLab
+                  type: object
+                  allOf:
+                    - $ref: ../definitions.yaml#/droneGit
+                    - properties:
                         server:
                           type: string
+            - title: Gogs
+              type: object
+              required: [gogs]
+              properties:
+                provider:
+                  default: gogs
+                  enum:
+                    - gogs
+                  type: string
+                gogs:
+                  title: Gogs
+                  type: object
+                  properties:
+                    server:
+                      type: string
         githubAdmins:
           additionalProperties: false
           title: Github admin group
+          type: object
           description: '[GitHub only] The name of a github group given admin access in drone.'
           properties:
             org:
@@ -190,8 +191,10 @@ AppDrone:
               title: Token
               description: The oauth secret used to identify with the github oauth app.
         image:
+          type: object
           properties:
             agent:
+              type: object
               properties:
                 tag:
                   $ref: ../definitions.yaml#/imageTag
@@ -200,6 +203,7 @@ AppDrone:
                   $ref: ../definitions.yaml#/imagePullPolicy
                   default: Always
             server:
+              type: object
               properties:
                 tag:
                   $ref: ../definitions.yaml#/imageTag
@@ -207,6 +211,7 @@ AppDrone:
                 pullPolicy:
                   $ref: ../definitions.yaml#/imagePullPolicy
         resources:
+          type: object
           properties:
             runner:
               title: Runner
@@ -225,8 +230,10 @@ AppDrone:
               required:
                 - requests
             agent:
+              type: object
               properties:
                 limits:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -235,6 +242,7 @@ AppDrone:
                       $ref: ../definitions.yaml#/quantityMem
                       x-default: 256Mi
                 requests:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -246,8 +254,10 @@ AppDrone:
                 - limits
                 - requests
             server:
+              type: object
               properties:
                 limits:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -256,6 +266,7 @@ AppDrone:
                       $ref: ../definitions.yaml#/quantityMem
                       x-default: 256Mi
                 requests:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu

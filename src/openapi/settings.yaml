@@ -8,21 +8,22 @@ Settings:
       $ref: definitions.yaml#/alerts
       title: Alerts
       description: Configure alerting endpoints to receive notifications from Alertmanager and Otomi deployments.
-      x-externalDocsPath: docs/console/settings/alerts
+      x-externalDocsPath: docs/console/settings#alerts
     home:
       $ref: definitions.yaml#/alerts
       title: Home alerts
       description: Same setup as 'Alerts', but to send copies of alerts "home". Useful for co-monitoring managed clusters of customers.
-      x-externalDocsPath: docs/console/settings/home
+      x-externalDocsPath: docs/console/settings#home-alerts
     azure:
       title: Azure
       additionalProperties: false
       description: Azure specific configuration. Only applicable on Azure clusters.
+      x-externalDocsPath: docs/console/settings#azure
       properties:
         appgw:
           properties:
             isManaged:
-              default: true
+              x-default: true
               title: Managed by AKS
               description:
                 In case `otomi.hasCloudLB` is set, this setting indicates that an Azure AppGW Ingress Controller was already installed by AKS as an addon (only available on "Preview" clusters).
@@ -47,14 +48,12 @@ Settings:
         - subscriptionId
         - tenantId
       type: object
-    cluster:
-      $ref: cluster.yaml#/Cluster
     dns:
       $ref: definitions.yaml#/dns
-      x-externalDocsPath: docs/console/settings/dns
+      x-externalDocsPath: docs/console/settings#dns
     kms:
       $ref: definitions.yaml#/kms
-      x-externalDocsPath: docs/console/settings/kms
+      x-externalDocsPath: docs/console/settings#kms
     oidc:
       title: OIDC
       description: OpenID Connect settings.
@@ -70,6 +69,7 @@ Settings:
         clientSecret:
           title: Client Secret
           type: string
+          x-secret: ''
         adminGroupID:
           title: Admin group ID
           type: string
@@ -87,7 +87,7 @@ Settings:
           description: Select OIDC claim to be passed by Keycloak as a unique user identifier. Best to not change this from the default.
           x-default: sub
       type: object
-      x-externalDocsPath: docs/console/settings/oidc
+      x-externalDocsPath: docs/console/settings#oidc
     otomi:
       title: Otomi
       type: object
@@ -132,33 +132,33 @@ Settings:
             - password
           type: object
         hasCloudLB:
-          default: false
+          x-default: false
           description: Set this to true when an external load balancer exists (Azure AppGW, Google Apigee) or needs to be started (AWS ALB). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.
           title: External load balancer
           type: boolean
         hasExternalDNS:
           description: Set this to true when an external dns zone is available to manage dns records. (Expects required `dns:` fields to be set.)
-          default: true
+          x-default: false
           title: External DNS
           type: boolean
         hasExternalIDP:
-          default: false
+          x-default: false
           description: Set this to true when bringing your own external IDP such as Azure AD. (Expects required `oidc:` fields to be set.)
           title: External IDP
           type: boolean
         isHomeMonitored:
-          default: false
+          x-default: false
           description: Whether this cluster is home monitored (like when under a Premium SLA). Sends criticals home.
           title: Home monitored
           type: boolean
         isManaged:
-          default: true
+          x-default: true
           description: Whether masters are managed and not under control. Set this to false when onprem.
           title: Managed masters
           type: boolean
         isMultitenant:
-          default: true
-          description: Will separate team metrics and logs. Disabling this lets everybody be admin and see everything.
+          x-default: false
+          description: Will separate team metrics and logs. Disabling this effectively gives all users admin role and lets them see everything.
           title: Multi-tenancy
           type: boolean
         version:
@@ -167,7 +167,7 @@ Settings:
           description: |
             Please pin this to a valid release version found in the repo. Suggestion: try the most recent stable version.
           type: string
-      x-externalDocsPath: docs/console/settings/otomi
+      x-externalDocsPath: docs/console/settings#otomi
     policies:
       $ref: policies.yaml#/policies
     smtp:
@@ -204,5 +204,5 @@ Settings:
       required:
         - smarthost
       type: object
-      x-externalDocsPath: docs/console/settings/smtp
+      x-externalDocsPath: docs/console/settings#smtp
   type: object

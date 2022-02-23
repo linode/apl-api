@@ -5,6 +5,7 @@ adminPassword:
   x-secret: ''
 alerts:
   additionalProperties: false
+  type: object
   properties:
     repeatInterval:
       x-default: 3h
@@ -80,6 +81,7 @@ alerts:
         responders:
           type: array
           items:
+            type: object
             allOf:
               - properties:
                   type:
@@ -152,6 +154,7 @@ annotations:
         type: string
         maxLength: 32767
 autoscaling:
+  type: object
   properties:
     maxReplicas:
       type: integer
@@ -160,10 +163,11 @@ autoscaling:
       type: integer
       x-default: 1
 autoscalingEnabled:
+  type: object
   allOf:
     - properties:
         enabled:
-          default: true
+          x-default: true
           type: boolean
     - $ref: '#/autoscaling'
 awsAccessKey:
@@ -207,6 +211,7 @@ azureEnvironment:
 azureMonitor:
   description: Azure Monitor data can be made available in Grafana.
   title: Azure Monitor
+  type: object
   nullable: true
   oneOf:
     - $ref: '#/offChoice'
@@ -399,6 +404,7 @@ droneGit:
     clientSecretValue:
       type: string
       x-secret: ''
+  type: object
 duration:
   description: 'Prometheus duration (See: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#configuration-file)'
   pattern: '((([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?|0)'
@@ -502,7 +508,7 @@ jobSpec:
       description: A job name
       example: some-job
     enabled:
-      default: true
+      x-default: true
       type: boolean
     type:
       default: Job
@@ -559,6 +565,7 @@ kms:
     sops:
       description: Encryption credentials for SOPS to encrypt the platform secrets.
       title: SOPS credentials
+      type: object
       oneOf:
         - properties:
             provider:
@@ -567,6 +574,7 @@ kms:
                 - aws
               default: aws
             aws:
+              type: object
               properties:
                 keys:
                   description: Comma separated list of one or two ARNs to keys as defined in AWS KMS. One if used for both enc+dec. Two if one for enc, other for dec.
@@ -586,6 +594,7 @@ kms:
           required:
             - aws
           title: AWS
+          type: object
         - properties:
             provider:
               type: string
@@ -593,6 +602,7 @@ kms:
               enum:
                 - azure
             azure:
+              type: object
               properties:
                 keys:
                   description: Comma separated list of one or two paths to keys as defined in Azure Keyvault. One if used for both enc+dec. Two if one for enc, other for dec.
@@ -612,6 +622,7 @@ kms:
           required:
             - azure
           title: Azure
+          type: object
         - properties:
             provider:
               type: string
@@ -619,6 +630,7 @@ kms:
               enum:
                 - google
             google:
+              type: object
               properties:
                 keys:
                   description: Comma separated list of one or two paths to keys as defined in GCP KMS. One if used for both enc+dec. Two if one for enc, other for dec.
@@ -636,6 +648,7 @@ kms:
           required:
             - google
           title: Google
+          type: object
         - properties:
             provider:
               type: string
@@ -643,6 +656,7 @@ kms:
               enum:
                 - vault
             vault:
+              type: object
               properties:
                 keys:
                   description: Comma separated list of one or two paths to keys as defined in Vault. One if used for both enc+dec. Two if one for enc, other for dec.
@@ -657,6 +671,7 @@ kms:
           required:
             - vault
           title: Vault
+          type: object
 ksvcNew:
   description: Will create a new knative service from the input gathered here.
   title: New Knative service
@@ -674,7 +689,7 @@ ksvcNew:
             readOnlyRootFilesystem:
               description: Whether this container has a read-only root filesystem. Default is false.
               type: boolean
-              default: false
+              x-default: false
           title: Security context
       type: object
     - $ref: '#/containerSpecNoSec'
@@ -685,7 +700,7 @@ ksvcNew:
             - ksvc
           type: string
         scaleToZero:
-          default: false
+          x-default: false
           description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
           title: Scale to zero
           type: boolean
@@ -887,9 +902,14 @@ resourceQuota:
     required:
       - name
       - value
+  default:
+    - name: pods
+      value: '50'
+    - name: services.loadbalancers
+      value: '0'
 runAsNonRoot:
   description: Will prevent the container from starting with UID 0. This implies that k8s must be able to infer the UID from the image. If it complains the UID must be explicitly set with runAsUser.
-  default: true
+  x-default: true
   title: Run as non-root
   type: boolean
 runAsUser:
@@ -948,6 +968,7 @@ secretMounts:
       path:
         $ref: '#/path'
     type: object
+    required: [name, path]
 s3Url:
   type: string
   description: An url to an AWS S3 bucket

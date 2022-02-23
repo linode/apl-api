@@ -3,13 +3,26 @@ AppKeycloak:
   x-externalDocsPath: https://www.keycloak.org
   x-short: Open Source Identity and Access Management
   description: Add authentication to applications and secure services with minimum effort. No need to deal with storing users or authenticating users. Keycloak provides user federation, strong authentication, user management, fine-grained authorization, and more.
+  x-info: |
+    The SSO login page for Otomi is served by Keycloak. It is used as an identity broker or provider for all Otomi integrated applications. Keycloak is configured with mappers that normalize incoming identities from an IDP to have predictable claims format to be used by Otomi applications.
+
+    Keycloak is automatically configured with 3 roles:
+
+    - otomi-admin: super admin role for all platform configuration and core applications
+    - team-admin: team admin role to manage teams and users
+    - team: team role for team members
+
+    And group (team) membership is reflected in the user's 'groups' claim.
+    When this authorization configuration is useful to their own built applications, teams can directly use Keycloak's provided groups and roles claims. There is no need for a client or token validation, as that has been done by the platform. They can do so by turning on the "Authenticate with Single Sign On" checkbox. This then limits the application access to only allow the members of the team.
+
+    When there are different requirements to use Keycloak for business applications, Keycloak's designated "master" and "otomi" realms may not be used, and an additional realm needs to be created. We refer to the keycloak docs for any custom configuration targeting business applications.
   title: Keycloak
   type: object
   properties:
     id:
       $ref: ../definitions.yaml#/idName
     enabled:
-      default: true
+      x-default: true
       type: boolean
     rawValues:
       $ref: ../definitions.yaml#/rawValues
@@ -26,6 +39,7 @@ AppKeycloak:
       properties:
         idp:
           additionalProperties: false
+          type: object
           properties:
             alias:
               type: string
@@ -38,8 +52,9 @@ AppKeycloak:
               x-secret: 'randAlphaNum 32'
         postgresqlPassword:
           type: string
-          description: Once set and deployed it cannot be changed with manual intervention.
+          description: Cannot be changed after initial install.
           x-secret: 'randAlphaNum 20'
+          readOnly: true
         adminUsername:
           type: string
           default: admin
@@ -47,10 +62,13 @@ AppKeycloak:
           $ref: ../definitions.yaml#/adminPassword
         resources:
           additionalProperties: false
+          type: object
           properties:
             keycloak:
+              type: object
               properties:
                 limits:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -59,6 +77,7 @@ AppKeycloak:
                       $ref: ../definitions.yaml#/quantityMem
                       x-default: 1.5Gi
                 requests:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -70,8 +89,10 @@ AppKeycloak:
                 - limits
                 - requests
             postgresql:
+              type: object
               properties:
                 limits:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -80,6 +101,7 @@ AppKeycloak:
                       $ref: ../definitions.yaml#/quantityMem
                       x-default: 1.5Gi
                 requests:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu

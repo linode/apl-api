@@ -1,6 +1,6 @@
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import OtomiStack from '../otomi-stack'
 import { OpenApiRequestExt } from '../otomi-models'
+import OtomiStack from '../otomi-stack'
 
 export default function (otomi: OtomiStack): OperationHandlerArray {
   const GET: Operation = [

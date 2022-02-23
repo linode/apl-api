@@ -9,7 +9,7 @@ AppKubeapps:
     id:
       $ref: ../definitions.yaml#/idName
     enabled:
-      default: false
+      x-default: false
       type: boolean
     rawValues:
       $ref: ../definitions.yaml#/rawValues

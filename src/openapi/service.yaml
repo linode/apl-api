@@ -57,12 +57,12 @@ Service:
 Ingress:
   properties:
     tlsPass:
-      default: false
+      x-default: false
       description: Pass through the request as is to the backing service. Only available for predeployed regular (non-knative) services.
       title: TLS passthrough
       type: boolean
     useDefaultSubdomain:
-      default: true
+      x-default: true
       description: Use the team domain so that the URL reveals the owner.
       title: Use team domain (preferred)
       type: boolean
@@ -86,16 +86,19 @@ Ingress:
       description: Forward the URL path into the service (don't rewrite to /)
       title: Forward path
       type: boolean
+      x-default: false
     auth:
       description: Will check if the user is logged in to one of keycloak's OIDC providers.
       title: Authenticate with Single Sign On
       type: boolean
+      x-default: false
     hasCert:
       description: Select when a certificate exists and should not be generated.
       title: Already has a certificate
       type: boolean
+      x-default: false
     certSelect:
-      default: true
+      x-default: true
       description: Select one of the TLS secrets created in Otomi.
       title: Select team secret
       type: boolean
@@ -157,13 +160,18 @@ IngressPublic:
 
 networkPolicy:
   additionalProperties: false
+  type: object
   properties:
     ingressPrivate:
+      additionalProperties: false
+      type: object
       title: Ingress traffic inside the cluster
       description: 'Pods belonging to this service must contain "app: <service name>" label'
       oneOf:
         - title: Deny all
           description: Deny traffic from all teams (including this one)
+          additionalProperties: false
+          type: object
           properties:
             mode:
               type: string
@@ -171,6 +179,8 @@ networkPolicy:
               enum:
                 - DenyAll
         - title: Allow selected
+          additionalProperties: false
+          type: object
           properties:
             mode:
               type: string
@@ -193,7 +203,10 @@ networkPolicy:
                     type: string
                 required:
                   - team
+                  - service
         - title: Allow all
+          additionalProperties: false
+          type: object
           description: Allow traffic from all teams
           properties:
             mode:

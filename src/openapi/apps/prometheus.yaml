@@ -3,6 +3,8 @@ AppPrometheus:
   x-externalDocsPath: https://prometheus.io
   x-short: From metrics to insight
   description: Power your metrics and alerting with the leading open-source monitoring solution.
+  x-info: |
+    Prometheus aggregates all the metrics from the platform and stores them in a storage endpoint of choice (defaults to PVC).
   title: Prometheus
   type: object
   properties:
@@ -32,8 +34,10 @@ AppPrometheus:
           $ref: ../definitions.yaml#/size
           default: 5Gi
         image:
+          type: object
           properties:
             prometheus:
+              type: object
               properties:
                 tag:
                   $ref: ../definitions.yaml#/imageTag
@@ -41,6 +45,7 @@ AppPrometheus:
                 pullPolicy:
                   $ref: ../definitions.yaml#/imagePullPolicy
             kube-state-metrics:
+              type: object
               properties:
                 tag:
                   $ref: ../definitions.yaml#/imageTag
@@ -48,6 +53,7 @@ AppPrometheus:
                 pullPolicy:
                   $ref: ../definitions.yaml#/imagePullPolicy
             node-exporter:
+              type: object
               properties:
                 tag:
                   $ref: ../definitions.yaml#/imageTag
@@ -55,10 +61,13 @@ AppPrometheus:
                 pullPolicy:
                   $ref: ../definitions.yaml#/imagePullPolicy
         resources:
+          type: object
           properties:
             prometheus:
+              type: object
               properties:
                 limits:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -67,6 +76,7 @@ AppPrometheus:
                       $ref: ../definitions.yaml#/quantityMem
                       x-default: 256Mi
                 requests:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -78,8 +88,10 @@ AppPrometheus:
                 - limits
                 - requests
             kube-state-metrics:
+              type: object
               properties:
                 limits:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -88,6 +100,7 @@ AppPrometheus:
                       $ref: ../definitions.yaml#/quantityMem
                       x-default: 256Mi
                 requests:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -99,8 +112,10 @@ AppPrometheus:
                 - limits
                 - requests
             node-exporter:
+              type: object
               properties:
                 limits:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
@@ -109,6 +124,7 @@ AppPrometheus:
                       $ref: ../definitions.yaml#/quantityMem
                       x-default: 128Mi
                 requests:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu

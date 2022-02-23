@@ -2,6 +2,10 @@ AppVault:
   additionalProperties: false
   x-externalDocsPath: https://www.vaultproject.io
   description: Vault info
+  x-info: |
+    Vault has been made tenant aware in Otomi. When it is enabled, a space will automatically be created for each team, and only team members are allowed access. Vault is automatically configured to use Otomi's Keycloak OIDC settings to login users through Otomi's SSO.
+
+    Vault (like all parts of Otomi) runs natively on Kubernetes. To prevent data from Vault being lost during a rolling cluster upgrade, data persistence can be configured in combination with external (blob) storage. Read more here for configuring external data persistence.
   title: Vault
   type: object
   properties:
@@ -30,6 +34,7 @@ AppVault:
           type: object
           oneOf:
             - title: gcpckms
+              type: object
               properties:
                 gcpckms:
                   properties:
@@ -49,6 +54,7 @@ AppVault:
               required:
                 - gcpckms
             - title: awskms
+              type: object
               properties:
                 awskms:
                   properties:
@@ -69,6 +75,7 @@ AppVault:
               required:
                 - awskms
             - title: azurekeyvault
+              type: object
               properties:
                 azurekeyvault:
                   properties:
@@ -92,13 +99,16 @@ AppVault:
           description: Storage configuration. See https://www.vaultproject.io/docs/configuration/storage. Defaults to PVC.
           type: object
         image:
+          type: object
           properties:
             tag:
               $ref: ../definitions.yaml#/imageTag
               x-default: 1.14.4
         resources:
+          type: object
           properties:
             limits:
+              type: object
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
@@ -107,6 +117,7 @@ AppVault:
                   $ref: ../definitions.yaml#/quantityMem
                   x-default: 512Mi
             requests:
+              type: object
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu

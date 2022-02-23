@@ -1,14 +1,15 @@
 /* eslint-disable class-methods-use-this */
+import $parser from '@apidevtools/json-schema-ref-parser'
 import * as k8s from '@kubernetes/client-node'
-import { readFileSync } from 'fs'
-import yaml from 'js-yaml'
-import { cloneDeep, merge, filter, get, omit, set, unset, union, isEmpty, each } from 'lodash'
-import generatePassword from 'password-generator'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
+import { readFileSync } from 'fs'
+import yaml from 'js-yaml'
+import { cloneDeep, each, filter, get, isEmpty, merge, omit, set, union, unset } from 'lodash'
+import generatePassword from 'password-generator'
 import path from 'path'
-import $parser from '@apidevtools/json-schema-ref-parser'
 import Db from './db'
+import { HttpError, PublicUrlExists, ValidationError } from './error'
 import {
   App,
   Cluster,
@@ -16,6 +17,7 @@ import {
   Dns,
   Job,
   OpenAPIDoc,
+  OtomiSpec,
   Policies,
   Secret,
   Service,
@@ -25,10 +27,8 @@ import {
   Team,
   TeamSelfService,
   User,
-  OtomiSpec,
 } from './otomi-models'
-
-import { HttpError, PublicUrlExists, ValidationError } from './error'
+import cloneRepo, { prepareValues, Repo } from './repo'
 import {
   argQuoteJoin,
   argQuoteStrip,
@@ -45,19 +45,18 @@ import {
   getTeamServicesJsonPath,
   objectToArray,
 } from './utils'
-import cloneRepo, { prepareValues, Repo } from './repo'
 import {
   cleanEnv,
-  CUSTOM_ROOT_CA,
   CORE_VERSION,
-  GIT_REPO_URL,
-  GIT_LOCAL_PATH,
-  GIT_BRANCH,
-  GIT_USER,
-  GIT_PASSWORD,
-  GIT_EMAIL,
+  CUSTOM_ROOT_CA,
   DB_PATH,
   DISABLE_SYNC,
+  GIT_BRANCH,
+  GIT_EMAIL,
+  GIT_LOCAL_PATH,
+  GIT_PASSWORD,
+  GIT_REPO_URL,
+  GIT_USER,
 } from './validators'
 
 const debug = Debug('otomi:otomi-stack')

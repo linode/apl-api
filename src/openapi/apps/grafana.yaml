@@ -9,7 +9,7 @@ AppGrafana:
     id:
       $ref: ../definitions.yaml#/idName
     enabled:
-      default: true
+      x-default: true
       type: boolean
     rawValues:
       $ref: ../definitions.yaml#/rawValues
@@ -25,6 +25,7 @@ AppGrafana:
         adminPassword:
           $ref: ../definitions.yaml#/adminPassword
         image:
+          type: object
           properties:
             tag:
               $ref: ../definitions.yaml#/imageTag
@@ -32,8 +33,10 @@ AppGrafana:
             pullPolicy:
               $ref: ../definitions.yaml#/imagePullPolicy
         resources:
+          type: object
           properties:
             limits:
+              type: object
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
@@ -42,6 +45,7 @@ AppGrafana:
                   $ref: ../definitions.yaml#/quantityMem
                   x-default: 256Mi
             requests:
+              type: object
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu

@@ -9,7 +9,7 @@ AppGatekeeper:
     id:
       $ref: ../definitions.yaml#/idName
     enabled:
-      default: false
+      x-default: false
       type: boolean
     rawValues:
       $ref: ../definitions.yaml#/rawValues
@@ -25,31 +25,56 @@ AppGatekeeper:
       type: object
       properties:
         auditInterval:
+          title: Audit interval
+          description: The frequency with which audit is run.
           type: integer
           default: 60
         auditFromCache:
+          title: Audit from cache
+          description: Take the roster of resources to audit from the OPA cache
           type: boolean
-          default: false
+          x-default: false
         constraintViolationsLimit:
+          title: Constraint violations limit
+          description: The maximum number of audit violations reported on a constraint.
           type: integer
           default: 20
         dataSync:
           type: array
           items:
             type: object
+            properties:
+              version:
+                description: A k8s resource version. (i.e. 'serving.knative.dev')
+                type: string
+              kind:
+                description: A k8s resource kind. (i.e. 'Service')
+                type: string
+              group:
+                description: A k8s resource api group. (i.e. 'operator.knative.dev')
+                type: string
+            required: [kind, version]
+          title: Data sync
+          description: Additional resources that Gatekeeper policies will operate on, next to the ones Otomi already watches (core/Pod, apps/DaemonSet, apps/Deployment, apps/StatefulSet, batch/CronJob, batch/Job, serving.knative.dev/Service)
         disableValidatingWebhook:
+          title: Disable validating webhook
+          description: Disables Gatekeeper from blocking violating admission requests. Check the audit logs in Loki for violations.
           type: boolean
-          default: true
+          x-default: true
+        emitAuditEvents:
+          title: Emit audit events
+          description: Emit K8s events in gatekeeper namespace for audit violations.
+          type: boolean
+          x-default: false
+        emitAdmissionEvents:
+          title: Emit admission events
+          description: Emit K8s events in gatekeeper namespace for admission violations.
+          type: boolean
+          x-default: false
         excludedNamespaces:
           type: array
           items:
             type: string
-        emitAuditEvents:
-          type: boolean
-          default: false
-        emitAdmissionEvents:
-          type: boolean
-          default: false
         logLevel:
           type: string
           default: 'INFO'
@@ -63,6 +88,7 @@ AppGatekeeper:
           type: integer
           x-default: 1
         image:
+          type: object
           properties:
             tag:
               $ref: ../definitions.yaml#/imageTag
@@ -70,43 +96,50 @@ AppGatekeeper:
             pullPolicy:
               $ref: ../definitions.yaml#/imagePullPolicy
         resources:
+          type: object
           properties:
             audit:
+              type: object
               properties:
                 limits:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 1500m
+                      x-default: 1000m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
                       x-default: 512Mi
                 requests:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 750m
+                      x-default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 150Mi
+                      x-default: 256Mi
               required:
                 - limits
                 - requests
             controller:
+              type: object
               properties:
                 limits:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 500m
+                      x-default: 1000m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
                       x-default: 512Mi
                 requests:
+                  type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 200m
+                      x-default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
                       x-default: 256Mi

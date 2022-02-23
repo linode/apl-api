@@ -3,13 +3,16 @@ AppExternalDns:
   x-externalDocsPath: https://github.com/kubernetes-sigs/external-dns
   x-short: Synchronize exposed Kubernetes Services and Ingresses with DNS providers.
   description: Inspired by Kubernetes DNS, Kubernetes' cluster-internal DNS server, ExternalDNS makes Kubernetes resources discoverable via public DNS servers. Like KubeDNS, it retrieves a list of resources (Services, Ingresses, etc.) from the Kubernetes API to determine a desired list of DNS records. Unlike KubeDNS, however, it's not a DNS server itself, but merely configures other DNS providers accordingly.
+  x-info: |
+    ExternalDNS is required to make public service domains accessible by registering them with Otomi's front loadbalancer CNAME or IP address.
+    When it is not enabled (default) Otomi will instead rely on [nip.io](https://nip.io) to create host names for the services.
   title: External DNS
   type: object
   properties:
     id:
       $ref: ../definitions.yaml#/idName
     enabled:
-      default: true
+      x-default: false
       type: boolean
     rawValues:
       $ref: ../definitions.yaml#/rawValues

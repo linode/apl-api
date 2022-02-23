@@ -49,6 +49,7 @@ App:
   properties:
     enabled:
       type: boolean
+      x-default: false
     id:
       $ref: definitions.yaml#/idName
     rawValues:
