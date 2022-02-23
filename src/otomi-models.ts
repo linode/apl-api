@@ -1,6 +1,6 @@
 import { Request } from 'express'
 import { JSONSchema4 } from 'json-schema'
-import { components, operations, paths, external } from './generated-schema'
+import { components, external, operations, paths } from './generated-schema'
 
 export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
@@ -17,8 +17,6 @@ export type Settings = components['schemas']['Settings']
 export type Setting =
   | Settings['alerts']
   | Settings['azure']
-  | Settings['cluster']
-  | components['schemas']['Session']['cluster']
   | Settings['dns']
   | Settings['home']
   | Settings['kms']
