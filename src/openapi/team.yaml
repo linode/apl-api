@@ -8,8 +8,8 @@ TeamSelfService:
       type: array
       items:
         type: string
-        enum: [ingress]
-      default: [ingress]
+        enum: [ingress, networkPolicy]
+      default: [ingress, networkPolicy]
       uniqueItems: true
     Team:
       title: Team
@@ -17,7 +17,7 @@ TeamSelfService:
       items:
         type: string
         # downloadKubeConfig - is an action that a user can perform, not an attribute of the input form
-        enum: [alerts, oidc, resourceQuota, downloadKubeConfig]
+        enum: [alerts, oidc, resourceQuota, downloadKubeConfig, networkPolicy]
       default: [alerts]
       uniqueItems: true
 Team:
@@ -46,6 +46,19 @@ Team:
       $ref: definitions.yaml#/resourceQuota
     azureMonitor:
       $ref: definitions.yaml#/azureMonitor
+    networkPolicy:
+      properties:
+        ingressPrivate:
+          title: Internal ingress filtering
+          description: When enabled a user can define network policies for incoming traffic per service
+          type: boolean
+          default: true
+        egressPublic:
+          title: External egress filtering
+          description: When enabled a user can define public endpoints a service can access
+          type: boolean
+          default: true
+      type: object
     selfService:
       $ref: team.yaml#/TeamSelfService
   required:

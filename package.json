@@ -132,7 +132,7 @@
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
     "dev:watch": "run-p dev watch:openapi watch:ts",
-    "dev": "ts-node-dev --watch 'src/openapi/*.yaml' --inspect=4321 --respawn --transpile-only -r dotenv/config src/app.ts",
+    "dev": "npm run build:models && ts-node-dev --watch 'src/openapi/*.yaml' --inspect=4321 --respawn --transpile-only -r dotenv/config src/app.ts",
     "dev:docker": "npm ci && npm run dev",
     "lint": "run-p types lint:es",
     "lint:es": "eslint --ext ts .",
@@ -155,5 +155,5 @@
       "tag": true
     }
   },
-  "version": "0.4.93"
+  "version": "0.4.94-rc.1"
 }

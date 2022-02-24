@@ -161,7 +161,7 @@ networkPolicy:
   additionalProperties: false
   properties:
     ingressPrivate:
-      title: Ingress traffic inside the cluster
+      title: Internal ingress filtering
       description: 'Pods belonging to this service must contain "app: <service name>" label'
       oneOf:
         - title: Deny all
@@ -200,3 +200,36 @@ networkPolicy:
               default: allowAll
               enum:
                 - allowAll
+    egressPublic:
+      title: External egress filtering
+      description: Trusted domains this service can access
+      type: array
+      items:
+        type: object
+        properties:
+          domain:
+            title: FQDN or IP address
+            $ref: definitions.yaml#/domain
+          ports:
+            type: array
+            items:
+              type: object
+              properties:
+                number:
+                  title: Port number
+                  type: integer
+                  minimum: 1
+                  maximum: 65535
+                protocol:
+                  title: Protocol
+                  type: string
+                  enum: [HTTPS, HTTP, TCP]
+                  default: HTTPS
+              required:
+                - number
+                - protocol
+              minItems: 1
+              uniqueItems: true
+            default:
+              - number: 443
+                protocol: HTTPS
