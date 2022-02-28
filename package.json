@@ -119,7 +119,7 @@
   },
   "run-if-changed": {
     "package-lock.json": "npm ci --prefer-offline --no-audit",
-    "src/openapi/*": "npm run build:models"
+    "src/openapi/**/*": "npm run build:models"
   },
   "scripts": {
     "build": "tsc && copyup --error src/generated-schema.json dist/",
@@ -129,7 +129,6 @@
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
     "dev": "ts-node-dev --watch 'src/openapi/**/*.yaml' --inspect=4321 --respawn --transpile-only -r dotenv/config src/app.ts",
-    "dev:docker": "npm ci && npm run dev",
     "lint": "run-p types lint:es",
     "lint:es": "eslint --ext ts .",
     "lint:fix": "eslint --ext ts --fix .",
@@ -150,5 +149,5 @@
       "tag": true
     }
   },
-  "version": "0.4.95-rc.3"
+  "version": "0.4.94"
 }
