@@ -163,7 +163,7 @@ networkPolicy:
   type: object
   properties:
     ingressPrivate:
-      additionalProperties: false
+      # additionalProperties: false
       type: object
       title: Ingress traffic inside the cluster
       description: 'Pods belonging to this service must contain "app: <service name>" label'
@@ -188,14 +188,14 @@ networkPolicy:
               enum:
                 - AllowOnly
             allow:
-              title: Add team or team with service
+              title: Allow entire team or just a service
               type: array
               items:
                 type: object
                 properties:
                   team:
                     title: Team name
-                    description: 'Allow traffic from a given team'
+                    description: Allow traffic from a given team
                     type: string
                   service:
                     title: Service name
@@ -203,7 +203,6 @@ networkPolicy:
                     type: string
                 required:
                   - team
-                  - service
         - title: Allow all
           additionalProperties: false
           type: object

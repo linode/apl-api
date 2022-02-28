@@ -61,7 +61,7 @@ AppDrone:
           x-secret: 'randAlphaNum 32'
         sourceControl:
           title: Source control
-          description: Provide data to connect to a remote git repo
+          description: Provide data to connect to a remote git host. When none is provided Otomi will deploy and configure an in-cluster Gitea repo.
           type: object
           oneOf:
             - $ref: ../definitions.yaml#/offChoice
@@ -138,8 +138,8 @@ AppDrone:
                     - $ref: ../definitions.yaml#/droneGit
                     - properties:
                         server:
-                          default: 'https://github.com'
                           type: string
+                          x-default: https://github.com
             - title: GitLab
               type: object
               required: [gitlab]
@@ -157,6 +157,7 @@ AppDrone:
                     - properties:
                         server:
                           type: string
+                          x-default: https://gitlab.com
             - title: Gogs
               type: object
               required: [gogs]

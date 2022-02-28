@@ -316,10 +316,10 @@ dns:
       description: The DNS provider managing the domains.
       title: Provider
       oneOf:
+        - $ref: '#/offChoice'
         - title: AWS
           properties:
             aws:
-              title: ''
               properties:
                 region:
                   $ref: '#/awsRegion'
@@ -332,7 +332,6 @@ dns:
         - title: Azure
           properties:
             azure:
-              title: ''
               properties:
                 cloud:
                   title: Cloud
@@ -378,7 +377,6 @@ dns:
         - title: Google
           properties:
             google:
-              title: ''
               properties:
                 serviceAccountKey:
                   description: A service account key for managing a DNS zone.
@@ -405,6 +403,7 @@ droneGit:
       type: string
       x-secret: ''
   type: object
+  required: [clientID, clientSecretValue]
 duration:
   description: 'Prometheus duration (See: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#configuration-file)'
   pattern: '((([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?|0)'
@@ -480,6 +479,7 @@ image:
   title: Container image
   description: Anything specified here overrides image specs from the release
 imagePullPolicy:
+  description: Container pull policy.
   default: IfNotPresent
   enum:
     - IfNotPresent
@@ -567,6 +567,7 @@ kms:
       title: SOPS credentials
       type: object
       oneOf:
+        - $ref: '#/offChoice'
         - properties:
             provider:
               type: string
@@ -792,7 +793,7 @@ logLevel:
 offChoice:
   additionalProperties: false
   nullable: true
-  title: 'Off'
+  title: 'None'
   type: object
 otomiAdminUsername:
   type: string
