@@ -1,9 +1,9 @@
 teamConfig:
-  teams:
     admin:
-      apps:
-        keycloak:
-          shortcuts:
-            - title: o
-              description: ki
-              path: /doki
+        apps:
+            keycloak:
+                shortcuts:
+                    -
+                        description: ki
+                        path: /doki
+                        title: o

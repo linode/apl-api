@@ -1,12 +1,12 @@
-import './test-init'
-import { merge } from 'lodash'
 import { expect } from 'chai'
+import { merge } from 'lodash'
 import sinon from 'sinon'
-import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
-import expectedDbState from './fixtures/values'
 import secretSettings from './fixtures/secret-settings'
-import { Repo } from './repo'
+import expectedDbState from './fixtures/values'
 import { OtomiSpec } from './otomi-models'
+import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
+import { Repo } from './repo'
+import './test-init'
 import { getObjectPaths } from './utils'
 
 describe('Data validation', () => {
@@ -74,7 +74,7 @@ describe('Work with values', () => {
     const spec = (await loadOpenApisSpec()) as unknown as OtomiSpec
     otomiStack.setSpec(spec as unknown as OtomiSpec)
     otomiStack.loadValues()
-    const dbState = otomiStack.db.db.getState()
+    const dbState = otomiStack.db.db.getState() as Record<string, any>
     expectedDbState.settings = merge(expectedDbState.settings, secretSettings)
     expect(dbState).to.deep.equal(expectedDbState)
   })

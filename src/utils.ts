@@ -148,7 +148,7 @@ export function getTeamJobsFilePath(teamId: string): string {
 }
 
 export function getTeamJobsJsonPath(teamId: string): string {
-  return `teamConfig.teams.${teamId}.jobs`
+  return `teamConfig.${teamId}.jobs`
 }
 
 export function getTeamSecretsFilePath(teamId: string): string {
@@ -156,7 +156,7 @@ export function getTeamSecretsFilePath(teamId: string): string {
 }
 
 export function getTeamSecretsJsonPath(teamId: string): string {
-  return `teamConfig.teams.${teamId}.secrets`
+  return `teamConfig.${teamId}.secrets`
 }
 
 export function getTeamServicesFilePath(teamId: string): string {
@@ -164,7 +164,7 @@ export function getTeamServicesFilePath(teamId: string): string {
 }
 
 export function getTeamServicesJsonPath(teamId: string): string {
-  return `teamConfig.teams.${teamId}.services`
+  return `teamConfig.${teamId}.services`
 }
 
 export const argSplit = /[^\s"']+|("[^"]*")|('[^']*')/g

@@ -1,4 +1,4 @@
 apps:
-  keycloak:
-    enabled: true
-    bla: dida
+    keycloak:
+        bla: dida
+        enabled: true

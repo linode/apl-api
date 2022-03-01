@@ -1,9 +1,9 @@
 teamConfig:
-  teams:
     otomi:
-      apps:
-        loki:
-          shortcuts:
-            - title: bla
-              description: di
-              path: /bla
+        apps:
+            loki:
+                shortcuts:
+                    -
+                        description: di
+                        path: /bla
+                        title: bla

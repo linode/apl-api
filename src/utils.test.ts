@@ -59,7 +59,7 @@ describe('Utils', () => {
     done()
   })
   it('should return proper json path to team secrets', (done) => {
-    expect(getTeamSecretsJsonPath('dev')).to.equal('teamConfig.teams.dev.secrets')
+    expect(getTeamSecretsJsonPath('dev')).to.equal('teamConfig.dev.secrets')
     done()
   })
   it('should return proper file path to team secrets', (done) => {

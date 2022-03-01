@@ -468,7 +468,7 @@ export default class OtomiStack {
   loadTeams(): void {
     const mergedData: Core = this.loadConfig('env/teams.yaml', `env/secrets.teams.yaml${decryptedFilePostfix()}`)
 
-    Object.values(mergedData?.teamConfig?.teams || {}).forEach((team: Team) => {
+    Object.values(mergedData?.teamConfig || {}).forEach((team: Team) => {
       this.loadTeam(team)
       this.loadTeamJobs(team.id!)
       this.loadTeamServices(team.id!)
@@ -518,9 +518,7 @@ export default class OtomiStack {
         const content = this.repo.readFile(teamAppsFile)
         const {
           teamConfig: {
-            teams: {
-              [`${teamId}`]: { apps },
-            },
+            [`${teamId}`]: { apps },
           },
         } = content
         each(apps, ({ shortcuts }, appId) => {
@@ -560,10 +558,8 @@ export default class OtomiStack {
       }
       const content = {
         teamConfig: {
-          teams: {
-            [teamId]: {
-              apps,
-            },
+          [teamId]: {
+            apps,
           },
         },
       }
@@ -603,11 +599,11 @@ export default class OtomiStack {
       this.saveTeamSecrets(teamId)
       team.resourceQuota = arrayToObject(team.resourceQuota ?? [])
       secretPropertyPaths.forEach((propertyPath) => {
-        secretPaths.push(`teamConfig.teams.${teamId}.${propertyPath}`)
+        secretPaths.push(`teamConfig.${teamId}.${propertyPath}`)
       })
       teamValues[teamId] = team
     })
-    const values = set({}, 'teamConfig.teams', teamValues)
+    const values = set({}, 'teamConfig', teamValues)
     this.saveConfig(filePath, secretFilePath, values, secretPaths)
   }
 
