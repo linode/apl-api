@@ -554,17 +554,17 @@ export default class OtomiStack {
       const { id, shortcuts } = app
       if (!shortcuts?.length) return
       apps[id as string] = {
-        shortcuts: shortcuts && shortcuts.length ? shortcuts : undefined,
+        shortcuts,
       }
-      const content = {
-        teamConfig: {
-          [teamId]: {
-            apps,
-          },
-        },
-      }
-      this.repo.writeFile(`./env/teams/apps.${teamId}.yaml`, content)
     })
+    const content = {
+      teamConfig: {
+        [teamId]: {
+          apps,
+        },
+      },
+    }
+    this.repo.writeFile(`./env/teams/apps.${teamId}.yaml`, content)
   }
 
   saveSettings(): void {
