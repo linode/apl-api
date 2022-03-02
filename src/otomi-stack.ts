@@ -219,9 +219,8 @@ export default class OtomiStack {
     try {
       return this.db.createItem('services', { ...data, teamId }, { teamId, name: data.name }, data?.id) as Service
     } catch (err) {
-      if (err.code === 409) {
-        err.publicMessage = 'Service name already exists'
-      }
+      if (err.code === 409) err.publicMessage = 'Service name already exists'
+
       throw err
     }
   }
@@ -299,9 +298,8 @@ export default class OtomiStack {
       throw new HttpError(500, e)
     }
 
-    if (!env.DISABLE_SYNC) {
-      await this.repo.save(email)
-    }
+    if (!env.DISABLE_SYNC) await this.repo.save(email)
+
     this.db.dirty = false
   }
 
@@ -503,10 +501,11 @@ export default class OtomiStack {
       if (
         this.coreValues.adminApps.find((a) => a.name === appId).isShared ||
         this.coreValues.teamApps.find((a) => a.name === appId)
-      )
+      ) {
         this.getTeams().forEach((t) => {
           this.db.populateItem('apps', { enabled, teamId: t.id }, { teamId: t.id, id: appId }, appId)
         })
+      }
     })
     // now also load the shortcuts that teams created and were stored in apps.* files
     this.getTeams()
@@ -516,6 +515,7 @@ export default class OtomiStack {
         const teamAppsFile = `env/teams/apps.${teamId}.yaml`
         if (!this.repo.fileExists(teamAppsFile)) return
         const content = this.repo.readFile(teamAppsFile)
+        if (!content) return
         const {
           teamConfig: {
             [`${teamId}`]: { apps },
@@ -679,13 +679,11 @@ export default class OtomiStack {
       'tlsPass',
     )
     svc.teamId = teamId
-    if (!('name' in svcRaw)) {
-      debug('Unknown service structure')
-    }
+    if (!('name' in svcRaw)) debug('Unknown service structure')
+
     if ('ksvc' in svcRaw) {
-      if ('predeployed' in svcRaw.ksvc) {
-        set(svc, 'ksvc.serviceType', 'ksvcPredeployed')
-      } else {
+      if ('predeployed' in svcRaw.ksvc) set(svc, 'ksvc.serviceType', 'ksvcPredeployed')
+      else {
         svc.ksvc = cloneDeep(svcRaw.ksvc)
         svc.ksvc.serviceType = 'ksvc'
         svc.ksvc.annotations = objectToArray(svcRaw.ksvc.annotations)
@@ -698,9 +696,8 @@ export default class OtomiStack {
       }
     } else set(svc, 'ksvc.serviceType', 'svcPredeployed')
 
-    if (svcRaw.type === 'cluster') {
-      svc.ingress = { type: 'cluster' }
-    } else {
+    if (svcRaw.type === 'cluster') svc.ingress = { type: 'cluster' }
+    else {
       const dns: Dns = this.getSetting('dns') as Dns
       const cluster: Cluster = this.getSetting('cluster') as Cluster
       const url = getServiceUrl({ domain: svcRaw.domain, name: svcRaw.name, teamId, cluster, dns })
@@ -742,11 +739,10 @@ export default class OtomiStack {
         svc.ksvc.command?.length > 1 ? svc.ksvc.command.match(argSplit).map(argQuoteStrip) : svc.ksvc.command
       // same for args
       svcCloned.ksvc.args = svc.ksvc.args?.length > 1 ? svc.ksvc.args.match(argSplit).map(argQuoteStrip) : svc.ksvc.args
-    } else if (serviceType === 'ksvcPredeployed') {
-      svcCloned.ksvc = { predeployed: true }
-    } else if (serviceType !== 'svcPredeployed') {
+    } else if (serviceType === 'ksvcPredeployed') svcCloned.ksvc = { predeployed: true }
+    else if (serviceType !== 'svcPredeployed')
       debug(`Saving service failure: Not supported service type: ${serviceType}`)
-    }
+
     if (svc.ingress && svc.ingress.type !== 'cluster') {
       const ing = svc.ingress
       if (ing.useDefaultSubdomain) svcCloned.ownHost = true

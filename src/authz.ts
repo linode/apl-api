@@ -61,7 +61,7 @@ export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
     // eslint-disable-next-line no-param-reassign
 
     if (schema.type === 'array') {
-      if (schema['x-acl'])
+      if (schema['x-acl']) {
         err.concat(
           validatePermissions(
             schema['x-acl'],
@@ -69,18 +69,20 @@ export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
             `components.schemas.${schemaName}.x-acl`,
           ),
         )
+      }
       return
     }
 
     if (schema.type === 'object') {
-      if (schema['x-acl'])
+      if (schema['x-acl']) {
         err.concat(
           validatePermissions(schema['x-acl'], allowedResourceActions, `components.schemas.${schemaName}.x-acl`),
         )
+      }
       const props = schema.properties
       if (schema.nullable && !props) return
       forIn(props, (prop, attributeName) => {
-        if (prop['x-acl'])
+        if (prop['x-acl']) {
           err.concat(
             validatePermissions(
               schema['x-acl'] || {},
@@ -88,6 +90,7 @@ export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
               `${schemaName}.properties${attributeName}.x-acl`,
             ),
           )
+        }
       })
     }
   })
@@ -113,9 +116,8 @@ export const loadSpecRules = (apiDoc: OpenAPIDoc): any => {
     console.debug(`Authz: loading rules for ${schemaName} schema`)
     const schema: Schema = schemas[schemaName]
 
-    if (schema.type === 'array') {
-      return
-    }
+    if (schema.type === 'array') return
+
     const schemaAcl = {}
     Object.keys(schema['x-acl'] || {}).forEach((role) => {
       schemaAcl[role] = (schema['x-acl'] || {})[role].map((action: AclAction) => {
@@ -145,9 +147,8 @@ export default class Authz {
       (schemaName, prop = '') =>
       (action) => {
         const subject = `${schemaName}${prop ? `.${prop}` : ''}`
-        if (action.endsWith('-any')) {
-          canRules.push({ action: action.slice(0, -4), subject })
-        } else {
+        if (action.endsWith('-any')) canRules.push({ action: action.slice(0, -4), subject })
+        else {
           user.teams.forEach((teamId) => {
             canRules.push({ action, subject, conditions: { teamId: { $eq: teamId } } })
           })
@@ -175,9 +176,8 @@ export default class Authz {
   validateWithRbac = (action: string, schemaName: string, teamId: string, data?: any): boolean => {
     const sub = subject(schemaName, { ...(data || {}), teamId })
     const iCan = this.rbac.can(action, sub)
-    if (!iCan) {
-      console.debug(`Authz: not authorized (RBAC): ${action} ${schemaName}/${teamId}`)
-    }
+    if (!iCan) console.debug(`Authz: not authorized (RBAC): ${action} ${schemaName}/${teamId}`)
+
     return iCan
   }
 

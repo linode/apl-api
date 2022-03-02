@@ -75,14 +75,9 @@ export function getObjectPaths(tree: Record<string, unknown>): Array<string> {
         if (obj instanceof Array) {
           if (typeof obj[n] !== 'object') leaves.push(`${path}[${n}]`)
           else walk(obj[n], `${path}[${n}]`)
-        } else if (typeof obj[n] === 'object') {
-          walk(obj[n], `${path}.${n}`)
-        } else {
-          leaves.push(`${path}.${n}`)
-        }
-      } else {
-        console.error(`No property: ${n}`)
-      }
+        } else if (typeof obj[n] === 'object') walk(obj[n], `${path}.${n}`)
+        else leaves.push(`${path}.${n}`)
+      } else console.error(`No property: ${n}`)
     })
   }
   walk(tree, '')

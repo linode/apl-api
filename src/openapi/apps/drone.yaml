@@ -201,7 +201,11 @@ AppDrone:
                   $ref: ../definitions.yaml#/imageTag
                   x-default: latest
                 pullPolicy:
-                  $ref: ../definitions.yaml#/imagePullPolicy
+                  description: Container pull policy.
+                  enum:
+                    - IfNotPresent
+                    - Always
+                  type: string
                   default: Always
             server:
               type: object

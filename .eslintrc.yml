@@ -49,6 +49,8 @@ rules:
   '@typescript-eslint/no-unsafe-call': off
   '@typescript-eslint/no-non-null-assertion': off
   '@typescript-eslint/no-floating-promises': off
+  comma-dangle: [error, only-multiline]
+  curly: [error, multi-or-nest]
   eol-last: ['error', 'always']
   func-names: off
   import/extensions: off

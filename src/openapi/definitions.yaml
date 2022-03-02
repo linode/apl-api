@@ -486,7 +486,6 @@ imagePullPolicy:
     - Always
   type: string
 imageTag:
-  x-default: stable
   pattern: '[\w][\w.-]{0,127}'
   type: string
   x-message: a valid container registry image tag

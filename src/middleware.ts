@@ -1,13 +1,13 @@
 /* eslint-disable no-param-reassign */
-import get from 'lodash/get'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
 import { omit } from 'lodash'
-import { HttpError, OtomiError } from './error'
-import { OpenApiRequest, JWT, OpenApiRequestExt, User, PermissionSchema, TeamSelfService } from './otomi-models'
+import get from 'lodash/get'
 import Authz, { getTeamSelfServiceAuthz } from './authz'
-import { cleanEnv, NO_AUTHZ } from './validators'
+import { HttpError, OtomiError } from './error'
+import { JWT, OpenApiRequest, OpenApiRequestExt, PermissionSchema, TeamSelfService, User } from './otomi-models'
 import OtomiStack from './otomi-stack'
+import { cleanEnv, NO_AUTHZ } from './validators'
 
 const env = cleanEnv({
   NO_AUTHZ,
@@ -45,9 +45,8 @@ export function getUser(user: JWT, otomi: OtomiStack): User {
   const sessionUser: User = { ...user, teams: [], roles: [], isAdmin: false, authz: {} }
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
-  if (env.NO_AUTHZ) {
-    sessionUser.isAdmin = true
-  } else {
+  if (env.NO_AUTHZ) sessionUser.isAdmin = true
+  else {
     user.groups.forEach((group) => {
       if (['admin', 'team-admin'].includes(group)) {
         if (!sessionUser.roles.includes('admin')) {
@@ -103,9 +102,8 @@ export function jwtMiddleware(otomi: OtomiStack): RequestHandler {
 const wrapResponse = (filter, orig) => {
   return function (obj, ...rest) {
     if (arguments.length === 1) {
-      if (badCode(this.statusCode)) {
-        return orig(this.statusCode, obj)
-      }
+      if (badCode(this.statusCode)) return orig(this.statusCode, obj)
+
       const ret = filter(obj)
       return orig(ret)
     }
@@ -147,10 +145,11 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): Requ
   if (action === 'read' && schemaName === 'Kubecfg')
     valid = valid && authz.hasSelfService(teamId, 'Team', 'downloadKubeConfig')
   else valid = authz.validateWithRbac(action, schemaName, teamId, req.body)
-  if (!valid)
+  if (!valid) {
     return res
       .status(403)
       .send({ authz: false, message: `User not allowed to perform ${action} on ${schemaName} resource` })
+  }
 
   const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body)
 

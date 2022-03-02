@@ -55,12 +55,12 @@ Team:
           title: Internal ingress filtering
           description: When enabled a user can define network policies for incoming traffic per service
           type: boolean
-          default: true
+          x-default: true
         egressPublic:
           title: External egress filtering
           description: When enabled a user can define public endpoints a service can access
           type: boolean
-          default: true
+          x-default: true
       type: object
     selfService:
       $ref: team.yaml#/TeamSelfService
