@@ -3,7 +3,6 @@ teamConfig:
         apps:
             keycloak:
                 shortcuts:
-                    -
-                        description: ki
-                        path: /doki
-                        title: o
+                    - description: ki
+                      path: /doki
+                      title: o

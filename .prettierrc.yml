@@ -3,3 +3,9 @@ trailingComma: all
 singleQuote: true
 printWidth: 120
 jsxSingleQuote: true
+overrides:
+  - files:
+      - 'test/**/*.yaml'
+    options:
+      tabWidth: 4
+      useTabs: true
