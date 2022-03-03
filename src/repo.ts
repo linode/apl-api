@@ -1,13 +1,13 @@
-import simpleGit, { CleanOptions, CommitResult, SimpleGit, SimpleGitOptions } from 'simple-git'
-import yaml from 'js-yaml'
-import path, { dirname } from 'path'
 import axios, { AxiosResponse } from 'axios'
-import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'fs'
-import { isEmpty } from 'lodash'
 import Debug from 'debug'
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs'
+import yaml from 'js-yaml'
+import { isEmpty } from 'lodash'
+import path, { dirname } from 'path'
+import simpleGit, { CleanOptions, CommitResult, SimpleGit, SimpleGitOptions } from 'simple-git'
 import { GitPullError } from './error'
-import { cleanEnv, DISABLE_SYNC, TOOLS_HOST } from './validators'
 import { decryptedFilePostfix, removeBlankAttributes } from './utils'
+import { cleanEnv, DISABLE_SYNC, TOOLS_HOST } from './validators'
 
 const debug = Debug('otomi:repo')
 
@@ -98,7 +98,8 @@ export class Repo {
           unlinkSync(absolutePathEncFile)
         }
       }
-      return
+      // bail if we came to write secrets which we can't fill empty
+      if (absolutePath.includes('/secrets.')) return
     }
     debug(`Writing to file: ${absolutePath}`)
     const yamlStr = yaml.safeDump(cleanedData, { indent: 4 })
