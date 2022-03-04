@@ -37,7 +37,7 @@ describe('API authz tests', () => {
         .put('/v1/settings/alerts')
         .send({
           alerts: {
-            drone: 'msteams',
+            drone: ['msteams'],
             groupInterval: '5m',
             msteams: {
               highPrio: 'bla',
@@ -57,7 +57,7 @@ describe('API authz tests', () => {
         .put('/v1/settings/alerts')
         .send({
           alerts: {
-            drone: 'msteams',
+            drone: ['msteams'],
             groupInterval: '5m',
             msteams: {
               highPrio: 'bla',

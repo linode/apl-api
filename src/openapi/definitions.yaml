@@ -29,6 +29,16 @@ alerts:
       title: Notification receivers
       type: array
       uniqueItems: true
+    drone:
+      description: Select default notification channels for Otomi deployments by Drone.
+      items:
+        enum:
+          - slack
+          - msteams
+          - opsgenie
+        type: string
+      type: array
+      uniqueItems: true
     slack:
       title: Slack
       description: Configure Slack endpoints for alerts.
@@ -131,14 +141,6 @@ alerts:
         - critical
         - nonCritical
       type: object
-    drone:
-      description: Select default notification channel for Otomi deployments in Drone.
-      enum:
-        - slack
-        - msteams
-        - opsgenie
-      title: Drone notifications
-      type: string
 annotation:
   type: string
   pattern: ^((.){1,253}\/)?(.){1,63}$

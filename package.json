@@ -128,7 +128,7 @@
     "build:client": "npm run build:models && bin/generate-client.sh",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
-    "dev": "ts-node-dev --watch 'src/openapi/**/*.yaml' --inspect=4321 --respawn --transpile-only -r dotenv/config src/app.ts",
+    "dev": "ts-node-dev --watch 'test/core.yaml,src/openapi/**/*.yaml' --inspect=4321 --respawn --transpile-only -r dotenv/config src/app.ts",
     "lint": "run-p types lint:es",
     "lint:es": "eslint --ext ts .",
     "lint:fix": "eslint --ext ts --fix .",

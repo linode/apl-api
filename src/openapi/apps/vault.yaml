@@ -12,6 +12,7 @@ AppVault:
     id:
       $ref: ../definitions.yaml#/idName
     enabled:
+      x-default: false
       type: boolean
     rawValues:
       $ref: ../definitions.yaml#/rawValues

@@ -497,7 +497,7 @@ export default {
       },
     },
     alerts: {
-      drone: 'slack',
+      drone: ['slack', 'opsgenie'],
       groupInterval: '5m',
       receivers: ['slack', 'email'],
       repeatInterval: '3h',

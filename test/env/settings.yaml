@@ -1,5 +1,5 @@
 alerts:
-    drone: slack
+    drone: [slack, opsgenie]
     groupInterval: 5m
     receivers:
         - slack
@@ -50,10 +50,9 @@ oidc:
     teamAdminGroupID: xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 otomi:
     additionalClusters:
-        -
-            domainSuffix: demo.eks.otomi.cloud
-            name: demo
-            provider: aws
+        - domainSuffix: demo.eks.otomi.cloud
+          name: demo
+          provider: aws
     addons:
         conftest:
             enabled: true

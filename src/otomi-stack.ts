@@ -5,7 +5,7 @@ import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 import { readFileSync } from 'fs'
 import yaml from 'js-yaml'
-import { cloneDeep, each, filter, get, isEmpty, merge, omit, set, union, unset } from 'lodash'
+import { cloneDeep, each, filter, get, isArray, isEmpty, merge, mergeWith, omit, set, union, unset } from 'lodash'
 import generatePassword from 'password-generator'
 import path from 'path'
 import Db from './db'
@@ -138,7 +138,9 @@ export default class OtomiStack {
 
   setSetting(data: Setting) {
     const settings = this.db.db.get('settings').value()
-    const ret = this.db.db.set('settings', merge(settings, data)).write()
+    // use lodash mergeWith to avoid merging arrays
+    const mergedSettings = mergeWith(settings, data, (a, b) => (isArray(b) ? b : undefined))
+    const ret = this.db.db.set('settings', mergedSettings).write()
     this.db.dirty = true
     return ret
   }
