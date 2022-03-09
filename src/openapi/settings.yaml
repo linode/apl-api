@@ -95,9 +95,7 @@ Settings:
       additionalProperties: false
       properties:
         adminPassword:
-          type: string
-          title: Admin password
-          description: Otomi global admin password. Will be used as default for all apps that are not provide with a password. Easy for access and quick to rotate.
+          $ref: definitions.yaml#/adminPassword
         additionalClusters:
           title: Additional clusters
           description: Enter other k8s clusters, if there are any.

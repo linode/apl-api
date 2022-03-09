@@ -28,8 +28,7 @@ AppGitea:
       type: object
       properties:
         adminPassword:
-          type: string
-          x-secret: ''
+          $ref: ../definitions.yaml#/adminPassword
         postgresqlPassword:
           type: string
           description: Once set and deployed it cannot be changed with manual intervention.
