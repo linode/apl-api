@@ -11,7 +11,7 @@ export default {
       enabled: true,
       values: {
         admin: 'bla',
-        password: 'dida',
+        adminPassword: 'dida',
       },
       rawValues: {},
       teamId: 'admin',
