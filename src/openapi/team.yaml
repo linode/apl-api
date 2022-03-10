@@ -52,13 +52,13 @@ Team:
     networkPolicy:
       properties:
         ingressPrivate:
-          title: Internal ingress filtering
-          description: When enabled all team service ingress will be bound by (ingress) network policies. Turning this off introduces a security risk!
+          title: Network policies
+          description: When enabled team services will be bound by (ingress) network policies. Turning this off introduces a security risk!
           type: boolean
           x-default: true
         egressPublic:
-          title: External egress filtering
-          description: When enabled all team services will be bound by egress control. Turning this off introduces a security risk!
+          title: Egress control
+          description: When enabled team service egress traffic will be limited to pre-defined endpoints. Turning this off introduces a security risk!
           type: boolean
           x-default: true
       type: object
