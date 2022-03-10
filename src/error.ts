@@ -1,4 +1,5 @@
 /* eslint-disable max-classes-per-file */
+import { debug } from 'console'
 import { CustomError } from 'ts-custom-error'
 
 export class OtomiError extends CustomError {
@@ -7,7 +8,7 @@ export class OtomiError extends CustomError {
   public publicMessage
 
   public constructor(msg, err?) {
-    if (err) console.error(err)
+    if (err) debug(err)
     super(err)
     this.publicMessage = msg
   }

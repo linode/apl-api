@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { Cluster } from './otomi-models'
-import { getObjectPaths, getServiceUrl, getTeamSecretsFilePath, getTeamSecretsJsonPath } from './utils'
+import { getServiceUrl } from './utils'
 
 describe('Utils', () => {
   const cluster: Cluster = {
@@ -44,26 +44,6 @@ describe('Utils', () => {
     })
     expect(x.subdomain).to.equal('aa')
     expect(x.domain).to.equal('bb.cc.dd.ee')
-    done()
-  })
-
-  it('should retrieve all object paths', (done) => {
-    const obj = {
-      a: 1,
-      b: { bb: 2 },
-      c: [{ ee: { fff: 3 } }, { ee: { fff: 4 } }],
-      d: { dd: [1, 2] },
-    }
-    const paths = getObjectPaths(obj)
-    expect(paths).to.have.members(['a', 'b.bb', 'c[0].ee.fff', 'c[1].ee.fff', 'd.dd[0]', 'd.dd[1]'])
-    done()
-  })
-  it('should return proper json path to team secrets', (done) => {
-    expect(getTeamSecretsJsonPath('dev')).to.equal('teamConfig.dev.secrets')
-    done()
-  })
-  it('should return proper file path to team secrets', (done) => {
-    expect(getTeamSecretsFilePath('dev')).to.equal('./env/teams/external-secrets.dev.yaml')
     done()
   })
 })

@@ -5,7 +5,7 @@ import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 import { readFileSync } from 'fs'
 import yaml from 'js-yaml'
-import { cloneDeep, each, filter, get, isArray, isEmpty, merge, mergeWith, omit, set, union, unset } from 'lodash'
+import { cloneDeep, each, filter, get, isArray, isEmpty, merge, mergeWith, omit, set, unset } from 'lodash'
 import generatePassword from 'password-generator'
 import path from 'path'
 import Db from './db'
@@ -35,14 +35,10 @@ import {
   argSplit,
   arrayToObject,
   decryptedFilePostfix,
-  getObjectPaths,
+  extract,
+  getPaths,
   getServiceUrl,
-  getTeamJobsFilePath,
-  getTeamJobsJsonPath,
-  getTeamSecretsFilePath,
-  getTeamSecretsJsonPath,
-  getTeamServicesFilePath,
-  getTeamServicesJsonPath,
+  getValuesSchema,
   objectToArray,
 } from './utils'
 import {
@@ -63,6 +59,8 @@ const debug = Debug('otomi:otomi-stack')
 
 const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'dockerconfig']
 
+let secretPaths: string[]
+
 const env = cleanEnv({
   CUSTOM_ROOT_CA,
   CORE_VERSION,
@@ -76,10 +74,38 @@ const env = cleanEnv({
   DISABLE_SYNC,
 })
 
+export function getTeamJobsFilePath(teamId: string): string {
+  return `./env/teams/jobs.${teamId}.yaml`
+}
+
+export function getTeamJobsJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.jobs`
+}
+
+export function getTeamSecretsFilePath(teamId: string): string {
+  return `./env/teams/external-secrets.${teamId}.yaml`
+}
+
+export function getTeamSecretsJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.secrets`
+}
+
+export function getTeamServicesFilePath(teamId: string): string {
+  return `./env/teams/services.${teamId}.yaml`
+}
+
+export function getTeamServicesJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.services`
+}
+
 export const loadOpenApisSpec = async (): Promise<OpenAPIDoc> => {
   const openApiPath = path.resolve(__dirname, 'generated-schema.json')
-  console.info(`Loading api spec from: ${openApiPath}`)
-  return (await $parser.parse(openApiPath)) as OpenAPIDoc
+  debug(`Loading api spec from: ${openApiPath}`)
+  const spec = (await $parser.parse(openApiPath)) as OpenAPIDoc
+  const valuesSchema = await getValuesSchema()
+  const secrets = extract(valuesSchema, (o, i) => i === 'x-secret')
+  secretPaths = getPaths(secrets)
+  return spec
 }
 
 export default class OtomiStack {
@@ -114,7 +140,7 @@ export default class OtomiStack {
         if (this.repo.fileExists('env/cluster.yaml')) break
         debug(`Values are not present at ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
       } catch (e) {
-        console.error(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
+        debug(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
         debug(`Git repository is not ready: ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
       }
       const timeoutMs = 15000
@@ -126,6 +152,23 @@ export default class OtomiStack {
 
   setSpec(spec): void {
     this.spec = spec
+  }
+
+  getSecretPaths(): string[] {
+    // we split secrets from plain data, but have to overcome teams using patternproperties
+    const teamProp = 'teamConfig.patternProperties.^[a-z0-9]([-a-z0-9]*[a-z0-9])+$'
+    const teams = this.getTeams().map(({ id }) => id)
+    const cleanSecretPaths: string[] = []
+    secretPaths.map((p) => {
+      if (p.indexOf(teamProp) === -1 && !cleanSecretPaths.includes(p)) cleanSecretPaths.push(p)
+      else {
+        teams.forEach((teamId: string) => {
+          if (p.indexOf(teamProp) === 0) cleanSecretPaths.push(p.replace(teamProp, `teamConfig.${teamId}`))
+        })
+      }
+    })
+    debug('secretPaths: ', cleanSecretPaths)
+    return cleanSecretPaths
   }
 
   getSetting(key: string): Setting {
@@ -291,7 +334,7 @@ export default class OtomiStack {
     try {
       await prepareValues()
     } catch (e) {
-      debug(e)
+      debug('ERROR: ' + JSON.stringify(e))
       if (e.response) {
         const { status } = e.response
         if (status === 422) throw new ValidationError()
@@ -394,21 +437,19 @@ export default class OtomiStack {
     this.db.db.get('settings').assign(data).write()
   }
 
-  loadConfig(dataPath: string, secretDataPath: string): any {
+  loadConfig(dataPath: string, inSecretDataPath: string): any {
     const data = this.repo.readFile(dataPath)
+    const secretDataPath = `${inSecretDataPath}${decryptedFilePostfix()}`
     let secretData = {}
-    if (this.repo.fileExists(secretDataPath)) {
-      secretData = this.repo.readFile(secretDataPath)
-      this.secretPaths = union(this.secretPaths, getObjectPaths(secretData))
-    }
+    if (this.repo.fileExists(secretDataPath)) secretData = this.repo.readFile(secretDataPath)
     return merge(data, secretData) as Core
   }
 
-  saveConfig(dataPath: string, secretDataPath: string, config: any, inSecretPaths?: string[]): void {
+  saveConfig(dataPath: string, inSecretDataPath: string, config: any): void {
     const secretData = {}
+    const secretDataPath = `${inSecretDataPath}${decryptedFilePostfix()}`
     const plainData = cloneDeep(config)
-    const secretPaths = inSecretPaths ?? (this.secretPaths || [])
-    secretPaths.forEach((objectPath) => {
+    this.getSecretPaths().forEach((objectPath) => {
       const val = get(config, objectPath)
       if (val) {
         set(secretData, objectPath, val)
@@ -427,10 +468,7 @@ export default class OtomiStack {
   }
 
   loadSettings(): void {
-    const data: Settings = this.loadConfig(
-      './env/settings.yaml',
-      `./env/secrets.settings.yaml${decryptedFilePostfix()}`,
-    )
+    const data: Settings = this.loadConfig('./env/settings.yaml', `./env/secrets.settings.yaml`)
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
@@ -466,7 +504,7 @@ export default class OtomiStack {
   }
 
   loadTeams(): void {
-    const mergedData: Core = this.loadConfig('env/teams.yaml', `env/secrets.teams.yaml${decryptedFilePostfix()}`)
+    const mergedData: Core = this.loadConfig('env/teams.yaml', `env/secrets.teams.yaml`)
 
     Object.values(mergedData?.teamConfig || {}).forEach((team: Team) => {
       this.loadTeam(team)
@@ -481,7 +519,7 @@ export default class OtomiStack {
     apps.forEach((appId) => {
       const path = `env/apps/${appId}.yaml`
       if (!this.repo.fileExists(path)) return // might not exist initially
-      const secretsPath = `env/apps/secrets.${appId}.yaml${decryptedFilePostfix()}`
+      const secretsPath = `env/apps/secrets.${appId}.yaml`
       const content = this.loadConfig(path, secretsPath)
       const values = (content?.apps && content.apps[appId]) || {}
       let rawValues = {}
@@ -550,11 +588,24 @@ export default class OtomiStack {
     this.repo.writeFile('./env/policies.yaml', { policies: this.getSetting('policies') })
   }
 
+  saveApps(): void {
+    this.getApps('admin').forEach((app) => {
+      const apps = {}
+      const { id, enabled, values, rawValues } = app
+      apps[id as string] = {
+        ...values,
+        _rawValues: rawValues,
+        enabled,
+      }
+      this.saveConfig(`./env/apps/${id}.yaml`, `./env/apps/secrets.${id}.yaml`, { apps })
+    })
+  }
+
   saveTeamApps(teamId): void {
     const apps = {}
     this.getApps(teamId).forEach((app) => {
       const { id, shortcuts } = app
-      if (!shortcuts?.length) return
+      if (teamId !== 'admin' && !shortcuts?.length) return
       apps[id as string] = {
         shortcuts,
       }
@@ -571,26 +622,13 @@ export default class OtomiStack {
 
   saveSettings(): void {
     const settings = this.getAllSettings()
-    this.saveConfig(
-      './env/settings.yaml',
-      `./env/secrets.settings.yaml${decryptedFilePostfix()}`,
-      omit(settings, ['cluster', 'policies']),
-    )
+    this.saveConfig('./env/settings.yaml', `./env/secrets.settings.yaml`, omit(settings, ['cluster', 'policies']))
   }
 
   saveTeams(): void {
     const filePath = './env/teams.yaml'
-    const secretFilePath = `./env/secrets.teams.yaml${decryptedFilePostfix()}`
+    const secretFilePath = `./env/secrets.teams.yaml`
     const teamValues = {}
-    const secretPropertyPaths = [
-      'password',
-      'azureMonitor.appInsightsApiKey',
-      'azureMonitor.clientSecret',
-      'azureMonitor.logAnalyticsClientSecret',
-      'alerts.slack.url',
-      'alerts.msteams',
-    ]
-    const secretPaths: string[] = []
     const teams = this.getTeams()
     teams.forEach((inTeam) => {
       const team: any = omit(inTeam, 'name')
@@ -600,13 +638,10 @@ export default class OtomiStack {
       this.saveTeamServices(teamId)
       this.saveTeamSecrets(teamId)
       team.resourceQuota = arrayToObject(team.resourceQuota ?? [])
-      secretPropertyPaths.forEach((propertyPath) => {
-        secretPaths.push(`teamConfig.${teamId}.${propertyPath}`)
-      })
       teamValues[teamId] = team
     })
     const values = set({}, 'teamConfig', teamValues)
-    this.saveConfig(filePath, secretFilePath, values, secretPaths)
+    this.saveConfig(filePath, secretFilePath, values)
   }
 
   saveTeamSecrets(teamId: string): void {
@@ -768,6 +803,7 @@ export default class OtomiStack {
     this.saveTeams()
     // also save admin apps
     this.saveTeamApps('admin')
+    this.saveApps()
   }
 
   getSession(user: User): Session {

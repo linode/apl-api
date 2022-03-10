@@ -112,11 +112,5 @@ AppKeycloak:
               required:
                 - limits
                 - requests
-        theme:
-          enum:
-            - default
-            - otomi
-          type: string
-          default: otomi
       required:
         - postgresqlPassword

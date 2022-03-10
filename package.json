@@ -109,8 +109,8 @@
   },
   "main": "dist/app.js",
   "name": "@redkubes/otomi-api",
-  "private": true,
   "publishConfig": {
+    "private": true,
     "registry": "https://npm.pkg.github.com"
   },
   "repository": {
@@ -134,9 +134,9 @@
     "lint:fix": "eslint --ext ts --fix .",
     "lint-staged": "lint-staged",
     "postinstall": "npm run build:models",
-    "pre-release:npm": "npm version prerelease --preid rc --no-commit-hooks --no-git-tag-version && bin/release-client.sh",
+    "pre-release:client": "npm version prerelease --preid rc --no-commit-hooks --no-git-tag-version && bin/release-client.sh",
     "release": "standard-version",
-    "release:npm": "bin/release-client.sh",
+    "release:client": "bin/release-client.sh",
     "run-if-changed": "run-if-changed",
     "start": "node dist/src/app.js",
     "test": "GIT_LOCAL_PATH=./test npm run build:models && TS_NODE_TRANSPILE_ONLY=true NODE_ENV=test mocha --timeout 25000 -r ts-node/register -r ts-custom-error src/*.test.* --exit",
@@ -149,5 +149,5 @@
       "tag": true
     }
   },
-  "version": "0.4.95-rc.11"
+  "version": "0.4.95-rc.12"
 }

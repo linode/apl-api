@@ -1,4 +1,5 @@
 /* eslint-disable no-param-reassign */
+import { debug } from 'console'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
 import { omit } from 'lodash'
@@ -26,7 +27,7 @@ const HttpMethodMapping = {
 // Note: 4 arguments (no more, no less) must be defined in your errorMiddleware function. Otherwise the function will be silently ignored.
 // eslint-disable-next-line no-unused-vars
 export function errorMiddleware(e, req: OpenApiRequest, res, next): void {
-  console.error('errorMiddleware error', e)
+  debug('errorMiddleware error', e)
   let code
   let msg
   if (e instanceof OtomiError) {
@@ -90,7 +91,7 @@ export function jwtMiddleware(otomi: OtomiStack): RequestHandler {
       return next()
     }
     if (!token) {
-      console.log('anonymous request')
+      debug('anonymous request')
       return next()
     }
     const { name, email, roles, groups } = jwtDecode(token)

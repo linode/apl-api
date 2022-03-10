@@ -10,9 +10,11 @@ Every api deployment will result in a commit to the values repo with the author'
 
 - npm@~10.0 installed
 - a valid values repo: follow these [instructions in otomi-core](https://github.com/redkubes/otomi-core/blob/master/docs/setup.md#a-valid-values-repo)
+
 ### 1.2 Setting up environment
 
 The following two steps only need to be performed once:
+
 1. Copy `.env.sample` to `.env` and edit accordingly.
 2. Download `otomi-api/.secrets` file from [Google Drive secrets](https://drive.google.com/drive/folders/1N802vs0IplKehkZq8SxMi67RipyO1pHN) and put content in `.env`.
 
@@ -21,6 +23,7 @@ The last step is running `npm install`.
 ### 1.3 Running dependencies
 
 The api depends on a running `otomi-core` tools server. It can be started from the `otomi-core` repo with:
+
 ```bash
 export ENV_DIR={location of your values repo}
 otomi server
@@ -31,11 +34,13 @@ Another way to start it in docker-compose (from within this repo):
 ```
 bin/dc.sh up-deps &
 ```
+
 (This setup and fragile and might be broken. If that is the case just clone `otomi-core` and follow the first suggestion.)
 
 ### 1.4 Run the dev server
 
 From the root of this project:
+
 ```bash
 export ENV_DIR={location of your values repo}
 export GIT_LOCAL_PATH=$ENV_DIR
@@ -55,10 +60,13 @@ Then go to your `otomi-console` repo clone and link to it with `npm link @redkub
 (The console can then be started just by running `npm run dev` from the `otomi-console` folder)
 
 ### 17. Preprelease of the client
+
 In order to publish pre-released npm package execute:
+
 ```
-npm run pre-release:npm
+npm run pre-release:client
 ```
+
 ## 2. Api design
 
 ### 2.1 Specification

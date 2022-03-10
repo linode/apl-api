@@ -1,6 +1,10 @@
+import $RefParser from '@apidevtools/json-schema-ref-parser'
 import cleanDeep, { CleanOptions } from 'clean-deep'
-import { existsSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
+import { load } from 'js-yaml'
+import { isEqual, memoize, omit } from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
+import { resolve } from 'path'
 import { Cluster, Dns } from './otomi-models'
 import { cleanEnv, GIT_LOCAL_PATH } from './validators'
 
@@ -31,10 +35,13 @@ export function objectToArray(
   return arr
 }
 
-export const flattenObject = (obj: Record<string, any>, path = ''): { [key: string]: string } => {
+export const flattenObject = (
+  obj: Record<string, any>,
+  path: string | undefined = undefined,
+): { [key: string]: string } => {
   return Object.entries(obj)
     .flatMap(([key, value]) => {
-      const subPath = path.length ? `${path}.${key}` : key
+      const subPath = path ? `${path}.${key}` : key
       if (typeof value === 'object' && !Array.isArray(value) && value !== null) return flattenObject(value, subPath)
       return { [subPath]: value }
     })
@@ -43,55 +50,59 @@ export const flattenObject = (obj: Record<string, any>, path = ''): { [key: stri
     }, {})
 }
 
-export const extract = (schema: Record<string, any>, leaf: string, mapValue = (val: any) => val): any => {
-  const schemaKeywords = ['properties', 'anyOf', 'allOf', 'oneOf', 'default', 'x-secret']
-  return Object.keys(schema)
-    .map((key) => {
-      const childObj = schema[key]
-      if (key === leaf) return schemaKeywords.includes(key) ? mapValue(childObj) : { [key]: mapValue(childObj) }
-      if (typeof childObj !== 'object') return {}
-      const obj = extract(childObj, leaf, mapValue)
-      if ('extractedValue' in obj) return { [key]: obj.extractedValue }
-      // eslint-disable-next-line no-nested-ternary
-      return schemaKeywords.includes(key) || !Object.keys(obj).length || !Number.isNaN(Number(key))
-        ? obj === '{}'
-          ? undefined
-          : obj
-        : { [key]: obj }
-    })
-    .reduce((accumulator, extractedValue) => {
-      return typeof extractedValue !== 'object'
-        ? { ...accumulator, extractedValue }
-        : { ...accumulator, ...extractedValue }
-    }, {})
-}
-
-export function getObjectPaths(tree: Record<string, unknown>): Array<string> {
-  const leaves: string[] = []
-  function walk(obj, path = ''): void {
-    Object.keys(obj).forEach((n) => {
-      // eslint-disable-next-line no-prototype-builtins
-      if (obj.hasOwnProperty(n)) {
-        if (obj instanceof Array) {
-          if (typeof obj[n] !== 'object') leaves.push(`${path}[${n}]`)
-          else walk(obj[n], `${path}[${n}]`)
-        } else if (typeof obj[n] === 'object') walk(obj[n], `${path}.${n}`)
-        else leaves.push(`${path}.${n}`)
-      } else console.error(`No property: ${n}`)
-    })
+export const loadYaml = (path: string, opts?: { noError: boolean }): Record<string, any> | undefined => {
+  if (!existsSync(path)) {
+    if (opts?.noError) return undefined
+    throw new Error(`${path} does not exist`)
   }
-  walk(tree, '')
+  return load(readFileSync(path, 'utf-8')) as Record<string, any>
+}
 
-  const rawLeaves = leaves.map((x: string) => {
-    return x.substring(1)
+let valuesSchema: Record<string, any>
+export const getValuesSchema = async (): Promise<Record<string, any>> => {
+  if (valuesSchema) return valuesSchema
+  const schema = loadYaml(resolve(__dirname, 'openapi/values-schema.yaml'))
+  const derefSchema = await $RefParser.dereference(schema as $RefParser.JSONSchema)
+  valuesSchema = omit(derefSchema, ['definitions'])
+  return valuesSchema
+}
+
+export const traverse = (o, func, path = '') =>
+  Object.getOwnPropertyNames(o).forEach((i) => {
+    func(o, i, path)
+    if (o[i] !== null && typeof o[i] === 'object') {
+      // going one step down in the object tree!!
+      traverse(o[i], func, path !== '' ? `${path}.${i}` : i)
+    }
   })
-  return rawLeaves
+
+export const nullify = (data) =>
+  traverse(data, (o, i) => {
+    // eslint-disable-next-line no-param-reassign
+    if (typeof o[i] === 'object' && isEqual(o[i], {})) o[i] = null
+  })
+
+export const isOf = (o): boolean => Object.keys(o).some((p) => ['anyOf', 'allOf', 'oneOf'].includes(p))
+
+export const extract = memoize((o, f) => {
+  const schemaKeywords = ['properties', 'items', 'anyOf', 'allOf', 'oneOf', 'default', 'x-secret', 'x-acl']
+  const leafs = {}
+  traverse(o, (o, i, path) => {
+    const res = f(o, i, path)
+    if (res === undefined) return
+    const p = path
+      .split('.')
+      .filter((p: string) => !schemaKeywords.includes(p) && p !== `${parseInt(p, 10)}`)
+      .join('.')
+    if (!leafs[p]) leafs[p] = res
+  })
+  return leafs
+})
+
+export function getPaths(tree: Record<string, unknown>): Array<string> {
+  return Object.keys(flattenObject(tree))
 }
 
-interface PublicUrl {
-  subdomain: string
-  domain: string
-}
 export function getServiceUrl({
   domain,
   name,
@@ -104,7 +115,10 @@ export function getServiceUrl({
   teamId?: string
   dns?: Dns
   cluster: Cluster
-}): PublicUrl {
+}): {
+  subdomain: string
+  domain: string
+} {
   if (!domain) {
     // Fallback mechanism for exposed service that does not have its public url specified in values
     return {
@@ -138,30 +152,6 @@ export function removeBlankAttributes(obj: Record<string, unknown>): Record<stri
   return cleanDeep(obj, options)
 }
 
-export function getTeamJobsFilePath(teamId: string): string {
-  return `./env/teams/jobs.${teamId}.yaml`
-}
-
-export function getTeamJobsJsonPath(teamId: string): string {
-  return `teamConfig.${teamId}.jobs`
-}
-
-export function getTeamSecretsFilePath(teamId: string): string {
-  return `./env/teams/external-secrets.${teamId}.yaml`
-}
-
-export function getTeamSecretsJsonPath(teamId: string): string {
-  return `teamConfig.${teamId}.secrets`
-}
-
-export function getTeamServicesFilePath(teamId: string): string {
-  return `./env/teams/services.${teamId}.yaml`
-}
-
-export function getTeamServicesJsonPath(teamId: string): string {
-  return `teamConfig.${teamId}.services`
-}
-
 export const argSplit = /[^\s"']+|("[^"]*")|('[^']*')/g
 
 export const argQuoteJoin = (a) =>
@@ -184,23 +174,3 @@ export const argQuoteStrip = (s) => {
 export const decryptedFilePostfix = () => {
   return existsSync(`${env.GIT_LOCAL_PATH}/.sops.yaml`) ? '.dec' : ''
 }
-
-export const traverse = (o, func) => {
-  func(o)
-  Object.getOwnPropertyNames(o).forEach((i) => {
-    if (o[i] !== null && typeof o[i] === 'object') {
-      // going one step down in the object tree!!
-      traverse(o[i], func)
-    }
-  })
-}
-
-// export const nullify = (schema) =>
-//   traverse(schema, (o) => {
-//     if (o.nullable) {
-//       // eslint-disable-next-line no-param-reassign
-//       if (!o.type) o.type = 'object'
-//       // eslint-disable-next-line no-param-reassign
-//       if (typeof o.type === 'string') o.type = [o.type, 'null']
-//     }
-//   })

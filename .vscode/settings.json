@@ -14,6 +14,7 @@
   "cSpell.diagnosticLevel": "Hint",
   "cSpell.enabled": true,
   "editor.codeActionsOnSave": {
+    "source.addMissingImports": true,
     "source.fixAll": true,
     "source.organizeImports": true
   },

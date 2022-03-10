@@ -7,7 +7,7 @@ import { OtomiSpec } from './otomi-models'
 import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
 import { Repo } from './repo'
 import './test-init'
-import { getObjectPaths } from './utils'
+import { flattenObject, getPaths } from './utils'
 
 describe('Data validation', () => {
   let otomiStack: OtomiStack
@@ -84,7 +84,7 @@ describe('Work with values', () => {
       results[path] = data
     }
     otomiStack.db.db.setState(expectedDbState)
-    otomiStack.secretPaths = getObjectPaths(secretSettings)
+    otomiStack.secretPaths = getPaths(secretSettings)
     otomiStack.repo.writeFile = writeFileStub
     otomiStack.saveValues()
     Object.entries(results).forEach(([path, data]) => {

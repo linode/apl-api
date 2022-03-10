@@ -138,7 +138,7 @@ export class Repo {
       debug(`Local git repository does not exist. Cloning from '${this.url}' to '${this.path}'`)
       await this.git.clone(this.repoPathAuth, this.path)
     } else {
-      console.log('Repo already exists. Checking out correct branch.')
+      debug('Repo already exists. Checking out correct branch.')
       // Git fetch ensures that local git repository is synced with remote repository
       await this.git.fetch()
       await this.git.checkout(this.branch)
@@ -170,7 +170,7 @@ export class Repo {
     try {
       await this.pull()
     } catch (e) {
-      console.warn(`Pull error: ${JSON.stringify(e)}`)
+      debug(`Pull error: ${JSON.stringify(e)}`)
       await this.git.rebase(['--abort'])
       await this.git.reset(['--hard', sha])
       await initValues()

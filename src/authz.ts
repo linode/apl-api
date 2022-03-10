@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Ability, subject } from '@casl/ability'
+import Debug from 'debug'
 import { each, forIn, get, has, isEmpty, omit, set } from 'lodash'
 import { Acl, AclAction, OpenAPIDoc, PermissionSchema, Schema, TeamAuthz, User, UserAuthz } from './otomi-models'
 import OtomiStack from './otomi-stack'
 import { extract, flattenObject } from './utils'
+
+const debug = Debug('otomi:authz')
 
 const allowedResourceActions = [
   'create',
@@ -32,11 +35,13 @@ function validatePermissions(acl: Acl, allowedPermissions: string[], path: strin
 }
 
 export const getAclProps = (schema) =>
-  Object.keys(flattenObject(extract(schema, 'x-acl', () => true))).reduce((memo: string[], item) => {
-    const trimmed = item.replace('.x-acl', '').replace('x-acl', '')
-    if (trimmed !== '') memo.push(trimmed)
-    return memo
-  }, [])
+  Object.keys(
+    flattenObject(
+      extract(schema, (o, i, p) => {
+        return p !== '' && i === 'x-acl' ? true : undefined
+      }),
+    ),
+  )
 
 export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
   const err: string[] = []
@@ -56,7 +61,7 @@ export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
   })
   const { schemas } = apiDoc.components
   forIn(schemas, (schema: Schema, schemaName: string) => {
-    console.debug(`Authz: loading rules for ${schemaName} schema`)
+    debug(`loading rules for ${schemaName} schema`)
     // @ts-ignore
     // eslint-disable-next-line no-param-reassign
 
@@ -95,11 +100,11 @@ export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
     }
   })
   if (err.length !== 0) {
-    console.log('Authz config validation errors:')
-    err.forEach((error) => console.error(error))
+    debug('config validation errors:')
+    err.forEach((error) => debug(error))
     return false
   }
-  console.log('Authz config validation succeeded')
+  debug('config validation succeeded')
   return true
 }
 
@@ -113,7 +118,7 @@ export const loadSpecRules = (apiDoc: OpenAPIDoc): any => {
   const { schemas } = apiDoc.components
 
   Object.keys(schemas).forEach((schemaName: string) => {
-    console.debug(`Authz: loading rules for ${schemaName} schema`)
+    debug(`loading rules for ${schemaName} schema`)
     const schema: Schema = schemas[schemaName]
 
     if (schema.type === 'array') return
@@ -176,8 +181,7 @@ export default class Authz {
   validateWithRbac = (action: string, schemaName: string, teamId: string, data?: any): boolean => {
     const sub = subject(schemaName, { ...(data || {}), teamId })
     const iCan = this.rbac.can(action, sub)
-    if (!iCan) console.debug(`Authz: not authorized (RBAC): ${action} ${schemaName}/${teamId}`)
-
+    if (!iCan) debug(`Authz: not authorized (RBAC): ${action} ${schemaName}${teamId ? `/${teamId}` : ''}`)
     return iCan
   }
 

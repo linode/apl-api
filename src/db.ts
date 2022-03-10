@@ -1,9 +1,10 @@
+import { debug } from 'console'
+import cloneDeep from 'lodash/cloneDeep'
+import findIndex from 'lodash/findIndex'
 import low from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
 import Memory from 'lowdb/adapters/Memory'
-import findIndex from 'lodash/findIndex'
 import { v4 as uuidv4 } from 'uuid'
-import cloneDeep from 'lodash/cloneDeep'
 import { AlreadyExists, NotExistError } from './error'
 import { App, Cluster, Job, Secret, Service, Settings, Team } from './otomi-models'
 
@@ -59,11 +60,11 @@ export default class Db {
     // @ts-ignore
     const data = coll.find(selector).value()
     if (data === undefined) {
-      console.error(`Selector props do not exist in '${type}': ${JSON.stringify(selector)}`)
+      debug(`Selector props do not exist in '${type}': ${JSON.stringify(selector)}`)
       throw new NotExistError()
     }
     if (data.length) {
-      console.error(`More than one item found for '${type}' with selector: ${JSON.stringify(selector)}`)
+      debug(`More than one item found for '${type}' with selector: ${JSON.stringify(selector)}`)
       throw new NotExistError()
     }
     return data

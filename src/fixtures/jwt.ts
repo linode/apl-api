@@ -1,5 +1,5 @@
-import nock from 'nock'
 import jwt from 'jsonwebtoken'
+import nock from 'nock'
 
 const { env } = process
 
@@ -70,7 +70,7 @@ export default function getToken(groups: string[], roles?: string[]): string {
   try {
     token = jwt.sign(payload, privateKey, options)
   } catch (err) {
-    console.log(err)
+    console.error(err)
     throw err
   }
 

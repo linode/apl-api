@@ -98,4 +98,4 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npm install
-          npm run release:npm
+          npm run release:client
