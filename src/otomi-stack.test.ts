@@ -7,7 +7,7 @@ import { OtomiSpec } from './otomi-models'
 import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
 import { Repo } from './repo'
 import './test-init'
-import { flattenObject, getPaths } from './utils'
+import { getPaths } from './utils'
 
 describe('Data validation', () => {
   let otomiStack: OtomiStack
@@ -88,6 +88,7 @@ describe('Work with values', () => {
     otomiStack.repo.writeFile = writeFileStub
     otomiStack.saveValues()
     Object.entries(results).forEach(([path, data]) => {
+      if (!otomiStack.repo.fileExists(path)) return
       const expectedData = otomiStack.repo.readFile(path)
       expect(data, path).to.have.any.keys(expectedData)
     })

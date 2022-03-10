@@ -89,7 +89,7 @@ export const extract = memoize((o, f) => {
   const leafs = {}
   traverse(o, (o, i, path) => {
     const res = f(o, i, path)
-    if (res === undefined) return
+    if (res === false) return
     const p = path
       .split('.')
       .filter((p: string) => !schemaKeywords.includes(p) && p !== `${parseInt(p, 10)}`)

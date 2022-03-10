@@ -1,4 +1,4 @@
 apps:
     keycloak:
-        bla: dida
+        admin: bla
         enabled: true

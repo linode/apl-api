@@ -10,7 +10,8 @@ export default {
     {
       enabled: true,
       values: {
-        bla: 'dida',
+        admin: 'bla',
+        password: 'dida',
       },
       rawValues: {},
       teamId: 'admin',
