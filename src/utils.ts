@@ -61,7 +61,7 @@ export const loadYaml = (path: string, opts?: { noError: boolean }): Record<stri
 let valuesSchema: Record<string, any>
 export const getValuesSchema = async (): Promise<Record<string, any>> => {
   if (valuesSchema) return valuesSchema
-  const schema = loadYaml(resolve(__dirname, 'openapi/values-schema.yaml'))
+  const schema = loadYaml(resolve(__dirname, 'values-schema.yaml'))
   const derefSchema = await $RefParser.dereference(schema as $RefParser.JSONSchema)
   valuesSchema = omit(derefSchema, ['definitions'])
   return valuesSchema

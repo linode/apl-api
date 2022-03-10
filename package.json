@@ -122,7 +122,7 @@
     "src/openapi/**/*": "npm run build:models"
   },
   "scripts": {
-    "build": "tsc && copyup --error src/generated-schema.json dist/",
+    "build": "tsc && copyup --error src/generated-schema.json src/values-schema.yaml dist/",
     "build:models": "npm run build:spec && openapi-typescript src/generated-schema.json -o src/generated-schema.ts",
     "build:spec": "ts-node-dev src/build-spec.ts",
     "build:client": "npm run build:models && bin/generate-client.sh",
