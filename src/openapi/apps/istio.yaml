@@ -66,7 +66,26 @@ AppIstio:
               type: object
               properties:
                 resources:
-                  $ref: ../definitions.yaml#/resources
+                  properties:
+                    limits:
+                      properties:
+                        cpu:
+                          $ref: '../definitions.yaml#/quantityCpu'
+                          x-default: '1'
+                        memory:
+                          $ref: '../definitions.yaml#/quantityMem'
+                          x-default: 1Gi
+                    requests:
+                      properties:
+                        cpu:
+                          $ref: '../definitions.yaml#/quantityCpu'
+                          x-default: 20m
+                        memory:
+                          $ref: '../definitions.yaml#/quantityMem'
+                          x-default: 80Mi
+                  required:
+                    - limits
+                    - requests
         meshConfig:
           type: object
           properties:

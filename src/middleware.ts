@@ -127,8 +127,6 @@ const wrapResponse = (filter, orig) => {
 }
 
 export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): RequestHandler {
-  let valid = false
-
   const {
     params: { teamId },
     user,
@@ -143,13 +141,13 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): Requ
   // init rules for the user
   authz.init(user)
 
-  if (action === 'read' && schemaName === 'Kubecfg')
-    valid = valid && authz.hasSelfService(teamId, 'Team', 'downloadKubeConfig')
+  let valid
+  if (action === 'read' && schemaName === 'Kubecfg') valid = authz.hasSelfService(teamId, 'Team', 'downloadKubeConfig')
   else valid = authz.validateWithRbac(action, schemaName, teamId, req.body)
   if (!valid) {
     return res
       .status(403)
-      .send({ authz: false, message: `User not allowed to perform ${action} on ${schemaName} resource` })
+      .send({ authz: false, message: `User not allowed to perform "${action}" on "${schemaName}" resource` })
   }
 
   const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body)

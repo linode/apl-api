@@ -1,5 +1,5 @@
 # --------------- Dev stage for developers to override sources
-FROM node:14-slim as dev
+FROM node:16-slim as dev
 ARG NPM_TOKEN
 RUN test -n "$NPM_TOKEN"
 
@@ -27,6 +27,7 @@ RUN npm run build:models && \
   npm run lint && \
   npm run test
 
+RUN pwd && ls -als . && ls -als /app/dist
 RUN npm run build  
 
 # --------------- Cleanup
@@ -34,10 +35,10 @@ FROM dev as clean
 # below command removes the packages specified in devDependencies and set NODE_ENV to production
 RUN npm prune --production
 # --------------- Production stage
-FROM node:14.17-alpine AS prod
+FROM node:16.14-alpine AS prod
 
 # Install dependencies
-RUN apk --no-cache add python git jq
+RUN apk --no-cache add python3 git jq
 
 # Install app
 RUN mkdir /app
