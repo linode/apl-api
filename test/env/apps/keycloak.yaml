@@ -1,4 +1,3 @@
 apps:
     keycloak:
         admin: bla
-        enabled: true

@@ -8,7 +8,7 @@ export default {
       id: 'gatekeeper',
     },
     {
-      enabled: true,
+      enabled: undefined,
       values: {
         admin: 'bla',
         adminPassword: 'dida',

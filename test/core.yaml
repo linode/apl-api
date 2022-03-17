@@ -1,6 +1,7 @@
 # NOTE: This file is merged with other values in ./helmfile.d/snippets/env.gotmpl
 k8s:
   namespaces:
+    - name: alertmanager
     - name: cert-manager
       disableIstioInjection: true
     - name: default
@@ -13,6 +14,7 @@ k8s:
       disableIstioInjection: true
     - name: harbor
     - name: gitea
+    - name: grafana
     - name: istio-system
       disableIstioInjection: true
     - name: ingress
@@ -35,12 +37,17 @@ k8s:
     - name: maintenance
       disableIstioInjection: true
     - name: monitoring
+      disableIstioInjection: true
     - name: operator-lifecycle-manager
+      disableIstioInjection: true
+      disablePolicyChecks: true
+    - name: operators
       disableIstioInjection: true
       disablePolicyChecks: true
     - name: otomi
     - name: overprovisioner
       disableIstioInjection: true
+    - name: prometheus
     - name: shared
     - name: team-admin
     - name: vault
@@ -48,10 +55,11 @@ k8s:
 adminApps:
   - name: alertmanager
     tags: [alerting, observability]
-    deps: [prometheus]
+    deps: [prometheus, grafana]
     ingress:
       - svc: po-alertmanager
         namespace: monitoring
+        # namespace: alertmanager
         port: 9093
         type: public
         auth: true
@@ -79,7 +87,6 @@ adminApps:
     tags: [ingress, security, tls]
   - name: gatekeeper
     tags: [security, policies, observability]
-    deps: [prometheus]
   - name: gitea
     tags: [git]
     isShared: true
@@ -88,23 +95,20 @@ adminApps:
       - namespace: gitea
         svc: gitea-http
         port: 3000
-        forwardPath: true
         type: public
   - name: grafana
     tags: [tracing, telemetry, observability]
-    deps: [prometheus]
+    deps: [alertmanager, prometheus]
     ownHost: true
     ingress:
       - svc: po-grafana
-        namespace: monitoring
+        namespace: grafana
         removeRequestHeaders:
           - authorization
         type: public
         auth: true
   - name: harbor
-    enabled: false
     tags: [security]
-    deps: [istio]
     isShared: true
     ownHost: true
     ingress:
@@ -126,9 +130,7 @@ adminApps:
   - name: hello
     hide: true
     tags: [demo]
-    deps: []
   - name: httpbin
-    enabled: false
     tags: [dev, testing, debugging]
     isShared: true
     ingress:
@@ -141,9 +143,7 @@ adminApps:
     tags: [ingress, auth]
   - name: istio
     tags: [ingress, egress, routing, security, tls, observability, policies]
-    deps: [grafana, prometheus]
   - name: jaeger
-    enabled: false
     tags: [ingress, telemetry, observability]
     deps: [istio]
     ingress:
@@ -155,14 +155,12 @@ adminApps:
         auth: true
   - name: keycloak
     tags: [auth, sso]
-    deps: [istio]
     ingress:
       - namespace: keycloak
         svc: keycloak-http
         ownHost: true
         type: public
   - name: kiali
-    enabled: false
     tags: [tracing, telemetry, observability]
     deps: [istio]
     ingress:
@@ -173,12 +171,10 @@ adminApps:
         type: public
         auth: true
   - name: knative
-    enabled: false
     tags: [serverless, functions]
     deps: [istio]
     logo: knative_logo.png
   - name: kubeapps
-    enabled: false
     tags: [dev, apps]
     deps: [operator-lifecycle-manager]
     isShared: true
@@ -187,10 +183,9 @@ adminApps:
       - svc: kubeapps
         namespace: kubeapps
         type: public
-        auth: true
+        # auth: true
   - name: loki
     tags: [logging, telemetry, observability]
-    deps: [grafana, prometheus]
     useHost: grafana
     path: /explore?orgId=1&left=%5B"now-1h","now","Loki",%7B%7D,%7B"mode":"Logs"%7D,%7B"ui":%5Btrue,true,true,"none"%5D%7D%5D
     shortcuts:
@@ -229,11 +224,12 @@ adminApps:
         auth: true
   - name: prometheus
     tags: [metrics, observability]
-    deps: [grafana]
+    deps: [alertmanager, grafana]
     ingress:
       - svc: po-prometheus
         port: 9090
         namespace: monitoring
+        # namespace: prometheus
         type: public
         auth: true
   - name: vault
@@ -262,6 +258,7 @@ teamApps:
     ingress:
       - svc: po-grafana
         hasPrefix: true
+        forwardPath: true
         removeRequestHeaders:
           - authorization
         type: public

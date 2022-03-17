@@ -2,6 +2,7 @@
 import $parser from '@apidevtools/json-schema-ref-parser'
 import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
+import { pascalCase } from 'change-case'
 import Debug from 'debug'
 import { readFileSync } from 'fs'
 import yaml from 'js-yaml'
@@ -203,6 +204,14 @@ export default class OtomiStack {
     return this.db.updateItem('apps', data, { teamId, id })
   }
 
+  toggleApps(teamId, { ids, enabled }): void {
+    ids.map((id) => {
+      // we might be given a dep that is only relevant to core, so check if it exists
+      if (this.db.getItemReference('apps', { teamId, id }, false))
+        this.db.updateItem('apps', { enabled }, { teamId, id })
+    })
+  }
+
   getTeams(): Array<Team> {
     return this.db.getCollection('teams') as Array<Team>
   }
@@ -369,20 +378,21 @@ export default class OtomiStack {
     const secretRes = await client.readNamespacedSecret(secretName || '', namespace)
     const { body: secret }: { body: k8s.V1Secret } = secretRes
     const token = Buffer.from(secret.data?.token || '', 'base64').toString('ascii')
-    const clusterData = this.getSetting('cluster') as Cluster
+    const { name, apiName = 'otomi-' + name, apiServer } = this.getSetting('cluster') as Cluster
+    if (!apiServer) throw new ValidationError('Missing configuration value: cluster.apiServer')
     const cluster = {
-      name: clusterData.apiName,
-      server: clusterData.apiServer,
+      name: apiName,
+      server: apiServer,
       skipTLSVerify: true,
     }
 
     const user = {
-      name: `${namespace}-${clusterData.apiName}`,
+      name: `${namespace}-${apiName}`,
       token,
     }
 
     const context = {
-      name: `${namespace}-${clusterData.apiName}`,
+      name: `${namespace}-${apiName}`,
       namespace,
       user: user.name,
       cluster: cluster.name,
@@ -515,7 +525,8 @@ export default class OtomiStack {
   }
 
   loadApps(): void {
-    const apps = (this.spec as any).components.schemas.AppList.enum
+    const { schemas } = (this.spec as any).components
+    const apps = schemas.AppList.enum
     apps.forEach((appId) => {
       const path = `env/apps/${appId}.yaml`
       if (!this.repo.fileExists(path)) return // might not exist initially
@@ -531,8 +542,10 @@ export default class OtomiStack {
         delete values._rawValues
       }
       let enabled
-      if (values.enabled !== undefined) {
-        enabled = values.enabled
+      const appName = `App${pascalCase(appId)}`
+      const app = schemas[appName]
+      if (app.properties.enabled !== undefined) {
+        enabled = !!values.enabled
         delete values.enabled
       }
       const teamId = 'admin'
@@ -595,8 +608,10 @@ export default class OtomiStack {
       apps[id as string] = {
         ...values,
         _rawValues: rawValues,
-        enabled,
       }
+      if (enabled !== undefined) apps[id as string].enabled = enabled
+      else delete apps[id as string].enabled
+
       this.saveConfig(`./env/apps/${id}.yaml`, `./env/apps/secrets.${id}.yaml`, { apps })
     })
   }

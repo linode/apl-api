@@ -21,9 +21,6 @@ AppKeycloak:
   properties:
     id:
       $ref: ../definitions.yaml#/idName
-    enabled:
-      x-default: true
-      type: boolean
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:

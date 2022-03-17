@@ -51,21 +51,23 @@ export default class Db {
   getItem(name: string, selector: any): DbType {
     // By default data is returned by reference, this means that modifications to returned objects may change the database.
     // To avoid such behavior, we use .cloneDeep().
-    const data = this.getItemReference(name, selector)
+    const data = this.getItemReference(name, selector) as DbType
     return cloneDeep(data)
   }
 
-  getItemReference(type: string, selector: any): DbType {
+  getItemReference(type: string, selector: any, mustThrow = true): DbType | undefined {
     const coll = this.db.get(type)
     // @ts-ignore
     const data = coll.find(selector).value()
     if (data === undefined) {
       debug(`Selector props do not exist in '${type}': ${JSON.stringify(selector)}`)
-      throw new NotExistError()
+      if (mustThrow) throw new NotExistError()
+      else return
     }
-    if (data.length) {
+    if (data?.length) {
       debug(`More than one item found for '${type}' with selector: ${JSON.stringify(selector)}`)
-      throw new NotExistError()
+      if (mustThrow) throw new NotExistError()
+      else return
     }
     return data
   }

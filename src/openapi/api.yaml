@@ -4,7 +4,7 @@ security:
 info:
   title: The otomi-stack API
   description: Holds the entire schema needed by console to autogenerate forms
-  version: 0.4.95-rc.15
+  version: 0.4.95-rc.18
 
 externalDocs:
   description: 'This is the base url of the external documentation'
@@ -574,6 +574,21 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/App'
+    put:
+      operationId: toggleApps
+      description: Turn on/off list of apps for a team
+      x-aclSchema: App
+      requestBody:
+        description: App toggles
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully toggled apps
   /apps/{teamId}/{appId}:
     parameters:
       - in: path
