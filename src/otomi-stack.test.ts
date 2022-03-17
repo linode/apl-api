@@ -65,14 +65,14 @@ describe('Data validation', () => {
 
 describe('Work with values', () => {
   let otomiStack: OtomiStack
-  beforeEach(() => {
+  beforeEach(async () => {
     otomiStack = new OtomiStack()
+    const spec = (await loadOpenApisSpec()) as unknown as OtomiSpec
+    otomiStack.setSpec(spec as unknown as OtomiSpec)
     otomiStack.repo = new Repo('./test', undefined, undefined, undefined, undefined, undefined)
   })
 
-  it('can load from configuration to database', async () => {
-    const spec = (await loadOpenApisSpec()) as unknown as OtomiSpec
-    otomiStack.setSpec(spec as unknown as OtomiSpec)
+  it('can load from configuration to database', () => {
     otomiStack.loadValues()
     const dbState = otomiStack.db.db.getState() as Record<string, any>
     expectedDbState.settings = merge(expectedDbState.settings, secretSettings)
