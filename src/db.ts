@@ -7,6 +7,7 @@ import Memory from 'lowdb/adapters/Memory'
 import { v4 as uuidv4 } from 'uuid'
 import { AlreadyExists, NotExistError } from './error'
 import { App, Cluster, Job, Secret, Service, Settings, Team } from './otomi-models'
+import { mergeData } from './utils'
 
 export type DbType = Cluster | Job | Secret | Service | Team | Settings | App
 export type Schema = {
@@ -112,11 +113,11 @@ export default class Db {
     const col = this.db.get(type)
     // @ts-ignore
     const idx = col.findIndex(selector).value()
-    const mergeData = merge ? prev : {}
-    const iData = { ...mergeData, ...data, ...selector }
-    col.value().splice(idx, 1, iData)
+    const merged = merge && prev ? mergeData(prev, data) : data
+    const newData = { ...merged, ...selector }
+    col.value().splice(idx, 1, newData)
     this.dirty = this.dirtyActive
-    return iData
+    return newData
   }
 
   setDirtyActive(active = true): void {

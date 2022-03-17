@@ -2,7 +2,7 @@ import $RefParser from '@apidevtools/json-schema-ref-parser'
 import cleanDeep, { CleanOptions } from 'clean-deep'
 import { existsSync, readFileSync } from 'fs'
 import { load } from 'js-yaml'
-import { isEqual, memoize, omit } from 'lodash'
+import { isArray, isEqual, memoize, mergeWith, omit } from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
 import { resolve } from 'path'
 import { Cluster, Dns } from './otomi-models'
@@ -174,3 +174,6 @@ export const argQuoteStrip = (s) => {
 export const decryptedFilePostfix = () => {
   return existsSync(`${env.GIT_LOCAL_PATH}/.sops.yaml`) ? '.dec' : ''
 }
+
+// use lodash mergeWith to avoid merging arrays
+export const mergeData = (orig, extra) => mergeWith(orig, extra, (a, b) => (isArray(b) ? b : undefined))

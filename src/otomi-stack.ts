@@ -6,7 +6,7 @@ import { pascalCase } from 'change-case'
 import Debug from 'debug'
 import { readFileSync } from 'fs'
 import yaml from 'js-yaml'
-import { cloneDeep, each, filter, get, isArray, isEmpty, merge, mergeWith, omit, set, unset } from 'lodash'
+import { cloneDeep, each, filter, get, isEmpty, merge, omit, set, unset } from 'lodash'
 import generatePassword from 'password-generator'
 import path from 'path'
 import Db from './db'
@@ -40,6 +40,7 @@ import {
   getPaths,
   getServiceUrl,
   getValuesSchema,
+  mergeData,
   objectToArray,
 } from './utils'
 import {
@@ -182,8 +183,7 @@ export default class OtomiStack {
 
   setSetting(data: Setting) {
     const settings = this.db.db.get('settings').value()
-    // use lodash mergeWith to avoid merging arrays
-    const mergedSettings = mergeWith(settings, data, (a, b) => (isArray(b) ? b : undefined))
+    const mergedSettings = mergeData(settings, data)
     const ret = this.db.db.set('settings', mergedSettings).write()
     this.db.dirty = true
     return ret
@@ -215,8 +215,8 @@ export default class OtomiStack {
     ids.map((id) => {
       // we might be given a dep that is only relevant to core, or
       // which is essential, so skip it
-      if (this.canToggleApp(id) && this.db.getItemReference('apps', { teamId, id }, false))
-        this.db.updateItem('apps', { enabled }, { teamId, id })
+      const orig = this.db.getItemReference('apps', { teamId, id }, false)
+      if (orig && this.canToggleApp(id)) this.db.updateItem('apps', { enabled }, { teamId, id }, true)
     })
   }
 
@@ -617,7 +617,7 @@ export default class OtomiStack {
         ...values,
         _rawValues: rawValues,
       }
-      if (enabled !== undefined) apps[id as string].enabled = enabled
+      if (this.canToggleApp(id) && enabled !== undefined) apps[id as string].enabled = enabled
       else delete apps[id as string].enabled
 
       this.saveConfig(`./env/apps/${id}.yaml`, `./env/apps/secrets.${id}.yaml`, { apps })
