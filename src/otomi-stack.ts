@@ -204,10 +204,18 @@ export default class OtomiStack {
     return this.db.updateItem('apps', data, { teamId, id })
   }
 
+  canToggleApp(id): boolean {
+    const { schemas } = (this.spec as any).components
+    const appName = `App${pascalCase(id)}`
+    const app = schemas[appName]
+    return app.properties.enabled !== undefined
+  }
+
   toggleApps(teamId, { ids, enabled }): void {
     ids.map((id) => {
-      // we might be given a dep that is only relevant to core, so check if it exists
-      if (this.db.getItemReference('apps', { teamId, id }, false))
+      // we might be given a dep that is only relevant to core, or
+      // which is essential, so skip it
+      if (this.canToggleApp(id) && this.db.getItemReference('apps', { teamId, id }, false))
         this.db.updateItem('apps', { enabled }, { teamId, id })
     })
   }
