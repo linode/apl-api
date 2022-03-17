@@ -23,9 +23,62 @@ AppKubeapps:
       x-externalDocsPath: docs/console/apps/kubeapps
       type: object
       properties:
+        enableCommonGround:
+          description: Enables the Dutch CommonGround chart repo.
+          x-default: false
+          type: boolean
         postgresqlPassword:
           type: string
           description: Once set and deployed it cannot be changed with manual intervention.
           x-secret: 'randAlphaNum 20'
+        initialRepos:
+          description: Add additional chart repos.
+          type: array
+          items:
+            type: object
+            required:
+              - type
+              - url
+            properties:
+              name:
+                type: string
+              type:
+                type: string
+                enum: ['helm', 'oci']
+              url:
+                type: string
+              description:
+                type: string
+              authorizationHeader:
+                type: string
+              basicAuth:
+                type: string
+              caCert:
+                type: string
+              tlsInsecureSkipVerify:
+                type: boolean
+              filterRule:
+                type: object
+                properties:
+                  jq:
+                    type: string
+                  variables:
+                    type: object
+                    additionalProperties:
+                      type: string
+              ociRepositories:
+                type: array
+                items:
+                  type: string
+        autoscaling:
+          additionalProperties: false
+          type: object
+          properties:
+            dashboard:
+              $ref: ../definitions.yaml#/autoscaling
+            frontend:
+              $ref: ../definitions.yaml#/autoscaling
+            kubeops:
+              $ref: ../definitions.yaml#/autoscaling
       required:
         - postgresqlPassword
