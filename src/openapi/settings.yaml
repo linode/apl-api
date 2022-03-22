@@ -1,7 +1,7 @@
 Settings:
   x-acl:
     admin: [read-any, update-any]
-    team: []
+    team: [read-any]
   additionalProperties: false
   properties:
     alerts:
@@ -9,16 +9,32 @@ Settings:
       title: Alerts
       description: Configure alerting endpoints to receive notifications from Alertmanager and Otomi deployments.
       x-externalDocsPath: docs/console/settings#alerts
+      x-acl:
+        admin: [read-any, update-any]
+        team: [read-any]
+    cluster:
+      $ref: cluster.yaml#/Cluster
+      title: Cluster
+      description: Cluster configuration.
+      x-acl:
+        admin: [read-any, update-any]
+        team: [read-any]
     home:
       $ref: definitions.yaml#/alerts
       title: Home alerts
       description: Same setup as 'Alerts', but to send copies of alerts "home". Useful for co-monitoring managed clusters of customers.
       x-externalDocsPath: docs/console/settings#home-alerts
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
     azure:
       title: Azure
       additionalProperties: false
       description: Azure specific configuration. Only applicable on Azure clusters.
       x-externalDocsPath: docs/console/settings#azure
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
       properties:
         appgw:
           properties:
@@ -51,9 +67,15 @@ Settings:
     dns:
       $ref: definitions.yaml#/dns
       x-externalDocsPath: docs/console/settings#dns
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
     kms:
       $ref: definitions.yaml#/kms
       x-externalDocsPath: docs/console/settings#kms
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
     oidc:
       title: OIDC
       description: OpenID Connect settings.
@@ -88,6 +110,9 @@ Settings:
           x-default: sub
       type: object
       x-externalDocsPath: docs/console/settings#oidc
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
     otomi:
       title: Otomi
       type: object
@@ -96,6 +121,9 @@ Settings:
       properties:
         adminPassword:
           $ref: definitions.yaml#/adminPassword
+          x-acl:
+            admin: [read-any, update-any]
+            team: []
         additionalClusters:
           title: Additional clusters
           description: Enter other k8s clusters, if there are any.
@@ -129,6 +157,9 @@ Settings:
             - username
             - password
           type: object
+          x-acl:
+            admin: [read-any, update-any]
+            team: []
         hasCloudLB:
           x-default: false
           description: Set this to true when an external load balancer exists (Azure AppGW, Google Apigee) or needs to be started (AWS ALB). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.
@@ -166,8 +197,14 @@ Settings:
             Please pin this to a valid release version found in the repo. Suggestion: try the most recent stable version.
           type: string
       x-externalDocsPath: docs/console/settings#otomi
+      x-acl:
+        admin: [read-any, update-any]
+        team: [read-any]
     policies:
       $ref: policies.yaml#/policies
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
     smtp:
       title: SMTP
       description: Mail server settings.
@@ -203,4 +240,10 @@ Settings:
         - smarthost
       type: object
       x-externalDocsPath: docs/console/settings#smtp
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
   type: object
+  required:
+    - cluster
+    - otomi

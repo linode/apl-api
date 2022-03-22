@@ -46,12 +46,12 @@ AdditionalCluster:
   additionalProperties: false
   x-acl:
     admin:
-      - read
-      - update
-      - create
-      - delete
+      - read-any
+      - update-any
+      - create-any
+      - delete-any
     team:
-      - read
+      - read-any
   title: Additional cluster
   description: A k8s cluster managed by Otomi.
   properties:
@@ -72,10 +72,10 @@ Cluster:
   type: object
   x-acl:
     admin:
-      - read
-      - update
+      - read-any
+      - update-any
     team:
-      - read
+      - read-any
   title: Cluster
   description: The k8s cluster managed by this Otomi instance.
   properties:

@@ -36,10 +36,10 @@ AppIngressNginx:
         autoscaling:
           $ref: ../definitions.yaml#/autoscalingEnabled
         modsecurity:
-          title: MOD Security
-          description: Enables MOD Security functionality.
+          title: ModSecurity
           properties:
             enabled:
+              description: Enables ModSecurity functionality.
               type: boolean
               x-default: false
             block:
@@ -47,7 +47,7 @@ AppIngressNginx:
               type: boolean
               x-default: true
             owasp:
-              description: Turns on the default OWASP rule set for modsec. See https://owasp.org/www-project-modsecurity-core-rule-set/.
+              description: Turns on the default OWASP rule set for ModSecurity. See https://owasp.org/www-project-modsecurity-core-rule-set/.
               type: boolean
               x-default: true
           type: object

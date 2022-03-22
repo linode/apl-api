@@ -1,12 +1,13 @@
-import request from 'supertest'
-import sinon from 'sinon'
-import { Express } from 'express'
 import { assert } from 'chai'
+import { Express } from 'express'
 import { isEqual } from 'lodash'
-import initApp from './server'
-import OtomiStack from './otomi-stack'
-import getToken from './fixtures/jwt'
+import sinon from 'sinon'
+import request from 'supertest'
 import { AlreadyExists } from './error'
+import getToken from './fixtures/jwt'
+import { OtomiSpec } from './otomi-models'
+import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
+import initApp from './server'
 
 const adminToken: string = getToken(['team-admin'])
 const teamToken: string = getToken(['team-team1'])
@@ -16,15 +17,17 @@ describe('API authz tests', () => {
   let otomiStack
   before(async () => {
     otomiStack = new OtomiStack()
+    const spec = (await loadOpenApisSpec()) as unknown as OtomiSpec
+    otomiStack.setSpec(spec)
     otomiStack.createTeam({ name: 'team1' })
     sinon.stub(otomiStack)
     app = await initApp(otomiStack)
   })
 
-  describe('Admin /settings/{setting} endpoint tests', () => {
+  describe('Admin /settings endpoint tests', () => {
     it(`admin can get /settings/alerts`, (done) => {
       request(app)
-        .get(`/v1/settings/alerts`)
+        .get(`/v1/settings`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
@@ -32,29 +35,9 @@ describe('API authz tests', () => {
         .end(done)
     })
 
-    it('admin can put /settings/alerts with correct payload', (done) => {
-      request(app)
-        .put('/v1/settings/alerts')
-        .send({
-          alerts: {
-            drone: ['msteams'],
-            groupInterval: '5m',
-            msteams: {
-              highPrio: 'bla',
-              lowPrio: 'bla',
-            },
-            receivers: ['slack'],
-            repeatInterval: '3h',
-          },
-        })
-        .set('Accept', 'application/json')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200)
-        .end(done)
-    })
     it('admin cannot put /settings/alerts with extra properties', (done) => {
       request(app)
-        .put('/v1/settings/alerts')
+        .put('/v1/settings')
         .send({
           alerts: {
             drone: ['msteams'],
@@ -76,10 +59,8 @@ describe('API authz tests', () => {
 
     it('admin can put empty payload, but it wont change anything', (done) => {
       request(app)
-        .put('/v1/settings/dns')
-        .send({
-          zones: ['someZoneOne', 'someZoneTwo'],
-        })
+        .put('/v1/settings')
+        .send({})
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(400)
@@ -387,6 +368,8 @@ describe('Error handler', () => {
   let otomiStack: OtomiStack
   before(async () => {
     otomiStack = new OtomiStack()
+    const spec = (await loadOpenApisSpec()) as unknown as OtomiSpec
+    otomiStack.setSpec(spec)
     app = await initApp(otomiStack)
   })
   it('should handle exception and transform it to HTTP response with a proper error code', (done) => {

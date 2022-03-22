@@ -13,6 +13,8 @@ k8s:
     - name: external-dns
       disableIstioInjection: true
     - name: harbor
+    - name: gatekeeper-system
+      disableIstioInjection: true
     - name: gitea
     - name: grafana
     - name: istio-system
@@ -133,10 +135,10 @@ adminApps:
   - name: httpbin
     tags: [dev, testing, debugging]
     isShared: true
+    ownHost: true
     ingress:
       - namespace: shared
         svc: httpbin
-        ownHost: true
         type: public
         auth: true
   - name: ingress-nginx
@@ -155,11 +157,16 @@ adminApps:
         auth: true
   - name: keycloak
     tags: [auth, sso]
+    isShared: true
+    ownHost: true
     ingress:
       - namespace: keycloak
         svc: keycloak-http
-        ownHost: true
         type: public
+    shortcuts:
+      - title: Account
+        description: Edit your account settings.
+        path: /realms/otomi/account/
   - name: kiali
     tags: [tracing, telemetry, observability]
     deps: [istio]

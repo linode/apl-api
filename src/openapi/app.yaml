@@ -44,7 +44,7 @@ AppList:
 App:
   x-acl:
     admin: [read-any, update-any]
-    team: [read, update]
+    team: [read-any, update]
   type: object
   properties:
     enabled:
@@ -54,11 +54,17 @@ App:
       $ref: definitions.yaml#/idName
     rawValues:
       $ref: definitions.yaml#/rawValues
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
     shortcuts:
       description: Resource URL that lands the user in a place of interest within an app.
       type: array
       items:
         $ref: definitions.yaml#/shortcut
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
     values:
       x-acl:
         admin: [read-any, update-any]

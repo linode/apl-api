@@ -89,6 +89,7 @@ alerts:
           $ref: '#/url'
           description: An opsgenie URL without the '?apiKey' part.
         responders:
+          description: Configure one or multiple alert responders.
           type: array
           items:
             type: object
@@ -104,6 +105,7 @@ alerts:
                     default: team
                 required: [type]
               - title: Responder
+                description: An OpsGenie responder identity.
                 oneOf:
                   - title: ID
                     required: [id]
@@ -553,9 +555,9 @@ jobSpec:
 k8sVersion:
   description: The cluster k8s version. Otomi supports 2 minor versions backwards from the suggested default.
   enum:
-    - '1.18'
     - '1.19'
     - '1.20'
+    - '1.21'
   type: string
 kms:
   additionalProperties: false

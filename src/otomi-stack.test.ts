@@ -11,8 +11,10 @@ import { getPaths } from './utils'
 
 describe('Data validation', () => {
   let otomiStack: OtomiStack
-  beforeEach(() => {
+  beforeEach(async () => {
     otomiStack = new OtomiStack()
+    const spec = (await loadOpenApisSpec()) as unknown as OtomiSpec
+    otomiStack.setSpec(spec)
   })
 
   it('should throw exception on duplicated domain', (done) => {
@@ -68,7 +70,7 @@ describe('Work with values', () => {
   beforeEach(async () => {
     otomiStack = new OtomiStack()
     const spec = (await loadOpenApisSpec()) as unknown as OtomiSpec
-    otomiStack.setSpec(spec as unknown as OtomiSpec)
+    otomiStack.setSpec(spec)
     otomiStack.repo = new Repo('./test', undefined, undefined, undefined, undefined, undefined)
   })
 

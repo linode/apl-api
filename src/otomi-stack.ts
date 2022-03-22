@@ -6,7 +6,7 @@ import { pascalCase } from 'change-case'
 import Debug from 'debug'
 import { readFileSync } from 'fs'
 import yaml from 'js-yaml'
-import { cloneDeep, each, filter, get, isEmpty, merge, omit, set, unset } from 'lodash'
+import { cloneDeep, each, filter, get, isEmpty, merge, omit, pick, set, unset } from 'lodash'
 import generatePassword from 'password-generator'
 import path from 'path'
 import Db from './db'
@@ -15,7 +15,6 @@ import {
   App,
   Cluster,
   Core,
-  Dns,
   Job,
   OpenAPIDoc,
   OtomiSpec,
@@ -23,7 +22,6 @@ import {
   Secret,
   Service,
   Session,
-  Setting,
   Settings,
   Team,
   TeamSelfService,
@@ -173,15 +171,13 @@ export default class OtomiStack {
     return cleanSecretPaths
   }
 
-  getSetting(key: string): Setting {
-    return this.db.db.get(['settings', key]).value()
+  getSettings(keys?: string[]): Settings {
+    const settings = this.db.db.get(['settings']).value()
+    if (!keys) return settings
+    return pick(settings, keys) as Settings
   }
 
-  getAllSettings(): Settings {
-    return this.db.db.get('settings').value()
-  }
-
-  setSetting(data: Setting) {
+  editSettings(data: Settings) {
     const settings = this.db.db.get('settings').value()
     const mergedSettings = mergeData(settings, data)
     const ret = this.db.db.set('settings', mergedSettings).write()
@@ -191,12 +187,22 @@ export default class OtomiStack {
 
   getApp(teamId: string, id: string): App {
     // @ts-ignore
-    return this.db.getItem('apps', { teamId, id })
+    const app = this.db.getItem('apps', { teamId, id }) as App
+    if (teamId === 'admin') return app
+    const adminApp = this.db.getItem('apps', { teamId: 'admin', id: app.id }) as App
+    return { ...cloneDeep(app), enabled: adminApp.enabled }
   }
 
-  getApps(teamId): Array<App> {
-    // @ts-ignore
-    return this.db.getCollection('apps', { teamId })
+  getApps(teamId, picks?: string[]): Array<App> {
+    const apps = this.db.getCollection('apps', { teamId }) as Array<App>
+    if (teamId === 'admin') return apps
+    // map apps enabled to the one from adminApps
+    const mapped = apps.map((a: App) => {
+      const adminApp = this.db.getItem('apps', { teamId: 'admin', id: a.id }) as App
+      return { ...cloneDeep(a), enabled: adminApp.enabled }
+    })
+    if (!picks) return mapped
+    return pick(mapped, picks) as Array<App>
   }
 
   editApp(teamId, id, data: App): App {
@@ -245,8 +251,14 @@ export default class OtomiStack {
       // eslint-disable-next-line no-param-reassign
       data.password = generatePassword(16, false)
     }
-
-    return this.db.createItem('teams', data, { id }, id) as Team
+    const team = this.db.createItem('teams', data, { id }, id) as Team
+    // assign app to team
+    const { schemas } = (this.spec as any).components
+    const apps = schemas.AppList.enum
+    apps.forEach((appId) => {
+      this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId })
+    })
+    return team
   }
 
   editTeam(id: string, data: Team): Team {
@@ -386,7 +398,7 @@ export default class OtomiStack {
     const secretRes = await client.readNamespacedSecret(secretName || '', namespace)
     const { body: secret }: { body: k8s.V1Secret } = secretRes
     const token = Buffer.from(secret.data?.token || '', 'base64').toString('ascii')
-    const { name, apiName = 'otomi-' + name, apiServer } = this.getSetting('cluster') as Cluster
+    const { name, apiName = 'otomi-' + name, apiServer } = this.getSettings(['cluster']) as any as Cluster
     if (!apiServer) throw new ValidationError('Missing configuration value: cluster.apiServer')
     const cluster = {
       name: apiName,
@@ -602,11 +614,11 @@ export default class OtomiStack {
   }
 
   saveCluster(): void {
-    this.repo.writeFile('./env/cluster.yaml', { cluster: this.getSetting('cluster') })
+    this.repo.writeFile('./env/cluster.yaml', { cluster: this.getSettings(['cluster']) })
   }
 
   savePolicies(): void {
-    this.repo.writeFile('./env/policies.yaml', { policies: this.getSetting('policies') })
+    this.repo.writeFile('./env/policies.yaml', { policies: this.getSettings(['policies']) })
   }
 
   saveApps(): void {
@@ -644,7 +656,7 @@ export default class OtomiStack {
   }
 
   saveSettings(): void {
-    const settings = this.getAllSettings()
+    const settings = this.getSettings()
     this.saveConfig('./env/settings.yaml', `./env/secrets.settings.yaml`, omit(settings, ['cluster', 'policies']))
   }
 
@@ -758,8 +770,7 @@ export default class OtomiStack {
 
     if (svcRaw.type === 'cluster') svc.ingress = { type: 'cluster' }
     else {
-      const dns: Dns = this.getSetting('dns') as Dns
-      const cluster: Cluster = this.getSetting('cluster') as Cluster
+      const { cluster, dns } = this.getSettings(['cluster', 'dns'])
       const url = getServiceUrl({ domain: svcRaw.domain, name: svcRaw.name, teamId, cluster, dns })
       svc.ingress = {
         auth: 'auth' in svcRaw,
@@ -829,21 +840,17 @@ export default class OtomiStack {
     this.saveApps()
   }
 
-  getSession(user: User): Session {
+  getSession(user: k8s.User): Session {
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
-      cluster: this.getSetting('cluster') as Session['cluster'],
-      clusters: get(this.getSetting('otomi'), 'additionalClusters', []) as Session['clusters'],
       core: this.getCore(),
-      dns: this.getSetting('dns') as Session['dns'],
-      user,
+      user: user as User,
       teams: this.getTeams(),
       isDirty: this.db.isDirty(),
       versions: {
         core: env.CORE_VERSION,
         api: process.env.npm_package_version,
       },
-      isMultitenant: get(this.getSetting('otomi'), 'isMultitenant', true) as Session['isMultitenant'],
     }
     return data
   }

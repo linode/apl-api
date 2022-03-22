@@ -25,6 +25,16 @@ export default {
       ],
     },
     {
+      enabled: undefined,
+      teamId: 'dev',
+      id: 'keycloak',
+    },
+    {
+      enabled: undefined,
+      teamId: 'otomi',
+      id: 'keycloak',
+    },
+    {
       enabled: true,
       values: {
         oki: 'doki',

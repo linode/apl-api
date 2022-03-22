@@ -4,7 +4,7 @@ security:
 info:
   title: The otomi-stack API
   description: Holds the entire schema needed by console to autogenerate forms
-  version: 0.4.95-rc.20
+  version: 0.4.95-rc.21
 
 externalDocs:
   description: 'This is the base url of the external documentation'
@@ -492,42 +492,8 @@ paths:
 
   /settings:
     get:
-      operationId: 'getAllSettings'
-      x-aclSchema: Settings
-      security: []
-      description: Get all settings
-      responses:
-        '200':
-          description: The requested apiDoc.
-          content:
-            application/json:
-              schema:
-                type: object
-        default:
-          description: The requested settings.
-
-  /settings/{setting}:
-    parameters:
-      - in: path
-        name: setting
-        required: true
-        schema:
-          type: string
-          enum:
-            - alerts
-            - azure
-            - cluster
-            - dns
-            - home
-            - kms
-            - oidc
-            - otomi
-            - policies
-            - smtp
-        example: oidc
-    get:
-      operationId: getSetting
-      description: Get a setting from the 'settings.yaml' or 'secret.settings.yaml' file.
+      operationId: getSettings
+      description: Get settings from the 'settings.yaml' or 'secret.settings.yaml' file.
       x-aclSchema: Settings
       responses:
         '200':
@@ -539,20 +505,20 @@ paths:
 
     # TODO: https://github.com/redkubes/otomi-api/issues/155
     put:
-      operationId: editSetting
-      description: Edit a setting from the 'settings.yaml' or 'secret.settings.yaml' file.
+      operationId: editSettings
+      description: Edit settings from the 'settings.yaml' or 'secret.settings.yaml' file.
       x-aclSchema: Settings
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Settings'
-        description: Given a setting parameter, put new setting for a given rootprop.
+        description: Put new settings.
         required: true
       responses:
         <<: *DefaultGetResponses
         '200':
-          description: Successfully edited this setting.
+          description: Successfully edited settings.
 
   /apps/{teamId}:
     parameters:
