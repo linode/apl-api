@@ -398,7 +398,9 @@ export default class OtomiStack {
     const secretRes = await client.readNamespacedSecret(secretName || '', namespace)
     const { body: secret }: { body: k8s.V1Secret } = secretRes
     const token = Buffer.from(secret.data?.token || '', 'base64').toString('ascii')
-    const { name, apiName = 'otomi-' + name, apiServer } = this.getSettings(['cluster']) as any as Cluster
+    const {
+      cluster: { name, apiName = `otomi-${name}`, apiServer },
+    } = this.getSettings(['cluster'])
     if (!apiServer) throw new ValidationError('Missing configuration value: cluster.apiServer')
     const cluster = {
       name: apiName,
@@ -614,11 +616,11 @@ export default class OtomiStack {
   }
 
   saveCluster(): void {
-    this.repo.writeFile('./env/cluster.yaml', { cluster: this.getSettings(['cluster']) })
+    this.repo.writeFile('./env/cluster.yaml', this.getSettings(['cluster']))
   }
 
   savePolicies(): void {
-    this.repo.writeFile('./env/policies.yaml', { policies: this.getSettings(['policies']) })
+    this.repo.writeFile('./env/policies.yaml', this.getSettings(['policies']))
   }
 
   saveApps(): void {
