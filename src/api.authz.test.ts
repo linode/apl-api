@@ -63,7 +63,7 @@ describe('API authz tests', () => {
         .send({})
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${adminToken}`)
-        .expect(400)
+        .expect(200)
         .end(done)
     })
   })
