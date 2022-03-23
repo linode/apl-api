@@ -52,7 +52,7 @@ export default class Db {
   getItem(name: string, selector: any): DbType {
     // By default data is returned by reference, this means that modifications to returned objects may change the database.
     // To avoid such behavior, we use .cloneDeep().
-    const data = this.getItemReference(name, selector) as DbType
+    const data = this.getItemReference(name, selector)
     return cloneDeep(data)
   }
 
@@ -96,7 +96,7 @@ export default class Db {
     // @ts-ignore
     if (selector && this.db.get(type).find(selector).value())
       throw new AlreadyExists(`Item already exists in '${type}' collection: ${JSON.stringify(selector)}`)
-    const ret = this.populateItem(type, data, selector, id) as DbType
+    const ret = this.populateItem(type, data, selector, id)
     this.dirty = this.dirtyActive
     return ret
   }
