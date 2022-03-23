@@ -113,8 +113,8 @@ export function getServiceUrl({
   domain?: string
   name?: string
   teamId?: string
-  dns?: Dns
   cluster: Cluster
+  dns: Dns
 }): {
   subdomain: string
   domain: string
@@ -123,11 +123,11 @@ export function getServiceUrl({
     // Fallback mechanism for exposed service that does not have its public url specified in values
     return {
       subdomain: `${name}.team-${teamId}`,
-      domain: cluster.domainSuffix || '',
+      domain: cluster!.domainSuffix || '',
     }
   }
 
-  const zones = [cluster.domainSuffix, ...(dns?.zones || [])]
+  const zones = [cluster!.domainSuffix, ...(dns?.zones || [])]
   // Sort by length descending
   zones.sort((a, b) => b.length - a.length)
   for (let i = 0; i < zones.length; i += 1) {

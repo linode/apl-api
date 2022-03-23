@@ -4,7 +4,7 @@ import { components, external, operations, paths } from './generated-schema'
 
 export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
-export type Cluster = components['schemas']['Cluster']
+export type Cluster = Settings['cluster']
 export type Deployment = components['schemas']['Deployment']
 export type Dns = Settings['dns']
 export type Job = components['schemas']['Job']

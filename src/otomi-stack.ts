@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this */
 import $parser from '@apidevtools/json-schema-ref-parser'
 import * as k8s from '@kubernetes/client-node'
-import { V1ObjectReference } from '@kubernetes/client-node'
+import { Cluster, V1ObjectReference } from '@kubernetes/client-node'
 import { pascalCase } from 'change-case'
 import Debug from 'debug'
 import { readFileSync } from 'fs'
@@ -13,7 +13,6 @@ import Db from './db'
 import { HttpError, PublicUrlExists, ValidationError } from './error'
 import {
   App,
-  Cluster,
   Core,
   Job,
   OpenAPIDoc,
@@ -400,7 +399,7 @@ export default class OtomiStack {
     const token = Buffer.from(secret.data?.token || '', 'base64').toString('ascii')
     const {
       cluster: { name, apiName = `otomi-${name}`, apiServer },
-    } = this.getSettings(['cluster'])
+    } = this.getSettings(['cluster']) as any
     if (!apiServer) throw new ValidationError('Missing configuration value: cluster.apiServer')
     const cluster = {
       name: apiName,
