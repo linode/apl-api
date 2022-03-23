@@ -244,6 +244,3 @@ Settings:
         admin: [read-any, update-any]
         team: []
   type: object
-  required:
-    - cluster
-    - otomi
