@@ -125,7 +125,7 @@ export const loadSpecRules = (apiDoc: OpenAPIDoc): any => {
 
     const schemaAcl = {}
     Object.keys(schema['x-acl'] || {}).forEach((role) => {
-      schemaAcl[role] = (schema['x-acl'] || {})[role].map((action: AclAction) => {
+      schemaAcl[role] = schema['x-acl']![role].map((action: AclAction) => {
         if (action.endsWith('-any')) return action.slice(0, -4)
         return action
       })
@@ -152,6 +152,7 @@ export default class Authz {
       (schemaName, prop = '') =>
       (action) => {
         const subject = `${schemaName}${prop ? `.${prop}` : ''}`
+        // debug(`creating rules for subject ${subject}`)
         if (action.endsWith('-any')) canRules.push({ action: action.slice(0, -4), subject })
         else {
           user.teams.forEach((teamId) => {
@@ -159,8 +160,7 @@ export default class Authz {
           })
         }
       }
-    Object.keys(this.specRules).forEach((schemaName: string) => {
-      const schema: Schema = this.specRules[schemaName]
+    const createRules = (schemaName, schema) => {
       user.roles.forEach((role) => {
         const aclHolder = getAclHolder(schema)
         const actions: string[] = get(aclHolder, `x-acl.${role}`, [])
@@ -170,8 +170,13 @@ export default class Authz {
           if (!aclHolder) return
           const actions: string[] = get(aclHolder, `x-acl.${role}`, [])
           actions.forEach(createRule(schemaName, prop))
+          if (obj.properties) createRules(`${schemaName}.${prop}`, obj)
         })
       })
+    }
+    Object.keys(this.specRules).forEach((schemaName: string) => {
+      const schema: Schema = this.specRules[schemaName]
+      createRules(schemaName, schema)
     })
 
     this.rbac = new Ability(canRules)

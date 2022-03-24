@@ -3,15 +3,6 @@ Session:
     ca:
       type: string
       readOnly: true
-    cluster:
-      $ref: cluster.yaml#/Cluster
-    clusters:
-      type: array
-      items:
-        $ref: cluster.yaml#/AdditionalCluster
-    dns:
-      $ref: definitions.yaml#/dns
-      readOnly: true
     core:
       type: object
       readOnly: true
@@ -19,12 +10,6 @@ Session:
       type: boolean
       readOnly: true
       x-default: false
-    namespaces:
-      readOnly: true
-      type: array
-      items:
-        type: string
-      uniqueItems: true
     teams:
       readOnly: true
       type: array
@@ -39,8 +24,4 @@ Session:
           type: string
         api:
           type: string
-    isMultitenant:
-      type: boolean
-      readOnly: true
-      x-default: true
   type: object
