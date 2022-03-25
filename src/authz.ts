@@ -185,6 +185,7 @@ export default class Authz {
 
   validateWithRbac = (action: string, schemaName: string, teamId: string, data?: any): boolean => {
     const sub = subject(schemaName, { ...(data || {}), teamId })
+    debug(`validateWithRbac: schemaName: ${schemaName}`)
     const iCan = this.rbac.can(action, sub)
     if (!iCan) debug(`Authz: not authorized (RBAC): ${action} ${schemaName}${teamId ? `/${teamId}` : ''}`)
     return iCan

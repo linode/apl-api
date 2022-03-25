@@ -179,9 +179,9 @@ export default class OtomiStack {
   editSettings(data: Settings) {
     const settings = this.db.db.get('settings').value()
     const mergedSettings = mergeData(settings, data)
-    const ret = this.db.db.set('settings', mergedSettings).write()
+    this.db.db.set('settings', mergedSettings).write()
     this.db.dirty = true
-    return ret
+    return mergedSettings
   }
 
   getApp(teamId: string, id: string): App {
