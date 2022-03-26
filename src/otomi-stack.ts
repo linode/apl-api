@@ -846,7 +846,6 @@ export default class OtomiStack {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore(),
       user: user as User,
-      teams: this.getTeams(),
       isDirty: this.db.isDirty(),
       versions: {
         core: env.CORE_VERSION,
