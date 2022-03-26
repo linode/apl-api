@@ -10,11 +10,6 @@ Session:
       type: boolean
       readOnly: true
       x-default: false
-    teams:
-      readOnly: true
-      type: array
-      items:
-        $ref: team.yaml#/Team
     user:
       $ref: user.yaml#/User
     versions:

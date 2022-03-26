@@ -540,6 +540,15 @@ paths:
       operationId: getApps
       description: Get list of apps for a team
       x-aclSchema: App
+      parameters:
+        - name: picks
+          in: query
+          description: Selection of properties to return.
+          schema:
+            type: array
+            items:
+              type: string
+              uniqueItems: true
       responses:
         '200':
           description: The request is successful.
