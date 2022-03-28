@@ -34,6 +34,7 @@ AppVault:
           nullable: true
           type: object
           oneOf:
+            - $ref: ../definitions.yaml#/offChoice
             - title: gcpckms
               type: object
               properties:
