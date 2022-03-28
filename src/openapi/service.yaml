@@ -57,12 +57,12 @@ Service:
 Ingress:
   properties:
     tlsPass:
-      x-default: false
+      default: false
       description: Pass through the request as is to the backing service. Only available for predeployed regular (non-knative) services.
       title: TLS passthrough
       type: boolean
     useDefaultSubdomain:
-      x-default: true
+      default: true
       description: Use the team domain so that the URL reveals the owner.
       title: Use team domain (preferred)
       type: boolean
@@ -86,19 +86,19 @@ Ingress:
       description: Forward the URL path into the service (don't rewrite to /)
       title: Forward path
       type: boolean
-      x-default: false
+      default: false
     auth:
       description: Will check if the user is logged in to one of keycloak's OIDC providers.
       title: Authenticate with Single Sign On
       type: boolean
-      x-default: false
+      default: false
     hasCert:
       description: Select when a certificate exists and should not be generated.
       title: Already has a certificate
       type: boolean
-      x-default: false
+      default: false
     certSelect:
-      x-default: true
+      default: true
       description: Select one of the TLS secrets created in Otomi.
       title: Select team secret
       type: boolean

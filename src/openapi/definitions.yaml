@@ -174,7 +174,7 @@ autoscalingEnabled:
   allOf:
     - properties:
         enabled:
-          x-default: true
+          default: true
           type: boolean
     - $ref: '#/autoscaling'
 awsAccessKey:
@@ -233,7 +233,7 @@ azureMonitor:
         azureLogAnalyticsSameAs:
           title: LogAnalytics using same creds?
           type: boolean
-          x-default: true
+          default: true
         clientId:
           $ref: '#/azureClientId'
         clientSecret:
@@ -363,7 +363,7 @@ dns:
                   title: Using managed identities?
                   type: boolean
                   description: If you use Azure MSI, this should be set to true
-                  x-default: false
+                  default: false
                 userAssignedIdentityID:
                   title: MSI id
                   type: string
@@ -514,7 +514,7 @@ jobSpec:
       description: A job name
       example: some-job
     enabled:
-      x-default: true
+      default: true
       type: boolean
     type:
       default: Job
@@ -696,7 +696,7 @@ ksvcNew:
             readOnlyRootFilesystem:
               description: Whether this container has a read-only root filesystem. Default is false.
               type: boolean
-              x-default: false
+              default: false
           title: Security context
       type: object
     - $ref: '#/containerSpecNoSec'
@@ -707,7 +707,7 @@ ksvcNew:
             - ksvc
           type: string
         scaleToZero:
-          x-default: false
+          default: false
           description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
           title: Scale to zero
           type: boolean
@@ -916,7 +916,7 @@ resourceQuota:
       value: '0'
 runAsNonRoot:
   description: Will prevent the container from starting with UID 0. This implies that k8s must be able to infer the UID from the image. If it complains the UID must be explicitly set with runAsUser.
-  x-default: true
+  default: true
   title: Run as non-root
   type: boolean
 runAsUser:

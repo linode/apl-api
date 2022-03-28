@@ -9,7 +9,7 @@ AppKubeapps:
     id:
       $ref: ../definitions.yaml#/idName
     enabled:
-      x-default: false
+      default: false
       type: boolean
     rawValues:
       $ref: ../definitions.yaml#/rawValues
@@ -25,7 +25,7 @@ AppKubeapps:
       properties:
         enableCommonGround:
           description: Enables the Dutch CommonGround chart repo.
-          x-default: false
+          default: false
           type: boolean
         postgresqlPassword:
           type: string

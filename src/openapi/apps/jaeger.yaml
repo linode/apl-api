@@ -14,7 +14,7 @@ AppJaeger:
     id:
       $ref: ../definitions.yaml#/idName
     enabled:
-      x-default: false
+      default: false
       type: boolean
     rawValues:
       $ref: ../definitions.yaml#/rawValues

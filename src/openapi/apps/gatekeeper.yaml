@@ -9,7 +9,7 @@ AppGatekeeper:
     id:
       $ref: ../definitions.yaml#/idName
     enabled:
-      x-default: false
+      default: false
       type: boolean
     rawValues:
       $ref: ../definitions.yaml#/rawValues
@@ -33,7 +33,7 @@ AppGatekeeper:
           title: Audit from cache
           description: Take the roster of resources to audit from the OPA cache
           type: boolean
-          x-default: false
+          default: false
         constraintViolationsLimit:
           title: Constraint violations limit
           description: The maximum number of audit violations reported on a constraint.
@@ -60,17 +60,17 @@ AppGatekeeper:
           title: Disable validating webhook
           description: Disables Gatekeeper from blocking violating admission requests. Check the audit logs in Loki for violations.
           type: boolean
-          x-default: true
+          default: true
         emitAuditEvents:
           title: Emit audit events
           description: Emit K8s events in gatekeeper namespace for audit violations.
           type: boolean
-          x-default: false
+          default: false
         emitAdmissionEvents:
           title: Emit admission events
           description: Emit K8s events in gatekeeper namespace for admission violations.
           type: boolean
-          x-default: false
+          default: false
         excludedNamespaces:
           type: array
           items:

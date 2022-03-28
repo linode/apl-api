@@ -35,11 +35,11 @@ AppDrone:
           description: Token used by to connect to remote git repo.
           x-secret: ''
         debug:
-          x-default: false
+          default: false
           type: boolean
           description: Turns on debugging
         trace:
-          x-default: false
+          default: false
           type: boolean
           description: Turns on tracing
         orgsFilter:

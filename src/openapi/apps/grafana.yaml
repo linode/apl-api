@@ -9,7 +9,7 @@ AppGrafana:
     id:
       $ref: ../definitions.yaml#/idName
     enabled:
-      x-default: true
+      default: true
       type: boolean
     rawValues:
       $ref: ../definitions.yaml#/rawValues
