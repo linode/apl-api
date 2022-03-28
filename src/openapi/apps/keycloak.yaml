@@ -52,9 +52,6 @@ AppKeycloak:
           description: Cannot be changed after initial install.
           x-secret: 'randAlphaNum 20'
           readOnly: true
-        adminUsername:
-          type: string
-          default: admin
         adminPassword:
           $ref: ../definitions.yaml#/adminPassword
         resources:
