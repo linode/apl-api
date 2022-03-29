@@ -28,8 +28,9 @@ AppGitea:
           $ref: ../definitions.yaml#/adminPassword
         postgresqlPassword:
           type: string
-          description: Once set and deployed it cannot be changed with manual intervention.
+          description: This password was generated and cannot be changed without manual intervention.
           x-secret: 'randAlphaNum 20'
+          readOnly: true
         image:
           type: object
           properties:

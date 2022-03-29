@@ -49,7 +49,7 @@ AppKeycloak:
               x-secret: 'randAlphaNum 32'
         postgresqlPassword:
           type: string
-          description: Cannot be changed after initial install.
+          description: This password was generated and cannot be changed without manual intervention.
           x-secret: 'randAlphaNum 20'
           readOnly: true
         adminPassword:

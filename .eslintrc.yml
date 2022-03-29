@@ -67,3 +67,4 @@ rules:
   no-use-before-define: off
   object-shorthand: error
   prefer-destructuring: warn
+  prefer-template: error

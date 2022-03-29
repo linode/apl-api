@@ -119,9 +119,7 @@ Ingress:
 
 IngressCluster:
   additionalProperties: false
-  description:
-    'If backend is a ksvc, this will expose a knative service on a local istio gateway, so other services can access it at their "$svc.$namespace" host name.
-    (Coming soon: ability to choose endpoints to connect to, so network policies are automatically generated.)'
+  description: "If backend is a ksvc, this will expose a knative service on a local istio gateway, so other services can access it's '$svc.$namespace' host name."
   title: Cluster
   type: object
   nullable: true
