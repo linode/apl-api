@@ -25,37 +25,6 @@ AppDrone:
       additionalProperties: false
       type: object
       properties:
-        adminUser:
-          $ref: ../definitions.yaml#/wordCharacterPattern
-          title: Admin username
-          description: Username used to connect to remote git repo.
-        adminToken:
-          $ref: ../definitions.yaml#/wordCharacterPattern
-          title: Admin token
-          description: Token used by to connect to remote git repo.
-          x-secret: ''
-        debug:
-          default: false
-          type: boolean
-          description: Turns on debugging
-        trace:
-          default: false
-          type: boolean
-          description: Turns on tracing
-        orgsFilter:
-          $ref: ../definitions.yaml#/wordCharacterPattern
-          title: Organization filter
-          description: A comma separated list of git organisations that drone will manage.
-        repo:
-          $ref: ../definitions.yaml#/idName
-          description: A git repository
-        repoFilter:
-          $ref: ../definitions.yaml#/wordCharacterPattern
-          description: A comma separated list of git repositories that drone will manage.
-        sharedSecret:
-          description: A secret used by drone-admit-members plugin. https://docs.drone.io/runner/kubernetes/configuration/reference/drone-secret-plugin-token/
-          type: string
-          x-secret: 'randAlphaNum 32'
         sourceControl:
           title: Source control
           description: Provide data to connect to a remote git host. When none is provided Otomi will deploy and configure an in-cluster Gitea repo.
@@ -72,7 +41,7 @@ AppDrone:
                     - bitbucketcloud
                   type: string
                 bitbucketCloud:
-                  title: Bitbucket Cloud
+                  x-hideTitle: true
                   $ref: ../definitions.yaml#/droneGit
                   type: object
             - title: Bitbucket Server
@@ -86,7 +55,7 @@ AppDrone:
                   type: string
                 bitbucketServer:
                   type: object
-                  title: Bitbucket Server
+                  x-hideTitle: true
                   properties:
                     consumerKey:
                       type: string
@@ -112,7 +81,7 @@ AppDrone:
                     - gitea
                   type: string
                 gitea:
-                  title: Gitea
+                  x-hideTitle: true
                   type: object
                   allOf:
                     - $ref: ../definitions.yaml#/droneGit
@@ -129,7 +98,7 @@ AppDrone:
                     - github
                   type: string
                 github:
-                  title: GitHub
+                  x-hideTitle: true
                   type: object
                   allOf:
                     - $ref: ../definitions.yaml#/droneGit
@@ -147,7 +116,7 @@ AppDrone:
                     - gitlab
                   type: string
                 gitlab:
-                  title: GitLab
+                  x-hideTitle: true
                   type: object
                   allOf:
                     - $ref: ../definitions.yaml#/droneGit
@@ -165,11 +134,34 @@ AppDrone:
                     - gogs
                   type: string
                 gogs:
-                  title: Gogs
+                  x-hideTitle: true
                   type: object
                   properties:
                     server:
                       type: string
+        adminUser:
+          $ref: ../definitions.yaml#/wordCharacterPattern
+          title: Admin username
+          description: Username used to connect to remote git repo.
+        adminToken:
+          $ref: ../definitions.yaml#/wordCharacterPattern
+          title: Admin token
+          description: Token used by to connect to remote git repo.
+          x-secret: ''
+        orgsFilter:
+          $ref: ../definitions.yaml#/wordCharacterPattern
+          title: Organization filter
+          description: A comma separated list of git organisations that drone will manage.
+        repo:
+          $ref: ../definitions.yaml#/idName
+          description: A git repository
+        repoFilter:
+          $ref: ../definitions.yaml#/wordCharacterPattern
+          description: A comma separated list of git repositories that drone will manage.
+        sharedSecret:
+          description: A secret used by drone-admit-members plugin. https://docs.drone.io/runner/kubernetes/configuration/reference/drone-secret-plugin-token/
+          type: string
+          x-secret: 'randAlphaNum 32'
         githubAdmins:
           additionalProperties: false
           title: Github admin group
@@ -188,6 +180,14 @@ AppDrone:
               $ref: ../definitions.yaml#/wordCharacterPattern
               title: Token
               description: The oauth secret used to identify with the github oauth app.
+        debug:
+          default: false
+          type: boolean
+          description: Turns on debugging
+        trace:
+          default: false
+          type: boolean
+          description: Turns on tracing
         image:
           type: object
           properties:

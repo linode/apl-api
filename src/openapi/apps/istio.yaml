@@ -57,6 +57,7 @@ AppIstio:
               type: object
               properties:
                 level:
+                  description: 'Comma separated list with key:value pairs as described here: https://istio.io/latest/docs/ops/diagnostic-tools/component-logging/'
                   type: string
             proxy:
               additionalProperties: false
