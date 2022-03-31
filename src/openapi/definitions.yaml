@@ -327,6 +327,7 @@ dns:
         - title: AWS
           properties:
             aws:
+              x-hideTitle: true
               properties:
                 region:
                   $ref: '#/awsRegion'
@@ -339,6 +340,7 @@ dns:
         - title: Azure
           properties:
             azure:
+              x-hideTitle: true
               properties:
                 cloud:
                   title: Cloud
@@ -384,6 +386,7 @@ dns:
         - title: Google
           properties:
             google:
+              x-hideTitle: true
               properties:
                 serviceAccountKey:
                   description: A service account key for managing a DNS zone.
@@ -415,6 +418,7 @@ duration:
   description: 'Prometheus duration (See: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#configuration-file)'
   pattern: '((([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?|0)'
   type: string
+  x-default: 1d
 email:
   pattern: ^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$
   x-message: a valid email address

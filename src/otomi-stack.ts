@@ -166,7 +166,7 @@ export default class OtomiStack {
         })
       }
     })
-    debug('secretPaths: ', cleanSecretPaths)
+    // debug('secretPaths: ', cleanSecretPaths)
     return cleanSecretPaths
   }
 
@@ -362,7 +362,7 @@ export default class OtomiStack {
     try {
       await prepareValues()
     } catch (e) {
-      debug('ERROR: ' + JSON.stringify(e))
+      debug(`ERROR: ${JSON.stringify(e)}`)
       if (e.response) {
         const { status } = e.response
         if (status === 422) throw new ValidationError()
@@ -627,10 +627,10 @@ export default class OtomiStack {
       const apps = {}
       const { id, enabled, values, rawValues } = app
       apps[id as string] = {
-        ...values,
+        ...(values || {}),
         _rawValues: rawValues,
       }
-      if (this.canToggleApp(id) && enabled !== undefined) apps[id as string].enabled = enabled
+      if (this.canToggleApp(id)) apps[id as string].enabled = !!enabled
       else delete apps[id as string].enabled
 
       this.saveConfig(`./env/apps/${id}.yaml`, `./env/apps/secrets.${id}.yaml`, { apps })

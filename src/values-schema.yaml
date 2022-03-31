@@ -1684,11 +1684,11 @@ properties:
             type: string
           maxBodySize:
             type: string
-            default: 1024m
+            x-default: 1024m
           maxBodySizeBytes:
             type: integer
             minimum: 0
-            default: 1073741824
+            x-default: 1073741824
             description: Needed for modsecurity. Should correspond to maxBodySize, but expressed in bytes.
           modsecurity:
             title: MOD Security

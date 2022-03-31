@@ -54,10 +54,10 @@ Settings:
           properties:
             fast:
               type: string
-              default: StandardSSD_LRS
+              x-default: StandardSSD_LRS
             standard:
               type: string
-              default: StandardLRS
+              x-default: StandardLRS
           type: object
       required:
         - resourceGroup

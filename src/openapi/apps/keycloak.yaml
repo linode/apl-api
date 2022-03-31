@@ -40,10 +40,10 @@ AppKeycloak:
           properties:
             alias:
               type: string
-              default: otomi-idp
+              x-default: otomi-idp
             clientID:
               $ref: ../definitions.yaml#/wordCharacterPattern
-              default: otomi
+              x-default: otomi
             clientSecret:
               type: string
               x-secret: 'randAlphaNum 32'

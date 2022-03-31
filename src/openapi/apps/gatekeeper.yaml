@@ -28,7 +28,7 @@ AppGatekeeper:
           title: Audit interval
           description: The frequency with which audit is run.
           type: integer
-          default: 60
+          x-default: 60
         auditFromCache:
           title: Audit from cache
           description: Take the roster of resources to audit from the OPA cache
@@ -38,7 +38,7 @@ AppGatekeeper:
           title: Constraint violations limit
           description: The maximum number of audit violations reported on a constraint.
           type: integer
-          default: 20
+          x-default: 20
         dataSync:
           type: array
           items:
