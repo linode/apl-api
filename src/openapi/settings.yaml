@@ -125,6 +125,7 @@ Settings:
           x-acl:
             admin: [read-any]
             team: []
+          readOnly: true
         additionalClusters:
           title: Additional clusters
           description: Enter other k8s clusters, if there are any.
