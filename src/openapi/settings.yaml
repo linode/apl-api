@@ -123,7 +123,7 @@ Settings:
           description: Master admin password that will be used for all apps that are not configured to use their own password.
           $ref: definitions.yaml#/adminPassword
           x-acl:
-            admin: [read-any, update-any]
+            admin: [read-any]
             team: []
         additionalClusters:
           title: Additional clusters
