@@ -1,5 +1,5 @@
 file:
   - src/test-init.ts
-files: src/*.test.ts
+files: src/**/*.test.ts
 require: ts-node/register
-# timeout: 20000
+timeout: 5000

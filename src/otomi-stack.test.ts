@@ -1,19 +1,15 @@
 import { expect } from 'chai'
-import { merge } from 'lodash'
 import sinon from 'sinon'
-import secretSettings from './fixtures/secret-settings'
 import expectedDbState from './fixtures/values'
-import { OtomiSpec } from './otomi-models'
 import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
 import { Repo } from './repo'
 import './test-init'
-import { getPaths } from './utils'
 
 describe('Data validation', () => {
   let otomiStack: OtomiStack
   beforeEach(async () => {
     otomiStack = new OtomiStack()
-    const spec = (await loadOpenApisSpec()) as unknown as OtomiSpec
+    const [spec] = await loadOpenApisSpec()
     otomiStack.setSpec(spec)
   })
 
@@ -67,17 +63,22 @@ describe('Data validation', () => {
 
 describe('Work with values', () => {
   let otomiStack: OtomiStack
-  beforeEach(async () => {
+  let spec
+  let secretPaths
+  before(async () => {
+    const [inSpec, inSecretPaths] = await loadOpenApisSpec()
+    spec = inSpec
+    secretPaths = inSecretPaths
+  })
+  beforeEach(() => {
     otomiStack = new OtomiStack()
-    const spec = (await loadOpenApisSpec()) as unknown as OtomiSpec
-    otomiStack.setSpec(spec)
+    otomiStack.setSpec(spec, secretPaths)
     otomiStack.repo = new Repo('./test', undefined, undefined, undefined, undefined, undefined)
   })
 
   it('can load from configuration to database', () => {
     otomiStack.loadValues()
     const dbState = otomiStack.db.db.getState() as Record<string, any>
-    expectedDbState.settings = merge(expectedDbState.settings, secretSettings)
     expect(dbState).to.deep.equal(expectedDbState)
   })
   it('can save database state to configuration files', () => {
@@ -86,7 +87,6 @@ describe('Work with values', () => {
       results[path] = data
     }
     otomiStack.db.db.setState(expectedDbState)
-    otomiStack.secretPaths = getPaths(secretSettings)
     otomiStack.repo.writeFile = writeFileStub
     otomiStack.saveValues()
     Object.entries(results).forEach(([path, data]) => {
@@ -95,4 +95,5 @@ describe('Work with values', () => {
       expect(data, path).to.have.any.keys(expectedData)
     })
   })
+  return undefined
 })

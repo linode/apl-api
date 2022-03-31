@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { getUser } from './middleware'
-import { JWT, OtomiSpec } from './otomi-models'
+import { JWT } from './otomi-models'
 import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
 
 const email = 'test@user.net'
@@ -18,8 +18,8 @@ describe('JWT claims mapping', () => {
   let otomiStack: OtomiStack
   beforeEach(async () => {
     otomiStack = new OtomiStack()
-    const spec = (await loadOpenApisSpec()) as unknown as OtomiSpec
-    otomiStack.setSpec(spec)
+    const [spec] = await loadOpenApisSpec()
+    otomiStack.setSpec(spec as any)
   })
   it('A user in either admin or team-admin group should get admin role and have isAdmin', () => {
     const user = getUser(adminJWT, otomiStack)

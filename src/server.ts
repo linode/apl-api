@@ -9,13 +9,13 @@ import path from 'path'
 import swaggerUi from 'swagger-ui-express'
 import Authz from './authz'
 import { authzMiddleware, errorMiddleware, isUserAuthenticated, jwtMiddleware } from './middleware'
-import { OpenAPIDoc, OtomiSpec } from './otomi-models'
+import { OpenAPIDoc } from './otomi-models'
 import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
 
 export default async function initApp(otomiStack: OtomiStack): Promise<express.Express> {
   const app = express()
   const apiRoutesPath = path.resolve(__dirname, 'api')
-  const spec = (await loadOpenApisSpec()) as unknown as OtomiSpec
+  const [spec] = await loadOpenApisSpec()
   otomiStack.setSpec(spec)
   const authz = new Authz(spec as any as OpenAPIDoc)
 

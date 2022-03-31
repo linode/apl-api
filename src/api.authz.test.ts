@@ -5,7 +5,6 @@ import sinon from 'sinon'
 import request from 'supertest'
 import { AlreadyExists } from './error'
 import getToken from './fixtures/jwt'
-import { OtomiSpec } from './otomi-models'
 import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
 import initApp from './server'
 
@@ -17,7 +16,7 @@ describe('API authz tests', () => {
   let otomiStack
   before(async () => {
     otomiStack = new OtomiStack()
-    const spec = (await loadOpenApisSpec()) as unknown as OtomiSpec
+    const [spec] = await loadOpenApisSpec()
     otomiStack.setSpec(spec)
     otomiStack.createTeam({ name: 'team1' })
     sinon.stub(otomiStack)
@@ -368,7 +367,7 @@ describe('Error handler', () => {
   let otomiStack: OtomiStack
   before(async () => {
     otomiStack = new OtomiStack()
-    const spec = (await loadOpenApisSpec()) as unknown as OtomiSpec
+    const [spec] = await loadOpenApisSpec()
     otomiStack.setSpec(spec)
     app = await initApp(otomiStack)
   })

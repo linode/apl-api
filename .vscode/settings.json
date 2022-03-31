@@ -25,5 +25,9 @@
   "mochaExplorer.env": {
     "NODE_ENV": "test"
   },
+  "mochaExplorer.configFile": ".mocharc.yml",
+  "mochaExplorer.files": "src/**/*.test.ts",
+  "mochaExplorer.require": "ts-node/register",
+  "mochaExplorer.timeout": 5000,
   "prettier.enable": true
 }

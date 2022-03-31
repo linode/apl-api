@@ -97,14 +97,14 @@ export function getTeamServicesJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.services`
 }
 
-export const loadOpenApisSpec = async (): Promise<OpenAPIDoc> => {
+export const loadOpenApisSpec = async (): Promise<[OpenAPIDoc, string[]]> => {
   const openApiPath = path.resolve(__dirname, 'generated-schema.json')
   debug(`Loading api spec from: ${openApiPath}`)
   const spec = (await $parser.parse(openApiPath)) as OpenAPIDoc
   const valuesSchema = await getValuesSchema()
   const secrets = extract(valuesSchema, (o, i) => i === 'x-secret')
   secretPaths = getPaths(secrets)
-  return spec
+  return [spec, secretPaths]
 }
 
 export default class OtomiStack {
@@ -149,8 +149,9 @@ export default class OtomiStack {
     this.loadValues()
   }
 
-  setSpec(spec): void {
+  setSpec(spec, secretPaths = []): void {
     this.spec = spec
+    this.secretPaths = secretPaths
   }
 
   getSecretPaths(): string[] {
@@ -225,17 +226,10 @@ export default class OtomiStack {
     })
   }
 
-  createTeamApps(): void {
-    this.getTeams().map((team) => {
-      this.createTeam(team)
-    })
-  }
-
   loadApps(): void {
     const apps = this.getAppSchema('List').enum
     apps.forEach((appId) => {
       const path = `env/apps/${appId}.yaml`
-      if (!this.repo.fileExists(path)) return // might not exist initially
       const secretsPath = `env/apps/secrets.${appId}.yaml`
       const content = this.loadConfig(path, secretsPath)
       const values = (content?.apps && content.apps[appId]) || {}
@@ -526,6 +520,7 @@ export default class OtomiStack {
   }
 
   loadConfig(dataPath: string, inSecretDataPath: string): any {
+    if (!this.repo.fileExists(dataPath)) return {}
     const data = this.repo.readFile(dataPath)
     const secretDataPath = `${inSecretDataPath}${decryptedFilePostfix()}`
     let secretData = {}
@@ -846,7 +841,7 @@ export default class OtomiStack {
   getSession(user: k8s.User): Session {
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
-      core: this.getCore(),
+      core: this.getCore() as Record<string, any>,
       user: user as User,
       isDirty: this.db.isDirty(),
       versions: {
