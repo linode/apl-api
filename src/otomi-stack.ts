@@ -206,7 +206,7 @@ export default class OtomiStack {
 
   editApp(teamId, id, data: App): App {
     // @ts-ignore
-    return this.db.updateItem('apps', data, { teamId, id })
+    return this.db.updateItem('apps', data, { teamId, id }, true)
   }
 
   canToggleApp(id): boolean {
@@ -225,6 +225,57 @@ export default class OtomiStack {
     })
   }
 
+  createTeamApps(): void {
+    this.getTeams().map((team) => {
+      this.createTeam(team)
+    })
+  }
+
+  loadApps(): void {
+    const apps = this.getAppSchema('List').enum
+    apps.forEach((appId) => {
+      const path = `env/apps/${appId}.yaml`
+      if (!this.repo.fileExists(path)) return // might not exist initially
+      const secretsPath = `env/apps/secrets.${appId}.yaml`
+      const content = this.loadConfig(path, secretsPath)
+      const values = (content?.apps && content.apps[appId]) || {}
+      let rawValues = {}
+      // eslint-disable-next-line no-underscore-dangle
+      if (values._rawValues) {
+        // eslint-disable-next-line no-underscore-dangle
+        rawValues = values._rawValues
+        // eslint-disable-next-line no-underscore-dangle
+        delete values._rawValues
+      }
+      let enabled
+      const app = this.getAppSchema(appId)
+      if (app.properties.enabled !== undefined) {
+        enabled = !!values.enabled
+        delete values.enabled
+      }
+      const teamId = 'admin'
+      this.db.createItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId }, appId)
+    })
+    // now also load the shortcuts that teams created and were stored in apps.* files
+    this.getTeams()
+      .map((t) => t.id)
+      .concat(['admin'])
+      .forEach((teamId) => {
+        const teamAppsFile = `env/teams/apps.${teamId}.yaml`
+        if (!this.repo.fileExists(teamAppsFile)) return
+        const content = this.repo.readFile(teamAppsFile)
+        if (!content) return
+        const {
+          teamConfig: {
+            [`${teamId}`]: { apps },
+          },
+        } = content
+        each(apps, ({ shortcuts }, appId) => {
+          this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
+        })
+      })
+  }
+
   getTeams(): Array<Team> {
     return this.db.getCollection('teams') as Array<Team>
   }
@@ -234,8 +285,12 @@ export default class OtomiStack {
     return data.selfService
   }
 
-  getCore(): any {
+  getCore(): Core {
     return this.coreValues
+  }
+
+  getAppSchema(appId) {
+    return (this.spec as any).components.schemas[`App${pascalCase(appId)}`]
   }
 
   getTeam(id: string): Team {
@@ -243,7 +298,7 @@ export default class OtomiStack {
   }
 
   createTeam(data: Team): Team {
-    const id = data.name
+    const id = data.id || data.name
 
     if (isEmpty(data.password)) {
       debug(`creating password for team '${data.name}'`)
@@ -252,10 +307,12 @@ export default class OtomiStack {
     }
     const team = this.db.createItem('teams', data, { id }, id) as Team
     // assign app to team
-    const { schemas } = (this.spec as any).components
-    const apps = schemas.AppList.enum
+    const apps = this.getAppSchema('List').enum
+    const core = this.getCore()
     apps.forEach((appId) => {
-      this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId })
+      const isShared = !!core.adminApps.find((a) => a.name === appId).isShared
+      const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
+      if (isShared || inTeamApps) this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
     })
     return team
   }
@@ -545,62 +602,6 @@ export default class OtomiStack {
     })
   }
 
-  loadApps(): void {
-    const { schemas } = (this.spec as any).components
-    const apps = schemas.AppList.enum
-    apps.forEach((appId) => {
-      const path = `env/apps/${appId}.yaml`
-      if (!this.repo.fileExists(path)) return // might not exist initially
-      const secretsPath = `env/apps/secrets.${appId}.yaml`
-      const content = this.loadConfig(path, secretsPath)
-      const values = (content?.apps && content.apps[appId]) || {}
-      let rawValues = {}
-      // eslint-disable-next-line no-underscore-dangle
-      if (values._rawValues) {
-        // eslint-disable-next-line no-underscore-dangle
-        rawValues = values._rawValues
-        // eslint-disable-next-line no-underscore-dangle
-        delete values._rawValues
-      }
-      let enabled
-      const appName = `App${pascalCase(appId)}`
-      const app = schemas[appName]
-      if (app.properties.enabled !== undefined) {
-        enabled = !!values.enabled
-        delete values.enabled
-      }
-      const teamId = 'admin'
-      this.db.populateItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId }, appId)
-      // give the same apps to teams if isShared or in team apps list
-      if (
-        this.coreValues.adminApps.find((a) => a.name === appId).isShared ||
-        this.coreValues.teamApps.find((a) => a.name === appId)
-      ) {
-        this.getTeams().forEach((t) => {
-          this.db.populateItem('apps', { enabled, teamId: t.id }, { teamId: t.id, id: appId }, appId)
-        })
-      }
-    })
-    // now also load the shortcuts that teams created and were stored in apps.* files
-    this.getTeams()
-      .map((t) => t.id)
-      .concat(['admin'])
-      .forEach((teamId) => {
-        const teamAppsFile = `env/teams/apps.${teamId}.yaml`
-        if (!this.repo.fileExists(teamAppsFile)) return
-        const content = this.repo.readFile(teamAppsFile)
-        if (!content) return
-        const {
-          teamConfig: {
-            [`${teamId}`]: { apps },
-          },
-        } = content
-        each(apps, ({ shortcuts }, appId) => {
-          this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
-        })
-      })
-  }
-
   loadTeamServices(teamId: string): void {
     const relativePath = getTeamServicesFilePath(teamId)
     if (!this.repo.fileExists(relativePath)) {
@@ -712,7 +713,8 @@ export default class OtomiStack {
   loadTeam(inTeam): any {
     const team = { ...inTeam }
     team.resourceQuota = objectToArray(inTeam.resourceQuota)
-    const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id)
+    const res = this.createTeam(team)
+    // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id)
     debug(`Loaded team: ${res.name}, id: ${res.id}`)
   }
 
