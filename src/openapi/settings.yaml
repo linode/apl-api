@@ -123,8 +123,9 @@ Settings:
           description: Master admin password that will be used for all apps that are not configured to use their own password.
           $ref: definitions.yaml#/adminPassword
           x-acl:
-            admin: [read-any, update-any]
+            admin: [read-any]
             team: []
+          readOnly: true
         additionalClusters:
           title: Additional clusters
           description: Enter other k8s clusters, if there are any.
