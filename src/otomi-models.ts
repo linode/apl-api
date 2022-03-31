@@ -71,7 +71,6 @@ export interface PermissionSchema {
 }
 export interface Schema extends JSONSchema4 {
   'x-acl'?: Acl
-  'x-readOnly'?: Acl
 }
 
 export interface Acl {

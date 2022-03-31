@@ -186,7 +186,7 @@ Settings:
           title: Home monitored
           type: boolean
         isManaged:
-          default: true
+          # default: true
           description: Whether masters are managed and not under control. Will be turned on automatically when provider is "custom", but if that is not desired, it must be explictily set to "false" before install of otomi.
           title: Managed masters
           type: boolean

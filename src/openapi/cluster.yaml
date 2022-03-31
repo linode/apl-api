@@ -81,36 +81,36 @@ Cluster:
   properties:
     apiName:
       $ref: '#/apiName'
-      x-readOnly: true
+      readOnly: true
     apiServer:
       $ref: '#/apiServer'
-      x-readOnly: true
+      readOnly: true
       description: Full url to a kubernetes api server. Used to generate kube context file.
       title: API Server
     domainSuffix:
       $ref: '#/domainSuffix'
-      x-readOnly: true
+      readOnly: true
     entrypoint:
       $ref: '#/entrypoint'
-      x-readOnly: true
+      readOnly: true
     k8sVersion:
       $ref: definitions.yaml#/k8sVersion
-      x-readOnly: true
+      readOnly: true
     name:
       $ref: '#/name'
-      x-readOnly: true
+      readOnly: true
     owner:
       $ref: '#/name'
-      x-readOnly: true
+      readOnly: true
     provider:
       $ref: '#/provider'
-      x-readOnly: true
+      readOnly: true
     region:
       $ref: '#/region'
-      x-readOnly: true
+      readOnly: true
     vpcID:
       $ref: '#/vpcID'
-      x-readOnly: true
+      readOnly: true
   required:
     - apiServer
     - domainSuffix
