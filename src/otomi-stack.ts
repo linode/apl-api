@@ -706,11 +706,11 @@ export default class OtomiStack {
   }
 
   loadTeam(inTeam): any {
-    const team = { ...inTeam }
+    const team = { ...inTeam, name: inTeam.id }
     team.resourceQuota = objectToArray(inTeam.resourceQuota)
     const res = this.createTeam(team)
     // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id)
-    debug(`Loaded team: ${res.name}, id: ${res.id}`)
+    debug(`Loaded team: ${res.id}`)
   }
 
   loadSecret(inSecret, teamId): void {

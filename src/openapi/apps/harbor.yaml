@@ -14,8 +14,8 @@ AppHarbor:
     id:
       $ref: ../definitions.yaml#/idName
     enabled:
-      default: false
       type: boolean
+      x-default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:
@@ -31,6 +31,10 @@ AppHarbor:
       properties:
         adminPassword:
           $ref: ../definitions.yaml#/adminPassword
+        # privateLibrary:
+        #   type: boolean
+        #   x-default: true
+        #   description: Will mark the main project named "library" as private.
         core:
           type: object
           properties:

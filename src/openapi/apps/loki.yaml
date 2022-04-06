@@ -144,8 +144,8 @@ AppLoki:
     id:
       $ref: ../definitions.yaml#/idName
     enabled:
-      default: true
       type: boolean
+      x-default: true
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:

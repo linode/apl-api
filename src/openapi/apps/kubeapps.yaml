@@ -9,8 +9,8 @@ AppKubeapps:
     id:
       $ref: ../definitions.yaml#/idName
     enabled:
-      default: false
       type: boolean
+      x-default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:
@@ -23,10 +23,6 @@ AppKubeapps:
       x-externalDocsPath: docs/console/apps/kubeapps
       type: object
       properties:
-        enableCommonGround:
-          description: Enables the Dutch CommonGround chart repo.
-          default: false
-          type: boolean
         postgresqlPassword:
           type: string
           description: Once set and deployed it cannot be changed with manual intervention.

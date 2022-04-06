@@ -13,8 +13,8 @@ AppKiali:
     id:
       $ref: ../definitions.yaml#/idName
     enabled:
-      default: false
       type: boolean
+      x-default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:

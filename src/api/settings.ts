@@ -7,15 +7,15 @@ const debug = Debug('otomi:api:settings')
 
 export default function (otomi: OtomiStack): OperationHandlerArray {
   const GET: Operation = [
-    ({ query: { settingIds } }: OpenApiRequest, res): void => {
-      debug(`getSettings(${settingIds})`)
-      res.json(otomi.getSettings(settingIds as string[] | undefined))
+    ({ query: { ids } }: OpenApiRequest, res): void => {
+      debug(`getSettings(${ids})`)
+      res.json(otomi.getSettings(ids as string[] | undefined))
     },
   ]
   const PUT: Operation = [
     ({ body }: OpenApiRequest, res): void => {
-      const settingIds = Object.keys(body)
-      debug(`editSettings(${settingIds.join(',')})`)
+      const ids = Object.keys(body)
+      debug(`editSettings(${ids.join(',')})`)
       res.json(otomi.editSettings(body))
     },
   ]

@@ -22,7 +22,7 @@ policies:
           title: Enabled
           description: Enable or disable the 'banned-image-tags' policy.
           type: boolean
-          default: false
+          x-default: false
     container-limits:
       title: Container limits
       type: object
@@ -38,7 +38,7 @@ policies:
           title: Enabled
           description: Enable or disable the 'container-limits' policy.
           type: boolean
-          default: false
+          x-default: false
     psp-allowed-repos:
       title: Allowed repositories
       type: object
@@ -56,7 +56,7 @@ policies:
           title: Enabled
           description: Enable or disable the 'allowed-repos' policy.
           type: boolean
-          default: false
+          x-default: false
     psp-host-filesystem:
       title: Host Filesystem
       type: object
@@ -79,13 +79,13 @@ policies:
                 title: Read-only
                 description: If enabled, files can only be read and not written or executed.
                 type: boolean
-                default: false
+                x-default: false
             additionalProperties: false
         enabled:
           title: Enabled
           description: Enable or disable the 'host-filesystem' policy.
           type: boolean
-          default: false
+          x-default: false
     psp-allowed-users:
       title: Allowed users
       type: object
@@ -186,7 +186,7 @@ policies:
           title: Enabled
           description: Enable or disable the 'allowed-users' policy.
           type: boolean
-          default: false
+          x-default: false
     psp-host-security:
       title: Host security
       type: object
@@ -198,7 +198,7 @@ policies:
           title: Enabled
           description: Enable or disable the 'host-security' policy.
           type: boolean
-          default: false
+          x-default: false
     psp-host-networking-ports:
       title: Container host networking ports
       type: object
@@ -210,7 +210,7 @@ policies:
           title: Enabled
           description: Enable or disable the 'host-networking-ports' policy.
           type: boolean
-          default: false
+          x-default: false
     psp-privileged:
       title: Privileged containers
       type: object
@@ -222,7 +222,7 @@ policies:
           title: Enabled
           description: Enable or disable the 'privileged' policy.
           type: boolean
-          default: false
+          x-default: false
     psp-capabilities:
       title: Container capabilities
       type: object
@@ -234,7 +234,7 @@ policies:
           title: Enabled
           description: Enable or disable the 'capabilities' policy.
           type: boolean
-          default: false
+          x-default: false
         allowedCapabilities:
           title: Allowed capabilities
           type: array
@@ -256,7 +256,7 @@ policies:
           title: Enabled
           description: Enable or disable the 'forbidden-sysctls' policy.
           type: boolean
-          default: false
+          x-default: false
         forbiddenSysctls:
           title: Forbidden system controls
           description: List the forbidden system controls here.
@@ -274,7 +274,7 @@ policies:
           title: Enabled
           description: Enable or disable the 'forbidden-sysctls' policy.
           type: boolean
-          default: false
+          x-default: false
         allowedProfiles:
           title: Allowed profiles
           type: array
@@ -291,7 +291,7 @@ policies:
           title: Enabled
           description: Enable or disable the 'seccomp' policy.
           type: boolean
-          default: false
+          x-default: false
         allowedProfiles:
           title: Allowed profiles
           type: array
@@ -308,7 +308,7 @@ policies:
           title: Enabled
           description: Enable or disable the 'selinux' policy.
           type: boolean
-          default: false
+          x-default: false
         seLinuxContext:
           title: SELinux context
           description: Choose one rule to apply.

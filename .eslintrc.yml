@@ -27,7 +27,7 @@ settings:
   import/resolver:
     node:
       extensions: ['.ts']
-      pathsd: [src]
+      paths: [src]
 
 env:
   es6: true

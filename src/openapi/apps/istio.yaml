@@ -47,8 +47,8 @@ AppIstio:
           type: object
           properties:
             enabled:
-              default: false
               type: boolean
+              x-default: false
         global:
           additionalProperties: false
           type: object

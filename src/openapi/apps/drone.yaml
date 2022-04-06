@@ -181,12 +181,12 @@ AppDrone:
               title: Token
               description: The oauth secret used to identify with the github oauth app.
         debug:
-          default: false
           type: boolean
+          x-default: false
           description: Turns on debugging
         trace:
-          default: false
           type: boolean
+          x-default: false
           description: Turns on tracing
         image:
           type: object

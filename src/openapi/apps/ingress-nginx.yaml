@@ -41,15 +41,15 @@ AppIngressNginx:
             enabled:
               description: Enables ModSecurity functionality.
               type: boolean
-              default: false
+              x-default: false
             block:
               description: Makes nginx block requests that are marked as violating the modsec rules.
               type: boolean
-              default: true
+              x-default: true
             owasp:
               description: Turns on the default OWASP rule set for ModSecurity. See https://owasp.org/www-project-modsecurity-core-rule-set/.
               type: boolean
-              default: true
+              x-default: true
           type: object
         service:
           type: object
@@ -97,7 +97,7 @@ AppIngressNginx:
               title: Enable private loadbalancer
               description: Enable to start an extra loadbalancer for private network traffic.
               type: boolean
-              default: false
+              x-default: false
             autoscaling:
               $ref: ../definitions.yaml#/autoscalingEnabled
             loadBalancerIP:

@@ -174,8 +174,8 @@ autoscalingEnabled:
   allOf:
     - properties:
         enabled:
-          default: true
           type: boolean
+          x-default: true
     - $ref: '#/autoscaling'
 awsAccessKey:
   title: AWS access key
@@ -233,7 +233,7 @@ azureMonitor:
         azureLogAnalyticsSameAs:
           title: LogAnalytics using same creds?
           type: boolean
-          default: true
+          x-default: true
         clientId:
           $ref: '#/azureClientId'
         clientSecret:
@@ -363,9 +363,9 @@ dns:
                   description: Azure subscription ID
                 useManagedIdentityExtension:
                   title: Using managed identities?
-                  type: boolean
                   description: If you use Azure MSI, this should be set to true
-                  default: false
+                  type: boolean
+                  x-default: false
                 userAssignedIdentityID:
                   title: MSI id
                   type: string
@@ -518,8 +518,8 @@ jobSpec:
       description: A job name
       example: some-job
     enabled:
-      default: true
       type: boolean
+      x-default: true
     type:
       default: Job
       enum:
@@ -700,7 +700,7 @@ ksvcNew:
             readOnlyRootFilesystem:
               description: Whether this container has a read-only root filesystem. Default is false.
               type: boolean
-              default: false
+              x-default: false
           title: Security context
       type: object
     - $ref: '#/containerSpecNoSec'
@@ -711,10 +711,10 @@ ksvcNew:
             - ksvc
           type: string
         scaleToZero:
-          default: false
           description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
           title: Scale to zero
           type: boolean
+          x-default: false
         containerPort:
           $ref: '#/portNumber'
           description: Container port the knative pod will connect with. Leaving this empty will let knative infer the port from the container, which usually works, but might be problematic when the container does not specifically expose a port. (As is the case with nginx derived images!)
@@ -920,9 +920,9 @@ resourceQuota:
       value: '0'
 runAsNonRoot:
   description: Will prevent the container from starting with UID 0. This implies that k8s must be able to infer the UID from the image. If it complains the UID must be explicitly set with runAsUser.
-  default: true
   title: Run as non-root
   type: boolean
+  x-default: true
 runAsUser:
   description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May be set in both SecurityContext and PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
   x-default: 1001

@@ -8,8 +8,8 @@ Session:
       readOnly: true
     isDirty:
       type: boolean
-      readOnly: true
       default: false
+      readOnly: true
     user:
       $ref: user.yaml#/User
     versions:
