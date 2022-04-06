@@ -60,7 +60,7 @@ export function getUser(user: JWT, otomi: OtomiStack): User {
       if (group.substr(0, 5) === 'team-' && group !== 'team-admin' && !sessionUser.teams.includes(teamId)) {
         // we might be assigned team-* without that team yet existing in the values, so ignore those
         const existing = otomi.db.getItemReference('teams', { id: teamId }, false)
-        if (!existing) sessionUser.teams.push(teamId)
+        if (existing) sessionUser.teams.push(teamId)
       }
     })
   }

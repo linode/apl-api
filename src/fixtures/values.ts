@@ -808,6 +808,7 @@ export default {
         Team: ['resourceQuota'],
       },
       password: 'linux1234',
+      name: 'dev',
       resourceQuota: [],
     },
     {
@@ -830,6 +831,7 @@ export default {
         },
       },
       password: 'linux123',
+      name: 'otomi',
     },
   ],
 }
