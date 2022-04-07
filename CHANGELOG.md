@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.95](https://github.com/redkubes/otomi-api/compare/v0.4.93...v0.4.95) (2022-04-05)
+
+
+### Bug Fixes
+
+* update schema regex for secrets ([#264](https://github.com/redkubes/otomi-api/issues/264)) ([6c56021](https://github.com/redkubes/otomi-api/commit/6c560219e31b6ad27577baa58d6eed0bc35963fa))
+* **modify message:** modify error message when the user gets a service duplication error ([#262](https://github.com/redkubes/otomi-api/issues/262)) ([0773056](https://github.com/redkubes/otomi-api/commit/0773056682889577f92a1bed16b3d206b995ef75))
+* service ingress paths ([#260](https://github.com/redkubes/otomi-api/issues/260)) ([0d62d03](https://github.com/redkubes/otomi-api/commit/0d62d0391aac473047eae8172900b5f72bc5624c)), closes [#259](https://github.com/redkubes/otomi-api/issues/259)
+* **avoid insert duplicated service inside a team:** ([#255](https://github.com/redkubes/otomi-api/issues/255)) ([4cf2c19](https://github.com/redkubes/otomi-api/commit/4cf2c19a3cc67cc8e8c82d055567bc7c5de1cafc)), closes [#246](https://github.com/redkubes/otomi-api/issues/246)
+* **deps:** pin dependencies ([#240](https://github.com/redkubes/otomi-api/issues/240)) ([30c3d6e](https://github.com/redkubes/otomi-api/commit/30c3d6ebbae3f4f0f5b71bfa5600a1dc31a0a40c))
+* **fix ismultitenant false issue:** add isMultitenant flag to Session ([#232](https://github.com/redkubes/otomi-api/issues/232)) ([273a2dc](https://github.com/redkubes/otomi-api/commit/273a2dcb7697be4986f6639c9c499cf2534721eb))
+
+
+### CI
+
+* **deps:** renovate automerge for patches ([aa8bdc8](https://github.com/redkubes/otomi-api/commit/aa8bdc8ede789c3a4b9837b625b6009344b20a9a))
+* **deps:** renovate self hosted with pat for automerge [ci skip] ([c64d448](https://github.com/redkubes/otomi-api/commit/c64d4488cf7054bd870ff1075e3178eba8480a87))
+
+
+### Others
+
+* **deps:** add renovate.json ([#239](https://github.com/redkubes/otomi-api/issues/239)) ([b50b4c8](https://github.com/redkubes/otomi-api/commit/b50b4c8b711b4228995a9966232be87c2e3891b0))
+* **deps:** bump object-path from 0.11.5 to 0.11.8 ([#236](https://github.com/redkubes/otomi-api/issues/236)) ([af02f6b](https://github.com/redkubes/otomi-api/commit/af02f6bb22ff6aceb43b5a3a0258cd8bbb90be72))
+* **deps:** bump trim-off-newlines from 1.0.1 to 1.0.3 ([#238](https://github.com/redkubes/otomi-api/issues/238)) ([87974cd](https://github.com/redkubes/otomi-api/commit/87974cd7dbbc316584ab9fab9e4dec53d3e75dad))
+* **deps:** bump validator from 13.6.0 to 13.7.0 ([#237](https://github.com/redkubes/otomi-api/issues/237)) ([e4c33b1](https://github.com/redkubes/otomi-api/commit/e4c33b1b6e4ac9d77fabc0ee230523c99d8cc519))
+* **prerelease:** npm client ([#261](https://github.com/redkubes/otomi-api/issues/261)) ([819ace7](https://github.com/redkubes/otomi-api/commit/819ace7493dfd8e5e135a94ec8a266efe9503581))
+* **release:** 0.4.94 ([23fc553](https://github.com/redkubes/otomi-api/commit/23fc553cc0e4457e043c5b9bf32664ebbe7e231b))
+
 ### [0.4.94](https://github.com/redkubes/otomi-api/compare/v0.4.93...v0.4.94) (2022-02-24)
 
 
