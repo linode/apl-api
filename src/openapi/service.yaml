@@ -176,6 +176,7 @@ networkPolicy:
               default: DenyAll
               enum:
                 - DenyAll
+          required: [mode]
         - title: Allow selected
           additionalProperties: false
           type: object
@@ -188,6 +189,7 @@ networkPolicy:
             allow:
               title: Allow entire team or just a service
               type: array
+              minItems: 1
               items:
                 type: object
                 properties:
@@ -201,6 +203,9 @@ networkPolicy:
                     type: string
                 required:
                   - team
+          required:
+            - mode
+            - allow
         - title: Allow all
           additionalProperties: false
           type: object
@@ -211,6 +216,7 @@ networkPolicy:
               default: AllowAll
               enum:
                 - AllowAll
+          required: [mode]
     egressPublic:
       title: External egress filtering
       description: Trusted domains this service can access
