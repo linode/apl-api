@@ -57,15 +57,15 @@ Service:
 Ingress:
   properties:
     tlsPass:
-      default: false
       description: Pass through the request as is to the backing service. Only available for predeployed regular (non-knative) services.
       title: TLS passthrough
       type: boolean
+      x-default: false
     useDefaultSubdomain:
-      default: true
       description: Use the team domain so that the URL reveals the owner.
       title: Use team domain (preferred)
       type: boolean
+      x-default: true
     subdomain:
       $ref: definitions.yaml#/domain
       description: A host that is used to set DNS 'A' records
@@ -86,19 +86,22 @@ Ingress:
       description: Forward the URL path into the service (don't rewrite to /)
       title: Forward path
       type: boolean
+      x-default: false
     auth:
       description: Will check if the user is logged in to one of keycloak's OIDC providers.
       title: Authenticate with Single Sign On
       type: boolean
+      x-default: false
     hasCert:
       description: Select when a certificate exists and should not be generated.
       title: Already has a certificate
       type: boolean
+      x-default: false
     certSelect:
-      default: true
       description: Select one of the TLS secrets created in Otomi.
       title: Select team secret
       type: boolean
+      x-default: true
     certName:
       description: The name of a TLS secret known to exist in the team namespace.
       example: example-com
@@ -116,9 +119,7 @@ Ingress:
 
 IngressCluster:
   additionalProperties: false
-  description:
-    'If backend is a ksvc, this will expose a knative service on a local istio gateway, so other services can access it at their "$svc.$namespace" host name.
-    (Coming soon: ability to choose endpoints to connect to, so network policies are automatically generated.)'
+  description: "If backend is a ksvc, this will expose a knative service on a local istio gateway, so other services can access it's '$svc.$namespace' host name."
   title: Cluster
   type: object
   nullable: true
@@ -141,7 +142,6 @@ IngressPrivate:
   nullable: true
   description: Will only accept traffic coming from the private-network loadbalancer. (Coming soon!)
   title: Private
-  type: object
 
 IngressPublic:
   allOf:
@@ -155,37 +155,47 @@ IngressPublic:
   nullable: true
   description: Will only accept traffic coming from the public loadbalancer.
   title: Public
-  type: object
 
 networkPolicy:
   additionalProperties: false
+  type: object
   properties:
     ingressPrivate:
-      title: Internal ingress filtering
+      # additionalProperties: false
+      type: object
+      title: Ingress traffic inside the cluster
       description: 'Pods belonging to this service must contain "app: <service name>" label'
       oneOf:
         - title: Deny all
           description: Deny traffic from all teams (including this one)
+          additionalProperties: false
+          type: object
           properties:
             mode:
-              default: denyAll
+              type: string
+              default: DenyAll
               enum:
-                - denyAll
+                - DenyAll
+          required: [mode]
         - title: Allow selected
+          additionalProperties: false
+          type: object
           properties:
             mode:
-              default: allowOnly
+              type: string
+              default: AllowOnly
               enum:
-                - allowOnly
+                - AllowOnly
             allow:
-              title: Add team or team with service
+              title: Allow entire team or just a service
               type: array
+              minItems: 1
               items:
                 type: object
                 properties:
                   team:
                     title: Team name
-                    description: 'Allow traffic from a given team'
+                    description: Allow traffic from a given team
                     type: string
                   service:
                     title: Service name
@@ -193,13 +203,20 @@ networkPolicy:
                     type: string
                 required:
                   - team
+          required:
+            - mode
+            - allow
         - title: Allow all
+          additionalProperties: false
+          type: object
           description: Allow traffic from all teams
           properties:
             mode:
-              default: allowAll
+              type: string
+              default: AllowAll
               enum:
-                - allowAll
+                - AllowAll
+          required: [mode]
     egressPublic:
       title: External egress filtering
       description: Trusted domains this service can access

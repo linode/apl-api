@@ -39,7 +39,7 @@
       "type": "pwa-node",
       "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
       "request": "launch",
-      "name": "Mocha All (transpiled)",
+      "name": "Mocha All",
       "args": ["--timeout", "999999", "--colors", "${workspaceFolder}/src/**/*.test.ts"],
       "env": {
         "NODE_ENV": "test"

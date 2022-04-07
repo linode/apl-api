@@ -1,51 +1,72 @@
 alerts:
-  drone: slack
-  groupInterval: 5m
-  receivers:
-    - slack
-    - email
-  repeatInterval: 3h
+    drone: [slack, opsgenie]
+    groupInterval: 5m
+    receivers:
+        - slack
+        - email
+    repeatInterval: 3h
 azure:
-  appgw:
-    isManaged: true
+    appgw:
+        isManaged: true
+    monitor:
+        clientId: somesecretvalue
 dns:
-  zones: [some.com, onprem.example.com, onprem.private.net]
-  aws:
-    region: eu-central-1
+    aws:
+        region: eu-central-1
+    zones:
+        - some.com
+        - onprem.example.com
+        - onprem.private.net
+google:
+    cloudDnsKey: |
+        {
+          "type": "service_account",
+          "project_id": "project_id-cloud",
+          "private_key_id": "private_key_id",
+          "private_key": "-----BEGIN PRIVATE KEY-----\n private_key ----END PRIVATE KEY-----\n",
+          "client_email": "client_email",
+          "client_id": "client_id",
+          "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+          "token_uri": "https://oauth2.googleapis.com/token",
+          "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+          "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/dnsmanager%40otomi-cloud.iam.gserviceaccount.com"
+        }
 home:
-  receivers:
-    - slack
-  slack:
-    channel: mon-otomi
-    channelCrit: mon-otomi-crit
+    receivers:
+        - slack
+    slack:
+        channel: mon-otomi
+        channelCrit: mon-otomi-crit
 kms:
-  sops:
-    google:
-      accountJson: '{"some":"json"}'
-      keys: some/key
-      project: some-project
-    provider: google
+    sops:
+        google:
+            keys: some/key
+            project: some-project
+        provider: google
 oidc:
-  adminGroupID: someAdminGroupID
-  clientID: someClientID
-  clientSecret: someClientSecret
-  issuer: https://login.microsoftonline.com/xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-  teamAdminGroupID: xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    adminGroupID: someAdminGroupID
+    clientID: someClientID
+    issuer: https://login.microsoftonline.com/xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    teamAdminGroupID: xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 otomi:
-  version: latest
-  hasCloudLB: false
-  isHomeMonitored: true
-  isManaged: true
-  isMultitenant: true
-  addons:
-    conftest:
-      enabled: true
-  additionalClusters:
-    - name: demo
-      domainSuffix: demo.eks.otomi.cloud
-      provider: aws
+    additionalClusters:
+        - domainSuffix: demo.eks.otomi.cloud
+          name: demo
+          provider: aws
+    addons:
+        conftest:
+            enabled: true
+    globalPullSecret:
+        username: otomi
+    hasCloudLB: false
+    isHomeMonitored: true
+    isManaged: true
+    isMultitenant: true
+    version: latest
 smtp:
-  authUsername: no-reply@doma.in
-  from: no-reply@doma.in
-  hello: doma.in
-  smarthost: smtp-relay.gmail.com:587
+    authPassword: somesecretvalue
+    authUsername: no-reply@doma.in
+    from: no-reply@doma.in
+    hello: doma.in
+    smarthost: smtp-relay.gmail.com:587
+version: 1

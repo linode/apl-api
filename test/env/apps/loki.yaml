@@ -1,0 +1,6 @@
+apps:
+    loki:
+        _rawValues:
+            somesing: raw
+        enabled: true
+        oki: doki

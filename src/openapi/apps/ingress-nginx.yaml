@@ -1,0 +1,135 @@
+AppIngressNginx:
+  additionalProperties: false
+  x-externalDocsPath: https://kubernetes.github.io/ingress-nginx/
+  x-short: NGINX Ingress Controller
+  description: Ingress-NGINX is an Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer.
+  title: Ingress-NGINX
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/console/apps/ingress-nginx
+      additionalProperties: false
+      type: object
+      properties:
+        loadBalancerIP:
+          type: string
+        loadBalancerRG:
+          type: string
+        maxBodySize:
+          type: string
+          x-default: 1024m
+        maxBodySizeBytes:
+          type: integer
+          minimum: 0
+          x-default: 1073741824
+          description: Needed for modsecurity. Should correspond to maxBodySize, but expressed in bytes.
+        autoscaling:
+          $ref: ../definitions.yaml#/autoscalingEnabled
+        modsecurity:
+          title: ModSecurity
+          properties:
+            enabled:
+              description: Enables ModSecurity functionality.
+              type: boolean
+              x-default: false
+            block:
+              description: Makes nginx block requests that are marked as violating the modsec rules.
+              type: boolean
+              x-default: true
+            owasp:
+              description: Turns on the default OWASP rule set for ModSecurity. See https://owasp.org/www-project-modsecurity-core-rule-set/.
+              type: boolean
+              x-default: true
+          type: object
+        service:
+          type: object
+          properties:
+            annotations:
+              $ref: ../definitions.yaml#/annotations
+        image:
+          type: object
+          properties:
+            tag:
+              $ref: ../definitions.yaml#/imageTag
+              x-default: v1.0.5
+            pullPolicy:
+              $ref: ../definitions.yaml#/imagePullPolicy
+        resources:
+          type: object
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  x-default: '2'
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  x-default: 1.5Gi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  x-default: 200m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  x-default: 512Mi
+          required:
+            - limits
+            - requests
+        private:
+          title: Private loadbalancer
+          description: Private loadbalancer configuration.
+          type: object
+          properties:
+            enabled:
+              title: Enable private loadbalancer
+              description: Enable to start an extra loadbalancer for private network traffic.
+              type: boolean
+              x-default: false
+            autoscaling:
+              $ref: ../definitions.yaml#/autoscalingEnabled
+            loadBalancerIP:
+              type: string
+            loadBalancerRG:
+              type: string
+            resources:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: '2'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 1.5Gi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 200m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 512Mi
+              required:
+                - limits
+                - requests
+            service:
+              type: object
+              properties:
+                annotations:
+                  $ref: ../definitions.yaml#/annotations

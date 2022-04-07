@@ -1,14 +1,17 @@
+import { debug } from 'console'
+import cloneDeep from 'lodash/cloneDeep'
+import findIndex from 'lodash/findIndex'
 import low from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
 import Memory from 'lowdb/adapters/Memory'
-import findIndex from 'lodash/findIndex'
 import { v4 as uuidv4 } from 'uuid'
-import cloneDeep from 'lodash/cloneDeep'
 import { AlreadyExists, NotExistError } from './error'
-import { Cluster, Job, Secret, Service, Settings, Team } from './otomi-models'
+import { App, Cluster, Job, Secret, Service, Settings, Team } from './otomi-models'
+import { mergeData } from './utils'
 
-export type DbType = Cluster | Job | Secret | Service | Team | Settings
+export type DbType = Cluster | Job | Secret | Service | Team | Settings | App
 export type Schema = {
+  apps: App[]
   jobs: Job[]
   secrets: Secret[]
   services: Service[]
@@ -34,6 +37,7 @@ export default class Db {
     // Set some defaults (required if your JSON file is empty)
     this.db
       .defaults({
+        apps: [],
         jobs: [],
         secrets: [],
         services: [],
@@ -52,17 +56,19 @@ export default class Db {
     return cloneDeep(data)
   }
 
-  getItemReference(type: string, selector: any): DbType {
+  getItemReference(type: string, selector: any, mustThrow = true): DbType | undefined {
     const coll = this.db.get(type)
     // @ts-ignore
     const data = coll.find(selector).value()
     if (data === undefined) {
-      console.error(`Selector props do not exist in '${type}': ${JSON.stringify(selector)}`)
-      throw new NotExistError()
+      debug(`Selector props do not exist in '${type}': ${JSON.stringify(selector)}`)
+      if (mustThrow) throw new NotExistError()
+      else return
     }
-    if (data.length) {
-      console.error(`More than one item found for '${type}' with selector: ${JSON.stringify(selector)}`)
-      throw new NotExistError()
+    if (data?.length) {
+      debug(`More than one item found for '${type}' with selector: ${JSON.stringify(selector)}`)
+      if (mustThrow) throw new NotExistError()
+      else return
     }
     return data
   }
@@ -90,9 +96,9 @@ export default class Db {
     // @ts-ignore
     if (selector && this.db.get(type).find(selector).value())
       throw new AlreadyExists(`Item already exists in '${type}' collection: ${JSON.stringify(selector)}`)
-    const ret = this.populateItem(type, data, selector, id)
+    const ret = this.populateItem(type, { ...data, ...selector }, selector, id)
     this.dirty = this.dirtyActive
-    return ret as DbType
+    return ret
   }
 
   deleteItem(type: string, selector: any): void {
@@ -102,15 +108,16 @@ export default class Db {
     this.dirty = this.dirtyActive
   }
 
-  updateItem(type: string, data: any, selector: any): DbType {
-    this.getItemReference(type, selector)
+  updateItem(type: string, data: any, selector: any, merge = false): DbType {
+    const prev = this.getItemReference(type, selector)
     const col = this.db.get(type)
     // @ts-ignore
     const idx = col.findIndex(selector).value()
-    const iData = { ...data, ...selector }
-    col.value().splice(idx, 1, iData)
+    const merged = merge && prev ? mergeData(prev, data) : data
+    const newData = { ...merged, ...selector }
+    col.value().splice(idx, 1, newData)
     this.dirty = this.dirtyActive
-    return iData
+    return newData
   }
 
   setDirtyActive(active = true): void {

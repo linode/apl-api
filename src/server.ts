@@ -1,30 +1,23 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import express from 'express'
-import { SecurityHandlers } from 'openapi-security-handler'
-import { initialize } from 'express-openapi'
 import { json } from 'body-parser'
-import path from 'path'
-import { parse } from '@apidevtools/json-schema-ref-parser'
 import cors from 'cors'
+import express from 'express'
+import { initialize } from 'express-openapi'
 import logger from 'morgan'
+import { SecurityHandlers } from 'openapi-security-handler'
+import path from 'path'
 import swaggerUi from 'swagger-ui-express'
-import { errorMiddleware, jwtMiddleware, isUserAuthenticated, authzMiddleware } from './middleware'
 import Authz from './authz'
+import { authzMiddleware, errorMiddleware, isUserAuthenticated, jwtMiddleware } from './middleware'
 import { OpenAPIDoc } from './otomi-models'
-import OtomiStack from './otomi-stack'
-
-export async function loadOpenApisSpec(): Promise<OpenAPIDoc> {
-  const openApiPath = path.resolve(__dirname, 'generated-schema.json')
-  console.info(`Loading api spec from: ${openApiPath}`)
-  const schema = await parse(openApiPath)
-  return schema as OpenAPIDoc
-}
+import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
 
 export default async function initApp(otomiStack: OtomiStack): Promise<express.Express> {
   const app = express()
   const apiRoutesPath = path.resolve(__dirname, 'api')
-  const spec: OpenAPIDoc = await loadOpenApisSpec()
-  const authz = new Authz(spec)
+  const [spec] = await loadOpenApisSpec()
+  otomiStack.setSpec(spec)
+  const authz = new Authz(spec as any as OpenAPIDoc)
 
   app.use(logger('dev'))
   app.use(cors())

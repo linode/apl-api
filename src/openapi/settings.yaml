@@ -1,33 +1,50 @@
 Settings:
   x-acl:
     admin: [read-any, update-any]
-    team: []
+    team: [read-any]
   additionalProperties: false
   properties:
     alerts:
       $ref: definitions.yaml#/alerts
       title: Alerts
       description: Configure alerting endpoints to receive notifications from Alertmanager and Otomi deployments.
-      x-externalDocsPath: docs/console/settings/alerts
+      x-externalDocsPath: docs/console/settings#alerts
+      x-acl:
+        admin: [read-any, update-any]
+        team: [read-any]
+    cluster:
+      $ref: cluster.yaml#/Cluster
+      title: Cluster
+      description: Cluster configuration.
+      x-acl:
+        admin: [read-any, update-any]
+        team: [read-any]
     home:
       $ref: definitions.yaml#/alerts
       title: Home alerts
       description: Same setup as 'Alerts', but to send copies of alerts "home". Useful for co-monitoring managed clusters of customers.
-      x-externalDocsPath: docs/console/settings/home
+      x-externalDocsPath: docs/console/settings#home-alerts
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
     azure:
       title: Azure
       additionalProperties: false
       description: Azure specific configuration. Only applicable on Azure clusters.
+      x-externalDocsPath: docs/console/settings#azure
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
       properties:
         appgw:
           properties:
             isManaged:
-              default: true
               title: Managed by AKS
               description:
                 In case `otomi.hasCloudLB` is set, this setting indicates that an Azure AppGW Ingress Controller was already installed by AKS as an addon (only available on "Preview" clusters).
                 Turning this off will let Otomi install an AppGW controller.
               type: boolean
+              x-default: true
           type: object
         monitor:
           $ref: definitions.yaml#/azureMonitor
@@ -37,24 +54,28 @@ Settings:
           properties:
             fast:
               type: string
-              default: StandardSSD_LRS
+              x-default: StandardSSD_LRS
             standard:
               type: string
-              default: StandardLRS
+              x-default: StandardLRS
           type: object
       required:
         - resourceGroup
         - subscriptionId
         - tenantId
       type: object
-    cluster:
-      $ref: cluster.yaml#/Cluster
     dns:
       $ref: definitions.yaml#/dns
-      x-externalDocsPath: docs/console/settings/dns
+      x-externalDocsPath: docs/console/settings#dns
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
     kms:
       $ref: definitions.yaml#/kms
-      x-externalDocsPath: docs/console/settings/kms
+      x-externalDocsPath: docs/console/settings#kms
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
     oidc:
       title: OIDC
       description: OpenID Connect settings.
@@ -70,6 +91,7 @@ Settings:
         clientSecret:
           title: Client Secret
           type: string
+          x-secret: ''
         adminGroupID:
           title: Admin group ID
           type: string
@@ -87,7 +109,10 @@ Settings:
           description: Select OIDC claim to be passed by Keycloak as a unique user identifier. Best to not change this from the default.
           x-default: sub
       type: object
-      x-externalDocsPath: docs/console/settings/oidc
+      x-externalDocsPath: docs/console/settings#oidc
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
     otomi:
       title: Otomi
       type: object
@@ -95,9 +120,12 @@ Settings:
       additionalProperties: false
       properties:
         adminPassword:
-          type: string
-          title: Admin password
-          description: Otomi global admin password. Will be used as default for all apps that are not provide with a password. Easy for access and quick to rotate.
+          description: Master admin password that will be used for all apps that are not configured to use their own password.
+          $ref: definitions.yaml#/adminPassword
+          x-acl:
+            admin: [read-any]
+            team: []
+          readOnly: true
         additionalClusters:
           title: Additional clusters
           description: Enter other k8s clusters, if there are any.
@@ -108,7 +136,11 @@ Settings:
               - domainSuffix
               - name
               - provider
+          x-acl:
+            admin: [read-any, update-any]
+            team: []
         globalPullSecret:
+          nullable: true
           title: Global pullsecret
           description: Will be connected to each "default" service account in all otomi app namespaces.
             Handy for authenticating with DockerHub to avoid rate limiting.
@@ -126,49 +158,60 @@ Settings:
             server:
               type: string
               x-default: docker.io
-          required:
-            - username
-            - password
+          # disabling required fields until rjsf solves this nested required bug:
+          # required:
+          #   - username
+          #   - password
           type: object
+          x-acl:
+            admin: [read-any, update-any]
+            team: []
         hasCloudLB:
-          default: false
           description: Set this to true when an external load balancer exists (Azure AppGW, Google Apigee) or needs to be started (AWS ALB). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.
           title: External load balancer
           type: boolean
+          x-default: false
         hasExternalDNS:
           description: Set this to true when an external dns zone is available to manage dns records. (Expects required `dns:` fields to be set.)
-          default: true
           title: External DNS
           type: boolean
+          x-default: false
         hasExternalIDP:
-          default: false
           description: Set this to true when bringing your own external IDP such as Azure AD. (Expects required `oidc:` fields to be set.)
           title: External IDP
           type: boolean
+          x-default: false
         isHomeMonitored:
-          default: false
           description: Whether this cluster is home monitored (like when under a Premium SLA). Sends criticals home.
           title: Home monitored
           type: boolean
+          x-default: false
         isManaged:
-          default: true
-          description: Whether masters are managed and not under control. Set this to false when onprem.
+          description: Whether masters are managed and not under control. Will be turned on automatically when provider is "custom", but if that is not desired, it must be explictily set to "false" before install of otomi.
           title: Managed masters
           type: boolean
+          x-default: true
+          readOnly: true
         isMultitenant:
-          default: true
-          description: Will separate team metrics and logs. Disabling this lets everybody be admin and see everything.
+          description: Will separate team metrics and logs. Disabling this effectively gives all users admin role and lets them see everything.
           title: Multi-tenancy
           type: boolean
+          x-default: false
         version:
           title: Otomi version
           default: latest
           description: |
             Please pin this to a valid release version found in the repo. Suggestion: try the most recent stable version.
           type: string
-      x-externalDocsPath: docs/console/settings/otomi
+      x-externalDocsPath: docs/console/settings#otomi
+      x-acl:
+        admin: [read-any, update-any]
+        team: [read-any]
     policies:
       $ref: policies.yaml#/policies
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
     smtp:
       title: SMTP
       description: Mail server settings.
@@ -203,5 +246,8 @@ Settings:
       required:
         - smarthost
       type: object
-      x-externalDocsPath: docs/console/settings/smtp
+      x-externalDocsPath: docs/console/settings#smtp
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
   type: object

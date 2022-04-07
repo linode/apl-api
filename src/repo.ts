@@ -1,41 +1,36 @@
-import simpleGit, { CleanOptions, CommitResult, SimpleGit, SimpleGitOptions } from 'simple-git'
-import yaml from 'js-yaml'
-import path, { dirname } from 'path'
 import axios, { AxiosResponse } from 'axios'
-import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'fs'
-import { isEmpty } from 'lodash'
 import Debug from 'debug'
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs'
+import yaml from 'js-yaml'
+import { isEmpty } from 'lodash'
+import path, { dirname } from 'path'
+import simpleGit, { CleanOptions, CommitResult, SimpleGit, SimpleGitOptions } from 'simple-git'
 import { GitPullError } from './error'
-import { cleanEnv, DISABLE_PROCESSING, DISABLE_SYNC, TOOLS_HOST } from './validators'
 import { decryptedFilePostfix, removeBlankAttributes } from './utils'
+import { cleanEnv, DISABLE_SYNC, TOOLS_HOST } from './validators'
 
 const debug = Debug('otomi:repo')
 
 const decryptedFilePostfixRegex = new RegExp(`${decryptedFilePostfix()}$`)
 
 const env = cleanEnv({
-  DISABLE_PROCESSING,
   DISABLE_SYNC,
   TOOLS_HOST,
 })
 
 const baseUrl = `http://${env.TOOLS_HOST}:17771/`
-const decryptUrl = `${baseUrl}decrypt`
-const processUrl = `${baseUrl}encrypt`
+const prepareUrl = `${baseUrl}prepare`
+const initUrl = `${baseUrl}init`
 
-export async function decrypt(): Promise<AxiosResponse | void> {
-  if (env.DISABLE_PROCESSING) {
-    debug('Skipping processing')
-    return Promise.resolve()
-  }
-  debug('Requesting decrypt action')
-  const res = await axios.get(decryptUrl)
+async function initValues(): Promise<AxiosResponse | void> {
+  debug('Requesting values repo "init" action')
+  const res = await axios.get(initUrl)
   return res
 }
 
-export async function processValues(): Promise<AxiosResponse | void> {
-  debug('Requesting process action')
-  const res = await axios.get(processUrl)
+export async function prepareValues(): Promise<AxiosResponse | void> {
+  debug('Requesting values repo "prepare" action')
+  const res = await axios.get(prepareUrl)
   return res
 }
 
@@ -89,22 +84,28 @@ export class Repo {
   writeFile(relativePath, data): void {
     const absolutePath = path.join(this.path, relativePath)
     const cleanedData = removeBlankAttributes(data)
-    if (isEmpty(cleanedData) && existsSync(absolutePath) && absolutePath.includes('/secrets.')) {
-      debug(`Removing file: ${absolutePath}`)
-      // Remove empty secret file due to https://github.com/mozilla/sops/issues/926 issue
-      unlinkSync(absolutePath)
+    if (isEmpty(cleanedData)) {
+      if (existsSync(absolutePath) && absolutePath.includes('/secrets.')) {
+        debug(`Removing file: ${absolutePath}`)
+        // Remove empty secret file due to https://github.com/mozilla/sops/issues/926 issue
+        unlinkSync(absolutePath)
+      }
       if (decryptedFilePostfix() !== '') {
         const absolutePathEncFile = absolutePath.replace(decryptedFilePostfixRegex, '')
         // also remove the encrypted file as they are operated on in pairs
-        if (existsSync(absolutePathEncFile)) unlinkSync(absolutePathEncFile)
+        if (existsSync(absolutePathEncFile)) {
+          debug(`Removing file: ${absolutePath}`)
+          unlinkSync(absolutePathEncFile)
+        }
       }
-      return
+      // bail if we came to write secrets which we can't fill empty
+      if (absolutePath.includes('/secrets.')) return
     }
     debug(`Writing to file: ${absolutePath}`)
-    const yamlStr = yaml.safeDump(cleanedData, { indent: 4 })
+    const content = isEmpty(cleanedData) ? '' : yaml.safeDump(cleanedData, { indent: 4 })
     const dir = dirname(absolutePath)
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
-    writeFileSync(absolutePath, yamlStr, 'utf8')
+    writeFileSync(absolutePath, content, 'utf8')
   }
 
   fileExists(relativePath: string): boolean {
@@ -127,7 +128,7 @@ export class Repo {
   }
 
   async clone(): Promise<void> {
-    if (env.isDev && env.DISABLE_SYNC) await decrypt()
+    if (env.isDev && env.DISABLE_SYNC) await initValues()
     if (env.DISABLE_SYNC) return
 
     debug(`Checking if local git repository exists at: ${this.path}`)
@@ -137,14 +138,14 @@ export class Repo {
       debug(`Local git repository does not exist. Cloning from '${this.url}' to '${this.path}'`)
       await this.git.clone(this.repoPathAuth, this.path)
     } else {
-      console.log('Repo already exists. Checking out correct branch.')
+      debug('Repo already exists. Checking out correct branch.')
       // Git fetch ensures that local git repository is synced with remote repository
       await this.git.fetch()
       await this.git.checkout(this.branch)
     }
     try {
       await this.pull()
-      await decrypt()
+      await initValues()
     } catch (e) {
       if (env.isDev) await this.git.clean(CleanOptions.FORCE)
       else throw e
@@ -169,10 +170,10 @@ export class Repo {
     try {
       await this.pull()
     } catch (e) {
-      console.warn(`Pull error: ${JSON.stringify(e)}`)
+      debug(`Pull error: ${JSON.stringify(e)}`)
       await this.git.rebase(['--abort'])
       await this.git.reset(['--hard', sha])
-      await decrypt()
+      await initValues()
       debug(`Reset HEAD to ${sha} commit`)
 
       throw new GitPullError()

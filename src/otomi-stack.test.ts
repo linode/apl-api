@@ -1,13 +1,16 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// import './test-init'
 import { expect } from 'chai'
 import sinon from 'sinon'
-import OtomiStack from './otomi-stack'
+import expectedDbState from './fixtures/values'
+import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
+import { Repo } from './repo'
+import './test-init'
 
 describe('Data validation', () => {
   let otomiStack: OtomiStack
-  beforeEach(() => {
+  beforeEach(async () => {
     otomiStack = new OtomiStack()
+    const [spec] = await loadOpenApisSpec()
+    otomiStack.setSpec(spec)
   })
 
   it('should throw exception on duplicated domain', (done) => {
@@ -56,4 +59,41 @@ describe('Data validation', () => {
     expect(stub.getCall(0).args[1].password).to.equal(myPassword)
     done()
   })
+})
+
+describe('Work with values', () => {
+  let otomiStack: OtomiStack
+  let spec
+  let secretPaths
+  before(async () => {
+    const [inSpec, inSecretPaths] = await loadOpenApisSpec()
+    spec = inSpec
+    secretPaths = inSecretPaths
+  })
+  beforeEach(() => {
+    otomiStack = new OtomiStack()
+    otomiStack.setSpec(spec, secretPaths)
+    otomiStack.repo = new Repo('./test', undefined, undefined, undefined, undefined, undefined)
+  })
+
+  it('can load from configuration to database', () => {
+    otomiStack.loadValues()
+    const dbState = otomiStack.db.db.getState() as Record<string, any>
+    expect(dbState).to.deep.equal(expectedDbState)
+  })
+  it('can save database state to configuration files', () => {
+    const results = {}
+    function writeFileStub(path, data): void {
+      results[path] = data
+    }
+    otomiStack.db.db.setState(expectedDbState)
+    otomiStack.repo.writeFile = writeFileStub
+    otomiStack.saveValues()
+    Object.entries(results).forEach(([path, data]) => {
+      if (!otomiStack.repo.fileExists(path)) return
+      const expectedData = otomiStack.repo.readFile(path)
+      expect(data, path).to.have.any.keys(expectedData)
+    })
+  })
+  return undefined
 })

@@ -1,0 +1,201 @@
+AppIstio:
+  additionalProperties: false
+  x-externalDocsPath: https://istio.io
+  x-short: Simplify observability, traffic management, security, and policy with the leading service mesh.
+  description: Istio extends Kubernetes to establish a programmable, application-aware network using the powerful Envoy service proxy. Working with both Kubernetes and traditional workloads, Istio brings standard, universal traffic management, telemetry, and security to complex deployments.
+  x-info: |
+    Since Otomi has security best practices built in, it is designed for intrusion.
+    Istio is installed by Otomi as a service mesh to deliver the following capabilities:
+
+    - mTLS enforcement for all traffic that is deemed compromisable.
+    - egress control, forcing teams to choose explicit egress endpoints.
+    - advanced routing capabilities such as weight based load balancing (A/B or blue/green testing)
+
+    In the future we might make it possible to opt out of Istio, but that effectively nullifies the mTLS capabilities and egress control.
+  title: Istio
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/console/apps/istio
+      additionalProperties: false
+      type: object
+      properties:
+        autoscaling:
+          additionalProperties: false
+          type: object
+          properties:
+            egressgateway:
+              $ref: ../definitions.yaml#/autoscaling
+            ingressgateway:
+              $ref: ../definitions.yaml#/autoscaling
+            ingressgateway-private:
+              $ref: ../definitions.yaml#/autoscaling
+            pilot:
+              $ref: ../definitions.yaml#/autoscaling
+        egressGateway:
+          additionalProperties: false
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              x-default: false
+        global:
+          additionalProperties: false
+          type: object
+          properties:
+            logging:
+              type: object
+              properties:
+                level:
+                  description: 'Comma separated list with key:value pairs as described here: https://istio.io/latest/docs/ops/diagnostic-tools/component-logging/'
+                  type: string
+            proxy:
+              additionalProperties: false
+              type: object
+              properties:
+                resources:
+                  properties:
+                    limits:
+                      properties:
+                        cpu:
+                          $ref: '../definitions.yaml#/quantityCpu'
+                          x-default: '1'
+                        memory:
+                          $ref: '../definitions.yaml#/quantityMem'
+                          x-default: 1Gi
+                    requests:
+                      properties:
+                        cpu:
+                          $ref: '../definitions.yaml#/quantityCpu'
+                          x-default: 20m
+                        memory:
+                          $ref: '../definitions.yaml#/quantityMem'
+                          x-default: 80Mi
+                  required:
+                    - limits
+                    - requests
+        meshConfig:
+          type: object
+          properties:
+            defaultConfig:
+              type: object
+              x-default:
+                tracing:
+                  sampling: 0.1
+        image:
+          type: object
+          properties:
+            tag:
+              $ref: ../definitions.yaml#/imageTag
+              x-default: 1.10.1
+            pullPolicy:
+              $ref: ../definitions.yaml#/imagePullPolicy
+        resources:
+          type: object
+          properties:
+            egressgateway:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests
+            ingressgateway:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests
+            ingressgateway-private:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests
+            pilot:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: '2'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 2Gi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests

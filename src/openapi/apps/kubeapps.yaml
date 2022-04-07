@@ -1,0 +1,80 @@
+AppKubeapps:
+  additionalProperties: false
+  x-externalDocsPath: https://kubeapps.com
+  x-short: Your Application Dashboard for Kubernetes
+  description: Kubeapps is a web-based UI for deploying and managing applications in Kubernetes clusters
+  title: Kubeapps
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      type: boolean
+      x-default: false
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/console/apps/kubeapps
+      type: object
+      properties:
+        postgresqlPassword:
+          type: string
+          description: Once set and deployed it cannot be changed with manual intervention.
+          x-secret: 'randAlphaNum 20'
+        initialRepos:
+          description: Add additional chart repos.
+          type: array
+          items:
+            type: object
+            required:
+              - type
+              - url
+            properties:
+              name:
+                type: string
+              type:
+                type: string
+                enum: ['helm', 'oci']
+              url:
+                type: string
+              description:
+                type: string
+              authorizationHeader:
+                type: string
+              basicAuth:
+                type: string
+              caCert:
+                type: string
+              tlsInsecureSkipVerify:
+                type: boolean
+              filterRule:
+                type: object
+                properties:
+                  jq:
+                    type: string
+                  variables:
+                    type: object
+                    additionalProperties:
+                      type: string
+              ociRepositories:
+                type: array
+                items:
+                  type: string
+        autoscaling:
+          additionalProperties: false
+          type: object
+          properties:
+            dashboard:
+              $ref: ../definitions.yaml#/autoscaling
+            frontend:
+              $ref: ../definitions.yaml#/autoscaling
+            kubeops:
+              $ref: ../definitions.yaml#/autoscaling
+      required:
+        - postgresqlPassword

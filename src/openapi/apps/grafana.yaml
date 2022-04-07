@@ -1,0 +1,58 @@
+AppGrafana:
+  additionalProperties: false
+  x-externalDocsPath: https://grafana.com/grafana/
+  x-short: The open observability platform
+  description: Grafana allows you to query, visualize, alert on and understand your metrics no matter where they are stored. Create, explore, and share beautiful dashboards with your team and foster a data driven culture.
+  title: Grafana
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      type: boolean
+      x-default: true
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      type: object
+      properties:
+        adminPassword:
+          $ref: ../definitions.yaml#/adminPassword
+        image:
+          type: object
+          properties:
+            tag:
+              $ref: ../definitions.yaml#/imageTag
+              x-default: 8.4.3
+            pullPolicy:
+              $ref: ../definitions.yaml#/imagePullPolicy
+        resources:
+          type: object
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  x-default: 500m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  x-default: 256Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  x-default: 100m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  x-default: 128Mi
+              required:
+                - limits
+                - requests

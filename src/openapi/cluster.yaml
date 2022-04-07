@@ -46,12 +46,12 @@ AdditionalCluster:
   additionalProperties: false
   x-acl:
     admin:
-      - read
-      - update
-      - create
-      - delete
+      - read-any
+      - update-any
+      - create-any
+      - delete-any
     team:
-      - read
+      - read-any
   title: Additional cluster
   description: A k8s cluster managed by Otomi.
   properties:
@@ -69,47 +69,48 @@ AdditionalCluster:
 
 Cluster:
   additionalProperties: false
+  type: object
   x-acl:
     admin:
-      - read
-      - update
+      - read-any
+      - update-any
     team:
-      - read
+      - read-any
   title: Cluster
   description: The k8s cluster managed by this Otomi instance.
   properties:
     apiName:
       $ref: '#/apiName'
-      x-readOnly: true
+      readOnly: true
     apiServer:
       $ref: '#/apiServer'
-      x-readOnly: true
+      readOnly: true
       description: Full url to a kubernetes api server. Used to generate kube context file.
       title: API Server
     domainSuffix:
       $ref: '#/domainSuffix'
-      x-readOnly: true
+      readOnly: true
     entrypoint:
       $ref: '#/entrypoint'
-      x-readOnly: true
+      readOnly: true
     k8sVersion:
       $ref: definitions.yaml#/k8sVersion
-      x-readOnly: true
+      readOnly: true
     name:
       $ref: '#/name'
-      x-readOnly: true
+      readOnly: true
     owner:
       $ref: '#/name'
-      x-readOnly: true
+      readOnly: true
     provider:
       $ref: '#/provider'
-      x-readOnly: true
+      readOnly: true
     region:
       $ref: '#/region'
-      x-readOnly: true
+      readOnly: true
     vpcID:
       $ref: '#/vpcID'
-      x-readOnly: true
+      readOnly: true
   required:
     - apiServer
     - domainSuffix
@@ -117,4 +118,3 @@ Cluster:
     - name
     - provider
     - region
-  type: object

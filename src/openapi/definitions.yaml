@@ -1,5 +1,14 @@
+adminPassword:
+  type: string
+  title: Admin password
+  description: Uses `otomi.adminPassword` when left empty.
+  x-secret: ''
+  x-acl:
+    admin: [read-any, update-any]
+    team: []
 alerts:
   additionalProperties: false
+  type: object
   properties:
     repeatInterval:
       x-default: 3h
@@ -17,9 +26,20 @@ alerts:
         enum:
           - slack
           - msteams
+          - opsgenie
           - email
         type: string
       title: Notification receivers
+      type: array
+      uniqueItems: true
+    drone:
+      description: Select default notification channels for Otomi deployments by Drone.
+      items:
+        enum:
+          - slack
+          - msteams
+          - opsgenie
+        type: string
       type: array
       uniqueItems: true
     slack:
@@ -58,6 +78,57 @@ alerts:
         - lowPrio
       title: Microsoft Teams
       type: object
+    opsgenie:
+      title: OpsGenie
+      description: Configure OpsGenie endpoints for alerts. Criticals will get level P1, and non-crits P2.
+      additionalProperties: false
+      properties:
+        apiKey:
+          description: The api key to use for authn.
+          title: Api key
+          type: string
+          x-secret: ''
+        url:
+          $ref: '#/url'
+          description: An opsgenie URL without the '?apiKey' part.
+        responders:
+          description: Configure one or multiple alert responders.
+          type: array
+          items:
+            type: object
+            allOf:
+              - properties:
+                  type:
+                    type: string
+                    enum:
+                      - team
+                      - user
+                      - escalation
+                      - schedule
+                    default: team
+                required: [type]
+              - title: Responder
+                description: An OpsGenie responder identity.
+                oneOf:
+                  - title: ID
+                    required: [id]
+                    properties:
+                      id:
+                        $ref: '#/idName'
+                  - title: Name
+                    required: [name]
+                    properties:
+                      name:
+                        $ref: '#/idName'
+                  - title: Username
+                    required: [username]
+                    properties:
+                      username:
+                        $ref: '#/idName'
+      required:
+        - apiKey
+        - url
+      type: object
     email:
       title: Email
       description: Configure email endpoints for alerts.
@@ -75,13 +146,6 @@ alerts:
         - critical
         - nonCritical
       type: object
-    drone:
-      description: Select default notification channel for Otomi deployments in Drone.
-      enum:
-        - slack
-        - msteams
-      title: Drone notifications
-      type: string
 annotation:
   type: string
   pattern: ^((.){1,253}\/)?(.){1,63}$
@@ -96,6 +160,23 @@ annotations:
       value:
         type: string
         maxLength: 32767
+autoscaling:
+  type: object
+  properties:
+    maxReplicas:
+      type: integer
+      x-default: 10
+    minReplicas:
+      type: integer
+      x-default: 1
+autoscalingEnabled:
+  type: object
+  allOf:
+    - properties:
+        enabled:
+          type: boolean
+          x-default: true
+    - $ref: '#/autoscaling'
 awsAccessKey:
   title: AWS access key
   description: An AWS access key ID.
@@ -137,6 +218,7 @@ azureEnvironment:
 azureMonitor:
   description: Azure Monitor data can be made available in Grafana.
   title: Azure Monitor
+  type: object
   nullable: true
   oneOf:
     - $ref: '#/offChoice'
@@ -223,16 +305,6 @@ containerSpec:
           $ref: '#/securityContext'
     - $ref: '#/containerSpecNoSec'
   type: object
-cpuQuantity:
-  title: CPU quantity
-  description: Amount of cores, or slice of cpu in millis.
-  x-default: 50m
-  example:
-    - '1'
-    - 200m
-  pattern: (^[1-9][0-9]*(?!<.*)$)|(^([0]|[1-9]+)\.[0-9]{1,3}(?!<.*)$)|(^[1-9][0-9]*m$)
-  type: string
-# _ because it creates a duplicate dns model for some reason
 dns:
   title: DNS
   type: object
@@ -250,12 +322,12 @@ dns:
     provider:
       description: The DNS provider managing the domains.
       title: Provider
-      type: object
       oneOf:
+        - $ref: '#/offChoice'
         - title: AWS
           properties:
             aws:
-              title: ''
+              x-hideTitle: true
               properties:
                 region:
                   $ref: '#/awsRegion'
@@ -268,7 +340,7 @@ dns:
         - title: Azure
           properties:
             azure:
-              title: ''
+              x-hideTitle: true
               properties:
                 cloud:
                   title: Cloud
@@ -291,8 +363,8 @@ dns:
                   description: Azure subscription ID
                 useManagedIdentityExtension:
                   title: Using managed identities?
-                  type: boolean
                   description: If you use Azure MSI, this should be set to true
+                  type: boolean
                   x-default: false
                 userAssignedIdentityID:
                   title: MSI id
@@ -314,7 +386,7 @@ dns:
         - title: Google
           properties:
             google:
-              title: ''
+              x-hideTitle: true
               properties:
                 serviceAccountKey:
                   description: A service account key for managing a DNS zone.
@@ -328,24 +400,28 @@ dns:
           required:
             - google
           type: object
-  x-rules:
-    - conditions:
-        - provider:
-            has: azure.useManagedIdentityExtension
-        - provider.azure.useManagedIdentityExtension:
-            eq: true
-      event:
-        type: remove
-        params:
-          field:
-            - provider.azure.aadClientId
-            - provider.azure.aadClientSecret
 
 domain:
   pattern: ^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))|([a-f0-9:]+:+)+[a-f0-9]+$
+  x-message: a valid fully qualified domain name (FQDN)
   type: string
+droneGit:
+  properties:
+    clientID:
+      $ref: '#/wordCharacterPattern'
+    clientSecretValue:
+      type: string
+      x-secret: ''
+  type: object
+  required: [clientID, clientSecretValue]
+duration:
+  description: 'Prometheus duration (See: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#configuration-file)'
+  pattern: '((([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?|0)'
+  type: string
+  x-default: 1d
 email:
   pattern: ^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$
+  x-message: a valid email address
   type: string
 env:
   title: Environment variables
@@ -357,6 +433,7 @@ env:
       name:
         type: string
         pattern: ^[a-zA-Z0-9_]*$
+        x-message: a valid environment variable name that consists of letters and underscores
       value:
         type: string
         maxLength: 131072
@@ -374,6 +451,7 @@ files:
       path:
         type: string
         pattern: ^\/([A-z0-9-_+]+\/).*$
+        x-message: a valid file name
       content:
         type: string
         maxLength: 131072
@@ -392,34 +470,42 @@ googleProject:
 hostPort:
   pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):()([1-9]|[1-5]?[0-9]{2,4}|6[1-4][0-9]{3}|65[1-4][0-9]{2}|655[1-2][0-9]|6553[1-5])$
   type: string
+  x-message: a valid host port
 idName:
   pattern: ^[a-z]([-a-z0-9]*[a-z0-9])+$
   type: string
+  x-message: a valid name that consists of lowercase letters and dashes
 image:
   allOf:
     - properties:
         repository:
           description: A container image repository.
           pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
+          x-message: a valid container registry repository
           type: string
       required:
         - repository
       type: object
     - $ref: '#/imageSimple'
   title: Container image
-  type: object
+  description: Anything specified here overrides image specs from the release
+imagePullPolicy:
+  description: Container pull policy.
+  default: IfNotPresent
+  enum:
+    - IfNotPresent
+    - Always
+  type: string
+imageTag:
+  pattern: '[\w][\w.-]{0,127}'
+  type: string
+  x-message: a valid container registry image tag
 imageSimple:
   properties:
     tag:
-      x-default: stable
-      pattern: '[\w][\w.-]{0,127}'
-      type: string
+      $ref: '#/imageTag'
     pullPolicy:
-      default: IfNotPresent
-      enum:
-        - IfNotPresent
-        - Always
-      type: string
+      $ref: '#/imagePullPolicy'
   required:
     - tag
   type: object
@@ -432,8 +518,8 @@ jobSpec:
       description: A job name
       example: some-job
     enabled:
-      default: true
       type: boolean
+      x-default: true
     type:
       default: Job
       enum:
@@ -444,13 +530,13 @@ jobSpec:
     script:
       $ref: '#/script'
     ttlSecondsAfterFinished:
-      default: 86400
+      x-default: 86400
       description: Time To Live after job is finished in seconds. Will be removed afterwards.
       title: TTL after finished
       type: integer
     schedule:
-      default: 0 1 * * *
-      description: Must give a cron-type expression if the job-type is 'cronjob' (job.type).
+      x-default: 0 1 * * *
+      description: Must give a cron-type expression if the job-type is 'cronjob' (job.type). Defaults to once a day at 1am.
       type: string
     runPolicy:
       default: OnSpecChange
@@ -474,12 +560,11 @@ jobSpec:
     - type
   type: object
 k8sVersion:
-  default: '1.20'
   description: The cluster k8s version. Otomi supports 2 minor versions backwards from the suggested default.
   enum:
-    - '1.18'
     - '1.19'
     - '1.20'
+    - '1.21'
   type: string
 kms:
   additionalProperties: false
@@ -490,7 +575,9 @@ kms:
     sops:
       description: Encryption credentials for SOPS to encrypt the platform secrets.
       title: SOPS credentials
+      type: object
       oneOf:
+        - $ref: '#/offChoice'
         - properties:
             provider:
               type: string
@@ -498,6 +585,7 @@ kms:
                 - aws
               default: aws
             aws:
+              type: object
               properties:
                 keys:
                   description: Comma separated list of one or two ARNs to keys as defined in AWS KMS. One if used for both enc+dec. Two if one for enc, other for dec.
@@ -517,6 +605,7 @@ kms:
           required:
             - aws
           title: AWS
+          type: object
         - properties:
             provider:
               type: string
@@ -524,6 +613,7 @@ kms:
               enum:
                 - azure
             azure:
+              type: object
               properties:
                 keys:
                   description: Comma separated list of one or two paths to keys as defined in Azure Keyvault. One if used for both enc+dec. Two if one for enc, other for dec.
@@ -543,6 +633,7 @@ kms:
           required:
             - azure
           title: Azure
+          type: object
         - properties:
             provider:
               type: string
@@ -550,6 +641,7 @@ kms:
               enum:
                 - google
             google:
+              type: object
               properties:
                 keys:
                   description: Comma separated list of one or two paths to keys as defined in GCP KMS. One if used for both enc+dec. Two if one for enc, other for dec.
@@ -567,6 +659,7 @@ kms:
           required:
             - google
           title: Google
+          type: object
         - properties:
             provider:
               type: string
@@ -574,6 +667,7 @@ kms:
               enum:
                 - vault
             vault:
+              type: object
               properties:
                 keys:
                   description: Comma separated list of one or two paths to keys as defined in Vault. One if used for both enc+dec. Two if one for enc, other for dec.
@@ -588,9 +682,10 @@ kms:
           required:
             - vault
           title: Vault
+          type: object
 ksvcNew:
   description: Will create a new knative service from the input gathered here.
-  title: New knative service
+  title: New Knative service
   allOf:
     - properties:
         annotations:
@@ -605,7 +700,7 @@ ksvcNew:
             readOnlyRootFilesystem:
               description: Whether this container has a read-only root filesystem. Default is false.
               type: boolean
-              default: false
+              x-default: false
           title: Security context
       type: object
     - $ref: '#/containerSpecNoSec'
@@ -616,10 +711,10 @@ ksvcNew:
             - ksvc
           type: string
         scaleToZero:
-          default: false
           description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
           title: Scale to zero
           type: boolean
+          x-default: false
         containerPort:
           $ref: '#/portNumber'
           description: Container port the knative pod will connect with. Leaving this empty will let knative infer the port from the container, which usually works, but might be problematic when the container does not specifically expose a port. (As is the case with nginx derived images!)
@@ -687,25 +782,32 @@ labelsAnnotations:
       name:
         type: string
         pattern: ^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]){1,253}\/)?([a-z0-9A-Z]+[a-z0-9A-Z-_.]+[a-z0-9A-Z]){1,63}$
+        description: A k8s annotation (see https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/)
+        x-message: a valid annotation
       values:
         type: string
         pattern: ^((.){1,253}\/)?(.){1,63}$
+        description: A k8s annotation value
+        x-message: a valid annotation value
     type: object
   type: array
-memoryQuantity:
-  title: Memory quantity
-  description: Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki.
-  x-default: 64Mi
-  example:
-    - 1Mi
-    - 0.5M
-  pattern: ^([0-9]+\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)$
+logLevel:
   type: string
+  default: info
+  enum:
+    - error
+    - warn
+    - info
+    - debug
+    - trace
 offChoice:
   additionalProperties: false
   nullable: true
-  title: 'Off'
+  title: 'None'
   type: object
+otomiAdminUsername:
+  type: string
+  x-secret: '"admin"'
 path:
   description: An absolute path
   type: string
@@ -751,22 +853,35 @@ portNumber:
   maximum: 32768
   minimum: 80
   type: integer
+quantityCpu:
+  title: CPU quantity
+  description: Amount of cores, or slice of cpu in millis.
+  example: 50m
+  pattern: (^[1-9][0-9]*(?!<.*)$)|(^([0]|[1-9]+)\.[0-9]{1,3}(?!<.*)$)|(^[1-9][0-9]*m$)
+  type: string
+quantityMem:
+  title: Memory quantity
+  description: Amount of memory. Valid units are E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki.
+  example: 1Gi
+  pattern: ^([0-9]+\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)$
+  type: string
 rawValues:
   description: "May define value overrides for a chart. WARNING: these values currently have no schema and can't be validated as such, and may break deployment. You are on your own here."
   type: object
-registry:
-  pattern: ^[a-z0-9]+(?:[._-][a-z0-9]+)*$
-  type: string
+  x-acl:
+    admin: [read-any, update-any]
+    team: []
 repoUrl:
   description: Path to a remote git repo without protocol. Will use https to access.
   pattern: ^(.+@)*([\w\d\.]+)(:[\d]+){0,1}/*(.*)$
   type: string
+  x-message: a valid git repo URL
 resource:
   properties:
     cpu:
-      $ref: '#/cpuQuantity'
+      $ref: '#/quantityCpu'
     memory:
-      $ref: '#/memoryQuantity'
+      $ref: '#/quantityMem'
   required:
     - cpu
     - memory
@@ -783,7 +898,6 @@ resources:
   required:
     - limits
     - requests
-  title: Resources
   type: object
 resourceQuota:
   description: 'List of kubernetes resource quota. Should adhere to the "spec.hard" format as described here: https://kubernetes.io/docs/concepts/policy/resource-quotas/. Not validated as there is no schema published. Change at your own risk.'
@@ -799,11 +913,16 @@ resourceQuota:
     required:
       - name
       - value
+  default:
+    - name: pods
+      value: '50'
+    - name: services.loadbalancers
+      value: '0'
 runAsNonRoot:
   description: Will prevent the container from starting with UID 0. This implies that k8s must be able to infer the UID from the image. If it complains the UID must be explicitly set with runAsUser.
-  default: true
   title: Run as non-root
   type: boolean
+  x-default: true
 runAsUser:
   description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May be set in both SecurityContext and PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
   x-default: 1001
@@ -821,10 +940,12 @@ runAsGroup:
 scaling:
   description: Min and max number of replicas.
   properties:
-    maxReplicas:
-      type: integer
     minReplicas:
       type: integer
+      title: Minimum nr of replicas
+    maxReplicas:
+      type: integer
+      title: Maximum nr of replicas
   type: object
 script:
   description: May specify a non-empty string containing an executable script.
@@ -858,8 +979,29 @@ secretMounts:
       path:
         $ref: '#/path'
     type: object
-subdomainType:
-  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+    required: [name, path]
+s3Url:
+  type: string
+  description: An url to an AWS S3 bucket
+shortcut:
+  additionalProperties: false
+  properties:
+    title:
+      type: string
+      description: Title for the shortcut
+    description:
+      type: string
+      description: A short description about the target of this shortcut.
+    path:
+      $ref: '#/path'
+  required:
+    - title
+    - description
+    - path
+  type: object
+size:
+  description: Disk size. Valid units are E|P|T|G|Ti|Gi.
+  pattern: '^([0-9]+\.)?[0-9]+(E|P|T|G||Ti|Gi)?$'
   type: string
 svcPredeployed:
   description: Will map onto a predeployed k8s service.
@@ -891,3 +1033,7 @@ volumes:
         type: string
     type: object
   type: array
+wordCharacterPattern:
+  type: string
+  pattern: ^[^\s]+$
+  x-error: At least one non whitespace character

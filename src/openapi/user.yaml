@@ -26,7 +26,7 @@ User:
       $ref: definitions.yaml#/email
     isAdmin:
       type: boolean
-      default: false
+      x-default: false
       description: If the user is admin
       readOnly: true
     authz:
@@ -56,6 +56,5 @@ User:
     - name
     - email
     - teams
-    - permissions
     - roles
   type: object

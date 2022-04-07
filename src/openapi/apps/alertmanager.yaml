@@ -1,0 +1,58 @@
+AppAlertmanager:
+  additionalProperties: false
+  x-externalDocsPath: https://prometheus.io/docs/alerting/latest/alertmanager/
+  x-short: Alerting made easy
+  description: The Alertmanager handles alerts sent by client applications such as the Prometheus server. It takes care of deduplicating, grouping, and routing them to the correct receiver integration such as email, PagerDuty, or OpsGenie. It also takes care of silencing and inhibition of alerts.
+  x-info: |
+    Alertmanager is configured by Otomi to use the global values found under settings' [alerts](/settings/alerts) and [home-alerts](/settings/home).
+
+    A team may decide to override some or all of them, in order to have alerts sent to their own endpoints. Self-service rights to alerting must be enabled for that team (enabled by default for all teams).
+  title: Alertmanager
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      type: boolean
+      x-default: false
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      additionalProperties: false
+      type: object
+      properties:
+        image:
+          properties:
+            tag:
+              $ref: ../definitions.yaml#/imageTag
+              x-default: v0.23.0
+            pullPolicy:
+              $ref: ../definitions.yaml#/imagePullPolicy
+        resources:
+          type: object
+          properties:
+            limits:
+              properties:
+                cpu:
+                  $ref: '../definitions.yaml#/quantityCpu'
+                  x-default: 500m
+                memory:
+                  $ref: '../definitions.yaml#/quantityMem'
+                  x-default: 256Mi
+            requests:
+              properties:
+                cpu:
+                  $ref: '../definitions.yaml#/quantityCpu'
+                  x-default: 100m
+                memory:
+                  $ref: '../definitions.yaml#/quantityMem'
+                  x-default: 128Mi
+          required:
+            - limits
+            - requests

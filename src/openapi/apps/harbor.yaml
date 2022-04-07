@@ -1,0 +1,428 @@
+AppHarbor:
+  additionalProperties: false
+  x-externalDocsPath: https://goharbor.io
+  x-short: Our mission is to be the trusted cloud native repository for Kubernetes
+  description: Harbor is an open source registry that secures artifacts with policies and role-based access control, ensures images are scanned and free from vulnerabilities, and signs images as trusted. Harbor, a CNCF Graduated project, delivers compliance, performance, and interoperability to help you consistently and securely manage artifacts across cloud native compute platforms like Kubernetes and Docker.
+  x-info: |
+    Harbor has been made user and tenant aware. Otomi runs automated tasks that take care of:
+    - Creating a project in Harbor for each team
+    - Creating a bot-account for each team
+    - Creating a Kubernetes pull secret in the team namespace to enable pulling of images out of the local registry
+  title: Harbor
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      type: boolean
+      x-default: false
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/console/apps/harbor
+      additionalProperties: false
+      type: object
+      properties:
+        adminPassword:
+          $ref: ../definitions.yaml#/adminPassword
+        # privateLibrary:
+        #   type: boolean
+        #   x-default: true
+        #   description: Will mark the main project named "library" as private.
+        core:
+          type: object
+          properties:
+            secret:
+              type: string
+              x-secret: 'randAlphaNum 16'
+            xsrfKey:
+              type: string
+              x-secret: 'randAlphaNum 32'
+        jobservice:
+          type: object
+          properties:
+            secret:
+              type: string
+              x-secret: 'randAlphaNum 16'
+        persistence:
+          additionalProperties: false
+          type: object
+          properties:
+            imageChartStorage:
+              type: object
+              additionalProperties: false
+              title: Image Chart Storage
+              oneOf:
+                - title: File
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - file
+                      default: file
+                - title: AWS
+                  type: object
+                  properties:
+                    aws:
+                      additionalProperties: false
+                      type: object
+                      properties:
+                        accesskey:
+                          $ref: ../definitions.yaml#/awsAccessKey
+                        secretkey:
+                          $ref: ../definitions.yaml#/awsSecretKey
+                        region:
+                          $ref: ../definitions.yaml#/awsRegion
+                        regionendpoint:
+                          type: string
+                        bucket:
+                          type: string
+                        encrypt:
+                          type: boolean
+                        keyid:
+                          type: string
+                        secure:
+                          type: boolean
+                        v4auth:
+                          type: boolean
+                        chunksize:
+                          type: integer
+                        multipartcopychunksize:
+                          type: integer
+                        multipartcopymaxconcurrency:
+                          type: integer
+                        multipartcopythresholdsize:
+                          type: integer
+                        rootdirectory:
+                          type: string
+                    type:
+                      type: string
+                      enum:
+                        - aws
+                      default: aws
+                - title: Azure
+                  type: object
+                  properties:
+                    azure:
+                      additionalProperties: false
+                      type: object
+                      properties:
+                        accountname:
+                          type: string
+                        accountkey:
+                          type: string
+                          x-secret: ''
+                        container:
+                          type: string
+                        realm:
+                          type: string
+                    type:
+                      type: string
+                      enum:
+                        - azure
+                      default: azure
+                - title: GCS
+                  type: object
+                  properties:
+                    gcs:
+                      additionalProperties: false
+                      type: object
+                      properties:
+                        bucket:
+                          type: string
+                        encodedkey:
+                          type: string
+                          description: A base64 encoded json file which contains the key
+                          x-secret: ''
+                        rootdirectory:
+                          type: string
+                    type:
+                      type: string
+                      enum:
+                        - gcs
+                      default: gcs
+        registry:
+          type: object
+          properties:
+            secret:
+              type: string
+              x-secret: 'randAlpha 16'
+            credentials:
+              type: object
+              properties:
+                htpasswd:
+                  type: string
+                  x-secret: 'htpasswd .dot.username .dot.password'
+                username:
+                  $ref: ../definitions.yaml#/otomiAdminUsername
+                password:
+                  type: string
+                  x-secret: 'randAlphaNum 32'
+          required:
+            - secret
+            - credentials
+        secretKey:
+          type: string
+          x-secret: 'randAlpha 16'
+        image:
+          type: object
+          properties:
+            tag:
+              $ref: ../definitions.yaml#/imageTag
+              x-default: v2.4.0
+            pullPolicy:
+              $ref: ../definitions.yaml#/imagePullPolicy
+        resources:
+          additionalProperties: false
+          type: object
+          properties:
+            chartmuseum:
+              title: Chart Museum
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 400m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+              required:
+                - limits
+                - requests
+            clair:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 1Gi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 400m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 2Gi
+              required:
+                - limits
+                - requests
+            clair-adapter:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 400m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+              required:
+                - limits
+                - requests
+            core:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 512Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+              required:
+                - limits
+                - requests
+            database:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 512Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+              required:
+                - limits
+                - requests
+            jobservice:
+              title: Job service
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 512Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+              required:
+                - limits
+                - requests
+            portal:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 400m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests
+            redis:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 400m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+              required:
+                - limits
+                - requests
+            registry:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 128Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 64Mi
+              required:
+                - limits
+                - requests
+            registry-controller:
+              title: Registry controller
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 400m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+              required:
+                - limits
+                - requests

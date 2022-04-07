@@ -1,0 +1,8 @@
+teamConfig:
+    admin:
+        apps:
+            keycloak:
+                shortcuts:
+                    - description: ki
+                      path: /doki
+                      title: o

@@ -1,20 +1,17 @@
 teamConfig:
-  teams:
-    otomi:
-      alerts: {}
-      id: otomi
-      oidc: {}
-      resourceQuota:
-        services.loadbalancers: '0'
-      selfService:
-        Team:
-          - resourceQuota
     dev:
-      alerts: {}
-      id: dev
-      oidc: {}
-      selfService:
-        Team:
-          - resourceQuota
-        Service:
-          - ingress
+        id: dev
+        selfService:
+            Service:
+                - ingress
+            Team:
+                - resourceQuota
+    otomi:
+        id: otomi
+        oidc:
+            groupMapping: 0efd2f6d-fb8b-49a9-9507-54cd6e92c348
+        resourceQuota:
+            services.loadbalancers: '0'
+        selfService:
+            Team:
+                - resourceQuota

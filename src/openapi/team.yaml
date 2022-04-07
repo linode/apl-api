@@ -40,6 +40,9 @@ Team:
     password:
       type: string
       writeOnly: true
+      x-acl:
+        admin: []
+        team: []
     alerts:
       $ref: definitions.yaml#/alerts
     resourceQuota:
@@ -49,15 +52,15 @@ Team:
     networkPolicy:
       properties:
         ingressPrivate:
-          title: Internal ingress filtering
-          description: When enabled a user can define network policies for incoming traffic per service
+          title: Network policies
+          description: When enabled team services will be bound by (ingress) network policies. Turning this off introduces a security risk!
           type: boolean
-          default: true
+          x-default: true
         egressPublic:
-          title: External egress filtering
-          description: When enabled a user can define public endpoints a service can access
+          title: Egress control
+          description: When enabled team service egress traffic will be limited to pre-defined endpoints. Turning this off introduces a security risk!
           type: boolean
-          default: true
+          x-default: true
       type: object
     selfService:
       $ref: team.yaml#/TeamSelfService

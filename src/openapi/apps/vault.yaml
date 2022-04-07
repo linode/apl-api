@@ -1,0 +1,132 @@
+AppVault:
+  additionalProperties: false
+  x-externalDocsPath: https://www.vaultproject.io
+  description: Vault info
+  x-info: |
+    Vault has been made tenant aware in Otomi. When it is enabled, a space will automatically be created for each team, and only team members are allowed access. Vault is automatically configured to use Otomi's Keycloak OIDC settings to login users through Otomi's SSO.
+
+    Vault (like all parts of Otomi) runs natively on Kubernetes. To prevent data from Vault being lost during a rolling cluster upgrade, data persistence can be configured in combination with external (blob) storage. Read more [here](https://www.vaultproject.io/docs/configuration/storage) for configuring external data persistence.
+  title: Vault
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      type: boolean
+      x-default: false
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/console/apps/vault
+      additionalProperties: false
+      type: object
+      properties:
+        logLevel:
+          $ref: ../definitions.yaml#/logLevel
+        seal:
+          description: Use a KMS to encrypt and decrypt the master key
+          nullable: true
+          type: object
+          oneOf:
+            - $ref: ../definitions.yaml#/offChoice
+            - title: gcpckms
+              type: object
+              properties:
+                gcpckms:
+                  properties:
+                    project:
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    region:
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    key_ring:
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    kmsAccount:
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                  required:
+                    - project
+                    - region
+                    - key_ring
+                    - kmsAccount
+              required:
+                - gcpckms
+            - title: awskms
+              type: object
+              properties:
+                awskms:
+                  properties:
+                    region:
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    access_key:
+                      type: string
+                    secret_key:
+                      type: string
+                      x-secret: ''
+                    endpoint:
+                      type: string
+                  required:
+                    - region
+                    - access_key
+                    - secret_key
+                    - endpoint
+              required:
+                - awskms
+            - title: azurekeyvault
+              type: object
+              properties:
+                azurekeyvault:
+                  properties:
+                    vault_name:
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    tenant_id:
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    client_id:
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    client_secret:
+                      type: string
+                      x-secret: ''
+                  required:
+                    - vault_name
+                    - tenant_id
+                    - client_id
+                    - client_secret
+              required:
+                - azurekeyvault
+        storage:
+          description: Storage configuration. See https://www.vaultproject.io/docs/configuration/storage. Defaults to PVC.
+          type: object
+        image:
+          type: object
+          properties:
+            tag:
+              $ref: ../definitions.yaml#/imageTag
+              x-default: 1.14.4
+        resources:
+          type: object
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  x-default: 1
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  x-default: 512Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  x-default: 500m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  x-default: 256Mi
+          required:
+            - limits
+            - requests

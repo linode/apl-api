@@ -1,31 +1,33 @@
+import Debug from 'debug'
 import { createLightship } from 'lightship'
-import initApp from './server'
 import OtomiStack from './otomi-stack'
+import initApp from './server'
 
-console.log('NODE_ENV: ', process.env.NODE_ENV)
+const debug = Debug('otomi:app')
+
+debug('NODE_ENV: ', process.env.NODE_ENV)
 
 const otomiStack = new OtomiStack()
 otomiStack.init()
 
 async function initServer() {
-  let server
   const lightship = createLightship()
-  lightship.registerShutdownHandler(() => {
-    server.close()
-  })
   const app = await initApp(otomiStack)
   const { PORT = 8080 } = process.env
-  server = app
+  const server = app
     .listen(PORT, () => {
-      console.info(`Listening on port: http://127.0.0.1:${PORT}`)
+      debug(`Listening on port: http://127.0.0.1:${PORT}`)
       lightship.signalReady()
     })
     .on('error', () => {
       lightship.shutdown()
     })
+  lightship.registerShutdownHandler(() => {
+    server.close()
+  })
 }
 
 initServer().catch((e) => {
-  console.error(e)
+  debug(e)
   process.exit(1)
 })

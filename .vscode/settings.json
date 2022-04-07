@@ -2,24 +2,32 @@
   "[dotenv]": {
     "editor.defaultFormatter": "foxundermoon.shell-format"
   },
-  "cSpell.diagnosticLevel": "Hint",
-  "editor.codeActionsOnSave": {
-    "source.fixAll": true
+  "[javascript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
-  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "[shellscript]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "cSpell.diagnosticLevel": "Hint",
+  "cSpell.enabled": true,
+  "editor.codeActionsOnSave": {
+    "source.addMissingImports": true,
+    "source.fixAll": true,
+    "source.organizeImports": true
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "eslint.format.enable": true,
   "eslint.validate": ["javascript", "typescript"],
-  "files.watcherExclude": {
-    "**/.git/objects/**": true,
-    "**/.git/subtree-cache/**": true,
-    "**/node_modules/*/**": true
-  },
   "mochaExplorer.env": {
     "NODE_ENV": "test"
   },
-  "mochaExplorer.files": "src/*.test.ts",
+  "mochaExplorer.configFile": ".mocharc.yml",
+  "mochaExplorer.files": "src/**/*.test.ts",
   "mochaExplorer.require": "ts-node/register",
-  "mochaExplorer.timeout": 20000,
+  "mochaExplorer.timeout": 5000,
   "prettier.enable": true
 }

@@ -1,17 +1,20 @@
 /* eslint-disable no-param-reassign */
-import get from 'lodash/get'
+import { debug } from 'console'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
 import { omit } from 'lodash'
+import get from 'lodash/get'
+import Authz, { getTeamSelfServiceAuthz } from './authz'
 import { HttpError, OtomiError } from './error'
-import { OpenApiRequest, JWT, OpenApiRequestExt, User, PermissionSchema, TeamSelfService } from './otomi-models'
-import Authz, { getUserAuthz, validateWithAbac } from './authz'
-import { cleanEnv, NO_AUTHZ } from './validators'
+import { JWT, OpenApiRequest, OpenApiRequestExt, PermissionSchema, TeamSelfService, User } from './otomi-models'
 import OtomiStack from './otomi-stack'
+import { cleanEnv, NO_AUTHZ } from './validators'
 
 const env = cleanEnv({
   NO_AUTHZ,
 })
+
+const badCode = (code) => code >= 300 || code < 200
 
 const HttpMethodMapping = {
   DELETE: 'delete',
@@ -24,7 +27,7 @@ const HttpMethodMapping = {
 // Note: 4 arguments (no more, no less) must be defined in your errorMiddleware function. Otherwise the function will be silently ignored.
 // eslint-disable-next-line no-unused-vars
 export function errorMiddleware(e, req: OpenApiRequest, res, next): void {
-  console.error('errorMiddleware error', e)
+  debug('errorMiddleware error', e)
   let code
   let msg
   if (e instanceof OtomiError) {
@@ -43,9 +46,8 @@ export function getUser(user: JWT, otomi: OtomiStack): User {
   const sessionUser: User = { ...user, teams: [], roles: [], isAdmin: false, authz: {} }
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
-  if (env.NO_AUTHZ) {
-    sessionUser.isAdmin = true
-  } else {
+  if (env.NO_AUTHZ) sessionUser.isAdmin = true
+  else {
     user.groups.forEach((group) => {
       if (['admin', 'team-admin'].includes(group)) {
         if (!sessionUser.roles.includes('admin')) {
@@ -57,10 +59,8 @@ export function getUser(user: JWT, otomi: OtomiStack): User {
       const teamId = group.substr(5)
       if (group.substr(0, 5) === 'team-' && group !== 'team-admin' && !sessionUser.teams.includes(teamId)) {
         // we might be assigned team-* without that team yet existing in the values, so ignore those
-        const coll = otomi.db.db.get('teams')
-        // @ts-ignore
-        const idx = coll.find({ id: teamId }).value()
-        if (idx) sessionUser.teams.push(teamId)
+        const existing = otomi.db.getItemReference('teams', { id: teamId }, false)
+        if (existing) sessionUser.teams.push(teamId)
       }
     })
   }
@@ -89,7 +89,7 @@ export function jwtMiddleware(otomi: OtomiStack): RequestHandler {
       return next()
     }
     if (!token) {
-      console.log('anonymous request')
+      debug('anonymous request')
       return next()
     }
     const { name, email, roles, groups } = jwtDecode(token)
@@ -98,33 +98,63 @@ export function jwtMiddleware(otomi: OtomiStack): RequestHandler {
   }
 }
 
-export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): RequestHandler {
-  let valid = false
+const wrapResponse = (filter, orig) => {
+  return function (obj, ...rest) {
+    if (arguments.length === 1) {
+      if (badCode(this.statusCode)) return orig(this.statusCode, obj)
 
+      const ret = filter(obj)
+      return orig(ret)
+    }
+
+    if (typeof rest[0] === 'number' && !badCode(rest[0])) {
+      // res.json(body, status) backwards compat
+      const ret = filter(obj)
+      return orig(ret, rest[0])
+    }
+
+    if (typeof obj === 'number' && !badCode(obj)) {
+      // res.json(status, body) backwards compat
+      const ret = filter(obj)
+      return orig(obj, ret)
+    }
+
+    // The original actually returns this.send(body)
+    return orig(obj, rest[0])
+  }
+}
+
+export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): RequestHandler {
   const {
     params: { teamId },
+    user,
   } = req
-  if (!req.user) return next()
-  const { user } = req
   const action = HttpMethodMapping[req.method]
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
   const schemaName = schema.split('/').pop() || null
 
-  // If there is no RBAC then we also skip ABAC
+  // If there is no RBAC then we bail
   if (!schemaName) return next()
 
-  valid = authz.validateWithRbac(action, schemaName, user, teamId, req.body)
-  if (action === 'read' && schemaName === 'Kubecfg')
-    valid = valid && authz.hasSelfService(user, teamId, 'Team', 'downloadKubeConfig')
-  if (!valid)
+  // init rules for the user
+  authz.init(user)
+
+  let valid
+  if (action === 'read' && schemaName === 'Kubecfg') valid = authz.hasSelfService(teamId, 'Team', 'downloadKubeConfig')
+  else valid = authz.validateWithRbac(action, schemaName, teamId, req.body)
+  if (!valid) {
     return res
       .status(403)
-      .send({ authz: false, message: `User not allowed to perform ${action} on ${schemaName} resource` })
+      .send({ authz: false, message: `User not allowed to perform "${action}" on "${schemaName}" resource` })
+  }
 
-  const violatedAttributes = validateWithAbac(action, schemaName, user, teamId, req.body)
+  const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body)
 
-  // A users sends valid form abac is used to remove these fields that are not allowed to be set
+  // A users sends valid form, but abac is used to remove fields that are not allowed to be set
   req.body = omit(req.body, violatedAttributes)
+
+  // filter response based on abac
+  res.json = wrapResponse((obj) => authz.filterWithAbac(schemaName, teamId, obj), res.json.bind(res))
 
   return next()
 }
@@ -133,9 +163,9 @@ export function authzMiddleware(authz: Authz, otomi: OtomiStack): RequestHandler
   return function nextHandler(req: OpenApiRequestExt, res, next): any {
     if (!req.isSecurityHandler) return next()
     if (!req.user) return next()
-    req.user.authz = getUserAuthz(
+    req.user.authz = getTeamSelfServiceAuthz(
       req.user.teams,
-      (req.apiDoc.components.schemas.TeamSelfService as TeamSelfService) as PermissionSchema,
+      req.apiDoc.components.schemas.TeamSelfService as TeamSelfService as PermissionSchema,
       otomi,
     )
     return authorize(req, res, next, authz)

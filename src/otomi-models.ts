@@ -1,29 +1,19 @@
 import { Request } from 'express'
 import { JSONSchema4 } from 'json-schema'
-import { components } from './generated-schema'
+import { components, external, operations, paths } from './generated-schema'
 
-export type Cluster = components['schemas']['Cluster']
+export type App = components['schemas']['App']
+export type AppList = components['schemas']['AppList']
+export type Cluster = Settings['cluster']
 export type Deployment = components['schemas']['Deployment']
-export type Dns = components['schemas']['Settings']['dns']
+export type Dns = Settings['dns']
 export type Job = components['schemas']['Job']
 export type Kubecfg = components['schemas']['Kubecfg']
-export type Policies = components['schemas']['Settings']['policies']
+export type Policies = Settings['policies']
 export type Secret = components['schemas']['Secret'] & { teamId?: string }
 export type Service = components['schemas']['Service']
 export type Session = components['schemas']['Session']
 export type Settings = components['schemas']['Settings']
-export type Setting =
-  | components['schemas']['Settings']['alerts']
-  | components['schemas']['Settings']['azure']
-  | components['schemas']['Settings']['cluster']
-  | components['schemas']['Session']['cluster']
-  | components['schemas']['Settings']['dns']
-  | components['schemas']['Settings']['home']
-  | components['schemas']['Settings']['kms']
-  | components['schemas']['Settings']['oidc']
-  | components['schemas']['Settings']['otomi']
-  | components['schemas']['Settings']['policies']
-  | components['schemas']['Settings']['smtp']
 export type Team = components['schemas']['Team']
 export type TeamSelfService = components['schemas']['Team']['selfService']
 export type User = components['schemas']['User']
@@ -60,6 +50,14 @@ export interface OpenAPIDoc {
   }
   security?: string[]
 }
+
+export interface OtomiSpec {
+  components: components
+  paths: paths
+  operations: operations
+  external: external
+}
+
 export type SchemaType = 'object' | 'array'
 
 export interface PermissionSchema {
@@ -73,7 +71,6 @@ export interface PermissionSchema {
 }
 export interface Schema extends JSONSchema4 {
   'x-acl'?: Acl
-  'x-readOnly'?: Acl
 }
 
 export interface Acl {
@@ -90,10 +87,8 @@ export type AclAction =
   | 'update'
   | 'update-any'
 
-// eslint-disable-next-line no-shadow
 export enum SessionRole {
   Admin = 'admin',
-  // eslint-disable-next-line no-shadow
   User = 'team',
 }
 
@@ -111,12 +106,8 @@ export interface OpenApiRequestExt extends OpenApiRequest, Session {
 }
 
 export interface Core {
-  apps: any
   k8s: any
-  services: any[]
-  teamConfig: {
-    services: any[]
-    teams: Team[]
-  }
-  isMultitenant: boolean
+  adminApps: any[]
+  teamApps: any[]
+  teamConfig: any
 }

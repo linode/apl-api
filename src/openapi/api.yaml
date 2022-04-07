@@ -4,7 +4,7 @@ security:
 info:
   title: The otomi-stack API
   description: Holds the entire schema needed by console to autogenerate forms
-  version: 0.0.0-PLACEHOLDER
+  version: 0.4.95-rc.21
 
 externalDocs:
   description: 'This is the base url of the external documentation'
@@ -14,21 +14,21 @@ x-responses:
   BadRequest: &BadRequest
     description: Bad Request
     content:
-      'application/json':
+      application/json:
         schema:
           $ref: '#/components/schemas/OpenApiValidationError'
 
   OtomiStackError: &OtomiStackError
     description: Resource already exists
     content:
-      'application/json':
+      application/json:
         schema:
           $ref: '#/components/schemas/OtomiStackError'
 
   NotFound: &NotFound
     description: Resource does not exist
     content:
-      'application/json':
+      application/json:
         schema:
           $ref: '#/components/schemas/OtomiStackError'
 
@@ -55,7 +55,7 @@ paths:
         '200':
           description: Successfully obtained all secrets
           content:
-            'application/json':
+            application/json:
               schema:
                 type: array
                 items:
@@ -72,7 +72,7 @@ paths:
         '200':
           description: Successfully obtained all jobs
           content:
-            'application/json':
+            application/json:
               schema:
                 type: array
                 items:
@@ -89,7 +89,7 @@ paths:
         '200':
           description: Successfully obtained all services
           content:
-            'application/json':
+            application/json:
               schema:
                 type: array
                 items:
@@ -106,7 +106,7 @@ paths:
         '200':
           description: Successfully obtained teams collection
           content:
-            'application/json':
+            application/json:
               schema:
                 type: array
                 items:
@@ -127,7 +127,7 @@ paths:
         '200':
           description: Successfully obtained teams collection
           content:
-            'application/json':
+            application/json:
               schema:
                 $ref: '#/components/schemas/Team'
   '/teams/{teamId}':
@@ -142,7 +142,7 @@ paths:
         '200':
           description: Successfully obtained team
           content:
-            'application/json':
+            application/json:
               schema:
                 $ref: '#/components/schemas/Team'
     put:
@@ -161,7 +161,7 @@ paths:
         '200':
           description: Successfully edited team
           content:
-            'application/json':
+            application/json:
               schema:
                 $ref: '#/components/schemas/Team'
     delete:
@@ -184,7 +184,7 @@ paths:
         '200':
           description: Successfully obtained jobs
           content:
-            'application/json':
+            application/json:
               schema:
                 type: array
                 items:
@@ -207,7 +207,7 @@ paths:
         '200':
           description: Successfully stored job configuration
           content:
-            'application/json':
+            application/json:
               schema:
                 $ref: '#/components/schemas/Job'
 
@@ -222,7 +222,7 @@ paths:
         '200':
           description: Successfully obtained services
           content:
-            'application/json':
+            application/json:
               schema:
                 type: array
                 items:
@@ -246,7 +246,7 @@ paths:
         '200':
           description: Successfully stored service configuration
           content:
-            'application/json':
+            application/json:
               schema:
                 $ref: '#/components/schemas/Service'
 
@@ -263,7 +263,7 @@ paths:
         '200':
           description: Successfully obtained job configuration
           content:
-            'application/json':
+            application/json:
               schema:
                 $ref: '#/components/schemas/Job'
     put:
@@ -282,7 +282,7 @@ paths:
         '200':
           description: Successfully edited job
           content:
-            'application/json':
+            application/json:
               schema:
                 $ref: '#/components/schemas/Job'
     delete:
@@ -307,7 +307,7 @@ paths:
         '200':
           description: Successfully obtained service configuration
           content:
-            'application/json':
+            application/json:
               schema:
                 $ref: '#/components/schemas/Service'
     put:
@@ -326,7 +326,7 @@ paths:
         '200':
           description: Successfully edited service
           content:
-            'application/json':
+            application/json:
               schema:
                 $ref: '#/components/schemas/Service'
     delete:
@@ -349,7 +349,7 @@ paths:
         '200':
           description: Successfully obtained secrets
           content:
-            'application/json':
+            application/json:
               schema:
                 type: array
                 items:
@@ -357,7 +357,7 @@ paths:
         '400':
           description: Bad Request
           content:
-            'application/json':
+            application/json:
               schema:
                 $ref: '#/components/schemas/OpenApiValidationError'
     post:
@@ -383,7 +383,7 @@ paths:
         '200':
           description: Successfully stored secret configuration
           content:
-            'application/json':
+            application/json:
               schema:
                 $ref: '#/components/schemas/Secret'
 
@@ -400,7 +400,7 @@ paths:
         '200':
           description: Successfully obtained secret configuration
           content:
-            'application/json':
+            application/json:
               schema:
                 $ref: '#/components/schemas/Secret'
     put:
@@ -419,7 +419,7 @@ paths:
         '200':
           description: Successfully edited a team secret
           content:
-            'application/json':
+            application/json:
               schema:
                 $ref: '#/components/schemas/Secret'
     delete:
@@ -440,7 +440,7 @@ paths:
         '202':
           description: Deployment has been triggered
           content:
-            'application/json':
+            application/json:
               schema:
                 type: object
         '409':
@@ -470,7 +470,7 @@ paths:
         '200':
           description: Get the session for the logged in user
           content:
-            'application/json':
+            application/json:
               schema:
                 $ref: '#/components/schemas/Session'
         default:
@@ -484,7 +484,7 @@ paths:
         '200':
           description: The requested apiDoc.
           content:
-            'application/json':
+            application/json:
               schema:
                 type: object
         default:
@@ -492,67 +492,125 @@ paths:
 
   /settings:
     get:
-      operationId: 'getAllSettings'
+      operationId: getSettings
+      description: Get settings from the 'settings.yaml' or 'secret.settings.yaml' file.
       x-aclSchema: Settings
-      security: []
-      description: Get all settings
-      responses:
-        '200':
-          description: The requested apiDoc.
-          content:
-            'application/json':
-              schema:
-                type: object
-        default:
-          description: The requested settings.
-
-  /settings/{setting}:
-    parameters:
-      - in: path
-        name: setting
-        required: true
-        schema:
-          type: string
-          enum:
-            - alerts
-            - azure
-            - cluster
-            - dns
-            - home
-            - kms
-            - oidc
-            - otomi
-            - policies
-            - smtp
-        example: oidc
-    get:
-      operationId: getSetting
-      description: Get a setting from the 'settings.yaml' or 'secret.settings.yaml' file.
-      x-aclSchema: Settings
+      parameters:
+        - name: ids
+          in: query
+          description: IDs of settings to return
+          schema:
+            type: array
+            items:
+              type: string
+              uniqueItems: true
       responses:
         '200':
           description: The request is successful.
           content:
-            'application/json':
+            application/json:
               schema:
                 $ref: '#/components/schemas/Settings'
 
     # TODO: https://github.com/redkubes/otomi-api/issues/155
     put:
-      operationId: editSetting
-      description: Edit a setting from the 'settings.yaml' or 'secret.settings.yaml' file.
+      operationId: editSettings
+      description: Edit settings from the 'settings.yaml' or 'secret.settings.yaml' file.
       x-aclSchema: Settings
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Settings'
-        description: Given a setting parameter, put new setting for a given rootprop.
+        description: Put new settings.
         required: true
       responses:
         <<: *DefaultGetResponses
         '200':
-          description: Successfully edited this setting.
+          description: Successfully edited settings.
+
+  /apps/{teamId}:
+    parameters:
+      - in: path
+        name: teamId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getApps
+      description: Get list of apps for a team
+      x-aclSchema: App
+      parameters:
+        - name: picks
+          in: query
+          description: Selection of properties to return.
+          schema:
+            type: array
+            items:
+              type: string
+              uniqueItems: true
+      responses:
+        '200':
+          description: The request is successful.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/App'
+    put:
+      operationId: toggleApps
+      description: Turn on/off list of apps for a team
+      x-aclSchema: App
+      requestBody:
+        description: App toggles
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully toggled apps
+  /apps/{teamId}/{appId}:
+    parameters:
+      - in: path
+        name: teamId
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: appId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getApp
+      description: Get app information
+      x-aclSchema: App
+      responses:
+        '200':
+          description: The request is successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/App'
+    put:
+      operationId: editApp
+      description: Edit app values
+      x-aclSchema: App
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/App'
+        description: Edit app values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited app values.
 
 # -------------------------------------------- Servers
 
@@ -608,6 +666,48 @@ components:
   # Please stick to: alphabetical sorting, all Uppercase first and then lowercase.
   # --------------------------------------------
   schemas:
+    App:
+      $ref: app.yaml#/App
+    AppAlertmanager:
+      $ref: apps/alertmanager.yaml#/AppAlertmanager
+    AppCertManager:
+      $ref: apps/cert-manager.yaml#/AppCertManager
+    AppDrone:
+      $ref: apps/drone.yaml#/AppDrone
+    AppExternalDns:
+      $ref: apps/external-dns.yaml#/AppExternalDns
+    AppGatekeeper:
+      $ref: apps/gatekeeper.yaml#/AppGatekeeper
+    AppGitea:
+      $ref: apps/gitea.yaml#/AppGitea
+    AppGrafana:
+      $ref: apps/grafana.yaml#/AppGrafana
+    AppHarbor:
+      $ref: apps/harbor.yaml#/AppHarbor
+    AppHttpbin:
+      $ref: apps/httpbin.yaml#/AppHttpbin
+    AppIngressNginx:
+      $ref: apps/ingress-nginx.yaml#/AppIngressNginx
+    AppIstio:
+      $ref: apps/istio.yaml#/AppIstio
+    AppJaeger:
+      $ref: apps/jaeger.yaml#/AppJaeger
+    AppKeycloak:
+      $ref: apps/keycloak.yaml#/AppKeycloak
+    AppKiali:
+      $ref: apps/kiali.yaml#/AppKiali
+    AppKnative:
+      $ref: apps/knative.yaml#/AppKnative
+    AppKubeapps:
+      $ref: apps/kubeapps.yaml#/AppKubeapps
+    AppLoki:
+      $ref: apps/loki.yaml#/AppLoki
+    AppPrometheus:
+      $ref: apps/prometheus.yaml#/AppPrometheus
+    AppVault:
+      $ref: apps/vault.yaml#/AppVault
+    AppList:
+      $ref: app.yaml#/AppList
     AdditionalCluster:
       $ref: cluster.yaml#/AdditionalCluster
     Cluster:
@@ -652,6 +752,8 @@ components:
       $ref: team.yaml#/TeamSelfService
     User:
       $ref: user.yaml#/User
+    adminPassword:
+      $ref: definitions.yaml#/adminPassword
     alerts:
       $ref: definitions.yaml#/alerts
     annotations:
@@ -660,6 +762,10 @@ components:
       $ref: cluster.yaml#/apiName
     apiServer:
       $ref: cluster.yaml#/apiServer
+    autoscaling:
+      $ref: definitions.yaml#/autoscaling
+    autoscalingEnabled:
+      $ref: definitions.yaml#/autoscalingEnabled
     awsAccessKey:
       $ref: definitions.yaml#/awsAccessKey
     awsSecretKey:
@@ -684,14 +790,14 @@ components:
       $ref: definitions.yaml#/containerSpec
     containerSpecNoSec:
       $ref: definitions.yaml#/containerSpecNoSec
-    cpu:
-      $ref: definitions.yaml#/cpuQuantity
     dns:
       $ref: definitions.yaml#/dns
     domain:
       $ref: definitions.yaml#/domain
     domainSuffix:
       $ref: cluster.yaml#/domainSuffix
+    droneGit:
+      $ref: definitions.yaml#/droneGit
     email:
       $ref: definitions.yaml#/email
     entrypoint:
@@ -706,6 +812,12 @@ components:
       $ref: definitions.yaml#/idName
     image:
       $ref: definitions.yaml#/image
+    imageTag:
+      $ref: definitions.yaml#/imageTag
+    imagePullPolicy:
+      $ref: definitions.yaml#/imagePullPolicy
+    imageSimple:
+      $ref: definitions.yaml#/imageSimple
     jobSpec:
       $ref: definitions.yaml#/jobSpec
     k8sVersion:
@@ -716,8 +828,10 @@ components:
       $ref: definitions.yaml#/ksvcNew
     ksvcPredeployed:
       $ref: definitions.yaml#/ksvcPredeployed
-    memory:
-      $ref: definitions.yaml#/memoryQuantity
+    lokiStorageProvider:
+      $ref: apps/loki.yaml#/lokiStorageProvider
+    lokiValues:
+      $ref: apps/loki.yaml#/lokiValues
     name:
       $ref: cluster.yaml#/name
     offChoice:
@@ -732,25 +846,37 @@ components:
       $ref: policies.yaml#/policies
     provider:
       $ref: cluster.yaml#/provider
+    quantityCpu:
+      $ref: definitions.yaml#/quantityCpu
+    quantityMem:
+      $ref: definitions.yaml#/quantityMem
+    rawValues:
+      $ref: definitions.yaml#/rawValues
     region:
       $ref: cluster.yaml#/region
     resource:
       $ref: definitions.yaml#/resource
+    resources:
+      $ref: definitions.yaml#/resources
     runAsGroup:
       $ref: definitions.yaml#/runAsGroup
     runAsNonRoot:
       $ref: definitions.yaml#/runAsNonRoot
     runAsUser:
       $ref: definitions.yaml#/runAsUser
-    resources:
-      $ref: definitions.yaml#/resources
+    scaling:
+      $ref: definitions.yaml#/scaling
     script:
       $ref: definitions.yaml#/script
     secrets:
       $ref: definitions.yaml#/secrets
+    shortcut:
+      $ref: definitions.yaml#/shortcut
     svcPredeployed:
       $ref: definitions.yaml#/svcPredeployed
     url:
       $ref: definitions.yaml#/url
     vpcID:
       $ref: cluster.yaml#/vpcID
+    wordCharacterPattern:
+      $ref: definitions.yaml#/wordCharacterPattern
