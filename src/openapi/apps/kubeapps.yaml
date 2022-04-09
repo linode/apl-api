@@ -41,6 +41,7 @@ AppKubeapps:
               type:
                 type: string
                 enum: ['helm', 'oci']
+                default: helm
               url:
                 type: string
               description:

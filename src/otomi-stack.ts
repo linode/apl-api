@@ -439,6 +439,11 @@ export default class OtomiStack {
 
   // eslint-disable-next-line class-methods-use-this
   async getKubecfg(teamId: string): Promise<k8s.KubeConfig> {
+    this.getTeam(teamId) // will throw if not existing
+    const {
+      cluster: { name, apiName = `otomi-${name}`, apiServer },
+    } = this.getSettings(['cluster']) as any
+    if (!apiServer) throw new ValidationError('Missing configuration value: cluster.apiServer')
     const client = this.getApiClient()
     const namespace = `team-${teamId}`
     const saRes = await client.readNamespacedServiceAccount('default', namespace)
@@ -448,10 +453,6 @@ export default class OtomiStack {
     const secretRes = await client.readNamespacedSecret(secretName || '', namespace)
     const { body: secret }: { body: k8s.V1Secret } = secretRes
     const token = Buffer.from(secret.data?.token || '', 'base64').toString('ascii')
-    const {
-      cluster: { name, apiName = `otomi-${name}`, apiServer },
-    } = this.getSettings(['cluster']) as any
-    if (!apiServer) throw new ValidationError('Missing configuration value: cluster.apiServer')
     const cluster = {
       name: apiName,
       server: apiServer,

@@ -1,9 +1,9 @@
+import { KubeConfig } from '@kubernetes/client-node'
+import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
 import yaml from 'js-yaml'
-import { KubeConfig } from '@kubernetes/client-node'
-import OtomiStack from '../../otomi-stack'
 import { OpenApiRequest } from '../../otomi-models'
-import Debug from 'debug'
+import OtomiStack from '../../otomi-stack'
 
 const debug = Debug('otomi:api:kubecfg')
 

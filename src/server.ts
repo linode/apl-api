@@ -2,6 +2,7 @@
 import { json } from 'body-parser'
 import cors from 'cors'
 import express from 'express'
+import 'express-async-errors'
 import { initialize } from 'express-openapi'
 import logger from 'morgan'
 import { SecurityHandlers } from 'openapi-security-handler'
