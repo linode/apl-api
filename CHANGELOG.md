@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.2](https://github.com/redkubes/otomi-api/compare/v0.5.1...v0.5.2) (2022-04-09)
+
+
+### Bug Fixes
+
+* async errors no more blocking express ([a354069](https://github.com/redkubes/otomi-api/commit/a3540695308ee4d32b8b75e4879fbc09ff63d435))
+
 ### [0.5.1](https://github.com/redkubes/otomi-api/compare/v0.4.95...v0.5.1) (2022-04-07)
 
 
