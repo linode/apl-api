@@ -248,12 +248,11 @@ export default class OtomiStack {
         delete values.enabled
       }
       const teamId = 'admin'
-      this.db.createItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId }, appId)
+      this.db.updateItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId }, appId)
     })
     // now also load the shortcuts that teams created and were stored in apps.* files
     this.getTeams()
       .map((t) => t.id)
-      .concat(['admin'])
       .forEach((teamId) => {
         const teamAppsFile = `env/teams/apps.${teamId}.yaml`
         if (!this.repo.fileExists(teamAppsFile)) return
@@ -300,13 +299,13 @@ export default class OtomiStack {
       data.password = generatePassword(16, false)
     }
     const team = this.db.createItem('teams', data, { id }, id) as Team
-    // assign app to team
     const apps = this.getAppSchema('List').enum
     const core = this.getCore()
     apps.forEach((appId) => {
       const isShared = !!core.adminApps.find((a) => a.name === appId).isShared
       const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
-      if (isShared || inTeamApps) this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
+      if (id === 'admin' || isShared || inTeamApps)
+        this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
     })
     return team
   }
@@ -335,7 +334,7 @@ export default class OtomiStack {
   }
 
   getAllServices(): Array<Service> {
-    return this.db.getCollection('services', (s) => s.teamId !== 'admin') as Array<Service>
+    return this.db.getCollection('services') as Array<Service>
   }
 
   createService(teamId: string, data: Service): Service {
@@ -590,12 +589,14 @@ export default class OtomiStack {
   loadTeams(): void {
     const mergedData: Core = this.loadConfig('env/teams.yaml', `env/secrets.teams.yaml`)
 
-    Object.values(mergedData?.teamConfig || {}).forEach((team: Team) => {
-      this.loadTeam(team)
-      this.loadTeamJobs(team.id!)
-      this.loadTeamServices(team.id!)
-      this.loadTeamSecrets(team.id!)
-    })
+    Object.values(mergedData?.teamConfig || {})
+      .concat([{ id: 'admin' }])
+      .forEach((team: Team) => {
+        this.loadTeam(team)
+        this.loadTeamJobs(team.id!)
+        this.loadTeamServices(team.id!)
+        this.loadTeamSecrets(team.id!)
+      })
   }
 
   loadTeamServices(teamId: string): void {
@@ -662,7 +663,7 @@ export default class OtomiStack {
     const filePath = './env/teams.yaml'
     const secretFilePath = `./env/secrets.teams.yaml`
     const teamValues = {}
-    const teams = this.getTeams()
+    const teams = this.getTeams().concat([{ id: 'admin', name: 'admin' }])
     teams.forEach((inTeam) => {
       const team: any = omit(inTeam, 'name')
       const teamId = team.id!
@@ -670,6 +671,7 @@ export default class OtomiStack {
       this.saveTeamJobs(teamId)
       this.saveTeamServices(teamId)
       this.saveTeamSecrets(teamId)
+      if (teamId === 'admin') return // no need to save to teams file
       team.resourceQuota = arrayToObject(team.resourceQuota ?? [])
       teamValues[teamId] = team
     })

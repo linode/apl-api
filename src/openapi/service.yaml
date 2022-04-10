@@ -20,9 +20,14 @@ Service:
       readOnly: true
     name:
       $ref: definitions.yaml#/idName
-      title: Name
       description: A service name.
       example: some-service
+    namespace:
+      $ref: definitions.yaml#/idName
+      description: "A kubernetes namespace. Tip: give each app it's own"
+      x-acl:
+        admin: [read-any, create-any, update-any, delete-any]
+        team: []
     port:
       description: A service port. Defaults to 80.
       type: integer
