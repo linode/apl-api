@@ -26,13 +26,14 @@ owner:
   type: string
 provider:
   title: Provider
-  description: Enter the cloud provider of this cluster.
+  description: Enter the cloud provider of this cluster. Choose 'local' for laptop install (minikube, kind), and 'custom' for onprem clusters.
   type: string
   enum:
     - aws
     - azure
     - google
-    - onprem
+    - custom
+    - local
 region:
   title: Region
   description: Enter the region of the cluster for its cloud provider.
