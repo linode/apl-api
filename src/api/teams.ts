@@ -8,7 +8,8 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
   const get: Operation = [
     (req, res): void => {
       debug('getTeams')
-      const data = otomi.getTeams()
+      // we filter admin team here as it is not for console
+      const data = (otomi.getTeams() || []).filter((t) => t.id !== 'admin')
       res.json(data)
     },
   ]
