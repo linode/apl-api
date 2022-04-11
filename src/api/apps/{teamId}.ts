@@ -6,12 +6,12 @@ import OtomiStack from '../../otomi-stack'
 const debug = Debug('otomi:api:apps')
 
 export default function (otomi: OtomiStack): OperationHandlerArray {
-  const GET: Operation = [
+  const get: Operation = [
     ({ params: { teamId } }: OpenApiRequest, res): void => {
       res.json(otomi.getApps(teamId))
     },
   ]
-  const PUT: Operation = [
+  const put: Operation = [
     ({ body, params: { teamId } }, res): void => {
       debug('toggleApps')
       otomi.toggleApps(teamId, body)
@@ -19,8 +19,8 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
     },
   ]
   const api = {
-    GET,
-    PUT,
+    get,
+    put,
   }
   return api
 }

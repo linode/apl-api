@@ -5,14 +5,14 @@ import OtomiStack from '../otomi-stack'
 const debug = Debug('otomi:api:teams')
 
 export default function (otomi: OtomiStack): OperationHandlerArray {
-  const GET: Operation = [
+  const get: Operation = [
     (req, res): void => {
       debug('getTeams')
       const data = otomi.getTeams()
       res.json(data)
     },
   ]
-  const POST: Operation = [
+  const post: Operation = [
     ({ body }, res): void => {
       debug('createTeam')
       const data = otomi.createTeam(body)
@@ -20,8 +20,8 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
     },
   ]
   const api = {
-    GET,
-    POST,
+    get,
+    post,
   }
   return api
 }

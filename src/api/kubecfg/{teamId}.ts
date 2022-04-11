@@ -10,7 +10,7 @@ const debug = Debug('otomi:api:kubecfg')
 export const parameters = []
 
 export default function (otomi: OtomiStack): OperationHandlerArray {
-  const GET: Operation = [
+  const get: Operation = [
     async ({ params: { teamId } }: OpenApiRequest, res): Promise<void> => {
       debug(`getKubecfg(${teamId})`)
       // trigger creation of file
@@ -23,7 +23,7 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
     },
   ]
   const api = {
-    GET,
+    get,
   }
   return api
 }

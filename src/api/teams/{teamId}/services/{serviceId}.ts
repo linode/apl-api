@@ -6,21 +6,21 @@ import OtomiStack from '../../../../otomi-stack'
 const debug = Debug('otomi:api:teams:services')
 
 export default function (otomi: OtomiStack): OperationHandlerArray {
-  const DELETE: Operation = [
+  const del: Operation = [
     ({ params: { serviceId } }: OpenApiRequest, res): void => {
       debug(`deleteService(${serviceId})`)
       otomi.deleteService(decodeURIComponent(serviceId))
       res.json({})
     },
   ]
-  const GET: Operation = [
+  const get: Operation = [
     ({ params: { serviceId } }: OpenApiRequest, res): void => {
       debug(`getService(${serviceId})`)
       const data = otomi.getService(decodeURIComponent(serviceId))
       res.json(data)
     },
   ]
-  const PUT: Operation = [
+  const put: Operation = [
     ({ params: { teamId, serviceId }, body }: OpenApiRequest, res): void => {
       debug(`editService(${serviceId})`)
       const data = otomi.editService(decodeURIComponent(serviceId), { ...body, teamId: decodeURIComponent(teamId) })
@@ -28,9 +28,9 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
     },
   ]
   const api = {
-    DELETE,
-    GET,
-    PUT,
+    delete: del,
+    get,
+    put,
   }
   return api
 }

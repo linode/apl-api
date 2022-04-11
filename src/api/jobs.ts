@@ -5,7 +5,7 @@ import OtomiStack from '../otomi-stack'
 const debug = Debug('otomi:api:jobs')
 
 export default function (otomi: OtomiStack): OperationHandlerArray {
-  const GET: Operation = [
+  const get: Operation = [
     /* business middleware not expressible by OpenAPI documentation goes here */
     (req, res): void => {
       debug('getAllJobs')
@@ -14,7 +14,7 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
     },
   ]
   const api = {
-    GET,
+    get,
   }
   return api
 }

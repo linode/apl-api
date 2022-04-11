@@ -6,14 +6,14 @@ import OtomiStack from '../../../otomi-stack'
 const debug = Debug('otomi:api:teams:secrets')
 
 export default function (otomi: OtomiStack): OperationHandlerArray {
-  const GET: Operation = [
+  const get: Operation = [
     ({ params: { teamId } }: OpenApiRequest, res): void => {
       debug(`getSecrets(${teamId})`)
       const v = otomi.getSecrets(teamId)
       res.json(v)
     },
   ]
-  const POST: Operation = [
+  const post: Operation = [
     ({ params: { teamId }, body }: OpenApiRequest, res): void => {
       debug(`createSecret(${teamId}, ...)`)
       const v = otomi.createSecret(teamId, body)
@@ -21,8 +21,8 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
     },
   ]
   const api = {
-    GET,
-    POST,
+    get,
+    post,
   }
   return api
 }
