@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.3](https://github.com/redkubes/otomi-api/compare/v0.5.2...v0.5.3) (2022-04-11)
+
+
+### Features
+
+* admin services ([425a836](https://github.com/redkubes/otomi-api/commit/425a8366fe9942bb00d269a067d667cc183f8c2b))
+
+
+### Bug Fixes
+
+* admin team also saved ([4c73108](https://github.com/redkubes/otomi-api/commit/4c73108b950fae5c2ae0f48b1bbede82cf6d02fc))
+* admin team not in get list ([2bb032b](https://github.com/redkubes/otomi-api/commit/2bb032bf6014648f777fc1f11cba06d3f98c8f89))
+* no admin team in teams list ([e1f8eec](https://github.com/redkubes/otomi-api/commit/e1f8eecded2a9afa852aa45f0798a211ab5db8b3))
+* onprem now custom [ci skip] ([fec251f](https://github.com/redkubes/otomi-api/commit/fec251f70f3424809e91203cfca7f1e48c3290cb))
+* tests ([68f0a4f](https://github.com/redkubes/otomi-api/commit/68f0a4fd7d32db5ab08e0ea635e9e698a5737520))
+
 ### [0.5.2](https://github.com/redkubes/otomi-api/compare/v0.5.1...v0.5.2) (2022-04-09)
 
 
