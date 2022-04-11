@@ -588,15 +588,14 @@ export default class OtomiStack {
 
   loadTeams(): void {
     const mergedData: Core = this.loadConfig('env/teams.yaml', `env/secrets.teams.yaml`)
-
-    Object.values(mergedData?.teamConfig || {})
-      .concat([{ id: 'admin' }])
-      .forEach((team: Team) => {
-        this.loadTeam(team)
-        this.loadTeamJobs(team.id!)
-        this.loadTeamServices(team.id!)
-        this.loadTeamSecrets(team.id!)
-      })
+    const tc = mergedData?.teamConfig || {}
+    if (!tc.admin) tc.admin = { id: 'admin' }
+    Object.values(tc).forEach((team: Team) => {
+      this.loadTeam(team)
+      this.loadTeamJobs(team.id!)
+      this.loadTeamServices(team.id!)
+      this.loadTeamSecrets(team.id!)
+    })
   }
 
   loadTeamServices(teamId: string): void {

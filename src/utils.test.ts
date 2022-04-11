@@ -9,7 +9,7 @@ describe('Utils', () => {
     apiServer: 'apiServer.onprem.example.com',
     k8sVersion: '1.19',
     name: 'dev',
-    provider: 'onprem',
+    provider: 'custom',
     region: 'eu-central-1',
   }
   const dns = {
