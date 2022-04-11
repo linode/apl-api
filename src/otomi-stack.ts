@@ -662,7 +662,7 @@ export default class OtomiStack {
     const filePath = './env/teams.yaml'
     const secretFilePath = `./env/secrets.teams.yaml`
     const teamValues = {}
-    const teams = this.getTeams().concat([{ id: 'admin', name: 'admin' }])
+    const teams = this.getTeams()
     teams.forEach((inTeam) => {
       const team: any = omit(inTeam, 'name')
       const teamId = team.id!
@@ -670,7 +670,6 @@ export default class OtomiStack {
       this.saveTeamJobs(teamId)
       this.saveTeamServices(teamId)
       this.saveTeamSecrets(teamId)
-      if (teamId === 'admin') return // no need to save to teams file
       team.resourceQuota = arrayToObject(team.resourceQuota ?? [])
       teamValues[teamId] = team
     })
