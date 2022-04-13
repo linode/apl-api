@@ -5,14 +5,14 @@ import { OpenApiRequest } from '../otomi-models'
 const debug = Debug('otomi:api')
 
 export default function (): OperationHandlerArray {
-  const GET: Operation = [
+  const get: Operation = [
     ({ apiDoc }: OpenApiRequest, res): void => {
       debug('apiDocs')
       res.json(apiDoc)
     },
   ]
   const api = {
-    GET,
+    get,
   }
   return api
 }

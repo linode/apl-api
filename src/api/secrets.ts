@@ -1,11 +1,11 @@
+import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
 import OtomiStack from '../otomi-stack'
-import Debug from 'debug'
 
 const debug = Debug('otomi:api:secrets')
 
 export default function (otomi: OtomiStack): OperationHandlerArray {
-  const GET: Operation = [
+  const get: Operation = [
     (req, res): void => {
       debug('getAllSecrets')
       const v = otomi.getAllSecrets()
@@ -13,7 +13,7 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
     },
   ]
   const api = {
-    GET,
+    get,
   }
   return api
 }

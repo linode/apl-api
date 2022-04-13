@@ -6,7 +6,7 @@ import OtomiStack from '../otomi-stack'
 const debug = Debug('otomi:api:deploy')
 
 export default function (otomi: OtomiStack): OperationHandlerArray {
-  const GET: Operation = [
+  const get: Operation = [
     async (req: OpenApiRequestExt, res): Promise<void> => {
       debug(`triggerDeployment`)
       const { email } = req.user
@@ -24,7 +24,7 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
     },
   ]
   const api = {
-    GET,
+    get,
   }
   return api
 }

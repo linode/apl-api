@@ -6,13 +6,13 @@ import OtomiStack from '../otomi-stack'
 const debug = Debug('otomi:api:settings')
 
 export default function (otomi: OtomiStack): OperationHandlerArray {
-  const GET: Operation = [
+  const get: Operation = [
     ({ query: { ids } }: OpenApiRequest, res): void => {
       debug(`getSettings(${ids})`)
       res.json(otomi.getSettings(ids as string[] | undefined))
     },
   ]
-  const PUT: Operation = [
+  const put: Operation = [
     ({ body }: OpenApiRequest, res): void => {
       const ids = Object.keys(body)
       debug(`editSettings(${ids.join(',')})`)
@@ -20,8 +20,8 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
     },
   ]
   const api = {
-    GET,
-    PUT,
+    get,
+    put,
   }
   return api
 }
