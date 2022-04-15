@@ -116,8 +116,8 @@ export class Repo {
   readFile(relativePath): any {
     const absolutePath = path.join(this.path, relativePath)
     debug(`Reading from file: ${absolutePath}`)
-    const doc = yaml.safeLoad(readFileSync(absolutePath, 'utf8'))
-    return doc as any
+    const doc = yaml.load(readFileSync(absolutePath, 'utf8'))
+    return doc
   }
 
   async commit(author: string): Promise<CommitResult> {

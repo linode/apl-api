@@ -121,7 +121,7 @@ export default class OtomiStack {
   constructor() {
     this.db = new Db(env.DB_PATH)
     const corePath = env.isProd ? '/etc/otomi/core.yaml' : './test/core.yaml'
-    this.coreValues = yaml.safeLoad(readFileSync(corePath, 'utf8')) as any
+    this.coreValues = yaml.load(readFileSync(corePath, 'utf8')) as Core
   }
 
   async init(): Promise<void> {
