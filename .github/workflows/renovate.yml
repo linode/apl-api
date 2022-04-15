@@ -22,3 +22,4 @@ jobs:
         with:
           configurationFile: .github/renovate.json
           token: ${{ secrets.NPM_TOKEN }}
+          autodiscover: true
