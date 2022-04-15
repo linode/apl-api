@@ -1,10 +1,3 @@
 {
-  "extends": ["config:base"],
-  "packageRules": [
-    {
-      "automerge": true,
-      "automergeType": "branch",
-      "matchUpdateTypes": ["patch", "pin"]
-    }
-  ]
+  "extends": ["github>redkubes/renovate"]
 }
