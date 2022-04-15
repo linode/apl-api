@@ -16,7 +16,7 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
       // trigger creation of file
       const config: KubeConfig = await otomi.getKubecfg(teamId)
       const exportedConfig = config.exportConfig()
-      const yamlConfig = yaml.safeDump(JSON.parse(exportedConfig))
+      const yamlConfig = yaml.dump(JSON.parse(exportedConfig))
       res.setHeader('Content-type', 'application/yaml')
       res.setHeader('Content-Disposition', `attachment; filename=kubecfg-team-${teamId}.yaml`)
       res.send(yamlConfig)

@@ -102,7 +102,7 @@ export class Repo {
       if (absolutePath.includes('/secrets.')) return
     }
     debug(`Writing to file: ${absolutePath}`)
-    const content = isEmpty(cleanedData) ? '' : yaml.safeDump(cleanedData, { indent: 4 })
+    const content = isEmpty(cleanedData) ? '' : yaml.dump(cleanedData, { indent: 4 })
     const dir = dirname(absolutePath)
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
     writeFileSync(absolutePath, content, 'utf8')
