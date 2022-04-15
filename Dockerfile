@@ -32,7 +32,7 @@ FROM dev as clean
 # below command removes the packages specified in devDependencies and set NODE_ENV to production
 RUN npm prune --production
 # --------------- Production stage
-FROM node:14.17-alpine AS prod
+FROM node:14.19-alpine AS prod
 
 # Install dependencies
 RUN apk --no-cache add python git jq
