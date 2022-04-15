@@ -6,8 +6,6 @@ services:
     build:
       context: .
       target: dev
-      args:
-        - NPM_TOKEN
     image: eu.gcr.io/otomi-cloud/otomi-api:${API_TAG:-dev}
     user: ${USER_ID}:${GROUP_ID}
     command: sh -c 'rm -rf /tmp/otomi-values && npm run dev:docker'

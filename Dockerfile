@@ -1,7 +1,5 @@
 # --------------- Dev stage for developers to override sources
 FROM node:14-slim as dev
-ARG NPM_TOKEN
-RUN test -n "$NPM_TOKEN"
 
 ENV NODE_ENV=development
 ENV BLUEBIRD_DEBUG=0
@@ -11,8 +9,6 @@ RUN mkdir /app
 WORKDIR /app
 
 COPY package*.json ./
-COPY .npmrc ./
-RUN echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" >> .npmrc
 
 RUN npm ci
 
