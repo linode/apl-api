@@ -35,7 +35,7 @@ RUN npm prune --production
 FROM node:14.19-alpine AS prod
 
 # Install dependencies
-RUN apk --no-cache add python git jq
+RUN apk --no-cache add python3 git jq
 
 # Install app
 RUN mkdir /app
