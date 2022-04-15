@@ -2,8 +2,6 @@
   "extends": ["config:base"],
   "packageRules": [
     {
-      "autodiscover": true,
-      "autodiscoverFilter": "otomi-api/*",
       "automerge": true,
       "automergeType": "branch",
       "matchUpdateTypes": ["patch", "pin"]
