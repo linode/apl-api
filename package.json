@@ -46,7 +46,7 @@
     "@commitlint/cli": "11.0.0",
     "@commitlint/config-conventional": "11.0.0",
     "@hkdobrev/run-if-changed": "0.3.1",
-    "@redocly/openapi-cli": "1.0.0-beta.81",
+    "@redocly/openapi-cli": "1.0.0-beta.94",
     "@types/chai": "4.3.0",
     "@types/chai-as-promised": "7.1.5",
     "@types/express": "4.17.13",
