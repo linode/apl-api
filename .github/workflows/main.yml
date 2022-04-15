@@ -33,7 +33,7 @@ jobs:
           echo "Creating tag: $tag"
           echo "TAG=$tag" >> $GITHUB_ENV
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           token: ${{ env.GIT_PASSWORD }}
       - name: CI tests, image build and push tag for main or branch
