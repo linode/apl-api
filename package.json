@@ -125,10 +125,9 @@
     "src/openapi/**/*": "npm run build:models"
   },
   "scripts": {
-    "build": "tsc && copyup --error src/generated-schema.json src/values-schema.yaml dist/",
+    "build": "npm run build:models && tsc && copyup --error src/generated-schema.json src/values-schema.yaml dist/",
     "build:models": "npm run build:spec && openapi-typescript src/generated-schema.json -o src/generated-schema.ts",
     "build:spec": "ts-node-dev src/build-spec.ts",
-    "build:client": "npm run build:models && bin/generate-client.sh",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
     "dev": "run-p watch dev:node",
@@ -153,7 +152,7 @@
       "tag": true
     }
   },
-  "version": "0.5.3",
+  "version": "0.5.2",
   "watch": {
     "build:models": {
       "patterns": [

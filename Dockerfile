@@ -23,11 +23,9 @@ COPY . .eslintrc.yml ./
 ARG CI=true
 ENV NODE_ENV=test
 
-RUN npm run build:models && \
+RUN npm run build && \
   npm run lint && \
   npm run test
-
-RUN npm run build  
 
 # --------------- Cleanup
 FROM dev as clean
