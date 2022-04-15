@@ -9,7 +9,7 @@ Every api deployment will result in a commit to the values repo with the author'
 ### 1.1 Prerequisites
 
 - npm@~10.0 installed
-- a valid values repo: follow these [instructions in otomi-core](https://github.com/redkubes/otomi-core/blob/master/docs/setup.md#a-valid-values-repo)
+- a valid values repo: follow these [instructions in otomi-core](https://github.com/redkubes/otomi-core/blob/main/docs/setup.md#a-valid-values-repo)
 
 ### 1.2 Setting up environment
 

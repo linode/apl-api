@@ -3,7 +3,7 @@ version: '3.4'
 services:
   tools:
     container_name: tools
-    image: otomi/core:${TOOLS_TAG:-master}
+    image: otomi/core:${TOOLS_TAG:-main}
     user: ${USER_ID}
     command: binzx/otomi server
     expose:
