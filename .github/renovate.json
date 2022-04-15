@@ -1,3 +1,4 @@
 {
-  "extends": ["github>redkubes/renovate-config"]
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["github>redkubes/renovate-config#master"]
 }
