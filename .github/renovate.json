@@ -1,4 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>redkubes/renovate-config"]
+  "extends": ["github>redkubes/renovate-config"],
+  "packageRules": [
+    {
+      "matchPackagePatterns": ["*"],
+      "groupName": "all-deps"
+    }
+  ]
 }

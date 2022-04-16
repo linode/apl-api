@@ -1,3 +1,0 @@
-@redkubes/fullstack
-package-*.json app/renovate-approve
-.github/actions/* app/renovate-approve
