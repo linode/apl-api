@@ -1,5 +1,5 @@
 # --------------- Dev stage for developers to override sources
-FROM node:14-slim as dev
+FROM node:17-slim as dev
 
 ENV NODE_ENV=development
 ENV BLUEBIRD_DEBUG=0
@@ -28,7 +28,7 @@ FROM dev as clean
 # below command removes the packages specified in devDependencies and set NODE_ENV to production
 RUN npm prune --production
 # --------------- Production stage
-FROM node:14.19-alpine AS prod
+FROM node:17.9-alpine AS prod
 
 # Install dependencies
 RUN apk --no-cache add python3 git jq
