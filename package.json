@@ -120,7 +120,7 @@
     "url": "git+https://github.com/redkubes/otomi-api.git"
   },
   "run-if-changed": {
-    "package-lock.json": "npm ci --prefer-offline --no-audit",
+    "package-lock.json": "npm install --prefer-offline --no-audit",
     "src/openapi/**/*": "npm run build:models"
   },
   "scripts": {
@@ -131,8 +131,8 @@
     "cz:retry": "git-cz --retry",
     "dev": "run-p watch dev:node",
     "dev:node": "ts-node-dev --watch 'test/core.yaml,src/generated-schema.ts' --inspect=4321 --respawn --transpile-only -r dotenv/config src/app.ts",
-    "lint": "run-p types lint:es",
-    "lint:es": "eslint --ext ts .",
+    "lint": "run-p types lint:ts",
+    "lint:ts": "eslint --ext ts .",
     "lint:fix": "eslint --ext ts --fix .",
     "lint-staged": "lint-staged",
     "postinstall": "npm run build:models",
