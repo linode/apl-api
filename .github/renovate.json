@@ -4,7 +4,7 @@
   "packageRules": [
     {
       "matchPackagePatterns": ["*"],
-      "groupName": "all-deps"
+      "groupName": "all"
     }
   ]
 }
