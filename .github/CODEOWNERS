@@ -1,2 +1,2 @@
 @redkubes/fullstack
-package-*.json @redkubesbot
+package-*.json @redkubesbot app/renovate-approve
