@@ -1039,19 +1039,25 @@ definitions:
     description: Grant team permissions to modify certain configuration parameters.
     type: object
     properties:
-      Service:
+      service:
         title: Service
         type: array
         items:
           type: string
           enum: [ingress, networkPolicy]
         uniqueItems: true
-      Team:
+      team:
         title: Team
         type: array
         items:
           type: string
           enum: [alerts, oidc, resourceQuota, downloadKubeConfig, networkPolicy]
+        uniqueItems: true
+      app:
+        type: array
+        items:
+          type: string
+          enum: [argocd]
         uniqueItems: true
   url:
     pattern: '^(https:\/\/)([\w\-])+\.{1}([a-zA-Z]{2,63})([\/\w-]*)*\/?\??([^#\n\r]*)?#?([^\n\r]*)$'

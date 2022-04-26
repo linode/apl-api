@@ -828,8 +828,8 @@ export default {
     {
       id: 'dev',
       selfService: {
-        Service: ['ingress'],
-        Team: ['resourceQuota'],
+        service: ['ingress'],
+        team: ['resourceQuota'],
       },
       password: 'linux1234',
       name: 'dev',
@@ -847,7 +847,7 @@ export default {
         },
       ],
       selfService: {
-        Team: ['resourceQuota'],
+        team: ['resourceQuota'],
       },
       alerts: {
         email: {

@@ -670,6 +670,8 @@ components:
       $ref: app.yaml#/App
     AppAlertmanager:
       $ref: apps/alertmanager.yaml#/AppAlertmanager
+    AppArgocd:
+      $ref: apps/argocd.yaml#/AppArgocd
     AppCertManager:
       $ref: apps/cert-manager.yaml#/AppCertManager
     AppDrone:

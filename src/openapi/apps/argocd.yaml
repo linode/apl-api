@@ -1,0 +1,136 @@
+AppArgocd:
+  additionalProperties: false
+  x-externalDocsPath: https://argo-cd.readthedocs.io/en/stable/
+  x-short: Declarative GitOps CD for Kubernetes
+  description: Argo CD is a declarative, GitOps continuous delivery tool for Kubernetes.
+  x-info: |
+    Argo CD is configured by Otomi to use the SSO provided by keycloak, and maps otomi groups to ArgoCD roles:
+    - Group otomi-admin is made super admin within ArgoCD
+    - Group team-admin has access to, and is admin of all team projects
+    - Team members are only allowed access to, and administer their own projects
+
+    When Gitea is enabled (default) teams will each be given a git repo named "team-$teamId", for which ArgoCD is configured access.
+    All that is left to do is for a team-admin (or team member with self-service rights) to fill their repo with intended state, commit, and automation takes care of the rest.
+    An example "Hello team $teamID!" is created in the repo
+  title: ArgoCD
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      type: boolean
+      x-default: false
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      additionalProperties: false
+      type: object
+      properties:
+        autoscaling:
+          $ref: ../definitions.yaml#/autoscalingEnabled
+        resources:
+          type: object
+          additionalProperties: false
+          properties:
+            controller:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 200m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 40m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 32Mi
+              required:
+                - limits
+                - requests
+            server:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 200m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 40m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 32Mi
+              required:
+                - limits
+                - requests
+            repo:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 200m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 40m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 32Mi
+              required:
+                - limits
+                - requests
+            redis:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 200m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      x-default: 40m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      x-default: 32Mi
+              required:
+                - limits
+                - requests

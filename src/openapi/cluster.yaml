@@ -31,9 +31,9 @@ provider:
   enum:
     - aws
     - azure
+    - digitalocean
     - google
     - custom
-    - local
 region:
   title: Region
   description: Enter the region of the cluster for its cloud provider.
