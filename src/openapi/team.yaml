@@ -22,7 +22,7 @@ TeamSelfService:
       type: array
       items:
         type: string
-        enum: [argocd]
+        enum: [argocd, gitea]
       default: []
       uniqueItems: true
 Team:
