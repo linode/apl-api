@@ -73,7 +73,7 @@ describe('API authz tests', () => {
       .send({
         name: 'team1',
         selfService: {
-          app: [],
+          apps: [],
           team: [],
           service: [],
         },

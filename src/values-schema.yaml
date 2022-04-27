@@ -1053,7 +1053,7 @@ definitions:
           type: string
           enum: [alerts, oidc, resourceQuota, downloadKubeConfig, networkPolicy]
         uniqueItems: true
-      app:
+      apps:
         type: array
         items:
           type: string

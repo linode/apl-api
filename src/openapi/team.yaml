@@ -18,7 +18,7 @@ TeamSelfService:
         enum: [alerts, oidc, resourceQuota, downloadKubeConfig, networkPolicy]
       default: [alerts]
       uniqueItems: true
-    app:
+    apps:
       type: array
       items:
         type: string
