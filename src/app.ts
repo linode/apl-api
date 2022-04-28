@@ -8,11 +8,11 @@ const debug = Debug('otomi:app')
 debug('NODE_ENV: ', process.env.NODE_ENV)
 
 const otomiStack = new OtomiStack()
-otomiStack.init()
 
 async function initServer() {
   const lightship = createLightship()
   const app = await initApp(otomiStack)
+  otomiStack.init()
   const { PORT = 8080 } = process.env
   const server = app
     .listen(PORT, () => {
