@@ -271,6 +271,10 @@ azureTenantId:
   title: Azure tenant id
   description: An Azure tenant id. Defaults to one found in metadata.
   type: string
+clusterName:
+  $ref: '#/idName'
+  description: Short name that will be used in construction of cluster domain and messaging.
+  type: string
 containerSpecNoSec:
   properties:
     image:
@@ -327,8 +331,15 @@ dns:
         - title: AWS
           properties:
             aws:
+              description: Uses explicit credentials when either a role or a pair of id+key is provided. Assumes node role present otherwise.
               x-hideTitle: true
               properties:
+                accessKeyID:
+                  $ref: '#/awsAccessKey'
+                secretAccessKey:
+                  $ref: '#/awsSecretKey'
+                role:
+                  $ref: '#/awsRole'
                 region:
                   $ref: '#/awsRegion'
               required:
@@ -400,11 +411,17 @@ dns:
           required:
             - google
           type: object
-
+    entrypoint:
+      $ref: '#/ipV4Address'
+      description: Optional. A public IP address that will override (loadbalancer) ip used for registering hosts. This allows for access to private clusters.
 domain:
   pattern: ^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))|([a-f0-9:]+:+)+[a-f0-9]+$
   x-message: a valid fully qualified domain name (FQDN)
   type: string
+domainSuffix:
+  $ref: '#/domain'
+  title: Domain suffix
+  description: Domain suffix for the cluster. Also added to list of dns zones in the Otomi Console.
 droneGit:
   properties:
     clientID:
@@ -510,6 +527,9 @@ imageSimple:
     - tag
   type: object
   title: Container image
+ipV4Address:
+  type: string
+  pattern: ^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$
 jobSpec:
   properties:
     name:
@@ -560,11 +580,14 @@ jobSpec:
     - type
   type: object
 k8sVersion:
-  description: The cluster k8s version. Otomi supports 2 minor versions backwards from the suggested default.
+  title: Kubernetes version
+  description: The cluster k8s version. Must match one of the list.
   enum:
     - '1.19'
     - '1.20'
     - '1.21'
+    - '1.22'
+    - '1.23'
   type: string
 kms:
   additionalProperties: false
@@ -853,6 +876,16 @@ portNumber:
   maximum: 32768
   minimum: 80
   type: integer
+provider:
+  title: Provider
+  description: Enter the cloud provider of this cluster. Choose 'local' for laptop install (minikube, kind), and 'custom' for onprem clusters.
+  type: string
+  enum:
+    - aws
+    - azure
+    - digitalocean
+    - google
+    - custom
 quantityCpu:
   title: CPU quantity
   description: Amount of cores, or slice of cpu in millis.

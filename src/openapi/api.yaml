@@ -760,10 +760,6 @@ components:
       $ref: definitions.yaml#/alerts
     annotations:
       $ref: definitions.yaml#/annotations
-    apiName:
-      $ref: cluster.yaml#/apiName
-    apiServer:
-      $ref: cluster.yaml#/apiServer
     autoscaling:
       $ref: definitions.yaml#/autoscaling
     autoscalingEnabled:
@@ -788,6 +784,8 @@ components:
       $ref: definitions.yaml#/azureSubscriptionId
     azureTenantId:
       $ref: definitions.yaml#/azureTenantId
+    clusterName:
+      $ref: definitions.yaml#/clusterName
     containerSpec:
       $ref: definitions.yaml#/containerSpec
     containerSpecNoSec:
@@ -797,13 +795,11 @@ components:
     domain:
       $ref: definitions.yaml#/domain
     domainSuffix:
-      $ref: cluster.yaml#/domainSuffix
+      $ref: definitions.yaml#/domainSuffix
     droneGit:
       $ref: definitions.yaml#/droneGit
     email:
       $ref: definitions.yaml#/email
-    entrypoint:
-      $ref: cluster.yaml#/entrypoint
     env:
       $ref: definitions.yaml#/env
     googleAccountJson:
@@ -834,8 +830,6 @@ components:
       $ref: apps/loki.yaml#/lokiStorageProvider
     lokiValues:
       $ref: apps/loki.yaml#/lokiValues
-    name:
-      $ref: cluster.yaml#/name
     offChoice:
       $ref: definitions.yaml#/offChoice
     path:
@@ -847,15 +841,13 @@ components:
     policies:
       $ref: policies.yaml#/policies
     provider:
-      $ref: cluster.yaml#/provider
+      $ref: definitions.yaml#/provider
     quantityCpu:
       $ref: definitions.yaml#/quantityCpu
     quantityMem:
       $ref: definitions.yaml#/quantityMem
     rawValues:
       $ref: definitions.yaml#/rawValues
-    region:
-      $ref: cluster.yaml#/region
     resource:
       $ref: definitions.yaml#/resource
     resources:
@@ -878,7 +870,5 @@ components:
       $ref: definitions.yaml#/svcPredeployed
     url:
       $ref: definitions.yaml#/url
-    vpcID:
-      $ref: cluster.yaml#/vpcID
     wordCharacterPattern:
       $ref: definitions.yaml#/wordCharacterPattern
