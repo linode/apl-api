@@ -2,6 +2,69 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.4](https://github.com/redkubes/otomi-api/compare/v0.5.3...v0.5.4) (2022-04-29)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @kubernetes/client-node to ^0.16.0 ([#285](https://github.com/redkubes/otomi-api/issues/285)) ([250de8e](https://github.com/redkubes/otomi-api/commit/250de8ee961c12bf777eae3660fbb8f304e4efbe))
+* **deps:** update dependency axios to ^0.26.0 ([#286](https://github.com/redkubes/otomi-api/issues/286)) ([093835a](https://github.com/redkubes/otomi-api/commit/093835ae8cba0384414412388f239651bb7cc420))
+* **deps:** update dependency simple-git to v3 [security] ([#267](https://github.com/redkubes/otomi-api/issues/267)) ([26c39cb](https://github.com/redkubes/otomi-api/commit/26c39cbacc5933872995f109d73fa6edc732d401))
+* missing load ([256984e](https://github.com/redkubes/otomi-api/commit/256984e498e66363fbbfd0c83f6f29fbc9765348))
+* no more npm token requirement for build [ci skip] ([9260cd2](https://github.com/redkubes/otomi-api/commit/9260cd2dceeaf224ee769b3ab57271278f911970))
+* python now 3 ([aef209b](https://github.com/redkubes/otomi-api/commit/aef209b8d39bb8cb8bafb2037403b7850239a315))
+* race condition for reading api spec ([a8dc47d](https://github.com/redkubes/otomi-api/commit/a8dc47d5c4c10765cedf55ca8844e0c897dafaf1))
+* warning about api redefinition ([#266](https://github.com/redkubes/otomi-api/issues/266)) ([e50b348](https://github.com/redkubes/otomi-api/commit/e50b34863c75f025c828d835ec5b4afe5ce5334f))
+* yaml upgrade ([380f3a1](https://github.com/redkubes/otomi-api/commit/380f3a10817ddfdbc2ec5c3d0eed02cbed47c7f8))
+
+
+### Build System
+
+* adding renovate schema [ci skip] ([289c641](https://github.com/redkubes/otomi-api/commit/289c64143e65b086f046fb2410615f67100aeb99))
+* **models:** build models for renovate ([1d52f5f](https://github.com/redkubes/otomi-api/commit/1d52f5fffd1d1b8bb98590915c7c27d18787bf19))
+* **models:** fix config for renovate ([c157176](https://github.com/redkubes/otomi-api/commit/c157176db3c21ffec8064de07b4689af391006bf))
+* **models:** fix config for renovate ([20a770f](https://github.com/redkubes/otomi-api/commit/20a770fa8ee1a499560eed8c3a54e3b10bef43d7))
+* **models:** fix config for renovate ([8f8f75e](https://github.com/redkubes/otomi-api/commit/8f8f75e67b8d188ee31a656e3caa1ea6e59d3f81))
+* remove self hosted renovate [ci skip] ([2a79ea1](https://github.com/redkubes/otomi-api/commit/2a79ea1f46a014f49a65113fcdaecb64ffc2d07b))
+* remove self hosted renovate [ci skip] ([6566dbe](https://github.com/redkubes/otomi-api/commit/6566dbed07aa5625232bdaa4ba04aa46a2a13d8c))
+* renamed renovate shared config repo [ci skip] ([b6c49da](https://github.com/redkubes/otomi-api/commit/b6c49da2caf0f760e17f373653ffc541ad9fcd8f))
+
+
+### Code Refactoring
+
+* master refs to main ([6588964](https://github.com/redkubes/otomi-api/commit/6588964f14e4799ab824440d82cf14877fc7837e))
+
+
+### Others
+
+* **deps:** pin dependencies ([#268](https://github.com/redkubes/otomi-api/issues/268)) ([72b17a6](https://github.com/redkubes/otomi-api/commit/72b17a6b529e0be3ec10dda7f341e6bff0ffc938))
+* **deps:** update actions/checkout action to v3 ([#287](https://github.com/redkubes/otomi-api/issues/287)) ([2e16628](https://github.com/redkubes/otomi-api/commit/2e166287a8a9f8ac7edc400ddc2d8fe8db3825a6))
+* **deps:** update commitlint monorepo ([#288](https://github.com/redkubes/otomi-api/issues/288)) ([264af06](https://github.com/redkubes/otomi-api/commit/264af065181e32ef3b461358448afd37b35e6869))
+* **deps:** update dependency @redocly/openapi-cli to v1.0.0-beta.94 ([#271](https://github.com/redkubes/otomi-api/issues/271)) ([cbbe717](https://github.com/redkubes/otomi-api/commit/cbbe7172cdcc8d090ff45ec5c7cc7d54ab12f0f7))
+* **deps:** update dependency @types/chai to v4.3.1 ([#276](https://github.com/redkubes/otomi-api/issues/276)) ([bed4b2e](https://github.com/redkubes/otomi-api/commit/bed4b2e268fe76b9757bd2b174f2f6a2fbe80174))
+* **deps:** update dependency @types/lodash to v4.14.181 ([#272](https://github.com/redkubes/otomi-api/issues/272)) ([dec0c4c](https://github.com/redkubes/otomi-api/commit/dec0c4c16c424e9bb581487a2cdc57426fdc3506))
+* **deps:** update dependency @types/node to v16 ([#289](https://github.com/redkubes/otomi-api/issues/289)) ([8e129f5](https://github.com/redkubes/otomi-api/commit/8e129f5911c2525e5d4d342bd6b5f835d1b3c6a6))
+* **deps:** update dependency @types/sinon to v10 ([#290](https://github.com/redkubes/otomi-api/issues/290)) ([624c0e2](https://github.com/redkubes/otomi-api/commit/624c0e2478b4a9b86df61f1019ea22bcc036733c))
+* **deps:** update dependency @types/supertest to v2.0.12 ([#274](https://github.com/redkubes/otomi-api/issues/274)) ([18851d2](https://github.com/redkubes/otomi-api/commit/18851d25217a96e76b13a335525d8498cf1af408))
+* **deps:** update dependency cspell to v5.19.7 ([#277](https://github.com/redkubes/otomi-api/issues/277)) ([7ff5fe2](https://github.com/redkubes/otomi-api/commit/7ff5fe266be3e8c00fbbae8c926cf94328a8ff52))
+* **deps:** update dependency dotenv to v16 ([#291](https://github.com/redkubes/otomi-api/issues/291)) ([dbdf461](https://github.com/redkubes/otomi-api/commit/dbdf461aa37ee4bee93295a666e232f86810ed32))
+* **deps:** update dependency eslint-config-prettier to v8 ([#293](https://github.com/redkubes/otomi-api/issues/293)) ([0254a04](https://github.com/redkubes/otomi-api/commit/0254a04ee328709f4e2c5cc5a0440d36006739ff))
+* **deps:** update dependency eslint-plugin-chai-friendly to v0.7.2 ([#278](https://github.com/redkubes/otomi-api/issues/278)) ([7fdfcd0](https://github.com/redkubes/otomi-api/commit/7fdfcd07166f48f61422fa6897e491ad5cad86de))
+* **deps:** update dependency prettier to v2.6.2 ([#280](https://github.com/redkubes/otomi-api/issues/280)) ([62c68cf](https://github.com/redkubes/otomi-api/commit/62c68cfe5e0bbb047afd70ed91f9223c308c3caf))
+* **deps:** update dependency supports-color to v9.2.2 ([#273](https://github.com/redkubes/otomi-api/issues/273)) ([d092dbe](https://github.com/redkubes/otomi-api/commit/d092dbe264f3449067474bc77b17d15d6ce2d2cc))
+* **deps:** update dependency typescript to v4.6.3 ([#281](https://github.com/redkubes/otomi-api/issues/281)) ([8d5bd5a](https://github.com/redkubes/otomi-api/commit/8d5bd5aaeada750e32bc11bba56f723342a2d17a))
+* **deps:** update node.js to v14.19 ([#284](https://github.com/redkubes/otomi-api/issues/284)) ([8d1e6f3](https://github.com/redkubes/otomi-api/commit/8d1e6f313c3b8babd676c493e34bca1a7f4260ad))
+
+
+### CI
+
+* **codeowners:** put back [ci skip] ([6ee4925](https://github.com/redkubes/otomi-api/commit/6ee49252e968fcbd0e8d77a12ca4d190d8e0ed33))
+* **renovate:** added app/renovate-approve to codeowners for packages [ci skip] ([f16113e](https://github.com/redkubes/otomi-api/commit/f16113e205181b9d71d08d70d88bd47972cfaf02))
+* **renovate:** group name [ci skip] ([2b14460](https://github.com/redkubes/otomi-api/commit/2b1446023e01fbe74daeb4f799d80ea9ed23aa7f))
+* **renovate:** removed codeowners to autoapprove by renovate, grouped all [ci skip] ([3cf1837](https://github.com/redkubes/otomi-api/commit/3cf18374e8e7341b54d58af8fe4b25200bf6b871))
+* **renovate:** removed groupName [ci skip] ([0e92a3d](https://github.com/redkubes/otomi-api/commit/0e92a3d427b21f71b43b622d0ebdb6df208ae821))
+* **renovate:** removed redkubesbot from codeowners [ci skip] ([e22b6f2](https://github.com/redkubes/otomi-api/commit/e22b6f24a966b141eebd899d3c3e416bb1e688d3))
+
 ### [0.5.3](https://github.com/redkubes/otomi-api/compare/v0.5.2...v0.5.3) (2022-04-11)
 
 
