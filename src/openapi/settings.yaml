@@ -110,6 +110,10 @@ Settings:
       x-acl:
         admin: [read-any, update-any]
         team: []
+      required:
+        - issuer
+        - clientID
+        - clientSecret
     otomi:
       title: Otomi
       type: object
@@ -200,6 +204,8 @@ Settings:
           description: |
             Please pin this to a valid release version found in the repo. Suggestion: try the most recent stable version.
           type: string
+      required:
+        - version
       x-externalDocsPath: docs/console/settings#otomi
       x-acl:
         admin: [read-any, update-any]
