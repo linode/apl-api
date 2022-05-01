@@ -878,7 +878,7 @@ portNumber:
   type: integer
 provider:
   title: Provider
-  description: Enter the cloud provider of this cluster. Choose 'local' for laptop install (minikube, kind), and 'custom' for onprem clusters.
+  description: The cloud provider of this cluster.
   type: string
   enum:
     - aws
