@@ -73,8 +73,9 @@ describe('API authz tests', () => {
       .send({
         name: 'team1',
         selfService: {
-          Team: [],
-          Service: [],
+          apps: [],
+          team: [],
+          service: [],
         },
       })
       .set('Accept', 'application/json')

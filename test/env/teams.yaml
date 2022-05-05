@@ -4,9 +4,9 @@ teamConfig:
     dev:
         id: dev
         selfService:
-            Service:
+            service:
                 - ingress
-            Team:
+            team:
                 - resourceQuota
     otomi:
         id: otomi
@@ -15,5 +15,5 @@ teamConfig:
         resourceQuota:
             services.loadbalancers: '0'
         selfService:
-            Team:
+            team:
                 - resourceQuota

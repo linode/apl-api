@@ -5,7 +5,6 @@ import path from 'path'
 
 const debug = Debug('otomi:build-spec')
 
-const clientPath = 'vendors/openapi/otomi-api.json'
 const modelsPath = 'src/generated-schema.json'
 
 async function buildOpenApisSpec(): Promise<void> {
@@ -13,9 +12,6 @@ async function buildOpenApisSpec(): Promise<void> {
   debug(`Loading api spec from: ${openApiPath}`)
   await $RefParser.dereference(openApiPath).then((schema) => {
     writeFileSync(modelsPath, JSON.stringify(schema, undefined, '  '), 'utf8')
-  })
-  await $RefParser.bundle(openApiPath).then((schema) => {
-    writeFileSync(clientPath, JSON.stringify(schema, undefined, '  '), 'utf8')
   })
 }
 
