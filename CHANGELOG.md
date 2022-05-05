@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.5](https://github.com/redkubes/otomi-api/compare/v0.5.4...v0.5.5) (2022-05-05)
+
+
+### Features
+
+* argocd app ([#300](https://github.com/redkubes/otomi-api/issues/300)) ([19eb854](https://github.com/redkubes/otomi-api/commit/19eb85486a1fe0789ed9db6c49848947e4b3f7da))
+* pr lint action [ci skip] ([d50b18c](https://github.com/redkubes/otomi-api/commit/d50b18ca1bff637c0d0c6b284e70ccbee12262e7))
+
+
+### Others
+
+* **deps:** update all-npm ([#298](https://github.com/redkubes/otomi-api/issues/298)) ([8a1a126](https://github.com/redkubes/otomi-api/commit/8a1a1263ea38b012610a2343af3f0dc6c58c6797))
+* **deps:** update dependency @redocly/openapi-cli to v1.0.0-beta.95 ([73d967a](https://github.com/redkubes/otomi-api/commit/73d967a4e5741eac52c17b8f2eb7fc7028d4dc3e))
+
 ### [0.5.4](https://github.com/redkubes/otomi-api/compare/v0.5.3...v0.5.4) (2022-04-29)
 
 
