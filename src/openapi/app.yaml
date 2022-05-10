@@ -5,6 +5,7 @@ AppList:
   #   type: string
   enum:
     - alertmanager
+    - argocd
     - cert-manager
     - drone
     - external-dns

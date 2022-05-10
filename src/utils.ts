@@ -127,7 +127,7 @@ export function getServiceUrl({
     }
   }
 
-  const zones = [cluster!.domainSuffix, ...(dns?.zones || [])]
+  const zones = [`${cluster!.domainSuffix}`, ...(dns?.zones || [])]
   // Sort by length descending
   zones.sort((a, b) => b.length - a.length)
   for (let i = 0; i < zones.length; i += 1) {

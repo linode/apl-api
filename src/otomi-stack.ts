@@ -396,10 +396,19 @@ export default class OtomiStack {
 
     const servicesFiltered = filter(services, (svc: any) => {
       if (svc.ingress?.type !== 'cluster') {
-        const { domain, subdomain, path } = svc.ingress
-        const existingUrl = `${subdomain}.${domain}${path || ''}`
-        const url = `${newSvc.subdomain}.${newSvc.domain}${newSvc.path || ''}`
-        return existingUrl === url
+        const { domain, subdomain, paths } = svc.ingress
+        const baseUrl = `${subdomain}.${domain}`
+        const newBaseUrl = `${newSvc.subdomain}.${newSvc.domain}`
+        // no paths for existing or new service? then just check base url
+        if (!newSvc.paths?.length && !paths?.length) return baseUrl === newBaseUrl
+        // one has paths but other doesn't? no problem
+        if ((newSvc.paths?.length && !paths?.length) || (!newSvc.paths?.length && paths?.length)) return false
+        // both have paths, so check full
+        return paths.some((p) => {
+          const existingUrl = `${subdomain}.${domain}${p}`
+          const newUrls: string[] = newSvc.paths.map((p) => `${newSvc.subdomain}.${newSvc.domain}${p}`)
+          return newUrls.includes(existingUrl)
+        })
       }
       return false
     })

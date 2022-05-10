@@ -11,6 +11,14 @@ export default {
     {
       shortcuts: [],
       teamId: 'admin',
+      id: 'argocd',
+      enabled: false,
+      values: {},
+      rawValues: {},
+    },
+    {
+      shortcuts: [],
+      teamId: 'admin',
       id: 'cert-manager',
       enabled: undefined,
       values: {},
@@ -173,6 +181,11 @@ export default {
     {
       shortcuts: [],
       teamId: 'dev',
+      id: 'argocd',
+    },
+    {
+      shortcuts: [],
+      teamId: 'dev',
       id: 'drone',
     },
     {
@@ -224,6 +237,11 @@ export default {
       shortcuts: [],
       teamId: 'otomi',
       id: 'alertmanager',
+    },
+    {
+      shortcuts: [],
+      teamId: 'otomi',
+      id: 'argocd',
     },
     {
       shortcuts: [],
@@ -828,8 +846,8 @@ export default {
     {
       id: 'dev',
       selfService: {
-        Service: ['ingress'],
-        Team: ['resourceQuota'],
+        service: ['ingress'],
+        team: ['resourceQuota'],
       },
       password: 'linux1234',
       name: 'dev',
@@ -847,7 +865,7 @@ export default {
         },
       ],
       selfService: {
-        Team: ['resourceQuota'],
+        team: ['resourceQuota'],
       },
       alerts: {
         email: {

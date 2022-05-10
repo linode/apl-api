@@ -26,9 +26,9 @@
       "resolveSourceMapLocations": ["!${workspaceFolder}/**"]
     },
     {
+      "name": "Debug npm run dev",
       "type": "node",
       "request": "launch",
-      "name": "Debug npm run dev",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run-script", "dev"],
       "cwd": "${workspaceRoot}",
@@ -36,10 +36,10 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "Mocha All",
       "type": "pwa-node",
       "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
       "request": "launch",
-      "name": "Mocha All",
       "args": ["--timeout", "999999", "--colors", "${workspaceFolder}/src/**/*.test.ts"],
       "env": {
         "NODE_ENV": "test"
@@ -49,9 +49,9 @@
       "internalConsoleOptions": "neverOpen"
     },
     {
+      "name": "Mocha Current File",
       "type": "node",
       "request": "launch",
-      "name": "Mocha Current File",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
       "args": [
         "--require",
