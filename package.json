@@ -87,7 +87,7 @@
     "prettier": "2.6.2",
     "sinon": "8.1.1",
     "sinon-chai": "3.7.0",
-    "standard-version": "9.3.2",
+    "standard-version": "9.5.0",
     "supertest": "4.0.2",
     "supports-color": "9.2.2",
     "swagger-node-codegen": "1.6.3",
