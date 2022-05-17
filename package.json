@@ -52,7 +52,7 @@
     "@types/lodash": "4.14.182",
     "@types/lowdb": "1.0.11",
     "@types/mocha": "7.0.2",
-    "@types/node": "16.11.35",
+    "@types/node": "16.11.36",
     "@types/sinon": "10.0.11",
     "@types/sinon-chai": "3.2.8",
     "@types/supertest": "2.0.12",
