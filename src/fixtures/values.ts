@@ -292,6 +292,11 @@ export default {
       id: 'kubeapps',
     },
     {
+      shortcuts: [],
+      teamId: 'otomi',
+      id: 'kubeclarity',
+    },
+    {
       shortcuts: [
         {
           description: 'di',
