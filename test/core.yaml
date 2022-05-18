@@ -37,6 +37,8 @@ k8s:
     - name: kubeapps
       disableIstioInjection: true
       disablePolicyChecks: true
+    - name: kubeclarity
+      disableIstioInjection: true
     - name: maintenance
       disableIstioInjection: true
     - name: monitoring
@@ -205,6 +207,16 @@ adminApps:
         namespace: kubeapps
         type: public
         # auth: true
+  - name: kubeclarity
+    tags: [security]
+    isShared: true
+    ownHost: true
+    ingress:
+      - svc: kubeclarity-kubeclarity
+        namespace: kubeclarity
+        port: 8080
+        type: public
+        auth: true
   - name: loki
     tags: [logging, telemetry, observability]
     deps: [grafana, prometheus]
