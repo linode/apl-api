@@ -229,6 +229,11 @@ export default {
     {
       shortcuts: [],
       teamId: 'dev',
+      id: 'kubeclarity',
+    },
+    {
+      shortcuts: [],
+      teamId: 'dev',
       id: 'loki',
     },
     {
