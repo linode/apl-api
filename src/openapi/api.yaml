@@ -702,6 +702,8 @@ components:
       $ref: apps/knative.yaml#/AppKnative
     AppKubeapps:
       $ref: apps/kubeapps.yaml#/AppKubeapps
+    AppKubeclarity:
+      $ref: apps/kubeapps.yaml#/AppKubeclarity
     AppLoki:
       $ref: apps/loki.yaml#/AppLoki
     AppPrometheus:
