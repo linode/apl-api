@@ -46,7 +46,7 @@ Team:
       type: string
       writeOnly: true
       x-acl:
-        admin: []
+        admin: [read-any, update-any]
         team: []
     alerts:
       $ref: definitions.yaml#/alerts
