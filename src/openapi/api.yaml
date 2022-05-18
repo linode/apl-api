@@ -703,7 +703,7 @@ components:
     AppKubeapps:
       $ref: apps/kubeapps.yaml#/AppKubeapps
     AppKubeclarity:
-      $ref: apps/kubeapps.yaml#/AppKubeclarity
+      $ref: apps/kubeclarity.yaml#/AppKubeclarity
     AppLoki:
       $ref: apps/loki.yaml#/AppLoki
     AppPrometheus:
