@@ -148,6 +148,14 @@ export default {
     {
       shortcuts: [],
       teamId: 'admin',
+      id: 'kubeclarity',
+      enabled: false,
+      values: {},
+      rawValues: {},
+    },
+    {
+      shortcuts: [],
+      teamId: 'admin',
       id: 'loki',
       enabled: true,
       values: {
