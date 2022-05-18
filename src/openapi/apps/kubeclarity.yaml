@@ -1,4 +1,4 @@
-AppKubeClarity:
+AppKubeclarity:
   additionalProperties: false
   x-externalDocsPath: https://github.com/openclarity/kubeclarity
   x-short: Your Application Dashboard for Kubernetes
