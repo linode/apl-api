@@ -169,7 +169,7 @@ networkPolicy:
       # additionalProperties: false
       type: object
       title: Ingress traffic inside the cluster
-      description: 'Pods belonging to this service must contain "app: <service name>" label'
+      description: 'Pods belonging to this service must contain "otomi.io/app: <service name>" label (N/A to Pods spawn by ksvc).'
       oneOf:
         - title: Deny all
           description: Deny traffic from all teams (including this one)
