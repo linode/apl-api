@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.7](https://github.com/redkubes/otomi-api/compare/v0.5.6...v0.5.7) (2022-05-23)
+
+
+### Others
+
+* **deps:** update dependency cspell to v5.21.1 ([150131a](https://github.com/redkubes/otomi-api/commit/150131a2dfdf785700fbfece675f328c5c0c1661))
+* **deps:** update dependency cspell to v5.21.2 ([91536fa](https://github.com/redkubes/otomi-api/commit/91536fa7d602a976795e774488299f09a06caadc))
+
+
+### Docs
+
+* ingressPrivate description ([f5032f0](https://github.com/redkubes/otomi-api/commit/f5032f0b3e5fdafe555c8ded2eb7c8b9a4ee90f7))
+
 ### [0.5.6](https://github.com/redkubes/otomi-api/compare/v0.5.5...v0.5.6) (2022-05-18)
 
 
