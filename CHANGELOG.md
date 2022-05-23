@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.6](https://github.com/redkubes/otomi-api/compare/v0.5.5...v0.5.6) (2022-05-18)
+
+
+### Bug Fixes
+
+* regexp for URL path ([#302](https://github.com/redkubes/otomi-api/issues/302)) ([79c933a](https://github.com/redkubes/otomi-api/commit/79c933a6b509ce4ce4089f6f6707f8227da92dfa))
+* schema ([843ad11](https://github.com/redkubes/otomi-api/commit/843ad110eddeffee29eec2321134e046244b99ba))
+
+
+### Others
+
+* **deps:** update all-npm ([b436b00](https://github.com/redkubes/otomi-api/commit/b436b007cc6b651735ec3c4626fbb975434e73ea))
+* **deps:** update dependency @commitlint/cli to v16.3.0 ([529d123](https://github.com/redkubes/otomi-api/commit/529d12340bd3beed3ecee3f76a292c661acee88a))
+* **deps:** update dependency @types/node to v16.11.35 ([2b627b9](https://github.com/redkubes/otomi-api/commit/2b627b985545a3faf1cbab492d84274b0b23ff3f))
+* **deps:** update dependency @types/node to v16.11.36 ([c2ba111](https://github.com/redkubes/otomi-api/commit/c2ba11182b3eb91cfc89f1325dc63a38cee421bc))
+* **deps:** update dependency cspell to v5.21.0 ([4cea482](https://github.com/redkubes/otomi-api/commit/4cea482bc66475eeb76a4c94ab83ce7ee98856fa))
+* **deps:** update dependency git-cz to v4.9.0 ([182e5f9](https://github.com/redkubes/otomi-api/commit/182e5f9548c0ba5a8db54e2eadabdf5e18cae5f5))
+* **deps:** update dependency standard-version to v9.5.0 ([4c72d78](https://github.com/redkubes/otomi-api/commit/4c72d78862929731dcb6a05b259e999997c5cebc))
+
 ### [0.5.5](https://github.com/redkubes/otomi-api/compare/v0.5.4...v0.5.5) (2022-05-05)
 
 

@@ -402,6 +402,8 @@ dns:
                 serviceAccountKey:
                   description: A service account key for managing a DNS zone.
                   type: string
+                  x-secret: true
+                  x-formtype: textarea
                 project:
                   type: string
               required:
@@ -480,6 +482,8 @@ googleAccountJson:
   description: Enter GCP account JSON for authentication.
   title: Account JSON
   type: string
+  x-secret: ''
+  x-formtype: textarea
 googleProject:
   description: Enter GCP project.
   title: GCP Project

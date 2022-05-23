@@ -62,7 +62,7 @@
     "chai-as-promised": "7.1.1",
     "commitizen": "4.2.4",
     "copyfiles": "2.4.1",
-    "cspell": "5.21.0",
+    "cspell": "5.21.2",
     "cz-conventional-changelog": "3.3.0",
     "dotenv": "16.0.1",
     "eslint": "7.32.0",
@@ -151,7 +151,7 @@
       "tag": true
     }
   },
-  "version": "0.5.5",
+  "version": "0.5.6",
   "watch": {
     "build:models": {
       "patterns": [
