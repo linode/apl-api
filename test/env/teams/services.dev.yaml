@@ -3,6 +3,8 @@ teamConfig:
         services:
             -
                 id: d611a6be-3898-406d-9b5a-44ee2ba14dfb
+                name: tlspass
+                port: 80
                 ksvc:
                     args:
                         - '-c'
@@ -26,8 +28,8 @@ teamConfig:
                             cpu: 50m
                             memory: 64Mi
                     scaleToZero: false
-                name: tlspass
+                    secrets: []
                 ownHost: true
-                port: 80
+                paths: []
                 tlsPass: true
                 type: public
