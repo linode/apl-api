@@ -229,11 +229,6 @@ export default {
     {
       shortcuts: [],
       teamId: 'dev',
-      id: 'kubeclarity',
-    },
-    {
-      shortcuts: [],
-      teamId: 'dev',
       id: 'loki',
     },
     {
@@ -290,11 +285,6 @@ export default {
       shortcuts: [],
       teamId: 'otomi',
       id: 'kubeapps',
-    },
-    {
-      shortcuts: [],
-      teamId: 'otomi',
-      id: 'kubeclarity',
     },
     {
       shortcuts: [
