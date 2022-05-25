@@ -70,6 +70,50 @@ Settings:
       x-acl:
         admin: [read-any, update-any]
         team: []
+    ingress:
+      properties:
+        keycloakClassName:
+          type: string
+          default: platform
+          description: Assign ingress class to keycloak app. Ensure that this network is accessible by any users that needs to authenticate via OIDC connect.
+        platformClass:
+          type: object
+          properties:
+            className:
+              type: string
+              enum: [platform]
+            network:
+              type: string
+              enum:
+                - public
+                - private
+              default: public
+            loadBalancerIP:
+              type: string
+            loadBalancerRG:
+              type: string
+            loadBalancerSubnet:
+              type: string
+              description: Load IP address from a specific subnet (applies to private network only)
+          required:
+            - className
+        classes:
+          type: array
+          items:
+            type: object
+            properties:
+              className:
+                type: string
+              network:
+                type: string
+                enum:
+                  - public
+                  - private
+                default: public
+              ipAddress:
+                type: string
+            required:
+              - className
     kms:
       $ref: definitions.yaml#/kms
       x-externalDocsPath: docs/console/settings#kms
