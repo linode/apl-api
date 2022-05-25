@@ -72,16 +72,15 @@ Settings:
         team: []
     ingress:
       properties:
-        keycloakClassName:
-          type: string
-          default: platform
-          description: Assign ingress class to keycloak app. Ensure that this network is accessible by any users that needs to authenticate via OIDC connect.
         platformClass:
           type: object
           properties:
             className:
               type: string
-              enum: [platform]
+              x-default: platform
+              x-acl:
+                admin: [read-any]
+                team: []
             network:
               type: string
               enum:

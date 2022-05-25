@@ -48,7 +48,6 @@ Service:
       # Note: the order matters first schema must be nullable empty object
       oneOf:
         - $ref: '#/IngressCluster'
-        - $ref: '#/IngressPrivate'
         - $ref: '#/IngressPublic'
       x-externalDocsPath: docs/console/services/#configuring-exposure-ingress
     networkPolicy:
@@ -140,19 +139,6 @@ IngressCluster:
         - cluster
       default: cluster
 
-IngressPrivate:
-  allOf:
-    - $ref: '#/Ingress'
-    - properties:
-        type:
-          type: string
-          enum:
-            - private
-          default: private
-  nullable: true
-  description: Will only accept traffic coming from the private-network loadbalancer. (Coming soon!)
-  title: Private
-
 IngressPublic:
   allOf:
     - $ref: '#/Ingress'
@@ -164,7 +150,7 @@ IngressPublic:
           default: public
   nullable: true
   description: Will only accept traffic coming from the public loadbalancer.
-  title: Public
+  title: Ingress
 
 networkPolicy:
   additionalProperties: false

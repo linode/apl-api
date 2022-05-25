@@ -106,5 +106,9 @@ AppKeycloak:
               required:
                 - limits
                 - requests
+        ingressClassName:
+          type: string
+          x-default: platform
+          description: Select ingress class to ensure that keycloak is accessible by any users that needs to authenticate via OIDC connect.
       required:
         - postgresqlPassword
