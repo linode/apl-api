@@ -757,6 +757,7 @@ export default class OtomiStack {
       'type',
       'ownHost',
       'tlsPass',
+      'ingressClassName',
     )
     svc.teamId = teamId
     if (!('name' in svcRaw)) debug('Unknown service structure')
@@ -792,6 +793,7 @@ export default class OtomiStack {
         tlsPass: 'tlsPass' in svcRaw,
         type: svcRaw.type,
         useDefaultSubdomain: !svcRaw.domain && svcRaw.ownHost,
+        ingressClassName: svcRaw.ingressClassName || undefined,
       }
     }
 
@@ -833,6 +835,7 @@ export default class OtomiStack {
       if (ing.paths) svcCloned.paths = ing.paths
       if (ing.forwardPath) svcCloned.forwardPath = true
       if (ing.tlsPass) svcCloned.tlsPass = true
+      if (ing.ingressClassName) svcCloned.ingressClassName = ing.ingressClassName
       svcCloned.type = svc.ingress.type
     } else svcCloned.type = 'cluster'
     return svcCloned
