@@ -78,9 +78,7 @@ Settings:
             className:
               type: string
               x-default: platform
-              x-acl:
-                admin: [read-any]
-                team: []
+              readOnly: true
             network:
               type: string
               enum:
