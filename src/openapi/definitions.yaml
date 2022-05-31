@@ -542,7 +542,7 @@ ingressClassParameters:
         - private
       default: public
     loadBalancerIP:
-      title: Load balancer IP addesss
+      title: Load balancer IP address
       description: A static IP address assigned to a load balancer
       type: string
     loadBalancerRG:
@@ -555,7 +555,7 @@ ingressClassParameters:
     sourceIpAddressFiltering:
       title: Source IP address filtering
       type: string
-      description: Whitelist source IP adress ranges. The value is a comma separated list of CIDRs
+      description: Whitelist source IP address ranges. The value is a comma separated list of CIDRs
 ipV4Address:
   type: string
   pattern: ^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$
