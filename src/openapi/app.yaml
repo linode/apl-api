@@ -21,6 +21,7 @@ AppList:
     - kiali
     - knative
     - kubeapps
+    - kubeclarity
     - loki
     - prometheus
     - vault
