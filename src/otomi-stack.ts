@@ -302,7 +302,6 @@ export default class OtomiStack {
     const apps = this.getAppSchema('List').enum
     const core = this.getCore()
     apps.forEach((appId) => {
-      console.warn(appId)
       const isShared = !!core.adminApps.find((a) => a.name === appId).isShared
       const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
       if (id === 'admin' || isShared || inTeamApps)
