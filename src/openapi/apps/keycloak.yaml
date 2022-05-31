@@ -109,6 +109,6 @@ AppKeycloak:
         ingressClassName:
           type: string
           x-default: platform
-          description: Select ingress class to ensure that keycloak is accessible by any users that needs to authenticate via OIDC connect.
+          description: Overwrite default ingress class if keycloak should be accessible under differrent IP address than the other platform applications.
       required:
         - postgresqlPassword
