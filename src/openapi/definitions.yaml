@@ -531,6 +531,31 @@ imageSimple:
     - tag
   type: object
   title: Container image
+ingressClassParameters:
+  type: object
+  properties:
+    network:
+      title: Load balancer type
+      type: string
+      enum:
+        - public
+        - private
+      default: public
+    loadBalancerIP:
+      title: Load balancer IP addesss
+      description: A static IP address assigned to a load balancer
+      type: string
+    loadBalancerRG:
+      title: Load balancer resource group
+      type: string
+    loadBalancerSubnet:
+      title: Load balancer subnet
+      type: string
+      description: Specify subnet provider for load balancer IP address (applies to private network only)
+    sourceIpAddressFiltering:
+      title: Source IP address filtering
+      type: string
+      description: Whitelist source IP adress ranges. The value is a comma separated list of CIDRs
 ipV4Address:
   type: string
   pattern: ^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$

@@ -71,53 +71,30 @@ Settings:
         admin: [read-any, update-any]
         team: []
     ingress:
+      type: object
       properties:
         platformClass:
-          type: object
-          properties:
-            className:
-              type: string
-              x-default: platform
-              readOnly: true
-            network:
-              type: string
-              enum:
-                - public
-                - private
-              default: public
-            loadBalancerIP:
-              type: string
-            loadBalancerRG:
-              type: string
-            loadBalancerSubnet:
-              type: string
-              description: Load IP address from a specific subnet (applies to private network only)
-            sourceIpAddressFiltering:
-              type: string
-              description: Whitelist source IP range. The value is a comma separated list of CIDRs
-          required:
-            - className
+          allOf:
+            - type: object
+              properties:
+                className:
+                  title: Class name
+                  description: The platform ingress class is assigned to all platform applications
+                  type: string
+                  x-default: platform
+                  readOnly: true
+            - $ref: definitions.yaml#/ingressClassParameters
         classes:
           title: Additional classes
           type: array
           items:
-            type: object
-            properties:
-              className:
-                type: string
-              network:
-                type: string
-                enum:
-                  - public
-                  - private
-                default: public
-              loadBalancerIP:
-                type: string
-              loadBalancerRG:
-                type: string
-              loadBalancerSubnet:
-                type: string
-                description: Load IP address from a specific subnet (applies to private network only)
+            allOf:
+              - type: object
+                properties:
+                  className:
+                    description: An arbitrary name that will be used to assign an ingress class to a team service
+                    type: string
+              - $ref: definitions.yaml#/ingressClassParameters
             required:
               - className
     kms:

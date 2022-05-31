@@ -814,6 +814,8 @@ components:
       $ref: definitions.yaml#/imagePullPolicy
     imageSimple:
       $ref: definitions.yaml#/imageSimple
+    ingressClassParameters:
+      $ref: definitions.yaml#/ingressClassParameters
     jobSpec:
       $ref: definitions.yaml#/jobSpec
     k8sVersion:
