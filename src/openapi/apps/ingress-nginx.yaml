@@ -21,10 +21,6 @@ AppIngressNginx:
       additionalProperties: false
       type: object
       properties:
-        loadBalancerIP:
-          type: string
-        loadBalancerRG:
-          type: string
         maxBodySize:
           type: string
           x-default: 1024m
@@ -88,48 +84,3 @@ AppIngressNginx:
           required:
             - limits
             - requests
-        private:
-          title: Private loadbalancer
-          description: Private loadbalancer configuration.
-          type: object
-          properties:
-            enabled:
-              title: Enable private loadbalancer
-              description: Enable to start an extra loadbalancer for private network traffic.
-              type: boolean
-              x-default: false
-            autoscaling:
-              $ref: ../definitions.yaml#/autoscalingEnabled
-            loadBalancerIP:
-              type: string
-            loadBalancerRG:
-              type: string
-            resources:
-              type: object
-              properties:
-                limits:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      x-default: '2'
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      x-default: 1.5Gi
-                requests:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 200m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      x-default: 512Mi
-              required:
-                - limits
-                - requests
-            service:
-              type: object
-              properties:
-                annotations:
-                  $ref: ../definitions.yaml#/annotations

@@ -108,6 +108,7 @@ AppKeycloak:
                 - requests
         ingressClassName:
           type: string
+          title: Ingress class name
           x-default: platform
           description: Overwrite default ingress class if keycloak should be accessible under differrent IP address than the other platform applications.
       required:
