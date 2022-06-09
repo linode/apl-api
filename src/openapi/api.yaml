@@ -722,8 +722,6 @@ components:
       $ref: service.yaml#/Ingress
     IngressCluster:
       $ref: service.yaml#/IngressCluster
-    IngressPrivate:
-      $ref: service.yaml#/IngressPrivate
     IngressPublic:
       $ref: service.yaml#/IngressPublic
     Job:
@@ -818,6 +816,8 @@ components:
       $ref: definitions.yaml#/imagePullPolicy
     imageSimple:
       $ref: definitions.yaml#/imageSimple
+    ingressClassParameters:
+      $ref: definitions.yaml#/ingressClassParameters
     jobSpec:
       $ref: definitions.yaml#/jobSpec
     k8sVersion:

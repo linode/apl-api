@@ -1,91 +1,80 @@
 teamConfig:
     otomi:
         services:
-            -
-                id: fb88a85d-49e6-4c20-98ed-11b3ceff540e
-                name: servant1
-                ksvc:
-                    env:
-                        INFORMANT: http://informant.team-otomi.svc.cluster.local
-                        TARGET: master, I am servant 1
-                    image:
-                        repository: otomi/helloworld-nodejs
-                        tag: 1.2.8
-                    resources:
-                        limits:
-                            cpu: 100m
-                            memory: 128Mi
-                        requests:
-                            cpu: 50m
-                            memory: 64Mi
-                    scaleToZero: false
-                    secrets: []
-                domain: master.onprem.example.com
-                paths:
-                    - /servant-1
-                type: public
-            -
-                id: f818a64d-25a4-46e0-9eaf-769b78866031
-                name: hello
-                ownHost: true
-                hasCert: true
-                certArn: some-arn
-                paths: []
-                type: public
-            -
-                id: f818a64d-25a4-46e0-9eaf-769b78866032
-                name: hello-private
-                domain: hello-private.team-otomi.dev.onprem.private.net
-                paths: []
-                type: private
-            -
-                id: f818a64d-25a4-46e0-9eaf-769b78866033
-                name: hello-somecom
-                domain: hello.some.com
-                hasCert: true
-                certName: bla
-                paths: []
-                type: public
-            -
-                id: f818a64d-25a4-46e0-9eaf-769b7886603d
-                name: servant2
-                ksvc:
-                    env:
-                        TARGET: master, I am servant 2
-                    image:
-                        repository: otomi/helloworld-nodejs
-                        tag: 1.2.8
-                    resources:
-                        limits:
-                            cpu: 100m
-                            memory: 128Mi
-                        requests:
-                            cpu: 50m
-                            memory: 64Mi
-                    scaleToZero: false
-                    secrets: []
-                domain: master.onprem.example.com
-                auth: true
-                paths:
-                    - /servant-2
-                type: public
-            -
-                id: 2f18da9a-e659-479d-9d65-2ca82503f43c
-                name: informant
-                ksvc:
-                    env:
-                        TARGET: head servant, I have a version number
-                    image:
-                        repository: otomi/helloworld-nodejs
-                        tag: 1.2.10
-                    resources:
-                        limits:
-                            cpu: 100m
-                            memory: 128Mi
-                        requests:
-                            cpu: 50m
-                            memory: 64Mi
-                    scaleToZero: false
-                    secrets:
-                        - mysecret-generic
-                type: cluster
+            - domain: master.onprem.example.com
+              id: fb88a85d-49e6-4c20-98ed-11b3ceff540e
+              ksvc:
+                  env:
+                      INFORMANT: http://informant.team-otomi.svc.cluster.local
+                      TARGET: master, I am servant 1
+                  image:
+                      repository: otomi/helloworld-nodejs
+                      tag: 1.2.8
+                  resources:
+                      limits:
+                          cpu: 100m
+                          memory: 128Mi
+                      requests:
+                          cpu: 50m
+                          memory: 64Mi
+                  scaleToZero: false
+              name: servant1
+              paths:
+                  - /servant-1
+              type: public
+            - certArn: some-arn
+              hasCert: true
+              id: f818a64d-25a4-46e0-9eaf-769b78866031
+              name: hello
+              ownHost: true
+              type: public
+            - domain: hello-private.team-otomi.dev.onprem.private.net
+              id: f818a64d-25a4-46e0-9eaf-769b78866032
+              name: hello-private
+              type: private
+            - certName: bla
+              domain: hello.some.com
+              hasCert: true
+              id: f818a64d-25a4-46e0-9eaf-769b78866033
+              name: hello-somecom
+              type: public
+            - domain: master.onprem.example.com
+              id: f818a64d-25a4-46e0-9eaf-769b7886603d
+              ksvc:
+                  env:
+                      TARGET: master, I am servant 2
+                  image:
+                      repository: otomi/helloworld-nodejs
+                      tag: 1.2.8
+                  resources:
+                      limits:
+                          cpu: 100m
+                          memory: 128Mi
+                      requests:
+                          cpu: 50m
+                          memory: 64Mi
+                  scaleToZero: false
+              name: servant2
+              paths:
+                  - /servant-2
+              type: public
+              ingressClassName: net-a
+            - id: 2f18da9a-e659-479d-9d65-2ca82503f43c
+              ksvc:
+                  env:
+                      TARGET: head servant, I have a version number
+                  image:
+                      repository: otomi/helloworld-nodejs
+                      tag: 1.2.10
+                  resources:
+                      limits:
+                          cpu: 100m
+                          memory: 128Mi
+                      requests:
+                          cpu: 50m
+                          memory: 64Mi
+                  scaleToZero: false
+                  secrets:
+                      - mysecret-generic
+              name: informant
+              type: cluster

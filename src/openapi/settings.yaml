@@ -70,6 +70,33 @@ Settings:
       x-acl:
         admin: [read-any, update-any]
         team: []
+    ingress:
+      type: object
+      properties:
+        platformClass:
+          allOf:
+            - type: object
+              properties:
+                className:
+                  title: Class name
+                  description: The platform ingress class is assigned to all platform applications
+                  type: string
+                  x-default: platform
+                  readOnly: true
+            - $ref: definitions.yaml#/ingressClassParameters
+        classes:
+          title: Additional classes
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  className:
+                    description: An arbitrary name that will be used to assign an ingress class to a team service
+                    type: string
+              - $ref: definitions.yaml#/ingressClassParameters
+            required:
+              - className
     kms:
       $ref: definitions.yaml#/kms
       x-externalDocsPath: docs/console/settings#kms

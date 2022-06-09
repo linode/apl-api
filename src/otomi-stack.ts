@@ -751,12 +751,12 @@ export default class OtomiStack {
       'domain',
       'forwardPath',
       'hasCert',
-      'auth',
       'ksvc',
       'paths',
       'type',
       'ownHost',
       'tlsPass',
+      'ingressClassName',
     )
     svc.teamId = teamId
     if (!('name' in svcRaw)) debug('Unknown service structure')
@@ -781,7 +781,6 @@ export default class OtomiStack {
       const { cluster, dns } = this.getSettings(['cluster', 'dns'])
       const url = getServiceUrl({ domain: svcRaw.domain, name: svcRaw.name, teamId, cluster, dns })
       svc.ingress = {
-        auth: 'auth' in svcRaw,
         certArn: svcRaw.certArn || undefined,
         certName: svcRaw.certName || undefined,
         domain: url.domain,
@@ -792,6 +791,7 @@ export default class OtomiStack {
         tlsPass: 'tlsPass' in svcRaw,
         type: svcRaw.type,
         useDefaultSubdomain: !svcRaw.domain && svcRaw.ownHost,
+        ingressClassName: svcRaw.ingressClassName || undefined,
       }
     }
 
@@ -826,13 +826,13 @@ export default class OtomiStack {
       const ing = svc.ingress
       if (ing.useDefaultSubdomain) svcCloned.ownHost = true
       else svcCloned.domain = `${ing.subdomain}.${ing.domain}`
-      if (ing.auth) svcCloned.auth = true
       if (ing.hasCert) svcCloned.hasCert = true
       if (ing.certName) svcCloned.certName = ing.certName
       if (ing.certArn) svcCloned.certArn = ing.certArn
       if (ing.paths) svcCloned.paths = ing.paths
       if (ing.forwardPath) svcCloned.forwardPath = true
       if (ing.tlsPass) svcCloned.tlsPass = true
+      if (ing.ingressClassName) svcCloned.ingressClassName = ing.ingressClassName
       svcCloned.type = svc.ingress.type
     } else svcCloned.type = 'cluster'
     return svcCloned

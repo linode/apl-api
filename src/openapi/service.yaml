@@ -48,7 +48,6 @@ Service:
       # Note: the order matters first schema must be nullable empty object
       oneOf:
         - $ref: '#/IngressCluster'
-        - $ref: '#/IngressPrivate'
         - $ref: '#/IngressPublic'
       x-externalDocsPath: docs/console/services/#configuring-exposure-ingress
     networkPolicy:
@@ -61,6 +60,11 @@ Service:
 
 Ingress:
   properties:
+    ingressClassName:
+      description: Assign service to a paricular Load Balancer by selecting ingress class name
+      title: Ingress Class Name
+      type: string
+      x-default: 'platform'
     tlsPass:
       description: Pass through the request as is to the backing service. Only available for predeployed regular (non-knative) services.
       title: TLS passthrough
@@ -90,11 +94,6 @@ Ingress:
     forwardPath:
       description: Forward the URL path into the service (don't rewrite to /)
       title: Forward path
-      type: boolean
-      x-default: false
-    auth:
-      description: Will check if the user is logged in to one of keycloak's OIDC providers.
-      title: Authenticate with Single Sign On
       type: boolean
       x-default: false
     hasCert:
@@ -135,19 +134,6 @@ IngressCluster:
         - cluster
       default: cluster
 
-IngressPrivate:
-  allOf:
-    - $ref: '#/Ingress'
-    - properties:
-        type:
-          type: string
-          enum:
-            - private
-          default: private
-  nullable: true
-  description: Will only accept traffic coming from the private-network loadbalancer. (Coming soon!)
-  title: Private
-
 IngressPublic:
   allOf:
     - $ref: '#/Ingress'
@@ -159,7 +145,7 @@ IngressPublic:
           default: public
   nullable: true
   description: Will only accept traffic coming from the public loadbalancer.
-  title: Public
+  title: Ingress
 
 networkPolicy:
   additionalProperties: false
