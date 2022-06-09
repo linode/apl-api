@@ -38,8 +38,7 @@ teamConfig:
               id: f818a64d-25a4-46e0-9eaf-769b78866033
               name: hello-somecom
               type: public
-            - auth: true
-              domain: master.onprem.example.com
+            - domain: master.onprem.example.com
               id: f818a64d-25a4-46e0-9eaf-769b7886603d
               ksvc:
                   env:

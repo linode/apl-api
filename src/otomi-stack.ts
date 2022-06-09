@@ -751,7 +751,6 @@ export default class OtomiStack {
       'domain',
       'forwardPath',
       'hasCert',
-      'auth',
       'ksvc',
       'paths',
       'type',
@@ -782,7 +781,6 @@ export default class OtomiStack {
       const { cluster, dns } = this.getSettings(['cluster', 'dns'])
       const url = getServiceUrl({ domain: svcRaw.domain, name: svcRaw.name, teamId, cluster, dns })
       svc.ingress = {
-        auth: 'auth' in svcRaw,
         certArn: svcRaw.certArn || undefined,
         certName: svcRaw.certName || undefined,
         domain: url.domain,
@@ -828,7 +826,6 @@ export default class OtomiStack {
       const ing = svc.ingress
       if (ing.useDefaultSubdomain) svcCloned.ownHost = true
       else svcCloned.domain = `${ing.subdomain}.${ing.domain}`
-      if (ing.auth) svcCloned.auth = true
       if (ing.hasCert) svcCloned.hasCert = true
       if (ing.certName) svcCloned.certName = ing.certName
       if (ing.certArn) svcCloned.certArn = ing.certArn

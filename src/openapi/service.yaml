@@ -96,11 +96,6 @@ Ingress:
       title: Forward path
       type: boolean
       x-default: false
-    auth:
-      description: Will check if the user is logged in to one of keycloak's OIDC providers.
-      title: Authenticate with Single Sign On
-      type: boolean
-      x-default: false
     hasCert:
       description: Select when a certificate exists and should not be generated.
       title: Already has a certificate
