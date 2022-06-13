@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.8](https://github.com/redkubes/otomi-api/compare/v0.5.7...v0.5.8) (2022-06-13)
+
+
+### Features
+
+* ingress class ([#315](https://github.com/redkubes/otomi-api/issues/315)) ([1834ae9](https://github.com/redkubes/otomi-api/commit/1834ae963012b03d71e12956f0f490d082ed2531))
+* kubeclarity ([#310](https://github.com/redkubes/otomi-api/issues/310)) ([57c6c5f](https://github.com/redkubes/otomi-api/commit/57c6c5f88a6b5ec602f8e637e16652aea0c00f06))
+
+
+### Code Refactoring
+
+* **component:** refactor tests and regenerate fixtures ([#313](https://github.com/redkubes/otomi-api/issues/313)) ([2f177ca](https://github.com/redkubes/otomi-api/commit/2f177ca38b17d38ec09c9e85ffa74f39ae9bf24a))
+
 ### [0.5.7](https://github.com/redkubes/otomi-api/compare/v0.5.6...v0.5.7) (2022-05-23)
 
 
