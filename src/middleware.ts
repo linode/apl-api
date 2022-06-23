@@ -140,7 +140,7 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): Requ
   authz.init(user)
 
   let valid
-  if (action === 'read' && schemaName === 'Kubecfg') valid = authz.hasSelfService(teamId, 'Team', 'downloadKubeConfig')
+  if (action === 'read' && schemaName === 'Kubecfg') valid = authz.hasSelfService(teamId, 'team', 'downloadKubeConfig')
   else valid = authz.validateWithRbac(action, schemaName, teamId, req.body)
   if (!valid) {
     return res

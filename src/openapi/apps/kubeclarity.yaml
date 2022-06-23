@@ -21,6 +21,7 @@ AppKubeclarity:
       items:
         $ref: ../definitions.yaml#/shortcut
     values:
+      x-externalDocsPath: docs/console/apps/kubeclarity
       type: object
       properties:
         resources:

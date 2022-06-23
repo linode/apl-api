@@ -39,10 +39,8 @@ Cluster:
   properties:
     name:
       $ref: definitions.yaml#/clusterName
-      readOnly: true
     domainSuffix:
       $ref: definitions.yaml#/domainSuffix
-      readOnly: true
     provider:
       $ref: definitions.yaml#/provider
       readOnly: true

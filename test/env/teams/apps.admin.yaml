@@ -39,6 +39,8 @@ teamConfig:
                 shortcuts: []
             kubeapps:
                 shortcuts: []
+            kubeclarity:
+                shortcuts: []
             loki:
                 shortcuts: []
             prometheus:

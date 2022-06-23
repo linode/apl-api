@@ -245,14 +245,14 @@ export const getTeamSelfServiceAuthz = (
 
   teams.forEach((teamId) => {
     const authz: TeamAuthz = {} as TeamAuthz
-    Object.keys(schema.properties).forEach((schemaName) => {
-      const possiblePermissions = schema.properties[schemaName].items.enum
-      set(authz, `deniedAttributes.${schemaName}`, [])
-      authz.deniedAttributes[schemaName] = possiblePermissions.filter((name) => {
-        const flags = get(otomi.getTeamSelfServiceFlags(teamId), schemaName, [])
+    Object.keys(schema.properties).forEach((propName) => {
+      const possiblePermissions = schema.properties[propName].items.enum
+      set(authz, `deniedAttributes.${propName}`, [])
+      authz.deniedAttributes[propName] = possiblePermissions.filter((name) => {
+        const flags = get(otomi.getTeamSelfServiceFlags(teamId), propName, [])
         return !flags.includes(name)
       })
-      if (schemaName === 'Team') authz.deniedAttributes.Team.push('selfService')
+      if (propName === 'team') authz.deniedAttributes.team.push('selfService')
     })
     permissionMap[teamId] = authz
   })
