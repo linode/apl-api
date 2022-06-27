@@ -469,7 +469,7 @@ files:
     properties:
       path:
         type: string
-        pattern: ^\/([A-z0-9-_+]+\/).*$
+        pattern: ^\/[^\0]+$
         x-message: a valid file name
       content:
         type: string
@@ -1076,7 +1076,7 @@ svcPredeployed:
   title: Existing Kubernetes service
   type: object
 url:
-  pattern: ^(https:\/\/)([\w\-])+\.{1}([a-zA-Z]{2,63})([\/\w-]*)*\/?\??([^#\n\r]*)?#?([^\n\r]*)$
+  pattern: ^https?:\/\/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&\/=]*)
   type: string
 vaultToken:
   title: Token

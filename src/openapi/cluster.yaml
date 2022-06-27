@@ -59,7 +59,6 @@ Cluster:
     owner:
       $ref: definitions.yaml#/idName
       description: A cluster owner. Used in alerts/reports to distinguish between resources for different customers.
-      default: otomi
     region:
       $ref: definitions.yaml#/awsRegion
       description: 'An AWS region. Used by charts such as cluster-autoscaler and aws-certs job. Example: eu-central-1'

@@ -825,7 +825,7 @@ export default class OtomiStack {
     if (svc.ingress && svc.ingress.type !== 'cluster') {
       const ing = svc.ingress
       if (ing.useDefaultSubdomain) svcCloned.ownHost = true
-      else svcCloned.domain = `${ing.subdomain}.${ing.domain}`
+      else svcCloned.domain = ing.subdomain ? `${ing.subdomain}.${ing.domain}` : ing.domain
       if (ing.hasCert) svcCloned.hasCert = true
       if (ing.certName) svcCloned.certName = ing.certName
       if (ing.certArn) svcCloned.certArn = ing.certArn
