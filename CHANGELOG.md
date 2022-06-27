@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.9](https://github.com/redkubes/otomi-api/compare/v0.5.8...v0.5.9) (2022-06-27)
+
+
+### Bug Fixes
+
+* file path regex, svc domain deflate, default value removed ([4320a5f](https://github.com/redkubes/otomi-api/commit/4320a5f8dd6f0ac0ddca9b1e38a6b7a9e1c6567f))
+* regression team selfservice, cluster fields editable ([486ee1b](https://github.com/redkubes/otomi-api/commit/486ee1b33eb37cfd29c275602a39ba68a6117273))
+
 ### [0.5.8](https://github.com/redkubes/otomi-api/compare/v0.5.7...v0.5.8) (2022-06-13)
 
 
