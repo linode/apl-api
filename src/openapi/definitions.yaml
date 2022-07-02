@@ -827,22 +827,6 @@ ksvcPredeployed:
 labels:
   $ref: '#/annotations'
   description: A set of labels.
-labelsAnnotations:
-  additionalProperties: false
-  items:
-    properties:
-      name:
-        type: string
-        pattern: ^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]){1,253}\/)?([a-z0-9A-Z]+[a-z0-9A-Z-_.]+[a-z0-9A-Z]){1,63}$
-        description: A k8s annotation (see https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/)
-        x-message: a valid annotation
-      values:
-        type: string
-        pattern: ^((.){1,253}\/)?(.){1,63}$
-        description: A k8s annotation value
-        x-message: a valid annotation value
-    type: object
-  type: array
 logLevel:
   type: string
   default: info
@@ -933,6 +917,10 @@ rawValues:
   x-acl:
     admin: [read-any, update-any]
     team: []
+replicas:
+  type: integer
+  title: Number of replicas
+  x-default: 1
 repoUrl:
   description: Path to a remote git repo without protocol. Will use https to access.
   pattern: ^(.+@)*([\w\d\.]+)(:[\d]+){0,1}/*(.*)$

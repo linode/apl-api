@@ -24,6 +24,30 @@ lokiValues:
       description: Set this to a date just after deployment in case of an upgrade. (Only needed when running v9 and wanting to upgrade schema.)
       title: Schema v11 start date
       type: string
+    resources:
+      type: object
+      properties:
+        limits:
+          type: object
+          properties:
+            cpu:
+              $ref: ../definitions.yaml#/quantityCpu
+              x-default: 800m
+            memory:
+              $ref: ../definitions.yaml#/quantityMem
+              x-default: 512Mi
+        requests:
+          type: object
+          properties:
+            cpu:
+              $ref: ../definitions.yaml#/quantityCpu
+              x-default: 100m
+            memory:
+              $ref: ../definitions.yaml#/quantityMem
+              x-default: 128Mi
+      required:
+        - limits
+        - requests
   required:
     - adminPassword
 

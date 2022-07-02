@@ -26,6 +26,11 @@ AppPrometheus:
       additionalProperties: false
       type: object
       properties:
+        replicas:
+          $ref: ../definitions.yaml#/replicas
+        scrapeInterval:
+          $ref: ../definitions.yaml#/duration
+          default: 60s
         retention:
           $ref: ../definitions.yaml#/duration
         retentionSize:

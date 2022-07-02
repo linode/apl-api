@@ -560,7 +560,8 @@ export default class OtomiStack {
   }
 
   loadSettings(): void {
-    const data: Settings = this.loadConfig('./env/settings.yaml', `./env/secrets.settings.yaml`)
+    const data: Record<string, any> = this.loadConfig('./env/settings.yaml', `./env/secrets.settings.yaml`)
+    data.otomi.nodeSelector = objectToArray(data.otomi.nodeSelector || {})
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
@@ -663,7 +664,8 @@ export default class OtomiStack {
   }
 
   saveSettings(): void {
-    const settings = this.getSettings()
+    const settings: Record<string, any> = cloneDeep(this.getSettings())
+    settings.otomi.nodeSelector = arrayToObject(settings.otomi.nodeSelector)
     this.saveConfig('./env/settings.yaml', `./env/secrets.settings.yaml`, omit(settings, ['cluster', 'policies']))
   }
 
