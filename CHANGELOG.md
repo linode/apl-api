@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.10](https://github.com/redkubes/otomi-api/compare/v0.5.9...v0.5.10) (2022-07-03)
+
+
+### Features
+
+* otomi.nodeselector, schema additions ([58ee5a2](https://github.com/redkubes/otomi-api/commit/58ee5a2ae12ce00dfee0c74f1aad9a3234e2bf9b))
+
 ### [0.5.9](https://github.com/redkubes/otomi-api/compare/v0.5.8...v0.5.9) (2022-06-27)
 
 
