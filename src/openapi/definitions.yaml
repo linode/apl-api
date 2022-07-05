@@ -353,16 +353,22 @@ dns:
             azure:
               x-hideTitle: true
               properties:
-                cloud:
-                  title: Cloud
+                environment:
                   type: string
-                  description: Azure Cloud
+                  description: Name of the Azure environment.
+                  default: AzurePublicCloud
+                  enum:
+                    - AzurePublicCloud
+                    - AzureChinaCloud
+                    - AzureUSGovernment
+                    - AzureGermanCloud
                 resourceGroup:
                   title: Resource group
                   type: string
-                  description: Azure resource group
+                  description: Azure resource group. Required for cert-manager.
                 hostedZoneName:
                   title: Hosted zone name
+                  description: Name of the DNS zone that should be used.
                   type: string
                 tenantId:
                   title: Tenant ID
@@ -380,7 +386,7 @@ dns:
                 userAssignedIdentityID:
                   title: MSI id
                   type: string
-                  description: If you use Azure MSI, this is the Client ID of a Azure user-assigned managed identity (optional, system-assigned managed identity is used if empty)
+                  description: If you use Azure MSI, this is the Client ID of a Azure user-assigned managed identity or resource id. Required for cert-manager.
                   x-secret: ''
                 aadClientId:
                   title: Client ID
@@ -390,6 +396,10 @@ dns:
                   title: Client secret
                   type: string
                   description: Azure Application Client Secret
+              required:
+                - tenantId
+                - subscriptionId
+                - resourceGroup
               type: object
           required:
             - azure
