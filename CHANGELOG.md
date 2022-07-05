@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.11](https://github.com/redkubes/otomi-api/compare/v0.5.10...v0.5.11) (2022-07-05)
+
+
+### Bug Fixes
+
+* dns schema to match core [ci skip] ([c78d93c](https://github.com/redkubes/otomi-api/commit/c78d93c1b5663bbfdd15103db13973d6ab5e466a))
+
 ### [0.5.10](https://github.com/redkubes/otomi-api/compare/v0.5.9...v0.5.10) (2022-07-03)
 
 
