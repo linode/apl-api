@@ -91,7 +91,7 @@ AppVault:
                       type: string
                       x-secret: ''
                     key_name:
-                      $ref: '#/definitions/wordCharacterPattern'
+                      $ref: ../definitions.yaml#/wordCharacterPattern
                   required:
                     - vault_name
                     - tenant_id
