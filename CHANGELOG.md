@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.12](https://github.com/redkubes/otomi-api/compare/v0.5.11...v0.5.12) (2022-07-27)
+
+
+### Bug Fixes
+
+* azure vault unseal ([#316](https://github.com/redkubes/otomi-api/issues/316)) ([7916f15](https://github.com/redkubes/otomi-api/commit/7916f151003e10c52624e54e64c69ad6328da37a))
+* regexp for responders ([#318](https://github.com/redkubes/otomi-api/issues/318)) ([5158f5b](https://github.com/redkubes/otomi-api/commit/5158f5b6a7cdf124bd7013baa9358be314c857c2))
+
 ### [0.5.11](https://github.com/redkubes/otomi-api/compare/v0.5.10...v0.5.11) (2022-07-05)
 
 
