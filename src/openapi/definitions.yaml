@@ -6,6 +6,58 @@ adminPassword:
   x-acl:
     admin: [read-any, update-any]
     team: []
+azure:
+  dns:
+    properties:
+      environment:
+        type: string
+        description: Name of the Azure environment.
+        default: AzurePublicCloud
+        enum:
+          - AzurePublicCloud
+          - AzureChinaCloud
+          - AzureUSGovernment
+          - AzureGermanCloud
+      resourceGroup:
+        title: Resource group
+        type: string
+        description: Azure resource group. Required for cert-manager.
+      hostedZoneName:
+        title: Hosted zone name
+        description: Name of the DNS zone that should be used.
+        type: string
+      tenantId:
+        title: Tenant ID
+        type: string
+        description: Azure tenant ID
+      subscriptionId:
+        title: Subscription ID
+        type: string
+        description: Azure subscription ID
+      useManagedIdentityExtension:
+        title: Using managed identities?
+        description: If you use Azure MSI, this should be set to true
+        type: boolean
+        x-default: false
+      userAssignedIdentityID:
+        title: MSI id
+        type: string
+        description: If you use Azure MSI, this is the Client ID of a Azure user-assigned managed identity or resource id. Required for cert-manager.
+        x-secret: ''
+      aadClientId:
+        title: Client ID
+        type: string
+        description: Azure Application Client ID
+      aadClientSecret:
+        title: Client secret
+        type: string
+        description: Azure Application Client Secret
+    required:
+      - tenantId
+      - subscriptionId
+      - resourceGroup
+    type: object
+
 alerts:
   additionalProperties: false
   type: object
@@ -352,57 +404,16 @@ dns:
           properties:
             azure:
               x-hideTitle: true
-              properties:
-                environment:
-                  type: string
-                  description: Name of the Azure environment.
-                  default: AzurePublicCloud
-                  enum:
-                    - AzurePublicCloud
-                    - AzureChinaCloud
-                    - AzureUSGovernment
-                    - AzureGermanCloud
-                resourceGroup:
-                  title: Resource group
-                  type: string
-                  description: Azure resource group. Required for cert-manager.
-                hostedZoneName:
-                  title: Hosted zone name
-                  description: Name of the DNS zone that should be used.
-                  type: string
-                tenantId:
-                  title: Tenant ID
-                  type: string
-                  description: Azure tenant ID
-                subscriptionId:
-                  title: Subscription ID
-                  type: string
-                  description: Azure subscription ID
-                useManagedIdentityExtension:
-                  title: Using managed identities?
-                  description: If you use Azure MSI, this should be set to true
-                  type: boolean
-                  x-default: false
-                userAssignedIdentityID:
-                  title: MSI id
-                  type: string
-                  description: If you use Azure MSI, this is the Client ID of a Azure user-assigned managed identity or resource id. Required for cert-manager.
-                  x-secret: ''
-                aadClientId:
-                  title: Client ID
-                  type: string
-                  description: Azure Application Client ID
-                aadClientSecret:
-                  title: Client secret
-                  type: string
-                  description: Azure Application Client Secret
-              required:
-                - tenantId
-                - subscriptionId
-                - resourceGroup
-              type: object
+              $ref: '#/azure/dns'
           required:
             - azure
+        - title: Azure Private
+          properties:
+            azure-private-dns:
+              x-hideTitle: true
+              $ref: '#/azure/dns'
+          required:
+            - azure-private-dns
           type: object
         - title: Google
           properties:
