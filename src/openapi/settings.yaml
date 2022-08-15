@@ -40,11 +40,9 @@ Settings:
           properties:
             isManaged:
               title: Managed by AKS
-              description:
-                In case `otomi.hasCloudLB` is set, this setting indicates that an Azure AppGW Ingress Controller was already installed by AKS as an addon (only available on "Preview" clusters).
-                Turning this off will let Otomi install an AppGW controller.
+              description: Indicates Azure Application Gateway Ingress Controller add-on is installed by AKS.
               type: boolean
-              x-default: true
+              x-default: false
           type: object
         monitor:
           $ref: definitions.yaml#/azureMonitor
