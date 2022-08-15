@@ -37,6 +37,7 @@ Settings:
         team: []
       properties:
         appgw:
+          title: Azure Application Gateway Ingress Controller
           properties:
             isManaged:
               title: Managed by AKS
@@ -193,8 +194,8 @@ Settings:
             admin: [read-any, update-any]
             team: []
         hasCloudLB:
-          description: Set this to true when an external load balancer exists (Azure AppGW, Google Apigee) or needs to be started (AWS ALB). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.
-          title: External load balancer
+          description: Set this to true when using a cloud specific ingress controller. By default the Nginx Ingress Controller is used.
+          title: Cloud ingress controller
           type: boolean
           x-default: false
         hasExternalDNS:
