@@ -22,7 +22,7 @@ Settings:
     home:
       $ref: definitions.yaml#/alerts
       title: Home alerts
-      description: Same setup as 'Alerts', but to send copies of alerts "home". Useful for co-monitoring managed clusters of customers.
+      description: Useful for 3rd party co-monitoring.
       x-externalDocsPath: docs/console/settings#home-alerts
       x-acl:
         admin: [read-any, update-any]
@@ -171,7 +171,7 @@ Settings:
           title: Global pullsecret
           description: Will be connected to each "default" service account in all otomi app namespaces.
             Handy for authenticating with DockerHub to avoid rate limiting.
-            Also useful when pulling all otomi images from a private repo. (One would need to override all the images in the config first.)
+            Also useful when pulling all otomi images from a private repo. (One would need to override all the images in the config first).
           additionalProperties: false
           properties:
             username:
@@ -199,18 +199,18 @@ Settings:
           type: boolean
           x-default: false
         hasExternalDNS:
-          description: Set this to true when an external dns zone is available to manage dns records. (Expects required `dns:` fields to be set.)
+          description: Set this to true when an external dns zone is available to manage dns records. (Expects required `dns:` fields to be set).
           title: External DNS
           type: boolean
           x-default: false
         hasExternalIDP:
-          description: Set this to true when bringing your own external IDP such as Azure AD. (Expects required `oidc:` fields to be set.)
+          description: Set this to true when bringing your own external IDP such as Azure AD. (Expects required `oidc:` fields to be set).
           title: External IDP
           type: boolean
           x-default: false
         isHomeMonitored:
-          description: Whether this cluster is home monitored (like when under a Premium SLA). Sends criticals home.
-          title: Home monitored
+          description: Whether this cluster is co-monitored.
+          title: Home alerts
           type: boolean
           x-default: false
         isMultitenant:
