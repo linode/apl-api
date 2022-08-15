@@ -213,12 +213,6 @@ Settings:
           title: Home monitored
           type: boolean
           x-default: false
-        isManaged:
-          description: Whether masters are managed and not under control. Will be turned on automatically when provider is "custom", but if that is not desired, it must be explictily set to "false" before install of otomi.
-          title: Managed masters
-          type: boolean
-          x-default: true
-          readOnly: true
         isMultitenant:
           description: Will separate team metrics and logs. Disabling this effectively gives all users admin role and lets them see everything.
           title: Multi-tenancy
