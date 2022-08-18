@@ -73,6 +73,16 @@ definitions:
             $ref: '#/definitions/url'
             description: A Slack webhook URL.
             x-secret: ''
+      watchdog:
+        additionalProperties: false
+        properties:
+          enabled:
+            default: false
+            type: boolean
+          endpoints:
+            description: A YAML array of endpoints for Watchdog Alerts
+            $ref: '#/definitions/rawValues'
+            x-secret: ''
       opsgenie:
         additionalProperties: false
         properties:

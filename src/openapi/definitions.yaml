@@ -78,6 +78,20 @@ alerts:
         - lowPrio
       title: Microsoft Teams
       type: object
+      watchdog:
+        title: Watchdog
+        description: |
+          Configuration for Watchdog (a.k.a Heartbeat, dead man's switch...) alert from AlertManager.
+          YAML snippets will be inserted
+        additionalProperties: false
+        properties:
+          enabled:
+            default: false
+            type: boolean
+          receivers:
+            description: A YAML array of endpoints for Watchdog Alerts
+            $ref: '#/rawValues'
+            x-secret: ''
     opsgenie:
       title: OpsGenie
       description: Configure OpsGenie endpoints for alerts. Criticals will get level P1, and non-crits P2.
