@@ -20,6 +20,20 @@ alerts:
       description: How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.)
       title: Group Interval
       type: string
+    watchdog:
+      title: Watchdog alert configuration
+      description: |
+        Configuration for Watchdog (a.k.a Heartbeat, dead man's switch...) alert from AlertManager.
+        YAML snippets will be inserted into "watchdog" receiver in values ("watchdog-home" is using home-alerts")
+      additionalProperties: false
+      properties:
+        enabled:
+          x-default: false
+          type: boolean
+        endpoints:
+          description: A YAML array of endpoints for Watchdog Alerts
+          $ref: '#/rawValues'
+          x-secret: ''
     receivers:
       description: Select default notification channel(s) for receiving alerts.
       items:
@@ -78,20 +92,6 @@ alerts:
         - lowPrio
       title: Microsoft Teams
       type: object
-      watchdog:
-        title: Watchdog
-        description: |
-          Configuration for Watchdog (a.k.a Heartbeat, dead man's switch...) alert from AlertManager.
-          YAML snippets will be inserted
-        additionalProperties: false
-        properties:
-          enabled:
-            default: false
-            type: boolean
-          receivers:
-            description: A YAML array of endpoints for Watchdog Alerts
-            $ref: '#/rawValues'
-            x-secret: ''
     opsgenie:
       title: OpsGenie
       description: Configure OpsGenie endpoints for alerts. Criticals will get level P1, and non-crits P2.
