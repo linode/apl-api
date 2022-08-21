@@ -1,8 +1,5 @@
 AppKubeapps:
   additionalProperties: false
-  x-externalDocsPath: https://kubeapps.com
-  x-short: Your Application Dashboard for Kubernetes
-  description: Kubeapps is a web-based UI for deploying and managing applications in Kubernetes clusters
   title: Kubeapps
   type: object
   properties:

@@ -155,13 +155,6 @@ lokiStorageProvider:
 
 AppLoki:
   additionalProperties: false
-  x-externalDocsPath: https://grafana.com/oss/loki/
-  x-short: 'Like Prometheus, but for logs.'
-  description: Loki is a horizontally scalable, highly available, multi-tenant log aggregation system inspired by Prometheus. It is designed to be very cost effective and easy to operate. It does not index the contents of the logs, but rather a set of labels for each log stream.
-  x-info: |
-    Loki aggregates all the container logs from the platform and stores them in a storage endpoint of choice (defaults to PVC). When Otomi is installed in multi-tenancy mode (see settings/otomi) it will split logs from team namespaces and make them available only to team members.
-
-    Otomi provides Loki shortcuts to selections of logs based on interest.
   title: Loki
   type: object
   properties:
