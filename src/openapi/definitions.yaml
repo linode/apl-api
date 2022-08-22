@@ -908,6 +908,8 @@ provider:
     - azure
     - digitalocean
     - google
+    - ovh
+    - vultr
     - custom
 quantityCpu:
   title: CPU quantity
