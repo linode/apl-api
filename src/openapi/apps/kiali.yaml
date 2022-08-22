@@ -1,12 +1,4 @@
 AppKiali:
-  additionalProperties: false
-  x-externalDocsPath: https://kiali.io
-  x-short: The Console for Istio Service Mesh.
-  description: Manage, visualize, validate and troubleshoot your mesh!
-  x-info: |
-    Kiali may be installed by Otomi to gain observability insights on its network traffic. It runs in anonymous mode and each authenticated user is given the same authorization, allowing them to see everything.
-
-    In the future this may be limited according to scope such as role and teams.
   title: Kiali
   type: object
   properties:

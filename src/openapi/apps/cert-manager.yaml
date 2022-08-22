@@ -1,11 +1,5 @@
 AppCertManager:
   additionalProperties: false
-  x-externalDocsPath: https://cert-manager.io/docs/
-  x-short: Cloud native certificate management
-  description: Automate certificate management in cloud native environments. Cert-manager builds on top of Kubernetes and OpenShift to provide X.509 certificates and issuers as first-class resource types. Provide 'certificates as a service' securely to developers and applications working within your cluster.
-  x-info: |
-    CertManager is used by Otomi to automatically create and rotate TLS certificates for service endpoints. You may bring your own CA, or let Otomi create one for you, but we recommend using [Letsencrypt](https://letsencrypt.org) for production certificates.
-    Setting CertManager to use Letsencrypt requires DNS availability of the requesting domains however, and forces Otomi to install [ExternalDNS](/apps/admin/external-dns). Because a lot of DNS settings are used by other Otomi contexts, most DNS configuration is found under [settings/dns](/settings/dns).
   title: CertManager
   type: object
   properties:
@@ -20,7 +14,7 @@ AppCertManager:
       items:
         $ref: ../definitions.yaml#/shortcut
     values:
-      x-externalDocsPath: docs/console/apps/cert-manager
+      x-externalDocsPath: docs/apps/cert-manager
       additionalProperties: false
       type: object
       properties:

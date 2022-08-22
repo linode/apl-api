@@ -1,10 +1,5 @@
 AppPrometheus:
   additionalProperties: false
-  x-externalDocsPath: https://prometheus.io
-  x-short: From metrics to insight
-  description: Power your metrics and alerting with the leading open-source monitoring solution.
-  x-info: |
-    Prometheus aggregates all the metrics from the platform and stores them in a storage endpoint of choice (defaults to PVC).
   title: Prometheus
   type: object
   properties:
@@ -22,7 +17,7 @@ AppPrometheus:
       items:
         $ref: ../definitions.yaml#/shortcut
     values:
-      x-externalDocsPath: docs/console/apps/prometheus
+      x-externalDocsPath: docs/apps/prometheus
       additionalProperties: false
       type: object
       properties:
