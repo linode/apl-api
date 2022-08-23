@@ -1,6 +1,5 @@
 AppKubeapps:
   additionalProperties: false
-  title: Kubeapps
   type: object
   properties:
     id:

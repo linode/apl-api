@@ -1,6 +1,5 @@
 AppPrometheus:
   additionalProperties: false
-  title: Prometheus
   type: object
   properties:
     id:

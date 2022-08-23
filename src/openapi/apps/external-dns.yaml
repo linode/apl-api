@@ -1,6 +1,5 @@
 AppExternalDns:
   additionalProperties: false
-  title: External DNS
   type: object
   properties:
     id:

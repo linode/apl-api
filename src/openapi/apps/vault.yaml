@@ -1,6 +1,5 @@
 AppVault:
   additionalProperties: false
-  title: Vault
   type: object
   properties:
     id:

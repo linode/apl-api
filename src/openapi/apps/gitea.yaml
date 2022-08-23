@@ -1,6 +1,5 @@
 AppGitea:
   additionalProperties: false
-  title: Gitea
   type: object
   properties:
     id:

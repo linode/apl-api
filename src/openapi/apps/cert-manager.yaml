@@ -1,6 +1,5 @@
 AppCertManager:
   additionalProperties: false
-  title: CertManager
   type: object
   properties:
     id:

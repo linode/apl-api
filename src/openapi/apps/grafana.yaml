@@ -1,6 +1,5 @@
 AppGrafana:
   additionalProperties: false
-  title: Grafana
   type: object
   properties:
     id:

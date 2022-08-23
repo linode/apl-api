@@ -1,6 +1,5 @@
 AppGatekeeper:
   additionalProperties: false
-  title: Gatekeeper
   type: object
   properties:
     id:

@@ -1,6 +1,5 @@
 AppAlertmanager:
   additionalProperties: false
-  title: Alertmanager
   type: object
   properties:
     id:

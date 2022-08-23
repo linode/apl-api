@@ -1,5 +1,4 @@
 AppKiali:
-  title: Kiali
   type: object
   properties:
     id:

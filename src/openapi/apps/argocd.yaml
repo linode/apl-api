@@ -1,6 +1,5 @@
 AppArgocd:
   additionalProperties: false
-  title: Argo CD
   type: object
   properties:
     id:

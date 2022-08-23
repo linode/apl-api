@@ -1,6 +1,5 @@
 AppDrone:
   additionalProperties: false
-  title: Drone
   type: object
   properties:
     id:

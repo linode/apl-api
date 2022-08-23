@@ -1,6 +1,5 @@
 AppIstio:
   additionalProperties: false
-  title: Istio
   type: object
   properties:
     id:

@@ -1,6 +1,5 @@
 AppKubeclarity:
   additionalProperties: false
-  title: KubeClarity
   type: object
   properties:
     id:

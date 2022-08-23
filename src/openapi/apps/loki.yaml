@@ -155,7 +155,6 @@ lokiStorageProvider:
 
 AppLoki:
   additionalProperties: false
-  title: Loki
   type: object
   properties:
     id:

@@ -1,6 +1,5 @@
 AppIngressNginx:
   additionalProperties: false
-  title: Ingress-NGINX
   type: object
   properties:
     id:

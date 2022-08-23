@@ -1,6 +1,5 @@
 AppHarbor:
   additionalProperties: false
-  title: Harbor
   type: object
   properties:
     id:

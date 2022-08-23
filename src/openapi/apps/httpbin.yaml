@@ -1,6 +1,5 @@
 AppHttpbin:
   additionalProperties: false
-  title: Httpbin
   type: object
   properties:
     id:

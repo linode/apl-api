@@ -1,6 +1,5 @@
 AppJaeger:
   additionalProperties: false
-  title: Jaeger
   type: object
   properties:
     id:

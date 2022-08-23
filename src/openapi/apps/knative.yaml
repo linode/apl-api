@@ -1,6 +1,5 @@
 AppKnative:
   additionalProperties: false
-  title: Knative
   type: object
   properties:
     id:

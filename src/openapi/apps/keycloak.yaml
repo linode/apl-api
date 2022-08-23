@@ -1,6 +1,5 @@
 AppKeycloak:
   additionalProperties: false
-  title: Keycloak
   type: object
   properties:
     id:
