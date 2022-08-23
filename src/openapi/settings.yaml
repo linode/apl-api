@@ -22,7 +22,7 @@ Settings:
     home:
       $ref: definitions.yaml#/alerts
       title: Home alerts
-      description: Same setup as 'Alerts', but to send copies of alerts "home". Useful for co-monitoring managed clusters of customers.
+      description: Useful for 3rd party co-monitoring.
       x-externalDocsPath: docs/console/settings#home-alerts
       x-acl:
         admin: [read-any, update-any]
@@ -37,14 +37,13 @@ Settings:
         team: []
       properties:
         appgw:
+          title: Azure Application Gateway Ingress Controller
           properties:
             isManaged:
               title: Managed by AKS
-              description:
-                In case `otomi.hasCloudLB` is set, this setting indicates that an Azure AppGW Ingress Controller was already installed by AKS as an addon (only available on "Preview" clusters).
-                Turning this off will let Otomi install an AppGW controller.
+              description: Indicates Azure Application Gateway Ingress Controller add-on is installed by AKS.
               type: boolean
-              x-default: true
+              x-default: false
           type: object
         monitor:
           $ref: definitions.yaml#/azureMonitor
@@ -195,8 +194,8 @@ Settings:
             admin: [read-any, update-any]
             team: []
         hasCloudLB:
-          description: Set this to true when an external load balancer exists (Azure AppGW, Google Apigee) or needs to be started (AWS ALB). This will then be configured through ingress controllers. Expects existing LBs to terminate https. Currently this is only working correctly for Azure, and not for AWS and Google. AWS is close to completion.
-          title: External load balancer
+          description: Set this to true when using a cloud specific ingress controller. By default the Nginx Ingress Controller is used.
+          title: Cloud ingress controller
           type: boolean
           x-default: false
         hasExternalDNS:
@@ -210,16 +209,10 @@ Settings:
           type: boolean
           x-default: false
         isHomeMonitored:
-          description: Whether this cluster is home monitored (like when under a Premium SLA). Sends criticals home.
-          title: Home monitored
+          description: Whether this cluster is co-monitored.
+          title: Home alerts
           type: boolean
           x-default: false
-        isManaged:
-          description: Whether masters are managed and not under control. Will be turned on automatically when provider is "custom", but if that is not desired, it must be explictily set to "false" before install of otomi.
-          title: Managed masters
-          type: boolean
-          x-default: true
-          readOnly: true
         isMultitenant:
           description: Will separate team metrics and logs. Disabling this effectively gives all users admin role and lets them see everything.
           title: Multi-tenancy
