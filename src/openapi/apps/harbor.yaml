@@ -1,14 +1,5 @@
 AppHarbor:
   additionalProperties: false
-  x-externalDocsPath: https://goharbor.io
-  x-short: Our mission is to be the trusted cloud native repository for Kubernetes
-  description: Harbor is an open source registry that secures artifacts with policies and role-based access control, ensures images are scanned and free from vulnerabilities, and signs images as trusted. Harbor, a CNCF Graduated project, delivers compliance, performance, and interoperability to help you consistently and securely manage artifacts across cloud native compute platforms like Kubernetes and Docker.
-  x-info: |
-    Harbor is configured by Otomi to use the SSO provided by keycloak, and maps its "groups" claim to Harbor teams. Otomi automates the following upon each deployment:
-    - Creating a project in Harbor for each team.
-    - Creating a bot-account for each team from which.
-    - Creating a Kubernetes pull secret in the team namespaces for pulling images out of Harbor.
-  title: Harbor
   type: object
   properties:
     id:
@@ -25,7 +16,7 @@ AppHarbor:
       items:
         $ref: ../definitions.yaml#/shortcut
     values:
-      x-externalDocsPath: docs/console/apps/harbor
+      x-externalDocsPath: docs/apps/harbor
       additionalProperties: false
       type: object
       properties:

@@ -423,6 +423,13 @@ dns:
           required:
             - google
           type: object
+        - title: Other
+          properties:
+            other:
+              type: object
+              properties: {}
+          required:
+            - other
     entrypoint:
       $ref: '#/ipV4Address'
       description: Optional. A public IP address that will override (loadbalancer) ip used for registering hosts. This allows for access to private clusters.
