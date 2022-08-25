@@ -37,7 +37,6 @@ import {
   getPaths,
   getServiceUrl,
   getValuesSchema,
-  mergeData,
   objectToArray,
 } from './utils'
 import {
@@ -177,12 +176,12 @@ export default class OtomiStack {
     return pick(settings, keys) as Settings
   }
 
-  editSettings(data: Settings) {
+  editSettings(data: Settings, settingId: string) {
     const settings = this.db.db.get('settings').value()
-    const mergedSettings = mergeData(settings, data)
-    this.db.db.set('settings', mergedSettings).write()
+    settings[settingId] = data[settingId]
+    this.db.db.set('settings', settings).write()
     this.db.dirty = true
-    return mergedSettings
+    return settings
   }
 
   getApp(teamId: string, id: string): App {

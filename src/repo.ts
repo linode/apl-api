@@ -128,7 +128,7 @@ export class Repo {
   }
 
   async clone(): Promise<void> {
-    if (env.isDev && env.DISABLE_SYNC) await initValues()
+    if (env.isDev && !env.DISABLE_SYNC) await initValues()
     if (env.DISABLE_SYNC) return
 
     debug(`Checking if local git repository exists at: ${this.path}`)
