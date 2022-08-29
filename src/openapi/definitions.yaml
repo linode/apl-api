@@ -114,7 +114,7 @@ alerts:
                     required: [id]
                     properties:
                       id:
-                        $ref: '#/idName'
+                        $ref: '#/wordCharacterPattern'
                   - title: Name
                     required: [name]
                     properties:
@@ -124,7 +124,7 @@ alerts:
                     required: [username]
                     properties:
                       username:
-                        $ref: '#/idName'
+                        $ref: '#/wordCharacterPattern'
       required:
         - apiKey
         - url
@@ -984,6 +984,8 @@ provider:
     - azure
     - digitalocean
     - google
+    - ovh
+    - vultr
     - custom
 quantityCpu:
   title: CPU quantity

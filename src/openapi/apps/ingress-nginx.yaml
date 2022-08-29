@@ -1,9 +1,5 @@
 AppIngressNginx:
   additionalProperties: false
-  x-externalDocsPath: https://kubernetes.github.io/ingress-nginx/
-  x-short: NGINX Ingress Controller
-  description: Ingress-NGINX is an Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer.
-  title: Ingress-NGINX
   type: object
   properties:
     id:
@@ -17,7 +13,7 @@ AppIngressNginx:
       items:
         $ref: ../definitions.yaml#/shortcut
     values:
-      x-externalDocsPath: docs/console/apps/ingress-nginx
+      x-externalDocsPath: docs/apps/ingress-nginx
       additionalProperties: false
       type: object
       properties:

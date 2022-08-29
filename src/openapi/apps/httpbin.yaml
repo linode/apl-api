@@ -1,8 +1,5 @@
 AppHttpbin:
   additionalProperties: false
-  x-externalDocsPath: https://github.com/postmanlabs/httpbin
-  x-short: A simple HTTP Request & Response Service.
-  title: Httpbin
   type: object
   properties:
     id:

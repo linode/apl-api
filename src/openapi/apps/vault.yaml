@@ -1,12 +1,5 @@
 AppVault:
   additionalProperties: false
-  x-externalDocsPath: https://www.vaultproject.io
-  description: Vault info
-  x-info: |
-    Vault has been made tenant aware in Otomi. When it is enabled, a space will automatically be created for each team, and only team members are allowed access. Vault is automatically configured to use Otomi's Keycloak OIDC settings to login users through Otomi's SSO.
-
-    Vault (like all parts of Otomi) runs natively on Kubernetes. To prevent data from Vault being lost during a rolling cluster upgrade, data persistence can be configured in combination with external (blob) storage. Read more [here](https://www.vaultproject.io/docs/configuration/storage) for configuring external data persistence.
-  title: Vault
   type: object
   properties:
     id:
@@ -23,14 +16,17 @@ AppVault:
       items:
         $ref: ../definitions.yaml#/shortcut
     values:
-      x-externalDocsPath: docs/console/apps/vault
+      x-externalDocsPath: docs/apps/vault
       additionalProperties: false
       type: object
       properties:
         logLevel:
           $ref: ../definitions.yaml#/logLevel
         seal:
-          description: Use a KMS to encrypt and decrypt the master key
+          description: |
+            Use a KMS to encrypt and decrypt the master key.\n
+            WARNING - You must first copy the keys from the "vault-unseal-keys" secret, and import them to your KMS.\n
+            (enabling this feature will delete the unseal key from the cluster without pushing to external kms!)
           nullable: true
           type: object
           oneOf:
@@ -90,11 +86,14 @@ AppVault:
                     client_secret:
                       type: string
                       x-secret: ''
+                    key_name:
+                      $ref: ../definitions.yaml#/wordCharacterPattern
                   required:
                     - vault_name
                     - tenant_id
                     - client_id
                     - client_secret
+                    - key_name
               required:
                 - azurekeyvault
         storage:

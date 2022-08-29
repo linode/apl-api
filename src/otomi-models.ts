@@ -109,5 +109,6 @@ export interface Core {
   k8s: any
   adminApps: any[]
   teamApps: any[]
+  appsInfo: any[]
   teamConfig: any
 }

@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.13](https://github.com/redkubes/otomi-api/compare/v0.5.12...v0.5.13) (2022-08-24)
+
+
+### Features
+
+* add new providers ([#322](https://github.com/redkubes/otomi-api/issues/322)) ([8751ed0](https://github.com/redkubes/otomi-api/commit/8751ed094aaeb420fe1b43ce1718e5f488815a04))
+* schema and related logic grooming ([#320](https://github.com/redkubes/otomi-api/issues/320)) ([846c420](https://github.com/redkubes/otomi-api/commit/846c420b900476cef42e8a7202d9d2da97a1c513)), closes [redkubes/unassigned-issues#442](https://github.com/redkubes/unassigned-issues/issues/442)
+
+
+### Bug Fixes
+
+* removed unused schema fields, updated doc links ([#323](https://github.com/redkubes/otomi-api/issues/323)) ([37f85f5](https://github.com/redkubes/otomi-api/commit/37f85f506c436a5917f93ec10d19c4bb2e0c4327))
+
+### [0.5.12](https://github.com/redkubes/otomi-api/compare/v0.5.11...v0.5.12) (2022-07-27)
+
+
+### Bug Fixes
+
+* azure vault unseal ([#316](https://github.com/redkubes/otomi-api/issues/316)) ([7916f15](https://github.com/redkubes/otomi-api/commit/7916f151003e10c52624e54e64c69ad6328da37a))
+* regexp for responders ([#318](https://github.com/redkubes/otomi-api/issues/318)) ([5158f5b](https://github.com/redkubes/otomi-api/commit/5158f5b6a7cdf124bd7013baa9358be314c857c2))
+
 ### [0.5.11](https://github.com/redkubes/otomi-api/compare/v0.5.10...v0.5.11) (2022-07-05)
 
 
