@@ -12,15 +12,3 @@ AppExternalDns:
       nullable: true
       items:
         $ref: ../definitions.yaml#/shortcut
-    values:
-      x-externalDocsPath: docs/apps/external-dns
-      type: object
-      properties:
-        domainFilters:
-          type: array
-          items:
-            type: string
-        zoneIdFilters:
-          type: array
-          items:
-            type: string
