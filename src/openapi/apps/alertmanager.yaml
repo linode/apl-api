@@ -1,13 +1,5 @@
 AppAlertmanager:
   additionalProperties: false
-  x-externalDocsPath: https://prometheus.io/docs/alerting/latest/alertmanager/
-  x-short: Alerting made easy
-  description: The Alertmanager handles alerts sent by client applications such as the Prometheus server. It takes care of deduplicating, grouping, and routing them to the correct receiver integration such as email, PagerDuty, or OpsGenie. It also takes care of silencing and inhibition of alerts.
-  x-info: |
-    Alertmanager is configured by Otomi to use the global values found under settings' [alerts](/settings/alerts) and [home-alerts](/settings/home).
-
-    A team may decide to override some or all of them, in order to have alerts sent to their own endpoints. Self-service rights to alerting must be enabled for that team (enabled by default for all teams).
-  title: Alertmanager
   type: object
   properties:
     id:
@@ -24,6 +16,7 @@ AppAlertmanager:
       items:
         $ref: ../definitions.yaml#/shortcut
     values:
+      x-externalDocsPath: docs/apps/alertmanager
       additionalProperties: false
       type: object
       properties:

@@ -1,10 +1,5 @@
 AppKubeclarity:
   additionalProperties: false
-  x-externalDocsPath: https://github.com/openclarity/kubeclarity
-  x-short: A runtime security scanner for container images
-  description: KubeClarity is a tool for detection and management of Software Bill Of Materials (SBOM) and vulnerabilities of container images and filesystems.
-  x-info: KubeClarity provides real-time image scanning to help Otomi admins secure their clusters.
-  title: KubeClarity
   type: object
   properties:
     id:
@@ -21,7 +16,7 @@ AppKubeclarity:
       items:
         $ref: ../definitions.yaml#/shortcut
     values:
-      x-externalDocsPath: docs/console/apps/kubeclarity
+      x-externalDocsPath: docs/apps/kubeclarity
       type: object
       properties:
         resources:

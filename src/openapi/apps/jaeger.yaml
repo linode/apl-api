@@ -1,14 +1,5 @@
 AppJaeger:
   additionalProperties: false
-  x-externalDocsPath: https://www.jaegertracing.io
-  x-short: Monitor and troubleshoot transactions in complex distributed systems.
-  description: 'As on-the-ground microservice practitioners are quickly realizing, the majority of operational problems that arise when moving to a distributed architecture are ultimately grounded in two areas: networking and observability. It is simply an orders of magnitude larger problem to network and debug a set of intertwined distributed services versus a single monolithic application.'
-  x-info: |
-    Jaeger may be installed by Otomi to gain tracing insights on its network traffic. It runs in anonymous mode and each authenticated user is given the same authorization, allowing them to see everything.
-
-    In the future this may be limited according to scope such as role and teams.
-
-  title: Jaeger
   type: object
   properties:
     id:
