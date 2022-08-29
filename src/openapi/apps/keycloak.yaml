@@ -54,6 +54,9 @@ AppKeycloak:
           readOnly: true
         adminPassword:
           $ref: ../definitions.yaml#/adminPassword
+        theme:
+          type: string
+          default: otomi
         resources:
           additionalProperties: false
           type: object

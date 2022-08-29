@@ -5,6 +5,7 @@ Settings:
   additionalProperties: false
   properties:
     alerts:
+      additionalProperties: false
       $ref: definitions.yaml#/alerts
       title: Alerts
       description: Configure alerting endpoints to receive notifications from Alertmanager and Otomi deployments.
@@ -13,6 +14,7 @@ Settings:
         admin: [read-any, update-any]
         team: [read-any]
     cluster:
+      additionalProperties: false
       $ref: cluster.yaml#/Cluster
       title: Cluster
       description: Cluster configuration.
@@ -20,6 +22,7 @@ Settings:
         admin: [read-any, update-any]
         team: [read-any]
     home:
+      additionalProperties: false
       $ref: definitions.yaml#/alerts
       title: Home alerts
       description: Same setup as 'Alerts', but to send copies of alerts "home". Useful for co-monitoring managed clusters of customers.

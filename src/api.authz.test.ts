@@ -36,7 +36,7 @@ describe('API authz tests', () => {
 
     it('admin cannot put /settings/alerts with extra properties', (done) => {
       request(app)
-        .put('/v1/settings')
+        .put('/v1/settings/alerts')
         .send({
           alerts: {
             drone: ['msteams'],
@@ -58,7 +58,7 @@ describe('API authz tests', () => {
 
     it('admin can put empty payload, but it wont change anything', (done) => {
       request(app)
-        .put('/v1/settings')
+        .put('/v1/settings/alerts')
         .send({})
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${adminToken}`)
