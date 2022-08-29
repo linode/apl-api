@@ -437,6 +437,7 @@ dns:
                   description: Required when ApiSecret is set.
                 secretName:
                   type: string
+                  description: Existing secret with credentials. Will override credentials provided.
                 proxied:
                   type: boolean
                   x-default: true
@@ -454,6 +455,7 @@ dns:
                   x-secret: true
                 secretName:
                   type: string
+                  description: Existing secret with credentials. Will override credentials provided.
               type: object
           required:
             - digitalocean
