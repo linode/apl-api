@@ -228,9 +228,6 @@ azureDns:
       type: string
       description: Azure Application Client Secret
       x-secret: ''
-    secretName:
-      type: string
-      description: Existing secret with credentials. Will override credentials provided.
     useManagedIdentityExtension:
       title: Using managed identities?
       type: boolean
@@ -393,9 +390,6 @@ dns:
                       $ref: '#/awsSecretKey'
                     accessKey:
                       $ref: '#/awsAccessKey'
-                    secretName:
-                      type: string
-                      description: Existing secret with credentials. Will override credentials provided.
                   type: object
                 region:
                   $ref: '#/awsRegion'
@@ -435,9 +429,6 @@ dns:
                 email:
                   $ref: '#/email'
                   description: Required when ApiSecret is set.
-                secretName:
-                  type: string
-                  description: Existing secret with credentials. Will override credentials provided.
                 proxied:
                   type: boolean
                   x-default: true
@@ -453,9 +444,6 @@ dns:
                 apiToken:
                   type: string
                   x-secret: true
-                secretName:
-                  type: string
-                  description: Existing secret with credentials. Will override credentials provided.
               type: object
           required:
             - digitalocean
@@ -470,9 +458,6 @@ dns:
                   description: A service account key in json format for managing a DNS zone.
                 project:
                   $ref: '#/googleProject'
-                secretName:
-                  type: string
-                  description: Existing secret with credentials. Will override credentials provided.
               required: [project]
               type: object
           required:
