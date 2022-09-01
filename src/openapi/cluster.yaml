@@ -48,7 +48,7 @@ Cluster:
       $ref: definitions.yaml#/k8sVersion
       readOnly: true
     apiName:
-      $ref: definitions.yaml#/idName
+      $ref: definitions.yaml#/k8sName
       title: API name
       description: Name of cluster. On AWS this must match the exact EKS cluster name.
       readOnly: true
