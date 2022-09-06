@@ -201,16 +201,8 @@ definitions:
           - tenantId
           - subscriptionId
           - resourceGroup
-        allOf:
-          - oneOf:
-              - required: [aadClientId, aadClientSecret]
-              - required: [useManagedIdentityExtension, userAssignedIdentityID]
-              - not:
-                  anyOf:
-                    - required: [useManagedIdentityExtension]
-                    - required: [userAssignedIdentityID]
-                    - required: [aadClientId]
-                    - required: [aadClientSecret]
+          - aadClientId
+          - aadClientSecret
       environment:
         title: Azure environment
         description: An Azure environment.

@@ -208,8 +208,6 @@ azureClientSecret:
 azureDns:
   x-hideTitle: true
   properties:
-    environment:
-      $ref: '#/azureEnvironment'
     resourceGroup:
       $ref: '#/azureResourceGroup'
     hostedZoneName:
@@ -222,39 +220,18 @@ azureDns:
       $ref: '#/azureSubscriptionId'
     aadClientId:
       $ref: '#/azureClientId'
-      nullable: true
     aadClientSecret:
       $ref: '#/azureClientSecret'
       title: Client secret
       type: string
       description: Azure Application Client Secret
-      nullable: true
-      x-secret: ''
-    useManagedIdentityExtension:
-      title: Using managed identities?
-      type: boolean
-      description: If you use Azure MSI, this should be set to true
-      default: false
-    userAssignedIdentityID:
-      title: MSI id
-      type: string
-      nullable: true
-      description: If you use Azure MSI, this is the Client ID of a Azure user-assigned managed identity or resource id. Required for cert-manager.
       x-secret: ''
   required:
     - tenantId
     - subscriptionId
     - resourceGroup
-azureEnvironment:
-  title: Azure environment
-  description: An Azure environment. Defaults to "AzurePublicCloud" when nothing chosen.
-  type: string
-  x-default: AzurePublicCloud
-  enum:
-    - AzurePublicCloud
-    - AzureChinaCloud
-    - AzureUSGovernment
-    - AzureGermanCloud
+    - aadClientId
+    - aadClientSecret
 azureMonitor:
   description: Azure Monitor data can be made available in Grafana.
   title: Azure Monitor

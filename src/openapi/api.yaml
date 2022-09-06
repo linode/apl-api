@@ -785,8 +785,6 @@ components:
       $ref: definitions.yaml#/azureClientId
     azureClientSecret:
       $ref: definitions.yaml#/azureClientSecret
-    azureEnvironment:
-      $ref: definitions.yaml#/azureEnvironment
     azureMonitor:
       $ref: definitions.yaml#/azureMonitor
     azureSubscriptionId:
