@@ -76,14 +76,6 @@ export const traverse = (o, func, path = '') =>
     }
   })
 
-export const nullToUndefined = (data) => {
-  const d = cloneDeep(data || {})
-  traverse(d, (o, i) => {
-    if (o && o[i] === null) o[i] = undefined
-  })
-  return d
-}
-
 export const isOf = (o): boolean => Object.keys(o).some((p) => ['anyOf', 'allOf', 'oneOf'].includes(p))
 
 export const extract = memoize((o, f) => {

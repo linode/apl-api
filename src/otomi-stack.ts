@@ -186,7 +186,8 @@ export default class OtomiStack {
 
   editSettings(data: Settings, settingId: string) {
     const settings = this.db.db.get('settings').value()
-    settings[settingId] = merge(settings[settingId], data[settingId])
+    // do not merge as oneOf properties cannot be merged
+    // settings[settingId] = merge(settings[settingId], data[settingId])
     settings[settingId] = removeBlankAttributes(settings[settingId])
     this.db.db.set('settings', settings).write()
     this.db.dirty = true
@@ -215,7 +216,7 @@ export default class OtomiStack {
 
   editApp(teamId, id, data: App): App {
     // @ts-ignore
-    return this.db.updateItem('apps', data, { teamId, id }, true)
+    return this.db.updateItem('apps', data, { teamId, id })
   }
 
   canToggleApp(id): boolean {
@@ -230,7 +231,7 @@ export default class OtomiStack {
       // we might be given a dep that is only relevant to core, or
       // which is essential, so skip it
       const orig = this.db.getItemReference('apps', { teamId, id }, false)
-      if (orig && this.canToggleApp(id)) this.db.updateItem('apps', { enabled }, { teamId, id }, true)
+      if (orig && this.canToggleApp(id)) this.db.updateItem('apps', { enabled }, { teamId, id })
     })
   }
 
@@ -272,7 +273,7 @@ export default class OtomiStack {
           },
         } = content
         each(apps, ({ shortcuts }, appId) => {
-          this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
+          this.db.updateItem('apps', { shortcuts }, { teamId, id: appId })
         })
       })
   }
