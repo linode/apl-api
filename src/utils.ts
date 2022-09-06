@@ -2,7 +2,7 @@ import $RefParser from '@apidevtools/json-schema-ref-parser'
 import cleanDeep, { CleanOptions } from 'clean-deep'
 import { existsSync, readFileSync } from 'fs'
 import { load } from 'js-yaml'
-import { isArray, isEqual, memoize, mergeWith, omit } from 'lodash'
+import { isArray, memoize, mergeWith, omit } from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
 import { resolve } from 'path'
 import { Cluster, Dns } from './otomi-models'
@@ -76,11 +76,13 @@ export const traverse = (o, func, path = '') =>
     }
   })
 
-export const nullify = (data) =>
-  traverse(data, (o, i) => {
-    // eslint-disable-next-line no-param-reassign
-    if (typeof o[i] === 'object' && isEqual(o[i], {})) o[i] = null
+export const nullToUndefined = (data) => {
+  const d = cloneDeep(data || {})
+  traverse(d, (o, i) => {
+    if (o && o[i] === null) o[i] = undefined
   })
+  return d
+}
 
 export const isOf = (o): boolean => Object.keys(o).some((p) => ['anyOf', 'allOf', 'oneOf'].includes(p))
 

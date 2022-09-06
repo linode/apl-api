@@ -38,6 +38,7 @@ import {
   getServiceUrl,
   getValuesSchema,
   objectToArray,
+  removeBlankAttributes,
 } from './utils'
 import {
   cleanEnv,
@@ -185,7 +186,8 @@ export default class OtomiStack {
 
   editSettings(data: Settings, settingId: string) {
     const settings = this.db.db.get('settings').value()
-    settings[settingId] = data[settingId]
+    settings[settingId] = merge(settings[settingId], data[settingId])
+    settings[settingId] = removeBlankAttributes(settings[settingId])
     this.db.db.set('settings', settings).write()
     this.db.dirty = true
     return settings

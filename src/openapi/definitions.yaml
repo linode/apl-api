@@ -222,11 +222,13 @@ azureDns:
       $ref: '#/azureSubscriptionId'
     aadClientId:
       $ref: '#/azureClientId'
+      nullable: true
     aadClientSecret:
       $ref: '#/azureClientSecret'
       title: Client secret
       type: string
       description: Azure Application Client Secret
+      nullable: true
       x-secret: ''
     useManagedIdentityExtension:
       title: Using managed identities?
@@ -236,6 +238,7 @@ azureDns:
     userAssignedIdentityID:
       title: MSI id
       type: string
+      nullable: true
       description: If you use Azure MSI, this is the Client ID of a Azure user-assigned managed identity or resource id. Required for cert-manager.
       x-secret: ''
   required:
