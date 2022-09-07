@@ -512,7 +512,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Settings'
 
-    # TODO: https://github.com/redkubes/otomi-api/issues/155
+  '/settings/{settingId}':
+    parameters:
+      - $ref: '#/components/parameters/settingsParams'
     put:
       operationId: editSettings
       description: Edit settings from the 'settings.yaml' or 'secret.settings.yaml' file.
@@ -648,6 +650,13 @@ components:
       required: true
       schema:
         type: string
+    settingsParams:
+      name: settingId
+      in: path
+      description: ID of the setting
+      required: true
+      schema:
+        type: string
 
   securitySchemes:
     groupAuthn:
@@ -776,8 +785,6 @@ components:
       $ref: definitions.yaml#/azureClientId
     azureClientSecret:
       $ref: definitions.yaml#/azureClientSecret
-    azureEnvironment:
-      $ref: definitions.yaml#/azureEnvironment
     azureMonitor:
       $ref: definitions.yaml#/azureMonitor
     azureSubscriptionId:

@@ -130,7 +130,7 @@
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
     "dev": "run-p watch dev:node",
-    "dev:node": "ts-node-dev --watch 'test/apps.yaml,test/core.yaml,src/generated-schema.ts' --inspect=4321 --respawn --transpile-only -r dotenv/config src/app.ts",
+    "dev:node": "ts-node-dev --watch 'test/apps.yaml,test/core.yaml,src/openapi/**/*.yaml,src/generated-schema.ts' --inspect=4321 --respawn --transpile-only -r dotenv/config src/app.ts",
     "lint": "run-p types lint:ts",
     "lint:ts": "eslint --ext ts .",
     "lint:fix": "eslint --ext ts --fix .",

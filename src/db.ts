@@ -7,7 +7,7 @@ import Memory from 'lowdb/adapters/Memory'
 import { v4 as uuidv4 } from 'uuid'
 import { AlreadyExists, NotExistError } from './error'
 import { App, Cluster, Job, Secret, Service, Settings, Team } from './otomi-models'
-import { mergeData } from './utils'
+import { mergeData, removeBlankAttributes } from './utils'
 
 export type DbType = Cluster | Job | Secret | Service | Team | Settings | App
 export type Schema = {
@@ -96,7 +96,8 @@ export default class Db {
     // @ts-ignore
     if (selector && this.db.get(type).find(selector).value())
       throw new AlreadyExists(`Item already exists in '${type}' collection: ${JSON.stringify(selector)}`)
-    const ret = this.populateItem(type, { ...data, ...selector }, selector, id)
+    const cleanData = removeBlankAttributes({ ...data, ...selector })
+    const ret = this.populateItem(type, cleanData, selector, id)
     this.dirty = this.dirtyActive
     return ret
   }
@@ -114,7 +115,7 @@ export default class Db {
     // @ts-ignore
     const idx = col.findIndex(selector).value()
     const merged = merge && prev ? mergeData(prev, data) : data
-    const newData = { ...merged, ...selector }
+    const newData = removeBlankAttributes({ ...merged, ...selector })
     col.value().splice(idx, 1, newData)
     this.dirty = this.dirtyActive
     return newData

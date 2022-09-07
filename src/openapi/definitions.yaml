@@ -205,16 +205,33 @@ azureClientSecret:
   description: An Azure client secret.
   type: string
   x-secret: ''
-azureEnvironment:
-  title: Azure environment
-  description: An Azure environment. Don't specify this if you don't know what you are doing!
-  type: string
-  x-default: AzureCloud
-  enum:
-    - AzureCloud
-    - AzureChinaCloud
-    - AzureUSGovernment
-    - AzureGermanCloud
+azureDns:
+  x-hideTitle: true
+  properties:
+    resourceGroup:
+      $ref: '#/azureResourceGroup'
+    hostedZoneName:
+      title: Hosted zone name
+      description: Name of the DNS zone that should be used.
+      $ref: '#/wordCharacterPattern'
+    tenantId:
+      $ref: '#/azureTenantId'
+    subscriptionId:
+      $ref: '#/azureSubscriptionId'
+    aadClientId:
+      $ref: '#/azureClientId'
+    aadClientSecret:
+      $ref: '#/azureClientSecret'
+      title: Client secret
+      type: string
+      description: Azure Application Client Secret
+      x-secret: ''
+  required:
+    - tenantId
+    - subscriptionId
+    - resourceGroup
+    - aadClientId
+    - aadClientSecret
 azureMonitor:
   description: Azure Monitor data can be made available in Grafana.
   title: Azure Monitor
@@ -263,6 +280,10 @@ azureMonitor:
       required:
         - clientId
         - clientSecret
+azureResourceGroup:
+  title: Azure resource group
+  description: An Azure resource group.
+  type: string
 azureSubscriptionId:
   title: Azure subscription id
   description: An Azure subscription id.
@@ -323,6 +344,16 @@ dns:
       title: Zones
       type: array
       uniqueItems: true
+    domainFilters:
+      description: Limit possible target zones by domain suffixes.
+      items:
+        type: string
+      type: array
+    zoneIdFilters:
+      description: Limit possible target zones by zone id.
+      items:
+        type: string
+      type: array
     provider:
       description: The DNS provider managing the domains.
       title: Provider
@@ -331,19 +362,20 @@ dns:
         - title: AWS
           properties:
             aws:
-              description: Uses explicit credentials when either a role or a pair of id+key is provided. Assumes node role present otherwise.
               x-hideTitle: true
               properties:
-                accessKeyID:
-                  $ref: '#/awsAccessKey'
-                secretAccessKey:
-                  $ref: '#/awsSecretKey'
-                role:
-                  $ref: '#/awsRole'
+                credentials:
+                  properties:
+                    secretKey:
+                      $ref: '#/awsSecretKey'
+                    accessKey:
+                      $ref: '#/awsAccessKey'
+                  type: object
                 region:
                   $ref: '#/awsRegion'
-              required:
-                - region
+                role:
+                  $ref: '#/awsRole'
+              required: [region]
               type: object
           required:
             - aws
@@ -351,58 +383,50 @@ dns:
         - title: Azure
           properties:
             azure:
-              x-hideTitle: true
-              properties:
-                environment:
-                  type: string
-                  description: Name of the Azure environment.
-                  default: AzurePublicCloud
-                  enum:
-                    - AzurePublicCloud
-                    - AzureChinaCloud
-                    - AzureUSGovernment
-                    - AzureGermanCloud
-                resourceGroup:
-                  title: Resource group
-                  type: string
-                  description: Azure resource group. Required for cert-manager.
-                hostedZoneName:
-                  title: Hosted zone name
-                  description: Name of the DNS zone that should be used.
-                  type: string
-                tenantId:
-                  title: Tenant ID
-                  type: string
-                  description: Azure tenant ID
-                subscriptionId:
-                  title: Subscription ID
-                  type: string
-                  description: Azure subscription ID
-                useManagedIdentityExtension:
-                  title: Using managed identities?
-                  description: If you use Azure MSI, this should be set to true
-                  type: boolean
-                  x-default: false
-                userAssignedIdentityID:
-                  title: MSI id
-                  type: string
-                  description: If you use Azure MSI, this is the Client ID of a Azure user-assigned managed identity or resource id. Required for cert-manager.
-                  x-secret: ''
-                aadClientId:
-                  title: Client ID
-                  type: string
-                  description: Azure Application Client ID
-                aadClientSecret:
-                  title: Client secret
-                  type: string
-                  description: Azure Application Client Secret
-              required:
-                - tenantId
-                - subscriptionId
-                - resourceGroup
-              type: object
+              $ref: '#/azureDns'
           required:
             - azure
+          type: object
+        - title: Azure Private DNS
+          properties:
+            azure-private-dns:
+              $ref: '#/azureDns'
+          required:
+            - azure-private-dns
+          type: object
+        - title: CloudFlare
+          properties:
+            cloudflare:
+              x-hideTitle: true
+              properties:
+                apiToken:
+                  type: string
+                  x-secret: true
+                apiSecret:
+                  type: string
+                  x-secret: true
+                  description: Required when Email is set.
+                email:
+                  $ref: '#/email'
+                  description: Required when ApiSecret is set.
+                proxied:
+                  type: boolean
+                  x-default: true
+              type: object
+          required:
+            - cloudflare
+          type: object
+        - title: Digital Ocean
+          properties:
+            digitalocean:
+              x-hideTitle: true
+              properties:
+                apiToken:
+                  type: string
+                  x-secret: true
+              type: object
+          required:
+            - digitalocean
           type: object
         - title: Google
           properties:
@@ -410,15 +434,11 @@ dns:
               x-hideTitle: true
               properties:
                 serviceAccountKey:
-                  description: A service account key for managing a DNS zone.
-                  type: string
-                  x-secret: true
-                  x-formtype: textarea
+                  $ref: '#/googleAccountJson'
+                  description: A service account key in json format for managing a DNS zone.
                 project:
-                  type: string
-              required:
-                - serviceAccountKey
-                - project
+                  $ref: '#/googleProject'
+              required: [project]
               type: object
           required:
             - google
@@ -426,8 +446,26 @@ dns:
         - title: Other
           properties:
             other:
+              description: This option requires configuration for both external-dns as well as cert-manager. No schema validation is available so provide correct data.
               type: object
-              properties: {}
+              properties:
+                name:
+                  type: string
+                  description: Name of the provider.
+                external-dns:
+                  title: YAML for external-dns.
+                  type: object
+                  description: 'The provider config as provided here: https://github.com/redkubes/otomi-core/blob/main/charts/external-dns/values.yaml'
+                  x-secret: ''
+                cert-manager:
+                  title: YAML for cert-manager.
+                  type: object
+                  description: 'The dns01 config as provided here: https://cert-manager.io/docs/configuration/acme/dns01/'
+                  x-secret: ''
+              required:
+                - name
+                - external-dns
+                - cert-manager
           required:
             - other
     entrypoint:
@@ -509,10 +547,14 @@ hostPort:
   pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):()([1-9]|[1-5]?[0-9]{2,4}|6[1-4][0-9]{3}|65[1-4][0-9]{2}|655[1-2][0-9]|6553[1-5])$
   type: string
   x-message: a valid host port
+k8sName:
+  pattern: ^[a-z]([_-a-z0-9]*[a-z0-9])+$
+  type: string
+  x-message: a valid name that consists of lowercase letters, dashes, underscores
 idName:
   pattern: ^[a-z]([-a-z0-9]*[a-z0-9])+$
   type: string
-  x-message: a valid name that consists of lowercase letters and dashes
+  x-message: a valid name that consists of lowercase letters, dashes
 image:
   allOf:
     - properties:
