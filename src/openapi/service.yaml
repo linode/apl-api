@@ -13,11 +13,11 @@ Service:
   x-externalDocsPath: docs/console/services
   properties:
     id:
-      readOnly: true
+      # readOnly: true
       type: string
     teamId:
       $ref: definitions.yaml#/idName
-      readOnly: true
+      # readOnly: true
     name:
       $ref: definitions.yaml#/idName
       description: A service name.

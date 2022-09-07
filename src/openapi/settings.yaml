@@ -84,7 +84,7 @@ Settings:
                   description: The platform ingress class is assigned to all platform applications
                   type: string
                   x-default: platform
-                  readOnly: true
+                  # readOnly: true
             - $ref: definitions.yaml#/ingressClassParameters
         classes:
           title: Additional classes
@@ -155,7 +155,7 @@ Settings:
           x-acl:
             admin: [read-any]
             team: []
-          readOnly: true
+          # readOnly: true
         additionalClusters:
           title: Additional clusters
           description: Enter other k8s clusters, if there are any.
