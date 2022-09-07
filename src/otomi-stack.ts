@@ -188,7 +188,7 @@ export default class OtomiStack {
     const settings = this.db.db.get('settings').value()
     // do not merge as oneOf properties cannot be merged
     // settings[settingId] = merge(settings[settingId], data[settingId])
-    settings[settingId] = removeBlankAttributes(settings[settingId])
+    settings[settingId] = removeBlankAttributes(data[settingId])
     this.db.db.set('settings', settings).write()
     this.db.dirty = true
     return settings
