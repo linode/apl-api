@@ -806,7 +806,7 @@ export default class OtomiStack {
       }
     }
 
-    const res: any = this.db.populateItem('services', svc, undefined, svc.id)
+    const res: any = this.db.populateItem('services', removeBlankAttributes(svc), undefined, svc.id)
     debug(`Loaded service: name: ${res.name}, id: ${res.id}`)
   }
 

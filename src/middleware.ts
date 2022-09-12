@@ -117,6 +117,14 @@ const wrapResponse = (filter, orig) => {
   }
 }
 
+function renameKeys(obj, newKeys) {
+  const keyValues = Object.keys(obj).map((key) => {
+    const newKey = newKeys[key] || key
+    return { [newKey]: obj[key] }
+  })
+  return Object.assign({}, ...keyValues)
+}
+
 export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, otomi: OtomiStack): RequestHandler {
   const {
     params: { teamId },
@@ -125,14 +133,6 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, otomi
   const action = HttpMethodMapping[req.method]
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
   const schemaName = schema.split('/').pop() || null
-
-  const schemaToDbMap = {
-    App: 'apps',
-    Job: 'jobs',
-    Secret: 'secrets',
-    Service: 'services',
-    Settings: 'settings',
-  }
   // If there is no RBAC then we bail
   if (!schemaName) return next()
 
@@ -148,18 +148,33 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, otomi
       .send({ authz: false, message: `User not allowed to perform "${action}" on "${schemaName}" resource` })
   }
 
-  const tableName = schemaToDbMap?.[schemaName]
-  let dataOrig = otomi.db.getItem(tableName, { teamId })
-  dataOrig = dataOrig ? dataOrig : {}
-  const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body, dataOrig)
-
-  if (violatedAttributes.length > 0) {
-    return res.status(403).send({
-      authz: false,
-      message: `User not allowed to modify the following attributes ${violatedAttributes}" of ${schemaName}" resource`,
-    })
+  const schemaToDbMap = {
+    Job: 'jobs',
+    Secret: 'secrets',
+    Service: 'services',
+    Team: 'teams',
   }
 
+  const paramsMap = {
+    serviceId: 'id',
+    secretId: 'id',
+    jobId: 'id',
+  }
+
+  const selector = renameKeys(req.params, paramsMap)
+
+  const tableName = schemaToDbMap?.[schemaName]
+  if (tableName && ['create', 'update'].includes(action)) {
+    let dataOrig = otomi.db.getItemReference(tableName, selector, false)
+    dataOrig = dataOrig ? dataOrig : {}
+    const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body, dataOrig)
+    if (violatedAttributes.length > 0) {
+      return res.status(403).send({
+        authz: false,
+        message: `User not allowed to modify the following attributes ${violatedAttributes}" of ${schemaName}" resource`,
+      })
+    }
+  }
   // filter response based on abac
   // res.json = wrapResponse((obj) => authz.filterWithAbac(schemaName, teamId, obj), res.json.bind(res))
   // res.json = wrapResponse((obj) => authz.filterWithAbac(schemaName, teamId, obj), res.json.bind(res))

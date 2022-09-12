@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Ability, subject } from '@casl/ability'
 import Debug from 'debug'
-import { each, forIn, get, has, isEmpty, omit, set } from 'lodash'
+import { each, forIn, get, isEmpty, isEqual, omit, set } from 'lodash'
 import { Acl, AclAction, OpenAPIDoc, PermissionSchema, Schema, TeamAuthz, User, UserAuthz } from './otomi-models'
 import OtomiStack from './otomi-stack'
 import { extract, flattenObject } from './utils'
@@ -200,7 +200,7 @@ export default class Authz {
       // also check if we are denied by lack of self service
       const deniedSelfServiceAttributes = get(
         this.user.authz,
-        `${teamId}.deniedAttributes.${schemaName}`,
+        `${teamId}.deniedAttributes.${schemaName.toLowerCase()}`,
         [],
       ) as Array<string>
       // the two above denied lists should be mutually exclusive, because a schema design should not
@@ -208,11 +208,7 @@ export default class Authz {
       const deniedAttributes = [...deniedRoleAttributes, ...deniedSelfServiceAttributes]
 
       deniedAttributes.forEach((path) => {
-        if (get(body, path) !== get(dataOrig, path)) violatedAttributes.push(path)
-      })
-
-      deniedAttributes.forEach((path) => {
-        if (has(body, path)) violatedAttributes.push(path)
+        if (!isEqual(get(body, path), get(dataOrig, path))) violatedAttributes.push(path)
       })
     }
     return violatedAttributes
