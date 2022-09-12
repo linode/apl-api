@@ -21,11 +21,38 @@ Settings:
       x-acl:
         admin: [read-any, update-any]
         team: [read-any]
+    backup:
+      additionalProperties: false
+      title: Backup
+      description: Backup schedule configuration.
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
+      type: object
+      properties:
+        platformSchedule:
+          title: Platform
+          description: Backup all Otomi platform services (e.g. Keycloak, Gitea, Harbor)
+          properties:
+            enabled:
+              type: boolean
+        # customSchedules:
+        #   title: Custom backup schedules
+        #   type: array
+        #   items:
+        #     allOf:
+        #       - type: object
+        #         properties:
+        #           scheduleName:
+        #             type: string
+        #       - $ref: definitions.yaml#/backupschedules
+        #     required:
+        #       - scheduleName
     home:
       additionalProperties: false
       $ref: definitions.yaml#/alerts
-      title: Home alerts
-      description: Useful for 3rd party co-monitoring.
+      title: Remote Monitoring
+      description: Send alerts to a 3rd party for remote monitoring
       x-externalDocsPath: docs/console/settings#home-alerts
       x-acl:
         admin: [read-any, update-any]
@@ -212,8 +239,8 @@ Settings:
           type: boolean
           x-default: false
         isHomeMonitored:
-          description: Whether this cluster is co-monitored.
-          title: Home alerts
+          description: Whether this cluster is monitored by a third party.
+          title: Remote monitoring
           type: boolean
           x-default: false
         isMultitenant:
