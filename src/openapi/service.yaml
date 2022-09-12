@@ -1,5 +1,4 @@
 Service:
-  x-db: services
   x-acl:
     admin:
       - delete-any

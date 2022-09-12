@@ -118,6 +118,7 @@ const wrapResponse = (filter, orig) => {
 }
 
 function renameKeys(obj, newKeys) {
+  if (Object.keys(obj).length === 1 && Object.hasOwn(obj, 'teamId')) return { id: obj.teamId }
   const keyValues = Object.keys(obj).map((key) => {
     const newKey = newKeys[key] || key
     return { [newKey]: obj[key] }
@@ -165,8 +166,13 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, otomi
 
   const tableName = schemaToDbMap?.[schemaName]
   if (tableName && ['create', 'update'].includes(action)) {
-    let dataOrig = otomi.db.getItemReference(tableName, selector, false)
-    dataOrig = dataOrig ? dataOrig : {}
+    let dataOrig = get(
+      req,
+      `apiDoc.components.schemas.TeamSelfService.properties.${schemaName.toLowerCase()}.x-allow-values`,
+      {},
+    )
+
+    if (action === 'update') dataOrig = otomi.db.getItemReference(tableName, selector, false) as any
     const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body, dataOrig)
     if (violatedAttributes.length > 0) {
       return res.status(403).send({
