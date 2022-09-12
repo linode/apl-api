@@ -191,7 +191,7 @@ export default class Authz {
     return iCan
   }
 
-  validateWithAbac = (action: string, schemaName: string, teamId: string, body: any) => {
+  validateWithAbac = (action: string, schemaName: string, teamId: string, body: any, dataOrig: any) => {
     const violatedAttributes: Array<string> = []
     if (this.user.roles.includes('admin')) return violatedAttributes
     if (['create', 'update'].includes(action)) {
@@ -206,6 +206,11 @@ export default class Authz {
       // the two above denied lists should be mutually exclusive, because a schema design should not
       // have have both self service as well as acl set for the same property, so we can merge the result
       const deniedAttributes = [...deniedRoleAttributes, ...deniedSelfServiceAttributes]
+
+      deniedAttributes.forEach((path) => {
+        if (get(body, path) !== get(dataOrig, path)) violatedAttributes.push(path)
+      })
+
       deniedAttributes.forEach((path) => {
         if (has(body, path)) violatedAttributes.push(path)
       })

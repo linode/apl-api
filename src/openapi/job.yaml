@@ -1,4 +1,5 @@
 Job:
+  x-db: jobs
   x-acl:
     admin: [read-any, create-any, update-any, delete-any]
     team: [read-any, create, update, delete]
