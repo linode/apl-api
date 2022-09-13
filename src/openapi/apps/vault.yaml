@@ -6,7 +6,7 @@ AppVault:
       $ref: ../definitions.yaml#/idName
     enabled:
       type: boolean
-      x-default: false
+      default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:
@@ -99,12 +99,12 @@ AppVault:
         storage:
           description: Storage configuration. See https://www.vaultproject.io/docs/configuration/storage. Defaults to PVC.
           type: object
-        image:
-          type: object
-          properties:
-            tag:
-              $ref: ../definitions.yaml#/imageTag
-              x-default: 1.14.4
+        # image:
+        #   type: object
+        #   properties:
+        #     tag:
+        #       $ref: ../definitions.yaml#/imageTag
+        #       default: 1.14.4
         resources:
           type: object
           properties:
@@ -113,19 +113,19 @@ AppVault:
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  x-default: 1
+                  default: 1
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  x-default: 512Mi
+                  default: 512Mi
             requests:
               type: object
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  x-default: 500m
+                  default: 500m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  x-default: 256Mi
+                  default: 256Mi
           required:
             - limits
             - requests

@@ -6,7 +6,7 @@ AppPrometheus:
       $ref: ../definitions.yaml#/idName
     enabled:
       type: boolean
-      x-default: false
+      default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:
@@ -30,38 +30,38 @@ AppPrometheus:
         retentionSize:
           type: string
           description: 'The maximum number of bytes of storage blocks to retain. The oldest data will be removed first. Defaults to 0 or disabled. Units supported: B, KB, MB, GB, TB, PB, EB'
-          x-default: 4GB
+          default: 4GB
           pattern: '^([0-9]+\.)?[0-9]+(B|KB|MB|GB|TB|PB|EB)?$'
         storageSize:
           $ref: ../definitions.yaml#/size
-          x-default: 5Gi
-        image:
-          type: object
-          properties:
-            prometheus:
-              type: object
-              properties:
-                tag:
-                  $ref: ../definitions.yaml#/imageTag
-                  x-default: v2.30.3
-                pullPolicy:
-                  $ref: ../definitions.yaml#/imagePullPolicy
-            kube-state-metrics:
-              type: object
-              properties:
-                tag:
-                  $ref: ../definitions.yaml#/imageTag
-                  x-default: v1.8.0
-                pullPolicy:
-                  $ref: ../definitions.yaml#/imagePullPolicy
-            node-exporter:
-              type: object
-              properties:
-                tag:
-                  $ref: ../definitions.yaml#/imageTag
-                  x-default: v1.3.1
-                pullPolicy:
-                  $ref: ../definitions.yaml#/imagePullPolicy
+          default: 5Gi
+        # image:
+        #   type: object
+        #   properties:
+        #     prometheus:
+        #       type: object
+        #       properties:
+        #         tag:
+        #           $ref: ../definitions.yaml#/imageTag
+        #           default: v2.30.3
+        #         pullPolicy:
+        #           $ref: ../definitions.yaml#/imagePullPolicy
+        #     kube-state-metrics:
+        #       type: object
+        #       properties:
+        #         tag:
+        #           $ref: ../definitions.yaml#/imageTag
+        #           default: v1.8.0
+        #         pullPolicy:
+        #           $ref: ../definitions.yaml#/imagePullPolicy
+        #     node-exporter:
+        #       type: object
+        #       properties:
+        #         tag:
+        #           $ref: ../definitions.yaml#/imageTag
+        #           default: v1.3.1
+        #         pullPolicy:
+        #           $ref: ../definitions.yaml#/imagePullPolicy
         resources:
           type: object
           properties:
@@ -73,19 +73,19 @@ AppPrometheus:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 500m
+                      default: 500m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 128Mi
+                      default: 128Mi
               required:
                 - limits
                 - requests
@@ -97,19 +97,19 @@ AppPrometheus:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 128Mi
+                      default: 128Mi
               required:
                 - limits
                 - requests
@@ -121,19 +121,19 @@ AppPrometheus:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 500m
+                      default: 500m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 128Mi
+                      default: 128Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 128Mi
+                      default: 128Mi
               required:
                 - limits
                 - requests

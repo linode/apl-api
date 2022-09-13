@@ -6,7 +6,7 @@ AppGatekeeper:
       $ref: ../definitions.yaml#/idName
     enabled:
       type: boolean
-      x-default: false
+      default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:
@@ -24,17 +24,17 @@ AppGatekeeper:
           title: Audit interval
           description: The frequency with which audit is run.
           type: integer
-          x-default: 60
+          default: 60
         auditFromCache:
           title: Audit from cache
           description: Take the roster of resources to audit from the OPA cache
           type: boolean
-          x-default: false
+          default: false
         constraintViolationsLimit:
           title: Constraint violations limit
           description: The maximum number of audit violations reported on a constraint.
           type: integer
-          x-default: 20
+          default: 20
         dataSync:
           type: array
           items:
@@ -56,17 +56,17 @@ AppGatekeeper:
           title: Disable validating webhook
           description: Disables Gatekeeper from blocking violating admission requests. Check the audit logs in Loki for violations.
           type: boolean
-          x-default: true
+          default: true
         emitAuditEvents:
           title: Emit audit events
           description: Emit K8s events in gatekeeper namespace for audit violations.
           type: boolean
-          x-default: false
+          default: false
         emitAdmissionEvents:
           title: Emit admission events
           description: Emit K8s events in gatekeeper namespace for admission violations.
           type: boolean
-          x-default: false
+          default: false
         excludedNamespaces:
           type: array
           items:
@@ -82,15 +82,15 @@ AppGatekeeper:
             - ERROR
         replicas:
           type: integer
-          x-default: 1
-        image:
-          type: object
-          properties:
-            tag:
-              $ref: ../definitions.yaml#/imageTag
-              x-default: v3.4.0
-            pullPolicy:
-              $ref: ../definitions.yaml#/imagePullPolicy
+          default: 1
+        # image:
+        #   type: object
+        #   properties:
+        #     tag:
+        #       $ref: ../definitions.yaml#/imageTag
+        #       default: v3.4.0
+        #     pullPolicy:
+        #       $ref: ../definitions.yaml#/imagePullPolicy
         resources:
           type: object
           properties:
@@ -102,19 +102,19 @@ AppGatekeeper:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 1000m
+                      default: 1000m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 512Mi
+                      default: 512Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
               required:
                 - limits
                 - requests
@@ -126,19 +126,19 @@ AppGatekeeper:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 1000m
+                      default: 1000m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 512Mi
+                      default: 512Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
               required:
                 - limits
                 - requests

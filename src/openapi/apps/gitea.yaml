@@ -24,33 +24,33 @@ AppGitea:
           description: This password was generated and cannot be changed without manual intervention.
           x-secret: 'randAlphaNum 20'
           # readOnly: true
-        image:
-          type: object
-          properties:
-            gitea:
-              type: object
-              properties:
-                tag:
-                  $ref: ../definitions.yaml#/imageTag
-                  x-default: 1.15.8
-                pullPolicy:
-                  $ref: ../definitions.yaml#/imagePullPolicy
-            postgres:
-              type: object
-              properties:
-                tag:
-                  $ref: ../definitions.yaml#/imageTag
-                  x-default: 13.5.0
-                pullPolicy:
-                  $ref: ../definitions.yaml#/imagePullPolicy
-            memcaches:
-              type: object
-              properties:
-                tag:
-                  $ref: ../definitions.yaml#/imageTag
-                  x-default: 1.6.12
-                pullPolicy:
-                  $ref: ../definitions.yaml#/imagePullPolicy
+        # image:
+        #   type: object
+        #   properties:
+        #     gitea:
+        #       type: object
+        #       properties:
+        #         tag:
+        #           $ref: ../definitions.yaml#/imageTag
+        #           default: 1.15.8
+        #         pullPolicy:
+        #           $ref: ../definitions.yaml#/imagePullPolicy
+        #     postgresql:
+        #       type: object
+        #       properties:
+        #         tag:
+        #           $ref: ../definitions.yaml#/imageTag
+        #           default: 13.5.0
+        #         pullPolicy:
+        #           $ref: ../definitions.yaml#/imagePullPolicy
+        #     memcached:
+        #       type: object
+        #       properties:
+        #         tag:
+        #           $ref: ../definitions.yaml#/imageTag
+        #           default: 1.6.12
+        #         pullPolicy:
+        #           $ref: ../definitions.yaml#/imagePullPolicy
         resources:
           type: object
           properties:
@@ -62,19 +62,19 @@ AppGitea:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: '1'
+                      default: '1'
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 1Gi
+                      default: 1Gi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 128Mi
+                      default: 128Mi
               required:
                 - limits
                 - requests
@@ -86,19 +86,19 @@ AppGitea:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 256m
+                      default: 256m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 128Mi
+                      default: 128Mi
               required:
                 - limits
                 - requests
@@ -110,19 +110,19 @@ AppGitea:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 500m
+                      default: 500m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 512Mi
+                      default: 512Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 250m
+                      default: 250m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
               required:
                 - limits
                 - requests

@@ -33,7 +33,7 @@ Service:
       type: integer
       minimum: 1
       maximum: 65535
-      x-default: 80
+      default: 80
     ksvc:
       oneOf:
         - $ref: definitions.yaml#/svcPredeployed
@@ -64,17 +64,17 @@ Ingress:
       description: Assign service to a paricular Load Balancer by selecting ingress class name
       title: Ingress Class Name
       type: string
-      x-default: 'platform'
+      default: 'platform'
     tlsPass:
       description: Pass through the request as is to the backing service. Only available for predeployed regular (non-knative) services.
       title: TLS passthrough
       type: boolean
-      x-default: false
+      default: false
     useDefaultSubdomain:
       description: Use the team domain so that the URL reveals the owner.
       title: Use team domain (preferred)
       type: boolean
-      x-default: true
+      default: true
     subdomain:
       $ref: definitions.yaml#/domain
       description: A host that is used to set DNS 'A' records
@@ -95,17 +95,17 @@ Ingress:
       description: Forward the URL path into the service (don't rewrite to /)
       title: Forward path
       type: boolean
-      x-default: false
+      default: false
     hasCert:
       description: Select when a certificate exists and should not be generated.
       title: Already has a certificate
       type: boolean
-      x-default: false
+      default: false
     certSelect:
       description: Select one of the TLS secrets created in Otomi.
       title: Select team secret
       type: boolean
-      x-default: true
+      default: true
     certName:
       description: The name of a TLS secret known to exist in the team namespace.
       example: example-com

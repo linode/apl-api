@@ -6,7 +6,7 @@ AppAlertmanager:
       $ref: ../definitions.yaml#/idName
     enabled:
       type: boolean
-      x-default: false
+      default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:
@@ -20,13 +20,13 @@ AppAlertmanager:
       additionalProperties: false
       type: object
       properties:
-        image:
-          properties:
-            tag:
-              $ref: ../definitions.yaml#/imageTag
-              x-default: v0.23.0
-            pullPolicy:
-              $ref: ../definitions.yaml#/imagePullPolicy
+        # image:
+        #   properties:
+        #     tag:
+        #       $ref: ../definitions.yaml#/imageTag
+        #       default: v0.23.0
+        #     pullPolicy:
+        #       $ref: ../definitions.yaml#/imagePullPolicy
         resources:
           type: object
           properties:
@@ -34,18 +34,18 @@ AppAlertmanager:
               properties:
                 cpu:
                   $ref: '../definitions.yaml#/quantityCpu'
-                  x-default: 500m
+                  default: 500m
                 memory:
                   $ref: '../definitions.yaml#/quantityMem'
-                  x-default: 256Mi
+                  default: 256Mi
             requests:
               properties:
                 cpu:
                   $ref: '../definitions.yaml#/quantityCpu'
-                  x-default: 100m
+                  default: 100m
                 memory:
                   $ref: '../definitions.yaml#/quantityMem'
-                  x-default: 128Mi
+                  default: 128Mi
           required:
             - limits
             - requests
