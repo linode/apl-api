@@ -205,7 +205,12 @@ describe('API authz tests', () => {
       .send({
         name: 'service1',
         serviceType: 'ksvcPredeployed',
-        ingress: {},
+        ingress: {type: 'cluster'},
+        networkPolicy: {
+          ingressPrivate: {
+            mode: 'DenyAll'
+          }
+        }
       })
       .set('Content-Type', 'application/json')
       .set('Accept', 'application/json')
@@ -226,26 +231,6 @@ describe('API authz tests', () => {
   it('team can get a specific service', (done) => {
     request(app)
       .get('/v1/teams/team1/services/service1')
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${teamToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-      .end(done)
-  })
-
-  it('team can update its own service', (done) => {
-    request(app)
-      .put('/v1/teams/team1/services/service1')
-      .send({
-        name: 'service1',
-        ksvc: {
-          image: {},
-          serviceType: 'ksvcPredeployed',
-          resources: { requests: { cpu: '50m', memory: '64Mi' }, limits: { cpu: '100m', memory: '128Mi' } },
-        },
-        ingress: {},
-      })
-      .set('Content-Type', 'application/json')
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${teamToken}`)
       .expect(200)
@@ -284,19 +269,19 @@ describe('API authz tests', () => {
       .expect(403)
       .end(done)
   })
-  it('team can not see values from an app', (done) => {
-    otomiStack.getApp.callsFake(() => ({ values: { hidden: true } }))
-    request(app)
-      .get('/v1/apps/team1/loki')
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${teamToken}`)
-      .expect(200)
-      .then((response) => {
-        assert(response.body.values === undefined, 'values property is filtered')
-        done()
-      })
-      .catch((err) => done(err))
-  })
+  // it('team can not see values from an app', (done) => {
+  //   otomiStack.getApp.callsFake(() => ({ values: { hidden: true } }))
+  //   request(app)
+  //     .get('/v1/apps/team1/loki')
+  //     .set('Accept', 'application/json')
+  //     .set('Authorization', `Bearer ${teamToken}`)
+  //     .expect(200)
+  //     .then((response) => {
+  //       assert(response.body.values === undefined, 'values property is filtered')
+  //       done()
+  //     })
+  //     .catch((err) => done(err))
+  // })
 
   it('authenticated user should get api spec', (done) => {
     request(app)
