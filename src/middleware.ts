@@ -4,6 +4,7 @@ import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
 import get from 'lodash/get'
 import Authz, { getTeamSelfServiceAuthz } from './authz'
+import Db from './db'
 import { HttpError, OtomiError } from './error'
 import { JWT, OpenApiRequest, OpenApiRequestExt, PermissionSchema, TeamSelfService, User } from './otomi-models'
 import OtomiStack from './otomi-stack'
@@ -132,7 +133,7 @@ function renameKeys(obj) {
   return Object.assign({}, ...keyValues)
 }
 
-export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, otomi: OtomiStack): RequestHandler {
+export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: Db): RequestHandler {
   const {
     params: { teamId },
     user,
@@ -172,7 +173,7 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, otomi
       {},
     )
 
-    if (action === 'update') dataOrig = otomi.db.getItemReference(tableName, selector, false) as any
+    if (action === 'update') dataOrig = db.getItemReference(tableName, selector, false) as any
     const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body, dataOrig)
     if (violatedAttributes.length > 0) {
       return res.status(403).send({
@@ -197,7 +198,7 @@ export function authzMiddleware(authz: Authz, otomi: OtomiStack): RequestHandler
       req.apiDoc.components.schemas.TeamSelfService as TeamSelfService as PermissionSchema,
       otomi,
     )
-    return authorize(req, res, next, authz, otomi)
+    return authorize(req, res, next, authz, otomi.db)
   }
 }
 

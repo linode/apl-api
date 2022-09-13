@@ -143,6 +143,16 @@ describe('API authz tests', () => {
       .catch((err) => done(err))
   })
 
+  it('team can deploy changes', (done) => {
+    request(app)
+      .get('/v1/deploy')
+      .set('Accept', 'application/json')
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+
   it('team cannot get all teams', (done) => {
     request(app)
       .get('/v1/deploy')
