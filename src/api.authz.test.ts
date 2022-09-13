@@ -205,12 +205,12 @@ describe('API authz tests', () => {
       .send({
         name: 'service1',
         serviceType: 'ksvcPredeployed',
-        ingress: {type: 'cluster'},
+        ingress: { type: 'cluster' },
         networkPolicy: {
           ingressPrivate: {
-            mode: 'DenyAll'
-          }
-        }
+            mode: 'DenyAll',
+          },
+        },
       })
       .set('Content-Type', 'application/json')
       .set('Accept', 'application/json')
