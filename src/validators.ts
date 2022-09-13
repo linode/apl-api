@@ -1,4 +1,4 @@
-import { str, bool, cleanEnv as clean, CleanEnv, StrictCleanOptions, ValidatorSpec } from 'envalid'
+import { bool, cleanEnv as clean, CleanEnv, str, StrictCleanOptions, ValidatorSpec } from 'envalid'
 
 export const CORE_VERSION = str({ desc: 'The otomi-core version', default: 'x.x.x' })
 export const CUSTOM_ROOT_CA = str({ desc: 'The root CA used for certs', default: undefined })
@@ -11,6 +11,11 @@ export const GIT_PASSWORD = str({ desc: 'The git password' })
 export const GIT_REPO_URL = str({ desc: 'The git repo url', default: 'github.com/redkubes/otomi-values-demo.git' })
 export const GIT_USER = str({ desc: 'The git username' })
 export const NO_AUTHZ = bool({ desc: 'Will disable authorization in the middleware', default: false })
+export const NO_AUTHZ_MOCK_IS_ADMIN = bool({
+  desc: 'Indicate if a mocked user is an admin (takes effect only if NO_AUTHZ=true)',
+  default: true,
+})
+export const NO_AUTHZ_MOCK_TEAM = str({ desc: 'Indicate if a user belongs to a team', default: 'demo' })
 export const OIDC_ENDPOINT = str()
 export const REGION = str({ desc: 'The cloud region' })
 export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '127.0.0.1' })
