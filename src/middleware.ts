@@ -1,5 +1,5 @@
 /* eslint-disable no-param-reassign */
-import { debug } from 'console'
+import { debug, error } from 'console'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
 import get from 'lodash/get'
@@ -28,7 +28,8 @@ const HttpMethodMapping = {
 // Note: 4 arguments (no more, no less) must be defined in your errorMiddleware function. Otherwise the function will be silently ignored.
 // eslint-disable-next-line no-unused-vars
 export function errorMiddleware(e, req: OpenApiRequest, res, next): void {
-  debug('errorMiddleware error', e)
+  if (env.isDev) error('errorMiddleware error', e)
+  else debug('errorMiddleware error', e)
   let code
   let msg
   if (e instanceof OtomiError) {
@@ -117,8 +118,13 @@ const wrapResponse = (filter, orig) => {
   }
 }
 
-function renameKeys(obj, newKeys) {
-  if (Object.keys(obj).length === 1 && Object.hasOwn(obj, 'teamId')) return { id: obj.teamId }
+function renameKeys(obj) {
+  const newKeys = {
+    serviceId: 'id',
+    secretId: 'id',
+    jobId: 'id',
+  }
+  if (Object.keys(obj).length === 1 && 'teamId' in obj) return { id: obj.teamId }
   const keyValues = Object.keys(obj).map((key) => {
     const newKey = newKeys[key] || key
     return { [newKey]: obj[key] }
@@ -156,13 +162,7 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, otomi
     Team: 'teams',
   }
 
-  const paramsMap = {
-    serviceId: 'id',
-    secretId: 'id',
-    jobId: 'id',
-  }
-
-  const selector = renameKeys(req.params, paramsMap)
+  const selector = renameKeys(req.params)
 
   const tableName = schemaToDbMap?.[schemaName]
   if (tableName && ['create', 'update'].includes(action)) {
