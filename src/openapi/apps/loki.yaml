@@ -7,15 +7,15 @@ lokiValues:
     persistence:
       properties:
         size:
-          x-default: 20Gi
+          default: 20Gi
           type: string
     retention:
       properties:
         duration:
-          x-default: 24h
+          default: 24h
           type: string
         period:
-          x-default: 24h
+          default: 24h
           description: Should be a multiple of 24h. See https://grafana.com/docs/loki/latest/operations/storage/boltdb-shipper/.
           type: string
       required:
@@ -32,19 +32,19 @@ lokiValues:
           properties:
             cpu:
               $ref: ../definitions.yaml#/quantityCpu
-              x-default: 800m
+              default: 800m
             memory:
               $ref: ../definitions.yaml#/quantityMem
-              x-default: 512Mi
+              default: 512Mi
         requests:
           type: object
           properties:
             cpu:
               $ref: ../definitions.yaml#/quantityCpu
-              x-default: 100m
+              default: 100m
             memory:
               $ref: ../definitions.yaml#/quantityMem
-              x-default: 128Mi
+              default: 128Mi
       required:
         - limits
         - requests
@@ -161,7 +161,7 @@ AppLoki:
       $ref: ../definitions.yaml#/idName
     enabled:
       type: boolean
-      x-default: true
+      default: true
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:

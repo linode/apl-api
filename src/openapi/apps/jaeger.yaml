@@ -6,7 +6,7 @@ AppJaeger:
       $ref: ../definitions.yaml#/idName
     enabled:
       type: boolean
-      x-default: false
+      default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:

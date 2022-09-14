@@ -6,7 +6,7 @@ AppKnative:
       $ref: ../definitions.yaml#/idName
     enabled:
       type: boolean
-      x-default: false
+      default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:
@@ -25,6 +25,6 @@ AppKnative:
           properties:
             replicas:
               description: For HA mode set to 5. Read more at https://github.com/knative/operator/issues/376
-              x-default: 1
+              default: 1
               type: integer
               minimum: 1

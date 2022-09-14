@@ -6,7 +6,7 @@ AppArgocd:
       $ref: ../definitions.yaml#/idName
     enabled:
       type: boolean
-      x-default: false
+      default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:
@@ -34,19 +34,19 @@ AppArgocd:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 200m
+                      default: 200m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 40m
+                      default: 40m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 32Mi
+                      default: 32Mi
               required:
                 - limits
                 - requests
@@ -58,19 +58,19 @@ AppArgocd:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 200m
+                      default: 200m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 40m
+                      default: 40m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 32Mi
+                      default: 32Mi
               required:
                 - limits
                 - requests
@@ -82,19 +82,19 @@ AppArgocd:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 200m
+                      default: 200m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 40m
+                      default: 40m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 32Mi
+                      default: 32Mi
               required:
                 - limits
                 - requests
@@ -106,19 +106,19 @@ AppArgocd:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 200m
+                      default: 200m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 40m
+                      default: 40m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 32Mi
+                      default: 32Mi
               required:
                 - limits
                 - requests

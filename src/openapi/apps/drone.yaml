@@ -97,7 +97,7 @@ AppDrone:
                     - properties:
                         server:
                           type: string
-                          x-default: https://github.com
+                          default: https://github.com
             - title: GitLab
               type: object
               required: [gitlab]
@@ -115,7 +115,7 @@ AppDrone:
                     - properties:
                         server:
                           type: string
-                          x-default: https://gitlab.com
+                          default: https://gitlab.com
             - title: Gogs
               type: object
               required: [gogs]
@@ -174,36 +174,36 @@ AppDrone:
               description: The oauth secret used to identify with the github oauth app.
         debug:
           type: boolean
-          x-default: false
+          default: false
           description: Turns on debugging
         trace:
           type: boolean
-          x-default: false
+          default: false
           description: Turns on tracing
-        image:
-          type: object
-          properties:
-            agent:
-              type: object
-              properties:
-                tag:
-                  $ref: ../definitions.yaml#/imageTag
-                  x-default: latest
-                pullPolicy:
-                  description: Container pull policy.
-                  enum:
-                    - IfNotPresent
-                    - Always
-                  type: string
-                  default: Always
-            server:
-              type: object
-              properties:
-                tag:
-                  $ref: ../definitions.yaml#/imageTag
-                  x-default: 2.7.3
-                pullPolicy:
-                  $ref: ../definitions.yaml#/imagePullPolicy
+        # image:
+        #   type: object
+        #   properties:
+        #     agent:
+        #       type: object
+        #       properties:
+        #         tag:
+        #           $ref: ../definitions.yaml#/imageTag
+        #           default: latest
+        #         pullPolicy:
+        #           description: Container pull policy.
+        #           enum:
+        #             - IfNotPresent
+        #             - Always
+        #           type: string
+        #           default: Always
+        #     server:
+        #       type: object
+        #       properties:
+        #         tag:
+        #           $ref: ../definitions.yaml#/imageTag
+        #           default: 2.7.3
+        #         pullPolicy:
+        #           $ref: ../definitions.yaml#/imagePullPolicy
         resources:
           type: object
           properties:
@@ -231,19 +231,19 @@ AppDrone:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 200m
+                      default: 200m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 40m
+                      default: 40m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 32Mi
+                      default: 32Mi
               required:
                 - limits
                 - requests
@@ -255,19 +255,19 @@ AppDrone:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 200m
+                      default: 200m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 40m
+                      default: 40m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 32Mi
+                      default: 32Mi
               required:
                 - limits
                 - requests
