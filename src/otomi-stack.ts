@@ -236,9 +236,13 @@ export default class OtomiStack {
     ids.map((id) => {
       // we might be given a dep that is only relevant to core, or
       // which is essential, so skip it
-      const orig = this.db.getItemReference('apps', { teamId, id }, false)
-      const secrets = get(res, `data.apps.${id}`, {})
-      if (orig && this.canToggleApp(id)) this.db.updateItem('apps', { enabled, ...secrets }, { teamId, id })
+      const orig = this.db.getItemReference('apps', { teamId, id }, false) as App
+      let secrets = {}
+
+      // Only update secrets if the app has not been enabled
+      // Secrets from orig shall not be overwrittien
+      if (!get(orig, 'enabled', false)) secrets = merge(get(res, `data.apps.${id}`, {}), get(orig, 'values', {}))
+      if (orig && this.canToggleApp(id)) this.db.updateItem('apps', { enabled, values: secrets }, { teamId, id })
     })
   }
 
