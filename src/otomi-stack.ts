@@ -25,6 +25,7 @@ import {
   Settings,
   Team,
   TeamSelfService,
+  User,
 } from './otomi-models'
 import cloneRepo, { prepareValues, Repo } from './repo'
 import {
@@ -874,7 +875,7 @@ export default class OtomiStack {
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
-      user,
+      user: user as User,
       isDirty: this.db.isDirty(),
       versions: {
         core: env.CORE_VERSION,
