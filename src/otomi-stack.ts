@@ -2,7 +2,6 @@
 import $parser from '@apidevtools/json-schema-ref-parser'
 import * as k8s from '@kubernetes/client-node'
 import { Cluster, V1ObjectReference } from '@kubernetes/client-node'
-import axios from 'axios'
 import { pascalCase } from 'change-case'
 import Debug from 'debug'
 import { readFileSync } from 'fs'
@@ -229,21 +228,12 @@ export default class OtomiStack {
     return app.properties.enabled !== undefined
   }
 
-  async toggleApps(teamId, { ids, enabled }): Promise<void> {
-    const baseUrl = `http://${env.TOOLS_HOST}:17771/`
-    const url = `${baseUrl}generate-secrets`
-    const res = await axios.get(url)
-
+  toggleApps(teamId, { ids, enabled }): void {
     ids.map((id) => {
       // we might be given a dep that is only relevant to core, or
       // which is essential, so skip it
       const orig = this.db.getItemReference('apps', { teamId, id }, false) as App
-      let secrets = {}
-
-      // Only update secrets if the app has not been enabled
-      // Secrets from orig shall not be overwrittien
-      if (!get(orig, 'enabled', false)) secrets = merge(get(res, `data.apps.${id}`, {}), get(orig, 'values', {}))
-      if (orig && this.canToggleApp(id)) this.db.updateItem('apps', { enabled, values: secrets }, { teamId, id })
+      if (orig && this.canToggleApp(id)) this.db.updateItem('apps', { enabled }, { teamId, id }, true)
     })
   }
 
@@ -266,10 +256,12 @@ export default class OtomiStack {
       const app = this.getAppSchema(appId)
       if (app.properties.enabled !== undefined) {
         enabled = !!values.enabled
+        // we do not want to send enabled flag to the input forms
         delete values.enabled
       }
+
       const teamId = 'admin'
-      this.db.updateItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId }, appId)
+      this.db.updateItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId })
     })
     // now also load the shortcuts that teams created and were stored in apps.* files
     this.getTeams()
@@ -285,7 +277,8 @@ export default class OtomiStack {
           },
         } = content
         each(apps, ({ shortcuts }, appId) => {
-          this.db.updateItem('apps', { shortcuts }, { teamId, id: appId })
+          // use merge strategey to not overwrite admin apps that were loaded before
+          this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
         })
       })
   }
