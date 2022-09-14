@@ -25,8 +25,6 @@ AppIstio:
               $ref: ../definitions.yaml#/autoscaling
             ingressgateway:
               $ref: ../definitions.yaml#/autoscaling
-            ingressgateway-private:
-              $ref: ../definitions.yaml#/autoscaling
             pilot:
               $ref: ../definitions.yaml#/autoscaling
         egressGateway:
@@ -115,30 +113,6 @@ AppIstio:
                 - limits
                 - requests
             ingressgateway:
-              type: object
-              properties:
-                limits:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: '1'
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
-                requests:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 128Mi
-              required:
-                - limits
-                - requests
-            ingressgateway-private:
               type: object
               properties:
                 limits:

@@ -2,6 +2,7 @@
 import $parser from '@apidevtools/json-schema-ref-parser'
 import * as k8s from '@kubernetes/client-node'
 import { Cluster, V1ObjectReference } from '@kubernetes/client-node'
+import axios from 'axios'
 import { pascalCase } from 'change-case'
 import Debug from 'debug'
 import { readFileSync } from 'fs'
@@ -24,7 +25,6 @@ import {
   Settings,
   Team,
   TeamSelfService,
-  User,
 } from './otomi-models'
 import cloneRepo, { prepareValues, Repo } from './repo'
 import {
@@ -52,6 +52,7 @@ import {
   GIT_PASSWORD,
   GIT_REPO_URL,
   GIT_USER,
+  TOOLS_HOST,
 } from './validators'
 
 const debug = Debug('otomi:otomi-stack')
@@ -71,6 +72,7 @@ const env = cleanEnv({
   GIT_EMAIL,
   DB_PATH,
   DISABLE_SYNC,
+  TOOLS_HOST,
 })
 
 export function getTeamJobsFilePath(teamId: string): string {
@@ -226,12 +228,17 @@ export default class OtomiStack {
     return app.properties.enabled !== undefined
   }
 
-  toggleApps(teamId, { ids, enabled }): void {
+  async toggleApps(teamId, { ids, enabled }): Promise<void> {
+    const baseUrl = `http://${env.TOOLS_HOST}:17771/`
+    const url = `${baseUrl}generate-secrets`
+    const res = await axios.get(url)
+
     ids.map((id) => {
       // we might be given a dep that is only relevant to core, or
       // which is essential, so skip it
       const orig = this.db.getItemReference('apps', { teamId, id }, false)
-      if (orig && this.canToggleApp(id)) this.db.updateItem('apps', { enabled }, { teamId, id })
+      const secrets = get(res, `data.apps.${id}`, {})
+      if (orig && this.canToggleApp(id)) this.db.updateItem('apps', { enabled, ...secrets }, { teamId, id })
     })
   }
 
@@ -863,7 +870,7 @@ export default class OtomiStack {
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
-      user: user as User,
+      user,
       isDirty: this.db.isDirty(),
       versions: {
         core: env.CORE_VERSION,
