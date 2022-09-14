@@ -6,7 +6,7 @@ AppHarbor:
       $ref: ../definitions.yaml#/idName
     enabled:
       type: boolean
-      x-default: false
+      default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:
@@ -24,7 +24,7 @@ AppHarbor:
           $ref: ../definitions.yaml#/adminPassword
         # privateLibrary:
         #   type: boolean
-        #   x-default: true
+        #   default: true
         #   description: Will mark the main project named "library" as private.
         core:
           type: object
@@ -162,14 +162,14 @@ AppHarbor:
         secretKey:
           type: string
           x-secret: 'randAlpha 16'
-        image:
-          type: object
-          properties:
-            tag:
-              $ref: ../definitions.yaml#/imageTag
-              x-default: v2.4.0
-            pullPolicy:
-              $ref: ../definitions.yaml#/imagePullPolicy
+        # image:
+        #   type: object
+        #   properties:
+        #     tag:
+        #       $ref: ../definitions.yaml#/imageTag
+        #       default: v2.4.0
+        #     pullPolicy:
+        #       $ref: ../definitions.yaml#/imagePullPolicy
         resources:
           additionalProperties: false
           type: object
@@ -183,19 +183,19 @@ AppHarbor:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 128Mi
+                      default: 128Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 400m
+                      default: 400m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
               required:
                 - limits
                 - requests
@@ -207,19 +207,19 @@ AppHarbor:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 1Gi
+                      default: 1Gi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 400m
+                      default: 400m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 2Gi
+                      default: 2Gi
               required:
                 - limits
                 - requests
@@ -231,19 +231,19 @@ AppHarbor:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 400m
+                      default: 400m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
               required:
                 - limits
                 - requests
@@ -255,19 +255,19 @@ AppHarbor:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 512Mi
+                      default: 512Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 50m
+                      default: 50m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
               required:
                 - limits
                 - requests
@@ -279,19 +279,19 @@ AppHarbor:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 512Mi
+                      default: 512Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 50m
+                      default: 50m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
               required:
                 - limits
                 - requests
@@ -304,19 +304,19 @@ AppHarbor:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 512Mi
+                      default: 512Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 50m
+                      default: 50m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
               required:
                 - limits
                 - requests
@@ -328,19 +328,19 @@ AppHarbor:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 400m
+                      default: 400m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 128Mi
+                      default: 128Mi
               required:
                 - limits
                 - requests
@@ -352,19 +352,19 @@ AppHarbor:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 400m
+                      default: 400m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 128Mi
+                      default: 128Mi
               required:
                 - limits
                 - requests
@@ -376,19 +376,19 @@ AppHarbor:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 128Mi
+                      default: 128Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 50m
+                      default: 50m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 64Mi
+                      default: 64Mi
               required:
                 - limits
                 - requests
@@ -401,19 +401,19 @@ AppHarbor:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 400m
+                      default: 400m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
               required:
                 - limits
                 - requests

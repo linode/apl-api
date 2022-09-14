@@ -6,7 +6,7 @@ AppGrafana:
       $ref: ../definitions.yaml#/idName
     enabled:
       type: boolean
-      x-default: true
+      default: true
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:
@@ -22,14 +22,14 @@ AppGrafana:
       properties:
         adminPassword:
           $ref: ../definitions.yaml#/adminPassword
-        image:
-          type: object
-          properties:
-            tag:
-              $ref: ../definitions.yaml#/imageTag
-              x-default: 8.4.3
-            pullPolicy:
-              $ref: ../definitions.yaml#/imagePullPolicy
+        # image:
+        #   type: object
+        #   properties:
+        #     tag:
+        #       $ref: ../definitions.yaml#/imageTag
+        #       default: 8.4.3
+        #     pullPolicy:
+        #       $ref: ../definitions.yaml#/imagePullPolicy
         resources:
           type: object
           properties:
@@ -38,19 +38,19 @@ AppGrafana:
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  x-default: 500m
+                  default: 500m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  x-default: 256Mi
+                  default: 256Mi
             requests:
               type: object
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  x-default: 100m
+                  default: 100m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  x-default: 128Mi
+                  default: 128Mi
               required:
                 - limits
                 - requests

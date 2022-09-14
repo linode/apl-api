@@ -73,7 +73,7 @@ Settings:
               title: Managed by AKS
               description: Indicates Azure Application Gateway Ingress Controller add-on is installed by AKS.
               type: boolean
-              x-default: false
+              default: false
           type: object
         monitor:
           $ref: definitions.yaml#/azureMonitor
@@ -83,10 +83,10 @@ Settings:
           properties:
             fast:
               type: string
-              x-default: StandardSSD_LRS
+              default: StandardSSD_LRS
             standard:
               type: string
-              x-default: StandardLRS
+              default: StandardLRS
           type: object
       required:
         - resourceGroup
@@ -110,7 +110,7 @@ Settings:
                   title: Class name
                   description: The platform ingress class is assigned to all platform applications
                   type: string
-                  x-default: platform
+                  default: platform
                   # readOnly: true
             - $ref: definitions.yaml#/ingressClassParameters
         classes:
@@ -155,12 +155,12 @@ Settings:
           type: string
         usernameClaimMapper:
           description: Claim name used by Keycloak to identify incoming users from the identity provider.
-          x-default: '${CLAIM.upn}'
+          default: '${CLAIM.upn}'
           type: string
         subClaimMapper:
           type: string
           description: Select OIDC claim to be passed by Keycloak as a unique user identifier. Best to not change this from the default.
-          x-default: sub
+          default: sub
       type: object
       x-externalDocsPath: docs/console/settings#oidc
       x-acl:
@@ -211,10 +211,10 @@ Settings:
               x-secret: ''
             email:
               type: string
-              x-default: not@us.ed
+              default: not@us.ed
             server:
               type: string
-              x-default: docker.io
+              default: docker.io
           # disabling required fields until rjsf solves this nested required bug:
           # required:
           #   - username
@@ -227,27 +227,27 @@ Settings:
           description: Set this to true when using a cloud specific ingress controller. By default the Nginx Ingress Controller is used.
           title: Cloud ingress controller
           type: boolean
-          x-default: false
+          default: false
         hasExternalDNS:
           description: Set this to true when an external dns zone is available to manage dns records. (Expects required `dns:` fields to be set.)
           title: External DNS
           type: boolean
-          x-default: false
+          default: false
         hasExternalIDP:
           description: Set this to true when bringing your own external IDP such as Azure AD. (Expects required `oidc:` fields to be set.)
           title: External IDP
           type: boolean
-          x-default: false
+          default: false
         isHomeMonitored:
           description: Whether this cluster is monitored by a third party.
           title: Remote monitoring
           type: boolean
-          x-default: false
+          default: false
         isMultitenant:
           description: Will separate team metrics and logs. Disabling this effectively gives all users admin role and lets them see everything.
           title: Multi-tenancy
           type: boolean
-          x-default: false
+          default: false
         nodeSelector:
           $ref: definitions.yaml#/labels
           description: 'One or more "label: value" pairs that must exist on one or more nodes, which will force all otomi platform workloads to be scheduled there.'

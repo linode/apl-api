@@ -52,6 +52,7 @@ import {
   GIT_PASSWORD,
   GIT_REPO_URL,
   GIT_USER,
+  TOOLS_HOST,
 } from './validators'
 
 const debug = Debug('otomi:otomi-stack')
@@ -71,6 +72,7 @@ const env = cleanEnv({
   GIT_EMAIL,
   DB_PATH,
   DISABLE_SYNC,
+  TOOLS_HOST,
 })
 
 export function getTeamJobsFilePath(teamId: string): string {
@@ -230,8 +232,8 @@ export default class OtomiStack {
     ids.map((id) => {
       // we might be given a dep that is only relevant to core, or
       // which is essential, so skip it
-      const orig = this.db.getItemReference('apps', { teamId, id }, false)
-      if (orig && this.canToggleApp(id)) this.db.updateItem('apps', { enabled }, { teamId, id })
+      const orig = this.db.getItemReference('apps', { teamId, id }, false) as App
+      if (orig && this.canToggleApp(id)) this.db.updateItem('apps', { enabled }, { teamId, id }, true)
     })
   }
 
@@ -254,10 +256,12 @@ export default class OtomiStack {
       const app = this.getAppSchema(appId)
       if (app.properties.enabled !== undefined) {
         enabled = !!values.enabled
+        // we do not want to send enabled flag to the input forms
         delete values.enabled
       }
+
       const teamId = 'admin'
-      this.db.updateItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId }, appId)
+      this.db.updateItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId })
     })
     // now also load the shortcuts that teams created and were stored in apps.* files
     this.getTeams()
@@ -273,7 +277,8 @@ export default class OtomiStack {
           },
         } = content
         each(apps, ({ shortcuts }, appId) => {
-          this.db.updateItem('apps', { shortcuts }, { teamId, id: appId })
+          // use merge strategey to not overwrite admin apps that were loaded before
+          this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
         })
       })
   }
@@ -806,7 +811,7 @@ export default class OtomiStack {
       }
     }
 
-    const res: any = this.db.populateItem('services', svc, undefined, svc.id)
+    const res: any = this.db.populateItem('services', removeBlankAttributes(svc), undefined, svc.id)
     debug(`Loaded service: name: ${res.name}, id: ${res.id}`)
   }
 

@@ -25,8 +25,6 @@ AppIstio:
               $ref: ../definitions.yaml#/autoscaling
             ingressgateway:
               $ref: ../definitions.yaml#/autoscaling
-            ingressgateway-private:
-              $ref: ../definitions.yaml#/autoscaling
             pilot:
               $ref: ../definitions.yaml#/autoscaling
         egressGateway:
@@ -35,7 +33,7 @@ AppIstio:
           properties:
             enabled:
               type: boolean
-              x-default: false
+              default: false
         global:
           additionalProperties: false
           type: object
@@ -56,18 +54,18 @@ AppIstio:
                       properties:
                         cpu:
                           $ref: '../definitions.yaml#/quantityCpu'
-                          x-default: '1'
+                          default: '1'
                         memory:
                           $ref: '../definitions.yaml#/quantityMem'
-                          x-default: 1Gi
+                          default: 1Gi
                     requests:
                       properties:
                         cpu:
                           $ref: '../definitions.yaml#/quantityCpu'
-                          x-default: 20m
+                          default: 20m
                         memory:
                           $ref: '../definitions.yaml#/quantityMem'
-                          x-default: 80Mi
+                          default: 80Mi
                   required:
                     - limits
                     - requests
@@ -76,17 +74,17 @@ AppIstio:
           properties:
             defaultConfig:
               type: object
-              x-default:
+              default:
                 tracing:
                   sampling: 0.1
-        image:
-          type: object
-          properties:
-            tag:
-              $ref: ../definitions.yaml#/imageTag
-              x-default: 1.10.1
-            pullPolicy:
-              $ref: ../definitions.yaml#/imagePullPolicy
+        # image:
+        #   type: object
+        #   properties:
+        #     tag:
+        #       $ref: ../definitions.yaml#/imageTag
+        #       default: 1.10.1
+        #     pullPolicy:
+        #       $ref: ../definitions.yaml#/imagePullPolicy
         resources:
           type: object
           properties:
@@ -98,19 +96,19 @@ AppIstio:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: '1'
+                      default: '1'
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 128Mi
+                      default: 128Mi
               required:
                 - limits
                 - requests
@@ -122,43 +120,19 @@ AppIstio:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: '1'
+                      default: '1'
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 128Mi
-              required:
-                - limits
-                - requests
-            ingressgateway-private:
-              type: object
-              properties:
-                limits:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      x-default: '1'
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      x-default: 256Mi
-                requests:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      x-default: 128Mi
+                      default: 128Mi
               required:
                 - limits
                 - requests
@@ -170,19 +144,19 @@ AppIstio:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: '2'
+                      default: '2'
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 2Gi
+                      default: 2Gi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 128Mi
+                      default: 128Mi
               required:
                 - limits
                 - requests

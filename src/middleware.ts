@@ -1,17 +1,19 @@
 /* eslint-disable no-param-reassign */
-import { debug } from 'console'
+import { debug, error } from 'console'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
-import { omit } from 'lodash'
 import get from 'lodash/get'
 import Authz, { getTeamSelfServiceAuthz } from './authz'
+import Db from './db'
 import { HttpError, OtomiError } from './error'
 import { JWT, OpenApiRequest, OpenApiRequestExt, PermissionSchema, TeamSelfService, User } from './otomi-models'
 import OtomiStack from './otomi-stack'
-import { cleanEnv, NO_AUTHZ } from './validators'
+import { cleanEnv, NO_AUTHZ, NO_AUTHZ_MOCK_IS_ADMIN, NO_AUTHZ_MOCK_TEAM } from './validators'
 
 const env = cleanEnv({
   NO_AUTHZ,
+  NO_AUTHZ_MOCK_IS_ADMIN,
+  NO_AUTHZ_MOCK_TEAM,
 })
 
 const badCode = (code) => code >= 300 || code < 200
@@ -27,7 +29,8 @@ const HttpMethodMapping = {
 // Note: 4 arguments (no more, no less) must be defined in your errorMiddleware function. Otherwise the function will be silently ignored.
 // eslint-disable-next-line no-unused-vars
 export function errorMiddleware(e, req: OpenApiRequest, res, next): void {
-  debug('errorMiddleware error', e)
+  if (env.isDev) error('errorMiddleware error', e)
+  else debug('errorMiddleware error', e)
   let code
   let msg
   if (e instanceof OtomiError) {
@@ -46,42 +49,34 @@ export function getUser(user: JWT, otomi: OtomiStack): User {
   const sessionUser: User = { ...user, teams: [], roles: [], isAdmin: false, authz: {} }
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
-  if (env.NO_AUTHZ) sessionUser.isAdmin = true
-  else {
-    user.groups.forEach((group) => {
-      if (['admin', 'team-admin'].includes(group)) {
-        if (!sessionUser.roles.includes('admin')) {
-          sessionUser.isAdmin = true
-          sessionUser.roles.push('admin')
-        }
-      } else if (!sessionUser.roles.includes('team')) sessionUser.roles.push('team')
-      // if in team-(not admin), remove 'team-' prefix
-      const teamId = group.substr(5)
-      if (group.substr(0, 5) === 'team-' && group !== 'team-admin' && !sessionUser.teams.includes(teamId)) {
-        // we might be assigned team-* without that team yet existing in the values, so ignore those
-        const existing = otomi.db.getItemReference('teams', { id: teamId }, false)
-        if (existing) sessionUser.teams.push(teamId)
+  user.groups.forEach((group) => {
+    if (['admin', 'team-admin'].includes(group)) {
+      if (!sessionUser.roles.includes('admin')) {
+        sessionUser.isAdmin = true
+        sessionUser.roles.push('admin')
       }
-    })
-  }
+    } else if (!sessionUser.roles.includes('team')) sessionUser.roles.push('team')
+    // if in team-(not admin), remove 'team-' prefix
+    const teamId = group.substr(5)
+    if (group.substr(0, 5) === 'team-' && group !== 'team-admin' && !sessionUser.teams.includes(teamId)) {
+      // we might be assigned team-* without that team yet existing in the values, so ignore those
+      const existing = otomi.db.getItemReference('teams', { id: teamId }, false)
+      if (existing) sessionUser.teams.push(teamId)
+    }
+  })
+
   return sessionUser
 }
 
 export function jwtMiddleware(otomi: OtomiStack): RequestHandler {
   return function nextHandler(req: OpenApiRequestExt, res, next): any {
     const token = req.header('Authorization')
-    if (!token && env.isDev) {
-      // allow the client to specify a group to be in
-      const { team = 'otomi' } = req.query
-      // default to admin unless team is given
-      const isAdmin = !team || team === 'admin'
-      const groups = ['team-demo', 'team-otomi']
-      if (team && !groups.includes(`team-${team}`)) groups.push(`team-${team}`)
+    if (env.isDev && env.NO_AUTHZ) {
       req.user = getUser(
         {
-          name: isAdmin ? 'Bob Admin' : 'Joe Team',
-          email: isAdmin ? 'bob.admin@otomi.cloud' : `joe.team@otomi.cloud`,
-          groups,
+          name: env.NO_AUTHZ_MOCK_IS_ADMIN ? 'Bob Admin' : 'Joe Team',
+          email: env.NO_AUTHZ_MOCK_IS_ADMIN ? 'bob.admin@otomi.cloud' : `joe.team@otomi.cloud`,
+          groups: env.NO_AUTHZ_MOCK_IS_ADMIN ? ['team-admin'] : [`team-${env.NO_AUTHZ_MOCK_TEAM}`],
           roles: [],
         },
         otomi,
@@ -124,7 +119,21 @@ const wrapResponse = (filter, orig) => {
   }
 }
 
-export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): RequestHandler {
+function renameKeys(obj) {
+  const newKeys = {
+    serviceId: 'id',
+    secretId: 'id',
+    jobId: 'id',
+  }
+  if (Object.keys(obj).length === 1 && 'teamId' in obj) return { id: obj.teamId }
+  const keyValues = Object.keys(obj).map((key) => {
+    const newKey = newKeys[key] || key
+    return { [newKey]: obj[key] }
+  })
+  return Object.assign({}, ...keyValues)
+}
+
+export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: Db): RequestHandler {
   const {
     params: { teamId },
     user,
@@ -132,7 +141,6 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): Requ
   const action = HttpMethodMapping[req.method]
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
   const schemaName = schema.split('/').pop() || null
-
   // If there is no RBAC then we bail
   if (!schemaName) return next()
 
@@ -148,13 +156,35 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz): Requ
       .send({ authz: false, message: `User not allowed to perform "${action}" on "${schemaName}" resource` })
   }
 
-  const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body)
+  const schemaToDbMap = {
+    Job: 'jobs',
+    Secret: 'secrets',
+    Service: 'services',
+    Team: 'teams',
+  }
 
-  // A users sends valid form, but abac is used to remove fields that are not allowed to be set
-  req.body = omit(req.body, violatedAttributes)
+  const selector = renameKeys(req.params)
 
+  const tableName = schemaToDbMap?.[schemaName]
+  if (tableName && ['create', 'update'].includes(action)) {
+    let dataOrig = get(
+      req,
+      `apiDoc.components.schemas.TeamSelfService.properties.${schemaName.toLowerCase()}.x-allow-values`,
+      {},
+    )
+
+    if (action === 'update') dataOrig = db.getItemReference(tableName, selector, false) as any
+    const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body, dataOrig)
+    if (violatedAttributes.length > 0) {
+      return res.status(403).send({
+        authz: false,
+        message: `User not allowed to modify the following attributes ${violatedAttributes}" of ${schemaName}" resource`,
+      })
+    }
+  }
   // filter response based on abac
-  res.json = wrapResponse((obj) => authz.filterWithAbac(schemaName, teamId, obj), res.json.bind(res))
+  // res.json = wrapResponse((obj) => authz.filterWithAbac(schemaName, teamId, obj), res.json.bind(res))
+  // res.json = wrapResponse((obj) => authz.filterWithAbac(schemaName, teamId, obj), res.json.bind(res))
 
   return next()
 }
@@ -168,13 +198,13 @@ export function authzMiddleware(authz: Authz, otomi: OtomiStack): RequestHandler
       req.apiDoc.components.schemas.TeamSelfService as TeamSelfService as PermissionSchema,
       otomi,
     )
-    return authorize(req, res, next, authz)
+    return authorize(req, res, next, authz, otomi.db)
   }
 }
 
 // eslint-disable-next-line no-unused-vars
 export function isUserAuthenticated(req: OpenApiRequestExt): boolean {
-  if (env.NO_AUTHZ) return true
+  // if (env.NO_AUTHZ) return true
   if (req.user) {
     req.isSecurityHandler = true
     return true

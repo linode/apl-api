@@ -23,10 +23,10 @@ AppKeycloak:
           properties:
             alias:
               type: string
-              x-default: otomi-idp
+              default: otomi-idp
             clientID:
               $ref: ../definitions.yaml#/wordCharacterPattern
-              x-default: otomi
+              default: otomi
             clientSecret:
               type: string
               x-secret: 'randAlphaNum 32'
@@ -52,19 +52,19 @@ AppKeycloak:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: '1'
+                      default: '1'
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 1.5Gi
+                      default: 1.5Gi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 1Gi
+                      default: 1Gi
               required:
                 - limits
                 - requests
@@ -76,19 +76,19 @@ AppKeycloak:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: '1'
+                      default: '1'
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 1.5Gi
+                      default: 1.5Gi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      x-default: 100m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      x-default: 1Gi
+                      default: 1Gi
               required:
                 - limits
                 - requests

@@ -6,7 +6,7 @@ AppKubeclarity:
       $ref: ../definitions.yaml#/idName
     enabled:
       type: boolean
-      x-default: false
+      default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:
@@ -27,19 +27,19 @@ AppKubeclarity:
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  x-default: 1000m
+                  default: 1000m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  x-default: 1000Mi
+                  default: 1000Mi
             requests:
               type: object
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  x-default: 100m
+                  default: 100m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  x-default: 200Mi
+                  default: 200Mi
               required:
                 - limits
                 - requests

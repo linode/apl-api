@@ -8,6 +8,12 @@ TeamSelfService:
       items:
         type: string
         enum: [ingress, networkPolicy]
+      x-allow-values:
+        ingress:
+          type: 'cluster'
+        networkPolicy:
+          ingressPrivate:
+            mode: 'DenyAll'
       default: [ingress, networkPolicy]
       uniqueItems: true
     team:
@@ -60,12 +66,12 @@ Team:
           title: Network policies
           description: When enabled team services will be bound by (ingress) network policies. Turning this off introduces a security risk!
           type: boolean
-          x-default: true
+          default: true
         egressPublic:
           title: Egress control
           description: When enabled team service egress traffic will be limited to pre-defined endpoints. Turning this off introduces a security risk!
           type: boolean
-          x-default: true
+          default: true
       type: object
     selfService:
       $ref: team.yaml#/TeamSelfService
