@@ -35,16 +35,16 @@ AppVelero:
           required:
             - bucket
         provider:
-          additionalProperties: false
           description: Choose your Cloud provider.
           nullable: true
           type: object
           oneOf:
-            - $ref: ../definitions.yaml#/offChoice
+            # - $ref: ../definitions.yaml#/offChoice
             - title: azure
               type: object
               properties:
                 azure:
+                  additionalProperties: false
                   properties:
                     environment:
                       title: Azure environment
@@ -91,10 +91,13 @@ AppVelero:
                         - subscriptionId
                         - aadClientId
                         - aadClientSecret
+              required:
+                - azure
             - title: aws
               type: object
               properties:
                 aws:
+                  additionalProperties: false
                   properties:
                     config:
                       title: Location configuration
@@ -125,6 +128,8 @@ AppVelero:
                       required:
                         - accessKeyId
                         - secretAccessKey
+              required:
+                - aws
         logLevel:
           description: Set log-level for the Velero pod.
           title: Log Level
