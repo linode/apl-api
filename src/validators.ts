@@ -15,7 +15,7 @@ export const NO_AUTHZ_MOCK_IS_ADMIN = bool({
   desc: 'Indicate if a mocked user is an admin (takes effect only if NO_AUTHZ=true)',
   default: true,
 })
-export const NO_AUTHZ_MOCK_TEAM = str({ desc: 'Indicate if a user belongs to a team', default: 'demo' })
+export const NO_AUTHZ_MOCK_TEAM = str({ desc: 'Indicate if a user belongs to a team', default: undefined })
 export const OIDC_ENDPOINT = str()
 export const REGION = str({ desc: 'The cloud region' })
 export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '127.0.0.1' })

@@ -254,12 +254,10 @@ export default class OtomiStack {
       }
       let enabled
       const app = this.getAppSchema(appId)
-      if (app.properties.enabled !== undefined) {
-        enabled = !!values.enabled
-        // we do not want to send enabled flag to the input forms
-        delete values.enabled
-      }
+      if (app.properties.enabled !== undefined) enabled = !!values.enabled
 
+      // we do not want to send enabled flag to the input forms
+      delete values.enabled
       const teamId = 'admin'
       this.db.updateItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId })
     })
