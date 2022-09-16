@@ -45,18 +45,21 @@ Settings:
               default: 0 0 * * *
               description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
               type: string
-        # customSchedules:
-        #   title: Custom backup schedules
-        #   type: array
-        #   items:
-        #     allOf:
-        #       - type: object
-        #         properties:
-        #           scheduleName:
-        #             type: string
-        #       - $ref: definitions.yaml#/backupschedules
-        #     required:
-        #       - scheduleName
+        teamSchedule:
+          title: Teams
+          description: Backup all Teams.
+          properties:
+            enabled:
+              type: boolean
+            ttl:
+              default: 240h
+              description: Expiration of the backup.
+              title: TTL after finished
+              type: string
+            schedule:
+              default: 0 0 * * *
+              description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
+              type: string
     home:
       additionalProperties: false
       $ref: definitions.yaml#/alerts
