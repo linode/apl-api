@@ -20,20 +20,6 @@ AppVelero:
       additionalProperties: false
       type: object
       properties:
-        backupStorageLocation:
-          description: Parameters for the `default` BackupStorageLocation.
-          properties:
-            name:
-              type: string
-              default: platform
-              description: Name of the backup storage location where backups should be stored.
-              $ref: ../definitions.yaml#/wordCharacterPattern
-            bucket:
-              type: string
-              description: Name of the blob container.
-              $ref: ../definitions.yaml#/wordCharacterPattern
-          required:
-            - bucket
         provider:
           description: Choose your Cloud provider.
           nullable: true
@@ -66,9 +52,14 @@ AppVelero:
                         storageAccount:
                           description: The name of the Azure storage account.
                           $ref: ../definitions.yaml#/wordCharacterPattern
+                        bucket:
+                          type: string
+                          description: Name of the blob container.
+                          $ref: ../definitions.yaml#/wordCharacterPattern
                       required:
                         - resourceGroup
                         - storageAccount
+                        - bucket
                     secretContents:
                       additionalProperties: false
                       description: Data to be stored in the Velero secret.
@@ -94,6 +85,7 @@ AppVelero:
                         - subscriptionId
                         - aadClientId
                         - aadClientSecret
+                        - resourceGroup
               required:
                 - azure
             - title: aws
@@ -152,7 +144,7 @@ AppVelero:
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  default: 1
+                  default: 1000m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
                   default: 512Mi
