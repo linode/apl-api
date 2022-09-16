@@ -218,7 +218,10 @@ export default class OtomiStack {
 
   editApp(teamId, id, data: App): App {
     // @ts-ignore
-    return this.db.updateItem('apps', data, { teamId, id })
+    let app: App = this.db.getItem('apps', { teamId, id })
+    // Shallow merge, so only first level attributes can be replaced (values, rawValues, shortcuts, etc.)
+    app = { ...app, ...data }
+    return this.db.updateItem('apps', app as any, { teamId, id }) as App
   }
 
   canToggleApp(id): boolean {
