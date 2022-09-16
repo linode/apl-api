@@ -32,10 +32,19 @@ Settings:
       properties:
         platformSchedule:
           title: Platform
-          description: Backup all Otomi platform services (e.g. Keycloak, Gitea, Harbor)
+          description: Backup all enabled Otomi platform services.
           properties:
             enabled:
               type: boolean
+            ttl:
+              default: 240h
+              description: Expiration of the backup.
+              title: TTL after finished
+              type: string
+            schedule:
+              default: 0 0 * * *
+              description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
+              type: string
         # customSchedules:
         #   title: Custom backup schedules
         #   type: array

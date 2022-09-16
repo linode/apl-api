@@ -57,14 +57,14 @@ AppVelero:
                         - AzureUSGovernment
                         - AzureGermanCloud
                     config:
-                      title: Location configuration
+                      title: Storage location configuration
                       description: Azure specific storage location configuration
                       properties:
                         resourceGroup:
-                          description: The name of the resource group that contains the cluster vm's and disks.
+                          description: Resource group of the storage account.
                           $ref: ../definitions.yaml#/wordCharacterPattern
                         storageAccount:
-                          description: The used Azure storage account
+                          description: The name of the Azure storage account.
                           $ref: ../definitions.yaml#/wordCharacterPattern
                       required:
                         - resourceGroup
@@ -79,11 +79,14 @@ AppVelero:
                         subscriptionId:
                           description: The used Azure Subscription ID.
                           $ref: ../definitions.yaml#/wordCharacterPattern
+                        resourceGroup:
+                          description: The resource group that contains the worker nodes (VMs and disks).
+                          $ref: ../definitions.yaml#/wordCharacterPattern
                         aadClientId:
                           description: The ID of the Service Principal with permissions to perform backups.
                           $ref: ../definitions.yaml#/wordCharacterPattern
                         aadClientSecret:
-                          description: The generated password of the Service Principal
+                          description: The generated password of the Service Principal.
                           $ref: ../definitions.yaml#/wordCharacterPattern
                           x-secret: ''
                       required:

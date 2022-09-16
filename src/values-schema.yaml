@@ -2374,7 +2374,7 @@ properties:
             properties:
               name:
                 type: string
-                default: platform
+                default: otomi
                 description: Name of the backup storage location where backups should be stored.
                 $ref: '#/definitions/wordCharacterPattern'
               bucket:
@@ -3037,6 +3037,15 @@ properties:
           enabled:
             type: boolean
             default: false
+          ttl:
+            default: 240h
+            description: Expiration of the backup.
+            title: TTL after finished
+            type: string
+          schedule:
+            default: 0 0 * * *
+            description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
+            type: string
       # customSchedules:
       #   type: array
       #   items:
