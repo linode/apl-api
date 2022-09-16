@@ -72,11 +72,14 @@ export function jwtMiddleware(otomi: OtomiStack): RequestHandler {
   return function nextHandler(req: OpenApiRequestExt, res, next): any {
     const token = req.header('Authorization')
     if (env.isDev && env.NO_AUTHZ) {
+      const groups: Array<string> = []
+      if (env.NO_AUTHZ_MOCK_IS_ADMIN) groups.push('team-admin')
+      if (env.NO_AUTHZ_MOCK_TEAM) groups.push(`team-${env.NO_AUTHZ_MOCK_TEAM}`)
       req.user = getUser(
         {
           name: env.NO_AUTHZ_MOCK_IS_ADMIN ? 'Bob Admin' : 'Joe Team',
           email: env.NO_AUTHZ_MOCK_IS_ADMIN ? 'bob.admin@otomi.cloud' : `joe.team@otomi.cloud`,
-          groups: env.NO_AUTHZ_MOCK_IS_ADMIN ? ['team-admin'] : [`team-${env.NO_AUTHZ_MOCK_TEAM}`],
+          groups,
           roles: [],
         },
         otomi,
