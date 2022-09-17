@@ -47,7 +47,6 @@ AppHarbor:
           properties:
             imageChartStorage:
               type: object
-              additionalProperties: false
               title: Image Chart Storage
               oneOf:
                 - title: File
@@ -98,6 +97,9 @@ AppHarbor:
                       enum:
                         - aws
                       default: aws
+                  required:
+                    - aws
+                    - type
                 - title: Azure
                   type: object
                   properties:
@@ -119,6 +121,10 @@ AppHarbor:
                       enum:
                         - azure
                       default: azure
+                  required:
+                    - azure
+                    - type
+
                 - title: GCS
                   type: object
                   properties:
@@ -139,6 +145,9 @@ AppHarbor:
                       enum:
                         - gcs
                       default: gcs
+                  required:
+                    - gcs
+                    - type
         registry:
           type: object
           properties:

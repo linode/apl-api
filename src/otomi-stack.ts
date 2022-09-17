@@ -218,7 +218,10 @@ export default class OtomiStack {
 
   editApp(teamId, id, data: App): App {
     // @ts-ignore
-    return this.db.updateItem('apps', data, { teamId, id })
+    let app: App = this.db.getItem('apps', { teamId, id })
+    // Shallow merge, so only first level attributes can be replaced (values, rawValues, shortcuts, etc.)
+    app = { ...app, ...data }
+    return this.db.updateItem('apps', app as any, { teamId, id }) as App
   }
 
   canToggleApp(id): boolean {
@@ -254,12 +257,10 @@ export default class OtomiStack {
       }
       let enabled
       const app = this.getAppSchema(appId)
-      if (app.properties.enabled !== undefined) {
-        enabled = !!values.enabled
-        // we do not want to send enabled flag to the input forms
-        delete values.enabled
-      }
+      if (app.properties.enabled !== undefined) enabled = !!values.enabled
 
+      // we do not want to send enabled flag to the input forms
+      delete values.enabled
       const teamId = 'admin'
       this.db.updateItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId })
     })
