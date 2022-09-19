@@ -1854,8 +1854,6 @@ properties:
                 $ref: '#/definitions/autoscaling'
               ingressgateway:
                 $ref: '#/definitions/autoscaling'
-              ingressgateway-private:
-                $ref: '#/definitions/autoscaling'
               pilot:
                 $ref: '#/definitions/autoscaling'
           egressGateway:
@@ -2381,7 +2379,7 @@ properties:
                       $ref: '#/definitions/wordCharacterPattern'
                     resourceGroup:
                       type: string
-                      description: The name of the resource group that contains the cluster vm's and disks.
+                      description: The resource group of the storage account
                       $ref: '#/definitions/wordCharacterPattern'
                     bucket:
                       type: string
@@ -2410,6 +2408,9 @@ properties:
                     subscriptionId:
                       $ref: '#/definitions/wordCharacterPattern'
                     aadClientId:
+                      $ref: '#/definitions/wordCharacterPattern'
+                    resourceGroup:
+                      description: The resource group of the worker nodes (VM's and disks)
                       $ref: '#/definitions/wordCharacterPattern'
                     aadClientSecret:
                       $ref: '#/definitions/wordCharacterPattern'
@@ -3038,18 +3039,18 @@ properties:
             description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
             type: string
       teamSchedule:
-          enabled:
-            type: boolean
-            default: false
-          ttl:
-            default: 240h
-            description: Expiration of the backup.
-            title: TTL after finished
-            type: string
-          schedule:
-            default: 0 0 * * *
-            description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
-            type: string
+        enabled:
+          type: boolean
+          default: false
+        ttl:
+          default: 240h
+          description: Expiration of the backup.
+          title: TTL after finished
+          type: string
+        schedule:
+          default: 0 0 * * *
+          description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
+          type: string
   teamConfig:
     additionalProperties: false
     patternProperties:
