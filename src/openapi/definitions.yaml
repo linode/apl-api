@@ -292,29 +292,6 @@ azureTenantId:
   title: Azure tenant id
   description: An Azure tenant id. Defaults to one found in metadata.
   type: string
-# backupschedules:
-#   properties:
-#     labels:
-#       $ref: '#/labels'
-#     annotations:
-#       $ref: '#/labels'
-#     schedule:
-#       description: Cron-type expression to schedule the backup
-#       type: string
-#     TTL:
-#       description: Time To Live after backup job is finished in seconds.
-#       type: integer
-#     includeNamespaces:
-#       items:
-#         type: string
-#       nullable: false
-#       title: Add namespaces to backup
-#       type: array
-#     enabled:
-#       type: boolean
-#   required:
-#     - includeNamespaces
-#     - schedule
 clusterName:
   $ref: '#/idName'
   description: Short name that will be used in construction of cluster domain and messaging.
