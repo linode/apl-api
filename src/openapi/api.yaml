@@ -793,8 +793,6 @@ components:
       $ref: definitions.yaml#/azureSubscriptionId
     azureTenantId:
       $ref: definitions.yaml#/azureTenantId
-    # backupschedules:
-    #   $ref: definitions.yaml#/backupschedules
     clusterName:
       $ref: definitions.yaml#/clusterName
     containerSpec:
