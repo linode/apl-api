@@ -679,8 +679,8 @@ k8sVersion:
   type: string
 kms:
   additionalProperties: false
-  description: Holds KMS settings like credentials for retrieving encryption/decryption keys.
-  title: KMS settings
+  description: Manage settings for retrieving encryption/decryption keys.
+  title: Key Management Service settings
   type: object
   properties:
     sops:
@@ -887,6 +887,7 @@ labels:
   $ref: '#/annotations'
   description: A set of labels.
 logLevel:
+  title: Log Level
   type: string
   default: info
   enum:

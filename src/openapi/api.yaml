@@ -2,7 +2,7 @@ openapi: '3.0.0'
 security:
   - groupAuthz: []
 info:
-  title: The otomi-stack API
+  title: The otomi API
   description: Holds the entire schema needed by console to autogenerate forms
   version: 0.4.95-rc.21
 
@@ -719,6 +719,8 @@ components:
       $ref: apps/prometheus.yaml#/AppPrometheus
     AppVault:
       $ref: apps/vault.yaml#/AppVault
+    AppVelero:
+      $ref: apps/velero.yaml#/AppVelero
     AppList:
       $ref: app.yaml#/AppList
     AdditionalCluster:
