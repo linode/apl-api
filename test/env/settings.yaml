@@ -12,6 +12,9 @@ azure:
         isManaged: true
     monitor:
         clientId: somesecretvalue
+backup:
+    platformSchedule:
+        enabled: true
 dns:
     aws:
         region: eu-central-1
@@ -52,10 +55,9 @@ oidc:
     teamAdminGroupID: xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 otomi:
     additionalClusters:
-        -
-            domainSuffix: demo.eks.otomi.cloud
-            name: demo
-            provider: aws
+        - domainSuffix: demo.eks.otomi.cloud
+          name: demo
+          provider: aws
     addons:
         conftest:
             enabled: true

@@ -1,0 +1,162 @@
+AppVelero:
+  additionalProperties: false
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      type: boolean
+      default: false
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/apps/velero
+      additionalProperties: false
+      type: object
+      properties:
+        provider:
+          description: Choose your Cloud provider.
+          nullable: true
+          type: object
+          oneOf:
+            # - $ref: ../definitions.yaml#/offChoice
+            - title: azure
+              type: object
+              properties:
+                azure:
+                  additionalProperties: false
+                  properties:
+                    environment:
+                      title: Azure environment
+                      description: An Azure environment.
+                      type: string
+                      default: AzurePublicCloud
+                      enum:
+                        - AzurePublicCloud
+                        - AzureChinaCloud
+                        - AzureUSGovernment
+                        - AzureGermanCloud
+                    config:
+                      title: Storage location configuration
+                      description: Azure specific storage location configuration
+                      properties:
+                        resourceGroup:
+                          description: Resource group of the storage account.
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                        storageAccount:
+                          description: The name of the Azure storage account.
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                        bucket:
+                          type: string
+                          description: Name of the blob container.
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                      required:
+                        - resourceGroup
+                        - storageAccount
+                        - bucket
+                    secretContents:
+                      additionalProperties: false
+                      description: Data to be stored in the Velero secret.
+                      properties:
+                        tenantId:
+                          description: The used Azure Account Tenant ID.
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                        subscriptionId:
+                          description: The used Azure Subscription ID.
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                        resourceGroup:
+                          description: The resource group that contains the worker nodes (VMs and disks).
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                        aadClientId:
+                          description: The ID of the Service Principal with permissions to perform backups.
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                        aadClientSecret:
+                          description: The generated password of the Service Principal.
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                          x-secret: ''
+                      required:
+                        - tenantId
+                        - subscriptionId
+                        - aadClientId
+                        - aadClientSecret
+                        - resourceGroup
+              required:
+                - azure
+            - title: aws
+              type: object
+              properties:
+                aws:
+                  additionalProperties: false
+                  properties:
+                    config:
+                      title: Location configuration
+                      description: AWS specific storage location configuration
+                      properties:
+                        region:
+                          description: The region of the S3 bucket
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                        s3bucket:
+                          description: The name (URL) of the S3 bucket
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                      required:
+                        - region
+                        - s3bucket
+                    secretContents:
+                      additionalProperties: false
+                      description: Data to be stored in the Velero secret.
+                      properties:
+                        accessKeyId:
+                          type: string
+                          description: The ID of the access key
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                        secretAccessKey:
+                          type: string
+                          description: The secret of the access key
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                          x-secret: ''
+                      required:
+                        - accessKeyId
+                        - secretAccessKey
+              required:
+                - aws
+        logLevel:
+          description: Set log-level for the Velero pod.
+          title: Log Level
+          type: string
+          default: info
+          enum:
+            - error
+            - warn
+            - info
+            - debug
+            - trace
+        resources:
+          type: object
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 1000m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 512Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 500m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 256Mi
+          required:
+            - limits
+            - requests

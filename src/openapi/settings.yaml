@@ -21,11 +21,50 @@ Settings:
       x-acl:
         admin: [read-any, update-any]
         team: [read-any]
+    backup:
+      additionalProperties: false
+      title: Backup
+      description: Backup schedule configuration.
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
+      type: object
+      properties:
+        platformSchedule:
+          title: Platform
+          description: Backup all enabled Otomi platform services.
+          properties:
+            enabled:
+              type: boolean
+            ttl:
+              default: 240h
+              description: Expiration of the backup.
+              title: TTL after finished
+              type: string
+            schedule:
+              default: 0 0 * * *
+              description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
+              type: string
+        teamSchedule:
+          title: Teams
+          description: Backup all Teams.
+          properties:
+            enabled:
+              type: boolean
+            ttl:
+              default: 240h
+              description: Expiration of the backup.
+              title: TTL after finished
+              type: string
+            schedule:
+              default: 0 0 * * *
+              description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
+              type: string
     home:
       additionalProperties: false
       $ref: definitions.yaml#/alerts
-      title: Home alerts
-      description: Useful for 3rd party co-monitoring.
+      title: Remote Monitoring
+      description: Send alerts to a 3rd party for remote monitoring
       x-externalDocsPath: docs/console/settings#home-alerts
       x-acl:
         admin: [read-any, update-any]
@@ -212,8 +251,8 @@ Settings:
           type: boolean
           default: false
         isHomeMonitored:
-          description: Whether this cluster is co-monitored.
-          title: Home alerts
+          description: Whether this cluster is monitored by a third party.
+          title: Remote monitoring
           type: boolean
           default: false
         isMultitenant:

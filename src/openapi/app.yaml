@@ -25,6 +25,7 @@ AppList:
     - loki
     - prometheus
     - vault
+    - velero
 
 # AppBase:
 #   x-acl:
