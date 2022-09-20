@@ -223,10 +223,10 @@ Settings:
               x-secret: ''
             email:
               type: string
-              default: not@us.ed
+              x-default: not@us.ed
             server:
               type: string
-              default: docker.io
+              x-default: docker.io
           # disabling required fields until rjsf solves this nested required bug:
           # required:
           #   - username
