@@ -40,9 +40,9 @@ AppKubeclarity:
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
                   default: 200Mi
-              required:
-                - limits
-                - requests
+          required:
+            - limits
+            - requests
         databasePassword:
           type: string
           description: Once set and deployed it cannot be changed with manual intervention.
