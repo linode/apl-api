@@ -51,6 +51,6 @@ AppGrafana:
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
                   default: 128Mi
-              required:
-                - limits
-                - requests
+            required:
+              - limits
+              - requests
