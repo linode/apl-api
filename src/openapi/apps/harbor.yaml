@@ -55,8 +55,8 @@ AppHarbor:
                     type:
                       type: string
                       enum:
-                        - file
-                      default: file
+                        - filesystem
+                      default: filesystem
                 - title: AWS
                   type: object
                   properties:
