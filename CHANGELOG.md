@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.14](https://github.com/redkubes/otomi-api/compare/v0.5.13...v0.5.14) (2022-09-23)
+
+
+### Features
+
+* add velero to platform apps ([#329](https://github.com/redkubes/otomi-api/issues/329)) ([d1b8972](https://github.com/redkubes/otomi-api/commit/d1b8972d0a33c328dfecb0afafa57868c22a42a4))
+* attribute based access control, default values ([#326](https://github.com/redkubes/otomi-api/issues/326)) ([da03217](https://github.com/redkubes/otomi-api/commit/da03217364060f0b86233bb56c5f9115fdda0a6e))
+* improve attribute based access control ([#325](https://github.com/redkubes/otomi-api/issues/325)) ([ff6e8bc](https://github.com/redkubes/otomi-api/commit/ff6e8bcfc24034ef2b2d68499d76965f15a98031))
+* mock user group membership ([#327](https://github.com/redkubes/otomi-api/issues/327)) ([824b986](https://github.com/redkubes/otomi-api/commit/824b986c810fcaded4e9b2f48ca516bff606b233))
+* yaml editor for dns provider 'other' ([#324](https://github.com/redkubes/otomi-api/issues/324)) ([fb8e215](https://github.com/redkubes/otomi-api/commit/fb8e2151db6cb6d6f006f7849d730477909e6308))
+
+
+### Bug Fixes
+
+* app update ([#328](https://github.com/redkubes/otomi-api/issues/328)) ([26dcfe2](https://github.com/redkubes/otomi-api/commit/26dcfe256b7a7ab8f8eda78949a7a5b69365b6c7))
+* grafana required properties ([#331](https://github.com/redkubes/otomi-api/issues/331)) ([1da5b1e](https://github.com/redkubes/otomi-api/commit/1da5b1ee84b0c8ce8dda26845bd3b6f9ee57aded))
+* grafana, harbor and kubeclarity schemas ([#332](https://github.com/redkubes/otomi-api/issues/332)) ([2164950](https://github.com/redkubes/otomi-api/commit/216495093e86aaceda54693c115947dfa1a0a52a))
+* loki app oneOf cannot be a root property in the form ([#330](https://github.com/redkubes/otomi-api/issues/330)) ([e1e4fea](https://github.com/redkubes/otomi-api/commit/e1e4feadd8776cbc4305196319ab8d180f720f60))
+* otomi settings form ([64c9963](https://github.com/redkubes/otomi-api/commit/64c996352b75e930669c0183f82c6f299aff3b2e))
+
 ### [0.5.13](https://github.com/redkubes/otomi-api/compare/v0.5.12...v0.5.13) (2022-08-24)
 
 
