@@ -18,6 +18,7 @@ export const NO_AUTHZ_MOCK_IS_ADMIN = bool({
 export const NO_AUTHZ_MOCK_TEAM = str({ desc: 'Indicate if a user belongs to a team', default: undefined })
 export const OIDC_ENDPOINT = str()
 export const REGION = str({ desc: 'The cloud region' })
+export const ROARR_LOG = bool({ desc: 'To enable Lightship logs', default: false })
 export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '127.0.0.1' })
 const { env } = process
 export function cleanEnv<T>(
