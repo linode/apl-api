@@ -12,12 +12,13 @@ const otomiStack = new OtomiStack()
 async function initServer() {
   const lightship = createLightship()
   const app = await initApp(otomiStack)
-  otomiStack.init()
   const { PORT = 8080 } = process.env
   const server = app
     .listen(PORT, () => {
       debug(`Listening on port: http://127.0.0.1:${PORT}`)
       lightship.signalReady()
+      // Clone repo after application is ready to avoid Pod NotReady phenomenon, and thus infitie Pod crash loopback
+      otomiStack.init()
     })
     .on('error', () => {
       lightship.shutdown()
