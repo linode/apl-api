@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.15](https://github.com/redkubes/otomi-api/compare/v0.5.14...v0.5.15) (2022-09-27)
+
+
+### Bug Fixes
+
+* clone repo after application is ready ([#333](https://github.com/redkubes/otomi-api/issues/333)) ([d303841](https://github.com/redkubes/otomi-api/commit/d303841a205bc0311270734420f652789d10057e)), closes [redkubes/otomi-core#913](https://github.com/redkubes/otomi-core/issues/913)
+
 ### [0.5.14](https://github.com/redkubes/otomi-api/compare/v0.5.13...v0.5.14) (2022-09-23)
 
 
