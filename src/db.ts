@@ -5,7 +5,6 @@ import low from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
 import Memory from 'lowdb/adapters/Memory'
 import { v4 as uuidv4 } from 'uuid'
-import { getIo } from './app'
 import { AlreadyExists, NotExistError } from './error'
 import { App, Cluster, Job, Secret, Service, Settings, Team } from './otomi-models'
 import { mergeData, removeBlankAttributes } from './utils'
@@ -122,10 +121,8 @@ export default class Db {
     return newData
   }
 
-  async setDirty(): Promise<void> {
+  setDirty(): void {
     this.dirty = !!this.editor
-    const io = await getIo()
-    io.emit('db', { state: this.dirty ? 'dirty' : 'clean', editor: this.editor })
   }
 
   isDirty(): boolean {

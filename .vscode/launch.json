@@ -37,14 +37,37 @@
     },
     {
       "name": "Mocha All",
-      "type": "pwa-node",
-      "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
+      "type": "node",
+      // "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
       "request": "launch",
-      "args": ["--timeout", "999999", "--colors", "${workspaceFolder}/src/**/*.test.ts"],
+      "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+      "args": [
+        "--require",
+        "dotenv/config",
+        "--require",
+        "ts-node/register",
+        "--timeout",
+        "999999",
+        "--colors",
+        "--recursive",
+        "${workspaceFolder}/src/**/*.test.ts"
+      ],
       "env": {
         "NODE_ENV": "test"
       },
-      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Mocha dist all",
+      "type": "node",
+      // "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
+      "request": "launch",
+      "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+      "args": ["--timeout", "999999", "--colors", "--recursive", "${workspaceFolder}/dist/**/*.test.js"],
+      "env": {
+        "NODE_ENV": "test"
+      },
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     },

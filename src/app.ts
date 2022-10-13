@@ -1,7 +1,8 @@
 import Debug from 'debug'
 import { createLightship } from 'lightship'
 import { Server } from 'socket.io'
-import OtomiStack from './otomi-stack'
+import { OpenApiRequestExt } from './otomi-models'
+import { default as OtomiStack } from './otomi-stack'
 import initApp from './server'
 
 const debug = Debug('otomi:app')
@@ -35,6 +36,26 @@ async function initServer() {
 
   io.on('connection', (socket) => {
     socket.on('error', console.error)
+  })
+  // we use a catch all route for the api so we can only allow one user to edit the db
+  // the first user to touch the data is the one and the rest has to wait
+  app.all('*', (req: OpenApiRequestExt, res, next) => {
+    const {
+      user: { email },
+    } = req
+    const {
+      db: { editor },
+    } = otomiStack
+    if (['post', 'put'].includes(req.method.toLowerCase())) {
+      if (editor && editor !== email) return next('Another user has already started editing values!')
+      next()
+      // we know we are mutating data, so set the editor (user email) when operation was successful
+      // eslint-disable-next-line no-param-reassign
+      otomiStack.db.editor = req.user.email
+      io.emit('db', { state: this.dirty ? 'dirty' : 'clean', editor: otomiStack.db.editor })
+      return
+    }
+    next()
   })
 }
 

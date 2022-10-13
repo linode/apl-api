@@ -11,10 +11,10 @@ import swaggerUi from 'swagger-ui-express'
 import { default as Authz } from './authz'
 import { authzMiddleware, errorMiddleware, isUserAuthenticated, jwtMiddleware } from './middleware'
 import { setMockIdx } from './mocks'
-import { OpenAPIDoc, OpenApiRequestExt } from './otomi-models'
-import { default as OtomiStack, loadOpenApisSpec } from './otomi-stack'
+import { OpenAPIDoc } from './otomi-models'
+import { loadOpenApisSpec } from './otomi-stack'
 
-export default async function initApp(otomiStack: OtomiStack): Promise<express.Express> {
+export default async function initApp(otomiStack: any): Promise<express.Express> {
   const app = express()
   const apiRoutesPath = path.resolve(__dirname, 'api')
   const [spec] = await loadOpenApisSpec()
@@ -34,25 +34,6 @@ export default async function initApp(otomiStack: OtomiStack): Promise<express.E
     }
     return securityHandlers
   }
-  // we use a catch all route for the api so we can only allow one user to edit the db
-  // the first user to touch the data is the one and the rest has to wait
-  app.all('*', (req: OpenApiRequestExt, res, next) => {
-    const {
-      user: { email },
-    } = req
-    const {
-      db: { editor },
-    } = otomiStack
-    if (['post', 'put'].includes(req.method.toLowerCase())) {
-      if (editor && editor !== email) return next('Another user has already started editing values!')
-      next()
-      // we know we are mutating data, so set the editor (user email) when operation was successful
-      // eslint-disable-next-line no-param-reassign
-      otomiStack.db.editor = req.user.email
-      return
-    }
-    next()
-  })
   app.all('/mock/:idx', (req, res, next) => {
     const { idx } = req.params
     setMockIdx(idx)

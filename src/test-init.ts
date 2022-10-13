@@ -1,6 +1,6 @@
 import { config, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import sinon from 'sinon'
+import { stub } from 'sinon'
 import sinonChai from 'sinon-chai'
 
 config.truncateThreshold = 0
@@ -8,8 +8,8 @@ use(chaiAsPromised)
 use(sinonChai)
 
 before(() => {
-  sinon.stub(console, 'log')
-  sinon.stub(console, 'debug')
-  sinon.stub(console, 'info')
-  sinon.stub(console, 'warn')
+  stub(console, 'log')
+  stub(console, 'debug')
+  stub(console, 'info')
+  stub(console, 'warn')
 })
