@@ -63,8 +63,8 @@ Settings:
     home:
       additionalProperties: false
       $ref: definitions.yaml#/alerts
-      title: Remote Monitoring
-      description: Send alerts to a 3rd party for remote monitoring
+      title: Co-monitoring
+      description: Send alerts to a 3rd party for co-monitoring
       x-externalDocsPath: docs/console/settings#home-alerts
       x-acl:
         admin: [read-any, update-any]
@@ -252,7 +252,7 @@ Settings:
           default: false
         isHomeMonitored:
           description: Whether this cluster is monitored by a third party.
-          title: Remote monitoring
+          title: Co-monitoring
           type: boolean
           default: false
         isMultitenant:

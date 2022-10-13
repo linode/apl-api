@@ -1,5 +1,6 @@
 import Debug from 'debug'
 import { createLightship } from 'lightship'
+import { Server } from 'socket.io'
 import OtomiStack from './otomi-stack'
 import initApp from './server'
 
@@ -9,11 +10,15 @@ debug('NODE_ENV: ', process.env.NODE_ENV)
 
 const otomiStack = new OtomiStack()
 
+let server
+let io
+
 async function initServer() {
+  if (server) return server
   const lightship = createLightship()
   const app = await initApp(otomiStack)
   const { PORT = 8080 } = process.env
-  const server = app
+  server = app
     .listen(PORT, () => {
       debug(`Listening on port: http://127.0.0.1:${PORT}`)
       lightship.signalReady()
@@ -26,7 +31,15 @@ async function initServer() {
   lightship.registerShutdownHandler(() => {
     server.close()
   })
+  io = new Server(server, { path: '/ws' })
+
+  io.on('connection', (socket) => {
+    socket.on('error', console.error)
+  })
 }
+
+export const getServer = async () => Promise.resolve(server)
+export const getIo = async () => Promise.resolve(io || {})
 
 initServer().catch((e) => {
   debug(e)

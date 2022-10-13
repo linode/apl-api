@@ -192,7 +192,7 @@ export default class OtomiStack {
     // settings[settingId] = merge(settings[settingId], data[settingId])
     settings[settingId] = removeBlankAttributes(data[settingId])
     this.db.db.set('settings', settings).write()
-    this.db.dirty = true
+    this.db.setDirty()
     return settings
   }
 
@@ -430,7 +430,7 @@ export default class OtomiStack {
     if (servicesFiltered.length > 0) throw new PublicUrlExists()
   }
 
-  async triggerDeployment(email: string): Promise<void> {
+  async triggerDeployment(): Promise<void> {
     debug('DISABLE_SYNC: ', env.DISABLE_SYNC)
     this.saveValues()
     try {
@@ -445,9 +445,16 @@ export default class OtomiStack {
       throw new HttpError(500, e)
     }
 
-    if (!env.DISABLE_SYNC) await this.repo.save(email)
+    if (!env.DISABLE_SYNC) await this.repo.save(this.db.editor)
+    // clean slate for others
+    this.db.editor = undefined
+    this.db.setDirty()
+  }
 
-    this.db.dirty = false
+  triggerRevert(): void {
+    debug('DISABLE_SYNC: ', env.DISABLE_SYNC)
+    this.db = new Db(env.DB_PATH)
+    this.init()
   }
 
   apiClient?: k8s.CoreV1Api
@@ -534,7 +541,6 @@ export default class OtomiStack {
     this.loadSettings()
     this.loadTeams()
     this.loadApps()
-    this.db.setDirtyActive()
   }
 
   loadCluster(): void {
@@ -869,8 +875,9 @@ export default class OtomiStack {
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
-      user: user as User,
+      editor: this.db.editor,
       isDirty: this.db.isDirty(),
+      user: user as User,
       versions: {
         core: env.CORE_VERSION,
         api: process.env.npm_package_version,

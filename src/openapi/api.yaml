@@ -446,6 +446,20 @@ paths:
         '409':
           <<: *OtomiStackError
 
+  /revert:
+    get:
+      operationId: revert
+      description: Revert to previous state
+      responses:
+        '202':
+          description: Revert has been triggered
+          content:
+            application/json:
+              schema:
+                type: object
+        '409':
+          <<: *OtomiStackError
+
   '/kubecfg/{teamId}':
     parameters:
       - $ref: '#/components/parameters/teamParams'

@@ -5,6 +5,7 @@ import low from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
 import Memory from 'lowdb/adapters/Memory'
 import { v4 as uuidv4 } from 'uuid'
+import { getIo } from './app'
 import { AlreadyExists, NotExistError } from './error'
 import { App, Cluster, Job, Secret, Service, Settings, Team } from './otomi-models'
 import { mergeData, removeBlankAttributes } from './utils'
@@ -24,7 +25,7 @@ export default class Db {
 
   dirty: boolean
 
-  dirtyActive: boolean
+  editor: string | undefined
 
   constructor(path?: string) {
     // @ts-ignore
@@ -46,7 +47,7 @@ export default class Db {
       })
       .write()
     this.dirty = false
-    this.dirtyActive = false
+    this.editor = undefined
   }
 
   getItem(name: string, selector: any): DbType {
@@ -98,7 +99,7 @@ export default class Db {
       throw new AlreadyExists(`Item already exists in '${type}' collection: ${JSON.stringify(selector)}`)
     const cleanData = removeBlankAttributes({ ...data, ...selector })
     const ret = this.populateItem(type, cleanData, selector, id)
-    this.dirty = this.dirtyActive
+    this.setDirty()
     return ret
   }
 
@@ -106,7 +107,7 @@ export default class Db {
     this.getItemReference(type, selector)
     // @ts-ignore
     this.db.get(type).remove(selector).write()
-    this.dirty = this.dirtyActive
+    this.setDirty()
   }
 
   updateItem(type: string, data: any, selector: any, merge = false): DbType {
@@ -117,12 +118,14 @@ export default class Db {
     const merged = merge && prev ? mergeData(prev, data) : data
     const newData = removeBlankAttributes({ ...merged, ...selector })
     col.value().splice(idx, 1, newData)
-    this.dirty = this.dirtyActive
+    this.setDirty()
     return newData
   }
 
-  setDirtyActive(active = true): void {
-    this.dirtyActive = active
+  async setDirty(): Promise<void> {
+    this.dirty = !!this.editor
+    const io = await getIo()
+    io.emit('db', { state: this.dirty ? 'dirty' : 'clean', editor: this.editor })
   }
 
   isDirty(): boolean {

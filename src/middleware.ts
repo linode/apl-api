@@ -6,17 +6,15 @@ import get from 'lodash/get'
 import Authz, { getTeamSelfServiceAuthz } from './authz'
 import Db from './db'
 import { HttpError, OtomiError } from './error'
+import { getMockEmail, getMockGroups, getMockName } from './mocks'
 import { JWT, OpenApiRequest, OpenApiRequestExt, PermissionSchema, TeamSelfService, User } from './otomi-models'
 import OtomiStack from './otomi-stack'
-import { cleanEnv, NO_AUTHZ, NO_AUTHZ_MOCK_IS_ADMIN, NO_AUTHZ_MOCK_TEAM } from './validators'
+import { AUTHZ_MOCK_IS_ADMIN, AUTHZ_MOCK_TEAM, cleanEnv } from './validators'
 
 const env = cleanEnv({
-  NO_AUTHZ,
-  NO_AUTHZ_MOCK_IS_ADMIN,
-  NO_AUTHZ_MOCK_TEAM,
+  AUTHZ_MOCK_IS_ADMIN,
+  AUTHZ_MOCK_TEAM,
 })
-
-const badCode = (code) => code >= 300 || code < 200
 
 const HttpMethodMapping = {
   DELETE: 'delete',
@@ -71,15 +69,12 @@ export function getUser(user: JWT, otomi: OtomiStack): User {
 export function jwtMiddleware(otomi: OtomiStack): RequestHandler {
   return function nextHandler(req: OpenApiRequestExt, res, next): any {
     const token = req.header('Authorization')
-    if (env.isDev && env.NO_AUTHZ) {
-      const groups: Array<string> = []
-      if (env.NO_AUTHZ_MOCK_IS_ADMIN) groups.push('team-admin')
-      if (env.NO_AUTHZ_MOCK_TEAM) groups.push(`team-${env.NO_AUTHZ_MOCK_TEAM}`)
+    if (env.isDev) {
       req.user = getUser(
         {
-          name: env.NO_AUTHZ_MOCK_IS_ADMIN ? 'Bob Admin' : 'Joe Team',
-          email: env.NO_AUTHZ_MOCK_IS_ADMIN ? 'bob.admin@otomi.cloud' : `joe.team@otomi.cloud`,
-          groups,
+          name: getMockName(),
+          email: getMockEmail(),
+          groups: getMockGroups(),
           roles: [],
         },
         otomi,
@@ -93,32 +88,6 @@ export function jwtMiddleware(otomi: OtomiStack): RequestHandler {
     const { name, email, roles, groups } = jwtDecode(token)
     req.user = getUser({ name, email, roles, groups }, otomi)
     return next()
-  }
-}
-
-const wrapResponse = (filter, orig) => {
-  return function (obj, ...rest) {
-    if (arguments.length === 1) {
-      if (badCode(this.statusCode)) return orig(this.statusCode, obj)
-
-      const ret = filter(obj)
-      return orig(ret)
-    }
-
-    if (typeof rest[0] === 'number' && !badCode(rest[0])) {
-      // res.json(body, status) backwards compat
-      const ret = filter(obj)
-      return orig(ret, rest[0])
-    }
-
-    if (typeof obj === 'number' && !badCode(obj)) {
-      // res.json(status, body) backwards compat
-      const ret = filter(obj)
-      return orig(obj, ret)
-    }
-
-    // The original actually returns this.send(body)
-    return orig(obj, rest[0])
   }
 }
 
@@ -207,7 +176,6 @@ export function authzMiddleware(authz: Authz, otomi: OtomiStack): RequestHandler
 
 // eslint-disable-next-line no-unused-vars
 export function isUserAuthenticated(req: OpenApiRequestExt): boolean {
-  // if (env.NO_AUTHZ) return true
   if (req.user) {
     req.isSecurityHandler = true
     return true

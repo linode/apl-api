@@ -6,14 +6,19 @@ Session:
     core:
       type: object
       readOnly: true
+    editor:
+      type: string
+      readOnly: true
     isDirty:
       type: boolean
       default: false
       readOnly: true
     user:
       $ref: user.yaml#/User
+      readOnly: true
     versions:
       type: object
+      readOnly: true
       properties:
         core:
           type: string

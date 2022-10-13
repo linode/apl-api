@@ -3,14 +3,14 @@ import { Operation, OperationHandlerArray } from 'express-openapi'
 import { OpenApiRequestExt } from '../otomi-models'
 import OtomiStack from '../otomi-stack'
 
-const debug = Debug('otomi:api:deploy')
+const debug = Debug('otomi:api:revert')
 
 export default function (otomi: OtomiStack): OperationHandlerArray {
   const get: Operation = [
-    async (req: OpenApiRequestExt, res): Promise<void> => {
-      debug(`triggerDeployment`)
+    (req: OpenApiRequestExt, res): void => {
+      debug(`triggerRevert`)
       try {
-        await otomi.triggerDeployment()
+        otomi.triggerRevert()
         res.json({})
       } catch (err) {
         debug(`Error: ${JSON.stringify(err)}`)
