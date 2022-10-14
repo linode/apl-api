@@ -3,17 +3,32 @@ teamConfig:
         id: admin
     dev:
         id: dev
+        alerts:
+            groupInterval: 5m
+            repeatInterval: 3h
         selfService:
             service:
                 - ingress
             team:
                 - resourceQuota
+        networkPolicy:
+            ingressPrivate: true
+            egressPublic: true
     otomi:
         id: otomi
+        alerts:
+            groupInterval: 5m
+            repeatInterval: 3h
         oidc:
             groupMapping: 0efd2f6d-fb8b-49a9-9507-54cd6e92c348
         resourceQuota:
             services.loadbalancers: '0'
         selfService:
+            service:
+                - ingress
+                - networkPolicy
             team:
                 - resourceQuota
+        networkPolicy:
+            ingressPrivate: true
+            egressPublic: true
