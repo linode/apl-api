@@ -98,7 +98,6 @@ export default class Db {
       throw new AlreadyExists(`Item already exists in '${type}' collection: ${JSON.stringify(selector)}`)
     const cleanData = removeBlankAttributes({ ...data, ...selector })
     const ret = this.populateItem(type, cleanData, selector, id)
-    this.setDirty()
     return ret
   }
 
@@ -106,7 +105,6 @@ export default class Db {
     this.getItemReference(type, selector)
     // @ts-ignore
     this.db.get(type).remove(selector).write()
-    this.setDirty()
   }
 
   updateItem(type: string, data: any, selector: any, merge = false): DbType {
@@ -117,15 +115,6 @@ export default class Db {
     const merged = merge && prev ? mergeData(prev, data) : data
     const newData = removeBlankAttributes({ ...merged, ...selector })
     col.value().splice(idx, 1, newData)
-    this.setDirty()
     return newData
-  }
-
-  setDirty(): void {
-    this.dirty = !!this.editor
-  }
-
-  isDirty(): boolean {
-    return !!this.dirty
   }
 }

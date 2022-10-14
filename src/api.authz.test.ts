@@ -3,10 +3,10 @@ import { Express } from 'express'
 import { isEqual } from 'lodash'
 import sinon from 'sinon'
 import request from 'supertest'
+import { initApp } from './app'
 import { AlreadyExists } from './error'
 import getToken from './fixtures/jwt'
 import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
-import initApp from './server'
 
 const adminToken: string = getToken(['team-admin'])
 const teamToken: string = getToken(['team-team1'])

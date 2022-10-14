@@ -192,7 +192,6 @@ export default class OtomiStack {
     // settings[settingId] = merge(settings[settingId], data[settingId])
     settings[settingId] = removeBlankAttributes(data[settingId])
     this.db.db.set('settings', settings).write()
-    this.db.setDirty()
     return settings
   }
 
@@ -448,7 +447,6 @@ export default class OtomiStack {
     if (!env.DISABLE_SYNC) await this.repo.save(this.db.editor)
     // clean slate for others
     this.db.editor = undefined
-    this.db.setDirty()
   }
 
   triggerRevert(): void {
@@ -876,7 +874,6 @@ export default class OtomiStack {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
       editor: this.db.editor,
-      isDirty: this.db.isDirty(),
       user: user as User,
       versions: {
         core: env.CORE_VERSION,

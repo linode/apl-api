@@ -9,10 +9,6 @@ Session:
     editor:
       type: string
       readOnly: true
-    isDirty:
-      type: boolean
-      default: false
-      readOnly: true
     user:
       $ref: user.yaml#/User
       readOnly: true

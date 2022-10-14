@@ -10,7 +10,7 @@ const teamEmails = ['alec.team@otomi.cloud', 'frank.team@otomi.cloud']
 const adminNames = ['Bob Admin', 'Joe Admin']
 const teamNames = ['Alec Team', 'Frank Team']
 
-let mockIdx = 1
+let mockIdx = 0
 export const setMockIdx = (idx) => {
   mockIdx = idx
 }
