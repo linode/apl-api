@@ -85,6 +85,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     })
     // we use a catch all route for the api so we can only allow one user to edit the db
     // the first user to touch the data is the "editor" and the rest has to wait
+    let timeout
     app.all('*', (req: OpenApiRequestExt, res, next) => {
       const {
         user: { email },
@@ -95,16 +96,27 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
       if (['post', 'put'].includes(req.method.toLowerCase())) {
         if (editor && editor !== email) return next('Another user has already started editing values!')
         next()
-        // we know a user is mutating data, so set the editor (user email) when operation was successful
-        otomiStack.db.editor = req.user.email
-        // and let others know they can only get read-only access
-        io.emit('db', { state: 'dirty', editor: otomiStack.db.editor })
+        if (!otomiStack.db.editor) {
+          // let others know they can only get read-only access
+          io.emit('db', { state: 'dirty', editor: req.user.email })
+          // we know a user is mutating data, so set the editor (user email) when operation was successful
+          otomiStack.db.editor = req.user.email
+        }
+        const interval = 20 * 3600 * 1000 // 20 minutes
+        if (timeout) clearInterval(timeout)
+        else {
+          timeout = setTimeout(() => {
+            otomiStack.triggerRevert()
+            io.emit('db', { state: 'clean', editor: otomiStack.db.editor, reason: 'timeout' })
+          }, interval)
+        }
         return
       }
       next()
       // if editor was removed let others know that the slate is clean
-      if (['deploy', 'revert'].includes(req.path.replace('/v1/', ''))) {
-        io.emit('db', { state: 'clean', editor: otomiStack.db.editor })
+      const path = req.path.replace('/v1/', '')
+      if (['deploy', 'revert'].includes(path)) {
+        io.emit('db', { state: 'clean', editor: otomiStack.db.editor, reason: path })
         otomiStack.db.editor = undefined
       }
     })
