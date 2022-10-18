@@ -16,10 +16,14 @@ import { authzMiddleware, errorMiddleware, isUserAuthenticated, jwtMiddleware } 
 import { setMockIdx } from './mocks'
 import { OpenAPIDoc, OpenApiRequestExt } from './otomi-models'
 import { default as OtomiStack, loadOpenApisSpec } from './otomi-stack'
+import { cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from './validators'
 
 const debug = Debug('otomi:app')
-
 debug('NODE_ENV: ', process.env.NODE_ENV)
+
+const env = cleanEnv({
+  EDITOR_INACTIVITY_TIMEOUT,
+})
 
 export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   const lightship = createLightship()
@@ -102,7 +106,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
           // we know a user is mutating data, so set the editor (user email) when operation was successful
           otomiStack.db.editor = req.user.email
         }
-        const interval = 10 * 3600 * 1000 // 10 minutes
+        const interval = env.EDITOR_INACTIVITY_TIMEOUT * 3600 * 1000 // 10 minutes
         if (timeout) {
           clearInterval(timeout)
           timeout = undefined

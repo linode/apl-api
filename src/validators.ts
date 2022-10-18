@@ -1,4 +1,4 @@
-import { bool, cleanEnv as clean, CleanEnv, str, StrictCleanOptions, ValidatorSpec } from 'envalid'
+import { bool, cleanEnv as clean, CleanEnv, num, str, StrictCleanOptions, ValidatorSpec } from 'envalid'
 
 export const AUTHZ_MOCK_IS_ADMIN = bool({
   desc: 'Indicate if a mocked user is an admin',
@@ -9,6 +9,10 @@ export const CORE_VERSION = str({ desc: 'The otomi-core version', default: 'x.x.
 export const CUSTOM_ROOT_CA = str({ desc: 'The root CA used for certs', default: undefined })
 export const DB_PATH = str({ desc: 'The file path to the db. If not given in-memory db is used.', default: undefined })
 export const DISABLE_SYNC = bool({ desc: 'Will disable pushing to the repo', default: false })
+export const EDITOR_INACTIVITY_TIMEOUT = num({
+  desc: 'Inactivity timeout in minutes after which editor lock is released from db for other editors.',
+  default: 10,
+})
 export const GIT_BRANCH = str({ desc: 'The git repo branch', default: 'main' })
 export const GIT_EMAIL = str({ desc: 'The git user email', default: 'not@us.ed' })
 export const GIT_LOCAL_PATH = str({ desc: 'The local file path to the repo', default: '/tmp/otomi-values' })
