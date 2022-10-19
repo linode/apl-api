@@ -9,6 +9,9 @@ Session:
     editor:
       type: string
       readOnly: true
+    inactivityTimeout:
+      type: integer
+      default: 10
     user:
       $ref: user.yaml#/User
       readOnly: true

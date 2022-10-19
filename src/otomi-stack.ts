@@ -46,6 +46,7 @@ import {
   CUSTOM_ROOT_CA,
   DB_PATH,
   DISABLE_SYNC,
+  EDITOR_INACTIVITY_TIMEOUT,
   GIT_BRANCH,
   GIT_EMAIL,
   GIT_LOCAL_PATH,
@@ -64,6 +65,7 @@ let secretPaths: string[]
 const env = cleanEnv({
   CUSTOM_ROOT_CA,
   CORE_VERSION,
+  EDITOR_INACTIVITY_TIMEOUT,
   GIT_REPO_URL,
   GIT_LOCAL_PATH,
   GIT_BRANCH,
@@ -874,6 +876,7 @@ export default class OtomiStack {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
       editor: this.db.editor,
+      inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
       user: user as User,
       versions: {
         core: env.CORE_VERSION,

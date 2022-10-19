@@ -106,7 +106,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
           // we know a user is mutating data, so set the editor (user email) when operation was successful
           otomiStack.db.editor = req.user.email
         }
-        const interval = env.EDITOR_INACTIVITY_TIMEOUT * 3600 * 1000 // 10 minutes
+        const interval = env.EDITOR_INACTIVITY_TIMEOUT * 3600 * 1000 // x minutes
         if (timeout) {
           clearInterval(timeout)
           timeout = undefined
