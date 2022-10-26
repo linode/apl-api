@@ -98,7 +98,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
         debug(`Listening on :::${PORT}`)
         lightship.signalReady()
         // Clone repo after the application is ready to avoid Pod NotReady phenomenon, and thus infinite Pod crash loopback
-        mainStack.init()
+        mainStack.initRepo()
       })
       .on('error', (e) => {
         console.error(e)

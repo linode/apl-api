@@ -152,7 +152,7 @@ export default class OtomiStack {
         debug(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
         debug(`Git repository is not ready: ${url}:${branch}`)
       }
-      const timeoutMs = 15000
+      const timeoutMs = 10000
       debug(`Trying again in ${timeoutMs} ms`)
       await new Promise((resolve) => setTimeout(resolve, timeoutMs))
     }

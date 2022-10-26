@@ -3,26 +3,26 @@ root: true
 
 parser: '@typescript-eslint/parser'
 parserOptions:
-  project: ['./tsconfig.json']
+  project: [./tsconfig.json]
   ecmaVersion: 2021
 
 extends:
-  # - airbnb-base
   - eslint:recommended
   - plugin:@typescript-eslint/eslint-recommended
   - plugin:@typescript-eslint/recommended
   - plugin:@typescript-eslint/recommended-requiring-type-checking
-  - plugin:chai-friendly/recommended
   - plugin:import/recommended
   - plugin:import/errors
-  - plugin:import/typescript
   - plugin:import/warnings
+  - plugin:import/typescript
   - plugin:prettier/recommended
+  - plugin:chai-friendly/recommended
+  - prettier
 
 plugins:
   - import
-  - '@typescript-eslint'
   - unused-imports
+  - '@typescript-eslint'
 
 settings:
   import/resolver:
