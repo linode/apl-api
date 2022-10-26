@@ -13,20 +13,21 @@ extends:
   - plugin:@typescript-eslint/recommended
   - plugin:@typescript-eslint/recommended-requiring-type-checking
   - plugin:chai-friendly/recommended
+  - plugin:import/recommended
   - plugin:import/errors
   - plugin:import/typescript
   - plugin:import/warnings
   - plugin:prettier/recommended
-  # - prettier/@typescript-eslint
 
 plugins:
   - import
   - '@typescript-eslint'
+  - unused-imports
 
 settings:
   import/resolver:
     node:
-      extensions: ['.ts']
+      extensions: [.ts]
       paths: [src]
     typescript: {}
 
@@ -50,6 +51,7 @@ rules:
   '@typescript-eslint/no-unsafe-call': off
   '@typescript-eslint/no-non-null-assertion': off
   '@typescript-eslint/no-floating-promises': off
+  '@typescript-eslint/no-unsafe-argument': warn
   comma-dangle: [error, only-multiline]
   curly: [error, multi-or-nest]
   eol-last: ['error', 'always']
@@ -69,3 +71,4 @@ rules:
   object-shorthand: error
   prefer-destructuring: warn
   prefer-template: error
+  unused-imports/no-unused-imports-ts: error

@@ -34,6 +34,7 @@ export function getUser(user: JWT, otomi: OtomiStack): User {
 }
 
 export function jwtMiddleware(): RequestHandler {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
     const token = req.header('Authorization')
     const otomi = await getSessionStack() // we can use the readonly version
