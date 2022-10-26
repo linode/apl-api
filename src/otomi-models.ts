@@ -1,6 +1,7 @@
 import { Request } from 'express'
 import { JSONSchema4 } from 'json-schema'
-import { components, external, operations, paths } from './generated-schema'
+import { components, external, operations, paths } from 'src/generated-schema'
+import OtomiStack from 'src/otomi-stack'
 
 export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
@@ -103,6 +104,7 @@ export interface OpenApiRequestExt extends OpenApiRequest, Session {
   user: User
   // Flag that indicates if experess-openapi middleware take up further authorization action
   isSecurityHandler?: boolean
+  otomi: OtomiStack
 }
 
 export interface Core {

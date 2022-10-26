@@ -1,7 +1,7 @@
 import { expect } from 'chai'
-import { getUser } from './middleware'
-import { JWT } from './otomi-models'
-import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
+import { JWT } from 'src/otomi-models'
+import OtomiStack from 'src/otomi-stack'
+import { getUser } from './jwt'
 
 const email = 'test@user.net'
 const adminGroups = ['team-admin', 'admin']
@@ -16,24 +16,22 @@ const multiTeamJWT: JWT = { ...adminJWT, groups: multiTeamGroups }
 
 describe('JWT claims mapping', () => {
   let otomiStack: OtomiStack
-  beforeEach(async () => {
+  beforeEach(() => {
     otomiStack = new OtomiStack()
-    const [spec] = await loadOpenApisSpec()
-    otomiStack.setSpec(spec as any)
   })
   it('A user in either admin or team-admin group should get admin role and have isAdmin', () => {
     const user = getUser(adminJWT, otomiStack)
     expect(user.isAdmin).to.be.true
   })
-  it('Multiple team groups should result in the same amount of teams existing', () => {
-    multiTeamUser.forEach((teamId) => otomiStack.createTeam({ name: teamId }))
+  it('Multiple team groups should result in the same amount of teams existing', async () => {
+    await Promise.all(multiTeamUser.map((teamId) => otomiStack.createTeam({ name: teamId })))
     const user = getUser(multiTeamJWT, otomiStack)
     expect(user.teams).to.deep.equal(multiTeamUser)
     expect(user.isAdmin).to.be.false
   })
-  it("Non existing team groups should not be added to the user's list of teams", () => {
+  it("Non existing team groups should not be added to the user's list of teams", async () => {
     const extraneousTeamsList = [...multiTeamUser, 'nonexisting']
-    extraneousTeamsList.forEach((teamId) => otomiStack.createTeam({ name: teamId }))
+    await Promise.all(extraneousTeamsList.map((teamId) => otomiStack.createTeam({ name: teamId })))
     const user = getUser(multiTeamJWT, otomiStack)
     expect(user.teams).to.deep.equal(multiTeamUser)
     expect(user.isAdmin).to.be.false

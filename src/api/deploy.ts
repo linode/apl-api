@@ -1,13 +1,12 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequestExt } from '../otomi-models'
-import OtomiStack from '../otomi-stack'
+import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:deploy')
 
-export default function (otomi: OtomiStack): OperationHandlerArray {
+export default function (): OperationHandlerArray {
   const get: Operation = [
-    async (req: OpenApiRequestExt, res): Promise<void> => {
+    async ({ otomi }: OpenApiRequestExt, res): Promise<void> => {
       debug(`triggerDeployment`)
       try {
         await otomi.triggerDeployment()

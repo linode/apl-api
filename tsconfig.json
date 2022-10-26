@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    // "allowSyntheticDefaultImports": true,
+    "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "downlevelIteration": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    // "isolatedModules": true,
+    "isolatedModules": true,
+    "lib": ["es2021", "esnext"],
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "dist",
@@ -18,9 +19,15 @@
     "target": "esnext"
   },
   "exclude": ["node_modules", "dist"],
-  "include": ["./src/**/*.ts"],
+  "extends": "ts-node/node16/tsconfig.json",
+  "include": ["src"],
   "parserOptions": {
-    "ecmaVersion": 2018,
+    "ecmaVersion": 2021,
     "sourceType": "module"
+  },
+  "ts-node": {
+    "transpileOnly": true,
+    "files": true,
+    "require": ["tsconfig-paths/register", "dotenv/config"]
   }
 }

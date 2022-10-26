@@ -1,15 +1,20 @@
+process.env.NODE_ENV = 'test'
 import { config, use } from 'chai'
-import chaiAsPromised from 'chai-as-promised'
+import { default as chaiAsPromised } from 'chai-as-promised'
 import { stub } from 'sinon'
-import sinonChai from 'sinon-chai'
+import { default as sinonChai } from 'sinon-chai'
+import { loadSpec } from 'src/app'
 
 config.truncateThreshold = 0
 use(chaiAsPromised)
 use(sinonChai)
 
-before(() => {
-  stub(console, 'log')
-  stub(console, 'debug')
-  stub(console, 'info')
-  stub(console, 'warn')
+before(async () => {
+  if (process.env.CI) {
+    stub(console, 'log')
+    stub(console, 'debug')
+    stub(console, 'info')
+    stub(console, 'warn')
+  }
+  await loadSpec()
 })

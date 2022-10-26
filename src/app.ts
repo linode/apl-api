@@ -1,157 +1,145 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
+import $parser, { JSONSchema } from '@apidevtools/json-schema-ref-parser'
 import { json } from 'body-parser'
+import { pascalCase } from 'change-case'
 import cors from 'cors'
 import Debug from 'debug'
 import express from 'express'
 import 'express-async-errors'
 import { initialize } from 'express-openapi'
+import { remove } from 'fs-extra'
 import { createLightship } from 'lightship'
 import logger from 'morgan'
-import { SecurityHandlers } from 'openapi-security-handler'
 import path from 'path'
-import { Server } from 'socket.io'
+import { default as Authz } from 'src/authz'
+import {
+  authzMiddleware,
+  errorMiddleware,
+  getIo,
+  getSessionStack,
+  jwtMiddleware,
+  sessionMiddleware,
+} from 'src/middleware'
+import { setMockIdx } from 'src/mocks'
+import { OpenAPIDoc, OpenApiRequestExt } from 'src/otomi-models'
+import { default as OtomiStack } from 'src/otomi-stack'
+import { extract, getPaths, getValuesSchema } from 'src/utils'
 import swaggerUi from 'swagger-ui-express'
-import { default as Authz } from './authz'
-import { authzMiddleware, errorMiddleware, isUserAuthenticated, jwtMiddleware } from './middleware'
-import { setMockIdx } from './mocks'
-import { OpenAPIDoc, OpenApiRequestExt } from './otomi-models'
-import { default as OtomiStack, loadOpenApisSpec } from './otomi-stack'
-import { cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from './validators'
+
+// import httpSignature from 'http-signature'
 
 const debug = Debug('otomi:app')
 debug('NODE_ENV: ', process.env.NODE_ENV)
 
-const env = cleanEnv({
-  EDITOR_INACTIVITY_TIMEOUT,
-})
+type OtomiSpec = {
+  spec: OpenAPIDoc
+  secretPaths: string[]
+}
+
+let otomiSpec: OtomiSpec
+export const loadSpec = async (): Promise<void> => {
+  const openApiPath = path.resolve(__dirname, 'generated-schema.json')
+  debug(`Loading api spec from: ${openApiPath}`)
+  const spec = (await $parser.parse(openApiPath)) as OpenAPIDoc
+  const valuesSchema = await getValuesSchema()
+  const secrets = extract(valuesSchema, (o, i) => i === 'x-secret')
+  const secretPaths = getPaths(secrets)
+  otomiSpec = { spec, secretPaths }
+}
+export const getSpec = (): OtomiSpec => {
+  return otomiSpec
+}
+export const getAppSchema = (appId): JSONSchema => {
+  return getSpec().spec.components.schemas[`App${pascalCase(appId)}`] as JSONSchema
+}
+
+export const getAppList = (): string[] => {
+  const appsSchema = getAppSchema('List')
+  return appsSchema.enum as string[]
+}
 
 export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   const lightship = createLightship()
   const app = express()
   const apiRoutesPath = path.resolve(__dirname, 'api')
-  const [spec] = await loadOpenApisSpec()
-  const otomiStack = inOtomiStack || new OtomiStack()
-
-  otomiStack.setSpec(spec)
-  const authz = new Authz(spec as any as OpenAPIDoc)
+  await loadSpec()
+  // instantiate read-only version of the db
+  const mainStack = inOtomiStack || getSessionStack()
+  const authz = new Authz(otomiSpec.spec)
 
   app.use(logger('dev'))
   app.use(cors())
   app.use(json())
-  app.use(jwtMiddleware(otomiStack))
-
-  function getSecurityHandlers(): SecurityHandlers {
-    const securityHandlers = {
-      groupAuthz: (req): boolean => {
-        return isUserAuthenticated(req)
-      },
-    }
-    return securityHandlers
-  }
+  app.use(jwtMiddleware())
   app.all('/mock/:idx', (req, res, next) => {
     const { idx } = req.params
     setMockIdx(idx)
     res.send('ok')
   })
+  app.all('/drone', (req, res, next) => {
+    // const parsed = httpSignature.parseRequest(req)
+    // if (!httpSignature.verifySignature(parsed, env.DRONE_SHARED_SECRET)) return res.status(401).send()
+    const event = req.headers['x-drone-event']
+    const io = getIo()
+    res.send('ok')
+    if (!io) return
+    if (event === 'build') io.emit('drone', req.body)
+  })
+  let server
   if (!inOtomiStack) {
     // initialize full server
     const { PORT = 8080 } = process.env
-    const server = app
+    server = app
       .listen(PORT, () => {
-        debug(`Listening on port: http://127.0.0.1:${PORT}`)
+        debug(`Listening on :::${PORT}`)
         lightship.signalReady()
         // Clone repo after the application is ready to avoid Pod NotReady phenomenon, and thus infinite Pod crash loopback
-        otomiStack.init()
+        mainStack.init()
       })
-      .on('error', () => {
+      .on('error', (e) => {
+        console.error(e)
         lightship.shutdown()
       })
     lightship.registerShutdownHandler(() => {
       server.close()
     })
-    // socket setup
-    const io = new Server(server, { path: '/ws' })
-    io.on('connection', (socket: any) => {
-      socket.on('error', console.error)
-      const users: any[] = []
-      for (const [id, { email }] of io.of('/').sockets as any) {
-        users.push({
-          id,
-          email,
-        })
-      }
-      socket.emit('users', users)
-      // notify existing users
-      socket.broadcast.emit('user connected', {
-        userID: socket.id,
-        email: socket.email,
-      })
-    })
-    // we use a catch all route for the api so we can only allow one user to edit the db
-    // the first user to touch the data is the "editor" and the rest has to wait
-    let timeout
-    app.all('*', (req: OpenApiRequestExt, res, next) => {
-      const {
-        user: { email },
-      } = req
-      const {
-        db: { editor },
-      } = otomiStack
-      if (['post', 'put'].includes(req.method.toLowerCase())) {
-        if (editor && editor !== email) return next('Another user has already started editing values!')
-        next()
-        if (!otomiStack.db.editor) {
-          // let others know they can only get read-only access
-          io.emit('db', { state: 'dirty', editor: req.user.email })
-          // we know a user is mutating data, so set the editor (user email) when operation was successful
-          otomiStack.db.editor = req.user.email
-        }
-        const interval = env.EDITOR_INACTIVITY_TIMEOUT * 3600 * 1000 // x minutes
-        if (timeout) {
-          clearInterval(timeout)
-          timeout = undefined
-        } else {
-          timeout = setTimeout(() => {
-            otomiStack.triggerRevert()
-            io.emit('db', { state: 'clean', editor: otomiStack.db.editor, reason: 'timeout' })
-          }, interval)
-        }
-        return
-      }
-      next()
-      // if editor was removed let others know that the slate is clean
-      const path = req.path.replace('/v1/', '')
-      if (['deploy', 'revert'].includes(path)) {
-        io.emit('db', { state: 'clean', editor: otomiStack.db.editor, reason: path })
-        otomiStack.db.editor = undefined
-      }
-    })
   }
+  // and register session middleware
+  const { beforeHandler, afterHandler } = sessionMiddleware(inOtomiStack ? undefined : server)
+  app.use(beforeHandler)
+
   // now we can initialize the more specific routes
   initialize({
     // @ts-ignore
     apiDoc: {
-      ...spec,
-      'x-express-openapi-additional-middleware': [authzMiddleware(authz, otomiStack)],
+      ...otomiSpec.spec,
+      'x-express-openapi-additional-middleware': [authzMiddleware(authz)],
     },
     app,
     dependencies: {
-      otomi: otomiStack,
       authz,
     },
     enableObjectCoercion: true,
     paths: apiRoutesPath,
     errorMiddleware,
-    securityHandlers: getSecurityHandlers(),
+    securityHandlers: {
+      groupAuthz: (req: OpenApiRequestExt): boolean => {
+        return !!req.user
+      },
+    },
     routesGlob: '**/*.{ts,js}',
     routesIndexFileRegExp: /(?:index)?\.[tj]s$/,
   })
-
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(spec))
+  app.use(afterHandler)
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
   return app
 }
 
 initApp().catch((e) => {
   debug(e)
   process.exit(1)
+})
+
+process.on('exit', () => {
+  if (process.env.NODE_ENV === 'development') remove('/tmp/otomi')
 })

@@ -1,12 +1,13 @@
 import $RefParser from '@apidevtools/json-schema-ref-parser'
 import cleanDeep, { CleanOptions } from 'clean-deep'
-import { existsSync, readFileSync } from 'fs'
+import { pathExists } from 'fs-extra'
+import { readFile } from 'fs/promises'
 import { load } from 'js-yaml'
 import { isArray, memoize, mergeWith, omit } from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
 import { resolve } from 'path'
-import { Cluster, Dns } from './otomi-models'
-import { cleanEnv, GIT_LOCAL_PATH } from './validators'
+import { Cluster, Dns } from 'src/otomi-models'
+import { cleanEnv, GIT_LOCAL_PATH } from 'src/validators'
 
 const env = cleanEnv({
   GIT_LOCAL_PATH,
@@ -50,18 +51,18 @@ export const flattenObject = (
     }, {})
 }
 
-export const loadYaml = (path: string, opts?: { noError: boolean }): Record<string, any> | undefined => {
-  if (!existsSync(path)) {
+export const loadYaml = async (path: string, opts?: { noError: boolean }): Promise<Record<string, any> | undefined> => {
+  if (!(await pathExists(path))) {
     if (opts?.noError) return undefined
     throw new Error(`${path} does not exist`)
   }
-  return load(readFileSync(path, 'utf-8')) as Record<string, any>
+  return load(await readFile(path, 'utf-8')) as Record<string, any>
 }
 
 let valuesSchema: Record<string, any>
 export const getValuesSchema = async (): Promise<Record<string, any>> => {
   if (valuesSchema) return valuesSchema
-  const schema = loadYaml(resolve(__dirname, 'values-schema.yaml'))
+  const schema = await loadYaml(resolve(__dirname, 'values-schema.yaml'))
   const derefSchema = await $RefParser.dereference(schema as $RefParser.JSONSchema)
   valuesSchema = omit(derefSchema, ['definitions'])
   return valuesSchema
@@ -163,10 +164,6 @@ export const argQuoteStrip = (s) => {
   if (['"', "'"].includes(s.charAt(0))) return s.substr(1, s.length - 2)
   if (s.includes("'") && !s.includes("\\'")) return s.replace(doubleQuoteMatcher, '')
   return s.replace(singleQuoteMatcher, '')
-}
-
-export const decryptedFilePostfix = () => {
-  return existsSync(`${env.GIT_LOCAL_PATH}/.sops.yaml`) ? '.dec' : ''
 }
 
 // use lodash mergeWith to avoid merging arrays

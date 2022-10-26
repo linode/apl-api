@@ -1,15 +1,13 @@
 import { expect } from 'chai'
 import sinon from 'sinon'
-import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
-import { Repo } from './repo'
-import './test-init'
+import OtomiStack from 'src/otomi-stack'
+import { Repo } from 'src/repo'
+import 'src/test-init'
 
 describe('Data validation', () => {
   let otomiStack: OtomiStack
-  beforeEach(async () => {
+  beforeEach(() => {
     otomiStack = new OtomiStack()
-    const [spec] = await loadOpenApisSpec()
-    otomiStack.setSpec(spec)
   })
 
   it('should throw exception on duplicated domain', (done) => {
@@ -64,16 +62,8 @@ describe('Data validation', () => {
 
 describe('Work with values', () => {
   let otomiStack: OtomiStack
-  let spec
-  let secretPaths
-  before(async () => {
-    const [inSpec, inSecretPaths] = await loadOpenApisSpec()
-    spec = inSpec
-    secretPaths = inSecretPaths
-  })
   beforeEach(() => {
     otomiStack = new OtomiStack()
-    otomiStack.setSpec(spec, secretPaths)
     otomiStack.repo = new Repo('./test', undefined, undefined, undefined, undefined, undefined)
   })
 

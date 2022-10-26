@@ -1,6 +1,6 @@
 import { expect } from 'chai'
-import Authz from './authz'
-import { OpenAPIDoc, SessionRole, User } from './otomi-models'
+import Authz from 'src/authz'
+import { OpenAPIDoc, SessionRole, User } from 'src/otomi-models'
 
 const sessionTeam: User = {
   authz: {},

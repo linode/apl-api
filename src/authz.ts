@@ -2,9 +2,9 @@
 import { Ability, subject } from '@casl/ability'
 import Debug from 'debug'
 import { each, forIn, get, isEmpty, isEqual, omit, set } from 'lodash'
-import { Acl, AclAction, OpenAPIDoc, PermissionSchema, Schema, TeamAuthz, User, UserAuthz } from './otomi-models'
-import OtomiStack from './otomi-stack'
-import { extract, flattenObject } from './utils'
+import { Acl, AclAction, OpenAPIDoc, PermissionSchema, Schema, TeamAuthz, User, UserAuthz } from 'src/otomi-models'
+import OtomiStack from 'src/otomi-stack'
+import { extract, flattenObject } from 'src/utils'
 
 const debug = Debug('otomi:authz')
 
@@ -208,7 +208,12 @@ export default class Authz {
       const deniedAttributes = [...deniedRoleAttributes, ...deniedSelfServiceAttributes]
 
       deniedAttributes.forEach((path) => {
-        if (!isEqual(get(body, path), get(dataOrig, path))) violatedAttributes.push(path)
+        const val = get(body, path)
+        const origVal = get(dataOrig, path)
+        // undefined value exxpected for forbidden props, just put back before save
+        if (val === undefined) set(body, path, origVal)
+        // value provided which shouldn't happen
+        else if (!isEqual(val, origVal)) violatedAttributes.push(path)
       })
     }
     return violatedAttributes

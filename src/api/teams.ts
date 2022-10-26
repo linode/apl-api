@@ -1,12 +1,12 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import OtomiStack from '../otomi-stack'
+import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:teams')
 
-export default function (otomi: OtomiStack): OperationHandlerArray {
+export default function (): OperationHandlerArray {
   const get: Operation = [
-    (req, res): void => {
+    ({ otomi }: OpenApiRequestExt, res): void => {
       debug('getTeams')
       // we filter admin team here as it is not for console
       const data = (otomi.getTeams() || []).filter((t) => t.id !== 'admin')
@@ -14,7 +14,7 @@ export default function (otomi: OtomiStack): OperationHandlerArray {
     },
   ]
   const post: Operation = [
-    ({ body }, res): void => {
+    ({ otomi, body }: OpenApiRequestExt, res): void => {
       debug('createTeam')
       const data = otomi.createTeam(body)
       res.json(data)

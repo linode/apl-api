@@ -1,27 +1,26 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequest } from '../../otomi-models'
-import OtomiStack from '../../otomi-stack'
+import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:teams')
 
-export default function (otomi: OtomiStack): OperationHandlerArray {
+export default function (): OperationHandlerArray {
   const del: Operation = [
-    ({ params: { teamId } }: OpenApiRequest, res): void => {
+    ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
       debug(`deleteTeam(${teamId})`)
       otomi.deleteTeam(teamId)
       res.json({})
     },
   ]
   const get: Operation = [
-    ({ params: { teamId } }: OpenApiRequest, res): void => {
+    ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
       debug(`getTeam(${teamId})`)
       const data = otomi.getTeam(teamId)
       res.json(data)
     },
   ]
   const put: Operation = [
-    ({ params: { teamId }, body }: OpenApiRequest, res): void => {
+    ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): void => {
       debug(`editTeam(${teamId})`)
       const data = otomi.editTeam(teamId, body)
       res.json(data)

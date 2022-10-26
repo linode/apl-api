@@ -1,4 +1,4 @@
-import { AUTHZ_MOCK_IS_ADMIN, AUTHZ_MOCK_TEAM, cleanEnv } from './validators'
+import { AUTHZ_MOCK_IS_ADMIN, AUTHZ_MOCK_TEAM, cleanEnv } from 'src/validators'
 
 const env = cleanEnv({
   AUTHZ_MOCK_IS_ADMIN,

@@ -1,13 +1,12 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequest } from '../otomi-models'
-import OtomiStack from '../otomi-stack'
+import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:settings')
 
-export default function (otomi: OtomiStack): OperationHandlerArray {
+export default function (): OperationHandlerArray {
   const get: Operation = [
-    ({ query: { ids } }: OpenApiRequest, res): void => {
+    ({ otomi, query: { ids } }: OpenApiRequestExt, res): void => {
       debug(`getSettings(${ids})`)
       res.json(otomi.getSettings(ids as string[] | undefined))
     },

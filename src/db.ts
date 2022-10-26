@@ -4,10 +4,10 @@ import findIndex from 'lodash/findIndex'
 import low from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
 import Memory from 'lowdb/adapters/Memory'
+import { AlreadyExists, NotExistError } from 'src/error'
+import { App, Cluster, Job, Secret, Service, Settings, Team } from 'src/otomi-models'
+import { mergeData, removeBlankAttributes } from 'src/utils'
 import { v4 as uuidv4 } from 'uuid'
-import { AlreadyExists, NotExistError } from './error'
-import { App, Cluster, Job, Secret, Service, Settings, Team } from './otomi-models'
-import { mergeData, removeBlankAttributes } from './utils'
 
 export type DbType = Cluster | Job | Secret | Service | Team | Settings | App
 export type Schema = {
@@ -21,10 +21,6 @@ export type Schema = {
 
 export default class Db {
   db: low.LowdbSync<any>
-
-  dirty: boolean
-
-  editor: string | undefined
 
   constructor(path?: string) {
     // @ts-ignore
@@ -45,8 +41,6 @@ export default class Db {
         teams: [],
       })
       .write()
-    this.dirty = false
-    this.editor = undefined
   }
 
   getItem(name: string, selector: any): DbType {

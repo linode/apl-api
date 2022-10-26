@@ -1,22 +1,20 @@
 /* eslint-disable class-methods-use-this */
-import $parser from '@apidevtools/json-schema-ref-parser'
 import * as k8s from '@kubernetes/client-node'
 import { Cluster, V1ObjectReference } from '@kubernetes/client-node'
 import { pascalCase } from 'change-case'
 import Debug from 'debug'
-import { readFileSync } from 'fs'
+import { readFile } from 'fs/promises'
 import yaml from 'js-yaml'
-import { cloneDeep, each, filter, get, isEmpty, merge, omit, pick, set, unset } from 'lodash'
+import { cloneDeep, each, filter, get, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
-import path from 'path'
-import Db from './db'
-import { HttpError, PublicUrlExists, ValidationError } from './error'
+import { getAppList, getAppSchema, getSpec } from 'src/app'
+import Db from 'src/db'
+import { PublicUrlExists, ValidationError } from 'src/error'
+import { getSessionStack } from 'src/middleware'
 import {
   App,
   Core,
   Job,
-  OpenAPIDoc,
-  OtomiSpec,
   Policies,
   Secret,
   Service,
@@ -25,27 +23,21 @@ import {
   Team,
   TeamSelfService,
   User,
-} from './otomi-models'
-import cloneRepo, { prepareValues, Repo } from './repo'
+} from 'src/otomi-models'
+import cloneRepo, { Repo } from 'src/repo'
 import {
   argQuoteJoin,
   argQuoteStrip,
   argSplit,
   arrayToObject,
-  decryptedFilePostfix,
-  extract,
-  getPaths,
   getServiceUrl,
-  getValuesSchema,
   objectToArray,
   removeBlankAttributes,
-} from './utils'
+} from 'src/utils'
 import {
   cleanEnv,
   CORE_VERSION,
   CUSTOM_ROOT_CA,
-  DB_PATH,
-  DISABLE_SYNC,
   EDITOR_INACTIVITY_TIMEOUT,
   GIT_BRANCH,
   GIT_EMAIL,
@@ -54,13 +46,11 @@ import {
   GIT_REPO_URL,
   GIT_USER,
   TOOLS_HOST,
-} from './validators'
+} from 'src/validators'
 
 const debug = Debug('otomi:otomi-stack')
 
 const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'dockerconfig']
-
-let secretPaths: string[]
 
 const env = cleanEnv({
   CUSTOM_ROOT_CA,
@@ -72,13 +62,11 @@ const env = cleanEnv({
   GIT_USER,
   GIT_PASSWORD,
   GIT_EMAIL,
-  DB_PATH,
-  DISABLE_SYNC,
   TOOLS_HOST,
 })
 
 export function getTeamJobsFilePath(teamId: string): string {
-  return `./env/teams/jobs.${teamId}.yaml`
+  return `env/teams/jobs.${teamId}.yaml`
 }
 
 export function getTeamJobsJsonPath(teamId: string): string {
@@ -86,7 +74,7 @@ export function getTeamJobsJsonPath(teamId: string): string {
 }
 
 export function getTeamSecretsFilePath(teamId: string): string {
-  return `./env/teams/external-secrets.${teamId}.yaml`
+  return `env/teams/external-secrets.${teamId}.yaml`
 }
 
 export function getTeamSecretsJsonPath(teamId: string): string {
@@ -94,75 +82,70 @@ export function getTeamSecretsJsonPath(teamId: string): string {
 }
 
 export function getTeamServicesFilePath(teamId: string): string {
-  return `./env/teams/services.${teamId}.yaml`
+  return `env/teams/services.${teamId}.yaml`
 }
 
 export function getTeamServicesJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.services`
 }
-
-export const loadOpenApisSpec = async (): Promise<[OpenAPIDoc, string[]]> => {
-  const openApiPath = path.resolve(__dirname, 'generated-schema.json')
-  debug(`Loading api spec from: ${openApiPath}`)
-  const spec = (await $parser.parse(openApiPath)) as OpenAPIDoc
-  const valuesSchema = await getValuesSchema()
-  const secrets = extract(valuesSchema, (o, i) => i === 'x-secret')
-  secretPaths = getPaths(secrets)
-  return [spec, secretPaths]
-}
-
 export default class OtomiStack {
   private coreValues: Core
 
   db: Db
 
-  spec: OtomiSpec
-
   repo: Repo
 
-  secretPaths: string[]
+  editor?: string
 
-  constructor() {
-    this.db = new Db(env.DB_PATH)
-    if (env.isProd) {
-      const corePath = '/etc/otomi/core.yaml'
-      this.coreValues = yaml.load(readFileSync(corePath, 'utf8')) as Core
-    } else {
-      this.coreValues = {
-        ...(yaml.load(readFileSync('./test/core.yaml', 'utf8')) as any),
-        ...(yaml.load(readFileSync('./test/apps.yaml', 'utf8')) as any),
-      }
-    }
+  constructor(editor?: string, inDb?: Db) {
+    this.editor = editor
+    this.db = inDb ?? new Db()
+  }
+
+  getRepoPath() {
+    if (env.isTest || this.editor === undefined) return env.GIT_LOCAL_PATH
+    const folder = `/tmp/otomi/values/${this.editor}`
+    return folder
   }
 
   async init(): Promise<void> {
+    if (env.isProd) {
+      const corePath = '/etc/otomi/core.yaml'
+      this.coreValues = yaml.load(await readFile(corePath, 'utf8')) as Core
+    } else {
+      this.coreValues = {
+        ...(yaml.load(await readFile('./test/core.yaml', 'utf8')) as any),
+        ...(yaml.load(await readFile('./test/apps.yaml', 'utf8')) as any),
+      }
+    }
+    // every editor gets their own folder to detect conflicts upon deploy
+    const path = this.getRepoPath()
+    const url = env.GIT_REPO_URL ?? path
+    const branch = env.GIT_BRANCH
     for (;;) {
       try {
         /* eslint-disable no-await-in-loop */
         this.repo = await cloneRepo(
-          env.GIT_LOCAL_PATH,
-          env.GIT_REPO_URL,
+          path,
+          url,
           env.GIT_USER,
           env.GIT_EMAIL,
           env.GIT_PASSWORD,
-          env.GIT_BRANCH,
+          branch,
+          env.GIT_REPO_URL && env.GIT_REPO_URL.startsWith('http') ? 'https' : 'file',
         )
-        if (this.repo.fileExists('env/cluster.yaml')) break
-        debug(`Values are not present at ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
+        if (await this.repo.fileExists('env/cluster.yaml')) break
+        debug(`Values are not present at ${url}:${branch}`)
       } catch (e) {
         debug(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
-        debug(`Git repository is not ready: ${env.GIT_REPO_URL}:${env.GIT_BRANCH}`)
+        debug(`Git repository is not ready: ${url}:${branch}`)
       }
       const timeoutMs = 15000
       debug(`Trying again in ${timeoutMs} ms`)
       await new Promise((resolve) => setTimeout(resolve, timeoutMs))
     }
-    this.loadValues()
-  }
-
-  setSpec(spec, secretPaths = []): void {
-    this.spec = spec
-    this.secretPaths = secretPaths
+    // branches get a copy of the "main" branch db, so we don't need to inflate
+    if (!this.editor) this.loadValues()
   }
 
   getSecretPaths(): string[] {
@@ -170,6 +153,7 @@ export default class OtomiStack {
     const teamProp = 'teamConfig.patternProperties.^[a-z0-9]([-a-z0-9]*[a-z0-9])+$'
     const teams = this.getTeams().map(({ id }) => id)
     const cleanSecretPaths: string[] = []
+    const { secretPaths } = getSpec()
     secretPaths.map((p) => {
       if (p.indexOf(teamProp) === -1 && !cleanSecretPaths.includes(p)) cleanSecretPaths.push(p)
       else {
@@ -226,10 +210,11 @@ export default class OtomiStack {
   }
 
   canToggleApp(id): boolean {
-    const { schemas } = (this.spec as any).components
+    const { spec } = getSpec()
+    const { schemas } = spec.components
     const appName = `App${pascalCase(id)}`
     const app = schemas[appName]
-    return app.properties.enabled !== undefined
+    return app.properties!.enabled !== undefined
   }
 
   toggleApps(teamId, { ids, enabled }): void {
@@ -241,48 +226,52 @@ export default class OtomiStack {
     })
   }
 
-  loadApps(): void {
-    const apps = this.getAppSchema('List').enum
-    apps.forEach((appId) => {
-      const path = `env/apps/${appId}.yaml`
-      const secretsPath = `env/apps/secrets.${appId}.yaml`
-      const content = this.loadConfig(path, secretsPath)
-      const values = (content?.apps && content.apps[appId]) || {}
-      let rawValues = {}
-      // eslint-disable-next-line no-underscore-dangle
-      if (values._rawValues) {
+  async loadApps(): Promise<void> {
+    const apps = getAppList()
+    await Promise.all(
+      apps.map(async (appId) => {
+        const path = `env/apps/${appId}.yaml`
+        const secretsPath = `env/apps/secrets.${appId}.yaml`
+        const content = await this.repo.loadConfig(path, secretsPath)
+        const values = (content?.apps && content.apps[appId]) || {}
+        let rawValues = {}
         // eslint-disable-next-line no-underscore-dangle
-        rawValues = values._rawValues
-        // eslint-disable-next-line no-underscore-dangle
-        delete values._rawValues
-      }
-      let enabled
-      const app = this.getAppSchema(appId)
-      if (app.properties.enabled !== undefined) enabled = !!values.enabled
+        if (values._rawValues) {
+          // eslint-disable-next-line no-underscore-dangle
+          rawValues = values._rawValues
+          // eslint-disable-next-line no-underscore-dangle
+          delete values._rawValues
+        }
+        let enabled
+        const app = getAppSchema(appId)
+        if (app.properties!.enabled !== undefined) enabled = !!values.enabled
 
-      // we do not want to send enabled flag to the input forms
-      delete values.enabled
-      const teamId = 'admin'
-      this.db.updateItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId })
-    })
+        // we do not want to send enabled flag to the input forms
+        delete values.enabled
+        const teamId = 'admin'
+        this.db.updateItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId })
+      }),
+    )
     // now also load the shortcuts that teams created and were stored in apps.* files
-    this.getTeams()
-      .map((t) => t.id)
-      .forEach((teamId) => {
-        const teamAppsFile = `env/teams/apps.${teamId}.yaml`
-        if (!this.repo.fileExists(teamAppsFile)) return
-        const content = this.repo.readFile(teamAppsFile)
-        if (!content) return
-        const {
-          teamConfig: {
-            [`${teamId}`]: { apps },
-          },
-        } = content
-        each(apps, ({ shortcuts }, appId) => {
-          // use merge strategey to not overwrite admin apps that were loaded before
-          this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
-        })
-      })
+    await Promise.all(
+      this.getTeams()
+        .map((t) => t.id)
+        .map(async (teamId) => {
+          const teamAppsFile = `env/teams/apps.${teamId}.yaml`
+          if (!(await this.repo.fileExists(teamAppsFile))) return
+          const content = await this.repo.readFile(teamAppsFile)
+          if (!content) return
+          const {
+            teamConfig: {
+              [`${teamId}`]: { apps },
+            },
+          } = content
+          each(apps, ({ shortcuts }, appId) => {
+            // use merge strategey to not overwrite admin apps that were loaded before
+            this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
+          })
+        }),
+    )
   }
 
   getTeams(): Array<Team> {
@@ -298,10 +287,6 @@ export default class OtomiStack {
     return this.coreValues
   }
 
-  getAppSchema(appId) {
-    return (this.spec as any).components.schemas[`App${pascalCase(appId)}`]
-  }
-
   getTeam(id: string): Team {
     return this.db.getItem('teams', { id }) as Team
   }
@@ -315,7 +300,7 @@ export default class OtomiStack {
       data.password = generatePassword(16, false)
     }
     const team = this.db.createItem('teams', data, { id }, id) as Team
-    const apps = this.getAppSchema('List').enum
+    const apps = getAppList()
     const core = this.getCore()
     apps.forEach((appId) => {
       const isShared = !!core.adminApps.find((a) => a.name === appId).isShared
@@ -432,29 +417,22 @@ export default class OtomiStack {
   }
 
   async triggerDeployment(): Promise<void> {
-    debug('DISABLE_SYNC: ', env.DISABLE_SYNC)
-    this.saveValues()
-    try {
-      await prepareValues()
-    } catch (e) {
-      debug(`ERROR: ${JSON.stringify(e)}`)
-      if (e.response) {
-        const { status } = e.response
-        if (status === 422) throw new ValidationError()
-        throw HttpError.fromCode(status)
-      }
-      throw new HttpError(500, e)
-    }
-
-    if (!env.DISABLE_SYNC) await this.repo.save(this.db.editor)
-    // clean slate for others
-    this.db.editor = undefined
+    await this.saveValues()
+    await this.repo.save(this.editor)
+    // refresh root repo
+    const rootStack = getSessionStack()
+    await rootStack.repo.pull()
+    rootStack.db = new Db()
+    await rootStack.loadValues()
+    // and then this one
+    this.repo.clone()
+    this.db = cloneDeep(getSessionStack().db)
+    this.editor = undefined
   }
 
   triggerRevert(): void {
-    debug('DISABLE_SYNC: ', env.DISABLE_SYNC)
-    this.db = new Db(env.DB_PATH)
-    this.init()
+    this.db = cloneDeep(getSessionStack().db)
+    this.editor = undefined
   }
 
   apiClient?: k8s.CoreV1Api
@@ -535,65 +513,41 @@ export default class OtomiStack {
     return this.db.getCollection('secrets', { teamId }) as Array<Secret>
   }
 
-  loadValues(): void {
-    this.loadCluster()
-    this.loadPolicies()
-    this.loadSettings()
-    this.loadTeams()
-    this.loadApps()
+  async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {
+    debug('Loading values')
+    await this.loadCluster()
+    await this.loadPolicies()
+    await this.loadSettings()
+    await this.loadTeams()
+    await this.loadApps()
   }
 
-  loadCluster(): void {
-    const data: Cluster = this.repo.readFile('./env/cluster.yaml')
+  async loadCluster(): Promise<void> {
+    const data: Cluster = await this.repo.loadConfig('env/cluster.yaml', 'env/secrets.cluster.yaml')
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
 
-  loadConfig(dataPath: string, inSecretDataPath: string): any {
-    if (!this.repo.fileExists(dataPath)) return {}
-    const data = this.repo.readFile(dataPath)
-    const secretDataPath = `${inSecretDataPath}${decryptedFilePostfix()}`
-    let secretData = {}
-    if (this.repo.fileExists(secretDataPath)) secretData = this.repo.readFile(secretDataPath)
-    return merge(data, secretData) as Core
-  }
-
-  saveConfig(dataPath: string, inSecretDataPath: string, config: any): void {
-    const secretData = {}
-    const secretDataPath = `${inSecretDataPath}${decryptedFilePostfix()}`
-    const plainData = cloneDeep(config)
-    this.getSecretPaths().forEach((objectPath) => {
-      const val = get(config, objectPath)
-      if (val) {
-        set(secretData, objectPath, val)
-        unset(plainData, objectPath)
-      }
-    })
-
-    this.repo.writeFile(secretDataPath, secretData)
-    this.repo.writeFile(dataPath, plainData)
-  }
-
-  loadPolicies(): void {
-    const data: Policies = this.repo.readFile('./env/policies.yaml')
+  async loadPolicies(): Promise<void> {
+    const data: Policies = await this.repo.readFile('env/policies.yaml')
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
 
-  loadSettings(): void {
-    const data: Record<string, any> = this.loadConfig('./env/settings.yaml', `./env/secrets.settings.yaml`)
+  async loadSettings(): Promise<void> {
+    const data: Record<string, any> = await this.repo.loadConfig('env/settings.yaml', `env/secrets.settings.yaml`)
     data.otomi.nodeSelector = objectToArray(data.otomi.nodeSelector || {})
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
 
-  loadTeamJobs(teamId: string): void {
+  async loadTeamJobs(teamId: string): Promise<void> {
     const relativePath = getTeamJobsFilePath(teamId)
-    if (!this.repo.fileExists(relativePath)) {
+    if (!(await this.repo.fileExists(relativePath))) {
       debug(`Team ${teamId} has no jobs yet`)
       return
     }
-    const data = this.repo.readFile(relativePath)
+    const data = await this.repo.readFile(relativePath)
     const jobs: Array<Job> = get(data, getTeamJobsJsonPath(teamId), [])
 
     jobs.forEach((job) => {
@@ -603,13 +557,13 @@ export default class OtomiStack {
     })
   }
 
-  loadTeamSecrets(teamId: string): void {
+  async loadTeamSecrets(teamId: string): Promise<void> {
     const relativePath = getTeamSecretsFilePath(teamId)
-    if (!this.repo.fileExists(relativePath)) {
+    if (!(await this.repo.fileExists(relativePath))) {
       debug(`Team ${teamId} has no secrets yet`)
       return
     }
-    const data = this.repo.readFile(relativePath)
+    const data = await this.repo.readFile(relativePath)
     const secrets: Array<Secret> = get(data, getTeamSecretsJsonPath(teamId), [])
 
     secrets.forEach((inSecret) => {
@@ -617,8 +571,8 @@ export default class OtomiStack {
     })
   }
 
-  loadTeams(): void {
-    const mergedData: Core = this.loadConfig('env/teams.yaml', `env/secrets.teams.yaml`)
+  async loadTeams(): Promise<void> {
+    const mergedData: Core = await this.repo.loadConfig('env/teams.yaml', `env/secrets.teams.yaml`)
     const tc = mergedData?.teamConfig || {}
     if (!tc.admin) tc.admin = { id: 'admin' }
     Object.values(tc).forEach((team: Team) => {
@@ -629,43 +583,55 @@ export default class OtomiStack {
     })
   }
 
-  loadTeamServices(teamId: string): void {
+  async loadTeamServices(teamId: string): Promise<void> {
     const relativePath = getTeamServicesFilePath(teamId)
-    if (!this.repo.fileExists(relativePath)) {
+    if (!(await this.repo.fileExists(relativePath))) {
       debug(`Team ${teamId} has no services yet`)
       return
     }
-    const data = this.repo.readFile(relativePath)
+    const data = await this.repo.readFile(relativePath)
     const services = get(data, getTeamServicesJsonPath(teamId), [])
     services.forEach((svc) => {
       this.loadService(svc, teamId)
     })
   }
 
-  saveCluster(): void {
-    this.repo.writeFile('./env/cluster.yaml', this.getSettings(['cluster']))
+  async saveCluster(secretPaths?: string[]): Promise<void> {
+    await this.repo.saveConfig(
+      'env/cluster.yaml',
+      'env/secrets.cluster.yaml',
+      this.getSettings(['cluster']),
+      secretPaths ?? this.getSecretPaths(),
+    )
   }
 
-  savePolicies(): void {
-    this.repo.writeFile('./env/policies.yaml', this.getSettings(['policies']))
+  async savePolicies(): Promise<void> {
+    await this.repo.writeFile('env/policies.yaml', this.getSettings(['policies']))
   }
 
-  saveApps(): void {
-    this.getApps('admin').forEach((app) => {
-      const apps = {}
-      const { id, enabled, values, rawValues } = app
-      apps[id as string] = {
-        ...(values || {}),
-        _rawValues: rawValues,
-      }
-      if (this.canToggleApp(id)) apps[id as string].enabled = !!enabled
-      else delete apps[id as string].enabled
+  async saveAdminApps(secretPaths?: string[]): Promise<void> {
+    await Promise.all(
+      this.getApps('admin').map(async (app) => {
+        const apps = {}
+        const { id, enabled, values, rawValues } = app
+        apps[id as string] = {
+          ...(values || {}),
+          _rawValues: rawValues,
+        }
+        if (this.canToggleApp(id)) apps[id as string].enabled = !!enabled
+        else delete apps[id as string].enabled
 
-      this.saveConfig(`./env/apps/${id}.yaml`, `./env/apps/secrets.${id}.yaml`, { apps })
-    })
+        await this.repo.saveConfig(
+          `env/apps/${id}.yaml`,
+          `env/apps/secrets.${id}.yaml`,
+          { apps },
+          secretPaths ?? this.getSecretPaths(),
+        )
+      }),
+    )
   }
 
-  saveTeamApps(teamId): void {
+  async saveTeamApps(teamId): Promise<void> {
     const apps = {}
     this.getApps(teamId).forEach((app) => {
       const { id, shortcuts } = app
@@ -681,50 +647,57 @@ export default class OtomiStack {
         },
       },
     }
-    this.repo.writeFile(`./env/teams/apps.${teamId}.yaml`, content)
+    await this.repo.writeFile(`env/teams/apps.${teamId}.yaml`, content)
   }
 
-  saveSettings(): void {
+  async saveSettings(secretPaths?: string[]): Promise<void> {
     const settings: Record<string, any> = cloneDeep(this.getSettings())
     settings.otomi.nodeSelector = arrayToObject(settings.otomi.nodeSelector)
-    this.saveConfig('./env/settings.yaml', `./env/secrets.settings.yaml`, omit(settings, ['cluster', 'policies']))
+    await this.repo.saveConfig(
+      'env/settings.yaml',
+      `env/secrets.settings.yaml`,
+      omit(settings, ['cluster', 'policies']),
+      secretPaths ?? this.getSecretPaths(),
+    )
   }
 
-  saveTeams(): void {
-    const filePath = './env/teams.yaml'
-    const secretFilePath = `./env/secrets.teams.yaml`
+  async saveTeams(secretPaths?: string[]): Promise<void> {
+    const filePath = 'env/teams.yaml'
+    const secretFilePath = `env/secrets.teams.yaml`
     const teamValues = {}
     const teams = this.getTeams()
-    teams.forEach((inTeam) => {
-      const team: any = omit(inTeam, 'name')
-      const teamId = team.id!
-      this.saveTeamApps(teamId)
-      this.saveTeamJobs(teamId)
-      this.saveTeamServices(teamId)
-      this.saveTeamSecrets(teamId)
-      team.resourceQuota = arrayToObject(team.resourceQuota ?? [])
-      teamValues[teamId] = team
-    })
+    await Promise.all(
+      teams.map(async (inTeam) => {
+        const team: any = omit(inTeam, 'name')
+        const teamId = team.id!
+        await this.saveTeamApps(teamId)
+        await this.saveTeamJobs(teamId)
+        await this.saveTeamServices(teamId)
+        await this.saveTeamSecrets(teamId)
+        team.resourceQuota = arrayToObject(team.resourceQuota ?? [])
+        teamValues[teamId] = team
+      }),
+    )
     const values = set({}, 'teamConfig', teamValues)
-    this.saveConfig(filePath, secretFilePath, values)
+    await this.repo.saveConfig(filePath, secretFilePath, values, secretPaths ?? this.getSecretPaths())
   }
 
-  saveTeamSecrets(teamId: string): void {
+  async saveTeamSecrets(teamId: string): Promise<void> {
     const secrets = this.db.getCollection('secrets', { teamId })
     const values: any[] = secrets.map((secret) => this.convertDbSecretToValues(secret))
-    this.repo.writeFile(getTeamSecretsFilePath(teamId), set({}, getTeamSecretsJsonPath(teamId), values))
+    await this.repo.writeFile(getTeamSecretsFilePath(teamId), set({}, getTeamSecretsJsonPath(teamId), values))
   }
 
-  saveTeamJobs(teamId: string): void {
+  async saveTeamJobs(teamId: string): Promise<void> {
     const jobs = this.db.getCollection('jobs', { teamId })
     const jobsRaw = jobs.map((item) => omit(item, ['teamId']))
     const data = {}
     set(data, getTeamJobsJsonPath(teamId), jobsRaw)
     const filePath = getTeamJobsFilePath(teamId)
-    this.repo.writeFile(filePath, data)
+    await this.repo.writeFile(filePath, data)
   }
 
-  saveTeamServices(teamId: string): void {
+  async saveTeamServices(teamId: string): Promise<void> {
     const services = this.db.getCollection('services', { teamId })
     const data = {}
     const values: any[] = []
@@ -735,15 +708,15 @@ export default class OtomiStack {
 
     set(data, getTeamServicesJsonPath(teamId), values)
     const filePath = getTeamServicesFilePath(teamId)
-    this.repo.writeFile(filePath, data)
+    await this.repo.writeFile(filePath, data)
   }
 
-  loadTeam(inTeam): any {
+  loadTeam(inTeam): void {
     const team = { ...inTeam, name: inTeam.id }
     team.resourceQuota = objectToArray(inTeam.resourceQuota)
     const res = this.createTeam(team)
     // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id)
-    debug(`Loaded team: ${res.id}`)
+    debug(`Loaded team: ${res.id!}`)
   }
 
   loadSecret(inSecret, teamId): void {
@@ -861,21 +834,22 @@ export default class OtomiStack {
     return svcCloned
   }
 
-  saveValues(): void {
-    this.saveCluster()
-    this.savePolicies()
-    this.saveSettings()
-    this.saveTeams()
+  async saveValues(): Promise<void> {
+    const secretPaths = this.getSecretPaths()
+    await this.saveCluster(secretPaths)
+    await this.savePolicies()
+    await this.saveSettings(secretPaths)
+    await this.saveTeams(secretPaths)
     // also save admin apps
-    this.saveTeamApps('admin')
-    this.saveApps()
+    await this.saveAdminApps(secretPaths)
+    await this.saveTeamApps('admin')
   }
 
   getSession(user: k8s.User): Session {
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
-      editor: this.db.editor,
+      editor: this.editor,
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
       user: user as User,
       versions: {

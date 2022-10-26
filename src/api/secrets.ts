@@ -1,12 +1,12 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import OtomiStack from '../otomi-stack'
+import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:secrets')
 
-export default function (otomi: OtomiStack): OperationHandlerArray {
+export default function (): OperationHandlerArray {
   const get: Operation = [
-    (req, res): void => {
+    ({ otomi }: OpenApiRequestExt, res): void => {
       debug('getAllSecrets')
       const v = otomi.getAllSecrets()
       res.json(v)

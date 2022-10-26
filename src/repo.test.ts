@@ -1,8 +1,8 @@
 import { expect } from 'chai'
+import { execSync } from 'child_process'
 import { appendFileSync } from 'fs'
 import { join } from 'path'
-import { execSync } from 'child_process'
-import cloneRepo, { initRepo, initRepoBare, Repo } from './repo'
+import cloneRepo, { initRepo, initRepoBare, Repo } from 'src/repo'
 
 describe('Repo scenarios', () => {
   let r1: Repo

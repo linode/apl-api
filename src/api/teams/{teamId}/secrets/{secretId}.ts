@@ -1,27 +1,26 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequest } from '../../../../otomi-models'
-import OtomiStack from '../../../../otomi-stack'
+import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:teams:secrets')
 
-export default function (otomi: OtomiStack): OperationHandlerArray {
+export default function (): OperationHandlerArray {
   const del: Operation = [
-    ({ params: { secretId } }: OpenApiRequest, res): void => {
+    ({ otomi, params: { secretId } }: OpenApiRequestExt, res): void => {
       debug(`deleteSecret(${secretId})`)
       otomi.deleteSecret(decodeURIComponent(secretId))
       res.json({})
     },
   ]
   const get: Operation = [
-    ({ params: { secretId } }: OpenApiRequest, res): void => {
+    ({ otomi, params: { secretId } }: OpenApiRequestExt, res): void => {
       debug(`getSecret(${secretId})`)
       const data = otomi.getSecret(decodeURIComponent(secretId))
       res.json(data)
     },
   ]
   const put: Operation = [
-    ({ params: { teamId, secretId }, body }: OpenApiRequest, res): void => {
+    ({ otomi, params: { teamId, secretId }, body }: OpenApiRequestExt, res): void => {
       debug(`editSecret(${secretId})`)
       const data = otomi.editSecret(decodeURIComponent(secretId), { ...body, teamId: decodeURIComponent(teamId) })
       res.json(data)

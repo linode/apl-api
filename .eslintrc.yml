@@ -28,6 +28,7 @@ settings:
     node:
       extensions: ['.ts']
       paths: [src]
+    typescript: {}
 
 env:
   es6: true
