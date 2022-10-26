@@ -6,8 +6,8 @@ import { initApp } from 'src/app'
 import request, { SuperAgentTest } from 'supertest'
 // import { AlreadyExists } from 'src/error'
 import getToken from 'src/fixtures/jwt'
-import { getSessionStack } from 'src/middleware'
 import OtomiStack from 'src/otomi-stack'
+import { getSessionStack } from './middleware'
 
 const adminToken: string = getToken(['team-admin'])
 const teamToken: string = getToken(['team-team1'])
@@ -17,7 +17,9 @@ describe('API authz tests', () => {
   let otomiStack: SinonStubbedInstance<OtomiStack>
   let agent: SuperAgentTest
   before(async () => {
-    const _otomiStack = getSessionStack()
+    // we need to get the session stack here, which was attached to req
+    const _otomiStack = await getSessionStack()
+    // await _otomiStack.init()
     _otomiStack.createTeam({ name: 'team1' })
     otomiStack = sinon.stub(_otomiStack)
     app = await initApp(otomiStack)

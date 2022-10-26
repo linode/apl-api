@@ -118,6 +118,18 @@ export default class OtomiStack {
         ...(yaml.load(await readFile('./test/apps.yaml', 'utf8')) as any),
       }
     }
+  }
+
+  async initRepo(skipDbInflation = false): Promise<void> {
+    if (env.isProd) {
+      const corePath = '/etc/otomi/core.yaml'
+      this.coreValues = yaml.load(await readFile(corePath, 'utf8')) as Core
+    } else {
+      this.coreValues = {
+        ...(yaml.load(await readFile('./test/core.yaml', 'utf8')) as any),
+        ...(yaml.load(await readFile('./test/apps.yaml', 'utf8')) as any),
+      }
+    }
     // every editor gets their own folder to detect conflicts upon deploy
     const path = this.getRepoPath()
     const url = env.GIT_REPO_URL ?? path
@@ -145,7 +157,7 @@ export default class OtomiStack {
       await new Promise((resolve) => setTimeout(resolve, timeoutMs))
     }
     // branches get a copy of the "main" branch db, so we don't need to inflate
-    if (!this.editor) this.loadValues()
+    if (!skipDbInflation) this.loadValues()
   }
 
   getSecretPaths(): string[] {
@@ -420,18 +432,18 @@ export default class OtomiStack {
     await this.saveValues()
     await this.repo.save(this.editor)
     // refresh root repo
-    const rootStack = getSessionStack()
+    const rootStack = await getSessionStack()
     await rootStack.repo.pull()
     rootStack.db = new Db()
     await rootStack.loadValues()
     // and then this one
     this.repo.clone()
-    this.db = cloneDeep(getSessionStack().db)
+    this.db = cloneDeep((await getSessionStack()).db)
     this.editor = undefined
   }
 
-  triggerRevert(): void {
-    this.db = cloneDeep(getSessionStack().db)
+  async triggerRevert(): Promise<void> {
+    this.db = cloneDeep((await getSessionStack()).db)
     this.editor = undefined
   }
 

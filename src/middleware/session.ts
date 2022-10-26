@@ -18,7 +18,8 @@ const env = cleanEnv({
 const readOnlyStack = new OtomiStack()
 const sessions: Record<string, OtomiStack> = {}
 // handler to get the correct stack for the user: if never touched any data give the main otomiStack
-export const getSessionStack = (editor?: string): OtomiStack => {
+export const getSessionStack = async (editor?: string): Promise<OtomiStack> => {
+  if (!readOnlyStack.getCore()) await readOnlyStack.init()
   if (!editor || !sessions[editor]) return readOnlyStack
   return sessions[editor]
 }
@@ -33,6 +34,8 @@ export const setSessionStack = async (editor: string, clean = false): Promise<vo
     debug(`Creating editor session for user ${editor}`)
     sessions[editor] = new OtomiStack(editor, readOnlyStack.db)
     await sessions[editor].init()
+    // init repo without inflating db from files as its slow and we just need a copy of the db
+    await sessions[editor].initRepo(true)
     sessions[editor].db = cloneDeep(readOnlyStack.db)
   } else sessions[editor].editor = editor
 }
@@ -77,7 +80,7 @@ export function sessionMiddleware(server?: http.Server): Record<string, RequestH
   return {
     async beforeHandler(req: OpenApiRequestExt, res, next: NextFunction): Promise<any> {
       const { email } = req.user || {}
-      const sessionStack = getSessionStack(email)
+      const sessionStack = await getSessionStack(email)
       // eslint-disable-next-line no-param-reassign
       req.otomi = sessionStack
       const { editor } = sessionStack
@@ -98,7 +101,7 @@ export function sessionMiddleware(server?: http.Server): Record<string, RequestH
           // and bootstrap session stack for user
           await setSessionStack(email)
           // eslint-disable-next-line no-param-reassign
-          req.otomi = getSessionStack(email)
+          req.otomi = await getSessionStack(email)
           timeout[email] = setTimeout(() => {
             sessionStack.triggerRevert()
             if (io) io.emit('db', { state: 'clean', editor: sessionStack.editor, reason: 'timeout' })

@@ -6,4 +6,4 @@ require:
   - tsconfig-paths/register
 colors: true
 recursive: true
-timeout: 25000
+timeout: 15000

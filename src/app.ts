@@ -24,8 +24,10 @@ import { setMockIdx } from 'src/mocks'
 import { OpenAPIDoc, OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
+import { cleanEnv } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
 
+const env = cleanEnv({})
 // import httpSignature from 'http-signature'
 
 const debug = Debug('otomi:app')
@@ -64,18 +66,20 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   const apiRoutesPath = path.resolve(__dirname, 'api')
   await loadSpec()
   // instantiate read-only version of the db
-  const mainStack = inOtomiStack || getSessionStack()
+  const mainStack = inOtomiStack || (await getSessionStack())
   const authz = new Authz(otomiSpec.spec)
 
   app.use(logger('dev'))
   app.use(cors())
   app.use(json())
   app.use(jwtMiddleware())
-  app.all('/mock/:idx', (req, res, next) => {
-    const { idx } = req.params
-    setMockIdx(idx)
-    res.send('ok')
-  })
+  if (env.isDev) {
+    app.all('/mock/:idx', (req, res, next) => {
+      const { idx } = req.params
+      setMockIdx(idx)
+      res.send('ok')
+    })
+  }
   app.all('/drone', (req, res, next) => {
     // const parsed = httpSignature.parseRequest(req)
     // if (!httpSignature.verifySignature(parsed, env.DRONE_SHARED_SECRET)) return res.status(401).send()
@@ -135,10 +139,12 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   return app
 }
 
-initApp().catch((e) => {
-  debug(e)
-  process.exit(1)
-})
+if (!env.isTest) {
+  initApp().catch((e) => {
+    debug(e)
+    process.exit(1)
+  })
+}
 
 process.on('exit', () => {
   if (process.env.NODE_ENV === 'development') remove('/tmp/otomi')

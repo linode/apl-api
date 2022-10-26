@@ -94,10 +94,10 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
 }
 
 export function authzMiddleware(authz: Authz): RequestHandler {
-  return function nextHandler(req: OpenApiRequestExt, res, next): any {
+  return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
     if (req.user) req.isSecurityHandler = true
     else return next()
-    const otomi: OtomiStack = getSessionStack(req.user.email)
+    const otomi: OtomiStack = await getSessionStack(req.user.email)
     req.user.authz = getTeamSelfServiceAuthz(
       req.user.teams,
       req.apiDoc.components.schemas.TeamSelfService as TeamSelfService as PermissionSchema,

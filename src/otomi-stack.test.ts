@@ -6,8 +6,9 @@ import 'src/test-init'
 
 describe('Data validation', () => {
   let otomiStack: OtomiStack
-  beforeEach(() => {
+  beforeEach(async () => {
     otomiStack = new OtomiStack()
+    await otomiStack.init()
   })
 
   it('should throw exception on duplicated domain', (done) => {
