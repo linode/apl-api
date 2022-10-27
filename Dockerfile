@@ -37,6 +37,7 @@ COPY --from=clean /app/node_modules node_modules
 COPY --from=ci /app/dist dist
 COPY package.json .
 
+ENV NODE_PATH='dist'
 USER node
 EXPOSE 8080
 
