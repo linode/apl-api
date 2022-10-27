@@ -1,4 +1,4 @@
-import { bool, CleanedEnvAccessors, cleanEnv as clean, num, str, ValidatorSpec } from 'envalid'
+import { bool, CleanedEnvAccessors, cleanEnv as clean, CleanOptions, num, str, ValidatorSpec } from 'envalid'
 
 export const AUTHZ_MOCK_IS_ADMIN = bool({
   desc: 'Indicate if a mocked user is an admin',
@@ -28,7 +28,7 @@ export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '
 const { env } = process
 export function cleanEnv<T>(
   validators: { [K in keyof T]: ValidatorSpec<T[K]> },
-  options: any = { strict: true },
+  options: CleanOptions<T> = {},
 ): Readonly<T & CleanedEnvAccessors> {
   if (env.NODE_ENV === 'test') {
     env.GIT_EMAIL = 'testUser@redkubes.com'

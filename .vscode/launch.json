@@ -5,7 +5,6 @@
       "type": "node",
       "request": "attach",
       "name": "Attach to current script",
-      "protocol": "inspector",
       "port": 4321,
       "restart": true,
       "cwd": "${workspaceRoot}"

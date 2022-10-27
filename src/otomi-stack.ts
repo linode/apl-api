@@ -4,7 +4,6 @@ import { Cluster, V1ObjectReference } from '@kubernetes/client-node'
 import { pascalCase } from 'change-case'
 import Debug from 'debug'
 import { readFile } from 'fs/promises'
-import yaml from 'js-yaml'
 import { cloneDeep, each, filter, get, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
@@ -47,6 +46,7 @@ import {
   GIT_USER,
   TOOLS_HOST,
 } from 'src/validators'
+import { parse as parseYaml } from 'yaml'
 
 const debug = Debug('otomi:otomi-stack')
 
@@ -111,11 +111,11 @@ export default class OtomiStack {
   async init(): Promise<void> {
     if (env.isProd) {
       const corePath = '/etc/otomi/core.yaml'
-      this.coreValues = yaml.load(await readFile(corePath, 'utf8')) as Core
+      this.coreValues = parseYaml(await readFile(corePath, 'utf8')) as Core
     } else {
       this.coreValues = {
-        ...(yaml.load(await readFile('./test/core.yaml', 'utf8')) as any),
-        ...(yaml.load(await readFile('./test/apps.yaml', 'utf8')) as any),
+        ...parseYaml(await readFile('./test/core.yaml', 'utf8')),
+        ...parseYaml(await readFile('./test/apps.yaml', 'utf8')),
       }
     }
   }
@@ -123,11 +123,11 @@ export default class OtomiStack {
   async initRepo(skipDbInflation = false): Promise<void> {
     if (env.isProd) {
       const corePath = '/etc/otomi/core.yaml'
-      this.coreValues = yaml.load(await readFile(corePath, 'utf8')) as Core
+      this.coreValues = parseYaml(await readFile(corePath, 'utf8')) as Core
     } else {
       this.coreValues = {
-        ...(yaml.load(await readFile('./test/core.yaml', 'utf8')) as any),
-        ...(yaml.load(await readFile('./test/apps.yaml', 'utf8')) as any),
+        ...parseYaml(await readFile('./test/core.yaml', 'utf8')),
+        ...parseYaml(await readFile('./test/apps.yaml', 'utf8')),
       }
     }
     // every editor gets their own folder to detect conflicts upon deploy

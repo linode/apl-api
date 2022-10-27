@@ -4,12 +4,13 @@ import Debug from 'debug'
 import diff from 'deep-diff'
 import { copy, ensureDir, pathExists } from 'fs-extra'
 import { mkdir, readFile, unlink, writeFile } from 'fs/promises'
-import yaml from 'js-yaml'
+import stringifyJson from 'json-stable-stringify'
 import { cloneDeep, get, isEmpty, merge, set, unset } from 'lodash'
 import path, { dirname } from 'path'
 import simpleGit, { CheckRepoActions, CommitResult, SimpleGit, SimpleGitOptions } from 'simple-git'
 import { removeBlankAttributes } from 'src/utils'
 import { cleanEnv, GIT_BRANCH, GIT_LOCAL_PATH, GIT_REPO_URL, TOOLS_HOST } from 'src/validators'
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { GitPullError, HttpError, ValidationError } from './error'
 import { Core } from './otomi-models'
 
@@ -135,7 +136,8 @@ export class Repo {
     // ok, write new content
     const absolutePath = path.join(this.path, file)
     debug(`Writing to file: ${absolutePath}`)
-    const content = isEmpty(cleanedData) ? '' : yaml.dump(cleanedData, { indent: 4 })
+    const sortedData = JSON.parse(stringifyJson(cleanedData))
+    const content = isEmpty(sortedData) ? '' : stringifyYaml(sortedData, undefined, 4)
     const dir = dirname(absolutePath)
     await ensureDir(dir)
     await writeFile(absolutePath, content, 'utf8')
@@ -151,7 +153,7 @@ export class Repo {
     const safeFile = checkSuffix ? this.getSafePath(file) : file
     const absolutePath = path.join(this.path, safeFile)
     debug(`Reading from file: ${absolutePath}`)
-    const doc = yaml.load(await readFile(absolutePath, 'utf8'))
+    const doc = parseYaml(await readFile(absolutePath, 'utf8'))
     return doc
   }
 
