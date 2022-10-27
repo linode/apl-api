@@ -9,7 +9,7 @@
     "lib": ["es2021", "esnext"],
     "module": "commonjs",
     "moduleResolution": "node",
-    "outDir": "dist",
+    "outDir": "dist/src",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
@@ -27,6 +27,6 @@
   "ts-node": {
     "transpileOnly": true,
     "files": true,
-    "require": ["tsconfig-paths/register", "dotenv/config"]
+    "require": ["tsconfig-paths/register"]
   }
 }
