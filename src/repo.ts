@@ -2,17 +2,17 @@ import { Bool } from 'aws-sdk/clients/clouddirectory'
 import axios, { AxiosResponse } from 'axios'
 import Debug from 'debug'
 import diff from 'deep-diff'
-import { copy, ensureDir, pathExists } from 'fs-extra'
-import { mkdir, readFile, unlink, writeFile } from 'fs/promises'
+import { copy, ensureDir, pathExists, readFile, writeFile } from 'fs-extra'
+import { unlink } from 'fs/promises'
 import stringifyJson from 'json-stable-stringify'
 import { cloneDeep, get, isEmpty, merge, set, unset } from 'lodash'
 import path, { dirname } from 'path'
 import simpleGit, { CheckRepoActions, CommitResult, SimpleGit, SimpleGitOptions } from 'simple-git'
-import { removeBlankAttributes } from 'src/utils'
 import { cleanEnv, GIT_BRANCH, GIT_LOCAL_PATH, GIT_REPO_URL, TOOLS_HOST } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { GitPullError, HttpError, ValidationError } from './error'
 import { Core } from './otomi-models'
+import { removeBlankAttributes } from './utils'
 
 const debug = Debug('otomi:repo')
 
@@ -27,26 +27,21 @@ const baseUrl = `http://${env.TOOLS_HOST}:17771/`
 const prepareUrl = `${baseUrl}prepare`
 const initUrl = `${baseUrl}init`
 
-async function initValues(envDir?: string): Promise<AxiosResponse | void> {
-  debug('Requesting values repo "init" action')
-  const res = await axios.get(initUrl, { params: { envDir } })
-  return res
+const getProtocol = (url): string => (url && url.includes('://') ? url.split('://')[0] : 'https')
+
+const getUrl = (url): string => (!url || url.includes('://') ? url : `${getProtocol(url)}://${url}`)
+
+function getUrlAuth(url, user, password): string | undefined {
+  if (!url) return
+  const protocol = getProtocol(url)
+  const [_, bareUrl] = url.split('://')
+  return protocol === 'file' ? `${protocol}://${bareUrl}` : `${protocol}://${user}:${password}@${bareUrl}`
 }
 
-export async function prepareValues(envDir?: string): Promise<AxiosResponse | void> {
-  debug('Requesting values repo "prepare" action')
-  const res = await axios.get(prepareUrl, { params: { envDir } })
-  return res
-}
-
-function getUrlAuth(url, protocol, user, password): string {
-  if (['http', 'file'].includes(url.substring(0, 4))) return url
-  return protocol === 'file' ? `${protocol}://${url}` : `${protocol}://${user}:${password}@${url}`
-}
-
+const secretFileRegex = new RegExp(`^(.*/)?secrets.*.yaml(.dec)?$`)
 export class Repo {
   branch: string
-  secretFilePostfix: string
+  secretFilePostfix = ''
   secretFileRegex: RegExp
   email: string
   git: SimpleGit
@@ -66,15 +61,26 @@ export class Repo {
     this.remoteBranch = `${this.remote}/${branch}`
     this.urlAuth = urlAuth
     this.user = user
-    if (this.hasRemote()) this.url = url
-    else this.url = `file://${env.GIT_LOCAL_PATH}`
+    this.url = url
     this.git = simpleGit(this.path)
+  }
+
+  async requestInitValues(): Promise<AxiosResponse | void> {
+    debug(`Tools: requesting "init" on values repo path ${this.path}`)
+    const res = await axios.get(initUrl, { params: { envDir: this.path } })
+    return res
+  }
+
+  async requestPrepareValues(): Promise<AxiosResponse | void> {
+    debug(`Tools: requesting "prepare" on values repo path ${this.path}`)
+    const res = await axios.get(prepareUrl, { params: { envDir: this.path } })
+    return res
   }
 
   async addConfig(): Promise<void> {
     await this.git.addConfig('user.name', this.user)
     await this.git.addConfig('user.email', this.email)
-    if (this.isRootClone() && !this.hasRemote()) await this.git.addConfig('receive.denyCurrentBranch', 'updateInstead')
+    if (env.isDev && this.isRootClone()) await this.git.addConfig('receive.denyCurrentBranch', 'updateInstead')
   }
 
   async init(): Promise<void> {
@@ -84,14 +90,12 @@ export class Repo {
 
   async initSops(): Promise<void> {
     this.secretFilePostfix = (await pathExists(`${this.path}/.sops.yaml`)) ? '.dec' : ''
-    this.secretFileRegex = new RegExp(`^(.*/)?secrets.*.yaml(.dec)?$`)
   }
 
   getSafePath(file) {
     if (this.secretFilePostfix === '') return file
     // otherwise we might have to give *.dec variant for secrets
-    if (file.match(this.secretFileRegex) && !file.endsWith(this.secretFilePostfix))
-      return `${file}${this.secretFilePostfix}`
+    if (file.match(secretFileRegex) && !file.endsWith(this.secretFilePostfix)) return `${file}${this.secretFilePostfix}`
     return file
   }
 
@@ -103,7 +107,7 @@ export class Repo {
       // Remove empty secret file due to https://github.com/mozilla/sops/issues/926 issue
       await unlink(absolutePath)
     }
-    if (file.match(this.secretFileRegex)) {
+    if (file.match(secretFileRegex)) {
       // also remove the encrypted file as they are operated on in pairs
       const encFile = `${file}${this.secretFilePostfix}`
       if (await this.fileExists(encFile)) {
@@ -128,7 +132,7 @@ export class Repo {
       // handle empty data first
       await this.removeFile(file)
       // bail if we came to write secrets which we can't fill empty
-      if (file.match(this.secretFileRegex)) return
+      if (file.match(secretFileRegex)) return
     }
     // we also bail when no changes found
     const hasDiff = await this.diffFile(file, cleanedData)
@@ -136,7 +140,7 @@ export class Repo {
     // ok, write new content
     const absolutePath = path.join(this.path, file)
     debug(`Writing to file: ${absolutePath}`)
-    const sortedData = JSON.parse(stringifyJson(cleanedData))
+    const sortedData = JSON.parse(stringifyJson(cleanedData) as string)
     const content = isEmpty(sortedData) ? '' : stringifyYaml(sortedData, undefined, 4)
     const dir = dirname(absolutePath)
     await ensureDir(dir)
@@ -189,49 +193,44 @@ export class Repo {
   }
 
   hasRemote() {
-    return !env.isDev || env.GIT_REPO_URL //.startsWith('http')
+    return env.GIT_REPO_URL
+  }
+
+  async initFromTestFolder(): Promise<void> {
+    // we inflate GIT_LOCAL_PATH from the ./test folder
+    debug(`DEV mode: using local folder values`)
+    await copy(`${process.cwd()}/test/`, env.GIT_LOCAL_PATH, {
+      recursive: true,
+      overwrite: false,
+    })
+    await this.init()
+    await this.git.checkoutLocalBranch(this.branch)
+    await this.git.add('.')
+    await this.git.commit('initial commit', undefined, this.getOptions())
+    await this.addConfig()
   }
 
   async clone(): Promise<void> {
     debug(`Checking if local git repository exists at: ${this.path}`)
     const isRepo = await this.git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT)
     if (!isRepo) {
-      debug(`No repo initialized, initializing`)
-      if (!this.hasRemote()) {
-        debug(`DEV mode: no remote url given`)
-        // we inflate GIT_LOCAL_PATH from the file:// url if given, otherwise from ./test folder
-        const isRootClone = this.isRootClone()
-        if (isRootClone) {
-          debug(`DEV mode: using local folder values`)
-          // if (this.url.startsWith('file://')) await this.git.clone(this.urlAuth, this.path)
-          await copy(
-            env.GIT_REPO_URL ? env.GIT_REPO_URL.replace('file://', '') : `${process.cwd()}/test/`,
-            env.GIT_LOCAL_PATH,
-            { recursive: true, overwrite: false },
-          )
-          await this.init()
-          await this.git.checkoutLocalBranch(this.branch)
-          await this.git.add('.')
-          await this.git.commit('initial commit', undefined, this.getOptions())
-        } else {
-          const remote = `file://${env.GIT_LOCAL_PATH}`
-          debug(`Cloning from '${remote}' to '${this.path}'`)
-          await this.git.clone(remote, this.path)
-        }
-      } else {
-        debug(`Cloning from '${this.url}' to '${this.path}'`)
-        await this.git.clone(this.urlAuth, this.path)
+      debug(`Initializing repo...`)
+      if (!this.hasRemote() && this.isRootClone()) return await this.initFromTestFolder()
+      else if (env.isDev && !this.urlAuth) {
+        // child clone, point to root
+        this.url = `file://${env.GIT_LOCAL_PATH}`
+        this.urlAuth = this.url
       }
-    } else if (this.hasRemote()) {
+      debug(`Cloning from '${this.url}' to '${this.path}'`)
+      await this.git.clone(this.urlAuth, this.path)
+      await this.addConfig()
+      await this.git.checkout(this.branch)
+    } else if (this.url) {
       debug('Repo already exists. Checking out correct branch.')
       // Git fetch ensures that local git repository is synced with remote repository
       await this.git.fetch({})
       await this.git.checkout(this.branch)
-    } else await this.pull()
-    // do some post processing after getting latest state:
-    await initValues(this.path)
-    // re-init sops as it might have changed
-    await this.initSops()
+    }
   }
 
   getOptions() {
@@ -241,18 +240,19 @@ export class Repo {
   }
 
   async commit(editor: string): Promise<CommitResult> {
-    debug(`Committing`)
     await this.git.add('./*')
     const commitSummary = await this.git.commit(`otomi-api commit by ${editor}`, undefined, this.getOptions())
     debug(`Commit summary: ${JSON.stringify(commitSummary)}`)
     return commitSummary
   }
 
-  async pull(): Promise<any> {
-    if (!this.hasRemote() && this.isRootClone()) return
+  async pull(skipRequest = false): Promise<any> {
+    if (!env.GIT_REPO_URL && this.isRootClone()) return
     debug('Pulling')
     const summary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
     debug(`Pull summary: ${JSON.stringify(summary)}`)
+    await this.initSops()
+    if (!skipRequest) await this.requestInitValues()
     return summary
   }
 
@@ -261,12 +261,6 @@ export class Repo {
     const summary = await this.git.push(this.remote, this.branch)
     debug('Pushed. Summary: ', summary)
     return
-    // }
-    // just overwrite the root folder
-    // if (!this.isRootClone()) {
-    //   await rm(env.GIT_LOCAL_PATH, { recursive: true, force: true })
-    //   await copy(this.path, env.GIT_LOCAL_PATH, { recursive: true })
-    // }
   }
 
   async getCommitSha(): Promise<string> {
@@ -276,7 +270,7 @@ export class Repo {
   async save(editor): Promise<void> {
     // prepare values first
     try {
-      await prepareValues(this.path)
+      await this.requestPrepareValues()
     } catch (e) {
       debug(`ERROR: ${JSON.stringify(e)}`)
       if (e.response) {
@@ -292,42 +286,40 @@ export class Repo {
     // if (commitSummary.commit === '' || !hasRemote) return
     try {
       // we are in a developer branch so first merge in root which might be changed by another dev
-      await this.pull()
+      await this.pull(true)
       await this.push()
     } catch (e) {
       debug(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
       debug(`Merge error: ${JSON.stringify(e)}`)
       await this.git.rebase(['--abort'])
       await this.git.reset(['--hard', sha])
-      await initValues(this.path)
       debug(`Reset HEAD to ${sha} commit`)
       throw new GitPullError()
     }
   }
 }
 
-export default async function cloneRepo(path, url, user, email, password, branch, protocol = 'https'): Promise<Repo> {
+export default async function getRepo(
+  path: string,
+  url: string,
+  user: string,
+  email: string,
+  password: string,
+  branch: string,
+  method: 'clone' | 'init' = 'clone',
+): Promise<Repo> {
   await ensureDir(path, { mode: 0o744 })
-  const urlAuth = getUrlAuth(url, protocol, user, password)
-  const repo = new Repo(path, url, user, email, urlAuth, branch)
-  await repo.clone()
-  await repo.addConfig()
+  const urlNormalized = getUrl(url)
+  const urlAuth = getUrlAuth(urlNormalized, user, password)
+  const repo = new Repo(path, urlNormalized, user, email, urlAuth, branch)
+  await repo[method]()
   return repo
 }
 
-export async function initRepo(path, url, user, email, password, branch, protocol = 'https'): Promise<Repo> {
-  if (!(await pathExists(path))) await mkdir(path, 0o744)
-  const urlAuth = getUrlAuth(url, protocol, user, password)
-  const repo = new Repo(path, url, user, email, urlAuth, branch)
-  await repo.init()
-  await repo.addConfig()
-  return repo
-}
-
-export async function initRepoBare(location): Promise<SimpleGit> {
-  await mkdir(location, 0o744)
+export async function initRepoBare(path: string): Promise<SimpleGit> {
+  await ensureDir(path, { mode: 0o744 })
   const options: Partial<SimpleGitOptions> = {
-    baseDir: location,
+    baseDir: path,
     config: process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0' ? ['http.sslVerify=false'] : undefined,
   }
   const git = simpleGit(options)

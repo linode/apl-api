@@ -33,11 +33,10 @@ export const setSessionStack = async (editor: string, clean = false): Promise<vo
   if (!sessions[editor]) {
     debug(`Creating editor session for user ${editor}`)
     sessions[editor] = new OtomiStack(editor, readOnlyStack.db)
-    await sessions[editor].init()
     // init repo without inflating db from files as its slow and we just need a copy of the db
     await sessions[editor].initRepo(true)
     sessions[editor].db = cloneDeep(readOnlyStack.db)
-  } else sessions[editor].editor = editor
+  }
 }
 export const cleanSessions = async () => {
   debug(`Cleaning all editor sessions`)

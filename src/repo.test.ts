@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { execSync } from 'child_process'
 import { appendFileSync } from 'fs'
 import { join } from 'path'
-import cloneRepo, { initRepo, initRepoBare, Repo } from 'src/repo'
+import getRepo, { initRepoBare, Repo } from 'src/repo'
 
 describe('Repo scenarios', () => {
   let r1: Repo
@@ -14,12 +14,12 @@ describe('Repo scenarios', () => {
   beforeEach(async () => {
     await initRepoBare(bareRepoPath)
 
-    r1 = await initRepo(repo1Path, bareRepoPath, 'test', 'test@test.test', 'pass', 'main', 'file')
+    r1 = await getRepo(repo1Path, bareRepoPath, 'test', 'test@test.test', 'pass', 'main', 'init')
     appendFileSync(join(repo1Path, testFile), 'AAA')
     await r1.git.add(testFile)
     await r1.git.commit('initial value')
     await r1.git.push('origin', 'main')
-    r2 = await cloneRepo(repo2Path, bareRepoPath, 'test', 'test@test.test', 'pass', 'main', 'file')
+    r2 = await getRepo(repo2Path, bareRepoPath, 'test', 'test@test.test', 'pass', 'main', 'init')
   })
 
   afterEach(() => {

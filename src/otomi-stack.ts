@@ -9,7 +9,7 @@ import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { PublicUrlExists, ValidationError } from 'src/error'
-import { getSessionStack } from 'src/middleware'
+import { getSessionStack, setSessionStack } from 'src/middleware'
 import {
   App,
   Core,
@@ -23,7 +23,7 @@ import {
   TeamSelfService,
   User,
 } from 'src/otomi-models'
-import cloneRepo, { Repo } from 'src/repo'
+import getRepo, { Repo } from 'src/repo'
 import {
   argQuoteJoin,
   argQuoteStrip,
@@ -121,31 +121,16 @@ export default class OtomiStack {
   }
 
   async initRepo(skipDbInflation = false): Promise<void> {
-    if (env.isProd) {
-      const corePath = '/etc/otomi/core.yaml'
-      this.coreValues = parseYaml(await readFile(corePath, 'utf8')) as Core
-    } else {
-      this.coreValues = {
-        ...parseYaml(await readFile('./test/core.yaml', 'utf8')),
-        ...parseYaml(await readFile('./test/apps.yaml', 'utf8')),
-      }
-    }
+    await this.init()
     // every editor gets their own folder to detect conflicts upon deploy
     const path = this.getRepoPath()
-    const url = env.GIT_REPO_URL ?? path
     const branch = env.GIT_BRANCH
+    const url = env.GIT_REPO_URL
     for (;;) {
       try {
         /* eslint-disable no-await-in-loop */
-        this.repo = await cloneRepo(
-          path,
-          url,
-          env.GIT_USER,
-          env.GIT_EMAIL,
-          env.GIT_PASSWORD,
-          branch,
-          env.GIT_REPO_URL && env.GIT_REPO_URL.startsWith('http') ? 'https' : 'file',
-        )
+        this.repo = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, branch)
+        this.repo.pull()
         if (await this.repo.fileExists('env/cluster.yaml')) break
         debug(`Values are not present at ${url}:${branch}`)
       } catch (e) {
@@ -436,10 +421,10 @@ export default class OtomiStack {
     await rootStack.repo.pull()
     rootStack.db = new Db()
     await rootStack.loadValues()
-    // and then this one
-    this.repo.clone()
-    this.db = cloneDeep((await getSessionStack()).db)
-    this.editor = undefined
+    setSessionStack(this.editor as string, true)
+    // to avoid re-reading all files we just copy root db
+    // this.db = cloneDeep(rootStack.db)
+    // this.editor = undefined
   }
 
   async triggerRevert(): Promise<void> {
