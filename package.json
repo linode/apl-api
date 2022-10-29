@@ -139,7 +139,7 @@
     "build": "npm run clean && npm run build:models && tsc && tsc-alias --dir dist -v && copyup --error src/generated-schema.json src/values-schema.yaml dist/src",
     "build:models": "npm run build:spec && openapi-typescript src/generated-schema.json -o src/generated-schema.ts",
     "build:spec": "ts-node-dev -r tsconfig-paths/register src/build-spec.ts",
-    "clean": "rm -rf out dist >/dev/null",
+    "clean": "rm -rf dist >/dev/null",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
     "dev": "rm -rf /tmp/otomi/values && run-p watch dev:node",

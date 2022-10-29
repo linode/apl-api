@@ -42,7 +42,6 @@ const secretFileRegex = new RegExp(`^(.*/)?secrets.*.yaml(.dec)?$`)
 export class Repo {
   branch: string
   secretFilePostfix = ''
-  secretFileRegex: RegExp
   email: string
   git: SimpleGit
   password: string
@@ -65,6 +64,10 @@ export class Repo {
     this.git = simpleGit(this.path)
   }
 
+  getProtocol() {
+    return getProtocol(this.url)
+  }
+
   async requestInitValues(): Promise<AxiosResponse | void> {
     debug(`Tools: requesting "init" on values repo path ${this.path}`)
     const res = await axios.get(initUrl, { params: { envDir: this.path } })
@@ -78,13 +81,22 @@ export class Repo {
   }
 
   async addConfig(): Promise<void> {
+    debug(`Adding git config`)
     await this.git.addConfig('user.name', this.user)
     await this.git.addConfig('user.email', this.email)
-    if (env.isDev && this.isRootClone()) await this.git.addConfig('receive.denyCurrentBranch', 'updateInstead')
+    if (this.isRootClone()) {
+      if (this.getProtocol() === 'file') {
+        // tell the the git repo there to accept updates even when it is checked out
+        const _git = simpleGit(this.url.replace('file://', ''))
+        await _git.addConfig('receive.denyCurrentBranch', 'updateInstead')
+      }
+      // same for the root repo, which needs to accept pushes from children
+      await this.git.addConfig('receive.denyCurrentBranch', 'updateInstead')
+    }
   }
 
-  async init(): Promise<void> {
-    await this.git.init()
+  async init(bare = true): Promise<void> {
+    await this.git.init(bare !== undefined ? bare : this.isRootClone())
     await this.git.addRemote(this.remote, this.url)
   }
 
@@ -203,7 +215,7 @@ export class Repo {
       recursive: true,
       overwrite: false,
     })
-    await this.init()
+    await this.init(false)
     await this.git.checkoutLocalBranch(this.branch)
     await this.git.add('.')
     await this.git.commit('initial commit', undefined, this.getOptions())
@@ -216,7 +228,7 @@ export class Repo {
     if (!isRepo) {
       debug(`Initializing repo...`)
       if (!this.hasRemote() && this.isRootClone()) return await this.initFromTestFolder()
-      else if (env.isDev && !this.urlAuth) {
+      else if (!this.isRootClone()) {
         // child clone, point to root
         this.url = `file://${env.GIT_LOCAL_PATH}`
         this.urlAuth = this.url
@@ -247,16 +259,17 @@ export class Repo {
   }
 
   async pull(skipRequest = false): Promise<any> {
-    if (!env.GIT_REPO_URL && this.isRootClone()) return
+    // test root can't pull as it has no remote
+    if (!this.url) return
     debug('Pulling')
     const summary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
     debug(`Pull summary: ${JSON.stringify(summary)}`)
     await this.initSops()
     if (!skipRequest) await this.requestInitValues()
-    return summary
   }
 
   async push(): Promise<any> {
+    if (!this.url) return
     debug('Pushing')
     const summary = await this.git.push(this.remote, this.branch)
     debug('Pushed. Summary: ', summary)

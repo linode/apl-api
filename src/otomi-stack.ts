@@ -130,7 +130,7 @@ export default class OtomiStack {
       try {
         /* eslint-disable no-await-in-loop */
         this.repo = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, branch)
-        this.repo.pull()
+        await this.repo.pull()
         if (await this.repo.fileExists('env/cluster.yaml')) break
         debug(`Values are not present at ${url}:${branch}`)
       } catch (e) {
@@ -142,7 +142,7 @@ export default class OtomiStack {
       await new Promise((resolve) => setTimeout(resolve, timeoutMs))
     }
     // branches get a copy of the "main" branch db, so we don't need to inflate
-    if (!skipDbInflation) this.loadValues()
+    if (!skipDbInflation) await this.loadValues()
   }
 
   getSecretPaths(): string[] {
@@ -416,11 +416,14 @@ export default class OtomiStack {
   async triggerDeployment(): Promise<void> {
     await this.saveValues()
     await this.repo.save(this.editor)
-    // refresh root repo
+    // pull push root
     const rootStack = await getSessionStack()
     await rootStack.repo.pull()
+    await rootStack.repo.push()
+    // inflate new db
     rootStack.db = new Db()
     await rootStack.loadValues()
+    // and remove this editor from the session
     setSessionStack(this.editor as string, true)
     // to avoid re-reading all files we just copy root db
     // this.db = cloneDeep(rootStack.db)
