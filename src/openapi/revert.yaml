@@ -1,0 +1,7 @@
+Revert:
+  x-externalDocsPath: docs/console/revert-changes
+  x-acl:
+    admin: [read-any]
+    team: [read-any]
+  properties: {}
+  type: object

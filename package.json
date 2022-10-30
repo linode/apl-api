@@ -155,6 +155,7 @@
     "run-if-changed": "run-if-changed",
     "start": "node dist/src/app.js",
     "test": "GIT_LOCAL_PATH=./test npm run build:models && ts-mocha src/*.test.* --exit",
+    "test:debug": "GIT_LOCAL_PATH=./test npm run build:models && ts-mocha --inspect=4322 src/*.test.* --exit",
     "types": "tsc --noEmit",
     "prepare": "husky install",
     "watch": "npm-watch"

@@ -1,11 +1,18 @@
-import { bool, CleanedEnvAccessors, cleanEnv as clean, CleanOptions, num, str, ValidatorSpec } from 'envalid'
+import { bool, CleanedEnvAccessors, cleanEnv as clean, CleanOptions, json, num, str, ValidatorSpec } from 'envalid'
 
 export const AUTHZ_MOCK_IS_ADMIN = bool({
   desc: 'Indicate if a mocked user is an admin',
   default: true,
 })
 export const AUTHZ_MOCK_TEAM = str({ desc: 'Comma separated list of teams a user belongs to', default: undefined })
-export const CORE_VERSION = str({ desc: 'The otomi-core version', default: 'x.x.x' })
+export const VERSIONS = json({
+  desc: 'The versions of the otomi components',
+  default: {
+    api: process.env.npm_package_version,
+    console: 'x.x.x',
+    core: 'x.x.x',
+  },
+})
 export const CUSTOM_ROOT_CA = str({ desc: 'The root CA used for certs', default: undefined })
 // export const DRONE_SHARED_SECRET = str({ desc: 'The drone secret to validate incoming webhooks' })
 export const EDITOR_INACTIVITY_TIMEOUT = num({

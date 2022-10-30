@@ -6,7 +6,6 @@ import OtomiStack from 'src/otomi-stack'
 export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
 export type Cluster = Settings['cluster']
-export type Deployment = components['schemas']['Deployment']
 export type Dns = Settings['dns']
 export type Job = components['schemas']['Job']
 export type Kubecfg = components['schemas']['Kubecfg']

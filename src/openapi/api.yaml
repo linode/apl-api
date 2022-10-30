@@ -433,32 +433,32 @@ paths:
 
   /deploy:
     get:
-      x-aclSchema: Deployment
+      x-aclSchema: Deploy
       operationId: deploy
       description: Trigger a deployment (only for admin)
       responses:
         '202':
-          description: Deployment has been triggered
-          content:
-            application/json:
-              schema:
-                type: object
+          description: Deploy has been triggered
         '409':
           <<: *OtomiStackError
 
   /revert:
     get:
+      x-aclSchema: Revert
       operationId: revert
-      description: Revert to previous state
+      description: Revert session to previous state
       responses:
         '202':
-          description: Revert has been triggered
-          content:
-            application/json:
-              schema:
-                type: object
-        '409':
-          <<: *OtomiStackError
+          description: Session state has been reverted
+
+  /restore:
+    get:
+      x-aclSchema: Restore
+      operationId: restore
+      description: Restore root to previous state
+      responses:
+        '202':
+          description: Root state has been restored
 
   '/kubecfg/{teamId}':
     parameters:
@@ -741,8 +741,8 @@ components:
       $ref: cluster.yaml#/AdditionalCluster
     Cluster:
       $ref: cluster.yaml#/Cluster
-    Deployment:
-      $ref: deployment.yaml#/Deployment
+    Deploy:
+      $ref: deploy.yaml#/Deploy
     Ingress:
       $ref: service.yaml#/Ingress
     IngressCluster:
@@ -757,6 +757,10 @@ components:
       $ref: error.yaml#/OpenApiValidationError
     OtomiStackError:
       $ref: error.yaml#/OtomiStackError
+    Restore:
+      $ref: restore.yaml#/Restore
+    Revert:
+      $ref: revert.yaml#/Revert
     Secret:
       $ref: secret.yaml#/Secret
     SecretDockerRegistry:

@@ -3,13 +3,14 @@ import * as k8s from '@kubernetes/client-node'
 import { Cluster, V1ObjectReference } from '@kubernetes/client-node'
 import { pascalCase } from 'change-case'
 import Debug from 'debug'
+import { emptyDir } from 'fs-extra'
 import { readFile } from 'fs/promises'
 import { cloneDeep, each, filter, get, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { PublicUrlExists, ValidationError } from 'src/error'
-import { getSessionStack, setSessionStack } from 'src/middleware'
+import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack, readOnlyStack } from 'src/middleware'
 import {
   App,
   Core,
@@ -35,7 +36,6 @@ import {
 } from 'src/utils'
 import {
   cleanEnv,
-  CORE_VERSION,
   CUSTOM_ROOT_CA,
   EDITOR_INACTIVITY_TIMEOUT,
   GIT_BRANCH,
@@ -45,6 +45,7 @@ import {
   GIT_REPO_URL,
   GIT_USER,
   TOOLS_HOST,
+  VERSIONS,
 } from 'src/validators'
 import { parse as parseYaml } from 'yaml'
 
@@ -54,15 +55,15 @@ const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'dockerconfi
 
 const env = cleanEnv({
   CUSTOM_ROOT_CA,
-  CORE_VERSION,
   EDITOR_INACTIVITY_TIMEOUT,
-  GIT_REPO_URL,
-  GIT_LOCAL_PATH,
   GIT_BRANCH,
-  GIT_USER,
-  GIT_PASSWORD,
   GIT_EMAIL,
+  GIT_LOCAL_PATH,
+  GIT_PASSWORD,
+  GIT_REPO_URL,
+  GIT_USER,
   TOOLS_HOST,
+  VERSIONS,
 })
 
 export function getTeamJobsFilePath(teamId: string): string {
@@ -88,6 +89,9 @@ export function getTeamServicesFilePath(teamId: string): string {
 export function getTeamServicesJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.services`
 }
+
+export const rootPath = '/tmp/otomi/values'
+
 export default class OtomiStack {
   private coreValues: Core
 
@@ -104,7 +108,7 @@ export default class OtomiStack {
 
   getRepoPath() {
     if (env.isTest || this.editor === undefined) return env.GIT_LOCAL_PATH
-    const folder = `/tmp/otomi/values/${this.editor}`
+    const folder = `${rootPath}/${this.editor}`
     return folder
   }
 
@@ -413,26 +417,42 @@ export default class OtomiStack {
     if (servicesFiltered.length > 0) throw new PublicUrlExists()
   }
 
-  async triggerDeployment(): Promise<void> {
+  async doDeployment(): Promise<void> {
     await this.saveValues()
     await this.repo.save(this.editor)
     // pull push root
     const rootStack = await getSessionStack()
-    await rootStack.repo.pull()
-    await rootStack.repo.push()
+    try {
+      await rootStack.repo.pull()
+      await rootStack.repo.push()
+    } catch (e) {
+      // worst case scenario: outside edit caused conflict on root pull
+      const msg: DbMessage = { state: 'corrupt', editor: this.editor!, reason: 'conflict' }
+      getIo().emit('db', msg)
+      throw e // bail and let admins press "Conflict: Restore DB" buttom
+    }
     // inflate new db
     rootStack.db = new Db()
     await rootStack.loadValues()
-    // and remove this editor from the session
-    setSessionStack(this.editor as string, true)
-    // to avoid re-reading all files we just copy root db
-    // this.db = cloneDeep(rootStack.db)
-    // this.editor = undefined
+    // and remove editor from the session
+    await cleanSession(this.editor!, false)
+    const sha = await rootStack.repo.getCommitSha()
+    const msg: DbMessage = { state: 'clean', editor: this.editor!, sha, reason: 'deploy' }
+    getIo().emit('db', msg)
   }
 
-  async triggerRevert(): Promise<void> {
-    this.db = cloneDeep((await getSessionStack()).db)
-    this.editor = undefined
+  async doRevert(): Promise<void> {
+    // other sessions active, can't do full reload
+    // remove editor from the session
+    await cleanSession(this.editor!)
+  }
+
+  async doRestore(): Promise<void> {
+    // hardcore: re-init root and broadcast
+    cleanAllSessions(this.editor!)
+    await emptyDir(rootPath)
+    // and re-init root
+    await getSessionStack()
   }
 
   apiClient?: k8s.CoreV1Api
@@ -618,7 +638,7 @@ export default class OtomiStack {
           ...(values || {}),
           _rawValues: rawValues,
         }
-        if (this.canToggleApp(id)) apps[id as string].enabled = !!enabled
+        if (this.canToggleApp(id)) apps[id!].enabled = !!enabled
         else delete apps[id as string].enabled
 
         await this.repo.saveConfig(
@@ -636,7 +656,7 @@ export default class OtomiStack {
     this.getApps(teamId).forEach((app) => {
       const { id, shortcuts } = app
       if (teamId !== 'admin' && !shortcuts?.length) return
-      apps[id as string] = {
+      apps[id!] = {
         shortcuts,
       }
     })
@@ -845,7 +865,8 @@ export default class OtomiStack {
     await this.saveTeamApps('admin')
   }
 
-  getSession(user: k8s.User): Session {
+  async getSession(user: k8s.User): Promise<Session> {
+    const currentSha = await readOnlyStack.repo.getCommitSha()
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
@@ -853,8 +874,13 @@ export default class OtomiStack {
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
       user: user as User,
       versions: {
-        core: env.CORE_VERSION,
-        api: process.env.npm_package_version,
+        core: env.VERSIONS.core,
+        api: env.VERSIONS.api ?? process.env.npm_package_version,
+        console: env.VERSIONS.console,
+        values: {
+          console: currentSha,
+          deployed: readOnlyStack.repo.deployedSha,
+        },
       },
     }
     return data

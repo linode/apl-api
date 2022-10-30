@@ -109,8 +109,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     })
   }
   // and register session middleware
-  const { beforeHandler, afterHandler } = sessionMiddleware(inOtomiStack ? undefined : server)
-  app.use(beforeHandler)
+  app.use(sessionMiddleware(server))
 
   // now we can initialize the more specific routes
   initialize({
@@ -134,7 +133,6 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     routesGlob: '**/*.{ts,js}',
     routesIndexFileRegExp: /(?:index)?\.[tj]s$/,
   })
-  app.use(afterHandler)
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
   return app
 }

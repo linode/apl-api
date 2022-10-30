@@ -41,13 +41,14 @@ function getUrlAuth(url, user, password): string | undefined {
 const secretFileRegex = new RegExp(`^(.*/)?secrets.*.yaml(.dec)?$`)
 export class Repo {
   branch: string
-  secretFilePostfix = ''
+  deployedSha: string
   email: string
   git: SimpleGit
   password: string
   path: string
   remote: string
   remoteBranch: string
+  secretFilePostfix = ''
   url: string
   urlAuth: string
   user: string
@@ -218,8 +219,9 @@ export class Repo {
     await this.init(false)
     await this.git.checkoutLocalBranch(this.branch)
     await this.git.add('.')
-    await this.git.commit('initial commit', undefined, this.getOptions())
     await this.addConfig()
+    const summary = await this.git.commit('initial commit', undefined, this.getOptions())
+    this.deployedSha = summary.commit
   }
 
   async clone(): Promise<void> {
@@ -237,6 +239,7 @@ export class Repo {
       await this.git.clone(this.urlAuth, this.path)
       await this.addConfig()
       await this.git.checkout(this.branch)
+      this.deployedSha = await this.getCommitSha()
     } else if (this.url) {
       debug('Repo already exists. Checking out correct branch.')
       // Git fetch ensures that local git repository is synced with remote repository
@@ -253,9 +256,9 @@ export class Repo {
 
   async commit(editor: string): Promise<CommitResult> {
     await this.git.add('./*')
-    const commitSummary = await this.git.commit(`otomi-api commit by ${editor}`, undefined, this.getOptions())
-    debug(`Commit summary: ${JSON.stringify(commitSummary)}`)
-    return commitSummary
+    const summary = await this.git.commit(`otomi-api commit by ${editor}`, undefined, this.getOptions())
+    debug(`Commit summary: ${JSON.stringify(summary)}`)
+    return summary
   }
 
   async pull(skipRequest = false): Promise<any> {
@@ -263,13 +266,14 @@ export class Repo {
     if (!this.url) return
     debug('Pulling')
     const summary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
-    debug(`Pull summary: ${JSON.stringify(summary)}`)
-    await this.initSops()
+    const summJson = JSON.stringify(summary)
+    debug(`Pull summary: ${summJson}`)
+    if (summJson.includes('.sops.yaml')) await this.initSops()
     if (!skipRequest) await this.requestInitValues()
   }
 
   async push(): Promise<any> {
-    if (!this.url) return
+    if (!this.url && this.isRootClone()) return
     debug('Pushing')
     const summary = await this.git.push(this.remote, this.branch)
     debug('Pushed. Summary: ', summary)
@@ -277,7 +281,7 @@ export class Repo {
   }
 
   async getCommitSha(): Promise<string> {
-    return this.git.revparse(['--verify', 'HEAD'])
+    return this.git.revparse('HEAD')
   }
 
   async save(editor): Promise<void> {
@@ -295,11 +299,12 @@ export class Repo {
     }
     // all good? commit
     const sha = await this.getCommitSha()
-    const commitSummary: CommitResult = await this.commit(editor)
-    // if (commitSummary.commit === '' || !hasRemote) return
+    await this.commit(editor)
     try {
       // we are in a developer branch so first merge in root which might be changed by another dev
-      await this.pull(true)
+      // but since we are a child we don't need to re-init, just wait for root db to be copied
+      const skipInit = true
+      await this.pull(skipInit)
       await this.push()
     } catch (e) {
       debug(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
