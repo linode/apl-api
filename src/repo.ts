@@ -268,7 +268,7 @@ export class Repo {
     const summary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
     const summJson = JSON.stringify(summary)
     debug(`Pull summary: ${summJson}`)
-    if (summJson.includes('.sops.yaml')) await this.initSops()
+    await this.initSops()
     if (!skipRequest) await this.requestInitValues()
   }
 
