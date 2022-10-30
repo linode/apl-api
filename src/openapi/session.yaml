@@ -23,4 +23,12 @@ Session:
           type: string
         api:
           type: string
+        console:
+          type: string
+        values:
+          properties:
+            console:
+              type: string
+            deployed:
+              type: string
   type: object

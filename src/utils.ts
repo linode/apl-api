@@ -7,11 +7,6 @@ import { isArray, memoize, mergeWith, omit } from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
 import { resolve } from 'path'
 import { Cluster, Dns } from 'src/otomi-models'
-import { cleanEnv, GIT_LOCAL_PATH } from 'src/validators'
-
-const env = cleanEnv({
-  GIT_LOCAL_PATH,
-})
 
 export function arrayToObject(array: [] = [], keyName = 'name', keyValue = 'value'): Record<string, unknown> {
   const obj = {}
@@ -79,10 +74,10 @@ export const traverse = (o, func, path = '') =>
 
 export const isOf = (o): boolean => Object.keys(o).some((p) => ['anyOf', 'allOf', 'oneOf'].includes(p))
 
-export const extract = memoize((o, f) => {
+export const extract = memoize((obj: Record<string, any>, f) => {
   const schemaKeywords = ['properties', 'items', 'anyOf', 'allOf', 'oneOf', 'default', 'x-secret', 'x-acl']
   const leafs = {}
-  traverse(o, (o, i, path) => {
+  traverse(obj, (o, i, path) => {
     const res = f(o, i, path)
     if (!res) return
     const p = path
