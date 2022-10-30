@@ -121,7 +121,7 @@
       "prettier --write"
     ]
   },
-  "main": "dist/app.js",
+  "main": "dist/src/app.js",
   "name": "@redkubes/otomi-api",
   "publishConfig": {
     "private": true,
