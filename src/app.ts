@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import $parser, { JSONSchema } from '@apidevtools/json-schema-ref-parser'
 import { json } from 'body-parser'
 import { pascalCase } from 'change-case'
 import cors from 'cors'
 import Debug from 'debug'
-import express from 'express'
+import express, { request } from 'express'
 import 'express-async-errors'
 import { initialize } from 'express-openapi'
 import { remove } from 'fs-extra'
@@ -80,14 +81,31 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
       res.send('ok')
     })
   }
-  app.all('/drone', (req, res, next) => {
+  app.all('/drone', async (req, res, next) => {
     // const parsed = httpSignature.parseRequest(req)
     // if (!httpSignature.verifySignature(parsed, env.DRONE_SHARED_SECRET)) return res.status(401).send()
     const event = req.headers['x-drone-event']
-    const io = getIo()
     res.send('ok')
-    if (!io) return
-    if (event === 'build') io.emit('drone', req.body)
+    if (event !== 'build') return
+    const io = getIo()
+    const {
+      build: { status },
+    } = request.body
+    // emit now to let others know, before doing anything else
+    if (io) io.emit('drone', req.body)
+    // deployment might have changed data, so reload
+    if (status === 'success') {
+      const stack = await getSessionStack()
+      try {
+        await stack.repo.pull()
+      } catch (e) {
+        debug(
+          'Could not pull from remote. Api potentially contains commits that clash, or other problem arose, so we have to mark the db as corrupt.',
+        )
+        console.error('Pull error: ', e)
+        stack.repo.corrupt = true
+      }
+    }
   })
   let server
   if (!inOtomiStack) {

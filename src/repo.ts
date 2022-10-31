@@ -41,6 +41,7 @@ function getUrlAuth(url, user, password): string | undefined {
 const secretFileRegex = new RegExp(`^(.*/)?secrets.*.yaml(.dec)?$`)
 export class Repo {
   branch: string
+  corrupt = false
   deployedSha: string
   email: string
   git: SimpleGit

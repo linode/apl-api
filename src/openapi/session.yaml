@@ -6,6 +6,9 @@ Session:
     core:
       type: object
       readOnly: true
+    corrupt:
+      type: boolean
+      default: false
     editor:
       type: string
       readOnly: true
