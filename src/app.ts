@@ -88,12 +88,12 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     res.send('ok')
     if (event !== 'build') return
     const io = getIo()
-    const {
-      build: { status },
-    } = request.body
     // emit now to let others know, before doing anything else
     if (io) io.emit('drone', req.body)
     // deployment might have changed data, so reload
+    const { build } = request.body
+    if (!build) return
+    const { status } = build
     if (status === 'success') {
       const stack = await getSessionStack()
       debug('Drone deployed, root pull')
