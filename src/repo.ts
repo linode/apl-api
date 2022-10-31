@@ -141,11 +141,9 @@ export class Repo {
 
   async writeFile(file, data): Promise<void> {
     const cleanedData = removeBlankAttributes(data)
-    if (isEmpty(cleanedData)) {
-      // handle empty data first
-      await this.removeFile(file)
-      // bail if we came to write secrets which we can't fill empty
-      if (file.match(secretFileRegex)) return
+    if (isEmpty(cleanedData) && file.match(secretFileRegex)) {
+      // remove empty secrets file which sops can't handle
+      return this.removeFile(file)
     }
     // we also bail when no changes found
     const hasDiff = await this.diffFile(file, cleanedData)
