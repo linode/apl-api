@@ -442,7 +442,7 @@ export default class OtomiStack {
 
   async doRestore(): Promise<void> {
     // hardcore: re-init root and broadcast
-    cleanAllSessions(this.editor!)
+    await cleanAllSessions(this.editor!)
     await emptyDir(rootPath)
     // and re-init root
     await getSessionStack()

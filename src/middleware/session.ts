@@ -46,9 +46,9 @@ export const setSessionStack = async (editor: string, clean = false): Promise<vo
 
 export const getEditors = () => Object.keys(sessions)
 
-export const cleanAllSessions = (editor: string): void => {
+export const cleanAllSessions = async (editor: string): Promise<void> => {
   debug(`Cleaning all editor sessions`)
-  const sha = readOnlyStack.repo.deployedSha
+  const sha = await readOnlyStack.repo.getCommitSha()
   const msg: DbMessage = { state: 'clean', editor, sha, reason: 'restore' }
   io.emit('db', msg)
   sessions = {}
@@ -56,7 +56,7 @@ export const cleanAllSessions = (editor: string): void => {
 
 export const cleanSession = async (editor: string, sendMsg = true): Promise<void> => {
   debug(`Cleaning editor session for ${editor}`)
-  const sha = await sessions[editor].repo.getCommitSha()
+  const sha = await readOnlyStack.repo.getCommitSha()
   delete sessions[editor]
   if (!sendMsg) return
   const msg: DbMessage = { state: 'clean', editor, sha, reason: 'revert' }
