@@ -1,0 +1,150 @@
+AppThanos:
+  additionalProperties: false
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      type: boolean
+      default: false
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/apps/thanos
+      type: object
+      properties:
+        receive:
+          title: Thanos receiver parameters
+          properties:
+            resources:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 1000m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 1000Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 200Mi
+              required:
+                - limits
+                - requests
+        query:
+          title: Thanos query parameters
+          properties:
+            stores:
+              title: Urls of the "data-producer" clusters
+              type: array
+              minItems: 0
+              items:
+                type: object
+                properties:
+                  name:
+                    title: Service name
+                    description: Allow traffic from a given team
+                    type: string
+                required:
+                  - name
+            replicaCount:
+              title: Query replica count
+              type: integer
+              default: 1
+            resources:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 1000m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 1000Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 200Mi
+              required:
+                - limits
+                - requests
+        objstore:
+          description: Choose your Cloud provider.
+          nullable: true
+          type: object
+          oneOf:
+            - title: localMinio
+              type: object
+              properties:
+                localMinio:
+                  additionalProperties: false
+                  properties:
+                    bucket:
+                      title: The name of the bucket
+                      type: string
+                    accessKey:
+                      description: Access Key
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                      x-secret: ''
+                    secretKey:
+                      description: Secret Key
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                      x-secret: ''
+                  required:
+                    - bucket
+                    - accessKey
+                    - secretKey
+              required:
+                - localMinio
+            - title: s3Like
+              type: object
+              properties:
+                s3Like:
+                  additionalProperties: false
+                  properties:
+                    bucket:
+                      title: The name of the bucket
+                      type: string
+                    endpoint:
+                      title: URL of the storage endpoint
+                      type: string                      
+                    accessKey:
+                      description: Access Key
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                      x-secret: ''
+                    secretKey:
+                      description: Secret Key
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                      x-secret: ''
+                  required:
+                    - bucket
+                    - endpoint
+                    - accessKey
+                    - secretKey
+              required:
+                - s3Like
+
+
+

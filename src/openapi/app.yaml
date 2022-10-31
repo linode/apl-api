@@ -26,6 +26,8 @@ AppList:
     - prometheus
     - vault
     - velero
+    - minio
+    - thanos
 
 # AppBase:
 #   x-acl:

@@ -20,6 +20,8 @@ AppPrometheus:
       additionalProperties: false
       type: object
       properties:
+        role:
+          $ref: ../definitions.yaml#/prometheusRole
         replicas:
           $ref: ../definitions.yaml#/replicas
         scrapeInterval:

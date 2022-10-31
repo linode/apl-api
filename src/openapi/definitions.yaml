@@ -949,6 +949,13 @@ portNumber:
   maximum: 32768
   minimum: 80
   type: integer
+prometheusRole:
+  description: Prometheus role.
+  default: standalone
+  enum:
+    - standalone
+    - producer
+  type: string
 provider:
   title: Provider
   description: The cloud provider of this cluster.
