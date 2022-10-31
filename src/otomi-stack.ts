@@ -256,7 +256,7 @@ export default class OtomiStack {
     // now also load the shortcuts that teams created and were stored in apps.* files
     await Promise.all(
       this.getTeams()
-        .map((t) => t.id)
+        .map((t) => t.id !== 'admin' && t.id)
         .map(async (teamId) => {
           const teamAppsFile = `env/teams/apps.${teamId}.yaml`
           if (!(await this.repo.fileExists(teamAppsFile))) return

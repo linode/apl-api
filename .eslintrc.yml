@@ -38,20 +38,21 @@ env:
 
 rules:
   '@typescript-eslint/ban-ts-comment': off
-  '@typescript-eslint/member-delimiter-style': off
-  '@typescript-eslint/no-explicit-any': off
   '@typescript-eslint/explicit-function-return-type': off
-  '@typescript-eslint/no-unsafe-assignment': off
-  '@typescript-eslint/no-unsafe-member-access': off
-  '@typescript-eslint/no-unsafe-return': off
-  '@typescript-eslint/no-use-before-define': ['error']
   # this next line is disabling all the warnings about non typed stuff:
   '@typescript-eslint/explicit-module-boundary-types': off
-  '@typescript-eslint/restrict-template-expressions': off
-  '@typescript-eslint/no-unsafe-call': off
-  '@typescript-eslint/no-non-null-assertion': off
+  '@typescript-eslint/member-delimiter-style': off
+  '@typescript-eslint/no-explicit-any': off
   '@typescript-eslint/no-floating-promises': off
+  '@typescript-eslint/no-non-null-assertion': off
   '@typescript-eslint/no-unsafe-argument': warn
+  '@typescript-eslint/no-unsafe-assignment': off
+  '@typescript-eslint/no-unsafe-call': off
+  '@typescript-eslint/no-unsafe-member-access': off
+  '@typescript-eslint/no-unsafe-return': off
+  '@typescript-eslint/no-unused-vars': [warn, { argsIgnorePattern: ^(_|next), varsIgnorePattern: ^_ }]
+  '@typescript-eslint/no-use-before-define': ['error']
+  '@typescript-eslint/restrict-template-expressions': off
   comma-dangle: [error, only-multiline]
   curly: [error, multi-or-nest]
   eol-last: ['error', 'always']
@@ -66,7 +67,7 @@ rules:
     - props: true
       ignorePropertyModificationsFor: [memo]
   no-shadow: warn
-  no-unused-vars: warn
+  no-unused-vars: off
   no-use-before-define: off
   object-shorthand: error
   prefer-destructuring: warn
