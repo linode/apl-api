@@ -50,7 +50,7 @@ AppThanos:
           title: Thanos query parameters
           properties:
             stores:
-              title: Urls of the "data-producer" clusters
+              title: Thanos sidecar service endpoints
               type: array
               minItems: 0
               items:
@@ -58,7 +58,7 @@ AppThanos:
                 properties:
                   name:
                     title: Service name
-                    description: Allow traffic from a given team
+                    description: Query data from this data producer
                     type: string
                 required:
                   - name
@@ -91,7 +91,8 @@ AppThanos:
                 - limits
                 - requests
         objstore:
-          description: Choose your Cloud provider.
+          title: Object store
+          description: Configure the Thanos object store.
           nullable: true
           type: object
           oneOf:

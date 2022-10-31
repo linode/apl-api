@@ -21,7 +21,7 @@ AppVelero:
       type: object
       properties:
         provider:
-          description: Choose your Cloud provider.
+          description: Choose your provider.
           nullable: true
           type: object
           oneOf:
@@ -61,7 +61,6 @@ AppVelero:
                         - storageAccount
                         - bucket
                     secretContents:
-                      additionalProperties: false
                       description: Data to be stored in the Velero secret.
                       properties:
                         tenantId:
@@ -108,7 +107,6 @@ AppVelero:
                         - region
                         - s3bucket
                     secretContents:
-                      additionalProperties: false
                       description: Data to be stored in the Velero secret.
                       properties:
                         accessKeyId:
@@ -125,6 +123,37 @@ AppVelero:
                         - secretAccessKey
               required:
                 - aws
+            - title: custom
+              type: object
+              additionalProperties: false
+              description: For any Kubernetes environment using S3 compatible storage (like Minio).
+              properties:
+                config:
+                  title: Location configuration
+                  description: Custom S3 compatible storage location configuration
+                  properties:
+                    s3bucket:
+                      description: The name (URL) of the bucket
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                  required:
+                    - s3bucket
+                secretContents:
+                  description: Data to be stored in the Velero secret.
+                  properties:
+                    accessKeyId:
+                      type: string
+                      description: The ID of the access key
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    secretAccessKey:
+                      type: string
+                      description: The secret of the access key
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                      x-secret: ''
+                  required:
+                    - accessKeyId
+                    - secretAccessKey
+              required:
+                - custom
         logLevel:
           description: Set log-level for the Velero pod.
           title: Log Level
