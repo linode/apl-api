@@ -11,6 +11,7 @@ import simpleGit, { CheckRepoActions, CommitResult, SimpleGit, SimpleGitOptions 
 import { cleanEnv, GIT_BRANCH, GIT_LOCAL_PATH, GIT_REPO_URL, TOOLS_HOST } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { GitPullError, HttpError, ValidationError } from './error'
+import { DbMessage, getIo } from './middleware'
 import { Core } from './otomi-models'
 import { removeBlankAttributes } from './utils'
 
@@ -42,7 +43,6 @@ const secretFileRegex = new RegExp(`^(.*/)?secrets.*.yaml(.dec)?$`)
 export class Repo {
   branch: string
   corrupt = false
-  deployedSha: string
   email: string
   git: SimpleGit
   password: string
@@ -147,12 +147,12 @@ export class Repo {
       return this.removeFile(file)
     }
     // we also bail when no changes found
-    const hasDiff = await this.diffFile(file, cleanedData)
+    const hasDiff = await this.diffFile(file, data)
     if (!hasDiff) return
     // ok, write new content
     const absolutePath = path.join(this.path, file)
     debug(`Writing to file: ${absolutePath}`)
-    const sortedData = JSON.parse(stringifyJson(cleanedData) as string)
+    const sortedData = JSON.parse(stringifyJson(data) as string)
     const content = isEmpty(sortedData) ? '' : stringifyYaml(sortedData, undefined, 4)
     const dir = dirname(absolutePath)
     await ensureDir(dir)
@@ -220,7 +220,6 @@ export class Repo {
     await this.git.add('.')
     await this.addConfig()
     const summary = await this.git.commit('initial commit', undefined, this.getOptions())
-    this.deployedSha = summary.commit
   }
 
   async clone(): Promise<void> {
@@ -238,7 +237,6 @@ export class Repo {
       await this.git.clone(this.urlAuth, this.path)
       await this.addConfig()
       await this.git.checkout(this.branch)
-      this.deployedSha = await this.getCommitSha()
     } else if (this.url) {
       debug('Repo already exists. Checking out correct branch.')
       // Git fetch ensures that local git repository is synced with remote repository
@@ -264,11 +262,20 @@ export class Repo {
     // test root can't pull as it has no remote
     if (!this.url) return
     debug('Pulling')
-    const summary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
-    const summJson = JSON.stringify(summary)
-    debug(`Pull summary: ${summJson}`)
-    await this.initSops()
-    if (!skipRequest) await this.requestInitValues()
+    try {
+      const summary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
+      const summJson = JSON.stringify(summary)
+      debug(`Pull summary: ${summJson}`)
+      await this.initSops()
+      if (!skipRequest) await this.requestInitValues()
+    } catch (e) {
+      debug('Could not pull from remote. Upstream commits? Marked db as corrupt.')
+      this.corrupt = true
+      console.error('Pull error: ', e)
+      const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'conflict' }
+      getIo().emit('db', msg)
+      throw e
+    }
   }
 
   async push(): Promise<any> {

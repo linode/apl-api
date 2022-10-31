@@ -96,15 +96,8 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     // deployment might have changed data, so reload
     if (status === 'success') {
       const stack = await getSessionStack()
-      try {
-        await stack.repo.pull()
-      } catch (e) {
-        debug(
-          'Could not pull from remote. Api potentially contains commits that clash, or other problem arose, so we have to mark the db as corrupt.',
-        )
-        console.error('Pull error: ', e)
-        stack.repo.corrupt = true
-      }
+      debug('Drone deployed, root pull')
+      await stack.repo.pull()
     }
   })
   let server

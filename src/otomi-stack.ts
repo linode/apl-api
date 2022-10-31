@@ -422,15 +422,8 @@ export default class OtomiStack {
     await this.repo.save(this.editor)
     // pull push root
     const rootStack = await getSessionStack()
-    try {
-      await rootStack.repo.pull()
-      await rootStack.repo.push()
-    } catch (e) {
-      // worst case scenario: outside edit caused conflict on root pull
-      const msg: DbMessage = { state: 'corrupt', editor: this.editor!, reason: 'conflict' }
-      getIo().emit('db', msg)
-      throw e // bail and let admins press "Conflict: Restore DB" buttom
-    }
+    await rootStack.repo.pull()
+    await rootStack.repo.push()
     // inflate new db
     rootStack.db = new Db()
     await rootStack.loadValues()
@@ -878,10 +871,7 @@ export default class OtomiStack {
         core: env.VERSIONS.core,
         api: env.VERSIONS.api ?? process.env.npm_package_version,
         console: env.VERSIONS.console,
-        values: {
-          console: currentSha,
-          deployed: readOnlyStack.repo.deployedSha,
-        },
+        values: currentSha,
       },
     }
     return data
