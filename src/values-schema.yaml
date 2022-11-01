@@ -2284,10 +2284,18 @@ properties:
           query:
             properties:
               stores:
-                description: Urls of the Thanos sidecar services of the "data-producer" clusters
-                items:
-                  type: string
+                title: Thanos sidecar service endpoints
                 type: array
+                minItems: 0
+                items:
+                  type: object
+                  properties:
+                    name:
+                      title: Service name
+                      description: Query data from this data producer
+                      type: string
+                  required:
+                    - name
               replicaCount:
                 type: integer
                 default: 1
@@ -2479,10 +2487,14 @@ properties:
               properties:
                 config:
                   properties:
+                    bucket:
+                      type: string
+                      description: Name of the blob container.
+                      $ref: '#/definitions/wordCharacterPattern'
                     region:
                       description: The region of the S3 bucket
                       $ref: '#/definitions/wordCharacterPattern'
-                    s3bucket:
+                    s3Url:
                       description: The name (URL) of the S3 bucket
                       $ref: '#/definitions/wordCharacterPattern'
                 secretContents:
@@ -2503,7 +2515,11 @@ properties:
               properties:
                 config:
                   properties:
-                    s3bucket:
+                    bucket:
+                      type: string
+                      description: Name of the blob container.
+                      $ref: '#/definitions/wordCharacterPattern'
+                    s3Url:
                       description: The name (URL) of the bucket
                       $ref: '#/definitions/wordCharacterPattern'
                 secretContents:

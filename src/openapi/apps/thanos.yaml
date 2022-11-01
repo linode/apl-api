@@ -9,12 +9,6 @@ AppThanos:
       default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
-    shortcuts:
-      description: Resource URL that lands the user in a place of interest within an app.
-      type: array
-      nullable: true
-      items:
-        $ref: ../definitions.yaml#/shortcut
     values:
       x-externalDocsPath: docs/apps/thanos
       additionalProperties: false
@@ -100,51 +94,43 @@ AppThanos:
             - title: localMinio
               type: object
               properties:
-                localMinio:
-                  properties:
-                    bucket:
-                      title: The name of the bucket
-                      type: string
-                    accessKey:
-                      description: Access Key
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                      x-secret: ''
-                    secretKey:
-                      description: Secret Key
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                      x-secret: ''
-                  required:
-                    - bucket
-                    - accessKey
-                    - secretKey
+                bucket:
+                  description: The name of the bucket
+                  type: string
+                accessKey:
+                  description: Access Key
+                  $ref: ../definitions.yaml#/wordCharacterPattern
+                  x-secret: ''
+                secretKey:
+                  description: Secret Key
+                  $ref: ../definitions.yaml#/wordCharacterPattern
+                  x-secret: ''
               required:
-                - localMinio
+                - bucket
+                - accessKey
+                - secretKey
             - title: s3Like
               type: object
               properties:
-                s3Like:
-                  properties:
-                    bucket:
-                      title: The name of the bucket
-                      type: string
-                    endpoint:
-                      title: URL of the storage endpoint
-                      type: string                      
-                    accessKey:
-                      description: Access Key
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                      x-secret: ''
-                    secretKey:
-                      description: Secret Key
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                      x-secret: ''
-                  required:
-                    - bucket
-                    - endpoint
-                    - accessKey
-                    - secretKey
+                bucket:
+                  description: The name of the bucket
+                  type: string
+                s3Url:
+                  description: URL of the storage endpoint
+                  type: string                      
+                accessKey:
+                  description: Access Key
+                  $ref: ../definitions.yaml#/wordCharacterPattern
+                  x-secret: ''
+                secretKey:
+                  description: Secret Key
+                  $ref: ../definitions.yaml#/wordCharacterPattern
+                  x-secret: ''
               required:
-                - s3Like
+                - bucket
+                - endpoint
+                - accessKey
+                - secretKey
 
 
 

@@ -29,130 +29,132 @@ AppVelero:
             - title: azure
               type: object
               properties:
-                azure:
+                environment:
+                  title: Environment
+                  description: An Azure environment.
+                  type: string
+                  default: AzurePublicCloud
+                  enum:
+                    - AzurePublicCloud
+                    - AzureChinaCloud
+                    - AzureUSGovernment
+                    - AzureGermanCloud
+                config:
+                  title: Storage location configuration
+                  description: Azure specific storage location configuration
                   properties:
-                    environment:
-                      title: Azure environment
-                      description: An Azure environment.
+                    resourceGroup:
+                      description: Resource group of the storage account.
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    storageAccount:
+                      description: The name of the Azure storage account.
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    bucket:
                       type: string
-                      default: AzurePublicCloud
-                      enum:
-                        - AzurePublicCloud
-                        - AzureChinaCloud
-                        - AzureUSGovernment
-                        - AzureGermanCloud
-                    config:
-                      title: Storage location configuration
-                      description: Azure specific storage location configuration
-                      properties:
-                        resourceGroup:
-                          description: Resource group of the storage account.
-                          $ref: ../definitions.yaml#/wordCharacterPattern
-                        storageAccount:
-                          description: The name of the Azure storage account.
-                          $ref: ../definitions.yaml#/wordCharacterPattern
-                        bucket:
-                          type: string
-                          description: Name of the blob container.
-                          $ref: ../definitions.yaml#/wordCharacterPattern
-                      required:
-                        - resourceGroup
-                        - storageAccount
-                        - bucket
-                    secretContents:
-                      description: Data to be stored in the Velero secret.
-                      properties:
-                        tenantId:
-                          description: The used Azure Account Tenant ID.
-                          $ref: ../definitions.yaml#/wordCharacterPattern
-                        subscriptionId:
-                          description: The used Azure Subscription ID.
-                          $ref: ../definitions.yaml#/wordCharacterPattern
-                        resourceGroup:
-                          description: The resource group that contains the worker nodes (VMs and disks).
-                          $ref: ../definitions.yaml#/wordCharacterPattern
-                        aadClientId:
-                          description: The ID of the Service Principal with permissions to perform backups.
-                          $ref: ../definitions.yaml#/wordCharacterPattern
-                        aadClientSecret:
-                          description: The generated password of the Service Principal.
-                          $ref: ../definitions.yaml#/wordCharacterPattern
-                          x-secret: ''
-                      required:
-                        - tenantId
-                        - subscriptionId
-                        - aadClientId
-                        - aadClientSecret
-                        - resourceGroup
+                      description: Name of the blob container.
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                  required:
+                    - resourceGroup
+                    - storageAccount
+                    - bucket
+                secretContents:
+                  description: Data to be stored in the Velero secret.
+                  properties:
+                    tenantId:
+                      description: The used Azure Account Tenant ID.
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    subscriptionId:
+                      description: The used Azure Subscription ID.
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    resourceGroup:
+                      description: The resource group that contains the worker nodes (VMs and disks).
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    aadClientId:
+                      description: The ID of the Service Principal with permissions to perform backups.
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    aadClientSecret:
+                      description: The generated password of the Service Principal.
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                      x-secret: ''
+                  required:
+                    - tenantId
+                    - subscriptionId
+                    - aadClientId
+                    - aadClientSecret
+                    - resourceGroup
               required:
                 - azure
             - title: aws
               type: object
               properties:
-                aws:
+                config:
+                  title: Location configuration
+                  description: AWS specific storage location configuration
                   properties:
-                    config:
-                      title: Location configuration
-                      description: AWS specific storage location configuration
-                      properties:
-                        region:
-                          description: The region of the S3 bucket
-                          $ref: ../definitions.yaml#/wordCharacterPattern
-                        s3bucket:
-                          description: The name (URL) of the S3 bucket
-                          $ref: ../definitions.yaml#/wordCharacterPattern
-                      required:
-                        - region
-                        - s3bucket
-                    secretContents:
-                      description: Data to be stored in the Velero secret.
-                      properties:
-                        accessKeyId:
-                          type: string
-                          description: The ID of the access key
-                          $ref: ../definitions.yaml#/wordCharacterPattern
-                        secretAccessKey:
-                          type: string
-                          description: The secret of the access key
-                          $ref: ../definitions.yaml#/wordCharacterPattern
-                          x-secret: ''
-                      required:
-                        - accessKeyId
-                        - secretAccessKey
+                    region:
+                      description: The region of the S3 bucket
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    bucket:
+                      description: The name of the bucket
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    s3Url:
+                      description: S3 URL
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                  required:
+                    - region
+                    - bucket
+                    - s3Url
+                secretContents:
+                  description: Data to be stored in the Velero secret.
+                  properties:
+                    accessKeyId:
+                      type: string
+                      description: The ID of the access key
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    secretAccessKey:
+                      type: string
+                      description: The secret of the access key
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                      x-secret: ''
+                  required:
+                    - accessKeyId
+                    - secretAccessKey
               required:
                 - aws
             - title: custom
               type: object
               description: For any Kubernetes environment using S3 compatible storage (like Minio).
               properties:
-                custom:
+                config:
+                  title: Location configuration
+                  description: Custom S3 compatible storage location configuration
                   properties:
-                    config:
-                      title: Location configuration
-                      description: Custom S3 compatible storage location configuration
-                      properties:
-                        s3bucket:
-                          description: The name (URL) of the bucket
-                          $ref: ../definitions.yaml#/wordCharacterPattern
-                      required:
-                        - s3bucket
-                    secretContents:
-                      description: Data to be stored in the Velero secret.
-                      properties:
-                        accessKeyId:
-                          type: string
-                          description: The ID of the access key
-                          $ref: ../definitions.yaml#/wordCharacterPattern
-                        secretAccessKey:
-                          type: string
-                          description: The secret of the access key
-                          $ref: ../definitions.yaml#/wordCharacterPattern
-                          x-secret: ''
-                      required:
-                        - accessKeyId
-                        - secretAccessKey
+                    bucket:
+                      description: The name of the bucket
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    s3Url:
+                      description: S3 URL
+                      $ref: ../definitions.yaml#/wordCharacterPattern
                   required:
-                    - custom
+                    - bucket
+                    - s3Url
+                secretContents:
+                  description: Data to be stored in the Velero secret.
+                  properties:
+                    accessKeyId:
+                      type: string
+                      description: The ID of the access key
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    secretAccessKey:
+                      type: string
+                      description: The secret of the access key
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                      x-secret: ''
+                  required:
+                    - accessKeyId
+                    - secretAccessKey
+              required:
+                - custom
         logLevel:
           description: Set log-level for the Velero pod.
           title: Log Level
