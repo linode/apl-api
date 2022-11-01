@@ -17,6 +17,7 @@ AppThanos:
         $ref: ../definitions.yaml#/shortcut
     values:
       x-externalDocsPath: docs/apps/thanos
+      additionalProperties: false
       type: object
       properties:
         receive:
@@ -100,7 +101,6 @@ AppThanos:
               type: object
               properties:
                 localMinio:
-                  additionalProperties: false
                   properties:
                     bucket:
                       title: The name of the bucket
@@ -123,7 +123,6 @@ AppThanos:
               type: object
               properties:
                 s3Like:
-                  additionalProperties: false
                   properties:
                     bucket:
                       title: The name of the bucket

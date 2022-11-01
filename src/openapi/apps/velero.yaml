@@ -30,7 +30,6 @@ AppVelero:
               type: object
               properties:
                 azure:
-                  additionalProperties: false
                   properties:
                     environment:
                       title: Azure environment
@@ -91,7 +90,6 @@ AppVelero:
               type: object
               properties:
                 aws:
-                  additionalProperties: false
                   properties:
                     config:
                       title: Location configuration
@@ -125,35 +123,36 @@ AppVelero:
                 - aws
             - title: custom
               type: object
-              additionalProperties: false
               description: For any Kubernetes environment using S3 compatible storage (like Minio).
               properties:
-                config:
-                  title: Location configuration
-                  description: Custom S3 compatible storage location configuration
+                custom:
                   properties:
-                    s3bucket:
-                      description: The name (URL) of the bucket
-                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    config:
+                      title: Location configuration
+                      description: Custom S3 compatible storage location configuration
+                      properties:
+                        s3bucket:
+                          description: The name (URL) of the bucket
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                      required:
+                        - s3bucket
+                    secretContents:
+                      description: Data to be stored in the Velero secret.
+                      properties:
+                        accessKeyId:
+                          type: string
+                          description: The ID of the access key
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                        secretAccessKey:
+                          type: string
+                          description: The secret of the access key
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                          x-secret: ''
+                      required:
+                        - accessKeyId
+                        - secretAccessKey
                   required:
-                    - s3bucket
-                secretContents:
-                  description: Data to be stored in the Velero secret.
-                  properties:
-                    accessKeyId:
-                      type: string
-                      description: The ID of the access key
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                    secretAccessKey:
-                      type: string
-                      description: The secret of the access key
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                      x-secret: ''
-                  required:
-                    - accessKeyId
-                    - secretAccessKey
-              required:
-                - custom
+                    - custom
         logLevel:
           description: Set log-level for the Velero pod.
           title: Log Level
