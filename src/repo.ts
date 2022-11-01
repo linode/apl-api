@@ -140,8 +140,8 @@ export class Repo {
     return deepDiff
   }
 
-  async writeFile(file, data): Promise<void> {
-    const cleanedData = removeBlankAttributes(data)
+  async writeFile(file: string, data: Record<string, unknown>): Promise<void> {
+    const cleanedData = removeBlankAttributes(data, { emptyArrays: true })
     if (isEmpty(cleanedData) && file.match(secretFileRegex)) {
       // remove empty secrets file which sops can't handle
       return this.removeFile(file)

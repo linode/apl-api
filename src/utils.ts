@@ -131,15 +131,15 @@ export function getServiceUrl({
   return { subdomain: '', domain }
 }
 
-export function removeBlankAttributes(obj: Record<string, unknown>): Record<string, unknown> {
-  const options: CleanOptions = {
+export function removeBlankAttributes(obj: Record<string, unknown>, options?: CleanOptions): Record<string, unknown> {
+  const defaultOptions: CleanOptions = {
     emptyArrays: false,
     emptyObjects: true,
     emptyStrings: true,
     nullValues: true,
     undefinedValues: true,
   }
-  return cleanDeep(obj, options)
+  return cleanDeep(obj, { ...defaultOptions, ...options })
 }
 
 export const argSplit = /[^\s"']+|("[^"]*")|('[^']*')/g
