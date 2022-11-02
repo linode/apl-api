@@ -2,7 +2,7 @@ import $RefParser from '@apidevtools/json-schema-ref-parser'
 import cleanDeep, { CleanOptions } from 'clean-deep'
 import { pathExists } from 'fs-extra'
 import { readFile } from 'fs/promises'
-import { load } from 'js-yaml'
+import { parse } from 'yaml'
 import { isArray, memoize, mergeWith, omit } from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
 import { resolve } from 'path'
@@ -51,7 +51,7 @@ export const loadYaml = async (path: string, opts?: { noError: boolean }): Promi
     if (opts?.noError) return undefined
     throw new Error(`${path} does not exist`)
   }
-  return load(await readFile(path, 'utf-8')) as Record<string, any>
+  return parse(await readFile(path, 'utf-8')) as Record<string, any>
 }
 
 let valuesSchema: Record<string, any>
