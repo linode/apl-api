@@ -14,8 +14,8 @@ AppThanos:
       additionalProperties: false
       type: object
       properties:
-        receive:
-          title: Thanos receiver parameters
+        receiver:
+          description: Thanos receiver parameters
           properties:
             resources:
               type: object
@@ -41,26 +41,25 @@ AppThanos:
               required:
                 - limits
                 - requests
-        query:
-          title: Thanos query parameters
-          properties:
-            stores:
-              title: Thanos sidecar service endpoints
-              type: array
-              minItems: 0
-              items:
-                type: object
-                properties:
-                  name:
-                    title: Service name
-                    description: Query data from this data producer
-                    type: string
-                required:
-                  - name
+            mode:
+              description: Mode to run receiver in.
+              type: string
+              default: standalone
+              enum:
+                - standalone
+                - dual-mode
             replicaCount:
-              title: Query replica count
+              description: Number of Thanos Receive replicas.
               type: integer
               default: 1
+            persistence:
+              properties:
+                size: 
+                  type: string
+                  default: 8Gi
+        storegateway:
+          description: Store gateway configuration
+          properties:
             resources:
               type: object
               properties:
@@ -85,6 +84,88 @@ AppThanos:
               required:
                 - limits
                 - requests
+            persistence:
+              properties:
+                size: 
+                  type: string
+                  default: 8Gi  
+        bucketweb:
+          properties:
+            resources:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 1000m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 1000Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 200Mi
+              required:
+                - limits
+                - requests
+        compactor:
+          description: Resolution and Retention flags.
+          properties:
+            retentionResolutionRaw:
+              type: string
+              default: 30d
+            retentionResolution5m:
+              type: string
+              default: 30d
+            retentionResolution1h: 
+              type: string
+              default: 5y
+            persistence:
+              properties:
+                size: 
+                  type: string
+                  default: 8Gi
+        ruler:
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            resources:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 1000m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 1000Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 200Mi
+              required:
+                - limits
+                - requests
+            persistence:
+              properties:
+                size: 
+                  type: string
+                  default: 8Gi
         objstore:
           title: Object store
           description: Configure the Thanos object store.
@@ -94,43 +175,51 @@ AppThanos:
             - title: localMinio
               type: object
               properties:
-                bucket:
-                  description: The name of the bucket
-                  type: string
-                accessKey:
-                  description: Access Key
-                  $ref: ../definitions.yaml#/wordCharacterPattern
-                  x-secret: ''
-                secretKey:
-                  description: Secret Key
-                  $ref: ../definitions.yaml#/wordCharacterPattern
-                  x-secret: ''
+                localMinio:
+                  properties:
+                    bucket:
+                      description: The name of the bucket
+                      type: string
+                    accessKey:
+                      description: Access Key
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                      x-secret: ''
+                    secretKey:
+                      description: Secret Key
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                      x-secret: ''
+                  required:
+                    - bucket
+                    - accessKey
+                    - secretKey
               required:
-                - bucket
-                - accessKey
-                - secretKey
+                - localMinio
             - title: s3Like
               type: object
               properties:
-                bucket:
-                  description: The name of the bucket
-                  type: string
-                s3Url:
-                  description: URL of the storage endpoint
-                  type: string                      
-                accessKey:
-                  description: Access Key
-                  $ref: ../definitions.yaml#/wordCharacterPattern
-                  x-secret: ''
-                secretKey:
-                  description: Secret Key
-                  $ref: ../definitions.yaml#/wordCharacterPattern
-                  x-secret: ''
+                s3Like:
+                  properties:
+                    bucket:
+                      description: The name of the bucket
+                      type: string
+                    s3Url:
+                      description: URL of the storage endpoint
+                      type: string                      
+                    accessKey:
+                      description: Access Key
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                      x-secret: ''
+                    secretKey:
+                      description: Secret Key
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                      x-secret: ''
+                  required:
+                    - bucket
+                    - endpoint
+                    - accessKey
+                    - secretKey
               required:
-                - bucket
-                - endpoint
-                - accessKey
-                - secretKey
+                - s3Like
 
 
 

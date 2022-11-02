@@ -20,8 +20,23 @@ AppPrometheus:
       additionalProperties: false
       type: object
       properties:
-        role:
-          $ref: ../definitions.yaml#/prometheusRole
+        remoteWrite:
+            properties:
+              enabled:
+                type: boolean
+                default: false
+                description: Enable to forward (stream) metrics collected by Prometheus to a remote location.
+              target:
+                type: string
+                description: Domain name of the Otomi aggregation cluster.
+              # username:
+              #   description: Username for the remote location (defaults to otomi-admin)
+              #   type: string
+              #   default: otomi-admin
+              # password:
+              #   description: The otomi-admin password of the Otomi aggregation cluster
+              #   $ref: ../definitions.yaml#/wordCharacterPattern
+              #   x-secret: ''              
         replicas:
           $ref: ../definitions.yaml#/replicas
         scrapeInterval:
