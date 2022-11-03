@@ -126,7 +126,7 @@ AppThanos:
               default: 30d
             retentionResolution1h: 
               type: string
-              default: 5y
+              default: 10y
             persistence:
               properties:
                 size: 

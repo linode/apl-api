@@ -35,7 +35,6 @@ AppVelero:
                       title: Environment
                       description: An Azure environment.
                       type: string
-                      default: AzurePublicCloud
                       enum:
                         - AzurePublicCloud
                         - AzureChinaCloud
