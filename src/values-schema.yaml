@@ -2282,6 +2282,18 @@ properties:
           enabled:
             type: boolean
             default: false
+          query:
+            properties:
+              resources:
+                $ref: '#/definitions/resources'
+              replicaCount:
+                description: Number of Thanos Query replicas.
+                type: integer
+                default: 1
+          queryFrontend:
+            properties:
+              resources:
+                $ref: '#/definitions/resources'
           receiver:
             properties:
               mode:
@@ -2295,12 +2307,12 @@ properties:
               resources:
                 $ref: '#/definitions/resources'
               replicaCount:
-                description: Number of Thanos Receive replicas to deployment.
+                description: Number of Thanos Receive replicas.
                 type: integer
                 default: 1
               persistence:
                 properties:
-                  size: 
+                  size:
                     type: string
           storegateway:
             properties:
@@ -2308,7 +2320,7 @@ properties:
                 $ref: '#/definitions/resources'
               persistence:
                 properties:
-                  size: 
+                  size:
                     type: string
           bucketweb:
             properties:
@@ -2323,12 +2335,12 @@ properties:
               retentionResolution5m:
                 type: string
                 default: 30d
-              retentionResolution1h: 
+              retentionResolution1h:
                 type: string
                 default: 10y
               persistence:
                 properties:
-                  size: 
+                  size:
                     type: string
           ruler:
             properties:
@@ -2339,7 +2351,7 @@ properties:
                 $ref: '#/definitions/resources'
               persistence:
                 properties:
-                  size: 
+                  size:
                     type: string
           objstore:
             localMinio:
@@ -2496,7 +2508,6 @@ properties:
                   title: Azure environment
                   description: An Azure environment.
                   type: string
-                  default: AzurePublicCloud
                   enum:
                     - AzurePublicCloud
                     - AzureChinaCloud
@@ -2547,6 +2558,7 @@ properties:
                       type: string
                       description: The secret of the access key
                       $ref: '#/definitions/wordCharacterPattern'
+                      x-secret: ''
                   required:
                     - region
                     - accessKeyId
@@ -2572,6 +2584,7 @@ properties:
                       type: string
                       description: The secret of the access key
                       $ref: '#/definitions/wordCharacterPattern'
+                      x-secret: ''
                   required:
                     - accessKeyId
                     - secretAccessKey

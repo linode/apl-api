@@ -14,6 +14,64 @@ AppThanos:
       additionalProperties: false
       type: object
       properties:
+        query:
+          description: Thanos query parameters
+          properties:
+            resources:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 1000m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 1000Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 200Mi
+              required:
+                - limits
+                - requests
+            replicaCount:
+              description: Number of Thanos Receive replicas.
+              type: integer
+              default: 1
+        queryFrontend:
+          description: Thanos query front-end parameters
+          properties:
+            resources:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 1000m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 1000Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 200Mi
+              required:
+                - limits
+                - requests
         receiver:
           description: Thanos receiver parameters
           properties:
