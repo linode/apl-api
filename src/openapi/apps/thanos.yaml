@@ -233,23 +233,9 @@ AppThanos:
             - title: localMinio
               type: object
               properties:
-                localMinio:
-                  properties:
-                    bucket:
-                      description: The name of the bucket
-                      type: string
-                    accessKey:
-                      description: Access Key
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                      x-secret: ''
-                    secretKey:
-                      description: Secret Key
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                      x-secret: ''
-                  required:
-                    - bucket
-                    - accessKey
-                    - secretKey
+                enabled: 
+                  type: boolean
+                  default: true
               required:
                 - localMinio
             - title: s3Like

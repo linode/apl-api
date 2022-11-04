@@ -19,6 +19,11 @@ AppMinio:
       x-externalDocsPath: docs/apps/minio
       type: object
       properties:
+        provisioning:
+          properties:
+            enabled:
+              type: boolean
+              default: true
         resources:
           type: object
           properties:
@@ -43,3 +48,4 @@ AppMinio:
           required:
             - limits
             - requests
+
