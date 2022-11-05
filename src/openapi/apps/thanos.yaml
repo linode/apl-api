@@ -225,7 +225,6 @@ AppThanos:
                   type: string
                   default: 8Gi
         objstore:
-          type: object
           title: Storage providers
           description: Configure the Thanos object store.
           anyOf:

@@ -65,7 +65,7 @@ lokiStorageProvider:
             - filesystem
           default: filesystem
     - title: AWS
-      description: Amazon storage options.
+      x-hideTitle: true
       properties:
         storageType:
           type: string
@@ -73,6 +73,7 @@ lokiStorageProvider:
             - aws
           default: aws
         aws:
+          description: Amazon storage options.
           properties:
             s3:
               $ref: ../definitions.yaml#/s3Url
@@ -83,7 +84,7 @@ lokiStorageProvider:
             dynamodb:
               $ref: ../definitions.yaml#/s3Url
     - title: Azure
-      description: Azure storage container.
+      x-hideTitle: true
       properties:
         storageType:
           type: string
@@ -91,7 +92,7 @@ lokiStorageProvider:
             - azure
           default: azure
         azure:
-          description: Missing from docs but available with this schema.
+          description: Azure storage container.
           properties:
             account_key:
               type: string
@@ -112,8 +113,6 @@ lokiStorageProvider:
           enum:
             - bigtable
           default: bigtable
-        bigtable:
-          type: object
     - title: Cassandra
       description: Apache Cassandra is an open source NoSQL distributed database.
       properties:
@@ -122,8 +121,6 @@ lokiStorageProvider:
           enum:
             - cassandra
           default: cassandra
-        cassandra:
-          type: object
     - title: GCS
       description: Google Cloud blob Storage.
       properties:
@@ -132,8 +129,6 @@ lokiStorageProvider:
           enum:
             - gcs
           default: gcs
-        gcs:
-          type: object
     - title: Swift
       description: OpenStack Object Storage.
       properties:
@@ -142,8 +137,6 @@ lokiStorageProvider:
           enum:
             - swift
           default: swift
-        swift:
-          type: object
     - title: Local
       description: Host volume.
       properties:
@@ -152,8 +145,6 @@ lokiStorageProvider:
           enum:
             - local
           default: local
-        local:
-          type: object
 
 AppLoki:
   additionalProperties: false
