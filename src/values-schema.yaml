@@ -2360,7 +2360,7 @@ properties:
                     type: string
           objstore:
             properties:
-              s3Like:
+              s3:
                 properties:
                   bucket:
                     type: string
@@ -2386,8 +2386,10 @@ properties:
               storageProvider:
                 type: string
                 enum:
-                  - s3Like
+                  - azureBlob
+                  - s3
                   - minioLocal
+                default: minioLocal
       tigera-operator:
         properties:
           _rawValues:

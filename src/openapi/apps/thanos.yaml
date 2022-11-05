@@ -13,6 +13,8 @@ AppThanos:
       x-externalDocsPath: docs/apps/thanos
       type: object
       properties:
+        objstore:
+          $ref: '#/thanosStorageProvider'
         query:
           description: Thanos query parameters
           properties:
@@ -223,8 +225,6 @@ AppThanos:
                 size: 
                   type: string
                   default: 8Gi
-        objstore:
-          $ref: '#/thanosStorageProvider'
       required:
         - objstore
 
@@ -242,14 +242,14 @@ thanosStorageProvider:
           enum:
             - minioLocal
           default: minioLocal
-    - title: S3 Like
+    - title: S3
       type: object
       x-hideTitle: true
       properties:
-        s3Like:
+        s3:
           type: object
-          title: S3 like
-          description: For storing backups in S3
+          title: S3
+          description: AWS S3 or S3 compatible blob storage.
           properties:
             bucket:
               type: string
@@ -276,9 +276,8 @@ thanosStorageProvider:
         storageProvider:
           type: string
           enum:
-            - s3Like
-          default: s3Like
+            - s3
+          default: s3
       required:
-        - s3Like
+        - s3
         - storageProvider
-
