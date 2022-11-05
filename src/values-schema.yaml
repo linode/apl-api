@@ -2386,7 +2386,6 @@ properties:
               storageProvider:
                 type: string
                 enum:
-                  - azureBlob
                   - s3
                   - minioLocal
                 default: minioLocal

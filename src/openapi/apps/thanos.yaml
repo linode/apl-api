@@ -1,4 +1,5 @@
 AppThanos:
+  additionalProperties: false
   type: object
   properties:
     id:
@@ -224,14 +225,11 @@ AppThanos:
                 size: 
                   type: string
                   default: 8Gi
-      required:
-        - objstore
-
 
 thanosStorageProvider:
   title: Storage providers
   description: Configure the Thanos object store.
-  oneOf:
+  anyOf:
     - title: Local Minio
       type: object
       description: For using local cluster Minio instance.
