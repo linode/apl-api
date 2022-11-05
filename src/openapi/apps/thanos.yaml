@@ -11,7 +11,6 @@ AppThanos:
       $ref: ../definitions.yaml#/rawValues
     values:
       x-externalDocsPath: docs/apps/thanos
-      additionalProperties: false
       type: object
       properties:
         query:
