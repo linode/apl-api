@@ -15,7 +15,6 @@ AppVelero:
       properties:
         cloud: 
           $ref: '#/veleroCloudProvider'
-
         storage: 
           $ref: '#/veleroStorageProvider'
         logLevel:

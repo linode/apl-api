@@ -2359,10 +2359,8 @@ properties:
                   size:
                     type: string
           storage:
-            additionalProperties: false
             properties:
               s3Like:
-                additionalProperties: false
                 properties:
                   bucket:
                     type: string
