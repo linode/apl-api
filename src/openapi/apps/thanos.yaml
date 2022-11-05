@@ -225,7 +225,6 @@ AppThanos:
                   type: string
                   default: 8Gi
         objstore:
-          additionalProperties: false
           type: object
           title: Storage providers
           description: Configure the Thanos object store.
@@ -244,7 +243,6 @@ AppThanos:
               description: For storing backups in S3
               properties:
                 s3:
-                  additionalProperties: false
                   type: object
                   properties:
                     bucket:

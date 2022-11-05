@@ -885,5 +885,9 @@ components:
       $ref: definitions.yaml#/svcPredeployed
     url:
       $ref: definitions.yaml#/url
+    veleroStorageProvider:
+      $ref: apps/velero.yaml#/veleroStorageProvider
+    veleroCloudProvider:
+      $ref: apps/velero.yaml#/veleroCloudProvider
     wordCharacterPattern:
       $ref: definitions.yaml#/wordCharacterPattern

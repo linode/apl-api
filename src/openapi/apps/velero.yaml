@@ -1,5 +1,4 @@
 AppVelero:
-  additionalProperties: false
   type: object
   properties:
     id:
@@ -9,190 +8,14 @@ AppVelero:
       default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
-    shortcuts:
-      description: Resource URL that lands the user in a place of interest within an app.
-      type: array
-      nullable: true
-      items:
-        $ref: ../definitions.yaml#/shortcut
     values:
       x-externalDocsPath: docs/apps/velero
-      additionalProperties: false
       type: object
       properties:
-        storage:
-          additionalProperties: false
-          type: object
-          title: Storage providers
-          description: Choose your storage backend.
-          oneOf:
-            - title: minioLocal
-              type: object
-              description: For using local cluster Minio instance.
-              properties:
-                storageProvider:
-                  type: string
-                  enum:
-                    - minioLocal
-                  default: minioLocal
-            - title: azureBlob
-              type: object
-              description: For storing backups in Azure Blob storage
-              properties:
-                azureBlob:
-                  additionalProperties: false
-                  type: object
-                  properties:
-                    resourceGroup:
-                      description: Resource group of the storage account.
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                    storageAccount:
-                      description: The name of the Azure storage account.
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                    bucket:
-                      type: string
-                      description: Name of the blob container.
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                    tenantId:
-                      description: The used Azure Account Tenant ID.
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                    subscriptionId:
-                      description: The used Azure Subscription ID.
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                    aadClientId:
-                      description: The ID of the Service Principal with permissions to perform backups.
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                    aadClientSecret:
-                      description: The generated password of the Service Principal.
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                      x-secret: ''
-                  required:
-                    - tenantId
-                    - subscriptionId
-                    - aadClientId
-                    - aadClientSecret
-                    - resourceGroup
-                    - storageAccount
-                    - bucket
-                storageProvider:
-                  type: string
-                  enum:
-                    - azureBlob
-                  default: azureBlob
-              required:
-                - azureBlob
-                - storageProvider
-            - title: s3
-              type: object
-              description: For storing backups in S3
-              properties:
-                s3:
-                  additionalProperties: false
-                  type: object
-                  properties:
-                    region:
-                      type: string
-                      description: The region of the S3 bucket
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                    bucket:
-                      type: string
-                      description: The name of the bucket
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                    s3Url:
-                      type: string
-                      description: S3 URL
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                    accessKeyId:
-                      type: string
-                      description: The ID of the access key
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                    secretAccessKey:
-                      type: string
-                      description: The secret of the access key
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                      x-secret: ''
-                  required:
-                    - accessKeyId
-                    - secretAccessKey
-                    - region
-                    - bucket
-                    - s3Url
-                storageProvider:
-                  type: string
-                  enum:
-                    - s3
-                  default: s3
-              required:
-                - s3
-                - storageProvider
-        cloud:
-          additionalProperties: false
-          type: object
-          title: Cloud provider
-          description: Choose your cloud provider.
-          oneOf:
-            - title: custom
-              type: object
-              description: For clusters not running in Azure or AWS (like on Vmware).
-              properties:
-                cloudProvider:
-                  type: string
-                  enum:
-                    - custom
-                  default: custom
-            - title: azure
-              type: object
-              description: Fot clusters running in Azure.
-              properties:
-                azure:
-                  additionalProperties: false
-                  type: object
-                  properties:
-                    environment:
-                      title: Environment
-                      description: An Azure environment.
-                      type: string
-                      enum:
-                        - AzurePublicCloud
-                        - AzureChinaCloud
-                        - AzureUSGovernment
-                        - AzureGermanCloud
-                    resourceGroup:
-                      description: The resource group that contains the worker nodes (VMs and disks).
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                  required:
-                    - resourceGroup
-                    - environment
-                cloudProvider:
-                  type: string
-                  enum:
-                    - azure
-                  default: azure
-              required:
-                - azure
-                - cloudProvider
-            - title: aws
-              description: For clusters running in AWS.
-              type: object
-              properties:
-                aws:
-                  additionalProperties: false
-                  type: object
-                  properties:
-                    bucket:
-                      type: string
-                      description: The AWS region where the cluster worker nodes are running.
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                  required:
-                    - bucket
-                cloudProvider:
-                  type: string
-                  enum:
-                    - aws
-                  default: aws
-              required:
-                - aws
-                - cloudProvider
+        cloud: 
+          $ref: '#/veleroCloudProvider'
+        storage: 
+          $ref: '#/veleroStorageProvider'
         logLevel:
           description: Set log-level for the Velero pod.
           title: Log Level
@@ -228,3 +51,173 @@ AppVelero:
           required:
             - limits
             - requests
+      required:
+        - cloud
+        - storage
+
+veleroCloudProvider:
+  title: Cloud provider
+  description: Choose your cloud provider.
+  oneOf:
+    - title: Custom
+      type: object
+      description: For clusters not running in Azure or AWS (like on Vmware).
+      properties:
+        cloudProvider:
+          type: string
+          enum:
+            - custom
+          default: custom
+    - title: Azure
+      type: object
+      description: For clusters running in Azure.
+      properties:
+        azure:
+          type: object
+          properties:
+            environment:
+              title: Environment
+              description: An Azure environment.
+              type: string
+              enum:
+                - AzurePublicCloud
+                - AzureChinaCloud
+                - AzureUSGovernment
+                - AzureGermanCloud
+            resourceGroup:
+              description: The resource group that contains the worker nodes (VMs and disks).
+              type: string
+          required:
+            - resourceGroup
+            - environment
+        cloudProvider:
+          type: string
+          enum:
+            - azure
+          default: azure
+      required:
+        - azure
+        - cloudProvider
+    - title: AWS
+      description: For clusters running in AWS.
+      type: object
+      properties:
+        aws:
+          type: object
+          properties:
+            region:
+              type: string
+              description: The AWS region where the cluster worker nodes are running.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+          required:
+            - region
+        cloudProvider:
+          type: string
+          enum:
+            - aws
+          default: aws
+      required:
+        - aws
+        - cloudProvider
+
+veleroStorageProvider:
+  title: Storage provider
+  description: Choose your storage backend.
+  oneOf:
+    - title: Local Minio
+      type: object
+      description: For using local cluster Minio instance.
+      properties:
+        storageProvider:
+          type: string
+          enum:
+            - minioLocal
+          default: minioLocal
+    - title: Azure Blob
+      type: object
+      description: For storing backups in Azure Blob storage
+      properties:
+        azureBlob:
+          type: object
+          properties:
+            resourceGroup:
+              description: Resource group of the storage account.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            storageAccount:
+              description: The name of the Azure storage account.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            bucket:
+              type: string
+              description: Name of the blob container.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            tenantId:
+              description: The used Azure Account Tenant ID.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            subscriptionId:
+              description: The used Azure Subscription ID.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            aadClientId:
+              description: The ID of the Service Principal with permissions to perform backups.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            aadClientSecret:
+              description: The generated password of the Service Principal.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+              x-secret: ''
+          required:
+            - tenantId
+            - subscriptionId
+            - aadClientId
+            - aadClientSecret
+            - resourceGroup
+            - storageAccount
+            - bucket
+        storageProvider:
+          type: string
+          enum:
+            - azureBlob
+          default: azureBlob
+      required:
+        - azureBlob
+        - storageProvider
+    - title: S3
+      type: object
+      description: For storing backups in S3
+      properties:
+        s3:
+          type: object
+          properties:
+            region:
+              type: string
+              description: The region of the S3 bucket
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            bucket:
+              type: string
+              description: The name of the bucket
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            s3Url:
+              type: string
+              description: S3 URL
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            accessKeyId:
+              type: string
+              description: The ID of the access key
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            secretAccessKey:
+              type: string
+              description: The secret of the access key
+              $ref: ../definitions.yaml#/wordCharacterPattern
+              x-secret: ''
+          required:
+            - accessKeyId
+            - secretAccessKey
+            - region
+            - bucket
+            - s3Url
+        storageProvider:
+          type: string
+          enum:
+            - s3
+          default: s3
+      required:
+        - s3
+        - storageProvider
