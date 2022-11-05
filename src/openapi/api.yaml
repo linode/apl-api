@@ -883,6 +883,8 @@ components:
       $ref: definitions.yaml#/shortcut
     svcPredeployed:
       $ref: definitions.yaml#/svcPredeployed
+    thanosStorageProvider:
+      $ref: apps/thanos.yaml#/thanosStorageProvider
     url:
       $ref: definitions.yaml#/url
     veleroStorageProvider:
