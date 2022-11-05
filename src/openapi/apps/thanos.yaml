@@ -1,5 +1,4 @@
 AppThanos:
-  additionalProperties: false
   type: object
   properties:
     id:
