@@ -1,4 +1,5 @@
 AppVelero:
+  additionalProperties: false
   type: object
   properties:
     id:
@@ -14,6 +15,7 @@ AppVelero:
       properties:
         cloud: 
           $ref: '#/veleroCloudProvider'
+
         storage: 
           $ref: '#/veleroStorageProvider'
         logLevel:
@@ -58,7 +60,7 @@ AppVelero:
 veleroCloudProvider:
   title: Cloud provider
   description: Choose your cloud provider.
-  oneOf:
+  anyOf:
     - title: Custom
       type: object
       description: For clusters not running in Azure or AWS (like on Vmware).
@@ -69,11 +71,13 @@ veleroCloudProvider:
             - custom
           default: custom
     - title: Azure
+      x-hideTitle: true
       type: object
-      description: For clusters running in Azure.
       properties:
         azure:
           type: object
+          title: Azure
+          description: For clusters running in Azure.
           properties:
             environment:
               title: Environment
@@ -99,11 +103,13 @@ veleroCloudProvider:
         - azure
         - cloudProvider
     - title: AWS
-      description: For clusters running in AWS.
+      x-hideTitle: true
       type: object
       properties:
         aws:
           type: object
+          description: For clusters running in AWS.
+          title: AWS
           properties:
             region:
               type: string
@@ -123,7 +129,7 @@ veleroCloudProvider:
 veleroStorageProvider:
   title: Storage provider
   description: Choose your storage backend.
-  oneOf:
+  anyOf:
     - title: Local Minio
       type: object
       description: For using local cluster Minio instance.
@@ -135,10 +141,12 @@ veleroStorageProvider:
           default: minioLocal
     - title: Azure Blob
       type: object
-      description: For storing backups in Azure Blob storage
+      x-hideTitle: true
       properties:
         azureBlob:
           type: object
+          description: For storing backups in Azure Blob storage
+          title: Azure blob (container) storage
           properties:
             resourceGroup:
               description: Resource group of the storage account.
@@ -181,10 +189,12 @@ veleroStorageProvider:
         - storageProvider
     - title: S3
       type: object
-      description: For storing backups in S3
+      x-hideTitle: true
       properties:
         s3:
           type: object
+          title: S3
+          description: AWS S3 or S3 compatible blob storage.
           properties:
             region:
               type: string

@@ -228,7 +228,7 @@ AppThanos:
           type: object
           title: Storage providers
           description: Configure the Thanos object store.
-          oneOf:
+          anyOf:
             - title: minioLocal
               type: object
               description: For using local cluster Minio instance.
@@ -240,10 +240,12 @@ AppThanos:
                   default: minioLocal
             - title: s3Like
               type: object
+              x-hideTitle: true
               description: For storing backups in S3
               properties:
                 s3:
                   type: object
+                  title: S3 like
                   properties:
                     bucket:
                       type: string
