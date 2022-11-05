@@ -232,7 +232,7 @@ AppThanos:
 thanosStorageProvider:
   title: Storage providers
   description: Configure the Thanos object store.
-  anyOf:
+  oneOf:
     - title: Local Minio
       type: object
       description: For using local cluster Minio instance.
