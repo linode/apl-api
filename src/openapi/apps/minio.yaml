@@ -20,6 +20,7 @@ AppMinio:
       type: object
       properties:
         provisioning:
+          description: Automatically provision buckets and policies for all Otomi apps.
           properties:
             enabled:
               type: boolean

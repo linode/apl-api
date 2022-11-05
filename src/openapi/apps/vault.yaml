@@ -96,9 +96,9 @@ AppVault:
                     - key_name
               required:
                 - azurekeyvault
-        storage:
-          description: Storage configuration. See https://www.vaultproject.io/docs/configuration/storage. Defaults to PVC.
-          type: object
+        # storage:
+        #   description: Storage configuration. See https://www.vaultproject.io/docs/configuration/storage. Defaults to PVC.
+        #   type: object
         # image:
         #   type: object
         #   properties:

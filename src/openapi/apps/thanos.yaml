@@ -225,45 +225,58 @@ AppThanos:
                   type: string
                   default: 8Gi
         objstore:
-          title: Object store
-          description: Configure the Thanos object store.
-          nullable: true
+          additionalProperties: false
           type: object
+          title: Storage providers
+          description: Configure the Thanos object store.
           oneOf:
-            - title: localMinio
+            - title: minioLocal
               type: object
+              description: For using local cluster Minio instance.
               properties:
-                enabled: 
-                  type: boolean
-                  default: true
-              required:
-                - localMinio
+                storageProvider:
+                  type: string
+                  enum:
+                    - minioLocal
+                  default: minioLocal
             - title: s3Like
               type: object
+              description: For storing backups in S3
               properties:
-                s3Like:
+                s3:
+                  additionalProperties: false
+                  type: object
                   properties:
                     bucket:
-                      description: The name of the bucket
                       type: string
-                    s3Url:
-                      description: URL of the storage endpoint
-                      type: string                      
-                    accessKey:
-                      description: Access Key
+                      description: The name of the bucket
                       $ref: ../definitions.yaml#/wordCharacterPattern
-                      x-secret: ''
-                    secretKey:
-                      description: Secret Key
+                    s3Url:
+                      type: string
+                      description: S3 URL
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    accessKeyId:
+                      type: string
+                      description: The ID of the access key
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                    secretAccessKey:
+                      type: string
+                      description: The secret of the access key
                       $ref: ../definitions.yaml#/wordCharacterPattern
                       x-secret: ''
                   required:
+                    - accessKeyId
+                    - secretAccessKey
                     - bucket
-                    - endpoint
-                    - accessKey
-                    - secretKey
+                    - s3Url
+                storageProvider:
+                  type: string
+                  enum:
+                    - s3Like
+                  default: s3Like
               required:
-                - s3Like
+                - s3
+                - storageProvider
 
 
 

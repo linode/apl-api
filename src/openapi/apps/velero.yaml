@@ -20,78 +20,28 @@ AppVelero:
       additionalProperties: false
       type: object
       properties:
-        providerCloud:
-          description: Choose your cloud provider.
-          nullable: true
+        storage:
+          additionalProperties: false
           type: object
-          oneOf:
-            # - $ref: ../definitions.yaml#/offChoice
-            - title: custom
-              type: object
-              description: For clusters not running in Azure or AWS (like on Vmware).
-              properties:
-                enabled: 
-                  type: boolean
-                  default: true
-              required:
-                - custom
-            - title: azure
-              type: object
-              description: Fot clusters running in Azure.
-              properties:
-                azure:
-                  properties:
-                    environment:
-                      title: Environment
-                      description: An Azure environment.
-                      type: string
-                      enum:
-                        - AzurePublicCloud
-                        - AzureChinaCloud
-                        - AzureUSGovernment
-                        - AzureGermanCloud
-                    resourceGroup:
-                      description: The resource group that contains the worker nodes (VMs and disks).
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                  required:
-                    - resourceGroup
-                    - environment
-              required:
-                - azure
-            - title: aws
-              description: For clusters running in AWS.
-              type: object
-              properties:
-                aws:
-                  properties:
-                    bucket:
-                      type: string
-                      description: The AWS region where the cluster worker nodes are running.
-                      $ref: ../definitions.yaml#/wordCharacterPattern
-                  required:
-                    - bucket
-              required:
-                - aws
-        providerStorage:
+          title: Storage providers
           description: Choose your storage backend.
-          nullable: true
-          type: object
           oneOf:
-            # - $ref: ../definitions.yaml#/offChoice
             - title: minioLocal
               type: object
               description: For using local cluster Minio instance.
               properties:
-                enabled: 
-                  type: boolean
-                  default: true
-              required:
-                - minioLocal
+                storageProvider:
+                  type: string
+                  enum:
+                    - minioLocal
+                  default: minioLocal
             - title: azureBlob
               type: object
               description: For storing backups in Azure Blob storage
               properties:
                 azureBlob:
+                  additionalProperties: false
+                  type: object
                   properties:
                     resourceGroup:
                       description: Resource group of the storage account.
@@ -124,13 +74,21 @@ AppVelero:
                     - resourceGroup
                     - storageAccount
                     - bucket
+                storageProvider:
+                  type: string
+                  enum:
+                    - azureBlob
+                  default: azureBlob
               required:
                 - azureBlob
+                - storageProvider
             - title: s3
               type: object
               description: For storing backups in S3
               properties:
                 s3:
+                  additionalProperties: false
+                  type: object
                   properties:
                     region:
                       type: string
@@ -159,8 +117,82 @@ AppVelero:
                     - region
                     - bucket
                     - s3Url
+                storageProvider:
+                  type: string
+                  enum:
+                    - s3
+                  default: s3
               required:
                 - s3
+                - storageProvider
+        cloud:
+          additionalProperties: false
+          type: object
+          title: Cloud provider
+          description: Choose your cloud provider.
+          oneOf:
+            - title: custom
+              type: object
+              description: For clusters not running in Azure or AWS (like on Vmware).
+              properties:
+                cloudProvider:
+                  type: string
+                  enum:
+                    - custom
+                  default: custom
+            - title: azure
+              type: object
+              description: Fot clusters running in Azure.
+              properties:
+                azure:
+                  additionalProperties: false
+                  type: object
+                  properties:
+                    environment:
+                      title: Environment
+                      description: An Azure environment.
+                      type: string
+                      enum:
+                        - AzurePublicCloud
+                        - AzureChinaCloud
+                        - AzureUSGovernment
+                        - AzureGermanCloud
+                    resourceGroup:
+                      description: The resource group that contains the worker nodes (VMs and disks).
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                  required:
+                    - resourceGroup
+                    - environment
+                cloudProvider:
+                  type: string
+                  enum:
+                    - azure
+                  default: azure
+              required:
+                - azure
+                - cloudProvider
+            - title: aws
+              description: For clusters running in AWS.
+              type: object
+              properties:
+                aws:
+                  additionalProperties: false
+                  type: object
+                  properties:
+                    bucket:
+                      type: string
+                      description: The AWS region where the cluster worker nodes are running.
+                      $ref: ../definitions.yaml#/wordCharacterPattern
+                  required:
+                    - bucket
+                cloudProvider:
+                  type: string
+                  enum:
+                    - aws
+                  default: aws
+              required:
+                - aws
+                - cloudProvider
         logLevel:
           description: Set log-level for the Velero pod.
           title: Log Level
