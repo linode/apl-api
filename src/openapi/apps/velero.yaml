@@ -195,10 +195,6 @@ veleroStorageProvider:
           title: S3
           description: AWS S3 or S3 compatible blob storage.
           properties:
-            region:
-              type: string
-              description: The region of the S3 bucket
-              $ref: ../definitions.yaml#/wordCharacterPattern
             bucket:
               type: string
               description: The name of the bucket
@@ -219,7 +215,6 @@ veleroStorageProvider:
           required:
             - accessKeyId
             - secretAccessKey
-            - region
             - bucket
             - s3Url
         storageProvider:

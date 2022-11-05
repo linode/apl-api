@@ -50,6 +50,7 @@ AppHarbor:
               title: Image Chart Storage
               oneOf:
                 - title: File
+                  x-hideTitle: true
                   type: object
                   properties:
                     type:
@@ -59,6 +60,7 @@ AppHarbor:
                       default: filesystem
                 - title: AWS
                   type: object
+                  x-hideTitle: true
                   properties:
                     aws:
                       additionalProperties: false
@@ -101,6 +103,7 @@ AppHarbor:
                     - aws
                     - type
                 - title: Azure
+                  x-hideTitle: true
                   type: object
                   properties:
                     azure:
@@ -126,6 +129,7 @@ AppHarbor:
                     - type
 
                 - title: GCS
+                  x-hideTitle: true
                   type: object
                   properties:
                     gcs:

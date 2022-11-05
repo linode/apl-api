@@ -32,6 +32,7 @@ AppVault:
           oneOf:
             - $ref: ../definitions.yaml#/offChoice
             - title: gcpckms
+              x-hideTitle: true
               type: object
               properties:
                 gcpckms:
@@ -52,6 +53,7 @@ AppVault:
               required:
                 - gcpckms
             - title: awskms
+              x-hideTitle: true
               type: object
               properties:
                 awskms:
@@ -73,6 +75,7 @@ AppVault:
               required:
                 - awskms
             - title: azurekeyvault
+              x-hideTitle: true
               type: object
               properties:
                 azurekeyvault:

@@ -226,13 +226,15 @@ AppThanos:
                   default: 8Gi
         objstore:
           $ref: '#/thanosStorageProvider'
+      required:
+        - objstore
 
 
 thanosStorageProvider:
   title: Storage providers
   description: Configure the Thanos object store.
   anyOf:
-    - title: minioLocal
+    - title: Local Minio
       type: object
       description: For using local cluster Minio instance.
       properties:
@@ -241,7 +243,7 @@ thanosStorageProvider:
           enum:
             - minioLocal
           default: minioLocal
-    - title: s3Like
+    - title: S3 Like
       type: object
       x-hideTitle: true
       properties:
