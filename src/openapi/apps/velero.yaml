@@ -52,14 +52,11 @@ AppVelero:
           required:
             - limits
             - requests
-      required:
-        - cloud
-        - storage
 
 veleroCloudProvider:
   title: Cloud provider
   description: Choose your cloud provider.
-  anyOf:
+  oneOf:
     - title: Custom
       type: object
       description: For clusters not running in Azure or AWS (like on Vmware).
@@ -128,7 +125,7 @@ veleroCloudProvider:
 veleroStorageProvider:
   title: Storage provider
   description: Choose your storage backend.
-  anyOf:
+  oneOf:
     - title: Local Minio
       type: object
       description: For using local cluster Minio instance.

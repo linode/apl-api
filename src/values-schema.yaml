@@ -2280,7 +2280,6 @@ properties:
                 type: boolean
                 default: false
       thanos:
-        additionalProperties: false
         properties:
           _rawValues:
             $ref: '#/definitions/rawValues'
