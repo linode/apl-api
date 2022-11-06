@@ -41,21 +41,37 @@ AppVelero:
                       title: Azure
                       description: For clusters running in Azure.
                       properties:
+                        resourceGroup:
+                          description: The resource group that contains the worker nodes (VMs and disks).
+                          type: string
+                        tenantId:
+                          description: The ID of the used Azure Tenant.
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                        subscriptionId:
+                          description: The ID of the used Azure Subscription.
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                        aadClientId:
+                          description: The ID of the Service Principal with permissions for disk and snapshot management. 
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                        aadClientSecret:
+                          description: The password of the Service Principal.
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                          x-secret: ''
                         environment:
-                          title: Environment
-                          description: An Azure environment.
+                          x-hideTitle: true
                           type: string
                           enum:
                             - AzurePublicCloud
                             - AzureChinaCloud
                             - AzureUSGovernment
                             - AzureGermanCloud
-                        resourceGroup:
-                          description: The resource group that contains the worker nodes (VMs and disks).
-                          type: string
                       required:
                         - resourceGroup
                         - environment
+                        - tenantId
+                        - subscriptionId
+                        - aadClientId
+                        - aadClientSecret
                     type:
                       type: string
                       enum:
