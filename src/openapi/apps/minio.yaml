@@ -25,6 +25,14 @@ AppMinio:
             enabled:
               type: boolean
               default: true
+        persistence:
+          properties:
+            enabled:
+              type: boolean
+              default: true
+            size: 
+              type: string
+              default: 20Gi
         resources:
           type: object
           properties:
