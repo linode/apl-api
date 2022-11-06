@@ -184,6 +184,11 @@ AppThanos:
             retentionResolution1h: 
               type: string
               default: 10y
+            persistence:
+              properties:
+                size: 
+                  type: string
+                  default: 8Gi  
             resources:
               type: object
               properties:

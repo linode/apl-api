@@ -21,7 +21,7 @@ AppVelero:
             cloudProvider:
               type: object
               title: Cloud provider
-              description: Choooooose your cloud provider.
+              description: Choose your cloud provider.
               oneOf:
                 - title: Custom
                   type: object
