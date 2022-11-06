@@ -184,6 +184,27 @@ AppThanos:
             retentionResolution1h: 
               type: string
               default: 10y
+            resources:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 1000m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 1000Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 200Mi
         ruler:
           properties:
             enabled:
