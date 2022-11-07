@@ -15,9 +15,6 @@ RUN npm ci
 RUN npm run build
 RUN npm run lint
 RUN npm run test
-# RUN npm run build && \
-#   npm run lint && \
-#   npm run test
 
 # --------------- Cleanup
 FROM ci as clean
@@ -25,6 +22,9 @@ FROM ci as clean
 RUN npm prune --production
 # --------------- Production stage
 FROM node:16.17-alpine AS prod
+
+ENV NODE_ENV=production
+ENV NODE_PATH='dist'
 
 # Install dependencies
 RUN apk --no-cache add python3 git jq
@@ -36,10 +36,7 @@ COPY --from=clean /app/node_modules node_modules
 COPY --from=ci /app/dist dist
 COPY package.json .
 
-ENV NODE_PATH='dist'
 USER node
 EXPOSE 8080
-
-ENV NODE_ENV=production
 
 CMD ["node", "--max-http-header-size", "16384", "dist/src/app.js"]

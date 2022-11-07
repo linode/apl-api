@@ -8,7 +8,7 @@ import Debug from 'debug'
 import express, { request } from 'express'
 import 'express-async-errors'
 import { initialize } from 'express-openapi'
-import { remove } from 'fs-extra'
+import { removeSync } from 'fs-extra'
 import { createLightship } from 'lightship'
 import logger from 'morgan'
 import path from 'path'
@@ -156,5 +156,5 @@ if (!env.isTest) {
 }
 
 process.on('exit', () => {
-  if (process.env.NODE_ENV === 'development') remove('/tmp/otomi')
+  if (process.env.NODE_ENV === 'development') removeSync('/tmp/otomi')
 })

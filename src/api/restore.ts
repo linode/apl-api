@@ -2,7 +2,7 @@ import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
-const debug = Debug('otomi:api:revert')
+const debug = Debug('otomi:api:restore')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [

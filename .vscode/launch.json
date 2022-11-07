@@ -20,12 +20,21 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "Mocha All",
+      "name": "Mocha all",
       "type": "node",
       "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
       "request": "launch",
       "program": "${workspaceRoot}/node_modules/.bin/ts-mocha",
-      "args": ["${workspaceFolder}/src/**/*.test.ts", "--timeout", "999999", "--exit"],
+      "args": ["src/**/*.test.ts", "--timeout", "999999", "--exit"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Mocha Current File",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+      "args": ["${file}", "--timeout", "999999", "--exit"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     },
@@ -36,15 +45,6 @@
       "request": "launch",
       "program": "${workspaceRoot}/node_modules/.bin/_mocha",
       "args": ["${workspaceFolder}/dist/**/*.test.js", "--timeout", "999999", "--exit"],
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen"
-    },
-    {
-      "name": "Mocha Current File",
-      "type": "node",
-      "request": "launch",
-      "program": "${workspaceRoot}/node_modules/.bin/ts-mocha",
-      "args": ["${file}", "--timeout", "999999", "--exit"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     }
