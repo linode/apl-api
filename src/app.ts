@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable @typescript-eslint/no-use-before-define */
-import $parser, { JSONSchema } from '@apidevtools/json-schema-ref-parser'
+import $parser from '@apidevtools/json-schema-ref-parser'
 import { json } from 'body-parser'
 import { pascalCase } from 'change-case'
 import cors from 'cors'
@@ -9,6 +9,7 @@ import express, { request } from 'express'
 import 'express-async-errors'
 import { initialize } from 'express-openapi'
 import { removeSync } from 'fs-extra'
+import { Server } from 'http'
 import { createLightship } from 'lightship'
 import logger from 'morgan'
 import path from 'path'
@@ -22,7 +23,7 @@ import {
   sessionMiddleware,
 } from 'src/middleware'
 import { setMockIdx } from 'src/mocks'
-import { OpenAPIDoc, OpenApiRequestExt } from 'src/otomi-models'
+import { OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
 import { cleanEnv } from 'src/validators'
@@ -52,8 +53,8 @@ export const loadSpec = async (): Promise<void> => {
 export const getSpec = (): OtomiSpec => {
   return otomiSpec
 }
-export const getAppSchema = (appId): JSONSchema => {
-  return getSpec().spec.components.schemas[`App${pascalCase(appId)}`] as JSONSchema
+export const getAppSchema = (appId: string): Schema => {
+  return getSpec().spec.components.schemas[`App${pascalCase(appId)}`]
 }
 
 export const getAppList = (): string[] => {
@@ -100,7 +101,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
       await stack.repo.pull()
     }
   })
-  let server
+  let server: Server | undefined
   if (!inOtomiStack) {
     // initialize full server
     const { PORT = 8080 } = process.env
@@ -116,11 +117,11 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
         lightship.shutdown()
       })
     lightship.registerShutdownHandler(() => {
-      server.close()
+      ;(server as Server).close()
     })
   }
   // and register session middleware
-  app.use(sessionMiddleware(server))
+  app.use(sessionMiddleware(server as Server))
 
   // now we can initialize the more specific routes
   initialize({
@@ -144,6 +145,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     routesGlob: '**/*.{ts,js}',
     routesIndexFileRegExp: /(?:index)?\.[tj]s$/,
   })
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
   return app
 }

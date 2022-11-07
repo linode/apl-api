@@ -30,7 +30,7 @@ export const getSessionStack = async (editor?: string): Promise<OtomiStack> => {
   if (!editor || !sessions[editor]) return readOnlyStack
   return sessions[editor]
 }
-export const setSessionStack = async (editor: string, clean = false): Promise<void> => {
+export const setSessionStack = async (editor: string): Promise<void> => {
   if (env.isTest) return
   if (!sessions[editor]) {
     debug(`Creating editor session for user ${editor}`)
@@ -68,14 +68,14 @@ export const getIo = () => io
 
 // we use session middleware so we can give each user their own otomiStack
 // with a snapshot of the db, the moment they start touching data
-export function sessionMiddleware(server?: http.Server): RequestHandler {
-  const timeout = {}
+export function sessionMiddleware(server: http.Server): RequestHandler {
+  const timeout: Record<string, NodeJS.Timeout | undefined> = {}
   // socket setup
   io = new Server(server, { path: '/ws' })
   io.on('connection', (socket: any) => {
     socket.on('error', console.error)
     const users: any[] = []
-    for (const [id, { email }] of io.of('/').sockets as any) {
+    for (const [id, { email }] of io.of('/').sockets as Map<string, any>) {
       users.push({
         id,
         email,

@@ -1,6 +1,6 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequestExt } from 'src/otomi-models'
+import { OpenApiRequestExt, Service } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:teams:services')
 
@@ -15,7 +15,7 @@ export default function (): OperationHandlerArray {
   const post: Operation = [
     ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): void => {
       debug(`createService(${teamId}, ...)`)
-      const v = otomi.createService(teamId, body)
+      const v = otomi.createService(teamId, body as Service)
       res.json(v)
     },
   ]

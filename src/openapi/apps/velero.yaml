@@ -160,3 +160,4 @@ AppVelero:
           required:
             - limits
             - requests
+  required: [id]

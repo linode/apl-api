@@ -1,13 +1,14 @@
 import { assert } from 'chai'
 import { Express } from 'express'
 import { isEqual } from 'lodash'
-import sinon, { SinonStubbedInstance } from 'sinon'
+import { SinonStubbedInstance, stub as sinonStub } from 'sinon'
 import { initApp } from 'src/app'
 import request, { SuperAgentTest } from 'supertest'
 // import { AlreadyExists } from 'src/error'
 import getToken from 'src/fixtures/jwt'
 import OtomiStack from 'src/otomi-stack'
 import { getSessionStack } from './middleware'
+import { App } from './otomi-models'
 
 const adminToken: string = getToken(['team-admin'])
 const teamToken: string = getToken(['team-team1'])
@@ -21,7 +22,7 @@ describe('API authz tests', () => {
     const _otomiStack = await getSessionStack()
     // await _otomiStack.init()
     _otomiStack.createTeam({ name: 'team1' })
-    otomiStack = sinon.stub(_otomiStack)
+    otomiStack = sinonStub(_otomiStack)
     app = await initApp(otomiStack)
     agent = request.agent(app)
     agent.set('Accept', 'application/json')
@@ -110,8 +111,8 @@ describe('API authz tests', () => {
       .end(done)
   })
   it('admin can see values from an app', (done) => {
-    const values = { shown: true }
-    otomiStack.getApp.callsFake(() => ({ values }))
+    const values: App['values'] = { shown: true }
+    otomiStack.getApp.callsFake(() => ({ id: 'bla', values }))
     agent
       .get('/v1/apps/admin/loki')
       .set('Authorization', `Bearer ${adminToken}`)

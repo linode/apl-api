@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
-    "lib": ["es2021", "esnext"],
+    "lib": ["es2021", "esnext", "dom", "dom.iterable"],
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "dist/src",

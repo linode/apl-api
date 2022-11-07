@@ -45,6 +45,12 @@ rules:
   '@typescript-eslint/no-explicit-any': off
   '@typescript-eslint/no-floating-promises': off
   '@typescript-eslint/no-non-null-assertion': off
+  '@typescript-eslint/no-shadow':
+    - error
+    - allow:
+        - deps
+        - secrets
+        - values
   '@typescript-eslint/no-unsafe-argument': warn
   '@typescript-eslint/no-unsafe-assignment': off
   '@typescript-eslint/no-unsafe-call': off
@@ -66,7 +72,7 @@ rules:
     - error
     - props: true
       ignorePropertyModificationsFor: [memo]
-  no-shadow: warn
+  no-shadow: off
   no-unused-vars: off
   no-use-before-define: off
   object-shorthand: error

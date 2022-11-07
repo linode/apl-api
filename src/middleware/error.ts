@@ -11,9 +11,10 @@ const env = cleanEnv({})
 export function errorMiddleware(e, req: OpenApiRequest, res, next): void {
   if (env.isDev) error('errorMiddleware error', e)
   else debug('errorMiddleware error', e)
-  let code
+  let code: number
   let msg
   if (e instanceof OtomiError) {
+    // eslint-disable-next-line prefer-destructuring
     code = e.code
     msg = e.publicMessage
   } else {

@@ -26,7 +26,7 @@ export default class Db {
     // @ts-ignore
     this.db = low(path === undefined ? new Memory<Schema>('') : new FileSync<Schema>(path))
     this.db._.mixin({
-      replaceRecord(arr, currentObject, newObject) {
+      replaceRecord(arr: Record<string, any>[], currentObject: Record<string, any>, newObject: Record<string, any>) {
         return arr.splice(findIndex(arr, currentObject), 1, newObject)
       },
     })
@@ -86,7 +86,7 @@ export default class Db {
     )
   }
 
-  createItem(type: string, data: any, selector?: any, id?: string): DbType {
+  createItem(type: string, data: Record<string, any>, selector?: Record<string, any>, id?: string): DbType {
     // @ts-ignore
     if (selector && this.db.get(type).find(selector).value())
       throw new AlreadyExists(`Item already exists in '${type}' collection: ${JSON.stringify(selector)}`)
@@ -101,12 +101,12 @@ export default class Db {
     this.db.get(type).remove(selector).write()
   }
 
-  updateItem(type: string, data: any, selector: any, merge = false): DbType {
+  updateItem(type: string, data: Record<string, any>, selector: Record<string, any>, merge = false): DbType {
     const prev = this.getItemReference(type, selector)
     const col = this.db.get(type)
     // @ts-ignore
     const idx = col.findIndex(selector).value()
-    const merged = merge && prev ? mergeData(prev, data) : data
+    const merged = (merge && prev ? mergeData(prev, data) : data) as Record<string, any>
     const newData = removeBlankAttributes({ ...merged, ...selector })
     col.value().splice(idx, 1, newData)
     return newData

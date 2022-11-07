@@ -38,3 +38,4 @@ AppCertManager:
             - production
             - staging
           default: production
+  required: [id]

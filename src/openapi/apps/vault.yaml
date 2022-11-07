@@ -129,3 +129,4 @@ AppVault:
           required:
             - limits
             - requests
+  required: [id]

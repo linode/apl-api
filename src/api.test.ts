@@ -7,6 +7,7 @@ describe('Api spec validation', () => {
   it('should indicate that api spec is valid', () => {
     const validator = new OpenAPISchemaValidator({ version: 3 })
     const { spec } = getSpec()
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const result = validator.validate(spec as any)
     expect(result.errors, JSON.stringify(result, undefined, '  ')).to.be.empty
   })

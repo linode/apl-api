@@ -176,3 +176,4 @@ AppLoki:
       type: object
       x-externalDocsPath: docs/apps/loki
       $ref: '#/lokiValues'
+  required: [id]

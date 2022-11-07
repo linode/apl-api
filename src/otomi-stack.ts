@@ -1,6 +1,6 @@
 /* eslint-disable class-methods-use-this */
 import * as k8s from '@kubernetes/client-node'
-import { Cluster, V1ObjectReference } from '@kubernetes/client-node'
+import { V1ObjectReference } from '@kubernetes/client-node'
 import { pascalCase } from 'change-case'
 import Debug from 'debug'
 import { emptyDir } from 'fs-extra'
@@ -177,7 +177,7 @@ export default class OtomiStack {
     const settings = this.db.db.get('settings').value()
     // do not merge as oneOf properties cannot be merged
     // settings[settingId] = merge(settings[settingId], data[settingId])
-    settings[settingId] = removeBlankAttributes(data[settingId])
+    settings[settingId] = removeBlankAttributes(data[settingId] as Record<string, any>)
     this.db.db.set('settings', settings).write()
     return settings
   }
@@ -207,10 +207,10 @@ export default class OtomiStack {
     let app: App = this.db.getItem('apps', { teamId, id })
     // Shallow merge, so only first level attributes can be replaced (values, rawValues, shortcuts, etc.)
     app = { ...app, ...data }
-    return this.db.updateItem('apps', app as any, { teamId, id }) as App
+    return this.db.updateItem('apps', app as Record<string, any>, { teamId, id }) as App
   }
 
-  canToggleApp(id): boolean {
+  canToggleApp(id: string): boolean {
     const { spec } = getSpec()
     const { schemas } = spec.components
     const appName = `App${pascalCase(id)}`
@@ -218,7 +218,7 @@ export default class OtomiStack {
     return app.properties!.enabled !== undefined
   }
 
-  toggleApps(teamId, { ids, enabled }): void {
+  toggleApps(teamId: string, ids: string[], enabled: boolean): void {
     ids.map((id) => {
       // we might be given a dep that is only relevant to core, or
       // which is essential, so skip it
@@ -264,10 +264,10 @@ export default class OtomiStack {
           if (!content) return
           const {
             teamConfig: {
-              [`${teamId}`]: { apps },
+              [`${teamId}`]: { apps: _apps },
             },
           } = content
-          each(apps, ({ shortcuts }, appId) => {
+          each(_apps, ({ shortcuts }, appId) => {
             // use merge strategey to not overwrite admin apps that were loaded before
             this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
           })
@@ -304,7 +304,7 @@ export default class OtomiStack {
     const apps = getAppList()
     const core = this.getCore()
     apps.forEach((appId) => {
-      const isShared = !!core.adminApps.find((a) => a.name === appId).isShared
+      const isShared = !!core.adminApps.find((a) => a.name === appId)!.isShared
       const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
       if (id === 'admin' || isShared || inTeamApps)
         this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
@@ -375,7 +375,7 @@ export default class OtomiStack {
     return this.db.getItem('jobs', { id }) as Job
   }
 
-  editJob(id: string, data: any): Job {
+  editJob(id: string, data: Job): Job {
     const oldData = this.getJob(id)
     if (data.name !== oldData.name) {
       this.deleteJob(id)
@@ -408,7 +408,7 @@ export default class OtomiStack {
         // both have paths, so check full
         return paths.some((p) => {
           const existingUrl = `${subdomain}.${domain}${p}`
-          const newUrls: string[] = newSvc.paths.map((p) => `${newSvc.subdomain}.${newSvc.domain}${p}`)
+          const newUrls: string[] = newSvc.paths.map((_p: string) => `${newSvc.subdomain}.${newSvc.domain}${_p}`)
           return newUrls.includes(existingUrl)
         })
       }
@@ -419,7 +419,7 @@ export default class OtomiStack {
 
   async doDeployment(): Promise<void> {
     await this.saveValues()
-    await this.repo.save(this.editor)
+    await this.repo.save(this.editor!)
     // pull push root
     const rootStack = await getSessionStack()
     await rootStack.repo.pull()
@@ -463,7 +463,7 @@ export default class OtomiStack {
     this.getTeam(teamId) // will throw if not existing
     const {
       cluster: { name, apiName = `otomi-${name}`, apiServer },
-    } = this.getSettings(['cluster']) as any
+    } = this.getSettings(['cluster']) as Record<string, any>
     if (!apiServer) throw new ValidationError('Missing configuration value: cluster.apiServer')
     const client = this.getApiClient()
     const namespace = `team-${teamId}`
@@ -502,7 +502,7 @@ export default class OtomiStack {
     return config
   }
 
-  createSecret(teamId, data): Secret {
+  createSecret(teamId: string, data: Record<string, any>): Secret {
     return this.db.createItem('secrets', { ...data, teamId }, { teamId, name: data.name }) as Secret
   }
 
@@ -536,7 +536,7 @@ export default class OtomiStack {
   }
 
   async loadCluster(): Promise<void> {
-    const data: Cluster = await this.repo.loadConfig('env/cluster.yaml', 'env/secrets.cluster.yaml')
+    const data = await this.repo.loadConfig('env/cluster.yaml', 'env/secrets.cluster.yaml')
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
@@ -549,7 +549,7 @@ export default class OtomiStack {
 
   async loadSettings(): Promise<void> {
     const data: Record<string, any> = await this.repo.loadConfig('env/settings.yaml', `env/secrets.settings.yaml`)
-    data.otomi.nodeSelector = objectToArray(data.otomi.nodeSelector || {})
+    data.otomi!.nodeSelector = objectToArray((data.otomi!.nodeSelector ?? {}) as Record<string, any>)
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
@@ -627,12 +627,12 @@ export default class OtomiStack {
       this.getApps('admin').map(async (app) => {
         const apps = {}
         const { id, enabled, values, rawValues } = app
-        apps[id as string] = {
+        apps[id] = {
           ...(values || {}),
           _rawValues: rawValues,
         }
-        if (this.canToggleApp(id)) apps[id!].enabled = !!enabled
-        else delete apps[id as string].enabled
+        if (this.canToggleApp(id)) apps[id].enabled = !!enabled
+        else delete apps[id].enabled
 
         await this.repo.saveConfig(
           `env/apps/${id}.yaml`,
@@ -644,12 +644,12 @@ export default class OtomiStack {
     )
   }
 
-  async saveTeamApps(teamId): Promise<void> {
+  async saveTeamApps(teamId: string): Promise<void> {
     const apps = {}
     this.getApps(teamId).forEach((app) => {
       const { id, shortcuts } = app
       if (teamId !== 'admin' && !shortcuts?.length) return
-      apps[id!] = {
+      apps[id] = {
         shortcuts,
       }
     })
@@ -664,8 +664,8 @@ export default class OtomiStack {
   }
 
   async saveSettings(secretPaths?: string[]): Promise<void> {
-    const settings: Record<string, any> = cloneDeep(this.getSettings())
-    settings.otomi.nodeSelector = arrayToObject(settings.otomi.nodeSelector)
+    const settings = cloneDeep(this.getSettings()) as Record<string, Record<string, any>>
+    settings.otomi.nodeSelector = arrayToObject(settings.otomi.nodeSelector as [])
     await this.repo.saveConfig(
       'env/settings.yaml',
       `env/secrets.settings.yaml`,
@@ -681,13 +681,13 @@ export default class OtomiStack {
     const teams = this.getTeams()
     await Promise.all(
       teams.map(async (inTeam) => {
-        const team: any = omit(inTeam, 'name')
-        const teamId = team.id!
+        const team: Record<string, any> = omit(inTeam, 'name')
+        const teamId = team.id as string
         await this.saveTeamApps(teamId)
         await this.saveTeamJobs(teamId)
         await this.saveTeamServices(teamId)
         await this.saveTeamSecrets(teamId)
-        team.resourceQuota = arrayToObject(team.resourceQuota ?? [])
+        team.resourceQuota = arrayToObject((team.resourceQuota as []) ?? [])
         teamValues[teamId] = team
       }),
     )
@@ -724,22 +724,22 @@ export default class OtomiStack {
     await this.repo.writeFile(filePath, data)
   }
 
-  loadTeam(inTeam): void {
-    const team = { ...inTeam, name: inTeam.id }
-    team.resourceQuota = objectToArray(inTeam.resourceQuota)
-    const res = this.createTeam(team)
+  loadTeam(inTeam: Team): void {
+    const team = { ...inTeam, name: inTeam.id } as Record<string, any>
+    team.resourceQuota = objectToArray(inTeam.resourceQuota as Record<string, any>)
+    const res = this.createTeam(team as Team)
     // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id)
     debug(`Loaded team: ${res.id!}`)
   }
 
   loadSecret(inSecret, teamId): void {
-    const secret: any = omit(inSecret, ...secretTransferProps)
+    const secret: Record<string, any> = omit(inSecret, ...secretTransferProps)
     secret.teamId = teamId
     secret.secret = secretTransferProps.reduce((memo: any, prop) => {
       if (inSecret[prop] !== undefined) memo[prop] = inSecret[prop]
       return memo
     }, {})
-    const res: any = this.db.populateItem('secrets', secret, { teamId, name: secret.name }, secret.id)
+    const res: any = this.db.populateItem('secrets', secret, { teamId, name: secret.name }, secret.id as string)
     debug(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
   }
 
@@ -773,12 +773,12 @@ export default class OtomiStack {
     if ('ksvc' in svcRaw) {
       if ('predeployed' in svcRaw.ksvc) set(svc, 'ksvc.serviceType', 'ksvcPredeployed')
       else {
-        svc.ksvc = cloneDeep(svcRaw.ksvc)
+        svc.ksvc = cloneDeep(svcRaw.ksvc) as Record<string, any>
         svc.ksvc.serviceType = 'ksvc'
-        svc.ksvc.annotations = objectToArray(svcRaw.ksvc.annotations)
-        svc.ksvc.env = objectToArray(svcRaw.ksvc.env, 'name', 'value')
-        svc.ksvc.files = objectToArray(svcRaw.ksvc.files, 'path', 'content')
-        svc.ksvc.secretMounts = objectToArray(svcRaw.ksvc.secretMounts, 'name', 'path')
+        svc.ksvc.annotations = objectToArray(svcRaw.ksvc.annotations as Record<string, any>)
+        svc.ksvc.env = objectToArray(svcRaw.ksvc.env as Record<string, any>, 'name', 'value')
+        svc.ksvc.files = objectToArray(svcRaw.ksvc.files as Record<string, any>, 'path', 'content')
+        svc.ksvc.secretMounts = objectToArray(svcRaw.ksvc.secretMounts as Record<string, any>, 'name', 'path')
         svc.ksvc.secrets = svcRaw.ksvc.secrets ?? []
         if (svcRaw.ksvc.command?.length) svc.ksvc.command = argQuoteJoin(svcRaw.ksvc.command)
         if (svcRaw.ksvc.args?.length) svc.ksvc.args = argQuoteJoin(svcRaw.ksvc.args)
@@ -804,7 +804,7 @@ export default class OtomiStack {
       }
     }
 
-    const res: any = this.db.populateItem('services', removeBlankAttributes(svc), undefined, svc.id)
+    const res: any = this.db.populateItem('services', removeBlankAttributes(svc), undefined, svc.id as string)
     debug(`Loaded service: name: ${res.name}, id: ${res.id}`)
   }
 
@@ -816,11 +816,11 @@ export default class OtomiStack {
     const ksvc = cloneDeep(svc.ksvc)
     delete ksvc.serviceType
     if (serviceType === 'ksvc') {
-      svcCloned.ksvc = ksvc
-      svcCloned.ksvc.annotations = arrayToObject(svc.ksvc.annotations!)
-      svcCloned.ksvc.env = arrayToObject(svc.ksvc.env ?? [])
-      svcCloned.ksvc.files = arrayToObject(svc.ksvc.files ?? [], 'path', 'content')
-      svcCloned.ksvc.secretMounts = arrayToObject(svc.ksvc.secretMounts ?? [], 'name', 'path')
+      svcCloned.ksvc = ksvc as Record<string, any>
+      svcCloned.ksvc.annotations = arrayToObject(svc.ksvc.annotations as [])
+      svcCloned.ksvc.env = arrayToObject((svc.ksvc.env as []) ?? [])
+      svcCloned.ksvc.files = arrayToObject((svc.ksvc.files as []) ?? [], 'path', 'content')
+      svcCloned.ksvc.secretMounts = arrayToObject((svc.ksvc.secretMounts as []) ?? [], 'name', 'path')
       svcCloned.ksvc.command = svc.ksvc.command?.length > 1 ? svc.ksvc.command.split(' ') : svc.ksvc.command
       // conveniently split the command string (which might contain args as well) by space
       svcCloned.ksvc.command =

@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import sinon from 'sinon'
+import { stub as sinonStub } from 'sinon'
 import OtomiStack from 'src/otomi-stack'
 import { Repo } from 'src/repo'
 import 'src/test-init'
@@ -47,13 +47,13 @@ describe('Data validation', () => {
     done()
   })
   it('should create a password when password is not specified', (done) => {
-    const stub = sinon.stub(otomiStack.db, 'createItem')
+    const stub = sinonStub(otomiStack.db, 'createItem')
     otomiStack.createTeam({ name: 'test' })
     expect(stub.getCall(0).args[1].password).to.not.be.empty
     done()
   })
   it('should not create a password when password is specified', (done) => {
-    const stub = sinon.stub(otomiStack.db, 'createItem')
+    const stub = sinonStub(otomiStack.db, 'createItem')
     const myPassword = 'someAwesomePassword'
     otomiStack.createTeam({ name: 'test', password: myPassword })
     expect(stub.getCall(0).args[1].password).to.equal(myPassword)
@@ -65,7 +65,7 @@ describe('Work with values', () => {
   let otomiStack: OtomiStack
   beforeEach(() => {
     otomiStack = new OtomiStack()
-    otomiStack.repo = new Repo('./test', undefined, undefined, undefined, undefined, undefined)
+    otomiStack.repo = new Repo('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
   })
 
   it('can load from configuration to database and back', () => {

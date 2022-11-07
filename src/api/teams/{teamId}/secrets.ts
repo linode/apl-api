@@ -1,6 +1,6 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequestExt } from 'src/otomi-models'
+import { OpenApiRequestExt, Secret } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:teams:secrets')
 
@@ -15,7 +15,7 @@ export default function (): OperationHandlerArray {
   const post: Operation = [
     ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): void => {
       debug(`createSecret(${teamId}, ...)`)
-      const v = otomi.createSecret(teamId, body)
+      const v = otomi.createSecret(teamId, body as Secret)
       res.json(v)
     },
   ]

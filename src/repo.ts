@@ -1,4 +1,3 @@
-import { Bool } from 'aws-sdk/clients/clouddirectory'
 import axios, { AxiosResponse } from 'axios'
 import Debug from 'debug'
 import diff from 'deep-diff'
@@ -50,16 +49,23 @@ export class Repo {
   remote: string
   remoteBranch: string
   secretFilePostfix = ''
-  url: string
-  urlAuth: string
+  url: string | undefined
+  urlAuth: string | undefined
   user: string
 
-  constructor(localRepoPath, url, user, email, urlAuth, branch) {
-    this.branch = branch
+  constructor(
+    localRepoPath: string,
+    url: string | undefined,
+    user: string,
+    email: string,
+    urlAuth: string | undefined,
+    branch: string | undefined,
+  ) {
+    this.branch = branch || 'main'
     this.email = email
     this.path = localRepoPath
     this.remote = 'origin'
-    this.remoteBranch = `${this.remote}/${branch}`
+    this.remoteBranch = path.join(this.remote, this.branch)
     this.urlAuth = urlAuth
     this.user = user
     this.url = url
@@ -89,7 +95,7 @@ export class Repo {
     if (this.isRootClone()) {
       if (this.getProtocol() === 'file') {
         // tell the the git repo there to accept updates even when it is checked out
-        const _git = simpleGit(this.url.replace('file://', ''))
+        const _git = simpleGit(this.url!.replace('file://', ''))
         await _git.addConfig('receive.denyCurrentBranch', 'updateInstead')
       }
       // same for the root repo, which needs to accept pushes from children
@@ -99,21 +105,21 @@ export class Repo {
 
   async init(bare = true): Promise<void> {
     await this.git.init(bare !== undefined ? bare : this.isRootClone())
-    await this.git.addRemote(this.remote, this.url)
+    await this.git.addRemote(this.remote, this.url!)
   }
 
   async initSops(): Promise<void> {
-    this.secretFilePostfix = (await pathExists(`${this.path}/.sops.yaml`)) ? '.dec' : ''
+    this.secretFilePostfix = (await pathExists(path.join(this.path, '.sops.yaml'))) ? '.dec' : ''
   }
 
-  getSafePath(file) {
+  getSafePath(file: string): string {
     if (this.secretFilePostfix === '') return file
     // otherwise we might have to give *.dec variant for secrets
     if (file.match(secretFileRegex) && !file.endsWith(this.secretFilePostfix)) return `${file}${this.secretFilePostfix}`
     return file
   }
 
-  async removeFile(file): Promise<void> {
+  async removeFile(file: string): Promise<void> {
     const absolutePath = path.join(this.path, file)
     const exists = await this.fileExists(file)
     if (exists) {
@@ -132,8 +138,8 @@ export class Repo {
     }
   }
 
-  async diffFile(file, data): Promise<boolean> {
-    const repoFile = this.getSafePath(file)
+  async diffFile(file: string, data: Record<string, any>): Promise<boolean> {
+    const repoFile: string = this.getSafePath(file)
     const oldData = await this.readFile(repoFile)
     const deepDiff = diff(data, oldData)
     debug(`Diff for ${file}: `, deepDiff)
@@ -159,12 +165,12 @@ export class Repo {
     await writeFile(absolutePath, content, 'utf8')
   }
 
-  async fileExists(relativePath: string): Promise<Bool> {
+  async fileExists(relativePath: string): Promise<boolean> {
     const absolutePath = path.join(this.path, relativePath)
     return await pathExists(absolutePath)
   }
 
-  async readFile(file, checkSuffix = false): Promise<any> {
+  async readFile(file: string, checkSuffix = false): Promise<Record<string, any>> {
     if (!(await this.fileExists(file))) return {}
     const safeFile = checkSuffix ? this.getSafePath(file) : file
     const absolutePath = path.join(this.path, safeFile)
@@ -173,7 +179,7 @@ export class Repo {
     return doc
   }
 
-  async loadConfig(file: string, secretFile: string): Promise<any> {
+  async loadConfig(file: string, secretFile: string): Promise<Core> {
     const data = await this.readFile(file)
     const secretData = await this.readFile(secretFile, true)
     return merge(data, secretData) as Core
@@ -182,7 +188,7 @@ export class Repo {
   async saveConfig(
     dataPath: string,
     inSecretDataPath: string,
-    config: any,
+    config: Record<string, any>,
     secretPaths: string[],
   ): Promise<Promise<void>> {
     const secretData = {}
@@ -200,18 +206,18 @@ export class Repo {
     await this.writeFile(dataPath, plainData)
   }
 
-  isRootClone() {
+  isRootClone(): boolean {
     return this.path === env.GIT_LOCAL_PATH
   }
 
-  hasRemote() {
-    return env.GIT_REPO_URL
+  hasRemote(): boolean {
+    return !!env.GIT_REPO_URL
   }
 
   async initFromTestFolder(): Promise<void> {
     // we inflate GIT_LOCAL_PATH from the ./test folder
     debug(`DEV mode: using local folder values`)
-    await copy(`${process.cwd()}/test/`, env.GIT_LOCAL_PATH, {
+    await copy(path.join(process.cwd(), 'test'), env.GIT_LOCAL_PATH, {
       recursive: true,
       overwrite: false,
     })
@@ -219,7 +225,7 @@ export class Repo {
     await this.git.checkoutLocalBranch(this.branch)
     await this.git.add('.')
     await this.addConfig()
-    const summary = await this.git.commit('initial commit', undefined, this.getOptions())
+    await this.git.commit('initial commit', undefined, this.getOptions())
   }
 
   async clone(): Promise<void> {
@@ -234,7 +240,7 @@ export class Repo {
         this.urlAuth = this.url
       }
       debug(`Cloning from '${this.url}' to '${this.path}'`)
-      await this.git.clone(this.urlAuth, this.path)
+      await this.git.clone(this.urlAuth!, this.path)
       await this.addConfig()
       await this.git.checkout(this.branch)
     } else if (this.url) {
@@ -290,18 +296,18 @@ export class Repo {
     return this.git.revparse('HEAD')
   }
 
-  async save(editor): Promise<void> {
+  async save(editor: string): Promise<void> {
     // prepare values first
     try {
       await this.requestPrepareValues()
     } catch (e) {
       debug(`ERROR: ${JSON.stringify(e)}`)
       if (e.response) {
-        const { status } = e.response
+        const { status } = e.response as AxiosResponse
         if (status === 422) throw new ValidationError()
         throw HttpError.fromCode(status)
       }
-      throw new HttpError(500, e)
+      throw new HttpError(500, `${e}`)
     }
     // all good? commit
     const sha = await this.getCommitSha()
@@ -324,7 +330,7 @@ export class Repo {
 }
 
 export default async function getRepo(
-  path: string,
+  repoPpath: string,
   url: string,
   user: string,
   email: string,
@@ -332,18 +338,18 @@ export default async function getRepo(
   branch: string,
   method: 'clone' | 'init' = 'clone',
 ): Promise<Repo> {
-  await ensureDir(path, { mode: 0o744 })
+  await ensureDir(repoPpath, { mode: 0o744 })
   const urlNormalized = getUrl(url)
   const urlAuth = getUrlAuth(urlNormalized, user, password)
-  const repo = new Repo(path, urlNormalized, user, email, urlAuth, branch)
+  const repo = new Repo(repoPpath, urlNormalized, user, email, urlAuth, branch)
   await repo[method]()
   return repo
 }
 
-export async function initRepoBare(path: string): Promise<SimpleGit> {
-  await ensureDir(path, { mode: 0o744 })
+export async function initRepoBare(repoPpath: string): Promise<SimpleGit> {
+  await ensureDir(repoPpath, { mode: 0o744 })
   const options: Partial<SimpleGitOptions> = {
-    baseDir: path,
+    baseDir: repoPpath,
     config: process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0' ? ['http.sslVerify=false'] : undefined,
   }
   const git = simpleGit(options)

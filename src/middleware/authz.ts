@@ -7,7 +7,7 @@ import { OpenApiRequestExt, PermissionSchema, TeamSelfService } from 'src/otomi-
 import OtomiStack from 'src/otomi-stack'
 import { getSessionStack } from './session'
 
-const HttpMethodMapping = {
+const HttpMethodMapping: Record<string, string> = {
   DELETE: 'delete',
   GET: 'read',
   PATCH: 'update',
@@ -15,7 +15,7 @@ const HttpMethodMapping = {
   PUT: 'update',
 }
 
-function renameKeys(obj) {
+function renameKeys(obj: Record<string, any>) {
   const newKeys = {
     serviceId: 'id',
     secretId: 'id',
@@ -31,7 +31,7 @@ function renameKeys(obj) {
 
 const badCode = (code) => code >= 300 || code < 200
 const wrapResponse = (filter, orig) => {
-  return function (obj, ...rest) {
+  return function (obj) {
     if (badCode(this.statusCode)) return orig(obj)
     const ret = filter(obj)
     return orig(ret)
@@ -61,7 +61,7 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
       .send({ authz: false, message: `User not allowed to perform "${action}" on "${schemaName}" resource` })
   }
 
-  const schemaToDbMap = {
+  const schemaToDbMap: Record<string, string> = {
     Job: 'jobs',
     Secret: 'secrets',
     Service: 'services',
@@ -78,7 +78,7 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
       {},
     )
 
-    if (action === 'update') dataOrig = db.getItemReference(tableName, selector, false) as any
+    if (action === 'update') dataOrig = db.getItemReference(tableName, selector, false) as Record<string, any>
     const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body, dataOrig)
     if (violatedAttributes.length > 0) {
       return res.status(403).send({
@@ -88,7 +88,10 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
     }
   }
   // filter response based on abac
-  res.json = wrapResponse((obj) => authz.filterWithAbac(schemaName, teamId, obj), res.json.bind(res))
+  res.json = wrapResponse(
+    (obj: Record<string, any>) => authz.filterWithAbac(schemaName, teamId, obj),
+    res.json.bind(res),
+  )
 
   return next()
 }

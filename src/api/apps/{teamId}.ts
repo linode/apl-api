@@ -11,9 +11,9 @@ export default function (): OperationHandlerArray {
     },
   ]
   const put: Operation = [
-    ({ otomi, body, params: { teamId } }: OpenApiRequestExt, res): void => {
+    ({ otomi, body: { ids, enabled }, params: { teamId } }: OpenApiRequestExt, res): void => {
       debug('toggleApps')
-      otomi.toggleApps(teamId, body)
+      otomi.toggleApps(teamId, ids as string[], enabled as boolean)
       res.end()
     },
   ]

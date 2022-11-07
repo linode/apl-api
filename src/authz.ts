@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { Ability, subject } from '@casl/ability'
+import { Ability, Subject, subject } from '@casl/ability'
 import Debug from 'debug'
 import { each, forIn, get, isEmpty, isEqual, omit, set } from 'lodash'
 import { Acl, AclAction, OpenAPIDoc, PermissionSchema, Schema, TeamAuthz, User, UserAuthz } from 'src/otomi-models'
@@ -34,10 +34,10 @@ function validatePermissions(acl: Acl, allowedPermissions: string[], path: strin
   return err
 }
 
-export const getAclProps = (schema) =>
+export const getAclProps = (schema: Schema) =>
   Object.keys(
     flattenObject(
-      extract(schema, (o, i, p) => {
+      extract(schema, (_: any, i: string, p: string) => {
         return p !== '' && i === 'x-acl' ? true : undefined
       }),
     ),
@@ -48,7 +48,7 @@ export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
 
   if (isEmpty(apiDoc.security)) err.push(`Missing global security definition at 'security'`)
 
-  forIn(apiDoc, (pathObj: any, pathName: string) => {
+  forIn(apiDoc, (pathObj: Record<string, any>, pathName: string) => {
     Object.keys(pathObj).forEach((methodName) => {
       if (!httpMethods.includes(methodName)) return
       const methodObj = pathObj[methodName]
@@ -137,7 +137,7 @@ export const loadSpecRules = (apiDoc: OpenAPIDoc): any => {
 export default class Authz {
   user: User
 
-  specRules: any[]
+  specRules: Record<string, Schema>
 
   rbac: Ability
 
@@ -151,25 +151,25 @@ export default class Authz {
     const createRule =
       (schemaName, prop = '') =>
       (action) => {
-        const subject = `${schemaName}${prop ? `.${prop}` : ''}`
+        const sub = `${schemaName}${prop ? `.${prop}` : ''}`
         // debug(`creating rules for subject ${subject}`)
         if (action.endsWith('-any')) canRules.push({ action: action.slice(0, -4), subject })
         else {
           user.teams.forEach((teamId) => {
-            canRules.push({ action, subject, conditions: { teamId: { $eq: teamId } } })
+            canRules.push({ action, sub, conditions: { teamId: { $eq: teamId } } })
           })
         }
       }
-    const createRules = (schemaName, schema) => {
+    const createRules = (schemaName, schema: Schema) => {
       user.roles.forEach((role) => {
         const aclHolder = getAclHolder(schema)
         const actions: string[] = get(aclHolder, `x-acl.${role}`, [])
         actions.forEach(createRule(schemaName))
         each(schema.properties, (obj, prop) => {
-          const aclHolder = getAclHolder(obj)
-          if (!aclHolder) return
-          const actions: string[] = get(aclHolder, `x-acl.${role}`, [])
-          actions.forEach(createRule(schemaName, prop))
+          const _aclHolder = getAclHolder(obj as Schema)
+          if (!_aclHolder) return
+          const _actions: string[] = get(_aclHolder, `x-acl.${role}`, [])
+          _actions.forEach(createRule(schemaName, prop))
           if (obj.properties) createRules(`${schemaName}.${prop}`, obj)
         })
       })
@@ -184,7 +184,7 @@ export default class Authz {
   }
 
   validateWithRbac = (action: string, schemaName: string, teamId: string, data?: any): boolean => {
-    const sub = subject(schemaName, { ...(data || {}), teamId })
+    const sub: Subject = subject(schemaName, { ...(data || {}), teamId })
     debug(`validateWithRbac: schemaName: ${schemaName}`)
     const iCan = this.rbac.can(action, sub)
     if (!iCan) debug(`Authz: not authorized (RBAC): ${action} ${schemaName}${teamId ? `/${teamId}` : ''}`)
@@ -228,7 +228,7 @@ export default class Authz {
     return violatedAttributes
   }
 
-  filterWithAbac = (schemaName: string, teamId: string, body: any): any => {
+  filterWithAbac = (schemaName: string, teamId: string, body: Record<string, any>): any => {
     if (typeof body !== 'object') return body
     const deniedRoleAttributes = this.getAbacDenied('read', schemaName, teamId)
     const ret = (body.length !== undefined ? body : [body]).map((obj) => omit(obj, deniedRoleAttributes))

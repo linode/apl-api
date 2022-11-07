@@ -7,7 +7,7 @@ export class OtomiError extends CustomError {
 
   public publicMessage
 
-  public constructor(msg, err?) {
+  public constructor(msg, err?: string) {
     if (err) debug(err)
     super(err)
     this.publicMessage = msg
@@ -46,7 +46,7 @@ export class ValidationError extends OtomiError {
 }
 
 export class HttpError extends OtomiError {
-  protected static messages = {
+  protected static messages: Record<number, string> = {
     400: 'Bad Request',
     401: 'Unauthorized', // RFC 7235
     402: 'Payment Required',

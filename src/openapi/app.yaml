@@ -72,3 +72,4 @@ App:
         admin: [read-any, update-any]
         team: []
       type: object
+  required: [id]

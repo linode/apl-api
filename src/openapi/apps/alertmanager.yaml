@@ -49,3 +49,4 @@ AppAlertmanager:
           required:
             - limits
             - requests
+  required: [id]

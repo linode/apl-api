@@ -1,5 +1,5 @@
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequestExt } from 'src/otomi-models'
+import { App, OpenApiRequestExt } from 'src/otomi-models'
 
 export default function (): OperationHandlerArray {
   const get: Operation = [
@@ -9,7 +9,7 @@ export default function (): OperationHandlerArray {
   ]
   const put: Operation = [
     ({ otomi, body, params: { teamId, appId } }: OpenApiRequestExt, res): void => {
-      res.json(otomi.editApp(teamId, appId, body))
+      res.json(otomi.editApp(teamId, appId, body as App))
     },
   ]
   const api = {
