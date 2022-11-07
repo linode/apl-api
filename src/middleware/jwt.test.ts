@@ -16,8 +16,9 @@ const multiTeamJWT: JWT = { ...adminJWT, groups: multiTeamGroups }
 
 describe('JWT claims mapping', () => {
   let otomiStack: OtomiStack
-  beforeEach(() => {
+  beforeEach(async () => {
     otomiStack = new OtomiStack()
+    await otomiStack.init()
   })
   it('A user in either admin or team-admin group should get admin role and have isAdmin', () => {
     const user = getUser(adminJWT, otomiStack)

@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^9.0.9",
-    "@casl/ability": "^5.2.2",
     "@kubernetes/client-node": "^0.16.0",
     "@types/json-schema": "^7.0.7",
     "aws-sdk": "^2.879.0",
@@ -46,6 +45,7 @@
   },
   "description": "The brain of the Otomi Container Platform. Handling console input and talking to core, it knows what to do.",
   "devDependencies": {
+    "@casl/ability": "^6.3.2",
     "@commitlint/cli": "16.3.0",
     "@commitlint/config-conventional": "16.2.4",
     "@hkdobrev/run-if-changed": "0.3.1",
