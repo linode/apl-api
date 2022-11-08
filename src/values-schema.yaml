@@ -1240,6 +1240,8 @@ properties:
         properties:
           _rawValues:
             $ref: '#/definitions/rawValues'
+          resources:
+            $ref: '#/definitions/resources'
           customRootCA:
             x-secret: ''
             type: string
