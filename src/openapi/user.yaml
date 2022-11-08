@@ -15,8 +15,8 @@ TeamAuthz:
 User:
   readOnly: true
   x-acl:
-    admin: []
-    team: []
+    admin: [read]
+    team: [read]
   properties:
     name:
       type: string

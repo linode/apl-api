@@ -62,7 +62,7 @@ AppVault:
                       type: string
                     secret_key:
                       type: string
-                      x-secret: ''
+                      x-secret: true
                     endpoint:
                       type: string
                   required:
@@ -85,7 +85,7 @@ AppVault:
                       $ref: ../definitions.yaml#/wordCharacterPattern
                     client_secret:
                       type: string
-                      x-secret: ''
+                      x-secret: true
                     key_name:
                       $ref: ../definitions.yaml#/wordCharacterPattern
                   required:

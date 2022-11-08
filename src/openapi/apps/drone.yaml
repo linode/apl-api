@@ -51,18 +51,18 @@ AppDrone:
                   properties:
                     consumerKey:
                       type: string
-                      x-secret: ''
+                      x-secret: true
                     passwordKey:
                       type: string
-                      x-secret: ''
+                      x-secret: true
                     privateKey:
                       type: string
-                      x-secret: ''
+                      x-secret: true
                     server:
                       type: string
                     username:
                       type: string
-                      x-secret: ''
+                      x-secret: true
             - title: Gitea
               type: object
               required: [gitea]
@@ -139,7 +139,7 @@ AppDrone:
           $ref: ../definitions.yaml#/wordCharacterPattern
           title: Admin token
           description: Token used by to connect to remote git repo.
-          x-secret: ''
+          x-secret: true
         orgsFilter:
           $ref: ../definitions.yaml#/wordCharacterPattern
           title: Organization filter

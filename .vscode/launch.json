@@ -34,7 +34,7 @@
       "type": "node",
       "request": "launch",
       "program": "${workspaceRoot}/node_modules/.bin/ts-mocha",
-      "args": ["${file}", "--timeout", "999999", "--exit"],
+      "args": ["${file}", "--timeout", "999999"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     },

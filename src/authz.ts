@@ -20,6 +20,7 @@ const allowedResourceActions = [
 ]
 const allowedResourceCollectionActions = ['read-any']
 const allowedAttributeActions = ['read', 'read-any', 'update', 'update-any']
+const allowedAttributeCrudActions = ['read', 'update']
 const httpMethods = ['post', 'delete', 'get', 'patch', 'update']
 
 function validatePermissions(acl: Acl, allowedPermissions: string[], path: string): string[] {
@@ -149,14 +150,19 @@ export default class Authz {
     this.user = user
     const canRules: any[] = []
     const createRule =
-      (schemaName, prop = '') =>
+      (schemaName, prop = '', inverted = false) =>
       (action) => {
         const sub = `${schemaName}${prop ? `.${prop}` : ''}`
-        // debug(`creating rules for subject ${subject}`)
-        if (action.endsWith('-any')) canRules.push({ action: action.slice(0, -4), subject })
+        debug(`creating rules for subject ${sub}, inverted: ${inverted}`)
+        if (action.endsWith('-any')) canRules.push({ action: action.slice(0, -4), inverted, subject: sub })
         else {
           user.teams.forEach((teamId) => {
-            canRules.push({ action, sub, conditions: { teamId: { $eq: teamId } } })
+            canRules.push({
+              action,
+              inverted,
+              subject: sub,
+              conditions: { teamId },
+            })
           })
         }
       }
@@ -170,6 +176,15 @@ export default class Authz {
           if (!_aclHolder) return
           const _actions: string[] = get(_aclHolder, `x-acl.${role}`, [])
           _actions.forEach(createRule(schemaName, prop))
+          // create explicit deny rules as well for all crud actions NOT given on props
+          // actions like *-any imply that * is also allowed, so exclude those from inversion
+          const normalized = _actions.map((a) => (a.includes('-any') ? a.slice(0, -4) : a))
+          allowedAttributeCrudActions
+            .filter((a) => {
+              const cond = !(normalized.includes(a) || _actions.includes(`${a}-any`))
+              return cond
+            })
+            .forEach(createRule(schemaName, prop, true))
           if (obj.properties) createRules(`${schemaName}.${prop}`, obj)
         })
       })
@@ -183,39 +198,40 @@ export default class Authz {
     return this
   }
 
-  validateWithRbac = (action: string, schemaName: string, teamId: string, data?: any): boolean => {
-    const sub: Subject = subject(schemaName, { ...(data || {}), teamId })
-    debug(`validateWithRbac: schemaName: ${schemaName}`)
+  validateWithCasl = (action: string, schemaName: string, teamId: string): boolean => {
+    const sub: Subject = subject(schemaName, { teamId })
+    debug(`validateWithCasl: `, sub)
     const iCan = this.rbac.can(action, sub)
     if (!iCan) debug(`Authz: not authorized (RBAC): ${action} ${schemaName}${teamId ? `/${teamId}` : ''}`)
     return iCan
   }
 
-  validateWithAbac = (action: string, schemaName: string, teamId: string, body: any, dataOrig: any) => {
-    const violatedAttributes: Array<string> = []
+  validateWithAbac = (action: string, schemaName: string, teamId: string, body?: any, dataOrig?: any): string[] => {
+    const violatedAttributes: string[] = []
     if (this.user.roles.includes('admin')) return violatedAttributes
-    if (['create', 'update'].includes(action)) {
-      // check if we are denied any attributes by role
-      const deniedRoleAttributes = this.getAbacDenied(action, schemaName, teamId)
-      // also check if we are denied by lack of self service
-      const deniedSelfServiceAttributes = get(
-        this.user.authz,
-        `${teamId}.deniedAttributes.${schemaName.toLowerCase()}`,
-        [],
-      ) as Array<string>
-      // the two above denied lists should be mutually exclusive, because a schema design should not
-      // have have both self service as well as acl set for the same property, so we can merge the result
-      const deniedAttributes = [...deniedRoleAttributes, ...deniedSelfServiceAttributes]
 
-      deniedAttributes.forEach((path) => {
-        const val = get(body, path)
-        const origVal = get(dataOrig, path)
-        // undefined value exxpected for forbidden props, just put back before save
-        if (val === undefined) set(body, path, origVal)
-        // value provided which shouldn't happen
-        else if (!isEqual(val, origVal)) violatedAttributes.push(path)
-      })
-    }
+    if ([!'create', 'update'].includes(action))
+      throw new Error('validateWithAbac should only be used for mutating actions')
+    const deniedRoleAttributes = this.getAbacDenied(action, schemaName, teamId)
+    // check if we are denied any attributes by role
+    // also check if we are denied by lack of self service
+    const deniedSelfServiceAttributes = get(
+      this.user.authz,
+      `${teamId}.deniedAttributes.${schemaName.toLowerCase()}`,
+      [],
+    ) as Array<string>
+    // the two above denied lists should be mutually exclusive, because a schema design should not
+    // have have both self service as well as acl set for the same property, so we can merge the result
+    const deniedAttributes = [...deniedRoleAttributes, ...deniedSelfServiceAttributes]
+
+    deniedAttributes.forEach((path) => {
+      const val = get(body, path)
+      const origVal = get(dataOrig, path)
+      // undefined value expected for forbidden props, just put back before save
+      if (val === undefined) set(body, path, origVal)
+      // value provided which shouldn't happen
+      else if (!isEqual(val, origVal)) violatedAttributes.push(path)
+    })
     return violatedAttributes
   }
 
@@ -223,7 +239,7 @@ export default class Authz {
     const schema = this.specRules[schemaName]
     const aclProps = getAclProps(schema)
     const violatedAttributes: Array<string> = aclProps.filter(
-      (prop) => !this.validateWithRbac(action, `${schemaName}.${prop}`, teamId),
+      (prop) => !this.validateWithCasl(action, `${schemaName}.${prop}`, teamId),
     )
     return violatedAttributes
   }

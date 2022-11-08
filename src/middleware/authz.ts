@@ -54,7 +54,7 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
 
   let valid
   if (action === 'read' && schemaName === 'Kubecfg') valid = authz.hasSelfService(teamId, 'team', 'downloadKubeConfig')
-  else valid = authz.validateWithRbac(action, schemaName, teamId, req.body)
+  else valid = authz.validateWithCasl(action, schemaName, teamId)
   if (!valid) {
     return res
       .status(403)
@@ -70,7 +70,7 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
 
   const selector = renameKeys(req.params)
 
-  const tableName = schemaToDbMap?.[schemaName]
+  const tableName = schemaToDbMap[schemaName]
   if (tableName && ['create', 'update'].includes(action)) {
     let dataOrig = get(
       req,

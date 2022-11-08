@@ -79,7 +79,7 @@ AppVelero:
                         aadClientSecret:
                           description: The generated password of the Service Principal.
                           $ref: ../definitions.yaml#/wordCharacterPattern
-                          x-secret: ''
+                          x-secret: true
                       required:
                         - tenantId
                         - subscriptionId
@@ -119,7 +119,7 @@ AppVelero:
                           type: string
                           description: The secret of the access key
                           $ref: ../definitions.yaml#/wordCharacterPattern
-                          x-secret: ''
+                          x-secret: true
                       required:
                         - accessKeyId
                         - secretAccessKey

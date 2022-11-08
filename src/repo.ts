@@ -5,8 +5,8 @@ import { copy, ensureDir, pathExists, readFile, writeFile } from 'fs-extra'
 import { unlink } from 'fs/promises'
 import stringifyJson from 'json-stable-stringify'
 import { cloneDeep, get, isEmpty, merge, set, unset } from 'lodash'
-import path, { dirname } from 'path'
-import simpleGit, { CheckRepoActions, CommitResult, SimpleGit, SimpleGitOptions } from 'simple-git'
+import { dirname, join } from 'path'
+import simpleGit, { CheckRepoActions, CommitResult, SimpleGit } from 'simple-git'
 import { cleanEnv, GIT_BRANCH, GIT_LOCAL_PATH, GIT_REPO_URL, TOOLS_HOST } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { GitPullError, HttpError, ValidationError } from './error'
@@ -54,7 +54,7 @@ export class Repo {
   user: string
 
   constructor(
-    localRepoPath: string,
+    path: string,
     url: string | undefined,
     user: string,
     email: string,
@@ -63,9 +63,9 @@ export class Repo {
   ) {
     this.branch = branch || 'main'
     this.email = email
-    this.path = localRepoPath
+    this.path = path
     this.remote = 'origin'
-    this.remoteBranch = path.join(this.remote, this.branch)
+    this.remoteBranch = join(this.remote, this.branch)
     this.urlAuth = urlAuth
     this.user = user
     this.url = url
@@ -109,7 +109,7 @@ export class Repo {
   }
 
   async initSops(): Promise<void> {
-    this.secretFilePostfix = (await pathExists(path.join(this.path, '.sops.yaml'))) ? '.dec' : ''
+    this.secretFilePostfix = (await pathExists(join(this.path, '.sops.yaml'))) ? '.dec' : ''
   }
 
   getSafePath(file: string): string {
@@ -120,7 +120,7 @@ export class Repo {
   }
 
   async removeFile(file: string): Promise<void> {
-    const absolutePath = path.join(this.path, file)
+    const absolutePath = join(this.path, file)
     const exists = await this.fileExists(file)
     if (exists) {
       debug(`Removing file: ${absolutePath}`)
@@ -131,7 +131,7 @@ export class Repo {
       // also remove the encrypted file as they are operated on in pairs
       const encFile = `${file}${this.secretFilePostfix}`
       if (await this.fileExists(encFile)) {
-        const absolutePathEnc = path.join(this.path, encFile)
+        const absolutePathEnc = join(this.path, encFile)
         debug(`Removing enc file: ${absolutePathEnc}`)
         await unlink(absolutePathEnc)
       }
@@ -156,7 +156,7 @@ export class Repo {
     const hasDiff = await this.diffFile(file, data)
     if (!hasDiff) return
     // ok, write new content
-    const absolutePath = path.join(this.path, file)
+    const absolutePath = join(this.path, file)
     debug(`Writing to file: ${absolutePath}`)
     const sortedData = JSON.parse(stringifyJson(data) as string)
     const content = isEmpty(sortedData) ? '' : stringifyYaml(sortedData, undefined, 4)
@@ -166,14 +166,14 @@ export class Repo {
   }
 
   async fileExists(relativePath: string): Promise<boolean> {
-    const absolutePath = path.join(this.path, relativePath)
+    const absolutePath = join(this.path, relativePath)
     return await pathExists(absolutePath)
   }
 
   async readFile(file: string, checkSuffix = false): Promise<Record<string, any>> {
     if (!(await this.fileExists(file))) return {}
     const safeFile = checkSuffix ? this.getSafePath(file) : file
-    const absolutePath = path.join(this.path, safeFile)
+    const absolutePath = join(this.path, safeFile)
     debug(`Reading from file: ${absolutePath}`)
     const doc = parseYaml(await readFile(absolutePath, 'utf8'))
     return doc
@@ -217,7 +217,7 @@ export class Repo {
   async initFromTestFolder(): Promise<void> {
     // we inflate GIT_LOCAL_PATH from the ./test folder
     debug(`DEV mode: using local folder values`)
-    await copy(path.join(process.cwd(), 'test'), env.GIT_LOCAL_PATH, {
+    await copy(join(process.cwd(), 'test'), env.GIT_LOCAL_PATH, {
       recursive: true,
       overwrite: false,
     })
@@ -330,7 +330,7 @@ export class Repo {
 }
 
 export default async function getRepo(
-  repoPpath: string,
+  path: string,
   url: string,
   user: string,
   email: string,
@@ -338,21 +338,10 @@ export default async function getRepo(
   branch: string,
   method: 'clone' | 'init' = 'clone',
 ): Promise<Repo> {
-  await ensureDir(repoPpath, { mode: 0o744 })
+  await ensureDir(path, { mode: 0o744 })
   const urlNormalized = getUrl(url)
   const urlAuth = getUrlAuth(urlNormalized, user, password)
-  const repo = new Repo(repoPpath, urlNormalized, user, email, urlAuth, branch)
+  const repo = new Repo(path, urlNormalized, user, email, urlAuth, branch)
   await repo[method]()
   return repo
-}
-
-export async function initRepoBare(repoPpath: string): Promise<SimpleGit> {
-  await ensureDir(repoPpath, { mode: 0o744 })
-  const options: Partial<SimpleGitOptions> = {
-    baseDir: repoPpath,
-    config: process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0' ? ['http.sslVerify=false'] : undefined,
-  }
-  const git = simpleGit(options)
-  await git.init(true)
-  return git
 }

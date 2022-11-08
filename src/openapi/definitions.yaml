@@ -2,7 +2,7 @@ adminPassword:
   type: string
   title: Admin password
   description: Uses `otomi.adminPassword` when left empty.
-  x-secret: ''
+  x-secret: true
   x-acl:
     admin: [read-any, update-any]
     team: []
@@ -60,6 +60,10 @@ alerts:
         url:
           $ref: '#/url'
           description: A Slack webhook URL.
+          x-acl:
+            admin: [read-any, update-any]
+            team: []
+          x-secret: true
       required:
         - url
       type: object
@@ -70,9 +74,17 @@ alerts:
         highPrio:
           title: High prio web hook
           type: string
+          x-acl:
+            admin: [read-any, update-any]
+            team: []
+          x-secret: true
         lowPrio:
           title: Low prio web hook
           type: string
+          x-acl:
+            admin: [read-any, update-any]
+            team: []
+          x-secret: true
       required:
         - highPrio
         - lowPrio
@@ -87,7 +99,7 @@ alerts:
           description: The api key to use for authn.
           title: Api key
           type: string
-          x-secret: ''
+          x-secret: true
         url:
           $ref: '#/url'
           description: An opsgenie URL without the '?apiKey' part.
@@ -181,12 +193,12 @@ awsAccessKey:
   title: AWS access key
   description: An AWS access key ID.
   type: string
-  x-secret: ''
+  x-secret: true
 awsSecretKey:
   title: AWS secret key
   description: An AWS secret key.
   type: string
-  x-secret: ''
+  x-secret: true
 awsRegion:
   title: AWS region
   description: An AWS region.
@@ -199,12 +211,15 @@ azureClientId:
   title: Azure client id
   description: An Azure client id.
   type: string
-  x-secret: ''
+  x-secret: true
 azureClientSecret:
   title: Azure client secret
   description: An Azure client secret.
   type: string
-  x-secret: ''
+  x-secret: true
+  x-acl:
+    admin: [read-any, update-any]
+    team: []
 azureDns:
   x-hideTitle: true
   properties:
@@ -225,7 +240,10 @@ azureDns:
       title: Client secret
       type: string
       description: Azure Application Client Secret
-      x-secret: ''
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
+      x-secret: true
   required:
     - tenantId
     - subscriptionId
@@ -370,6 +388,9 @@ dns:
                       $ref: '#/awsSecretKey'
                     accessKey:
                       $ref: '#/awsAccessKey'
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
                   type: object
                 region:
                   $ref: '#/awsRegion'
@@ -401,11 +422,17 @@ dns:
               properties:
                 apiToken:
                   type: string
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
                   x-secret: true
                 apiSecret:
                   type: string
-                  x-secret: true
                   description: Required when Email is set.
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
+                  x-secret: true
                 email:
                   $ref: '#/email'
                   description: Required when ApiSecret is set.
@@ -423,6 +450,9 @@ dns:
               properties:
                 apiToken:
                   type: string
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
                   x-secret: true
               type: object
           required:
@@ -436,6 +466,10 @@ dns:
                 serviceAccountKey:
                   $ref: '#/googleAccountJson'
                   description: A service account key in json format for managing a DNS zone.
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
+                    x-secret: true
                 project:
                   $ref: '#/googleProject'
               required: [project]
@@ -456,12 +490,18 @@ dns:
                   title: YAML for external-dns.
                   type: object
                   description: 'The provider config as provided here: https://github.com/redkubes/otomi-core/blob/main/charts/external-dns/values.yaml'
-                  x-secret: ''
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
+                  x-secret: true
                 cert-manager:
                   title: YAML for cert-manager.
                   type: object
                   description: 'The dns01 config as provided here: https://cert-manager.io/docs/configuration/acme/dns01/'
-                  x-secret: ''
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
+                  x-secret: true
               required:
                 - name
                 - external-dns
@@ -485,7 +525,10 @@ droneGit:
       $ref: '#/wordCharacterPattern'
     clientSecretValue:
       type: string
-      x-secret: ''
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
+      x-secret: true
   type: object
   required: [clientID, clientSecretValue]
 duration:
@@ -537,7 +580,7 @@ googleAccountJson:
   description: Enter GCP account JSON for authentication.
   title: Account JSON
   type: string
-  x-secret: ''
+  x-secret: true
   x-formtype: textarea
 googleProject:
   description: Enter GCP project.
@@ -704,8 +747,14 @@ kms:
                   type: string
                 accessKey:
                   $ref: '#/awsAccessKey'
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
                 secretKey:
                   $ref: '#/awsSecretKey'
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
                 region:
                   $ref: '#/awsRegion'
               required:
@@ -732,8 +781,14 @@ kms:
                   type: string
                 clientId:
                   $ref: '#/azureClientId'
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
                 clientSecret:
                   $ref: '#/azureClientSecret'
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
                 tenantId:
                   $ref: '#/azureTenantId'
               required:
@@ -760,6 +815,9 @@ kms:
                   type: string
                 accountJson:
                   $ref: '#/googleAccountJson'
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
                 project:
                   $ref: '#/googleProject'
               required:
@@ -786,6 +844,9 @@ kms:
                   type: string
                 token:
                   $ref: '#/vaultToken'
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
               required:
                 - keys
                 - token
@@ -1131,6 +1192,7 @@ url:
 vaultToken:
   title: Token
   type: string
+  x-secret: true
 volumes:
   items:
     additionalProperties: false

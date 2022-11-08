@@ -58,10 +58,6 @@ describe('API authz tests', () => {
         .expect(400)
         .end(done)
     })
-
-    it('admin can put empty payload, but it wont change anything', (done) => {
-      agent.put('/v1/settings/alerts').send({}).set('Authorization', `Bearer ${adminToken}`).expect(200).end(done)
-    })
   })
 
   it('admin can update team self-service-flags', (done) => {
@@ -99,9 +95,6 @@ describe('API authz tests', () => {
     const data = { name: 'otomi', password: 'test' }
     agent.post('/v1/teams').send(data).set('Authorization', `Bearer ${adminToken}`).expect(200).end(done)
   })
-  it('admin cannot delete all teams', (done) => {
-    agent.delete('/v1/teams').set('Authorization', `Bearer ${adminToken}`).expect(404).end(done)
-  })
   it('admin can deploy changes', (done) => {
     agent
       .get('/v1/deploy')
@@ -112,7 +105,7 @@ describe('API authz tests', () => {
   })
   it('admin can see values from an app', (done) => {
     const values: App['values'] = { shown: true }
-    otomiStack.getApp.callsFake(() => ({ id: 'bla', values }))
+    otomiStack.getApp.callsFake(() => ({ id: 'adminapp', values }))
     agent
       .get('/v1/apps/admin/loki')
       .set('Authorization', `Bearer ${adminToken}`)
@@ -223,7 +216,6 @@ describe('API authz tests', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-
   it('team can not delete service from other team', (done) => {
     agent.delete('/v1/teams/team2/services/service1').set('Authorization', `Bearer ${teamToken}`).expect(403).end(done)
   })
@@ -239,19 +231,18 @@ describe('API authz tests', () => {
       .expect(403)
       .end(done)
   })
-  // it('team can not see values from an app', (done) => {
-  //   otomiStack.getApp.callsFake(() => ({ values: { hidden: true } }))
-  //   agent
-  //     .get('/v1/apps/team1/loki')
-  //     .set('Authorization', `Bearer ${teamToken}`)
-  //     .expect(200)
-  //     .then((response) => {
-  //       assert(response.body.values === undefined, 'values property is filtered')
-  //       done()
-  //     })
-  //     .catch((err) => done(err))
-  // })
-
+  it('team can not see values from an app', (done) => {
+    otomiStack.getApp.callsFake(() => ({ id: 'teamapp', values: { hidden: true } }))
+    agent
+      .get('/v1/apps/team1/loki')
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect(200)
+      .then((response) => {
+        assert(response.body.values === undefined, 'values property is filtered')
+        done()
+      })
+      .catch((err) => done(err))
+  })
   it('authenticated user should get api spec', (done) => {
     agent
       .get('/v1/apiDocs')
