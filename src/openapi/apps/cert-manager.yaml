@@ -38,3 +38,27 @@ AppCertManager:
             - production
             - staging
           default: production
+        resources:
+          type: object
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 1000m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 512Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 500m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 256Mi
+          required:
+            - limits
+            - requests
