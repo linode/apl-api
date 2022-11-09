@@ -46,19 +46,19 @@ AppCertManager:
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  default: 1000m
+                  default: 200m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  default: 512Mi
+                  default: 384Mi
             requests:
               type: object
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  default: 500m
+                  default: 50m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  default: 256Mi
+                  default: 64Mi
           required:
             - limits
             - requests
