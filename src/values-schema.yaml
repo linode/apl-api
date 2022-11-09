@@ -1233,6 +1233,7 @@ properties:
               redis:
                 $ref: '#/definitions/resources'
       cert-manager:
+        additionalProperties: false
         properties:
           _rawValues:
             $ref: '#/definitions/rawValues'
