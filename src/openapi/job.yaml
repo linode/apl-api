@@ -7,9 +7,9 @@ Job:
     - properties:
         id:
           type: string
-          readOnly: true
+          # readOnly: true
         teamId:
           $ref: definitions.yaml#/idName
-          readOnly: true
+          # readOnly: true
     - $ref: definitions.yaml#/jobSpec
     - $ref: definitions.yaml#/podSpec

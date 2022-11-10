@@ -31,6 +31,10 @@ TeamSelfService:
         enum: [argocd, gitea]
       default: []
       uniqueItems: true
+  x-acl:
+    admin: [read-any, update-any]
+    team: [read]
+
 Team:
   properties:
     id:

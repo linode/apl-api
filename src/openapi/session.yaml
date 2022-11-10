@@ -2,25 +2,25 @@ Session:
   properties:
     ca:
       type: string
-      readOnly: true
+      # readOnly: true
     core:
       type: object
-      readOnly: true
+      # readOnly: true
     corrupt:
       type: boolean
       default: false
     editor:
       type: string
-      readOnly: true
+      # readOnly: true
     inactivityTimeout:
       type: integer
       default: 10
     user:
       $ref: user.yaml#/User
-      readOnly: true
+      # readOnly: true
     versions:
       type: object
-      readOnly: true
+      # readOnly: true
       properties:
         core:
           type: string

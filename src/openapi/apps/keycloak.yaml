@@ -34,7 +34,7 @@ AppKeycloak:
           type: string
           description: This password was generated and cannot be changed without manual intervention.
           x-secret: 'randAlphaNum 20'
-          readOnly: true
+          # readOnly: true
         adminPassword:
           $ref: ../definitions.yaml#/adminPassword
         theme:

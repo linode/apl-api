@@ -70,15 +70,15 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
 
   const selector = renameKeys(req.params)
 
-  const tableName = schemaToDbMap[schemaName]
-  if (tableName && ['create', 'update'].includes(action)) {
+  if (['create', 'update'].includes(action)) {
+    const collection = schemaToDbMap[schemaName]
     let dataOrig = get(
       req,
       `apiDoc.components.schemas.TeamSelfService.properties.${schemaName.toLowerCase()}.x-allow-values`,
       {},
     )
 
-    if (action === 'update') dataOrig = db.getItemReference(tableName, selector, false) as Record<string, any>
+    if (action === 'update') dataOrig = db.getItemReference(collection, selector, false) as Record<string, any>
     const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body, dataOrig)
     if (violatedAttributes.length > 0) {
       return res.status(403).send({
@@ -87,11 +87,12 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
       })
     }
   }
-  // filter response based on abac
-  res.json = wrapResponse(
-    (obj: Record<string, any>) => authz.filterWithAbac(schemaName, teamId, obj),
-    res.json.bind(res),
-  )
+  // TODO: enable next part later:
+  //filter response based on abac
+  // res.json = wrapResponse(
+  //   (obj: Record<string, any>) => authz.filterWithAbac(schemaName, teamId, obj),
+  //   res.json.bind(res),
+  // )
 
   return next()
 }

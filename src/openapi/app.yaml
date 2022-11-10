@@ -57,7 +57,7 @@ App:
       x-acl:
         admin: [read-any]
         team: [read-any]
-      readOnly: true
+      # readOnly: true
     rawValues:
       $ref: definitions.yaml#/rawValues
       x-acl:

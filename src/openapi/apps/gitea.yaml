@@ -23,7 +23,7 @@ AppGitea:
           type: string
           description: This password was generated and cannot be changed without manual intervention.
           x-secret: 'randAlphaNum 20'
-          readOnly: true
+          # readOnly: true
         # image:
         #   type: object
         #   properties:

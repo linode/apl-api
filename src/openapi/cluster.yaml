@@ -43,10 +43,10 @@ Cluster:
       $ref: definitions.yaml#/domainSuffix
     provider:
       $ref: definitions.yaml#/provider
-      readOnly: true
+      # readOnly: true
     k8sVersion:
       $ref: definitions.yaml#/k8sVersion
-      readOnly: true
+      # readOnly: true
     apiName:
       $ref: definitions.yaml#/k8sName
       title: API name

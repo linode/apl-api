@@ -10,24 +10,15 @@ Settings:
       title: Alerts
       description: Configure alerting endpoints to receive notifications from Alertmanager and Otomi deployments.
       x-externalDocsPath: docs/console/settings#alerts
-      x-acl:
-        admin: [read-any, update-any]
-        team: [read-any]
     cluster:
       additionalProperties: false
       $ref: cluster.yaml#/Cluster
       title: Cluster
       description: Cluster configuration.
-      x-acl:
-        admin: [read-any, update-any]
-        team: [read-any]
     backup:
       additionalProperties: false
       title: Backup
       description: Backup schedule configuration.
-      x-acl:
-        admin: [read-any, update-any]
-        team: []
       type: object
       properties:
         platformSchedule:
@@ -218,19 +209,27 @@ Settings:
           properties:
             username:
               type: string
+              x-acl:
+                admin: [read-any, update-any]
+                team: []
             password:
               type: string
               x-secret: true
+              x-acl:
+                admin: [read-any, update-any]
+                team: []
             email:
               type: string
+              x-acl:
+                admin: [read-any, update-any]
+                team: []
               x-default: not@us.ed
             server:
               type: string
               x-default: docker.io
-          # disabling required fields until rjsf solves this nested required bug:
-          # required:
-          #   - username
-          #   - password
+          required:
+            - username
+            - password
           type: object
           x-acl:
             admin: [read-any, update-any]
