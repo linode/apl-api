@@ -85,9 +85,11 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     })
   }
   app.all('/drone', async (req, res, next) => {
-    const parsed = httpSignature.parseRequest(req)
+    const parsed = httpSignature.parseRequest(req, {
+      algorithm: 'hmac-sha256',
+    })
     console.log(req)
-    if (!httpSignature.verifySignature(parsed, env.DRONE_WEBHOOK_SECRET)) return res.status(401).send()
+    if (!httpSignature.verifyHMAC(parsed, env.DRONE_WEBHOOK_SECRET)) return res.status(401).send()
     const event = req.headers['x-drone-event']
     res.send('ok')
     if (event !== 'build') return
@@ -151,13 +153,6 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
   return app
-}
-
-if (!env.isTest) {
-  initApp().catch((e) => {
-    debug(e)
-    process.exit(1)
-  })
 }
 
 process.on('exit', () => {
