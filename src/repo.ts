@@ -320,11 +320,6 @@ export class Repo {
     } catch (e) {
       debug(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
       debug(`Merge error: ${JSON.stringify(e)}`)
-      await this.git.rebase(['--abort'])
-      const remote = `origin/${this.branch}`
-      await this.git.reset(['--hard', 'HEAD', remote])
-      await this.git.clean(['-f'])
-      debug(`Reset HEAD to ${remote}`)
       throw new GitPullError()
     }
   }

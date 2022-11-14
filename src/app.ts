@@ -97,7 +97,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     // emit now to let others know, before doing anything else
     if (io) io.emit('drone', req.body)
     // deployment might have changed data, so reload
-    const { build } = request.body
+    const { build } = request.body || {}
     if (!build) return
     const { status } = build
     if (status === 'success') {
