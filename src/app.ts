@@ -86,6 +86,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   }
   app.all('/drone', async (req, res, next) => {
     const parsed = httpSignature.parseRequest(req)
+    console.log(req)
     if (!httpSignature.verifySignature(parsed, env.DRONE_WEBHOOK_SECRET)) return res.status(401).send()
     const event = req.headers['x-drone-event']
     res.send('ok')
