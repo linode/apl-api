@@ -210,7 +210,7 @@ export default class Authz {
     const violatedAttributes: string[] = []
     if (this.user.roles.includes('admin')) return violatedAttributes
 
-    if ([!'create', 'update'].includes(action))
+    if (!['create', 'update'].includes(action))
       throw new Error('validateWithAbac should only be used for mutating actions')
     const deniedRoleAttributes = this.getAbacDenied(action, schemaName, teamId)
     // check if we are denied any attributes by role
