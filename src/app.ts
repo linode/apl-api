@@ -10,6 +10,7 @@ import 'express-async-errors'
 import { initialize } from 'express-openapi'
 import { removeSync } from 'fs-extra'
 import { Server } from 'http'
+import httpSignature from 'http-signature'
 import { createLightship } from 'lightship'
 import logger from 'morgan'
 import path from 'path'
@@ -26,11 +27,12 @@ import { setMockIdx } from 'src/mocks'
 import { OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
-import { cleanEnv } from 'src/validators'
+import { cleanEnv, DRONE_WEBHOOK_SECRET } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
 
-const env = cleanEnv({})
-// import httpSignature from 'http-signature'
+const env = cleanEnv({
+  DRONE_WEBHOOK_SECRET,
+})
 
 const debug = Debug('otomi:app')
 debug('NODE_ENV: ', process.env.NODE_ENV)
@@ -83,8 +85,8 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     })
   }
   app.all('/drone', async (req, res, next) => {
-    // const parsed = httpSignature.parseRequest(req)
-    // if (!httpSignature.verifySignature(parsed, env.DRONE_SHARED_SECRET)) return res.status(401).send()
+    const parsed = httpSignature.parseRequest(req)
+    if (!httpSignature.verifySignature(parsed, env.DRONE_WEBHOOK_SECRET)) return res.status(401).send()
     const event = req.headers['x-drone-event']
     res.send('ok')
     if (event !== 'build') return

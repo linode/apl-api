@@ -2,11 +2,12 @@
 import Debug from 'debug'
 import { RequestHandler } from 'express'
 import 'express-async-errors'
+import { emptyDir } from 'fs-extra'
 import http from 'http'
-import { cloneDeep } from 'lodash'
+import { cloneDeep, join } from 'lodash'
 import { Server } from 'socket.io'
 import { OpenApiRequestExt } from 'src/otomi-models'
-import { default as OtomiStack } from 'src/otomi-stack'
+import { default as OtomiStack, rootPath } from 'src/otomi-stack'
 import { cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validators'
 
 const debug = Debug('otomi:session')
@@ -58,6 +59,7 @@ export const cleanSession = async (editor: string, sendMsg = true): Promise<void
   debug(`Cleaning editor session for ${editor}`)
   const sha = await readOnlyStack.repo.getCommitSha()
   delete sessions[editor]
+  await emptyDir(join(rootPath, editor))
   if (!sendMsg) return
   const msg: DbMessage = { state: 'clean', editor, sha, reason: 'revert' }
   io.emit('db', msg)
