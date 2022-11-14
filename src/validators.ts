@@ -14,7 +14,7 @@ export const VERSIONS = json({
   },
 })
 export const CUSTOM_ROOT_CA = str({ desc: 'The root CA used for certs', default: undefined })
-export const DRONE_WEBHOOK_SECRET = str({ desc: 'The drone secret to validate incoming webhooks' })
+export const DRONE_WEBHOOK_SECRET = str({ desc: 'The drone secret to validate incoming webhooks', default: undefined })
 export const EDITOR_INACTIVITY_TIMEOUT = num({
   desc: 'Inactivity timeout in days after which editor session is removed to clean mem',
   default: 1,
