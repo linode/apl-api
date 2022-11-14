@@ -155,6 +155,13 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   return app
 }
 
+if (!env.isTest) {
+  initApp().catch((e) => {
+    debug(e)
+    process.exit(1)
+  })
+}
+
 process.on('exit', () => {
   if (process.env.NODE_ENV === 'development') removeSync('/tmp/otomi')
 })

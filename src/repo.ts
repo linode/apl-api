@@ -310,7 +310,6 @@ export class Repo {
       throw new HttpError(500, `${e}`)
     }
     // all good? commit
-    const sha = await this.getCommitSha()
     await this.commit(editor)
     try {
       // we are in a developer branch so first merge in root which might be changed by another dev
