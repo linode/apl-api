@@ -9,7 +9,7 @@ import { cloneDeep, each, filter, get, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
-import { PublicUrlExists, ValidationError } from 'src/error'
+import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
 import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack, readOnlyStack } from 'src/middleware'
 import {
   App,
@@ -96,10 +96,9 @@ export default class OtomiStack {
   private coreValues: Core
 
   db: Db
-
-  repo: Repo
-
   editor?: string
+  locked = false
+  repo: Repo
 
   constructor(editor?: string, inDb?: Db) {
     this.editor = editor
@@ -418,20 +417,26 @@ export default class OtomiStack {
   }
 
   async doDeployment(): Promise<void> {
-    await this.saveValues()
-    await this.repo.save(this.editor!)
-    // pull push root
     const rootStack = await getSessionStack()
-    await rootStack.repo.pull()
-    await rootStack.repo.push()
-    // inflate new db
-    rootStack.db = new Db()
-    await rootStack.loadValues()
-    // and remove editor from the session
-    await cleanSession(this.editor!, false)
-    const sha = await rootStack.repo.getCommitSha()
-    const msg: DbMessage = { state: 'clean', editor: this.editor!, sha, reason: 'deploy' }
-    getIo().emit('db', msg)
+    if (rootStack.locked) throw new DeployLockError()
+    rootStack.locked = true
+    try {
+      await this.saveValues()
+      await this.repo.save(this.editor!)
+      // pull push root
+      await rootStack.repo.pull()
+      await rootStack.repo.push()
+      // inflate new db
+      rootStack.db = new Db()
+      await rootStack.loadValues()
+      // and remove editor from the session
+      await cleanSession(this.editor!, false)
+      const sha = await rootStack.repo.getCommitSha()
+      const msg: DbMessage = { state: 'clean', editor: this.editor!, sha, reason: 'deploy' }
+      getIo().emit('db', msg)
+    } finally {
+      rootStack.locked = false
+    }
   }
 
   async doRevert(): Promise<void> {

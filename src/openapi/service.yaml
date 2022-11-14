@@ -116,10 +116,6 @@ Ingress:
       example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
       title: Certificate ARN
       type: string
-    ownHost:
-      default: true
-      description: When true the service will get it's own domain by prefixing the app name to the team domain. Mostly set to true.
-      type: boolean
   required:
     - domain
     - subdomain
