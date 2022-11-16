@@ -88,7 +88,6 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     const parsed = httpSignature.parseRequest(req, {
       algorithm: 'hmac-sha256',
     })
-    console.log(req)
     if (!httpSignature.verifyHMAC(parsed, env.DRONE_WEBHOOK_SECRET)) return res.status(401).send()
     const event = req.headers['x-drone-event']
     res.send('ok')
