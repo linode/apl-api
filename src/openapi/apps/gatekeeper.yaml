@@ -142,3 +142,4 @@ AppGatekeeper:
               required:
                 - limits
                 - requests
+  required: [id]

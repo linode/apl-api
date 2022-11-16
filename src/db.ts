@@ -4,10 +4,10 @@ import findIndex from 'lodash/findIndex'
 import low from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
 import Memory from 'lowdb/adapters/Memory'
+import { AlreadyExists, NotExistError } from 'src/error'
+import { App, Cluster, Job, Secret, Service, Settings, Team } from 'src/otomi-models'
+import { mergeData, removeBlankAttributes } from 'src/utils'
 import { v4 as uuidv4 } from 'uuid'
-import { AlreadyExists, NotExistError } from './error'
-import { App, Cluster, Job, Secret, Service, Settings, Team } from './otomi-models'
-import { mergeData, removeBlankAttributes } from './utils'
 
 export type DbType = Cluster | Job | Secret | Service | Team | Settings | App
 export type Schema = {
@@ -22,15 +22,11 @@ export type Schema = {
 export default class Db {
   db: low.LowdbSync<any>
 
-  dirty: boolean
-
-  dirtyActive: boolean
-
   constructor(path?: string) {
     // @ts-ignore
     this.db = low(path === undefined ? new Memory<Schema>('') : new FileSync<Schema>(path))
     this.db._.mixin({
-      replaceRecord(arr, currentObject, newObject) {
+      replaceRecord(arr: Record<string, any>[], currentObject: Record<string, any>, newObject: Record<string, any>) {
         return arr.splice(findIndex(arr, currentObject), 1, newObject)
       },
     })
@@ -45,8 +41,6 @@ export default class Db {
         teams: [],
       })
       .write()
-    this.dirty = false
-    this.dirtyActive = false
   }
 
   getItem(name: string, selector: any): DbType {
@@ -92,13 +86,12 @@ export default class Db {
     )
   }
 
-  createItem(type: string, data: any, selector?: any, id?: string): DbType {
+  createItem(type: string, data: Record<string, any>, selector?: Record<string, any>, id?: string): DbType {
     // @ts-ignore
     if (selector && this.db.get(type).find(selector).value())
       throw new AlreadyExists(`Item already exists in '${type}' collection: ${JSON.stringify(selector)}`)
     const cleanData = removeBlankAttributes({ ...data, ...selector })
     const ret = this.populateItem(type, cleanData, selector, id)
-    this.dirty = this.dirtyActive
     return ret
   }
 
@@ -106,26 +99,16 @@ export default class Db {
     this.getItemReference(type, selector)
     // @ts-ignore
     this.db.get(type).remove(selector).write()
-    this.dirty = this.dirtyActive
   }
 
-  updateItem(type: string, data: any, selector: any, merge = false): DbType {
+  updateItem(type: string, data: Record<string, any>, selector: Record<string, any>, merge = false): DbType {
     const prev = this.getItemReference(type, selector)
     const col = this.db.get(type)
     // @ts-ignore
     const idx = col.findIndex(selector).value()
-    const merged = merge && prev ? mergeData(prev, data) : data
+    const merged = (merge && prev ? mergeData(prev, data) : data) as Record<string, any>
     const newData = removeBlankAttributes({ ...merged, ...selector })
     col.value().splice(idx, 1, newData)
-    this.dirty = this.dirtyActive
     return newData
-  }
-
-  setDirtyActive(active = true): void {
-    this.dirtyActive = active
-  }
-
-  isDirty(): boolean {
-    return !!this.dirty
   }
 }

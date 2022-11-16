@@ -1,6 +1,6 @@
 import { expect } from 'chai'
-import { Cluster } from './otomi-models'
-import { getServiceUrl } from './utils'
+import { Cluster } from 'src/otomi-models'
+import { getServiceUrl } from 'src/utils'
 
 describe('Utils', () => {
   const cluster: Cluster = {

@@ -1,7 +1,6 @@
 alerts:
     drone:
         - slack
-        - opsgenie
     groupInterval: 5m
     receivers:
         - slack
@@ -16,8 +15,9 @@ backup:
     platformSchedule:
         enabled: true
 dns:
-    aws:
-        region: eu-central-1
+    provider:
+        aws:
+            region: eu-central-1
     zones:
         - some.com
         - onprem.example.com
@@ -42,36 +42,27 @@ home:
     slack:
         channel: mon-otomi
         channelCrit: mon-otomi-crit
-kms:
-    sops:
-        google:
-            keys: some/key
-            project: some-project
-        provider: google
 oidc:
     adminGroupID: someAdminGroupID
     clientID: someClientID
     issuer: https://login.microsoftonline.com/xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     teamAdminGroupID: xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 otomi:
+    adminPassword: okidoki
     additionalClusters:
         - domainSuffix: demo.eks.otomi.cloud
           name: demo
           provider: aws
-    addons:
-        conftest:
-            enabled: true
     globalPullSecret:
         username: otomi
     hasCloudLB: false
     isHomeMonitored: true
-    isManaged: true
     isMultitenant: true
     version: latest
 smtp:
-    authPassword: somesecretvalue
-    authUsername: no-reply@doma.in
+    auth_password: somesecretvalue
+    auth_identity: no-reply@doma.in
     from: no-reply@doma.in
     hello: doma.in
     smarthost: smtp-relay.gmail.com:587
-version: 1
+version: 5

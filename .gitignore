@@ -1,3 +1,6 @@
+# Backups
+*.bak
+
 # Logs & traces
 *.log
 
@@ -41,3 +44,4 @@ kms.json*
 
 /vendors/client/
 /src/generated-*
+secrets.*.yaml.dec

@@ -126,3 +126,4 @@ AppGitea:
               required:
                 - limits
                 - requests
+  required: [id]

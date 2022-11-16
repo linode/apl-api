@@ -71,12 +71,12 @@ AppIstio:
                     - requests
         # meshConfig:
         #   type: object
-          # properties:
-          #   defaultConfig:
-          #     type: object
-          #     default:
-          #       tracing:
-          #         sampling: 0.1
+        # properties:
+        #   defaultConfig:
+        #     type: object
+        #     default:
+        #       tracing:
+        #         sampling: 0.1
         # image:
         #   type: object
         #   properties:
@@ -160,3 +160,4 @@ AppIstio:
               required:
                 - limits
                 - requests
+  required: [id]

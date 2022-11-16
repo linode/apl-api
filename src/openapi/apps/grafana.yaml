@@ -54,3 +54,4 @@ AppGrafana:
           required:
             - limits
             - requests
+  required: [id]

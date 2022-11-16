@@ -7,7 +7,7 @@ export class OtomiError extends CustomError {
 
   public publicMessage
 
-  public constructor(msg, err?) {
+  public constructor(msg, err?: string) {
     if (err) debug(err)
     super(err)
     this.publicMessage = msg
@@ -45,8 +45,15 @@ export class ValidationError extends OtomiError {
   }
 }
 
+export class DeployLockError extends OtomiError {
+  public constructor(err?: string) {
+    super('Deployment in progress. Please try again in 15 seconds.', err)
+    this.code = 409
+  }
+}
+
 export class HttpError extends OtomiError {
-  protected static messages = {
+  protected static messages: Record<number, string> = {
     400: 'Bad Request',
     401: 'Unauthorized', // RFC 7235
     402: 'Payment Required',
