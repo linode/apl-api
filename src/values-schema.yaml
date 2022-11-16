@@ -1106,6 +1106,11 @@ definitions:
         items:
           $ref: '#/definitions/service'
         type: array
+      monitoringStack:
+        properties:
+          enabled:
+            type: boolean
+            default: true
       networkPolicy:
         ingressPrivate:
           title: Enable filtering of ingress traffic inside the cluster
