@@ -141,7 +141,7 @@
     "clean": "rm -rf dist >/dev/null",
     "cz": "git-cz",
     "cz:retry": "git-cz --retry",
-    "dev": "rm -rf /tmp/otomi/values && run-p watch dev:node",
+    "dev": "run-p watch dev:node",
     "dev:node": "ts-node-dev --watch 'test/apps.yaml,test/core.yaml,src/openapi/**/*.yaml,src/generated-schema.ts,.env' -r tsconfig-paths/register -r dotenv/config --inspect=4321 --respawn --transpile-only src/app.ts",
     "lint": "run-p types lint:ts",
     "lint:ts": "eslint --ext ts .",
