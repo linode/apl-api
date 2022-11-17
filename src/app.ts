@@ -110,11 +110,11 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     // initialize full server
     const { PORT = 8080 } = process.env
     server = app
-      .listen(PORT, () => {
+      .listen(PORT, async () => {
         debug(`Listening on :::${PORT}`)
         lightship.signalReady()
         // Clone repo after the application is ready to avoid Pod NotReady phenomenon, and thus infinite Pod crash loopback
-        mainStack.initRepo()
+        ;(await getSessionStack()).initRepo()
       })
       .on('error', (e) => {
         console.error(e)

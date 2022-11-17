@@ -41,7 +41,6 @@ export function cleanEnv<T>(
     env.GIT_EMAIL = 'testUser@redkubes.com'
     env.GIT_USER = 'testUser'
     env.GIT_PASSWORD = 'testUserPassword'
-    env.GIT_LOCAL_PATH = 'test'
   }
   return clean(env, validators, options)
 }

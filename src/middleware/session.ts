@@ -24,11 +24,14 @@ export type DbMessage = {
 }
 
 // instantiate read-only version of the stack
-export const readOnlyStack = new OtomiStack()
+let readOnlyStack
 let sessions: Record<string, OtomiStack> = {}
 // handler to get the correct stack for the user: if never touched any data give the main otomiStack
 export const getSessionStack = async (editor?: string): Promise<OtomiStack> => {
-  if (!readOnlyStack.getCore()) await readOnlyStack.init()
+  if (!readOnlyStack) {
+    readOnlyStack = new OtomiStack()
+    await readOnlyStack.init()
+  }
   if (!editor || !sessions[editor]) return readOnlyStack
   return sessions[editor]
 }
@@ -54,6 +57,8 @@ export const cleanAllSessions = async (editor: string): Promise<void> => {
   const msg: DbMessage = { state: 'clean', editor, sha, reason: 'restore' }
   io.emit('db', msg)
   sessions = {}
+  readOnlyStack = undefined
+  ;(await getSessionStack()).initRepo()
 }
 
 export const cleanSession = async (editor: string, sendMsg = true): Promise<void> => {

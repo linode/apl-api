@@ -10,7 +10,7 @@ import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
-import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack, readOnlyStack } from 'src/middleware'
+import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
   Core,
@@ -733,7 +733,7 @@ export default class OtomiStack {
     const team = { ...inTeam, name: inTeam.id } as Record<string, any>
     team.resourceQuota = objectToArray(inTeam.resourceQuota as Record<string, any>)
     const res = this.createTeam(team as Team)
-    // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id)
+    // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id as string)
     debug(`Loaded team: ${res.id!}`)
   }
 
@@ -864,11 +864,12 @@ export default class OtomiStack {
   }
 
   async getSession(user: k8s.User): Promise<Session> {
-    const currentSha = await readOnlyStack.repo.getCommitSha()
+    const rootStack = await getSessionStack()
+    const currentSha = await rootStack.repo.getCommitSha()
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
-      corrupt: readOnlyStack.repo.corrupt,
+      corrupt: rootStack.repo.corrupt,
       editor: this.editor,
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
       user: user as User,
