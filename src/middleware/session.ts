@@ -24,7 +24,7 @@ export type DbMessage = {
 }
 
 // instantiate read-only version of the stack
-let readOnlyStack: OtomiStack = new OtomiStack()
+let readOnlyStack: OtomiStack
 let sessions: Record<string, OtomiStack> = {}
 // handler to get the correct stack for the user: if never touched any data give the main otomiStack
 export const getSessionStack = async (editor?: string): Promise<OtomiStack> => {
