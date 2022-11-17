@@ -69,8 +69,6 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   const app = express()
   const apiRoutesPath = path.resolve(__dirname, 'api')
   await loadSpec()
-  // instantiate read-only version of the db
-  const mainStack = inOtomiStack || (await getSessionStack())
   const authz = new Authz(otomiSpec.spec)
 
   app.use(logger('dev'))
