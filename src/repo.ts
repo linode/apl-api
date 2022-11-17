@@ -275,12 +275,12 @@ export class Repo {
       await this.initSops()
       if (!skipRequest) await this.requestInitValues()
     } catch (e) {
-      debug('Could not pull from remote. Upstream commits? Marked db as corrupt.')
+      const err = 'Could not pull from remote. Upstream commits? Marked db as corrupt.'
+      debug(err, e)
       this.corrupt = true
-      console.error('Pull error: ', e)
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'conflict' }
       getIo().emit('db', msg)
-      throw e
+      throw new GitPullError(err)
     }
   }
 
