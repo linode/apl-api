@@ -264,7 +264,7 @@ export class Repo {
     return summary
   }
 
-  async pull(skipRequest = false): Promise<any> {
+  async pull(skipRequest = false, skipMsg = false): Promise<any> {
     // test root can't pull as it has no remote
     if (!this.url) return
     debug('Pulling')
@@ -278,8 +278,10 @@ export class Repo {
       const err = 'Could not pull from remote. Upstream commits? Marked db as corrupt.'
       debug(err, e)
       this.corrupt = true
-      const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'conflict' }
-      getIo().emit('db', msg)
+      if (!skipMsg) {
+        const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'conflict' }
+        getIo().emit('db', msg)
+      }
       throw new GitPullError(err)
     }
   }

@@ -424,7 +424,7 @@ export default class OtomiStack {
       await this.saveValues()
       await this.repo.save(this.editor!)
       // pull push root
-      await rootStack.repo.pull()
+      await rootStack.repo.pull(undefined, true)
       await rootStack.repo.push()
       // inflate new db
       rootStack.db = new Db()
@@ -434,6 +434,10 @@ export default class OtomiStack {
       const sha = await rootStack.repo.getCommitSha()
       const msg: DbMessage = { state: 'clean', editor: this.editor!, sha, reason: 'deploy' }
       getIo().emit('db', msg)
+    } catch (e) {
+      const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
+      getIo().emit('db', msg)
+      throw e
     } finally {
       rootStack.locked = false
     }
