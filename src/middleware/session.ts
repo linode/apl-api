@@ -51,15 +51,11 @@ export const setSessionStack = async (editor: string): Promise<void> => {
 
 export const getEditors = () => Object.keys(sessions)
 
-export const cleanAllSessions = async (editor: string): Promise<void> => {
+export const cleanAllSessions = (): void => {
   debug(`Cleaning all editor sessions`)
-  const sha = await readOnlyStack.repo.getCommitSha()
-  const msg: DbMessage = { state: 'clean', editor, sha, reason: 'restore' }
-  io.emit('db', msg)
   sessions = {}
   // @ts-ignore
   readOnlyStack = undefined
-  ;(await getSessionStack()).initRepo()
 }
 
 export const cleanSession = async (editor: string, sendMsg = true): Promise<void> => {

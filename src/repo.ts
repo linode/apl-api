@@ -41,6 +41,7 @@ function getUrlAuth(url, user, password): string | undefined {
 const secretFileRegex = new RegExp(`^(.*/)?secrets.*.yaml(.dec)?$`)
 export class Repo {
   branch: string
+  commitSha: string
   corrupt = false
   email: string
   git: SimpleGit
@@ -249,6 +250,7 @@ export class Repo {
       await this.git.fetch({})
       await this.git.checkout(this.branch)
     }
+    this.commitSha = await this.getCommitSha()
   }
 
   getOptions() {
@@ -272,6 +274,7 @@ export class Repo {
       const summary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
       const summJson = JSON.stringify(summary)
       debug(`Pull summary: ${summJson}`)
+      this.commitSha = await this.getCommitSha()
       await this.initSops()
       if (!skipRequest) await this.requestInitValues()
     } catch (e) {

@@ -99,6 +99,7 @@ export default class OtomiStack {
   editor?: string
   locked = false
   repo: Repo
+  repoPromise: Promise<Repo>
 
   constructor(editor?: string, inDb?: Db) {
     this.editor = editor
@@ -131,8 +132,9 @@ export default class OtomiStack {
     const url = env.GIT_REPO_URL
     for (;;) {
       try {
-        /* eslint-disable no-await-in-loop */
-        this.repo = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, branch)
+        if (this.repoPromise === undefined)
+          this.repoPromise = getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, branch)
+        this.repo = await this.repoPromise
         await this.repo.pull()
         if (await this.repo.fileExists('env/cluster.yaml')) break
         debug(`Values are not present at ${url}:${branch}`)
@@ -450,11 +452,14 @@ export default class OtomiStack {
   }
 
   async doRestore(): Promise<void> {
-    // hardcore: re-init root and broadcast
-    await cleanAllSessions(this.editor!)
+    cleanAllSessions()
     await emptyDir(rootPath)
     // and re-init root
-    await getSessionStack()
+    const rootStack = await getSessionStack()
+    await rootStack.initRepo()
+    // and msg
+    const msg: DbMessage = { state: 'clean', editor: 'system', sha: '-', reason: 'restore' }
+    getIo().emit('db', msg)
   }
 
   apiClient?: k8s.CoreV1Api
@@ -869,7 +874,8 @@ export default class OtomiStack {
 
   async getSession(user: k8s.User): Promise<Session> {
     const rootStack = await getSessionStack()
-    const currentSha = await rootStack.repo.getCommitSha()
+    await rootStack.repoPromise
+    const currentSha = rootStack.repo.commitSha
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
