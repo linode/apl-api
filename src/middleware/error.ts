@@ -12,16 +12,16 @@ const env = cleanEnv({})
 export function errorMiddleware(e, req: OpenApiRequest, res: Response, next): void {
   if (env.isDev) error('errorMiddleware error', e)
   else debug('errorMiddleware error', e)
-  let code: number
-  let msg
+  let code: number = e.code ?? e.statusCode ?? e.status ?? e.response?.status ?? 500
+  let msg: string = e.message ?? e.response?.data
   if (e instanceof OtomiError) {
     // eslint-disable-next-line prefer-destructuring
     code = e.code
     msg = e.publicMessage
     if (code === 503) res.header({ 'Retry-After': '30' })
-  } else {
+  } else if (Number.isNaN(Number(code))) {
     code = 500
-    msg = `${HttpError.fromCode(code).message}`
+    msg = `${HttpError.fromCode(500).message}`
   }
   res.status(code).json({ error: msg })
 }
