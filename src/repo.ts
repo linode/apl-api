@@ -41,7 +41,6 @@ function getUrlAuth(url, user, password): string | undefined {
 const secretFileRegex = new RegExp(`^(.*/)?secrets.*.yaml(.dec)?$`)
 export class Repo {
   branch: string
-  commitSha: string
   corrupt = false
   email: string
   git: SimpleGit
@@ -250,7 +249,6 @@ export class Repo {
       await this.git.fetch({})
       await this.git.checkout(this.branch)
     }
-    this.commitSha = await this.getCommitSha()
   }
 
   getOptions() {
@@ -266,7 +264,7 @@ export class Repo {
     return summary
   }
 
-  async pull(skipRequest = false, skipMsg = false): Promise<any> {
+  async pull(skipRequest = false): Promise<any> {
     // test root can't pull as it has no remote
     if (!this.url) return
     debug('Pulling')
@@ -274,18 +272,15 @@ export class Repo {
       const summary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
       const summJson = JSON.stringify(summary)
       debug(`Pull summary: ${summJson}`)
-      this.commitSha = await this.getCommitSha()
       await this.initSops()
       if (!skipRequest) await this.requestInitValues()
     } catch (e) {
-      const err = 'Could not pull from remote. Upstream commits? Marked db as corrupt.'
-      debug(err, e)
+      debug('Could not pull from remote. Upstream commits? Marked db as corrupt.')
       this.corrupt = true
-      if (!skipMsg) {
-        const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'conflict' }
-        getIo().emit('db', msg)
-      }
-      throw new GitPullError(err)
+      console.error('Pull error: ', e)
+      const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'conflict' }
+      getIo().emit('db', msg)
+      throw e
     }
   }
 

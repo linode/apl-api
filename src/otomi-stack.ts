@@ -10,7 +10,7 @@ import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
-import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
+import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack, readOnlyStack } from 'src/middleware'
 import {
   App,
   Core,
@@ -99,7 +99,6 @@ export default class OtomiStack {
   editor?: string
   locked = false
   repo: Repo
-  repoPromise: Promise<Repo>
 
   constructor(editor?: string, inDb?: Db) {
     this.editor = editor
@@ -132,9 +131,8 @@ export default class OtomiStack {
     const url = env.GIT_REPO_URL
     for (;;) {
       try {
-        if (this.repoPromise === undefined)
-          this.repoPromise = getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, branch)
-        this.repo = await this.repoPromise
+        /* eslint-disable no-await-in-loop */
+        this.repo = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, branch)
         await this.repo.pull()
         if (await this.repo.fileExists('env/cluster.yaml')) break
         debug(`Values are not present at ${url}:${branch}`)
@@ -426,7 +424,7 @@ export default class OtomiStack {
       await this.saveValues()
       await this.repo.save(this.editor!)
       // pull push root
-      await rootStack.repo.pull(undefined, true)
+      await rootStack.repo.pull()
       await rootStack.repo.push()
       // inflate new db
       rootStack.db = new Db()
@@ -436,10 +434,6 @@ export default class OtomiStack {
       const sha = await rootStack.repo.getCommitSha()
       const msg: DbMessage = { state: 'clean', editor: this.editor!, sha, reason: 'deploy' }
       getIo().emit('db', msg)
-    } catch (e) {
-      const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
-      getIo().emit('db', msg)
-      throw e
     } finally {
       rootStack.locked = false
     }
@@ -452,14 +446,11 @@ export default class OtomiStack {
   }
 
   async doRestore(): Promise<void> {
-    cleanAllSessions()
+    // hardcore: re-init root and broadcast
+    await cleanAllSessions(this.editor!)
     await emptyDir(rootPath)
     // and re-init root
-    const rootStack = await getSessionStack()
-    await rootStack.initRepo()
-    // and msg
-    const msg: DbMessage = { state: 'clean', editor: 'system', sha: '-', reason: 'restore' }
-    getIo().emit('db', msg)
+    await getSessionStack()
   }
 
   apiClient?: k8s.CoreV1Api
@@ -742,7 +733,7 @@ export default class OtomiStack {
     const team = { ...inTeam, name: inTeam.id } as Record<string, any>
     team.resourceQuota = objectToArray(inTeam.resourceQuota as Record<string, any>)
     const res = this.createTeam(team as Team)
-    // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id as string)
+    // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id)
     debug(`Loaded team: ${res.id!}`)
   }
 
@@ -873,13 +864,11 @@ export default class OtomiStack {
   }
 
   async getSession(user: k8s.User): Promise<Session> {
-    const rootStack = await getSessionStack()
-    await rootStack.repoPromise
-    const currentSha = rootStack.repo.commitSha
+    const currentSha = await readOnlyStack.repo.getCommitSha()
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
-      corrupt: rootStack.repo.corrupt,
+      corrupt: readOnlyStack.repo.corrupt,
       editor: this.editor,
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
       user: user as User,

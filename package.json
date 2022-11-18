@@ -153,8 +153,8 @@
     "release:client": "bin/release-client.sh",
     "run-if-changed": "run-if-changed",
     "start": "node dist/src/app.js",
-    "test": "npm run build:models && ts-mocha --exit 'src/**/*.test.ts'",
-    "test:pattern": "npm run build:models && ts-mocha --exit",
+    "test": "GIT_LOCAL_PATH=./test npm run build:models && ts-mocha --exit 'src/**/*.test.ts'",
+    "test:pattern": "GIT_LOCAL_PATH=./test npm run build:models && ts-mocha --exit",
     "types": "tsc --noEmit",
     "prepare": "husky install",
     "watch": "npm-watch"
