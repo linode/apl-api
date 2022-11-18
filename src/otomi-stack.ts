@@ -98,8 +98,8 @@ export default class OtomiStack {
   db: Db
   editor?: string
   locked = false
+  isLoaded = false
   repo: Repo
-  repoPromise: Promise<Repo>
 
   constructor(editor?: string, inDb?: Db) {
     this.editor = editor
@@ -132,9 +132,7 @@ export default class OtomiStack {
     const url = env.GIT_REPO_URL
     for (;;) {
       try {
-        if (this.repoPromise === undefined)
-          this.repoPromise = getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, branch)
-        this.repo = await this.repoPromise
+        this.repo = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, branch)
         await this.repo.pull()
         if (await this.repo.fileExists('env/cluster.yaml')) break
         debug(`Values are not present at ${url}:${branch}`)
@@ -547,6 +545,7 @@ export default class OtomiStack {
     await this.loadSettings()
     await this.loadTeams()
     await this.loadApps()
+    this.isLoaded = true
   }
 
   async loadCluster(): Promise<void> {
@@ -874,7 +873,6 @@ export default class OtomiStack {
 
   async getSession(user: k8s.User): Promise<Session> {
     const rootStack = await getSessionStack()
-    await rootStack.repoPromise
     const currentSha = rootStack.repo.commitSha
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,

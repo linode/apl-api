@@ -7,6 +7,7 @@ import http from 'http'
 import { cloneDeep } from 'lodash'
 import { join } from 'path'
 import { Server } from 'socket.io'
+import { ApiNotReadyError } from 'src/error'
 import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
 import { cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validators'
@@ -95,6 +96,7 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
   })
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
+    if (!readOnlyStack || !readOnlyStack.isLoaded) throw new ApiNotReadyError()
     const { email } = req.user || {}
     const sessionStack = await getSessionStack(email)
     // eslint-disable-next-line no-param-reassign

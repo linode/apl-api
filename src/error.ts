@@ -45,6 +45,12 @@ export class ValidationError extends OtomiError {
   }
 }
 
+export class ApiNotReadyError extends OtomiError {
+  public constructor(err?: string) {
+    super('Api is not ready (initializing). Please try again in 30 seconds.', err)
+    this.code = 503
+  }
+}
 export class DeployLockError extends OtomiError {
   public constructor(err?: string) {
     super('Deployment in progress. Please try again in 15 seconds.', err)
