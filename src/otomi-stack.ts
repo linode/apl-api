@@ -456,7 +456,7 @@ export default class OtomiStack {
     const rootStack = await getSessionStack()
     await rootStack.initRepo()
     // and msg
-    const msg: DbMessage = { state: 'clean', editor: 'system', sha: '-', reason: 'restore' }
+    const msg: DbMessage = { state: 'clean', editor: 'system', sha: rootStack.repo.commitSha, reason: 'restore' }
     getIo().emit('db', msg)
   }
 
