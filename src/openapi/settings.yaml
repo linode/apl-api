@@ -227,9 +227,10 @@ Settings:
             server:
               type: string
               x-default: docker.io
-          required:
-            - username
-            - password
+          # disabling required fields until rjsf solves this nested required bug:
+          # required:
+          #   - username
+          #   - password
           type: object
           x-acl:
             admin: [read-any, update-any]
