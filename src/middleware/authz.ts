@@ -29,14 +29,14 @@ function renameKeys(obj: Record<string, any>) {
   return Object.assign({}, ...keyValues)
 }
 
-const badCode = (code) => code >= 300 || code < 200
-const wrapResponse = (filter, orig) => {
-  return function (obj) {
-    if (badCode(this.statusCode)) return orig(obj)
-    const ret = filter(obj)
-    return orig(ret)
-  }
-}
+// const badCode = (code) => code >= 300 || code < 200
+// const wrapResponse = (filter, orig) => {
+//   return function (obj) {
+//     if (badCode(this.statusCode)) return orig(obj)
+//     const ret = filter(obj)
+//     return orig(ret)
+//   }
+// }
 
 export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: Db): RequestHandler {
   const {
