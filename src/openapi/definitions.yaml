@@ -316,11 +316,6 @@ clusterName:
   type: string
 containerSpecNoSec:
   properties:
-    image:
-      $ref: '#/image'
-    resources:
-      $ref: '#/resources'
-      title: Container resources
     env:
       $ref: '#/env'
     secrets:
@@ -337,9 +332,9 @@ containerSpecNoSec:
       type: string
       title: Command arguments
       description: Override the arguments given to the entrypoint/command of the container.
-  required:
-    - image
-    - resources
+  # required:
+  #   - image
+  #   - resources
   type: object
 containerSpec:
   allOf:
@@ -856,9 +851,35 @@ kms:
           title: Vault
           type: object
 ksvcNew:
-  description: Will create a new knative service from the input gathered here.
+  description: Create a new Knative service by proving the image/tag. All other configuration parameters are optional.
   title: New Knative service
   allOf:
+    - $ref: '#/image'
+    - properties:
+        resources:
+          type: object
+          properties:
+            limits:
+              properties:
+                cpu:
+                  $ref: '#/quantityCpu'
+                  default: 200m
+                memory:
+                  $ref: '#/quantityMem'
+                  default: 32Mi
+            requests:
+              properties:
+                cpu:
+                  $ref: '#/quantityCpu'
+                  default: 100m
+                memory:
+                  $ref: '#/quantityMem'
+                  default: 16Mi
+          required:
+            - limits
+            - requests
+      type: object
+    - $ref: '#/containerSpecNoSec'
     - properties:
         annotations:
           $ref: '#/annotations'
@@ -875,7 +896,6 @@ ksvcNew:
               default: false
           title: Security context
       type: object
-    - $ref: '#/containerSpecNoSec'
     - properties:
         serviceType:
           default: ksvc
@@ -889,7 +909,7 @@ ksvcNew:
           default: false
         containerPort:
           $ref: '#/portNumber'
-          description: Container port the knative pod will connect with. Leaving this empty will let knative infer the port from the container, which usually works, but might be problematic when the container does not specifically expose a port. (As is the case with nginx derived images!)
+          description: Container port the knative pod will connect with.
           title: Container port
         # autoCD:
         #   description: Deploys new images based on a tagging strategy
@@ -1092,19 +1112,19 @@ resourceQuota:
     - name: services.loadbalancers
       value: '0'
 runAsNonRoot:
-  description: Will prevent the container from starting with UID 0. This implies that k8s must be able to infer the UID from the image. If it complains the UID must be explicitly set with runAsUser.
+  description: Will prevent the container from starting with UID 0.
   title: Run as non-root
   type: boolean
   default: true
 runAsUser:
-  description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May be set in both SecurityContext and PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+  description: The UID to run the entrypoint of the container process.
   default: 1001
   maximum: 65535
   minimum: 0
   title: Run as user
   type: integer
 runAsGroup:
-  description: The GID to run the entrypoint of the container process. Defaults to group specified in image metadata if unspecified. May be set in both SecurityContext and PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+  description: The GID to run the entrypoint of the container process.
   default: 1001
   maximum: 65535
   minimum: 0

@@ -40,7 +40,7 @@ Service:
         - $ref: definitions.yaml#/ksvcPredeployed
         - $ref: definitions.yaml#/ksvcNew
       title: Service type
-      description: Type of service. Can be a knative service or a regular service.
+      description: Type of service. Choose between existing K8s service, existing Knative service or create a new Knative service.
       x-externalDocsPath: docs/console/services/#configuring-the-service-type
     ingress:
       title: Exposure (ingress)
