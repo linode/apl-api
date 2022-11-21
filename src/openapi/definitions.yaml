@@ -854,7 +854,9 @@ ksvcNew:
   description: Create a new Knative service by proving the image/tag. All other configuration parameters are optional.
   title: New Knative service
   allOf:
-    - $ref: '#/image'
+    - properties:
+        image:
+          $ref: '#/image'
     - properties:
         resources:
           type: object
