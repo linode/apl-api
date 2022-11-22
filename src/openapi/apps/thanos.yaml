@@ -24,19 +24,19 @@ AppThanos:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 1000m
+                      default: 1
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 1000Mi
+                      default: 1Gi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
+                      default: 200m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 200Mi
+                      default: 128Mi
               required:
                 - limits
                 - requests
@@ -55,10 +55,10 @@ AppThanos:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 1000m
+                      default: 500m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 1000Mi
+                      default: 512Mi
                 requests:
                   type: object
                   properties:
@@ -67,7 +67,7 @@ AppThanos:
                       default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 200Mi
+                      default: 128Mi
               required:
                 - limits
                 - requests
@@ -82,19 +82,19 @@ AppThanos:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 1000m
+                      default: 1
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 1000Mi
+                      default: 1Gi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
+                      default: 200m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 200Mi
+                      default: 128Mi
               required:
                 - limits
                 - requests
@@ -125,19 +125,19 @@ AppThanos:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 1000m
+                      default: 500m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 1000Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
+                      default: 200m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 200Mi
+                      default: 256Mi
               required:
                 - limits
                 - requests
@@ -156,10 +156,10 @@ AppThanos:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 1000m
+                      default: 500m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 1000Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
@@ -168,7 +168,7 @@ AppThanos:
                       default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 200Mi
+                      default: 128Mi
               required:
                 - limits
                 - requests
@@ -197,19 +197,19 @@ AppThanos:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 1000m
+                      default: 500m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 1000Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
+                      default: 200m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 200Mi
+                      default: 128Mi
         ruler:
           properties:
             enabled:
@@ -223,19 +223,19 @@ AppThanos:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 1000m
+                      default: 500m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 1000Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
+                      default: 200m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 200Mi
+                      default: 128Mi
               required:
                 - limits
                 - requests
