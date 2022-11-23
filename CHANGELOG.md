@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.16](https://github.com/redkubes/otomi-api/compare/v0.5.15...v0.5.16) (2022-11-18)
+
+
+### Features
+
+* detect git conflicts on multi-user values changes ([#334](https://github.com/redkubes/otomi-api/issues/334)) ([a09de9c](https://github.com/redkubes/otomi-api/commit/a09de9c104dfd31c8ec8592c6724d3d3a374c9e2))
+
+
+### Bug Fixes
+
+* certman resources ([#337](https://github.com/redkubes/otomi-api/issues/337)) ([f794106](https://github.com/redkubes/otomi-api/commit/f794106d04d6df27f14be9fde4d5c6eaf5d32f67))
+* do not remove /tmp/otomi/values dir ([#338](https://github.com/redkubes/otomi-api/issues/338)) ([ab3a7d1](https://github.com/redkubes/otomi-api/commit/ab3a7d1928f9c82d89ead6f4ec612643ac72a2bf))
+* prevent regression ([2136ce7](https://github.com/redkubes/otomi-api/commit/2136ce7a980b9106b68e3eac1c98bb9fa9b51e47))
+* **schema:** add certmanager resources to schema ([#335](https://github.com/redkubes/otomi-api/issues/335)) ([e64634c](https://github.com/redkubes/otomi-api/commit/e64634c445f3cab76e408795f2cbb6d5e9a08267))
+
 ### [0.5.15](https://github.com/redkubes/otomi-api/compare/v0.5.14...v0.5.15) (2022-09-27)
 
 
