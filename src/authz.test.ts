@@ -37,10 +37,6 @@ describe('Schema wise permissions', () => {
     },
   }
 
-  const data = {
-    name: 'svc',
-    ingress: { f1: 'test' },
-  }
   it('An admin can get and update all services', () => {
     const authz = new Authz(spec).init(sessionAdmin)
     expect(authz.validateWithCasl('create', 'Service', 'mercury')).to.be.false
@@ -84,18 +80,10 @@ describe('Ownership wise resource permissions', () => {
   }
 
   it('A team cannot update service from another team', () => {
-    const data = {
-      name: 'svc',
-      // teamId: 'venus',
-    }
     const authz = new Authz(spec).init(sessionTeam)
     expect(authz.validateWithCasl('update', 'Service', 'venus')).to.be.false
   })
   it('A team can update its own service', () => {
-    const data = {
-      name: 'svc',
-      // teamId: 'mercury',
-    }
     const authz = new Authz(spec).init(sessionTeam)
     expect(authz.validateWithCasl('update', 'Service', 'mercury')).to.be.true
   })
