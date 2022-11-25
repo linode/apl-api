@@ -2709,6 +2709,14 @@ properties:
       adminPassword:
         type: string
         x-secret: 'randAlphaNum 20'
+      otomiCloudApikey:
+        title: Otomi Cloud Apikey
+        type: string
+        description: Apikey to activate Otomi, managed and activated by Otomi Cloud
+      isActivatedOnOtomiCloud:
+        default: false
+        description: 'Bool check to see if Otomi is activated in Otomi Cloud'
+        type: boolean
       globalPullSecret:
         title: Global pullsecret
         description: Will be connected to each "default" service account in all otomi app namespaces.

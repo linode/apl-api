@@ -195,6 +195,14 @@ Settings:
             admin: [read-any]
             team: []
           # readOnly: true
+        otomiCloudApikey:
+          type: string
+          description: Apikey to activate Otomi, managed and activated by Otomi Cloud
+          title: Otomi Cloud Apikey
+        isActivatedOnOtomiCloud:
+          default: false
+          description: 'Bool check to see if Otomi is activated in Otomi Cloud'
+          type: boolean
         additionalClusters:
           title: Additional clusters
           description: Enter other k8s clusters, if there are any.

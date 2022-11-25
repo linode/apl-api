@@ -26,6 +26,7 @@ import {
   TeamSelfService,
   User,
 } from './otomi-models'
+import connect from './otomiCloud/connect-oc'
 import cloneRepo, { prepareValues, Repo } from './repo'
 import {
   argQuoteJoin,
@@ -188,6 +189,8 @@ export default class OtomiStack {
 
   editSettings(data: Settings, settingId: string) {
     const settings = this.db.db.get('settings').value()
+    if (data.otomi?.otomiCloudApikey) connect()
+
     // do not merge as oneOf properties cannot be merged
     // settings[settingId] = merge(settings[settingId], data[settingId])
     settings[settingId] = removeBlankAttributes(data[settingId])
