@@ -168,3 +168,4 @@ AppPrometheus:
               required:
                 - limits
                 - requests
+  required: [id]

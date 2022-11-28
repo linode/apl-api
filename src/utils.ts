@@ -1,16 +1,12 @@
 import $RefParser from '@apidevtools/json-schema-ref-parser'
 import cleanDeep, { CleanOptions } from 'clean-deep'
-import { existsSync, readFileSync } from 'fs'
-import { load } from 'js-yaml'
+import { pathExists } from 'fs-extra'
+import { readFile } from 'fs/promises'
 import { isArray, memoize, mergeWith, omit } from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
 import { resolve } from 'path'
-import { Cluster, Dns } from './otomi-models'
-import { cleanEnv, GIT_LOCAL_PATH } from './validators'
-
-const env = cleanEnv({
-  GIT_LOCAL_PATH,
-})
+import { Cluster, Dns } from 'src/otomi-models'
+import { parse } from 'yaml'
 
 export function arrayToObject(array: [] = [], keyName = 'name', keyValue = 'value'): Record<string, unknown> {
   const obj = {}
@@ -42,7 +38,8 @@ export const flattenObject = (
   return Object.entries(obj)
     .flatMap(([key, value]) => {
       const subPath = path ? `${path}.${key}` : key
-      if (typeof value === 'object' && !Array.isArray(value) && value !== null) return flattenObject(value, subPath)
+      if (typeof value === 'object' && !Array.isArray(value) && value !== null)
+        return flattenObject(value as Record<string, any>, subPath)
       return { [subPath]: value }
     })
     .reduce((acc, base) => {
@@ -50,18 +47,18 @@ export const flattenObject = (
     }, {})
 }
 
-export const loadYaml = (path: string, opts?: { noError: boolean }): Record<string, any> | undefined => {
-  if (!existsSync(path)) {
+export const loadYaml = async (path: string, opts?: { noError: boolean }): Promise<Record<string, any> | undefined> => {
+  if (!(await pathExists(path))) {
     if (opts?.noError) return undefined
     throw new Error(`${path} does not exist`)
   }
-  return load(readFileSync(path, 'utf-8')) as Record<string, any>
+  return parse(await readFile(path, 'utf-8')) as Record<string, any>
 }
 
 let valuesSchema: Record<string, any>
 export const getValuesSchema = async (): Promise<Record<string, any>> => {
   if (valuesSchema) return valuesSchema
-  const schema = loadYaml(resolve(__dirname, 'values-schema.yaml'))
+  const schema = await loadYaml(resolve(__dirname, 'values-schema.yaml'))
   const derefSchema = await $RefParser.dereference(schema as $RefParser.JSONSchema)
   valuesSchema = omit(derefSchema, ['definitions'])
   return valuesSchema
@@ -76,17 +73,18 @@ export const traverse = (o, func, path = '') =>
     }
   })
 
-export const isOf = (o): boolean => Object.keys(o).some((p) => ['anyOf', 'allOf', 'oneOf'].includes(p))
+export const isOf = (o: Record<string, any>): boolean =>
+  Object.keys(o).some((p) => ['anyOf', 'allOf', 'oneOf'].includes(p))
 
-export const extract = memoize((o, f) => {
+export const extract = memoize((obj: Record<string, any>, f) => {
   const schemaKeywords = ['properties', 'items', 'anyOf', 'allOf', 'oneOf', 'default', 'x-secret', 'x-acl']
   const leafs = {}
-  traverse(o, (o, i, path) => {
+  traverse(obj, (o, i, path) => {
     const res = f(o, i, path)
     if (!res) return
     const p = path
       .split('.')
-      .filter((p: string) => !schemaKeywords.includes(p) && p !== `${parseInt(p, 10)}`)
+      .filter((part: string) => !schemaKeywords.includes(part) && part !== `${parseInt(part, 10)}`)
       .join('.')
     if (!leafs[p]) leafs[p] = res
   })
@@ -135,15 +133,15 @@ export function getServiceUrl({
   return { subdomain: '', domain }
 }
 
-export function removeBlankAttributes(obj: Record<string, unknown>): Record<string, unknown> {
-  const options: CleanOptions = {
+export function removeBlankAttributes(obj: Record<string, unknown>, options?: CleanOptions): Record<string, unknown> {
+  const defaultOptions: CleanOptions = {
     emptyArrays: false,
     emptyObjects: true,
     emptyStrings: true,
     nullValues: true,
     undefinedValues: true,
   }
-  return cleanDeep(obj, options)
+  return cleanDeep(obj, { ...defaultOptions, ...options })
 }
 
 export const argSplit = /[^\s"']+|("[^"]*")|('[^']*')/g
@@ -159,14 +157,10 @@ export const argQuoteJoin = (a) =>
 
 const doubleQuoteMatcher = /"/g
 const singleQuoteMatcher = /'/g
-export const argQuoteStrip = (s) => {
+export const argQuoteStrip = (s: string) => {
   if (['"', "'"].includes(s.charAt(0))) return s.substr(1, s.length - 2)
   if (s.includes("'") && !s.includes("\\'")) return s.replace(doubleQuoteMatcher, '')
   return s.replace(singleQuoteMatcher, '')
-}
-
-export const decryptedFilePostfix = () => {
-  return existsSync(`${env.GIT_LOCAL_PATH}/.sops.yaml`) ? '.dec' : ''
 }
 
 // use lodash mergeWith to avoid merging arrays

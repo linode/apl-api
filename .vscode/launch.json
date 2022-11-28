@@ -5,25 +5,9 @@
       "type": "node",
       "request": "attach",
       "name": "Attach to current script",
-      "protocol": "inspector",
       "port": 4321,
       "restart": true,
       "cwd": "${workspaceRoot}"
-    },
-    {
-      "name": "Debug src/app.ts",
-      "type": "pwa-node",
-      "request": "launch",
-      "runtimeExecutable": "node",
-      "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
-      "args": ["src/app.ts"],
-      "cwd": "${workspaceRoot}",
-      "internalConsoleOptions": "openOnSessionStart",
-      "skipFiles": ["<node_internals>/**", "node_modules/**"],
-      "env": {
-        "NODE_ENV": "test"
-      },
-      "resolveSourceMapLocations": ["!${workspaceFolder}/**"]
     },
     {
       "name": "Debug npm run dev",
@@ -36,15 +20,12 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "Mocha All",
-      "type": "pwa-node",
+      "name": "Mocha all",
+      "type": "node",
       "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
       "request": "launch",
-      "args": ["--timeout", "999999", "--colors", "${workspaceFolder}/src/**/*.test.ts"],
-      "env": {
-        "NODE_ENV": "test"
-      },
-      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+      "program": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+      "args": ["src/**/*.test.ts", "--timeout", "999999", "--exit"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     },
@@ -52,21 +33,18 @@
       "name": "Mocha Current File",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-      "args": [
-        "--require",
-        "dotenv/config",
-        "--require",
-        "ts-node/register",
-        "--timeout",
-        "999999",
-        "--colors",
-        "--recursive",
-        "${file}"
-      ],
-      "env": {
-        "NODE_ENV": "test"
-      },
+      "program": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+      "args": ["${file}", "--timeout", "999999"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Mocha dist all",
+      "type": "node",
+      "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
+      "request": "launch",
+      "program": "${workspaceRoot}/node_modules/.bin/_mocha",
+      "args": ["${workspaceFolder}/dist/**/*.test.js", "--timeout", "999999", "--exit"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     }

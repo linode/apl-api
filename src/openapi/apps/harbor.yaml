@@ -114,7 +114,7 @@ AppHarbor:
                           type: string
                         accountkey:
                           type: string
-                          x-secret: ''
+                          x-secret: true
                         container:
                           type: string
                         realm:
@@ -141,7 +141,7 @@ AppHarbor:
                         encodedkey:
                           type: string
                           description: A base64 encoded json file which contains the key
-                          x-secret: ''
+                          x-secret: true
                         rootdirectory:
                           type: string
                     type:
@@ -430,3 +430,4 @@ AppHarbor:
               required:
                 - limits
                 - requests
+  required: [id]

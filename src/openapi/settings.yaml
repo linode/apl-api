@@ -10,24 +10,15 @@ Settings:
       title: Alerts
       description: Configure alerting endpoints to receive notifications from Alertmanager and Otomi deployments.
       x-externalDocsPath: docs/console/settings#alerts
-      x-acl:
-        admin: [read-any, update-any]
-        team: [read-any]
     cluster:
       additionalProperties: false
       $ref: cluster.yaml#/Cluster
       title: Cluster
       description: Cluster configuration.
-      x-acl:
-        admin: [read-any, update-any]
-        team: [read-any]
     backup:
       additionalProperties: false
       title: Backup
       description: Backup schedule configuration.
-      x-acl:
-        admin: [read-any, update-any]
-        team: []
       type: object
       properties:
         platformSchedule:
@@ -63,8 +54,8 @@ Settings:
     home:
       additionalProperties: false
       $ref: definitions.yaml#/alerts
-      title: Remote Monitoring
-      description: Send alerts to a 3rd party for remote monitoring
+      title: Co-monitoring
+      description: Send alerts to a 3rd party for co-monitoring
       x-externalDocsPath: docs/console/settings#home-alerts
       x-acl:
         admin: [read-any, update-any]
@@ -158,7 +149,7 @@ Settings:
         clientSecret:
           title: Client Secret
           type: string
-          x-secret: ''
+          x-secret: true
         adminGroupID:
           title: Admin group ID
           type: string
@@ -218,11 +209,20 @@ Settings:
           properties:
             username:
               type: string
+              x-acl:
+                admin: [read-any, update-any]
+                team: []
             password:
               type: string
-              x-secret: ''
+              x-secret: true
+              x-acl:
+                admin: [read-any, update-any]
+                team: []
             email:
               type: string
+              x-acl:
+                admin: [read-any, update-any]
+                team: []
               x-default: not@us.ed
             server:
               type: string
@@ -252,7 +252,7 @@ Settings:
           default: false
         isHomeMonitored:
           description: Whether this cluster is monitored by a third party.
-          title: Remote monitoring
+          title: Co-monitoring
           type: boolean
           default: false
         isMultitenant:

@@ -1,22 +1,21 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequest } from '../../../otomi-models'
-import OtomiStack from '../../../otomi-stack'
+import { Job, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:teams:jobs')
 
-export default function (otomi: OtomiStack): OperationHandlerArray {
+export default function (): OperationHandlerArray {
   const get: Operation = [
-    ({ params: { teamId } }: OpenApiRequest, res): void => {
+    ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
       debug(`getTeamJobs(${teamId})`)
       const v = otomi.getTeamJobs(teamId)
       res.json(v)
     },
   ]
   const post: Operation = [
-    ({ params: { teamId }, body }: OpenApiRequest, res): void => {
+    ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): void => {
       debug(`createJob(${teamId}, ...)`)
-      const v = otomi.createJob(teamId, body)
+      const v = otomi.createJob(teamId, body as Job)
       res.json(v)
     },
   ]

@@ -1,20 +1,25 @@
 import axios, { AxiosResponse } from 'axios'
 import Debug from 'debug'
-import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs'
-import yaml from 'js-yaml'
-import { isEmpty } from 'lodash'
-import path, { dirname } from 'path'
-import simpleGit, { CleanOptions, CommitResult, SimpleGit, SimpleGitOptions } from 'simple-git'
-import { GitPullError } from './error'
-import { decryptedFilePostfix, removeBlankAttributes } from './utils'
-import { cleanEnv, DISABLE_SYNC, TOOLS_HOST } from './validators'
+import diff from 'deep-diff'
+import { copy, ensureDir, pathExists, readFile, writeFile } from 'fs-extra'
+import { unlink } from 'fs/promises'
+import stringifyJson from 'json-stable-stringify'
+import { cloneDeep, get, isEmpty, merge, set, unset } from 'lodash'
+import { dirname, join } from 'path'
+import simpleGit, { CheckRepoActions, CommitResult, SimpleGit } from 'simple-git'
+import { cleanEnv, GIT_BRANCH, GIT_LOCAL_PATH, GIT_REPO_URL, TOOLS_HOST } from 'src/validators'
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
+import { GitPullError, HttpError, ValidationError } from './error'
+import { DbMessage, getIo } from './middleware'
+import { Core } from './otomi-models'
+import { removeBlankAttributes } from './utils'
 
 const debug = Debug('otomi:repo')
 
-const decryptedFilePostfixRegex = new RegExp(`${decryptedFilePostfix()}$`)
-
 const env = cleanEnv({
-  DISABLE_SYNC,
+  GIT_BRANCH,
+  GIT_LOCAL_PATH,
+  GIT_REPO_URL,
   TOOLS_HOST,
 })
 
@@ -22,214 +27,322 @@ const baseUrl = `http://${env.TOOLS_HOST}:17771/`
 const prepareUrl = `${baseUrl}prepare`
 const initUrl = `${baseUrl}init`
 
-async function initValues(): Promise<AxiosResponse | void> {
-  debug('Requesting values repo "init" action')
-  const res = await axios.get(initUrl)
-  return res
+const getProtocol = (url): string => (url && url.includes('://') ? url.split('://')[0] : 'https')
+
+const getUrl = (url): string => (!url || url.includes('://') ? url : `${getProtocol(url)}://${url}`)
+
+function getUrlAuth(url, user, password): string | undefined {
+  if (!url) return
+  const protocol = getProtocol(url)
+  const [_, bareUrl] = url.split('://')
+  return protocol === 'file' ? `${protocol}://${bareUrl}` : `${protocol}://${user}:${password}@${bareUrl}`
 }
 
-export async function prepareValues(): Promise<AxiosResponse | void> {
-  debug('Requesting values repo "prepare" action')
-  const res = await axios.get(prepareUrl)
-  return res
-}
-
-function getRemotePathAuth(remotPath, protocol, user, password): string {
-  return protocol === 'file' ? `${protocol}://${remotPath}` : `${protocol}://${user}:${password}@${remotPath}`
-}
-
+const secretFileRegex = new RegExp(`^(.*/)?secrets.*.yaml(.dec)?$`)
 export class Repo {
-  path: string
-
+  branch: string
+  commitSha: string
+  corrupt = false
+  email: string
   git: SimpleGit
-
-  url: string
-
+  password: string
+  path: string
+  remote: string
+  remoteBranch: string
+  secretFilePostfix = ''
+  url: string | undefined
+  urlAuth: string | undefined
   user: string
 
-  email: string
-
-  password: string
-
-  branch: string
-
-  remote: string
-
-  remoteBranch: string
-
-  repoPathAuth: string
-
-  constructor(localRepoPath, remotePath, user, email, repoPathAuth, branch) {
-    this.path = localRepoPath
-    this.url = remotePath
-    this.repoPathAuth = repoPathAuth
-    this.user = user
+  constructor(
+    path: string,
+    url: string | undefined,
+    user: string,
+    email: string,
+    urlAuth: string | undefined,
+    branch: string | undefined,
+  ) {
+    this.branch = branch || 'main'
     this.email = email
-    this.branch = branch
+    this.path = path
     this.remote = 'origin'
-    this.remoteBranch = `${this.remote}/${branch}`
+    this.remoteBranch = join(this.remote, this.branch)
+    this.urlAuth = urlAuth
+    this.user = user
+    this.url = url
     this.git = simpleGit(this.path)
   }
 
+  getProtocol() {
+    return getProtocol(this.url)
+  }
+
+  async requestInitValues(): Promise<AxiosResponse | void> {
+    debug(`Tools: requesting "init" on values repo path ${this.path}`)
+    const res = await axios.get(initUrl, { params: { envDir: this.path } })
+    return res
+  }
+
+  async requestPrepareValues(): Promise<AxiosResponse | void> {
+    debug(`Tools: requesting "prepare" on values repo path ${this.path}`)
+    const res = await axios.get(prepareUrl, { params: { envDir: this.path } })
+    return res
+  }
+
   async addConfig(): Promise<void> {
+    debug(`Adding git config`)
     await this.git.addConfig('user.name', this.user)
     await this.git.addConfig('user.email', this.email)
-  }
-
-  async init(): Promise<void> {
-    await this.git.init()
-    await this.addRemoteOrigin()
-  }
-
-  writeFile(relativePath, data): void {
-    const absolutePath = path.join(this.path, relativePath)
-    const cleanedData = removeBlankAttributes(data)
-    if (isEmpty(cleanedData)) {
-      if (existsSync(absolutePath) && absolutePath.includes('/secrets.')) {
-        debug(`Removing file: ${absolutePath}`)
-        // Remove empty secret file due to https://github.com/mozilla/sops/issues/926 issue
-        unlinkSync(absolutePath)
+    if (this.isRootClone()) {
+      if (this.getProtocol() === 'file') {
+        // tell the the git repo there to accept updates even when it is checked out
+        const _git = simpleGit(this.url!.replace('file://', ''))
+        await _git.addConfig('receive.denyCurrentBranch', 'updateInstead')
       }
-      if (decryptedFilePostfix() !== '') {
-        const absolutePathEncFile = absolutePath.replace(decryptedFilePostfixRegex, '')
-        // also remove the encrypted file as they are operated on in pairs
-        if (existsSync(absolutePathEncFile)) {
-          debug(`Removing file: ${absolutePath}`)
-          unlinkSync(absolutePathEncFile)
-        }
-      }
-      // bail if we came to write secrets which we can't fill empty
-      if (absolutePath.includes('/secrets.')) return
+      // same for the root repo, which needs to accept pushes from children
+      await this.git.addConfig('receive.denyCurrentBranch', 'updateInstead')
     }
+  }
+
+  async init(bare = true): Promise<void> {
+    await this.git.init(bare !== undefined ? bare : this.isRootClone())
+    await this.git.addRemote(this.remote, this.url!)
+  }
+
+  async initSops(): Promise<void> {
+    this.secretFilePostfix = (await pathExists(join(this.path, '.sops.yaml'))) ? '.dec' : ''
+  }
+
+  getSafePath(file: string): string {
+    if (this.secretFilePostfix === '') return file
+    // otherwise we might have to give *.dec variant for secrets
+    if (file.match(secretFileRegex) && !file.endsWith(this.secretFilePostfix)) return `${file}${this.secretFilePostfix}`
+    return file
+  }
+
+  async removeFile(file: string): Promise<void> {
+    const absolutePath = join(this.path, file)
+    const exists = await this.fileExists(file)
+    if (exists) {
+      debug(`Removing file: ${absolutePath}`)
+      // Remove empty secret file due to https://github.com/mozilla/sops/issues/926 issue
+      await unlink(absolutePath)
+    }
+    if (file.match(secretFileRegex)) {
+      // also remove the encrypted file as they are operated on in pairs
+      const encFile = `${file}${this.secretFilePostfix}`
+      if (await this.fileExists(encFile)) {
+        const absolutePathEnc = join(this.path, encFile)
+        debug(`Removing enc file: ${absolutePathEnc}`)
+        await unlink(absolutePathEnc)
+      }
+    }
+  }
+
+  async diffFile(file: string, data: Record<string, any>): Promise<boolean> {
+    const repoFile: string = this.getSafePath(file)
+    const oldData = await this.readFile(repoFile)
+    const deepDiff = diff(data, oldData)
+    debug(`Diff for ${file}: `, deepDiff)
+    return deepDiff
+  }
+
+  async writeFile(file: string, data: Record<string, unknown>): Promise<void> {
+    const cleanedData = removeBlankAttributes(data, { emptyArrays: true })
+    if (isEmpty(cleanedData) && file.match(secretFileRegex)) {
+      // remove empty secrets file which sops can't handle
+      return this.removeFile(file)
+    }
+    // we also bail when no changes found
+    const hasDiff = await this.diffFile(file, data)
+    if (!hasDiff) return
+    // ok, write new content
+    const absolutePath = join(this.path, file)
     debug(`Writing to file: ${absolutePath}`)
-    const content = isEmpty(cleanedData) ? '' : yaml.dump(cleanedData, { indent: 4 })
+    const sortedData = JSON.parse(stringifyJson(data) as string)
+    const content = isEmpty(sortedData) ? '' : stringifyYaml(sortedData, undefined, 4)
     const dir = dirname(absolutePath)
-    if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
-    writeFileSync(absolutePath, content, 'utf8')
+    await ensureDir(dir)
+    await writeFile(absolutePath, content, 'utf8')
   }
 
-  fileExists(relativePath: string): boolean {
-    const absolutePath = path.join(this.path, relativePath)
-    return existsSync(absolutePath)
+  async fileExists(relativePath: string): Promise<boolean> {
+    const absolutePath = join(this.path, relativePath)
+    return await pathExists(absolutePath)
   }
 
-  readFile(relativePath): any {
-    const absolutePath = path.join(this.path, relativePath)
+  async readFile(file: string, checkSuffix = false): Promise<Record<string, any>> {
+    if (!(await this.fileExists(file))) return {}
+    const safeFile = checkSuffix ? this.getSafePath(file) : file
+    const absolutePath = join(this.path, safeFile)
     debug(`Reading from file: ${absolutePath}`)
-    const doc = yaml.load(readFileSync(absolutePath, 'utf8'))
+    const doc = parseYaml(await readFile(absolutePath, 'utf8'))
     return doc
   }
 
-  async commit(author: string): Promise<CommitResult> {
-    await this.git.add('./*')
-    const commitSummary = await this.git.commit(`otomi-api<${author}>`)
-    debug(`Commit summary: ${JSON.stringify(commitSummary)}`)
-    return commitSummary
+  async loadConfig(file: string, secretFile: string): Promise<Core> {
+    const data = await this.readFile(file)
+    const secretData = await this.readFile(secretFile, true)
+    return merge(data, secretData) as Core
+  }
+
+  async saveConfig(
+    dataPath: string,
+    inSecretDataPath: string,
+    config: Record<string, any>,
+    secretPaths: string[],
+  ): Promise<Promise<void>> {
+    const secretData = {}
+    const secretDataPath = `${inSecretDataPath}${this.secretFilePostfix}`
+    const plainData = cloneDeep(config)
+    secretPaths.forEach((objectPath) => {
+      const val = get(config, objectPath)
+      if (val) {
+        set(secretData, objectPath, val)
+        unset(plainData, objectPath)
+      }
+    })
+
+    await this.writeFile(secretDataPath, secretData)
+    await this.writeFile(dataPath, plainData)
+  }
+
+  isRootClone(): boolean {
+    return this.path === env.GIT_LOCAL_PATH
+  }
+
+  hasRemote(): boolean {
+    return !!env.GIT_REPO_URL
+  }
+
+  async initFromTestFolder(): Promise<void> {
+    // we inflate GIT_LOCAL_PATH from the ./test folder
+    debug(`DEV mode: using local folder values`)
+    await copy(join(process.cwd(), 'test'), env.GIT_LOCAL_PATH, {
+      recursive: true,
+      overwrite: false,
+    })
+    await this.init(false)
+    await this.git.checkoutLocalBranch(this.branch)
+    await this.git.add('.')
+    await this.addConfig()
+    await this.git.commit('initial commit', undefined, this.getOptions())
   }
 
   async clone(): Promise<void> {
-    if (env.isDev && !env.DISABLE_SYNC) await initValues()
-    if (env.DISABLE_SYNC) return
-
     debug(`Checking if local git repository exists at: ${this.path}`)
-
-    const isRepo = await this.git.checkIsRepo()
+    const isRepo = await this.git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT)
     if (!isRepo) {
-      debug(`Local git repository does not exist. Cloning from '${this.url}' to '${this.path}'`)
-      await this.git.clone(this.repoPathAuth, this.path)
-    } else {
+      debug(`Initializing repo...`)
+      if (!this.hasRemote() && this.isRootClone()) return await this.initFromTestFolder()
+      else if (!this.isRootClone()) {
+        // child clone, point to root
+        this.url = `file://${env.GIT_LOCAL_PATH}`
+        this.urlAuth = this.url
+      }
+      debug(`Cloning from '${this.url}' to '${this.path}'`)
+      await this.git.clone(this.urlAuth!, this.path)
+      await this.addConfig()
+      await this.git.checkout(this.branch)
+    } else if (this.url) {
       debug('Repo already exists. Checking out correct branch.')
       // Git fetch ensures that local git repository is synced with remote repository
-      await this.git.fetch()
+      await this.git.fetch({})
       await this.git.checkout(this.branch)
     }
+    this.commitSha = await this.getCommitSha()
+  }
+
+  getOptions() {
+    const options = {}
+    if (env.isDev) options['--no-verify'] = null // only for dev do we have git hooks blocking direct commit
+    return options
+  }
+
+  async commit(editor: string): Promise<CommitResult> {
+    await this.git.add('./*')
+    const summary = await this.git.commit(`otomi-api commit by ${editor}`, undefined, this.getOptions())
+    debug(`Commit summary: ${JSON.stringify(summary)}`)
+    return summary
+  }
+
+  async pull(skipRequest = false, skipMsg = false): Promise<any> {
+    // test root can't pull as it has no remote
+    if (!this.url) return
+    debug('Pulling')
     try {
-      await this.pull()
-      await initValues()
+      const summary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
+      const summJson = JSON.stringify(summary)
+      debug(`Pull summary: ${summJson}`)
+      this.commitSha = await this.getCommitSha()
+      await this.initSops()
+      if (!skipRequest) await this.requestInitValues()
     } catch (e) {
-      if (env.isDev) await this.git.clean(CleanOptions.FORCE)
-      else throw e
+      const err = 'Could not pull from remote. Upstream commits? Marked db as corrupt.'
+      debug(err, e)
+      this.corrupt = true
+      if (!skipMsg) {
+        const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'conflict' }
+        getIo().emit('db', msg)
+      }
+      throw new GitPullError(err)
     }
   }
 
-  async pull(): Promise<any> {
-    const pullSummary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
-    debug(`Pull summary: ${JSON.stringify(pullSummary)}`)
-    return pullSummary
+  async push(): Promise<any> {
+    if (!this.url && this.isRootClone()) return
+    debug('Pushing')
+    const summary = await this.git.push(this.remote, this.branch)
+    debug('Pushed. Summary: ', summary)
+    return
   }
 
   async getCommitSha(): Promise<string> {
-    return this.git.revparse(['--verify', 'HEAD'])
+    return this.git.revparse('HEAD')
   }
 
-  async save(email): Promise<void> {
-    const sha = await this.getCommitSha()
-
-    const commitSummary: CommitResult = await this.commit(email)
-    if (commitSummary.commit === '') return
+  async save(editor: string): Promise<void> {
+    // prepare values first
     try {
-      await this.pull()
+      await this.requestPrepareValues()
     } catch (e) {
-      debug(`Pull error: ${JSON.stringify(e)}`)
-      await this.git.rebase(['--abort'])
-      await this.git.reset(['--hard', sha])
-      await initValues()
-      debug(`Reset HEAD to ${sha} commit`)
-
+      debug(`ERROR: ${JSON.stringify(e)}`)
+      if (e.response) {
+        const { status } = e.response as AxiosResponse
+        if (status === 422) throw new ValidationError()
+        throw HttpError.fromCode(status)
+      }
+      throw new HttpError(500, `${e}`)
+    }
+    // all good? commit
+    await this.commit(editor)
+    try {
+      // we are in a developer branch so first merge in root which might be changed by another dev
+      // but since we are a child we don't need to re-init, just wait for root db to be copied
+      const skipInit = true
+      await this.pull(skipInit)
+      await this.push()
+    } catch (e) {
+      debug(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
+      debug(`Merge error: ${JSON.stringify(e)}`)
       throw new GitPullError()
     }
-    debug('pushing')
-    await this.git.push(this.remote, this.branch)
-    debug('pushed')
-  }
-
-  async addRemoteOrigin(): Promise<void> {
-    await this.git.addRemote(this.remote, this.url)
   }
 }
 
-export default async function cloneRepo(
-  localPath,
-  remotePath,
-  user,
-  email,
-  password,
-  branch,
-  protocol = 'https',
+export default async function getRepo(
+  path: string,
+  url: string,
+  user: string,
+  email: string,
+  password: string,
+  branch: string,
+  method: 'clone' | 'init' = 'clone',
 ): Promise<Repo> {
-  if (!existsSync(localPath)) mkdirSync(localPath, 0o744)
-  const remotePathAuth = getRemotePathAuth(remotePath, protocol, user, password)
-  const repo = new Repo(localPath, remotePath, user, email, remotePathAuth, branch)
-  await repo.clone()
-  if (!env.DISABLE_SYNC) await repo.addConfig()
+  await ensureDir(path, { mode: 0o744 })
+  const urlNormalized = getUrl(url)
+  const urlAuth = getUrlAuth(urlNormalized, user, password)
+  const repo = new Repo(path, urlNormalized, user, email, urlAuth, branch)
+  await repo[method]()
   return repo
-}
-
-export async function initRepo(
-  localPath,
-  remotePath,
-  user,
-  email,
-  password,
-  branch,
-  protocol = 'https',
-): Promise<Repo> {
-  if (!existsSync(localPath)) mkdirSync(localPath, 0o744)
-  const remotePathAuth = getRemotePathAuth(remotePath, protocol, user, password)
-
-  const repo = new Repo(localPath, remotePath, user, email, remotePathAuth, branch)
-  await repo.init()
-  await repo.addConfig()
-  return repo
-}
-
-export async function initRepoBare(location): Promise<SimpleGit> {
-  mkdirSync(location, 0o744)
-  const options: Partial<SimpleGitOptions> = {
-    baseDir: location,
-    config: process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0' ? ['http.sslVerify=false'] : undefined,
-  }
-  const git = simpleGit(options)
-  await git.init(true)
-  return git
 }

@@ -1,15 +1,11 @@
 import { Request } from 'express'
 import { JSONSchema4 } from 'json-schema'
-import { components, external, operations, paths } from './generated-schema'
-
+import { components, external, operations, paths } from 'src/generated-schema'
+import OtomiStack from 'src/otomi-stack'
 export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
-export type Cluster = Settings['cluster']
-export type Deployment = components['schemas']['Deployment']
-export type Dns = Settings['dns']
 export type Job = components['schemas']['Job']
 export type Kubecfg = components['schemas']['Kubecfg']
-export type Policies = Settings['policies']
 export type Secret = components['schemas']['Secret'] & { teamId?: string }
 export type Service = components['schemas']['Service']
 export type Session = components['schemas']['Session']
@@ -19,6 +15,15 @@ export type TeamSelfService = components['schemas']['Team']['selfService']
 export type User = components['schemas']['User']
 export type UserAuthz = components['schemas']['User']['authz']
 export type TeamAuthz = components['schemas']['TeamAuthz']
+
+// Derived setting models
+export type Alerts = Settings['alerts']
+export type Cluster = Settings['cluster']
+export type Dns = Settings['dns']
+export type Kms = Settings['kms']
+export type Oidc = Settings['oidc']
+export type Otomi = Settings['otomi']
+export type Policies = Settings['policies']
 
 export interface OpenApiRequest extends Request {
   operationDoc: {
@@ -71,6 +76,7 @@ export interface PermissionSchema {
 }
 export interface Schema extends JSONSchema4 {
   'x-acl'?: Acl
+  nullable?: boolean
 }
 
 export interface Acl {
@@ -103,12 +109,22 @@ export interface OpenApiRequestExt extends OpenApiRequest, Session {
   user: User
   // Flag that indicates if experess-openapi middleware take up further authorization action
   isSecurityHandler?: boolean
+  otomi: OtomiStack
 }
 
 export interface Core {
-  k8s: any
-  adminApps: any[]
-  teamApps: any[]
-  appsInfo: any[]
-  teamConfig: any
+  k8s: Record<string, Record<string, any>[]>
+  adminApps: Record<string, any>[]
+  alerts: Alerts
+  apps: Record<string, any>[]
+  appsInfo: Record<string, any>[]
+  cluster: Cluster
+  dns: Dns
+  kms: Kms
+  oidc: Oidc
+  otomi: Otomi
+  policies: Policies
+  teamApps: Record<string, any>[]
+  teamConfig: Record<string, any>
+  version: number
 }

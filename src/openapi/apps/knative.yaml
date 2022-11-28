@@ -28,3 +28,4 @@ AppKnative:
               default: 1
               type: integer
               minimum: 1
+  required: [id]

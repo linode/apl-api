@@ -8,7 +8,7 @@ services:
       target: dev
     image: eu.gcr.io/otomi-cloud/otomi-api:${API_TAG:-dev}
     user: ${USER_ID}:${GROUP_ID}
-    command: sh -c 'rm -rf /tmp/otomi-values && npm run dev:docker'
+    command: sh -c 'rm -rf /tmp/otomi/values/main && npm run dev:docker'
     ports:
       - 8080:8080
 

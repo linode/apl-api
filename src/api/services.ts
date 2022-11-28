@@ -1,13 +1,13 @@
-import { Operation, OperationHandlerArray } from 'express-openapi'
-import OtomiStack from '../otomi-stack'
 import Debug from 'debug'
+import { Operation, OperationHandlerArray } from 'express-openapi'
+import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:services')
 
-export default function (otomi: OtomiStack): OperationHandlerArray {
+export default function (): OperationHandlerArray {
   const get: Operation = [
     /* business middleware not expressible by OpenAPI documentation goes here */
-    (req, res): void => {
+    ({ otomi }: OpenApiRequestExt, res): void => {
       debug('getAllServices')
       const v = otomi.getAllServices()
       res.json(v)

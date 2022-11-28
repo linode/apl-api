@@ -1,53 +1,27 @@
 teamConfig:
     admin:
         apps:
-            alertmanager:
-                shortcuts: []
-            argocd:
-                shortcuts: []
-            cert-manager:
-                shortcuts: []
-            drone:
-                shortcuts: []
-            external-dns:
-                shortcuts: []
-            gatekeeper:
-                shortcuts: []
-            gitea:
-                shortcuts: []
-            grafana:
-                shortcuts: []
-            harbor:
-                shortcuts: []
-            httpbin:
-                shortcuts: []
-            ingress-nginx:
-                shortcuts: []
-            istio:
-                shortcuts: []
-            jaeger:
-                shortcuts: []
-            keycloak:
-                shortcuts:
-                    -
-                        description: ki
-                        path: /doki
-                        title: o
-            kiali:
-                shortcuts: []
-            knative:
-                shortcuts: []
-            kubeapps:
-                shortcuts: []
-            kubeclarity:
-                shortcuts: []
-            loki:
-                shortcuts: []
-            prometheus:
-                shortcuts: []
-            thanos:
-                shortcuts: []                
-            vault:
-                shortcuts: []
-            velero:
-                shortcuts: []
+            alertmanager: {}
+            argocd: {}
+            cert-manager: {}
+            drone: {}
+            external-dns: {}
+            gatekeeper: {}
+            gitea: {}
+            grafana: {}
+            harbor: {}
+            httpbin: {}
+            ingress-nginx: {}
+            istio: {}
+            jaeger: {}
+            keycloak: {}
+            kiali: {}
+            knative: {}
+            kubeapps: {}
+            kubeclarity: {}
+            loki: {}
+            minio: {}
+            prometheus: {}
+            thanos: {}
+            vault: {}
+            velero: {}

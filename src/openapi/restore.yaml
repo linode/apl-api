@@ -1,0 +1,7 @@
+Restore:
+  x-externalDocsPath: docs/console/deploy-changes
+  x-acl:
+    admin: [read-any]
+    team: []
+  properties: {}
+  type: object

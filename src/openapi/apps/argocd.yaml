@@ -122,3 +122,4 @@ AppArgocd:
               required:
                 - limits
                 - requests
+  required: [id]

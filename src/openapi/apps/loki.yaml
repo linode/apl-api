@@ -96,7 +96,7 @@ lokiStorageProvider:
           properties:
             account_key:
               type: string
-              x-secret: ''
+              x-secret: true
             account_name:
               type: string
             container_name:
@@ -167,3 +167,4 @@ AppLoki:
       type: object
       x-externalDocsPath: docs/apps/loki
       $ref: '#/lokiValues'
+  required: [id]
