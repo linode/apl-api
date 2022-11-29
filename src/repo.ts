@@ -276,7 +276,6 @@ export class Repo {
       debug(`Pull summary: ${summJson}`)
       this.commitSha = await this.getCommitSha()
       await this.initSops()
-      if (!skipRequest) await this.requestInitValues()
     } catch (e) {
       const err = 'Could not pull from remote. Upstream commits? Marked db as corrupt.'
       debug(err, e)
@@ -287,6 +286,7 @@ export class Repo {
       }
       throw new GitPullError(err)
     }
+    if (!skipRequest) await this.requestInitValues()
   }
 
   async push(): Promise<any> {

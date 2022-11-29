@@ -600,7 +600,6 @@ export default class OtomiStack {
   async loadTeams(): Promise<void> {
     const mergedData: Core = await this.repo.loadConfig('env/teams.yaml', `env/secrets.teams.yaml`)
     const tc = mergedData?.teamConfig || {}
-    if (!tc.admin) tc.admin = { id: 'admin' }
     Object.values(tc).forEach((team: Team) => {
       this.loadTeam(team)
       this.loadTeamJobs(team.id!)
@@ -685,6 +684,7 @@ export default class OtomiStack {
       omit(settings, ['cluster', 'policies']),
       secretPaths ?? this.getSecretPaths(),
     )
+    await this.repo.writeFile('env/cluster.yaml', { cluster: settings.cluster })
   }
 
   async saveTeams(secretPaths?: string[]): Promise<void> {
@@ -741,7 +741,6 @@ export default class OtomiStack {
     const team = { ...inTeam, name: inTeam.id } as Record<string, any>
     team.resourceQuota = objectToArray(inTeam.resourceQuota as Record<string, any>)
     const res = this.createTeam(team as Team)
-    // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id as string)
     debug(`Loaded team: ${res.id!}`)
   }
 
