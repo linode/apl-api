@@ -31,7 +31,7 @@ AppMinio:
               type: boolean
               default: true
             size:
-              $ref: ../definitions.yaml#/size'
+              $ref: ../definitions.yaml#/size
               default: 20Gi
         resources:
           type: object
