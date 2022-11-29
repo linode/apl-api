@@ -29,5 +29,6 @@
   "mochaExplorer.files": "src/**/*.test.ts",
   "mochaExplorer.require": "ts-node/register",
   "mochaExplorer.timeout": 5000,
-  "prettier.enable": true
+  "prettier.enable": true,
+  "cSpell.words": ["minio"]
 }

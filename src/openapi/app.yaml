@@ -23,6 +23,7 @@ AppList:
     - kubeapps
     - kubeclarity
     - loki
+    - minio
     - prometheus
     - vault
     - velero
