@@ -1,0 +1,59 @@
+AppMinio:
+  additionalProperties: false
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      type: boolean
+      default: false
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/apps/minio
+      type: object
+      properties:
+        provisioning:
+          description: Automatically provision buckets and policies for all Otomi apps.
+          properties:
+            enabled:
+              type: boolean
+              default: true
+        persistence:
+          properties:
+            enabled:
+              type: boolean
+              default: true
+            size:
+              $ref: ../definitions.yaml#/size
+              default: 20Gi
+        resources:
+          type: object
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 1000m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 1000Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 100m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 200Mi
+          required:
+            - limits
+            - requests

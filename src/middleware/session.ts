@@ -7,6 +7,7 @@ import http from 'http'
 import { cloneDeep } from 'lodash'
 import { join } from 'path'
 import { Server } from 'socket.io'
+import { ApiNotReadyError } from 'src/error'
 import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
 import { cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validators'
@@ -24,11 +25,14 @@ export type DbMessage = {
 }
 
 // instantiate read-only version of the stack
-export const readOnlyStack = new OtomiStack()
+let readOnlyStack: OtomiStack
 let sessions: Record<string, OtomiStack> = {}
 // handler to get the correct stack for the user: if never touched any data give the main otomiStack
 export const getSessionStack = async (editor?: string): Promise<OtomiStack> => {
-  if (!readOnlyStack.getCore()) await readOnlyStack.init()
+  if (!readOnlyStack) {
+    readOnlyStack = new OtomiStack()
+    await readOnlyStack.init()
+  }
   if (!editor || !sessions[editor]) return readOnlyStack
   return sessions[editor]
 }
@@ -48,12 +52,11 @@ export const setSessionStack = async (editor: string): Promise<void> => {
 
 export const getEditors = () => Object.keys(sessions)
 
-export const cleanAllSessions = async (editor: string): Promise<void> => {
+export const cleanAllSessions = (): void => {
   debug(`Cleaning all editor sessions`)
-  const sha = await readOnlyStack.repo.getCommitSha()
-  const msg: DbMessage = { state: 'clean', editor, sha, reason: 'restore' }
-  io.emit('db', msg)
   sessions = {}
+  // @ts-ignore
+  readOnlyStack = undefined
 }
 
 export const cleanSession = async (editor: string, sendMsg = true): Promise<void> => {
@@ -93,6 +96,7 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
   })
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
+    if (!env.isTest && (!readOnlyStack || !readOnlyStack.isLoaded)) throw new ApiNotReadyError()
     const { email } = req.user || {}
     const sessionStack = await getSessionStack(email)
     // eslint-disable-next-line no-param-reassign

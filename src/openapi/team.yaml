@@ -64,6 +64,13 @@ Team:
       $ref: definitions.yaml#/resourceQuota
     azureMonitor:
       $ref: definitions.yaml#/azureMonitor
+    monitoringStack:
+      properties:
+        enabled:
+          description: Whether monitoring for the team is enabled. If disabled, only admins can see logs and metrics. In multi-tenancy mode, no Prometheus and Grafana instance will be provisioned for the team.
+          title: Team monitoring enabled
+          type: boolean
+          default: true
     networkPolicy:
       properties:
         ingressPrivate:
