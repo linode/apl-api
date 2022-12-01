@@ -204,26 +204,26 @@ AppHarbor:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
+                      default: 400m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 128Mi
+                      default: 256Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 400m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
+                      default: 128Mi
               required:
                 - limits
                 - requests
             clair:
               type: object
               properties:
-                limits:
+                requests:
                   type: object
                   properties:
                     cpu:
@@ -232,7 +232,7 @@ AppHarbor:
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
                       default: 1Gi
-                requests:
+                limits:
                   type: object
                   properties:
                     cpu:
