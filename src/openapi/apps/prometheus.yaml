@@ -51,6 +51,11 @@ AppPrometheus:
                   customConfig:
                     description: Custom remote write config. Will be appended to the remoteWrite list.
                     type: string
+                  insecureSkipVerify:
+                    type: boolean
+                    title: Skip SSL verify
+                    default: false
+                    description: Enable when remote target is using self-signed certificates.
         replicas:
           $ref: ../definitions.yaml#/replicas
         scrapeInterval:
