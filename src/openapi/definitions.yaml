@@ -310,6 +310,15 @@ azureTenantId:
   title: Azure tenant id
   description: An Azure tenant id. Defaults to one found in metadata.
   type: string
+backupTtl:
+  default: 240h
+  description: Expiration of the backup.
+  title: TTL after finished
+  type: string
+backupSchedule:
+  default: 0 0 * * *
+  description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
+  type: string
 clusterName:
   $ref: '#/idName'
   description: Short name that will be used in construction of cluster domain and messaging.

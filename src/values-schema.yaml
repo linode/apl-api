@@ -127,12 +127,17 @@ definitions:
         type: integer
         default: 1
   autoscalingEnabled:
-    allOf:
-      - properties:
-          enabled:
-            default: true
-            type: boolean
-      - $ref: '#/definitions/autoscaling'
+    additionalProperties: false
+    properties:
+      enabled:
+        default: true
+        type: boolean
+      maxReplicas:
+        type: integer
+        default: 10
+      minReplicas:
+        type: integer
+        default: 1
   aws:
     definitions:
       accessKey:
@@ -253,7 +258,15 @@ definitions:
         title: Resource group
         description: An Azure resource group.
         $ref: '#/definitions/wordCharacterPattern'
-
+  backupTtl:
+    default: 240h
+    description: Expiration of the backup.
+    title: TTL after finished
+    type: string
+  backupSchedule:
+    default: 0 0 * * *
+    description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
+    type: string
   cluster:
     additionalProperties: false
     properties:
@@ -735,8 +748,8 @@ definitions:
     pattern: '^[a-z0-9]+(?:[._-][a-z0-9]+)*$'
     type: string
   repoUrl:
-    description: Path to a remote git repo without protocol. Will use https to access.
-    pattern: '^(.+@)*([\w\d\.]+)(:[\d]+){0,1}/*(.*)$'
+    description: Path to a remote git repo with or without protocol prefix of either https:// or file:// (https:// used if omitted)
+    pattern: '^(https://|file://)?(.+@)*([\w\d\.]+)(:[\d]+){0,1}/*(.*)$'
     type: string
   repository:
     description: A container image repository.
@@ -1650,8 +1663,8 @@ properties:
                       - aws
                       - azure
                       - gcs
-                      - file
-                    default: file
+                      - filesystem
+                    default: filesystem
           registry:
             properties:
               secret:
@@ -2032,6 +2045,8 @@ properties:
       external-secrets:
         additionalProperties: false
         properties:
+          _rawValues:
+            $ref: '#/definitions/rawValues'
           enabled:
             type: boolean
           logLevel:
@@ -2079,40 +2094,42 @@ properties:
                 type: string
             required:
               - duration
-          aws:
-            type: object
-          azure:
-            description: Missing from docs but available with this schema.
+          storage:
             properties:
-              account_key:
+              aws:
+                type: object
+              azure:
+                description: Missing from docs but available with this schema.
+                properties:
+                  account_key:
+                    type: string
+                    x-secret: ''
+                  account_name:
+                    type: string
+                  container_name:
+                    type: string
+                type: object
+              bigtable:
+                type: object
+              cassandra:
+                type: object
+              gcs:
+                type: object
+              swift:
+                type: object
+              local:
+                type: object
+              storageType:
                 type: string
-                x-secret: ''
-              account_name:
-                type: string
-              container_name:
-                type: string
-            type: object
-          bigtable:
-            type: object
-          cassandra:
-            type: object
-          gcs:
-            type: object
-          swift:
-            type: object
-          local:
-            type: object
-          storageType:
-            type: string
-            enum:
-              - aws
-              - azure
-              - bigtable
-              - cassandra
-              - filesystem
-              - gcs
-              - swift
-              - local
+                enum:
+                  - aws
+                  - azure
+                  - bigtable
+                  - cassandra
+                  - filesystem
+                  - gcs
+                  - swift
+                  - local
           v11StartDate:
             description: Set this to a date just after deployment in case of an upgrade. (Otomi started at v9 with filesystem.)
             title: Schema v11 start date
@@ -2167,7 +2184,7 @@ properties:
                 type: boolean
                 default: true
               size:
-                type: string
+                $ref: '#/definitions/size'
                 default: 20Gi
       oauth2-proxy:
         additionalProperties: false
@@ -2188,6 +2205,9 @@ properties:
         properties:
           _rawValues:
             $ref: '#/definitions/rawValues'
+          editorInactivityTimeout:
+            type: integer
+            default: 10
           git:
             additionalProperties: false
             properties:
@@ -2399,86 +2419,125 @@ properties:
       velero:
         additionalProperties: false
         properties:
+          _rawValues:
+            $ref: '#/definitions/rawValues'
           enabled:
             type: boolean
             default: false
-          provider:
-            azure:
-              properties:
-                config:
-                  additionalProperties: false
-                  properties:
-                    storageAccount:
-                      type: string
-                      description: The used Azure storage account
-                      $ref: '#/definitions/wordCharacterPattern'
-                    resourceGroup:
-                      type: string
-                      description: The resource group of the storage account
-                      $ref: '#/definitions/wordCharacterPattern'
-                    bucket:
-                      type: string
-                      description: Name of the blob container.
-                      $ref: '#/definitions/wordCharacterPattern'
-                  required:
-                    - resourceGroup
-                    - storageAccount
-                    - bucket
-                environment:
-                  title: Azure environment
-                  description: An Azure environment.
-                  type: string
-                  default: AzurePublicCloud
-                  enum:
-                    - AzurePublicCloud
-                    - AzureChinaCloud
-                    - AzureUSGovernment
-                    - AzureGermanCloud
-                secretContents:
-                  additionalProperties: false
-                  description: Data to be stored in the Velero secret.
-                  properties:
-                    tenantId:
-                      $ref: '#/definitions/wordCharacterPattern'
-                    subscriptionId:
-                      $ref: '#/definitions/wordCharacterPattern'
-                    aadClientId:
-                      $ref: '#/definitions/wordCharacterPattern'
-                    resourceGroup:
-                      description: The resource group of the worker nodes (VM's and disks)
-                      $ref: '#/definitions/wordCharacterPattern'
-                    aadClientSecret:
-                      $ref: '#/definitions/wordCharacterPattern'
-                      x-secret: ''
-                  required:
-                    - tenantId
-                    - subscriptionId
-                    - aadClientId
-                    - aadClientSecret
-            aws:
-              properties:
-                congig:
-                  properties:
-                    region:
-                      description: The region of the S3 bucket
-                      $ref: '#/definitions/wordCharacterPattern'
-                    s3bucket:
-                      description: The name (URL) of the S3 bucket
-                      $ref: '#/definitions/wordCharacterPattern'
-                secretContents:
-                  properties:
-                    accessKeyId:
-                      type: string
-                      description: The ID of the access key
-                      $ref: '#/definitions/wordCharacterPattern'
-                    secretAccessKey:
-                      type: string
-                      description: The secret of the access key
-                      $ref: '#/definitions/wordCharacterPattern'
-                  required:
-                    - region
-                    - accessKeyId
-                    - secretAccessKey
+          cloud:
+            properties:
+              cloudProvider:
+                properties:
+                  azure:
+                    description: Azure
+                    properties:
+                      resourceGroup:
+                        description: The resource group of the worker nodes (VM's and disks)
+                        $ref: '#/definitions/wordCharacterPattern'
+                      environment:
+                        title: Azure environment
+                        type: string
+                        enum:
+                          - AzurePublicCloud
+                          - AzureChinaCloud
+                          - AzureUSGovernment
+                          - AzureGermanCloud
+                      tenantId:
+                        $ref: '#/definitions/wordCharacterPattern'
+                      subscriptionId:
+                        $ref: '#/definitions/wordCharacterPattern'
+                      aadClientId:
+                        $ref: '#/definitions/wordCharacterPattern'
+                      aadClientSecret:
+                        $ref: '#/definitions/wordCharacterPattern'
+                        x-secret: ''
+                    required:
+                      - tenantId
+                      - subscriptionId
+                      - aadClientId
+                      - aadClientSecret
+                      - resourceGroup
+                      - environment
+                  aws:
+                    description: Amazon Web Services
+                    properties:
+                      region:
+                        type: string
+                        description: The AWS region where the cluster is running.
+                        $ref: '#/definitions/wordCharacterPattern'
+                  type:
+                    type: string
+                    enum:
+                      - aws
+                      - azure
+                      - custom
+                    default: custom
+          storage:
+            properties:
+              storageProvider:
+                properties:
+                  azureBlob:
+                    type: object
+                    properties:
+                      storageAccount:
+                        type: string
+                        description: The used Azure storage account
+                        $ref: '#/definitions/wordCharacterPattern'
+                      resourceGroup:
+                        type: string
+                        description: The resource group of the storage account
+                        $ref: '#/definitions/wordCharacterPattern'
+                      bucket:
+                        type: string
+                        description: Name of the blob container.
+                        $ref: '#/definitions/wordCharacterPattern'
+                      tenantId:
+                        $ref: '#/definitions/wordCharacterPattern'
+                      subscriptionId:
+                        $ref: '#/definitions/wordCharacterPattern'
+                      aadClientId:
+                        $ref: '#/definitions/wordCharacterPattern'
+                      aadClientSecret:
+                        $ref: '#/definitions/wordCharacterPattern'
+                        x-secret: ''
+                    required:
+                      - tenantId
+                      - subscriptionId
+                      - aadClientId
+                      - aadClientSecret
+                      - resourceGroup
+                      - storageAccount
+                      - bucket
+                  s3:
+                    properties:
+                      bucket:
+                        type: string
+                        description: Name of the blob container.
+                        $ref: '#/definitions/wordCharacterPattern'
+                      s3Url:
+                        description: The name (URL) of the S3 bucket
+                        $ref: '#/definitions/wordCharacterPattern'
+                      accessKeyId:
+                        type: string
+                        description: The ID of the access key
+                        $ref: '#/definitions/wordCharacterPattern'
+                      secretAccessKey:
+                        type: string
+                        description: The secret of the access key
+                        $ref: '#/definitions/wordCharacterPattern'
+                        x-secret: ''
+                    required:
+                      - bucket
+                      - s3Url
+                      - accessKeyId
+                      - secretAccessKey
+                  type:
+                    type: string
+                    enum:
+                      - azureBlob
+                      - s3
+                      - minioLocal
+                    default: minioLocal
           logLevel:
             description: Set log-level for the Velero pod.
             default: info
@@ -2516,6 +2575,7 @@ properties:
         oneOf:
           - title: AWS
             description: Uses credentials when either a pair of id+key or a secret name is provided. Assumes node role otherwise.
+            additionalProperties: false
             properties:
               aws:
                 properties:
@@ -2541,18 +2601,21 @@ properties:
             required:
               - aws
           - title: Azure
+            additionalProperties: false
             properties:
               azure:
                 $ref: '#/definitions/azure/definitions/dns'
             required:
               - azure
           - title: Azure Private
+            additionalProperties: false
             properties:
               azure-private-dns:
                 $ref: '#/definitions/azure/definitions/dns'
             required:
               - azure-private-dns
           - title: Google
+            additionalProperties: false
             properties:
               google:
                 properties:
@@ -2565,6 +2628,7 @@ properties:
             required:
               - google
           - title: Digital Ocean
+            additionalProperties: false
             properties:
               digitalocean:
                 properties:
@@ -2576,6 +2640,7 @@ properties:
             required:
               - digitalocean
           - title: CloudFlare
+            additionalProperties: false
             properties:
               cloudflare:
                 properties:
@@ -2603,6 +2668,7 @@ properties:
             required:
               - cloudflare
           - title: Other
+            additionalProperties: false
             properties:
               other:
                 description: This option requires configuration for both external-dns as well as cert-manager. No schema validation is available so provide correct data.
@@ -3059,38 +3125,99 @@ properties:
       - smarthost
   backup:
     properties:
-      platformSchedule:
+      platform:
+        title: Platform applications
+        description: Select platfom apps to backup.
         properties:
-          enabled:
-            type: boolean
-            default: false
-          ttl:
-            default: 240h
-            description: Expiration of the backup.
-            title: TTL after finished
-            type: string
-          schedule:
-            default: 0 0 * * *
-            description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
-            type: string
-      teamSchedule:
+          gitea:
+            title: Gitea
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              ttl:
+                $ref: '#/definitions/backupTtl'
+              schedule:
+                $ref: '#/definitions/backupSchedule'
+          drone:
+            title: Drone
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              ttl:
+                $ref: '#/definitions/backupTtl'
+              schedule:
+                $ref: '#/definitions/backupSchedule'
+          keycloak:
+            title: Keycloak
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              ttl:
+                $ref: '#/definitions/backupTtl'
+              schedule:
+                $ref: '#/definitions/backupSchedule'
+          harbor:
+            title: Harbor
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              ttl:
+                $ref: '#/definitions/backupTtl'
+              schedule:
+                $ref: '#/definitions/backupSchedule'
+          vault:
+            title: Vault
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              ttl:
+                $ref: '#/definitions/backupTtl'
+              schedule:
+                $ref: '#/definitions/backupSchedule'
+          argo:
+            title: ArgoCD
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              ttl:
+                $ref: '#/definitions/backupTtl'
+              schedule:
+                $ref: '#/definitions/backupSchedule'
+          kubeapps:
+            title: Kubeapps
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              ttl:
+                $ref: '#/definitions/backupTtl'
+              schedule:
+                $ref: '#/definitions/backupSchedule'
+      teams:
         enabled:
           type: boolean
           default: false
         ttl:
-          default: 240h
-          description: Expiration of the backup.
-          title: TTL after finished
-          type: string
+          $ref: '#/definitions/backupTtl'
         schedule:
-          default: 0 0 * * *
-          description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
-          type: string
+          $ref: '#/definitions/backupSchedule'
   teamConfig:
     additionalProperties: false
     patternProperties:
       '^[a-z0-9]([-a-z0-9]*[a-z0-9])+$':
         $ref: '#/definitions/team'
+    properties:
+      admin:
+        properties:
+          password:
+            type: string
+            x-secret: randAlpha 16
   version:
     type: integer
     description: DO NOT CHANGE! Holds the values-schema version. For more details, see `otomi migrate`.
