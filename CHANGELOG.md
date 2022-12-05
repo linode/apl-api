@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.18](https://github.com/redkubes/otomi-api/compare/v0.5.17...v0.5.18) (2022-12-05)
+
+
+### Bug Fixes
+
+* treat isShared flag as optional ([#347](https://github.com/redkubes/otomi-api/issues/347)) ([550413c](https://github.com/redkubes/otomi-api/commit/550413c0f0ccd5b338cbf24b7ba27295ed702e4d))
+
 ### [0.5.17](https://github.com/redkubes/otomi-api/compare/v0.5.16...v0.5.17) (2022-12-05)
 
 
