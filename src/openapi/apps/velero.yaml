@@ -18,7 +18,7 @@ AppVelero:
           additionalProperties: false
           type: object
           properties:
-            cloudProvider:
+            provider:
               type: object
               title: Cloud provider
               description: Select your cloud provider.
@@ -93,8 +93,19 @@ AppVelero:
                           type: string
                           description: The AWS region where the cluster worker nodes are running.
                           $ref: ../definitions.yaml#/wordCharacterPattern
+                        accessKeyId:
+                          type: string
+                          description: The ID of the access key
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                        secretAccessKey:
+                          type: string
+                          description: The secret of the access key
+                          $ref: ../definitions.yaml#/wordCharacterPattern
+                          x-secret: true
                       required:
                         - region
+                        - accessKeyId
+                        - secretAccessKey
                     type:
                       type: string
                       enum:
@@ -107,7 +118,7 @@ AppVelero:
           additionalProperties: false
           type: object
           properties:
-            storageProvider:
+            provider:
               type: object
               title: Storage provider
               description: Select the preferred provider for storing backups.
@@ -141,23 +152,19 @@ AppVelero:
                           description: Name of the blob container.
                           $ref: ../definitions.yaml#/wordCharacterPattern
                         tenantId:
-                          description: The used Azure Account Tenant ID.
+                          description: The used Azure Account Tenant ID. Optional if cloud provider is Azure.
                           $ref: ../definitions.yaml#/wordCharacterPattern
                         subscriptionId:
-                          description: The used Azure Subscription ID.
+                          description: The used Azure Subscription ID. Optional if cloud provider is Azure.
                           $ref: ../definitions.yaml#/wordCharacterPattern
                         aadClientId:
-                          description: The ID of the Service Principal with permissions to perform backups.
+                          description: The ID of the Service Principal with permissions to perform backups. Optional if cloud provider is Azure.
                           $ref: ../definitions.yaml#/wordCharacterPattern
                         aadClientSecret:
-                          description: The generated password of the Service Principal.
+                          description: The password of the Service Principal. Optional if cloud provider is Azure.
                           $ref: ../definitions.yaml#/wordCharacterPattern
                           x-secret: true
                       required:
-                        - tenantId
-                        - subscriptionId
-                        - aadClientId
-                        - aadClientSecret
                         - resourceGroup
                         - storageAccount
                         - bucket
@@ -180,24 +187,22 @@ AppVelero:
                       properties:
                         bucket:
                           type: string
-                          description: The name of the bucket
+                          description: The name of the bucket.
                           $ref: ../definitions.yaml#/wordCharacterPattern
                         s3Url:
                           type: string
-                          description: S3 URL
+                          description: The full S3 URL.
                           $ref: ../definitions.yaml#/wordCharacterPattern
                         accessKeyId:
                           type: string
-                          description: The ID of the access key
+                          description: The ID of the access key. Optional if cloud provider is AWS.
                           $ref: ../definitions.yaml#/wordCharacterPattern
                         secretAccessKey:
                           type: string
-                          description: The secret of the access key
+                          description: The secret of the access key. Optional if cloud provider is AWS.
                           $ref: ../definitions.yaml#/wordCharacterPattern
                           x-secret: true
                       required:
-                        - accessKeyId
-                        - secretAccessKey
                         - bucket
                         - s3Url
                     type:
