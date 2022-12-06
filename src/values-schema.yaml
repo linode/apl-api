@@ -2501,10 +2501,6 @@ properties:
                         $ref: '#/definitions/wordCharacterPattern'
                         x-secret: ''
                     required:
-                      - tenantId
-                      - subscriptionId
-                      - aadClientId
-                      - aadClientSecret
                       - resourceGroup
                       - storageAccount
                       - bucket
