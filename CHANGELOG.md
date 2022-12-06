@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.19](https://github.com/redkubes/otomi-api/compare/v0.5.18...v0.5.19) (2022-12-06)
+
+
+### Bug Fixes
+
+* x-secret ([#348](https://github.com/redkubes/otomi-api/issues/348)) ([17f983b](https://github.com/redkubes/otomi-api/commit/17f983b39636bad306e7fa3d9d0839be48701d49))
+
 ### [0.5.18](https://github.com/redkubes/otomi-api/compare/v0.5.17...v0.5.18) (2022-12-05)
 
 
