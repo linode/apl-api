@@ -20,6 +20,7 @@ AppVelero:
           properties:
             provider:
               type: object
+              additionalProperties: false
               title: Cloud provider
               description: Select your cloud provider.
               oneOf:
@@ -56,7 +57,7 @@ AppVelero:
                         aadClientSecret:
                           description: The password of the Service Principal.
                           $ref: ../definitions.yaml#/wordCharacterPattern
-                          x-secret: ''
+                          x-secret: true
                         environment:
                           x-hideTitle: true
                           type: string
