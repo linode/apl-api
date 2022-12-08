@@ -10,9 +10,9 @@ teamConfig:
             egressPublic: true
             ingressPrivate: true
         selfService:
-            service:
+            Service:
                 - ingress
-            team:
+            Team:
                 - resourceQuota
     otomi:
         alerts:
@@ -27,8 +27,8 @@ teamConfig:
         resourceQuota:
             services.loadbalancers: '0'
         selfService:
-            service:
+            Service:
                 - ingress
                 - networkPolicy
-            team:
+            Team:
                 - resourceQuota
