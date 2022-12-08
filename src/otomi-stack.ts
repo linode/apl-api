@@ -303,7 +303,7 @@ export default class OtomiStack {
     const apps = getAppList()
     const core = this.getCore()
     apps.forEach((appId) => {
-      const isShared = !!core.adminApps.find((a) => a.name === appId)!.isShared
+      const isShared = !!core.adminApps.find((a) => a.name === appId)?.isShared
       const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
       if (id === 'admin' || isShared || inTeamApps)
         this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
