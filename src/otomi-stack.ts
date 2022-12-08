@@ -650,7 +650,7 @@ export default class OtomiStack {
 
   convertSettingsToValues(): Settings {
     const settings = cloneDeep(this.getSettings()) as Record<string, Record<string, any>>
-    settings.otomi.nodeSelector = arrayToObject(settings.otomi.nodeSelector as [])
+    set(settings, 'otomi.nodeSelector', arrayToObject(settings.otomi?.nodeSelector || []))
     return omit(settings, ['cluster', 'policies'])
   }
 
