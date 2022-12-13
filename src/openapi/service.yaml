@@ -116,6 +116,43 @@ Ingress:
       example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
       title: Certificate ARN
       type: string
+    headers:
+      additionalProperties: false
+      type: object
+      properties:
+        response:
+          type: object
+          title: HTTP Response Headers
+          properties:
+            set:
+              type: array
+              minItems: 0
+              items:
+                type: object
+                properties:
+                  name:
+                    title: Name
+                    type: string
+                  value:
+                    title: Value
+                    type: string
+                required:
+                  - name
+                  - value
+              default:
+                - name: X-Frame-Options
+                  value: sameorigin
+                - name: X-Content-Type-Options
+                  value: nosniff
+                - name: Referrer-Policy
+                  value: no-referrer
+                - name: Cross-Origin-Embedder-Policy
+                  value: require-corp
+                - name: Cross-Origin-Opener-Policy
+                  value: same-origin
+                - name: X-Content-Type-Options
+                  value: same-origin
+
   required:
     - domain
     - subdomain
