@@ -779,6 +779,7 @@ export default class OtomiStack {
       'ownHost',
       'tlsPass',
       'ingressClassName',
+      'headers',
     )
     svc.teamId = teamId
     if (!('name' in svcRaw)) debug('Unknown service structure')
@@ -806,6 +807,7 @@ export default class OtomiStack {
         certArn: svcRaw.certArn || undefined,
         certName: svcRaw.certName || undefined,
         domain: url.domain,
+        headers: svcRaw.headers || [],
         forwardPath: 'forwardPath' in svcRaw,
         hasCert: 'hasCert' in svcRaw,
         paths: svcRaw.paths ? svcRaw.paths : [],
