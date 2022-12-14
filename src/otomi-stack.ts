@@ -855,6 +855,7 @@ export default class OtomiStack {
       if (ing.forwardPath) svcCloned.forwardPath = true
       if (ing.tlsPass) svcCloned.tlsPass = true
       if (ing.ingressClassName) svcCloned.ingressClassName = ing.ingressClassName
+      if (ing.headers) svcCloned.headers = ing.headers
       svcCloned.type = svc.ingress.type
     } else svcCloned.type = 'cluster'
     return svcCloned

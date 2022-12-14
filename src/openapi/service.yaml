@@ -152,7 +152,6 @@ Ingress:
                   value: same-origin
                 - name: X-Content-Type-Options
                   value: same-origin
-
   required:
     - domain
     - subdomain
