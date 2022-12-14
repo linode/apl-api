@@ -18,7 +18,7 @@ import {
   arrayToObject,
   getServiceUrl,
   objectToArray,
-  removeBlankAttributes
+  removeBlankAttributes,
 } from 'src/utils'
 import {
   cleanEnv,
@@ -31,7 +31,7 @@ import {
   GIT_REPO_URL,
   GIT_USER,
   TOOLS_HOST,
-  VERSIONS
+  VERSIONS,
 } from 'src/validators'
 import { parse as parseYaml } from 'yaml'
 import {
@@ -45,7 +45,7 @@ import {
   Settings,
   Team,
   TeamSelfService,
-  User
+  User,
 } from './otomi-models'
 import connect from './otomiCloud/connect-oc'
 import getRepo, { Repo } from './repo'
