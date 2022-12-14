@@ -14,3 +14,4 @@ AppKiali:
       nullable: true
       items:
         $ref: ../definitions.yaml#/shortcut
+  required: [id]

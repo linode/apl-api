@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import Db from './db'
+import Db from 'src/db'
 
 describe('Db', () => {
   let testDb: Db

@@ -1,34 +1,30 @@
-# --------------- Dev stage for developers to override sources
-FROM node:14-slim as dev
+FROM node:16-slim as ci
 
-ENV NODE_ENV=development
+ENV NODE_ENV=test
 ENV BLUEBIRD_DEBUG=0
 ENV HUSKY_SKIP_INSTALL=true
+ARG CI=true
 
 RUN mkdir /app
 WORKDIR /app
 
-COPY package*.json ./
+COPY . .* ./
 
 RUN npm ci
 
-# --------------- ci stage for CI runner
-FROM dev as ci
-
-COPY . .eslintrc.yml ./
-ARG CI=true
-ENV NODE_ENV=test
-
-RUN npm run build && \
-  npm run lint && \
-  npm run test
+RUN npm run build
+RUN npm run lint
+RUN npm run test
 
 # --------------- Cleanup
-FROM dev as clean
+FROM ci as clean
 # below command removes the packages specified in devDependencies and set NODE_ENV to production
 RUN npm prune --production
 # --------------- Production stage
-FROM node:14.19-alpine AS prod
+FROM node:16.17-alpine AS prod
+
+ENV NODE_ENV=production
+ENV NODE_PATH='dist'
 
 # Install dependencies
 RUN apk --no-cache add python3 git jq
@@ -43,6 +39,4 @@ COPY package.json .
 USER node
 EXPOSE 8080
 
-ENV NODE_ENV=production
-
-CMD ["node", "--max-http-header-size", "16384", "dist/app.js"]
+CMD ["node", "--max-http-header-size", "16384", "dist/src/app.js"]

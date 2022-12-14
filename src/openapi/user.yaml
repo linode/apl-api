@@ -13,22 +13,22 @@ TeamAuthz:
   required:
     - deniedAttributes
 User:
-  readOnly: true
+  # readOnly: true
   x-acl:
-    admin: []
-    team: []
+    admin: [read]
+    team: [read]
   properties:
     name:
       type: string
       description: A user name
-      readOnly: true
+      # readOnly: true
     email:
       $ref: definitions.yaml#/email
     isAdmin:
       type: boolean
       default: false
       description: If the user is admin
-      readOnly: true
+      # readOnly: true
     authz:
       type: object
       additionalProperties:
@@ -40,7 +40,7 @@ User:
       description: A list of teams the user belongs to
       items:
         type: string
-      readOnly: true
+      # readOnly: true
       uniqueItems: true
     roles:
       type: array
@@ -48,7 +48,7 @@ User:
       description: A list of roles that the user has
       items:
         type: string
-      readOnly: true
+      # readOnly: true
       uniqueItems: true
   required:
     - authz

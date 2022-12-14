@@ -75,3 +75,4 @@ AppKubeapps:
               $ref: ../definitions.yaml#/autoscaling
       required:
         - postgresqlPassword
+  required: [id]

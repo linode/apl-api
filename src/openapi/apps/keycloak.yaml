@@ -94,3 +94,4 @@ AppKeycloak:
                 - requests
       required:
         - postgresqlPassword
+  required: [id]

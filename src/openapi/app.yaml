@@ -23,6 +23,7 @@ AppList:
     - kubeapps
     - kubeclarity
     - loki
+    - minio
     - prometheus
     - vault
     - velero
@@ -54,6 +55,10 @@ App:
       type: boolean
     id:
       $ref: definitions.yaml#/idName
+      x-acl:
+        admin: [read-any]
+        team: [read-any]
+      # readOnly: true
     rawValues:
       $ref: definitions.yaml#/rawValues
       x-acl:
@@ -72,3 +77,4 @@ App:
         admin: [read-any, update-any]
         team: []
       type: object
+  required: [id]

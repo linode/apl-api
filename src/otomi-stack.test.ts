@@ -1,15 +1,14 @@
 import { expect } from 'chai'
-import sinon from 'sinon'
-import OtomiStack, { loadOpenApisSpec } from './otomi-stack'
-import { Repo } from './repo'
-import './test-init'
+import { stub as sinonStub } from 'sinon'
+import OtomiStack from 'src/otomi-stack'
+import { Repo } from 'src/repo'
+import 'src/test-init'
 
 describe('Data validation', () => {
   let otomiStack: OtomiStack
   beforeEach(async () => {
     otomiStack = new OtomiStack()
-    const [spec] = await loadOpenApisSpec()
-    otomiStack.setSpec(spec)
+    await otomiStack.init()
   })
 
   it('should throw exception on duplicated domain', (done) => {
@@ -48,13 +47,13 @@ describe('Data validation', () => {
     done()
   })
   it('should create a password when password is not specified', (done) => {
-    const stub = sinon.stub(otomiStack.db, 'createItem')
+    const stub = sinonStub(otomiStack.db, 'createItem')
     otomiStack.createTeam({ name: 'test' })
     expect(stub.getCall(0).args[1].password).to.not.be.empty
     done()
   })
   it('should not create a password when password is specified', (done) => {
-    const stub = sinon.stub(otomiStack.db, 'createItem')
+    const stub = sinonStub(otomiStack.db, 'createItem')
     const myPassword = 'someAwesomePassword'
     otomiStack.createTeam({ name: 'test', password: myPassword })
     expect(stub.getCall(0).args[1].password).to.equal(myPassword)
@@ -64,17 +63,9 @@ describe('Data validation', () => {
 
 describe('Work with values', () => {
   let otomiStack: OtomiStack
-  let spec
-  let secretPaths
-  before(async () => {
-    const [inSpec, inSecretPaths] = await loadOpenApisSpec()
-    spec = inSpec
-    secretPaths = inSecretPaths
-  })
   beforeEach(() => {
     otomiStack = new OtomiStack()
-    otomiStack.setSpec(spec, secretPaths)
-    otomiStack.repo = new Repo('./test', undefined, undefined, undefined, undefined, undefined)
+    otomiStack.repo = new Repo('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
   })
 
   it('can load from configuration to database and back', () => {

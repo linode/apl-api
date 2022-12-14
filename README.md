@@ -47,25 +47,17 @@ export GIT_LOCAL_PATH=$ENV_DIR
 npm run dev
 ```
 
-### 1.5 Linking client to be used by console
+### 1.5 Mock different users
 
-In order to make console work with the dev version of the generated client:
-
-```bash
-npm run build:client
-npm link vendors/client/otomi-api/axios/
-```
-
-Then go to your `otomi-console` repo clone and link to it with `npm link @redkubes/otomi-api-client-axios`
-(The console can then be started just by running `npm run dev` from the `otomi-console` folder)
-
-### 17. Preprelease of the client
-
-In order to publish pre-released npm package execute:
+In order to test websocket communication between two browsers you can prime the api to register two different users.
+To set the api to register user 0 or 1:
 
 ```
-npm run pre-release:client
+http://localhost:3000/api/mock/0
+http://localhost:3000/api/mock/1
 ```
+
+See `src/mocks.ts` for details.
 
 ## 2. Api design
 

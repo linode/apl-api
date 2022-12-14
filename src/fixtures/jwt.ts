@@ -48,12 +48,9 @@ env.OIDC_ENDPOINT = 'https://bla.dida'
 nock(env.OIDC_ENDPOINT).persist().get('/.well-known/jwks.json').reply(200, nockReply)
 
 export default function getToken(groups: string[], roles?: string[]): string {
-  const user = {
-    email: 'test.user@test.net',
-  }
-
   const payload = {
-    name: user.email,
+    name: 'Joe Test',
+    email: 'test.user@test.net',
     groups,
     roles,
   }

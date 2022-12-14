@@ -49,3 +49,4 @@ AppKubeclarity:
           x-secret: 'randAlphaNum 20'
       required:
         - databasePassword
+  required: [id]
