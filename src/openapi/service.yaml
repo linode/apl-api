@@ -123,6 +123,7 @@ Ingress:
         response:
           type: object
           title: HTTP Response Headers
+          description: The following HTTP response headers will be set. Adjust, remove or add more if needed.
           properties:
             set:
               type: array
