@@ -169,6 +169,14 @@ export default class OtomiStack {
 
   getSettings(keys?: string[]): Settings {
     const settings = this.db.db.get(['settings']).value()
+    //console.log('halos reach settings', this.getApiClient())
+    const client = this.getApiClient()
+    client.listNode().then((node) => {
+      node.body.items.forEach((element) => {
+        console.log('element', element)
+      })
+      //console.log('node', node)
+    })
     if (!keys) return settings
     return pick(settings, keys) as Settings
   }
