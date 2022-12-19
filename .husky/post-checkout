@@ -10,7 +10,7 @@ source_nvm() {
         _brew_prefix=$(brew --prefix nvm)
         if [ -f "$_brew_prefix/nvm.sh" ]; then
             echo "Sourcing nvm from brew ($_brew_prefix)"
-            . $_brew_prefix/nvm.sh
+            . "$_brew_prefix"/nvm.sh
         fi
     else
         echo "Please make sure nvm is installed (correctly), please follow the installation instructions
@@ -29,12 +29,9 @@ configure_npm() {
     if [ -n "$_nvmrc_path" ]; then
         _nvmrc_node_version=$(nvm version "$(cat "${_nvmrc_path}")")
         echo "node version found in nvmrc: ${_nvmrc_node_version}"
-        if [ "$_nvmrc_node_version" = "N/A" ]; then
-            echo "nmvrc node version not installed, attempting installation..."
-            nvm install
-        elif [ "$_nvmrc_node_version" != "$_node_version" ]; then
+        if [ "$_nvmrc_node_version" != "$_node_version" ]; then
             echo "nvmrc node version found! Switching from ${_node_version} to ${_nvmrc_node_version}"
-            nvm use
+            nvm use "${_nvmrc_node_version}"
         else
             echo "It's a match! Continue using ${_node_version}"
         fi
