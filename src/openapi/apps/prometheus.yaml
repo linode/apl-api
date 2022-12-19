@@ -47,7 +47,7 @@ AppPrometheus:
                       password:
                         description: The password for the remote target
                         $ref: ../definitions.yaml#/wordCharacterPattern
-                        x-secret: '' 
+                        x-secret: true 
                   customConfig:
                     description: Custom remote write config. Will be appended to the remoteWrite list.
                     type: string

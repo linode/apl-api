@@ -1,4 +1,4 @@
-FROM node:16-slim as ci
+FROM node:18.12.1-alpine as ci
 
 ENV NODE_ENV=test
 ENV BLUEBIRD_DEBUG=0
@@ -21,7 +21,7 @@ FROM ci as clean
 # below command removes the packages specified in devDependencies and set NODE_ENV to production
 RUN npm prune --production
 # --------------- Production stage
-FROM node:16.17-alpine AS prod
+FROM node:18.12.1-alpine AS prod
 
 ENV NODE_ENV=production
 ENV NODE_PATH='dist'
