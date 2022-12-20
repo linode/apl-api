@@ -127,7 +127,6 @@ Ingress:
           properties:
             set:
               type: array
-              minItems: 0
               items:
                 type: object
                 properties:
