@@ -56,11 +56,13 @@ export const getSpec = (): OtomiSpec => {
   return otomiSpec
 }
 export const getAppSchema = (appId: string): Schema => {
-  return getSpec().spec.components.schemas[`App${pascalCase(appId)}`]
+  const id: string = appId.startsWith('ingress-nginx') ? 'ingress-nginx' : appId
+  return getSpec().spec.components.schemas[`App${pascalCase(id)}`]
 }
 
 export const getAppList = (): string[] => {
   const appsSchema = getAppSchema('List')
+
   return appsSchema.enum as string[]
 }
 

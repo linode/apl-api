@@ -1,7 +1,6 @@
 /* eslint-disable class-methods-use-this */
 import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
-import { pascalCase } from 'change-case'
 import Debug from 'debug'
 import { emptyDir } from 'fs-extra'
 import { readFile } from 'fs/promises'
@@ -146,6 +145,7 @@ export default class OtomiStack {
     }
     // branches get a copy of the "main" branch db, so we don't need to inflate
     if (!skipDbInflation) await this.loadValues()
+    debug('Values are loaded')
   }
 
   getSecretPaths(): string[] {
@@ -210,10 +210,7 @@ export default class OtomiStack {
   }
 
   canToggleApp(id: string): boolean {
-    const { spec } = getSpec()
-    const { schemas } = spec.components
-    const appName = `App${pascalCase(id)}`
-    const app = schemas[appName]
+    const app = getAppSchema(id)
     return app.properties!.enabled !== undefined
   }
 
@@ -226,30 +223,43 @@ export default class OtomiStack {
     })
   }
 
+  async loadApp(appId: string, appInstanceId: string): Promise<void> {
+    const path = `env/apps/${appInstanceId}.yaml`
+    const secretsPath = `env/apps/secrets.${appInstanceId}.yaml`
+    const content = await this.repo.loadConfig(path, secretsPath)
+    const values = (content?.apps && content.apps[appInstanceId]) || {}
+    let rawValues = {}
+
+    // eslint-disable-next-line no-underscore-dangle
+    if (values._rawValues) {
+      // eslint-disable-next-line no-underscore-dangle
+      rawValues = values._rawValues
+      // eslint-disable-next-line no-underscore-dangle
+      delete values._rawValues
+    }
+    let enabled
+    const app = getAppSchema(appId)
+    if (app.properties!.enabled !== undefined) enabled = !!values.enabled
+
+    // we do not want to send enabled flag to the input forms
+    delete values.enabled
+    const teamId = 'admin'
+    this.db.createItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appInstanceId }, appInstanceId)
+  }
   async loadApps(): Promise<void> {
     const apps = getAppList()
+    const { ingress } = this.getSettings()
+    const allClasses = ['platform']
+    const core = this.getCore()
+    allClasses.concat(ingress?.classes?.map((obj) => obj.className as string) || [])
     await Promise.all(
       apps.map(async (appId) => {
-        const path = `env/apps/${appId}.yaml`
-        const secretsPath = `env/apps/secrets.${appId}.yaml`
-        const content = await this.repo.loadConfig(path, secretsPath)
-        const values = (content?.apps && content.apps[appId]) || {}
-        let rawValues = {}
-        // eslint-disable-next-line no-underscore-dangle
-        if (values._rawValues) {
-          // eslint-disable-next-line no-underscore-dangle
-          rawValues = values._rawValues
-          // eslint-disable-next-line no-underscore-dangle
-          delete values._rawValues
+        if (appId !== 'ingress-nginx') await this.loadApp(appId, appId)
+        else {
+          allClasses.map(async (className) => {
+            await this.loadApp(appId, `${appId}-${className}`)
+          })
         }
-        let enabled
-        const app = getAppSchema(appId)
-        if (app.properties!.enabled !== undefined) enabled = !!values.enabled
-
-        // we do not want to send enabled flag to the input forms
-        delete values.enabled
-        const teamId = 'admin'
-        this.db.updateItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId })
       }),
     )
     // now also load the shortcuts that teams created and were stored in apps.* files
@@ -268,7 +278,8 @@ export default class OtomiStack {
           } = content
           each(_apps, ({ shortcuts }, appId) => {
             // use merge strategey to not overwrite admin apps that were loaded before
-            this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
+            if (teamId !== 'admin') this.db.createItem('apps', { shortcuts }, { teamId, id: appId }, appId)
+            // else this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
           })
         }),
     )
@@ -302,12 +313,12 @@ export default class OtomiStack {
     const team = this.db.createItem('teams', data, { id }, id) as Team
     const apps = getAppList()
     const core = this.getCore()
-    apps.forEach((appId) => {
-      const isShared = !!core.adminApps.find((a) => a.name === appId)?.isShared
-      const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
-      if (id === 'admin' || isShared || inTeamApps)
-        this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
-    })
+    // apps.forEach((appId) => {
+    //   const isShared = !!core.adminApps.find((a) => a.name === appId)?.isShared
+    //   const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
+    //   if (id === 'admin' || isShared || inTeamApps)
+    //     this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
+    // })
     return team
   }
 
