@@ -177,13 +177,13 @@ AppThanos:
           properties:
             retentionResolutionRaw:
               type: string
-              default: 30d
+              default: 0s
             retentionResolution5m:
               type: string
-              default: 30d
+              default: 0s
             retentionResolution1h: 
               type: string
-              default: 10y
+              default: 0s
             persistence:
               properties:
                 size: 
