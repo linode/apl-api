@@ -101,12 +101,12 @@ AppThanos:
             mode:
               description: Mode to run receiver in.
               type: string
-              default: standalone
+              default: dual-mode
               enum:
                 - standalone
                 - dual-mode
             replicaCount:
-              description: Number of Thanos Receive replicas.
+              description: Number of Thanos Receiver replicas.
               type: integer
               default: 2
             persistence:
@@ -114,6 +114,36 @@ AppThanos:
                 size: 
                   type: string
                   default: 8Gi
+        receiverDistributor:
+          description: Thanos Receiver distributer parameters
+          properties:
+            enabled:
+              type: boolean
+              default: true
+            resources:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 512Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 128Mi
+              required:
+                - limits
+                - requests
         storegateway:
           description: Store gateway configuration
           properties:
