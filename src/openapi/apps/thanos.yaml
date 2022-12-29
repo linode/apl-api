@@ -108,7 +108,7 @@ AppThanos:
             replicaCount:
               description: Number of Thanos Receive replicas.
               type: integer
-              default: 1
+              default: 2
             persistence:
               properties:
                 size: 
