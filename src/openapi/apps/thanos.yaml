@@ -27,7 +27,7 @@ AppThanos:
                       default: 500m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
+                      default: 1Gi
                 requests:
                   type: object
                   properties:
@@ -36,7 +36,7 @@ AppThanos:
                       default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 128Mi
+                      default: 256Mi
               required:
                 - limits
                 - requests
@@ -58,7 +58,7 @@ AppThanos:
                       default: 500m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
+                      default: 512Mi
                 requests:
                   type: object
                   properties:
@@ -85,7 +85,7 @@ AppThanos:
                       default: '1'
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 1Gi
+                      default: 2Gi
                 requests:
                   type: object
                   properties:
@@ -113,7 +113,7 @@ AppThanos:
               properties:
                 size: 
                   type: string
-                  default: 8Gi
+                  default: 50Gi
         receiverDistributor:
           description: Thanos Receiver distributer parameters
           properties:
@@ -186,19 +186,19 @@ AppThanos:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 500m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
+                      default: 128Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
+                      default: 50m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 128Mi
+                      default: 64Mi
               required:
                 - limits
                 - requests
@@ -207,10 +207,10 @@ AppThanos:
           properties:
             retentionResolutionRaw:
               type: string
-              default: 0s
+              default: 30d
             retentionResolution5m:
               type: string
-              default: 0s
+              default: 60d
             retentionResolution1h: 
               type: string
               default: 0s
@@ -227,10 +227,10 @@ AppThanos:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 500m
+                      default: '1'
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
+                      default: 512Mi
                 requests:
                   type: object
                   properties:
@@ -256,7 +256,7 @@ AppThanos:
                       default: 500m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
+                      default: 512Mi
                 requests:
                   type: object
                   properties:
@@ -265,7 +265,7 @@ AppThanos:
                       default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 128Mi
+                      default: 256Mi
               required:
                 - limits
                 - requests
