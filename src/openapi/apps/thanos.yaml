@@ -109,6 +109,14 @@ AppThanos:
               description: Number of Thanos Receiver replicas.
               type: integer
               default: 2
+            tsdbRetention:
+              description: How long to retain raw samples on local storage. 0d - disables this retention.
+              type: string
+              default: 7d
+            replicationFactor:
+              description: How many times to replicate incoming write requests.
+              type: integer
+              default: 1       
             persistence:
               properties:
                 size: 
