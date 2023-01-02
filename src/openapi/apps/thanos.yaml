@@ -16,88 +16,13 @@ AppThanos:
         query:
           description: Thanos query parameters
           properties:
-            resources:
-              type: object
-              properties:
-                limits:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 500m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 1Gi
-                requests:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
-              required:
-                - limits
-                - requests
             replicaCount:
               description: Number of Thanos Receive replicas.
               type: integer
               default: 1
-        queryFrontend:
-          description: Thanos query front-end parameters
-          properties:
-            resources:
-              type: object
-              properties:
-                limits:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 500m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 512Mi
-                requests:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 128Mi
-              required:
-                - limits
-                - requests
         receiver:
           description: Thanos receiver parameters
           properties:
-            resources:
-              type: object
-              properties:
-                limits:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: '1'
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 2Gi
-                requests:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 200m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 512Mi
-              required:
-                - limits
-                - requests
             mode:
               description: Mode to run receiver in.
               type: string
@@ -116,100 +41,13 @@ AppThanos:
             replicationFactor:
               description: How many times to replicate incoming write requests.
               type: integer
-              default: 1       
-            persistence:
-              properties:
-                size: 
-                  type: string
-                  default: 50Gi
+              default: 1
         receiverDistributor:
           description: Thanos Receiver distributer parameters
           properties:
             enabled:
               type: boolean
               default: true
-            resources:
-              type: object
-              properties:
-                limits:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: '1'
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 512Mi
-                requests:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 128Mi
-              required:
-                - limits
-                - requests
-        storegateway:
-          description: Store gateway configuration
-          properties:
-            resources:
-              type: object
-              properties:
-                limits:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 500m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
-                requests:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 128Mi
-              required:
-                - limits
-                - requests
-            persistence:
-              properties:
-                size: 
-                  type: string
-                  default: 8Gi  
-        bucketweb:
-          properties:
-            resources:
-              type: object
-              properties:
-                limits:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 128Mi
-                requests:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 50m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 64Mi
-              required:
-                - limits
-                - requests
         compactor:
           description: Resolution and Retention flags.
           properties:
@@ -222,66 +60,11 @@ AppThanos:
             retentionResolution1h: 
               type: string
               default: 0s
-            persistence:
-              properties:
-                size: 
-                  type: string
-                  default: 8Gi  
-            resources:
-              type: object
-              properties:
-                limits:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: '1'
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 512Mi
-                requests:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 128Mi
         ruler:
           properties:
             enabled:
               type: boolean
               default: false
-            resources:
-              type: object
-              properties:
-                limits:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 500m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 512Mi
-                requests:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
-              required:
-                - limits
-                - requests
-            persistence:
-              properties:
-                size: 
-                  type: string
-                  default: 8Gi
         objstore:
           additionalProperties: false
           type: object
@@ -339,3 +122,239 @@ AppThanos:
                   required:
                     - s3
                     - type
+        persistence:
+          additionalProperties: false
+          type: object
+          properties:
+            receiver:
+              type: object
+              title: Receive
+              properties:
+                size: 
+                  type: string
+                  default: 50Gi
+            storegateway:
+              description: Store gateway
+              type: object
+              properties:
+                size: 
+                  type: string
+                  default: 8Gi
+            compactor:
+              description: Compactor
+              type: object
+              properties:
+                size: 
+                  type: string
+                  default: 8Gi
+            ruler:
+              description: Ruler
+              type: object
+              properties:
+                size: 
+                  type: string
+                  default: 8Gi
+        resources:
+          additionalProperties: false
+          type: object
+          properties:
+            query:
+              title: Query
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 500m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 1Gi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 256Mi
+              required:
+                - limits
+                - requests
+            queryFrontend:
+              title: Query Frontend
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 500m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 512Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 128Mi
+              required:
+                - limits
+                - requests
+            receiver:
+              description: Receive
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 2Gi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 200m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 512Mi
+              required:
+                - limits
+                - requests
+            receiverDistributor:
+              description: Receiver Distributer
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 512Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 128Mi
+              required:
+                - limits
+                - requests
+            storegateway:
+              description: Store Gateway
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 500m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 128Mi
+              required:
+                - limits
+                - requests
+            bucketweb:
+              description: Bucket Web
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 128Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 64Mi
+              required:
+                - limits
+                - requests
+            compactor:
+              description: Compactor
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 512Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 128Mi
+              required:
+                - limits
+                - requests
+            ruler:
+              description: Ruler
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 500m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 512Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 256Mi
+              required:
+                - limits
+                - requests
