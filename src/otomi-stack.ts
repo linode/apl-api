@@ -1,6 +1,7 @@
 /* eslint-disable class-methods-use-this */
 import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
+import { Service } from 'aws-sdk'
 import Debug from 'debug'
 import { emptyDir } from 'fs-extra'
 import { readFile } from 'fs/promises'
@@ -10,19 +11,7 @@ import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
 import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
-import {
-  App,
-  Core,
-  Job,
-  Policies,
-  Secret,
-  Service,
-  Session,
-  Settings,
-  Team,
-  TeamSelfService,
-  User,
-} from 'src/otomi-models'
+import { App, Core, Job, Policies, Secret, Session, Settings, Team, TeamSelfService, User } from 'src/otomi-models'
 import getRepo, { Repo } from 'src/repo'
 import {
   argQuoteJoin,
@@ -103,6 +92,15 @@ export default class OtomiStack {
   constructor(editor?: string, inDb?: Db) {
     this.editor = editor
     this.db = inDb ?? new Db()
+  }
+
+  getAppList() {
+    const apps = getAppList()
+    apps.splice(apps.indexOf('ingress-nginx'), 1)
+    const { ingress } = this.getSettings()
+    const allClasses = ['platform'].concat(ingress?.classes?.map((obj) => obj.className as string) || [])
+    const ingressApps = allClasses.map((name) => `ingress-nginx-${name}`)
+    return apps.concat(ingressApps)
   }
 
   getRepoPath() {
@@ -223,7 +221,8 @@ export default class OtomiStack {
     })
   }
 
-  async loadApp(appId: string, appInstanceId: string): Promise<void> {
+  async loadApp(appInstanceId: string): Promise<void> {
+    const appId = appInstanceId.startsWith('ingress-nginx-') ? 'ingress-nginx' : appInstanceId
     const path = `env/apps/${appInstanceId}.yaml`
     const secretsPath = `env/apps/secrets.${appInstanceId}.yaml`
     const content = await this.repo.loadConfig(path, secretsPath)
@@ -247,19 +246,11 @@ export default class OtomiStack {
     this.db.createItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appInstanceId }, appInstanceId)
   }
   async loadApps(): Promise<void> {
-    const apps = getAppList()
-    const { ingress } = this.getSettings()
-    const allClasses = ['platform']
-    const core = this.getCore()
-    allClasses.concat(ingress?.classes?.map((obj) => obj.className as string) || [])
+    const apps = this.getAppList()
+
     await Promise.all(
       apps.map(async (appId) => {
-        if (appId !== 'ingress-nginx') await this.loadApp(appId, appId)
-        else {
-          allClasses.map(async (className) => {
-            await this.loadApp(appId, `${appId}-${className}`)
-          })
-        }
+        await this.loadApp(appId)
       }),
     )
     // now also load the shortcuts that teams created and were stored in apps.* files

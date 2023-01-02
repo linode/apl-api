@@ -62,7 +62,6 @@ export const getAppSchema = (appId: string): Schema => {
 
 export const getAppList = (): string[] => {
   const appsSchema = getAppSchema('List')
-
   return appsSchema.enum as string[]
 }
 
