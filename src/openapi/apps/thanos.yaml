@@ -26,14 +26,14 @@ AppThanos:
             mode:
               description: Mode to run receiver in.
               type: string
-              default: dual-mode
+              default: standalone
               enum:
                 - standalone
                 - dual-mode
             replicaCount:
               description: Number of Thanos Receiver replicas.
               type: integer
-              default: 2
+              default: 1
             tsdbRetention:
               description: How long to retain raw samples on local storage. 0d - disables this retention.
               type: string
