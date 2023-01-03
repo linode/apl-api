@@ -4,7 +4,21 @@ Session:
       type: string
       # readOnly: true
     core:
-      type: object
+      properties:
+        k8s:
+          properties:
+            namespaces:
+              type: array
+              items:
+                properties:
+                  name:
+                    type: string
+                  app:
+                    type: string
+                  disableIstioInjection:
+                    type: boolean
+                  disablePolicyChecks:
+                    type: boolean
       # readOnly: true
     corrupt:
       type: boolean
