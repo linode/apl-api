@@ -1148,6 +1148,12 @@ definitions:
     description: Grant team permissions to modify certain configuration parameters.
     type: object
     properties:
+      secrets:
+        type: array
+        items:
+          type: string
+          enum: [teamsWide, teams]
+        uniqueItems: true
       service:
         type: array
         items:
