@@ -83,9 +83,9 @@ export class Repo {
     return res
   }
 
-  async requestPrepareValues(): Promise<AxiosResponse | void> {
+  async requestPrepareValues(values: Record<string, any>): Promise<AxiosResponse | void> {
     debug(`Tools: requesting "prepare" on values repo path ${this.path}`)
-    const res = await axios.get(prepareUrl, { params: { envDir: this.path } })
+    const res = await axios.post(prepareUrl, values, { params: { envDir: this.path } })
     return res
   }
 
@@ -301,10 +301,10 @@ export class Repo {
     return this.git.revparse('HEAD')
   }
 
-  async save(editor: string): Promise<void> {
+  async save(values: Record<string, any>, editor: string): Promise<void> {
     // prepare values first
     try {
-      await this.requestPrepareValues()
+      await this.requestPrepareValues(values)
     } catch (e) {
       debug(`ERROR: ${JSON.stringify(e)}`)
       if (e.response) {

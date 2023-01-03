@@ -303,7 +303,7 @@ export default class OtomiStack {
     const apps = getAppList()
     const core = this.getCore()
     apps.forEach((appId) => {
-      const isShared = !!core.adminApps.find((a) => a.name === appId)?.isShared
+      const isShared = !!core.adminApps.find((a) => a.name === appId)!.isShared
       const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
       if (id === 'admin' || isShared || inTeamApps)
         this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
@@ -421,8 +421,8 @@ export default class OtomiStack {
     if (rootStack.locked) throw new DeployLockError()
     rootStack.locked = true
     try {
-      await this.saveValues()
-      await this.repo.save(this.editor!)
+      const values = this.convertDbToValues()
+      await this.repo.save(values, this.editor!)
       // pull push root
       await rootStack.repo.pull(undefined, true)
       await rootStack.repo.push()
@@ -621,42 +621,21 @@ export default class OtomiStack {
     })
   }
 
-  async saveCluster(secretPaths?: string[]): Promise<void> {
-    await this.repo.saveConfig(
-      'env/cluster.yaml',
-      'env/secrets.cluster.yaml',
-      this.getSettings(['cluster']),
-      secretPaths ?? this.getSecretPaths(),
-    )
+  convertAdminAppsToValues(): Record<string, any> {
+    const apps = {}
+    this.getApps('admin').map((app) => {
+      const { id, enabled, values, rawValues } = app
+      apps[id] = {
+        ...(values || {}),
+        _rawValues: rawValues,
+      }
+      if (this.canToggleApp(id)) apps[id].enabled = !!enabled
+      else delete apps[id].enabled
+    })
+    return apps
   }
 
-  async savePolicies(): Promise<void> {
-    await this.repo.writeFile('env/policies.yaml', this.getSettings(['policies']))
-  }
-
-  async saveAdminApps(secretPaths?: string[]): Promise<void> {
-    await Promise.all(
-      this.getApps('admin').map(async (app) => {
-        const apps = {}
-        const { id, enabled, values, rawValues } = app
-        apps[id] = {
-          ...(values || {}),
-          _rawValues: rawValues,
-        }
-        if (this.canToggleApp(id)) apps[id].enabled = !!enabled
-        else delete apps[id].enabled
-
-        await this.repo.saveConfig(
-          `env/apps/${id}.yaml`,
-          `env/apps/secrets.${id}.yaml`,
-          { apps },
-          secretPaths ?? this.getSecretPaths(),
-        )
-      }),
-    )
-  }
-
-  async saveTeamApps(teamId: string): Promise<void> {
+  convertTeamAppsToValues(teamId: string): Record<string, any> {
     const apps = {}
     this.getApps(teamId).forEach((app) => {
       const { id, shortcuts } = app
@@ -665,76 +644,50 @@ export default class OtomiStack {
         shortcuts,
       }
     })
-    const content = {
-      teamConfig: {
-        [teamId]: {
-          apps,
-        },
-      },
-    }
-    await this.repo.writeFile(`env/teams/apps.${teamId}.yaml`, content)
+    return apps
   }
 
-  async saveSettings(secretPaths?: string[]): Promise<void> {
+  convertSettingsToValues(): Settings {
     const settings = cloneDeep(this.getSettings()) as Record<string, Record<string, any>>
-    settings.otomi.nodeSelector = arrayToObject(settings.otomi.nodeSelector as [])
-    await this.repo.saveConfig(
-      'env/settings.yaml',
-      `env/secrets.settings.yaml`,
-      omit(settings, ['cluster', 'policies']),
-      secretPaths ?? this.getSecretPaths(),
-    )
-    await this.repo.writeFile('env/cluster.yaml', { cluster: settings.cluster })
+    set(settings, 'otomi.nodeSelector', arrayToObject(settings.otomi?.nodeSelector || []))
+    return omit(settings, ['cluster', 'policies'])
   }
 
-  async saveTeams(secretPaths?: string[]): Promise<void> {
-    const filePath = 'env/teams.yaml'
-    const secretFilePath = `env/secrets.teams.yaml`
-    const teamValues = {}
+  convertTeamsToValues(): Record<string, any> {
+    const teamConfig = {}
     const teams = this.getTeams()
-    await Promise.all(
-      teams.map(async (inTeam) => {
-        const team: Record<string, any> = omit(inTeam, 'name')
-        const teamId = team.id as string
-        await this.saveTeamApps(teamId)
-        await this.saveTeamJobs(teamId)
-        await this.saveTeamServices(teamId)
-        await this.saveTeamSecrets(teamId)
-        team.resourceQuota = arrayToObject((team.resourceQuota as []) ?? [])
-        teamValues[teamId] = team
-      }),
-    )
-    const values = set({}, 'teamConfig', teamValues)
-    await this.repo.saveConfig(filePath, secretFilePath, values, secretPaths ?? this.getSecretPaths())
+    teams.map((inTeam) => {
+      const team: Record<string, any> = omit(inTeam, 'name')
+      const teamId = team.id as string
+      if (teamId !== 'admin') team.apps = this.convertTeamAppsToValues(teamId)
+      team.jobs = this.convertTeamJobsToValues(teamId)
+      team.services = this.convertTeamServicesToValues(teamId)
+      team.secrets = this.convertTeamSecretsToValues(teamId)
+      team.resourceQuota = arrayToObject((team.resourceQuota as []) ?? [])
+      teamConfig[teamId] = team
+    })
+    return teamConfig
   }
 
-  async saveTeamSecrets(teamId: string): Promise<void> {
+  convertTeamSecretsToValues(teamId: string): Record<string, any>[] {
     const secrets = this.db.getCollection('secrets', { teamId })
-    const values: any[] = secrets.map((secret) => this.convertDbSecretToValues(secret))
-    await this.repo.writeFile(getTeamSecretsFilePath(teamId), set({}, getTeamSecretsJsonPath(teamId), values))
+    const values: any[] = secrets.map((secret) => this.convertSecretToValues(secret))
+    return values
   }
 
-  async saveTeamJobs(teamId: string): Promise<void> {
+  convertTeamJobsToValues(teamId: string): Record<string, any>[] {
     const jobs = this.db.getCollection('jobs', { teamId })
-    const jobsRaw = jobs.map((item) => omit(item, ['teamId']))
-    const data = {}
-    set(data, getTeamJobsJsonPath(teamId), jobsRaw)
-    const filePath = getTeamJobsFilePath(teamId)
-    await this.repo.writeFile(filePath, data)
+    return jobs.map((item) => omit(item, ['teamId']))
   }
 
-  async saveTeamServices(teamId: string): Promise<void> {
+  convertTeamServicesToValues(teamId: string): Record<string, any>[] {
     const services = this.db.getCollection('services', { teamId })
-    const data = {}
     const values: any[] = []
     services.forEach((service) => {
-      const value = this.convertDbServiceToValues(service)
+      const value = this.convertServiceToValues(service)
       values.push(value)
     })
-
-    set(data, getTeamServicesJsonPath(teamId), values)
-    const filePath = getTeamServicesFilePath(teamId)
-    await this.repo.writeFile(filePath, data)
+    return values
   }
 
   loadTeam(inTeam: Team): void {
@@ -755,7 +708,7 @@ export default class OtomiStack {
     debug(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
   }
 
-  convertDbSecretToValues(inSecret: any): any {
+  convertSecretToValues(inSecret: any): any {
     const secret: any = omit(inSecret, 'secret')
     secretTransferProps.forEach((prop) => {
       if (inSecret.secret[prop] !== undefined) secret[prop] = inSecret.secret[prop]
@@ -823,7 +776,7 @@ export default class OtomiStack {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  convertDbServiceToValues(svc: any): any {
+  convertServiceToValues(svc: any): any {
     const { serviceType } = svc.ksvc
     debug(`Saving service: id: ${svc.id} serviceType: ${serviceType}`)
     const svcCloned = omit(svc, ['teamId', 'ksvc', 'ingress', 'path'])
@@ -862,15 +815,13 @@ export default class OtomiStack {
     return svcCloned
   }
 
-  async saveValues(): Promise<void> {
-    const secretPaths = this.getSecretPaths()
-    await this.saveCluster(secretPaths)
-    await this.savePolicies()
-    await this.saveSettings(secretPaths)
-    await this.saveTeams(secretPaths)
-    // also save admin apps
-    await this.saveAdminApps(secretPaths)
-    await this.saveTeamApps('admin')
+  convertDbToValues(): Record<string, any> {
+    return {
+      ...this.convertSettingsToValues(),
+      ...this.getSettings(['cluster', 'policies']),
+      apps: this.convertAdminAppsToValues(),
+      teamConfig: this.convertTeamsToValues(),
+    }
   }
 
   async getSession(user: k8s.User): Promise<Session> {
