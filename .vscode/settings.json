@@ -30,5 +30,11 @@
   "mochaExplorer.require": "ts-node/register",
   "mochaExplorer.timeout": 5000,
   "prettier.enable": true,
-  "cSpell.words": ["minio"]
+  "cSpell.words": ["minio"],
+  "[properties]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "[dockerfile]": {
+    "editor.defaultFormatter": "ms-azuretools.vscode-docker"
+  }
 }
