@@ -20,6 +20,42 @@ AppPrometheus:
       additionalProperties: false
       type: object
       properties:
+        remoteWrite:
+            properties:
+              enabled:
+                type: boolean
+                default: false
+                description: Enable to forward (stream) metrics collected by Prometheus to a remote location.
+              otomiThanos:
+                type: boolean
+                default: false
+                description: Enable to use default Otomi remote write config for Thanos.
+              rwConfig:
+                title: Remote write configuration
+                properties:
+                  target:
+                    type: string
+                    description: Full URL of the remote write target (use 'https://thanos.<domain>/api/v1/receive' for Otomi Thanos)
+                  basicAuth:
+                    properties:
+                      enabled:
+                        type: boolean
+                        default: false
+                      username:
+                        description: Username for the remote target
+                        type: string
+                      password:
+                        description: The password for the remote target
+                        $ref: ../definitions.yaml#/wordCharacterPattern
+                        x-secret: true 
+                  customConfig:
+                    description: Custom remote write config. Will be appended to the remoteWrite list.
+                    type: string
+                  insecureSkipVerify:
+                    type: boolean
+                    title: Skip SSL verify
+                    default: false
+                    description: Enable when remote target is using self-signed certificates.
         replicas:
           $ref: ../definitions.yaml#/replicas
         scrapeInterval:

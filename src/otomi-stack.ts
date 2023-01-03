@@ -303,7 +303,7 @@ export default class OtomiStack {
     const apps = getAppList()
     const core = this.getCore()
     apps.forEach((appId) => {
-      const isShared = !!core.adminApps.find((a) => a.name === appId)!.isShared
+      const isShared = !!core.adminApps.find((a) => a.name === appId)?.isShared
       const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
       if (id === 'admin' || isShared || inTeamApps)
         this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
@@ -778,6 +778,7 @@ export default class OtomiStack {
       'ownHost',
       'tlsPass',
       'ingressClassName',
+      'headers',
     )
     svc.teamId = teamId
     if (!('name' in svcRaw)) debug('Unknown service structure')
@@ -805,6 +806,7 @@ export default class OtomiStack {
         certArn: svcRaw.certArn || undefined,
         certName: svcRaw.certName || undefined,
         domain: url.domain,
+        headers: svcRaw.headers || [],
         forwardPath: 'forwardPath' in svcRaw,
         hasCert: 'hasCert' in svcRaw,
         paths: svcRaw.paths ? svcRaw.paths : [],
@@ -854,6 +856,7 @@ export default class OtomiStack {
       if (ing.forwardPath) svcCloned.forwardPath = true
       if (ing.tlsPass) svcCloned.tlsPass = true
       if (ing.ingressClassName) svcCloned.ingressClassName = ing.ingressClassName
+      if (ing.headers) svcCloned.headers = ing.headers
       svcCloned.type = svc.ingress.type
     } else svcCloned.type = 'cluster'
     return svcCloned
