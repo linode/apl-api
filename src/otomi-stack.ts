@@ -10,7 +10,19 @@ import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
 import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
-import { App, Core, Job, Policies, Secret, Service, Session, Settings, Team, TeamSelfService } from 'src/otomi-models'
+import {
+  App,
+  Core,
+  Job,
+  Policies,
+  Secret,
+  Service,
+  Session,
+  Settings,
+  Team,
+  TeamSelfService,
+  User,
+} from 'src/otomi-models'
 import getRepo, { Repo } from 'src/repo'
 import {
   argQuoteJoin,
@@ -889,7 +901,7 @@ export default class OtomiStack {
       corrupt: rootStack.repo.corrupt,
       editor: this.editor,
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
-      user,
+      user: user as User,
       versions: {
         core: env.VERSIONS.core,
         api: env.VERSIONS.api ?? process.env.npm_package_version,
