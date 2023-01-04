@@ -1,7 +1,6 @@
 /* eslint-disable class-methods-use-this */
 import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
-import { Service } from 'aws-sdk'
 import Debug from 'debug'
 import { emptyDir } from 'fs-extra'
 import { readFile } from 'fs/promises'
@@ -11,7 +10,7 @@ import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
 import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
-import { App, Core, Job, Policies, Secret, Session, Settings, Team, TeamSelfService, User } from 'src/otomi-models'
+import { App, Core, Job, Policies, Secret, Service, Session, Settings, Team, TeamSelfService } from 'src/otomi-models'
 import getRepo, { Repo } from 'src/repo'
 import {
   argQuoteJoin,
@@ -95,8 +94,8 @@ export default class OtomiStack {
   }
 
   getAppList() {
-    const apps = getAppList()
-    apps.splice(apps.indexOf('ingress-nginx'), 1)
+    let apps = getAppList()
+    apps = apps.filter((item) => item !== 'ingress-nginx')
     const { ingress } = this.getSettings()
     const allClasses = ['platform'].concat(ingress?.classes?.map((obj) => obj.className as string) || [])
     const ingressApps = allClasses.map((name) => `ingress-nginx-${name}`)
@@ -245,33 +244,37 @@ export default class OtomiStack {
     const teamId = 'admin'
     this.db.createItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appInstanceId }, appInstanceId)
   }
+
+  async loadTeamShortcuts(teamId): Promise<void> {
+    const teamAppsFile = `env/teams/apps.${teamId}.yaml`
+    if (!(await this.repo.fileExists(teamAppsFile))) return
+    const content = await this.repo.readFile(teamAppsFile)
+    if (!content) return
+    const {
+      teamConfig: {
+        [`${teamId}`]: { apps: _apps },
+      },
+    } = content
+    each(_apps, ({ shortcuts }, appId) => {
+      // use merge strategy to not overwrite apps that were loaded before
+      this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
+    })
+  }
+
   async loadApps(): Promise<void> {
     const apps = this.getAppList()
-
     await Promise.all(
       apps.map(async (appId) => {
         await this.loadApp(appId)
       }),
     )
+
     // now also load the shortcuts that teams created and were stored in apps.* files
     await Promise.all(
       this.getTeams()
         .map((t) => t.id)
         .map(async (teamId) => {
-          const teamAppsFile = `env/teams/apps.${teamId}.yaml`
-          if (!(await this.repo.fileExists(teamAppsFile))) return
-          const content = await this.repo.readFile(teamAppsFile)
-          if (!content) return
-          const {
-            teamConfig: {
-              [`${teamId}`]: { apps: _apps },
-            },
-          } = content
-          each(_apps, ({ shortcuts }, appId) => {
-            // use merge strategey to not overwrite admin apps that were loaded before
-            if (teamId !== 'admin') this.db.createItem('apps', { shortcuts }, { teamId, id: appId }, appId)
-            // else this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
-          })
+          await this.loadTeamShortcuts(teamId)
         }),
     )
   }
@@ -304,12 +307,13 @@ export default class OtomiStack {
     const team = this.db.createItem('teams', data, { id }, id) as Team
     const apps = getAppList()
     const core = this.getCore()
-    // apps.forEach((appId) => {
-    //   const isShared = !!core.adminApps.find((a) => a.name === appId)?.isShared
-    //   const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
-    //   if (id === 'admin' || isShared || inTeamApps)
-    //     this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
-    // })
+    apps.forEach((appId) => {
+      const isShared = !!core.adminApps.find((a) => a.name === appId)?.isShared
+      const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
+      // Admin apps are loaded by loadApps function
+      if (id !== 'admin' && (isShared || inTeamApps))
+        this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
+    })
     return team
   }
 
@@ -885,7 +889,7 @@ export default class OtomiStack {
       corrupt: rootStack.repo.corrupt,
       editor: this.editor,
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
-      user: user as User,
+      user,
       versions: {
         core: env.VERSIONS.core,
         api: env.VERSIONS.api ?? process.env.npm_package_version,
