@@ -2,7 +2,7 @@ cluster:
     apiName: custom
     apiServer: https://apiServer.onprem.example.com
     domainSuffix: dev.onprem.example.com
-    k8sVersion: '1.19'
+    k8sVersion: '1.23'
     name: dev
     owner: demo
     provider: aws
