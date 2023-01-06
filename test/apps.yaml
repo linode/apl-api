@@ -54,6 +54,17 @@ appsInfo:
     license: Apache 2.0
     about: ExternalDNS synchronizes exposed Kubernetes Services and Ingresses with DNS providers.
     integration: ExternalDNS is used by Otomi to make public service domains accessible by registering them with Otomi's load balancer CNAME or IP address. When ExternalDNS is not enabled (default), then Otomi will rely on nip.io to create host names for all services.
+  falco:
+    title: Falco
+    appVersion: 0.57.0
+    repo: https://github.com/prometheus/prometheus
+    maintainers: Prometheus
+    relatedLinks:
+      - https://otomi.io/docs/apps/prometheus
+      - https://prometheus.io/
+    license: Apache 2.0
+    about: Bla.
+    integration: Bla.
   gatekeeper:
     title: Gatekeeper
     appVersion: 3.8.1

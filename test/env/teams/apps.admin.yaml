@@ -24,3 +24,4 @@ teamConfig:
             prometheus: {}
             vault: {}
             velero: {}
+            falco: {}

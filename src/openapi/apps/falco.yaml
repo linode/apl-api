@@ -1,0 +1,121 @@
+AppFalco:
+  additionalProperties: false
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      type: boolean
+      default: false
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/apps/falco
+      additionalProperties: false
+      type: object
+      properties:
+        rules:
+          title: Rule sets
+          description: Otomi and user defined rule sets that can be adjusted to a user's environment.
+          properties:
+            otomiRules:
+              title: Otomi rules
+              description: Pre-configured rules for Otomi.
+              type: string
+              default: |
+                - macro: k8s_containers
+                  condition: (
+                      container.image.repository in (
+                        docker.io/openpolicyagent/gatekeeper,
+                        docker.io/velero/velero,
+                        docker.io/weaveworks/kured,
+                        k8s.gcr.io/kube-state-metrics/kube-state-metrics,
+                        quay.io/jetstack/cert-manager-cainjector,
+                        quay.io/jetstack/cert-manager-controller,
+                        quay.io/jetstack/cert-manager-webhook,
+                        quay.io/prometheus-operator/prometheus-operator,
+                        quay.io/prometheus/prometheus,
+                      ) or (k8s.ns.name = "kube-system")
+                    )
+                - macro: user_known_write_below_etc_activities
+                  condition: (
+                      (container.image.repository = docker.io/goharbor/harbor-core and proc.name = cp) or
+                      (container.image.repository = docker.io/goharbor/harbor-registryctl and proc.name = cp) or
+                      (container.image.repository = docker.io/goharbor/registry-photon and proc.name = cp) or
+                      (container.image.repository = docker.io/goharbor/trivy-adapter-photon and proc.name = cp)
+                    )
+                - macro: user_sensitive_mount_containers
+                  condition: (
+                      container.image.repository in (
+                        quay.io/prometheus/node-exporter
+                      )
+                    )
+                - macro: user_trusted_containers
+                  condition: (
+                      container.image.repository in (
+                        docker.io/drone/drone-runner-kube
+                        docker.io/otomi/api
+                      )
+                    )
+            customRules:
+              title: Custom rules
+              description: User defined custom rules. Only use macros that are not used in the Otomi rules.
+              type: string
+        resources:
+          type: object
+          properties:
+            falco:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 500m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 128Mi
+              required:
+                - limits
+                - requests
+            falcoSideKick:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 64Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 20m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 32Mi
+              required:
+                - limits
+                - requests
+

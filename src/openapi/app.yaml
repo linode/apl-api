@@ -9,6 +9,7 @@ AppList:
     - cert-manager
     - drone
     - external-dns
+    - falco
     - gatekeeper
     - gitea
     - grafana
