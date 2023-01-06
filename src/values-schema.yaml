@@ -1474,12 +1474,6 @@ properties:
       falco:
         additionalProperties: false
         properties:
-          rules:
-            properties:
-              otomiRules:
-                type: string
-              customRules:
-                type: string
           resources:
             additionalProperties: false
             properties:
