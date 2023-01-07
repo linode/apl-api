@@ -1474,6 +1474,8 @@ properties:
       falco:
         additionalProperties: false
         properties:
+          _rawValues:
+            $ref: '#/definitions/rawValues'
           resources:
             additionalProperties: false
             properties:
