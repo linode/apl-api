@@ -1481,6 +1481,8 @@ properties:
                 $ref: '#/definitions/resources'
               falcoSidekick:
                 $ref: '#/definitions/resources'
+              falcoExporter:
+                $ref: '#/definitions/resources'
       gatekeeper:
         additionalProperties: false
         properties:

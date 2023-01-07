@@ -71,4 +71,29 @@ AppFalco:
               required:
                 - limits
                 - requests
+            falcoExporter:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 64Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 32Mi
+              required:
+                - limits
+                - requests
+
 
