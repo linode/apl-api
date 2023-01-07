@@ -20,6 +20,13 @@ AppFalco:
       additionalProperties: false
       type: object
       properties:
+        falcoSidekick:
+          title: Falco Sidekick configuration
+          properties:
+            replicas:
+              $ref: ../definitions.yaml#/replicas      
+            minPrio:
+              $ref: ../definitions.yaml#/priority
         resources:
           type: object
           properties:

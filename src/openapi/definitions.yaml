@@ -1022,6 +1022,20 @@ provider:
     - ovh
     - vultr
     - custom
+priority:
+  title: Minimum priority
+  description: minimum priority of alert events
+  type: string
+  default: informational
+  enum:
+    - emergency
+    - alert
+    - critical
+    - error
+    - warning
+    - notice
+    - informational
+    - debug
 quantityCpu:
   title: CPU quantity
   description: Amount of cores, or slice of cpu in millis.
