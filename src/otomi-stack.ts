@@ -269,7 +269,8 @@ export default class OtomiStack {
     } = content
     each(_apps, ({ shortcuts }, appId) => {
       // use merge strategy to not overwrite apps that were loaded before
-      this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
+      const item = this.db.getItemReference('apps', { teamId, id: appId }, false)
+      if (item) this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
     })
   }
 
