@@ -119,7 +119,7 @@ export const loadSpecRules = (apiDoc: OpenAPIDoc): any => {
   const { schemas } = apiDoc.components
 
   Object.keys(schemas).forEach((schemaName: string) => {
-    debug(`loading rules for ${schemaName} schema`)
+    // debug(`loading rules for ${schemaName} schema`)
     const schema: Schema = schemas[schemaName]
 
     if (schema.type === 'array') return
