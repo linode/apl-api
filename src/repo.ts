@@ -193,6 +193,7 @@ export class Repo {
     secretPaths: string[],
   ): Promise<Promise<void>> {
     const secretData = {}
+    const secretDataPath = `${inSecretDataPath}${this.secretFilePostfix}`
     const plainData = cloneDeep(config)
     secretPaths.forEach((objectPath) => {
       const val = get(config, objectPath)
@@ -202,10 +203,6 @@ export class Repo {
       }
     })
 
-    let secretDataPath = `${inSecretDataPath}${this.secretFilePostfix}`
-    const secretExists = await pathExists(inSecretDataPath)
-    // In case secret file does not exists, create new one and let sops to encrypt it in place
-    if (this.secretFilePostfix && !secretExists) secretDataPath = inSecretDataPath
     await this.writeFile(secretDataPath, secretData)
     await this.writeFile(dataPath, plainData)
   }
