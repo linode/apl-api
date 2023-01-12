@@ -56,7 +56,8 @@ export const getSpec = (): OtomiSpec => {
   return otomiSpec
 }
 export const getAppSchema = (appId: string): Schema => {
-  return getSpec().spec.components.schemas[`App${pascalCase(appId)}`]
+  const id: string = appId.startsWith('ingress-nginx') ? 'ingress-nginx' : appId
+  return getSpec().spec.components.schemas[`App${pascalCase(id)}`]
 }
 
 export const getAppList = (): string[] => {
@@ -69,8 +70,6 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   const app = express()
   const apiRoutesPath = path.resolve(__dirname, 'api')
   await loadSpec()
-  // instantiate read-only version of the db
-  const mainStack = inOtomiStack || (await getSessionStack())
   const authz = new Authz(otomiSpec.spec)
 
   app.use(logger('dev'))
@@ -110,11 +109,11 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     // initialize full server
     const { PORT = 8080 } = process.env
     server = app
-      .listen(PORT, () => {
+      .listen(PORT, async () => {
         debug(`Listening on :::${PORT}`)
         lightship.signalReady()
         // Clone repo after the application is ready to avoid Pod NotReady phenomenon, and thus infinite Pod crash loopback
-        mainStack.initRepo()
+        ;(await getSessionStack()).initRepo()
       })
       .on('error', (e) => {
         console.error(e)

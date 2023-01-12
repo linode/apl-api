@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.20](https://github.com/redkubes/otomi-api/compare/v0.5.19...v0.5.20) (2022-12-14)
+
+
+### Features
+
+* Harbor backup ([#343](https://github.com/redkubes/otomi-api/issues/343)) ([b2b983a](https://github.com/redkubes/otomi-api/commit/b2b983a6b51545fac7f790847310a920aa654dca))
+
+### [0.5.19](https://github.com/redkubes/otomi-api/compare/v0.5.18...v0.5.19) (2022-12-06)
+
+
+### Bug Fixes
+
+* x-secret ([#348](https://github.com/redkubes/otomi-api/issues/348)) ([17f983b](https://github.com/redkubes/otomi-api/commit/17f983b39636bad306e7fa3d9d0839be48701d49))
+
+### [0.5.18](https://github.com/redkubes/otomi-api/compare/v0.5.17...v0.5.18) (2022-12-05)
+
+
+### Bug Fixes
+
+* treat isShared flag as optional ([#347](https://github.com/redkubes/otomi-api/issues/347)) ([550413c](https://github.com/redkubes/otomi-api/commit/550413c0f0ccd5b338cbf24b7ba27295ed702e4d))
+
+### [0.5.17](https://github.com/redkubes/otomi-api/compare/v0.5.16...v0.5.17) (2022-12-05)
+
+
+### Features
+
+* add a flag to disable monitoring stack for a specific team ([#340](https://github.com/redkubes/otomi-api/issues/340)) ([5138dee](https://github.com/redkubes/otomi-api/commit/5138dee7f3e7759e34ab5fa32df02ae5ed3c1d3c))
+* add minio app ([#345](https://github.com/redkubes/otomi-api/issues/345)) ([2701cfb](https://github.com/redkubes/otomi-api/commit/2701cfbbbcb495992bc57aa97cf6fa53c42a2115))
+* prometheus remote write ([#344](https://github.com/redkubes/otomi-api/issues/344)) ([bb4e912](https://github.com/redkubes/otomi-api/commit/bb4e912d37ad38ff27f81f27942503db49166661))
+
+
+### Bug Fixes
+
+* ensure that root repo is loaded ([#342](https://github.com/redkubes/otomi-api/issues/342)) ([f7e5e83](https://github.com/redkubes/otomi-api/commit/f7e5e835679e44eaacb5bbf8bc5db7acc024e19a))
+
 ### [0.5.16](https://github.com/redkubes/otomi-api/compare/v0.5.15...v0.5.16) (2022-11-18)
 
 

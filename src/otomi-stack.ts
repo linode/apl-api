@@ -1,7 +1,6 @@
 /* eslint-disable class-methods-use-this */
 import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
-import { pascalCase } from 'change-case'
 import Debug from 'debug'
 import { emptyDir } from 'fs-extra'
 import { readFile } from 'fs/promises'
@@ -10,7 +9,7 @@ import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
-import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack, readOnlyStack } from 'src/middleware'
+import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
   Core,
@@ -98,11 +97,21 @@ export default class OtomiStack {
   db: Db
   editor?: string
   locked = false
+  isLoaded = false
   repo: Repo
 
   constructor(editor?: string, inDb?: Db) {
     this.editor = editor
     this.db = inDb ?? new Db()
+  }
+
+  getAppList() {
+    let apps = getAppList()
+    apps = apps.filter((item) => item !== 'ingress-nginx')
+    const { ingress } = this.getSettings()
+    const allClasses = ['platform'].concat(ingress?.classes?.map((obj) => obj.className as string) || [])
+    const ingressApps = allClasses.map((name) => `ingress-nginx-${name}`)
+    return apps.concat(ingressApps)
   }
 
   getRepoPath() {
@@ -131,7 +140,6 @@ export default class OtomiStack {
     const url = env.GIT_REPO_URL
     for (;;) {
       try {
-        /* eslint-disable no-await-in-loop */
         this.repo = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, branch)
         await this.repo.pull()
         if (await this.repo.fileExists('env/cluster.yaml')) break
@@ -146,6 +154,7 @@ export default class OtomiStack {
     }
     // branches get a copy of the "main" branch db, so we don't need to inflate
     if (!skipDbInflation) await this.loadValues()
+    debug('Values are loaded')
   }
 
   getSecretPaths(): string[] {
@@ -210,10 +219,7 @@ export default class OtomiStack {
   }
 
   canToggleApp(id: string): boolean {
-    const { spec } = getSpec()
-    const { schemas } = spec.components
-    const appName = `App${pascalCase(id)}`
-    const app = schemas[appName]
+    const app = getAppSchema(id)
     return app.properties!.enabled !== undefined
   }
 
@@ -226,50 +232,62 @@ export default class OtomiStack {
     })
   }
 
+  async loadApp(appInstanceId: string): Promise<void> {
+    const appId = appInstanceId.startsWith('ingress-nginx-') ? 'ingress-nginx' : appInstanceId
+    const path = `env/apps/${appInstanceId}.yaml`
+    const secretsPath = `env/apps/secrets.${appInstanceId}.yaml`
+    const content = await this.repo.loadConfig(path, secretsPath)
+    const values = (content?.apps && content.apps[appInstanceId]) || {}
+    let rawValues = {}
+
+    // eslint-disable-next-line no-underscore-dangle
+    if (values._rawValues) {
+      // eslint-disable-next-line no-underscore-dangle
+      rawValues = values._rawValues
+      // eslint-disable-next-line no-underscore-dangle
+      delete values._rawValues
+    }
+    let enabled
+    const app = getAppSchema(appId)
+    if (app.properties!.enabled !== undefined) enabled = !!values.enabled
+
+    // we do not want to send enabled flag to the input forms
+    delete values.enabled
+    const teamId = 'admin'
+    this.db.createItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appInstanceId }, appInstanceId)
+  }
+
+  async loadTeamShortcuts(teamId): Promise<void> {
+    const teamAppsFile = `env/teams/apps.${teamId}.yaml`
+    if (!(await this.repo.fileExists(teamAppsFile))) return
+    const content = await this.repo.readFile(teamAppsFile)
+    if (!content) return
+    const {
+      teamConfig: {
+        [`${teamId}`]: { apps: _apps },
+      },
+    } = content
+    each(_apps, ({ shortcuts }, appId) => {
+      // use merge strategy to not overwrite apps that were loaded before
+      const item = this.db.getItemReference('apps', { teamId, id: appId }, false)
+      if (item) this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
+    })
+  }
+
   async loadApps(): Promise<void> {
-    const apps = getAppList()
+    const apps = this.getAppList()
     await Promise.all(
       apps.map(async (appId) => {
-        const path = `env/apps/${appId}.yaml`
-        const secretsPath = `env/apps/secrets.${appId}.yaml`
-        const content = await this.repo.loadConfig(path, secretsPath)
-        const values = (content?.apps && content.apps[appId]) || {}
-        let rawValues = {}
-        // eslint-disable-next-line no-underscore-dangle
-        if (values._rawValues) {
-          // eslint-disable-next-line no-underscore-dangle
-          rawValues = values._rawValues
-          // eslint-disable-next-line no-underscore-dangle
-          delete values._rawValues
-        }
-        let enabled
-        const app = getAppSchema(appId)
-        if (app.properties!.enabled !== undefined) enabled = !!values.enabled
-
-        // we do not want to send enabled flag to the input forms
-        delete values.enabled
-        const teamId = 'admin'
-        this.db.updateItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId })
+        await this.loadApp(appId)
       }),
     )
+
     // now also load the shortcuts that teams created and were stored in apps.* files
     await Promise.all(
       this.getTeams()
         .map((t) => t.id)
         .map(async (teamId) => {
-          const teamAppsFile = `env/teams/apps.${teamId}.yaml`
-          if (!(await this.repo.fileExists(teamAppsFile))) return
-          const content = await this.repo.readFile(teamAppsFile)
-          if (!content) return
-          const {
-            teamConfig: {
-              [`${teamId}`]: { apps: _apps },
-            },
-          } = content
-          each(_apps, ({ shortcuts }, appId) => {
-            // use merge strategey to not overwrite admin apps that were loaded before
-            this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
-          })
+          await this.loadTeamShortcuts(teamId)
         }),
     )
   }
@@ -303,9 +321,10 @@ export default class OtomiStack {
     const apps = getAppList()
     const core = this.getCore()
     apps.forEach((appId) => {
-      const isShared = !!core.adminApps.find((a) => a.name === appId)!.isShared
+      const isShared = !!core.adminApps.find((a) => a.name === appId)?.isShared
       const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
-      if (id === 'admin' || isShared || inTeamApps)
+      // Admin apps are loaded by loadApps function
+      if (id !== 'admin' && (isShared || inTeamApps))
         this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
     })
     return team
@@ -424,7 +443,7 @@ export default class OtomiStack {
       await this.saveValues()
       await this.repo.save(this.editor!)
       // pull push root
-      await rootStack.repo.pull()
+      await rootStack.repo.pull(undefined, true)
       await rootStack.repo.push()
       // inflate new db
       rootStack.db = new Db()
@@ -434,6 +453,10 @@ export default class OtomiStack {
       const sha = await rootStack.repo.getCommitSha()
       const msg: DbMessage = { state: 'clean', editor: this.editor!, sha, reason: 'deploy' }
       getIo().emit('db', msg)
+    } catch (e) {
+      const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
+      getIo().emit('db', msg)
+      throw e
     } finally {
       rootStack.locked = false
     }
@@ -446,11 +469,14 @@ export default class OtomiStack {
   }
 
   async doRestore(): Promise<void> {
-    // hardcore: re-init root and broadcast
-    await cleanAllSessions(this.editor!)
+    cleanAllSessions()
     await emptyDir(rootPath)
     // and re-init root
-    await getSessionStack()
+    const rootStack = await getSessionStack()
+    await rootStack.initRepo()
+    // and msg
+    const msg: DbMessage = { state: 'clean', editor: 'system', sha: rootStack.repo.commitSha, reason: 'restore' }
+    getIo().emit('db', msg)
   }
 
   apiClient?: k8s.CoreV1Api
@@ -538,6 +564,7 @@ export default class OtomiStack {
     await this.loadSettings()
     await this.loadTeams()
     await this.loadApps()
+    this.isLoaded = true
   }
 
   async loadCluster(): Promise<void> {
@@ -733,7 +760,7 @@ export default class OtomiStack {
     const team = { ...inTeam, name: inTeam.id } as Record<string, any>
     team.resourceQuota = objectToArray(inTeam.resourceQuota as Record<string, any>)
     const res = this.createTeam(team as Team)
-    // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id)
+    // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id as string)
     debug(`Loaded team: ${res.id!}`)
   }
 
@@ -771,6 +798,7 @@ export default class OtomiStack {
       'ownHost',
       'tlsPass',
       'ingressClassName',
+      'headers',
     )
     svc.teamId = teamId
     if (!('name' in svcRaw)) debug('Unknown service structure')
@@ -798,6 +826,7 @@ export default class OtomiStack {
         certArn: svcRaw.certArn || undefined,
         certName: svcRaw.certName || undefined,
         domain: url.domain,
+        headers: svcRaw.headers || [],
         forwardPath: 'forwardPath' in svcRaw,
         hasCert: 'hasCert' in svcRaw,
         paths: svcRaw.paths ? svcRaw.paths : [],
@@ -847,6 +876,7 @@ export default class OtomiStack {
       if (ing.forwardPath) svcCloned.forwardPath = true
       if (ing.tlsPass) svcCloned.tlsPass = true
       if (ing.ingressClassName) svcCloned.ingressClassName = ing.ingressClassName
+      if (ing.headers) svcCloned.headers = ing.headers
       svcCloned.type = svc.ingress.type
     } else svcCloned.type = 'cluster'
     return svcCloned
@@ -864,11 +894,12 @@ export default class OtomiStack {
   }
 
   async getSession(user: k8s.User): Promise<Session> {
-    const currentSha = await readOnlyStack.repo.getCommitSha()
+    const rootStack = await getSessionStack()
+    const currentSha = rootStack.repo.commitSha
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
-      corrupt: readOnlyStack.repo.corrupt,
+      corrupt: rootStack.repo.corrupt,
       editor: this.editor,
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
       user: user as User,
