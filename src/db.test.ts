@@ -8,7 +8,7 @@ describe('Db', () => {
   })
 
   it('can store with id', (done) => {
-    const v = testDb.createItem('teams', { name: 'n1', k: '1' }, undefined, '1')
+    const v = testDb.createItem('teams', { id: '1', name: 'n1', k: '1' })
     expect(v).to.deep.equal({ name: 'n1', k: '1', id: '1' })
     done()
   })
@@ -27,8 +27,8 @@ describe('Db', () => {
   })
 
   it('can remove item', (done) => {
-    testDb.createItem('teams', { name: 'name1', k: 'a' }, undefined, '1')
-    testDb.createItem('teams', { name: 'name2', k: 'b' }, undefined, '2')
+    testDb.createItem('teams', { id: '1', name: 'name1', k: 'a' })
+    testDb.createItem('teams', { id: '2', name: 'name2', k: 'b' })
 
     testDb.deleteItem('teams', { id: '1' })
     expect(() => testDb.getItem('teams', { id: '1' })).to.throw()
@@ -39,7 +39,7 @@ describe('Db', () => {
   })
 
   it('can update item', (done) => {
-    testDb.createItem('teams', { name: 'n1', k: '1' }, undefined, '1')
+    testDb.createItem('teams', { id: '1', name: 'n1', k: '1' })
     testDb.updateItem('teams', { name: 'n1', k: '2' }, { id: '1' })
 
     const v = testDb.getItem('teams', { id: '1' })
@@ -47,8 +47,8 @@ describe('Db', () => {
     done()
   })
 
-  it('can obtain item', (done) => {
-    testDb.createItem('teams', { name: 'n1', k: '1' }, undefined, '1')
+  it('can get item', (done) => {
+    testDb.createItem('teams', { id: '1', name: 'n1', k: '1' })
     const v = testDb.getItem('teams', { name: 'n1' })
     expect(v).to.deep.equal({ name: 'n1', k: '1', id: '1' })
     done()

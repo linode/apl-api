@@ -1,5 +1,6 @@
 import { expect } from 'chai'
 import { stub as sinonStub } from 'sinon'
+import testValues from 'src/fixtures/values'
 import OtomiStack from 'src/otomi-stack'
 import { Repo } from 'src/repo'
 import 'src/test-init'
@@ -63,13 +64,15 @@ describe('Data validation', () => {
 
 describe('Work with values', () => {
   let otomiStack: OtomiStack
-  beforeEach(() => {
+  beforeEach(async () => {
     otomiStack = new OtomiStack()
+    await otomiStack.init()
     otomiStack.repo = new Repo('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
   })
 
   it('can load from configuration to database and back', () => {
-    expect(otomiStack.loadValues()).to.not.throw
+    otomiStack.values = testValues as any
+    expect(otomiStack.inflateValues()).to.not.throw
     expect(otomiStack.convertDbToValues()).to.not.throw
   })
   return undefined

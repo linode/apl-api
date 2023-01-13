@@ -20,6 +20,7 @@ export type TeamAuthz = components['schemas']['TeamAuthz']
 export type Alerts = Settings['alerts']
 export type Cluster = Settings['cluster']
 export type Dns = Settings['dns']
+export type Home = Settings['home']
 export type Kms = Settings['kms']
 export type Oidc = Settings['oidc']
 export type Otomi = Settings['otomi']
@@ -112,19 +113,35 @@ export interface OpenApiRequestExt extends OpenApiRequest, Session {
   otomi: OtomiStack
 }
 
+export interface Shortcut {
+  title: string
+  description: string
+  path: string
+}
+
+type TeamStuff = {
+  apps: App[]
+  jobs: Job[]
+  secrets: Secret[]
+  services: Service[]
+}
 export interface Core {
   k8s: Record<string, Record<string, any>[]>
   adminApps: Record<string, any>[]
-  alerts: Alerts
-  apps: Record<string, any>[]
   appsInfo: Record<string, any>[]
-  cluster: Cluster
-  dns: Dns
-  kms: Kms
-  oidc: Oidc
-  otomi: Otomi
-  policies: Policies
   teamApps: Record<string, any>[]
-  teamConfig: Record<string, any>
+}
+
+export interface Values {
+  alerts?: Alerts
+  apps: Record<string, any>
+  cluster: Cluster
+  dns?: Dns
+  home?: Home
+  kms?: Kms
+  oidc?: Oidc
+  otomi?: Otomi
+  policies: Policies
+  teamConfig: Record<string, Team & TeamStuff>
   version: number
 }

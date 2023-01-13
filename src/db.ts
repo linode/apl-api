@@ -10,6 +10,12 @@ import { mergeData, removeBlankAttributes } from 'src/utils'
 import { v4 as uuidv4 } from 'uuid'
 
 export type DbType = Cluster | Job | Secret | Service | Team | Settings | App
+export type DbModel = DbType & {
+  id?: string
+  // not used at all, but added just for testing:
+  k?: string
+}
+
 export type Schema = {
   apps: App[]
   jobs: Job[]
@@ -50,7 +56,7 @@ export default class Db {
     return cloneDeep(data)
   }
 
-  getItemReference(type: string, selector: any, mustThrow = true): DbType | undefined {
+  getItemReference(type: string, selector: any, mustThrow = true): DbModel | undefined {
     const coll = this.db.get(type)
     // @ts-ignore
     const data = coll.find(selector).value()
@@ -67,31 +73,29 @@ export default class Db {
     return data
   }
 
-  getCollection(type: string, selector?: any): Array<DbType> {
+  getCollection(type: string, selector?: any): Array<DbModel> {
     // @ts-ignore
     return this.db.get(type).filter(selector).value()
   }
 
-  populateItem(type: string, data: DbType, selector?: any, id?: string): DbType | undefined {
-    // @ts-ignore
-    if (selector && this.db.get(type).find(selector).value()) return undefined
+  populateItem(type: string, data: DbModel): Record<string, string> {
     return (
       this.db
         .get(type)
         // @ts-ignore
         .push(data)
         .last()
-        .assign({ id: id || uuidv4() })
+        .assign({ id: data.id ?? uuidv4() })
         .write()
     )
   }
 
-  createItem(type: string, data: Record<string, any>, selector?: Record<string, any>, id?: string): DbType {
+  createItem(type: string, data: any, selector?: Partial<DbModel>): DbType {
     // @ts-ignore
     if (selector && this.db.get(type).find(selector).value())
       throw new AlreadyExists(`Item already exists in '${type}' collection: ${JSON.stringify(selector)}`)
-    const cleanData = removeBlankAttributes({ ...data, ...selector })
-    const ret = this.populateItem(type, cleanData, selector, id)
+    const cleanData = removeBlankAttributes({ ...data, ...selector } as Record<string, any>) as DbModel
+    const ret = this.populateItem(type, cleanData)
     return ret
   }
 

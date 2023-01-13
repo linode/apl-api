@@ -160,5 +160,6 @@ if (!env.isTest) {
 }
 
 process.on('exit', () => {
+  console.log('Removing /tmp/otomi files')
   if (process.env.NODE_ENV === 'development') removeSync('/tmp/otomi')
 })

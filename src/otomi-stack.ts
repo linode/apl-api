@@ -1,21 +1,21 @@
 /* eslint-disable class-methods-use-this */
 import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
+import axios, { AxiosResponse } from 'axios'
 import { pascalCase } from 'change-case'
 import Debug from 'debug'
 import { emptyDir } from 'fs-extra'
 import { readFile } from 'fs/promises'
-import { cloneDeep, each, filter, get, isEmpty, omit, pick, set } from 'lodash'
+import { cloneDeep, each, filter, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
-import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
+import { DeployLockError, HttpError, PublicUrlExists, ValidationError } from 'src/error'
 import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
   Core,
   Job,
-  Policies,
   Secret,
   Service,
   Session,
@@ -23,6 +23,7 @@ import {
   Team,
   TeamSelfService,
   User,
+  Values,
 } from 'src/otomi-models'
 import getRepo, { Repo } from 'src/repo'
 import {
@@ -92,9 +93,14 @@ export function getTeamServicesJsonPath(teamId: string): string {
 
 export const rootPath = '/tmp/otomi/values'
 
-export default class OtomiStack {
-  private coreValues: Core
+const baseUrl = `http://${env.TOOLS_HOST}:17771/`
+const readUrl = `${baseUrl}read`
+const updateUrl = `${baseUrl}update`
 
+const ownModels = ['apps', 'secrets', 'services', 'shortcuts']
+export default class OtomiStack {
+  private core: Core
+  values: Values
   db: Db
   editor?: string
   locked = false
@@ -106,18 +112,40 @@ export default class OtomiStack {
     this.db = inDb ?? new Db()
   }
 
+  getAppList() {
+    let apps = getAppList()
+    apps = apps.filter((item) => item !== 'ingress-nginx')
+    const { ingress } = this.getSettings()
+    const allClasses = ['platform'].concat(ingress?.classes?.map((obj) => obj.className as string) || [])
+    const ingressApps = allClasses.map((name) => `ingress-nginx-${name}`)
+    return apps.concat(ingressApps)
+  }
+
   getRepoPath() {
     if (env.isTest || this.editor === undefined) return env.GIT_LOCAL_PATH
     const folder = `${rootPath}/${this.editor}`
     return folder
   }
 
+  async readValues(): Promise<AxiosResponse> {
+    debug(`Tools: requesting "read" on values repo path ${this.repo.path}`)
+    const res = await axios.get(readUrl, { params: { envDir: this.repo.path } })
+    this.values = res.data
+    return res
+  }
+
+  async updateValues(values: Values): Promise<void> {
+    debug(`Tools: requesting "update" on values repo path ${this.repo.path}`)
+    await axios.post(updateUrl, values, { params: { envDir: this.repo.path } })
+    this.values = values
+  }
+
   async init(): Promise<void> {
     if (env.isProd) {
       const corePath = '/etc/otomi/core.yaml'
-      this.coreValues = parseYaml(await readFile(corePath, 'utf8')) as Core
+      this.core = parseYaml(await readFile(corePath, 'utf8')) as Core
     } else {
-      this.coreValues = {
+      this.core = {
         ...parseYaml(await readFile('./test/core.yaml', 'utf8')),
         ...parseYaml(await readFile('./test/apps.yaml', 'utf8')),
       }
@@ -148,22 +176,12 @@ export default class OtomiStack {
     if (!skipDbInflation) await this.loadValues()
   }
 
-  getSecretPaths(): string[] {
-    // we split secrets from plain data, but have to overcome teams using patternproperties
-    const teamProp = 'teamConfig.patternProperties.^[a-z0-9]([-a-z0-9]*[a-z0-9])+$'
-    const teams = this.getTeams().map(({ id }) => id)
-    const cleanSecretPaths: string[] = []
-    const { secretPaths } = getSpec()
-    secretPaths.map((p) => {
-      if (p.indexOf(teamProp) === -1 && !cleanSecretPaths.includes(p)) cleanSecretPaths.push(p)
-      else {
-        teams.forEach((teamId: string) => {
-          if (p.indexOf(teamProp) === 0) cleanSecretPaths.push(p.replace(teamProp, `teamConfig.${teamId}`))
-        })
-      }
-    })
-    // debug('secretPaths: ', cleanSecretPaths)
-    return cleanSecretPaths
+  async pull(skipMsg = false): Promise<void> {
+    await this.repo.pull()
+    if (!skipMsg) {
+      const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'conflict' }
+      getIo().emit('db', msg)
+    }
   }
 
   getSettings(keys?: string[]): Settings {
@@ -226,52 +244,37 @@ export default class OtomiStack {
     })
   }
 
-  async loadApps(): Promise<void> {
-    const apps = getAppList()
-    await Promise.all(
-      apps.map(async (appId) => {
-        const path = `env/apps/${appId}.yaml`
-        const secretsPath = `env/apps/secrets.${appId}.yaml`
-        const content = await this.repo.loadConfig(path, secretsPath)
-        const values = (content?.apps && content.apps[appId]) || {}
-        let rawValues = {}
-        // eslint-disable-next-line no-underscore-dangle
-        if (values._rawValues) {
-          // eslint-disable-next-line no-underscore-dangle
-          rawValues = values._rawValues
-          // eslint-disable-next-line no-underscore-dangle
-          delete values._rawValues
-        }
-        let enabled
-        const app = getAppSchema(appId)
-        if (app.properties!.enabled !== undefined) enabled = !!values.enabled
+  loadTeamShortcuts(teamId) {
+    const {
+      teamConfig: {
+        [`${teamId}`]: { apps },
+      },
+    } = this.values
+    each(apps, ({ shortcuts }, appId) => {
+      // use merge strategy to not overwrite apps that were loaded before
+      const item = this.db.getItemReference('apps', { teamId, id: appId }, false)
+      if (item) this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
+    })
+  }
 
-        // we do not want to send enabled flag to the input forms
-        delete values.enabled
-        const teamId = 'admin'
-        this.db.updateItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appId })
-      }),
-    )
-    // now also load the shortcuts that teams created and were stored in apps.* files
-    await Promise.all(
-      this.getTeams()
-        .map((t) => t.id)
-        .map(async (teamId) => {
-          const teamAppsFile = `env/teams/apps.${teamId}.yaml`
-          if (!(await this.repo.fileExists(teamAppsFile))) return
-          const content = await this.repo.readFile(teamAppsFile)
-          if (!content) return
-          const {
-            teamConfig: {
-              [`${teamId}`]: { apps: _apps },
-            },
-          } = content
-          each(_apps, ({ shortcuts }, appId) => {
-            // use merge strategey to not overwrite admin apps that were loaded before
-            this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
-          })
-        }),
-    )
+  loadPlatformApps(): void {
+    const apps = this.getAppList()
+    apps.map((inAppId) => {
+      const appId = inAppId.startsWith('ingress-nginx-') ? 'ingress-nginx' : inAppId
+      const values = this.values.apps?.[appId] ?? {}
+      let rawValues = {}
+      if (values._rawValues) {
+        rawValues = values._rawValues
+        delete values._rawValues
+      }
+      let enabled
+      const app = getAppSchema(appId)
+      if (app.properties!.enabled !== undefined) enabled = !!values.enabled
+      // we do not want to send enabled flag to the input forms
+      delete values.enabled
+      const teamId = 'admin'
+      this.db.populateItem('apps', { id: appId, enabled, values, rawValues, teamId })
+    })
   }
 
   getTeams(): Array<Team> {
@@ -281,10 +284,6 @@ export default class OtomiStack {
   getTeamSelfServiceFlags(id: string): TeamSelfService {
     const data = this.getTeam(id)
     return data.selfService
-  }
-
-  getCore(): Core {
-    return this.coreValues
   }
 
   getTeam(id: string): Team {
@@ -299,15 +298,8 @@ export default class OtomiStack {
       // eslint-disable-next-line no-param-reassign
       data.password = generatePassword(16, false)
     }
-    const team = this.db.createItem('teams', data, { id }, id) as Team
-    const apps = getAppList()
-    const core = this.getCore()
-    apps.forEach((appId) => {
-      const isShared = !!core.adminApps.find((a) => a.name === appId)!.isShared
-      const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
-      if (id === 'admin' || isShared || inTeamApps)
-        this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
-    })
+    const team = this.db.createItem('teams', data, { id }) as Team
+    this.loadTeamApps(id)
     return team
   }
 
@@ -341,7 +333,7 @@ export default class OtomiStack {
   createService(teamId: string, data: Service): Service {
     this.checkPublicUrlInUse(data)
     try {
-      return this.db.createItem('services', { ...data, teamId }, { teamId, name: data.name }, data?.id) as Service
+      return this.db.createItem('services', { ...data, teamId }, { teamId, name: data.name }) as Service
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Service name already exists'
 
@@ -398,10 +390,10 @@ export default class OtomiStack {
     const servicesFiltered = filter(services, (svc: any) => {
       if (svc.ingress?.type !== 'cluster') {
         const { domain, subdomain, paths } = svc.ingress
-        const baseUrl = `${subdomain}.${domain}`
+        const _baseUrl = `${subdomain}.${domain}`
         const newBaseUrl = `${newSvc.subdomain}.${newSvc.domain}`
         // no paths for existing or new service? then just check base url
-        if (!newSvc.paths?.length && !paths?.length) return baseUrl === newBaseUrl
+        if (!newSvc.paths?.length && !paths?.length) return _baseUrl === newBaseUrl
         // one has paths but other doesn't? no problem
         if ((newSvc.paths?.length && !paths?.length) || (!newSvc.paths?.length && paths?.length)) return false
         // both have paths, so check full
@@ -416,15 +408,36 @@ export default class OtomiStack {
     if (servicesFiltered.length > 0) throw new PublicUrlExists()
   }
 
+  async save(editor: string): Promise<void> {
+    // save values first
+    const values = this.convertDbToValues()
+    try {
+      await this.updateValues(values)
+    } catch (e) {
+      debug(`ERROR: ${JSON.stringify(e)}`)
+      if (e.response) {
+        const { status } = e.response as AxiosResponse
+        if (status === 422) throw new ValidationError()
+        throw HttpError.fromCode(status)
+      }
+      throw new HttpError(500, `${e}`)
+    }
+    // all good? commit
+    await this.repo.commit(editor)
+    // we are in a developer branch so first merge in root which might be changed by another dev
+    await this.repo.pull()
+    // pushing to the root (not the remote!), so should not throw unless race condition with another dev
+    await this.repo.push()
+  }
+
   async doDeployment(): Promise<void> {
     const rootStack = await getSessionStack()
     if (rootStack.locked) throw new DeployLockError()
     rootStack.locked = true
     try {
-      const values = this.convertDbToValues()
-      await this.repo.save(values, this.editor!)
+      await this.save(this.editor!)
       // pull push root
-      await rootStack.repo.pull(undefined, true)
+      await rootStack.repo.pull()
       await rootStack.repo.push()
       // inflate new db
       rootStack.db = new Db()
@@ -538,91 +551,154 @@ export default class OtomiStack {
     return this.db.getCollection('secrets', { teamId }) as Array<Secret>
   }
 
-  async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {
+  async loadValues(): Promise<void> {
     debug('Loading values')
-    await this.loadCluster()
-    await this.loadPolicies()
-    await this.loadSettings()
-    await this.loadTeams()
-    await this.loadApps()
+    await this.readValues()
+    this.inflateValues()
+  }
+
+  inflateValues(): void {
+    debug('Inflating values')
+    this.loadSettings()
+    this.loadPlatformApps()
+    each(this.values?.teamConfig, (team: Team, teamId: string) => {
+      this.loadTeam(team)
+      // platform apps were assigned to teamId 'admin' alerady in loadPlatformApps, so skip
+      if (teamId !== 'admin') this.loadTeamApps(teamId)
+      this.loadTeamJobs(teamId)
+      this.loadTeamServices(teamId)
+      this.loadTeamSecrets(teamId)
+      this.loadTeamShortcuts(teamId)
+    })
     this.isLoaded = true
   }
 
-  async loadCluster(): Promise<void> {
-    const data = await this.repo.loadConfig('env/cluster.yaml', 'env/secrets.cluster.yaml')
-    // @ts-ignore
-    this.db.db.get('settings').assign(data).write()
-  }
-
-  async loadPolicies(): Promise<void> {
-    const data: Policies = await this.repo.readFile('env/policies.yaml')
-    // @ts-ignore
-    this.db.db.get('settings').assign(data).write()
-  }
-
-  async loadSettings(): Promise<void> {
-    const data: Record<string, any> = await this.repo.loadConfig('env/settings.yaml', `env/secrets.settings.yaml`)
+  loadSettings(): void {
+    const data = pick(this.values, [
+      'alerts',
+      'azure',
+      'backup',
+      'cloud',
+      'cluster',
+      'dns',
+      'home',
+      'ingress',
+      'kms',
+      'oidc',
+      'otomi',
+      'policies',
+      'smtp',
+      'version',
+    ])
     data.otomi!.nodeSelector = objectToArray((data.otomi!.nodeSelector ?? {}) as Record<string, any>)
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
 
-  async loadTeamJobs(teamId: string): Promise<void> {
-    const relativePath = getTeamJobsFilePath(teamId)
-    if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no jobs yet`)
-      return
-    }
-    const data = await this.repo.readFile(relativePath)
-    const jobs: Array<Job> = get(data, getTeamJobsJsonPath(teamId), [])
+  loadTeam(inTeam: Team): void {
+    const team = { ...omit(inTeam, ownModels), name: inTeam.id } as Record<string, any>
+    team.resourceQuota = objectToArray(inTeam.resourceQuota as Record<string, any>)
+    this.db.populateItem('teams', team)
+    debug(`Loaded team ${inTeam.id}`)
+  }
 
+  loadTeamApps(teamId): void {
+    const apps = getAppList()
+    apps.forEach((appId) => {
+      const isShared = !!this.core.adminApps.find((a) => a.name === appId)!.isShared
+      const inTeamApps = !!this.core.teamApps.find((a) => a.name === appId)
+      if (teamId === 'admin' || isShared || inTeamApps) {
+        this.db.populateItem('apps', { shortcuts: [], teamId, id: appId })
+        debug(`Loaded team app ${appId}, teamId:  ${teamId}`)
+      }
+    })
+  }
+
+  loadTeamJobs(teamId: string): void {
+    const jobs = this.values.teamConfig[teamId].jobs ?? []
     jobs.forEach((job) => {
       // @ts-ignore
-      const res: Job = this.db.populateItem('jobs', { ...job, teamId }, { teamId, name: job.name }, job.id)
-      debug(`Loaded job: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
+      this.db.populateItem('jobs', { ...job, teamId, name: job.name })
+      debug(`Loaded job ${job.name}, id: ${job.id}, teamId: ${teamId}`)
     })
   }
 
-  async loadTeamSecrets(teamId: string): Promise<void> {
-    const relativePath = getTeamSecretsFilePath(teamId)
-    if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no secrets yet`)
-      return
-    }
-    const data = await this.repo.readFile(relativePath)
-    const secrets: Array<Secret> = get(data, getTeamSecretsJsonPath(teamId), [])
-
+  loadTeamSecrets(teamId: string): void {
+    const secrets = this.values.teamConfig[teamId].secrets ?? []
     secrets.forEach((inSecret) => {
-      this.loadSecret(inSecret, teamId)
+      const secret: Record<string, any> = omit(inSecret, ...secretTransferProps)
+      secret.teamId = teamId
+      secret.secret = secretTransferProps.reduce((memo: any, prop) => {
+        if (inSecret[prop] !== undefined) memo[prop] = inSecret[prop]
+        return memo
+      }, {})
+      this.db.populateItem('secrets', secret)
+      debug(`Loaded secret: name: ${secret.name}, id: ${secret.id}, teamId: ${teamId}`)
     })
   }
 
-  async loadTeams(): Promise<void> {
-    const mergedData: Core = await this.repo.loadConfig('env/teams.yaml', `env/secrets.teams.yaml`)
-    const tc = mergedData?.teamConfig || {}
-    if (!tc.admin) tc.admin = { id: 'admin' }
-    Object.values(tc).forEach((team: Team) => {
-      this.loadTeam(team)
-      this.loadTeamJobs(team.id!)
-      this.loadTeamServices(team.id!)
-      this.loadTeamSecrets(team.id!)
+  loadTeamServices(teamId: string): void {
+    const services = this.values.teamConfig[teamId].services ?? []
+    services.forEach((svcRaw: Record<string, any>) => {
+      const svc = omit(
+        svcRaw,
+        'certArn',
+        'certName',
+        'domain',
+        'forwardPath',
+        'hasCert',
+        'ksvc',
+        'paths',
+        'type',
+        'ownHost',
+        'tlsPass',
+        'ingressClassName',
+        'headers',
+      )
+      svc.teamId = teamId
+      if (!('name' in svcRaw)) debug('Unknown service structure')
+
+      if ('ksvc' in svcRaw) {
+        if ('predeployed' in svcRaw.ksvc) set(svc, 'ksvc.serviceType', 'ksvcPredeployed')
+        else {
+          svc.ksvc = cloneDeep(svcRaw.ksvc) as Record<string, any>
+          svc.ksvc.serviceType = 'ksvc'
+          svc.ksvc.annotations = objectToArray(svcRaw.ksvc.annotations as Record<string, any>)
+          svc.ksvc.env = objectToArray(svcRaw.ksvc.env as Record<string, any>, 'name', 'value')
+          svc.ksvc.files = objectToArray(svcRaw.ksvc.files as Record<string, any>, 'path', 'content')
+          svc.ksvc.secretMounts = objectToArray(svcRaw.ksvc.secretMounts as Record<string, any>, 'name', 'path')
+          svc.ksvc.secrets = svcRaw.ksvc.secrets ?? []
+          if (svcRaw.ksvc.command?.length) svc.ksvc.command = argQuoteJoin(svcRaw.ksvc.command)
+          if (svcRaw.ksvc.args?.length) svc.ksvc.args = argQuoteJoin(svcRaw.ksvc.args)
+        }
+      } else set(svc, 'ksvc.serviceType', 'svcPredeployed')
+
+      if (svcRaw.type === 'cluster') svc.ingress = { type: 'cluster' }
+      else {
+        const { cluster, dns } = this.getSettings(['cluster', 'dns'])
+        const url = getServiceUrl({ domain: svcRaw.domain, name: svcRaw.name, teamId, cluster, dns })
+        svc.ingress = {
+          certArn: svcRaw.certArn || undefined,
+          certName: svcRaw.certName || undefined,
+          domain: url.domain,
+          headers: svcRaw.headers || [],
+          forwardPath: 'forwardPath' in svcRaw,
+          hasCert: 'hasCert' in svcRaw,
+          paths: svcRaw.paths ? svcRaw.paths : [],
+          subdomain: url.subdomain,
+          tlsPass: 'tlsPass' in svcRaw,
+          type: svcRaw.type,
+          useDefaultSubdomain: !svcRaw.domain && svcRaw.ownHost,
+          ingressClassName: svcRaw.ingressClassName || undefined,
+        }
+      }
+
+      this.db.populateItem('services', removeBlankAttributes(svc))
+      debug(`Loaded service: name: ${svc.name}, id: ${svc.id}`)
     })
   }
 
-  async loadTeamServices(teamId: string): Promise<void> {
-    const relativePath = getTeamServicesFilePath(teamId)
-    if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no services yet`)
-      return
-    }
-    const data = await this.repo.readFile(relativePath)
-    const services = get(data, getTeamServicesJsonPath(teamId), [])
-    services.forEach((svc) => {
-      this.loadService(svc, teamId)
-    })
-  }
-
-  convertAdminAppsToValues(): Record<string, any> {
+  convertPlatformAppsToValues(): Record<string, any> {
     const apps = {}
     this.getApps('admin').map((app) => {
       const { id, enabled, values, rawValues } = app
@@ -642,7 +718,7 @@ export default class OtomiStack {
       const { id, shortcuts } = app
       if (teamId !== 'admin' && !shortcuts?.length) return
       apps[id] = {
-        shortcuts,
+        shortcuts: shortcuts ?? [],
       }
     })
     return apps
@@ -650,8 +726,9 @@ export default class OtomiStack {
 
   convertSettingsToValues(): Settings {
     const settings = cloneDeep(this.getSettings()) as Record<string, Record<string, any>>
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     set(settings, 'otomi.nodeSelector', arrayToObject(settings.otomi?.nodeSelector || []))
-    return omit(settings, ['cluster', 'policies'])
+    return settings
   }
 
   convertTeamsToValues(): Record<string, any> {
@@ -660,7 +737,7 @@ export default class OtomiStack {
     teams.map((inTeam) => {
       const team: Record<string, any> = omit(inTeam, 'name')
       const teamId = team.id as string
-      if (teamId !== 'admin') team.apps = this.convertTeamAppsToValues(teamId)
+      team.apps = this.convertTeamAppsToValues(teamId)
       team.jobs = this.convertTeamJobsToValues(teamId)
       team.services = this.convertTeamServicesToValues(teamId)
       team.secrets = this.convertTeamSecretsToValues(teamId)
@@ -671,157 +748,73 @@ export default class OtomiStack {
   }
 
   convertTeamSecretsToValues(teamId: string): Record<string, any>[] {
-    const secrets = this.db.getCollection('secrets', { teamId })
-    const values: any[] = secrets.map((secret) => this.convertSecretToValues(secret))
+    const secrets = this.db.getCollection('secrets', { teamId }) as Secret[]
+    const values: any[] = secrets.map((s) => {
+      const secret: any = omit(s, 'secret')
+      secretTransferProps.forEach((prop) => {
+        if (s.secret[prop] !== undefined) secret[prop] = s.secret[prop]
+      })
+      return secret
+    })
     return values
   }
 
   convertTeamJobsToValues(teamId: string): Record<string, any>[] {
-    const jobs = this.db.getCollection('jobs', { teamId })
+    const jobs = this.db.getCollection('jobs', { teamId }) as Job[]
     return jobs.map((item) => omit(item, ['teamId']))
   }
 
   convertTeamServicesToValues(teamId: string): Record<string, any>[] {
-    const services = this.db.getCollection('services', { teamId })
+    const services = this.db.getCollection('services', { teamId }) as any[]
     const values: any[] = []
-    services.forEach((service) => {
-      const value = this.convertServiceToValues(service)
-      values.push(value)
+    services.forEach((svc) => {
+      const { serviceType } = svc.ksvc
+      debug(`Saving service: id: ${svc.id} serviceType: ${serviceType}`)
+      const svcCloned = omit(svc, ['teamId', 'ksvc', 'ingress', 'path'])
+      const ksvc = cloneDeep(svc.ksvc)
+      delete ksvc.serviceType
+      if (serviceType === 'ksvc') {
+        svcCloned.ksvc = ksvc as Record<string, any>
+        svcCloned.ksvc.annotations = arrayToObject(svc.ksvc.annotations as [])
+        svcCloned.ksvc.env = arrayToObject((svc.ksvc.env as []) ?? [])
+        svcCloned.ksvc.files = arrayToObject((svc.ksvc.files as []) ?? [], 'path', 'content')
+        svcCloned.ksvc.secretMounts = arrayToObject((svc.ksvc.secretMounts as []) ?? [], 'name', 'path')
+        svcCloned.ksvc.command = svc.ksvc.command?.length > 1 ? svc.ksvc.command.split(' ') : svc.ksvc.command
+        // conveniently split the command string (which might contain args as well) by space
+        svcCloned.ksvc.command =
+          svc.ksvc.command?.length > 1 ? svc.ksvc.command.match(argSplit).map(argQuoteStrip) : svc.ksvc.command
+        // same for args
+        svcCloned.ksvc.args =
+          svc.ksvc.args?.length > 1 ? svc.ksvc.args.match(argSplit).map(argQuoteStrip) : svc.ksvc.args
+      } else if (serviceType === 'ksvcPredeployed') svcCloned.ksvc = { predeployed: true }
+      else if (serviceType !== 'svcPredeployed')
+        debug(`Saving service failure: Not supported service type: ${serviceType}`)
+
+      if (svc.ingress && svc.ingress.type !== 'cluster') {
+        const ing = svc.ingress
+        if (ing.useDefaultSubdomain) svcCloned.ownHost = true
+        else svcCloned.domain = ing.subdomain ? `${ing.subdomain}.${ing.domain}` : ing.domain
+        if (ing.hasCert) svcCloned.hasCert = true
+        if (ing.certName) svcCloned.certName = ing.certName
+        if (ing.certArn) svcCloned.certArn = ing.certArn
+        if (ing.paths) svcCloned.paths = ing.paths
+        if (ing.forwardPath) svcCloned.forwardPath = true
+        if (ing.tlsPass) svcCloned.tlsPass = true
+        if (ing.ingressClassName) svcCloned.ingressClassName = ing.ingressClassName
+        if (ing.headers) svcCloned.headers = ing.headers
+        svcCloned.type = svc.ingress.type
+      } else svcCloned.type = 'cluster'
+
+      values.push(svcCloned)
     })
     return values
   }
 
-  loadTeam(inTeam: Team): void {
-    const team = { ...inTeam, name: inTeam.id } as Record<string, any>
-    team.resourceQuota = objectToArray(inTeam.resourceQuota as Record<string, any>)
-    const res = this.createTeam(team as Team)
-    // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id as string)
-    debug(`Loaded team: ${res.id!}`)
-  }
-
-  loadSecret(inSecret, teamId): void {
-    const secret: Record<string, any> = omit(inSecret, ...secretTransferProps)
-    secret.teamId = teamId
-    secret.secret = secretTransferProps.reduce((memo: any, prop) => {
-      if (inSecret[prop] !== undefined) memo[prop] = inSecret[prop]
-      return memo
-    }, {})
-    const res: any = this.db.populateItem('secrets', secret, { teamId, name: secret.name }, secret.id as string)
-    debug(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
-  }
-
-  convertSecretToValues(inSecret: any): any {
-    const secret: any = omit(inSecret, 'secret')
-    secretTransferProps.forEach((prop) => {
-      if (inSecret.secret[prop] !== undefined) secret[prop] = inSecret.secret[prop]
-    })
-    return secret
-  }
-
-  loadService(svcRaw, teamId): void {
-    // Create service
-    const svc = omit(
-      svcRaw,
-      'certArn',
-      'certName',
-      'domain',
-      'forwardPath',
-      'hasCert',
-      'ksvc',
-      'paths',
-      'type',
-      'ownHost',
-      'tlsPass',
-      'ingressClassName',
-      'headers',
-    )
-    svc.teamId = teamId
-    if (!('name' in svcRaw)) debug('Unknown service structure')
-
-    if ('ksvc' in svcRaw) {
-      if ('predeployed' in svcRaw.ksvc) set(svc, 'ksvc.serviceType', 'ksvcPredeployed')
-      else {
-        svc.ksvc = cloneDeep(svcRaw.ksvc) as Record<string, any>
-        svc.ksvc.serviceType = 'ksvc'
-        svc.ksvc.annotations = objectToArray(svcRaw.ksvc.annotations as Record<string, any>)
-        svc.ksvc.env = objectToArray(svcRaw.ksvc.env as Record<string, any>, 'name', 'value')
-        svc.ksvc.files = objectToArray(svcRaw.ksvc.files as Record<string, any>, 'path', 'content')
-        svc.ksvc.secretMounts = objectToArray(svcRaw.ksvc.secretMounts as Record<string, any>, 'name', 'path')
-        svc.ksvc.secrets = svcRaw.ksvc.secrets ?? []
-        if (svcRaw.ksvc.command?.length) svc.ksvc.command = argQuoteJoin(svcRaw.ksvc.command)
-        if (svcRaw.ksvc.args?.length) svc.ksvc.args = argQuoteJoin(svcRaw.ksvc.args)
-      }
-    } else set(svc, 'ksvc.serviceType', 'svcPredeployed')
-
-    if (svcRaw.type === 'cluster') svc.ingress = { type: 'cluster' }
-    else {
-      const { cluster, dns } = this.getSettings(['cluster', 'dns'])
-      const url = getServiceUrl({ domain: svcRaw.domain, name: svcRaw.name, teamId, cluster, dns })
-      svc.ingress = {
-        certArn: svcRaw.certArn || undefined,
-        certName: svcRaw.certName || undefined,
-        domain: url.domain,
-        headers: svcRaw.headers || [],
-        forwardPath: 'forwardPath' in svcRaw,
-        hasCert: 'hasCert' in svcRaw,
-        paths: svcRaw.paths ? svcRaw.paths : [],
-        subdomain: url.subdomain,
-        tlsPass: 'tlsPass' in svcRaw,
-        type: svcRaw.type,
-        useDefaultSubdomain: !svcRaw.domain && svcRaw.ownHost,
-        ingressClassName: svcRaw.ingressClassName || undefined,
-      }
-    }
-
-    const res: any = this.db.populateItem('services', removeBlankAttributes(svc), undefined, svc.id as string)
-    debug(`Loaded service: name: ${res.name}, id: ${res.id}`)
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  convertServiceToValues(svc: any): any {
-    const { serviceType } = svc.ksvc
-    debug(`Saving service: id: ${svc.id} serviceType: ${serviceType}`)
-    const svcCloned = omit(svc, ['teamId', 'ksvc', 'ingress', 'path'])
-    const ksvc = cloneDeep(svc.ksvc)
-    delete ksvc.serviceType
-    if (serviceType === 'ksvc') {
-      svcCloned.ksvc = ksvc as Record<string, any>
-      svcCloned.ksvc.annotations = arrayToObject(svc.ksvc.annotations as [])
-      svcCloned.ksvc.env = arrayToObject((svc.ksvc.env as []) ?? [])
-      svcCloned.ksvc.files = arrayToObject((svc.ksvc.files as []) ?? [], 'path', 'content')
-      svcCloned.ksvc.secretMounts = arrayToObject((svc.ksvc.secretMounts as []) ?? [], 'name', 'path')
-      svcCloned.ksvc.command = svc.ksvc.command?.length > 1 ? svc.ksvc.command.split(' ') : svc.ksvc.command
-      // conveniently split the command string (which might contain args as well) by space
-      svcCloned.ksvc.command =
-        svc.ksvc.command?.length > 1 ? svc.ksvc.command.match(argSplit).map(argQuoteStrip) : svc.ksvc.command
-      // same for args
-      svcCloned.ksvc.args = svc.ksvc.args?.length > 1 ? svc.ksvc.args.match(argSplit).map(argQuoteStrip) : svc.ksvc.args
-    } else if (serviceType === 'ksvcPredeployed') svcCloned.ksvc = { predeployed: true }
-    else if (serviceType !== 'svcPredeployed')
-      debug(`Saving service failure: Not supported service type: ${serviceType}`)
-
-    if (svc.ingress && svc.ingress.type !== 'cluster') {
-      const ing = svc.ingress
-      if (ing.useDefaultSubdomain) svcCloned.ownHost = true
-      else svcCloned.domain = ing.subdomain ? `${ing.subdomain}.${ing.domain}` : ing.domain
-      if (ing.hasCert) svcCloned.hasCert = true
-      if (ing.certName) svcCloned.certName = ing.certName
-      if (ing.certArn) svcCloned.certArn = ing.certArn
-      if (ing.paths) svcCloned.paths = ing.paths
-      if (ing.forwardPath) svcCloned.forwardPath = true
-      if (ing.tlsPass) svcCloned.tlsPass = true
-      if (ing.ingressClassName) svcCloned.ingressClassName = ing.ingressClassName
-      if (ing.headers) svcCloned.headers = ing.headers
-      svcCloned.type = svc.ingress.type
-    } else svcCloned.type = 'cluster'
-    return svcCloned
-  }
-
-  convertDbToValues(): Record<string, any> {
+  convertDbToValues(): Values {
     return {
+      ...this.values,
       ...this.convertSettingsToValues(),
-      ...this.getSettings(['cluster', 'policies']),
-      apps: this.convertAdminAppsToValues(),
+      apps: this.convertPlatformAppsToValues(),
       teamConfig: this.convertTeamsToValues(),
     }
   }
@@ -831,7 +824,7 @@ export default class OtomiStack {
     const currentSha = rootStack.repo.commitSha
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
-      core: this.getCore() as Record<string, any>,
+      core: this.core as Record<string, any>,
       corrupt: rootStack.repo.corrupt,
       editor: this.editor,
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
