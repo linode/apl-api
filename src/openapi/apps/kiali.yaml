@@ -1,4 +1,5 @@
 AppKiali:
+  additionalProperties: false
   type: object
   properties:
     id:
@@ -14,4 +15,62 @@ AppKiali:
       nullable: true
       items:
         $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/apps/kiali
+      additionalProperties: false
+      type: object
+      properties:
+        resources:
+          type: object
+          properties:
+            operator:
+              title: Kiali Operator
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 500m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 128Mi
+              required:
+                - limits
+                - requests
+            pod:
+              type: object
+              title: Kiali CR Pod
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 500m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 128Mi
+              required:
+                - limits
+                - requests
   required: [id]
