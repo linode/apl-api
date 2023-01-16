@@ -24,7 +24,7 @@ AppKiali:
           type: object
           properties:
             operator:
-              title: Kiali Operator
+              title: Kiali Operator Pods
               type: object
               properties:
                 limits:
@@ -50,7 +50,7 @@ AppKiali:
                 - requests
             pod:
               type: object
-              title: Kiali CR Pod
+              title: Kiali Pods
               properties:
                 limits:
                   type: object
