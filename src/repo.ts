@@ -188,14 +188,13 @@ export class Repo {
 
   async saveConfig(
     dataPath: string,
-    inSecretDataPath: string,
+    inSecretRelativeFilePath: string,
     config: Record<string, any>,
-    secretPaths: string[],
+    secretJsonPaths: string[],
   ): Promise<Promise<void>> {
     const secretData = {}
-    const secretDataPath = `${inSecretDataPath}${this.secretFilePostfix}`
     const plainData = cloneDeep(config)
-    secretPaths.forEach((objectPath) => {
+    secretJsonPaths.forEach((objectPath) => {
       const val = get(config, objectPath)
       if (val) {
         set(secretData, objectPath, val)
@@ -203,7 +202,15 @@ export class Repo {
       }
     })
 
-    await this.writeFile(secretDataPath, secretData)
+    let secretDataRelativePath = `${inSecretRelativeFilePath}${this.secretFilePostfix}`
+
+    if (this.secretFilePostfix) {
+      const secretExists = await this.fileExists(inSecretRelativeFilePath)
+      // In case secret file does not exists, create new one and let sops to encrypt it in place
+      if (!secretExists) secretDataRelativePath = inSecretRelativeFilePath
+    }
+
+    await this.writeFile(secretDataRelativePath, secretData)
     await this.writeFile(dataPath, plainData)
   }
 
