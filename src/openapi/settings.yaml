@@ -88,6 +88,15 @@ Settings:
                   $ref: definitions.yaml#/backupTtl
                 schedule:
                   $ref: definitions.yaml#/backupSchedule
+            minio:
+              title: Minio
+              properties:
+                enabled:
+                  type: boolean
+                ttl:
+                  $ref: definitions.yaml#/backupTtl
+                schedule:
+                  $ref: definitions.yaml#/backupSchedule
         teams:
           title: Teams
           description: Backup all Teams.
