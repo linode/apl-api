@@ -32,19 +32,19 @@ AppKiali:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 500m
+                      default: 200m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
+                      default: 1Gi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
+                      default: 50m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 128Mi
+                      default: 256Mi
               required:
                 - limits
                 - requests
@@ -57,7 +57,7 @@ AppKiali:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 500m
+                      default: 200m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
                       default: 256Mi
@@ -66,7 +66,7 @@ AppKiali:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
+                      default: 50m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
                       default: 128Mi
