@@ -25,6 +25,7 @@ AppList:
     - loki
     - minio
     - prometheus
+    - thanos
     - vault
     - velero
 
