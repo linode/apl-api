@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.21](https://github.com/redkubes/otomi-api/compare/v0.5.20...v0.5.21) (2023-01-16)
+
+
+### Features
+
+* add default response headers to ingress config ([#352](https://github.com/redkubes/otomi-api/issues/352)) ([f4b74e7](https://github.com/redkubes/otomi-api/commit/f4b74e7a53a8ecd08b9b3d26c498bf20d92ffde5))
+* define ingress-nginx settings for each ingress class ([#354](https://github.com/redkubes/otomi-api/issues/354)) ([ddb44e0](https://github.com/redkubes/otomi-api/commit/ddb44e091662ca579173b6ba3d85e0796cbcf312))
+
+
+### Bug Fixes
+
+* save brand new secrets files ([#355](https://github.com/redkubes/otomi-api/issues/355)) ([26eaf15](https://github.com/redkubes/otomi-api/commit/26eaf157bee973fe71850b42f2c105374077ba22)), closes [otomi-core/#975](https://github.com/otomi-core/otomi-api/issues/975)
+
+
+### Reverts
+
+* Revert "fix: save brand new secrets files (#355)" (#357) ([8059a80](https://github.com/redkubes/otomi-api/commit/8059a80bcf01148b51cf122f8512071c0b4c09c3)), closes [#355](https://github.com/redkubes/otomi-api/issues/355) [#357](https://github.com/redkubes/otomi-api/issues/357)
+
+
+### Others
+
+* locked node version to project ([#351](https://github.com/redkubes/otomi-api/issues/351)) ([5183824](https://github.com/redkubes/otomi-api/commit/5183824ecf318a8ebc70bd3fcce041f15dfa4d8e))
+
 ### [0.5.20](https://github.com/redkubes/otomi-api/compare/v0.5.19...v0.5.20) (2022-12-14)
 
 
