@@ -169,21 +169,17 @@ export default class OtomiStack {
 
   getSettings(keys?: string[]): Settings {
     const settings = this.db.db.get(['settings']).value()
-    //console.log('halos reach settings', this.getApiClient())
-    const client = this.getApiClient()
-    client.listNode().then((node) => {
-      node.body.items.forEach((element) => {
-        console.log('element', element)
-      })
-      //console.log('node', node)
-    })
     if (!keys) return settings
     return pick(settings, keys) as Settings
   }
 
   editSettings(data: Settings, settingId: string) {
     const settings = this.db.db.get('settings').value()
-    if (data.otomi?.otomiCloudApikey) connect()
+    if (data.otomi?.otomiCloudApikey && !data.otomi?.isActivatedOnOtomiCloud) {
+      // eslint-disable-next-line no-param-reassign
+      data.otomi.isActivatedOnOtomiCloud = true
+      connect(data.otomi.otomiCloudApikey, settings.cluster)
+    }
 
     // do not merge as oneOf properties cannot be merged
     // settings[settingId] = merge(settings[settingId], data[settingId])

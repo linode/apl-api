@@ -8,7 +8,6 @@ import Debug from 'debug'
 import express, { request } from 'express'
 import 'express-async-errors'
 import { initialize } from 'express-openapi'
-import { removeSync } from 'fs-extra'
 import { Server } from 'http'
 import httpSignature from 'http-signature'
 import { createLightship } from 'lightship'
@@ -149,6 +148,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   })
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
+
   return app
 }
 
@@ -157,8 +157,11 @@ if (!env.isTest) {
     debug(e)
     process.exit(1)
   })
+  // setInterval(async () => {
+  //   const sessionStack = await getSessionStack()
+  //   const sessionStackSettings = sessionStack.getSettings()
+  //   const otomiStackSettings = sessionStackSettings.otomi
+  //   console.log('sessionStack', otomiStackSettings?.otomiCloudApikey)
+  //   if (otomiStackSettings?.otomiCloudApikey) collectMetrics(sessionStackSettings)
+  // }, 1000)
 }
-
-process.on('exit', () => {
-  if (process.env.NODE_ENV === 'development') removeSync('/tmp/otomi')
-})

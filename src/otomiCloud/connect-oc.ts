@@ -1,36 +1,11 @@
 import axios from 'axios'
+import sendMetrics from './send-metrics'
 
-export default async function connect(): Promise<string | void> {
-  console.log('hello world from otomi cloud function')
-  // await axios({
-  //   url: 'http://localhost:3000/api/graphql',
-  //   method: 'post',
-  //   data: {
-  //     query: `
-  //                     mutation UpdateApiCluster(
-  //                         $key: cla9msf8f0210gcgtdf2q3lxq
-  //                     ) {
-  //                         updateCluster(
-  //                             where: { key: $key }
-  //                             data: {
-  //                                 status: "UP"
-  //                             }
-  //                         ) {
-  //                             updatedAt
-  //                         }
-  //                     }
-  //                 `,
-  //   },
-  // })
-  //   .then((result) => {
-  //     console.log('otomi cloud: ', result.data)
-  //   })
-  //   .catch((error) => {
-  //     console.error('otomi cloud error: ', error.message)
-  //   })
+export default async function connect(apikey: string, clusterData: any): Promise<string | void> {
+  const { name, provider, domainSuffix } = clusterData
 
   await axios({
-    url: 'http://localhost:3000/api/graphql',
+    url: 'https://dev.portal.otomi.cloud/api/graphql',
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -39,8 +14,13 @@ export default async function connect(): Promise<string | void> {
       query: `
         mutation Cluster {
           updateCluster(
-            where: {key: "cla9msf8f0210gcgtdf2q3lxq"}
-            data: {status: {set: UP}}
+            where: {key: "${apikey}"}
+            data: {
+              domainSuffix: {set: "${domainSuffix}"}
+              name: {set: "${name}"}
+              provider: {set: "${provider}"}
+              status: {set: UP}
+            }
             ) {
             id
             domainSuffix
@@ -54,8 +34,8 @@ export default async function connect(): Promise<string | void> {
     `,
     },
   })
-    .then((result) => {
-      console.log('otomi cloud: ', result.data)
+    .then(() => {
+      sendMetrics(apikey)
     })
     .catch((error) => {
       console.error('otomi cloud error: ', error.message)

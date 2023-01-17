@@ -10,6 +10,7 @@ import { Server } from 'socket.io'
 import { ApiNotReadyError } from 'src/error'
 import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
+import sendMetrics from 'src/otomiCloud/send-metrics'
 import { cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validators'
 
 const debug = Debug('otomi:session')
@@ -31,7 +32,10 @@ let sessions: Record<string, OtomiStack> = {}
 export const getSessionStack = async (editor?: string): Promise<OtomiStack> => {
   if (!readOnlyStack) {
     readOnlyStack = new OtomiStack()
-    await readOnlyStack.init()
+    await readOnlyStack.init().then(() => {
+      const otomiStackSettings = readOnlyStack.getSettings()
+      if (otomiStackSettings.otomi?.otomiCloudApikey) sendMetrics(otomiStackSettings.otomi?.otomiCloudApikey)
+    })
   }
   if (!editor || !sessions[editor]) return readOnlyStack
   return sessions[editor]
