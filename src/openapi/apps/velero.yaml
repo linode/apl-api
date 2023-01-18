@@ -20,7 +20,6 @@ AppVelero:
           properties:
             provider:
               type: object
-              additionalProperties: false
               title: Cloud provider
               description: Select your cloud provider.
               oneOf:
@@ -38,6 +37,7 @@ AppVelero:
                   type: object
                   properties:
                     azure:
+                      additionalProperties: false
                       type: object
                       title: Azure
                       description: For clusters running in Azure.
@@ -66,6 +66,7 @@ AppVelero:
                             - AzureChinaCloud
                             - AzureUSGovernment
                             - AzureGermanCloud
+                          default: AzurePublicCloud
                       required:
                         - resourceGroup
                         - environment
@@ -86,6 +87,7 @@ AppVelero:
                   type: object
                   properties:
                     aws:
+                      additionalProperties: false
                       type: object
                       description: For clusters running in AWS.
                       title: AWS
@@ -115,7 +117,7 @@ AppVelero:
                   required:
                     - aws
                     - type
-        storage: 
+        storage:
           additionalProperties: false
           type: object
           properties:
@@ -138,6 +140,7 @@ AppVelero:
                   x-hideTitle: true
                   properties:
                     azureBlob:
+                      additionalProperties: false
                       type: object
                       description: Select to store backups in Azure Blob storage.
                       title: Azure blob (container) storage
@@ -182,6 +185,7 @@ AppVelero:
                   x-hideTitle: true
                   properties:
                     s3:
+                      additionalProperties: false
                       type: object
                       title: S3
                       description: Select to store backups in AWS S3 or S3 compatible blob storage.
@@ -226,6 +230,7 @@ AppVelero:
             - debug
             - trace
         resources:
+          additionalProperties: false
           type: object
           properties:
             limits:

@@ -258,15 +258,17 @@ definitions:
         title: Resource group
         description: An Azure resource group.
         $ref: '#/definitions/wordCharacterPattern'
-  backupTtl:
-    default: 240h
-    description: Expiration of the backup.
-    title: TTL after finished
-    type: string
-  backupSchedule:
-    default: 0 0 * * *
-    description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
-    type: string
+  backup:
+    definitions:
+      ttl:
+        default: 240h
+        description: Expiration of the backup.
+        title: TTL after finished
+        type: string
+      schedule:
+        default: 0 0 * * *
+        description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
+        type: string
   cluster:
     additionalProperties: false
     properties:
@@ -447,6 +449,50 @@ definitions:
       - tag
     type: object
     title: Container image
+  ingressNginx:
+    additionalProperties: false
+    properties:
+      _rawValues:
+        $ref: '#/definitions/rawValues'
+      autoscaling:
+        $ref: '#/definitions/autoscalingEnabled'
+      maxBodySize:
+        type: string
+        default: 1024m
+      maxBodySizeBytes:
+        type: integer
+        minimum: 0
+        default: 1073741824
+        description: Needed for modsecurity. Should correspond to maxBodySize, but expressed in bytes.
+      modsecurity:
+        title: MOD Security
+        description: Enables MOD Security functionality.
+        properties:
+          block:
+            description: Makes nginx block requests that are marked as violating the modsec rules.
+            type: boolean
+            default: false
+          enabled:
+            type: boolean
+            default: false
+          owasp:
+            description: Turns on the default OWASP rule set for modsec. See
+            type: boolean
+            default: true
+        type: object
+      image:
+        properties:
+          tag:
+            $ref: '#/definitions/imageTag'
+            x-default: v1.0.5
+          pullPolicy:
+            $ref: '#/definitions/imagePullPolicy'
+      resources:
+        $ref: '#/definitions/resources'
+      service:
+        properties:
+          annotations:
+            $ref: '#/definitions/annotations'
   ingressClassParameters:
     type: object
     properties:
@@ -547,7 +593,6 @@ definitions:
   k8sVersion:
     description: The cluster k8s version. Must match one of the list.
     enum:
-      - '1.19'
       - '1.20'
       - '1.21'
       - '1.22'
@@ -830,8 +875,19 @@ definitions:
       id:
         readOnly: true
         type: string
+      clusterWide:
+        description: Will create the secret in all namespaces.
+        type: boolean
+        default: false
+      teamWide:
+        description: Will create the secret in all team-* namespaces.
+        type: boolean
+        default: false
       name:
         $ref: '#/definitions/idName'
+      namespace:
+        $ref: '#/definitions/idName'
+        description: A kubernetes namespace.
     required:
       - name
     oneOf:
@@ -1053,6 +1109,7 @@ definitions:
         description: Ingress class name
         type: string
         default: platform
+        pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])+$'
       svc:
         $ref: '#/definitions/idName'
         description: When given a backing k8s service is expected to be deployed with this name, which will be exposed through this team service.
@@ -1738,11 +1795,9 @@ properties:
                 type: boolean
                 default: false
               schedule:
-                default: 0 0 * * *
-                description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
-                type: string
-        # required:
-        #   - databasePassword
+                $ref: '#/definitions/backup/definitions/schedule'
+        required:
+          - databasePassword
       hello:
         description: Hello world demo chart. When you turn this off you may also have to remove the ingress service.
         properties:
@@ -1823,50 +1878,8 @@ properties:
               - required:
                   - armAuth
                   - appgw
-      ingress-nginx:
-        additionalProperties: false
-        properties:
-          _rawValues:
-            $ref: '#/definitions/rawValues'
-          autoscaling:
-            $ref: '#/definitions/autoscalingEnabled'
-          maxBodySize:
-            type: string
-            default: 1024m
-          maxBodySizeBytes:
-            type: integer
-            minimum: 0
-            default: 1073741824
-            description: Needed for modsecurity. Should correspond to maxBodySize, but expressed in bytes.
-          modsecurity:
-            title: MOD Security
-            description: Enables MOD Security functionality.
-            properties:
-              block:
-                description: Makes nginx block requests that are marked as violating the modsec rules.
-                type: boolean
-                default: false
-              enabled:
-                type: boolean
-                default: false
-              owasp:
-                description: Turns on the default OWASP rule set for modsec. See
-                type: boolean
-                default: true
-            type: object
-          image:
-            properties:
-              tag:
-                $ref: '#/definitions/imageTag'
-                x-default: v1.0.5
-              pullPolicy:
-                $ref: '#/definitions/imagePullPolicy'
-          resources:
-            $ref: '#/definitions/resources'
-          service:
-            properties:
-              annotations:
-                $ref: '#/definitions/annotations'
+      ingress-nginx-platform:
+        $ref: '#/definitions/ingressNginx'
       istio:
         additionalProperties: false
         properties:
@@ -1981,7 +1994,12 @@ properties:
           _rawValues:
             $ref: '#/definitions/rawValues'
           resources:
-            $ref: '#/definitions/resources'
+            additionalProperties: false
+            properties:
+              operator:
+                $ref: '#/definitions/resources'
+              pod:
+                $ref: '#/definitions/resources'
       knative:
         additionalProperties: false
         properties:
@@ -2076,15 +2094,10 @@ properties:
       external-secrets:
         additionalProperties: false
         properties:
-          _rawValues:
-            $ref: '#/definitions/rawValues'
           enabled:
             type: boolean
           logLevel:
             $ref: '#/definitions/logLevel'
-          pollingInterval:
-            type: integer
-            default: 60000
       kube-descheduler:
         additionalProperties: false
         properties:
@@ -2360,6 +2373,136 @@ properties:
           enabled:
             type: boolean
             default: false
+      thanos:
+        properties:
+          _rawValues:
+            $ref: '#/definitions/rawValues'
+          enabled:
+            type: boolean
+            default: false
+          query:
+            properties:
+              replicaCount:
+                description: Number of Thanos Query replicas.
+                type: integer
+                default: 1
+          receiver:
+            properties:
+              mode:
+                title: Receiver mode
+                description: Mode to run receiver in.
+                type: string
+                default: standalone
+                enum:
+                  - standalone
+                  - dual-mode
+              replicaCount:
+                description: Number of Thanos Receive replicas.
+                type: integer
+                default: 1
+              tsdbRetention:
+                type: string
+                default: 7d
+              replicationFactor:
+                type: integer
+                default: 1
+          compactor:
+            description: Resolution and Retention flags.
+            properties:
+              retentionResolutionRaw:
+                type: string
+                default: 30d
+              retentionResolution5m:
+                type: string
+                default: 30d
+              retentionResolution1h:
+                type: string
+                default: 10y
+          receiverDistributor:
+            properties:
+              enabled:
+                type: boolean
+                default: true
+          ruler:
+            properties:
+              enabled:
+                type: boolean
+                default: false
+          objstore:
+            properties:
+              storageProvider:
+                additionalProperties: false
+                properties:
+                  s3:
+                    properties:
+                      bucket:
+                        type: string
+                        description: Name of the blob container.
+                        $ref: '#/definitions/wordCharacterPattern'
+                      s3Url:
+                        description: The name (URL) of the S3 bucket
+                        $ref: '#/definitions/wordCharacterPattern'
+                      accessKeyId:
+                        type: string
+                        description: The ID of the access key
+                        $ref: '#/definitions/wordCharacterPattern'
+                      secretAccessKey:
+                        type: string
+                        description: The secret of the access key
+                        $ref: '#/definitions/wordCharacterPattern'
+                        x-secret: ''
+                    required:
+                      - bucket
+                      - s3Url
+                      - accessKeyId
+                      - secretAccessKey
+                  type:
+                    type: string
+                    enum:
+                      - s3
+                      - minioLocal
+                    default: minioLocal
+          resources:
+            additionalProperties: false
+            properties:
+              query:
+                $ref: '#/definitions/resources'
+              queryFrontend:
+                $ref: '#/definitions/resources'
+              receiver:
+                $ref: '#/definitions/resources'
+              storegateway:
+                $ref: '#/definitions/resources'
+              bucketweb:
+                $ref: '#/definitions/resources'
+              compactor:
+                $ref: '#/definitions/resources'
+              receiverDistributor:
+                $ref: '#/definitions/resources'
+              ruler:
+                $ref: '#/definitions/resources'
+        persistence:
+          properties:
+            receiver:
+              properties:
+                size:
+                  $ref: '#/definitions/size'
+                  default: 50Gi
+            storegateway:
+              properties:
+                size:
+                  $ref: '#/definitions/size'
+                  default: 8Gi
+            compactor:
+              properties:
+                size:
+                  $ref: '#/definitions/size'
+                  default: 8Gi
+            ruler:
+              properties:
+                size:
+                  $ref: '#/definitions/size'
+                  default: 8Gi
       vault:
         additionalProperties: false
         properties:
@@ -2456,10 +2599,13 @@ properties:
             type: boolean
             default: false
           cloud:
+            additionalProperties: false
+            type: object
             properties:
-              cloudProvider:
+              provider:
                 properties:
                   azure:
+                    additionalProperties: false
                     description: Azure
                     properties:
                       resourceGroup:
@@ -2473,6 +2619,7 @@ properties:
                           - AzureChinaCloud
                           - AzureUSGovernment
                           - AzureGermanCloud
+                        default: AzurePublicCloud
                       tenantId:
                         $ref: '#/definitions/wordCharacterPattern'
                       subscriptionId:
@@ -2490,6 +2637,7 @@ properties:
                       - resourceGroup
                       - environment
                   aws:
+                    additionalProperties: false
                     description: Amazon Web Services
                     properties:
                       region:
@@ -2504,11 +2652,12 @@ properties:
                       - custom
                     default: custom
           storage:
+            additionalProperties: false
             properties:
-              storageProvider:
+              provider:
                 properties:
                   azureBlob:
-                    type: object
+                    additionalProperties: false
                     properties:
                       storageAccount:
                         type: string
@@ -2536,6 +2685,7 @@ properties:
                       - storageAccount
                       - bucket
                   s3:
+                    additionalProperties: false
                     properties:
                       bucket:
                         type: string
@@ -2556,8 +2706,6 @@ properties:
                     required:
                       - bucket
                       - s3Url
-                      - accessKeyId
-                      - secretAccessKey
                   type:
                     type: string
                     enum:
@@ -2577,6 +2725,9 @@ properties:
               - panic
           resources:
             $ref: '#/definitions/resources'
+    patternProperties:
+      '^ingress-nginx-[a-z0-9]([-a-z0-9]*[a-z0-9])+$':
+        $ref: '#/definitions/ingressNginx'
   cluster:
     $ref: '#/definitions/cluster'
   dns:
@@ -3154,7 +3305,7 @@ properties:
     properties:
       platform:
         title: Platform applications
-        description: Select platfom apps to backup.
+        description: Select platform apps to backup.
         properties:
           gitea:
             title: Gitea
@@ -3163,9 +3314,9 @@ properties:
                 type: boolean
                 default: false
               ttl:
-                $ref: '#/definitions/backupTtl'
+                $ref: '#/definitions/backup/definitions/ttl'
               schedule:
-                $ref: '#/definitions/backupSchedule'
+                $ref: '#/definitions/backup/definitions/schedule'
           drone:
             title: Drone
             properties:
@@ -3173,9 +3324,9 @@ properties:
                 type: boolean
                 default: false
               ttl:
-                $ref: '#/definitions/backupTtl'
+                $ref: '#/definitions/backup/definitions/ttl'
               schedule:
-                $ref: '#/definitions/backupSchedule'
+                $ref: '#/definitions/backup/definitions/schedule'
           keycloak:
             title: Keycloak
             properties:
@@ -3183,9 +3334,9 @@ properties:
                 type: boolean
                 default: false
               ttl:
-                $ref: '#/definitions/backupTtl'
+                $ref: '#/definitions/backup/definitions/ttl'
               schedule:
-                $ref: '#/definitions/backupSchedule'
+                $ref: '#/definitions/backup/definitions/schedule'
           harbor:
             title: Harbor
             properties:
@@ -3193,9 +3344,9 @@ properties:
                 type: boolean
                 default: false
               ttl:
-                $ref: '#/definitions/backupTtl'
+                $ref: '#/definitions/backup/definitions/ttl'
               schedule:
-                $ref: '#/definitions/backupSchedule'
+                $ref: '#/definitions/backup/definitions/schedule'
           vault:
             title: Vault
             properties:
@@ -3203,9 +3354,9 @@ properties:
                 type: boolean
                 default: false
               ttl:
-                $ref: '#/definitions/backupTtl'
+                $ref: '#/definitions/backup/definitions/ttl'
               schedule:
-                $ref: '#/definitions/backupSchedule'
+                $ref: '#/definitions/backup/definitions/schedule'
           argo:
             title: ArgoCD
             properties:
@@ -3213,9 +3364,9 @@ properties:
                 type: boolean
                 default: false
               ttl:
-                $ref: '#/definitions/backupTtl'
+                $ref: '#/definitions/backup/definitions/ttl'
               schedule:
-                $ref: '#/definitions/backupSchedule'
+                $ref: '#/definitions/backup/definitions/schedule'
           kubeapps:
             title: Kubeapps
             properties:
@@ -3223,9 +3374,9 @@ properties:
                 type: boolean
                 default: false
               ttl:
-                $ref: '#/definitions/backupTtl'
+                $ref: '#/definitions/backup/definitions/ttl'
               schedule:
-                $ref: '#/definitions/backupSchedule'
+                $ref: '#/definitions/backup/definitions/schedule'
           minio:
             title: Minio
             properties:
@@ -3233,17 +3384,17 @@ properties:
                 type: boolean
                 default: false
               ttl:
-                $ref: '#/definitions/backupTtl'
+                $ref: '#/definitions/backup/definitions/ttl'
               schedule:
-                $ref: '#/definitions/backupSchedule'
+                $ref: '#/definitions/backup/definitions/schedule'
       teams:
         enabled:
           type: boolean
           default: false
         ttl:
-          $ref: '#/definitions/backupTtl'
+          $ref: '#/definitions/backup/definitions/ttl'
         schedule:
-          $ref: '#/definitions/backupSchedule'
+          $ref: '#/definitions/backup/definitions/schedule'
   teamConfig:
     additionalProperties: false
     patternProperties:
