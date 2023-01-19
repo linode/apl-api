@@ -2400,12 +2400,22 @@ properties:
                 description: Number of Thanos Receive replicas.
                 type: integer
                 default: 1
+              persistence:
+                properties:
+                  size:
+                    type: string
               tsdbRetention:
                 type: string
                 default: 7d
               replicationFactor:
                 type: integer
                 default: 1
+          storegateway:
+            properties:
+              persistence:
+                properties:
+                  size:
+                    type: string
           compactor:
             description: Resolution and Retention flags.
             properties:
@@ -2418,6 +2428,10 @@ properties:
               retentionResolution1h:
                 type: string
                 default: 10y
+              persistence:
+                properties:
+                  size:
+                    type: string
           receiverDistributor:
             properties:
               enabled:
@@ -2428,6 +2442,10 @@ properties:
               enabled:
                 type: boolean
                 default: false
+              persistence:
+                properties:
+                  size:
+                    type: string
           objstore:
             properties:
               storageProvider:
@@ -2485,22 +2503,22 @@ properties:
           properties:
             receiver:
               properties:
-                size:
+                size: 
                   $ref: '#/definitions/size'
                   default: 50Gi
             storegateway:
               properties:
-                size:
+                size: 
                   $ref: '#/definitions/size'
                   default: 8Gi
             compactor:
               properties:
-                size:
+                size: 
                   $ref: '#/definitions/size'
                   default: 8Gi
             ruler:
               properties:
-                size:
+                size: 
                   $ref: '#/definitions/size'
                   default: 8Gi
       vault:
