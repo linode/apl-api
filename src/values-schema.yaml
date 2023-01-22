@@ -2658,6 +2658,19 @@ properties:
                     type: string
                     description: The AWS region where the cluster is running.
                     $ref: '#/definitions/wordCharacterPattern'
+                  accessKeyId:
+                    type: string
+                    description: The ID of the access key
+                    $ref: '#/definitions/wordCharacterPattern'
+                  secretAccessKey:
+                    type: string
+                    description: The secret of the access key
+                    $ref: '#/definitions/wordCharacterPattern'
+                    x-secret: ''
+                required:
+                  - region
+                  - accessKeyId
+                  - secretAccessKey
               type:
                 type: string
                 enum:
