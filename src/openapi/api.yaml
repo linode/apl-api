@@ -735,6 +735,8 @@ components:
       $ref: apps/minio.yaml#/AppMinio   
     AppPrometheus:
       $ref: apps/prometheus.yaml#/AppPrometheus
+    AppThanos:
+      $ref: apps/thanos.yaml#/AppThanos
     AppVault:
       $ref: apps/vault.yaml#/AppVault
     AppVelero:

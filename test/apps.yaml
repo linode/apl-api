@@ -12,7 +12,7 @@ appsInfo:
     integration: Alertmanager can be activated to send alerts to configured receivers. It is configured by Otomi to use the global values found under settings/alerts. A team can override global settings to send alerts to their own endpoints.
   argocd:
     title: ArgoCD
-    appVersion: 1.4.25
+    appVersion: v2.4.7
     repo: https://github.com/argoproj/argo-helm
     maintainers: Argo Project
     relatedLinks:
@@ -100,7 +100,7 @@ appsInfo:
     integration: Otomi uses Grafana to visualize Prometheus metrics and Loki logs. Team members are automatically given the Editor role, while admins are also given the Admin role. It is possible to make configuration changes directly in Grafana, but only to non-conflicting settings. Data sources are preconfigured and must not be edited as changes will be gone when Grafana is redeployed.
   harbor:
     title: Harbor
-    appVersion: 2.3.0
+    appVersion: 2.5.4
     repo: https://github.com/goharbor/harbor
     maintainers: Project Harbor
     relatedLinks:
@@ -234,9 +234,20 @@ appsInfo:
     license: Apache 2.0
     about: Prometheus is a systems and service monitoring system. It collects metrics from configured targets at given intervals, evaluates rule expressions, displays the results, and can trigger alerts when specified conditions are observed.
     integration: Prometheus can be activated to aggregate all platform metrics and store them in a storage endpoint of choice (defaults to PVC). When Otomi is configured in multi-tenancy mode, each team will be provided with a dedicated Prometheus instance. This instance can be used to aggregate custom team metrics.
+  thanos:
+    title: Thanos
+    appVersion: 0.28.1
+    repo: https://github.com/thanos-io/thanos
+    maintainers: Thanos
+    relatedLinks:
+      - https://otomi.io/docs/apps/thanos
+      - https://thanos.io
+    license: Apache 2.0
+    about: Thanos is a tool to set up a Highly Available Prometheus with long-term storage capabilities.
+    integration: Otomi installs and configures Thanos in a Remote Write setup. The Receiver is exposed for external Prometheus instances to upload metrics in real-time. By default Thanos Object Store is configured to use the thanos bucket of the local Minio instance. When Thanos is enabled, an extra data source is added to Grafana for Thanos Query.
   vault:
     title: Vault
-    appVersion: 1.14.3
+    appVersion: 1.6.1
     repo: https://github.com/hashicorp/vault
     maintainers: HashiCorp
     relatedLinks:
