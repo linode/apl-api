@@ -25,3 +25,4 @@ teamConfig:
             thanos: {}
             vault: {}
             velero: {}
+            falco: {}

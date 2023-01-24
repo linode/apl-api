@@ -701,6 +701,8 @@ components:
       $ref: apps/drone.yaml#/AppDrone
     AppExternalDns:
       $ref: apps/external-dns.yaml#/AppExternalDns
+    AppFalco:
+      $ref: apps/falco.yaml#/AppFalco
     AppGatekeeper:
       $ref: apps/gatekeeper.yaml#/AppGatekeeper
     AppGitea:
@@ -730,7 +732,7 @@ components:
     AppLoki:
       $ref: apps/loki.yaml#/AppLoki
     AppMinio:
-      $ref: apps/minio.yaml#/AppMinio   
+      $ref: apps/minio.yaml#/AppMinio
     AppPrometheus:
       $ref: apps/prometheus.yaml#/AppPrometheus
     AppThanos:
@@ -873,6 +875,8 @@ components:
       $ref: definitions.yaml#/podSpec
     policies:
       $ref: policies.yaml#/policies
+    priority:
+      $ref: definitions.yaml#/priority
     provider:
       $ref: definitions.yaml#/provider
     quantityCpu:

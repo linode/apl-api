@@ -1,0 +1,106 @@
+AppFalco:
+  additionalProperties: false
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      type: boolean
+      default: false
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/apps/falco
+      additionalProperties: false
+      type: object
+      properties:
+        falcoSidekick:
+          title: Falco Sidekick configuration
+          properties:
+            replicas:
+              $ref: ../definitions.yaml#/replicas      
+            minPrio:
+              $ref: ../definitions.yaml#/priority
+        resources:
+          type: object
+          properties:
+            falco:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 500m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 128Mi
+              required:
+                - limits
+                - requests
+            falcoSideKick:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 64Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 20m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 32Mi
+              required:
+                - limits
+                - requests
+            falcoExporter:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 64Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 32Mi
+              required:
+                - limits
+                - requests
+
+
