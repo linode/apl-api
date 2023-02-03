@@ -112,9 +112,6 @@ export default class OtomiStack {
     const allClasses = ['platform'].concat(ingress?.classes?.map((obj) => obj.className as string) || [])
     const ingressApps = allClasses.map((name) => `ingress-nginx-${name}`)
     apps = apps.concat(ingressApps)
-
-    if (!['aws', 'azure'].includes(cluster?.provider as string)) apps = apps.filter((name) => name !== 'falco')
-
     return apps
   }
   getRepoPath() {
