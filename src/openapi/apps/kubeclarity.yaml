@@ -24,22 +24,25 @@ AppKubeclarity:
           description: Select the analyser(s) to use. syft gomod are enabled by default
           properties:
             trivy:
-              enabled:
-                type: boolean
-                default: false
+              properties:
+                enabled:
+                  type: boolean
+                  default: false
         scanner:
           title: Scanner config
           description: Select the scanner(s) to use.
           properties:
             grype:
-              enabled:
-                type: boolean
-                default: true
-                readOnly: true
+              properties:
+                enabled:
+                  type: boolean
+                  default: true
+                  readOnly: true
             trivy:
-              enabled:
-                type: boolean
-                default: false
+              properties:
+                enabled:
+                  type: boolean
+                  default: false
         resources:
           additionalProperties: false
           type: object

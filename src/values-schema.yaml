@@ -2097,7 +2097,6 @@ properties:
             x-secret: 'randAlphaNum 20'
         required:
           - postgresqlPassword
-
       kubeclarity:
         description: Kubeclarity security scanning Helm chart.
         properties:
