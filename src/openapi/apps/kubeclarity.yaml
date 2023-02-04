@@ -19,30 +19,185 @@ AppKubeclarity:
       x-externalDocsPath: docs/apps/kubeclarity
       type: object
       properties:
+        analyser:
+          title: Analyser config
+          description: Select the analyser(s) to use. syft gomod are enabled by default
+          properties:
+            trivy:
+              enabled:
+                type: boolean
+                default: false
+        scanner:
+          title: Scanner config
+          description: Select the scanner(s) to use.
+          properties:
+            grype:
+              enabled:
+                type: boolean
+                default: true
+                readOnly: true
+            trivy:
+              enabled:
+                type: boolean
+                default: false
         resources:
+          additionalProperties: false
           type: object
           properties:
-            limits:
+            kubeclarity:
+              title: Kubeclarity
               type: object
               properties:
-                cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
-                  default: 1000m
-                memory:
-                  $ref: ../definitions.yaml#/quantityMem
-                  default: 1000Mi
-            requests:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 1Gi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 200Mi
+            cdbScanner:
+              title: Cis Docker Benchmark Scanner
               type: object
               properties:
-                cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
-                  default: 100m
-                memory:
-                  $ref: ../definitions.yaml#/quantityMem
-                  default: 200Mi
-          required:
-            - limits
-            - requests
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 1Gi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 50Mi
+            vulnerabilityScanner:
+              title: Vulnerability Scanner
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 1Gi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 50Mi
+            grypeServer:
+              title: KubeClarity Grype Server
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 1Gi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 200m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 200Mi
+            trivyServer:
+              title: KubeClarity Trivy Server
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 1Gi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 200m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 200Mi
+            sbomDb:
+              title: KubeClarity SBOM DB
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 100m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 100Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 10m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 20Mi
+            postgresql:
+              title: KubeClarity Internal Postgres
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: '1'
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 1Gi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 250m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 256Mi
         databasePassword:
           type: string
           description: Once set and deployed it cannot be changed with manual intervention.

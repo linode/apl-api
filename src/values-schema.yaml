@@ -2097,6 +2097,7 @@ properties:
             x-secret: 'randAlphaNum 20'
         required:
           - postgresqlPassword
+
       kubeclarity:
         description: Kubeclarity security scanning Helm chart.
         properties:
@@ -2105,6 +2106,20 @@ properties:
           enabled:
             type: boolean
             default: false
+          analyser:
+            trivy:
+              enabled:
+                type: boolean
+                default: false
+          scanner:
+            grype:
+              enabled:
+                type: boolean
+                default: true
+            trivy:
+              enabled:
+                type: boolean
+                default: false
           logLevel:
             enum:
               - debug
@@ -2118,7 +2133,22 @@ properties:
             description: Once set and deployed it cannot be changed with manual intervention.
             x-secret: 'randAlphaNum 20'
           resources:
-            $ref: '#/definitions/resources'
+            additionalProperties: false
+            properties:
+              kubeclarity:
+                $ref: '#/definitions/resources'
+              cdbScanner:
+                $ref: '#/definitions/resources'
+              vulnerabilityServer:
+                $ref: '#/definitions/resources'
+              grypeServer:
+                $ref: '#/definitions/resources'
+              trivyServer:
+                $ref: '#/definitions/resources'
+              sbomDb:
+                $ref: '#/definitions/resources'
+              postgresql:
+                $ref: '#/definitions/resources'
         required:
           - databasePassword
       external-secrets:
@@ -2533,22 +2563,22 @@ properties:
           properties:
             receiver:
               properties:
-                size: 
+                size:
                   $ref: '#/definitions/size'
                   default: 50Gi
             storegateway:
               properties:
-                size: 
+                size:
                   $ref: '#/definitions/size'
                   default: 8Gi
             compactor:
               properties:
-                size: 
+                size:
                   $ref: '#/definitions/size'
                   default: 8Gi
             ruler:
               properties:
-                size: 
+                size:
                   $ref: '#/definitions/size'
                   default: 8Gi
       vault:
