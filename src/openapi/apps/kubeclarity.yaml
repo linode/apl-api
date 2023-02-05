@@ -29,6 +29,7 @@ AppKubeclarity:
                   type: boolean
                   default: false
         scanner:
+          additionalProperties: false
           title: Scanner config
           description: Select the scanner(s) to use.
           properties:

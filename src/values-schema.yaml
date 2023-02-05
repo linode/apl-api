@@ -2106,19 +2106,27 @@ properties:
             type: boolean
             default: false
           analyser:
-            trivy:
-              enabled:
-                type: boolean
-                default: false
+            additionalProperties: false
+            properties:
+              trivy:
+                properties:
+                  enabled:
+                    type: boolean
+                    default: false
           scanner:
-            grype:
-              enabled:
-                type: boolean
-                default: true
-            trivy:
-              enabled:
-                type: boolean
-                default: false
+            additionalProperties: false
+            properties:
+              grype:
+                properties:
+                  enabled:
+                    type: boolean
+                    default: true
+                    readOnly: true
+              trivy:
+                properties:
+                  enabled:
+                    type: boolean
+                    default: false
           logLevel:
             enum:
               - debug
