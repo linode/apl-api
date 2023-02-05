@@ -107,13 +107,11 @@ export default class OtomiStack {
 
   getAppList() {
     let apps = getAppList()
-    apps = apps.filter((name) => name !== 'ingress-nginx')
-    const { ingress, cluster } = this.getSettings()
+    apps = apps.filter((item) => item !== 'ingress-nginx')
+    const { ingress } = this.getSettings()
     const allClasses = ['platform'].concat(ingress?.classes?.map((obj) => obj.className as string) || [])
     const ingressApps = allClasses.map((name) => `ingress-nginx-${name}`)
-    apps = apps.concat(ingressApps)
-
-    return apps
+    return apps.concat(ingressApps)
   }
   getRepoPath() {
     if (env.isTest || this.editor === undefined) return env.GIT_LOCAL_PATH

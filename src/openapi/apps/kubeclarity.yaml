@@ -23,23 +23,25 @@ AppKubeclarity:
           title: Analyser config
           description: Select the analyser(s) to use. syft gomod are enabled by default
           properties:
-            trivy:
+            trivyAnalyser:
+              title: Trivy
               properties:
                 enabled:
                   type: boolean
                   default: false
         scanner:
-          additionalProperties: false
           title: Scanner config
           description: Select the scanner(s) to use.
           properties:
-            grype:
+            grypeScanner:
+              title: Grypeeeee
               properties:
                 enabled:
                   type: boolean
                   default: true
                   readOnly: true
-            trivy:
+            trivyScanner:
+              title: Trivy
               properties:
                 enabled:
                   type: boolean
@@ -110,10 +112,10 @@ AppKubeclarity:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 50m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 50Mi
+                      default: 256Mi
             grypeServer:
               title: KubeClarity Grype Server
               type: object
