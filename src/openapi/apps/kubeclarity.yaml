@@ -31,7 +31,7 @@ AppKubeclarity:
                   default: true
         scanner:
           title: Scanner config
-          description: Select the scanner(s) to use.
+          description: Select the scanner(s) to use. At least one needs to be selected.
           properties:
             grypeScanner:
               title: Grype
