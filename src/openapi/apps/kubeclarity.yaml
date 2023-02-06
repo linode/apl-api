@@ -28,24 +28,23 @@ AppKubeclarity:
               properties:
                 enabled:
                   type: boolean
-                  default: false
+                  default: true
         scanner:
           title: Scanner config
           description: Select the scanner(s) to use.
           properties:
             grypeScanner:
-              title: Grypeeeee
+              title: Grype
               properties:
                 enabled:
                   type: boolean
-                  default: true
-                  readOnly: true
+                  default: false
             trivyScanner:
               title: Trivy
               properties:
                 enabled:
                   type: boolean
-                  default: false
+                  default: true
         resources:
           additionalProperties: false
           type: object
