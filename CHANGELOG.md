@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.22](https://github.com/redkubes/otomi-api/compare/v0.5.21...v0.5.22) (2023-02-06)
+
+
+### Features
+
+* add falco app ([#363](https://github.com/redkubes/otomi-api/issues/363)) ([e9787ba](https://github.com/redkubes/otomi-api/commit/e9787ba9aad22adb704dea377e16e493f6612dcd))
+* configure Kiali resources ([#362](https://github.com/redkubes/otomi-api/issues/362)) ([58a912a](https://github.com/redkubes/otomi-api/commit/58a912a44c64617af44e1575906adaed70b33d1f))
+* add thanos app ([#353](https://github.com/redkubes/otomi-api/issues/353)) ([3475885](https://github.com/redkubes/otomi-api/commit/3475885e335f2f73b496cf7c2db0bc9206266f22))
+* velero minio ([#349](https://github.com/redkubes/otomi-api/issues/349)) ([57caa4c](https://github.com/redkubes/otomi-api/commit/57caa4c9349c3786fa5a1715ffe240342cf4fcf9))
+
+
+### Bug Fixes
+
+* do not show authz loading logs ([#356](https://github.com/redkubes/otomi-api/issues/356)) ([2624c75](https://github.com/redkubes/otomi-api/commit/2624c75e6cbe1b3e1e15fcab5f94993e7db73086))
+* save brand new secrets files ([#358](https://github.com/redkubes/otomi-api/issues/358)) ([5601356](https://github.com/redkubes/otomi-api/commit/56013568918307847645252078d378ba9470a899)), closes [otomi-core/#975](https://github.com/otomi-core/otomi-api/issues/975)
+* Title and description for team monitoring stack ([#360](https://github.com/redkubes/otomi-api/issues/360)) ([9c4907a](https://github.com/redkubes/otomi-api/commit/9c4907aa234c34a39215256e4cd9824cc913933d))
+
 ### [0.5.21](https://github.com/redkubes/otomi-api/compare/v0.5.20...v0.5.21) (2023-01-16)
 
 
