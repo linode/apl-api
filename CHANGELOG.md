@@ -17,7 +17,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 * do not show authz loading logs ([#356](https://github.com/redkubes/otomi-api/issues/356)) ([2624c75](https://github.com/redkubes/otomi-api/commit/2624c75e6cbe1b3e1e15fcab5f94993e7db73086))
 * save brand new secrets files ([#358](https://github.com/redkubes/otomi-api/issues/358)) ([5601356](https://github.com/redkubes/otomi-api/commit/56013568918307847645252078d378ba9470a899)), closes [otomi-core/#975](https://github.com/otomi-core/otomi-api/issues/975)
-* Title and description for team monitoring stack ([#360](https://github.com/redkubes/otomi-api/issues/360)) ([9c4907a](https://github.com/redkubes/otomi-api/commit/9c4907aa234c34a39215256e4cd9824cc913933d))
+* title and description for team monitoring stack ([#360](https://github.com/redkubes/otomi-api/issues/360)) ([9c4907a](https://github.com/redkubes/otomi-api/commit/9c4907aa234c34a39215256e4cd9824cc913933d))
 
 ### [0.5.21](https://github.com/redkubes/otomi-api/compare/v0.5.20...v0.5.21) (2023-01-16)
 
