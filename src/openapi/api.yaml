@@ -776,7 +776,7 @@ components:
     Kubecfg:
       $ref: kubecfg.yaml#/Kubecfg
     DockerConfig:
-      $ref: DockerConfig.yaml#/DockerConfig
+      $ref: dockerconfig.yaml#/DockerConfig
     OpenApiValidationError:
       $ref: error.yaml#/OpenApiValidationError
     OtomiStackError:
