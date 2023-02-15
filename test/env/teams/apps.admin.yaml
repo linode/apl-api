@@ -19,6 +19,7 @@ teamConfig:
             knative: {}
             kubeapps: {}
             kubeclarity: {}
+            kured: {}
             loki: {}
             minio: {}
             prometheus: {}
