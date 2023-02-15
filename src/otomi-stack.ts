@@ -5,7 +5,7 @@ import Debug from 'debug'
 
 import { emptyDir } from 'fs-extra'
 import { readFile } from 'fs/promises'
-import { cloneDeep, each, filter, get, isEmpty, omit, pick, set } from 'lodash'
+import { cloneDeep, each, filter, get, isArray, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
@@ -959,11 +959,13 @@ export default class OtomiStack {
     else {
       const { cluster, dns } = this.getSettings(['cluster', 'dns'])
       const url = getServiceUrl({ domain: svcRaw.domain, name: svcRaw.name, teamId, cluster, dns })
+      // TODO remove the isArray check in 0.5.24
+      const headers = isArray(svcRaw.headers) ? undefined : svcRaw.headers
       svc.ingress = {
         certArn: svcRaw.certArn || undefined,
         certName: svcRaw.certName || undefined,
         domain: url.domain,
-        headers: svcRaw.headers || [],
+        headers,
         forwardPath: 'forwardPath' in svcRaw,
         hasCert: 'hasCert' in svcRaw,
         paths: svcRaw.paths ? svcRaw.paths : [],
