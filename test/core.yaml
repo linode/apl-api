@@ -54,6 +54,8 @@ k8s:
       disablePolicyChecks: true
     - name: kubeclarity
       app: kubeclarity
+    - name: kured
+      app: kured
     - name: maintenance
       disableIstioInjection: true
     - name: minio
@@ -255,6 +257,8 @@ adminApps:
         port: 8080
         type: public
         auth: true
+  - name: kured
+    tags: [security]
   - name: loki
     tags: [logging, telemetry, observability]
     deps: [grafana, prometheus]
