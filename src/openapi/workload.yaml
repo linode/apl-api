@@ -7,12 +7,14 @@ Workload:
       - update-any
     team:
       - delete
-      - read-any
+      - read
       - create
       - update
   type: object
   description: Define location of the application's manifests or chart
   properties:
+    id:
+      type: string
     name:
       $ref: 'definitions.yaml#/wordCharacterPattern'
     url:

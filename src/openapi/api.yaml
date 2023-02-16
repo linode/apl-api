@@ -467,6 +467,14 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/workloadParams'
+    delete:
+      operationId: deleteWorkload
+      description: Delete a workload from a given team
+      x-aclSchema: Workload
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a workload
     get:
       operationId: getWorkload
       description: Get a workload from a given team

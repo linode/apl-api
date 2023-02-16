@@ -231,6 +231,31 @@ describe('API authz tests', () => {
       .expect(403)
       .end(done)
   })
+  it('team can not update workload from other team', (done) => {
+    agent
+      .put('/v1/teams/team2/workloads/my-uuid')
+      .send({
+        name: 'wid',
+        url: 'https://test.local/',
+      })
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect(403)
+      .end(done)
+  })
+
+  it('team can not delete workload from other team', (done) => {
+    agent.delete('/v1/teams/team2/workloads/my-uuid').set('Authorization', `Bearer ${teamToken}`).expect(403).end(done)
+  })
+  it('team can not update workload values from other team', (done) => {
+    agent
+      .put('/v1/teams/team2/workloads/my-uuid/values')
+      .send({
+        a: 'b',
+      })
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect(403)
+      .end(done)
+  })
   xit('team can not see filtered values', (done) => {
     otomiStack.getApp.callsFake(() => ({ id: 'teamapp', values: { hidden: true } }))
     agent
@@ -280,6 +305,18 @@ describe('API authz tests', () => {
   })
   it('anonymous user cannot get services', (done) => {
     agent.get('/v1/teams/team1/services').expect(401).end(done)
+  })
+  it('anonymous user cannot get workloads', (done) => {
+    agent.get('/v1/teams/team1/workloads').expect(401).end(done)
+  })
+  it('anonymous user cannot modify a workload', (done) => {
+    agent.put('/v1/teams/team1/workloads/my-uuid').expect(401).end(done)
+  })
+  it('anonymous user cannot modify a workload values', (done) => {
+    agent.put('/v1/teams/team1/workloads/my-uuid/values').expect(401).end(done)
+  })
+  it('anonymous user cannot delete a workload', (done) => {
+    agent.delete('/v1/teams/team1/workloads/my-uuid').expect(401).end(done)
   })
   it('anonymous user cannot get a given service', (done) => {
     agent.get('/v1/teams/team1/services/service1').expect(401).end(done)
