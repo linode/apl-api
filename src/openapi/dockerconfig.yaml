@@ -1,0 +1,6 @@
+DockerConfig:
+  x-acl:
+    admin: [read-any]
+    team: [read]
+  properties: {}
+  type: object

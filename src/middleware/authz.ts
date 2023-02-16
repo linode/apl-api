@@ -54,6 +54,8 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
 
   let valid
   if (action === 'read' && schemaName === 'Kubecfg') valid = authz.hasSelfService(teamId, 'team', 'downloadKubeConfig')
+  else if (action === 'read' && schemaName === 'DockerConfig')
+    valid = authz.hasSelfService(teamId, 'team', 'downloadDockerConfig')
   else valid = authz.validateWithCasl(action, schemaName, teamId)
   if (!valid) {
     return res

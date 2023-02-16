@@ -476,6 +476,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/Kubecfg'
 
+  '/dockerconfig/{teamId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: downloadDockerConfig
+      description: Download Docker login creds for a team
+      x-aclSchema: DockerConfig
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Succesfully finished the download
+          content:
+            'application/yaml':
+              schema:
+                $ref: '#/components/schemas/DockerConfig'
+
   /session:
     get:
       operationId: getSession
@@ -763,6 +779,8 @@ components:
       $ref: job.yaml#/Job
     Kubecfg:
       $ref: kubecfg.yaml#/Kubecfg
+    DockerConfig:
+      $ref: dockerconfig.yaml#/DockerConfig
     OpenApiValidationError:
       $ref: error.yaml#/OpenApiValidationError
     OtomiStackError:
