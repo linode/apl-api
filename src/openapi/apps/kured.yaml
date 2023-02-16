@@ -30,17 +30,17 @@ AppKured:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 10m
+                      default: 50m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 64Mi
+                      default: 32Mi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 5m
+                      default: 20m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 32Mi
+                      default: 16Mi
   required: [id]
