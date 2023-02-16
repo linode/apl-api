@@ -277,3 +277,5 @@ networkPolicy:
             default:
               - number: 443
                 protocol: HTTPS
+        required:
+          - domain
