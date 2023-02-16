@@ -670,6 +670,33 @@ export default class OtomiStack {
     })
   }
 
+  async loadTeamWorkloads(teamId: string): Promise<void> {
+    const relativePath = getTeamWorkloadsFilePath(teamId)
+    if (!(await this.repo.fileExists(relativePath))) {
+      debug(`Team ${teamId} has no workloads yet`)
+      return
+    }
+    const data = await this.repo.readFile(relativePath)
+    const inData: Array<Record<string, any>> = get(data, getTeamWorkloadsJsonPath(teamId), [])
+
+    inData.forEach((inWorkload) => {
+      this.loadWorkload(inWorkload, teamId)
+    })
+    const workloads = this.getTeamWorkloads(teamId)
+    workloads.forEach((workload) => {
+      this.loadTeamWorkloadValues(teamId, workload)
+    })
+  }
+
+  async loadTeamWorkloadValues(teamId: string, workload: Workload): Promise<void> {
+    const relativePath = getTeamWorkloadValuesFilePath(teamId, workload.name)
+    if (!(await this.repo.fileExists(relativePath))) {
+      debug(`Team ${teamId} has no workloads yet`)
+      return [] as Array<Workload>
+    }
+    const data = await this.repo.readFile(relativePath)
+  }
+
   async loadTeams(): Promise<void> {
     const mergedData: Core = await this.repo.loadConfig('env/teams.yaml', `env/secrets.teams.yaml`)
     const tc = mergedData?.teamConfig || {}
@@ -679,6 +706,7 @@ export default class OtomiStack {
       this.loadTeamJobs(team.id!)
       this.loadTeamServices(team.id!)
       this.loadTeamSecrets(team.id!)
+      this.loadTeamWorkloads(team.id!)
     })
   }
 
@@ -845,6 +873,13 @@ export default class OtomiStack {
     }, {})
     const res: any = this.db.populateItem('secrets', secret, { teamId, name: secret.name }, secret.id as string)
     debug(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
+  }
+
+  loadWorkload(inWorkload, teamId): void {
+    const workload: Record<string, any> = inWorkload
+    workload.teamId = teamId
+    const res: any = this.db.populateItem('workloads', workload, { teamId, name: workload.name }, workload.id as string)
+    debug(`Loaded workload: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
   }
 
   convertDbSecretToValues(inSecret: any): any {
