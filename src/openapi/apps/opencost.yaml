@@ -1,0 +1,80 @@
+AppOpencost:
+  additionalProperties: false
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      type: boolean
+      default: false
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/apps/opencost
+      additionalProperties: false
+      type: object
+      properties:
+        gcpKey:
+          type: string
+          description: API key for GCP.
+          x-secret: 'randAlphaNum 20'
+        resources:
+          type: object
+          properties:
+            exporter:
+              title: Opencost exporter
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 200m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 1Gi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 256Mi
+              required:
+                - limits
+                - requests
+            ui:
+              type: object
+              title: Opencost UI
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 200m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 128Mi
+              required:
+                - limits
+                - requests
+  required: [id]

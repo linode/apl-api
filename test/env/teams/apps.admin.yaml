@@ -21,6 +21,7 @@ teamConfig:
             kubeclarity: {}
             loki: {}
             minio: {}
+            opencost: {}
             prometheus: {}
             thanos: {}
             vault: {}
