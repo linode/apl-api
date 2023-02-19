@@ -22,6 +22,7 @@ AppOpencost:
       properties:
         gcpKey:
           type: string
+          title: API key
           description: API key for GCP.
           x-secret: 'randAlphaNum 20'
         resources:
