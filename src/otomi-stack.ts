@@ -683,18 +683,24 @@ export default class OtomiStack {
       this.loadWorkload(inWorkload, teamId)
     })
     const workloads = this.getTeamWorkloads(teamId)
-    workloads.forEach((workload) => {
-      this.loadTeamWorkloadValues(teamId, workload)
-    })
+    await Promise.all(
+      workloads.map((workload) => {
+        this.loadWorkloadValues(workload)
+      }),
+    )
   }
 
-  async loadTeamWorkloadValues(teamId: string, workload: Workload): Promise<void> {
-    const relativePath = getTeamWorkloadValuesFilePath(teamId, workload.name)
-    if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no workloads yet`)
-      return [] as Array<Workload>
-    }
-    const data = await this.repo.readFile(relativePath)
+  async loadWorkloadValues(workload: Workload): Promise<void> {
+    const relativePath = getTeamWorkloadValuesFilePath(workload.teamId!, workload.name)
+    let data = { values: {} } as WorkloadValues
+    if (!(await this.repo.fileExists(relativePath)))
+      debug(`The workload values file does not exists at ${relativePath}`)
+    else data = (await this.repo.readFile(relativePath)) as WorkloadValues
+
+    data.id = workload.id!
+    data.teamId = workload.teamId!
+    const res: any = this.db.populateItem('workloadValues', data, undefined, workload.id as string)
+    debug(`Loaded workload values: name: ${res.name}, id: ${res.id}, teamId: ${workload.teamId!}`)
   }
 
   async loadTeams(): Promise<void> {
@@ -818,19 +824,26 @@ export default class OtomiStack {
 
   async saveTeamWorkloads(teamId: string): Promise<void> {
     const values = this.db.getCollection('workloads', { teamId })
-    await this.repo.writeFile(getTeamWorkloadsFilePath(teamId), set({}, getTeamWorkloadsJsonPath(teamId), values))
-  }
+    const relativePath = getTeamWorkloadsFilePath(teamId)
+    const workloads = set({}, getTeamWorkloadsJsonPath(teamId), values) as Array<Workload>
+    const cleanedWorkloads = workloads.map((obj) => {
+      return omit(obj, ['teamId'])
+    })
 
-  async saveTeamWorkloadValues(teamId: string): Promise<void> {
-    const workloads = this.db.getCollection('workloads', { teamId })
+    await this.repo.writeFile(relativePath, set({}, getTeamWorkloadsJsonPath(teamId), cleanedWorkloads))
     await Promise.all(
-      workloads.map(async (item: Workload) => {
-        const values = this.getWorkloadValues(item.id!)
-        const path = getTeamWorkloadValuesFilePath(teamId, item.name)
-        const data = set({}, getTeamWorkloadValuesJsonPath(), values.values)
-        await this.repo.writeFile(path, data)
+      workloads.map((workload) => {
+        this.saveWorkloadValues(workload)
       }),
     )
+  }
+
+  async saveWorkloadValues(workload: Workload): Promise<void> {
+    const values = this.getWorkloadValues(workload.id!)
+    const path = getTeamWorkloadValuesFilePath(workload.teamId!, workload.name)
+    const data = set({}, getTeamWorkloadValuesJsonPath(), values)
+    const cleanedData = omit(data, ['id', 'name', 'teamId'])
+    await this.repo.writeFile(path, cleanedData)
   }
 
   async saveTeamJobs(teamId: string): Promise<void> {
@@ -878,7 +891,7 @@ export default class OtomiStack {
   loadWorkload(inWorkload, teamId): void {
     const workload: Record<string, any> = inWorkload
     workload.teamId = teamId
-    const res: any = this.db.populateItem('workloads', workload, { teamId, name: workload.name }, workload.id as string)
+    const res: any = this.db.populateItem('workloads', workload, undefined, workload.id as string)
     debug(`Loaded workload: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
   }
 

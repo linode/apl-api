@@ -478,7 +478,7 @@ paths:
     get:
       operationId: getWorkload
       description: Get a workload from a given team
-      x-aclSchema: Secret
+      x-aclSchema: Workload
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -518,7 +518,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/WorkloadValues'
         '400':
           <<: *BadRequest
     put:
@@ -529,7 +529,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
+              $ref: '#/components/schemas/WorkloadValues'
         description: Workload values
         required: true
       responses:
@@ -539,7 +539,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Secret'
+                $ref: '#/components/schemas/WorkloadValues'
   /deploy:
     get:
       x-aclSchema: Deploy
@@ -906,6 +906,8 @@ components:
       $ref: user.yaml#/User
     Workload:
       $ref: workload.yaml#/Workload
+    WorkloadValues:
+      $ref: workload.yaml#/WorkloadValues
     adminPassword:
       $ref: definitions.yaml#/adminPassword
     alerts:
