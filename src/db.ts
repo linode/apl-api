@@ -41,6 +41,8 @@ export default class Db {
         services: [],
         settings: {},
         teams: [],
+        workloads: [],
+        workloadValues: [],
       })
       .write()
   }

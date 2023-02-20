@@ -372,7 +372,7 @@ export default class OtomiStack {
 
   getTeamWorkloads(teamId: string): Array<Workload> {
     const ids = { teamId }
-    return this.db.getItem('workloads', ids) as Array<Workload>
+    return this.db.getCollection('workloads', ids) as Array<Workload>
   }
 
   getAllWorkloads(): Array<Workload> {
@@ -678,9 +678,9 @@ export default class OtomiStack {
     }
     const data = await this.repo.readFile(relativePath)
     const inData: Array<Record<string, any>> = get(data, getTeamWorkloadsJsonPath(teamId), [])
-
     inData.forEach((inWorkload) => {
-      this.loadWorkload(inWorkload, teamId)
+      const res: any = this.db.populateItem('workloads', { ...inWorkload, teamId }, undefined, inWorkload.id as string)
+      debug(`Loaded workload: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
     })
     const workloads = this.getTeamWorkloads(teamId)
     await Promise.all(
@@ -696,11 +696,10 @@ export default class OtomiStack {
     if (!(await this.repo.fileExists(relativePath)))
       debug(`The workload values file does not exists at ${relativePath}`)
     else data = (await this.repo.readFile(relativePath)) as WorkloadValues
-
     data.id = workload.id!
     data.teamId = workload.teamId!
     const res: any = this.db.populateItem('workloadValues', data, undefined, workload.id as string)
-    debug(`Loaded workload values: name: ${res.name}, id: ${res.id}, teamId: ${workload.teamId!}`)
+    debug(`Loaded workload values: name: id: ${res.id}, teamId: ${workload.teamId!}`)
   }
 
   async loadTeams(): Promise<void> {
@@ -842,7 +841,7 @@ export default class OtomiStack {
     const values = this.getWorkloadValues(workload.id!)
     const path = getTeamWorkloadValuesFilePath(workload.teamId!, workload.name)
     const data = set({}, getTeamWorkloadValuesJsonPath(), values)
-    const cleanedData = omit(data, ['id', 'name', 'teamId'])
+    const cleanedData = omit(data, ['id', 'teamId'])
     await this.repo.writeFile(path, cleanedData)
   }
 
@@ -886,13 +885,6 @@ export default class OtomiStack {
     }, {})
     const res: any = this.db.populateItem('secrets', secret, { teamId, name: secret.name }, secret.id as string)
     debug(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
-  }
-
-  loadWorkload(inWorkload, teamId): void {
-    const workload: Record<string, any> = inWorkload
-    workload.teamId = teamId
-    const res: any = this.db.populateItem('workloads', workload, undefined, workload.id as string)
-    debug(`Loaded workload: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
   }
 
   convertDbSecretToValues(inSecret: any): any {
