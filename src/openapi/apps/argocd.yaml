@@ -21,7 +21,7 @@ AppArgocd:
       type: object
       properties:
         autoscaling:
-          $ref: ../definitions.yaml#/autoscalingEnabled
+          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabled
         resources:
           type: object
           additionalProperties: false
