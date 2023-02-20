@@ -21,7 +21,6 @@ AppOpencost:
       type: object
       properties:
         keys:
-          title: API keys
           properties:
             gcp:
               type: string
