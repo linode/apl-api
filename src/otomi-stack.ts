@@ -822,14 +822,13 @@ export default class OtomiStack {
   }
 
   async saveTeamWorkloads(teamId: string): Promise<void> {
-    const values = this.db.getCollection('workloads', { teamId })
-    const relativePath = getTeamWorkloadsFilePath(teamId)
-    const workloads = set({}, getTeamWorkloadsJsonPath(teamId), values) as Array<Workload>
-    const cleanedWorkloads = workloads.map((obj) => {
+    const workloads = this.db.getCollection('workloads', { teamId }) as Array<Workload>
+    const cleaneWorkloads: Array<Record<string, any>> = workloads.map((obj) => {
       return omit(obj, ['teamId'])
     })
-
-    await this.repo.writeFile(relativePath, set({}, getTeamWorkloadsJsonPath(teamId), cleanedWorkloads))
+    const relativePath = getTeamWorkloadsFilePath(teamId)
+    const outData: Record<string, any> = set({}, getTeamWorkloadsJsonPath(teamId), cleaneWorkloads)
+    await this.repo.writeFile(relativePath, set({}, getTeamWorkloadsJsonPath(teamId), outData))
     await Promise.all(
       workloads.map((workload) => {
         this.saveWorkloadValues(workload)
