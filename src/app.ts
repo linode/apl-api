@@ -160,6 +160,3 @@ if (!env.isTest) {
   })
 }
 
-process.on('exit', () => {
-  if (process.env.NODE_ENV === 'development') removeSync('/tmp/otomi')
-})

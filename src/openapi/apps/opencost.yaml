@@ -20,11 +20,39 @@ AppOpencost:
       additionalProperties: false
       type: object
       properties:
-        gcpKey:
-          type: string
-          title: API key
-          description: API key for GCP.
-          x-secret: 'randAlphaNum 20'
+        keys:
+          title: API keys
+          properties:
+            gcp:
+              type: string
+              description: API key for GCP.
+              x-secret: 'randAlphaNum 20'
+        alerts:
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            CostOfAllNodesQuotaPerMonthReached:
+              title: Max total cost per month
+              description: Sends an alert when total costs of nodes per month hits the quota.
+              properties:
+                quota:
+                  type: integer
+                  default: 500
+            TeamCpuMonthQuotaReached:
+              title: Max total Team CPU cost per month
+              description: Sends an alert when team total CPU costs per month hits the quota.
+              properties:
+                quota:
+                  type: integer
+                  default: 100
+            TeamMemMonthQuotaReached:
+              title: Max total Team Memory cost per month
+              description: Sends an alert when team total Memory costs per month hits the quota.
+              properties:
+                quota:
+                  type: integer
+                  default: 100
         resources:
           type: object
           properties:
