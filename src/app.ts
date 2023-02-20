@@ -20,7 +20,7 @@ import {
   getIo,
   getSessionStack,
   jwtMiddleware,
-  sessionMiddleware
+  sessionMiddleware,
 } from 'src/middleware'
 import { setMockIdx } from 'src/mocks'
 import { OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
