@@ -26,6 +26,7 @@ AppList:
     - kured
     - loki
     - minio
+    - opencost
     - prometheus
     - thanos
     - trivy

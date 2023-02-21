@@ -1,0 +1,108 @@
+AppOpencost:
+  additionalProperties: false
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      type: boolean
+      default: false
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/apps/opencost
+      additionalProperties: false
+      type: object
+      properties:
+        keys:
+          properties:
+            gcp:
+              type: string
+              description: API key for GCP.
+              x-secret: 'randAlphaNum 20'
+        alerts:
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            CostOfAllNodesQuotaPerMonthReached:
+              title: Max total cost per month
+              description: Sends an alert when total costs of nodes per month hits the quota.
+              properties:
+                quota:
+                  type: integer
+                  default: 500
+            TeamCpuMonthQuotaReached:
+              title: Max total Team CPU cost per month
+              description: Sends an alert when team total CPU costs per month hits the quota.
+              properties:
+                quota:
+                  type: integer
+                  default: 100
+            TeamMemMonthQuotaReached:
+              title: Max total Team Memory cost per month
+              description: Sends an alert when team total Memory costs per month hits the quota.
+              properties:
+                quota:
+                  type: integer
+                  default: 100
+        resources:
+          type: object
+          properties:
+            exporter:
+              title: Opencost exporter
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 200m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 1Gi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 256Mi
+              required:
+                - limits
+                - requests
+            ui:
+              type: object
+              title: Opencost UI
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 200m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 256Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 128Mi
+              required:
+                - limits
+                - requests
+  required: [id]
