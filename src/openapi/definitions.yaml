@@ -180,6 +180,15 @@ autoscaling:
       default: 10
     minReplicas:
       type: integer
+      default: 2
+autoscalingNonEssential:
+  type: object
+  properties:
+    maxReplicas:
+      type: integer
+      default: 5
+    minReplicas:
+      type: integer
       default: 1
 autoscalingEnabled:
   type: object
@@ -189,6 +198,14 @@ autoscalingEnabled:
           type: boolean
           default: true
     - $ref: '#/autoscaling'
+autoscalingNonEssentialEnabled:
+  type: object
+  allOf:
+    - properties:
+        enabled:
+          type: boolean
+          default: true
+    - $ref: '#/autoscalingNonEssential'
 awsAccessKey:
   title: AWS access key
   description: An AWS access key ID.
