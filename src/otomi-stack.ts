@@ -379,7 +379,7 @@ export default class OtomiStack {
   createWorkload(teamId: string, data: Workload): Workload {
     try {
       const w = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }, data?.id) as Workload
-      this.db.createItem('workloadValues', { teamId }, { teamId, name: data.name }, data?.id) as WorkloadValues
+      this.db.createItem('workloadValues', { teamId }, { teamId, name: w.name }, w.id) as WorkloadValues
       return w
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Workload name already exists'
