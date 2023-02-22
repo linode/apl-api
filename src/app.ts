@@ -158,5 +158,3 @@ if (!env.isTest) {
     process.exit(1)
   })
 }
-
-process.on('exit', () => {})

@@ -676,7 +676,7 @@ export default class OtomiStack {
       return
     }
     const data = await this.repo.readFile(relativePath)
-    const inData: Array<Record<string, any>> = get(data, getTeamWorkloadsJsonPath(teamId), [])
+    const inData: Array<Workload> = get(data, getTeamWorkloadsJsonPath(teamId), [])
     inData.forEach((inWorkload) => {
       const res: any = this.db.populateItem('workloads', { ...inWorkload, teamId }, undefined, inWorkload.id as string)
       debug(`Loaded workload: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
