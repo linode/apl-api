@@ -450,7 +450,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: getWorkloads
+      operationId: getTeamWorkloads
       x-aclSchema: Workload
       responses:
         <<: *DefaultGetResponses
@@ -462,6 +462,25 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Workload'
+    post:
+      operationId: createWorkload
+      description: Create a team workload
+      x-aclSchema: Workload
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Workload'
+        description: Workload object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored workload configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workload'
 
   '/teams/{teamId}/workloads/{workloadId}':
     parameters:
@@ -508,6 +527,9 @@ paths:
                 $ref: '#/components/schemas/Workload'
 
   '/teams/{teamId}/workloads/{workloadId}/values':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/workloadParams'
     get:
       operationId: getWorkloadValues
       description: Get workload helm chart values

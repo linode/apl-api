@@ -8,7 +8,6 @@ import Debug from 'debug'
 import express, { request } from 'express'
 import 'express-async-errors'
 import { initialize } from 'express-openapi'
-import { removeSync } from 'fs-extra'
 import { Server } from 'http'
 import httpSignature from 'http-signature'
 import { createLightship } from 'lightship'
@@ -160,6 +159,4 @@ if (!env.isTest) {
   })
 }
 
-process.on('exit', () => {
-  if (process.env.NODE_ENV === 'development') removeSync('/tmp/otomi')
-})
+process.on('exit', () => {})

@@ -2,6 +2,7 @@
 import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
+
 import { emptyDir } from 'fs-extra'
 import { readFile } from 'fs/promises'
 import { cloneDeep, each, filter, get, isEmpty, omit, pick, set } from 'lodash'
@@ -48,7 +49,7 @@ import {
   TOOLS_HOST,
   VERSIONS,
 } from 'src/validators'
-import { parse as parseYaml } from 'yaml'
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 
 const debug = Debug('otomi:otomi-stack')
 
@@ -88,10 +89,6 @@ export function getTeamWorkloadValuesFilePath(teamId: string, workloadName): str
 
 export function getTeamWorkloadsJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.workloads`
-}
-
-export function getTeamWorkloadValuesJsonPath(): string {
-  return 'values'
 }
 
 export function getTeamSecretsJsonPath(teamId: string): string {
@@ -381,7 +378,9 @@ export default class OtomiStack {
 
   createWorkload(teamId: string, data: Workload): Workload {
     try {
-      return this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }, data?.id) as Workload
+      const w = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }, data?.id) as Workload
+      this.db.createItem('workloadValues', { teamId }, { teamId, name: data.name }, data?.id) as WorkloadValues
+      return w
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Workload name already exists'
       throw err
@@ -692,14 +691,16 @@ export default class OtomiStack {
 
   async loadWorkloadValues(workload: Workload): Promise<void> {
     const relativePath = getTeamWorkloadValuesFilePath(workload.teamId!, workload.name)
-    let data = { values: {} } as WorkloadValues
+    let data = { values: {} } as Record<string, any>
     if (!(await this.repo.fileExists(relativePath)))
       debug(`The workload values file does not exists at ${relativePath}`)
-    else data = (await this.repo.readFile(relativePath)) as WorkloadValues
+    else data = await this.repo.readFile(relativePath)
     data.id = workload.id!
     data.teamId = workload.teamId!
+    data.name = workload.name!
+    data.values = parseYaml(data.values as string)
     const res: any = this.db.populateItem('workloadValues', data, undefined, workload.id as string)
-    debug(`Loaded workload values: name: id: ${res.id}, teamId: ${workload.teamId!}`)
+    debug(`Loaded workload values: name: ${res.name} id: ${res.id}, teamId: ${workload.teamId!}`)
   }
 
   async loadTeams(): Promise<void> {
@@ -828,7 +829,8 @@ export default class OtomiStack {
     })
     const relativePath = getTeamWorkloadsFilePath(teamId)
     const outData: Record<string, any> = set({}, getTeamWorkloadsJsonPath(teamId), cleaneWorkloads)
-    await this.repo.writeFile(relativePath, set({}, getTeamWorkloadsJsonPath(teamId), outData))
+    debug(`Saving workloads of team: ${teamId}`)
+    await this.repo.writeFile(relativePath, outData)
     await Promise.all(
       workloads.map((workload) => {
         this.saveWorkloadValues(workload)
@@ -837,11 +839,13 @@ export default class OtomiStack {
   }
 
   async saveWorkloadValues(workload: Workload): Promise<void> {
-    const values = this.getWorkloadValues(workload.id!)
+    debug(`Saving workload values: id: ${workload.id!}`)
+    const data = this.getWorkloadValues(workload.id!)
+    const outData = omit(data, ['id', 'teamId', 'name']) as Record<string, any>
+    outData.values = stringifyYaml(data.values, undefined, 4)
     const path = getTeamWorkloadValuesFilePath(workload.teamId!, workload.name)
-    const data = set({}, getTeamWorkloadValuesJsonPath(), values)
-    const cleanedData = omit(data, ['id', 'teamId'])
-    await this.repo.writeFile(path, cleanedData)
+
+    await this.repo.writeFile(path, outData, false)
   }
 
   async saveTeamJobs(teamId: string): Promise<void> {
