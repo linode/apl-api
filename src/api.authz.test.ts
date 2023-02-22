@@ -250,7 +250,7 @@ describe('API authz tests', () => {
     agent
       .put('/v1/teams/team2/workloads/my-uuid/values')
       .send({
-        a: 'b',
+        values: { a: 'b' },
       })
       .set('Authorization', `Bearer ${teamToken}`)
       .expect(403)
