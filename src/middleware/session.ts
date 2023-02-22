@@ -109,7 +109,7 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
       clearInterval(timeout[email])
       timeout[email] = undefined
     }
-    if (['post', 'put'].includes(req.method.toLowerCase())) {
+    if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
       // manipulating data and no editor session yet? create one
       if (!editor) {
         // bootstrap session stack for user

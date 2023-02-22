@@ -431,6 +431,137 @@ paths:
         '200':
           description: Successfully deleted a team secret
 
+  '/workloads':
+    get:
+      operationId: getAllWorkloads
+      x-aclSchema: Workload
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all workloads configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workload'
+
+  '/teams/{teamId}/workloads':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamWorkloads
+      x-aclSchema: Workload
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team workloads configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workload'
+    post:
+      operationId: createWorkload
+      description: Create a team workload
+      x-aclSchema: Workload
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Workload'
+        description: Workload object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored workload configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workload'
+
+  '/teams/{teamId}/workloads/{workloadId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/workloadParams'
+    delete:
+      operationId: deleteWorkload
+      description: Delete a workload from a given team
+      x-aclSchema: Workload
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a workload
+    get:
+      operationId: getWorkload
+      description: Get a workload from a given team
+      x-aclSchema: Workload
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained workload configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workload'
+    put:
+      operationId: editWorkload
+      description: Edit a secret from a given team
+      x-aclSchema: Workload
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Workload'
+        description: Workload object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team secret
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workload'
+
+  '/teams/{teamId}/workloads/{workloadId}/values':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/workloadParams'
+    get:
+      operationId: getWorkloadValues
+      description: Get workload helm chart values
+      x-aclSchema: Workload
+      responses:
+        '200':
+          description: Successfully obtained all workload values
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkloadValues'
+        '400':
+          <<: *BadRequest
+    put:
+      operationId: editWorkloadValues
+      description: Edit workload values
+      x-aclSchema: Workload
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkloadValues'
+        description: Workload values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team secret
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkloadValues'
   /deploy:
     get:
       x-aclSchema: Deploy
@@ -687,7 +818,13 @@ components:
       required: true
       schema:
         type: string
-
+    workloadParams:
+      name: workloadId
+      in: path
+      description: ID of the workload
+      required: true
+      schema:
+        type: string
   securitySchemes:
     groupAuthn:
       type: apiKey
@@ -813,6 +950,10 @@ components:
       $ref: team.yaml#/TeamSelfService
     User:
       $ref: user.yaml#/User
+    Workload:
+      $ref: workload.yaml#/Workload
+    WorkloadValues:
+      $ref: workload.yaml#/WorkloadValues
     adminPassword:
       $ref: definitions.yaml#/adminPassword
     alerts:

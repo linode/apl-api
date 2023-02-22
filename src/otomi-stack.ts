@@ -2,6 +2,7 @@
 import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
+
 import { emptyDir } from 'fs-extra'
 import { readFile } from 'fs/promises'
 import { cloneDeep, each, filter, get, isEmpty, omit, pick, set } from 'lodash'
@@ -22,6 +23,8 @@ import {
   Team,
   TeamSelfService,
   User,
+  Workload,
+  WorkloadValues,
 } from 'src/otomi-models'
 import getRepo, { Repo } from 'src/repo'
 import {
@@ -46,7 +49,7 @@ import {
   TOOLS_HOST,
   VERSIONS,
 } from 'src/validators'
-import { parse as parseYaml } from 'yaml'
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 
 const debug = Debug('otomi:otomi-stack')
 
@@ -75,6 +78,17 @@ export function getTeamJobsJsonPath(teamId: string): string {
 
 export function getTeamSecretsFilePath(teamId: string): string {
   return `env/teams/external-secrets.${teamId}.yaml`
+}
+
+export function getTeamWorkloadsFilePath(teamId: string): string {
+  return `env/teams/workloads.${teamId}.yaml`
+}
+export function getTeamWorkloadValuesFilePath(teamId: string, workloadName): string {
+  return `env/teams/workloads/${teamId}/${workloadName}.yaml`
+}
+
+export function getTeamWorkloadsJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.workloads`
 }
 
 export function getTeamSecretsJsonPath(teamId: string): string {
@@ -353,6 +367,45 @@ export default class OtomiStack {
     return this.db.getCollection('jobs', ids) as Array<Job>
   }
 
+  getTeamWorkloads(teamId: string): Array<Workload> {
+    const ids = { teamId }
+    return this.db.getCollection('workloads', ids) as Array<Workload>
+  }
+
+  getAllWorkloads(): Array<Workload> {
+    return this.db.getCollection('workloads') as Array<Workload>
+  }
+
+  createWorkload(teamId: string, data: Workload): Workload {
+    try {
+      const w = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }) as Workload
+      this.db.createItem('workloadValues', { teamId }, { teamId, name: w.name }, w.id) as WorkloadValues
+      return w
+    } catch (err) {
+      if (err.code === 409) err.publicMessage = 'Workload name already exists'
+      throw err
+    }
+  }
+  getWorkload(id: string): Workload {
+    return this.db.getItem('workloads', { id }) as Workload
+  }
+
+  editWorkload(id: string, data: Workload): Workload {
+    return this.db.updateItem('workloads', data, { id }) as Workload
+  }
+
+  deleteWorkload(id: string): void {
+    return this.db.deleteItem('workloads', { id })
+  }
+
+  editWorkloadValues(id: string, data: WorkloadValues): WorkloadValues {
+    return this.db.updateItem('workloadValues', data, { id }) as WorkloadValues
+  }
+
+  getWorkloadValues(id: string): WorkloadValues {
+    return this.db.getItem('workloadValues', { id }) as WorkloadValues
+  }
+
   getAllServices(): Array<Service> {
     return this.db.getCollection('services') as Array<Service>
   }
@@ -627,6 +680,40 @@ export default class OtomiStack {
     })
   }
 
+  async loadTeamWorkloads(teamId: string): Promise<void> {
+    const relativePath = getTeamWorkloadsFilePath(teamId)
+    if (!(await this.repo.fileExists(relativePath))) {
+      debug(`Team ${teamId} has no workloads yet`)
+      return
+    }
+    const data = await this.repo.readFile(relativePath)
+    const inData: Array<Workload> = get(data, getTeamWorkloadsJsonPath(teamId), [])
+    inData.forEach((inWorkload) => {
+      const res: any = this.db.populateItem('workloads', { ...inWorkload, teamId }, undefined, inWorkload.id as string)
+      debug(`Loaded workload: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
+    })
+    const workloads = this.getTeamWorkloads(teamId)
+    await Promise.all(
+      workloads.map((workload) => {
+        this.loadWorkloadValues(workload)
+      }),
+    )
+  }
+
+  async loadWorkloadValues(workload: Workload): Promise<void> {
+    const relativePath = getTeamWorkloadValuesFilePath(workload.teamId!, workload.name)
+    let data = { values: {} } as Record<string, any>
+    if (!(await this.repo.fileExists(relativePath)))
+      debug(`The workload values file does not exists at ${relativePath}`)
+    else data = await this.repo.readFile(relativePath)
+    data.id = workload.id!
+    data.teamId = workload.teamId!
+    data.name = workload.name!
+    data.values = parseYaml(data.values as string)
+    const res: any = this.db.populateItem('workloadValues', data, undefined, workload.id as string)
+    debug(`Loaded workload values: name: ${res.name} id: ${res.id}, teamId: ${workload.teamId!}`)
+  }
+
   async loadTeams(): Promise<void> {
     const mergedData: Core = await this.repo.loadConfig('env/teams.yaml', `env/secrets.teams.yaml`)
     const tc = mergedData?.teamConfig || {}
@@ -636,6 +723,7 @@ export default class OtomiStack {
       this.loadTeamJobs(team.id!)
       this.loadTeamServices(team.id!)
       this.loadTeamSecrets(team.id!)
+      this.loadTeamWorkloads(team.id!)
     })
   }
 
@@ -730,6 +818,7 @@ export default class OtomiStack {
         await this.saveTeamJobs(teamId)
         await this.saveTeamServices(teamId)
         await this.saveTeamSecrets(teamId)
+        await this.saveTeamWorkloads(teamId)
         team.resourceQuota = arrayToObject((team.resourceQuota as []) ?? [])
         teamValues[teamId] = team
       }),
@@ -742,6 +831,32 @@ export default class OtomiStack {
     const secrets = this.db.getCollection('secrets', { teamId })
     const values: any[] = secrets.map((secret) => this.convertDbSecretToValues(secret))
     await this.repo.writeFile(getTeamSecretsFilePath(teamId), set({}, getTeamSecretsJsonPath(teamId), values))
+  }
+
+  async saveTeamWorkloads(teamId: string): Promise<void> {
+    const workloads = this.db.getCollection('workloads', { teamId }) as Array<Workload>
+    const cleaneWorkloads: Array<Record<string, any>> = workloads.map((obj) => {
+      return omit(obj, ['teamId'])
+    })
+    const relativePath = getTeamWorkloadsFilePath(teamId)
+    const outData: Record<string, any> = set({}, getTeamWorkloadsJsonPath(teamId), cleaneWorkloads)
+    debug(`Saving workloads of team: ${teamId}`)
+    await this.repo.writeFile(relativePath, outData)
+    await Promise.all(
+      workloads.map((workload) => {
+        this.saveWorkloadValues(workload)
+      }),
+    )
+  }
+
+  async saveWorkloadValues(workload: Workload): Promise<void> {
+    debug(`Saving workload values: id: ${workload.id!}`)
+    const data = this.getWorkloadValues(workload.id!)
+    const outData = omit(data, ['id', 'teamId', 'name']) as Record<string, any>
+    outData.values = stringifyYaml(data.values, undefined, 4)
+    const path = getTeamWorkloadValuesFilePath(workload.teamId!, workload.name)
+
+    await this.repo.writeFile(path, outData, false)
   }
 
   async saveTeamJobs(teamId: string): Promise<void> {
