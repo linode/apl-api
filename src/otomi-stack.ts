@@ -378,7 +378,7 @@ export default class OtomiStack {
 
   createWorkload(teamId: string, data: Workload): Workload {
     try {
-      const w = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }, data?.id) as Workload
+      const w = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }) as Workload
       this.db.createItem('workloadValues', { teamId }, { teamId, name: w.name }, w.id) as WorkloadValues
       return w
     } catch (err) {
