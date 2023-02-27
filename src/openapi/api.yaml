@@ -753,6 +753,8 @@ components:
       $ref: apps/prometheus.yaml#/AppPrometheus
     AppThanos:
       $ref: apps/thanos.yaml#/AppThanos
+    AppTrivy:
+      $ref: apps/trivy.yaml#/AppTrivy
     AppVault:
       $ref: apps/vault.yaml#/AppVault
     AppVelero:
