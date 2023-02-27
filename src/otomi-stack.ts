@@ -694,12 +694,19 @@ export default class OtomiStack {
     let data = { values: {} } as Record<string, any>
     if (!(await this.repo.fileExists(relativePath)))
       debug(`The workload values file does not exists at ${relativePath}`)
-    else data = (await this.repo.readFile(relativePath)) || {}
+    else data = await this.repo.readFile(relativePath)
 
     data.id = workload.id!
     data.teamId = workload.teamId!
     data.name = workload.name!
-    data.values = parseYaml(data.values as string)
+    try {
+      data.values = parseYaml(data.values as string) || {}
+    } catch (error) {
+      debug(
+        `The values property does not seem to be a YAML formated string at ${relativePath}. Falling back to empty map.`,
+      )
+      data.values = {}
+    }
 
     const res = this.db.populateItem('workloadValues', data, undefined, workload.id as string) as WorkloadValues
     debug(`Loaded workload values: name: ${res.name} id: ${res.id}, teamId: ${workload.teamId!}`)

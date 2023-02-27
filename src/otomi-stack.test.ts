@@ -73,11 +73,6 @@ describe('Work with values', () => {
     expect(otomiStack.loadValues()).to.not.throw
     expect(otomiStack.saveValues()).to.not.throw
   })
-  it('can load worklaod values configuration to database and back', () => {
-    expect(otomiStack.loadValues()).to.not.throw
-    expect(otomiStack.saveValues()).to.not.throw
-  })
-  return undefined
 })
 
 describe('Workload values', () => {
@@ -87,9 +82,29 @@ describe('Workload values', () => {
     otomiStack.repo = new Repo('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
   })
 
-  it('can load workload values', () => {
-    const w: Workload = { id: '1', name: 'name', url: 'https://test.local' }
-    otomiStack.repo = Mock
-    otomiStack.loadWorkloadValues(w)
+  it('can load workload values (empty dict)', async () => {
+    const w: Workload = { id: '1', teamId: '2', name: 'name', url: 'https://test.local' }
+
+    otomiStack.repo.fileExists = sinonStub().returns(true)
+    otomiStack.repo.readFile = sinonStub().returns({})
+    const res = await otomiStack.loadWorkloadValues(w)
+    expect(res).to.deep.equal({ id: '1', teamId: '2', name: 'name', values: {} })
+  })
+  it('can load workload values (dict)', async () => {
+    const w: Workload = { id: '1', teamId: '2', name: 'name', url: 'https://test.local' }
+
+    otomiStack.repo.fileExists = sinonStub().returns(true)
+    otomiStack.repo.readFile = sinonStub().returns({ values: 'test: 1' })
+    const res = await otomiStack.loadWorkloadValues(w)
+    expect(res).to.deep.equal({ id: '1', teamId: '2', name: 'name', values: { test: 1 } })
+  })
+
+  it('can load workload values (empty string)', async () => {
+    const w: Workload = { id: '1', teamId: '2', name: 'name', url: 'https://test.local' }
+
+    otomiStack.repo.fileExists = sinonStub().returns(true)
+    otomiStack.repo.readFile = sinonStub().returns({ values: '' })
+    const res = await otomiStack.loadWorkloadValues(w)
+    expect(res).to.deep.equal({ id: '1', teamId: '2', name: 'name', values: {} })
   })
 })
