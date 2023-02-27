@@ -26,3 +26,4 @@ teamConfig:
             vault: {}
             velero: {}
             falco: {}
+            trivy: {}
