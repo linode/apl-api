@@ -759,8 +759,9 @@ export default class OtomiStack {
         const { id, enabled, values, rawValues } = app
         apps[id] = {
           ...(values || {}),
-          _rawValues: rawValues,
         }
+        if (!isEmpty(rawValues)) apps[id]._rawValues = rawValues
+
         if (this.canToggleApp(id)) apps[id].enabled = !!enabled
         else delete apps[id].enabled
 
@@ -849,7 +850,7 @@ export default class OtomiStack {
   }
 
   async saveWorkloadValues(workload: Workload): Promise<void> {
-    debug(`Saving workload values: id: ${workload.id!}`)
+    debug(`Saving workload values: id: ${workload.id!} teamId: ${workload.teamId!} name: ${workload.name}`)
     const data = this.getWorkloadValues(workload.id!)
     const outData = omit(data, ['id', 'teamId', 'name']) as Record<string, any>
     outData.values = stringifyYaml(data.values, undefined, 4)
