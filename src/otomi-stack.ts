@@ -586,6 +586,17 @@ export default class OtomiStack {
     return config
   }
 
+  async getDockerConfig(teamId: string): Promise<string> {
+    this.getTeam(teamId) // will throw if not existing
+    const client = this.getApiClient()
+    const namespace = `team-${teamId}`
+    const secretName = 'harbor-pushsecret'
+    const secretRes = await client.readNamespacedSecret(secretName, namespace)
+    const { body: secret }: { body: k8s.V1Secret } = secretRes
+    const token = Buffer.from(secret.data!['.dockerconfigjson'], 'base64').toString('ascii')
+    return token
+  }
+
   createSecret(teamId: string, data: Record<string, any>): Secret {
     return this.db.createItem('secrets', { ...data, teamId }, { teamId, name: data.name }) as Secret
   }

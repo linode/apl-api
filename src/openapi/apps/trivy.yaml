@@ -1,4 +1,4 @@
-AppFalco:
+AppTrivy:
   additionalProperties: false
   type: object
   properties:
@@ -9,28 +9,20 @@ AppFalco:
       default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
-    shortcuts:
-      description: Resource URL that lands the user in a place of interest within an app.
-      type: array
-      nullable: true
-      items:
-        $ref: ../definitions.yaml#/shortcut
     values:
-      x-externalDocsPath: docs/apps/falco
-      additionalProperties: false
+      x-externalDocsPath: docs/apps/trivy-operator
       type: object
       properties:
-        falcoSidekick:
-          title: Falco Sidekick configuration
+        operator:
+          title: Trivy Operator configuration
           properties:
-            replicas:
+            replicaCount:
               $ref: ../definitions.yaml#/replicas      
-            minPrio:
-              $ref: ../definitions.yaml#/priority
         resources:
+          additionalProperties: false
           type: object
           properties:
-            falco:
+            operator:
               type: object
               properties:
                 limits:
@@ -41,7 +33,7 @@ AppFalco:
                       default: 500m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
+                      default: 512Mi
                 requests:
                   type: object
                   properties:
@@ -50,38 +42,23 @@ AppFalco:
                       default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 128Mi
-              required:
-                - limits
-                - requests
-            falcoSideKick:
-              type: object
-              properties:
-                limits:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 50m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
                       default: 64Mi
-                requests:
+              required:
+                - limits
+                - requests
+            trivy:
+              type: object
+              properties:
+                limits:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 20m
+                      default: 500m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 32Mi
-              required:
-                - limits
-                - requests
-            falcoExporter:
-              type: object
-              properties:
-                limits:
+                      default: 512Mi
+                requests:
                   type: object
                   properties:
                     cpu:
@@ -90,15 +67,6 @@ AppFalco:
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
                       default: 64Mi
-                requests:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 50m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 32Mi
               required:
                 - limits
                 - requests
