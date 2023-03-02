@@ -1,0 +1,59 @@
+Workload:
+  x-acl:
+    admin:
+      - delete-any
+      - read-any
+      - create-any
+      - update-any
+    team:
+      - delete
+      - read
+      - create
+      - update
+  type: object
+  description: Define location of the application's manifests or chart
+  properties:
+    id:
+      type: string
+    teamId:
+      $ref: definitions.yaml#/idName
+    name:
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+    url:
+      description: URL to either Helm or Git repository
+      $ref: 'definitions.yaml#/url'
+    path:
+      description: A relative directory path within the Git repository. Absolute paths cause errors. (only valid for applications sourced from Git)
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+    chart:
+      description: Chart is a Helm chart name, and must be specified for applications sourced from a Helm repo.
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+    revision:
+      description: In case of Git, this can be commit, tag, or branch. If omitted, will equal to HEAD. In case of Helm, this is a semver tag for the Chart's version.
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+      default: HEAD
+  required:
+    - name
+    - url
+
+WorkloadValues:
+  x-acl:
+    admin:
+      - read-any
+      - update-any
+    team:
+      - read
+      - update
+  type: object
+  description: Workload values
+  properties:
+    id:
+      type: string
+    teamId:
+      $ref: definitions.yaml#/idName
+    name:
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+    values:
+      type: object
+  required:
+    - values
