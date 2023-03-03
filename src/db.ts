@@ -6,7 +6,7 @@ import FileSync from 'lowdb/adapters/FileSync'
 import Memory from 'lowdb/adapters/Memory'
 import { AlreadyExists, NotExistError } from 'src/error'
 import { App, Cluster, Job, Secret, Service, Settings, Team, Workload, WorkloadValues } from 'src/otomi-models'
-import { mergeData, removeBlankAttributes } from 'src/utils'
+import { mergeData } from 'src/utils'
 import { v4 as uuidv4 } from 'uuid'
 
 export type DbType = Cluster | Job | Secret | Service | Team | Settings | App | Workload | WorkloadValues
@@ -94,7 +94,7 @@ export default class Db {
     // @ts-ignore
     if (selector && this.db.get(type).find(selector).value())
       throw new AlreadyExists(`Item already exists in '${type}' collection: ${JSON.stringify(selector)}`)
-    const cleanData = removeBlankAttributes({ ...data, ...selector })
+    const cleanData = { ...data, ...selector }
     const ret = this.populateItem(type, cleanData, selector, id)
     return ret
   }
@@ -111,7 +111,7 @@ export default class Db {
     // @ts-ignore
     const idx = col.findIndex(selector).value()
     const merged = (merge && prev ? mergeData(prev, data) : data) as Record<string, any>
-    const newData = removeBlankAttributes({ ...merged, ...selector })
+    const newData = { ...merged, ...selector }
     col.value().splice(idx, 1, newData)
     return newData
   }

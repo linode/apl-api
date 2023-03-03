@@ -1,5 +1,6 @@
 import { expect } from 'chai'
 import { stub as sinonStub } from 'sinon'
+import { Workload } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { Repo } from 'src/repo'
 import 'src/test-init'
@@ -72,5 +73,38 @@ describe('Work with values', () => {
     expect(otomiStack.loadValues()).to.not.throw
     expect(otomiStack.saveValues()).to.not.throw
   })
-  return undefined
+})
+
+describe('Workload values', () => {
+  let otomiStack: OtomiStack
+  beforeEach(() => {
+    otomiStack = new OtomiStack()
+    otomiStack.repo = new Repo('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
+  })
+
+  it('can load workload values (empty dict)', async () => {
+    const w: Workload = { id: '1', teamId: '2', name: 'name', url: 'https://test.local' }
+
+    otomiStack.repo.fileExists = sinonStub().returns(true)
+    otomiStack.repo.readFile = sinonStub().returns({})
+    const res = await otomiStack.loadWorkloadValues(w)
+    expect(res).to.deep.equal({ id: '1', teamId: '2', name: 'name', values: {} })
+  })
+  it('can load workload values (dict)', async () => {
+    const w: Workload = { id: '1', teamId: '2', name: 'name', url: 'https://test.local' }
+
+    otomiStack.repo.fileExists = sinonStub().returns(true)
+    otomiStack.repo.readFile = sinonStub().returns({ values: 'test: 1' })
+    const res = await otomiStack.loadWorkloadValues(w)
+    expect(res).to.deep.equal({ id: '1', teamId: '2', name: 'name', values: { test: 1 } })
+  })
+
+  it('can load workload values (empty string)', async () => {
+    const w: Workload = { id: '1', teamId: '2', name: 'name', url: 'https://test.local' }
+
+    otomiStack.repo.fileExists = sinonStub().returns(true)
+    otomiStack.repo.readFile = sinonStub().returns({ values: '' })
+    const res = await otomiStack.loadWorkloadValues(w)
+    expect(res).to.deep.equal({ id: '1', teamId: '2', name: 'name', values: {} })
+  })
 })

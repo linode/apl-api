@@ -177,7 +177,7 @@ export class Repo {
     const safeFile = checkSuffix ? this.getSafePath(file) : file
     const absolutePath = join(this.path, safeFile)
     debug(`Reading from file: ${absolutePath}`)
-    const doc = parseYaml(await readFile(absolutePath, 'utf8'))
+    const doc = parseYaml(await readFile(absolutePath, 'utf8')) || {}
     return doc
   }
 

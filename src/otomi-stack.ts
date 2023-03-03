@@ -379,7 +379,7 @@ export default class OtomiStack {
   createWorkload(teamId: string, data: Workload): Workload {
     try {
       const w = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }) as Workload
-      this.db.createItem('workloadValues', { teamId }, { teamId, name: w.name }, w.id) as WorkloadValues
+      this.db.createItem('workloadValues', { teamId, values: {} }, { teamId, name: w.name }, w.id) as WorkloadValues
       return w
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Workload name already exists'
@@ -700,18 +700,28 @@ export default class OtomiStack {
     )
   }
 
-  async loadWorkloadValues(workload: Workload): Promise<void> {
+  async loadWorkloadValues(workload: Workload): Promise<WorkloadValues> {
     const relativePath = getTeamWorkloadValuesFilePath(workload.teamId!, workload.name)
     let data = { values: {} } as Record<string, any>
     if (!(await this.repo.fileExists(relativePath)))
       debug(`The workload values file does not exists at ${relativePath}`)
     else data = await this.repo.readFile(relativePath)
+
     data.id = workload.id!
     data.teamId = workload.teamId!
     data.name = workload.name!
-    data.values = parseYaml(data.values as string)
-    const res: any = this.db.populateItem('workloadValues', data, undefined, workload.id as string)
+    try {
+      data.values = parseYaml(data.values as string) || {}
+    } catch (error) {
+      debug(
+        `The values property does not seem to be a YAML formated string at ${relativePath}. Falling back to empty map.`,
+      )
+      data.values = {}
+    }
+
+    const res = this.db.populateItem('workloadValues', data, undefined, workload.id as string) as WorkloadValues
     debug(`Loaded workload values: name: ${res.name} id: ${res.id}, teamId: ${workload.teamId!}`)
+    return res
   }
 
   async loadTeams(): Promise<void> {
@@ -760,8 +770,9 @@ export default class OtomiStack {
         const { id, enabled, values, rawValues } = app
         apps[id] = {
           ...(values || {}),
-          _rawValues: rawValues,
         }
+        if (!isEmpty(rawValues)) apps[id]._rawValues = rawValues
+
         if (this.canToggleApp(id)) apps[id].enabled = !!enabled
         else delete apps[id].enabled
 
@@ -850,7 +861,7 @@ export default class OtomiStack {
   }
 
   async saveWorkloadValues(workload: Workload): Promise<void> {
-    debug(`Saving workload values: id: ${workload.id!}`)
+    debug(`Saving workload values: id: ${workload.id!} teamId: ${workload.teamId!} name: ${workload.name}`)
     const data = this.getWorkloadValues(workload.id!)
     const outData = omit(data, ['id', 'teamId', 'name']) as Record<string, any>
     outData.values = stringifyYaml(data.values, undefined, 4)
