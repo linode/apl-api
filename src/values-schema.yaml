@@ -1223,7 +1223,7 @@ definitions:
         type: array
         items:
           type: string
-          enum: [alerts, oidc, resourceQuota, downloadKubeConfig, networkPolicy]
+          enum: [alerts, oidc, resourceQuota, downloadKubeConfig, downloadDockerConfig, networkPolicy]
         uniqueItems: true
       apps:
         type: array
@@ -2533,22 +2533,22 @@ properties:
           properties:
             receiver:
               properties:
-                size: 
+                size:
                   $ref: '#/definitions/size'
                   default: 50Gi
             storegateway:
               properties:
-                size: 
+                size:
                   $ref: '#/definitions/size'
                   default: 8Gi
             compactor:
               properties:
-                size: 
+                size:
                   $ref: '#/definitions/size'
                   default: 8Gi
             ruler:
               properties:
-                size: 
+                size:
                   $ref: '#/definitions/size'
                   default: 8Gi
       trivy:
