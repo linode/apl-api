@@ -521,72 +521,6 @@ definitions:
   ipV4Address:
     type: string
     pattern: ^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$
-  jobs:
-    description: You may pass an array of Job objects. The Kubernetes API accepts
-      a Job specification, which is meant for run-to-completion apps (e.g. batch
-      Jobs).
-    items:
-      type: object
-      allOf:
-        - properties:
-            id:
-              type: string
-              readOnly: true
-          type: object
-        - $ref: '#/definitions/jobSpec'
-        - $ref: '#/definitions/podSpec'
-    type: array
-  jobSpec:
-    properties:
-      type:
-        default: Job
-        enum:
-          - Job
-          - CronJob
-        type: string
-      name:
-        $ref: '#/definitions/idName'
-        title: Name
-        description: A job name
-        example: some-job
-      enabled:
-        default: true
-        type: boolean
-      runPolicy:
-        default: OnSpecChange
-        description: |
-          If runPolicy is set to 'Always', the job controller will always be re-deployed after a successful deployment with Helm.
-          If runPolicy is set to 'OnSpecChange', the job controller will only be re-deployed if one changes this specification.
-        enum:
-          - Always
-          - OnSpecChange
-        type: string
-      schedule:
-        default: 0 1 * * *
-        description: Must give a cron-type expression if the job type is 'Cronjob'.
-        type: string
-      script:
-        $ref: '#/definitions/script'
-      shell:
-        default: /bin/sh
-        description: Full path to a shell binary that exists in the image.
-        type: string
-      ttlSecondsAfterFinished:
-        default: 86400
-        description: Time To Live after job is finished in seconds. Will be removed afterwards.
-        minimum: 0
-        title: TTL after finished
-        type: integer
-      init:
-        type: array
-        items:
-          $ref: '#/definitions/containerSpec'
-        nullable: true
-    required:
-      - name
-      - script
-      - type
-    type: object
   k8sContext:
     description: The cluster k8s context as found in $KUBECONFIG.
     $ref: '#/definitions/wordCharacterPattern'
@@ -1037,41 +971,6 @@ definitions:
       isShared:
         description: When true the service will get it's own domain by prefixing the app name to the cluster domain. Mostly used by core apps.
         type: boolean
-      ksvc:
-        anyOf:
-          - description: Details for a knative service that will be deployed and operated.
-            allOf:
-              - properties:
-                  annotations:
-                    $ref: '#/definitions/annotations'
-                    title: Pod annotations
-                type: object
-              - properties:
-                  securityContext:
-                    properties:
-                      runAsUser:
-                        $ref: '#/definitions/unixOwnerId'
-                      readOnlyRootFilesystem:
-                        description: Whether this container has a read-only root filesystem. Default is false.
-                        type: boolean
-                        default: false
-              - $ref: '#/definitions/containerSpecNoSec'
-              - properties:
-                  containerPort:
-                    $ref: '#/definitions/portNumber'
-                    description: Container port the knative pod will connect with. Leaving this empty will let knative infer the port from the container, which usually works, but might be problematic when the container does not specifically expose a port. (As is the case with nginx derived images!)
-                    title: Container port
-                  scaleToZero:
-                    default: false
-                    description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
-                    title: Scale to zero
-                    type: boolean
-          - description: Choose this when the ksvc is already deployed
-            properties:
-              predeployed:
-                default: true
-                description: Has this service been predeployed? Otherwise otomi will start it with the configuration given.
-                type: boolean
       logo:
         description: Used by otomi-console as an override mechanism to display another logo.
         properties:
@@ -1164,8 +1063,6 @@ definitions:
       id:
         $ref: '#/definitions/idName'
         description: Must be the same as the name.
-      jobs:
-        $ref: '#/definitions/jobs'
       limitRange:
         description: 'Kubernetes limit range. As is.'
         properties:
