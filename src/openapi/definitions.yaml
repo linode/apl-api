@@ -1226,7 +1226,7 @@ svcPredeployed:
   title: Existing Kubernetes service
   type: object
 url:
-  pattern: ^(?P<protocol>http|https)?:?(?P<host>\/\/.*\.[^\/]+)$
+  pattern: '^(?P<protocol>http|https)?:?(?P<host>\/\/.*\.[^\/]+)$'
   type: string
 vaultToken:
   title: Token
