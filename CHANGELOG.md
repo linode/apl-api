@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.6.0](https://github.com/redkubes/otomi-api/compare/v0.5.22...v0.6.0) (2023-03-14)
+
+
+### Features
+
+* add trviy app ([#369](https://github.com/redkubes/otomi-api/issues/369)) ([1a75576](https://github.com/redkubes/otomi-api/commit/1a75576833b999210a711467701df9e8a652923c))
+* download team docker config for Harbor project ([#367](https://github.com/redkubes/otomi-api/issues/367)) ([956667c](https://github.com/redkubes/otomi-api/commit/956667c69b5c70b04ea2745eddab81f8d8f3bc7a))
+* support k8s 1.24 ([#377](https://github.com/redkubes/otomi-api/issues/377)) ([55e3234](https://github.com/redkubes/otomi-api/commit/55e3234541e7101667aedc249b21cd8b76094876))
+* team workloads ([#373](https://github.com/redkubes/otomi-api/issues/373)) ([989b5a0](https://github.com/redkubes/otomi-api/commit/989b5a05f68d7d658e31a52522482d7b77a98b2c))
+
+
+### Bug Fixes
+
+* autoscaling defaults ([#372](https://github.com/redkubes/otomi-api/issues/372)) ([360b2f4](https://github.com/redkubes/otomi-api/commit/360b2f4efec04a351f55527f730bbd9197d60e8c))
+* required property for egress policy ([#370](https://github.com/redkubes/otomi-api/issues/370)) ([7f75a11](https://github.com/redkubes/otomi-api/commit/7f75a1121817d2fe3c55fb78d4ddd5e25a5916a5)), closes [otom-core/#1035](https://github.com/otom-core/otomi-api/issues/1035)
+* selfservice flags ([#375](https://github.com/redkubes/otomi-api/issues/375)) ([44c9e23](https://github.com/redkubes/otomi-api/commit/44c9e237b362df6ab44aa768181a2064b98f3e1a))
+
 ### [0.5.22](https://github.com/redkubes/otomi-api/compare/v0.5.21...v0.5.22) (2023-02-06)
 
 
