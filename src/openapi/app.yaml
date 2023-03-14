@@ -28,6 +28,7 @@ AppList:
     - minio
     - prometheus
     - thanos
+    - trivy
     - vault
     - velero
 

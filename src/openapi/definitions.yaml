@@ -180,6 +180,15 @@ autoscaling:
       default: 10
     minReplicas:
       type: integer
+      default: 2
+autoscalingNonEssential:
+  type: object
+  properties:
+    maxReplicas:
+      type: integer
+      default: 5
+    minReplicas:
+      type: integer
       default: 1
 autoscalingEnabled:
   type: object
@@ -189,6 +198,14 @@ autoscalingEnabled:
           type: boolean
           default: true
     - $ref: '#/autoscaling'
+autoscalingNonEssentialEnabled:
+  type: object
+  allOf:
+    - properties:
+        enabled:
+          type: boolean
+          default: true
+    - $ref: '#/autoscalingNonEssential'
 awsAccessKey:
   title: AWS access key
   description: An AWS access key ID.
@@ -723,11 +740,10 @@ k8sVersion:
   title: Kubernetes version
   description: The cluster k8s version. Must match one of the list.
   enum:
-    - '1.19'
-    - '1.20'
     - '1.21'
     - '1.22'
     - '1.23'
+    - '1.24'
   type: string
 kms:
   additionalProperties: false

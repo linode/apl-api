@@ -147,8 +147,9 @@ export class Repo {
     return deepDiff
   }
 
-  async writeFile(file: string, data: Record<string, unknown>): Promise<void> {
-    const cleanedData = removeBlankAttributes(data, { emptyArrays: true })
+  async writeFile(file: string, data: Record<string, unknown>, unsetBlankAttributes = true): Promise<void> {
+    let cleanedData = data
+    if (unsetBlankAttributes) cleanedData = removeBlankAttributes(data, { emptyArrays: true })
     if (isEmpty(cleanedData) && file.match(secretFileRegex)) {
       // remove empty secrets file which sops can't handle
       return this.removeFile(file)
@@ -176,7 +177,7 @@ export class Repo {
     const safeFile = checkSuffix ? this.getSafePath(file) : file
     const absolutePath = join(this.path, safeFile)
     debug(`Reading from file: ${absolutePath}`)
-    const doc = parseYaml(await readFile(absolutePath, 'utf8'))
+    const doc = parseYaml(await readFile(absolutePath, 'utf8')) || {}
     return doc
   }
 
