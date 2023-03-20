@@ -27,7 +27,7 @@ import {
   TeamSelfService,
   User,
   Workload,
-  WorkloadValues
+  WorkloadValues,
 } from 'src/otomi-models'
 import getRepo, { Repo } from 'src/repo'
 import {
@@ -37,7 +37,7 @@ import {
   arrayToObject,
   getServiceUrl,
   objectToArray,
-  removeBlankAttributes
+  removeBlankAttributes,
 } from 'src/utils'
 import {
   cleanEnv,
@@ -50,7 +50,7 @@ import {
   GIT_REPO_URL,
   GIT_USER,
   TOOLS_HOST,
-  VERSIONS
+  VERSIONS,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 
