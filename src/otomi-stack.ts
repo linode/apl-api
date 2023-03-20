@@ -628,6 +628,7 @@ export default class OtomiStack {
     await this.loadSettings()
     await this.loadTeams()
     await this.loadApps()
+    // load license
     this.isLoaded = true
   }
 
@@ -1046,6 +1047,7 @@ export default class OtomiStack {
         console: env.VERSIONS.console,
         values: currentSha,
       },
+      // license: rootStack.getLicense(),
     }
     return data
   }
