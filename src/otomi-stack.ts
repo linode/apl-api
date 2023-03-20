@@ -5,8 +5,10 @@ import Debug from 'debug'
 
 import { emptyDir } from 'fs-extra'
 import { readFile } from 'fs/promises'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 import { cloneDeep, each, filter, get, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
+import * as osPath from 'path'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
@@ -25,7 +27,7 @@ import {
   TeamSelfService,
   User,
   Workload,
-  WorkloadValues,
+  WorkloadValues
 } from 'src/otomi-models'
 import getRepo, { Repo } from 'src/repo'
 import {
@@ -35,7 +37,7 @@ import {
   arrayToObject,
   getServiceUrl,
   objectToArray,
-  removeBlankAttributes,
+  removeBlankAttributes
 } from 'src/utils'
 import {
   cleanEnv,
@@ -48,7 +50,7 @@ import {
   GIT_REPO_URL,
   GIT_USER,
   TOOLS_HOST,
-  VERSIONS,
+  VERSIONS
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 
@@ -195,21 +197,29 @@ export default class OtomiStack {
     return license as License
   }
 
-  validateLicense(license: string): boolean {
-    return false
+  validateLicense(jwtLicense: string): License {
+    const defaultPublicKeyPath = osPath.resolve(__dirname, 'license/license.pem')
+    const license: License = { isValid: false, hasLicense: true, body: undefined }
+    try {
+      const jwtPayload = jwt.verify(jwtLicense, defaultPublicKeyPath) as JwtPayload
+      license.body = jwtPayload.body
+      license.isValid = true
+    } catch (err) {
+      return license
+    }
+
+    return license
   }
 
-  decodeLicense(licenseBase64: string): License['body'] {
-    const licenseBody = {} as License['body']
-    return licenseBody
-  }
+  uploadLicense(jwtLicense: string): License {
+    const license = this.validateLicense(jwtLicense)
 
-  updateLicense(licenseBase64: string): void {
-    const license: License = { isValid: false, hasLicense: false, body: undefined }
-    license.body = this.decodeLicense(licenseBase64)
-    license.isValid = this.validateLicense(licenseBase64)
-    // validate license
-    // store license in db
+    if (!license.isValid) return license
+
+    this.db.db.set('license', license).write()
+    this.saveLicense(jwtLicense)
+
+    return license
   }
 
   async loadLicense(): Promise<void> {
@@ -221,11 +231,10 @@ export default class OtomiStack {
     await this.repo.readFile('env/secrets.license')
     return
   }
-  async saveLicense(): Promise<void> {
+  async saveLicense(jwtLicense: string): Promise<void> {
     //
-    await this.repo.saveConfig('license', 'env/secrets.license', this.db.getCollection('license')[0] as License, [
-      'license',
-    ])
+    await this.repo.saveConfig('env/license.yaml', 'env/secrets.license.yaml', { license: jwtLicense }, ['license'])
+    this.doDeployment()
     return
   }
 
