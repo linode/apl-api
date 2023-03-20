@@ -1,0 +1,37 @@
+License:
+  type: object
+  properties:
+    isValid:
+      type: boolean
+      default: false
+    hasLicense:
+      type: boolean
+      default: false
+    body:
+      version:
+        type: integer
+        min: 1
+        description: License format version
+      key:
+        type: string
+        description: Unique API key used to connect with Otomi Cloud
+      type:
+        type: string
+        enum:
+          - community
+          - professional
+          - enterprise
+      capabilities:
+        properties:
+          teams:
+            type: integer
+            min: 1
+            description: Maximum number of teams (excluding team admin)
+          services:
+            type: integer
+            min: 1
+            description: Maximum number of services
+          workloads:
+            type: integer
+            min: 1
+            description: Maximum number of workloads

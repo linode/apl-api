@@ -916,6 +916,8 @@ components:
       $ref: job.yaml#/Job
     Kubecfg:
       $ref: kubecfg.yaml#/Kubecfg
+    License:
+      $ref: license.yaml#/License
     DockerConfig:
       $ref: dockerconfig.yaml#/DockerConfig
     OpenApiValidationError:
