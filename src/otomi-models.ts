@@ -7,6 +7,7 @@ export type AppList = components['schemas']['AppList']
 export type Job = components['schemas']['Job']
 export type Kubecfg = components['schemas']['Kubecfg']
 export type Secret = components['schemas']['Secret'] & { teamId?: string }
+export type License = components['schemas']['License']
 export type Service = components['schemas']['Service']
 export type Session = components['schemas']['Session']
 export type Settings = components['schemas']['Settings']

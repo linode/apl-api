@@ -15,6 +15,7 @@ import {
   App,
   Core,
   Job,
+  License,
   Policies,
   Secret,
   Service,
@@ -187,6 +188,40 @@ export default class OtomiStack {
     })
     // debug('secretPaths: ', cleanSecretPaths)
     return cleanSecretPaths
+  }
+
+  getLicense(): License {
+    const license = this.db.db.get(['license']).value()
+    return license as License
+  }
+
+  validateLicense(license: string): boolean {
+    return false
+  }
+
+  decodeLicense(licenseBase64: string): License['body'] {
+    return {}
+  }
+
+  updateLicense(licenseBase64: string): void {
+    const license: License = { isValid: false, hasLicense: false, body: undefined }
+    license.body = this.decodeLicense(licenseBase64)
+    license.isValid = this.validateLicense(licenseBase64)
+    // validate license
+    // store license in db
+  }
+
+  async loadLicense(): Promise<void> {
+    // check if file exists
+    // read from repo
+    // decode base64 string
+    // set isValid, set hasLicense
+    // create object in db
+    return
+  }
+  async saveLicense(): Promise<void> {
+    //
+    return
   }
 
   getSettings(keys?: string[]): Settings {
@@ -1047,7 +1082,7 @@ export default class OtomiStack {
         console: env.VERSIONS.console,
         values: currentSha,
       },
-      // license: rootStack.getLicense(),
+      license: rootStack.getLicense(),
     }
     return data
   }

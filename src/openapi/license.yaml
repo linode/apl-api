@@ -37,3 +37,15 @@ License:
               type: integer
               min: 1
               description: Maximum number of workloads
+          required:
+            - teams
+            - services
+            - workloads
+      required:
+        - version
+        - key
+        - type
+        - capabilities
+  required:
+    - isValid
+    - hasLicense
