@@ -200,7 +200,8 @@ export default class OtomiStack {
   }
 
   decodeLicense(licenseBase64: string): License['body'] {
-    return {}
+    const licenseBody = {} as License['body']
+    return licenseBody
   }
 
   updateLicense(licenseBase64: string): void {
@@ -217,10 +218,14 @@ export default class OtomiStack {
     // decode base64 string
     // set isValid, set hasLicense
     // create object in db
+    await this.repo.readFile('env/secrets.license')
     return
   }
   async saveLicense(): Promise<void> {
     //
+    await this.repo.saveConfig('license', 'env/secrets.license', this.db.getCollection('license')[0] as License, [
+      'license',
+    ])
     return
   }
 
