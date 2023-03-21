@@ -193,8 +193,8 @@ export default class OtomiStack {
   }
 
   getLicense(): License {
-    const license = this.db.db.get(['license']).value()
-    return license as License
+    const license = this.db.db.get(['license']).value() as License
+    return license
   }
 
   validateLicense(jwtLicense: string): License {
