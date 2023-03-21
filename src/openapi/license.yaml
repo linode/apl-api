@@ -15,7 +15,7 @@ License:
       properties:
         version:
           type: integer
-          min: 1
+          minimum: 1
           description: License format version
         key:
           type: string
@@ -30,15 +30,15 @@ License:
           properties:
             teams:
               type: integer
-              min: 1
+              minimum: 1
               description: Maximum number of teams (excluding team admin)
             services:
               type: integer
-              min: 1
+              minimum: 1
               description: Maximum number of services
             workloads:
               type: integer
-              min: 1
+              minimum: 1
               description: Maximum number of workloads
           required:
             - teams
