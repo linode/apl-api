@@ -212,30 +212,44 @@ export default class OtomiStack {
   }
 
   uploadLicense(jwtLicense: string): License {
-    const license = this.validateLicense(jwtLicense)
+    debug.info('Uploading the license')
 
-    if (!license.isValid) return license
+    const license = this.validateLicense(jwtLicense)
+    if (!license.isValid) {
+      debug.warn('License invalid')
+      return license
+    }
 
     this.db.db.set('license', license).write()
     this.saveLicense(jwtLicense)
-
+    this.doDeployment()
+    debug.info('License uploaded')
     return license
   }
 
   async loadLicense(): Promise<void> {
-    // check if file exists
-    // read from repo
-    // decode base64 string
-    // set isValid, set hasLicense
-    // create object in db
-    await this.repo.readFile('env/secrets.license')
-    return
+    debug.info('Loading license')
+    if (!(await this.repo.fileExists('env/secrets.license.yaml'))) {
+      debug.warn('License file does not exists')
+      const license: License = { isValid: false, hasLicense: false, body: undefined }
+      this.db.db.set('license', license).write()
+      return
+    }
+
+    const licenseValues = await this.repo.readFile('env/secrets.license.yaml')
+    const jwtLicense: string = licenseValues.license
+    const license = this.validateLicense(jwtLicense)
+
+    if (!license.isValid) {
+      debug.warn('License file invalid')
+      return
+    }
+    this.db.db.set('license', license).write()
+    debug.warn('Loaded license')
   }
+
   async saveLicense(jwtLicense: string): Promise<void> {
-    //
     await this.repo.saveConfig('env/license.yaml', 'env/secrets.license.yaml', { license: jwtLicense }, ['license'])
-    this.doDeployment()
-    return
   }
 
   getSettings(keys?: string[]): Settings {
