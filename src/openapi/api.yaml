@@ -46,6 +46,26 @@ x-get-responses: &DefaultGetResponses
 
 # -------------------------------------------- Paths
 paths:
+  /activate:
+    put:
+      operationId: activateLicense
+      description: Upload and activate license
+      x-aclSchema: License
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        description: License JWT
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Uploaded license
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/License'
   /secrets:
     get:
       operationId: getAllSecrets

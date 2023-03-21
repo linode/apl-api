@@ -1,4 +1,7 @@
 License:
+  x-acl:
+    admin: [update-any]
+    team: []
   type: object
   properties:
     isValid:
