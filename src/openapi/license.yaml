@@ -1,7 +1,14 @@
-License:
+LicenseJwt:
   x-acl:
     admin: [update-any]
     team: []
+  properties:
+    jwt:
+      type: string
+  required:
+    - jwt
+
+License:
   type: object
   properties:
     isValid:

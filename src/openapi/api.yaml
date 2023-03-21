@@ -50,12 +50,12 @@ paths:
     put:
       operationId: activateLicense
       description: Upload and activate license
-      x-aclSchema: License
+      x-aclSchema: LicenseJwt
       requestBody:
         content:
           application/json:
             schema:
-              type: string
+              $ref: '#/components/schemas/LicenseJwt'
         description: License JWT
         required: true
       responses:
@@ -936,6 +936,8 @@ components:
       $ref: job.yaml#/Job
     Kubecfg:
       $ref: kubecfg.yaml#/Kubecfg
+    LicenseJwt:
+      $ref: license.yaml#/LicenseJwt
     License:
       $ref: license.yaml#/License
     DockerConfig:
