@@ -159,7 +159,8 @@
     "test:pattern": "npm run build:models && ts-mocha --exit",
     "types": "tsc --noEmit",
     "prepare": "husky install",
-    "watch": "npm-watch"
+    "watch": "npm-watch",
+    "license:sign": "ts-node-dev -r tsconfig-paths/register src/license.ts"
   },
   "standard-version": {
     "skip": {
