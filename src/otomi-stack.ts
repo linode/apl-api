@@ -212,24 +212,24 @@ export default class OtomiStack {
   }
 
   uploadLicense(jwtLicense: string): License {
-    debug.info('Uploading the license')
+    debug('Uploading the license')
 
     const license = this.validateLicense(jwtLicense)
     if (!license.isValid) {
-      debug.warn('License invalid')
+      debug('License invalid')
       return license
     }
 
     this.db.db.set('license', license).write()
     this.doDeployment()
-    debug.info('License uploaded')
+    debug('License uploaded')
     return license
   }
 
   async loadLicense(): Promise<void> {
-    debug.info('Loading license')
+    debug('Loading license')
     if (!(await this.repo.fileExists('env/secrets.license.yaml'))) {
-      debug.warn('License file does not exists')
+      debug('License file does not exists')
       const license: License = { isValid: false, hasLicense: false, body: undefined }
       this.db.db.set('license', license).write()
       return
@@ -240,11 +240,11 @@ export default class OtomiStack {
     const license = this.validateLicense(jwtLicense)
 
     if (!license.isValid) {
-      debug.warn('License file invalid')
+      debug('License file invalid')
       return
     }
     this.db.db.set('license', license).write()
-    debug.warn('Loaded license')
+    debug('Loaded license')
   }
 
   async saveLicense(): Promise<void> {
