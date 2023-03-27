@@ -204,15 +204,16 @@ export default class OtomiStack {
   }
 
   verifyLicense(jwtLicense: string, rsaPublicKey: string): License {
-    const license: License = { isValid: false, hasLicense: true, body: undefined }
+    const license: License = { isValid: false, hasLicense: true, body: undefined, jwt: jwtLicense }
     try {
       const jwtPayload = jwt.verify(jwtLicense, rsaPublicKey) as JwtPayload
       license.body = jwtPayload.body
       license.isValid = true
     } catch (err) {
+      debug('License valid')
       return license
     }
-
+    debug('License invalid')
     return license
   }
 
@@ -697,6 +698,7 @@ export default class OtomiStack {
 
   async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {
     debug('Loading values')
+    await this.loadLicense()
     await this.loadCluster()
     await this.loadPolicies()
     await this.loadSettings()
