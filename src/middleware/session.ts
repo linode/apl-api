@@ -111,6 +111,8 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
     }
     if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
       // manipulating data and no editor session yet? create one
+
+      // TODO check license
       if (!editor) {
         // bootstrap session stack for user
         await setSessionStack(email)

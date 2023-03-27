@@ -197,11 +197,16 @@ export default class OtomiStack {
     return license
   }
 
-  validateLicense(jwtLicense: string): License {
-    const defaultPublicKeyPath = osPath.resolve(__dirname, 'license/license.pem')
+  async validateLicense(jwtLicense: string): Promise<License> {
+    const licensePath = osPath.resolve(__dirname, 'license/license.pem')
+    const publicKey = await readFile(licensePath, 'utf8')
+    return this.verifyLicense(jwtLicense, publicKey)
+  }
+
+  verifyLicense(jwtLicense: string, rsaPublicKey: string): License {
     const license: License = { isValid: false, hasLicense: true, body: undefined }
     try {
-      const jwtPayload = jwt.verify(jwtLicense, defaultPublicKeyPath) as JwtPayload
+      const jwtPayload = jwt.verify(jwtLicense, rsaPublicKey) as JwtPayload
       license.body = jwtPayload.body
       license.isValid = true
     } catch (err) {
@@ -211,10 +216,10 @@ export default class OtomiStack {
     return license
   }
 
-  uploadLicense(jwtLicense: string): License {
+  async uploadLicense(jwtLicense: string): Promise<License> {
     debug('Uploading the license')
 
-    const license = this.validateLicense(jwtLicense)
+    const license = await this.validateLicense(jwtLicense)
     if (!license.isValid) {
       debug('License invalid')
       return license
@@ -237,7 +242,7 @@ export default class OtomiStack {
 
     const licenseValues = await this.repo.readFile('env/secrets.license.yaml')
     const jwtLicense: string = licenseValues.license
-    const license = this.validateLicense(jwtLicense)
+    const license = await this.validateLicense(jwtLicense)
 
     if (!license.isValid) {
       debug('License file invalid')
