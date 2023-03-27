@@ -3497,5 +3497,6 @@ properties:
   license:
     type: string
     describe: License in form of JWT
+    x-secret: ''
 required:
   - cluster

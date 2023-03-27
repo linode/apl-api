@@ -240,7 +240,7 @@ export default class OtomiStack {
       return
     }
 
-    const licenseValues = await this.repo.readFile('env/secrets.license.yaml')
+    const licenseValues = await this.repo.readFile('env/secrets.license.yaml', true)
     const jwtLicense: string = licenseValues.license
     const license = await this.validateLicense(jwtLicense)
 
@@ -252,10 +252,15 @@ export default class OtomiStack {
     debug('Loaded license')
   }
 
-  async saveLicense(): Promise<void> {
+  async saveLicense(secretPaths?: string[]): Promise<void> {
     const license = this.db.db.get(['license']).value() as License
     if (!license.hasLicense) return
-    await this.repo.saveConfig('env/license.yaml', 'env/secrets.license.yaml', { license: license.jwt }, ['license'])
+    await this.repo.saveConfig(
+      'env/license.yaml',
+      'env/secrets.license.yaml',
+      { license: license.jwt },
+      secretPaths ?? this.getSecretPaths(),
+    )
   }
 
   getSettings(keys?: string[]): Settings {
@@ -1098,7 +1103,7 @@ export default class OtomiStack {
     // also save admin apps
     await this.saveAdminApps(secretPaths)
     await this.saveTeamApps('admin')
-    await this.saveLicense()
+    await this.saveLicense(secretPaths)
   }
 
   async getSession(user: k8s.User): Promise<Session> {
