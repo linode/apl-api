@@ -210,10 +210,8 @@ export default class OtomiStack {
       license.body = jwtPayload.body
       license.isValid = true
     } catch (err) {
-      debug('License valid')
       return license
     }
-    debug('License invalid')
     return license
   }
 
