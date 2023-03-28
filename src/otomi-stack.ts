@@ -15,7 +15,7 @@ import {
   App,
   Core,
   Job,
-  K8sServices,
+  K8sService,
   Policies,
   Secret,
   Service,
@@ -543,20 +543,31 @@ export default class OtomiStack {
     return this.apiClient
   }
 
-  async getK8sServices(user: User): K8sServices {
-    const teams = user.teams.map((name) => {
-      return `team-${name}`
-    })
-
+  async getK8sServices(teamId: string): Promise<Array<K8sService>> {
+    // const teams = user.teams.map((name) => {
+    //   return `team-${name}`
+    // })
     const client = this.getApiClient()
-    const collection = await Promise.all(
-      teams.map(async (team) => {
-        const svcList = await client.listNamespacedService(team)
-        svcList.body.items.map((item) => {
-          return { name: item.metadata?.name }
-        })
-      }),
-    )
+    const collection: K8sService[] = []
+
+    // if (user.isAdmin) {
+    //   const svcList = await client.listServiceForAllNamespaces()
+    //   svcList.body.items.map((item) => {
+    //     collection.push({
+    //       name: item.metadata!.name ?? 'unknown',
+    //       ports: item.spec?.ports?.map((portItem) => portItem.port) ?? [],
+    //     })
+    //   })
+    //   return collection
+    // }
+    const svcList = await client.listNamespacedService(`team-${teamId}`)
+
+    svcList.body.items.map((item) => {
+      collection.push({
+        name: item.metadata!.name ?? 'unknown',
+        ports: item.spec?.ports?.map((portItem) => portItem.port) ?? [],
+      })
+    })
     return collection
   }
 
