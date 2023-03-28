@@ -46,6 +46,21 @@ x-get-responses: &DefaultGetResponses
 
 # -------------------------------------------- Paths
 paths:
+  /ks/services:
+    get:
+      operationId: getK8sServices
+      description: getK8sServices
+      responses:
+        '200':
+          description: Successfully obtained kuebrentes services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/K8sServices'
+        '400':
+          <<: *BadRequest
   /secrets:
     get:
       operationId: getAllSecrets
@@ -914,6 +929,8 @@ components:
       $ref: service.yaml#/IngressPublic
     Job:
       $ref: job.yaml#/Job
+    K8sServices:
+      $ref: k8s.yaml#/K8sServices
     Kubecfg:
       $ref: kubecfg.yaml#/Kubecfg
     DockerConfig:

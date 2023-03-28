@@ -15,6 +15,7 @@ import {
   App,
   Core,
   Job,
+  K8sServices,
   Policies,
   Secret,
   Service,
@@ -542,7 +543,7 @@ export default class OtomiStack {
     return this.apiClient
   }
 
-  async getK8sServices(user: User) {
+  async getK8sServices(user: User): K8sServices {
     const teams = user.teams.map((name) => {
       return `team-${name}`
     })
@@ -552,7 +553,7 @@ export default class OtomiStack {
       teams.map(async (team) => {
         const svcList = await client.listNamespacedService(team)
         svcList.body.items.map((item) => {
-          return item.metadata?.name
+          return { name: item.metadata?.name }
         })
       }),
     )
