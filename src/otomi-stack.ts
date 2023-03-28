@@ -542,6 +542,23 @@ export default class OtomiStack {
     return this.apiClient
   }
 
+  async getK8sServices(user: User) {
+    const teams = user.teams.map((name) => {
+      return `team-${name}`
+    })
+
+    const client = this.getApiClient()
+    const collection = await Promise.all(
+      teams.map(async (team) => {
+        const svcList = await client.listNamespacedService(team)
+        svcList.body.items.map((item) => {
+          return item.metadata?.name
+        })
+      }),
+    )
+    return collection
+  }
+
   // eslint-disable-next-line class-methods-use-this
   async getKubecfg(teamId: string): Promise<k8s.KubeConfig> {
     this.getTeam(teamId) // will throw if not existing
