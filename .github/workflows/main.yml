@@ -63,7 +63,7 @@ jobs:
           git config --global user.email $GIT_USER@users.noreply.github.com
           git config --global user.name $GIT_USER
           echo "machine github.com login $GIT_USER password $GIT_PASSWORD" > ~/.netrc
-          git tag -am "$COMMIT_MSG" $release_tag && git push --follow-tags origin main
+          git tag -am "$COMMIT_MSG" $release_tag && git push --follow-tags
           changelog=$(cat CHANGELOG.md | awk -v n=2 '/### \[[0-9]*/&&!--n{exit}{print}')
           # now do some escaping because github does not help us here:
           changelog="${changelog//'%'/'%25'}"
