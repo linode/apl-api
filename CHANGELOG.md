@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.7.0](https://github.com/redkubes/otomi-api/compare/v0.6.0...v0.7.0) (2023-03-31)
+
+
+### Features
+
+* add namespace field into workload ([#378](https://github.com/redkubes/otomi-api/issues/378)) ([5a16b1c](https://github.com/redkubes/otomi-api/commit/5a16b1c8fff3c86fdb3b53eb359baf3de8406892))
+* kured as an optional app ([#371](https://github.com/redkubes/otomi-api/issues/371)) ([bd1ee27](https://github.com/redkubes/otomi-api/commit/bd1ee276d90e7c851790f0042cac65e163d380cb))
+
+
+### Others
+
+* add bump minor script ([89d4455](https://github.com/redkubes/otomi-api/commit/89d4455595c61ca9b5c761f527fc8aff1e221df5))
+* release only from the releases/ branches ([ffa5e00](https://github.com/redkubes/otomi-api/commit/ffa5e007f13b0b6779ce04033d353d396dd0ca92))
+* release only from the releases/ branches ([#379](https://github.com/redkubes/otomi-api/issues/379)) ([ab21460](https://github.com/redkubes/otomi-api/commit/ab21460095d9f966ad0b95a342ab445d7a776b69))
+* **release:** 0.7.0 ([7b45bcf](https://github.com/redkubes/otomi-api/commit/7b45bcfcd1194c04c94a1139d7da10a40ac0c50c))
+
 ## [0.6.0](https://github.com/redkubes/otomi-api/compare/v0.5.22...v0.6.0) (2023-03-14)
 
 
