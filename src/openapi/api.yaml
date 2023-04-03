@@ -44,8 +44,8 @@ x-get-responses: &DefaultGetResponses
   '404':
     <<: *NotFound
 
-  # -------------------------------------------- Paths
-
+# -------------------------------------------- Paths
+paths:
   /secrets:
     get:
       operationId: getAllSecrets
