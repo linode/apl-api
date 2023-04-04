@@ -15,6 +15,7 @@ import {
   App,
   Core,
   Job,
+  K8sService,
   Policies,
   Secret,
   Service,
@@ -540,6 +541,34 @@ export default class OtomiStack {
     kc.loadFromDefault()
     this.apiClient = kc.makeApiClient(k8s.CoreV1Api)
     return this.apiClient
+  }
+
+  async getK8sServices(teamId: string): Promise<Array<K8sService>> {
+    // const teams = user.teams.map((name) => {
+    //   return `team-${name}`
+    // })
+    const client = this.getApiClient()
+    const collection: K8sService[] = []
+
+    // if (user.isAdmin) {
+    //   const svcList = await client.listServiceForAllNamespaces()
+    //   svcList.body.items.map((item) => {
+    //     collection.push({
+    //       name: item.metadata!.name ?? 'unknown',
+    //       ports: item.spec?.ports?.map((portItem) => portItem.port) ?? [],
+    //     })
+    //   })
+    //   return collection
+    // }
+    const svcList = await client.listNamespacedService(`team-${teamId}`)
+
+    svcList.body.items.map((item) => {
+      collection.push({
+        name: item.metadata!.name ?? 'unknown',
+        ports: item.spec?.ports?.map((portItem) => portItem.port) ?? [],
+      })
+    })
+    return collection
   }
 
   // eslint-disable-next-line class-methods-use-this
