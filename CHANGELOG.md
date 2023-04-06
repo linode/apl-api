@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.7.1](https://github.com/redkubes/otomi-api/compare/v0.7.0...v0.7.1) (2023-04-06)
+
+
+### Bug Fixes
+
+* saving the headers property of service object ([1748000](https://github.com/redkubes/otomi-api/commit/1748000a5c62a37ce10d1385fed3db240d742e2b))
+
+
+### Others
+
+* env sample ([79b5e7e](https://github.com/redkubes/otomi-api/commit/79b5e7efa0ca177fbfcc9d42f6ad033e95111aab))
+
 ## [0.7.0](https://github.com/redkubes/otomi-api/compare/v0.6.0...v0.7.0) (2023-03-31)
 
 
