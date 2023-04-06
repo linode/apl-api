@@ -1767,7 +1767,7 @@ properties:
                   type:
                     type: string
                     enum:
-                      - aws
+                      - s3
                       - azure
                       - gcs
                       - filesystem
