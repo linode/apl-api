@@ -315,7 +315,7 @@ Settings:
           description: Will separate team metrics and logs. Disabling this effectively gives all users admin role and lets them see everything.
           title: Multi-tenancy
           type: boolean
-          default: false
+          default: true
         nodeSelector:
           $ref: definitions.yaml#/labels
           description: 'One or more "label: value" pairs that must exist on one or more nodes, which will force all otomi platform workloads to be scheduled there.'
