@@ -269,6 +269,44 @@ definitions:
         default: 0 0 * * *
         description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
         type: string
+  build:
+    type: object
+    description: Define location of code to build
+    properties:
+      name:
+        description: Name of the image
+        $ref: '#/definitions/wordCharacterPattern'
+      tag:
+        description: Image tag
+        $ref: '#/definitions/imageTag'
+      source:
+        description: The source of the application. Use 'otomi-gitea' for any private repo in the Otomi organization
+        $ref: '#/definitions/wordCharacterPattern'
+        enum:
+          - otomi-gitea
+          - github
+        default: otomi-gitea
+      repoUrl:
+        description: URL of the Git repository holding the application code.
+        $ref: '#/definitions/url'
+      revision:
+        description: This can be a commit, tag, or branch. If omitted, will equal to HEAD.
+        $ref: '#/definitions/wordCharacterPattern'
+        default: HEAD
+      path:
+        description: A relative directory path within the Git repository.
+        $ref: '#/definitions/wordCharacterPattern'
+      repoUserName:
+        description: The username used for basic authentication to access a private github repo.
+        $ref: '#/definitions/wordCharacterPattern'
+      repoPassword:
+        x-secret: ''
+        type: string
+        description: The password used for basic authentication to access a private github repo.
+    required:
+      - name
+      - source
+      - repoUrl
   cluster:
     additionalProperties: false
     properties:
@@ -1208,6 +1246,10 @@ definitions:
           description: When set a user can define egress towards FQDNs and public IPs for a team service
           type: boolean
           default: true
+      builds:
+        type: array
+        items:
+          $ref: '#/definitions/build'
   teamSelfService:
     title: Team self service flags
     description: Grant team permissions to modify certain configuration parameters.
@@ -2148,6 +2190,14 @@ properties:
             properties:
               kuredDaemonSet:
                 $ref: '#/definitions/resources'
+      kpack:
+        additionalProperties: false
+        properties:
+          _rawValues:
+            $ref: '#/definitions/rawValues'
+          enabled:
+            type: boolean
+            default: false
       loki:
         additionalProperties: false
         properties:

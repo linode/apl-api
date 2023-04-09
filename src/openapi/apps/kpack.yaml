@@ -1,0 +1,16 @@
+AppKpack:
+  additionalProperties: false
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      type: boolean
+      default: false
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+      x-externalDocsPath: docs/apps/trivy-operator
+      type: object
+  required: [id]
+
+

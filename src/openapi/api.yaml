@@ -902,6 +902,8 @@ components:
       $ref: apps/kubeclarity.yaml#/AppKubeclarity
     AppKured:
       $ref: apps/kured.yaml#/AppKured
+    AppKpack:
+      $ref: apps/kpack.yaml#/AppKpack
     AppLoki:
       $ref: apps/loki.yaml#/AppLoki
     AppMinio:
