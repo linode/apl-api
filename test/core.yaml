@@ -54,6 +54,8 @@ k8s:
       disablePolicyChecks: true
     - name: kubeclarity
       app: kubeclarity
+    - name: kured
+      app: kured
     - name: maintenance
       disableIstioInjection: true
     - name: minio
@@ -80,6 +82,10 @@ k8s:
       disableIstioInjection: true
     - name: team-admin
     - name: tigera-operator
+      disableIstioInjection: true
+      disablePolicyChecks: true
+    - name: trivy-operator
+      app: trivy
       disableIstioInjection: true
       disablePolicyChecks: true
     - name: vault
@@ -254,6 +260,8 @@ adminApps:
         port: 8080
         type: public
         auth: true
+  - name: kured
+    tags: [security]
   - name: loki
     tags: [logging, telemetry, observability]
     deps: [grafana, prometheus]
@@ -329,6 +337,9 @@ adminApps:
         paths: [/api/]
         forwardPath: true
         type: public
+  - name: trivy
+    tags: [security]
+    deps: [prometheus, grafana]
   - name: vault
     tags: [secrets, security, observability]
     deps: [external-secrets]

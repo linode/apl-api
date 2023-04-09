@@ -68,11 +68,11 @@ AppKubeapps:
           type: object
           properties:
             dashboard:
-              $ref: ../definitions.yaml#/autoscaling
+              $ref: ../definitions.yaml#/autoscalingNonEssential
             frontend:
-              $ref: ../definitions.yaml#/autoscaling
+              $ref: ../definitions.yaml#/autoscalingNonEssential
             kubeops:
-              $ref: ../definitions.yaml#/autoscaling
+              $ref: ../definitions.yaml#/autoscalingNonEssential
       required:
         - postgresqlPassword
   required: [id]

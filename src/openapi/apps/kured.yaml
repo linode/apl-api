@@ -1,0 +1,46 @@
+AppKured:
+  additionalProperties: false
+  type: object
+  properties:
+    id:
+      $ref: ../definitions.yaml#/idName
+    enabled:
+      type: boolean
+      default: false
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      x-externalDocsPath: docs/apps/kured
+      properties:
+        resources:
+          type: object
+          properties:
+            kuredDaemonSet:
+              type: object
+              title: Kured DaemonSet
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 50m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 32Mi
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      $ref: ../definitions.yaml#/quantityCpu
+                      default: 20m
+                    memory:
+                      $ref: ../definitions.yaml#/quantityMem
+                      default: 16Mi
+  required: [id]

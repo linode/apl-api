@@ -6,6 +6,7 @@ export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
 export type Job = components['schemas']['Job']
 export type Kubecfg = components['schemas']['Kubecfg']
+export type K8sService = components['schemas']['K8sService']
 export type Secret = components['schemas']['Secret'] & { teamId?: string }
 export type Service = components['schemas']['Service']
 export type Session = components['schemas']['Session']
@@ -14,6 +15,9 @@ export type Team = components['schemas']['Team']
 export type TeamSelfService = components['schemas']['Team']['selfService']
 export type User = components['schemas']['User']
 export type UserAuthz = components['schemas']['User']['authz']
+export type Workload = components['schemas']['Workload']
+export type WorkloadValues = components['schemas']['WorkloadValues']
+
 export type TeamAuthz = components['schemas']['TeamAuthz']
 
 // Derived setting models

@@ -23,11 +23,13 @@ AppList:
     - knative
     - kubeapps
     - kubeclarity
+    - kured
     - loki
     - minio
     - opencost
     - prometheus
     - thanos
+    - trivy
     - vault
     - velero
 
