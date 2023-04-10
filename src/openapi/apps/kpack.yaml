@@ -11,6 +11,55 @@ AppKpack:
       $ref: ../definitions.yaml#/rawValues
       x-externalDocsPath: docs/apps/trivy-operator
       type: object
+    values:
+      x-externalDocsPath: docs/apps/velero
+      additionalProperties: false
+      type: object
+      properties:
+        buildPacks:
+          title: Build Packs
+          description: Buildpackages from the Paketo project that can be used by Kpack to build OCI images.
+          properties:
+            java:
+              properties:
+                enabled:
+                  type: boolean
+                  default: true
+            nodejs:
+              properties:
+                enabled:
+                  type: boolean
+                  default: true
+            go:
+              properties:
+                enabled:
+                  type: boolean
+                  default: true
+            dotnetCore:
+              properties:
+                enabled:
+                  type: boolean
+                  default: false
+            php:
+              properties:
+                enabled:
+                  type: boolean
+                  default: false
+            custom:
+              title: Custom Buildpacks
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    title: Name
+                    type: string
+                  image:
+                    title: Image
+                    type: string
+                required:
+                  - name
+                  - image
   required: [id]
 
 
