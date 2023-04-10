@@ -45,21 +45,6 @@ AppKpack:
                 enabled:
                   type: boolean
                   default: false
-            custom:
-              title: Custom Buildpacks
-              type: array
-              items:
-                type: object
-                properties:
-                  name:
-                    title: Name
-                    type: string
-                  image:
-                    title: Image
-                    type: string
-                required:
-                  - name
-                  - image
   required: [id]
 
 
