@@ -63,14 +63,14 @@ Team:
     billingAlertQuotas:
       title: Billing alert quotas
       properties:
-        TeamCpuMonthQuotaReached:
+        teamCpuMonthQuotaReached:
           title: Max total Team CPU cost per month in $
           description: Sends an alert when team total CPU costs per month hits the quota.
           properties:
             quota:
               type: integer
               default: 100
-        TeamMemMonthQuotaReached:
+        teamMemMonthQuotaReached:
           title: Max total Team Memory cost per month in $
           description: Sends an alert when team total Memory costs per month hits the quota.
           properties:
