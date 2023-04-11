@@ -31,7 +31,7 @@ AppOpencost:
             enabled:
               type: boolean
               default: false
-            CostOfAllNodesQuotaPerMonthReached:
+            costOfAllNodesQuotaPerMonthReached:
               title: Max total cost per month
               description: Sends an alert when total costs of nodes per month hits the quota.
               properties:

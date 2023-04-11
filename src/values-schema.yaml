@@ -2316,7 +2316,7 @@ properties:
               enabled:
                 type: boolean
                 default: false
-              CostOfAllNodesQuotaPerMonthReached:
+              costOfAllNodesQuotaPerMonthReached:
                 properties:
                   quota:
                     type: integer
