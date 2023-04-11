@@ -38,20 +38,6 @@ AppOpencost:
                 quota:
                   type: integer
                   default: 500
-            TeamCpuMonthQuotaReached:
-              title: Max total Team CPU cost per month
-              description: Sends an alert when team total CPU costs per month hits the quota.
-              properties:
-                quota:
-                  type: integer
-                  default: 100
-            TeamMemMonthQuotaReached:
-              title: Max total Team Memory cost per month
-              description: Sends an alert when team total Memory costs per month hits the quota.
-              properties:
-                quota:
-                  type: integer
-                  default: 100
         resources:
           type: object
           properties:
