@@ -17,7 +17,7 @@ export type User = components['schemas']['User']
 export type UserAuthz = components['schemas']['User']['authz']
 export type Workload = components['schemas']['Workload']
 export type WorkloadValues = components['schemas']['WorkloadValues']
-
+export type Build = components['schemas']['Build']
 export type TeamAuthz = components['schemas']['TeamAuthz']
 
 // Derived setting models

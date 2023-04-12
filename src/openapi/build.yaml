@@ -1,0 +1,45 @@
+Build:
+  x-acl:
+    admin:
+      - delete-any
+      - read-any
+      - create-any
+      - update-any
+    team:
+      - delete
+      - read
+      - create
+      - update
+  type: object
+  description: Define location of the application code for build
+  properties:
+    id:
+      type: string
+    teamId:
+      $ref: definitions.yaml#/idName
+    name:
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+    tag:
+      description: The image tag
+      $ref: 'definitions.yaml#/imageTag'
+      default: v0.0.1
+    repoUrl:
+      description: URL to the Git repository
+      $ref: 'definitions.yaml#/url'
+    path:
+      description: A relative directory path within the Git repository.
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+    revision:
+      description: This can be commit, tag, or branch. If omitted, will equal to HEAD.
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+      default: HEAD
+    repoUserName:
+      description: The username used for basic authentication to access a private github repo.
+      $ref: '#/definitions/wordCharacterPattern'
+    repoPassword:
+      x-secret: true
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+      description: The password used for basic authentication to access a private github repo.
+  required:
+    - name
+    - repoUrl

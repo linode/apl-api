@@ -449,6 +449,101 @@ paths:
         '200':
           description: Successfully deleted a team secret
 
+  '/builds':
+    get:
+      operationId: getAllBuilds
+      x-aclSchema: Build
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all builds configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Build'
+
+  '/teams/{teamId}/builds':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamBuilds
+      x-aclSchema: Build
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team builds configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Build'
+    post:
+      operationId: createBuild
+      description: Create a team build
+      x-aclSchema: Build
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Build'
+        description: Build object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored build configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Build'
+
+  '/teams/{teamId}/builds/{buildId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/buildParams'
+    delete:
+      operationId: deleteBuild
+      description: Delete a build from a given team
+      x-aclSchema: Build
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a build
+    get:
+      operationId: getBuild
+      description: Get a build from a given team
+      x-aclSchema: Build
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained build configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Build'
+    put:
+      operationId: editBuild
+      description: Edit a build from a given team
+      x-aclSchema: Build
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Build'
+        description: Build object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team build
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Build'
+
   '/workloads':
     get:
       operationId: getAllWorkloads
@@ -801,6 +896,13 @@ servers:
 # -------------------------------------------- Components
 components:
   parameters:
+    buildParams:
+      name: buildId
+      in: path
+      description: ID of the build
+      required: true
+      schema:
+        type: string
     jobParams:
       name: jobId
       in: path
@@ -922,6 +1024,8 @@ components:
       $ref: app.yaml#/AppList
     AdditionalCluster:
       $ref: cluster.yaml#/AdditionalCluster
+    Build:
+      $ref: build.yaml#/Build
     Cluster:
       $ref: cluster.yaml#/Cluster
     Deploy:
