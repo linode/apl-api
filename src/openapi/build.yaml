@@ -16,7 +16,7 @@ Build:
     id:
       type: string
     teamId:
-      $ref: definitions.yaml#/idName
+      $ref: 'definitions.yaml#/idName'
     name:
       $ref: 'definitions.yaml#/wordCharacterPattern'
     tag:
@@ -35,7 +35,7 @@ Build:
       default: HEAD
     repoUserName:
       description: The username used for basic authentication to access a private github repo.
-      $ref: '#/definitions/wordCharacterPattern'
+      $ref: 'definitions.yaml#/wordCharacterPattern'
     repoPassword:
       x-secret: true
       $ref: 'definitions.yaml#/wordCharacterPattern'
