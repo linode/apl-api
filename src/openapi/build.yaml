@@ -18,13 +18,14 @@ Build:
     teamId:
       $ref: 'definitions.yaml#/idName'
     name:
+      title: Build name
       $ref: 'definitions.yaml#/wordCharacterPattern'
+      description: Results in registry harbor.<domain>/<team-name>/name
     tag:
-      description: The image tag
       $ref: 'definitions.yaml#/imageTag'
       default: v0.0.1
     repoUrl:
-      description: URL to the Git repository
+      description: The URL of the Git repo that contains the application code.
       $ref: 'definitions.yaml#/url'
     path:
       description: A relative directory path within the Git repository.
@@ -33,13 +34,26 @@ Build:
       description: This can be commit, tag, or branch. If omitted, will equal to HEAD.
       $ref: 'definitions.yaml#/wordCharacterPattern'
       default: HEAD
+    otomiGit:
+      title: Otomi Gitea repo?
+      description: Set to true when using a Otomi Gitea repo and let Otomi configure access.
+      type: boolean
+      default: false
+    privateGit:
+      title: Private repo?
+      description: Set to true when using a private repo and fill in the username and password.
+      type: boolean
+      default: false
     repoUserName:
-      description: The username used for basic authentication to access a private github repo.
+      title: user name
+      description: The username used to access a private git repo.
       $ref: 'definitions.yaml#/wordCharacterPattern'
     repoPassword:
-      x-secret: true
+      x-secret: ''
+      title: password
       $ref: 'definitions.yaml#/wordCharacterPattern'
-      description: The password used for basic authentication to access a private github repo.
+      description: The password used to access a private github repo.
+
   required:
     - name
     - repoUrl
