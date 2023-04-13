@@ -64,7 +64,7 @@ AppHarbor:
                 - title: AWS
                   type: object
                   properties:
-                    aws:
+                    s3:
                       additionalProperties: false
                       type: object
                       properties:
@@ -99,10 +99,10 @@ AppHarbor:
                     type:
                       type: string
                       enum:
-                        - aws
-                      default: aws
+                        - s3
+                      default: s3
                   required:
-                    - aws
+                    - s3
                     - type
                 - title: Azure
                   type: object
