@@ -10,7 +10,7 @@ import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
-import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
+import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
   Core,
@@ -37,7 +37,6 @@ import {
   removeBlankAttributes,
 } from 'src/utils'
 import {
-  cleanEnv,
   CUSTOM_ROOT_CA,
   EDITOR_INACTIVITY_TIMEOUT,
   GIT_BRANCH,
@@ -48,6 +47,7 @@ import {
   GIT_USER,
   TOOLS_HOST,
   VERSIONS,
+  cleanEnv,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 
@@ -198,7 +198,11 @@ export default class OtomiStack {
   editSettings(data: Settings, settingId: string) {
     const settings = this.db.db.get('settings').value()
     // do not merge as oneOf properties cannot be merged
-    // settings[settingId] = merge(settings[settingId], data[settingId])
+    // for the policies we do want to merge
+    if (data.policies) {
+      Object.assign(settings.policies, data.policies)
+      Object.assign(data[settingId], settings.policies)
+    }
     settings[settingId] = removeBlankAttributes(data[settingId] as Record<string, any>)
     this.db.db.set('settings', settings).write()
     return settings
