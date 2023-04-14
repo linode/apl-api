@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.7.2](https://github.com/redkubes/otomi-api/compare/v0.7.1...v0.7.2) (2023-04-14)
+
+
+### Bug Fixes
+
+* setting harbor s3 storage  ([#382](https://github.com/redkubes/otomi-api/issues/382)) ([8ad4953](https://github.com/redkubes/otomi-api/commit/8ad4953ec29d98ca4780cf869f4c394248b2e042))
+
 ### [0.7.1](https://github.com/redkubes/otomi-api/compare/v0.7.0...v0.7.1) (2023-04-06)
 
 
