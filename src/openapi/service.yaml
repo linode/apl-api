@@ -20,7 +20,6 @@ Service:
       # readOnly: true
     name:
       $ref: definitions.yaml#/idName
-      description: A service name.
       example: some-service
     namespace:
       $ref: definitions.yaml#/idName
@@ -29,7 +28,6 @@ Service:
         admin: [read-any, create-any, update-any, delete-any]
         team: []
     port:
-      description: A service port. Defaults to 80.
       type: integer
       minimum: 1
       maximum: 65535
@@ -139,19 +137,6 @@ Ingress:
                 required:
                   - name
                   - value
-              default:
-                - name: X-Frame-Options
-                  value: sameorigin
-                - name: X-Content-Type-Options
-                  value: nosniff
-                - name: Referrer-Policy
-                  value: no-referrer
-                - name: Cross-Origin-Embedder-Policy
-                  value: require-corp
-                - name: Cross-Origin-Opener-Policy
-                  value: same-origin
-                - name: X-Content-Type-Options
-                  value: same-origin
   required:
     - domain
     - subdomain
