@@ -1248,6 +1248,19 @@ definitions:
       resourceQuota:
         description: 'List of kubernetes resource quota. Should adhere to the "spec.hard" format as described here: https://kubernetes.io/docs/concepts/policy/resource-quotas/. Not validated as there is no schema published. Change at your own risk.'
         type: object
+      billingAlertQuotas:
+        title: Billing alert quotas
+        properties:
+          TeamCpuMonthQuotaReached:
+            properties:
+              quota:
+                type: integer
+                default: 100
+          TeamMemMonthQuotaReached:
+            properties:
+              quota:
+                type: integer
+                default: 100
       selfService:
         $ref: '#/definitions/teamSelfService'
       services:
@@ -1293,7 +1306,7 @@ definitions:
         type: array
         items:
           type: string
-          enum: [alerts, oidc, resourceQuota, downloadKubeConfig, downloadDockerConfig, networkPolicy]
+          enum: [alerts, oidc, resourceQuota, billingAlertQuotas, downloadKubeConfig, downloadDockerConfig, networkPolicy]
         uniqueItems: true
       apps:
         type: array
@@ -2363,6 +2376,36 @@ properties:
                 x-secret: 'randAlphaNum 32 | b64enc'
       oauth2-proxy-redis:
         $ref: '#/definitions/redisChart'
+      opencost:
+        additionalProperties: false
+        properties:
+          _rawValues:
+            $ref: '#/definitions/rawValues'
+          enabled:
+            type: boolean
+            default: false
+          keys:
+            properties:
+              gcp:
+                type: string
+                $ref: '#/definitions/wordCharacterPattern'
+          alerts:
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              costOfAllNodesQuotaPerMonthReached:
+                properties:
+                  quota:
+                    type: integer
+                    default: 500
+          resources:
+            additionalProperties: false
+            properties:
+              exporter:
+                $ref: '#/definitions/resources'
+              ui:
+                $ref: '#/definitions/resources'
       otomi-api:
         additionalProperties: false
         properties:

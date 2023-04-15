@@ -27,6 +27,7 @@ AppList:
     - kpack
     - loki
     - minio
+    - opencost
     - prometheus
     - thanos
     - trivy
