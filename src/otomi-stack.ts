@@ -592,9 +592,19 @@ export default class OtomiStack {
 
     const svcList = await client.listNamespacedService(`team-${teamId}`)
     svcList.body.items.map((item) => {
+      let name = item.metadata!.name ?? 'unknown'
+      let managedByKnative = false
+      if (item.metadata?.labels?.['networking.internal.knative.dev/serviceType'] === 'Private') return
+      if (item.spec?.type === 'ExternalName' && item.metadata?.labels?.['serving.knative.dev/service']) return
+      if (item.metadata?.labels?.['serving.knative.dev/service']) {
+        name = item.metadata?.labels?.['serving.knative.dev/service']
+        managedByKnative = true
+      }
+
       collection.push({
-        name: item.metadata!.name ?? 'unknown',
+        name,
         ports: item.spec?.ports?.map((portItem) => portItem.port) ?? [],
+        managedByKnative,
       })
     })
 
@@ -963,7 +973,6 @@ export default class OtomiStack {
       'domain',
       'forwardPath',
       'hasCert',
-      'ksvc',
       'paths',
       'type',
       'ownHost',
@@ -973,7 +982,6 @@ export default class OtomiStack {
     )
     svc.teamId = teamId
     if (!('name' in svcRaw)) debug('Unknown service structure')
-    if (svcRaw?.ksvc?.predeployed) set(svc, 'ksvc.serviceType', 'ksvcPredeployed')
     if (svcRaw.type === 'cluster') svc.ingress = { type: 'cluster' }
     else {
       const { cluster, dns } = this.getSettings(['cluster', 'dns'])
@@ -1003,7 +1011,6 @@ export default class OtomiStack {
   // eslint-disable-next-line class-methods-use-this
   convertDbServiceToValues(svc: any): any {
     const svcCloned = omit(svc, ['teamId', 'ingress', 'path'])
-    if (svc.serviceType === 'ksvcPredeployed') set(svc, 'ksvc.predeployed', true)
     if (svc.ingress && svc.ingress.type !== 'cluster') {
       const ing = svc.ingress
       if (ing.useDefaultSubdomain) svcCloned.ownHost = true

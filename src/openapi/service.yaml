@@ -34,6 +34,14 @@ Service:
       maximum: 65535
       default: 80
       x-formtype: SelectWidget
+    ksvc:
+      type: object
+      properties:
+        predeployed:
+          description: Set this flag it the service is managed by knative service
+          type: boolean
+          default: false
+      # x-hidden: true
     ingress:
       title: Exposure (ingress)
       description: Determines loadbalancer related configuration for handling the service ingress.
