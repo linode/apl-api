@@ -16,8 +16,8 @@ import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } fro
 import {
   App,
   Core,
-  License,
   K8sService,
+  License,
   Policies,
   Secret,
   Service,
@@ -575,6 +575,7 @@ export default class OtomiStack {
     // const teams = user.teams.map((name) => {
     //   return `team-${name}`
     // })
+
     const client = this.getApiClient()
     const collection: K8sService[] = []
 
@@ -588,14 +589,15 @@ export default class OtomiStack {
     //   })
     //   return collection
     // }
-    const svcList = await client.listNamespacedService(`team-${teamId}`)
 
+    const svcList = await client.listNamespacedService(`team-${teamId}`)
     svcList.body.items.map((item) => {
       collection.push({
         name: item.metadata!.name ?? 'unknown',
         ports: item.spec?.ports?.map((portItem) => portItem.port) ?? [],
       })
     })
+
     return collection
   }
 
@@ -961,6 +963,7 @@ export default class OtomiStack {
       'domain',
       'forwardPath',
       'hasCert',
+      'ksvc',
       'paths',
       'type',
       'ownHost',
@@ -970,8 +973,7 @@ export default class OtomiStack {
     )
     svc.teamId = teamId
     if (!('name' in svcRaw)) debug('Unknown service structure')
-
-    set(svc, 'ksvc.serviceType', 'svcPredeployed')
+    if (svcRaw?.ksvc?.predeployed) set(svc, 'ksvc.serviceType', 'ksvcPredeployed')
     if (svcRaw.type === 'cluster') svc.ingress = { type: 'cluster' }
     else {
       const { cluster, dns } = this.getSettings(['cluster', 'dns'])
@@ -1001,6 +1003,7 @@ export default class OtomiStack {
   // eslint-disable-next-line class-methods-use-this
   convertDbServiceToValues(svc: any): any {
     const svcCloned = omit(svc, ['teamId', 'ingress', 'path'])
+    if (svc.serviceType === 'ksvcPredeployed') set(svc, 'ksvc.predeployed', true)
     if (svc.ingress && svc.ingress.type !== 'cluster') {
       const ing = svc.ingress
       if (ing.useDefaultSubdomain) svcCloned.ownHost = true

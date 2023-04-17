@@ -21,6 +21,7 @@ Service:
     name:
       $ref: definitions.yaml#/idName
       example: some-service
+      x-formtype: SelectWidget
     namespace:
       $ref: definitions.yaml#/idName
       description: "A kubernetes namespace. Tip: give each app it's own"
@@ -32,6 +33,7 @@ Service:
       minimum: 1
       maximum: 65535
       default: 80
+      x-formtype: SelectWidget
     ingress:
       title: Exposure (ingress)
       description: Determines loadbalancer related configuration for handling the service ingress.
