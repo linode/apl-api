@@ -1608,7 +1608,7 @@ properties:
                 additionalProperties: false
                 description: For reference go to https://github.com/distribution/distribution/blob/main/docs/configuration.md#storage
                 properties:
-                  aws:
+                  s3:
                     additionalProperties: false
                     properties:
                       accesskey:
@@ -1664,7 +1664,7 @@ properties:
                   type:
                     type: string
                     enum:
-                      - aws
+                      - s3
                       - azure
                       - gcs
                       - filesystem
@@ -2034,6 +2034,17 @@ properties:
           schedule:
             default: '*/30 * * * *'
             type: string
+      kured:
+        additionalProperties: false
+        properties:
+          enabled:
+            default: false
+            type: boolean
+          resources:
+            additionalProperties: false
+            properties:
+              kuredDaemonSet:
+                $ref: '#/definitions/resources'
       loki:
         additionalProperties: false
         properties:

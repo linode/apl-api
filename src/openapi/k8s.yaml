@@ -1,0 +1,13 @@
+K8sService:
+  x-acl:
+    admin: [read-any]
+    team: [read]
+  properties:
+    name:
+      type: string
+    ports:
+      type: array
+      items:
+        type: integer
+  required:
+    - name
