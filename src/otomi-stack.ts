@@ -5,8 +5,10 @@ import Debug from 'debug'
 
 import { emptyDir } from 'fs-extra'
 import { readFile } from 'fs/promises'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 import { cloneDeep, each, filter, get, isArray, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
+import * as osPath from 'path'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
@@ -15,6 +17,7 @@ import {
   App,
   Core,
   Job,
+  License,
   K8sService,
   Policies,
   Secret,
@@ -188,6 +191,76 @@ export default class OtomiStack {
     })
     // debug('secretPaths: ', cleanSecretPaths)
     return cleanSecretPaths
+  }
+
+  getLicense(): License {
+    const license = this.db.db.get(['license']).value() as License
+    return license
+  }
+
+  async validateLicense(jwtLicense: string): Promise<License> {
+    const licensePath = osPath.resolve(__dirname, 'license/license.pem')
+    const publicKey = await readFile(licensePath, 'utf8')
+    return this.verifyLicense(jwtLicense, publicKey)
+  }
+
+  verifyLicense(jwtLicense: string, rsaPublicKey: string): License {
+    const license: License = { isValid: false, hasLicense: true, body: undefined, jwt: jwtLicense }
+    try {
+      const jwtPayload = jwt.verify(jwtLicense, rsaPublicKey) as JwtPayload
+      license.body = jwtPayload.body
+      license.isValid = true
+    } catch (err) {
+      return license
+    }
+    return license
+  }
+
+  async uploadLicense(jwtLicense: string): Promise<License> {
+    debug('Uploading the license')
+
+    const license = await this.validateLicense(jwtLicense)
+    if (!license.isValid) {
+      debug('License invalid')
+      return license
+    }
+
+    this.db.db.set('license', license).write()
+    this.doDeployment()
+    debug('License uploaded')
+    return license
+  }
+
+  async loadLicense(): Promise<void> {
+    debug('Loading license')
+    if (!(await this.repo.fileExists('env/secrets.license.yaml'))) {
+      debug('License file does not exists')
+      const license: License = { isValid: false, hasLicense: false, body: undefined }
+      this.db.db.set('license', license).write()
+      return
+    }
+
+    const licenseValues = await this.repo.readFile('env/secrets.license.yaml', true)
+    const jwtLicense: string = licenseValues.license
+    const license = await this.validateLicense(jwtLicense)
+
+    if (!license.isValid) {
+      debug('License file invalid')
+      return
+    }
+    this.db.db.set('license', license).write()
+    debug('Loaded license')
+  }
+
+  async saveLicense(secretPaths?: string[]): Promise<void> {
+    const license = this.db.db.get(['license']).value() as License
+    if (!license.hasLicense) return
+    await this.repo.saveConfig(
+      'env/license.yaml',
+      'env/secrets.license.yaml',
+      { license: license.jwt },
+      secretPaths ?? this.getSecretPaths(),
+    )
   }
 
   getSettings(keys?: string[]): Settings {
@@ -656,11 +729,13 @@ export default class OtomiStack {
 
   async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {
     debug('Loading values')
+    await this.loadLicense()
     await this.loadCluster()
     await this.loadPolicies()
     await this.loadSettings()
     await this.loadTeams()
     await this.loadApps()
+    // load license
     this.isLoaded = true
   }
 
@@ -1063,6 +1138,7 @@ export default class OtomiStack {
     // also save admin apps
     await this.saveAdminApps(secretPaths)
     await this.saveTeamApps('admin')
+    await this.saveLicense(secretPaths)
   }
 
   async getSession(user: k8s.User): Promise<Session> {
@@ -1081,6 +1157,7 @@ export default class OtomiStack {
         console: env.VERSIONS.console,
         values: currentSha,
       },
+      license: rootStack.getLicense(),
     }
     return data
   }
