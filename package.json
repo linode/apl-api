@@ -152,6 +152,7 @@
     "postinstall": "npm run build:models",
     "pre-release:client": "npm version prerelease --preid rc --no-commit-hooks --no-git-tag-version && bin/release-client.sh",
     "release": "standard-version",
+    "release:bump:minor": "standard-version --skip.changelog true --release-as minor",
     "release:client": "bin/release-client.sh",
     "run-if-changed": "run-if-changed",
     "start": "node dist/src/app.js",
@@ -167,7 +168,7 @@
       "tag": true
     }
   },
-  "version": "0.6.0",
+  "version": "0.7.0",
   "watch": {
     "build:models": {
       "patterns": [

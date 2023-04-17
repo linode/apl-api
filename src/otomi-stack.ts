@@ -6,18 +6,19 @@ import Debug from 'debug'
 import { emptyDir } from 'fs-extra'
 import { readFile } from 'fs/promises'
 import jwt, { JwtPayload } from 'jsonwebtoken'
-import { cloneDeep, each, filter, get, isEmpty, omit, pick, set } from 'lodash'
+import { cloneDeep, each, filter, get, isArray, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
 import * as osPath from 'path'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
-import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
+import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
   Core,
   Job,
   License,
+  K8sService,
   Policies,
   Secret,
   Service,
@@ -40,7 +41,6 @@ import {
   removeBlankAttributes,
 } from 'src/utils'
 import {
-  cleanEnv,
   CUSTOM_ROOT_CA,
   EDITOR_INACTIVITY_TIMEOUT,
   GIT_BRANCH,
@@ -51,6 +51,7 @@ import {
   GIT_USER,
   TOOLS_HOST,
   VERSIONS,
+  cleanEnv,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 
@@ -271,7 +272,11 @@ export default class OtomiStack {
   editSettings(data: Settings, settingId: string) {
     const settings = this.db.db.get('settings').value()
     // do not merge as oneOf properties cannot be merged
-    // settings[settingId] = merge(settings[settingId], data[settingId])
+    // for the policies we do want to merge
+    if (data.policies) {
+      Object.assign(settings.policies, data.policies)
+      Object.assign(data[settingId], settings.policies)
+    }
     settings[settingId] = removeBlankAttributes(data[settingId] as Record<string, any>)
     this.db.db.set('settings', settings).write()
     return settings
@@ -613,6 +618,34 @@ export default class OtomiStack {
     kc.loadFromDefault()
     this.apiClient = kc.makeApiClient(k8s.CoreV1Api)
     return this.apiClient
+  }
+
+  async getK8sServices(teamId: string): Promise<Array<K8sService>> {
+    // const teams = user.teams.map((name) => {
+    //   return `team-${name}`
+    // })
+    const client = this.getApiClient()
+    const collection: K8sService[] = []
+
+    // if (user.isAdmin) {
+    //   const svcList = await client.listServiceForAllNamespaces()
+    //   svcList.body.items.map((item) => {
+    //     collection.push({
+    //       name: item.metadata!.name ?? 'unknown',
+    //       ports: item.spec?.ports?.map((portItem) => portItem.port) ?? [],
+    //     })
+    //   })
+    //   return collection
+    // }
+    const svcList = await client.listNamespacedService(`team-${teamId}`)
+
+    svcList.body.items.map((item) => {
+      collection.push({
+        name: item.metadata!.name ?? 'unknown',
+        ports: item.spec?.ports?.map((portItem) => portItem.port) ?? [],
+      })
+    })
+    return collection
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -1034,11 +1067,13 @@ export default class OtomiStack {
     else {
       const { cluster, dns } = this.getSettings(['cluster', 'dns'])
       const url = getServiceUrl({ domain: svcRaw.domain, name: svcRaw.name, teamId, cluster, dns })
+      // TODO remove the isArray check in 0.5.24
+      const headers = isArray(svcRaw.headers) ? undefined : svcRaw.headers
       svc.ingress = {
         certArn: svcRaw.certArn || undefined,
         certName: svcRaw.certName || undefined,
         domain: url.domain,
-        headers: svcRaw.headers || [],
+        headers,
         forwardPath: 'forwardPath' in svcRaw,
         hasCert: 'hasCert' in svcRaw,
         paths: svcRaw.paths ? svcRaw.paths : [],

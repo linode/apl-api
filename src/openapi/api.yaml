@@ -270,6 +270,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/Service'
 
+  '/teams/{teamId}/kubernetes/services':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamK8sServices
+      description: Get services from a given team
+      x-aclSchema: Service
+      responses:
+        '200':
+          description: Successfully obtained kuberntes services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/K8sService'
+        '400':
+          <<: *BadRequest
   '/teams/{teamId}/jobs/{jobId}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
@@ -934,6 +952,8 @@ components:
       $ref: service.yaml#/IngressPublic
     Job:
       $ref: job.yaml#/Job
+    K8sService:
+      $ref: k8s.yaml#/K8sService
     Kubecfg:
       $ref: kubecfg.yaml#/Kubecfg
     LicenseJwt:

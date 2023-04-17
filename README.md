@@ -109,6 +109,17 @@ From above:
 
 - the GET /secrets request handler authenticate it by using security schema defined under global `security` property.
 
+How to set headers for OWASP:
+
+```
+X-Frame-Options: sameorigin
+X-Content-Type-Options: nosniff
+Referrer-Policy: no-referrer
+Cross-Origin-Embedder-Policy: require-corp
+Cross-Origin-Opener-Policy: same-origin
+X-Content-Type-Options: same-origin
+```
+
 ### 2.3 Authorization
 
 An authorization is defined in `src/api.yaml` file as an extension to OpenApiV3 spec.
