@@ -5,13 +5,14 @@ import low from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
 import Memory from 'lowdb/adapters/Memory'
 import { AlreadyExists, NotExistError } from 'src/error'
-import { App, Cluster, Secret, Service, Settings, Team, Workload, WorkloadValues } from 'src/otomi-models'
+import { App, Cluster, License, Secret, Service, Settings, Team, Workload, WorkloadValues } from 'src/otomi-models'
 import { mergeData } from 'src/utils'
 import { v4 as uuidv4 } from 'uuid'
 
 export type DbType = Cluster | Secret | Service | Team | Settings | App | Workload | WorkloadValues
 export type Schema = {
   apps: App[]
+  license: License
   secrets: Secret[]
   services: Service[]
   settings: Settings
@@ -35,6 +36,7 @@ export default class Db {
     this.db
       .defaults({
         apps: [],
+        license: {},
         secrets: [],
         services: [],
         settings: {},
