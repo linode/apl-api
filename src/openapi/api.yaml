@@ -845,8 +845,6 @@ components:
       $ref: service.yaml#/IngressCluster
     IngressPublic:
       $ref: service.yaml#/IngressPublic
-    Job:
-      $ref: job.yaml#/Job
     K8sService:
       $ref: k8s.yaml#/K8sService
     Kubecfg:
