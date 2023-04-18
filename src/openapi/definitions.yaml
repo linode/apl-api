@@ -329,7 +329,7 @@ azureTenantId:
   type: string
 backupTtl:
   default: 168h
-  description: Expiration of the backup.
+  description: Expiration of the backup. Defaults to 7 days.
   title: TTL after finished
   type: string
 backupSchedule:
