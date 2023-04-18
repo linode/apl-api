@@ -346,4 +346,19 @@ describe('API authz tests', () => {
         done()
       })
   })
+
+  it('authenticated user can not activate license', (done) => {
+    agent.put('/v1/activate').send({ jwt: 'mytoken' }).expect(403).set('Authorization', `Bearer ${teamToken}`).end(done)
+  })
+  it('admin can activate license', (done) => {
+    agent
+      .put('/v1/activate')
+      .send({ jwt: 'mytoken' })
+      .expect(200)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .end(done)
+  })
+  it('anonymous user cannot activate license', (done) => {
+    agent.put('/v1/activate').send({ jwt: 'mytoken' }).expect(401).end(done)
+  })
 })
