@@ -328,7 +328,7 @@ azureTenantId:
   description: An Azure tenant id. Defaults to one found in metadata.
   type: string
 backupTtl:
-  default: 240h
+  default: 168h
   description: Expiration of the backup.
   title: TTL after finished
   type: string
