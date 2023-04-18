@@ -19,7 +19,6 @@ function renameKeys(obj: Record<string, any>) {
   const newKeys = {
     serviceId: 'id',
     secretId: 'id',
-    jobId: 'id',
   }
   if (Object.keys(obj).length === 1 && 'teamId' in obj) return { id: obj.teamId }
   const keyValues = Object.keys(obj).map((key) => {
@@ -64,7 +63,6 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
   }
 
   const schemaToDbMap: Record<string, string> = {
-    Job: 'jobs',
     Secret: 'secrets',
     Service: 'services',
     Team: 'teams',
