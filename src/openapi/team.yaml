@@ -80,6 +80,8 @@ Team:
           default: false
         schedule:
           $ref: definitions.yaml#/backupSchedule
+        ttl: 
+          $ref: definitions.yaml#/backupTtl
         snapshotVolumes:
           title: Snapshot Volumes
           description: Whether or not to snapshot volumes.
