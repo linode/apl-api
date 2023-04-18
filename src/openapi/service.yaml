@@ -21,6 +21,7 @@ Service:
     name:
       $ref: definitions.yaml#/idName
       example: some-service
+      x-formtype: SelectWidget
     namespace:
       $ref: definitions.yaml#/idName
       description: "A kubernetes namespace. Tip: give each app it's own"
@@ -32,14 +33,15 @@ Service:
       minimum: 1
       maximum: 65535
       default: 80
+      x-formtype: SelectWidget
     ksvc:
-      oneOf:
-        - $ref: definitions.yaml#/svcPredeployed
-        - $ref: definitions.yaml#/ksvcPredeployed
-        - $ref: definitions.yaml#/ksvcNew
-      title: Service type
-      description: Type of service. Can be a knative service or a regular service.
-      x-externalDocsPath: docs/console/services/#configuring-the-service-type
+      type: object
+      properties:
+        predeployed:
+          description: Set this flag it the service is managed by knative service
+          type: boolean
+          default: false
+      # x-hidden: true
     ingress:
       title: Exposure (ingress)
       description: Determines loadbalancer related configuration for handling the service ingress.
@@ -144,7 +146,6 @@ Ingress:
 
 IngressCluster:
   additionalProperties: false
-  description: "If backend is a ksvc, this will expose a knative service on a local istio gateway, so other services can access it's '$svc.$namespace' host name."
   title: Cluster
   type: object
   nullable: true
@@ -176,7 +177,7 @@ networkPolicy:
       # additionalProperties: false
       type: object
       title: Ingress traffic inside the cluster
-      description: 'Pods belonging to this service must contain "otomi.io/app: <service name>" label (N/A to Pods spawn by ksvc).'
+      description: 'Pods belonging to this service must contain "otomi.io/app: <service name>" label.'
       oneOf:
         - title: Deny all
           description: Deny traffic from all teams (including this one)

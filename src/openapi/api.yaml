@@ -83,23 +83,6 @@ paths:
         '400':
           <<: *BadRequest
 
-  /jobs:
-    get:
-      operationId: getAllJobs
-      description: Get all jobs running on the cluster
-      x-aclSchema: Job
-      responses:
-        '200':
-          description: Successfully obtained all jobs
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Job'
-        '400':
-          <<: *BadRequest
-
   /services:
     get:
       operationId: getAllServices
@@ -193,44 +176,6 @@ paths:
         '200':
           description: Successfully deleted a team
 
-  '/teams/{teamId}/jobs':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-    get:
-      operationId: getTeamJobs
-      description: Get jobs from a given team
-      x-aclSchema: Job
-      responses:
-        '200':
-          description: Successfully obtained jobs
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Job'
-        '400':
-          <<: *BadRequest
-    post:
-      operationId: createJob
-      description: Create a job
-      x-aclSchema: Job
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Job'
-        description: Job object
-        required: true
-      responses:
-        <<: *DefaultPostResponses
-        '200':
-          description: Successfully stored job configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Job'
-
   '/teams/{teamId}/services':
     parameters:
       - $ref: '#/components/parameters/teamParams'
@@ -288,49 +233,6 @@ paths:
                   $ref: '#/components/schemas/K8sService'
         '400':
           <<: *BadRequest
-  '/teams/{teamId}/jobs/{jobId}':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/jobParams'
-    get:
-      operationId: getJob
-      description: Get a job from a given team
-      x-aclSchema: Job
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully obtained job configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Job'
-    put:
-      operationId: editJob
-      description: Edit a job from a given team
-      x-aclSchema: Job
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Job'
-        description: Job object that contains updated values
-        required: true
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully edited job
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Job'
-    delete:
-      operationId: deleteJob
-      description: Delete a job from a given team
-      x-aclSchema: Job
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully deleted a job
 
   '/teams/{teamId}/services/{serviceId}':
     parameters:
@@ -821,13 +723,6 @@ servers:
 # -------------------------------------------- Components
 components:
   parameters:
-    jobParams:
-      name: jobId
-      in: path
-      description: ID of the job
-      required: true
-      schema:
-        type: string
     teamParams:
       name: teamId
       in: path
@@ -950,8 +845,6 @@ components:
       $ref: service.yaml#/IngressCluster
     IngressPublic:
       $ref: service.yaml#/IngressPublic
-    Job:
-      $ref: job.yaml#/Job
     K8sService:
       $ref: k8s.yaml#/K8sService
     Kubecfg:
@@ -1058,16 +951,10 @@ components:
       $ref: definitions.yaml#/imageSimple
     ingressClassParameters:
       $ref: definitions.yaml#/ingressClassParameters
-    jobSpec:
-      $ref: definitions.yaml#/jobSpec
     k8sVersion:
       $ref: definitions.yaml#/k8sVersion
     kms:
       $ref: definitions.yaml#/kms
-    ksvcNew:
-      $ref: definitions.yaml#/ksvcNew
-    ksvcPredeployed:
-      $ref: definitions.yaml#/ksvcPredeployed
     lokiStorageProvider:
       $ref: apps/loki.yaml#/lokiStorageProvider
     lokiValues:
