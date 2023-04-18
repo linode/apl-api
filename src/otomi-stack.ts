@@ -594,9 +594,11 @@ export default class OtomiStack {
     svcList.body.items.map((item) => {
       let name = item.metadata!.name ?? 'unknown'
       let managedByKnative = false
+      // Filter out knative private services
       if (item.metadata?.labels?.['networking.internal.knative.dev/serviceType'] === 'Private') return
-      if (item.spec?.type === 'ExternalName' && item.metadata?.labels?.['serving.knative.dev/service']) return
-      if (item.metadata?.labels?.['serving.knative.dev/service']) {
+      // Filter out services that are knative service revision
+      if (item.spec?.type === 'ClusterIP' && item.metadata?.labels?.['serving.knative.dev/service']) return
+      if (item.spec?.type === 'ExternalName' && item.metadata?.labels?.['serving.knative.dev/service']) {
         name = item.metadata?.labels?.['serving.knative.dev/service']
         managedByKnative = true
       }
