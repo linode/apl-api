@@ -932,7 +932,7 @@ export default class OtomiStack {
   }
 
   async saveTeamBackups(teamId: string): Promise<void> {
-    const backups = this.db.getCollection('backups', { teamId }) as Array<Build>
+    const backups = this.db.getCollection('backups', { teamId }) as Array<Backup>
     const cleaneBackups: Array<Record<string, any>> = backups.map((obj) => {
       return omit(obj, ['teamId'])
     })
