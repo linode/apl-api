@@ -21,7 +21,7 @@ TeamSelfService:
       items:
         type: string
         # downloadKubeConfig - is an action that a user can perform, not an attribute of the input form
-        enum: [alerts, backup, oidc, resourceQuota, downloadKubeConfig, downloadDockerConfig, networkPolicy]
+        enum: [alerts, oidc, resourceQuota, downloadKubeConfig, downloadDockerConfig, networkPolicy]
       uniqueItems: true
     apps:
       type: array
@@ -71,41 +71,6 @@ Team:
           title: Enabled
           type: boolean
           default: true
-    backup:
-      title: Backup configuration
-      properties:
-        enabled:
-          description: Enable to create backups for the team based on the desired configuration.
-          type: boolean
-          default: false
-        schedule:
-          $ref: definitions.yaml#/backupSchedule
-        snapshotVolumes:
-          title: Snapshot Volumes
-          description: Whether or not to snapshot volumes.
-          type: boolean
-          default: false
-        labelSelector:
-          title: Label Selector
-          $ref: definitions.yaml#/labels
-          description: (Optional) Individual objects must match this label selector to be included in the backup.
-        includedResources:
-          title: Included Resources
-          description: Resources to include in the backup.
-          items:
-            enum:
-              - pv
-              - secret
-              - configmap
-              - deployment
-              - service
-              - statefulset
-              - replicaset
-            type: string
-          type: array
-          uniqueItems: true
-        ttl: 
-          $ref: definitions.yaml#/backupTtl
     networkPolicy:
       properties:
         ingressPrivate:

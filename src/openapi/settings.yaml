@@ -15,9 +15,9 @@ Settings:
       $ref: cluster.yaml#/Cluster
       title: Cluster
       description: Cluster configuration.
-    backups:
+    platformBackups:
       additionalProperties: false
-      title: Backup
+      title: Platform App Backup
       description: Platform apps backup schedule configuration.
       type: object
       properties:

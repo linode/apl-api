@@ -1,21 +1,21 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequestExt, Workload } from 'src/otomi-models'
+import { OpenApiRequestExt, Backup } from 'src/otomi-models'
 
-const debug = Debug('otomi:api:teams:workloads')
+const debug = Debug('otomi:api:teams:backups')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [
     ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
-      debug(`getTeamWorkloads(${teamId})`)
-      const v = otomi.getTeamWorkloads({ teamId })
+      debug(`getTeamBackups(${teamId})`)
+      const v = otomi.getTeamBackups(teamId)
       res.json(v)
     },
   ]
   const post: Operation = [
     ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): void => {
-      debug(`createWorkload(${teamId}, ...)`)
-      const v = otomi.createWorkload(teamId, body as Workload)
+      debug(`createBackup(${teamId}, ...)`)
+      const v = otomi.createBackup(teamId, body as Backup)
       res.json(v)
     },
   ]
