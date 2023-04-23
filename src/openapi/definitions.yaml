@@ -64,8 +64,9 @@ alerts:
             admin: [read-any, update-any]
             team: []
           x-secret: true
-      required:
-        - url
+      # TODO: Enable again when form rework is done
+      # required:
+      #   - url
       type: object
     msteams:
       additionalProperties: false
@@ -85,9 +86,10 @@ alerts:
             admin: [read-any, update-any]
             team: []
           x-secret: true
-      required:
-        - highPrio
-        - lowPrio
+      # TODO: Enable again when form rework is done
+      # required:
+      #   - highPrio
+      #   - lowPrio
       title: Microsoft Teams
       type: object
     opsgenie:
@@ -137,9 +139,10 @@ alerts:
                     properties:
                       username:
                         $ref: '#/wordCharacterPattern'
-      required:
-        - apiKey
-        - url
+      # TODO: Enable again when form rework is done
+      # required:
+      #   - apiKey
+      #   - url
       type: object
     email:
       title: Email
@@ -154,9 +157,10 @@ alerts:
           title: Non-critical Events
           $ref: '#/email'
           description: One or more email addresses (comma separated) for non-critical events.
-      required:
-        - critical
-        - nonCritical
+      # TODO: Enable again when form rework is done
+      # required:
+      #   - critical
+      #   - nonCritical
       type: object
 annotation:
   type: string
