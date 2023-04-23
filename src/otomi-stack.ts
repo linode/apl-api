@@ -392,7 +392,7 @@ export default class OtomiStack {
   createBackup(teamId: string, data: Backup): Backup {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      return this.db.createItem('builds', { ...data, teamId }, { teamId, name: data.name }) as Backup
+      return this.db.createItem('backups', { ...data, teamId }, { teamId, name: data.name }) as Backup
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Backup name already exists'
       throw err

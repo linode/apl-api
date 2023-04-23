@@ -8,7 +8,7 @@ export default function (): OperationHandlerArray {
   const get: Operation = [
     ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
       debug(`getTeamWorkloads(${teamId})`)
-      const v = otomi.getTeamWorkloads({ teamId })
+      const v = otomi.getTeamWorkloads(teamId)
       res.json(v)
     },
   ]
