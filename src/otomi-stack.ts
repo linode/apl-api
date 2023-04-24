@@ -5,8 +5,10 @@ import Debug from 'debug'
 
 import { emptyDir } from 'fs-extra'
 import { readFile } from 'fs/promises'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 import { cloneDeep, each, filter, get, isArray, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
+import * as osPath from 'path'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
@@ -15,8 +17,8 @@ import {
   App,
   Backup,
   Core,
-  Job,
   K8sService,
+  License,
   Policies,
   Secret,
   Service,
@@ -29,15 +31,7 @@ import {
   WorkloadValues,
 } from 'src/otomi-models'
 import getRepo, { Repo } from 'src/repo'
-import {
-  argQuoteJoin,
-  argQuoteStrip,
-  argSplit,
-  arrayToObject,
-  getServiceUrl,
-  objectToArray,
-  removeBlankAttributes,
-} from 'src/utils'
+import { arrayToObject, getServiceUrl, objectToArray, removeBlankAttributes } from 'src/utils'
 import {
   CUSTOM_ROOT_CA,
   EDITOR_INACTIVITY_TIMEOUT,
@@ -69,14 +63,6 @@ const env = cleanEnv({
   TOOLS_HOST,
   VERSIONS,
 })
-
-export function getTeamJobsFilePath(teamId: string): string {
-  return `env/teams/jobs.${teamId}.yaml`
-}
-
-export function getTeamJobsJsonPath(teamId: string): string {
-  return `teamConfig.${teamId}.jobs`
-}
 
 export function getTeamBackupsFilePath(teamId: string): string {
   return `env/teams/backups.${teamId}.yaml`
@@ -196,6 +182,76 @@ export default class OtomiStack {
     })
     // debug('secretPaths: ', cleanSecretPaths)
     return cleanSecretPaths
+  }
+
+  getLicense(): License {
+    const license = this.db.db.get(['license']).value() as License
+    return license
+  }
+
+  async validateLicense(jwtLicense: string): Promise<License> {
+    const licensePath = osPath.resolve(__dirname, 'license/license.pem')
+    const publicKey = await readFile(licensePath, 'utf8')
+    return this.verifyLicense(jwtLicense, publicKey)
+  }
+
+  verifyLicense(jwtLicense: string, rsaPublicKey: string): License {
+    const license: License = { isValid: false, hasLicense: true, body: undefined, jwt: jwtLicense }
+    try {
+      const jwtPayload = jwt.verify(jwtLicense, rsaPublicKey) as JwtPayload
+      license.body = jwtPayload.body
+      license.isValid = true
+    } catch (err) {
+      return license
+    }
+    return license
+  }
+
+  async uploadLicense(jwtLicense: string): Promise<License> {
+    debug('Uploading the license')
+
+    const license = await this.validateLicense(jwtLicense)
+    if (!license.isValid) {
+      debug('License invalid')
+      return license
+    }
+
+    this.db.db.set('license', license).write()
+    this.doDeployment()
+    debug('License uploaded')
+    return license
+  }
+
+  async loadLicense(): Promise<void> {
+    debug('Loading license')
+    if (!(await this.repo.fileExists('env/secrets.license.yaml'))) {
+      debug('License file does not exists')
+      const license: License = { isValid: false, hasLicense: false, body: undefined }
+      this.db.db.set('license', license).write()
+      return
+    }
+
+    const licenseValues = await this.repo.readFile('env/secrets.license.yaml', true)
+    const jwtLicense: string = licenseValues.license
+    const license = await this.validateLicense(jwtLicense)
+
+    if (!license.isValid) {
+      debug('License file invalid')
+      return
+    }
+    this.db.db.set('license', license).write()
+    debug('Loaded license')
+  }
+
+  async saveLicense(secretPaths?: string[]): Promise<void> {
+    const license = this.db.db.get(['license']).value() as License
+    if (!license.hasLicense) return
+    await this.repo.saveConfig(
+      'env/license.yaml',
+      'env/secrets.license.yaml',
+      { license: license.jwt },
+      secretPaths ?? this.getSecretPaths(),
+    )
   }
 
   getSettings(keys?: string[]): Settings {
@@ -375,11 +431,6 @@ export default class OtomiStack {
     return this.db.getCollection('services', ids) as Array<Service>
   }
 
-  getTeamJobs(teamId: string): Array<Job> {
-    const ids = { teamId }
-    return this.db.getCollection('jobs', ids) as Array<Job>
-  }
-
   getTeamBackups(teamId: string): Array<Backup> {
     const ids = { teamId }
     return this.db.getCollection('backups', ids) as Array<Backup>
@@ -477,33 +528,6 @@ export default class OtomiStack {
     return this.db.deleteItem('services', { id })
   }
 
-  getAllJobs(): Array<Job> {
-    return this.db.getCollection('jobs') as Array<Job>
-  }
-
-  createJob(teamId: string, data: Job): Job {
-    return this.db.createItem('jobs', { ...data, teamId }) as Job
-  }
-
-  getJob(id: string): Job {
-    return this.db.getItem('jobs', { id }) as Job
-  }
-
-  editJob(id: string, data: Job): Job {
-    const oldData = this.getJob(id)
-    if (data.name !== oldData.name) {
-      this.deleteJob(id)
-      // eslint-disable-next-line no-param-reassign
-      delete data.id
-      return this.createJob(oldData.teamId!, data)
-    }
-    return this.db.updateItem('jobs', data, { id }) as Job
-  }
-
-  deleteJob(id: string): void {
-    return this.db.deleteItem('jobs', { id })
-  }
-
   checkPublicUrlInUse(data: any): void {
     // skip when editing or when svc is of type "cluster" as it has no url
     if (data.id || data?.ingress?.type === 'cluster') return
@@ -589,6 +613,7 @@ export default class OtomiStack {
     // const teams = user.teams.map((name) => {
     //   return `team-${name}`
     // })
+
     const client = this.getApiClient()
     const collection: K8sService[] = []
 
@@ -602,14 +627,27 @@ export default class OtomiStack {
     //   })
     //   return collection
     // }
-    const svcList = await client.listNamespacedService(`team-${teamId}`)
 
+    const svcList = await client.listNamespacedService(`team-${teamId}`)
     svcList.body.items.map((item) => {
+      let name = item.metadata!.name ?? 'unknown'
+      let managedByKnative = false
+      // Filter out knative private services
+      if (item.metadata?.labels?.['networking.internal.knative.dev/serviceType'] === 'Private') return
+      // Filter out services that are knative service revision
+      if (item.spec?.type === 'ClusterIP' && item.metadata?.labels?.['serving.knative.dev/service']) return
+      if (item.spec?.type === 'ExternalName' && item.metadata?.labels?.['serving.knative.dev/service']) {
+        name = item.metadata?.labels?.['serving.knative.dev/service']
+        managedByKnative = true
+      }
+
       collection.push({
-        name: item.metadata!.name ?? 'unknown',
+        name,
         ports: item.spec?.ports?.map((portItem) => portItem.port) ?? [],
+        managedByKnative,
       })
     })
+
     return collection
   }
 
@@ -694,11 +732,13 @@ export default class OtomiStack {
 
   async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {
     debug('Loading values')
+    await this.loadLicense()
     await this.loadCluster()
     await this.loadPolicies()
     await this.loadSettings()
     await this.loadTeams()
     await this.loadApps()
+    // load license
     this.isLoaded = true
   }
 
@@ -719,22 +759,6 @@ export default class OtomiStack {
     data.otomi!.nodeSelector = objectToArray((data.otomi!.nodeSelector ?? {}) as Record<string, any>)
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
-  }
-
-  async loadTeamJobs(teamId: string): Promise<void> {
-    const relativePath = getTeamJobsFilePath(teamId)
-    if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no jobs yet`)
-      return
-    }
-    const data = await this.repo.readFile(relativePath)
-    const jobs: Array<Job> = get(data, getTeamJobsJsonPath(teamId), [])
-
-    jobs.forEach((job) => {
-      // @ts-ignore
-      const res: Job = this.db.populateItem('jobs', { ...job, teamId }, { teamId, name: job.name }, job.id)
-      debug(`Loaded job: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
-    })
   }
 
   async loadTeamSecrets(teamId: string): Promise<void> {
@@ -815,7 +839,6 @@ export default class OtomiStack {
     if (!tc.admin) tc.admin = { id: 'admin' }
     Object.values(tc).forEach((team: Team) => {
       this.loadTeam(team)
-      this.loadTeamJobs(team.id!)
       this.loadTeamServices(team.id!)
       this.loadTeamSecrets(team.id!)
       this.loadTeamWorkloads(team.id!)
@@ -913,7 +936,6 @@ export default class OtomiStack {
         const teamId = team.id as string
         await this.saveTeamApps(teamId)
         await this.saveTeamBackups(teamId)
-        await this.saveTeamJobs(teamId)
         await this.saveTeamServices(teamId)
         await this.saveTeamSecrets(teamId)
         await this.saveTeamWorkloads(teamId)
@@ -968,15 +990,6 @@ export default class OtomiStack {
     await this.repo.writeFile(path, outData, false)
   }
 
-  async saveTeamJobs(teamId: string): Promise<void> {
-    const jobs = this.db.getCollection('jobs', { teamId })
-    const jobsRaw = jobs.map((item) => omit(item, ['teamId']))
-    const data = {}
-    set(data, getTeamJobsJsonPath(teamId), jobsRaw)
-    const filePath = getTeamJobsFilePath(teamId)
-    await this.repo.writeFile(filePath, data)
-  }
-
   async saveTeamServices(teamId: string): Promise<void> {
     const services = this.db.getCollection('services', { teamId })
     const data = {}
@@ -1027,7 +1040,6 @@ export default class OtomiStack {
       'domain',
       'forwardPath',
       'hasCert',
-      'ksvc',
       'paths',
       'type',
       'ownHost',
@@ -1037,22 +1049,6 @@ export default class OtomiStack {
     )
     svc.teamId = teamId
     if (!('name' in svcRaw)) debug('Unknown service structure')
-
-    if ('ksvc' in svcRaw) {
-      if ('predeployed' in svcRaw.ksvc) set(svc, 'ksvc.serviceType', 'ksvcPredeployed')
-      else {
-        svc.ksvc = cloneDeep(svcRaw.ksvc) as Record<string, any>
-        svc.ksvc.serviceType = 'ksvc'
-        svc.ksvc.annotations = objectToArray(svcRaw.ksvc.annotations as Record<string, any>)
-        svc.ksvc.env = objectToArray(svcRaw.ksvc.env as Record<string, any>, 'name', 'value')
-        svc.ksvc.files = objectToArray(svcRaw.ksvc.files as Record<string, any>, 'path', 'content')
-        svc.ksvc.secretMounts = objectToArray(svcRaw.ksvc.secretMounts as Record<string, any>, 'name', 'path')
-        svc.ksvc.secrets = svcRaw.ksvc.secrets ?? []
-        if (svcRaw.ksvc.command?.length) svc.ksvc.command = argQuoteJoin(svcRaw.ksvc.command)
-        if (svcRaw.ksvc.args?.length) svc.ksvc.args = argQuoteJoin(svcRaw.ksvc.args)
-      }
-    } else set(svc, 'ksvc.serviceType', 'svcPredeployed')
-
     if (svcRaw.type === 'cluster') svc.ingress = { type: 'cluster' }
     else {
       const { cluster, dns } = this.getSettings(['cluster', 'dns'])
@@ -1081,27 +1077,7 @@ export default class OtomiStack {
 
   // eslint-disable-next-line class-methods-use-this
   convertDbServiceToValues(svc: any): any {
-    const { serviceType } = svc.ksvc
-    debug(`Saving service: id: ${svc.id} serviceType: ${serviceType}`)
-    const svcCloned = omit(svc, ['teamId', 'ksvc', 'ingress', 'path'])
-    const ksvc = cloneDeep(svc.ksvc)
-    delete ksvc.serviceType
-    if (serviceType === 'ksvc') {
-      svcCloned.ksvc = ksvc as Record<string, any>
-      svcCloned.ksvc.annotations = arrayToObject(svc.ksvc.annotations as [])
-      svcCloned.ksvc.env = arrayToObject((svc.ksvc.env as []) ?? [])
-      svcCloned.ksvc.files = arrayToObject((svc.ksvc.files as []) ?? [], 'path', 'content')
-      svcCloned.ksvc.secretMounts = arrayToObject((svc.ksvc.secretMounts as []) ?? [], 'name', 'path')
-      svcCloned.ksvc.command = svc.ksvc.command?.length > 1 ? svc.ksvc.command.split(' ') : svc.ksvc.command
-      // conveniently split the command string (which might contain args as well) by space
-      svcCloned.ksvc.command =
-        svc.ksvc.command?.length > 1 ? svc.ksvc.command.match(argSplit).map(argQuoteStrip) : svc.ksvc.command
-      // same for args
-      svcCloned.ksvc.args = svc.ksvc.args?.length > 1 ? svc.ksvc.args.match(argSplit).map(argQuoteStrip) : svc.ksvc.args
-    } else if (serviceType === 'ksvcPredeployed') svcCloned.ksvc = { predeployed: true }
-    else if (serviceType !== 'svcPredeployed')
-      debug(`Saving service failure: Not supported service type: ${serviceType}`)
-
+    const svcCloned = omit(svc, ['teamId', 'ingress', 'path'])
     if (svc.ingress && svc.ingress.type !== 'cluster') {
       const ing = svc.ingress
       if (ing.useDefaultSubdomain) svcCloned.ownHost = true
@@ -1128,6 +1104,7 @@ export default class OtomiStack {
     // also save admin apps
     await this.saveAdminApps(secretPaths)
     await this.saveTeamApps('admin')
+    await this.saveLicense(secretPaths)
   }
 
   async getSession(user: k8s.User): Promise<Session> {
@@ -1146,6 +1123,7 @@ export default class OtomiStack {
         console: env.VERSIONS.console,
         values: currentSha,
       },
+      license: rootStack.getLicense(),
     }
     return data
   }

@@ -9,5 +9,8 @@ K8sService:
       type: array
       items:
         type: integer
+    managedByKnative:
+      type: boolean
+      default: false
   required:
     - name

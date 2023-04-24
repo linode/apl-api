@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken'
+import jwt, { SignOptions } from 'jsonwebtoken'
 import nock from 'nock'
 
 const { env } = process
@@ -55,8 +55,7 @@ export default function getToken(groups: string[], roles?: string[]): string {
     roles,
   }
 
-  const options = {
-    header: { kid: '0' },
+  const options: SignOptions = {
     algorithm: 'RS256',
     expiresIn: '1d',
     audience: 'otomi',
