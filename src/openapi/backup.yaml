@@ -12,6 +12,7 @@ Backup:
       - update
   type: object
   description: Create Velero backup schedules
+  x-externalDocsPath: docs/console/backups
   properties:
     id:
       type: string
