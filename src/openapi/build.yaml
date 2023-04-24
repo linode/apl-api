@@ -61,7 +61,7 @@ Build:
           description: This can be commit, tag, or branch. If omitted, will equal to HEAD.
           $ref: 'definitions.yaml#/wordCharacterPattern'
           default: HEAD
-
+      required:
+        - repoUrl
   required:
     - name
-    - repoUrl
