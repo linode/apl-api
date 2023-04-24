@@ -4,10 +4,11 @@ import { components, external, operations, paths } from 'src/generated-schema'
 import OtomiStack from 'src/otomi-stack'
 export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
-export type Job = components['schemas']['Job']
 export type Kubecfg = components['schemas']['Kubecfg']
 export type K8sService = components['schemas']['K8sService']
 export type Secret = components['schemas']['Secret'] & { teamId?: string }
+export type License = components['schemas']['License']
+export type LicenseJwt = components['schemas']['LicenseJwt']
 export type Service = components['schemas']['Service']
 export type Session = components['schemas']['Session']
 export type Settings = components['schemas']['Settings']

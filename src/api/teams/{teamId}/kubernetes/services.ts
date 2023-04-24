@@ -8,9 +8,13 @@ export default function (): OperationHandlerArray {
   const get: Operation = [
     async (req: OpenApiRequestExt, res): Promise<void> => {
       debug('getAllK8sServices')
-
-      const v = await req.otomi.getK8sServices(req.params.teamId)
-      res.json(v)
+      try {
+        const v = await req.otomi.getK8sServices(req.params.teamId)
+        res.json(v)
+      } catch (e) {
+        debug(e)
+        res.json([])
+      }
     },
   ]
   const api = {
