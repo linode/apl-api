@@ -8,9 +8,10 @@ import { cloneDeep } from 'lodash'
 import { join } from 'path'
 import { Server } from 'socket.io'
 import { ApiNotReadyError } from 'src/error'
+import { checkLicenseCapabilities } from 'src/license'
 import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
-import { cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validators'
+import { EDITOR_INACTIVITY_TIMEOUT, cleanEnv } from 'src/validators'
 
 const debug = Debug('otomi:session')
 const env = cleanEnv({
@@ -109,20 +110,31 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
       clearInterval(timeout[email])
       timeout[email] = undefined
     }
+
     if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
       // manipulating data and no editor session yet? create one
-
-      // TODO check license
-      if (!editor) {
-        // bootstrap session stack for user
-        await setSessionStack(email)
-        // eslint-disable-next-line no-param-reassign
-        req.otomi = await getSessionStack(email)
-        timeout[email] = setTimeout(() => {
-          sessionStack.doRevert()
-        }, interval)
+      // get license
+      const license = sessionStack.getLicense()
+      // check if license if valid
+      // TODO throw error if license is invalid
+      if (license.isValid) {
+        // eslint-disable-next-line prefer-destructuring
+        const checkAgainst = req.originalUrl.split('/').slice(-1)[0]
+        // check license capabilities
+        // TODO throw error if exceeded license capabilities
+        if (['teams', 'services', 'workloads'].includes(checkAgainst))
+          if (!checkLicenseCapabilities(checkAgainst, license, sessionStack.db.db.getState())) return
+        if (!editor) {
+          // bootstrap session stack for user
+          await setSessionStack(email)
+          // eslint-disable-next-line no-param-reassign
+          req.otomi = await getSessionStack(email)
+          timeout[email] = setTimeout(() => {
+            sessionStack.doRevert()
+          }, interval)
+        }
+        return next()
       }
-      return next()
     }
     return next()
   }
