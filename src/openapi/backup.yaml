@@ -11,7 +11,7 @@ Backup:
       - create
       - update
   type: object
-  description: Create Velero backup schedules
+  description: Create Velero backup schedules for Persistent Volumes
   x-externalDocsPath: docs/console/backups
   properties:
     id:
@@ -24,27 +24,12 @@ Backup:
       $ref: definitions.yaml#/backupSchedule
     snapshotVolumes:
       title: Snapshot Volumes
-      description: Whether or not to snapshot volumes.
+      description: Whether or not to snapshot volumes. This only applies to Persistent Volumes in Azure, GCE, and AWS.
       type: boolean
       default: false
     labelSelector:
       title: Label Selector
       $ref: definitions.yaml#/labels
       description: (Optional) Individual objects must match this label selector to be included in the backup.
-    includedResources:
-      title: Included Resources
-      description: Resources to include in the backup.
-      items:
-        enum:
-          - pv
-          - secret
-          - configmap
-          - deployment
-          - service
-          - statefulset
-          - replicaset
-        type: string
-      type: array
-      uniqueItems: true
     ttl: 
       $ref: definitions.yaml#/backupTtl

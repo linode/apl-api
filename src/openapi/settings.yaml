@@ -17,8 +17,8 @@ Settings:
       description: Cluster configuration.
     platformBackups:
       additionalProperties: false
-      title: Platform App Backup
-      description: Platform apps backup schedule configuration.
+      title: Backup platform Persistent Volumes
+      description: Platform app Persistent Volume backup schedules.
       type: object
       properties:
         gitea:
