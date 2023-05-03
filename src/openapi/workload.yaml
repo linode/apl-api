@@ -35,7 +35,7 @@ Workload:
     namespace:
       description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'
       $ref: 'definitions.yaml#/domain'
-    selected:
+    selectedChart:
       type: string
   required:
     - name
@@ -73,19 +73,18 @@ WorkloadValues:
             - repository
             - tag
         containerPorts:
-          type: array
-          items:
-            type: object
-            properties:
-              name:
-                type: string
-                $ref: 'definitions.yaml#/wordCharacterPattern'
-                default: http
-              containerPort:
-                type: integer
-                $ref: 'definitions.yaml#/portNumber'
-              protocol:
-                type: string
-                default: TCP
+          type: object
+          properties:
+            name:
+              type: string
+              $ref: 'definitions.yaml#/wordCharacterPattern'
+              default: http
+            containerPort:
+              type: integer
+              $ref: 'definitions.yaml#/portNumber'
+              default: 8080
+            protocol:
+              type: string
+              default: TCP
   required:
     - values
