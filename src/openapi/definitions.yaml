@@ -650,7 +650,7 @@ imagePullPolicy:
     - Always
   type: string
 imageRepository:
-  pattern: ^https?:\/\/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&\/=]*)
+  pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
   type: string
 imageTag:
   pattern: '[\w][\w.-]{0,127}'

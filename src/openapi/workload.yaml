@@ -59,6 +59,7 @@ WorkloadValues:
       $ref: 'definitions.yaml#/wordCharacterPattern'
     values:
       type: object
+      title: Basic Values
       properties:
         fullnameOverride:
           $ref: 'definitions.yaml#/wordCharacterPattern'
