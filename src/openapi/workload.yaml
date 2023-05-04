@@ -36,9 +36,10 @@ Workload:
       description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'
       $ref: 'definitions.yaml#/domain'
     selectedChart:
-      type: string
+      enum: ['deployment', 'ksvc', 'custom']
   required:
     - name
+    - url
 
 WorkloadValues:
   x-acl:
@@ -75,14 +76,13 @@ WorkloadValues:
             - tag
         containerPorts:
           type: array
-          default: [{ name: http, containerPort: 8080, protocol: TCP }]
+          default: [{ containerPort: 8080, protocol: TCP }]
           items:
             type: object
             properties:
               name:
                 type: string
                 $ref: 'definitions.yaml#/wordCharacterPattern'
-                default: http
               containerPort:
                 type: integer
                 $ref: 'definitions.yaml#/portNumber'
