@@ -75,6 +75,7 @@ WorkloadValues:
             - tag
         containerPorts:
           type: array
+          default: [{ name: http, containerPort: 8080, protocol: TCP }]
           items:
             type: object
             properties:
