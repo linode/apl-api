@@ -74,18 +74,20 @@ WorkloadValues:
             - repository
             - tag
         containerPorts:
-          type: object
-          properties:
-            name:
-              type: string
-              $ref: 'definitions.yaml#/wordCharacterPattern'
-              default: http
-            containerPort:
-              type: integer
-              $ref: 'definitions.yaml#/portNumber'
-              default: 8080
-            protocol:
-              type: string
-              default: TCP
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                $ref: 'definitions.yaml#/wordCharacterPattern'
+                default: http
+              containerPort:
+                type: integer
+                $ref: 'definitions.yaml#/portNumber'
+                default: 8080
+              protocol:
+                type: string
+                default: TCP
   required:
     - values
