@@ -1,35 +1,10 @@
 teamConfig:
     dev:
         services:
-            -
-                id: d611a6be-3898-406d-9b5a-44ee2ba14dfb
-                ksvc:
-                    args:
-                        - '-c'
-                        - echo 'bla'
-                    command:
-                        - bash
-                    containerPort: 80
-                    files:
-                        /foo: bar
-                    image:
-                        pullPolicy: IfNotPresent
-                        repository: nginx
-                        tag: latest
-                    podSecurityContext:
-                        runAsUser: 1001
-                    resources:
-                        limits:
-                            cpu: 100m
-                            memory: 128Mi
-                        requests:
-                            cpu: 50m
-                            memory: 64Mi
-                    scaleToZero: false
-                    secrets: []
-                name: tlspass
-                ownHost: true
-                paths: []
-                port: 80
-                tlsPass: true
-                type: public
+            - id: d611a6be-3898-406d-9b5a-44ee2ba14dfb
+              name: tlspass
+              ownHost: true
+              paths: []
+              port: 80
+              tlsPass: true
+              type: public

@@ -24,6 +24,7 @@ AppList:
     - kubeapps
     - kubeclarity
     - kured
+    - kpack
     - loki
     - minio
     - opencost

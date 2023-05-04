@@ -1,0 +1,13 @@
+teamConfig:
+    otomi:
+        builds:
+            - name: demo-java1
+              tag: v.0.0.1
+              repoUrl: https://github.com/buildpacks/samples
+              revision: HEAD
+              path: samples/apps/java-maven
+            - name: demo-java2
+              tag: v.0.0.1
+              repoUrl: https://github.com/buildpacks/samples
+              revision: HEAD
+              path: samples/apps/java-maven

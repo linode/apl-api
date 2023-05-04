@@ -2,14 +2,14 @@ import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
-const debug = Debug('otomi:api:jobs')
+const debug = Debug('otomi:api:builds')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [
     /* business middleware not expressible by OpenAPI documentation goes here */
     ({ otomi }: OpenApiRequestExt, res): void => {
-      debug('getAllJobs')
-      const v = otomi.getAllJobs()
+      debug('getAllBuilds')
+      const v = otomi.getAllBuilds()
       res.json(v)
     },
   ]
