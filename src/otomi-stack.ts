@@ -207,7 +207,6 @@ export default class OtomiStack {
     debug('License removed')
     license = this.db.db.get(['license']).value() as License
     debug(license)
-    this.doDeployment()
   }
 
   async uploadLicense(jwtLicense: string): Promise<License> {
