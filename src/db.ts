@@ -105,12 +105,6 @@ export default class Db {
     this.db.get(type).remove(selector).write()
   }
 
-  // TODO: Debug purposes only
-  deleteLicense(type: string): void {
-    // @ts-ignore
-    this.db.unset(type).write()
-  }
-
   updateItem(type: string, data: Record<string, any>, selector: Record<string, any>, merge = false): DbType {
     const prev = this.getItemReference(type, selector)
     const col = this.db.get(type)

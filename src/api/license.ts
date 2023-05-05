@@ -6,9 +6,9 @@ const debug = Debug('otomi:api:delete')
 
 export default function (): OperationHandlerArray {
   const del: Operation = [
-    ({ otomi }: OpenApiRequestExt, res) => {
+    async ({ otomi }: OpenApiRequestExt, res) => {
       debug(`doLicenseRemove`)
-      otomi.removeLicense()
+      await otomi.removeLicense()
       res.json({})
     },
   ]

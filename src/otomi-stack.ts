@@ -200,13 +200,14 @@ export default class OtomiStack {
   }
 
   // TODO: Delete - Debug purposes only
-  removeLicense() {
-    let license = this.db.db.get(['license']).value() as License
-    debug(license)
-    this.db.deleteLicense('license')
-    debug('License removed')
-    license = this.db.db.get(['license']).value() as License
-    debug(license)
+  async removeLicense() {
+    if (await this.repo.fileExists('env/secrets.license.yaml')) {
+      await this.repo.removeFile('env/secrets.license.yaml').then(() => {
+        const license: License = { isValid: false, hasLicense: false, body: undefined }
+        this.db.db.set('license', license).write()
+        this.doDeployment()
+      })
+    }
   }
 
   async uploadLicense(jwtLicense: string): Promise<License> {

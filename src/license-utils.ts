@@ -1,5 +1,4 @@
-import { getSessionStack } from './middleware/session'
-import { License, OpenApiRequest } from './otomi-models'
+import { License } from './otomi-models'
 
 function checkLicenseCapabilities(request: string, license: License, databaseState: any): boolean {
   let actionAllowed = false
@@ -31,12 +30,4 @@ export function checkLicense(requestType: string, path: string, license: License
       }
     } else throw new Error('license is not valid')
   } else return
-}
-
-// TODO: Delete - Debug purposes only
-export async function removeLicense(req: OpenApiRequest) {
-  const { email } = req.user || {}
-  const sessionStack = await getSessionStack(email)
-  if (sessionStack.getLicense()) sessionStack.removeLicense()
-  else throw new Error('no license found')
 }
