@@ -7,6 +7,7 @@ import Memory from 'lowdb/adapters/Memory'
 import { AlreadyExists, NotExistError } from 'src/error'
 import {
   App,
+  Backup,
   Build,
   Cluster,
   License,
@@ -20,7 +21,7 @@ import {
 import { mergeData } from 'src/utils'
 import { v4 as uuidv4 } from 'uuid'
 
-export type DbType = Build | Cluster | Secret | Service | Team | Settings | App | Workload | WorkloadValues
+export type DbType = Backup | Build | Cluster | Secret | Service | Team | Settings | App | Workload | WorkloadValues
 export type Schema = {
   apps: App[]
   license: License
@@ -48,6 +49,7 @@ export default class Db {
     this.db
       .defaults({
         apps: [],
+        backups: [],
         builds: [],
         license: {},
         secrets: [],

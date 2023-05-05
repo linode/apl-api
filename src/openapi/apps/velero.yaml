@@ -14,6 +14,13 @@ AppVelero:
       additionalProperties: false
       type: object
       properties:
+        restic:
+          title: Restic Integration
+          description: Turn on Restic integration to take snapshots of persistent volumes when not using Amazon EBS Volumes, Azure Managed Disks or Google Persistent Disks.
+          properties:
+            enabled:
+              type: boolean
+              default: false
         cloud:
           $ref: '#/veleroCloudProvider'
         storage:
@@ -155,6 +162,41 @@ veleroCloudProvider:
       required:
         - aws
         - type
+    - title: Google
+      x-hideTitle: true
+      type: object
+      properties:
+        google:
+          additionalProperties: false
+          type: object
+          description: For clusters running in Google.
+          title: Google
+          properties:
+            serviceAccount:
+              type: string
+              description: The IAM service account with permissions to manage snapshot resources in the GCP Project.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            project:
+              type: string
+              description: The name of the GCP project.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            saKeyJson:
+              description: The Service Account Key (json)
+              type: string
+              x-secret: true
+              x-formtype: textarea
+          required:
+            - saKeyJson
+            - serviceAccount
+            - project
+        type:
+          type: string
+          enum:
+            - google
+          default: google
+      required:
+        - google
+        - type
 
 veleroStorageProvider:
   type: object
@@ -252,4 +294,36 @@ veleroStorageProvider:
           default: s3
       required:
         - s3
+        - type
+    - title: gcs
+      type: object
+      x-hideTitle: true
+      properties:
+        gcs:
+          additionalProperties: false
+          type: object
+          title: Google Object Storage
+          description: Select to store backups in Google Object Storage.
+          properties:
+            bucket:
+              type: string
+              description: Name of the bucket.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            serviceAccount:
+              description: The name of the GCP service account to use.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            saKeyJson:
+              description: The Service Account Key (json)
+              type: string
+              x-secret: true
+              x-formtype: textarea
+          required:
+            - bucket
+        type:
+          type: string
+          enum:
+            - gcs
+          default: gcs
+      required:
+        - gcs
         - type

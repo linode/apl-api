@@ -21,8 +21,17 @@ TeamSelfService:
       items:
         type: string
         # downloadKubeConfig - is an action that a user can perform, not an attribute of the input form
-        enum: [alerts, oidc, billingAlertQuotas, resourceQuota, downloadKubeConfig, downloadDockerConfig, networkPolicy]
-      default: [alerts]
+        enum:
+          [
+            alerts,
+            backup,
+            billingAlertQuotas,
+            oidc,
+            resourceQuota,
+            downloadKubeConfig,
+            downloadDockerConfig,
+            networkPolicy,
+          ]
       uniqueItems: true
     apps:
       type: array

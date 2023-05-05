@@ -371,6 +371,101 @@ paths:
         '200':
           description: Successfully deleted a team secret
 
+  '/backups':
+    get:
+      operationId: getAllBackups
+      x-aclSchema: Backup
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all backups configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Backup'
+
+  '/teams/{teamId}/backups':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamBackups
+      x-aclSchema: Backup
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team backups configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Backup'
+    post:
+      operationId: createBackup
+      description: Create a team backup
+      x-aclSchema: Backup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Backup'
+        description: Backup object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored backup configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Backup'
+
+  '/teams/{teamId}/backups/{backupId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/backupParams'
+    delete:
+      operationId: deleteBackup
+      description: Delete a backup from a given team
+      x-aclSchema: Backup
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a backup
+    get:
+      operationId: getBackup
+      description: Get a backup from a given team
+      x-aclSchema: Backup
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained backup configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Backup'
+    put:
+      operationId: editBackup
+      description: Edit a backup from a given team
+      x-aclSchema: Backup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Backup'
+        description: Backup object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team backup
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Backup'
+
   '/builds':
     get:
       operationId: getAllBuilds
@@ -592,7 +687,26 @@ paths:
       responses:
         <<: *DefaultGetResponses
         '200':
-          description: Successfully edited a team secret
+          description: Successfully edited workload values
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkloadValues'
+    patch:
+      operationId: updateWorkloadValues
+      description: Update workload values
+      x-aclSchema: Workload
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkloadValues'
+        description: Workload values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully updated workload values
           content:
             application/json:
               schema:
@@ -818,6 +932,13 @@ servers:
 # -------------------------------------------- Components
 components:
   parameters:
+    backupParams:
+      name: backupId
+      in: path
+      description: ID of the backup
+      required: true
+      schema:
+        type: string
     buildParams:
       name: buildId
       in: path
@@ -941,6 +1062,8 @@ components:
       $ref: app.yaml#/AppList
     AdditionalCluster:
       $ref: cluster.yaml#/AdditionalCluster
+    Backup:
+      $ref: backup.yaml#/Backup
     Build:
       $ref: build.yaml#/Build
     Cluster:

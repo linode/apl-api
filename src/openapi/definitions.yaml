@@ -332,8 +332,8 @@ azureTenantId:
   description: An Azure tenant id. Defaults to one found in metadata.
   type: string
 backupTtl:
-  default: 240h
-  description: Expiration of the backup.
+  default: 168h
+  description: Expiration of the backup. Defaults to 7 days.
   title: TTL after finished
   type: string
 backupSchedule:
@@ -648,6 +648,9 @@ imagePullPolicy:
   enum:
     - IfNotPresent
     - Always
+  type: string
+imageRepository:
+  pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
   type: string
 imageTag:
   pattern: '[\w][\w.-]{0,127}'
