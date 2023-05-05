@@ -319,8 +319,6 @@ veleroStorageProvider:
               x-formtype: textarea
           required:
             - bucket
-            - saKeyJson
-            - serviceAccount
         type:
           type: string
           enum:
