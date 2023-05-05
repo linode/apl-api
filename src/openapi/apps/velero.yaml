@@ -180,8 +180,14 @@ veleroCloudProvider:
               type: string
               description: The name of the GCP project.
               $ref: ../definitions.yaml#/wordCharacterPattern
+            saKeyJson:
+              description: The Service Account Key (json)
+              type: string
+              x-secret: true
+              x-formtype: textarea
           required:
-            - iamAccount
+            - saKeyJson
+            - serviceAccount
             - project
         type:
           type: string
@@ -293,11 +299,11 @@ veleroStorageProvider:
       type: object
       x-hideTitle: true
       properties:
-        s3:
+        gcs:
           additionalProperties: false
           type: object
           title: Google Object Storage
-          description: Select to store backups in AWS S3 or S3 compatible blob storage.
+          description: Select to store backups in Google Object Storage.
           properties:
             bucket:
               type: string
@@ -306,14 +312,20 @@ veleroStorageProvider:
             serviceAccount:
               description: The name of the GCP service account to use.
               $ref: ../definitions.yaml#/wordCharacterPattern
+            saKeyJson:
+              description: The Service Account Key (json)
+              type: string
+              x-secret: true
+              x-formtype: textarea
           required:
             - bucket
+            - saKeyJson
             - serviceAccount
         type:
           type: string
           enum:
-            - s3
-          default: s3
+            - gcs
+          default: gcs
       required:
-        - s3
+        - gcs
         - type
