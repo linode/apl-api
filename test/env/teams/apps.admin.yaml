@@ -23,6 +23,7 @@ teamConfig:
             kpack: {}
             loki: {}
             minio: {}
+            opencost: {}
             prometheus: {}
             thanos: {}
             vault: {}
