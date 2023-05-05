@@ -693,7 +693,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/WorkloadValues'
     patch:
-      operationId: editWorkloadValues
+      operationId: updateWorkloadValues
       description: Update workload values
       x-aclSchema: Workload
       requestBody:
