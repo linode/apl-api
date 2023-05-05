@@ -16,6 +16,7 @@ import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } fro
 import {
   App,
   Backup,
+  Build,
   Core,
   K8sService,
   License,
@@ -82,8 +83,16 @@ export function getTeamWorkloadValuesFilePath(teamId: string, workloadName): str
   return `env/teams/workloads/${teamId}/${workloadName}.yaml`
 }
 
+export function getTeamBuildsFilePath(teamId: string): string {
+  return `env/teams/builds.${teamId}.yaml`
+}
+
 export function getTeamWorkloadsJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.workloads`
+}
+
+export function getTeamBuildsJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.builds`
 }
 
 export function getTeamSecretsJsonPath(teamId: string): string {
@@ -461,6 +470,38 @@ export default class OtomiStack {
     return this.db.deleteItem('backups', { id })
   }
 
+  getTeamBuilds(teamId: string): Array<Build> {
+    const ids = { teamId }
+    return this.db.getCollection('builds', ids) as Array<Build>
+  }
+
+  getAllBuilds(): Array<Build> {
+    return this.db.getCollection('builds') as Array<Build>
+  }
+
+  createBuild(teamId: string, data: Build): Build {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      return this.db.createItem('builds', { ...data, teamId }, { teamId, name: data.name }) as Build
+    } catch (err) {
+      if (err.code === 409) err.publicMessage = 'Build name already exists'
+      throw err
+    }
+  }
+
+  getBuild(id: string): Build {
+    return this.db.getItem('builds', { id }) as Build
+  }
+
+  editBuild(id: string, data: Build): Build {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    return this.db.updateItem('builds', data, { id }) as Build
+  }
+
+  deleteBuild(id: string): void {
+    return this.db.deleteItem('builds', { id })
+  }
+
   getTeamWorkloads(teamId: string): Array<Workload> {
     const ids = { teamId }
     return this.db.getCollection('workloads', ids) as Array<Workload>
@@ -789,6 +830,20 @@ export default class OtomiStack {
     })
   }
 
+  async loadTeamBuilds(teamId: string): Promise<void> {
+    const relativePath = getTeamBuildsFilePath(teamId)
+    if (!(await this.repo.fileExists(relativePath))) {
+      debug(`Team ${teamId} has no builds yet`)
+      return
+    }
+    const data = await this.repo.readFile(relativePath)
+    const inData: Array<Build> = get(data, getTeamBuildsJsonPath(teamId), [])
+    inData.forEach((inBuild) => {
+      const res: any = this.db.populateItem('builds', { ...inBuild, teamId }, undefined, inBuild.id as string)
+      debug(`Loaded build: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
+    })
+  }
+
   async loadTeamWorkloads(teamId: string): Promise<void> {
     const relativePath = getTeamWorkloadsFilePath(teamId)
     if (!(await this.repo.fileExists(relativePath))) {
@@ -843,6 +898,7 @@ export default class OtomiStack {
       this.loadTeamSecrets(team.id!)
       this.loadTeamWorkloads(team.id!)
       this.loadTeamBackups(team.id!)
+      this.loadTeamBuilds(team.id!)
     })
   }
 
@@ -939,6 +995,7 @@ export default class OtomiStack {
         await this.saveTeamServices(teamId)
         await this.saveTeamSecrets(teamId)
         await this.saveTeamWorkloads(teamId)
+        await this.saveTeamBuilds(teamId)
         team.resourceQuota = arrayToObject((team.resourceQuota as []) ?? [])
         teamValues[teamId] = team
       }),
@@ -978,6 +1035,17 @@ export default class OtomiStack {
         this.saveWorkloadValues(workload)
       }),
     )
+  }
+
+  async saveTeamBuilds(teamId: string): Promise<void> {
+    const builds = this.db.getCollection('builds', { teamId }) as Array<Build>
+    const cleaneBuilds: Array<Record<string, any>> = builds.map((obj) => {
+      return omit(obj, ['teamId'])
+    })
+    const relativePath = getTeamBuildsFilePath(teamId)
+    const outData: Record<string, any> = set({}, getTeamBuildsJsonPath(teamId), cleaneBuilds)
+    debug(`Saving builds of team: ${teamId}`)
+    await this.repo.writeFile(relativePath, outData)
   }
 
   async saveWorkloadValues(workload: Workload): Promise<void> {

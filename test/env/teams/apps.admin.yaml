@@ -20,6 +20,7 @@ teamConfig:
             kubeapps: {}
             kubeclarity: {}
             kured: {}
+            kpack: {}
             loki: {}
             minio: {}
             prometheus: {}

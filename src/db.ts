@@ -8,6 +8,7 @@ import { AlreadyExists, NotExistError } from 'src/error'
 import {
   App,
   Backup,
+  Build,
   Cluster,
   License,
   Secret,
@@ -20,7 +21,7 @@ import {
 import { mergeData } from 'src/utils'
 import { v4 as uuidv4 } from 'uuid'
 
-export type DbType = Cluster | Secret | Backup | Service | Team | Settings | App | Workload | WorkloadValues
+export type DbType = Backup | Build | Cluster | Secret | Service | Team | Settings | App | Workload | WorkloadValues
 export type Schema = {
   apps: App[]
   license: License
@@ -30,6 +31,7 @@ export type Schema = {
   teams: Team[]
   workloads: Workload[]
   workloadValues: WorkloadValues[]
+  builds: Build[]
 }
 
 export default class Db {
@@ -48,6 +50,7 @@ export default class Db {
       .defaults({
         apps: [],
         backups: [],
+        builds: [],
         license: {},
         secrets: [],
         services: [],
