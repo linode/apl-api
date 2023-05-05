@@ -592,7 +592,26 @@ paths:
       responses:
         <<: *DefaultGetResponses
         '200':
-          description: Successfully edited a team secret
+          description: Successfully edited workload values
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkloadValues'
+    patch:
+      operationId: editWorkloadValues
+      description: Update workload values
+      x-aclSchema: Workload
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkloadValues'
+        description: Workload values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully updated workload values
           content:
             application/json:
               schema:

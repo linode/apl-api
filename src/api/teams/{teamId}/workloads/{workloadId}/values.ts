@@ -23,9 +23,29 @@ export default function (): OperationHandlerArray {
       res.json(data)
     },
   ]
+
+  const patch: Operation = [
+    ({ otomi, params: { teamId, workloadId }, body }: OpenApiRequestExt, res): void => {
+      const { image, containerPorts, fullnameOverride, ...rest } = body.values
+      debug(`editWorkloadValues(${workloadId})`)
+      const data = otomi.editWorkloadValues(decodeURIComponent(workloadId), {
+        id: workloadId,
+        values: {
+          fullnameOverride,
+          image,
+          containerPorts,
+          ...rest,
+        },
+        teamId: decodeURIComponent(teamId),
+      } as WorkloadValues)
+      res.json(data)
+    },
+  ]
+
   const api = {
     get,
     put,
+    patch,
   }
   return api
 }
