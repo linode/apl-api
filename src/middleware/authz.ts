@@ -5,6 +5,7 @@ import Authz, { getTeamSelfServiceAuthz } from 'src/authz'
 import Db from 'src/db'
 import { OpenApiRequestExt, PermissionSchema, TeamSelfService } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
+import { cleanEnv } from 'src/validators'
 import { getSessionStack } from './session'
 
 const HttpMethodMapping: Record<string, string> = {
@@ -56,10 +57,14 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
   else if (action === 'read' && schemaName === 'DockerConfig')
     valid = authz.hasSelfService(teamId, 'team', 'downloadDockerConfig')
   else valid = authz.validateWithCasl(action, schemaName, teamId)
-  if (!valid) {
-    return res
-      .status(403)
-      .send({ authz: false, message: `User not allowed to perform "${action}" on "${schemaName}" resource` })
+  const env = cleanEnv({})
+  // TODO: Debug purpose only for removal of license
+  if (!env.isDev) {
+    if (!valid) {
+      return res
+        .status(403)
+        .send({ authz: false, message: `User not allowed to perform "${action}" on "${schemaName}" resource` })
+    }
   }
 
   const schemaToDbMap: Record<string, string> = {

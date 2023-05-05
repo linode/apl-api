@@ -46,6 +46,14 @@ x-get-responses: &DefaultGetResponses
 
 # -------------------------------------------- Paths
 paths:
+  /license:
+    delete:
+      operationId: deleteLicense
+      description: Delete user license
+      x-aclSchema: License
+      responses:
+        '200':
+          description: Successfully removed user license
   /activate:
     put:
       operationId: activateLicense

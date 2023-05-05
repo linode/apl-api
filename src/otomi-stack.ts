@@ -199,6 +199,17 @@ export default class OtomiStack {
     return license
   }
 
+  // TODO: Delete - Debug purposes only
+  removeLicense() {
+    let license = this.db.db.get(['license']).value() as License
+    debug(license)
+    this.db.deleteLicense('license')
+    debug('License removed')
+    license = this.db.db.get(['license']).value() as License
+    debug(license)
+    this.doDeployment()
+  }
+
   async uploadLicense(jwtLicense: string): Promise<License> {
     debug('Uploading the license')
 
