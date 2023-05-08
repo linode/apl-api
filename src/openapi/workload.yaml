@@ -60,15 +60,16 @@ WorkloadValues:
       $ref: 'definitions.yaml#/wordCharacterPattern'
     values:
       type: object
-      title: Basic Values
+      title: Minimal values
       properties:
         fullnameOverride:
           $ref: 'definitions.yaml#/wordCharacterPattern'
         image:
           type: object
+          description: Add the registry and tag of the image to use
           properties:
             repository:
-              $ref: 'definitions.yaml#/imageRepository'
+              $ref: 'definitions.yaml#/imageRegistry'
             tag:
               $ref: 'definitions.yaml#/imageTag'
           required:
@@ -77,6 +78,7 @@ WorkloadValues:
         containerPorts:
           type: array
           default: [{ containerPort: 8080, protocol: TCP }]
+          title: Port
           items:
             type: object
             properties:
@@ -87,8 +89,39 @@ WorkloadValues:
                 type: integer
                 $ref: 'definitions.yaml#/portNumber'
                 default: 8080
+                description: Declare TCP port used by the application
               protocol:
                 type: string
                 default: TCP
+        resources:
+          type: object
+          title: Resources
+          description: Adjust according to application consumption
+          properties:
+            requests:
+              x-hideTitle: true
+              properties:
+                cpu:
+                  title: vCPU
+                  $ref: 'definitions.yaml#/quantityCpu'
+                  default: 200m
+                memory:
+                  title: Memory
+                  $ref: 'definitions.yaml#/quantityMem'
+                  default: 32Mi
+        autoscaling:
+          type: object
+          title: Instances
+          description: Autoscaling is based on real-time CPU and memory consumtion. To avoid downtime, set the minimal number of instances to at least 2
+          properties:
+            minReplicas:
+              title: Min
+              type: integer
+              default: 2
+            maxReplicas:
+              title: Max
+              type: integer
+              default: 10
+
   required:
     - values

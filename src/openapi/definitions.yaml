@@ -649,9 +649,10 @@ imagePullPolicy:
     - IfNotPresent
     - Always
   type: string
-imageRepository:
+imageRegistry:
   pattern: ^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$
   type: string
+  title: registry
 imageTag:
   pattern: '[\w][\w.-]{0,127}'
   type: string
