@@ -1342,8 +1342,6 @@ definitions:
                 description: A relative directory path within the Git repository.
                 type: string
                 default: ./Dockerfile
-            required:
-              - repoUrl
           buildpacks:
             properties:
               buildPacksrepoUrl:
@@ -1356,8 +1354,6 @@ definitions:
               path:
                 description: A relative directory path within the Git repository.
                 type: string
-            required:
-              - repoUrl
     required:
       - name
 
