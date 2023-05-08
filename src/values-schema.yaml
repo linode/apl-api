@@ -357,9 +357,6 @@ definitions:
     properties:
       name:
         $ref: '#/definitions/wordCharacterPattern'
-      enabled:
-        type: boolean
-        default: false
       ttl:
         $ref: '#/definitions/backupTtl'
       schedule:
@@ -767,6 +764,7 @@ definitions:
       - kind
       - ovh
       - vultr
+      - scaleway
   redisChart:
     properties:
       _rawValues:
@@ -1207,12 +1205,12 @@ definitions:
       billingAlertQuotas:
         title: Billing alert quotas
         properties:
-          TeamCpuMonthQuotaReached:
+          teamCpuMonthQuotaReached:
             properties:
               quota:
                 type: integer
                 default: 100
-          TeamMemMonthQuotaReached:
+          teamMemMonthQuotaReached:
             properties:
               quota:
                 type: integer
@@ -1282,7 +1280,7 @@ definitions:
         uniqueItems: true
   backupTtl:
     default: 168h
-    description: Expiration of the backup.
+    description: Expiration of the backup. Defaults to 7 days.
     title: TTL after finished
     type: string
   url:
@@ -1329,20 +1327,37 @@ definitions:
             x-secret: ''
             $ref: '#/definitions/wordCharacterPattern'
             description: The password used for basic authentication to access a private github repo.
-      appSource:
+      mode:
         properties:
-          repoUrl:
-            description: URL of the Git repository holding the application code.
-            $ref: '#/definitions/url'
-          revision:
-            description: This may be a commit sha, branch name, or tag. If omitted, will equal to HEAD.
-            $ref: '#/definitions/wordCharacterPattern'
-            default: HEAD
-          path:
-            description: A relative directory path within the Git repository.
-            $ref: '#/definitions/wordCharacterPattern'
-        required:
-          - repoUrl
+          docker:
+            properties:
+              repoUrl:
+                description: URL of the Git repository holding the application code.
+                $ref: '#/definitions/url'
+              revision:
+                description: This may be a commit sha, branch name, or tag. If omitted, will equal to HEAD.
+                $ref: '#/definitions/wordCharacterPattern'
+                default: HEAD
+              path:
+                description: A relative directory path within the Git repository.
+                type: string
+                default: ./Dockerfile
+            required:
+              - repoUrl
+          buildpacks:
+            properties:
+              buildPacksrepoUrl:
+                description: URL of the Git repository holding the application code.
+                $ref: '#/definitions/url'
+              revision:
+                description: This may be a commit sha, branch name, or tag. If omitted, will equal to HEAD.
+                $ref: '#/definitions/wordCharacterPattern'
+                default: HEAD
+              path:
+                description: A relative directory path within the Git repository.
+                type: string
+            required:
+              - repoUrl
     required:
       - name
 
@@ -1368,6 +1383,7 @@ definitions:
       namespace:
         description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'
         $ref: '#/definitions/domain'
+
     required:
       - name
       - url
@@ -2512,6 +2528,10 @@ properties:
           enabled:
             type: boolean
             default: false
+          disabledRules:
+            type: array
+            items:
+              type: string
           remoteWrite:
             properties:
               enabled:
@@ -2897,6 +2917,9 @@ properties:
                     type: string
                     description: The name of the GCP project.
                     $ref: '#/definitions/wordCharacterPattern'
+                  saKeyJson:
+                    type: string
+                    x-secret: ''
               type:
                 type: string
                 enum:
@@ -2967,6 +2990,9 @@ properties:
                   serviceAccount:
                     description: The name of the GCP service account to use.
                     $ref: '#/definitions/wordCharacterPattern'
+                  saKeyJson:
+                    type: string
+                    x-secret: ''
                 required:
                   - bucket
                   - serviceAccount
@@ -3573,7 +3599,7 @@ properties:
         description: 'The smtp host:port combination.'
     required:
       - smarthost
-  backups:
+  platformBackups:
     properties:
       gitea:
         title: Gitea
