@@ -77,7 +77,7 @@ WorkloadValues:
             - tag
         containerPorts:
           type: array
-          default: [{ containerPort: 8080, protocol: TCP }]
+          default: [{ name: http, containerPort: 8080, protocol: TCP }]
           title: Port
           items:
             type: object
@@ -85,6 +85,7 @@ WorkloadValues:
               name:
                 type: string
                 $ref: 'definitions.yaml#/wordCharacterPattern'
+                default: http
               containerPort:
                 type: integer
                 $ref: 'definitions.yaml#/portNumber'
