@@ -24,6 +24,70 @@ Build:
     tag:
       $ref: 'definitions.yaml#/imageTag'
       default: v0.0.1
+    mode:
+      title: Mode
+      description: Choose between Docker or Buildpacks
+      type: object
+      oneOf:
+        - title: Docker
+          type: object
+          description: Build from source using a Dockerfile
+          properties:
+            docker:
+              additionalProperties: false
+              type: object
+              x-hideTitle: true
+              properties:
+                repoUrl:
+                  description: The URL of the Git repo that contains the application code.
+                  $ref: 'definitions.yaml#/url'
+                path:
+                  description: The path to the Dockerfile to execute (defaults to ./Dockerfile)
+                  type: string
+                revision:
+                  description: This can be commit, tag, or branch. If omitted, will equal to HEAD.
+                  $ref: 'definitions.yaml#/wordCharacterPattern'
+                  default: HEAD
+              required:
+                - repoUrl
+            type:
+              type: string
+              enum:
+                - docker
+              default: docker
+          required:
+            - docker
+            - type
+        - title: Buildpacks
+          type: object
+          description: Build from source using Buildpacks
+          properties:
+            buildpacks:
+              additionalProperties: false
+              x-hideTitle: true
+              type: object
+              properties:
+                repoUrl:
+                  description: The URL of the Git repo that contains the application code.
+                  $ref: 'definitions.yaml#/url'
+                path:
+                  description: A subpath within the source input where the source to build is located (optional)
+                  type: string
+                  default: ""
+                revision:
+                  description: This can be commit, tag, or branch. If omitted, will equal to HEAD.
+                  $ref: 'definitions.yaml#/wordCharacterPattern'
+                  default: HEAD
+              required:
+                - repoUrl
+            type:
+              type: string
+              enum:
+                - buildpacks
+              default: buildpacks
+          required:
+            - buildpacks
+            - type
     repoAccess:
       title: Repository access (Optional)
       description: Configure access to private repositories.
@@ -47,21 +111,6 @@ Build:
           title: password
           $ref: 'definitions.yaml#/wordCharacterPattern'
           description: The password used to access a private github repo.
-    appSource:
-      title: Application Source
-      description: Define the source of the application code to use.
-      properties:
-        repoUrl:
-          description: The URL of the Git repo that contains the application code.
-          $ref: 'definitions.yaml#/url'
-        path:
-          description: A relative directory path within the Git repository.
-          $ref: 'definitions.yaml#/wordCharacterPattern'
-        revision:
-          description: This can be commit, tag, or branch. If omitted, will equal to HEAD.
-          $ref: 'definitions.yaml#/wordCharacterPattern'
-          default: HEAD
-      required:
-        - repoUrl
+
   required:
     - name

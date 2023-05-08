@@ -2273,7 +2273,7 @@ properties:
             properties:
               kuredDaemonSet:
                 $ref: '#/definitions/resources'
-      kpack:
+      tekton:
         additionalProperties: false
         properties:
           _rawValues:
@@ -2281,34 +2281,6 @@ properties:
           enabled:
             type: boolean
             default: false
-          buildPacks:
-            properties:
-              java:
-                properties:
-                  enabled:
-                    type: boolean
-                    default: true
-              nodejs:
-                properties:
-                  enabled:
-                    type: boolean
-                    default: true
-              go:
-                properties:
-                  enabled:
-                    type: boolean
-                    default: true
-              dotnetCore:
-                properties:
-                  enabled:
-                    type: boolean
-                    default: false
-              php:
-                properties:
-                  enabled:
-                    type: boolean
-                    default: false
-
       loki:
         additionalProperties: false
         properties:
