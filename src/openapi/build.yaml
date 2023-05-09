@@ -57,6 +57,7 @@ buildMode:
   title: Mode
   description: Choose between Docker or Buildpacks
   type: object
+  default: 1
   oneOf:
     - title: Docker
       type: object
@@ -106,7 +107,7 @@ buildMode:
             path:
               description: A subpath within the repo where the source to build is located (optional)
               type: string
-              default: ""
+              default: ''
             revision:
               description: This can be a commit, a tag, or a branch
               $ref: 'definitions.yaml#/wordCharacterPattern'
