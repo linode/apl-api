@@ -23,7 +23,7 @@ Build:
       description: Results in image name harbor.<your-domain>/<team-name>/name
     tag:
       $ref: 'definitions.yaml#/imageTag'
-      default: v0.0.1
+      default: latest
       description: Image tag
     mode:
       $ref: '#/buildMode'
