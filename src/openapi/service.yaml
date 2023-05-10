@@ -10,7 +10,7 @@ Service:
       - read-any
       - create
       - update
-  x-externalDocsPath: docs/console/services
+  x-externalDocsPath: docs/for-devs/console/services
   properties:
     id:
       # readOnly: true
@@ -49,7 +49,6 @@ Service:
       oneOf:
         - $ref: '#/IngressCluster'
         - $ref: '#/IngressPublic'
-      x-externalDocsPath: docs/console/services/#configuring-exposure-ingress
     networkPolicy:
       title: Network policies
       $ref: '#/networkPolicy'
