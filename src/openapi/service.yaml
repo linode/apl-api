@@ -145,7 +145,7 @@ Ingress:
 
 IngressCluster:
   additionalProperties: false
-  title: Cluster
+  title: Private (in-cluster)
   type: object
   nullable: true
   properties:
@@ -165,8 +165,8 @@ IngressPublic:
             - public
           default: public
   nullable: true
-  description: Will only accept traffic coming from the public loadbalancer.
-  title: Ingress
+  description: Will only accept traffic coming from an external loadbalancer.
+  title: External (public or private network)
 
 networkPolicy:
   additionalProperties: false
