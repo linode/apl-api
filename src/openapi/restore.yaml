@@ -1,5 +1,5 @@
 Restore:
-  x-externalDocsPath: docs/console/deploy-changes
+  x-externalDocsPath: docs/for-devs/console/deploy-changes
   x-acl:
     admin: [read-any]
     team: []

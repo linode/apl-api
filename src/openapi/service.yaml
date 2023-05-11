@@ -10,7 +10,7 @@ Service:
       - read-any
       - create
       - update
-  x-externalDocsPath: docs/console/services
+  x-externalDocsPath: docs/for-devs/console/services
   properties:
     id:
       # readOnly: true
@@ -49,7 +49,6 @@ Service:
       oneOf:
         - $ref: '#/IngressCluster'
         - $ref: '#/IngressPublic'
-      x-externalDocsPath: docs/console/services/#configuring-exposure-ingress
     networkPolicy:
       title: Network policies
       $ref: '#/networkPolicy'
@@ -146,7 +145,7 @@ Ingress:
 
 IngressCluster:
   additionalProperties: false
-  title: Cluster
+  title: Private (in-cluster)
   type: object
   nullable: true
   properties:
@@ -166,8 +165,8 @@ IngressPublic:
             - public
           default: public
   nullable: true
-  description: Will only accept traffic coming from the public loadbalancer.
-  title: Ingress
+  description: Will only accept traffic coming from an external loadbalancer.
+  title: External (public or private network)
 
 networkPolicy:
   additionalProperties: false

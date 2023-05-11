@@ -11,7 +11,7 @@ Build:
       - create
       - update
   type: object
-  x-externalDocsPath: docs/console/builds
+  x-externalDocsPath: docs/for-devs/console/builds
   properties:
     id:
       type: string

@@ -125,4 +125,4 @@ Team:
       - read-any
       - update
   type: object
-  x-externalDocsPath: docs/console/teams
+  x-externalDocsPath: docs/for-ops/console/teams
