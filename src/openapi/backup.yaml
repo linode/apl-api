@@ -12,7 +12,7 @@ Backup:
       - update
   type: object
   description: Create Velero backup schedules for Persistent Volumes
-  x-externalDocsPath: docs/console/backups
+  x-externalDocsPath: docs/for-devs/console/backups
   properties:
     id:
       type: string
