@@ -52,7 +52,7 @@ describe('License tests', () => {
   it('should throw exception on license team capabilities', () => {
     validLicense.body!.capabilities.teams = 2
     expect(() => {
-      checkLicense('post', 'teams', validLicense, { teams: ['', ''] })
+      checkLicense('post', 'teams', validLicense, { teams: ['', '', ''] })
     }).to.throw('maximum number of teams are reached for this license')
   })
   it('should throw exception on license workloads capabilities', () => {
