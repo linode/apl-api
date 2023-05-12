@@ -4,7 +4,8 @@ function checkLicenseCapabilities(request: string, license: License, databaseSta
   let actionAllowed = false
   switch (request) {
     case 'teams':
-      if (databaseState.teams.length < license.body!.capabilities.teams) actionAllowed = true
+      // -1 is needed because the admin is a separate team
+      if (databaseState.teams.length - 1 < license.body!.capabilities.teams) actionAllowed = true
       break
     case 'services':
       if (databaseState.services.length < license.body!.capabilities.services) actionAllowed = true
