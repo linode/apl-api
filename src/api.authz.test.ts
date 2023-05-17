@@ -8,10 +8,25 @@ import request, { SuperAgentTest } from 'supertest'
 import getToken from 'src/fixtures/jwt'
 import OtomiStack from 'src/otomi-stack'
 import { getSessionStack } from './middleware'
-import { App } from './otomi-models'
+import { App, License } from './otomi-models'
 
 const adminToken: string = getToken(['team-admin'])
 const teamToken: string = getToken(['team-team1'])
+const validLicense: License = {
+  isValid: true,
+  hasLicense: true,
+  jwt: '',
+  body: {
+    version: 1,
+    key: 'abc',
+    type: 'professional',
+    capabilities: {
+      teams: 30,
+      services: 30,
+      workloads: 30,
+    },
+  },
+}
 
 describe('API authz tests', () => {
   let app: Express
@@ -23,6 +38,10 @@ describe('API authz tests', () => {
     // await _otomiStack.init()
     _otomiStack.createTeam({ name: 'team1' })
     otomiStack = sinonStub(_otomiStack)
+    otomiStack.getLicense.restore()
+    sinonStub(otomiStack, 'getLicense').callsFake(function () {
+      return validLicense
+    })
     app = await initApp(otomiStack)
     agent = request.agent(app)
     agent.set('Accept', 'application/json')
@@ -37,7 +56,6 @@ describe('API authz tests', () => {
         .expect('Content-Type', /json/)
         .end(done)
     })
-
     it('admin cannot put /settings/alerts with extra properties', (done) => {
       agent
         .put('/v1/settings/alerts')
@@ -328,7 +346,7 @@ describe('API authz tests', () => {
   it('anonymous user cannot delete a given service', (done) => {
     agent.delete('/v1/teams/team1/services/service1').expect(401).end(done)
   })
-  it('anonymous user cannot add a new service', (done) => {
+  it('anonymous user cannot create a new service', (done) => {
     agent.post('/v1/teams/team1/services').expect(401).end(done)
   })
   it('should handle exists exception and transform it to HTTP response with code 409', (done) => {
