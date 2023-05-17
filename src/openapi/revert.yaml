@@ -1,5 +1,5 @@
 Revert:
-  x-externalDocsPath: docs/console/revert-changes
+  x-externalDocsPath: docs/for-devs/console/deploy-changes
   x-acl:
     admin: [read-any]
     team: [read-any]
