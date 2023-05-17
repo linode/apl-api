@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.8.1](https://github.com/redkubes/otomi-api/compare/v0.8.0...v0.8.1) (2023-05-17)
+
+
+### Features
+
+* added checks for if license capabilities are exceeded todo errors ([0ec0a6a](https://github.com/redkubes/otomi-api/commit/0ec0a6a598bb358393d33bdc1f79ec014eed1a14))
+* added error handling and extra check for post requests ([451afbc](https://github.com/redkubes/otomi-api/commit/451afbc51833cc51be38a433a8935ccdb01adba9))
+* added license tests ([0b78d13](https://github.com/redkubes/otomi-api/commit/0b78d1356f79d439b627a84f7f147f689ac1bc46))
+* added license utils ([d8b2be5](https://github.com/redkubes/otomi-api/commit/d8b2be54d8b4802081d24fcc545247a02055f7d5))
+* added remove license not working yet ([a3e262b](https://github.com/redkubes/otomi-api/commit/a3e262b07d3fc909f6bb615a411a8e9ac927a91b))
+* added remove license not working yet 2 ([df6f783](https://github.com/redkubes/otomi-api/commit/df6f7839232c265c4d3d794412c9e1d6b96099e5))
+* added signing license checks ([7e5c484](https://github.com/redkubes/otomi-api/commit/7e5c484194a26bcf2e9d373b14a33733f6df4647))
+* connectivity with otomi cloud ([aa50725](https://github.com/redkubes/otomi-api/commit/aa50725de9bb039babd629f3874287375e8f087d))
+* remove license is working ([8208dc6](https://github.com/redkubes/otomi-api/commit/8208dc6ef13f056b9b7927bbab06a48d78ad0c72))
+* separated license check for better mocking and fixed old tests that now need a license ([27bf534](https://github.com/redkubes/otomi-api/commit/27bf5346381530b1dd0b9876e0a7e4f6619ee6f8))
+
+
+### Bug Fixes
+
+* copy license to dist folder ([9446253](https://github.com/redkubes/otomi-api/commit/94462539ed3cc48c934737714fe576f6125cf77f))
+* recalculate team capabilities ([d747886](https://github.com/redkubes/otomi-api/commit/d7478861389925ac6b780438fac627a6a9fd54f6))
+* recalculate team capabilities test ([feed91f](https://github.com/redkubes/otomi-api/commit/feed91f59b7cd7add8465b49aa9c21c39db71738))
+* schema 4 license ([81a9d01](https://github.com/redkubes/otomi-api/commit/81a9d01c8d43514b64c183ebe027d709cf38a16f))
+* upload license error bug ([01d96a7](https://github.com/redkubes/otomi-api/commit/01d96a7c8473dbe72635669fbb5809294c43aae6))
+
 ## [0.6.0](https://github.com/redkubes/otomi-api/compare/v0.5.22...v0.6.0) (2023-03-14)
 
 
