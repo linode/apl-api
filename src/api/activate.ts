@@ -6,9 +6,9 @@ const debug = Debug('otomi:api:activate')
 
 export default function (): OperationHandlerArray {
   const put: Operation = [
-    ({ otomi, body }: OpenApiRequestExt, res): void => {
+    async ({ otomi, body }: OpenApiRequestExt, res): Promise<void> => {
       debug('Update license')
-      const data = otomi.uploadLicense((body as LicenseJwt).jwt)
+      const data = await otomi.uploadLicense((body as LicenseJwt).jwt)
       res.json(data)
     },
   ]
