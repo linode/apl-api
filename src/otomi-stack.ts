@@ -606,6 +606,13 @@ export default class OtomiStack {
   }
 
   deleteBuild(id: string): void {
+    const p = this.db.getCollection('projects') as Array<Project>
+    p.forEach((project: any) => {
+      if (project?.build?.id === id) {
+        const updatedData = { ...project, build: null }
+        this.db.updateItem('projects', updatedData, { id: project.id }) as Project
+      }
+    })
     return this.db.deleteItem('builds', { id })
   }
 
@@ -637,6 +644,13 @@ export default class OtomiStack {
   }
 
   deleteWorkload(id: string): void {
+    const p = this.db.getCollection('projects') as Array<Project>
+    p.forEach((project: any) => {
+      if (project?.workload?.id === id) {
+        const updatedData = { ...project, workload: null }
+        this.db.updateItem('projects', updatedData, { id: project.id }) as Project
+      }
+    })
     this.db.deleteItem('workloadValues', { id })
     return this.db.deleteItem('workloads', { id })
   }
@@ -674,6 +688,13 @@ export default class OtomiStack {
   }
 
   deleteService(id: string): void {
+    const p = this.db.getCollection('projects') as Array<Project>
+    p.forEach((project: any) => {
+      if (project?.service?.id === id) {
+        const updatedData = { ...project, service: null }
+        this.db.updateItem('projects', updatedData, { id: project.id }) as Project
+      }
+    })
     return this.db.deleteItem('services', { id })
   }
 
