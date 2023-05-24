@@ -662,7 +662,7 @@ export default class OtomiStack {
     const p = this.db.getCollection('projects') as Array<Project>
     p.forEach((project: any) => {
       if (project?.workload?.id === id) {
-        const updatedData = { ...project, workload: null }
+        const updatedData = { ...project, workload: null, workloadValues: null }
         this.db.updateItem('projects', updatedData, { id: project.id }) as Project
       }
     })
