@@ -11,7 +11,7 @@ import generatePassword from 'password-generator'
 import * as osPath from 'path'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
-import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
+import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
 import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
@@ -21,6 +21,7 @@ import {
   K8sService,
   License,
   Policies,
+  Project,
   Secret,
   Service,
   Session,
@@ -470,6 +471,112 @@ export default class OtomiStack {
     return this.db.deleteItem('backups', { id })
   }
 
+  getTeamProjects(teamId: string): Array<Project> {
+    const ids = { teamId }
+    return this.db.getCollection('projects', ids) as Array<Project>
+  }
+
+  getAllProjects(): Array<Project> {
+    return this.db.getCollection('projects') as Array<Project>
+  }
+
+  createProject(teamId: string, data: Project): Project {
+    const findItem = (collectionName: string) => {
+      return this.db.getCollection(collectionName).find((e: any) => {
+        return e.teamId === teamId && e.name === data.name
+      })
+    }
+    const item = findItem('builds') || findItem('workloads') || findItem('services')
+    try {
+      if (item)
+        throw new AlreadyExists(`Item already exists in collections: ${JSON.stringify({ teamId, name: data.name })}`)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      return this.db.createItem('projects', { ...data, teamId }, { teamId, name: data.name }) as Project
+    } catch (err) {
+      if (err.code === 409 && item)
+        err.publicMessage = `Use different project name, ${data.name} already used in other collection.`
+      else if (err.code === 409) err.publicMessage = 'Project name already exists'
+      throw err
+    }
+  }
+
+  getProject(id: string): Project {
+    const p = this.db.getItem('projects', { id }) as any
+    let b, w, wv, s
+    try {
+      b = this.db.getItem('builds', { id: p.build?.id }) as Build
+    } catch (err) {
+      b = {}
+    }
+    try {
+      w = this.db.getItem('workloads', { id: p.workload?.id }) as Workload
+    } catch (err) {
+      w = {}
+    }
+    try {
+      wv = this.db.getItem('workloadValues', { id: p.workloadValues?.id }) as WorkloadValues
+    } catch (err) {
+      wv = {}
+    }
+    try {
+      s = this.db.getItem('services', { id: p.service?.id }) as Service
+    } catch (err) {
+      s = {}
+    }
+
+    // const w = this.db.getItem('workloads', { id: p.workload?.id }) as Workload
+    // const wv = this.db.getItem('workloadValues', { id: p.workloadValues?.id }) as WorkloadValues
+    // const s = this.db.getItem('services', { id: p.service?.id }) as Service
+    return { ...p, build: b, workload: w, workloadValues: wv, service: s }
+  }
+
+  editProject(id: string, data: any): any {
+    const {
+      build,
+      workload,
+      workloadValues: { values },
+      service,
+      teamId,
+      name,
+    } = data
+
+    let b, w, wv, s
+    if (!build?.id && build?.mode) b = this.db.createItem('builds', { ...build, teamId }, { teamId, name }) as Build
+    else if (build?.id) b = this.db.updateItem('builds', build, { id: build.id }) as Build
+
+    if (!workload?.id) w = this.db.createItem('workloads', { ...workload, teamId }, { teamId, name }) as Workload
+    else w = this.db.updateItem('workloads', workload, { id: workload.id }) as Workload
+
+    if (!data.workloadValues?.id)
+      wv = this.db.createItem('workloadValues', { teamId, values }, { teamId, name }, w.id) as WorkloadValues
+    else wv = this.db.updateItem('workloadValues', { teamId, values }, { id: workload.id }) as WorkloadValues
+
+    if (!service?.id) s = this.db.createItem('services', { ...service, teamId }, { teamId, name }) as Service
+    else s = this.db.updateItem('services', service, { id: service.id }) as Service
+
+    const updatedData = {
+      id,
+      name,
+      teamId,
+      ...(b && { build: { id: b.id } }),
+      workload: { id: w.id },
+      workloadValues: { id: wv.id },
+      service: { id: s.id },
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    return this.db.updateItem('projects', updatedData, { id }) as Project
+  }
+
+  deleteProject(id: string): void {
+    const p = this.db.getItem('projects', { id }) as any
+    if (p.build?.id) this.db.deleteItem('builds', { id: p.build.id })
+    if (p.workload?.id) this.db.deleteItem('workloads', { id: p.workload.id })
+    if (p.workloadValues?.id) this.db.deleteItem('workloadValues', { id: p.workloadValues.id })
+    if (p.service?.id) this.db.deleteItem('services', { id: p.service.id })
+    return this.db.deleteItem('projects', { id })
+  }
+
   getTeamBuilds(teamId: string): Array<Build> {
     const ids = { teamId }
     return this.db.getCollection('builds', ids) as Array<Build>
@@ -530,6 +637,7 @@ export default class OtomiStack {
   }
 
   deleteWorkload(id: string): void {
+    this.db.deleteItem('workloadValues', { id })
     return this.db.deleteItem('workloads', { id })
   }
 
