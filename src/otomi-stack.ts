@@ -85,12 +85,20 @@ export function getTeamWorkloadValuesFilePath(teamId: string, workloadName): str
   return `env/teams/workloads/${teamId}/${workloadName}.yaml`
 }
 
+export function getTeamProjectsFilePath(teamId: string): string {
+  return `env/teams/projects.${teamId}.yaml`
+}
+
 export function getTeamBuildsFilePath(teamId: string): string {
   return `env/teams/builds.${teamId}.yaml`
 }
 
 export function getTeamWorkloadsJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.workloads`
+}
+
+export function getTeamProjectsJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.projects`
 }
 
 export function getTeamBuildsJsonPath(teamId: string): string {
@@ -974,6 +982,20 @@ export default class OtomiStack {
     })
   }
 
+  async loadTeamProjects(teamId: string): Promise<void> {
+    const relativePath = getTeamProjectsFilePath(teamId)
+    if (!(await this.repo.fileExists(relativePath))) {
+      debug(`Team ${teamId} has no projects yet`)
+      return
+    }
+    const data = await this.repo.readFile(relativePath)
+    const inData: Array<Project> = get(data, getTeamProjectsJsonPath(teamId), [])
+    inData.forEach((inProject) => {
+      const res: any = this.db.populateItem('projects', { ...inProject, teamId }, undefined, inProject.id as string)
+      debug(`Loaded project: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
+    })
+  }
+
   async loadTeamBuilds(teamId: string): Promise<void> {
     const relativePath = getTeamBuildsFilePath(teamId)
     if (!(await this.repo.fileExists(relativePath))) {
@@ -1042,6 +1064,7 @@ export default class OtomiStack {
       this.loadTeamSecrets(team.id!)
       this.loadTeamWorkloads(team.id!)
       this.loadTeamBackups(team.id!)
+      this.loadTeamProjects(team.id!)
       this.loadTeamBuilds(team.id!)
     })
   }
@@ -1139,6 +1162,7 @@ export default class OtomiStack {
         await this.saveTeamServices(teamId)
         await this.saveTeamSecrets(teamId)
         await this.saveTeamWorkloads(teamId)
+        await this.saveTeamProjects(teamId)
         await this.saveTeamBuilds(teamId)
         team.resourceQuota = arrayToObject((team.resourceQuota as []) ?? [])
         teamValues[teamId] = team
@@ -1179,6 +1203,17 @@ export default class OtomiStack {
         this.saveWorkloadValues(workload)
       }),
     )
+  }
+
+  async saveTeamProjects(teamId: string): Promise<void> {
+    const projects = this.db.getCollection('projects', { teamId }) as Array<Project>
+    const cleaneProjects: Array<Record<string, any>> = projects.map((obj) => {
+      return omit(obj, ['teamId'])
+    })
+    const relativePath = getTeamProjectsFilePath(teamId)
+    const outData: Record<string, any> = set({}, getTeamProjectsJsonPath(teamId), cleaneProjects)
+    debug(`Saving projects of team: ${teamId}`)
+    await this.repo.writeFile(relativePath, outData)
   }
 
   async saveTeamBuilds(teamId: string): Promise<void> {
