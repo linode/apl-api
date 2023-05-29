@@ -113,7 +113,7 @@ WorkloadValues:
         autoscaling:
           type: object
           title: Instances
-          description: Autoscaling is based on real-time CPU and memory consumtion. To avoid downtime, set the minimal number of instances to at least 2
+          description: Configure the desired Minimal and Maximal replica's
           properties:
             minReplicas:
               title: Min
