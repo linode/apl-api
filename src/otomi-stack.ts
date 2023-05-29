@@ -12,7 +12,7 @@ import * as osPath from 'path'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
-import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
+import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
   Backup,
@@ -20,6 +20,7 @@ import {
   Core,
   K8sService,
   License,
+  Metrics,
   Policies,
   Secret,
   Service,
@@ -34,7 +35,6 @@ import {
 import getRepo, { Repo } from 'src/repo'
 import { arrayToObject, getServiceUrl, objectToArray, removeBlankAttributes } from 'src/utils'
 import {
-  cleanEnv,
   CUSTOM_ROOT_CA,
   EDITOR_INACTIVITY_TIMEOUT,
   GIT_BRANCH,
@@ -45,6 +45,7 @@ import {
   GIT_USER,
   TOOLS_HOST,
   VERSIONS,
+  cleanEnv,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import connect from './otomiCloud/connect'
@@ -133,6 +134,18 @@ export default class OtomiStack {
     return apps.concat(ingressApps)
   }
 
+  getMetrics(): Metrics {
+    const metrics: Metrics = {
+      otomi_backups: this.getAllBackups().length,
+      otomi_builds: this.getAllBuilds().length,
+      otomi_secrets: this.getAllSecrets().length,
+      otomi_services: this.getAllServices().length,
+      // We do not count team_admin as a regular team
+      otomi_teams: this.getTeams().length - 1,
+      otomi_workloads: this.getAllWorkloads().length,
+    }
+    return metrics
+  }
   getRepoPath() {
     if (env.isTest || this.editor === undefined) return env.GIT_LOCAL_PATH
     const folder = `${rootPath}/${this.editor}`
