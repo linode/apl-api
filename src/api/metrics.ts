@@ -6,7 +6,7 @@ const debug = Debug('otomi:api:metrics')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [
-    async ({ otomi }: OpenApiRequestExt, res) => {
+    ({ otomi }: OpenApiRequestExt, res) => {
       debug('get')
       const data = otomi.getMetrics()
       res.json(data)
