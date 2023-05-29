@@ -1,7 +1,7 @@
 Metrics:
   x-acl:
-    admin: [get-any]
-    team: [get-any]
+    admin: [read-any]
+    team: [read-any]
   type: object
   properties:
     otomi_backups:
