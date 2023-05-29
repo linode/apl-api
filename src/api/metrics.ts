@@ -8,7 +8,7 @@ export default function (): OperationHandlerArray {
   const get: Operation = [
     async ({ otomi }: OpenApiRequestExt, res) => {
       debug('get')
-      const data = await otomi.getMetrics()
+      const data = otomi.getMetrics()
       res.json(data)
     },
   ]
