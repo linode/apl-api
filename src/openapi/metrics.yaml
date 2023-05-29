@@ -1,0 +1,37 @@
+Metrics:
+  x-acl:
+    admin: [read-any]
+    team: [read-any]
+  type: object
+  properties:
+    otomi_backups:
+      type: integer
+      minimum: 0
+      default: 0
+    otomi_builds:
+      type: integer
+      minimum: 0
+      default: 0
+    otomi_secrets:
+      type: integer
+      minimum: 0
+      default: 0q
+    otomi_services:
+      type: integer
+      minimum: 0
+      default: 0
+    otomi_teams:
+      type: integer
+      minimum: 0
+      default: 0
+    otomi_workloads:
+      type: integer
+      minimum: 0
+      default: 0
+  required:
+    - otomi_backups
+    - otomi_builds
+    - otomi_secrets
+    - otomi_services
+    - otomi_teams
+    - otomi_workloads
