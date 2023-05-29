@@ -140,7 +140,8 @@ export default class OtomiStack {
       otomi_builds: this.getAllBuilds().length,
       otomi_secrets: this.getAllSecrets().length,
       otomi_services: this.getAllServices().length,
-      otomi_teams: this.getTeams().length,
+      // We do not count team_admin as a regular team
+      otomi_teams: this.getTeams().length - 1,
       otomi_workloads: this.getAllWorkloads().length,
     }
     return metrics
