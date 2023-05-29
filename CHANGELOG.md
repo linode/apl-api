@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.8.2](https://github.com/redkubes/otomi-api/compare/v0.8.1...v0.8.2) (2023-05-29)
+
+
+### Features
+
+* add metrics endpoint ([#409](https://github.com/redkubes/otomi-api/issues/409)) ([58481fd](https://github.com/redkubes/otomi-api/commit/58481fdc0c501ac75d2c233d0dfe096ec962d588))
+
+
+### Bug Fixes
+
+* autoscaling description ([#407](https://github.com/redkubes/otomi-api/issues/407)) ([5ea59f8](https://github.com/redkubes/otomi-api/commit/5ea59f8dfdaa0bab0bd9d4bb73caf0d82f2e5062))
+* schema with supported k8s versions ([#405](https://github.com/redkubes/otomi-api/issues/405)) ([8eab895](https://github.com/redkubes/otomi-api/commit/8eab89541a140e246225b4c842dc27305bd4e416))
+
 ### [0.8.1](https://github.com/redkubes/otomi-api/compare/v0.8.0...v0.8.1) (2023-05-17)
 
 
