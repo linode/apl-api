@@ -34,7 +34,6 @@ License:
           type: string
           enum:
             - community
-            - professional
             - enterprise
         capabilities:
           properties:

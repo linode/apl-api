@@ -63,10 +63,6 @@ function checkLicenseToSign(license: License): boolean {
       errorMessageBuilder('Workloads capabilities are too high for this type of license')
     }
   }
-  if (license.body?.type === 'professional') {
-    isValid = false
-    errorMessageBuilder('This type of license is not supported yet, please choose either community or enterprise')
-  }
 
   if (!isValid) throw new Error(`${errors}`)
   return isValid

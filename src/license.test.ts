@@ -9,7 +9,7 @@ const validLicense: License = {
   body: {
     version: 1,
     key: 'abc',
-    type: 'professional',
+    type: 'enterprise',
     capabilities: {
       teams: 3,
       services: 3,
