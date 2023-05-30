@@ -20,6 +20,7 @@ import {
   Core,
   K8sService,
   License,
+  Metrics,
   Policies,
   Project,
   Secret,
@@ -142,6 +143,18 @@ export default class OtomiStack {
     return apps.concat(ingressApps)
   }
 
+  getMetrics(): Metrics {
+    const metrics: Metrics = {
+      otomi_backups: this.getAllBackups().length,
+      otomi_builds: this.getAllBuilds().length,
+      otomi_secrets: this.getAllSecrets().length,
+      otomi_services: this.getAllServices().length,
+      // We do not count team_admin as a regular team
+      otomi_teams: this.getTeams().length - 1,
+      otomi_workloads: this.getAllWorkloads().length,
+    }
+    return metrics
+  }
   getRepoPath() {
     if (env.isTest || this.editor === undefined) return env.GIT_LOCAL_PATH
     const folder = `${rootPath}/${this.editor}`

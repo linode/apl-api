@@ -2,18 +2,18 @@ import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
-const debug = Debug('otomi:api:license')
+const debug = Debug('otomi:api:metrics')
 
 export default function (): OperationHandlerArray {
-  const del: Operation = [
-    async ({ otomi }: OpenApiRequestExt, res) => {
-      debug(`doLicenseRemove`)
-      await otomi.removeLicense()
-      res.json({})
+  const get: Operation = [
+    ({ otomi }: OpenApiRequestExt, res) => {
+      debug('get')
+      const data = otomi.getMetrics()
+      res.json(data)
     },
   ]
   const api = {
-    delete: del,
+    get,
   }
   return api
 }

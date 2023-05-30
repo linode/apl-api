@@ -22,7 +22,7 @@ export type WorkloadValues = components['schemas']['WorkloadValues']
 export type Project = components['schemas']['Project']
 export type Build = components['schemas']['Build']
 export type TeamAuthz = components['schemas']['TeamAuthz']
-
+export type Metrics = components['schemas']['Metrics']
 // Derived setting models
 export type Alerts = Settings['alerts']
 export type Cluster = Settings['cluster']
