@@ -3,8 +3,8 @@ import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
-import { emptyDir } from 'fs-extra'
-import { readFile } from 'fs/promises'
+import { emptyDir, pathExists } from 'fs-extra'
+import { readFile, readdir, unlink, writeFile } from 'fs/promises'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { cloneDeep, each, filter, get, isArray, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
@@ -17,6 +17,7 @@ import {
   App,
   Backup,
   Build,
+  Cloudtty,
   Core,
   K8sService,
   License,
@@ -48,6 +49,7 @@ import {
   cleanEnv,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
+import { apply } from './apply'
 import connect from './otomiCloud/connect'
 
 const debug = Debug('otomi:otomi-stack')
@@ -528,6 +530,47 @@ export default class OtomiStack {
 
   deleteBuild(id: string): void {
     return this.db.deleteItem('builds', { id })
+  }
+
+  async connectCloudtty(data: Cloudtty): Promise<Cloudtty> {
+    // const kc = new k8s.KubeConfig()
+    // kc.loadFromDefault()
+    // const opts = {}
+    // kc.applyToRequest(opts)
+
+    if (await pathExists('./src/ttyManifests/ttyd.yaml')) await unlink('./src/ttyManifests/ttyd.yaml')
+    const variables = {
+      TARGET_TEAM: data.teamId,
+      FQDN: data.domain,
+      SUB: data.sub,
+    }
+    const files = await readdir('./src/ttyManifests', 'utf-8')
+    const filteredFiles = files.filter((file) => file.startsWith('tty'))
+    const variableKeys = Object.keys(variables)
+    const fileContents = await Promise.all(
+      filteredFiles.map(async (file) => {
+        let fileContent = await readFile(`./src/ttyManifests/${file}`, 'utf-8')
+        variableKeys.forEach((key) => {
+          const regex = new RegExp(`\\$${key}`, 'g')
+          fileContent = fileContent.replace(regex, variables[key])
+        })
+        return fileContent
+      }),
+    )
+    await writeFile('./src/ttyManifests/ttyd.yaml', fileContents, 'utf-8')
+
+    //====================================================================================================
+
+    apply('./src/ttyManifests/ttyd.yaml')
+      .then((res) => {
+        console.log('APPLY res: ', res)
+      })
+      .catch((err) => {
+        console.log('APPLY err: ', err)
+      })
+
+    const myData = { iFrameUrl: 'https://www.youtube.com/embed/Lxy9uA_J2OM', ...data }
+    return myData
   }
 
   getTeamWorkloads(teamId: string): Array<Workload> {

@@ -1,0 +1,29 @@
+Cloudtty:
+  x-acl:
+    admin:
+      - delete-any
+      - read-any
+      - create-any
+      - update-any
+    team:
+      - delete
+      - read
+      - create
+      - update
+  type: object
+  x-externalDocsPath: docs/for-devs/console/cloudtty
+  properties:
+    id:
+      type: string
+    teamId:
+      $ref: 'definitions.yaml#/idName'
+    domain:
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+    sub:
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+    iFrameUrl:
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+  required:
+    - teamId
+    - domain
+    - sub
