@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.8.4](https://github.com/redkubes/otomi-api/compare/v0.8.3...v0.8.4) (2023-06-02)
+
+
+### Bug Fixes
+
+* use kubectl sa ([#411](https://github.com/redkubes/otomi-api/issues/411)) ([18e54a0](https://github.com/redkubes/otomi-api/commit/18e54a0701f05b3e4da26a567d1aa3f0e94e836d))
+
 ### [0.8.3](https://github.com/redkubes/otomi-api/compare/v0.8.2...v0.8.3) (2023-06-01)
 
 
