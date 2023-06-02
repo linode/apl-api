@@ -9,97 +9,84 @@ Settings:
       $ref: definitions.yaml#/alerts
       title: Alerts
       description: Configure alerting endpoints to receive notifications from Alertmanager and Otomi deployments.
-      x-externalDocsPath: docs/console/settings#alerts
+      x-externalDocsPath: docs/for-ops/console/settings#alerts
     cluster:
       additionalProperties: false
       $ref: cluster.yaml#/Cluster
       title: Cluster
       description: Cluster configuration.
-    backup:
+    platformBackups:
       additionalProperties: false
-      title: Backup
-      description: Backup schedule configuration.
+      x-externalDocsPath: docs/for-ops/console/settings/backup
+      title: Backup platform Persistent Volumes
+      description: Platform app Persistent Volume backup schedules.
       type: object
       properties:
-        platform:
-          title: Platform applications
-          description: Select platfom apps to backup.
+        gitea:
+          title: Gitea
           properties:
-            gitea:
-              title: Gitea
-              properties:
-                enabled:
-                  type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
-                schedule:
-                  $ref: definitions.yaml#/backupSchedule
-            drone:
-              title: Drone
-              properties:
-                enabled:
-                  type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
-                schedule:
-                  $ref: definitions.yaml#/backupSchedule
-            keycloak:
-              title: Keycloak
-              properties:
-                enabled:
-                  type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
-                schedule:
-                  $ref: definitions.yaml#/backupSchedule
-            harbor:
-              title: Harbor
-              properties:
-                enabled:
-                  type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
-                schedule:
-                  $ref: definitions.yaml#/backupSchedule
-            vault:
-              title: Vault
-              properties:
-                enabled:
-                  type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
-                schedule:
-                  $ref: definitions.yaml#/backupSchedule
-            argo:
-              title: ArgoCD
-              properties:
-                enabled:
-                  type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
-                schedule:
-                  $ref: definitions.yaml#/backupSchedule
-            kubeapps:
-              title: Kubeapps
-              properties:
-                enabled:
-                  type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
-                schedule:
-                  $ref: definitions.yaml#/backupSchedule
-            minio:
-              title: Minio
-              properties:
-                enabled:
-                  type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
-                schedule:
-                  $ref: definitions.yaml#/backupSchedule
-        teams:
-          title: Teams
-          description: Backup all Teams.
+            enabled:
+              type: boolean
+            ttl:
+              $ref: definitions.yaml#/backupTtl
+            schedule:
+              $ref: definitions.yaml#/backupSchedule
+        drone:
+          title: Drone
+          properties:
+            enabled:
+              type: boolean
+            ttl:
+              $ref: definitions.yaml#/backupTtl
+            schedule:
+              $ref: definitions.yaml#/backupSchedule
+        keycloak:
+          title: Keycloak
+          properties:
+            enabled:
+              type: boolean
+            ttl:
+              $ref: definitions.yaml#/backupTtl
+            schedule:
+              $ref: definitions.yaml#/backupSchedule
+        harbor:
+          title: Harbor
+          properties:
+            enabled:
+              type: boolean
+            ttl:
+              $ref: definitions.yaml#/backupTtl
+            schedule:
+              $ref: definitions.yaml#/backupSchedule
+        vault:
+          title: Vault
+          properties:
+            enabled:
+              type: boolean
+            ttl:
+              $ref: definitions.yaml#/backupTtl
+            schedule:
+              $ref: definitions.yaml#/backupSchedule
+        argo:
+          title: ArgoCD
+          properties:
+            enabled:
+              type: boolean
+            ttl:
+              $ref: definitions.yaml#/backupTtl
+            schedule:
+              $ref: definitions.yaml#/backupSchedule
+        kubeapps:
+          title: Kubeapps
+          properties:
+            enabled:
+              type: boolean
+            ttl:
+              $ref: definitions.yaml#/backupTtl
+            schedule:
+              $ref: definitions.yaml#/backupSchedule
+        minio:
+          title: Minio
           properties:
             enabled:
               type: boolean
@@ -112,7 +99,7 @@ Settings:
       $ref: definitions.yaml#/alerts
       title: Co-monitoring
       description: Send alerts to a 3rd party for co-monitoring
-      x-externalDocsPath: docs/console/settings#home-alerts
+      x-externalDocsPath: docs/for-ops/console/settings#co-monitoring
       x-acl:
         admin: [read-any, update-any]
         team: []
@@ -120,7 +107,7 @@ Settings:
       title: Azure
       additionalProperties: false
       description: Azure specific configuration. Only applicable on Azure clusters.
-      x-externalDocsPath: docs/console/settings#azure
+      x-externalDocsPath: docs/for-ops/console/settings/azure
       x-acl:
         admin: [read-any, update-any]
         team: []
@@ -154,7 +141,7 @@ Settings:
       type: object
     dns:
       $ref: definitions.yaml#/dns
-      x-externalDocsPath: docs/console/settings#dns
+      x-externalDocsPath: docs/for-ops/console/settings/dns
       x-acl:
         admin: [read-any, update-any]
         team: []
@@ -187,7 +174,7 @@ Settings:
               - className
     kms:
       $ref: definitions.yaml#/kms
-      x-externalDocsPath: docs/console/settings#kms
+      x-externalDocsPath: docs/for-ops/console/settings/key-management
       x-acl:
         admin: [read-any, update-any]
         team: []
@@ -221,7 +208,7 @@ Settings:
           description: Select OIDC claim to be passed by Keycloak as a unique user identifier. Best to not change this from the default.
           default: sub
       type: object
-      x-externalDocsPath: docs/console/settings#oidc
+      x-externalDocsPath: docs/for-ops/console/settings/oidc
       x-acl:
         admin: [read-any, update-any]
         team: []
@@ -327,7 +314,7 @@ Settings:
           type: string
       required:
         - version
-      x-externalDocsPath: docs/console/settings#otomi
+      x-externalDocsPath: docs/for-ops/console/settings/otomi
       x-acl:
         admin: [read-any, update-any]
         team: [read-any]
@@ -370,7 +357,7 @@ Settings:
       required:
         - smarthost
       type: object
-      x-externalDocsPath: docs/console/settings#smtp
+      x-externalDocsPath: docs/for-ops/console/settings/smtp
       x-acl:
         admin: [read-any, update-any]
         team: []

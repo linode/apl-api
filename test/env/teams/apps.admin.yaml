@@ -20,9 +20,10 @@ teamConfig:
             kubeapps: {}
             kubeclarity: {}
             kured: {}
-            kpack: {}
+            tekton: {}
             loki: {}
             minio: {}
+            opencost: {}
             prometheus: {}
             thanos: {}
             vault: {}

@@ -21,8 +21,17 @@ TeamSelfService:
       items:
         type: string
         # downloadKubeConfig - is an action that a user can perform, not an attribute of the input form
-        enum: [alerts, oidc, resourceQuota, downloadKubeConfig, downloadDockerConfig, networkPolicy]
-      default: [alerts]
+        enum:
+          [
+            alerts,
+            backup,
+            billingAlertQuotas,
+            oidc,
+            resourceQuota,
+            downloadKubeConfig,
+            downloadDockerConfig,
+            networkPolicy,
+          ]
       uniqueItems: true
     apps:
       type: array
@@ -60,6 +69,23 @@ Team:
         team: []
     alerts:
       $ref: definitions.yaml#/alerts
+    billingAlertQuotas:
+      title: Billing alert quotas
+      properties:
+        teamCpuMonthQuotaReached:
+          title: Max total Team CPU cost per month in $
+          description: Sends an alert when team total CPU costs per month hits the quota.
+          properties:
+            quota:
+              type: integer
+              default: 100
+        teamMemMonthQuotaReached:
+          title: Max total Team Memory cost per month in $
+          description: Sends an alert when team total Memory costs per month hits the quota.
+          properties:
+            quota:
+              type: integer
+              default: 100
     resourceQuota:
       $ref: definitions.yaml#/resourceQuota
     azureMonitor:
@@ -99,4 +125,4 @@ Team:
       - read-any
       - update
   type: object
-  x-externalDocsPath: docs/console/teams
+  x-externalDocsPath: docs/for-ops/console/teams

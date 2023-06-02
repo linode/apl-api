@@ -1,0 +1,35 @@
+Backup:
+  x-acl:
+    admin:
+      - delete-any
+      - read-any
+      - create-any
+      - update-any
+    team:
+      - delete
+      - read
+      - create
+      - update
+  type: object
+  description: Create Velero backup schedules for Persistent Volumes
+  x-externalDocsPath: docs/for-devs/console/backups
+  properties:
+    id:
+      type: string
+    teamId:
+      $ref: definitions.yaml#/idName
+    name:
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+    schedule:
+      $ref: definitions.yaml#/backupSchedule
+    snapshotVolumes:
+      title: Snapshot Volumes
+      description: Whether or not to snapshot volumes. This only applies to Persistent Volumes in Azure, GCE, and AWS.
+      type: boolean
+      default: false
+    labelSelector:
+      title: Label Selector
+      $ref: definitions.yaml#/labels
+      description: (Optional) Individual objects must match this label selector to be included in the backup.
+    ttl: 
+      $ref: definitions.yaml#/backupTtl

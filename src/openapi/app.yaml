@@ -24,9 +24,10 @@ AppList:
     - kubeapps
     - kubeclarity
     - kured
-    - kpack
+    - tekton
     - loki
     - minio
+    - opencost
     - prometheus
     - thanos
     - trivy

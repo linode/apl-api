@@ -15,10 +15,12 @@ import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
 import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
+  Backup,
   Build,
   Core,
   K8sService,
   License,
+  Metrics,
   Policies,
   Secret,
   Service,
@@ -46,6 +48,7 @@ import {
   cleanEnv,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
+import connect from './otomiCloud/connect'
 
 const debug = Debug('otomi:otomi-stack')
 
@@ -63,6 +66,13 @@ const env = cleanEnv({
   TOOLS_HOST,
   VERSIONS,
 })
+
+export function getTeamBackupsFilePath(teamId: string): string {
+  return `env/teams/backups.${teamId}.yaml`
+}
+export function getTeamBackupsJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.backups`
+}
 
 export function getTeamSecretsFilePath(teamId: string): string {
   return `env/teams/external-secrets.${teamId}.yaml`
@@ -124,6 +134,18 @@ export default class OtomiStack {
     return apps.concat(ingressApps)
   }
 
+  getMetrics(): Metrics {
+    const metrics: Metrics = {
+      otomi_backups: this.getAllBackups().length,
+      otomi_builds: this.getAllBuilds().length,
+      otomi_secrets: this.getAllSecrets().length,
+      otomi_services: this.getAllServices().length,
+      // We do not count team_admin as a regular team
+      otomi_teams: this.getTeams().length - 1,
+      otomi_workloads: this.getAllWorkloads().length,
+    }
+    return metrics
+  }
   getRepoPath() {
     if (env.isTest || this.editor === undefined) return env.GIT_LOCAL_PATH
     const folder = `${rootPath}/${this.editor}`
@@ -208,6 +230,17 @@ export default class OtomiStack {
     return license
   }
 
+  // TODO: Delete - Debug purposes only
+  async removeLicense() {
+    if (await this.repo.fileExists('env/secrets.license.yaml')) {
+      await this.repo.removeFile('env/secrets.license.yaml').then(() => {
+        const license: License = { isValid: false, hasLicense: false, body: undefined }
+        this.db.db.set('license', license).write()
+        this.doDeployment()
+      })
+    }
+  }
+
   async uploadLicense(jwtLicense: string): Promise<License> {
     debug('Uploading the license')
 
@@ -218,6 +251,9 @@ export default class OtomiStack {
     }
 
     this.db.db.set('license', license).write()
+    const clusterInfo = this.getSettings(['cluster'])
+    const apiKey = license.body?.key as string
+    await connect(apiKey, clusterInfo)
     this.doDeployment()
     debug('License uploaded')
     return license
@@ -430,6 +466,36 @@ export default class OtomiStack {
   getTeamServices(teamId: string): Array<Service> {
     const ids = { teamId }
     return this.db.getCollection('services', ids) as Array<Service>
+  }
+
+  getTeamBackups(teamId: string): Array<Backup> {
+    const ids = { teamId }
+    return this.db.getCollection('backups', ids) as Array<Backup>
+  }
+
+  getAllBackups(): Array<Backup> {
+    return this.db.getCollection('backups') as Array<Backup>
+  }
+
+  createBackup(teamId: string, data: Backup): Backup {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      return this.db.createItem('backups', { ...data, teamId }, { teamId, name: data.name }) as Backup
+    } catch (err) {
+      if (err.code === 409) err.publicMessage = 'Backup name already exists'
+      throw err
+    }
+  }
+  getBackup(id: string): Backup {
+    return this.db.getItem('backups', { id }) as Backup
+  }
+
+  editBackup(id: string, data: Backup): Backup {
+    return this.db.updateItem('backups', data, { id }) as Backup
+  }
+
+  deleteBackup(id: string): void {
+    return this.db.deleteItem('backups', { id })
   }
 
   getTeamBuilds(teamId: string): Array<Build> {
@@ -663,7 +729,7 @@ export default class OtomiStack {
     if (!apiServer) throw new ValidationError('Missing configuration value: cluster.apiServer')
     const client = this.getApiClient()
     const namespace = `team-${teamId}`
-    const saRes = await client.readNamespacedServiceAccount('default', namespace)
+    const saRes = await client.readNamespacedServiceAccount(`sa-${namespace}`, namespace)
     const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
     const { secrets }: { secrets?: Array<V1ObjectReference> } = sa
     const secretName = secrets?.length ? secrets[0].name : ''
@@ -778,6 +844,20 @@ export default class OtomiStack {
     })
   }
 
+  async loadTeamBackups(teamId: string): Promise<void> {
+    const relativePath = getTeamBackupsFilePath(teamId)
+    if (!(await this.repo.fileExists(relativePath))) {
+      debug(`Team ${teamId} has no backups yet`)
+      return
+    }
+    const data = await this.repo.readFile(relativePath)
+    const inData: Array<Backup> = get(data, getTeamBackupsJsonPath(teamId), [])
+    inData.forEach((inBackup) => {
+      const res: any = this.db.populateItem('backups', { ...inBackup, teamId }, undefined, inBackup.id as string)
+      debug(`Loaded backup: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
+    })
+  }
+
   async loadTeamBuilds(teamId: string): Promise<void> {
     const relativePath = getTeamBuildsFilePath(teamId)
     if (!(await this.repo.fileExists(relativePath))) {
@@ -845,6 +925,7 @@ export default class OtomiStack {
       this.loadTeamServices(team.id!)
       this.loadTeamSecrets(team.id!)
       this.loadTeamWorkloads(team.id!)
+      this.loadTeamBackups(team.id!)
       this.loadTeamBuilds(team.id!)
     })
   }
@@ -938,6 +1019,7 @@ export default class OtomiStack {
         const team: Record<string, any> = omit(inTeam, 'name')
         const teamId = team.id as string
         await this.saveTeamApps(teamId)
+        await this.saveTeamBackups(teamId)
         await this.saveTeamServices(teamId)
         await this.saveTeamSecrets(teamId)
         await this.saveTeamWorkloads(teamId)
@@ -954,6 +1036,17 @@ export default class OtomiStack {
     const secrets = this.db.getCollection('secrets', { teamId })
     const values: any[] = secrets.map((secret) => this.convertDbSecretToValues(secret))
     await this.repo.writeFile(getTeamSecretsFilePath(teamId), set({}, getTeamSecretsJsonPath(teamId), values))
+  }
+
+  async saveTeamBackups(teamId: string): Promise<void> {
+    const backups = this.db.getCollection('backups', { teamId }) as Array<Backup>
+    const cleaneBackups: Array<Record<string, any>> = backups.map((obj) => {
+      return omit(obj, ['teamId'])
+    })
+    const relativePath = getTeamBackupsFilePath(teamId)
+    const outData: Record<string, any> = set({}, getTeamBackupsJsonPath(teamId), cleaneBackups)
+    debug(`Saving backups of team: ${teamId}`)
+    await this.repo.writeFile(relativePath, outData)
   }
 
   async saveTeamWorkloads(teamId: string): Promise<void> {

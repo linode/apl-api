@@ -4,6 +4,7 @@ import { components, external, operations, paths } from 'src/generated-schema'
 import OtomiStack from 'src/otomi-stack'
 export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
+export type Backup = components['schemas']['Backup']
 export type Kubecfg = components['schemas']['Kubecfg']
 export type K8sService = components['schemas']['K8sService']
 export type Secret = components['schemas']['Secret'] & { teamId?: string }
@@ -20,7 +21,7 @@ export type Workload = components['schemas']['Workload']
 export type WorkloadValues = components['schemas']['WorkloadValues']
 export type Build = components['schemas']['Build']
 export type TeamAuthz = components['schemas']['TeamAuthz']
-
+export type Metrics = components['schemas']['Metrics']
 // Derived setting models
 export type Alerts = Settings['alerts']
 export type Cluster = Settings['cluster']

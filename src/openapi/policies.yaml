@@ -334,4 +334,4 @@ policies:
               user:
                 title: User
                 type: string
-  x-externalDocsPath: docs/console/policies
+  x-externalDocsPath: docs/for-ops/console/policies
