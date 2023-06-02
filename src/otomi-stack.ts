@@ -866,7 +866,7 @@ export default class OtomiStack {
     if (!apiServer) throw new ValidationError('Missing configuration value: cluster.apiServer')
     const client = this.getApiClient()
     const namespace = `team-${teamId}`
-    const saRes = await client.readNamespacedServiceAccount('default', namespace)
+    const saRes = await client.readNamespacedServiceAccount(`sa-${namespace}`, namespace)
     const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
     const { secrets }: { secrets?: Array<V1ObjectReference> } = sa
     const secretName = secrets?.length ? secrets[0].name : ''
