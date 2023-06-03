@@ -138,6 +138,12 @@ definitions:
       minReplicas:
         type: integer
         default: 1
+      targetCPUUtilizationPercentage:
+        type: integer
+        default: 80
+      targetMemoryUtilizationPercentage:
+        type: integer
+        default: 80
   aws:
     definitions:
       accessKey:
@@ -598,10 +604,8 @@ definitions:
   k8sVersion:
     description: The cluster k8s version. Must match one of the list.
     enum:
-      - '1.22'
       - '1.23'
       - '1.24'
-      - '1.25'
     type: string
   labels:
     $ref: '#/definitions/labelsAnnotations'
@@ -1050,40 +1054,12 @@ definitions:
         description: When true the service will get it's own domain by prefixing the app name to the cluster domain. Mostly used by core apps.
         type: boolean
       ksvc:
-        anyOf:
-          - description: Details for a knative service that will be deployed and operated.
-            allOf:
-              - properties:
-                  annotations:
-                    $ref: '#/definitions/annotations'
-                    title: Pod annotations
-                type: object
-              - properties:
-                  securityContext:
-                    properties:
-                      runAsUser:
-                        $ref: '#/definitions/unixOwnerId'
-                      readOnlyRootFilesystem:
-                        description: Whether this container has a read-only root filesystem. Default is false.
-                        type: boolean
-                        default: false
-              - $ref: '#/definitions/containerSpecNoSec'
-              - properties:
-                  containerPort:
-                    $ref: '#/definitions/portNumber'
-                    description: Container port the knative pod will connect with. Leaving this empty will let knative infer the port from the container, which usually works, but might be problematic when the container does not specifically expose a port. (As is the case with nginx derived images!)
-                    title: Container port
-                  scaleToZero:
-                    default: false
-                    description: Scales to zero after 60 seconds and needs approximately 8 seconds to start back up.
-                    title: Scale to zero
-                    type: boolean
-          - description: Choose this when the ksvc is already deployed
-            properties:
-              predeployed:
-                default: true
-                description: Has this service been predeployed? Otherwise otomi will start it with the configuration given.
-                type: boolean
+        type: object
+        properties:
+          predeployed:
+            description: Set this flag it the service is managed by knative service
+            type: boolean
+            default: false
       logo:
         description: Used by otomi-console as an override mechanism to display another logo.
         properties:
@@ -1344,7 +1320,7 @@ definitions:
                 default: ./Dockerfile
           buildpacks:
             properties:
-              buildPacksrepoUrl:
+              repoUrl:
                 description: URL of the Git repository holding the application code.
                 $ref: '#/definitions/url'
               revision:
@@ -2302,16 +2278,49 @@ properties:
             type: boolean
             default: false
           resources:
-            $ref: '#/definitions/resources'
+            additionalProperties: false
+            properties:
+              ingester:
+                $ref: '#/definitions/resources'
+              gateway:
+                $ref: '#/definitions/resources'
+              querier:
+                $ref: '#/definitions/resources'
+              distributor:
+                $ref: '#/definitions/resources'
+              queryFrontend:
+                $ref: '#/definitions/resources'
+          autoscaling:
+            properties:
+              ingester:
+                $ref: '#/definitions/autoscalingEnabled'
+              gateway:
+                $ref: '#/definitions/autoscalingEnabled'
+              querier:
+                $ref: '#/definitions/autoscalingEnabled'
+              distributor:
+                $ref: '#/definitions/autoscalingEnabled'
+              queryFrontend:
+                $ref: '#/definitions/autoscalingEnabled'
           adminPassword:
             type: string
             x-secret: 'randAlphaNum 20'
           persistence:
             additionalProperties: false
             properties:
-              size:
-                default: 20Gi
-                type: string
+              ingester:
+                properties:
+                  enabled:
+                    type: boolean
+                    default: true
+              querier:
+                properties:
+                  enabled:
+                    type: boolean
+                    default: true
+                  size:
+                    default: 20Gi
+                    type: string
           retention:
             additionalProperties: false
             properties:
@@ -2329,7 +2338,6 @@ properties:
               aws:
                 type: object
               azure:
-                description: Missing from docs but available with this schema.
                 properties:
                   account_key:
                     type: string

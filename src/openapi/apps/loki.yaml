@@ -5,10 +5,25 @@ lokiValues:
       type: string
       x-secret: 'randAlphaNum 20'
     persistence:
+      additionalProperties: false
+      type: object
       properties:
-        size:
-          default: 20Gi
-          type: string
+        ingestor:
+          properties:
+            enabled:
+              type: boolean
+              default: 20Gi
+            size:
+              default: 20Gi
+              type: string
+        querier:
+          properties:
+            enabled:
+              type: boolean
+              default: 20Gi
+            size:
+              default: 20Gi
+              type: string
     retention:
       properties:
         duration:
@@ -21,35 +36,144 @@ lokiValues:
       required:
         - duration
     v11StartDate:
-      description: Set this to a date just after deployment in case of an upgrade. (Only needed when running v9 and wanting to upgrade schema.)
+      description: Set this to a date just after deployment in case of an upgrade.
       title: Schema v11 start date
       type: string
-    resources:
-      type: object
-      properties:
-        limits:
-          type: object
-          properties:
-            cpu:
-              $ref: ../definitions.yaml#/quantityCpu
-              default: 800m
-            memory:
-              $ref: ../definitions.yaml#/quantityMem
-              default: 512Mi
-        requests:
-          type: object
-          properties:
-            cpu:
-              $ref: ../definitions.yaml#/quantityCpu
-              default: 100m
-            memory:
-              $ref: ../definitions.yaml#/quantityMem
-              default: 128Mi
-      required:
-        - limits
-        - requests
     storage:
       $ref: '#/lokiStorageProvider'
+    autoscaling:
+      type: object
+      additionalProperties: false
+      properties:
+        ingester:
+          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets
+        gateway:
+          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets
+        querier:
+          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets
+        distributor:
+          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets
+        queryFrontend:
+          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets 
+    resources:
+      additionalProperties: false
+      type: object
+      properties:
+        ingester:
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 200m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 256Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 50m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 128Mi
+          required:
+            - limits
+            - requests
+        gateway:
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 200m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 256Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 50m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 64Mi
+          required:
+            - limits
+            - requests
+        querier:
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 200m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 256Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 50m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 64Mi
+          required:
+            - limits
+            - requests
+        distributor:
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 200m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 256Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 50m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 64Mi
+          required:
+            - limits
+            - requests
+        queryFrontend:
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 200m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 256Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 50m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 64Mi
+          required:
+            - limits
+            - requests
   required:
     - adminPassword
 
