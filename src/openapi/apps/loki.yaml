@@ -59,6 +59,29 @@ lokiValues:
       additionalProperties: false
       type: object
       properties:
+        compactor:
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 200m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 256Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 50m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 128Mi
+          required:
+            - limits
+            - requests
         ingester:
           properties:
             limits:
@@ -181,7 +204,8 @@ lokiStorageProvider:
   title: Storage provider
   oneOf:
     - title: Filesystem
-      description: Creates a k8s pvc.
+      x-hideTitle: true
+      description: Use Persistent Volume Claims
       properties:
         storageType:
           type: string
@@ -189,7 +213,8 @@ lokiStorageProvider:
             - filesystem
           default: filesystem
     - title: AWS
-      description: Amazon storage options.
+      x-hideTitle: true
+      description: Use Amazon Web Services S3
       properties:
         storageType:
           type: string
@@ -207,7 +232,8 @@ lokiStorageProvider:
             dynamodb:
               $ref: ../definitions.yaml#/s3Url
     - title: Azure
-      description: Azure storage container.
+      x-hideTitle: true
+      description: Use Azure storage container
       properties:
         storageType:
           type: string
@@ -215,7 +241,6 @@ lokiStorageProvider:
             - azure
           default: azure
         azure:
-          description: Missing from docs but available with this schema.
           properties:
             account_key:
               type: string
@@ -229,7 +254,8 @@ lokiStorageProvider:
             - account_name
             - container_name
     - title: Bigtable
-      description: 'Google Cloud Bigtable: nosql database service.'
+      x-hideTitle: true
+      description: 'Use Google Cloud Bigtable: nosql database service'
       properties:
         storageType:
           type: string
@@ -239,7 +265,8 @@ lokiStorageProvider:
         bigtable:
           type: object
     - title: Cassandra
-      description: Apache Cassandra is an open source NoSQL distributed database.
+      x-hideTitle: true
+      description: Use Apache Cassandra is an open source NoSQL distributed database
       properties:
         storageType:
           type: string
@@ -249,7 +276,8 @@ lokiStorageProvider:
         cassandra:
           type: object
     - title: GCS
-      description: Google Cloud blob Storage.
+      x-hideTitle: true
+      description: Use Google Cloud blob Storage
       properties:
         storageType:
           type: string
@@ -259,7 +287,8 @@ lokiStorageProvider:
         gcs:
           type: object
     - title: Swift
-      description: OpenStack Object Storage.
+      x-hideTitle: true
+      description: Use OpenStack Object Storage
       properties:
         storageType:
           type: string
@@ -269,7 +298,8 @@ lokiStorageProvider:
         swift:
           type: object
     - title: Local
-      description: Host volume.
+      x-hideTitle: true
+      description: Use a host volume
       properties:
         storageType:
           type: string
