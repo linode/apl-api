@@ -2314,7 +2314,7 @@ properties:
                   size:
                     default: 20Gi
                     $ref: '#/definitions/size'
-            ingester:
+              ingester:
                 properties:
                   size:
                     default: 20Gi

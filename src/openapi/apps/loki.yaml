@@ -4,26 +4,6 @@ lokiValues:
     adminPassword:
       type: string
       x-secret: 'randAlphaNum 20'
-    persistence:
-      additionalProperties: false
-      type: object
-      properties:
-        ingestor:
-          properties:
-            enabled:
-              type: boolean
-              default: 20Gi
-            size:
-              default: 20Gi
-              type: string
-        querier:
-          properties:
-            enabled:
-              type: boolean
-              default: 20Gi
-            size:
-              default: 20Gi
-              type: string
     retention:
       properties:
         duration:
@@ -41,6 +21,21 @@ lokiValues:
       type: string
     storage:
       $ref: '#/lokiStorageProvider'
+    persistence:
+      type: object
+      properties:
+        ingester:
+          type: object
+          properties:
+            size:
+              default: 20Gi
+              type: string
+        querier:
+          type: object
+          properties:
+            size:
+              default: 20Gi
+              type: string
     autoscaling:
       type: object
       additionalProperties: false
