@@ -196,50 +196,31 @@ lokiValues:
     - adminPassword
 
 lokiStorageProvider:
+  type: object
   title: Storage provider
+  description: Select the preferred provider for storing logs.
   oneOf:
-    - title: Filesystem
-      x-hideTitle: true
-      description: Use Persistent Volume Claims
+    - title: Local Minio
+      type: object
+      description: Select to use the in-cluster Minio instance.
       properties:
-        storageType:
+        type:
           type: string
           enum:
-            - filesystem
-          default: filesystem
-    - title: AWS
+            - minioLocal
+          default: minioLocal
+    - title: Azure Blob
+      type: object
       x-hideTitle: true
-      description: Use Amazon Web Services S3
       properties:
-        storageType:
-          type: string
-          enum:
-            - aws
-          default: aws
-        aws:
-          properties:
-            s3:
-              $ref: ../definitions.yaml#/s3Url
-            bucketnames:
-              type: string
-              title: Bucket names
-              description: A comma separated list of bucket names.
-            dynamodb:
-              $ref: ../definitions.yaml#/s3Url
-    - title: Azure
-      x-hideTitle: true
-      description: Use Azure storage container
-      properties:
-        storageType:
-          type: string
-          enum:
-            - azure
-          default: azure
         azure:
+          type: object
+          description: Select to store logs in Azure Blob storage.
+          title: Azure blob (container) storage
           properties:
             account_key:
               type: string
-              x-secret: true
+              x-secret: ''
             account_name:
               type: string
             container_name:
@@ -248,61 +229,98 @@ lokiStorageProvider:
             - account_key
             - account_name
             - container_name
-    - title: Bigtable
-      x-hideTitle: true
-      description: 'Use Google Cloud Bigtable: nosql database service'
-      properties:
-        storageType:
+        type:
           type: string
           enum:
-            - bigtable
-          default: bigtable
-        bigtable:
-          type: object
-    - title: Cassandra
+            - azure
+          default: azure
+      required:
+        - azure
+        - type
+    - title: S3
+      type: object
       x-hideTitle: true
-      description: Use Apache Cassandra is an open source NoSQL distributed database
       properties:
-        storageType:
+        s3:
+          type: object
+          title: S3
+          description: Select to store logs in AWS S3 or S3 compatible blob storage.
+          properties:
+            bucket:
+              type: string
+              description: The name of the bucket.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            s3Url:
+              type: string
+              description: The full S3 URL.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            accessKeyId:
+              type: string
+              description: The ID of the access key. Optional if cloud provider is AWS.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            secretAccessKey:
+              type: string
+              description: The secret of the access key. Optional if cloud provider is AWS.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+              x-secret: true
+          required:
+            - bucket
+            - s3Url
+            - accessKeyId
+            - secretAccessKey
+        type:
           type: string
           enum:
-            - cassandra
-          default: cassandra
-        cassandra:
-          type: object
-    - title: GCS
+            - s3
+          default: s3
+      required:
+        - s3
+        - type
+    - title: gcs
+      type: object
       x-hideTitle: true
-      description: Use Google Cloud blob Storage
       properties:
-        storageType:
+        gcs:
+          type: object
+          title: Google Object Storage
+          description: Select to store backups in Google Object Storage.
+          properties:
+            bucket:
+              type: string
+              description: Name of the bucket.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            project:
+              description: Big Table Project.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            instance:
+              description: Big Table Instance.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+          required:
+            - bucket
+            - project
+            - instance
+        type:
           type: string
           enum:
             - gcs
           default: gcs
-        gcs:
-          type: object
-    - title: Swift
+      required:
+        - gcs
+        - type
+    - title: Filesystem
       x-hideTitle: true
-      description: Use OpenStack Object Storage
+      description: Use Persistent Volumes for file storage
       properties:
-        storageType:
+        filesystem:
+          type: object
+        type:
           type: string
           enum:
-            - swift
-          default: swift
-        swift:
-          type: object
-    - title: Local
-      x-hideTitle: true
-      description: Use a host volume
-      properties:
-        storageType:
-          type: string
-          enum:
-            - local
-          default: local
-        local:
-          type: object
+            - filesystem
+          default: filesystem
+      required:
+        - filesystem
+        - type
 
 AppLoki:
   additionalProperties: false
