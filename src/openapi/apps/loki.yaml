@@ -218,17 +218,17 @@ lokiStorageProvider:
           description: Select to store logs in Azure Blob storage.
           title: Azure blob (container) storage
           properties:
-            account_key:
+            accountKey:
               type: string
               x-secret: ''
-            account_name:
+            accountName:
               type: string
-            container_name:
+            containerName:
               type: string
           required:
-            - account_key
-            - account_name
-            - container_name
+            - accountKey
+            - accountName
+            - containerName
         type:
           type: string
           enum:
