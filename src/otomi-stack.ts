@@ -319,6 +319,13 @@ export default class OtomiStack {
     return settings
   }
 
+  // Check if the collection name already exists in any collection
+  isCollectionNameTaken(collectionName: string, teamId: string, name: string): boolean {
+    return this.db.getCollection(collectionName).some((e: any) => {
+      return e.teamId === teamId && e.name === name
+    })
+  }
+
   getApp(teamId: string, id: string): App {
     // @ts-ignore
     const app = this.db.getItem('apps', { teamId, id }) as App
@@ -516,21 +523,20 @@ export default class OtomiStack {
     return this.db.getCollection('projects') as Array<Project>
   }
 
+  // Creates a new project and reserves a given name for 'builds', 'workloads' and 'services' resources
   createProject(teamId: string, data: Project): Project {
-    const findItem = (collectionName: string) => {
-      return this.db.getCollection(collectionName).find((e: any) => {
-        return e.teamId === teamId && e.name === data.name
-      })
-    }
-    const item = findItem('builds') || findItem('workloads') || findItem('services')
+    // Check if the project name already exists in any collection
+    const projectNameTaken = ['builds', 'workloads', 'services'].some((collectionName) =>
+      this.isCollectionNameTaken(collectionName, teamId, data.name),
+    )
+    const projectNameTakenPublicMessage = `In the team '${teamId}' there is already a resource that match the project name '${data.name}'`
+
     try {
-      if (item)
-        throw new AlreadyExists(`Item already exists in collections: ${JSON.stringify({ teamId, name: data.name })}`)
+      if (projectNameTaken) throw new AlreadyExists(projectNameTakenPublicMessage)
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return this.db.createItem('projects', { ...data, teamId }, { teamId, name: data.name }) as Project
     } catch (err) {
-      if (err.code === 409 && item)
-        err.publicMessage = `Use different project name, ${data.name} already used in other collection.`
+      if (err.code === 409 && projectNameTaken) err.publicMessage = projectNameTakenPublicMessage
       else if (err.code === 409) err.publicMessage = 'Project name already exists'
       throw err
     }
@@ -559,22 +565,12 @@ export default class OtomiStack {
     } catch (err) {
       s = {}
     }
-
-    // const w = this.db.getItem('workloads', { id: p.workload?.id }) as Workload
-    // const wv = this.db.getItem('workloadValues', { id: p.workloadValues?.id }) as WorkloadValues
-    // const s = this.db.getItem('services', { id: p.service?.id }) as Service
     return { ...p, build: b, workload: w, workloadValues: wv, service: s }
   }
 
-  editProject(id: string, data: any): any {
-    const {
-      build,
-      workload,
-      workloadValues: { values },
-      service,
-      teamId,
-      name,
-    } = data
+  editProject(id: string, data: Project): Project {
+    const { build, workload, workloadValues, service, teamId, name } = data
+    const { values } = workloadValues as WorkloadValues
 
     let b, w, wv, s
     if (!build?.id && build?.mode) b = this.db.createItem('builds', { ...build, teamId }, { teamId, name }) as Build
@@ -585,7 +581,7 @@ export default class OtomiStack {
 
     if (!data.workloadValues?.id)
       wv = this.db.createItem('workloadValues', { teamId, values }, { teamId, name }, w.id) as WorkloadValues
-    else wv = this.db.updateItem('workloadValues', { teamId, values }, { id: workload.id }) as WorkloadValues
+    else wv = this.db.updateItem('workloadValues', { teamId, values }, { id: workloadValues?.id }) as WorkloadValues
 
     if (!service?.id) s = this.db.createItem('services', { ...service, teamId }, { teamId, name }) as Service
     else s = this.db.updateItem('services', service, { id: service.id }) as Service
@@ -604,6 +600,7 @@ export default class OtomiStack {
     return this.db.updateItem('projects', updatedData, { id }) as Project
   }
 
+  // Deletes a project and all its related resources
   deleteProject(id: string): void {
     const p = this.db.getItem('projects', { id }) as any
     if (p.build?.id) this.db.deleteItem('builds', { id: p.build.id })
@@ -719,18 +716,20 @@ export default class OtomiStack {
   }
 
   editService(id: string, data: Service): Service {
-    this.deleteService(id)
+    this.deleteService(id, false)
     return this.createService(data.teamId!, { ...data, id })
   }
 
-  deleteService(id: string): void {
-    const p = this.db.getCollection('projects') as Array<Project>
-    p.forEach((project: any) => {
-      if (project?.service?.id === id) {
-        const updatedData = { ...project, service: null }
-        this.db.updateItem('projects', updatedData, { id: project.id }) as Project
-      }
-    })
+  deleteService(id: string, deleteProjectService = true): void {
+    if (deleteProjectService) {
+      const p = this.db.getCollection('projects') as Array<Project>
+      p.forEach((project: any) => {
+        if (project?.service?.id === id) {
+          const updatedData = { ...project, service: null }
+          this.db.updateItem('projects', updatedData, { id: project.id }) as Project
+        }
+      })
+    }
     return this.db.deleteItem('services', { id })
   }
 
