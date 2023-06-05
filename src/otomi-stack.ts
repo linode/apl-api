@@ -543,7 +543,7 @@ export default class OtomiStack {
   }
 
   getProject(id: string): Project {
-    const p = this.db.getItem('projects', { id }) as any
+    const p = this.db.getItem('projects', { id }) as Project
     let b, w, wv, s
     try {
       b = this.db.getItem('builds', { id: p.build?.id }) as Build
@@ -602,7 +602,7 @@ export default class OtomiStack {
 
   // Deletes a project and all its related resources
   deleteProject(id: string): void {
-    const p = this.db.getItem('projects', { id }) as any
+    const p = this.db.getItem('projects', { id }) as Project
     if (p.build?.id) this.db.deleteItem('builds', { id: p.build.id })
     if (p.workload?.id) this.db.deleteItem('workloads', { id: p.workload.id })
     if (p.workloadValues?.id) this.db.deleteItem('workloadValues', { id: p.workloadValues.id })
@@ -640,7 +640,7 @@ export default class OtomiStack {
 
   deleteBuild(id: string): void {
     const p = this.db.getCollection('projects') as Array<Project>
-    p.forEach((project: any) => {
+    p.forEach((project: Project) => {
       if (project?.build?.id === id) {
         const updatedData = { ...project, build: null }
         this.db.updateItem('projects', updatedData, { id: project.id }) as Project
@@ -678,7 +678,7 @@ export default class OtomiStack {
 
   deleteWorkload(id: string): void {
     const p = this.db.getCollection('projects') as Array<Project>
-    p.forEach((project: any) => {
+    p.forEach((project: Project) => {
       if (project?.workload?.id === id) {
         const updatedData = { ...project, workload: null, workloadValues: null }
         this.db.updateItem('projects', updatedData, { id: project.id }) as Project
@@ -723,7 +723,7 @@ export default class OtomiStack {
   deleteService(id: string, deleteProjectService = true): void {
     if (deleteProjectService) {
       const p = this.db.getCollection('projects') as Array<Project>
-      p.forEach((project: any) => {
+      p.forEach((project: Project) => {
         if (project?.service?.id === id) {
           const updatedData = { ...project, service: null }
           this.db.updateItem('projects', updatedData, { id: project.id }) as Project
