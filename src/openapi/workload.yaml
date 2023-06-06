@@ -142,7 +142,10 @@ WorkloadValues:
           title: Annotations
           $ref: 'definitions.yaml#/annotations'
         secrets:
-          $ref: 'definitions.yaml#/secrets'
+          description: The name of a TLS secret known to exist in the team namespace.
+          example: example-com
+          title: Secret name
+          type: string
         containerSecurityContext:
           title: Container Security Context
           properties:
