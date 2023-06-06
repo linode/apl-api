@@ -657,18 +657,19 @@ export default class OtomiStack {
     // const opts = {}
     // kc.applyToRequest(opts)
 
-    if (await pathExists('./src/ttyManifests/ttyd.yaml')) await unlink('./src/ttyManifests/ttyd.yaml')
+    if (await pathExists('./ttyd.yaml')) await unlink('./ttyd.yaml')
     const variables = {
       TARGET_TEAM: data.teamId,
       FQDN: data.domain,
       SUB: data.sub,
     }
-    const files = await readdir('./src/ttyManifests', 'utf-8')
+    const files = await readdir('./', 'utf-8')
     const filteredFiles = files.filter((file) => file.startsWith('tty'))
+    console.log('filteredFiles', filteredFiles)
     const variableKeys = Object.keys(variables)
     const fileContents = await Promise.all(
       filteredFiles.map(async (file) => {
-        let fileContent = await readFile(`./src/ttyManifests/${file}`, 'utf-8')
+        let fileContent = await readFile(`./${file}`, 'utf-8')
         variableKeys.forEach((key) => {
           const regex = new RegExp(`\\$${key}`, 'g')
           fileContent = fileContent.replace(regex, variables[key])
@@ -676,11 +677,11 @@ export default class OtomiStack {
         return fileContent
       }),
     )
-    await writeFile('./src/ttyManifests/ttyd.yaml', fileContents, 'utf-8')
+    await writeFile('./ttyd.yaml', fileContents, 'utf-8')
 
     //====================================================================================================
 
-    apply('./src/ttyManifests/ttyd.yaml')
+    apply('./ttyd.yaml')
       .then((res) => {
         console.log('APPLY res: ', res)
       })
