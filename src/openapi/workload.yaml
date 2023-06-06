@@ -50,7 +50,6 @@ WorkloadValues:
       - read
       - update
   type: object
-  description: Workload values
   properties:
     id:
       type: string
@@ -160,12 +159,12 @@ WorkloadValues:
           $ref: 'definitions.yaml#/secretMounts'
         # only for deployment
         servicePorts:
-           $ref: 'definitions.yaml#/servicePorts'
-           default:
-             - name: http
-               port: 80
-               targetPort: http
-               protocol: TCP
+          $ref: 'definitions.yaml#/servicePorts'
+          # default:
+          #   - name: http
+          #     port: 80
+          #     targetPort: http
+          #     protocol: TCP
         serviceMonitor:
           properties:
             create:
@@ -173,9 +172,6 @@ WorkloadValues:
               default: false
             endpoints:
               $ref: 'definitions.yaml#/endpoints'
-
-
-
 
   required:
     - values
