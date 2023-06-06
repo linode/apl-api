@@ -11,6 +11,7 @@ const adminJWT: JWT = {
   name: 'joe',
   email,
   groups: adminGroups,
+  sub: 'mock-sub-value',
 }
 const multiTeamJWT: JWT = { ...adminJWT, groups: multiTeamGroups }
 
