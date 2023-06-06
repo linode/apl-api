@@ -664,13 +664,11 @@ export default class OtomiStack {
       FQDN: data.domain,
       SUB: data.sub,
     }
-    console.log('variables', variables)
+    console.log('variables:', variables)
     const files = await readdir('./dist/src', 'utf-8')
-    console.log('files', files)
     const filteredFiles = files.filter((file) => file.startsWith('tty'))
-    console.log('filteredFiles', filteredFiles)
+    console.log('filteredFiles:', filteredFiles)
     const variableKeys = Object.keys(variables)
-    console.log('variableKeys', variableKeys)
     const fileContents = await Promise.all(
       filteredFiles.map(async (file) => {
         let fileContent = await readFile(`./dist/src/${file}`, 'utf-8')
@@ -681,6 +679,7 @@ export default class OtomiStack {
         return fileContent
       }),
     )
+    console.log('fileContents:', fileContents)
     await writeFile('./dist/src/ttyd.yaml', fileContents, 'utf-8')
 
     //====================================================================================================
