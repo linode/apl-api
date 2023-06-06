@@ -35,7 +35,7 @@ WORKDIR /app
 COPY --from=clean /app/node_modules node_modules
 COPY --from=ci /app/dist dist
 RUN mkdir -p /app/src/
-COPY --from=ci /app/src/ttyManifests /app/src/ttyManifests
+COPY --from=ci /app/src/ttyManifests /app/dist/src/ttyManifests
 COPY package.json .
 
 USER node
