@@ -3,8 +3,8 @@ import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
-import { emptyDir, pathExists } from 'fs-extra'
-import { readFile, readdir, unlink, writeFile } from 'fs/promises'
+import { emptyDir } from 'fs-extra'
+import { readFile, readdir, writeFile } from 'fs/promises'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { cloneDeep, each, filter, get, isArray, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
@@ -652,18 +652,21 @@ export default class OtomiStack {
   }
 
   async connectCloudtty(data: Cloudtty): Promise<Cloudtty> {
+    console.log('connectCloudtty START')
     // const kc = new k8s.KubeConfig()
     // kc.loadFromDefault()
     // const opts = {}
     // kc.applyToRequest(opts)
 
-    if (await pathExists('./ttyd.yaml')) await unlink('./ttyd.yaml')
+    // if (await pathExists('./ttyd.yaml')) await unlink('./ttyd.yaml')
     const variables = {
       TARGET_TEAM: data.teamId,
       FQDN: data.domain,
       SUB: data.sub,
     }
+    console.log('variables', variables)
     const files = await readdir('./', 'utf-8')
+    console.log('files', files)
     const filteredFiles = files.filter((file) => file.startsWith('tty'))
     console.log('filteredFiles', filteredFiles)
     const variableKeys = Object.keys(variables)
