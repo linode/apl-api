@@ -670,6 +670,7 @@ export default class OtomiStack {
     const filteredFiles = files.filter((file) => file.startsWith('tty'))
     console.log('filteredFiles', filteredFiles)
     const variableKeys = Object.keys(variables)
+    console.log('variableKeys', variableKeys)
     const fileContents = await Promise.all(
       filteredFiles.map(async (file) => {
         let fileContent = await readFile(`./dist/src/${file}`, 'utf-8')
