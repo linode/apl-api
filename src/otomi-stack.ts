@@ -3,7 +3,7 @@ import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
-import { emptyDir } from 'fs-extra'
+import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { cloneDeep, each, filter, get, isArray, isEmpty, omit, pick, set } from 'lodash'
@@ -658,7 +658,7 @@ export default class OtomiStack {
     // const opts = {}
     // kc.applyToRequest(opts)
 
-    // if (await pathExists('./ttyd.yaml')) await unlink('./ttyd.yaml')
+    if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
     const variables = {
       TARGET_TEAM: data.teamId,
       FQDN: data.domain,
@@ -680,11 +680,11 @@ export default class OtomiStack {
       }),
     )
     console.log('fileContents:', fileContents)
-    await writeFile('./dist/src/ttyd.yaml', fileContents, 'utf-8')
+    await writeFile('/tmp/ttyd.yaml', fileContents, 'utf-8')
 
     //====================================================================================================
 
-    apply('./dist/src/ttyd.yaml')
+    apply('/tmp/ttyd.yaml')
       .then((res) => {
         console.log('APPLY res: ', res)
       })
