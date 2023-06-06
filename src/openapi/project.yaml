@@ -1,0 +1,32 @@
+Project:
+  x-acl:
+    admin:
+      - delete-any
+      - read-any
+      - create-any
+      - update-any
+    team:
+      - delete
+      - read
+      - create
+      - update
+  type: object
+  x-externalDocsPath: docs/for-devs/console/projects
+  properties:
+    id:
+      type: string
+    teamId:
+      $ref: 'definitions.yaml#/idName'
+    name:
+      title: Project name
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+    build:
+      $ref: 'build.yaml#/Build'
+    workload:
+      $ref: 'workload.yaml#/Workload'
+    workloadValues:
+      $ref: 'workload.yaml#/WorkloadValues'
+    service:
+      $ref: 'service.yaml#/Service'
+  required:
+    - name
