@@ -11,7 +11,7 @@ import generatePassword from 'password-generator'
 import * as osPath from 'path'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
-import { DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
+import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
 import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
@@ -23,6 +23,7 @@ import {
   License,
   Metrics,
   Policies,
+  Project,
   Secret,
   Service,
   Session,
@@ -87,12 +88,20 @@ export function getTeamWorkloadValuesFilePath(teamId: string, workloadName): str
   return `env/teams/workloads/${teamId}/${workloadName}.yaml`
 }
 
+export function getTeamProjectsFilePath(teamId: string): string {
+  return `env/teams/projects.${teamId}.yaml`
+}
+
 export function getTeamBuildsFilePath(teamId: string): string {
   return `env/teams/builds.${teamId}.yaml`
 }
 
 export function getTeamWorkloadsJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.workloads`
+}
+
+export function getTeamProjectsJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.projects`
 }
 
 export function getTeamBuildsJsonPath(teamId: string): string {
@@ -312,6 +321,13 @@ export default class OtomiStack {
     return settings
   }
 
+  // Check if the collection name already exists in any collection
+  isCollectionNameTaken(collectionName: string, teamId: string, name: string): boolean {
+    return this.db.getCollection(collectionName).some((e: any) => {
+      return e.teamId === teamId && e.name === name
+    })
+  }
+
   getApp(teamId: string, id: string): App {
     // @ts-ignore
     const app = this.db.getItem('apps', { teamId, id }) as App
@@ -500,6 +516,102 @@ export default class OtomiStack {
     return this.db.deleteItem('backups', { id })
   }
 
+  getTeamProjects(teamId: string): Array<Project> {
+    const ids = { teamId }
+    return this.db.getCollection('projects', ids) as Array<Project>
+  }
+
+  getAllProjects(): Array<Project> {
+    return this.db.getCollection('projects') as Array<Project>
+  }
+
+  // Creates a new project and reserves a given name for 'builds', 'workloads' and 'services' resources
+  createProject(teamId: string, data: Project): Project {
+    // Check if the project name already exists in any collection
+    const projectNameTaken = ['builds', 'workloads', 'services'].some((collectionName) =>
+      this.isCollectionNameTaken(collectionName, teamId, data.name),
+    )
+    const projectNameTakenPublicMessage = `In the team '${teamId}' there is already a resource that match the project name '${data.name}'`
+
+    try {
+      if (projectNameTaken) throw new AlreadyExists(projectNameTakenPublicMessage)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      return this.db.createItem('projects', { ...data, teamId }, { teamId, name: data.name }) as Project
+    } catch (err) {
+      if (err.code === 409 && projectNameTaken) err.publicMessage = projectNameTakenPublicMessage
+      else if (err.code === 409) err.publicMessage = 'Project name already exists'
+      throw err
+    }
+  }
+
+  getProject(id: string): Project {
+    const p = this.db.getItem('projects', { id }) as Project
+    let b, w, wv, s
+    try {
+      b = this.db.getItem('builds', { id: p.build?.id }) as Build
+    } catch (err) {
+      b = {}
+    }
+    try {
+      w = this.db.getItem('workloads', { id: p.workload?.id }) as Workload
+    } catch (err) {
+      w = {}
+    }
+    try {
+      wv = this.db.getItem('workloadValues', { id: p.workloadValues?.id }) as WorkloadValues
+    } catch (err) {
+      wv = {}
+    }
+    try {
+      s = this.db.getItem('services', { id: p.service?.id }) as Service
+    } catch (err) {
+      s = {}
+    }
+    return { ...p, build: b, workload: w, workloadValues: wv, service: s }
+  }
+
+  editProject(id: string, data: Project): Project {
+    const { build, workload, workloadValues, service, teamId, name } = data
+    const { values } = workloadValues as WorkloadValues
+
+    let b, w, wv, s
+    if (!build?.id && build?.mode) b = this.db.createItem('builds', { ...build, teamId }, { teamId, name }) as Build
+    else if (build?.id) b = this.db.updateItem('builds', build, { id: build.id }) as Build
+
+    if (!workload?.id) w = this.db.createItem('workloads', { ...workload, teamId }, { teamId, name }) as Workload
+    else w = this.db.updateItem('workloads', workload, { id: workload.id }) as Workload
+
+    if (!data.workloadValues?.id)
+      wv = this.db.createItem('workloadValues', { teamId, values }, { teamId, name }, w.id) as WorkloadValues
+    else wv = this.db.updateItem('workloadValues', { teamId, values }, { id: workloadValues?.id }) as WorkloadValues
+
+    if (!service?.id) s = this.db.createItem('services', { ...service, teamId }, { teamId, name }) as Service
+    else s = this.db.updateItem('services', service, { id: service.id }) as Service
+
+    const updatedData = {
+      id,
+      name,
+      teamId,
+      ...(b && { build: { id: b.id } }),
+      workload: { id: w.id },
+      workloadValues: { id: wv.id },
+      service: { id: s.id },
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    return this.db.updateItem('projects', updatedData, { id }) as Project
+  }
+
+  // Deletes a project and all its related resources
+  deleteProject(id: string): void {
+    const p = this.db.getItem('projects', { id }) as Project
+    if (p.build?.id) this.db.deleteItem('builds', { id: p.build.id })
+    if (p.workload?.id) this.db.deleteItem('workloads', { id: p.workload.id })
+    if (p.workloadValues?.id) this.db.deleteItem('workloadValues', { id: p.workloadValues.id })
+    if (p.service?.id) this.db.deleteItem('services', { id: p.service.id })
+    return this.db.deleteItem('projects', { id })
+  }
+
   getTeamBuilds(teamId: string): Array<Build> {
     const ids = { teamId }
     return this.db.getCollection('builds', ids) as Array<Build>
@@ -529,6 +641,13 @@ export default class OtomiStack {
   }
 
   deleteBuild(id: string): void {
+    const p = this.db.getCollection('projects') as Array<Project>
+    p.forEach((project: Project) => {
+      if (project?.build?.id === id) {
+        const updatedData = { ...project, build: null }
+        this.db.updateItem('projects', updatedData, { id: project.id }) as Project
+      }
+    })
     return this.db.deleteItem('builds', { id })
   }
 
@@ -601,6 +720,14 @@ export default class OtomiStack {
   }
 
   deleteWorkload(id: string): void {
+    const p = this.db.getCollection('projects') as Array<Project>
+    p.forEach((project: Project) => {
+      if (project?.workload?.id === id) {
+        const updatedData = { ...project, workload: null, workloadValues: null }
+        this.db.updateItem('projects', updatedData, { id: project.id }) as Project
+      }
+    })
+    this.db.deleteItem('workloadValues', { id })
     return this.db.deleteItem('workloads', { id })
   }
 
@@ -632,11 +759,20 @@ export default class OtomiStack {
   }
 
   editService(id: string, data: Service): Service {
-    this.deleteService(id)
+    this.deleteService(id, false)
     return this.createService(data.teamId!, { ...data, id })
   }
 
-  deleteService(id: string): void {
+  deleteService(id: string, deleteProjectService = true): void {
+    if (deleteProjectService) {
+      const p = this.db.getCollection('projects') as Array<Project>
+      p.forEach((project: Project) => {
+        if (project?.service?.id === id) {
+          const updatedData = { ...project, service: null }
+          this.db.updateItem('projects', updatedData, { id: project.id }) as Project
+        }
+      })
+    }
     return this.db.deleteItem('services', { id })
   }
 
@@ -772,7 +908,7 @@ export default class OtomiStack {
     if (!apiServer) throw new ValidationError('Missing configuration value: cluster.apiServer')
     const client = this.getApiClient()
     const namespace = `team-${teamId}`
-    const saRes = await client.readNamespacedServiceAccount('default', namespace)
+    const saRes = await client.readNamespacedServiceAccount(`kubectl`, namespace)
     const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
     const { secrets }: { secrets?: Array<V1ObjectReference> } = sa
     const secretName = secrets?.length ? secrets[0].name : ''
@@ -901,6 +1037,20 @@ export default class OtomiStack {
     })
   }
 
+  async loadTeamProjects(teamId: string): Promise<void> {
+    const relativePath = getTeamProjectsFilePath(teamId)
+    if (!(await this.repo.fileExists(relativePath))) {
+      debug(`Team ${teamId} has no projects yet`)
+      return
+    }
+    const data = await this.repo.readFile(relativePath)
+    const inData: Array<Project> = get(data, getTeamProjectsJsonPath(teamId), [])
+    inData.forEach((inProject) => {
+      const res: any = this.db.populateItem('projects', { ...inProject, teamId }, undefined, inProject.id as string)
+      debug(`Loaded project: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
+    })
+  }
+
   async loadTeamBuilds(teamId: string): Promise<void> {
     const relativePath = getTeamBuildsFilePath(teamId)
     if (!(await this.repo.fileExists(relativePath))) {
@@ -969,6 +1119,7 @@ export default class OtomiStack {
       this.loadTeamSecrets(team.id!)
       this.loadTeamWorkloads(team.id!)
       this.loadTeamBackups(team.id!)
+      this.loadTeamProjects(team.id!)
       this.loadTeamBuilds(team.id!)
     })
   }
@@ -1066,6 +1217,7 @@ export default class OtomiStack {
         await this.saveTeamServices(teamId)
         await this.saveTeamSecrets(teamId)
         await this.saveTeamWorkloads(teamId)
+        await this.saveTeamProjects(teamId)
         await this.saveTeamBuilds(teamId)
         team.resourceQuota = arrayToObject((team.resourceQuota as []) ?? [])
         teamValues[teamId] = team
@@ -1106,6 +1258,17 @@ export default class OtomiStack {
         this.saveWorkloadValues(workload)
       }),
     )
+  }
+
+  async saveTeamProjects(teamId: string): Promise<void> {
+    const projects = this.db.getCollection('projects', { teamId }) as Array<Project>
+    const cleaneProjects: Array<Record<string, any>> = projects.map((obj) => {
+      return omit(obj, ['teamId'])
+    })
+    const relativePath = getTeamProjectsFilePath(teamId)
+    const outData: Record<string, any> = set({}, getTeamProjectsJsonPath(teamId), cleaneProjects)
+    debug(`Saving projects of team: ${teamId}`)
+    await this.repo.writeFile(relativePath, outData)
   }
 
   async saveTeamBuilds(teamId: string): Promise<void> {

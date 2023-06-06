@@ -12,6 +12,7 @@ import {
   Cloudtty,
   Cluster,
   License,
+  Project,
   Secret,
   Service,
   Settings,
@@ -34,6 +35,7 @@ export type DbType =
   | App
   | Workload
   | WorkloadValues
+  | Project
 export type Schema = {
   apps: App[]
   license: License
@@ -45,6 +47,7 @@ export type Schema = {
   workloadValues: WorkloadValues[]
   builds: Build[]
   cloudtty: Cloudtty
+  projects: Project[]
 }
 
 export default class Db {
@@ -66,6 +69,7 @@ export default class Db {
         builds: [],
         cloudtty: {},
         license: {},
+        projects: [],
         secrets: [],
         services: [],
         settings: {},
