@@ -49,6 +49,13 @@ AppHarbor:
           additionalProperties: false
           type: object
           properties:
+            database:
+              type: object
+              title: Database storage size
+              properties:
+                size:
+                  type: string
+                  default: 2Gi
             imageChartStorage:
               type: object
               title: Image Chart Storage

@@ -1,0 +1,52 @@
+AppCnpg:
+  additionalProperties: false
+  x-externalDocsPath: https://github.com/cloudnative-pg/cloudnative-pg
+  x-short: ToDo
+  description: ToDo
+  x-info: ToDo
+  title: Cloudnative-PG
+  type: object
+  properties:
+    storage:
+      $ref: '../definitions.yaml#/storageProvider'
+    enabled:
+      type: boolean
+      default: true
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      type: object
+      properties:
+        storage:
+          $ref: ../definitions.yaml#/storageProvider
+        resources:
+          type: object
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 1000m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 1000Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 100m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 200Mi
+          required:
+            - limits
+            - requests
+  required: [id]
