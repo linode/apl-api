@@ -1967,13 +1967,6 @@ properties:
           persistence:
             additionalProperties: false
             properties:
-              database:
-                type: object
-                title: Database storage size
-                properties:
-                  size:
-                    type: string
-                    default: 2Gi
               imageChartStorage:
                 additionalProperties: false
                 description: For reference go to https://github.com/distribution/distribution/blob/main/docs/configuration.md#storage
@@ -3726,89 +3719,110 @@ properties:
     required:
       - smarthost
   platformBackups:
+    type: object
     properties:
-      gitea:
-        title: Gitea
+      database:
+        type: object
+        title: Database backups
         properties:
-          enabled:
-            type: boolean
-            default: false
-          ttl:
-            $ref: '#/definitions/backupTtl'
-          schedule:
-            $ref: '#/definitions/backupSchedule'
-      drone:
-        title: Drone
+          harbor:
+            title: Harbor
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              resources:
+                $ref: '#/definitions/resources'
+              ttl:
+                $ref: '#/definitions/backupTtl'
+              schedule:
+                $ref: '#/definitions/backupSchedule'
+      persistentVolumes:
+        type: object
+        title: PersistentVolumes backups
         properties:
-          enabled:
-            type: boolean
-            default: false
-          ttl:
-            $ref: '#/definitions/backupTtl'
-          schedule:
-            $ref: '#/definitions/backupSchedule'
-      keycloak:
-        title: Keycloak
-        properties:
-          enabled:
-            type: boolean
-            default: false
-          ttl:
-            $ref: '#/definitions/backupTtl'
-          schedule:
-            $ref: '#/definitions/backupSchedule'
-      harbor:
-        title: Harbor
-        properties:
-          enabled:
-            type: boolean
-            default: false
-          resources:
-            $ref: '#/definitions/resources'
-          ttl:
-            $ref: '#/definitions/backupTtl'
-          schedule:
-            $ref: '#/definitions/backupSchedule'
-      vault:
-        title: Vault
-        properties:
-          enabled:
-            type: boolean
-            default: false
-          ttl:
-            $ref: '#/definitions/backupTtl'
-          schedule:
-            $ref: '#/definitions/backupSchedule'
-      argo:
-        title: ArgoCD
-        properties:
-          enabled:
-            type: boolean
-            default: false
-          ttl:
-            $ref: '#/definitions/backupTtl'
-          schedule:
-            $ref: '#/definitions/backupSchedule'
-      kubeapps:
-        title: Kubeapps
-        properties:
-          enabled:
-            type: boolean
-            default: false
-          ttl:
-            $ref: '#/definitions/backupTtl'
-          schedule:
-            $ref: '#/definitions/backupSchedule'
-      minio:
-        title: Minio
-        properties:
-          enabled:
-            type: boolean
-            default: false
-          ttl:
-            $ref: '#/definitions/backupTtl'
-          schedule:
-            $ref: '#/definitions/backupSchedule'
+          gitea:
+            title: Gitea
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              ttl:
+                $ref: '#/definitions/backupTtl'
+              schedule:
+                $ref: '#/definitions/backupSchedule'
+          drone:
+            title: Drone
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              ttl:
+                $ref: '#/definitions/backupTtl'
+              schedule:
+                $ref: '#/definitions/backupSchedule'
+          keycloak:
+            title: Keycloak
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              ttl:
+                $ref: '#/definitions/backupTtl'
+              schedule:
+                $ref: '#/definitions/backupSchedule'
+          harbor:
+            title: Harbor
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              resources:
+                $ref: '#/definitions/resources'
+              ttl:
+                $ref: '#/definitions/backupTtl'
+              schedule:
+                $ref: '#/definitions/backupSchedule'
+          vault:
+            title: Vault
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              ttl:
+                $ref: '#/definitions/backupTtl'
+              schedule:
+                $ref: '#/definitions/backupSchedule'
+          argo:
+            title: ArgoCD
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              ttl:
+                $ref: '#/definitions/backupTtl'
+              schedule:
+                $ref: '#/definitions/backupSchedule'
+          kubeapps:
+            title: Kubeapps
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              ttl:
+                $ref: '#/definitions/backupTtl'
+              schedule:
+                $ref: '#/definitions/backupSchedule'
+          minio:
+            title: Minio
+            properties:
+              enabled:
+                type: boolean
+                default: false
+              ttl:
+                $ref: '#/definitions/backupTtl'
+              schedule:
+                $ref: '#/definitions/backupSchedule'
   teamConfig:
     additionalProperties: false
     patternProperties:

@@ -17,83 +17,87 @@ Settings:
       description: Cluster configuration.
     platformBackups:
       additionalProperties: false
-      x-externalDocsPath: docs/for-ops/console/settings/backup
-      title: Backup platform Persistent Volumes
-      description: Platform app Persistent Volume backup schedules.
       type: object
       properties:
-        gitea:
-          title: Gitea
+        database:
+        persistentVolumes:
+          x-externalDocsPath: docs/for-ops/console/settings/backup
+          title: Backup platform Persistent Volumes
+          description: Platform app Persistent Volume backup schedules.
+          type: object
           properties:
-            enabled:
-              type: boolean
-            ttl:
-              $ref: definitions.yaml#/backupTtl
-            schedule:
-              $ref: definitions.yaml#/backupSchedule
-        drone:
-          title: Drone
-          properties:
-            enabled:
-              type: boolean
-            ttl:
-              $ref: definitions.yaml#/backupTtl
-            schedule:
-              $ref: definitions.yaml#/backupSchedule
-        keycloak:
-          title: Keycloak
-          properties:
-            enabled:
-              type: boolean
-            ttl:
-              $ref: definitions.yaml#/backupTtl
-            schedule:
-              $ref: definitions.yaml#/backupSchedule
-        harbor:
-          title: Harbor
-          properties:
-            enabled:
-              type: boolean
-            ttl:
-              $ref: definitions.yaml#/backupTtl
-            schedule:
-              $ref: definitions.yaml#/backupSchedule
-        vault:
-          title: Vault
-          properties:
-            enabled:
-              type: boolean
-            ttl:
-              $ref: definitions.yaml#/backupTtl
-            schedule:
-              $ref: definitions.yaml#/backupSchedule
-        argo:
-          title: ArgoCD
-          properties:
-            enabled:
-              type: boolean
-            ttl:
-              $ref: definitions.yaml#/backupTtl
-            schedule:
-              $ref: definitions.yaml#/backupSchedule
-        kubeapps:
-          title: Kubeapps
-          properties:
-            enabled:
-              type: boolean
-            ttl:
-              $ref: definitions.yaml#/backupTtl
-            schedule:
-              $ref: definitions.yaml#/backupSchedule
-        minio:
-          title: Minio
-          properties:
-            enabled:
-              type: boolean
-            ttl:
-              $ref: definitions.yaml#/backupTtl
-            schedule:
-              $ref: definitions.yaml#/backupSchedule
+            gitea:
+              title: Gitea
+              properties:
+                enabled:
+                  type: boolean
+                ttl:
+                  $ref: definitions.yaml#/backupTtl
+                schedule:
+                  $ref: definitions.yaml#/backupSchedule
+            drone:
+              title: Drone
+              properties:
+                enabled:
+                  type: boolean
+                ttl:
+                  $ref: definitions.yaml#/backupTtl
+                schedule:
+                  $ref: definitions.yaml#/backupSchedule
+            keycloak:
+              title: Keycloak
+              properties:
+                enabled:
+                  type: boolean
+                ttl:
+                  $ref: definitions.yaml#/backupTtl
+                schedule:
+                  $ref: definitions.yaml#/backupSchedule
+            harbor:
+              title: Harbor
+              properties:
+                enabled:
+                  type: boolean
+                ttl:
+                  $ref: definitions.yaml#/backupTtl
+                schedule:
+                  $ref: definitions.yaml#/backupSchedule
+            vault:
+              title: Vault
+              properties:
+                enabled:
+                  type: boolean
+                ttl:
+                  $ref: definitions.yaml#/backupTtl
+                schedule:
+                  $ref: definitions.yaml#/backupSchedule
+            argo:
+              title: ArgoCD
+              properties:
+                enabled:
+                  type: boolean
+                ttl:
+                  $ref: definitions.yaml#/backupTtl
+                schedule:
+                  $ref: definitions.yaml#/backupSchedule
+            kubeapps:
+              title: Kubeapps
+              properties:
+                enabled:
+                  type: boolean
+                ttl:
+                  $ref: definitions.yaml#/backupTtl
+                schedule:
+                  $ref: definitions.yaml#/backupSchedule
+            minio:
+              title: Minio
+              properties:
+                enabled:
+                  type: boolean
+                ttl:
+                  $ref: definitions.yaml#/backupTtl
+                schedule:
+                  $ref: definitions.yaml#/backupSchedule
     home:
       additionalProperties: false
       $ref: definitions.yaml#/alerts
