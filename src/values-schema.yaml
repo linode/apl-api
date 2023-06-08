@@ -498,9 +498,6 @@ definitions:
   ingressClassParameters:
     type: object
     properties:
-      entrypoint:
-        description: A public IP address that has a route to a private loadbalancer ip, allowing access to private clusters. (Provider "custom" only.)
-        type: string
       network:
         title: Load balancer type
         type: string
