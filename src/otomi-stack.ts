@@ -665,13 +665,13 @@ export default class OtomiStack {
       SUB: data.sub,
     }
     console.log('variables:', variables)
-    const files = await readdir('./dist/src', 'utf-8')
+    const files = await readdir('./dist/src/ttyManifests', 'utf-8')
     const filteredFiles = files.filter((file) => file.startsWith('tty'))
     console.log('filteredFiles:', filteredFiles)
     const variableKeys = Object.keys(variables)
     const fileContents = await Promise.all(
       filteredFiles.map(async (file) => {
-        let fileContent = await readFile(`./dist/src/${file}`, 'utf-8')
+        let fileContent = await readFile(`./dist/src/ttyManifests/${file}`, 'utf-8')
         variableKeys.forEach((key) => {
           const regex = new RegExp(`\\$${key}`, 'g')
           fileContent = fileContent.replace(regex, variables[key])
