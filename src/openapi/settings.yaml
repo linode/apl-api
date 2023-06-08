@@ -20,9 +20,22 @@ Settings:
       type: object
       properties:
         database:
+          type: object
+          title: Database backups
+          properties:
+            harbor:
+              title: Harbor
+              properties:
+                enabled:
+                  type: boolean
+                  default: false
+                retentionPolicy:
+                  $ref: definitions.yaml#/backupRetentionPolicy
+                schedule:
+                  $ref: definitions.yaml#/backupSchedule
         persistentVolumes:
           x-externalDocsPath: docs/for-ops/console/settings/backup
-          title: Backup platform Persistent Volumes
+          title: PersistentVolumes backups
           description: Platform app Persistent Volume backup schedules.
           type: object
           properties:
