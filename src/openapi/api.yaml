@@ -581,6 +581,101 @@ paths:
               schema:
                 $ref: '#/components/schemas/Build'
 
+  '/projects':
+    get:
+      operationId: getAllProjects
+      x-aclSchema: Project
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all projects configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+
+  '/teams/{teamId}/projects':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamProjects
+      x-aclSchema: Project
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team projects configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+    post:
+      operationId: createProject
+      description: Create a team project
+      x-aclSchema: Project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+        description: Project object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored project configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+
+  '/teams/{teamId}/projects/{projectId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/projectParams'
+    delete:
+      operationId: deleteProject
+      description: Delete a project from a given team
+      x-aclSchema: Project
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a project
+    get:
+      operationId: getProject
+      description: Get a project from a given team
+      x-aclSchema: Project
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained project configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+    put:
+      operationId: editProject
+      description: Edit a project from a given team
+      x-aclSchema: Project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+        description: Project object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+
   '/workloads':
     get:
       operationId: getAllWorkloads
@@ -966,6 +1061,13 @@ components:
       required: true
       schema:
         type: string
+    projectParams:
+      name: projectId
+      in: path
+      description: ID of the build
+      required: true
+      schema:
+        type: string
     teamParams:
       name: teamId
       in: path
@@ -1112,6 +1214,8 @@ components:
       $ref: error.yaml#/OpenApiValidationError
     OtomiStackError:
       $ref: error.yaml#/OtomiStackError
+    Project:
+      $ref: project.yaml#/Project
     Restore:
       $ref: restore.yaml#/Restore
     Revert:
