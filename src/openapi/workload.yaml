@@ -144,7 +144,9 @@ WorkloadValues:
           description: The name of a TLS secret known to exist in the team namespace.
           example: example-com
           title: Secret name
-          type: string
+          type: array
+          items:
+            type: string
         containerSecurityContext:
           title: Container Security Context
           properties:
