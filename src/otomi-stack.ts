@@ -652,22 +652,14 @@ export default class OtomiStack {
   }
 
   async connectCloudtty(data: Cloudtty): Promise<Cloudtty> {
-    console.log('connectCloudtty START')
-    // const kc = new k8s.KubeConfig()
-    // kc.loadFromDefault()
-    // const opts = {}
-    // kc.applyToRequest(opts)
-
     if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
     const variables = {
       TARGET_TEAM: data.teamId,
       FQDN: data.domain,
       SUB: data.sub,
     }
-    console.log('variables:', variables)
     const files = await readdir('./dist/src/ttyManifests', 'utf-8')
     const filteredFiles = files.filter((file) => file.startsWith('tty'))
-    console.log('filteredFiles:', filteredFiles)
     const variableKeys = Object.keys(variables)
     const fileContents = await Promise.all(
       filteredFiles.map(async (file) => {
@@ -679,7 +671,6 @@ export default class OtomiStack {
         return fileContent
       }),
     )
-    console.log('fileContents:', fileContents)
     await writeFile('/tmp/ttyd.yaml', fileContents, 'utf-8')
 
     //====================================================================================================

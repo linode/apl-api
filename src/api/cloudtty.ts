@@ -6,11 +6,18 @@ const debug = Debug('otomi:api:cloudtty')
 
 export default function (): OperationHandlerArray {
   const post: Operation = [
-    ({ otomi, body }: OpenApiRequestExt, res): void => {
+    async ({ otomi, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`connectCloudtty`)
-      const v = otomi.connectCloudtty(body)
-      const myData = { iFrameUrl: 'https://www.youtube.com/embed/Lxy9uA_J2OM', ...body }
-      res.json(myData)
+
+      try {
+        const v = await otomi.connectCloudtty(body)
+        setTimeout(() => {
+          res.json(v)
+        }, 30000)
+      } catch (e) {
+        debug(e)
+        res.json({})
+      }
     },
   ]
   const api = {
