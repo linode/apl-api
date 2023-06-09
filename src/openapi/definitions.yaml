@@ -585,6 +585,20 @@ env:
       - name
       - value
     type: object
+endpoints:
+  title: Endpoints
+  type: array
+  nullable: true
+  items:
+    properties:
+      port:
+        $ref: '#/portNumber'
+      path:
+        type: string
+    required:
+      - port
+      - path
+    type: object
 files:
   description: 'Entries of absolute path > content pairs. One caveat: content can be 131072 chars max.'
   title: Files
@@ -999,19 +1013,19 @@ resourceQuota:
     - name: services.loadbalancers
       value: '0'
 runAsNonRoot:
-  description: Will prevent the container from starting with UID 0. This implies that k8s must be able to infer the UID from the image. If it complains the UID must be explicitly set with runAsUser.
+  description: Will prevent the container from starting with UID 0
   title: Run as non-root
   type: boolean
   default: true
 runAsUser:
-  description: The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May be set in both SecurityContext and PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+  description: The UID to run the entrypoint of the container process
   default: 1001
   maximum: 65535
   minimum: 0
   title: Run as user
   type: integer
 runAsGroup:
-  description: The GID to run the entrypoint of the container process. Defaults to group specified in image metadata if unspecified. May be set in both SecurityContext and PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+  description: The GID to run the entrypoint of the container process
   default: 1001
   maximum: 65535
   minimum: 0
@@ -1048,6 +1062,36 @@ secrets:
   title: Secrets
   type: array
   uniqueItems: true
+args:
+  title: Command arguments
+  description: Override the arguments given to the entrypoint/command of the container.
+  items:
+    type: string
+  type: array
+servicePorts:
+  title: Service Ports
+  type: array
+  nullable: true
+  items:
+    properties:
+      name:
+        type: string
+      port:
+        $ref: '#/portNumber'
+      targetPort:
+        type: string
+      protocol:
+        type: string
+        enum:
+          - TCP
+          - UDP
+        default: TCP
+    required:
+      - name
+      - port
+      - targetPort
+      - protocol
+    type: object
 secretMounts:
   description: Pairs of secret name > absolute folder path. Will mount the contents of the secret in the container at the specified folder path.
   title: Secret mounts
