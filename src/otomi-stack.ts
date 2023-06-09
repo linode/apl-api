@@ -692,7 +692,7 @@ export default class OtomiStack {
         console.log('APPLY err: ', err)
       })
 
-    const myData = { iFrameUrl: 'https://www.youtube.com/embed/Lxy9uA_J2OM', ...data }
+    const myData = { iFrameUrl: `https://tty.${data.domain}/${data.sub}`, ...data }
     return myData
   }
 
