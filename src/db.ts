@@ -11,6 +11,7 @@ import {
   Build,
   Cluster,
   License,
+  Project,
   Secret,
   Service,
   Settings,
@@ -21,7 +22,18 @@ import {
 import { mergeData } from 'src/utils'
 import { v4 as uuidv4 } from 'uuid'
 
-export type DbType = Backup | Build | Cluster | Secret | Service | Team | Settings | App | Workload | WorkloadValues
+export type DbType =
+  | Backup
+  | Build
+  | Cluster
+  | Secret
+  | Service
+  | Team
+  | Settings
+  | App
+  | Workload
+  | WorkloadValues
+  | Project
 export type Schema = {
   apps: App[]
   license: License
@@ -32,6 +44,7 @@ export type Schema = {
   workloads: Workload[]
   workloadValues: WorkloadValues[]
   builds: Build[]
+  projects: Project[]
 }
 
 export default class Db {
@@ -52,6 +65,7 @@ export default class Db {
         backups: [],
         builds: [],
         license: {},
+        projects: [],
         secrets: [],
         services: [],
         settings: {},
