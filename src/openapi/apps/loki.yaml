@@ -308,11 +308,10 @@ lokiStorageProvider:
         - gcs
         - type
     - title: Filesystem
+      type: object
       x-hideTitle: true
       description: Use Persistent Volumes for file storage
       properties:
-        filesystem:
-          type: object
         type:
           type: string
           enum:
