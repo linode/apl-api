@@ -210,6 +210,24 @@ autoscalingNonEssentialEnabled:
           type: boolean
           default: true
     - $ref: '#/autoscalingNonEssential'
+autoscalingNonEssentialEnabledTargets:
+  type: object
+  allOf:
+    - properties:
+        enabled:
+          type: boolean
+          default: true
+    - $ref: '#/autoscalingNonEssential'
+    - $ref: '#/autoscalingTargets'
+autoscalingTargets:
+  type: object
+  properties:
+    targetCPUUtilizationPercentage:
+      type: integer
+      default: 80
+    targetMemoryUtilizationPercentage:
+      type: integer
+      default: 80
 awsAccessKey:
   title: AWS access key
   description: An AWS access key ID.
