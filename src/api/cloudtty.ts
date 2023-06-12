@@ -13,7 +13,7 @@ export default function (): OperationHandlerArray {
         const v = await otomi.connectCloudtty(body)
         setTimeout(() => {
           res.json(v)
-        }, 30000)
+        }, 10000)
       } catch (e) {
         debug(e)
         res.json({})
