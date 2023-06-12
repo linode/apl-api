@@ -522,7 +522,7 @@ definitions:
         description: 'Whitelist source IP address ranges. The value is a comma separated list of CIDRs, e.g. 10.0.0.0/24,172.10.0.1'
       entrypoint:
         $ref: '#/definitions/ipV4Address'
-        description: Optional. A public IP address that will override (loadbalancer) ip used for registering hosts. This allows for access to private clusters.
+        description: Optional. An IP address that will override the external Load balancer IP address used for registering hosts in DNS.
   ipV4Address:
     type: string
     pattern: ^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$
