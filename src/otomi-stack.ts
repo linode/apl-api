@@ -675,7 +675,7 @@ export default class OtomiStack {
 
     //====================================================================================================
 
-    apply('/tmp/ttyd.yaml')
+    await apply('/tmp/ttyd.yaml')
       .then((res) => {
         console.log('APPLY res: ', res)
       })
