@@ -4,11 +4,6 @@ lokiValues:
     adminPassword:
       type: string
       x-secret: 'randAlphaNum 20'
-    persistence:
-      properties:
-        size:
-          default: 20Gi
-          type: string
     retention:
       properties:
         duration:
@@ -21,139 +16,310 @@ lokiValues:
       required:
         - duration
     v11StartDate:
-      description: Set this to a date just after deployment in case of an upgrade. (Only needed when running v9 and wanting to upgrade schema.)
+      description: Set this to a date just after deployment in case of an upgrade.
       title: Schema v11 start date
       type: string
-    resources:
-      type: object
-      properties:
-        limits:
-          type: object
-          properties:
-            cpu:
-              $ref: ../definitions.yaml#/quantityCpu
-              default: 800m
-            memory:
-              $ref: ../definitions.yaml#/quantityMem
-              default: 512Mi
-        requests:
-          type: object
-          properties:
-            cpu:
-              $ref: ../definitions.yaml#/quantityCpu
-              default: 100m
-            memory:
-              $ref: ../definitions.yaml#/quantityMem
-              default: 128Mi
-      required:
-        - limits
-        - requests
     storage:
       $ref: '#/lokiStorageProvider'
+    persistence:
+      type: object
+      properties:
+        ingester:
+          type: object
+          properties:
+            size:
+              default: 20Gi
+              type: string
+        querier:
+          type: object
+          properties:
+            size:
+              default: 20Gi
+              type: string
+    autoscaling:
+      type: object
+      additionalProperties: false
+      properties:
+        ingester:
+          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets
+        gateway:
+          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets
+        querier:
+          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets
+        distributor:
+          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets
+        queryFrontend:
+          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets 
+    resources:
+      additionalProperties: false
+      type: object
+      properties:
+        compactor:
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 200m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 256Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 50m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 128Mi
+          required:
+            - limits
+            - requests
+        ingester:
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 200m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 256Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 50m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 128Mi
+          required:
+            - limits
+            - requests
+        gateway:
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 200m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 256Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 50m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 64Mi
+          required:
+            - limits
+            - requests
+        querier:
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 200m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 256Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 50m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 64Mi
+          required:
+            - limits
+            - requests
+        distributor:
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 200m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 256Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 50m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 64Mi
+          required:
+            - limits
+            - requests
+        queryFrontend:
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 200m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 256Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 50m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 64Mi
+          required:
+            - limits
+            - requests
   required:
     - adminPassword
 
 lokiStorageProvider:
+  type: object
   title: Storage provider
+  description: Select the preferred provider for storing logs.
   oneOf:
-    - title: Filesystem
-      description: Creates a k8s pvc.
+    - title: Local Minio
+      type: object
+      description: Select to use the in-cluster Minio instance.
       properties:
-        storageType:
+        type:
           type: string
           enum:
-            - filesystem
-          default: filesystem
-    - title: AWS
-      description: Amazon storage options.
+            - minioLocal
+          default: minioLocal
+    - title: Azure Blob
+      type: object
+      x-hideTitle: true
       properties:
-        storageType:
-          type: string
-          enum:
-            - aws
-          default: aws
-        aws:
+        azure:
+          type: object
+          description: Select to store logs in Azure Blob storage.
+          title: Azure blob (container) storage
           properties:
-            s3:
-              $ref: ../definitions.yaml#/s3Url
-            bucketnames:
+            accountKey:
               type: string
-              title: Bucket names
-              description: A comma separated list of bucket names.
-            dynamodb:
-              $ref: ../definitions.yaml#/s3Url
-    - title: Azure
-      description: Azure storage container.
-      properties:
-        storageType:
+              x-secret: ''
+            accountName:
+              type: string
+            containerName:
+              type: string
+          required:
+            - accountKey
+            - accountName
+            - containerName
+        type:
           type: string
           enum:
             - azure
           default: azure
-        azure:
-          description: Missing from docs but available with this schema.
+      required:
+        - azure
+        - type
+    - title: S3
+      type: object
+      x-hideTitle: true
+      properties:
+        s3:
+          type: object
+          title: S3
+          description: Select to store logs in AWS S3 or S3 compatible blob storage.
           properties:
-            account_key:
+            bucket:
               type: string
+              description: The name of the bucket.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            s3Url:
+              type: string
+              description: The full S3 URL.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            accessKeyId:
+              type: string
+              description: The ID of the access key. Optional if cloud provider is AWS.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            secretAccessKey:
+              type: string
+              description: The secret of the access key. Optional if cloud provider is AWS.
+              $ref: ../definitions.yaml#/wordCharacterPattern
               x-secret: true
-            account_name:
-              type: string
-            container_name:
-              type: string
           required:
-            - account_key
-            - account_name
-            - container_name
-    - title: Bigtable
-      description: 'Google Cloud Bigtable: nosql database service.'
-      properties:
-        storageType:
+            - bucket
+            - s3Url
+            - accessKeyId
+            - secretAccessKey
+        type:
           type: string
           enum:
-            - bigtable
-          default: bigtable
-        bigtable:
-          type: object
-    - title: Cassandra
-      description: Apache Cassandra is an open source NoSQL distributed database.
+            - s3
+          default: s3
+      required:
+        - s3
+        - type
+    - title: gcs
+      type: object
+      x-hideTitle: true
       properties:
-        storageType:
-          type: string
-          enum:
-            - cassandra
-          default: cassandra
-        cassandra:
+        gcs:
           type: object
-    - title: GCS
-      description: Google Cloud blob Storage.
-      properties:
-        storageType:
+          title: Google Object Storage
+          description: Select to store backups in Google Object Storage.
+          properties:
+            bucket:
+              type: string
+              description: Name of the bucket.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            project:
+              description: Big Table Project.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+            instance:
+              description: Big Table Instance.
+              $ref: ../definitions.yaml#/wordCharacterPattern
+          required:
+            - bucket
+            - project
+            - instance
+        type:
           type: string
           enum:
             - gcs
           default: gcs
-        gcs:
-          type: object
-    - title: Swift
-      description: OpenStack Object Storage.
+      required:
+        - gcs
+        - type
+    - title: Filesystem
+      type: object
+      x-hideTitle: true
+      description: Use Persistent Volumes for file storage
       properties:
-        storageType:
+        type:
           type: string
           enum:
-            - swift
-          default: swift
-        swift:
-          type: object
-    - title: Local
-      description: Host volume.
-      properties:
-        storageType:
-          type: string
-          enum:
-            - local
-          default: local
-        local:
-          type: object
+            - filesystem
+          default: filesystem
+      required:
+        - filesystem
+        - type
 
 AppLoki:
   additionalProperties: false
