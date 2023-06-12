@@ -10,7 +10,7 @@ import { promisify } from 'util'
  * @param specPath File system path to a YAML Kubernetes spec.
  * @return Array of resources created
  */
-export async function apply(specPath: string): Promise<k8s.KubernetesObject[] | any> {
+export async function apply(specPath: string): Promise<k8s.KubernetesObject[]> {
   console.log('Spec_Path_:', specPath)
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
@@ -46,24 +46,24 @@ export async function apply(specPath: string): Promise<k8s.KubernetesObject[] | 
     }
   }
 
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+
   if (created.length > 0) {
-    client
-      .listNamespacedPod('default')
+    k8sApi
+      .listNamespacedPod('team-admin')
       .then((res) => {
         const pods = res.body.items
         console.log('pods', pods)
 
         // Find the specific pod by name
-        const pod = pods.find((item) => item.metadata.name === 'default')
+        const pod = pods.find((item: any) => item.metadata.name === 'team-admin') as any
 
-        if (pod) {
-          console.log(`Pod ${'default'} status: ${pod.status.phase}`)
-          return created
-        } else console.log(`Pod ${'default'} not found.`)
+        if (pod) console.log(`Pod ${'team-admin'} status: ${pod.status.phase}`)
+        else console.log(`Pod ${'team-admin'} not found.`)
       })
       .catch((err) => {
         console.error('Error:', err)
-        return null
       })
   }
+  return created
 }
