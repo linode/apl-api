@@ -48,7 +48,8 @@ export async function apply(specPath: string): Promise<k8s.KubernetesObject[]> {
 
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
 
-  if (created.length > 0) {
+  if (created) {
+    console.log('created', created)
     k8sApi
       .listNamespacedPod('team-admin')
       .then((res) => {
