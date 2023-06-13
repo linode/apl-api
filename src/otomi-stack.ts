@@ -52,6 +52,7 @@ import {
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { apply } from './apply'
 import connect from './otomiCloud/connect'
+import { watch } from './watch'
 
 const debug = Debug('otomi:otomi-stack')
 
@@ -682,6 +683,8 @@ export default class OtomiStack {
       .catch((err) => {
         console.log('APPLY err: ', err)
       })
+
+    await watch()
 
     const myData = { iFrameUrl: `https://tty.${data.domain}/${data.sub}`, ...data }
     return myData
