@@ -677,12 +677,6 @@ export default class OtomiStack {
     //====================================================================================================
 
     await apply('/tmp/ttyd.yaml')
-      .then((res) => {
-        console.log('APPLY res: ', res)
-      })
-      .catch((err) => {
-        console.log('APPLY err: ', err)
-      })
 
     await watch()
 

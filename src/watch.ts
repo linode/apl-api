@@ -10,34 +10,17 @@ export async function watch(): Promise<any> {
     await k8swatch
       .watch(
         '/api/v1/pods',
-        // optional query parameters can go here.
         {
           allowWatchBookmarks: true,
         },
-        // callback is called for each received object.
         (type, apiObj, watchObj) => {
-          if (type === 'ADDED') {
-            // tslint:disable-next-line:no-console
-            console.log('new object:')
-          } else if (type === 'MODIFIED') {
-            // tslint:disable-next-line:no-console
-            console.log('changed object:')
-          } else if (type === 'DELETED') {
-            // tslint:disable-next-line:no-console
-            console.log('deleted object:')
-          } else if (type === 'BOOKMARK') {
-            // tslint:disable-next-line:no-console
-            console.log(`bookmark: ${watchObj.metadata.resourceVersion}`)
-          } else {
-            // tslint:disable-next-line:no-console
-            console.log(`unknown type: ${type}`)
-          }
-          // tslint:disable-next-line:no-console
-          console.log(apiObj)
+          const filteredTty = apiObj.filter(
+            (item: any) => item.metadata.name === 'tty-9867f64d-174b-493a-950e-e82bca1d734f-admin',
+          )
+
+          console.log(filteredTty)
         },
-        // done callback is called if the watch terminates normally
         (err) => {
-          // tslint:disable-next-line:no-console
           console.log(err)
         },
       )
