@@ -46,8 +46,12 @@ export async function apply(specPath: string): Promise<k8s.KubernetesObject[]> {
     }
   }
 
-  const myClass = new k8s.V1PodStatus()
-  console.log('myClass', myClass)
+  try {
+    const myClass = new k8s.V1PodStatus()
+    console.log('myClass', myClass)
+  } catch (error) {
+    console.log('V1PodStatus error:', error)
+  }
 
   return created
 }
