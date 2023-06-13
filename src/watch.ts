@@ -18,7 +18,7 @@ export async function watch(): Promise<any> {
             (item: any) => item.metadata.name === 'tty-9867f64d-174b-493a-950e-e82bca1d734f-admin',
           )
 
-          console.log(filteredTty)
+          console.log('filteredTty:', filteredTty)
         },
         (err) => {
           console.log(err)
