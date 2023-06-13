@@ -29,6 +29,6 @@ spec:
         - '-'
         - user
         - -c
-        - sh /etc/kconfig/kconfig.sh && ttyd -w /home/user -m 1 -u 1000 -g 1000 -p 8080 sh
+        - sh /etc/kconfig/kconfig.sh && ttyd -w /home/user -u 1000 -g 1000 -p 8080 sh
 ---
 
