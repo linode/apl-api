@@ -16,10 +16,14 @@ export async function watchPodUntilRunning(namespace: string, podName: string) {
 
   while (!isRunning) {
     console.log('4=====================')
-    const res = await k8sApi.readNamespacedPodStatus(podName, namespace)
-    console.log('5=====================')
-    isRunning = res.body.status?.phase === 'Running'
-    console.log('6=====================')
+    try {
+      const res = await k8sApi.readNamespacedPodStatus(podName, namespace)
+      console.log('5=====================')
+      isRunning = res.body.status?.phase === 'Running'
+    } catch (error) {
+      console.log('6=====================')
+      console.log('error:', error)
+    }
 
     if (!isRunning) {
       console.log('7=====================')
