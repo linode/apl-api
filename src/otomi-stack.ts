@@ -653,6 +653,10 @@ export default class OtomiStack {
   }
 
   async connectCloudtty(data: Cloudtty): Promise<Cloudtty> {
+    const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
+    const cloudtty = cloudttys.find((c) => c.teamId === data.teamId && c.sub === data.sub)
+    if (cloudtty) return cloudtty
+
     if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
     const variables = {
       TARGET_TEAM: data.teamId,
@@ -681,9 +685,13 @@ export default class OtomiStack {
     console.log('watchPodUntilRunning STARTED!')
     const watchPodUntilRunningRes = await watchPodUntilRunning('team-admin', `tty-${data.sub}-admin`)
     console.log('watchPodUntilRunningRes', watchPodUntilRunningRes)
-
     const myData = { iFrameUrl: `https://tty.${data.domain}/${data.sub}`, ...data }
-    return myData
+
+    return this.db.createItem(
+      'cloudtty',
+      { ...myData },
+      { teamId: data.teamId, name: `tty-${data.sub}-admin` },
+    ) as Cloudtty
   }
 
   async deleteCloudtty() {
