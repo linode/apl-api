@@ -4,6 +4,7 @@ teamConfig:
             alertmanager: {}
             argocd: {}
             cert-manager: {}
+            cnpg: {}
             drone: {}
             external-dns: {}
             gatekeeper: {}

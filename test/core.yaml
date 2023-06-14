@@ -6,6 +6,8 @@ k8s:
     - name: cert-manager
       disableIstioInjection: true
     - name: cnpg-system
+      app: cnpg
+      disableIstioInjection: true
     - name: default
       disableIstioInjection: true
       disablePolicyChecks: true
