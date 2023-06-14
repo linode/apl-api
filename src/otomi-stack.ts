@@ -687,11 +687,7 @@ export default class OtomiStack {
     console.log('watchPodUntilRunningRes', watchPodUntilRunningRes)
     const myData = { iFrameUrl: `https://tty.${data.domain}/${data.sub}`, ...data }
 
-    return this.db.createItem(
-      'cloudtty',
-      { ...myData },
-      { teamId: data.teamId, name: `tty-${data.sub}-admin` },
-    ) as Cloudtty
+    return this.db.createItem('cloudtty', myData) as Cloudtty
   }
 
   async deleteCloudtty() {
