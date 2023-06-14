@@ -3,7 +3,7 @@ import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
 
-async function watchPodUntilRunning(namespace: string, podName: string) {
+export async function watchPodUntilRunning(namespace: string, podName: string) {
   let isRunning = false
 
   const kc = new k8s.KubeConfig()
@@ -32,7 +32,7 @@ async function watchPodUntilRunning(namespace: string, podName: string) {
  * @param specPath File system path to a YAML Kubernetes spec.
  * @return Array of resources created
  */
-export async function apply(specPath: string, ttyPodName: string): Promise<k8s.KubernetesObject[]> {
+export async function apply(specPath: string): Promise<k8s.KubernetesObject[]> {
   console.log('1=====================')
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()

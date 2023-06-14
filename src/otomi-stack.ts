@@ -50,7 +50,7 @@ import {
   cleanEnv,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
-import { apply } from './apply'
+import { apply, watchPodUntilRunning } from './apply'
 import { k8sdelete } from './k8sdelete'
 import connect from './otomiCloud/connect'
 
@@ -676,10 +676,13 @@ export default class OtomiStack {
 
     //====================================================================================================
 
-    await apply('/tmp/ttyd.yaml', `tty-${data.sub}-admin`)
-      .then((res) => {
+    await apply('/tmp/ttyd.yaml')
+      .then(async (res) => {
         console.log('APPLY RUNs')
-        console.log(res)
+        console.log(JSON.stringify(res))
+        console.log('watchPodUntilRunning STARTED!')
+        const watchPodUntilRunningRes = await watchPodUntilRunning(`tty-${data.sub}-admin`, 'team-admin')
+        console.log('watchPodUntilRunningRes', watchPodUntilRunningRes)
       })
       .catch((err) => {
         console.log('APPLY ERR')
