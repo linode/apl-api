@@ -141,13 +141,13 @@ WorkloadValues:
           title: Annotations
           $ref: 'definitions.yaml#/annotations'
         secrets:
-          description: The name of a TLS secret known to exist in the team namespace.
+          description: select an existing secret to use as a secretRef.
           example: example-com
           title: Secret name
           type: array
           items:
             type: string
-        containerSecurityContext:
+        podSecurityContext:
           title: Container Security Context
           properties:
             runAsUser:
