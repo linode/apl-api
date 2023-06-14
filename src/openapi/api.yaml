@@ -601,6 +601,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Cloudtty'
+    delete:
+      operationId: deleteCloudtty
+      description: Delete cloudtty url
+      x-aclSchema: Cloudtty
+      responses:
+        '200':
+          description: Successfully removed cloudtty url
 
   '/projects':
     get:

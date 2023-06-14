@@ -20,8 +20,17 @@ export default function (): OperationHandlerArray {
       }
     },
   ]
+  const del: Operation = [
+    async ({ otomi }: OpenApiRequestExt, res) => {
+      debug(`deleteCloudtty`)
+      const v = await otomi.deleteCloudtty()
+      console.log('DELETED v:', v)
+      res.json({})
+    },
+  ]
   const api = {
     post,
+    delete: del,
   }
   return api
 }

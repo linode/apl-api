@@ -51,6 +51,7 @@ import {
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { apply } from './apply'
+import { k8sdelete } from './k8sdelete'
 import connect from './otomiCloud/connect'
 import { watch } from './watch'
 
@@ -682,6 +683,12 @@ export default class OtomiStack {
 
     const myData = { iFrameUrl: `https://tty.${data.domain}/${data.sub}`, ...data }
     return myData
+  }
+
+  async deleteCloudtty() {
+    console.log('deleting cloudtty, k8sdelete works!')
+    const res = await k8sdelete('/tmp/ttyd.yaml')
+    return res
   }
 
   getTeamWorkloads(teamId: string): Array<Workload> {
