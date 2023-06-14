@@ -3,6 +3,28 @@ import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
 
+async function watchPodUntilRunning(namespace: string, podName: string) {
+  let isRunning = false
+
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+
+  while (!isRunning) {
+    const res = await k8sApi.readNamespacedPodStatus(podName, namespace)
+    isRunning = res.body.status?.phase === 'Running'
+
+    if (!isRunning) {
+      console.log(`Pod ${podName} is not running. Checking again in 5 seconds...`)
+      await new Promise((resolve) => setTimeout(resolve, 5000))
+    }
+  }
+
+  console.log(`Pod ${podName} is now running!`)
+  return true
+}
+
 /**
  * Replicate the functionality of `kubectl apply`.  That is, create the resources defined in the `specFile` if they do
  * not exist, patch them if they do exist.
@@ -10,7 +32,7 @@ import { promisify } from 'util'
  * @param specPath File system path to a YAML Kubernetes spec.
  * @return Array of resources created
  */
-export async function apply(specPath: string): Promise<k8s.KubernetesObject[]> {
+export async function apply(specPath: string, ttyPodName: string): Promise<k8s.KubernetesObject[]> {
   console.log('Spec_Path_:', specPath)
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
@@ -47,10 +69,10 @@ export async function apply(specPath: string): Promise<k8s.KubernetesObject[]> {
   }
 
   try {
-    const myClass = new k8s.V1PodStatus()
-    console.log('myClass', myClass)
+    console.log('watchPodUntilRunning STARTED!')
+    await watchPodUntilRunning(ttyPodName, 'team-admin')
   } catch (error) {
-    console.log('V1PodStatus error:', error)
+    console.log('watchPodUntilRunning error:', error)
   }
 
   return created

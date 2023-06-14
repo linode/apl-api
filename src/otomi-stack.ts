@@ -53,7 +53,6 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { apply } from './apply'
 import { k8sdelete } from './k8sdelete'
 import connect from './otomiCloud/connect'
-import { watch } from './watch'
 
 const debug = Debug('otomi:otomi-stack')
 
@@ -677,9 +676,7 @@ export default class OtomiStack {
 
     //====================================================================================================
 
-    await apply('/tmp/ttyd.yaml')
-
-    await watch()
+    await apply('/tmp/ttyd.yaml', `tty-${data.sub}-admin`)
 
     const myData = { iFrameUrl: `https://tty.${data.domain}/${data.sub}`, ...data }
     return myData
