@@ -68,12 +68,12 @@ export async function apply(specPath: string, ttyPodName: string): Promise<k8s.K
     }
   }
 
-  try {
-    console.log('watchPodUntilRunning STARTED!')
-    await watchPodUntilRunning(ttyPodName, 'team-admin')
-  } catch (error) {
-    console.log('watchPodUntilRunning error:', error)
-  }
+  // try {
+  //   console.log('watchPodUntilRunning STARTED!')
+  //   await watchPodUntilRunning(ttyPodName, 'team-admin')
+  // } catch (error) {
+  //   console.log('watchPodUntilRunning error:', error)
+  // }
 
   return created
 }

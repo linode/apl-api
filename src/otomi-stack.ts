@@ -676,7 +676,10 @@ export default class OtomiStack {
 
     //====================================================================================================
 
-    await apply('/tmp/ttyd.yaml', `tty-${data.sub}-admin`)
+    await apply('/tmp/ttyd.yaml', `tty-${data.sub}-admin`).then((res) => {
+      console.log('APPLY RUNs')
+      console.log(res)
+    })
 
     const myData = { iFrameUrl: `https://tty.${data.domain}/${data.sub}`, ...data }
     return myData
