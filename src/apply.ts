@@ -3,6 +3,10 @@ import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
 
+export async function wait3Seconds() {
+  await new Promise((resolve) => setTimeout(resolve, 3000))
+}
+
 export async function watchPodUntilRunning(namespace: string, podName: string) {
   let isRunning = false
   const kc = new k8s.KubeConfig()

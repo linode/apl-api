@@ -50,7 +50,7 @@ import {
   cleanEnv,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
-import { apply, watchPodUntilRunning } from './apply'
+import { apply, wait3Seconds, watchPodUntilRunning } from './apply'
 import { k8sdelete } from './k8sdelete'
 import connect from './otomiCloud/connect'
 
@@ -680,17 +680,14 @@ export default class OtomiStack {
     await writeFile('/tmp/ttyd.yaml', fileContents, 'utf-8')
 
     await apply('/tmp/ttyd.yaml')
-    const ttyPodIsRunning = await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}-admin`)
+    await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}-admin`)
+    await wait3Seconds()
 
-    if (ttyPodIsRunning) {
-      setTimeout(() => {
-        return this.db.createItem(
-          'cloudttys',
-          { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}` },
-          { teamId: data.teamId, name: `tty-${data.emailNoSymbols}-admin` },
-        ) as Cloudtty
-      }, 3 * 1000)
-    } else throw new Error('Cloudtty pod is not created!')
+    return this.db.createItem(
+      'cloudttys',
+      { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}` },
+      { teamId: data.teamId, name: `tty-${data.emailNoSymbols}-admin` },
+    ) as Cloudtty
   }
 
   async deleteCloudtty(data: Cloudtty) {
