@@ -50,7 +50,6 @@ WorkloadValues:
       - read
       - update
   type: object
-  description: Workload values
   properties:
     id:
       type: string
@@ -60,6 +59,7 @@ WorkloadValues:
       $ref: 'definitions.yaml#/wordCharacterPattern'
     values:
       type: object
+      # select basic or advanced
       title: Minimal values
       properties:
         fullnameOverride:
@@ -77,7 +77,6 @@ WorkloadValues:
             - tag
         containerPorts:
           type: array
-          default: [{ name: http, containerPort: 8080, protocol: TCP }]
           title: Port
           items:
             type: object
@@ -100,7 +99,6 @@ WorkloadValues:
           description: Adjust according to application consumption
           properties:
             requests:
-              x-hideTitle: true
               properties:
                 cpu:
                   title: vCPU
@@ -110,6 +108,15 @@ WorkloadValues:
                   title: Memory
                   $ref: 'definitions.yaml#/quantityMem'
                   default: 32Mi
+            # only show in advanced
+            limits:
+              properties:
+                cpu:
+                  title: vCPU
+                  $ref: 'definitions.yaml#/quantityCpu'
+                memory:
+                  title: Memory
+                  $ref: 'definitions.yaml#/quantityMem'
         autoscaling:
           type: object
           title: Instances
@@ -123,6 +130,52 @@ WorkloadValues:
               title: Max
               type: integer
               default: 10
+        # only show in advanced
+        env:
+          $ref: 'definitions.yaml#/env'
+        args:
+          $ref: 'definitions.yaml#/args'
+        labels:
+          $ref: 'definitions.yaml#/labels'
+        annotations:
+          title: Annotations
+          $ref: 'definitions.yaml#/annotations'
+        secrets:
+          description: select an existing secret to use as a secretRef.
+          example: example-com
+          title: Secret name
+          type: array
+          items:
+            type: string
+        podSecurityContext:
+          title: Container Security Context
+          properties:
+            runAsUser:
+              $ref: 'definitions.yaml#/runAsUser'
+            runAsNonRoot:
+              $ref: 'definitions.yaml#/runAsNonRoot'
+            readOnlyRootFilesystem:
+              type: boolean
+              default: false
+        files:
+          $ref: 'definitions.yaml#/files'
+        secretMounts:
+          $ref: 'definitions.yaml#/secretMounts'
+        # only for deployment
+        servicePorts:
+          $ref: 'definitions.yaml#/servicePorts'
+          # default:
+          #   - name: http
+          #     port: 80
+          #     targetPort: http
+          #     protocol: TCP
+        serviceMonitor:
+          properties:
+            create:
+              type: boolean
+              default: false
+            endpoints:
+              $ref: 'definitions.yaml#/endpoints'
 
   required:
     - values
