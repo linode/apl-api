@@ -2,6 +2,6 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: tty-$EMAIL-$TARGET_TEAM
-  namespace: team-$TARGET_TEAM
+  namespace: team-admin
 ---
 
