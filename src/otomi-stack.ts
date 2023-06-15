@@ -653,8 +653,11 @@ export default class OtomiStack {
   }
 
   async connectCloudtty(data: Cloudtty): Promise<Cloudtty> {
+    console.log('connectCloudtty', data)
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
+    console.log('cloudttys', cloudttys)
     const cloudtty = cloudttys.find((c) => c.teamId === data.teamId && c.sub === data.sub)
+    console.log('cloudtty', cloudtty)
     if (cloudtty) return cloudtty
 
     if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
@@ -678,24 +681,26 @@ export default class OtomiStack {
     )
     await writeFile('/tmp/ttyd.yaml', fileContents, 'utf-8')
 
-    //====================================================================================================
-
     await apply('/tmp/ttyd.yaml')
-
-    console.log('watchPodUntilRunning STARTED!')
     const watchPodUntilRunningRes = await watchPodUntilRunning('team-admin', `tty-${data.sub}-admin`)
     console.log('watchPodUntilRunningRes', watchPodUntilRunningRes)
+
     const myData = { iFrameUrl: `https://tty.${data.domain}/${data.sub}`, ...data }
+    console.log('myData', myData)
 
-    this.db.createItem('cloudtty', { ...myData }, { teamId: data.teamId, name: `tty-${data.sub}-admin` }) as Cloudtty
-
-    return myData
+    return this.db.createItem(
+      'cloudttys',
+      { ...myData },
+      { teamId: data.teamId, name: `tty-${data.sub}-admin` },
+    ) as Cloudtty
   }
 
-  async deleteCloudtty() {
+  async deleteCloudtty(data: Cloudtty) {
     console.log('deleting cloudtty, k8sdelete works!')
-    const res = await k8sdelete('/tmp/ttyd.yaml')
-    return res
+    await k8sdelete('/tmp/ttyd.yaml')
+    const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
+    const cloudtty = cloudttys.find((c) => c.teamId === data.teamId && c.sub === data.sub) as Cloudtty
+    return this.db.deleteItem('cloudttys', { id: cloudtty.id })
   }
 
   getTeamWorkloads(teamId: string): Array<Workload> {

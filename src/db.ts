@@ -46,7 +46,7 @@ export type Schema = {
   workloads: Workload[]
   workloadValues: WorkloadValues[]
   builds: Build[]
-  cloudtty: Cloudtty
+  cloudttys: Cloudtty[]
   projects: Project[]
 }
 
@@ -67,7 +67,7 @@ export default class Db {
         apps: [],
         backups: [],
         builds: [],
-        cloudtty: {},
+        cloudttys: [],
         license: {},
         projects: [],
         secrets: [],
