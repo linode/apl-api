@@ -652,20 +652,18 @@ export default class OtomiStack {
     return this.db.deleteItem('builds', { id })
   }
 
-  async connectCloudtty(data: Cloudtty): Promise<Cloudtty> {
-    console.log('connectCloudtty', data)
-    const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
-    console.log('cloudttys', cloudttys)
-    const cloudtty = cloudttys.find((c) => c.teamId === data.teamId && c.sub === data.sub)
-    console.log('cloudtty', cloudtty)
-    if (cloudtty) return cloudtty
-
-    if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
+  async connectCloudtty(data: Cloudtty): Promise<Cloudtty | any> {
     const variables = {
       TARGET_TEAM: data.teamId,
       FQDN: data.domain,
-      SUB: data.sub,
+      EMAIL: data.emailNoSymbols,
     }
+    const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
+    const cloudtty = cloudttys.find((c) => c.teamId === data.teamId && c.emailNoSymbols === data.emailNoSymbols)
+    if (cloudtty) return cloudtty
+
+    if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
+
     const files = await readdir('./dist/src/ttyManifests', 'utf-8')
     const filteredFiles = files.filter((file) => file.startsWith('tty'))
     const variableKeys = Object.keys(variables)
@@ -682,31 +680,26 @@ export default class OtomiStack {
     await writeFile('/tmp/ttyd.yaml', fileContents, 'utf-8')
 
     await apply('/tmp/ttyd.yaml')
-    const watchPodUntilRunningRes = await watchPodUntilRunning('team-admin', `tty-${data.sub}-admin`)
-    if (watchPodUntilRunningRes) {
-      console.log('watchPodUntilRunning STARTED!')
+    const ttyPodIsRunning = await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}-admin`)
+
+    if (ttyPodIsRunning) {
       setTimeout(() => {
-        console.log('watchPodUntilRunningRes', watchPodUntilRunningRes)
+        return this.db.createItem(
+          'cloudttys',
+          { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}` },
+          { teamId: data.teamId, name: `tty-${data.emailNoSymbols}-admin` },
+        ) as Cloudtty
       }, 3 * 1000)
-    }
-
-    console.log('watchPodUntilRunning ENDED!')
-
-    const myData = { iFrameUrl: `https://tty.${data.domain}/${data.sub}`, ...data }
-    console.log('myData', myData)
-
-    return this.db.createItem(
-      'cloudttys',
-      { ...myData },
-      { teamId: data.teamId, name: `tty-${data.sub}-admin` },
-    ) as Cloudtty
+    } else throw new Error('Cloudtty pod is not created!')
   }
 
   async deleteCloudtty(data: Cloudtty) {
     console.log('deleting cloudtty, k8sdelete works!')
     await k8sdelete('/tmp/ttyd.yaml')
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
-    const cloudtty = cloudttys.find((c) => c.teamId === data.teamId && c.sub === data.sub) as Cloudtty
+    const cloudtty = cloudttys.find(
+      (c) => c.teamId === data.teamId && c.emailNoSymbols === data.emailNoSymbols,
+    ) as Cloudtty
     return this.db.deleteItem('cloudttys', { id: cloudtty.id })
   }
 

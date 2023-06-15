@@ -19,11 +19,11 @@ Cloudtty:
       $ref: 'definitions.yaml#/idName'
     domain:
       $ref: 'definitions.yaml#/wordCharacterPattern'
-    sub:
+    emailNoSymbols:
       $ref: 'definitions.yaml#/wordCharacterPattern'
     iFrameUrl:
       $ref: 'definitions.yaml#/wordCharacterPattern'
   required:
     - teamId
     - domain
-    - sub
+    - emailNoSymbols
