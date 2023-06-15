@@ -4,37 +4,24 @@ import * as yaml from 'js-yaml'
 import { promisify } from 'util'
 
 export async function watchPodUntilRunning(namespace: string, podName: string) {
-  console.log('1=====================')
   let isRunning = false
-
-  console.log('2=====================')
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
-
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
-  console.log('3=====================')
 
   while (!isRunning) {
-    console.log('4=====================')
     try {
       const res = await k8sApi.readNamespacedPodStatus(podName, namespace)
-      console.log('5=====================')
-      setTimeout(() => {
-        isRunning = res.body.status?.phase === 'Running'
-      }, 3 * 1000)
-      console.log('6=====================')
+      isRunning = res.body.status?.phase === 'Running'
     } catch (error) {
       console.log('error:', error)
     }
 
     if (!isRunning) {
-      console.log('7=====================')
       console.log(`Pod ${podName} is not running. Checking again in 5 seconds...`)
       await new Promise((resolve) => setTimeout(resolve, 5000))
-      console.log('8=====================')
     }
   }
-  console.log('9=====================')
 
   console.log(`Pod ${podName} is now running!`)
   return true

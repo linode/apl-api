@@ -8,15 +8,8 @@ export default function (): OperationHandlerArray {
   const post: Operation = [
     async ({ otomi, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`connectCloudtty`)
-      try {
-        const v = await otomi.connectCloudtty(body)
-        setTimeout(() => {
-          res.json(v)
-        }, 5 * 1000)
-      } catch (e) {
-        debug(e)
-        res.json({})
-      }
+      const v = await otomi.connectCloudtty(body)
+      res.json(v)
     },
   ]
   const del: Operation = [

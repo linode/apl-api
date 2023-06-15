@@ -683,7 +683,14 @@ export default class OtomiStack {
 
     await apply('/tmp/ttyd.yaml')
     const watchPodUntilRunningRes = await watchPodUntilRunning('team-admin', `tty-${data.sub}-admin`)
-    console.log('watchPodUntilRunningRes', watchPodUntilRunningRes)
+    if (watchPodUntilRunningRes) {
+      console.log('watchPodUntilRunning STARTED!')
+      setTimeout(() => {
+        console.log('watchPodUntilRunningRes', watchPodUntilRunningRes)
+      }, 3 * 1000)
+    }
+
+    console.log('watchPodUntilRunning ENDED!')
 
     const myData = { iFrameUrl: `https://tty.${data.domain}/${data.sub}`, ...data }
     console.log('myData', myData)
