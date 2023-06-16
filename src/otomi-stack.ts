@@ -682,13 +682,13 @@ export default class OtomiStack {
     await writeFile(`/tmp/ttyd-${data.teamId}.yaml`, fileContents, 'utf-8')
 
     await apply(`/tmp/ttyd-${data.teamId}.yaml`)
-    await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}-admin`)
+    await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}-${data.teamId}}`)
     await wait3Seconds()
 
     return this.db.createItem(
       'cloudttys',
-      { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}` },
-      { teamId: data.teamId, name: `tty-${data.emailNoSymbols}-admin` },
+      { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}-${data.teamId}}` },
+      { teamId: data.teamId, name: `tty-${data.emailNoSymbols}-${data.teamId}` },
     ) as Cloudtty
   }
 
