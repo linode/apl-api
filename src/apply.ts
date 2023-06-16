@@ -73,12 +73,5 @@ export async function apply(specPath: string): Promise<k8s.KubernetesObject[]> {
     }
   }
 
-  // try {
-  //   console.log('watchPodUntilRunning STARTED!')
-  //   await watchPodUntilRunning(ttyPodName, 'team-admin')
-  // } catch (error) {
-  //   console.log('watchPodUntilRunning error:', error)
-  // }
-
   return created
 }
