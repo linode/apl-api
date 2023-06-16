@@ -659,7 +659,9 @@ export default class OtomiStack {
       EMAIL: data.emailNoSymbols,
     }
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
+    console.log('connectCloudtty cloudttys', cloudttys)
     const cloudtty = cloudttys.find((c) => c.teamId === data.teamId && c.emailNoSymbols === data.emailNoSymbols)
+    console.log('connectCloudtty cloudtty', cloudtty)
     if (cloudtty) return cloudtty
 
     if (await pathExists(`/tmp/ttyd-${data.teamId}.yaml`)) await unlink(`/tmp/ttyd-${data.teamId}.yaml`)
@@ -694,9 +696,11 @@ export default class OtomiStack {
     console.log('deleting cloudtty, k8sdelete works!')
     await k8sdelete(`/tmp/ttyd-${data.teamId}.yaml`)
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
+    console.log('deleteCloudtty cloudttys', cloudttys)
     const cloudtty = cloudttys.find(
       (c) => c.teamId === data.teamId && c.emailNoSymbols === data.emailNoSymbols,
     ) as Cloudtty
+    console.log('deleteCloudtty cloudtty', cloudtty)
     return this.db.deleteItem('cloudttys', { id: cloudtty.id })
   }
 
