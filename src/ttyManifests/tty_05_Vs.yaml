@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: tty-$EMAIL
+  name: tty-$EMAIL-$TARGET_TEAM
   namespace: team-admin
 spec:
   gateways:

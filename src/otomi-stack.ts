@@ -662,7 +662,7 @@ export default class OtomiStack {
     const cloudtty = cloudttys.find((c) => c.teamId === data.teamId && c.emailNoSymbols === data.emailNoSymbols)
     if (cloudtty) return cloudtty
 
-    if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
+    if (await pathExists(`/tmp/ttyd-${data.teamId}.yaml`)) await unlink(`/tmp/ttyd-${data.teamId}.yaml`)
 
     const files = await readdir('./dist/src/ttyManifests', 'utf-8')
     const filteredFiles = files.filter((file) => file.startsWith('tty'))
@@ -677,9 +677,9 @@ export default class OtomiStack {
         return fileContent
       }),
     )
-    await writeFile('/tmp/ttyd.yaml', fileContents, 'utf-8')
+    await writeFile(`/tmp/ttyd-${data.teamId}.yaml`, fileContents, 'utf-8')
 
-    await apply('/tmp/ttyd.yaml')
+    await apply(`/tmp/ttyd-${data.teamId}.yaml`)
     await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}-admin`)
     await wait3Seconds()
 
@@ -692,7 +692,7 @@ export default class OtomiStack {
 
   async deleteCloudtty(data: Cloudtty) {
     console.log('deleting cloudtty, k8sdelete works!')
-    await k8sdelete('/tmp/ttyd.yaml')
+    await k8sdelete(`/tmp/ttyd-${data.teamId}.yaml`)
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
     const cloudtty = cloudttys.find(
       (c) => c.teamId === data.teamId && c.emailNoSymbols === data.emailNoSymbols,
