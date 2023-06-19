@@ -696,12 +696,32 @@ export default class OtomiStack {
     console.log('deleting cloudtty, k8sdelete works!')
     await k8sdelete(`/tmp/ttyd-${data.teamId}.yaml`)
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
-    console.log('deleteCloudtty cloudttys', cloudttys)
     const cloudtty = cloudttys.find(
       (c) => c.teamId === data.teamId && c.emailNoSymbols === data.emailNoSymbols,
     ) as Cloudtty
-    console.log('deleteCloudtty cloudtty', cloudtty)
     return this.db.deleteItem('cloudttys', { id: cloudtty.id })
+  }
+
+  async saveCloudttys(): Promise<void> {
+    const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
+    const outData: Record<string, any> = set({}, 'env/cloudttys.yaml', cloudttys)
+    debug(`Saving cloudttys`)
+    await this.repo.writeFile('env/cloudttys.yaml', outData)
+  }
+
+  async loadCloudttys(): Promise<void> {
+    debug('Loading cloudttys')
+    if (!(await this.repo.fileExists('env/cloudttys.yaml'))) {
+      debug('Cloudttys file does not exists')
+      return
+    }
+
+    const data = await this.repo.readFile('env/cloudttys.yaml', true)
+    const inData: Array<Cloudtty> = get(data, 'env/cloudttys.yaml', [])
+    inData.forEach((inCloudtty) => {
+      const res: any = this.db.populateItem('cloudttys', inCloudtty, undefined, inCloudtty.id as string)
+      debug(`Loaded cloudtty: name: ${res.name}, id: ${res.id}`)
+    })
   }
 
   getTeamWorkloads(teamId: string): Array<Workload> {
@@ -997,6 +1017,7 @@ export default class OtomiStack {
     await this.loadPolicies()
     await this.loadSettings()
     await this.loadTeams()
+    await this.loadCloudttys()
     await this.loadApps()
     // load license
     this.isLoaded = true
@@ -1419,6 +1440,7 @@ export default class OtomiStack {
     await this.saveAdminApps(secretPaths)
     await this.saveTeamApps('admin')
     await this.saveLicense(secretPaths)
+    await this.saveCloudttys()
   }
 
   async getSession(user: k8s.User): Promise<Session> {
