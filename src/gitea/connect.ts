@@ -6,12 +6,12 @@ export default async function giteaCheckLatest(token: string, clusterData: any):
   // if (env.NODE_ENV === 'development') domainSuffix = ''
   if (!domainSuffix) {
     console.log('Domain suffix was empty, hardcoding it')
-    domainSuffix = '161.35.245.248'
+    domainSuffix = '161.35.245.248.nip.io'
   }
   console.log('domain', domainSuffix)
   if (domainSuffix) {
     await axios({
-      url: `https://gitea.${domainSuffix}.nip.io/api/v1/repos/otomi/values`,
+      url: `https://gitea.${domainSuffix}/api/v1/repos/otomi/values`,
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
