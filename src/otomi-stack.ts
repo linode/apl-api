@@ -655,17 +655,18 @@ export default class OtomiStack {
   async connectCloudtty(data: Cloudtty): Promise<Cloudtty | any> {
     console.log('connectCloudtty data:', data)
     const variables = {
-      TARGET_TEAM: data.teamId,
       FQDN: data.domain,
       EMAIL: data.emailNoSymbols,
     }
+    const { userTeams } = data // ['team-admin', 'team-demo1', 'team-demo2']
+
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
     console.log('connectCloudtty cloudttys', cloudttys)
-    const cloudtty = cloudttys.find((c) => c.teamId === data.teamId && c.emailNoSymbols === data.emailNoSymbols)
+    const cloudtty = cloudttys.find((c) => c.emailNoSymbols === data.emailNoSymbols)
     console.log('connectCloudtty cloudtty', cloudtty)
     if (cloudtty) return cloudtty
 
-    if (await pathExists(`/tmp/ttyd-${data.teamId}.yaml`)) await unlink(`/tmp/ttyd-${data.teamId}.yaml`)
+    if (await pathExists(`/tmp/ttyd-${data.emailNoSymbols}.yaml`)) await unlink(`/tmp/ttyd-${data.emailNoSymbols}.yaml`)
 
     //IF user is admin then read the manifests from ./dist/src/ttyManifests/adminTtyManifests
     const files = data.isAdmin
@@ -673,6 +674,7 @@ export default class OtomiStack {
       : await readdir('./dist/src/ttyManifests', 'utf-8')
     const filteredFiles = files.filter((file) => file.startsWith('tty'))
     const variableKeys = Object.keys(variables)
+
     const fileContents = await Promise.all(
       filteredFiles.map(async (file) => {
         let fileContent = data.isAdmin
@@ -682,29 +684,40 @@ export default class OtomiStack {
           const regex = new RegExp(`\\$${key}`, 'g')
           fileContent = fileContent.replace(regex, variables[key])
         })
+
+        if (!data.isAdmin && file === 'tty_03_Rolebinding.yaml') {
+          // create iteration for userTeams and create tty_03_Rolebinding.yaml for each team and replace the team name
+          const roleBinding = fileContent
+          const roleBindingArray: string[] = []
+          userTeams?.forEach((team: string) => {
+            const regex = new RegExp(`\\$TARGET_TEAM`, 'g')
+            const roleBindingForTeam = roleBinding.replace(regex, team)
+            roleBindingArray.push(roleBindingForTeam)
+          })
+          fileContent = roleBindingArray.join('\n---\n')
+        }
+
         return fileContent
       }),
     )
-    await writeFile(`/tmp/ttyd-${data.teamId}.yaml`, fileContents, 'utf-8')
+    await writeFile(`/tmp/ttyd-${data.emailNoSymbols}.yaml`, fileContents, 'utf-8')
 
-    await apply(`/tmp/ttyd-${data.teamId}.yaml`)
-    await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}-${data.teamId}`)
+    await apply(`/tmp/ttyd-${data.emailNoSymbols}.yaml`)
+    await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}`)
     await wait3Seconds()
 
     return this.db.createItem(
       'cloudttys',
-      { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}-${data.teamId}` },
-      { teamId: data.teamId, name: `tty-${data.emailNoSymbols}-${data.teamId}` },
+      { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}` },
+      { teamId: data.teamId, name: `tty-${data.emailNoSymbols}` },
     ) as Cloudtty
   }
 
   async deleteCloudtty(data: Cloudtty) {
     console.log('deleting cloudtty, k8sdelete works!')
-    await k8sdelete(`/tmp/ttyd-${data.teamId}.yaml`)
+    await k8sdelete(`/tmp/ttyd-${data.emailNoSymbols}.yaml`)
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
-    const cloudtty = cloudttys.find(
-      (c) => c.teamId === data.teamId && c.emailNoSymbols === data.emailNoSymbols,
-    ) as Cloudtty
+    const cloudtty = cloudttys.find((c) => c.emailNoSymbols === data.emailNoSymbols) as Cloudtty
     return this.db.deleteItem('cloudttys', { id: cloudtty.id })
   }
 

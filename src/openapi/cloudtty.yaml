@@ -26,6 +26,10 @@ Cloudtty:
     isAdmin:
       type: boolean
       default: false
+    userTeams:
+      type: array
+      items:
+        type: string
   required:
     - teamId
     - domain

@@ -2,11 +2,11 @@ apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    app: tty-$EMAIL-$TARGET_TEAM
-  name: tty-$EMAIL-$TARGET_TEAM
+    app: tty-$EMAIL
+  name: tty-$EMAIL
   namespace: team-admin
 spec:
-  serviceAccountName: tty-$EMAIL-$TARGET_TEAM
+  serviceAccountName: tty-$EMAIL
   volumes:
     - name: kconfig
       configMap:

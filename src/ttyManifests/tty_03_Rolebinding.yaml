@@ -2,14 +2,14 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: tty-admin-rolebinding
-  namespace: team-$TARGET_TEAM
+  namespace: $TARGET_TEAM
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: tty-admin
 subjects:
   - kind: ServiceAccount
-    name: tty-$EMAIL-$TARGET_TEAM
+    name: tty-$EMAIL
     namespace: team-admin
 ---
 

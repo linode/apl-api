@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: tty-$EMAIL-$TARGET_TEAM
+  name: tty-$EMAIL
   namespace: team-admin
 spec:
   gateways:
@@ -17,12 +17,12 @@ spec:
         uri: /oauth2/sign_out?rd=https://keycloak.$FQDN/realms/otomi/protocol/openid-connect/logout?redirect_uri=https://otomi.$FQDN
     - match:
         - uri:
-            prefix: /$EMAIL-$TARGET_TEAM
+            prefix: /$EMAIL
       rewrite:
         uri: /
       route:
         - destination:
-            host: tty-$EMAIL-$TARGET_TEAM.team-admin.svc.cluster.local
+            host: tty-$EMAIL.team-admin.svc.cluster.local
             port:
               number: 8080
           headers:
