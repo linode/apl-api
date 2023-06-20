@@ -26,9 +26,19 @@ import { setMockIdx } from 'src/mocks'
 import { OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
-import { cleanEnv, DRONE_WEBHOOK_SECRET } from 'src/validators'
+import { DRONE_WEBHOOK_SECRET, cleanEnv } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
+import giteaConnect from './gitea/connect'
 
+const pingGitea = async (inOtomiStack: OtomiStack | undefined) => {
+  console.log('Make Gitea Call')
+  const clusterInfo = inOtomiStack?.getSettings(['cluster'])
+  const latestOtomiVersion: any = await giteaConnect('b3RvbWktYWRtaW46d2VsY29tZW90b21p', clusterInfo)
+  const stack = await getSessionStack()
+  console.log('latestOtomiVersion', latestOtomiVersion)
+  console.log('stack branch', stack.repo.branch)
+  if (latestOtomiVersion.commits[-1].id !== stack.repo.branch) console.log('Not the same version')
+}
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
 })
@@ -82,6 +92,11 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
       res.send('ok')
     })
   }
+  // 2 minute interval
+  const interval = 2 * 60 * 1000
+  setInterval(async function () {
+    await pingGitea(inOtomiStack)
+  }, interval)
   app.all('/drone', async (req, res, next) => {
     const parsed = httpSignature.parseRequest(req, {
       algorithm: 'hmac-sha256',
