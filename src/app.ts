@@ -36,8 +36,9 @@ const pingGitea = async (inOtomiStack: OtomiStack | undefined) => {
   const latestOtomiVersion: any = await giteaCheckLatest('b3RvbWktYWRtaW46d2VsY29tZW90b21p', clusterInfo)
   const stack = await getSessionStack()
   console.log('latestOtomiVersion', latestOtomiVersion)
-  console.log('stack branch', stack.repo.branch)
-  if (latestOtomiVersion.commits[-1].id !== stack.repo.commitSha) console.log('Not the same version')
+  console.log('stack branch', stack.repo.commitSha)
+  if (latestOtomiVersion && latestOtomiVersion.commits[-1].id !== stack.repo.commitSha)
+    console.log('Not the same version')
 }
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
