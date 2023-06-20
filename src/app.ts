@@ -30,9 +30,10 @@ import { DRONE_WEBHOOK_SECRET, cleanEnv } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
 import giteaCheckLatest from './gitea/connect'
 
-const pingGitea = async (inOtomiStack: OtomiStack | undefined) => {
+const pingGitea = async () => {
+  const otomiStack = await getSessionStack()
   console.log('Make Gitea Call')
-  const clusterInfo = inOtomiStack?.getSettings(['cluster'])
+  const clusterInfo = otomiStack?.getSettings(['cluster'])
   const latestOtomiVersion: any = await giteaCheckLatest('b3RvbWktYWRtaW46d2VsY29tZW90b21p', clusterInfo)
   const stack = await getSessionStack()
   console.log('latestOtomiVersion', latestOtomiVersion)
