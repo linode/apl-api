@@ -23,6 +23,9 @@ Cloudtty:
       $ref: 'definitions.yaml#/wordCharacterPattern'
     iFrameUrl:
       $ref: 'definitions.yaml#/wordCharacterPattern'
+    isAdmin:
+      type: boolean
+      default: false
   required:
     - teamId
     - domain

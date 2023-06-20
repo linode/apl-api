@@ -653,6 +653,7 @@ export default class OtomiStack {
   }
 
   async connectCloudtty(data: Cloudtty): Promise<Cloudtty | any> {
+    console.log('connectCloudtty data:', data)
     const variables = {
       TARGET_TEAM: data.teamId,
       FQDN: data.domain,
@@ -666,7 +667,10 @@ export default class OtomiStack {
 
     if (await pathExists(`/tmp/ttyd-${data.teamId}.yaml`)) await unlink(`/tmp/ttyd-${data.teamId}.yaml`)
 
-    const files = await readdir('./dist/src/ttyManifests', 'utf-8')
+    //IF user is admin then read the manifests from ./dist/src/ttyManifests/adminTtyManifests
+    const files = data.isAdmin
+      ? await readdir('./dist/src/ttyManifests/adminTtyManifests', 'utf-8')
+      : await readdir('./dist/src/ttyManifests', 'utf-8')
     const filteredFiles = files.filter((file) => file.startsWith('tty'))
     const variableKeys = Object.keys(variables)
     const fileContents = await Promise.all(
