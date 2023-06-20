@@ -28,16 +28,16 @@ import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
 import { DRONE_WEBHOOK_SECRET, cleanEnv } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
-import giteaConnect from './gitea/connect'
+import giteaCheckLatest from './gitea/connect'
 
 const pingGitea = async (inOtomiStack: OtomiStack | undefined) => {
   console.log('Make Gitea Call')
   const clusterInfo = inOtomiStack?.getSettings(['cluster'])
-  const latestOtomiVersion: any = await giteaConnect('b3RvbWktYWRtaW46d2VsY29tZW90b21p', clusterInfo)
+  const latestOtomiVersion: any = await giteaCheckLatest('b3RvbWktYWRtaW46d2VsY29tZW90b21p', clusterInfo)
   const stack = await getSessionStack()
   console.log('latestOtomiVersion', latestOtomiVersion)
   console.log('stack branch', stack.repo.branch)
-  if (latestOtomiVersion.commits[-1].id !== stack.repo.branch) console.log('Not the same version')
+  if (latestOtomiVersion.commits[-1].id !== stack.repo.commitSha) console.log('Not the same version')
 }
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
