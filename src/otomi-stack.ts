@@ -683,7 +683,7 @@ export default class OtomiStack {
         const roleBindingForTeam = roleBinding.replace(regex, team)
         roleBindingArray.push(roleBindingForTeam)
       })
-      return roleBindingArray.join('\n---\n')
+      return roleBindingArray.join('\n')
     }
 
     const fileContents = await Promise.all(
