@@ -97,7 +97,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   // 2 minute interval
   const interval = 2 * 60 * 1000
   setInterval(async function () {
-    await pingGitea(inOtomiStack)
+    await pingGitea()
   }, interval)
   app.all('/drone', async (req, res, next) => {
     const parsed = httpSignature.parseRequest(req, {
