@@ -34,7 +34,7 @@ const pingGitea = async () => {
   const otomiStack = await getSessionStack()
   console.log('Make Gitea Call')
   const clusterInfo = otomiStack?.getSettings(['cluster'])
-  const latestOtomiVersion: any = await giteaCheckLatest('b3RvbWktYWRtaW46d2VsY29tZW90b21p', clusterInfo)
+  const latestOtomiVersion = await giteaCheckLatest('b3RvbWktYWRtaW46d2VsY29tZW90b21p', clusterInfo)
   const stack = await getSessionStack()
   console.log('latestOtomiVersion', latestOtomiVersion)
   console.log('stack branch', stack.repo.commitSha)
