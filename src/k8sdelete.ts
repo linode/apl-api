@@ -41,7 +41,7 @@ export function k8sdelete(specPath: string, resourceName: string, namespace: str
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
   k8sApi
-    .deleteNamespacedPod(resourceName, namespace)
+    .deleteNamespacedPod(`tty-${resourceName}`, namespace)
     .then((response) => {
       console.log('Pod deleted successfully:', response.body)
     })
