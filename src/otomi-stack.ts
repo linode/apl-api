@@ -675,15 +675,17 @@ export default class OtomiStack {
     const filteredFiles = files.filter((file) => file.startsWith('tty'))
     const variableKeys = Object.keys(variables)
 
+    // iterates over the rolebinding file and replace the $TARGET_TEAM with the team name for teams
     const rolebindingContents = (fileContent) => {
-      const roleBinding = fileContent
-      const roleBindingArray: string[] = []
+      const rolebindingArray: string[] = []
+
       userTeams?.forEach((team: string) => {
         const regex = new RegExp(`\\$TARGET_TEAM`, 'g')
-        const roleBindingForTeam = roleBinding.replace(regex, team)
-        roleBindingArray.push(roleBindingForTeam)
+        const rolebindingForTeam: string = fileContent.replace(regex, team)
+        rolebindingArray.push(rolebindingForTeam)
       })
-      return roleBindingArray.join('\n')
+
+      return rolebindingArray.join('\n')
     }
 
     const fileContents = await Promise.all(
@@ -696,10 +698,7 @@ export default class OtomiStack {
           fileContent = fileContent.replace(regex, variables[key])
         })
 
-        if (!data.isAdmin && file === 'tty_03_Rolebinding.yaml') {
-          // create iteration for userTeams and create tty_03_Rolebinding.yaml for each team and replace the team name
-          fileContent = rolebindingContents(fileContent)
-        }
+        if (!data.isAdmin && file === 'tty_03_Rolebinding.yaml') fileContent = rolebindingContents(fileContent)
 
         return fileContent
       }),
