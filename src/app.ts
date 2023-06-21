@@ -30,16 +30,21 @@ import { DRONE_WEBHOOK_SECRET, cleanEnv } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
 import giteaCheckLatest from './gitea/connect'
 
-const pingGitea = async () => {
+const checkAgainstGitea = async () => {
   const otomiStack = await getSessionStack()
   console.log('Make Gitea Call')
   const clusterInfo = otomiStack?.getSettings(['cluster'])
   const latestOtomiVersion = await giteaCheckLatest('b3RvbWktYWRtaW46d2VsY29tZW90b21p', clusterInfo)
   const stack = await getSessionStack()
   console.log('latestOtomiVersion', latestOtomiVersion)
+  console.log('data', latestOtomiVersion.data)
   console.log('stack branch', stack.repo.commitSha)
-  if (latestOtomiVersion[0] && latestOtomiVersion.commits[-1].id !== stack.repo.commitSha)
+  if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== stack.repo.commitSha) {
     console.log('Not the same version')
+    await stack.repo.pull()
+  } else if (latestOtomiVersion && latestOtomiVersion.data[0].sha === stack.repo.commitSha)
+    console.log('The same version')
+  else console.log('otomiVersion is empty')
 }
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
@@ -97,7 +102,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   // 2 minute interval
   const interval = 2 * 60 * 1000
   setInterval(async function () {
-    await pingGitea()
+    await checkAgainstGitea()
   }, interval)
   app.all('/drone', async (req, res, next) => {
     const parsed = httpSignature.parseRequest(req, {
