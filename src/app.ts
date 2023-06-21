@@ -38,7 +38,7 @@ const pingGitea = async () => {
   const stack = await getSessionStack()
   console.log('latestOtomiVersion', latestOtomiVersion)
   console.log('stack branch', stack.repo.commitSha)
-  if (latestOtomiVersion && latestOtomiVersion.commits[-1].id !== stack.repo.commitSha)
+  if (latestOtomiVersion[0] && latestOtomiVersion.commits[-1].id !== stack.repo.commitSha)
     console.log('Not the same version')
 }
 const env = cleanEnv({

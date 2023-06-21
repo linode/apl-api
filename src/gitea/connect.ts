@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-export default async function giteaCheckLatest(token: string, clusterData: any): Promise<string | void> {
+export default async function giteaCheckLatest(token: string, clusterData: any): Promise<any> {
   const domainSuffix: string | undefined = clusterData?.cluster?.domainSuffix
   // let domainSuffix: string = os.networkInterfaces().lo0![0].address
   // if (env.NODE_ENV === 'development') domainSuffix = ''
@@ -20,7 +20,7 @@ export default async function giteaCheckLatest(token: string, clusterData: any):
     })
       .then((response) => {
         console.log('res', response)
-        return response
+        return response.data
       })
       .catch((error) => {
         console.error('gitea error: ', error.message)
