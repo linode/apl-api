@@ -1,15 +1,15 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   name: tty-admin-rolebinding
   namespace: team-admin
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: tty-admin
+  name: cluster-admin
 subjects:
   - kind: ServiceAccount
-    name: tty-admin-oto-mi-admin
+    name: tty-admin-oto-mi
     namespace: team-admin
 ---
 
