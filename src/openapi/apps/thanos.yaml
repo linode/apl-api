@@ -83,6 +83,34 @@ AppThanos:
                       enum:
                         - minioLocal
                       default: minioLocal
+                - title: Azure Blob
+                  type: object
+                  x-hideTitle: true
+                  properties:
+                    azureBlob:
+                      type: object
+                      description: Azure Blob storage.
+                      title: Azure blob (container) storage
+                      properties:
+                        accountKey:
+                          type: string
+                          x-secret: ''
+                        accountName:
+                          type: string
+                        containerName:
+                          type: string
+                      required:
+                        - accountKey
+                        - accountName
+                        - containerName
+                    type:
+                      type: string
+                      enum:
+                        - azure
+                      default: azure
+                  required:
+                    - azure
+                    - type
                 - title: S3
                   type: object
                   x-hideTitle: true
