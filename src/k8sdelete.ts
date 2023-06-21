@@ -39,9 +39,8 @@ export function k8sdelete(specPath: string, resourceName: string, namespace: str
 
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
-
-  const client = k8s.KubernetesObjectApi.makeApiClient(kc) as any
-  client
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  k8sApi
     .deleteNamespacedPod(resourceName, namespace)
     .then((response) => {
       console.log('Pod deleted successfully:', response.body)
