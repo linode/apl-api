@@ -46,7 +46,7 @@ export async function k8sdelete(specPath: string, resourceName: string, namespac
   try {
     await k8sApi.deleteNamespacedServiceAccount(`tty-${resourceName}`, namespace)
     await k8sApi.deleteNamespacedPod(`tty-${resourceName}`, namespace)
-    await rbacAuthorizationV1Api.deleteClusterRoleBinding(`tty-${resourceName}`)
+    await rbacAuthorizationV1Api.deleteClusterRoleBinding('tty-admin-rolebinding')
     await k8sApi.deleteNamespacedService(`tty-${resourceName}`, namespace)
 
     const apiVersion = 'networking.istio.io'
