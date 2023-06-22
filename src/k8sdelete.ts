@@ -55,7 +55,7 @@ export async function k8sdelete(specPath: string, resourceName: string, namespac
     const plural = 'virtualservices'
 
     console.log('listNamespacedCustomObject virtualservices')
-    customObjectsApi.listNamespacedCustomObject(apiGroup, apiVersion, namespace, plural).then(
+    await customObjectsApi.listNamespacedCustomObject(apiGroup, apiVersion, namespace, plural).then(
       (response) => {
         console.log('response: ', response)
       },
@@ -65,7 +65,7 @@ export async function k8sdelete(specPath: string, resourceName: string, namespac
     )
 
     console.log('deleteNamespacedCustomObject virtualservices')
-    customObjectsApi
+    await customObjectsApi
       .deleteNamespacedCustomObject(apiGroup, apiVersion, namespace, plural, `tty-${resourceName}`)
       .then(
         (response) => {
