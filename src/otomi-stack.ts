@@ -723,7 +723,7 @@ export default class OtomiStack {
     const cloudtty = cloudttys.find((c) => c.emailNoSymbols === data.emailNoSymbols) as Cloudtty
     console.log('cloudtty', cloudtty)
     k8sdelete(`/tmp/ttyd-${data.emailNoSymbols}.yaml`, data.emailNoSymbols, 'team-admin')
-    return this.db.deleteItem('cloudttys', { id: cloudtty.id })
+    if (cloudtty.id) return this.db.deleteItem('cloudttys', { id: cloudtty.id })
   }
 
   async saveCloudttys(): Promise<void> {
