@@ -1,4 +1,4 @@
-import { bool, CleanedEnvAccessors, cleanEnv as clean, CleanOptions, json, num, str, ValidatorSpec } from 'envalid'
+import { CleanOptions, CleanedEnvAccessors, ValidatorSpec, bool, cleanEnv as clean, json, num, str } from 'envalid'
 
 export const AUTHZ_MOCK_IS_ADMIN = bool({
   desc: 'Indicate if a mocked user is an admin',
@@ -18,6 +18,10 @@ export const DRONE_WEBHOOK_SECRET = str({ desc: 'The drone secret to validate in
 export const EDITOR_INACTIVITY_TIMEOUT = num({
   desc: 'Inactivity timeout in days after which editor session is removed to clean mem',
   default: 1,
+})
+export const GITEA_CHECK_VERSION_INTERVAL = num({
+  desc: 'Interval in minutes for how much time in between each gitea latest version check',
+  default: 5,
 })
 export const GIT_BRANCH = str({ desc: 'The git repo branch', default: 'main' })
 export const GIT_EMAIL = str({ desc: 'The git user email', default: 'not@us.ed' })

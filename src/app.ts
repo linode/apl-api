@@ -26,7 +26,7 @@ import { setMockIdx } from 'src/mocks'
 import { OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
-import { DRONE_WEBHOOK_SECRET, cleanEnv } from 'src/validators'
+import { DRONE_WEBHOOK_SECRET, GITEA_CHECK_VERSION_INTERVAL, cleanEnv } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
 import giteaCheckLatest from './gitea/connect'
 
@@ -48,6 +48,7 @@ const checkAgainstGitea = async () => {
 }
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
+  GITEA_CHECK_VERSION_INTERVAL,
 })
 
 const debug = Debug('otomi:app')
@@ -99,8 +100,9 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
       res.send('ok')
     })
   }
-  // 2 minute interval
-  const interval = 2 * 60 * 1000
+  const interval = env.GITEA_CHECK_VERSION_INTERVAL * 60 * 1000
+  console.log('env interval', env.GITEA_CHECK_VERSION_INTERVAL)
+  console.log('Timer gitea interval', interval)
   setInterval(async function () {
     await checkAgainstGitea()
   }, interval)
