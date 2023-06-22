@@ -51,9 +51,10 @@ export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty
     await k8sApi.deleteNamespacedServiceAccount(`tty-${resourceName}`, namespace)
     await k8sApi.deleteNamespacedPod(`tty-${resourceName}`, namespace)
 
-    if (!isAdmin)
-      await rbacAuthorizationV1Api.deleteNamespacedRoleBinding(`tty-${userTeams?.[0]}-rolebinding`, namespace)
-    else await rbacAuthorizationV1Api.deleteClusterRoleBinding('tty-admin-rolebinding')
+    if (!isAdmin) {
+      for (const team of userTeams!)
+        await rbacAuthorizationV1Api.deleteNamespacedRoleBinding(`tty-${team}-rolebinding`, team)
+    } else await rbacAuthorizationV1Api.deleteClusterRoleBinding('tty-admin-rolebinding')
 
     await k8sApi.deleteNamespacedService(`tty-${resourceName}`, namespace)
     const apiGroup = 'networking.istio.io'
