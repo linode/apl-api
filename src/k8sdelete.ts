@@ -50,6 +50,7 @@ export async function k8sdelete(specPath: string, resourceName: string, namespac
     await k8sApi.deleteNamespacedService(`tty-${resourceName}`, namespace)
     // await rbacAuthorizationV1Api.deleteNamespacedRoleBinding(`tty-${resourceName}-rolebinding`, namespace)
 
+    console.log('deleteNamespacedCustomObject virtualservices')
     const apiVersion = 'networking.istio.io'
     const apiGroup = 'v1beta1'
     const plural = 'virtualservices'
