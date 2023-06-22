@@ -8,7 +8,7 @@ import * as k8s from '@kubernetes/client-node'
 //   resourceName: string,
 //   namespace: string,
 // ): Promise<k8s.KubernetesObject[]> {
-export function k8sdelete(specPath: string, resourceName: string, namespace: string) {
+export async function k8sdelete(specPath: string, resourceName: string, namespace: string) {
   // const kc = new k8s.KubeConfig()
   // kc.loadFromDefault()
 
@@ -40,12 +40,20 @@ export function k8sdelete(specPath: string, resourceName: string, namespace: str
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
-  k8sApi
-    .deleteNamespacedPod(`tty-${resourceName}`, namespace)
-    .then((response) => {
-      console.log('Pod deleted successfully:', response.body)
-    })
-    .catch((err) => {
-      console.error('Error deleting pod:', err.response.body)
-    })
+  const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
+  const rbacAuthorizationV1Api = kc.makeApiClient(k8s.RbacAuthorizationV1Api)
+
+  try {
+    await k8sApi.deleteNamespacedServiceAccount(`tty-${resourceName}`, namespace)
+    await k8sApi.deleteNamespacedPod(`tty-${resourceName}`, namespace)
+    await rbacAuthorizationV1Api.deleteClusterRoleBinding(`tty-${resourceName}`)
+    await k8sApi.deleteNamespacedService(`tty-${resourceName}`, namespace)
+
+    const apiVersion = 'networking.istio.io'
+    const apiGroup = 'v1beta1'
+    const plural = 'virtualservices'
+    await customObjectsApi.deleteNamespacedCustomObject(apiGroup, apiVersion, namespace, plural, `tty-${resourceName}`)
+  } catch (error) {
+    console.log('k8sdelete error: ', error)
+  }
 }
