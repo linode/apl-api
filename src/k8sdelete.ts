@@ -48,11 +48,24 @@ export async function k8sdelete(specPath: string, resourceName: string, namespac
     await k8sApi.deleteNamespacedPod(`tty-${resourceName}`, namespace)
     await rbacAuthorizationV1Api.deleteClusterRoleBinding('tty-admin-rolebinding')
     await k8sApi.deleteNamespacedService(`tty-${resourceName}`, namespace)
+    // await rbacAuthorizationV1Api.deleteNamespacedRoleBinding(`tty-${resourceName}-rolebinding`, namespace)
 
     const apiVersion = 'networking.istio.io'
     const apiGroup = 'v1beta1'
     const plural = 'virtualservices'
-    await customObjectsApi.deleteNamespacedCustomObject(apiGroup, apiVersion, namespace, plural, `tty-${resourceName}`)
+    customObjectsApi
+      .deleteNamespacedCustomObject(apiGroup, apiVersion, namespace, plural, `tty-${resourceName}`)
+      .then(
+        (response) => {
+          console.log('response: ', response)
+        },
+        (err) => {
+          console.log('error: ', err)
+        },
+      )
+      .catch((err) => {
+        console.log('catch error: ', err)
+      })
   } catch (error) {
     console.log('k8sdelete error: ', error)
   }
