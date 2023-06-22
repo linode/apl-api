@@ -1,4 +1,5 @@
 import * as k8s from '@kubernetes/client-node'
+import { Cloudtty } from './otomi-models'
 // import * as fs from 'fs'
 // import * as yaml from 'js-yaml'
 // import { promisify } from 'util'
@@ -8,7 +9,7 @@ import * as k8s from '@kubernetes/client-node'
 //   resourceName: string,
 //   namespace: string,
 // ): Promise<k8s.KubernetesObject[]> {
-export async function k8sdelete(specPath: string, resourceName: string, namespace: string) {
+export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty) {
   // const kc = new k8s.KubeConfig()
   // kc.loadFromDefault()
 
@@ -43,41 +44,22 @@ export async function k8sdelete(specPath: string, resourceName: string, namespac
   const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
   const rbacAuthorizationV1Api = kc.makeApiClient(k8s.RbacAuthorizationV1Api)
 
+  const resourceName = emailNoSymbols
+  const namespace = 'team-admin'
+
   try {
     await k8sApi.deleteNamespacedServiceAccount(`tty-${resourceName}`, namespace)
     await k8sApi.deleteNamespacedPod(`tty-${resourceName}`, namespace)
-    await rbacAuthorizationV1Api.deleteClusterRoleBinding('tty-admin-rolebinding')
-    await k8sApi.deleteNamespacedService(`tty-${resourceName}`, namespace)
-    // await rbacAuthorizationV1Api.deleteNamespacedRoleBinding(`tty-${resourceName}-rolebinding`, namespace)
 
+    if (!isAdmin)
+      await rbacAuthorizationV1Api.deleteNamespacedRoleBinding(`tty-${userTeams?.[0]}-rolebinding`, namespace)
+    else await rbacAuthorizationV1Api.deleteClusterRoleBinding('tty-admin-rolebinding')
+
+    await k8sApi.deleteNamespacedService(`tty-${resourceName}`, namespace)
     const apiGroup = 'networking.istio.io'
     const apiVersion = 'v1beta1'
     const plural = 'virtualservices'
-
-    console.log('listNamespacedCustomObject virtualservices')
-    await customObjectsApi.listNamespacedCustomObject(apiGroup, apiVersion, namespace, plural).then(
-      (response) => {
-        console.log('response: ', response)
-      },
-      (err) => {
-        console.log('error: ', err)
-      },
-    )
-
-    console.log('deleteNamespacedCustomObject virtualservices')
-    await customObjectsApi
-      .deleteNamespacedCustomObject(apiGroup, apiVersion, namespace, plural, `tty-${resourceName}`)
-      .then(
-        (response) => {
-          console.log('response: ', response)
-        },
-        (err) => {
-          console.log('error: ', err)
-        },
-      )
-      .catch((err) => {
-        console.log('catch error: ', err)
-      })
+    await customObjectsApi.deleteNamespacedCustomObject(apiGroup, apiVersion, namespace, plural, `tty-${resourceName}`)
   } catch (error) {
     console.log('k8sdelete error: ', error)
   }
