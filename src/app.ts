@@ -26,13 +26,13 @@ import { setMockIdx } from 'src/mocks'
 import { OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
-import { DRONE_WEBHOOK_SECRET, GITEA_CHECK_VERSION_INTERVAL, GIT_PASSWORD, GIT_USER, cleanEnv } from 'src/validators'
+import { DRONE_WEBHOOK_SECRET, GIT_CHECK_VERSION_INTERVAL, GIT_PASSWORD, GIT_USER, cleanEnv } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
 import giteaCheckLatest from './gitea/connect'
 
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
-  GITEA_CHECK_VERSION_INTERVAL,
+  GIT_CHECK_VERSION_INTERVAL,
   GIT_USER,
   GIT_PASSWORD,
 })
@@ -47,21 +47,13 @@ type OtomiSpec = {
 
 const checkAgainstGitea = async () => {
   const encodedToken = Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')
-  console.log('yes: ', encodedToken)
   const otomiStack = await getSessionStack()
-  console.log('Make Gitea Call')
   const clusterInfo = otomiStack?.getSettings(['cluster'])
   const latestOtomiVersion = await giteaCheckLatest(encodedToken, clusterInfo)
-  const stack = await getSessionStack()
-  console.log('latestOtomiVersion', latestOtomiVersion)
-  console.log('data', latestOtomiVersion.data)
-  console.log('stack branch', stack.repo.commitSha)
-  if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== stack.repo.commitSha) {
-    console.log('Not the same version')
-    await stack.repo.pull()
-  } else if (latestOtomiVersion && latestOtomiVersion.data[0].sha === stack.repo.commitSha)
-    console.log('The same version')
-  else console.log('otomiVersion is empty')
+  if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== otomiStack.repo.commitSha) {
+    debug('Local values differentiate from Git repository, retrieving latest values')
+    await otomiStack.repo.pull()
+  }
 }
 
 let otomiSpec: OtomiSpec
@@ -105,8 +97,8 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
       res.send('ok')
     })
   }
-  const interval = env.GITEA_CHECK_VERSION_INTERVAL * 60 * 1000
-  console.log('env interval', env.GITEA_CHECK_VERSION_INTERVAL)
+  const interval = env.GIT_CHECK_VERSION_INTERVAL * 60 * 1000
+  console.log('env interval', env.GIT_CHECK_VERSION_INTERVAL)
   console.log('Timer gitea interval', interval)
   setInterval(async function () {
     await checkAgainstGitea()

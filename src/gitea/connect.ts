@@ -1,4 +1,8 @@
 import axios from 'axios'
+import Debug from 'debug'
+
+const debug = Debug('otomi:gitea-connect')
+debug('NODE_ENV: ', process.env.NODE_ENV)
 
 export default async function giteaCheckLatest(token: string, clusterData: any): Promise<any> {
   const domainSuffix: string | undefined = clusterData?.cluster?.domainSuffix
@@ -12,7 +16,7 @@ export default async function giteaCheckLatest(token: string, clusterData: any):
         Authorization: `Basic ${token}`,
       },
     }).catch((error) => {
-      console.error('gitea error: ', error.message)
+      debug('Gitea error: ', error.message)
     })
 
     return response
