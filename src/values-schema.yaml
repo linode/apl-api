@@ -2498,10 +2498,6 @@ properties:
           editorInactivityTimeout:
             type: integer
             default: 10
-          giteaCheckVersionInterval:
-            description: 'Interval in minutes for how much time in between each gitea latest version check'
-            type: integer
-            default: 5
           git:
             additionalProperties: false
             properties:
@@ -2516,6 +2512,8 @@ properties:
                 $ref: '#/definitions/repoUrl'
               user:
                 type: string
+              checkVersionInterval:
+                type: integer
           resources:
             additionalProperties: false
             properties:
