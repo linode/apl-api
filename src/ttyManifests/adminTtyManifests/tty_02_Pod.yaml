@@ -10,7 +10,7 @@ spec:
   volumes:
     - name: kconfig
       configMap:
-        name: kconfig-$TARGET_TEAM
+        name: kconfig-team-$TARGET_TEAM
   containers:
     - image: otomi/tty:0.1.1
       name: po
