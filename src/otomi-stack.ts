@@ -656,7 +656,6 @@ export default class OtomiStack {
     const variables = {
       FQDN: data.domain,
       EMAIL: data.emailNoSymbols,
-      TARGET_TEAM: data.teamId,
     }
     const { userTeams } = data
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
@@ -673,8 +672,13 @@ export default class OtomiStack {
     const filteredFiles = files.filter((file) => file.startsWith('tty'))
     const variableKeys = Object.keys(variables)
 
+    const podContentForAdmin = (fileContent) => {
+      const regex = new RegExp(`\\$TARGET_TEAM`, 'g')
+      return fileContent.replace(regex, data.teamId)
+    }
+
     // iterates over the rolebinding file and replace the $TARGET_TEAM with the team name for teams
-    const rolebindingContents = (fileContent) => {
+    const rolebindingContentsForUsers = (fileContent) => {
       const rolebindingArray: string[] = []
       userTeams?.forEach((team: string) => {
         const regex = new RegExp(`\\$TARGET_TEAM`, 'g')
@@ -693,7 +697,8 @@ export default class OtomiStack {
           const regex = new RegExp(`\\$${key}`, 'g')
           fileContent = fileContent.replace(regex, variables[key])
         })
-        if (!data.isAdmin && file === 'tty_03_Rolebinding.yaml') fileContent = rolebindingContents(fileContent)
+        if (data.isAdmin && file === 'tty_02_Pod.yaml') fileContent = podContentForAdmin(fileContent)
+        if (!data.isAdmin && file === 'tty_03_Rolebinding.yaml') fileContent = rolebindingContentsForUsers(fileContent)
         return fileContent
       }),
     )
