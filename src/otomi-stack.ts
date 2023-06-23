@@ -656,6 +656,7 @@ export default class OtomiStack {
     const variables = {
       FQDN: data.domain,
       EMAIL: data.emailNoSymbols,
+      TARGET_TEAM: data.teamId,
     }
     const { userTeams } = data
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
