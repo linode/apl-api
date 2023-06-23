@@ -28,22 +28,21 @@ import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
 import { DRONE_WEBHOOK_SECRET, GITEA_CHECK_VERSION_INTERVAL, cleanEnv } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
-import giteaCheckLatest from './gitea/connect'
 
 const checkAgainstGitea = async () => {
   const otomiStack = await getSessionStack()
-  console.log('Make Gitea Call')
-  const clusterInfo = otomiStack?.getSettings(['cluster'])
-  const latestOtomiVersion = await giteaCheckLatest('b3RvbWktYWRtaW46d2VsY29tZW90b21p', clusterInfo)
+  // console.log('Make Gitea Call')
+  // const clusterInfo = otomiStack?.getSettings(['cluster'])
+  // const latestOtomiVersion = await giteaCheckLatest('b3RvbWktYWRtaW46d2VsY29tZW90b21p', clusterInfo)
   const stack = await getSessionStack()
-  console.log('latestOtomiVersion', latestOtomiVersion)
-  console.log('data', latestOtomiVersion.data)
-  console.log('stack branch', stack.repo.commitSha)
-  if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== stack.repo.commitSha) {
+  // console.log('latestOtomiVersion', latestOtomiVersion)
+  // console.log('data', latestOtomiVersion.data)
+  // console.log('stack branch', stack.repo.commitSha)
+  const latestOtomiVersion = await stack.repo.getCommitSha()
+  if (latestOtomiVersion !== stack.repo.commitSha) {
     console.log('Not the same version')
     await stack.repo.pull()
-  } else if (latestOtomiVersion && latestOtomiVersion.data[0].sha === stack.repo.commitSha)
-    console.log('The same version')
+  } else if (latestOtomiVersion === stack.repo.commitSha) console.log('The same version')
   else console.log('otomiVersion is empty')
 }
 const env = cleanEnv({
