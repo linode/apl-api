@@ -30,8 +30,23 @@ import { DRONE_WEBHOOK_SECRET, GITEA_CHECK_VERSION_INTERVAL, GIT_PASSWORD, GIT_U
 import swaggerUi from 'swagger-ui-express'
 import giteaCheckLatest from './gitea/connect'
 
+const env = cleanEnv({
+  DRONE_WEBHOOK_SECRET,
+  GITEA_CHECK_VERSION_INTERVAL,
+  GIT_USER,
+  GIT_PASSWORD,
+})
+
+const debug = Debug('otomi:app')
+debug('NODE_ENV: ', process.env.NODE_ENV)
+
+type OtomiSpec = {
+  spec: OpenAPIDoc
+  secretPaths: string[]
+}
+
 const checkAgainstGitea = async () => {
-  const encodedToken = Buffer.from(`${GIT_USER}:${GIT_PASSWORD}`).toString('base64')
+  const encodedToken = Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')
   console.log('yes: ', encodedToken)
   const otomiStack = await getSessionStack()
   console.log('Make Gitea Call')
@@ -47,18 +62,6 @@ const checkAgainstGitea = async () => {
   } else if (latestOtomiVersion && latestOtomiVersion.data[0].sha === stack.repo.commitSha)
     console.log('The same version')
   else console.log('otomiVersion is empty')
-}
-const env = cleanEnv({
-  DRONE_WEBHOOK_SECRET,
-  GITEA_CHECK_VERSION_INTERVAL,
-})
-
-const debug = Debug('otomi:app')
-debug('NODE_ENV: ', process.env.NODE_ENV)
-
-type OtomiSpec = {
-  spec: OpenAPIDoc
-  secretPaths: string[]
 }
 
 let otomiSpec: OtomiSpec
