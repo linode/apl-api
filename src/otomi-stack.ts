@@ -50,7 +50,7 @@ import {
   cleanEnv,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
-import { apply, wait3Seconds, watchPodUntilRunning } from './apply'
+import { apply, watchPodUntilRunning } from './apply'
 import { k8sdelete } from './k8sdelete'
 import connect from './otomiCloud/connect'
 
@@ -653,22 +653,19 @@ export default class OtomiStack {
   }
 
   async connectCloudtty(data: Cloudtty): Promise<Cloudtty | any> {
-    console.log('connectCloudtty data:', data)
     const variables = {
       FQDN: data.domain,
       EMAIL: data.emailNoSymbols,
     }
-    const { userTeams } = data // ['team-admin', 'team-demo1', 'team-demo2']
-
+    const { userTeams } = data
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
-    console.log('connectCloudtty cloudttys', cloudttys)
     const cloudtty = cloudttys.find((c) => c.emailNoSymbols === data.emailNoSymbols)
-    console.log('connectCloudtty cloudtty', cloudtty)
+
     if (cloudtty) return cloudtty
 
-    if (await pathExists(`/tmp/ttyd-${data.emailNoSymbols}.yaml`)) await unlink(`/tmp/ttyd-${data.emailNoSymbols}.yaml`)
+    if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
 
-    //IF user is admin then read the manifests from ./dist/src/ttyManifests/adminTtyManifests
+    //if user is admin then read the manifests from ./dist/src/ttyManifests/adminTtyManifests
     const files = data.isAdmin
       ? await readdir('./dist/src/ttyManifests/adminTtyManifests', 'utf-8')
       : await readdir('./dist/src/ttyManifests', 'utf-8')
@@ -678,13 +675,11 @@ export default class OtomiStack {
     // iterates over the rolebinding file and replace the $TARGET_TEAM with the team name for teams
     const rolebindingContents = (fileContent) => {
       const rolebindingArray: string[] = []
-
       userTeams?.forEach((team: string) => {
         const regex = new RegExp(`\\$TARGET_TEAM`, 'g')
         const rolebindingForTeam: string = fileContent.replace(regex, team)
         rolebindingArray.push(rolebindingForTeam)
       })
-
       return rolebindingArray.join('\n')
     }
 
@@ -697,17 +692,13 @@ export default class OtomiStack {
           const regex = new RegExp(`\\$${key}`, 'g')
           fileContent = fileContent.replace(regex, variables[key])
         })
-
         if (!data.isAdmin && file === 'tty_03_Rolebinding.yaml') fileContent = rolebindingContents(fileContent)
-
         return fileContent
       }),
     )
-    await writeFile(`/tmp/ttyd-${data.emailNoSymbols}.yaml`, fileContents, 'utf-8')
-
-    await apply(`/tmp/ttyd-${data.emailNoSymbols}.yaml`)
+    await writeFile('/tmp/ttyd.yaml', fileContents, 'utf-8')
+    await apply('/tmp/ttyd.yaml')
     await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}`)
-    await wait3Seconds()
 
     return this.db.createItem(
       'cloudttys',
@@ -717,13 +708,10 @@ export default class OtomiStack {
   }
 
   async deleteCloudtty(data: Cloudtty) {
-    console.log('deleting cloudtty, k8sdelete works!')
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
-    console.log('cloudttys', cloudttys)
     const cloudtty = cloudttys.find((c) => c.emailNoSymbols === data.emailNoSymbols) as Cloudtty
-    console.log('cloudtty', cloudtty)
     await k8sdelete(data)
-    if (cloudtty?.id) return this.db.deleteItem('cloudttys', { id: cloudtty.id })
+    return this.db.deleteItem('cloudttys', { id: cloudtty.id })
   }
 
   async saveCloudttys(): Promise<void> {
