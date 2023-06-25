@@ -30,3 +30,4 @@ teamConfig:
             velero: {}
             falco: {}
             trivy: {}
+            tempo: {}
