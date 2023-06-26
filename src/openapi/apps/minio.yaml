@@ -32,7 +32,7 @@ AppMinio:
               default: true
             size:
               $ref: ../definitions.yaml#/size
-              default: 20Gi
+              default: 50Gi
         resources:
           type: object
           properties:
