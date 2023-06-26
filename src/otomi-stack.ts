@@ -658,13 +658,11 @@ export default class OtomiStack {
     }
     const { userTeams } = data
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
-    console.log('cloudttys', cloudttys)
     const cloudtty = cloudttys.find((c) => c.emailNoSymbols === data.emailNoSymbols)
-    console.log('cloudtty', cloudtty)
 
-    // if cloudtty already exists then return it else delete the cloudtty and create a new one
+    // if cloudtty already exists then return it else delete the cloudtty resources and create a new one
     if (cloudtty) return cloudtty
-    else await this.deleteCloudtty(data)
+    else await k8sdelete(data)
 
     if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
 
