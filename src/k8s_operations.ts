@@ -77,6 +77,22 @@ export async function watchPodUntilRunning(namespace: string, podName: string) {
   return true
 }
 
+export async function checkPodExist(namespace: string, podName: string) {
+  let isRunning = false
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+
+  try {
+    const res = await k8sApi.readNamespacedPodStatus(podName, namespace)
+    isRunning = res.body.status?.phase === 'Running'
+  } catch (error) {
+    debug('checkPodExist error:', error)
+  }
+
+  return isRunning
+}
+
 export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty) {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
