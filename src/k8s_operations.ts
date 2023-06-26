@@ -1,8 +1,11 @@
 import * as k8s from '@kubernetes/client-node'
+import Debug from 'debug'
 import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
 import { Cloudtty } from './otomi-models'
+
+const debug = Debug('otomi:api:cloudtty')
 
 /**
  * Replicate the functionality of `kubectl apply`.  That is, create the resources defined in the `specFile` if they do
@@ -45,7 +48,7 @@ export async function apply(specPath: string): Promise<k8s.KubernetesObject[]> {
       created.push(response.body)
     }
   }
-
+  debug(`Cloudtty is created!`)
   return created
 }
 
@@ -60,16 +63,17 @@ export async function watchPodUntilRunning(namespace: string, podName: string) {
       const res = await k8sApi.readNamespacedPodStatus(podName, namespace)
       isRunning = res.body.status?.phase === 'Running'
     } catch (error) {
-      console.log('error:', error)
+      debug('watchPodUntilRunning error:', error)
     }
 
     if (!isRunning) {
-      console.log(`Pod ${podName} is not running. Checking again in 5 seconds...`)
+      debug(`Pod ${podName} is not running. Checking again in 5 seconds...`)
       await new Promise((resolve) => setTimeout(resolve, 5000))
     }
   }
+  // wait 3 more seconds to make sure the pod is fully initialized
   await new Promise((resolve) => setTimeout(resolve, 3000))
-  console.log(`Pod ${podName} is now running!`)
+  debug(`Pod ${podName} is now running!`)
   return true
 }
 
@@ -94,6 +98,6 @@ export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty
     const plural = 'virtualservices'
     await customObjectsApi.deleteNamespacedCustomObject(apiGroup, apiVersion, namespace, plural, `tty-${resourceName}`)
   } catch (error) {
-    console.log('k8sdelete error: ', error)
+    debug('k8sdelete error:', error)
   }
 }

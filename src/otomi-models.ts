@@ -111,7 +111,6 @@ export interface JWT {
   email: string
   groups: string[]
   roles?: string[]
-  sub: string
 }
 
 export interface OpenApiRequestExt extends OpenApiRequest, Session {

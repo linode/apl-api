@@ -34,3 +34,4 @@ Cloudtty:
     - teamId
     - domain
     - emailNoSymbols
+    - isAdmin
