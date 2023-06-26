@@ -663,6 +663,7 @@ export default class OtomiStack {
     console.log('cloudtty', cloudtty)
 
     if (cloudtty) return cloudtty
+    else this.deleteCloudtty(data)
 
     if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
 
