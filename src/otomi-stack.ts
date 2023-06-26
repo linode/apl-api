@@ -671,7 +671,7 @@ export default class OtomiStack {
     const filteredFiles = files.filter((file) => file.startsWith('tty'))
     const variableKeys = Object.keys(variables)
 
-    const podContentForAdmin = (fileContent) => {
+    const podContentAddTargetTeam = (fileContent) => {
       const regex = new RegExp(`\\$TARGET_TEAM`, 'g')
       return fileContent.replace(regex, data.teamId)
     }
@@ -696,7 +696,7 @@ export default class OtomiStack {
           const regex = new RegExp(`\\$${key}`, 'g')
           fileContent = fileContent.replace(regex, variables[key])
         })
-        if (data.isAdmin && file === 'tty_02_Pod.yaml') fileContent = podContentForAdmin(fileContent)
+        if (file === 'tty_02_Pod.yaml') fileContent = podContentAddTargetTeam(fileContent)
         if (!data.isAdmin && file === 'tty_03_Rolebinding.yaml') fileContent = rolebindingContentsForUsers(fileContent)
         return fileContent
       }),
