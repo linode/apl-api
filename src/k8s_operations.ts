@@ -100,4 +100,6 @@ export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty
   } catch (error) {
     debug('k8sdelete error:', error)
   }
+  // wait 3 more seconds to make sure the resources are fully deleted
+  await new Promise((resolve) => setTimeout(resolve, 3000))
 }
