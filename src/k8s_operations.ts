@@ -2,30 +2,7 @@ import * as k8s from '@kubernetes/client-node'
 import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
-
-export async function watchPodUntilRunning(namespace: string, podName: string) {
-  let isRunning = false
-  const kc = new k8s.KubeConfig()
-  kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
-
-  while (!isRunning) {
-    try {
-      const res = await k8sApi.readNamespacedPodStatus(podName, namespace)
-      isRunning = res.body.status?.phase === 'Running'
-    } catch (error) {
-      console.log('error:', error)
-    }
-
-    if (!isRunning) {
-      console.log(`Pod ${podName} is not running. Checking again in 5 seconds...`)
-      await new Promise((resolve) => setTimeout(resolve, 5000))
-    }
-  }
-  await new Promise((resolve) => setTimeout(resolve, 3000))
-  console.log(`Pod ${podName} is now running!`)
-  return true
-}
+import { Cloudtty } from './otomi-models'
 
 /**
  * Replicate the functionality of `kubectl apply`.  That is, create the resources defined in the `specFile` if they do
@@ -70,4 +47,53 @@ export async function apply(specPath: string): Promise<k8s.KubernetesObject[]> {
   }
 
   return created
+}
+
+export async function watchPodUntilRunning(namespace: string, podName: string) {
+  let isRunning = false
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+
+  while (!isRunning) {
+    try {
+      const res = await k8sApi.readNamespacedPodStatus(podName, namespace)
+      isRunning = res.body.status?.phase === 'Running'
+    } catch (error) {
+      console.log('error:', error)
+    }
+
+    if (!isRunning) {
+      console.log(`Pod ${podName} is not running. Checking again in 5 seconds...`)
+      await new Promise((resolve) => setTimeout(resolve, 5000))
+    }
+  }
+  await new Promise((resolve) => setTimeout(resolve, 3000))
+  console.log(`Pod ${podName} is now running!`)
+  return true
+}
+
+export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty) {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
+  const rbacAuthorizationV1Api = kc.makeApiClient(k8s.RbacAuthorizationV1Api)
+  const resourceName = emailNoSymbols
+  const namespace = 'team-admin'
+  try {
+    await k8sApi.deleteNamespacedServiceAccount(`tty-${resourceName}`, namespace)
+    await k8sApi.deleteNamespacedPod(`tty-${resourceName}`, namespace)
+    if (!isAdmin) {
+      for (const team of userTeams!)
+        await rbacAuthorizationV1Api.deleteNamespacedRoleBinding(`tty-${team}-rolebinding`, team)
+    } else await rbacAuthorizationV1Api.deleteClusterRoleBinding('tty-admin-rolebinding')
+    await k8sApi.deleteNamespacedService(`tty-${resourceName}`, namespace)
+    const apiGroup = 'networking.istio.io'
+    const apiVersion = 'v1beta1'
+    const plural = 'virtualservices'
+    await customObjectsApi.deleteNamespacedCustomObject(apiGroup, apiVersion, namespace, plural, `tty-${resourceName}`)
+  } catch (error) {
+    console.log('k8sdelete error: ', error)
+  }
 }

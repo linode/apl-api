@@ -50,8 +50,7 @@ import {
   cleanEnv,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
-import { apply, watchPodUntilRunning } from './apply'
-import { k8sdelete } from './k8sdelete'
+import { apply, k8sdelete, watchPodUntilRunning } from './k8s_operations'
 import connect from './otomiCloud/connect'
 
 const debug = Debug('otomi:otomi-stack')
