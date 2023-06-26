@@ -51,8 +51,8 @@ const checkAgainstGitea = async () => {
   const otomiStack = await getSessionStack()
   const clusterInfo = otomiStack?.getSettings(['cluster'])
   const latestOtomiVersion = await giteaCheckLatest(encodedToken, clusterInfo)
-  // check the local version against the latest version
-  // if the latest is newer than the latest version will be pulled locally
+  // check the local version against the latest online version
+  // if the latest online is newer it will be pulled locally
   if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== otomiStack.repo.commitSha) {
     debug('Local values differentiate from Git repository, retrieving latest values')
     await otomiStack.repo.pull()
