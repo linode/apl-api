@@ -45,5 +45,3 @@ kms.json*
 /vendors/client/
 /src/generated-*
 secrets.*.yaml.dec
-
-src/ttyManifests/ttyd.yaml
