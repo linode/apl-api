@@ -658,7 +658,9 @@ export default class OtomiStack {
     }
     const { userTeams } = data
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
+    console.log('cloudttys', cloudttys)
     const cloudtty = cloudttys.find((c) => c.emailNoSymbols === data.emailNoSymbols)
+    console.log('cloudtty', cloudtty)
 
     if (cloudtty) return cloudtty
 
