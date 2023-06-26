@@ -717,7 +717,7 @@ export default class OtomiStack {
   async deleteCloudtty(data: Cloudtty) {
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
     const cloudtty = cloudttys.find((c) => c.emailNoSymbols === data.emailNoSymbols) as Cloudtty
-    await k8sdelete(data)
+    if (cloudtty.id) await k8sdelete(data)
     return this.db.deleteItem('cloudttys', { id: cloudtty.id })
   }
 
