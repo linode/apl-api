@@ -662,8 +662,9 @@ export default class OtomiStack {
     const cloudtty = cloudttys.find((c) => c.emailNoSymbols === data.emailNoSymbols)
     console.log('cloudtty', cloudtty)
 
+    // if cloudtty already exists then return it else delete the cloudtty and create a new one
     if (cloudtty) return cloudtty
-    else this.deleteCloudtty(data)
+    else await this.deleteCloudtty(data)
 
     if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
 
