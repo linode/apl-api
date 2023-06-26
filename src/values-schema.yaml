@@ -2498,9 +2498,6 @@ properties:
           editorInactivityTimeout:
             type: integer
             default: 10
-          checkLatestCommitInterval:
-            type: integer
-            default: 5
           git:
             additionalProperties: false
             properties:
