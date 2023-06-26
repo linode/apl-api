@@ -2498,6 +2498,9 @@ properties:
           editorInactivityTimeout:
             type: integer
             default: 10
+          checkLatestCommitInterval:
+            type: integer
+            default: 5
           git:
             additionalProperties: false
             properties:
@@ -2512,8 +2515,6 @@ properties:
                 $ref: '#/definitions/repoUrl'
               user:
                 type: string
-              checkVersionInterval:
-                type: integer
           resources:
             additionalProperties: false
             properties:

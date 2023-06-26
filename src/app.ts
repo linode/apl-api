@@ -26,13 +26,13 @@ import { setMockIdx } from 'src/mocks'
 import { OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
-import { DRONE_WEBHOOK_SECRET, GIT_CHECK_VERSION_INTERVAL, GIT_PASSWORD, GIT_USER, cleanEnv } from 'src/validators'
+import { CHECK_LATEST_COMMIT_INTERVAL, DRONE_WEBHOOK_SECRET, GIT_PASSWORD, GIT_USER, cleanEnv } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
 import giteaCheckLatest from './gitea/connect'
 
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
-  GIT_CHECK_VERSION_INTERVAL,
+  CHECK_LATEST_COMMIT_INTERVAL,
   GIT_USER,
   GIT_PASSWORD,
 })
@@ -45,11 +45,14 @@ type OtomiSpec = {
   secretPaths: string[]
 }
 
+// get the latest commit from Gitea and checks it against the local values
 const checkAgainstGitea = async () => {
   const encodedToken = Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')
   const otomiStack = await getSessionStack()
   const clusterInfo = otomiStack?.getSettings(['cluster'])
   const latestOtomiVersion = await giteaCheckLatest(encodedToken, clusterInfo)
+  // check the local version against the latest version
+  // if the latest is newer than the latest version will be pulled locally
   if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== otomiStack.repo.commitSha) {
     debug('Local values differentiate from Git repository, retrieving latest values')
     await otomiStack.repo.pull()
@@ -97,12 +100,12 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
       res.send('ok')
     })
   }
-  const interval = env.GIT_CHECK_VERSION_INTERVAL * 60 * 1000
-  console.log('env interval', env.GIT_CHECK_VERSION_INTERVAL)
-  console.log('Timer gitea interval', interval)
+  const gitCheckVersionInterval = env.CHECK_LATEST_COMMIT_INTERVAL * 60 * 1000
+  console.log('env interval', env.CHECK_LATEST_COMMIT_INTERVAL)
+  console.log('Timer gitea interval', gitCheckVersionInterval)
   setInterval(async function () {
     await checkAgainstGitea()
-  }, interval)
+  }, gitCheckVersionInterval)
   app.all('/drone', async (req, res, next) => {
     const parsed = httpSignature.parseRequest(req, {
       algorithm: 'hmac-sha256',

@@ -20,8 +20,8 @@ export const EDITOR_INACTIVITY_TIMEOUT = num({
   default: 1,
 })
 export const GIT_BRANCH = str({ desc: 'The git repo branch', default: 'main' })
-export const GIT_CHECK_VERSION_INTERVAL = num({
-  desc: 'Interval in minutes for how much time in between each gitea latest version check',
+export const CHECK_LATEST_COMMIT_INTERVAL = num({
+  desc: 'Interval in minutes for how much time in between each gitea latest commit check',
   default: 5,
 })
 export const GIT_EMAIL = str({ desc: 'The git user email', default: 'not@us.ed' })
