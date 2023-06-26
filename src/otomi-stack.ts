@@ -660,9 +660,12 @@ export default class OtomiStack {
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
     const cloudtty = cloudttys.find((c) => c.emailNoSymbols === data.emailNoSymbols)
 
-    // if cloudtty already exists then return it else delete the cloudtty resources and create a new one
+    // if cloudtty already exists then return it
     if (cloudtty) return cloudtty
-    else await k8sdelete(data)
+
+    // if cloudtty does not exists then check if the pod is running and return it
+    if (await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}`))
+      return { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}` }
 
     if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
 
