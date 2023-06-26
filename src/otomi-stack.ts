@@ -50,7 +50,7 @@ import {
   cleanEnv,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
-import { apply, checkPodExist, k8sdelete, watchPodUntilRunning } from './k8s_operations'
+import { apply, checkPodExists, k8sdelete, watchPodUntilRunning } from './k8s_operations'
 import connect from './otomiCloud/connect'
 
 const debug = Debug('otomi:otomi-stack')
@@ -664,7 +664,7 @@ export default class OtomiStack {
     if (cloudtty) return cloudtty
 
     // if cloudtty does not exists then check if the pod is running and return it
-    if (await checkPodExist('team-admin', `tty-${data.emailNoSymbols}`))
+    if (await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`))
       return { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}` }
 
     if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
@@ -721,7 +721,8 @@ export default class OtomiStack {
     const cloudttys = this.db.getCollection('cloudttys') as Array<Cloudtty>
     const cloudtty = cloudttys.find((c) => c.emailNoSymbols === data.emailNoSymbols) as Cloudtty
     if (cloudtty.id) await k8sdelete(data)
-    return this.db.deleteItem('cloudttys', { id: cloudtty.id })
+    if (!(await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`)))
+      return this.db.deleteItem('cloudttys', { id: cloudtty.id })
   }
 
   async saveCloudttys(): Promise<void> {

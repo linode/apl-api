@@ -77,7 +77,7 @@ export async function watchPodUntilRunning(namespace: string, podName: string) {
   return true
 }
 
-export async function checkPodExist(namespace: string, podName: string) {
+export async function checkPodExists(namespace: string, podName: string) {
   let isRunning = false
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
