@@ -34,6 +34,10 @@ AppIstio:
             enabled:
               type: boolean
               default: false
+        meshConfig:
+          title: Service mesh configuration
+          description: 'See: https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#MeshConfig'
+          type: object
         global:
           additionalProperties: false
           type: object
@@ -69,22 +73,6 @@ AppIstio:
                   required:
                     - limits
                     - requests
-        # meshConfig:
-        #   type: object
-        # properties:
-        #   defaultConfig:
-        #     type: object
-        #     default:
-        #       tracing:
-        #         sampling: 0.1
-        # image:
-        #   type: object
-        #   properties:
-        #     tag:
-        #       $ref: ../definitions.yaml#/imageTag
-        #       default: 1.10.1
-        #     pullPolicy:
-        #       $ref: ../definitions.yaml#/imagePullPolicy
         resources:
           type: object
           properties:
