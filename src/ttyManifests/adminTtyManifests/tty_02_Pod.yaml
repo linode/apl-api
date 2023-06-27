@@ -25,6 +25,8 @@ spec:
         - name: kconfig
           mountPath: /etc/kconfig
       command:
-        - ash /etc/kconfig/kconfig.sh && ttyd -p 8080 ash -l  
+        - sh
+        - -c
+        - ash /etc/kconfig/kconfig.sh && ttyd -w /home/user -p 8080 ash -l
 ---
 
