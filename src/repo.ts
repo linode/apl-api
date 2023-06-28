@@ -305,6 +305,7 @@ export class Repo {
         throw new GitPullError('Failed to remove upstream commits!')
       }
       debug('Removed upstream commits!')
+      this.corrupt = false
     }
   }
 
