@@ -28,6 +28,8 @@ alerts:
           - msteams
           - opsgenie
           - email
+          - none
+        default: none
         type: string
       title: Notification receivers
       type: array
