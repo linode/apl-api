@@ -9,6 +9,7 @@ import {
   App,
   Backup,
   Build,
+  Cloudtty,
   Cluster,
   License,
   Project,
@@ -25,6 +26,7 @@ import { v4 as uuidv4 } from 'uuid'
 export type DbType =
   | Backup
   | Build
+  | Cloudtty
   | Cluster
   | Secret
   | Service
@@ -44,6 +46,7 @@ export type Schema = {
   workloads: Workload[]
   workloadValues: WorkloadValues[]
   builds: Build[]
+  cloudttys: Cloudtty[]
   projects: Project[]
 }
 
@@ -64,6 +67,7 @@ export default class Db {
         apps: [],
         backups: [],
         builds: [],
+        cloudttys: [],
         license: {},
         projects: [],
         secrets: [],
