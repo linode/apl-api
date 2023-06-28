@@ -296,9 +296,9 @@ export class Repo {
         // Remove local changes so that no conflict can happen
         debug('Removing local changes.')
         await this.git.reset(ResetMode.HARD)
-        debug('Get latest branch: ', this.branch)
-        await this.git.checkout('main')
-        debug('Trying to remove upstream commits.')
+        debug('Get latest branch from: ', this.branch)
+        await this.git.pull(this.branch)
+        debug('Trying to remove upstream commits: ', this.remote)
         await this.git.push([this.remote, this.branch, '--force'])
       } catch (error) {
         debug('Failed to remove upstream commits: ', error)
