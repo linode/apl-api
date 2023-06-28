@@ -136,7 +136,7 @@
     "src/openapi/**/*": "npm run build:models"
   },
   "scripts": {
-    "build": "npm run clean && npm run build:models && tsc && tsc-alias --dir dist -v && copyup --error src/generated-schema.json src/values-schema.yaml dist/src && copyup --error ./src/license/license.pem ./dist/src",
+    "build": "npm run clean && npm run build:models && tsc && tsc-alias --dir dist -v && copyup --error src/generated-schema.json src/values-schema.yaml src/ttyManifests/*.yaml src/ttyManifests/adminTtyManifests/*.yaml dist/src && copyup --error ./src/license/license.pem ./dist/src",
     "build:models": "npm run build:spec && openapi-typescript src/generated-schema.json -o src/generated-schema.ts",
     "build:spec": "ts-node-dev -r tsconfig-paths/register src/build-spec.ts",
     "clean": "rm -rf dist >/dev/null",
