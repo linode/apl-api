@@ -296,6 +296,8 @@ export class Repo {
         // Remove local changes so that no conflict can happen
         debug('Removing local changes.')
         await this.git.reset(ResetMode.HARD)
+        debug(`Go to ${this.branch} branch`)
+        await this.git.checkout(this.branch)
         debug('Get latest branch from: ', this.branch)
         await this.git.pull(this.branch)
         debug('Trying to remove upstream commits: ', this.remote)
