@@ -254,8 +254,6 @@ export class Repo {
       await this.git.checkout(this.branch)
     } else if (this.url) {
       debug('Repo already exists. Checking out correct branch.')
-      // Remove local changes so that no conflict can happen
-      await this.git.reset(ResetMode.HARD)
       // Git fetch ensures that local git repository is synced with remote repository
       await this.git.fetch({})
       await this.git.checkout(this.branch)
@@ -295,11 +293,16 @@ export class Repo {
         getIo().emit('db', msg)
       }
       try {
-        await this.git.push(['origin', 'HEAD', '--force'])
+        // Remove local changes so that no conflict can happen
+        debug('Removing local changes.')
+        await this.git.reset(ResetMode.HARD)
+        debug('Get latest branch: ', this.branch)
+        await this.git.checkout('main')
         debug('Trying to remove upstream commits.')
+        await this.git.push([this.remote, this.branch, '--force'])
       } catch (error) {
         debug('Failed to remove upstream commits: ', error)
-        throw new GitPullError()
+        throw new GitPullError('Failed to remove upstream commits!')
       }
       debug('Removed upstream commits!')
     }
