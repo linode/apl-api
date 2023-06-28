@@ -288,14 +288,20 @@ export class Repo {
       await this.initSops()
       if (!skipRequest) await this.requestInitValues()
     } catch (e) {
-      const err = 'Could not pull from remote. Upstream commits? Marked db as corrupt.'
-      debug(err, e)
+      debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', e)
       this.corrupt = true
       if (!skipMsg) {
         const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'conflict' }
         getIo().emit('db', msg)
       }
-      throw new GitPullError(err)
+      try {
+        await this.git.push(['origin', 'HEAD', '--force'])
+        debug('Trying to remove upstream commits.')
+      } catch (error) {
+        debug('Failed to remove upstream commits: ', error)
+        throw new GitPullError()
+      }
+      debug('Removed upstream commits!')
     }
   }
 
