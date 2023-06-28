@@ -33,6 +33,10 @@ License:
         envType:
           type: string
           description: string that is either dev | prod | local to see with which Otomi cloud environment Otomi Api should connect
+          enum:
+            - dev
+            - prod
+            - local
         type:
           type: string
           enum:
