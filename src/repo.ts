@@ -306,8 +306,6 @@ export class Repo {
         await this.git.fetch(this.remote, this.branch)
         debug('Reconciling divergent branches.')
         await this.git.merge([`${this.remote}/${this.branch}`, '--strategy-option=theirs'])
-        debug('Get latest branch from: ', this.branch)
-        await this.git.pull(this.branch)
         debug('Trying to remove upstream commits: ', this.remote)
         await this.git.push([this.remote, this.branch, '--force'])
       } catch (error) {
