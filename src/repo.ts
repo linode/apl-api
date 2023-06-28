@@ -6,8 +6,8 @@ import { unlink } from 'fs/promises'
 import stringifyJson from 'json-stable-stringify'
 import { cloneDeep, get, isEmpty, merge, set, unset } from 'lodash'
 import { dirname, join } from 'path'
-import simpleGit, { CheckRepoActions, CommitResult, SimpleGit } from 'simple-git'
-import { cleanEnv, GIT_BRANCH, GIT_LOCAL_PATH, GIT_REPO_URL, TOOLS_HOST } from 'src/validators'
+import simpleGit, { CheckRepoActions, CommitResult, ResetMode, SimpleGit } from 'simple-git'
+import { GIT_BRANCH, GIT_LOCAL_PATH, GIT_REPO_URL, TOOLS_HOST, cleanEnv } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { GitPullError, HttpError, ValidationError } from './error'
 import { DbMessage, getIo } from './middleware'
@@ -254,6 +254,8 @@ export class Repo {
       await this.git.checkout(this.branch)
     } else if (this.url) {
       debug('Repo already exists. Checking out correct branch.')
+      // Remove local changes so that no conflict can happen
+      await this.git.reset(ResetMode.HARD)
       // Git fetch ensures that local git repository is synced with remote repository
       await this.git.fetch({})
       await this.git.checkout(this.branch)
