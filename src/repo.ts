@@ -6,7 +6,7 @@ import { unlink } from 'fs/promises'
 import stringifyJson from 'json-stable-stringify'
 import { cloneDeep, get, isEmpty, merge, set, unset } from 'lodash'
 import { dirname, join } from 'path'
-import simpleGit, { CheckRepoActions, CommitResult, ResetMode, SimpleGit } from 'simple-git'
+import simpleGit, { CheckRepoActions, CleanOptions, CommitResult, ResetMode, SimpleGit } from 'simple-git'
 import { GIT_BRANCH, GIT_LOCAL_PATH, GIT_REPO_URL, TOOLS_HOST, cleanEnv } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { GitPullError, HttpError, ValidationError } from './error'
@@ -294,10 +294,14 @@ export class Repo {
       }
       try {
         // Remove local changes so that no conflict can happen
+        debug('Removing local changes.')
+        await this.git.reset(ResetMode.HARD)
         debug(`Go to ${this.branch} branch`)
         await this.git.checkout(this.branch)
         debug('Removing local changes.')
         await this.git.reset(ResetMode.HARD)
+        debug('Clean local')
+        await this.git.clean(CleanOptions.FORCE, ['-d'])
         debug('Get latest branch from: ', this.branch)
         await this.git.pull(this.branch)
         debug('Trying to remove upstream commits: ', this.remote)
