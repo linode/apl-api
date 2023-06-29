@@ -300,7 +300,7 @@ export class Repo {
         await this.git.checkout(this.branch)
         debug('Removing local changes.')
         await this.git.reset(ResetMode.HARD)
-        debug('Clean local')
+        debug('Cleaning local values and directories.')
         await this.git.clean(CleanOptions.FORCE, ['-d'])
         debug('Get the latest branch from:', this.remote)
         await this.git.fetch(this.remote, this.branch)
@@ -313,6 +313,8 @@ export class Repo {
         throw new GitPullError('Failed to remove upstream commits!')
       }
       debug('Removed upstream commits!')
+      const cleanMsg: DbMessage = { editor: 'system', state: 'clean', reason: 'restored' }
+      getIo().emit('db', cleanMsg)
       this.corrupt = false
     }
   }
