@@ -100,6 +100,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
       res.send('ok')
     })
   }
+  // Transforms the interval to minutes
   const gitCheckVersionInterval = env.CHECK_LATEST_COMMIT_INTERVAL * 60 * 1000
   setInterval(async function () {
     await checkAgainstGitea()
