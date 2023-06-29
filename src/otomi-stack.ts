@@ -3,8 +3,8 @@ import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
-import { emptyDir } from 'fs-extra'
-import { readFile } from 'fs/promises'
+import { emptyDir, pathExists, unlink } from 'fs-extra'
+import { readFile, readdir, writeFile } from 'fs/promises'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { cloneDeep, each, filter, get, isArray, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
@@ -17,6 +17,7 @@ import {
   App,
   Backup,
   Build,
+  Cloudtty,
   Core,
   K8sService,
   License,
@@ -49,6 +50,7 @@ import {
   cleanEnv,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
+import { apply, checkPodExists, k8sdelete, watchPodUntilRunning } from './k8s_operations'
 import connect from './otomiCloud/connect'
 
 const debug = Debug('otomi:otomi-stack')
@@ -647,6 +649,67 @@ export default class OtomiStack {
       }
     })
     return this.db.deleteItem('builds', { id })
+  }
+
+  async connectCloudtty(data: Cloudtty): Promise<Cloudtty | any> {
+    const variables = {
+      FQDN: data.domain,
+      EMAIL: data.emailNoSymbols,
+    }
+    const { userTeams } = data
+
+    // if cloudtty does not exists then check if the pod is running and return it
+    if (await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`))
+      return { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}` }
+
+    if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
+
+    //if user is admin then read the manifests from ./dist/src/ttyManifests/adminTtyManifests
+    const files = data.isAdmin
+      ? await readdir('./dist/src/ttyManifests/adminTtyManifests', 'utf-8')
+      : await readdir('./dist/src/ttyManifests', 'utf-8')
+    const filteredFiles = files.filter((file) => file.startsWith('tty'))
+    const variableKeys = Object.keys(variables)
+
+    const podContentAddTargetTeam = (fileContent) => {
+      const regex = new RegExp(`\\$TARGET_TEAM`, 'g')
+      return fileContent.replace(regex, data.teamId)
+    }
+
+    // iterates over the rolebinding file and replace the $TARGET_TEAM with the team name for teams
+    const rolebindingContentsForUsers = (fileContent) => {
+      const rolebindingArray: string[] = []
+      userTeams?.forEach((team: string) => {
+        const regex = new RegExp(`\\$TARGET_TEAM`, 'g')
+        const rolebindingForTeam: string = fileContent.replace(regex, team)
+        rolebindingArray.push(rolebindingForTeam)
+      })
+      return rolebindingArray.join('\n')
+    }
+
+    const fileContents = await Promise.all(
+      filteredFiles.map(async (file) => {
+        let fileContent = data.isAdmin
+          ? await readFile(`./dist/src/ttyManifests/adminTtyManifests/${file}`, 'utf-8')
+          : await readFile(`./dist/src/ttyManifests/${file}`, 'utf-8')
+        variableKeys.forEach((key) => {
+          const regex = new RegExp(`\\$${key}`, 'g')
+          fileContent = fileContent.replace(regex, variables[key])
+        })
+        if (file === 'tty_02_Pod.yaml') fileContent = podContentAddTargetTeam(fileContent)
+        if (!data.isAdmin && file === 'tty_03_Rolebinding.yaml') fileContent = rolebindingContentsForUsers(fileContent)
+        return fileContent
+      }),
+    )
+    await writeFile('/tmp/ttyd.yaml', fileContents, 'utf-8')
+    await apply('/tmp/ttyd.yaml')
+    await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}`)
+
+    return { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}` }
+  }
+
+  async deleteCloudtty(data: Cloudtty) {
+    if (await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`)) await k8sdelete(data)
   }
 
   getTeamWorkloads(teamId: string): Array<Workload> {

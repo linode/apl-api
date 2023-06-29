@@ -60,11 +60,11 @@ AppThanos:
             retentionResolution1h: 
               type: string
               default: 0s
-        ruler:
-          properties:
-            enabled:
-              type: boolean
-              default: false
+        # ruler:
+        #   properties:
+        #     enabled:
+        #       type: boolean
+        #       default: false
         objstore:
           additionalProperties: false
           type: object
@@ -83,6 +83,34 @@ AppThanos:
                       enum:
                         - minioLocal
                       default: minioLocal
+                - title: Azure Blob
+                  type: object
+                  x-hideTitle: true
+                  properties:
+                    azureBlob:
+                      type: object
+                      description: Azure Blob storage.
+                      title: Azure blob (container) storage
+                      properties:
+                        accountKey:
+                          type: string
+                          x-secret: ''
+                        accountName:
+                          type: string
+                        containerName:
+                          type: string
+                      required:
+                        - accountKey
+                        - accountName
+                        - containerName
+                    type:
+                      type: string
+                      enum:
+                        - azure
+                      default: azure
+                  required:
+                    - azure
+                    - type
                 - title: S3
                   type: object
                   x-hideTitle: true
@@ -147,13 +175,13 @@ AppThanos:
                 size: 
                   type: string
                   default: 8Gi
-            ruler:
-              description: Ruler
-              type: object
-              properties:
-                size: 
-                  type: string
-                  default: 8Gi
+            # ruler:
+            #   description: Ruler
+            #   type: object
+            #   properties:
+            #     size: 
+            #       type: string
+            #       default: 8Gi
         resources:
           additionalProperties: false
           type: object
@@ -333,28 +361,28 @@ AppThanos:
               required:
                 - limits
                 - requests
-            ruler:
-              description: Ruler
-              type: object
-              properties:
-                limits:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 500m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 512Mi
-                requests:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
-              required:
-                - limits
-                - requests
+            # ruler:
+            #   description: Ruler
+            #   type: object
+            #   properties:
+            #     limits:
+            #       type: object
+            #       properties:
+            #         cpu:
+            #           $ref: ../definitions.yaml#/quantityCpu
+            #           default: 500m
+            #         memory:
+            #           $ref: ../definitions.yaml#/quantityMem
+            #           default: 512Mi
+            #     requests:
+            #       type: object
+            #       properties:
+            #         cpu:
+            #           $ref: ../definitions.yaml#/quantityCpu
+            #           default: 100m
+            #         memory:
+            #           $ref: ../definitions.yaml#/quantityMem
+            #           default: 256Mi
+            #   required:
+            #     - limits
+            #     - requests
