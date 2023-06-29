@@ -10,19 +10,6 @@ alerts:
   additionalProperties: false
   type: object
   properties:
-    receivers:
-      description: Select notification channel(s) for receiving alerts. Select 'none' if no channel available.
-      items:
-        enum:
-          - slack
-          - msteams
-          - opsgenie
-          - email
-          - none
-        type: string
-      title: Notification receivers
-      type: array
-      uniqueItems: true
     repeatInterval:
       default: 3h
       description: Waiting time before sending a notification again after it was sent successfully for an alert.
@@ -33,6 +20,19 @@ alerts:
       description: Waiting time before sending a notification about new alerts that are added to a group of alerts.
       title: Group Interval
       type: string
+    receivers:
+      description: Select notification channel(s) for receiving alerts. Use 'none' if no channel available.
+      title: Notification receivers
+      type: array
+      items:
+        enum:
+          - slack
+          - msteams
+          - opsgenie
+          - email
+          - none
+        type: string
+      uniqueItems: true
     drone:
       description: Select default notification channels for Otomi deployments by Drone.
       items:
