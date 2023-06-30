@@ -12,7 +12,7 @@ import * as osPath from 'path'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
-import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
+import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
   Backup,
@@ -37,6 +37,7 @@ import {
 import getRepo, { Repo } from 'src/repo'
 import { arrayToObject, getServiceUrl, objectToArray, removeBlankAttributes } from 'src/utils'
 import {
+  cleanEnv,
   CUSTOM_ROOT_CA,
   EDITOR_INACTIVITY_TIMEOUT,
   GIT_BRANCH,
@@ -47,7 +48,6 @@ import {
   GIT_USER,
   TOOLS_HOST,
   VERSIONS,
-  cleanEnv,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { apply, checkPodExists, k8sdelete, watchPodUntilRunning } from './k8s_operations'
@@ -264,7 +264,8 @@ export default class OtomiStack {
     this.db.db.set('license', license).write()
     const clusterInfo = this.getSettings(['cluster'])
     const apiKey = license.body?.key as string
-    await connect(apiKey, clusterInfo)
+    const envType = license.body?.envType as string
+    await connect(apiKey, envType, clusterInfo)
     this.doDeployment()
     debug('License uploaded')
     return license
