@@ -6,8 +6,8 @@ import { unlink } from 'fs/promises'
 import stringifyJson from 'json-stable-stringify'
 import { cloneDeep, get, isEmpty, merge, set, unset } from 'lodash'
 import { dirname, join } from 'path'
-import simpleGit, { CheckRepoActions, CommitResult, SimpleGit } from 'simple-git'
-import { cleanEnv, GIT_BRANCH, GIT_LOCAL_PATH, GIT_REPO_URL, TOOLS_HOST } from 'src/validators'
+import simpleGit, { CheckRepoActions, CleanOptions, CommitResult, ResetMode, SimpleGit } from 'simple-git'
+import { GIT_BRANCH, GIT_LOCAL_PATH, GIT_REPO_URL, TOOLS_HOST, cleanEnv } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { GitPullError, HttpError, ValidationError } from './error'
 import { DbMessage, getIo } from './middleware'
@@ -286,14 +286,36 @@ export class Repo {
       await this.initSops()
       if (!skipRequest) await this.requestInitValues()
     } catch (e) {
-      const err = 'Could not pull from remote. Upstream commits? Marked db as corrupt.'
-      debug(err, e)
+      debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', e)
       this.corrupt = true
       if (!skipMsg) {
         const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'conflict' }
         getIo().emit('db', msg)
       }
-      throw new GitPullError(err)
+      try {
+        // Remove local changes so that no conflict can happen
+        debug('Removing local changes.')
+        await this.git.reset(ResetMode.HARD)
+        debug(`Go to ${this.branch} branch`)
+        await this.git.checkout(this.branch)
+        debug('Removing local changes.')
+        await this.git.reset(ResetMode.HARD)
+        debug('Cleaning local values and directories.')
+        await this.git.clean(CleanOptions.FORCE, ['-d'])
+        debug('Get the latest branch from:', this.remote)
+        await this.git.fetch(this.remote, this.branch)
+        debug('Reconciling divergent branches.')
+        await this.git.merge([`${this.remote}/${this.branch}`, '--strategy-option=theirs'])
+        debug('Trying to remove upstream commits: ', this.remote)
+        await this.git.push([this.remote, this.branch, '--force'])
+      } catch (error) {
+        debug('Failed to remove upstream commits: ', error)
+        throw new GitPullError('Failed to remove upstream commits!')
+      }
+      debug('Removed upstream commits!')
+      const cleanMsg: DbMessage = { editor: 'system', state: 'clean', reason: 'restored' }
+      getIo().emit('db', cleanMsg)
+      this.corrupt = false
     }
   }
 
