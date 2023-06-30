@@ -26,11 +26,15 @@ import { setMockIdx } from 'src/mocks'
 import { OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
-import { cleanEnv, DRONE_WEBHOOK_SECRET } from 'src/validators'
+import { CHECK_LATEST_COMMIT_INTERVAL, DRONE_WEBHOOK_SECRET, GIT_PASSWORD, GIT_USER, cleanEnv } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
+import giteaCheckLatest from './gitea/connect'
 
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
+  CHECK_LATEST_COMMIT_INTERVAL,
+  GIT_USER,
+  GIT_PASSWORD,
 })
 
 const debug = Debug('otomi:app')
@@ -39,6 +43,20 @@ debug('NODE_ENV: ', process.env.NODE_ENV)
 type OtomiSpec = {
   spec: OpenAPIDoc
   secretPaths: string[]
+}
+
+// get the latest commit from Gitea and checks it against the local values
+const checkAgainstGitea = async () => {
+  const encodedToken = Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')
+  const otomiStack = await getSessionStack()
+  const clusterInfo = otomiStack?.getSettings(['cluster'])
+  const latestOtomiVersion = await giteaCheckLatest(encodedToken, clusterInfo)
+  // check the local version against the latest online version
+  // if the latest online is newer it will be pulled locally
+  if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== otomiStack.repo.commitSha) {
+    debug('Local values differentiate from Git repository, retrieving latest values')
+    await otomiStack.repo.pull()
+  }
 }
 
 let otomiSpec: OtomiSpec
@@ -82,6 +100,11 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
       res.send('ok')
     })
   }
+  // Transforms the interval to minutes
+  const gitCheckVersionInterval = env.CHECK_LATEST_COMMIT_INTERVAL * 60 * 1000
+  setInterval(async function () {
+    await checkAgainstGitea()
+  }, gitCheckVersionInterval)
   app.all('/drone', async (req, res, next) => {
     const parsed = httpSignature.parseRequest(req, {
       algorithm: 'hmac-sha256',
