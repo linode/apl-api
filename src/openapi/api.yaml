@@ -581,6 +581,41 @@ paths:
               schema:
                 $ref: '#/components/schemas/Build'
 
+  '/cloudtty':
+    post:
+      operationId: connectCloudtty
+      description: Create a cloudtty url
+      x-aclSchema: Cloudtty
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cloudtty'
+        description: Cloudtty object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored cloudtty configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cloudtty'
+    delete:
+      operationId: deleteCloudtty
+      description: Delete cloudtty url
+      x-aclSchema: Cloudtty
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cloudtty'
+        description: Cloudtty object
+        required: true
+      responses:
+        '200':
+          description: Successfully removed cloudtty url
+
   '/projects':
     get:
       operationId: getAllProjects
@@ -1188,6 +1223,8 @@ components:
       $ref: backup.yaml#/Backup
     Build:
       $ref: build.yaml#/Build
+    Cloudtty:
+      $ref: cloudtty.yaml#/Cloudtty
     Cluster:
       $ref: cluster.yaml#/Cluster
     Deploy:

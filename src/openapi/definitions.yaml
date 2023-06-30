@@ -12,25 +12,26 @@ alerts:
   properties:
     repeatInterval:
       default: 3h
-      description: Indicates waiting time before sending a notification again after it was sent successfully for an alert. (Usually ~3h or more).
+      description: Waiting time before sending a notification again after it was sent successfully for an alert.
       title: Repeat Interval
       type: string
     groupInterval:
       default: 5m
-      description: How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.)
+      description: Waiting time before sending a notification about new alerts that are added to a group of alerts.
       title: Group Interval
       type: string
     receivers:
-      description: Select default notification channel(s) for receiving alerts.
+      description: Select notification channel(s) for receiving alerts. Use 'none' if no channel available.
+      title: Notification receivers
+      type: array
       items:
         enum:
           - slack
           - msteams
           - opsgenie
           - email
+          - none
         type: string
-      title: Notification receivers
-      type: array
       uniqueItems: true
     drone:
       description: Select default notification channels for Otomi deployments by Drone.
