@@ -1,0 +1,37 @@
+Cloudtty:
+  x-acl:
+    admin:
+      - delete-any
+      - read-any
+      - create-any
+      - update-any
+    team:
+      - delete-any
+      - read-any
+      - create-any
+      - update-any
+  type: object
+  x-externalDocsPath: docs/for-devs/console/cloudtty
+  properties:
+    id:
+      type: string
+    teamId:
+      $ref: 'definitions.yaml#/idName'
+    domain:
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+    emailNoSymbols:
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+    iFrameUrl:
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+    isAdmin:
+      type: boolean
+      default: false
+    userTeams:
+      type: array
+      items:
+        type: string
+  required:
+    - teamId
+    - domain
+    - emailNoSymbols
+    - isAdmin
