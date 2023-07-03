@@ -229,6 +229,12 @@ Settings:
             admin: [read-any]
             team: []
           # readOnly: true
+        showPassword:
+          type: boolean
+          default: false
+          x-acl:
+            admin: [read-any, update-any]
+            team: []
         additionalClusters:
           title: Additional clusters
           description: Enter other k8s clusters, if there are any.
@@ -258,6 +264,7 @@ Settings:
             password:
               type: string
               x-secret: true
+              x-formtype: password
               x-acl:
                 admin: [read-any, update-any]
                 team: []
@@ -270,6 +277,12 @@ Settings:
             server:
               type: string
               x-default: docker.io
+            showPassword:
+              type: boolean
+              default: false
+              x-acl:
+                admin: [read-any, update-any]
+                team: []
           # disabling required fields until rjsf solves this nested required bug:
           # required:
           #   - username

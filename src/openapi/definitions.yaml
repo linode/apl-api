@@ -3,6 +3,7 @@ adminPassword:
   title: Admin password
   description: Uses `otomi.adminPassword` when left empty.
   x-secret: true
+  x-formtype: password
   x-acl:
     admin: [read-any, update-any]
     team: []
