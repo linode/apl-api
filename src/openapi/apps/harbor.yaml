@@ -152,18 +152,6 @@ AppHarbor:
                   required:
                     - gcs
                     - type
-        backup:
-          title: Backup Registry database
-          description: Enabeling the registry backup will create a backup of the Harbor Registry database and store it in the Minio harbor bucket.
-          type: object
-          properties:
-            enabled:
-              type: boolean
-              default: false
-            schedule:
-              default: 0 0 * * *
-              description: Cron-type expression to schedule the backup. Defaults to once a day at 00:00.
-              type: string
         registry:
           type: object
           properties:
