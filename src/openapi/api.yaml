@@ -1163,6 +1163,8 @@ components:
       $ref: apps/argocd.yaml#/AppArgocd
     AppCertManager:
       $ref: apps/cert-manager.yaml#/AppCertManager
+    AppCnpg:
+      $ref: apps/cnpg.yaml#/AppCnpg
     AppDrone:
       $ref: apps/drone.yaml#/AppDrone
     AppExternalDns:
