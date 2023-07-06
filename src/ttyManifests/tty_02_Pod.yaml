@@ -15,7 +15,7 @@ spec:
       configMap:
         name: kconfig-team-$TARGET_TEAM
   containers:
-    - image: otomi/tty:0.1.5 # TODO: Update after otomi-core changes are approved 
+    - image: otomi/tty:1.0.0
       name: po
       resources:
         requests:
