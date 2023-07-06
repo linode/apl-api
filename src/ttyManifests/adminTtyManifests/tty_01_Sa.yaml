@@ -3,5 +3,13 @@ kind: ServiceAccount
 metadata:
   name: tty-$EMAIL
   namespace: team-admin
+secrets:
+  - name: tty-$EMAIL
 ---
-
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tty-$EMAIL
+  annotations:
+    kubernetes.io/service-account.name: tty-$EMAIL
+type: kubernetes.io/service-account-token
