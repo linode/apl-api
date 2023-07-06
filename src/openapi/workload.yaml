@@ -148,7 +148,7 @@ WorkloadValues:
           items:
             type: string
         podSecurityContext:
-          title: Container Security Context
+          title: Pod Security Context
           properties:
             runAsUser:
               $ref: 'definitions.yaml#/runAsUser'
