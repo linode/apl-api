@@ -17,7 +17,7 @@ AppHarbor:
         $ref: ../definitions.yaml#/shortcut
     values:
       x-externalDocsPath: docs/apps/harbor
-      additionalProperties: false
+      additionalProperties: true
       type: object
       properties:
         adminPassword:
