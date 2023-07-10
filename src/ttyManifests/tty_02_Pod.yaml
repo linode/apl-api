@@ -15,7 +15,7 @@ spec:
       configMap:
         name: kconfig-team-$TARGET_TEAM
   containers:
-    - image: otomi/tty:0.1.5
+    - image: otomi/tty:1.0.0
       name: po
       resources:
         requests:
@@ -28,8 +28,8 @@ spec:
         - name: kconfig
           mountPath: /etc/kconfig
       command:
-        - sh
+        - bash
         - -c
-        - ash /etc/kconfig/kconfig.sh && ttyd -w /home/user -p 8080 ash -l
+        - bash /etc/kconfig/kconfig.sh && ttyd -w /home/user -p 8080 tmux new -A
 ---
 
