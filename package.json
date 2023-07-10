@@ -167,7 +167,7 @@
       "tag": true
     }
   },
-  "version": "0.9.0",
+  "version": "0.9.1",
   "watch": {
     "build:models": {
       "patterns": [

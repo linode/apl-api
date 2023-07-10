@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.1](https://github.com/redkubes/otomi-api/compare/v0.9.0...v0.9.1) (2023-07-10)
+
+
+### Features
+
+* updated tty image ([#427](https://github.com/redkubes/otomi-api/issues/427)) ([86d253c](https://github.com/redkubes/otomi-api/commit/86d253c375a74c79306e8b3c854a6ea4872c22e5))
+
+
+### Bug Fixes
+
+* more permissive schema to accomodate harbor internal flags ([#431](https://github.com/redkubes/otomi-api/issues/431)) ([19d2d07](https://github.com/redkubes/otomi-api/commit/19d2d0735019e1d284cd5d155cbc7bde9e227a82))
+* update workload values field ([#429](https://github.com/redkubes/otomi-api/issues/429)) ([b8ba2cf](https://github.com/redkubes/otomi-api/commit/b8ba2cfe42a02900fc8354a11237f90044b1a813))
+* updated admin serviceaccount ([#432](https://github.com/redkubes/otomi-api/issues/432)) ([2dcdce8](https://github.com/redkubes/otomi-api/commit/2dcdce8aa7487a09f49ca88644b16fada3a3a8c3))
+
 ## [0.9.0](https://github.com/redkubes/otomi-api/compare/v0.6.0...v0.9.0) (2023-07-04)
 
 
