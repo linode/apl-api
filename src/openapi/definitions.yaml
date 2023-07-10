@@ -739,6 +739,7 @@ k8sVersion:
   enum:
     - '1.23'
     - '1.24'
+    - '1.25'
   type: string
 kms:
   additionalProperties: false
