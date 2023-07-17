@@ -15,7 +15,9 @@ import logger from 'morgan'
 import path from 'path'
 import { default as Authz } from 'src/authz'
 import {
+  DbMessage,
   authzMiddleware,
+  cleanSession,
   errorMiddleware,
   getIo,
   getSessionStack,
@@ -56,6 +58,12 @@ const checkAgainstGitea = async () => {
   if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== otomiStack.repo.commitSha) {
     debug('Local values differentiate from Git repository, retrieving latest values')
     await otomiStack.repo.pull()
+    await otomiStack.loadValues()
+    // and remove editor from the session
+    await cleanSession(otomiStack.editor!, false)
+    const sha = await otomiStack.repo.getCommitSha()
+    const msg: DbMessage = { state: 'clean', editor: otomiStack.editor!, sha, reason: 'conflict' }
+    getIo().emit('db', msg)
   }
 }
 
