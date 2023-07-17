@@ -62,7 +62,7 @@ const checkAgainstGitea = async () => {
     // and remove editor from the session
     await cleanSession(otomiStack.editor!, false)
     const sha = await otomiStack.repo.getCommitSha()
-    const msg: DbMessage = { state: 'clean', editor: otomiStack.editor!, sha, reason: 'conflict' }
+    const msg: DbMessage = { state: 'clean', editor: 'system', sha, reason: 'conflict' }
     getIo().emit('db', msg)
   }
 }
