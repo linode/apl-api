@@ -17,7 +17,6 @@ import { default as Authz } from 'src/authz'
 import {
   DbMessage,
   authzMiddleware,
-  cleanSession,
   errorMiddleware,
   getIo,
   getSessionStack,
@@ -28,14 +27,7 @@ import { setMockIdx } from 'src/mocks'
 import { OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
-import {
-  CHECK_LATEST_COMMIT_INTERVAL,
-  DRONE_WEBHOOK_SECRET,
-  GIT_EMAIL,
-  GIT_PASSWORD,
-  GIT_USER,
-  cleanEnv,
-} from 'src/validators'
+import { CHECK_LATEST_COMMIT_INTERVAL, DRONE_WEBHOOK_SECRET, GIT_PASSWORD, GIT_USER, cleanEnv } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
 import Db from './db'
 import giteaCheckLatest from './gitea/connect'
@@ -45,7 +37,6 @@ const env = cleanEnv({
   CHECK_LATEST_COMMIT_INTERVAL,
   GIT_USER,
   GIT_PASSWORD,
-  GIT_EMAIL,
 })
 
 const debug = Debug('otomi:app')
@@ -72,9 +63,6 @@ const checkAgainstGitea = async () => {
     debug('Check 1')
     await otomiStack.loadValues()
     debug('Check 2')
-    // and remove editor from the session
-    if (otomiStack.editor) await cleanSession(otomiStack.editor, false)
-    else await cleanSession(env.GIT_EMAIL, false)
     debug('Check 3')
     const sha = await otomiStack.repo.getCommitSha()
     debug('Check 4')
