@@ -30,6 +30,7 @@ import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
 import { CHECK_LATEST_COMMIT_INTERVAL, DRONE_WEBHOOK_SECRET, GIT_PASSWORD, GIT_USER, cleanEnv } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
+import Db from './db'
 import giteaCheckLatest from './gitea/connect'
 
 const env = cleanEnv({
@@ -58,12 +59,15 @@ const checkAgainstGitea = async () => {
   if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== otomiStack.repo.commitSha) {
     debug('Local values differentiate from Git repository, retrieving latest values')
     await otomiStack.repo.pull()
+    // inflate new db
+    otomiStack.db = new Db()
     await otomiStack.loadValues()
     // and remove editor from the session
     await cleanSession(otomiStack.editor!, false)
     const sha = await otomiStack.repo.getCommitSha()
     const msg: DbMessage = { state: 'clean', editor: 'system', sha, reason: 'conflict' }
     getIo().emit('db', msg)
+    otomiStack.locked = false
   }
 }
 
