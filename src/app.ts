@@ -60,18 +60,11 @@ const checkAgainstGitea = async () => {
     await otomiStack.repo.pull()
     // inflate new db
     otomiStack.db = new Db()
-    debug('Check 1')
     await otomiStack.loadValues()
-    debug('Check 2')
-    debug('Check 3')
     const sha = await otomiStack.repo.getCommitSha()
-    debug('Check 4')
     const msg: DbMessage = { state: 'clean', editor: 'system', sha, reason: 'conflict' }
-    debug('Check 5')
     getIo().emit('db', msg)
-    debug('Check 6')
     otomiStack.locked = false
-    debug('Check 7')
   }
 }
 
