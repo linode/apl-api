@@ -12,3 +12,4 @@ spec:
     - when:
         - key: request.auth.claims[sub]
           values: ['$SUB']
+---
