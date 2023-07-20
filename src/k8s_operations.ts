@@ -102,6 +102,20 @@ export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty
   const resourceName = emailNoSymbols
   const namespace = 'team-admin'
   try {
+    const apiVersion = 'v1beta1'
+    const apiGroupAuthz = 'security.istio.io'
+    const apiGroupVS = 'networking.istio.io'
+    const pluralAuth = 'authorizationpolicies'
+    const pluralVS = 'virtualservices'
+
+    await customObjectsApi.deleteNamespacedCustomObject(
+      apiGroupAuthz,
+      apiVersion,
+      namespace,
+      pluralAuth,
+      `tty-${resourceName}`,
+    )
+
     await k8sApi.deleteNamespacedServiceAccount(`tty-${resourceName}`, namespace)
     await k8sApi.deleteNamespacedPod(`tty-${resourceName}`, namespace)
     if (!isAdmin) {
@@ -109,10 +123,14 @@ export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty
         await rbacAuthorizationV1Api.deleteNamespacedRoleBinding(`tty-${team}-rolebinding`, team)
     } else await rbacAuthorizationV1Api.deleteClusterRoleBinding('tty-admin-rolebinding')
     await k8sApi.deleteNamespacedService(`tty-${resourceName}`, namespace)
-    const apiGroup = 'networking.istio.io'
-    const apiVersion = 'v1beta1'
-    const plural = 'virtualservices'
-    await customObjectsApi.deleteNamespacedCustomObject(apiGroup, apiVersion, namespace, plural, `tty-${resourceName}`)
+
+    await customObjectsApi.deleteNamespacedCustomObject(
+      apiGroupVS,
+      apiVersion,
+      namespace,
+      pluralVS,
+      `tty-${resourceName}`,
+    )
   } catch (error) {
     debug('k8sdelete error:', error)
   }
