@@ -30,6 +30,8 @@ Cloudtty:
       type: array
       items:
         type: string
+    sub:
+      $ref: 'definitions.yaml#/wordCharacterPattern'
   required:
     - teamId
     - domain
