@@ -1,9 +1,9 @@
 import axios from 'axios'
 
-export default async function connect(apikey: string, clusterData: any): Promise<string | void> {
+export default async function connect(apikey: string, envType: string, clusterData: any): Promise<string | void> {
   const { name, provider, domainSuffix } = clusterData.cluster
   await axios({
-    url: 'https://portal.otomi.cloud/api/graphql',
+    url: envType === 'dev' ? 'https://dev.portal.otomi.cloud/api/graphql' : 'https://portal.otomi.cloud/api/graphql',
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
