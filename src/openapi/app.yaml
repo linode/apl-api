@@ -32,6 +32,7 @@ AppList:
     - prometheus
     - thanos
     - tempo
+    - otel
     - trivy
     - vault
     - velero

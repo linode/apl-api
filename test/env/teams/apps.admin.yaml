@@ -32,3 +32,4 @@ teamConfig:
             falco: {}
             trivy: {}
             tempo: {}
+            otel: {}

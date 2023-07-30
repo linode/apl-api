@@ -1215,6 +1215,8 @@ components:
       $ref: apps/thanos.yaml#/AppThanos
     AppTrivy:
       $ref: apps/trivy.yaml#/AppTrivy
+    AppOtel:
+      $ref: apps/otel.yaml#/AppOtel
     AppVault:
       $ref: apps/vault.yaml#/AppVault
     AppVelero:

@@ -2950,6 +2950,12 @@ properties:
                 size:
                   $ref: '#/definitions/size'
                   default: 8Gi
+      otel:
+        additionalProperties: false
+        properties:
+          enabled:
+            type: boolean
+            default: false    
       trivy:
         properties:
           _rawValues:
