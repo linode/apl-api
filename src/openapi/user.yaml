@@ -50,6 +50,9 @@ User:
         type: string
       # readOnly: true
       uniqueItems: true
+    sub:
+      type: string
+      description: A user subject
   required:
     - authz
     - isAdmin
