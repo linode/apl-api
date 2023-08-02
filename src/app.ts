@@ -68,6 +68,34 @@ const checkAgainstGitea = async () => {
   }
 }
 
+const uploadOtomiMetrics = async () => {
+  const otomiStack = await getSessionStack()
+  const license = otomiStack.getLicense()
+  if (license && license.isValid) {
+    console.log('License is Valid')
+    const cluster = otomiStack.getSettings(['cluster']) as Record<string, any>
+    const otomiVersion = otomiStack.getCore()
+    const nodesData = await otomiStack.loadSettings()
+    const metrics = otomiStack.getMetrics()
+    const licenseMetaData = {
+      teams: metrics.otomi_teams,
+      services: metrics.otomi_services,
+      workloads: metrics.otomi_workloads,
+    }
+    const otomiMetrics = {
+      k8sVersion: cluster.cluster.k8sVersion,
+      otomiVersion: otomiVersion.version,
+      nodes: nodesData,
+      licenseData: licenseMetaData,
+    }
+    console.log('K8sVersion:', cluster.cluster.k8sVersion)
+    console.log('OtomiVersion:', otomiVersion.version)
+    console.log('Nodes:', nodesData)
+    console.log('License MetaData:', licenseMetaData)
+    console.log('OtomiMetrics:', otomiMetrics)
+  }
+}
+
 let otomiSpec: OtomiSpec
 export const loadSpec = async (): Promise<void> => {
   const openApiPath = path.resolve(__dirname, 'generated-schema.json')
@@ -114,6 +142,9 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   setInterval(async function () {
     await checkAgainstGitea()
   }, gitCheckVersionInterval)
+  setInterval(async function () {
+    await uploadOtomiMetrics()
+  }, 60000)
   app.all('/drone', async (req, res, next) => {
     const parsed = httpSignature.parseRequest(req, {
       algorithm: 'hmac-sha256',
