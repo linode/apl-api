@@ -38,19 +38,19 @@ tempoValues:
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  default: 200m
+                  default: 500m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  default: 256Mi
+                  default: 1Gi
             requests:
               type: object
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  default: 50m
+                  default: 100m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  default: 128Mi
+                  default: 256Mi
           required:
             - limits
             - requests
@@ -61,19 +61,19 @@ tempoValues:
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  default: 200m
+                  default: 500m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  default: 256Mi
+                  default: 1Gi
             requests:
               type: object
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  default: 50m
+                  default: 100m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  default: 128Mi
+                  default: 256Mi
           required:
             - limits
             - requests
