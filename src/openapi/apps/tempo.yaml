@@ -19,8 +19,6 @@ tempoValues:
       type: object
       additionalProperties: false
       properties:
-        ingester:
-          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets
         querier:
           $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets
         distributor:
