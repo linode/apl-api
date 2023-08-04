@@ -20,11 +20,11 @@ tempoValues:
       additionalProperties: false
       properties:
         querier:
-          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets
+          $ref: ../definitions.yaml#/autoscalingNonEssentialDisabledTargets
         distributor:
-          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets
+          $ref: ../definitions.yaml#/autoscalingNonEssentialDisabledTargets
         queryFrontend:
-          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets 
+          $ref: ../definitions.yaml#/autoscalingNonEssentialDisabledTargets 
     resources:
       additionalProperties: false
       type: object
