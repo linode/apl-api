@@ -15,55 +15,55 @@ AppOtel:
       nullable: true
       items:
         $ref: ../definitions.yaml#/shortcut
-    values:
-      x-externalDocsPath: docs/apps/thanos
-      type: object
-      properties:
-        mode:
-          title: Deployment mode
-          description: Mode to run Otel Collector in.
-          type: string
-          default: deployment
-          enum:
-            - deployment
-            - daemonset
-            - statefulset
-        presets:
-          title: Presets
-          description: Configuration of components that also require k8s modifications to work correctly.
-          properties:
-            kubernetesAttributes:
-              title: Kubernetes Attributes
-              type: boolean
-              description: Configures the Kubernetes Processor to add Kubernetes metadata.
-              default: false
-        resources:
-          additionalProperties: false
-          type: object
-          properties:
-            collector:
-              title: Collector
-              type: object
-              properties:
-                limits:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 200m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 512Mi
-                requests:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 50m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 16Mi
-              required:
-                - limits
-                - requests
+    # values:
+    #   x-externalDocsPath: docs/apps/thanos
+    #   type: object
+    #   properties:
+    #     mode:
+    #       title: Deployment mode
+    #       description: Mode to run Otel Collector in.
+    #       type: string
+    #       default: deployment
+    #       enum:
+    #         - deployment
+    #         - daemonset
+    #         - statefulset
+    #     presets:
+    #       title: Presets
+    #       description: Configuration of components that also require k8s modifications to work correctly.
+    #       properties:
+    #         kubernetesAttributes:
+    #           title: Kubernetes Attributes
+    #           type: boolean
+    #           description: Configures the Kubernetes Processor to add Kubernetes metadata.
+    #           default: false
+    #     resources:
+    #       additionalProperties: false
+    #       type: object
+    #       properties:
+    #         collector:
+    #           title: Collector
+    #           type: object
+    #           properties:
+    #             limits:
+    #               type: object
+    #               properties:
+    #                 cpu:
+    #                   $ref: ../definitions.yaml#/quantityCpu
+    #                   default: 200m
+    #                 memory:
+    #                   $ref: ../definitions.yaml#/quantityMem
+    #                   default: 512Mi
+    #             requests:
+    #               type: object
+    #               properties:
+    #                 cpu:
+    #                   $ref: ../definitions.yaml#/quantityCpu
+    #                   default: 50m
+    #                 memory:
+    #                   $ref: ../definitions.yaml#/quantityMem
+    #                   default: 16Mi
+    #           required:
+    #             - limits
+    #             - requests
   required: [id]
