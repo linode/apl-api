@@ -220,6 +220,15 @@ autoscalingNonEssentialDisabledTargets:
           default: false
     - $ref: '#/autoscalingNonEssential'
     - $ref: '#/autoscalingTargets'
+autoscalingNonEssentialEnabledTargets:
+  type: object
+  allOf:
+    - properties:
+        enabled:
+          type: boolean
+          default: true
+    - $ref: '#/autoscalingNonEssential'
+    - $ref: '#/autoscalingTargets'
 autoscalingTargets:
   type: object
   properties:

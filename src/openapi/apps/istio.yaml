@@ -17,6 +17,8 @@ AppIstio:
       additionalProperties: false
       type: object
       properties:
+        tracing:
+          $ref: '#/istioTracingProviders'
         autoscaling:
           additionalProperties: false
           type: object
@@ -160,4 +162,55 @@ AppIstio:
               required:
                 - limits
                 - requests
+istioTracingProviders:
+  type: object
+  title: Tracing Providers
+  oneOf:
+    - title: Disabled
+      x-hideTitle: true
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - disabled
+          default: disabled
+    - title: Default Envoy
+      type: object
+      description: Use Envoy OpenTelemetry (gRPC) Access Logs.
+      x-hideTitle: true
+      properties:
+        defaultEnvoy:
+          type: object
+          properties:
+            randomSamplingPercentage:
+              type: string
+              default: 100
+        type:
+          type: string
+          enum:
+            - defaultEnvoy
+          default: defaultEnvoy
+      required:
+        - azure
+        - type
+    - title: OpenTelemetry
+      type: object
+      x-hideTitle: true
+      description: Use Istio with OpenTelemetry tracing backend.
+      properties:
+        openTelemetry:
+          type: object
+          properties:
+            randomSamplingPercentage:
+              type: string
+              default: 100
+        type:
+          type: string
+          enum:
+            - openTelemetry
+          default: openTelemetry
+      required:
+        - openTelemetry
+        - type
   required: [id]
