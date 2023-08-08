@@ -135,3 +135,19 @@ export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty
     debug('k8sdelete error:', error)
   }
 }
+
+export async function getNodes() {
+  const metricsDebug = Debug('otomi:api:k8sOperations')
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+
+  try {
+    const nodesResponse = await k8sApi.listNode()
+    const numberOfNodes = nodesResponse.body.items.length
+    return numberOfNodes
+  } catch (error) {
+    metricsDebug('k8sGetNodes error:', error)
+  }
+}

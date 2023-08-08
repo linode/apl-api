@@ -31,7 +31,7 @@ import { CHECK_LATEST_COMMIT_INTERVAL, DRONE_WEBHOOK_SECRET, GIT_PASSWORD, GIT_U
 import swaggerUi from 'swagger-ui-express'
 import Db from './db'
 import giteaCheckLatest from './gitea/connect'
-import uploadMetrics from './otomiCloud/upload-metrics'
+import { getNodes } from './k8s_operations'
 
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
@@ -73,22 +73,12 @@ const uploadOtomiMetrics = async () => {
   const otomiStack = await getSessionStack()
   const license = otomiStack.getLicense()
   if (license && license.isValid) {
-    const client = otomiStack.getApiClient()
-    let totalNodes = 0
-    let totalMachines = 0
-    client.listNode().then((node) => {
-      node.body.items.forEach((element) => {
-        totalNodes += parseInt(element.status?.capacity?.cpu as string)
-        totalMachines++
-      })
-    })
+    const totalNodes = await getNodes()
     const cluster = otomiStack.getSettings(['cluster']) as Record<string, any>
     const settings = otomiStack.getSettings()
-    const nodesData = totalMachines
     const metrics = otomiStack.getMetrics()
     const otomiMetrics = {
-      coreValue: totalNodes,
-      workerNodeCount: nodesData,
+      workerNodeCount: totalNodes,
       k8sVersion: cluster.cluster.k8sVersion,
       otomiVersion: settings.otomi!.version,
       teams: metrics.otomi_teams,
@@ -97,7 +87,8 @@ const uploadOtomiMetrics = async () => {
     }
     const apiKey = license.body?.key as string
     const envType = license.body?.envType as string
-    await uploadMetrics(apiKey, envType, otomiMetrics)
+    debug(otomiMetrics)
+    // await uploadMetrics(apiKey, envType, otomiMetrics)
   }
 }
 
@@ -149,7 +140,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   }, gitCheckVersionInterval)
   setInterval(async function () {
     await uploadOtomiMetrics()
-  }, 60000)
+  }, 1000)
   app.all('/drone', async (req, res, next) => {
     const parsed = httpSignature.parseRequest(req, {
       algorithm: 'hmac-sha256',
