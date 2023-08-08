@@ -38,18 +38,101 @@ lokiValues:
               type: string
     autoscaling:
       type: object
-      additionalProperties: false
       properties:
         ingester:
-          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            maxReplicas:
+              type: integer
+              default: 3
+            minReplicas:
+              type: integer
+              default: 1
+            targetCPUUtilizationPercentage:
+              type: integer
+              default: 80
+            targetMemoryUtilizationPercentage:
+              type: integer
+              default: 80
         gateway:
-          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets
+          additionalProperties: false
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            maxReplicas:
+              type: integer
+              default: 3
+            minReplicas:
+              type: integer
+              default: 1
+            targetCPUUtilizationPercentage:
+              type: integer
+              default: 80
+            targetMemoryUtilizationPercentage:
+              type: integer
+              default: 80
         querier:
-          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets
+          additionalProperties: false
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            maxReplicas:
+              type: integer
+              default: 3
+            minReplicas:
+              type: integer
+              default: 1
+            targetCPUUtilizationPercentage:
+              type: integer
+              default: 80
+            targetMemoryUtilizationPercentage:
+              type: integer
+              default: 80
         distributor:
-          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets
+          additionalProperties: false
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            maxReplicas:
+              type: integer
+              default: 3
+            minReplicas:
+              type: integer
+              default: 1
+            targetCPUUtilizationPercentage:
+              type: integer
+              default: 80
+            targetMemoryUtilizationPercentage:
+              type: integer
+              default: 80
         queryFrontend:
-          $ref: ../definitions.yaml#/autoscalingNonEssentialEnabledTargets 
+          additionalProperties: false
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: true
+            maxReplicas:
+              type: integer
+              default: 3
+            minReplicas:
+              type: integer
+              default: 1
+            targetCPUUtilizationPercentage:
+              type: integer
+              default: 80
+            targetMemoryUtilizationPercentage:
+              type: integer
+              default: 80
     resources:
       additionalProperties: false
       type: object

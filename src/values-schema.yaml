@@ -2157,6 +2157,15 @@ properties:
           enabled:
             default: true
             type: boolean
+          tracing:
+            description: Configure Istio for tracing. Requires Tempo, Grafana, Loki, Prometheus and Otel to be enabled.
+            propterties:
+            enabled:
+              default: false
+              type: boolean
+            randomSamplingPercentage:
+              type: string
+              default: "100"
           autoscaling:
             properties:
               egressgateway:

@@ -17,14 +17,61 @@ tempoValues:
               type: string
     autoscaling:
       type: object
-      additionalProperties: false
       properties:
         querier:
-          $ref: ../definitions.yaml#/autoscalingNonEssentialDisabledTargets
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            maxReplicas:
+              type: integer
+              default: 3
+            minReplicas:
+              type: integer
+              default: 1
+            targetCPUUtilizationPercentage:
+              type: integer
+              default: 80
+            targetMemoryUtilizationPercentage:
+              type: integer
+              default: 80
         distributor:
-          $ref: ../definitions.yaml#/autoscalingNonEssentialDisabledTargets
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            maxReplicas:
+              type: integer
+              default: 3
+            minReplicas:
+              type: integer
+              default: 1
+            targetCPUUtilizationPercentage:
+              type: integer
+              default: 80
+            targetMemoryUtilizationPercentage:
+              type: integer
+              default: 80
         queryFrontend:
-          $ref: ../definitions.yaml#/autoscalingNonEssentialDisabledTargets 
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            maxReplicas:
+              type: integer
+              default: 3
+            minReplicas:
+              type: integer
+              default: 1
+            targetCPUUtilizationPercentage:
+              type: integer
+              default: 80
+            targetMemoryUtilizationPercentage:
+              type: integer
+              default: 80 
     resources:
       additionalProperties: false
       type: object
