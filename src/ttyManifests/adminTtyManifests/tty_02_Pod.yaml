@@ -3,6 +3,7 @@ kind: Pod
 metadata:
   labels:
     app: tty-$EMAIL
+    otomi: tty
   name: tty-$EMAIL
   namespace: team-admin
 spec:

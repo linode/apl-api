@@ -45,6 +45,7 @@ export function jwtMiddleware(): RequestHandler {
           email: getMockEmail(),
           groups: getMockGroups(),
           roles: [],
+          sub: 'mock-sub-value',
         },
         otomi,
       )
@@ -54,8 +55,8 @@ export function jwtMiddleware(): RequestHandler {
       debug('anonymous request')
       return next()
     }
-    const { name, email, roles, groups } = jwtDecode(token)
-    req.user = getUser({ name, email, roles, groups }, otomi)
+    const { name, email, roles, groups, sub } = jwtDecode(token)
+    req.user = getUser({ name, email, roles, groups, sub }, otomi)
     return next()
   }
 }
