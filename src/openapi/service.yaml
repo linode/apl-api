@@ -84,6 +84,18 @@ Ingress:
       description: A managed DNS zone
       title: DNS Zone
       type: string
+      useCname:
+        description: Will configure additional host(CNAME) for the service.
+        type: boolean
+        default: false
+      cname:
+        properties:
+          domain:
+            description: CNAME of the service.
+            type: string
+          tlsSecretName:
+            description: Kubernets secret name of type TLS.
+            type: string
     paths:
       description: The paths in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
       title: URL paths
