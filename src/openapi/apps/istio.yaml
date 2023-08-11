@@ -18,14 +18,14 @@ AppIstio:
       type: object
       properties:
         tracing:
-          description: Enable Istio for tracing. Requires Otel Collector to be enabled.
+          description: Configure Istio for tracing. Requires Otel Collector to be enabled.
           properties:
             enabled:
               type: boolean
               default: false
-            randomSamplingPercentage:
+            samplingRatio:
               type: string
-              default: "100"
+              default: "0.01"
         autoscaling:
           additionalProperties: false
           type: object

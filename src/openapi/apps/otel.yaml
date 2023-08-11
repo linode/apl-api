@@ -17,8 +17,7 @@ AppOtel:
         collector:
           properties:
             mode:
-              title: Otel Collector deployment mode
-              description: Mode to run Otel Collector in.
+              description: Mode to run OTel Collector in.
               type: string
               default: deployment
               enum:
@@ -36,7 +35,6 @@ AppOtel:
           type: object
           properties:
             collector:
-              title: Collector
               type: object
               properties:
                 limits:
@@ -47,7 +45,7 @@ AppOtel:
                       default: 500m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 128Mi
+                      default: 512Mi
                 requests:
                   type: object
                   properties:
@@ -61,7 +59,6 @@ AppOtel:
                 - limits
                 - requests
             manager:
-              title: Manager
               type: object
               properties:
                 limits:
@@ -86,7 +83,6 @@ AppOtel:
                 - limits
                 - requests
             kubeRBACProxy:
-              title: Kube RBAC Proxy
               type: object
               properties:
                 limits:
