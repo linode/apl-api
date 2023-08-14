@@ -27,7 +27,14 @@ import { setMockIdx } from 'src/mocks'
 import { OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
-import { CHECK_LATEST_COMMIT_INTERVAL, DRONE_WEBHOOK_SECRET, GIT_PASSWORD, GIT_USER, cleanEnv } from 'src/validators'
+import {
+  CHECK_LATEST_COMMIT_INTERVAL,
+  DRONE_WEBHOOK_SECRET,
+  GIT_PASSWORD,
+  GIT_USER,
+  UPLOAD_METRICS_INTERVAL,
+  cleanEnv,
+} from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
 import Db from './db'
 import giteaCheckLatest from './gitea/connect'
@@ -36,6 +43,7 @@ import { getNodes } from './k8s_operations'
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
   CHECK_LATEST_COMMIT_INTERVAL,
+  UPLOAD_METRICS_INTERVAL,
   GIT_USER,
   GIT_PASSWORD,
 })
@@ -135,12 +143,13 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   }
   // Transforms the interval to minutes
   const gitCheckVersionInterval = env.CHECK_LATEST_COMMIT_INTERVAL * 60 * 1000
+  const gitUploadMetricsInterval = env.UPLOAD_METRICS_INTERVAL * 60 * 1000
   setInterval(async function () {
     await checkAgainstGitea()
   }, gitCheckVersionInterval)
   setInterval(async function () {
     await uploadOtomiMetrics()
-  }, 1000)
+  }, gitUploadMetricsInterval)
   app.all('/drone', async (req, res, next) => {
     const parsed = httpSignature.parseRequest(req, {
       algorithm: 'hmac-sha256',
