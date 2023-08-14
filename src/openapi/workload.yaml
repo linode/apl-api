@@ -35,6 +35,12 @@ Workload:
     namespace:
       description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'
       $ref: 'definitions.yaml#/domain'
+    autoUpdate:
+      type: boolean
+      default: false
+    buildName:
+      description: Build
+      type: string
     selectedChart:
       enum: ['deployment', 'ksvc', 'custom']
   required:
