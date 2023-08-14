@@ -39,6 +39,7 @@ import swaggerUi from 'swagger-ui-express'
 import Db from './db'
 import giteaCheckLatest from './gitea/connect'
 import { getNodes } from './k8s_operations'
+import uploadMetrics from './otomiCloud/upload-metrics'
 
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
@@ -95,8 +96,7 @@ const uploadOtomiMetrics = async () => {
     }
     const apiKey = license.body?.key as string
     const envType = license.body?.envType as string
-    debug(otomiMetrics)
-    // await uploadMetrics(apiKey, envType, otomiMetrics)
+    if (envType) await uploadMetrics(apiKey, envType, otomiMetrics)
   }
 }
 
