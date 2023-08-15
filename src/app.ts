@@ -80,27 +80,31 @@ const checkAgainstGitea = async () => {
 
 // collect and upload metrics to Otomi-Cloud
 const uploadOtomiMetrics = async () => {
-  const otomiStack = await getSessionStack()
-  const license = otomiStack.getLicense()
-  // if license is valid collect metrics and send them to Otomi-Cloud
-  if (license && license.isValid) {
-    const apiKey = license.body?.key as string
-    const envType = license.body?.envType as string
-    // if not local development get the total amount of nodes from the cluster otherwise return 0
-    const totalNodes = await getNodes(envType)
-    const cluster = otomiStack.getSettings(['cluster']) as Record<string, any>
-    const settings = otomiStack.getSettings()
-    const metrics = otomiStack.getMetrics()
-    const otomiMetrics = {
-      workerNodeCount: totalNodes,
-      k8sVersion: cluster.cluster.k8sVersion,
-      otomiVersion: settings.otomi!.version,
-      teams: metrics.otomi_teams,
-      services: metrics.otomi_services,
-      workloads: metrics.otomi_workloads,
+  try {
+    const otomiStack = await getSessionStack()
+    const license = otomiStack.getLicense()
+    // if license is valid collect metrics and send them to Otomi-Cloud
+    if (license && license.isValid) {
+      const apiKey = license.body?.key as string
+      const envType = license.body?.envType as string
+      // if not local development get the total amount of nodes from the cluster otherwise return 0
+      const totalNodes = await getNodes(envType)
+      const cluster = otomiStack.getSettings(['cluster']) as Record<string, any>
+      const settings = otomiStack.getSettings()
+      const metrics = otomiStack.getMetrics()
+      const otomiMetrics = {
+        workerNodeCount: totalNodes,
+        k8sVersion: cluster.cluster.k8sVersion,
+        otomiVersion: settings.otomi!.version,
+        teams: metrics.otomi_teams,
+        services: metrics.otomi_services,
+        workloads: metrics.otomi_workloads,
+      }
+      // if not local development upload to the corresponding Otomi-Cloud server
+      if (envType) await uploadMetrics(apiKey, envType, otomiMetrics)
     }
-    // if not local development upload to the corresponding Otomi-Cloud server
-    if (envType) await uploadMetrics(apiKey, envType, otomiMetrics)
+  } catch (error) {
+    debug('Could not collect metrics for Otomi-Cloud: ', error)
   }
 }
 

@@ -38,6 +38,7 @@ export default async function uploadMetrics(apikey: string, envType: string, met
     `,
     },
   }).catch((error) => {
+    debug('Could not upload to Otomi-Cloud')
     debug('Otomi cloud error: ', error.message)
   })
   if (response) debug('Metrics send succesfully')
