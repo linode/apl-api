@@ -84,7 +84,10 @@ const uploadOtomiMetrics = async () => {
   const license = otomiStack.getLicense()
   // if license is valid collect metrics and send them to Otomi-Cloud
   if (license && license.isValid) {
-    const totalNodes = await getNodes()
+    const apiKey = license.body?.key as string
+    const envType = license.body?.envType as string
+    // if not local development get the total amount of nodes from the cluster otherwise return 0
+    const totalNodes = await getNodes(envType)
     const cluster = otomiStack.getSettings(['cluster']) as Record<string, any>
     const settings = otomiStack.getSettings()
     const metrics = otomiStack.getMetrics()
@@ -96,9 +99,6 @@ const uploadOtomiMetrics = async () => {
       services: metrics.otomi_services,
       workloads: metrics.otomi_workloads,
     }
-    const apiKey = license.body?.key as string
-    const envType = license.body?.envType as string
-
     // if not local development upload to the corresponding Otomi-Cloud server
     if (envType) await uploadMetrics(apiKey, envType, otomiMetrics)
   }
