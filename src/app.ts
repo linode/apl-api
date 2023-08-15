@@ -78,9 +78,11 @@ const checkAgainstGitea = async () => {
   }
 }
 
+// collect and upload metrics to Otomi-Cloud
 const uploadOtomiMetrics = async () => {
   const otomiStack = await getSessionStack()
   const license = otomiStack.getLicense()
+  // if license is valid collect metrics and send them to Otomi-Cloud
   if (license && license.isValid) {
     const totalNodes = await getNodes()
     const cluster = otomiStack.getSettings(['cluster']) as Record<string, any>
@@ -96,6 +98,8 @@ const uploadOtomiMetrics = async () => {
     }
     const apiKey = license.body?.key as string
     const envType = license.body?.envType as string
+
+    // if not local development upload to the corresponding Otomi-Cloud server
     if (envType) await uploadMetrics(apiKey, envType, otomiMetrics)
   }
 }
