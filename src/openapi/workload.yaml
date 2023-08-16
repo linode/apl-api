@@ -36,11 +36,27 @@ Workload:
       description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'
       $ref: 'definitions.yaml#/domain'
     autoUpdate:
-      type: boolean
-      default: false
-    buildName:
-      description: Build
-      type: string
+      description: Automatically update the image. Only supported wit Helm charts in local Gitea repository and images stored in Harbor.
+      title: Auto Image Updater
+      properties:
+        enabled:
+          type: boolean
+          default: false
+        strategy:
+          default: semver
+          enum:
+            - semver
+            - latest
+            - digest
+          type: string
+          description: Choose the update strategy. Default is Semver.
+        build:
+          type: string
+          description: Use an Otomi Build name or the name of the image in Harbor (without 'team-name/')
+        tag:
+          description: Tag of the build. Only if strategy is digest.
+          type: string
+      
     selectedChart:
       enum: ['deployment', 'ksvc', 'custom']
   required:
