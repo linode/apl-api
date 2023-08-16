@@ -42,6 +42,9 @@ Workload:
         enabled:
           type: boolean
           default: false
+        build:
+          type: string
+          description: Use an Otomi Build name or the name of the image in Harbor (without 'team-name/')
         strategy:
           default: semver
           enum:
@@ -50,9 +53,10 @@ Workload:
             - digest
           type: string
           description: Choose the update strategy. Default is Semver.
-        build:
+        versionConstraint:
           type: string
-          description: Use an Otomi Build name or the name of the image in Harbor (without 'team-name/')
+          default: 1.0
+          description: "Example: 1.0 would allow the image to be updated to any patch version within the 1.0 minor release."
         tag:
           description: Tag of the build. Only if strategy is digest.
           type: string
