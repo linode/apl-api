@@ -6,11 +6,17 @@ debug('NODE_ENV: ', process.env.NODE_ENV)
 
 export default async function uploadMetrics(apikey: string, envType: string, metricsData: any): Promise<string | any> {
   const { workerNodeCount, k8sVersion, otomiVersion, teams, services, workloads } = metricsData
+  let cloudUrl = 'localhost:3000/api/graphql'
+  // if not local development upload to the corresponding Otomi-Cloud server
+  if (envType) {
+    cloudUrl =
+      envType === 'dev' ? 'https://dev.portal.otomi.cloud/api/graphql' : 'https://portal.otomi.cloud/api/graphql'
+  }
 
   debug('Attempting to send metrics')
 
   const response = await axios({
-    url: envType === 'dev' ? 'https://dev.portal.otomi.cloud/api/graphql' : 'https://portal.otomi.cloud/api/graphql',
+    url: cloudUrl,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
