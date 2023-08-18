@@ -26,7 +26,7 @@ export const CHECK_LATEST_COMMIT_INTERVAL = num({
 })
 export const UPLOAD_METRICS_INTERVAL = num({
   desc: 'Interval in minutes for how much time in between each metric is uploaded to Otomi-Cloud',
-  default: 1,
+  default: 360,
 })
 export const GIT_EMAIL = str({ desc: 'The git user email', default: 'not@us.ed' })
 export const GIT_LOCAL_PATH = str({
