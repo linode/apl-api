@@ -30,7 +30,7 @@ describe('Utils', () => {
   })
   it('should retrieve default host if service domain not defined', (done) => {
     const x = getServiceUrl({ name: 'aa', teamId: 'bb', cluster, dns: { ...dns, zones: ['dd.ee'] } })
-    expect(x.subdomain).to.equal('aa.team-bb')
+    expect(x.subdomain).to.equal('aa-bb')
     expect(x.domain).to.equal('dev.otomi.cloud')
     done()
   })
