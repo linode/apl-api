@@ -5,6 +5,7 @@ import OtomiStack from 'src/otomi-stack'
 export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
 export type Backup = components['schemas']['Backup']
+export type Source = components['schemas']['Source']
 export type Kubecfg = components['schemas']['Kubecfg']
 export type K8sService = components['schemas']['K8sService']
 export type Secret = components['schemas']['Secret'] & { teamId?: string }

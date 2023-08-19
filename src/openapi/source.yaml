@@ -1,0 +1,127 @@
+Source:
+  x-acl:
+    admin:
+      - delete-any
+      - read-any
+      - create-any
+      - update-any
+    team:
+      - delete
+      - read
+      - create
+      - update
+  type: object
+  x-externalDocsPath: docs/for-devs/console/sources
+  properties:
+    id:
+      type: string
+    teamId:
+      $ref: 'definitions.yaml#/idName'
+    name:
+      title: Source name
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+      description: Use a friendly short name to identify this source.
+    description:
+      description: Use a description to explain more about this source.
+      type: string
+    sourceType:
+      $ref: '#/sourceType'
+  required:
+    - name
+
+sourceType:
+  title: Source Type
+  description: Choose between Git Repository, Helm registry or Image registry.
+  type: object
+  oneOf:
+    - title: Git Repository 
+      type: object
+      x-hideTitle: true
+      description: Only public repositories or private local Gitea repositories are supported.
+      properties:
+        git:
+          additionalProperties: false
+          type: object
+          title: Git Repository
+          properties:
+            url:
+              description: The URL of the Git repo
+              $ref: 'definitions.yaml#/url'
+              title: Repo URL
+            path:
+              description: The path. Use ./Dockerfile to use this source for the Docker Build option.
+              type: string
+            revision:
+              description: This can be a commit, a tag, or a branch
+              $ref: 'definitions.yaml#/wordCharacterPattern'
+              default: main
+          required:
+            - url
+        type:
+          type: string
+          enum:
+            - git
+          default: git
+      required:
+        - git
+        - type
+    - title: Image Registry
+      type: object
+      x-hideTitle: true
+      description: Only public image registries or private local Harbor registries are supported.
+      properties:
+        image:
+          additionalProperties: false
+          type: object
+          properties:
+            repository:
+              description: The URL of the Git repo that contains the application code
+              $ref: 'definitions.yaml#/url'
+              title: Repo URL
+            tag:
+              description: A subpath within the repo where the source to build is located (optional)
+              type: string
+              default: ''
+          required:
+            - repository
+        type:
+          type: string
+          enum:
+            - image
+          default: image
+      required:
+        - image
+        - type
+    - title: Helm registry
+      type: object
+      x-hideTitle: true
+      description: Only public Helm registries are supported.
+      properties:
+        helm:
+          additionalProperties: false
+          type: object
+          properties:
+            url:
+              description: URL to the Helm repository
+              $ref: 'definitions.yaml#/url'
+              title: Repo URL
+            revision:
+              description: A semver tag for the Chart's version.
+              type: string
+              default: ''
+            chart:
+              description: A Helm chart name
+              type: string
+              default: ''
+          required:
+            - url
+            - revision
+            - chart
+        type:
+          type: string
+          enum:
+            - helm
+          default: helm
+      required:
+        - helm
+        - type

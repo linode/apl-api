@@ -505,6 +505,9 @@ definitions:
   ingressClassParameters:
     type: object
     properties:
+      entrypoint:
+        description: A public IP address that has a route to a private loadbalancer ip, allowing access to private clusters. (Provider "custom" only.)
+        type: string
       network:
         title: Load balancer type
         type: string
@@ -527,9 +530,6 @@ definitions:
         title: Source IP address filtering
         type: string
         description: 'Whitelist source IP address ranges. The value is a comma separated list of CIDRs, e.g. 10.0.0.0/24,172.10.0.1'
-      entrypoint:
-        $ref: '#/definitions/ipV4Address'
-        description: Optional. An IP address that will override the external Load balancer IP address used for registering hosts in DNS.
   ipV4Address:
     type: string
     pattern: ^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$
@@ -607,6 +607,7 @@ definitions:
     enum:
       - '1.23'
       - '1.24'
+      - '1.25'
     type: string
   labels:
     $ref: '#/definitions/labelsAnnotations'
@@ -782,7 +783,7 @@ definitions:
         default: standalone
       password:
         type: string
-        x-secret: 'randAlpha 24'
+        x-secret: '{{ randAlpha 24 }}'
       resources:
         additionalProperties: false
         properties:
@@ -976,7 +977,7 @@ definitions:
   secretTemplates:
     definitions:
       otomiAdminUsername:
-        x-secret: '"admin"'
+        x-secret: 'admin'
   securityContext:
     additionalProperties:
       uniqueItems: true
@@ -1026,6 +1027,20 @@ definitions:
       headers:
         properties:
           response:
+            properties:
+              set:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    value:
+                      type: string
+                  required:
+                    - name
+                    - value
+          request:
             properties:
               set:
                 type: array
@@ -1218,10 +1233,18 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/workload'
+      projects:
+        type: array
+        items:
+          $ref: '#/definitions/project'
       builds:
         type: array
         items:
           $ref: '#/definitions/build'
+      sources:
+        type: array
+        items:
+          $ref: '#/definitions/source'
   teamSelfService:
     title: Team self service flags
     description: Grant team permissions to modify certain configuration parameters.
@@ -1284,6 +1307,71 @@ definitions:
     type: string
     # At least one non whitespace character
     pattern: ^[^\s]+$
+  project:
+    type: object
+    description: A single project can represent application's build, workload and service.
+    properties:
+      name:
+        description: Name of the project
+        $ref: '#/definitions/wordCharacterPattern'
+    required:
+      - name
+  source:
+    type: object
+    properties:
+      name:
+        description: Name of the source
+        $ref: '#/definitions/wordCharacterPattern'
+      sourceType:
+        properties:
+          git:
+            title: Git Repository
+            properties:
+              url:
+                description: The URL of the Git repo
+                $ref: '#/definitions/url'
+                title: Repo URL
+              path:
+                description: The path. Use ./Dockerfile to use this source for the Docker Build option.
+                type: string
+              revision:
+                description: This can be a commit, a tag, or a branch
+                $ref: '#/definitions/wordCharacterPattern'
+                default: HEAD
+            required:
+              - url
+          image:
+            additionalProperties: false
+            properties:
+              repository:
+                description: The URL of the Git repo that contains the application code
+                $ref: '#/definitions/url'
+                title: Repo URL
+              tag:
+                description: A subpath within the repo where the source to build is located (optional)
+                type: string
+                default: ''
+            required:
+              - repository
+          helm:
+            additionalProperties: false
+            properties:
+              url:
+                description: URL to the Helm repository
+                $ref: '#/definitions/url'
+                title: Repo URL
+              revision:
+                description: A semver tag for the Chart's version.
+                type: string
+                default: ''
+              chart:
+                description: A Helm chart name
+                type: string
+                default: ''
+            required:
+              - url
+              - revision
+              - chart
   build:
     type: object
     description: Define location of code to build
@@ -1432,7 +1520,7 @@ definitions:
                 type: string
                 description: The secret of the access key. Optional if cloud provider is AWS.
                 $ref: '#/definitions/wordCharacterPattern'
-                x-secret: true
+                x-secret: ''
             required:
               - bucket
               - s3Url
@@ -1554,6 +1642,13 @@ properties:
             $ref: '#/definitions/rawValues'
           resources:
             $ref: '#/definitions/resources'
+          byoWildcardCert:
+            description: 'Bring your own trusted wildcard certificate. Only applicable for byo-wildcard-cert issuer'
+            type: string
+          byoWildcardCertKey:
+            description: 'A certificate key corresponding to the byoWildcardCert.'
+            type: string
+            x-secret: ''
           customRootCA:
             x-secret: ''
             type: string
@@ -1565,10 +1660,16 @@ properties:
           email:
             $ref: '#/definitions/email'
           issuer:
+            description: |
+              Indicates the origin of the wildcard certificate. 
+              The custom-ca - cert-manager uses the customRootCA to generate wildcard certificate.
+              The letsencrypt - cert-manager requests certificate from letsencrypt endpoint.
+              The byo-wildcard-cert allows users to bring their own trusted wildcard certificate (cert-manager not involved)
             type: string
             enum:
               - custom-ca
               - letsencrypt
+              - byo-wildcard-cert
             default: custom-ca
           stage:
             type: string
@@ -1576,22 +1677,6 @@ properties:
               - production
               - staging
             default: production
-        oneOf:
-          - properties:
-              issuer:
-                const: letsencrypt
-            required:
-              - email
-              - issuer
-          - properties:
-              issuer:
-                const: custom-ca
-            required:
-              - issuer
-          - not:
-              anyOf:
-                - required:
-                    - issuer
       cnpg:
         additionalProperties: false
         properties:
@@ -1694,7 +1779,7 @@ properties:
           sharedSecret:
             description: A secret used by drone-admit-members plugin. https://docs.drone.io/runner/kubernetes/configuration/reference/drone-secret-plugin-token/
             type: string
-            x-secret: 'randAlphaNum 32'
+            x-secret: '{{ randAlphaNum 32 }}'
           sourceControl:
             additionalProperties: false
             properties:
@@ -1873,7 +1958,7 @@ properties:
           postgresqlPassword:
             type: string
             description: This password was generated and cannot be changed without manual intervention.
-            x-secret: 'randAlphaNum 20'
+            x-secret: '{{ randAlphaNum 20 }}'
             readOnly: true
           image:
             additionalProperties: false
@@ -1926,20 +2011,20 @@ properties:
           databasePassword:
             type: string
             description: Once set and deployed it cannot be changed with manual intervention.
-            x-secret: 'randAlphaNum 20'
+            x-secret: '{{ randAlphaNum 20 }}'
           core:
             properties:
               secret:
                 type: string
-                x-secret: 'randAlphaNum 16'
+                x-secret: '{{ randAlphaNum 16 }}'
               xsrfKey:
                 type: string
-                x-secret: 'randAlphaNum 32'
+                x-secret: '{{ randAlphaNum 32 }}'
           jobservice:
             properties:
               secret:
                 type: string
-                x-secret: 'randAlphaNum 16'
+                x-secret: '{{ randAlphaNum 16 }}'
           persistence:
             additionalProperties: false
             properties:
@@ -2012,18 +2097,18 @@ properties:
             properties:
               secret:
                 type: string
-                x-secret: 'randAlpha 16'
+                x-secret: '{{ randAlpha 16 }}'
               credentials:
                 properties:
                   htpasswd:
                     type: string
-                    x-secret: 'htpasswd .dot.username .dot.password'
+                    x-secret: ''
                   username:
                     type: string
                     $ref: '#/definitions/secretTemplates/definitions/otomiAdminUsername'
                   password:
                     type: string
-                    x-secret: 'randAlphaNum 32'
+                    x-secret: '{{ randAlphaNum 32 }}'
             required:
               - secret
               - credentials
@@ -2033,12 +2118,17 @@ properties:
                 type: string
               type:
                 type: string
+                description: Internal is a database provided by the community chart. The external is database provided by the cloudnative-pg.
+                enum:
+                  - internal
+                  - external
               name:
                 type: string
               user:
                 type: string
-              core-database:
-                type: string
+              importHarborDb:
+                description: Indicate if an existing database should be importend. (Once set to true you must not change it back)
+                type: boolean
           image:
             $ref: '#/definitions/imageSimple'
           resources:
@@ -2064,7 +2154,7 @@ properties:
                 $ref: '#/definitions/resources'
           secretKey:
             type: string
-            x-secret: 'randAlpha 16'
+            x-secret: '{{ randAlpha 16 }}'
         required:
           - databasePassword
       hello:
@@ -2183,11 +2273,8 @@ properties:
                   resources:
                     $ref: '#/definitions/resources'
           meshConfig:
-            properties:
-              defaultConfig:
-                type: object
-            required:
-              - defaultConfig
+            description: 'See: https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#MeshConfig'
+            type: object
           image:
             $ref: '#/definitions/imageSimple'
           resources:
@@ -2227,11 +2314,11 @@ properties:
                 default: otomi
               clientSecret:
                 type: string
-                x-secret: 'randAlphaNum 32'
+                x-secret: '{{ randAlphaNum 32 }}'
           postgresqlPassword:
             type: string
             description: This password was generated and cannot be changed without manual intervention.
-            x-secret: 'randAlphaNum 20'
+            x-secret: '{{ randAlphaNum 20 }}'
             readOnly: true
           adminPassword:
             type: string
@@ -2333,7 +2420,7 @@ properties:
           postgresqlPassword:
             type: string
             description: Once set and deployed it cannot be changed with manual intervention.
-            x-secret: 'randAlphaNum 20'
+            x-secret: '{{ randAlphaNum 20 }}'
         required:
           - postgresqlPassword
       kubeclarity:
@@ -2355,9 +2442,22 @@ properties:
           databasePassword:
             type: string
             description: Once set and deployed it cannot be changed with manual intervention.
-            x-secret: 'randAlphaNum 20'
+            x-secret: '{{ randAlphaNum 20 }}'
           resources:
-            $ref: '#/definitions/resources'
+            additionalProperties: false
+            properties:
+              kubeclarity:
+                $ref: '#/definitions/resources'
+              cdbScanner:
+                $ref: '#/definitions/resources'
+              vulnerabilityScanner:
+                $ref: '#/definitions/resources'
+              trivyServer:
+                $ref: '#/definitions/resources'
+              sbomDb:
+                $ref: '#/definitions/resources'
+              postgresql:
+                $ref: '#/definitions/resources'
         required:
           - databasePassword
       external-secrets:
@@ -2434,7 +2534,7 @@ properties:
                 $ref: '#/definitions/autoscalingEnabled'
           adminPassword:
             type: string
-            x-secret: 'randAlphaNum 20'
+            x-secret: '{{ randAlphaNum 20 }}'
           persistence:
             properties:
               querier:
@@ -2470,10 +2570,6 @@ properties:
                   accountKey:
                     $ref: '#/definitions/wordCharacterPattern'
                     x-secret: ''
-                required:
-                  - containerName
-                  - accountName
-                  - accountKey
               s3:
                 properties:
                   bucket:
@@ -2485,11 +2581,6 @@ properties:
                   secretAccessKey:
                     $ref: '#/definitions/wordCharacterPattern'
                     x-secret: ''
-                required:
-                  - bucket
-                  - accessKeyId
-                  - s3Url
-                  - secretAccessKey
               gcs:
                 properties:
                   bucket:
@@ -2498,9 +2589,6 @@ properties:
                     $ref: '#/definitions/wordCharacterPattern'
                   instance:
                     $ref: '#/definitions/wordCharacterPattern'
-                required:
-                  - bucket
-                  - serviceAccount
               type:
                 type: string
                 enum:
@@ -2577,7 +2665,7 @@ properties:
                 description: Cookie secret must be 32 byte base64 encoded string.
                 pattern: '^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$'
                 type: string
-                x-secret: 'randAlphaNum 32 | b64enc'
+                x-secret: '{{ randAlphaNum 32 | b64enc }}'
       oauth2-proxy-redis:
         $ref: '#/definitions/redisChart'
       opa-exporter:
@@ -2834,10 +2922,24 @@ properties:
                       - s3Url
                       - accessKeyId
                       - secretAccessKey
+                  azureBlob:
+                    properties:
+                      accountName:
+                        $ref: '#/definitions/wordCharacterPattern'
+                      containerName:
+                        $ref: '#/definitions/wordCharacterPattern'
+                      accountKey:
+                        $ref: '#/definitions/wordCharacterPattern'
+                        x-secret: ''
+                    required:
+                      - accountName
+                      - containerName
+                      - accountKey
                   type:
                     type: string
                     enum:
                       - s3
+                      - azureBlob
                       - minioLocal
                     default: minioLocal
           resources:
@@ -3249,7 +3351,7 @@ properties:
                 properties:
                   apiToken:
                     type: string
-                    x-secret: true
+                    x-secret: ''
                 required:
                   - apiToken
             required:
@@ -3261,10 +3363,10 @@ properties:
                 properties:
                   apiToken:
                     type: string
-                    x-secret: true
+                    x-secret: ''
                   apiSecret:
                     type: string
-                    x-secret: true
+                    x-secret: ''
                     description: Required when Email is set.
                   email:
                     $ref: '#/definitions/email'
@@ -3306,6 +3408,9 @@ properties:
                   - cert-manager
             required:
               - other
+      entrypoint:
+        $ref: '#/definitions/ipV4Address'
+        description: Optional. A public IP address that will override (loadbalancer) ip used for registering hosts. This allows for access to private clusters.
   home:
     $ref: '#/definitions/alerts'
   files:
@@ -3450,7 +3555,7 @@ properties:
             - provider
       adminPassword:
         type: string
-        x-secret: 'randAlphaNum 20'
+        x-secret: '{{ randAlphaNum 20 }}'
       globalPullSecret:
         title: Global pullsecret
         description: Will be connected to each "default" service account in all otomi app namespaces.
@@ -3847,6 +3952,24 @@ properties:
                 $ref: '#/definitions/backupTtl'
               schedule:
                 $ref: '#/definitions/backupSchedule'
+  databases:
+    properties:
+      keycloak:
+        title: Keycloak
+        properties:
+          useOtomiDB:
+            type: boolean
+            default: false
+          size:
+            type: string
+          resources:
+            $ref: '#/definitions/resources'
+          replicas:
+            type: integer
+            default: 2
+          imported:
+            type: boolean
+            default: false
   teamConfig:
     additionalProperties: false
     patternProperties:
@@ -3857,7 +3980,7 @@ properties:
         properties:
           password:
             type: string
-            x-secret: randAlpha 16
+            x-secret: '{{ randAlpha 16 }}'
   version:
     type: integer
     description: DO NOT CHANGE! Holds the values-schema version. For more details, see `otomi migrate`.

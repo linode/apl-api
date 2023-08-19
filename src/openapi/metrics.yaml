@@ -12,6 +12,10 @@ Metrics:
       type: integer
       minimum: 0
       default: 0
+    otomi_sources:
+      type: integer
+      minimum: 0
+      default: 0
     otomi_secrets:
       type: integer
       minimum: 0
@@ -31,6 +35,7 @@ Metrics:
   required:
     - otomi_backups
     - otomi_builds
+    - otomi_sources
     - otomi_secrets
     - otomi_services
     - otomi_teams

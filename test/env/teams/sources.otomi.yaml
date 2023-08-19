@@ -1,0 +1,10 @@
+teamConfig:
+    otomi:
+        sources:
+            - name: test
+              sourceType:
+                git:
+                    url: https://demo.com.git
+                    path: bla
+                    revision: main
+                type: git

@@ -581,6 +581,101 @@ paths:
               schema:
                 $ref: '#/components/schemas/Build'
 
+  '/sources':
+    get:
+      operationId: getAllSources
+      x-aclSchema: Source
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all source configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Source'
+
+  '/teams/{teamId}/sources':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamSources
+      x-aclSchema: Source
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team source configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Source'
+    post:
+      operationId: createSource
+      description: Create a team source
+      x-aclSchema: Source
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Source'
+        description: Source object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored source configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+
+  '/teams/{teamId}/sources/{sourceId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/sourceParams'
+    delete:
+      operationId: deleteSource
+      description: Delete a source from a given team
+      x-aclSchema: Source
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a source
+    get:
+      operationId: getSource
+      description: Get a source from a given team
+      x-aclSchema: Source
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained source configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+    put:
+      operationId: editSource
+      description: Edit a source from a given team
+      x-aclSchema: Source
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Source'
+        description: Build object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team source
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+
   '/cloudtty':
     post:
       operationId: connectCloudtty
@@ -1124,6 +1219,13 @@ components:
       required: true
       schema:
         type: string
+    sourceParams:
+      name: sourceId
+      in: path
+      description: ID of the source
+      required: true
+      schema:
+        type: string
     settingsParams:
       name: settingId
       in: path
@@ -1225,6 +1327,8 @@ components:
       $ref: backup.yaml#/Backup
     Build:
       $ref: build.yaml#/Build
+    Source:
+      $ref: source.yaml#/Source
     Cloudtty:
       $ref: cloudtty.yaml#/Cloudtty
     Cluster:

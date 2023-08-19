@@ -28,6 +28,7 @@ import {
   Service,
   Session,
   Settings,
+  Source,
   Team,
   TeamSelfService,
   User,
@@ -75,6 +76,13 @@ export function getTeamBackupsFilePath(teamId: string): string {
 }
 export function getTeamBackupsJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.backups`
+}
+
+export function getTeamSourcesFilePath(teamId: string): string {
+  return `env/teams/sources.${teamId}.yaml`
+}
+export function getTeamSourcesJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.sources`
 }
 
 export function getTeamSecretsFilePath(teamId: string): string {
@@ -150,6 +158,7 @@ export default class OtomiStack {
       otomi_backups: this.getAllBackups().length,
       otomi_builds: this.getAllBuilds().length,
       otomi_secrets: this.getAllSecrets().length,
+      otomi_sources: this.getAllSources().length,
       otomi_services: this.getAllServices().length,
       // We do not count team_admin as a regular team
       otomi_teams: this.getTeams().length - 1,
@@ -515,6 +524,36 @@ export default class OtomiStack {
 
   deleteBackup(id: string): void {
     return this.db.deleteItem('backups', { id })
+  }
+
+  getTeamSources(teamId: string): Array<Source> {
+    const ids = { teamId }
+    return this.db.getCollection('sources', ids) as Array<Source>
+  }
+
+  getAllSources(): Array<Source> {
+    return this.db.getCollection('sources') as Array<Source>
+  }
+
+  createSource(teamId: string, data: Source): Source {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      return this.db.createItem('sources', { ...data, teamId }, { teamId, name: data.name }) as Source
+    } catch (err) {
+      if (err.code === 409) err.publicMessage = 'Source name already exists'
+      throw err
+    }
+  }
+  getSource(id: string): Source {
+    return this.db.getItem('sources', { id }) as Source
+  }
+
+  editSource(id: string, data: Source): Source {
+    return this.db.updateItem('sources', data, { id }) as Source
+  }
+
+  deleteSource(id: string): void {
+    return this.db.deleteItem('sources', { id })
   }
 
   getTeamProjects(teamId: string): Array<Project> {
@@ -1062,6 +1101,20 @@ export default class OtomiStack {
     })
   }
 
+  async loadTeamSources(teamId: string): Promise<void> {
+    const relativePath = getTeamSourcesFilePath(teamId)
+    if (!(await this.repo.fileExists(relativePath))) {
+      debug(`Team ${teamId} has no sources yet`)
+      return
+    }
+    const data = await this.repo.readFile(relativePath)
+    const inData: Array<Source> = get(data, getTeamSourcesJsonPath(teamId), [])
+    inData.forEach((inSource) => {
+      const res: any = this.db.populateItem('sources', { ...inSource, teamId }, undefined, inSource.id as string)
+      debug(`Loaded source: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
+    })
+  }
+
   async loadTeamProjects(teamId: string): Promise<void> {
     const relativePath = getTeamProjectsFilePath(teamId)
     if (!(await this.repo.fileExists(relativePath))) {
@@ -1142,6 +1195,7 @@ export default class OtomiStack {
       this.loadTeam(team)
       this.loadTeamServices(team.id!)
       this.loadTeamSecrets(team.id!)
+      this.loadTeamSources(team.id!)
       this.loadTeamWorkloads(team.id!)
       this.loadTeamBackups(team.id!)
       this.loadTeamProjects(team.id!)
@@ -1239,6 +1293,7 @@ export default class OtomiStack {
         const teamId = team.id as string
         await this.saveTeamApps(teamId)
         await this.saveTeamBackups(teamId)
+        await this.saveTeamSources(teamId)
         await this.saveTeamServices(teamId)
         await this.saveTeamSecrets(teamId)
         await this.saveTeamWorkloads(teamId)
@@ -1266,6 +1321,17 @@ export default class OtomiStack {
     const relativePath = getTeamBackupsFilePath(teamId)
     const outData: Record<string, any> = set({}, getTeamBackupsJsonPath(teamId), cleaneBackups)
     debug(`Saving backups of team: ${teamId}`)
+    await this.repo.writeFile(relativePath, outData)
+  }
+
+  async saveTeamSources(teamId: string): Promise<void> {
+    const sources = this.db.getCollection('sources', { teamId }) as Array<Source>
+    const cleaneSources: Array<Record<string, any>> = sources.map((obj) => {
+      return omit(obj, ['teamId'])
+    })
+    const relativePath = getTeamSourcesFilePath(teamId)
+    const outData: Record<string, any> = set({}, getTeamSourcesJsonPath(teamId), cleaneSources)
+    debug(`Saving sources of team: ${teamId}`)
     await this.repo.writeFile(relativePath, outData)
   }
 
