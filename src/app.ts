@@ -27,14 +27,24 @@ import { setMockIdx } from 'src/mocks'
 import { OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
-import { CHECK_LATEST_COMMIT_INTERVAL, DRONE_WEBHOOK_SECRET, GIT_PASSWORD, GIT_USER, cleanEnv } from 'src/validators'
+import {
+  CHECK_LATEST_COMMIT_INTERVAL,
+  DRONE_WEBHOOK_SECRET,
+  GIT_PASSWORD,
+  GIT_USER,
+  UPLOAD_METRICS_INTERVAL,
+  cleanEnv,
+} from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
 import Db from './db'
 import giteaCheckLatest from './gitea/connect'
+import { getNodes } from './k8s_operations'
+import uploadMetrics from './otomiCloud/upload-metrics'
 
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
   CHECK_LATEST_COMMIT_INTERVAL,
+  UPLOAD_METRICS_INTERVAL,
   GIT_USER,
   GIT_PASSWORD,
 })
@@ -65,6 +75,36 @@ const checkAgainstGitea = async () => {
     const msg: DbMessage = { state: 'clean', editor: 'system', sha, reason: 'conflict' }
     getIo().emit('db', msg)
     otomiStack.locked = false
+  }
+}
+
+// collect and upload metrics to Otomi-Cloud
+const uploadOtomiMetrics = async () => {
+  try {
+    const otomiStack = await getSessionStack()
+    const license = otomiStack.getLicense()
+    // if license is valid collect metrics and send them to Otomi-Cloud
+    if (license && license.isValid) {
+      const apiKey = license.body?.key as string
+      const envType = license.body?.envType as string
+      // if not local development get the total amount of nodes from the cluster otherwise return 0
+      const totalNodes = await getNodes(envType)
+      const cluster = otomiStack.getSettings(['cluster']) as Record<string, any>
+      const settings = otomiStack.getSettings()
+      const metrics = otomiStack.getMetrics()
+      const otomiMetrics = {
+        workerNodeCount: totalNodes,
+        k8sVersion: cluster.cluster.k8sVersion,
+        otomiVersion: settings.otomi!.version,
+        teams: metrics.otomi_teams,
+        services: metrics.otomi_services,
+        workloads: metrics.otomi_workloads,
+      }
+      // upload to the Otomi-Cloud server
+      if (envType) await uploadMetrics(apiKey, envType, otomiMetrics)
+    }
+  } catch (error) {
+    debug('Could not collect metrics for Otomi-Cloud: ', error)
   }
 }
 
@@ -111,9 +151,13 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   }
   // Transforms the interval to minutes
   const gitCheckVersionInterval = env.CHECK_LATEST_COMMIT_INTERVAL * 60 * 1000
+  const gitUploadMetricsInterval = env.UPLOAD_METRICS_INTERVAL * 60 * 1000
   setInterval(async function () {
     await checkAgainstGitea()
   }, gitCheckVersionInterval)
+  setInterval(async function () {
+    await uploadOtomiMetrics()
+  }, gitUploadMetricsInterval)
   app.all('/drone', async (req, res, next) => {
     const parsed = httpSignature.parseRequest(req, {
       algorithm: 'hmac-sha256',
