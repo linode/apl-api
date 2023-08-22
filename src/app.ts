@@ -38,7 +38,7 @@ import {
 import swaggerUi from 'swagger-ui-express'
 import Db from './db'
 import giteaCheckLatest from './gitea/connect'
-import { getNodes } from './k8s_operations'
+import { getKubernetesVersion, getNodes } from './k8s_operations'
 import uploadMetrics from './otomiCloud/upload-metrics'
 
 const env = cleanEnv({
@@ -92,6 +92,8 @@ const uploadOtomiMetrics = async () => {
       const cluster = otomiStack.getSettings(['cluster']) as Record<string, any>
       const settings = otomiStack.getSettings()
       const metrics = otomiStack.getMetrics()
+      const kubernetesVersion = await getKubernetesVersion()
+      console.log('kubernetesVersion', kubernetesVersion)
       const otomiMetrics = {
         workerNodeCount: totalNodes,
         k8sVersion: cluster.cluster.k8sVersion,

@@ -148,11 +148,26 @@ export async function getNodes(envType: string) {
     kc.loadFromDefault()
     const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
     const nodesResponse = await k8sApi.listNode()
+    console.log('nodesResponse', nodesResponse[0])
     const numberOfNodes = nodesResponse.body.items.length
     return numberOfNodes
   } catch (error) {
     metricsDebug('k8sGetNodes error:', error)
     metricsDebug('k8sGetNodes error: Error encountered, returning -1 nodes')
     return -1
+  }
+}
+
+export async function getKubernetesVersion() {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+
+  const k8sApi = kc.makeApiClient(k8s.VersionApi)
+
+  try {
+    const response = await k8sApi.getCode()
+    console.log('Kubernetes Server Version:', response.body.gitVersion)
+  } catch (err) {
+    console.error('Error:', err)
   }
 }
