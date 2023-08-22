@@ -1395,7 +1395,7 @@ export default class OtomiStack {
         subdomain: url.subdomain,
         tlsPass: 'tlsPass' in svcRaw,
         type: svcRaw.type,
-        useDefaultSubdomain: !svcRaw.domain && svcRaw.ownHost,
+        useDefaultHost: !svcRaw.domain && svcRaw.ownHost,
         ingressClassName: svcRaw.ingressClassName || undefined,
         useCname: svcRaw.useCname,
         cname: svcRaw.cname,
@@ -1411,7 +1411,7 @@ export default class OtomiStack {
     const svcCloned = omit(svc, ['teamId', 'ingress', 'path'])
     if (svc.ingress && svc.ingress.type !== 'cluster') {
       const ing = svc.ingress
-      if (ing.useDefaultSubdomain) svcCloned.ownHost = true
+      if (ing.useDefaultHost) svcCloned.ownHost = true
       else svcCloned.domain = ing.subdomain ? `${ing.subdomain}.${ing.domain}` : ing.domain
       if (ing.hasCert) svcCloned.hasCert = true
       if (ing.certName) svcCloned.certName = ing.certName
