@@ -283,7 +283,13 @@ definitions:
         $ref: '#/definitions/k8sContext'
         description: Optional. Must be set for development mode and must point to an existing context in KUBECONFIG.
       k8sVersion:
-        $ref: definitions.yaml#/k8sVersion
+        title: Kubernetes version
+        description: The cluster k8s version. Must match one of the list.
+        enum:
+          - '1.23'
+          - '1.24'
+          - '1.25'
+        type: string
       name:
         $ref: '#/definitions/clusterName'
         description: Short name that will be used in construction of cluster domain and messaging.
