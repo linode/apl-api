@@ -329,6 +329,9 @@ Settings:
           description: |
             Please pin this to a valid release version found in the repo. Suggestion: try the most recent stable version.
           type: string
+        k8sVersion:
+          $ref: definitions.yaml#/k8sVersion
+          readOnly: true
       required:
         - version
       x-externalDocsPath: docs/for-ops/console/settings/otomi
