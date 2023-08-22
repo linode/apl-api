@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.11.0](https://github.com/redkubes/otomi-api/compare/v0.10.0...v0.11.0) (2023-08-21)
+
+
+### Features
+
+* default host instead of subdomain ([#442](https://github.com/redkubes/otomi-api/issues/442)) ([2645639](https://github.com/redkubes/otomi-api/commit/264563914de8e412866dafc06bcc717491c1ac26))
+* otomi usage metrics ([#439](https://github.com/redkubes/otomi-api/issues/439)) ([5a9fd2a](https://github.com/redkubes/otomi-api/commit/5a9fd2ac0ae7fda9beac33dbe2f0cb0564414d08))
+* support wildcard certificate ([#437](https://github.com/redkubes/otomi-api/issues/437)) ([f6d59bb](https://github.com/redkubes/otomi-api/commit/f6d59bb90542a061bfde9ae274e1a5c51f9590ed))
+
+
+### Bug Fixes
+
+* http 400 error for values fields ([#436](https://github.com/redkubes/otomi-api/issues/436)) ([183ba3d](https://github.com/redkubes/otomi-api/commit/183ba3dd019d39f662b2a62d65652ec189f29ed4))
+
+
+### Others
+
+* update-actions ([#440](https://github.com/redkubes/otomi-api/issues/440)) ([14e7055](https://github.com/redkubes/otomi-api/commit/14e705552796fd101d155a0f08e757e810a50837))
+
 ## [0.10.0](https://github.com/redkubes/otomi-api/compare/v0.6.0...v0.10.0) (2023-08-03)
 
 
