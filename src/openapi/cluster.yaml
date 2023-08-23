@@ -45,7 +45,7 @@ Cluster:
       $ref: definitions.yaml#/provider
       # readOnly: true
     k8sVersion:
-      type: string
+      $ref: definitions.yaml#/k8sVersion
       # readOnly: true
     apiName:
       $ref: definitions.yaml#/k8sName

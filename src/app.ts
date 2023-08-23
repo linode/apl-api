@@ -90,7 +90,7 @@ const uploadOtomiMetrics = async () => {
       // if not local development get the total amount of nodes from the cluster otherwise return 0
       const totalNodes = await getNodes(envType)
       const k8sVersion = await getKubernetesVersion()
-      const settings = await otomiStack.getSettings()
+      const settings = otomiStack.getSettings()
       const metrics = otomiStack.getMetrics()
       const otomiMetrics = {
         workerNodeCount: totalNodes,
