@@ -89,14 +89,12 @@ const uploadOtomiMetrics = async () => {
       const envType = license.body?.envType as string
       // if not local development get the total amount of nodes from the cluster otherwise return 0
       const totalNodes = await getNodes(envType)
-      const cluster = otomiStack.getSettings(['cluster']) as Record<string, any>
-      const settings = otomiStack.getSettings()
+      const k8sVersion = await getKubernetesVersion()
+      const settings = await otomiStack.getSettings()
       const metrics = otomiStack.getMetrics()
-      const kubernetesVersion = await getKubernetesVersion()
-      console.log('kubernetesVersion', kubernetesVersion)
       const otomiMetrics = {
         workerNodeCount: totalNodes,
-        k8sVersion: cluster.cluster.k8sVersion,
+        k8sVersion,
         otomiVersion: settings.otomi!.version,
         teams: metrics.otomi_teams,
         services: metrics.otomi_services,

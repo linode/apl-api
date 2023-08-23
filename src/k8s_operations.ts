@@ -148,7 +148,6 @@ export async function getNodes(envType: string) {
     kc.loadFromDefault()
     const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
     const nodesResponse = await k8sApi.listNode()
-    console.log('nodesResponse', nodesResponse[0])
     const numberOfNodes = nodesResponse.body.items.length
     return numberOfNodes
   } catch (error) {
@@ -167,6 +166,7 @@ export async function getKubernetesVersion() {
   try {
     const response = await k8sApi.getCode()
     console.log('Kubernetes Server Version:', response.body.gitVersion)
+    return response.body.gitVersion
   } catch (err) {
     console.error('Error:', err)
   }

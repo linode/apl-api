@@ -136,10 +136,10 @@ export default class OtomiStack {
     this.db = inDb ?? new Db()
   }
 
-  getAppList() {
+  async getAppList() {
     let apps = getAppList()
     apps = apps.filter((item) => item !== 'ingress-nginx')
-    const { ingress } = this.getSettings()
+    const { ingress } = await this.getSettings()
     const allClasses = ['platform'].concat(ingress?.classes?.map((obj) => obj.className as string) || [])
     const ingressApps = allClasses.map((name) => `ingress-nginx-${name}`)
     return apps.concat(ingressApps)
@@ -303,10 +303,11 @@ export default class OtomiStack {
     )
   }
 
-  getSettings(keys?: string[]): Settings {
+  async getSettings(keys?: string[]): Promise<Settings> {
     const settings = this.db.db.get(['settings']).value()
-    if (!keys) return settings
-    return pick(settings, keys) as Settings
+    const k8sVersion = await getKubernetesVersion()
+    if (!keys) return { ...settings, cluster: { ...settings.cluster, k8sVersion } }
+    return pick({ ...settings, cluster: { ...settings.cluster, k8sVersion } }, keys) as Settings
   }
 
   editSettings(data: Settings, settingId: string) {
@@ -416,7 +417,9 @@ export default class OtomiStack {
   async loadApps(): Promise<void> {
     const apps = this.getAppList()
     await Promise.all(
-      apps.map(async (appId) => {
+      (
+        await apps
+      ).map(async (appId) => {
         await this.loadApp(appId)
       }),
     )
@@ -658,9 +661,6 @@ export default class OtomiStack {
       EMAIL: data.emailNoSymbols,
       SUB: data.sub,
     }
-
-    console.log('USER SUB: ', variables.SUB)
-    await getKubernetesVersion()
 
     const { userTeams } = data
 
@@ -1173,7 +1173,7 @@ export default class OtomiStack {
   }
 
   async savePolicies(): Promise<void> {
-    await this.repo.writeFile('env/policies.yaml', this.getSettings(['policies']))
+    await this.repo.writeFile('env/policies.yaml', await this.getSettings(['policies']))
   }
 
   async saveAdminApps(secretPaths?: string[]): Promise<void> {
@@ -1219,7 +1219,7 @@ export default class OtomiStack {
   }
 
   async saveSettings(secretPaths?: string[]): Promise<void> {
-    const settings = cloneDeep(this.getSettings()) as Record<string, Record<string, any>>
+    const settings = cloneDeep(await this.getSettings()) as Record<string, Record<string, any>>
     settings.otomi.nodeSelector = arrayToObject(settings.otomi.nodeSelector as [])
     await this.repo.saveConfig(
       'env/settings.yaml',
@@ -1359,7 +1359,7 @@ export default class OtomiStack {
     return secret
   }
 
-  loadService(svcRaw, teamId): void {
+  async loadService(svcRaw, teamId): Promise<void> {
     // Create service
     const svc = omit(
       svcRaw,
@@ -1379,7 +1379,7 @@ export default class OtomiStack {
     if (!('name' in svcRaw)) debug('Unknown service structure')
     if (svcRaw.type === 'cluster') svc.ingress = { type: 'cluster' }
     else {
-      const { cluster, dns } = this.getSettings(['cluster', 'dns'])
+      const { cluster, dns } = await this.getSettings(['cluster', 'dns'])
       const url = getServiceUrl({ domain: svcRaw.domain, name: svcRaw.name, teamId, cluster, dns })
       // TODO remove the isArray check in 0.5.24
       const headers = isArray(svcRaw.headers) ? undefined : svcRaw.headers
