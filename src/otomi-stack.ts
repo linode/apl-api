@@ -653,7 +653,7 @@ export default class OtomiStack {
   }
 
   async getK8sVersion(): Promise<string> {
-    const version = (await getKubernetesVersion()) as string
+    const version = await getKubernetesVersion()
     return version
   }
 

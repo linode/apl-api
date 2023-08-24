@@ -1240,8 +1240,6 @@ components:
       $ref: build.yaml#/Build
     Cloudtty:
       $ref: cloudtty.yaml#/Cloudtty
-    K8sVersion:
-      type: string
     Cluster:
       $ref: cluster.yaml#/Cluster
     Deploy:
@@ -1362,8 +1360,6 @@ components:
       $ref: definitions.yaml#/imageSimple
     ingressClassParameters:
       $ref: definitions.yaml#/ingressClassParameters
-    k8sVersion:
-      $ref: definitions.yaml#/k8sVersion
     kms:
       $ref: definitions.yaml#/kms
     lokiStorageProvider:
