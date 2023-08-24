@@ -158,18 +158,19 @@ export async function getNodes(envType: string) {
 }
 
 export async function getKubernetesVersion() {
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  return '1.20.0'
-  // const kc = new k8s.KubeConfig()
-  // kc.loadFromDefault()
+  // await new Promise((resolve) => setTimeout(resolve, 500))
+  // return '1.20.0'
 
-  // const k8sApi = kc.makeApiClient(k8s.VersionApi)
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
 
-  // try {
-  //   const response = await k8sApi.getCode()
-  //   console.log('Kubernetes Server Version:', response.body.gitVersion)
-  //   return response.body.gitVersion
-  // } catch (err) {
-  //   console.error('Error:', err)
-  // }
+  const k8sApi = kc.makeApiClient(k8s.VersionApi)
+
+  try {
+    const response = await k8sApi.getCode()
+    console.log('Kubernetes Server Version:', response.body.gitVersion)
+    return response.body.gitVersion
+  } catch (err) {
+    console.error('Error:', err)
+  }
 }
