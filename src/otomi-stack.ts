@@ -654,7 +654,7 @@ export default class OtomiStack {
 
   async getK8sVersion(): Promise<string> {
     const version = await getKubernetesVersion()
-    return version
+    return version || 'unknown'
   }
 
   async connectCloudtty(data: Cloudtty): Promise<Cloudtty | any> {
