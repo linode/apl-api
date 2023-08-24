@@ -27,29 +27,6 @@ Build:
       description: Image tag
     mode:
       $ref: '#/buildMode'
-    repoAccess:
-      title: Repository access (Optional)
-      description: Configure access to private repositories.
-      properties:
-        otomiGit:
-          title: Otomi Gitea repo?
-          description: Set to true when using a private Gitea repo in Otomi.
-          type: boolean
-          default: false
-        # privateGit:
-        #   title: Private repo?
-        #   description: Set to true when using a private repo and fill in the username and password
-        #   type: boolean
-        #   default: false
-        # repoUserName:
-        #   title: user name
-        #   description: The username used to access a private git repo
-        #   $ref: 'definitions.yaml#/wordCharacterPattern'
-        # repoPassword:
-        #   x-secret: true
-        #   title: password
-        #   $ref: 'definitions.yaml#/wordCharacterPattern'
-        #   description: The password used to access a private github repo
   required:
     - name
 
