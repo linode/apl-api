@@ -97,8 +97,6 @@ Ingress:
         tlsSecretName:
           description: Kubernets secret name of type TLS.
           type: string
-      required:
-        - domain
     paths:
       description: The paths in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
       title: URL paths
