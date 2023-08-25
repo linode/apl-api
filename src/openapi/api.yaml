@@ -584,7 +584,7 @@ paths:
   '/k8sVersion':
     get:
       operationId: getK8sVersion
-      description: Get k8s version
+      description: Get cluster k8s version
       responses:
         <<: *DefaultPostResponses
         '200':

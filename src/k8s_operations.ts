@@ -157,9 +157,8 @@ export async function getNodes(envType: string) {
   }
 }
 
-export async function getKubernetesVersion() {
-  // await new Promise((resolve) => setTimeout(resolve, 500))
-  // return '1.20.0'
+export async function getKubernetesVersion(envType: string) {
+  if (envType === 'dev') return 'x.x.x'
 
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()

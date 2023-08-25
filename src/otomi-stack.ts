@@ -653,8 +653,10 @@ export default class OtomiStack {
   }
 
   async getK8sVersion(): Promise<string> {
-    const version = await getKubernetesVersion()
-    return version || 'unknown'
+    const license = this.getLicense()
+    const envType = license.body?.envType as string
+    const version = (await getKubernetesVersion(envType)) as string
+    return version
   }
 
   async connectCloudtty(data: Cloudtty): Promise<Cloudtty | any> {
