@@ -100,7 +100,6 @@ const uploadOtomiMetrics = async () => {
         services: metrics.otomi_services,
         workloads: metrics.otomi_workloads,
       }
-      console.log('otomiMetrics', otomiMetrics)
       // upload to the Otomi-Cloud server
       if (envType) await uploadMetrics(apiKey, envType, otomiMetrics)
     }
