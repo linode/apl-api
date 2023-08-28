@@ -156,3 +156,20 @@ export async function getNodes(envType: string) {
     return -1
   }
 }
+
+export async function getKubernetesVersion(envType: string) {
+  if (envType === 'dev') return 'x.x.x'
+
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+
+  const k8sApi = kc.makeApiClient(k8s.VersionApi)
+
+  try {
+    const response = await k8sApi.getCode()
+    console.log('Kubernetes Server Version:', response.body.gitVersion)
+    return response.body.gitVersion
+  } catch (err) {
+    console.error('Error:', err)
+  }
+}

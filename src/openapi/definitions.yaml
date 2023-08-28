@@ -733,14 +733,6 @@ ingressClassParameters:
 ipV4Address:
   type: string
   pattern: ^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$
-k8sVersion:
-  title: Kubernetes version
-  description: The cluster k8s version. Must match one of the list.
-  enum:
-    - '1.23'
-    - '1.24'
-    - '1.25'
-  type: string
 kms:
   additionalProperties: false
   description: Manage settings for retrieving encryption/decryption keys.

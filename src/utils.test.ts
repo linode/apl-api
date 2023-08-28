@@ -7,7 +7,6 @@ describe('Utils', () => {
     domainSuffix: 'dev.otomi.cloud',
     apiName: 'onprem',
     apiServer: 'apiServer.onprem.example.com',
-    k8sVersion: '1.24',
     name: 'dev',
     provider: 'custom',
     region: 'eu-central-1',

@@ -50,7 +50,7 @@ import {
   cleanEnv,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
-import { apply, checkPodExists, k8sdelete, watchPodUntilRunning } from './k8s_operations'
+import { apply, checkPodExists, getKubernetesVersion, k8sdelete, watchPodUntilRunning } from './k8s_operations'
 import connect from './otomiCloud/connect'
 
 const debug = Debug('otomi:otomi-stack')
@@ -652,14 +652,19 @@ export default class OtomiStack {
     return this.db.deleteItem('builds', { id })
   }
 
+  async getK8sVersion(): Promise<string> {
+    const license = this.getLicense()
+    const envType = license.body?.envType as string
+    const version = (await getKubernetesVersion(envType)) as string
+    return version
+  }
+
   async connectCloudtty(data: Cloudtty): Promise<Cloudtty | any> {
     const variables = {
       FQDN: data.domain,
       EMAIL: data.emailNoSymbols,
       SUB: data.sub,
     }
-
-    console.log('USER SUB: ', variables.SUB)
 
     const { userTeams } = data
 
