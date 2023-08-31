@@ -6,10 +6,10 @@ Project:
       - create-any
       - update-any
     team:
-      - delete
-      - read
-      - create
-      - update
+      - delete-any
+      - read-any
+      - create-any
+      - update-any
   type: object
   x-externalDocsPath: docs/for-devs/console/projects
   properties:
