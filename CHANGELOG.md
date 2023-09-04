@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0](https://github.com/redkubes/otomi-api/compare/v0.11.0...v1.0.0) (2023-09-04)
+
+
+### Features
+
+* added CNAME support ([#445](https://github.com/redkubes/otomi-api/issues/445)) ([245275c](https://github.com/redkubes/otomi-api/commit/245275c1d7267746042c79b5f06b6d6dfed08b01))
+* remove k8s version ([#446](https://github.com/redkubes/otomi-api/issues/446)) ([c56a4fb](https://github.com/redkubes/otomi-api/commit/c56a4fbb75f7d96376a9079441d3fe011be36f64))
+
+
+### Bug Fixes
+
+* remove repo access ([#443](https://github.com/redkubes/otomi-api/issues/443)) ([2a21569](https://github.com/redkubes/otomi-api/commit/2a215693b5899483b1b19b1d3821135855951d4f))
+
 ## [0.11.0](https://github.com/redkubes/otomi-api/compare/v0.10.0...v0.11.0) (2023-08-21)
 
 
