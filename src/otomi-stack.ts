@@ -9,6 +9,8 @@ import jwt, { JwtPayload } from 'jsonwebtoken'
 import { cloneDeep, each, filter, get, isArray, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
 import * as osPath from 'path'
+// import simpleGit from 'simple-git'
+import shell from 'shelljs'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
@@ -731,16 +733,28 @@ export default class OtomiStack {
     return this.db.getCollection('workloads') as Array<Workload>
   }
 
-  createWorkload(teamId: string, data: Workload): Workload {
+  async createWorkload(teamId: string, data: Workload): Promise<any> {
+    const path = data.path ? `/${data.path}` : ''
+    const helmChartsDir = '/tmp/helmChartsDir'
+    shell.rm('-rf', helmChartsDir)
+    shell.mkdir('-p', helmChartsDir)
+    shell.cd(helmChartsDir)
+    shell.exec(`git clone --depth 1 ${data.url} .`)
+    const files = await readdir(`${helmChartsDir}${path}`, 'utf-8')
+    const filteredFile = files.find((file) => file.startsWith(`${data.chart}`))
+    const fileContent = await readFile(`${helmChartsDir}${path}/${filteredFile}`, 'utf-8')
+    shell.rm('-rf', helmChartsDir)
+
     try {
       const w = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }) as Workload
       this.db.createItem('workloadValues', { teamId, values: {} }, { teamId, name: w.name }, w.id) as WorkloadValues
-      return w
+      return { ...w, content: fileContent }
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Workload name already exists'
       throw err
     }
   }
+
   getWorkload(id: string): Workload {
     return this.db.getItem('workloads', { id }) as Workload
   }

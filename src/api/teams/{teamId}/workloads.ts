@@ -13,9 +13,9 @@ export default function (): OperationHandlerArray {
     },
   ]
   const post: Operation = [
-    ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`createWorkload(${teamId}, ...)`)
-      const v = otomi.createWorkload(teamId, body as Workload)
+      const v = await otomi.createWorkload(teamId, body as Workload)
       res.json(v)
     },
   ]
