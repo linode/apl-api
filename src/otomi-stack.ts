@@ -9,8 +9,6 @@ import jwt, { JwtPayload } from 'jsonwebtoken'
 import { cloneDeep, each, filter, get, isArray, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
 import * as osPath from 'path'
-// import simpleGit from 'simple-git'
-import shell from 'shelljs'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
@@ -54,6 +52,7 @@ import {
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { apply, checkPodExists, getKubernetesVersion, k8sdelete, watchPodUntilRunning } from './k8s_operations'
 import connect from './otomiCloud/connect'
+import { getWorkloadChart } from './utils/workloadUtils'
 
 const debug = Debug('otomi:otomi-stack')
 
@@ -735,20 +734,21 @@ export default class OtomiStack {
 
   async createWorkload(teamId: string, data: Workload): Promise<any> {
     const path = data.path ? `/${data.path}` : ''
-    const helmChartsDir = '/tmp/helmChartsDir'
-    shell.rm('-rf', helmChartsDir)
-    shell.mkdir('-p', helmChartsDir)
-    shell.cd(helmChartsDir)
-    shell.exec(`git clone --depth 1 ${data.url} .`)
-    const files = await readdir(`${helmChartsDir}${path}`, 'utf-8')
-    const filteredFile = files.find((file) => file.startsWith(`${data.chart}`))
-    const fileContent = await readFile(`${helmChartsDir}${path}/${filteredFile}`, 'utf-8')
-    shell.rm('-rf', helmChartsDir)
+    const { customValues, customChartVersion, customChartDescription } = await getWorkloadChart(
+      data.revision as string,
+      data.url,
+      path,
+    )
 
     try {
       const w = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }) as Workload
-      this.db.createItem('workloadValues', { teamId, values: {} }, { teamId, name: w.name }, w.id) as WorkloadValues
-      return { ...w, content: fileContent }
+      const wv = this.db.createItem(
+        'workloadValues',
+        { teamId, values: customValues || {}, customChartVersion, customChartDescription },
+        { teamId, name: w.name },
+        w.id,
+      ) as WorkloadValues
+      return { ...w, wv }
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Workload name already exists'
       throw err
