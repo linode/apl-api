@@ -733,18 +733,27 @@ export default class OtomiStack {
   }
 
   async createWorkload(teamId: string, data: Workload): Promise<any> {
-    const path = data.path ? `/${data.path}` : ''
-    const { customValues, customChartVersion, customChartDescription } = await getWorkloadChart(
-      data.revision as string,
-      data.url,
-      path,
-    )
+    let values = {}
+    let customChartVersion = ''
+    let customChartDescription = ''
+
+    if (data.selectedChart === 'custom') {
+      const path = data.path ? `/${data.path}` : ''
+      const { customValues, chartVersion, chartDescription } = await getWorkloadChart(
+        data.revision as string,
+        data.url,
+        path,
+      )
+      values = customValues
+      customChartVersion = chartVersion
+      customChartDescription = chartDescription
+    }
 
     try {
       const w = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }) as Workload
       const wv = this.db.createItem(
         'workloadValues',
-        { teamId, values: customValues || {}, customChartVersion, customChartDescription },
+        { teamId, values, customChartVersion, customChartDescription },
         { teamId, name: w.name },
         w.id,
       ) as WorkloadValues

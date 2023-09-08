@@ -35,7 +35,7 @@ export async function getWorkloadChart(revision: string, url: string, path: stri
     const c = await readFile(`${helmChartsDir}${path}/Chart.yaml`, 'utf-8')
     const customValues = YAML.parse(v)
     const customChart = YAML.parse(c)
-    return { customValues, customChartVersion: customChart.version, customChartDescription: customChart.description }
+    return { customValues, chartVersion: customChart.version, chartDescription: customChart.description }
   } catch (error) {
     throwChartError(`There is no chart in '${url}' ${path ? ` path '${path}'` : ''}`)
   }
