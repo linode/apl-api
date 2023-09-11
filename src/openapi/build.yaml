@@ -27,6 +27,10 @@ Build:
       description: Image tag
     mode:
       $ref: '#/buildMode'
+    trigger:
+      type: boolean
+      default: false
+      description: Trigger the build based on a Gitea webhook. 
   required:
     - name
 
