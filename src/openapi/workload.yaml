@@ -36,7 +36,7 @@ Workload:
       description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'
       $ref: 'definitions.yaml#/domain'
     autoUpdate:
-      description: Automatically update the image. Only supported wit Helm charts in local Gitea repository and images stored in Harbor.
+      description: Automatically update the image. Only supported with Helm charts in local Gitea repository and images stored in Harbor.
       title: Auto Image Updater
       properties:
         enabled:
@@ -92,8 +92,8 @@ Workload:
                   properties:
                     versionConstraint:
                       type: string
-                      default: "1.0"
-                      description: "Example: 1.0 would allow the image to be updated to any patch version within the 1.0 minor release."
+                      default: '1.0'
+                      description: 'Example: 1.0 would allow the image to be updated to any patch version within the 1.0 minor release.'
                   required:
                     - versionConstraint
                 type:
@@ -101,7 +101,7 @@ Workload:
                   enum:
                     - semver
                   default: semver
-      
+
     selectedChart:
       enum: ['deployment', 'ksvc', 'custom']
   required:

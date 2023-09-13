@@ -102,18 +102,74 @@ export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty
   const resourceName = emailNoSymbols
   const namespace = 'team-admin'
   try {
+    const apiVersion = 'v1beta1'
+    const apiGroupAuthz = 'security.istio.io'
+    const apiGroupVS = 'networking.istio.io'
+    const pluralAuth = 'authorizationpolicies'
+    const pluralVS = 'virtualservices'
+
+    await customObjectsApi.deleteNamespacedCustomObject(
+      apiGroupAuthz,
+      apiVersion,
+      namespace,
+      pluralAuth,
+      `tty-${resourceName}`,
+    )
+
     await k8sApi.deleteNamespacedServiceAccount(`tty-${resourceName}`, namespace)
     await k8sApi.deleteNamespacedPod(`tty-${resourceName}`, namespace)
     if (!isAdmin) {
       for (const team of userTeams!)
         await rbacAuthorizationV1Api.deleteNamespacedRoleBinding(`tty-${team}-rolebinding`, team)
-    } else await rbacAuthorizationV1Api.deleteClusterRoleBinding('tty-admin-rolebinding')
+    } else await rbacAuthorizationV1Api.deleteClusterRoleBinding('tty-admin-clusterrolebinding')
     await k8sApi.deleteNamespacedService(`tty-${resourceName}`, namespace)
-    const apiGroup = 'networking.istio.io'
-    const apiVersion = 'v1beta1'
-    const plural = 'virtualservices'
-    await customObjectsApi.deleteNamespacedCustomObject(apiGroup, apiVersion, namespace, plural, `tty-${resourceName}`)
+
+    await customObjectsApi.deleteNamespacedCustomObject(
+      apiGroupVS,
+      apiVersion,
+      namespace,
+      pluralVS,
+      `tty-${resourceName}`,
+    )
   } catch (error) {
     debug('k8sdelete error:', error)
+  }
+}
+
+// Get the amount of nodes from the cluster
+export async function getNodes(envType: string) {
+  const metricsDebug = Debug('otomi:api:k8sOperations')
+  if (!envType) {
+    metricsDebug('k8sGetNodes: Local development! Returning 0 nodes')
+    return 0
+  }
+  try {
+    const kc = new k8s.KubeConfig()
+    kc.loadFromDefault()
+    const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+    const nodesResponse = await k8sApi.listNode()
+    const numberOfNodes = nodesResponse.body.items.length
+    return numberOfNodes
+  } catch (error) {
+    metricsDebug('k8sGetNodes error:', error)
+    metricsDebug('k8sGetNodes error: Error encountered, returning -1 nodes')
+    return -1
+  }
+}
+
+export async function getKubernetesVersion(envType: string) {
+  if (envType === 'dev') return 'x.x.x'
+
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+
+  const k8sApi = kc.makeApiClient(k8s.VersionApi)
+
+  try {
+    const response = await k8sApi.getCode()
+    console.log('Kubernetes Server Version:', response.body.gitVersion)
+    return response.body.gitVersion
+  } catch (err) {
+    console.error('Error:', err)
   }
 }

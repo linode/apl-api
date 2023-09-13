@@ -36,7 +36,7 @@ jobs:
         with:
           token: ${{ env.GIT_PASSWORD }}
       - name: CI tests, image build and push tag for main or branch
-        uses: whoan/docker-build-with-cache-action@v5
+        uses: whoan/docker-build-with-cache-action@v6
         with:
           username: redkubesbot
           password: '${{ secrets.NPM_TOKEN }}'
@@ -49,7 +49,7 @@ jobs:
           docker login -u otomi -p $DOCKER_PASSWORD
           docker tag $CACHE_REGISTRY/$CACHE_REPO:$TAG $REPO:$TAG
           docker push $REPO:$TAG
-      - if: startsWith(github.ref, 'refs/heads/releases/') && startsWith(github.event.head_commit.message, 'chore(release)')
+      - if: (startsWith(github.ref, 'refs/heads/releases/') || startsWith(github.ref, 'refs/heads/main'))&& startsWith(github.event.head_commit.message, 'chore(release)')
         name: Docker tag and push. Git tag and push.
         id: git_tag
         run: |
@@ -70,7 +70,7 @@ jobs:
           changelog="${changelog//$'\n'/'%0A'}"
           changelog="${changelog//$'\r'/'%0D'}"
           echo changes=$changelog >> $GITHUB_OUTPUT
-      - if: startsWith(github.ref, 'refs/heads/releases/') && startsWith(github.event.head_commit.message, 'chore(release)')
+      - if: (startsWith(github.ref, 'refs/heads/releases/') || startsWith(github.ref, 'refs/heads/main')) && startsWith(github.event.head_commit.message, 'chore(release)')
         name: Create GitHub release
         uses: actions/create-release@v1
         env:

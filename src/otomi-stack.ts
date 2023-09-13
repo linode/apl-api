@@ -12,7 +12,7 @@ import * as osPath from 'path'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
-import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
+import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
   Backup,
@@ -37,7 +37,6 @@ import {
 import getRepo, { Repo } from 'src/repo'
 import { arrayToObject, getServiceUrl, objectToArray, removeBlankAttributes } from 'src/utils'
 import {
-  cleanEnv,
   CUSTOM_ROOT_CA,
   EDITOR_INACTIVITY_TIMEOUT,
   GIT_BRANCH,
@@ -48,9 +47,10 @@ import {
   GIT_USER,
   TOOLS_HOST,
   VERSIONS,
+  cleanEnv,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
-import { apply, checkPodExists, k8sdelete, watchPodUntilRunning } from './k8s_operations'
+import { apply, checkPodExists, getKubernetesVersion, k8sdelete, watchPodUntilRunning } from './k8s_operations'
 import connect from './otomiCloud/connect'
 
 const debug = Debug('otomi:otomi-stack')
@@ -652,11 +652,20 @@ export default class OtomiStack {
     return this.db.deleteItem('builds', { id })
   }
 
+  async getK8sVersion(): Promise<string> {
+    const license = this.getLicense()
+    const envType = license.body?.envType as string
+    const version = (await getKubernetesVersion(envType)) as string
+    return version
+  }
+
   async connectCloudtty(data: Cloudtty): Promise<Cloudtty | any> {
     const variables = {
       FQDN: data.domain,
       EMAIL: data.emailNoSymbols,
+      SUB: data.sub,
     }
+
     const { userTeams } = data
 
     // if cloudtty does not exists then check if the pod is running and return it
@@ -1369,6 +1378,8 @@ export default class OtomiStack {
       'tlsPass',
       'ingressClassName',
       'headers',
+      'useCname',
+      'cname',
     )
     svc.teamId = teamId
     if (!('name' in svcRaw)) debug('Unknown service structure')
@@ -1389,8 +1400,10 @@ export default class OtomiStack {
         subdomain: url.subdomain,
         tlsPass: 'tlsPass' in svcRaw,
         type: svcRaw.type,
-        useDefaultSubdomain: !svcRaw.domain && svcRaw.ownHost,
+        useDefaultHost: !svcRaw.domain && svcRaw.ownHost,
         ingressClassName: svcRaw.ingressClassName || undefined,
+        useCname: svcRaw.useCname,
+        cname: svcRaw.cname,
       }
     }
 
@@ -1403,7 +1416,7 @@ export default class OtomiStack {
     const svcCloned = omit(svc, ['teamId', 'ingress', 'path'])
     if (svc.ingress && svc.ingress.type !== 'cluster') {
       const ing = svc.ingress
-      if (ing.useDefaultSubdomain) svcCloned.ownHost = true
+      if (ing.useDefaultHost) svcCloned.ownHost = true
       else svcCloned.domain = ing.subdomain ? `${ing.subdomain}.${ing.domain}` : ing.domain
       if (ing.hasCert) svcCloned.hasCert = true
       if (ing.certName) svcCloned.certName = ing.certName
@@ -1413,6 +1426,8 @@ export default class OtomiStack {
       if (ing.tlsPass) svcCloned.tlsPass = true
       if (ing.ingressClassName) svcCloned.ingressClassName = ing.ingressClassName
       if (ing.headers) svcCloned.headers = ing.headers
+      if (ing.useCname) svcCloned.useCname = ing.useCname
+      if (ing.cname) svcCloned.cname = ing.cname
       svcCloned.type = svc.ingress.type
     } else svcCloned.type = 'cluster'
     return svcCloned

@@ -7,7 +7,6 @@ describe('Utils', () => {
     domainSuffix: 'dev.otomi.cloud',
     apiName: 'onprem',
     apiServer: 'apiServer.onprem.example.com',
-    k8sVersion: '1.24',
     name: 'dev',
     provider: 'custom',
     region: 'eu-central-1',
@@ -30,7 +29,7 @@ describe('Utils', () => {
   })
   it('should retrieve default host if service domain not defined', (done) => {
     const x = getServiceUrl({ name: 'aa', teamId: 'bb', cluster, dns: { ...dns, zones: ['dd.ee'] } })
-    expect(x.subdomain).to.equal('aa.team-bb')
+    expect(x.subdomain).to.equal('aa-bb')
     expect(x.domain).to.equal('dev.otomi.cloud')
     done()
   })

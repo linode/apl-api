@@ -114,7 +114,7 @@ export function getServiceUrl({
   if (!domain) {
     // Fallback mechanism for exposed service that does not have its public url specified in values
     return {
-      subdomain: `${name}.team-${teamId}`,
+      subdomain: `${name}-${teamId}`,
       domain: cluster!.domainSuffix || '',
     }
   }
