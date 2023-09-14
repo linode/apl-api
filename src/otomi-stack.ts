@@ -739,10 +739,14 @@ export default class OtomiStack {
 
     if (data.selectedChart === 'custom') {
       const path = data.path ? `/${data.path}` : ''
+      const { emailNoSymbols } = data as any
       const { customValues, chartVersion, chartDescription } = await getWorkloadChart(
         data.revision as string,
         data.url,
         path,
+        data.name,
+        teamId,
+        emailNoSymbols,
       )
       values = customValues
       customChartVersion = chartVersion

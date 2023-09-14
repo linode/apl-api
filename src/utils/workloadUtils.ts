@@ -10,9 +10,16 @@ function throwChartError(message: string) {
   throw err
 }
 
-export async function getWorkloadChart(revision: string, url: string, path: string): Promise<Promise<any>> {
+export async function getWorkloadChart(
+  revision: string,
+  url: string,
+  path: string,
+  workloadName: string,
+  teamId: string,
+  emailNoSymbols: string,
+): Promise<Promise<any>> {
   let shellResult
-  const helmChartsDir = '/tmp/helmChartsDir'
+  const helmChartsDir = `/tmp/otomi/charts/${emailNoSymbols}/${teamId}-${workloadName}`
   shell.rm('-rf', helmChartsDir)
   shell.mkdir('-p', helmChartsDir)
   shell.cd(helmChartsDir)
