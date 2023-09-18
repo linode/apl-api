@@ -581,6 +581,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/Build'
 
+  '/k8sVersion':
+    get:
+      operationId: getK8sVersion
+      description: Get cluster k8s version
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully obtained k8s version
+          content:
+            application/json:
+              schema:
+                type: string
+
   '/cloudtty':
     post:
       operationId: connectCloudtty
@@ -1351,8 +1364,6 @@ components:
       $ref: definitions.yaml#/imageSimple
     ingressClassParameters:
       $ref: definitions.yaml#/ingressClassParameters
-    k8sVersion:
-      $ref: definitions.yaml#/k8sVersion
     kms:
       $ref: definitions.yaml#/kms
     lokiStorageProvider:
