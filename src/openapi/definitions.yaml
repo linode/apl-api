@@ -945,6 +945,7 @@ provider:
     - google
     - ovh
     - vultr
+    - scaleway
     - custom
 priority:
   title: Minimum priority
