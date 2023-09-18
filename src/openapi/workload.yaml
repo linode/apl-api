@@ -176,9 +176,9 @@ WorkloadValues:
               default: false
             endpoints:
               $ref: 'definitions.yaml#/endpoints'
-    customChartVersion:
+    chartVersion:
       type: string
-    customChartDescription:
+    chartDescription:
       type: string
 
   required:
