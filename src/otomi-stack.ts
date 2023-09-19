@@ -52,6 +52,7 @@ import {
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { apply, checkPodExists, getKubernetesVersion, k8sdelete, watchPodUntilRunning } from './k8s_operations'
 import connect from './otomiCloud/connect'
+import { validateBackupFields } from './utils/backupUtils'
 
 const debug = Debug('otomi:otomi-stack')
 
@@ -497,6 +498,7 @@ export default class OtomiStack {
   }
 
   createBackup(teamId: string, data: Backup): Backup {
+    validateBackupFields(data.name, data.ttl)
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return this.db.createItem('backups', { ...data, teamId }, { teamId, name: data.name }) as Backup
@@ -510,6 +512,7 @@ export default class OtomiStack {
   }
 
   editBackup(id: string, data: Backup): Backup {
+    validateBackupFields(data.name, data.ttl)
     return this.db.updateItem('backups', data, { id }) as Backup
   }
 
