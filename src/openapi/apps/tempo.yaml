@@ -1,9 +1,6 @@
 tempoValues:
   type: object
   properties:
-    adminPassword:
-      type: string
-      x-secret: 'randAlphaNum 20'
     storage:
       $ref: '#/tempoStorageProvider'
     persistence:
