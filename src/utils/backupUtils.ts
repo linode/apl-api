@@ -5,7 +5,7 @@ function isLowerCase(str) {
 }
 
 function isTTLInHours(ttl) {
-  const ttlPattern = /^(\d+)\s*(h)$/i
+  const ttlPattern = /^(\d+)*(h)$/i
   const match = ttl.match(ttlPattern)
   if (match && match[2] === 'h') return true
   return false
