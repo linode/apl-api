@@ -22,7 +22,7 @@ export function errorMiddleware(e, req: OpenApiRequest, res: Response, next): vo
   } else if (Number.isNaN(Number(code))) {
     code = 500
     msg = `${HttpError.fromCode(500).message}`
-  } else if (code === 400 && e?.errors[0].errorCode === 'required.openapi.requestValidation') {
+  } else if (code === 400 && e?.errors[0].errorCode.includes('openapi.requestValidation')) {
     const requiredProperties = e?.errors.map((item: any) => item?.path).join(', ')
     msg = `Required property missing! '${requiredProperties}'`
   }
