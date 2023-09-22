@@ -25,6 +25,15 @@ AppIngressNginx:
           minimum: 0
           default: 1073741824
           description: Needed for modsecurity. Should correspond to maxBodySize, but expressed in bytes.
+        tracing:
+          description: Configure Controller for tracing. Requires Otel Collector to be enabled.
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            samplingRatio:
+              type: string
+              default: "0.01"
         autoscaling:
           $ref: ../definitions.yaml#/autoscalingEnabled
         modsecurity:
