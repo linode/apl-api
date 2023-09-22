@@ -31,6 +31,8 @@ AppList:
     - opencost
     - prometheus
     - thanos
+    - tempo
+    - otel
     - trivy
     - vault
     - velero

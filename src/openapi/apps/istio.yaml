@@ -17,6 +17,15 @@ AppIstio:
       additionalProperties: false
       type: object
       properties:
+        tracing:
+          description: Configure Istio for tracing. Requires Otel Collector to be enabled.
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            samplingRatio:
+              type: string
+              default: "0.01"
         autoscaling:
           additionalProperties: false
           type: object
@@ -69,22 +78,6 @@ AppIstio:
                   required:
                     - limits
                     - requests
-        # meshConfig:
-        #   type: object
-        # properties:
-        #   defaultConfig:
-        #     type: object
-        #     default:
-        #       tracing:
-        #         sampling: 0.1
-        # image:
-        #   type: object
-        #   properties:
-        #     tag:
-        #       $ref: ../definitions.yaml#/imageTag
-        #       default: 1.10.1
-        #     pullPolicy:
-        #       $ref: ../definitions.yaml#/imagePullPolicy
         resources:
           type: object
           properties:
