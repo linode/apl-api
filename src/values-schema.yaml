@@ -1389,7 +1389,12 @@ definitions:
       namespace:
         description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'
         $ref: '#/definitions/domain'
-
+      autoUpdate:
+        type: boolean
+        default: false
+      buildName:
+        description: Build
+        $ref: '#/definitions/wordCharacterPattern'
     required:
       - name
       - url
@@ -1582,6 +1587,13 @@ properties:
             $ref: '#/definitions/rawValues'
           resources:
             $ref: '#/definitions/resources'
+          byoWildcardCert:
+            description: 'Bring your own trusted wildcard certificate. Only applicable for byo-wildcard-cert issuer'
+            type: string
+          byoWildcardCertKey:
+            description: 'A certificate key corresponding to the byoWildcardCert.'
+            type: string
+            x-secret: ''
           customRootCA:
             x-secret: ''
             type: string
@@ -1593,10 +1605,16 @@ properties:
           email:
             $ref: '#/definitions/email'
           issuer:
+            description: |
+              Indicates the origin of the wildcard certificate. 
+              The custom-ca - cert-manager uses the customRootCA to generate wildcard certificate.
+              The letsencrypt - cert-manager requests certificate from letsencrypt endpoint.
+              The byo-wildcard-cert allows users to bring their own trusted wildcard certificate (cert-manager not involved)
             type: string
             enum:
               - custom-ca
               - letsencrypt
+              - byo-wildcard-cert
             default: custom-ca
           stage:
             type: string
@@ -1604,22 +1622,6 @@ properties:
               - production
               - staging
             default: production
-        oneOf:
-          - properties:
-              issuer:
-                const: letsencrypt
-            required:
-              - email
-              - issuer
-          - properties:
-              issuer:
-                const: custom-ca
-            required:
-              - issuer
-          - not:
-              anyOf:
-                - required:
-                    - issuer
       cnpg:
         additionalProperties: false
         properties:
@@ -4012,6 +4014,24 @@ properties:
                 $ref: '#/definitions/backupTtl'
               schedule:
                 $ref: '#/definitions/backupSchedule'
+  databases:
+    properties:
+      keycloak:
+        title: Keycloak
+        properties:
+          useOtomiDB:
+            type: boolean
+            default: false
+          size:
+            type: string
+          resources:
+            $ref: '#/definitions/resources'
+          replicas:
+            type: integer
+            default: 2
+          imported:
+            type: boolean
+            default: false
   teamConfig:
     additionalProperties: false
     patternProperties:
