@@ -52,6 +52,8 @@ import {
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { apply, checkPodExists, getKubernetesVersion, k8sdelete, watchPodUntilRunning } from './k8s_operations'
 import connect from './otomiCloud/connect'
+import { validateBackupFields } from './utils/backupUtils'
+import { getWorkloadChart } from './utils/workloadUtils'
 
 const debug = Debug('otomi:otomi-stack')
 
@@ -497,6 +499,7 @@ export default class OtomiStack {
   }
 
   createBackup(teamId: string, data: Backup): Backup {
+    validateBackupFields(data.name, data.ttl)
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return this.db.createItem('backups', { ...data, teamId }, { teamId, name: data.name }) as Backup
@@ -510,6 +513,7 @@ export default class OtomiStack {
   }
 
   editBackup(id: string, data: Backup): Backup {
+    validateBackupFields(data.name, data.ttl)
     return this.db.updateItem('backups', data, { id }) as Backup
   }
 
@@ -573,7 +577,7 @@ export default class OtomiStack {
 
   editProject(id: string, data: Project): Project {
     const { build, workload, workloadValues, service, teamId, name } = data
-    const { values } = workloadValues as WorkloadValues
+    const { values, chartVersion, chartDescription } = workloadValues as WorkloadValues
 
     let b, w, wv, s
     if (!build?.id && build?.mode) b = this.db.createItem('builds', { ...build, teamId }, { teamId, name }) as Build
@@ -582,9 +586,14 @@ export default class OtomiStack {
     if (!workload?.id) w = this.db.createItem('workloads', { ...workload, teamId }, { teamId, name }) as Workload
     else w = this.db.updateItem('workloads', workload, { id: workload.id }) as Workload
 
-    if (!data.workloadValues?.id)
-      wv = this.db.createItem('workloadValues', { teamId, values }, { teamId, name }, w.id) as WorkloadValues
-    else wv = this.db.updateItem('workloadValues', { teamId, values }, { id: workloadValues?.id }) as WorkloadValues
+    if (!data.workloadValues?.id) {
+      wv = this.db.createItem(
+        'workloadValues',
+        { teamId, values, chartVersion: chartVersion || '', chartDescription: chartDescription || '' },
+        { teamId, name },
+        w.id,
+      ) as WorkloadValues
+    } else wv = this.db.updateItem('workloadValues', { teamId, values }, { id: workloadValues?.id }) as WorkloadValues
 
     if (!service?.id) s = this.db.createItem('services', { ...service, teamId }, { teamId, name }) as Service
     else s = this.db.updateItem('services', service, { id: service.id }) as Service
@@ -731,6 +740,20 @@ export default class OtomiStack {
     return this.db.getCollection('workloads') as Array<Workload>
   }
 
+  async getCustomWorkloadValues(data: any): Promise<any> {
+    const path = data.path ? `/${data.path}` : ''
+    const { revision, url, name, teamId, emailNoSymbols } = data
+    const { values, chartVersion, chartDescription } = await getWorkloadChart(
+      revision,
+      url,
+      path,
+      name,
+      teamId,
+      emailNoSymbols,
+    )
+    return { values, chartVersion, chartDescription }
+  }
+
   createWorkload(teamId: string, data: Workload): Workload {
     try {
       const w = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }) as Workload
@@ -741,6 +764,7 @@ export default class OtomiStack {
       throw err
     }
   }
+
   getWorkload(id: string): Workload {
     return this.db.getItem('workloads', { id }) as Workload
   }

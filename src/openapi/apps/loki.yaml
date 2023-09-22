@@ -329,28 +329,32 @@ lokiStorageProvider:
           title: S3
           description: Select to store logs in AWS S3 or S3 compatible blob storage.
           properties:
+            useInstanceRole:
+              type: boolean
+              default: false
+              description: Set to true to use an EC2 instance role (without providing credentials).
             bucket:
               type: string
-              description: The name of the bucket.
+              description: The name of the bucket. Always required!
               $ref: ../definitions.yaml#/wordCharacterPattern
             s3Url:
               type: string
-              description: The full S3 URL.
+              description: The full S3 URL. Required if use Instance Role is not set.
               $ref: ../definitions.yaml#/wordCharacterPattern
             accessKeyId:
               type: string
-              description: The ID of the access key. Optional if cloud provider is AWS.
+              description: The ID of the access key. Required if use Instance Role is not set.
               $ref: ../definitions.yaml#/wordCharacterPattern
             secretAccessKey:
               type: string
-              description: The secret of the access key. Optional if cloud provider is AWS.
+              description: The secret of the access key. Required if use Instance Role is not set.
               $ref: ../definitions.yaml#/wordCharacterPattern
               x-secret: true
+            region:
+              description: The region of the bucket. Required if use Instance Role is set.
+              $ref: ../definitions.yaml#/wordCharacterPattern
           required:
             - bucket
-            - s3Url
-            - accessKeyId
-            - secretAccessKey
         type:
           type: string
           enum:
