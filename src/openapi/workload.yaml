@@ -35,6 +35,73 @@ Workload:
     namespace:
       description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'
       $ref: 'definitions.yaml#/domain'
+    autoUpdate:
+      description: Automatically update the image. Only supported with Helm charts in local Gitea repository and images stored in Harbor.
+      title: Auto Image Updater
+      properties:
+        enabled:
+          type: boolean
+          default: false
+        build:
+          type: string
+          description: Use an Otomi Build name or the name of the image in Harbor (without '*/team-<name>/')
+        strategy:
+          type: object
+          title: Update strategy
+          description: Choose your prefered update strategy
+          oneOf:
+            - title: latest
+              type: object
+              description: Update to the most recently built image.
+              x-hideTitle: true
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - latest
+                  default: latest
+            - title: digest
+              type: object
+              x-hideTitle: true
+              description: Update to the most recent pushed version of a given tag.
+              properties:
+                digest:
+                  additionalProperties: false
+                  type: object
+                  title: Digest
+                  properties:
+                    tag:
+                      description: Tag of the build. Only if strategy is digest.
+                      type: string
+                  required:
+                    - tag
+                type:
+                  type: string
+                  enum:
+                    - digest
+                  default: digest
+            - title: semver
+              x-hideTitle: true
+              type: object
+              description: Update to semantic versions.
+              properties:
+                semver:
+                  additionalProperties: false
+                  type: object
+                  title: Semver
+                  properties:
+                    versionConstraint:
+                      type: string
+                      default: '1.0'
+                      description: 'Example: 1.0 would allow the image to be updated to any patch version within the 1.0 minor release.'
+                  required:
+                    - versionConstraint
+                type:
+                  type: string
+                  enum:
+                    - semver
+                  default: semver
+
     selectedChart:
       enum: ['deployment', 'ksvc', 'custom']
   required:

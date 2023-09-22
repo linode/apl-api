@@ -1,26 +1,8 @@
-lokiValues:
+tempoValues:
   type: object
   properties:
-    adminPassword:
-      type: string
-      x-secret: 'randAlphaNum 20'
-    retention:
-      properties:
-        duration:
-          default: 24h
-          type: string
-        period:
-          default: 24h
-          description: Should be a multiple of 24h. See https://grafana.com/docs/loki/latest/operations/storage/boltdb-shipper/.
-          type: string
-      required:
-        - duration
-    v11StartDate:
-      description: Set this to a date just after deployment in case of an upgrade.
-      title: Schema v11 start date
-      type: string
     storage:
-      $ref: '#/lokiStorageProvider'
+      $ref: '#/tempoStorageProvider'
     persistence:
       type: object
       properties:
@@ -28,56 +10,12 @@ lokiValues:
           type: object
           properties:
             size:
-              default: 20Gi
-              type: string
-        querier:
-          type: object
-          properties:
-            size:
-              default: 20Gi
+              default: 10Gi
               type: string
     autoscaling:
       type: object
       properties:
-        ingester:
-          type: object
-          properties:
-            enabled:
-              type: boolean
-              default: false
-            maxReplicas:
-              type: integer
-              default: 3
-            minReplicas:
-              type: integer
-              default: 1
-            targetCPUUtilizationPercentage:
-              type: integer
-              default: 80
-            targetMemoryUtilizationPercentage:
-              type: integer
-              default: 80
-        gateway:
-          additionalProperties: false
-          type: object
-          properties:
-            enabled:
-              type: boolean
-              default: false
-            maxReplicas:
-              type: integer
-              default: 3
-            minReplicas:
-              type: integer
-              default: 1
-            targetCPUUtilizationPercentage:
-              type: integer
-              default: 80
-            targetMemoryUtilizationPercentage:
-              type: integer
-              default: 80
         querier:
-          additionalProperties: false
           type: object
           properties:
             enabled:
@@ -96,7 +34,6 @@ lokiValues:
               type: integer
               default: 80
         distributor:
-          additionalProperties: false
           type: object
           properties:
             enabled:
@@ -115,12 +52,11 @@ lokiValues:
               type: integer
               default: 80
         queryFrontend:
-          additionalProperties: false
           type: object
           properties:
             enabled:
               type: boolean
-              default: true
+              default: false
             maxReplicas:
               type: integer
               default: 3
@@ -132,7 +68,7 @@ lokiValues:
               default: 80
             targetMemoryUtilizationPercentage:
               type: integer
-              default: 80
+              default: 80 
     resources:
       additionalProperties: false
       type: object
@@ -144,19 +80,19 @@ lokiValues:
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  default: 200m
+                  default: 500m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  default: 256Mi
+                  default: 1Gi
             requests:
               type: object
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  default: 50m
+                  default: 100m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  default: 128Mi
+                  default: 256Mi
           required:
             - limits
             - requests
@@ -167,23 +103,23 @@ lokiValues:
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  default: 200m
+                  default: 500m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  default: 256Mi
+                  default: 1Gi
             requests:
               type: object
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  default: 50m
+                  default: 100m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  default: 128Mi
+                  default: 256Mi
           required:
             - limits
             - requests
-        gateway:
+        memcached:
           properties:
             limits:
               type: object
@@ -275,10 +211,8 @@ lokiValues:
           required:
             - limits
             - requests
-  required:
-    - adminPassword
 
-lokiStorageProvider:
+tempoStorageProvider:
   type: object
   title: Storage provider
   description: Select the preferred provider for storing logs.
@@ -329,32 +263,28 @@ lokiStorageProvider:
           title: S3
           description: Select to store logs in AWS S3 or S3 compatible blob storage.
           properties:
-            useInstanceRole:
-              type: boolean
-              default: false
-              description: Set to true to use an EC2 instance role (without providing credentials).
             bucket:
               type: string
-              description: The name of the bucket. Always required!
+              description: The name of the bucket.
               $ref: ../definitions.yaml#/wordCharacterPattern
             s3Url:
               type: string
-              description: The full S3 URL. Required if use Instance Role is not set.
+              description: The full S3 URL.
               $ref: ../definitions.yaml#/wordCharacterPattern
             accessKeyId:
               type: string
-              description: The ID of the access key. Required if use Instance Role is not set.
+              description: The ID of the access key. Optional if cloud provider is AWS.
               $ref: ../definitions.yaml#/wordCharacterPattern
             secretAccessKey:
               type: string
-              description: The secret of the access key. Required if use Instance Role is not set.
+              description: The secret of the access key. Optional if cloud provider is AWS.
               $ref: ../definitions.yaml#/wordCharacterPattern
               x-secret: true
-            region:
-              description: The region of the bucket. Required if use Instance Role is set.
-              $ref: ../definitions.yaml#/wordCharacterPattern
           required:
             - bucket
+            - s3Url
+            - accessKeyId
+            - secretAccessKey
         type:
           type: string
           enum:
@@ -363,52 +293,39 @@ lokiStorageProvider:
       required:
         - s3
         - type
-    - title: gcs
-      type: object
-      x-hideTitle: true
-      properties:
-        gcs:
-          type: object
-          title: Google Object Storage
-          description: Select to store backups in Google Object Storage.
-          properties:
-            bucket:
-              type: string
-              description: Name of the bucket.
-              $ref: ../definitions.yaml#/wordCharacterPattern
-            project:
-              description: Big Table Project.
-              $ref: ../definitions.yaml#/wordCharacterPattern
-            instance:
-              description: Big Table Instance.
-              $ref: ../definitions.yaml#/wordCharacterPattern
-          required:
-            - bucket
-            - project
-            - instance
-        type:
-          type: string
-          enum:
-            - gcs
-          default: gcs
-      required:
-        - gcs
-        - type
-    - title: Filesystem
-      type: object
-      x-hideTitle: true
-      description: Use Persistent Volumes for file storage
-      properties:
-        type:
-          type: string
-          enum:
-            - filesystem
-          default: filesystem
-      required:
-        - filesystem
-        - type
+    # - title: gcs
+    #   type: object
+    #   x-hideTitle: true
+    #   properties:
+    #     gcs:
+    #       type: object
+    #       title: Google Object Storage
+    #       description: Select to store backups in Google Object Storage.
+    #       properties:
+    #         bucket:
+    #           type: string
+    #           description: Name of the bucket.
+    #           $ref: ../definitions.yaml#/wordCharacterPattern
+    #         project:
+    #           description: Big Table Project.
+    #           $ref: ../definitions.yaml#/wordCharacterPattern
+    #         instance:
+    #           description: Big Table Instance.
+    #           $ref: ../definitions.yaml#/wordCharacterPattern
+    #       required:
+    #         - bucket
+    #         - project
+    #         - instance
+    #     type:
+    #       type: string
+    #       enum:
+    #         - gcs
+    #       default: gcs
+    #   required:
+    #     - gcs
+    #     - type
 
-AppLoki:
+AppTempo:
   additionalProperties: false
   type: object
   properties:
@@ -427,6 +344,6 @@ AppLoki:
         $ref: ../definitions.yaml#/shortcut
     values:
       type: object
-      x-externalDocsPath: docs/apps/loki
-      $ref: '#/lokiValues'
+      x-externalDocsPath: docs/apps/tempo
+      $ref: '#/tempoValues'
   required: [id]

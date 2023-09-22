@@ -211,15 +211,6 @@ autoscalingNonEssentialEnabled:
           type: boolean
           default: true
     - $ref: '#/autoscalingNonEssential'
-autoscalingNonEssentialEnabledTargets:
-  type: object
-  allOf:
-    - properties:
-        enabled:
-          type: boolean
-          default: true
-    - $ref: '#/autoscalingNonEssential'
-    - $ref: '#/autoscalingTargets'
 autoscalingTargets:
   type: object
   properties:
