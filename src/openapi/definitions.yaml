@@ -211,15 +211,6 @@ autoscalingNonEssentialEnabled:
           type: boolean
           default: true
     - $ref: '#/autoscalingNonEssential'
-autoscalingNonEssentialEnabledTargets:
-  type: object
-  allOf:
-    - properties:
-        enabled:
-          type: boolean
-          default: true
-    - $ref: '#/autoscalingNonEssential'
-    - $ref: '#/autoscalingTargets'
 autoscalingTargets:
   type: object
   properties:
@@ -945,6 +936,7 @@ provider:
     - google
     - ovh
     - vultr
+    - scaleway
     - custom
 priority:
   title: Minimum priority

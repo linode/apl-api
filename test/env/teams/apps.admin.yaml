@@ -31,3 +31,5 @@ teamConfig:
             velero: {}
             falco: {}
             trivy: {}
+            tempo: {}
+            otel: {}

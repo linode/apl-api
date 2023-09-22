@@ -1,0 +1,3 @@
+apps:
+    tempo:
+        enabled: false

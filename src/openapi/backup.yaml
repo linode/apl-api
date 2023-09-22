@@ -31,5 +31,9 @@ Backup:
       title: Label Selector
       $ref: definitions.yaml#/labels
       description: (Optional) Individual objects must match this label selector to be included in the backup.
-    ttl: 
+    ttl:
       $ref: definitions.yaml#/backupTtl
+  required:
+    - name
+    - schedule
+    - ttl
