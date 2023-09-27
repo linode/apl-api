@@ -27,6 +27,10 @@ Build:
       description: Image tag
     mode:
       $ref: '#/buildMode'
+    trigger:
+      type: boolean
+      default: false
+      description: "Trigger the build based on a Gitea webhook. Use this URL for the webhook: http://el-gitea-webhook-<build-name>.team-<team-name>.svc.cluster.local"
   required:
     - name
 
