@@ -676,6 +676,7 @@ export default class OtomiStack {
   }
 
   async connectCloudtty(data: Cloudtty): Promise<Cloudtty | any> {
+    debug('connectCloudtty start!')
     const variables = {
       FQDN: data.domain,
       EMAIL: data.emailNoSymbols,
@@ -732,6 +733,7 @@ export default class OtomiStack {
     await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}`)
 
     const wrapperFunction = () => {
+      debug('wrapperFunction start!')
       getPodLogs('team-admin', `tty-${data.emailNoSymbols}`).catch((error) => {
         console.error('Error in myAsyncFunction:', error)
       })
@@ -742,7 +744,7 @@ export default class OtomiStack {
       clearInterval(intervalId)
       debug('Interval has been cleared!')
     }, 300000)
-
+    debug('connectCloudtty end!')
     return { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}` }
   }
 
