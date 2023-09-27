@@ -98,12 +98,14 @@ export async function getPodLogs(namespace: string, podName: string) {
     )
     const inputString = res.body
     const pattern = /clients: (\d+)/
-    const match = inputString.match(pattern)
-    if (match) {
+
+    let match
+
+    while ((match = pattern.exec(inputString)) !== null) {
       clientsValue = Number(match[1])
       debug(`Clients Value: ${clientsValue}`)
       return clientsValue
-    } else debug('Clients value not found in the string.')
+    }
   } catch (error) {
     debug('getPodLogs error:', error)
   }
