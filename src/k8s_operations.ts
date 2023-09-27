@@ -78,6 +78,7 @@ export async function watchPodUntilRunning(namespace: string, podName: string) {
 }
 
 export async function getPodLogs(namespace: string, podName: string) {
+  debug('getPodLogs!')
   let clientsValue: number | undefined = undefined
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()

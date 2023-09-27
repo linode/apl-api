@@ -691,11 +691,11 @@ export default class OtomiStack {
           console.error('Error in myAsyncFunction:', error)
         })
     }
-    const intervalId = setInterval(wrapperFunction, 60000)
+    const intervalId = setInterval(wrapperFunction, 10000)
     setTimeout(() => {
       clearInterval(intervalId)
       debug('Interval has been cleared!')
-    }, 300000)
+    }, 200000)
 
     // if cloudtty does not exists then check if the pod is running and return it
     if (await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`))
