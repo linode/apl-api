@@ -78,11 +78,10 @@ export async function watchPodUntilRunning(namespace: string, podName: string) {
 }
 
 export async function getPodLogs(namespace: string, podName: string) {
-  debug('getPodLogs start!')
+  let clientsValue: number | undefined = undefined
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
-
   try {
     const res = await k8sApi.readNamespacedPodLog(
       podName,
@@ -96,11 +95,17 @@ export async function getPodLogs(namespace: string, podName: string) {
       undefined,
       5,
     )
-    debug('getPodLogs res:', JSON.stringify(res))
+    const inputString = res.body
+    const pattern = /clients: (\d+)/
+    const match = inputString.match(pattern)
+    if (match) {
+      clientsValue = Number(match[1])
+      debug(`Clients Value: ${clientsValue}`)
+      return clientsValue
+    } else debug('Clients value not found in the string.')
   } catch (error) {
     debug('getPodLogs error:', error)
   }
-  debug('getPodLogs end!')
 }
 
 export async function checkPodExists(namespace: string, podName: string) {

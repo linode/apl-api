@@ -676,7 +676,6 @@ export default class OtomiStack {
   }
 
   async connectCloudtty(data: Cloudtty): Promise<Cloudtty | any> {
-    debug('connectCloudtty start!')
     const variables = {
       FQDN: data.domain,
       EMAIL: data.emailNoSymbols,
@@ -684,6 +683,19 @@ export default class OtomiStack {
     }
 
     const { userTeams } = data
+
+    const wrapperFunction = () => {
+      getPodLogs('team-admin', `tty-${data.emailNoSymbols}`)
+        .then((res) => debug('getPodLogs res: ', res))
+        .catch((error) => {
+          console.error('Error in myAsyncFunction:', error)
+        })
+    }
+    const intervalId = setInterval(wrapperFunction, 60000)
+    setTimeout(() => {
+      clearInterval(intervalId)
+      debug('Interval has been cleared!')
+    }, 300000)
 
     // if cloudtty does not exists then check if the pod is running and return it
     if (await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`))
@@ -731,20 +743,6 @@ export default class OtomiStack {
     await writeFile('/tmp/ttyd.yaml', fileContents, 'utf-8')
     await apply('/tmp/ttyd.yaml')
     await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}`)
-
-    const wrapperFunction = () => {
-      debug('wrapperFunction start!')
-      getPodLogs('team-admin', `tty-${data.emailNoSymbols}`).catch((error) => {
-        console.error('Error in myAsyncFunction:', error)
-      })
-    }
-
-    const intervalId = setInterval(wrapperFunction, 60000)
-    setTimeout(() => {
-      clearInterval(intervalId)
-      debug('Interval has been cleared!')
-    }, 300000)
-    debug('connectCloudtty end!')
     return { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}` }
   }
 
