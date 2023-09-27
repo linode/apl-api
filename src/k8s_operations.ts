@@ -79,7 +79,7 @@ export async function watchPodUntilRunning(namespace: string, podName: string) {
 
 export async function getPodLogs(namespace: string, podName: string) {
   debug('getPodLogs!')
-  let clientsValue: number | undefined = undefined
+  // let clientsValue: number | undefined = undefined
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
@@ -97,15 +97,16 @@ export async function getPodLogs(namespace: string, podName: string) {
       5,
     )
     const inputString = res.body
-    const pattern = /clients: (\d+)/
+    debug('inputString:', inputString)
+    // const pattern = /clients: (\d+)/
 
-    let match
+    // let match
 
-    while ((match = pattern.exec(inputString)) !== null) {
-      clientsValue = Number(match[1])
-      debug(`Clients Value: ${clientsValue}`)
-      return clientsValue
-    }
+    // while ((match = pattern.exec(inputString)) !== null) {
+    //   clientsValue = Number(match[1])
+    //   debug(`Clients Value: ${clientsValue}`)
+    //   return clientsValue
+    // }
   } catch (error) {
     debug('getPodLogs error:', error)
   }
