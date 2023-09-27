@@ -77,6 +77,19 @@ export async function watchPodUntilRunning(namespace: string, podName: string) {
   return true
 }
 
+export async function getPodLogs(namespace: string, podName: string) {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+
+  try {
+    const res = await k8sApi.readNamespacedPodLog(podName, namespace)
+    debug('getPodLogs res:', JSON.stringify(res))
+  } catch (error) {
+    debug('getPodLogs error:', error)
+  }
+}
+
 export async function checkPodExists(namespace: string, podName: string) {
   let isRunning = false
   const kc = new k8s.KubeConfig()

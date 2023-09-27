@@ -50,7 +50,14 @@ import {
   cleanEnv,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
-import { apply, checkPodExists, getKubernetesVersion, k8sdelete, watchPodUntilRunning } from './k8s_operations'
+import {
+  apply,
+  checkPodExists,
+  getKubernetesVersion,
+  getPodLogs,
+  k8sdelete,
+  watchPodUntilRunning,
+} from './k8s_operations'
 import connect from './otomiCloud/connect'
 import { validateBackupFields } from './utils/backupUtils'
 import { getWorkloadChart } from './utils/workloadUtils'
@@ -723,6 +730,18 @@ export default class OtomiStack {
     await writeFile('/tmp/ttyd.yaml', fileContents, 'utf-8')
     await apply('/tmp/ttyd.yaml')
     await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}`)
+
+    const wrapperFunction = () => {
+      getPodLogs('team-admin', `tty-${data.emailNoSymbols}`).catch((error) => {
+        console.error('Error in myAsyncFunction:', error)
+      })
+    }
+
+    const intervalId = setInterval(wrapperFunction, 60000)
+    setTimeout(() => {
+      clearInterval(intervalId)
+      debug('Interval has been cleared!')
+    }, 300000)
 
     return { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}` }
   }
