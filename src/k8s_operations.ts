@@ -84,7 +84,18 @@ export async function getPodLogs(namespace: string, podName: string) {
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
 
   try {
-    const res = await k8sApi.readNamespacedPodLog(podName, namespace)
+    const res = await k8sApi.readNamespacedPodLog(
+      podName,
+      namespace,
+      'po',
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      5,
+    )
     debug('getPodLogs res:', JSON.stringify(res))
   } catch (error) {
     debug('getPodLogs error:', error)
