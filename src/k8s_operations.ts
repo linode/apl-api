@@ -129,7 +129,7 @@ export async function getPodLogs(namespace: string, podName: string) {
       clientsValue = Number(match[1])
       debug(`Clients Value: ${clientsValue}`)
       debug(`Time difference: ${timeDifferenceInSeconds} seconds`)
-      if (clientsValue === 0 && timeDifferenceInSeconds > 30) return 'Terminate the shell pods!'
+      if (clientsValue === 0 && timeDifferenceInSeconds > 60) return true
     } else console.log('Timestamp not found in the input string.')
   } catch (error) {
     debug('getPodLogs error:', error)

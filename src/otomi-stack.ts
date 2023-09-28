@@ -686,16 +686,18 @@ export default class OtomiStack {
 
     const wrapperFunction = () => {
       getPodLogs('team-admin', `tty-${data.emailNoSymbols}`)
-        .then((res) => debug('getPodLogs res: ', res))
+        .then((res) => {
+          if (res) this.deleteCloudtty(data)
+        })
         .catch((error) => {
           console.error('Error in myAsyncFunction:', error)
         })
     }
-    const intervalId = setInterval(wrapperFunction, 10000)
+    const intervalId = setInterval(wrapperFunction, 10 * 1000)
     setTimeout(() => {
       clearInterval(intervalId)
       debug('Interval has been cleared!')
-    }, 200000)
+    }, 5 * 60 * 1000)
 
     // if cloudtty does not exists then check if the pod is running and return it
     if (await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`))
