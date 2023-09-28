@@ -2268,12 +2268,7 @@ properties:
                 default: otomi
               clientSecret:
                 type: string
-                x-secret: '{{ randAlphaNum 32 }}'
-          postgresqlPassword:
-            type: string
-            description: This password was generated and cannot be changed without manual intervention.
-            x-secret: '{{ randAlphaNum 20 }}'
-            readOnly: true
+                x-secret: 'randAlphaNum 32'
           adminPassword:
             type: string
             x-secret: ''
@@ -2293,8 +2288,6 @@ properties:
                 $ref: '#/definitions/resources'
               postgresql:
                 $ref: '#/definitions/resources'
-        required:
-          - postgresqlPassword
       kiali:
         additionalProperties: false
         properties:

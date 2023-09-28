@@ -30,11 +30,6 @@ AppKeycloak:
             clientSecret:
               type: string
               x-secret: 'randAlphaNum 32'
-        postgresqlPassword:
-          type: string
-          description: This password was generated and cannot be changed without manual intervention.
-          x-secret: 'randAlphaNum 20'
-          # readOnly: true
         adminPassword:
           $ref: ../definitions.yaml#/adminPassword
         theme:
@@ -68,7 +63,7 @@ AppKeycloak:
               required:
                 - limits
                 - requests
-            postgresql:
+            operator:
               type: object
               properties:
                 limits:
@@ -76,22 +71,20 @@ AppKeycloak:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: '1'
+                      default: '400m'
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 1.5Gi
+                      default: '512Mi'
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
+                      default: '100m'
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 1Gi
+                      default: '128Mi'
               required:
                 - limits
                 - requests
-      required:
-        - postgresqlPassword
   required: [id]
