@@ -35,7 +35,10 @@ export async function getWorkloadChart(
 
     if (shellResult.code !== 0)
       throwChartError(`Not found ${isCommitID ? 'commit' : 'branch or tag'} '${revision}' in '${url}'`)
-  } else shell.exec(`git clone --depth 1 ${url} .`)
+  } else {
+    shell.env['GIT_SSL_NO_VERIFY'] = 'true'
+    shell.exec(`git clone --depth 1 ${url} .`)
+  }
 
   try {
     const v = await readFile(`${helmChartsDir}${path}/values.yaml`, 'utf-8')
