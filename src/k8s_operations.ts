@@ -97,10 +97,12 @@ export async function getPodLogs(namespace: string, podName: string) {
       5,
     )
     const inputString = res.body
-    debug('inputString:', inputString)
     const lines = inputString.split('\n')
     const filteredLines = lines.filter((line) => line.includes('clients: '))
     const lastLine = filteredLines[filteredLines.length - 1]
+    const datetime = new Date()
+    debug(`Date Time Now: ${datetime.toISOString().slice(0, 10)}`)
+    debug(`Last Line: ${lastLine}`)
     const pattern = /clients: (\d+)/
     const match = pattern.exec(lastLine)
 
