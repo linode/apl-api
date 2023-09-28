@@ -12,7 +12,7 @@ function throwChartError(message: string) {
 
 export async function getWorkloadChart(
   revision: string,
-  url: string,
+  giturl: string,
   path: string,
   workloadName: string,
   teamId: string,
@@ -23,6 +23,13 @@ export async function getWorkloadChart(
   shell.rm('-rf', helmChartsDir)
   shell.mkdir('-p', helmChartsDir)
   shell.cd(helmChartsDir)
+  let url = giturl
+
+  if (giturl.includes('gitea')) {
+    shell.env['GIT_SSL_NO_VERIFY'] = 'true'
+    const [, giteaUrl] = giturl.split('://')
+    url = `https://${process.env.GIT_USER}:${process.env.GIT_PASSWORD}@${giteaUrl}`
+  }
 
   if (revision !== 'HEAD') {
     const commitIDRegex = /^[0-9a-fA-F]{40}$/
@@ -34,12 +41,8 @@ export async function getWorkloadChart(
     } else shellResult = shell.exec(`git clone --depth 1 --branch ${revision} ${url} .`)
 
     if (shellResult.code !== 0)
-      throwChartError(`Not found ${isCommitID ? 'commit' : 'branch or tag'} '${revision}' in '${url}'`)
-  } else {
-    shell.env['GIT_SSL_NO_VERIFY'] = 'true'
-    const myUrl = url.split('://')
-    shell.exec(`git clone --depth 1 https://otomi-admin:welcomeotomi@${myUrl[1]} .`)
-  }
+      throwChartError(`Not found ${isCommitID ? 'commit' : 'branch or tag'} '${revision}' in '${giturl}'`)
+  } else shell.exec(`git clone --depth 1 ${url} .`)
 
   try {
     const v = await readFile(`${helmChartsDir}${path}/values.yaml`, 'utf-8')
@@ -52,6 +55,6 @@ export async function getWorkloadChart(
       chartDescription: customChart.description,
     }
   } catch (error) {
-    throwChartError(`There is no chart in '${url}' ${path ? ` path '${path}'` : ''}`)
+    throwChartError(`There is no chart in '${giturl}' ${path ? ` path '${path}'` : ''}`)
   }
 }
