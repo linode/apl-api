@@ -37,7 +37,7 @@ export async function getWorkloadChart(
       throwChartError(`Not found ${isCommitID ? 'commit' : 'branch or tag'} '${revision}' in '${url}'`)
   } else {
     shell.env['GIT_SSL_NO_VERIFY'] = 'true'
-    shell.exec(`git clone --depth 1 ${url} .`)
+    shell.exec(`git clone --depth 1 https://otomi-admin:welcomeotomi@${url} .`)
   }
 
   try {
