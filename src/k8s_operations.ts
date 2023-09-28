@@ -78,8 +78,6 @@ export async function watchPodUntilRunning(namespace: string, podName: string) {
 }
 
 export async function getPodLogs(namespace: string, podName: string) {
-  debug('getPodLogs!')
-  let clientsValue: number | undefined = undefined
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
@@ -109,7 +107,6 @@ export async function getPodLogs(namespace: string, podName: string) {
 
     if (match && timestampMatch) {
       const [, timestampString] = timestampMatch
-      debug('timestampString', timestampString)
       const dateParts = timestampString.split(' ')
       const [date, time] = dateParts
       const [year, month, day] = date.split('/')
@@ -124,13 +121,11 @@ export async function getPodLogs(namespace: string, podName: string) {
       ).getTime()
       const currentTime: any = new Date().getTime()
       const timeDifference = currentTime - timestamp
-      debug('timeDifference', timeDifference)
       const timeDifferenceInSeconds = Math.floor(timeDifference / 1000)
-      clientsValue = Number(match[1])
-      debug(`Clients Value: ${clientsValue}`)
+      const clientsValue = Number(match[1])
       debug(`Time difference: ${timeDifferenceInSeconds} seconds`)
       if (clientsValue === 0 && timeDifferenceInSeconds > 60) return true
-    } else console.log('Timestamp not found in the input string.')
+    }
   } catch (error) {
     debug('getPodLogs error:', error)
   }
