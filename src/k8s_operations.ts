@@ -110,8 +110,11 @@ export async function getPodLogs(namespace: string, podName: string) {
     if (match && timestampMatch) {
       const [, timestampString] = timestampMatch
       const timestampDate: any = new Date(timestampString)
+      console.log('timestampDate', timestampDate)
       const currentTime: any = new Date()
+      console.log('currentTime', currentTime)
       const timeDifference = currentTime - timestampDate
+      console.log('timeDifference', timeDifference)
       const timeDifferenceInSeconds = timeDifference / 1000
       clientsValue = Number(match[1])
       debug(`Clients Value: ${clientsValue}`)
