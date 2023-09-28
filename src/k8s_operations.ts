@@ -109,6 +109,7 @@ export async function getPodLogs(namespace: string, podName: string) {
 
     if (match && timestampMatch) {
       const [, timestampString] = timestampMatch
+      console.log('timestampString', timestampString)
       const timestampDate: any = new Date(timestampString)
       console.log('timestampDate', timestampDate)
       const currentTime: any = new Date()
