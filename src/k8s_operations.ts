@@ -100,17 +100,24 @@ export async function getPodLogs(namespace: string, podName: string) {
     const lines = inputString.split('\n')
     const filteredLines = lines.filter((line) => line.includes('clients: '))
     const lastLine = filteredLines[filteredLines.length - 1]
-    const datetime = new Date()
-    debug(`Date Time Now: ${datetime.toISOString().slice(0, 10)}`)
-    debug(`Last Line: ${lastLine}`)
+
+    const timestampRegex = /\[(.*?)\]/
+    const timestampMatch = lastLine.match(timestampRegex)
+
     const pattern = /clients: (\d+)/
     const match = pattern.exec(lastLine)
 
-    if (match) {
+    if (match && timestampMatch) {
+      const [, timestampString] = timestampMatch
+      const timestampDate: any = new Date(timestampString)
+      const currentTime: any = new Date()
+      const timeDifference = currentTime - timestampDate
+      const timeDifferenceInSeconds = timeDifference / 1000
       clientsValue = Number(match[1])
       debug(`Clients Value: ${clientsValue}`)
-      return clientsValue
-    } else debug('No match found')
+      debug(`Time difference: ${timeDifferenceInSeconds} seconds`)
+      if (clientsValue === 0 && timeDifferenceInSeconds > 30) return 'Terminate the shell pods!'
+    } else console.log('Timestamp not found in the input string.')
   } catch (error) {
     debug('getPodLogs error:', error)
   }
