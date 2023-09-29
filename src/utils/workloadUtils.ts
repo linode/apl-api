@@ -24,7 +24,7 @@ export async function getWorkloadChart(
   const helmChartsDir = `/tmp/otomi/charts/${emailNoSymbols}/${teamId}-${workloadName}`
   shell.rm('-rf', helmChartsDir)
   shell.mkdir('-p', helmChartsDir)
-  shell.cd(helmChartsDir)
+  // shell.cd(helmChartsDir)
   let url = giturl
 
   if (giturl.includes('gitea')) {
@@ -37,13 +37,13 @@ export async function getWorkloadChart(
     const isCommitID = commitIDRegex.test(revision)
 
     if (isCommitID) {
-      shell.exec(`git clone ${url} .`)
+      shell.exec(`git clone ${url} helmChartsDir`)
       shellResult = shell.exec(`git reset --hard ${revision}`)
-    } else shellResult = shell.exec(`git clone --depth 1 --branch ${revision} ${url} .`)
+    } else shellResult = shell.exec(`git clone --depth 1 --branch ${revision} ${url} helmChartsDir`)
 
     if (shellResult.code !== 0)
       throwChartError(`Not found ${isCommitID ? 'commit' : 'branch or tag'} '${revision}' in '${giturl}'`)
-  } else shell.exec(`git clone --depth 1 ${url} .`)
+  } else shell.exec(`git clone --depth 1 ${url} helmChartsDir`)
 
   shellResult = shell.pwd()
   console.log('shellResult', shellResult)
