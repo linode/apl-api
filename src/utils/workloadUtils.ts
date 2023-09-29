@@ -19,6 +19,8 @@ export async function getWorkloadChart(
   emailNoSymbols: string,
 ): Promise<Promise<any>> {
   let shellResult
+  shellResult = shell.pwd()
+  console.log('shellResult', shellResult)
   const helmChartsDir = `/tmp/otomi/charts/${emailNoSymbols}/${teamId}-${workloadName}`
   shell.rm('-rf', helmChartsDir)
   shell.mkdir('-p', helmChartsDir)
@@ -42,6 +44,9 @@ export async function getWorkloadChart(
     if (shellResult.code !== 0)
       throwChartError(`Not found ${isCommitID ? 'commit' : 'branch or tag'} '${revision}' in '${giturl}'`)
   } else shell.exec(`git clone --depth 1 ${url} .`)
+
+  shellResult = shell.pwd()
+  console.log('shellResult', shellResult)
 
   try {
     const v = await readFile(`${helmChartsDir}${path}/values.yaml`, 'utf-8')
