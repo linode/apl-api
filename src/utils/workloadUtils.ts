@@ -26,7 +26,6 @@ export async function getWorkloadChart(
   let url = giturl
 
   if (giturl.includes('gitea')) {
-    shell.env['GIT_SSL_NO_VERIFY'] = 'true'
     const [, giteaUrl] = giturl.split('://')
     url = `https://${process.env.GIT_USER}:${process.env.GIT_PASSWORD}@${giteaUrl}`
   }
