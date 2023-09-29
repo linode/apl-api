@@ -53,8 +53,8 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import {
   apply,
   checkPodExists,
+  getCloudttyActiveTime,
   getKubernetesVersion,
-  getPodLogs,
   k8sdelete,
   watchPodUntilRunning,
 } from './k8s_operations'
@@ -690,17 +690,6 @@ export default class OtomiStack {
 
     if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
 
-    let myfiles: any = []
-
-    try {
-      readdir('./dist/src/ttyManifests/adminTtyManifests', 'utf-8').then((files) => {
-        myfiles = files
-        console.log('myfiles', myfiles)
-      })
-    } catch (error) {
-      console.log('error', error)
-    }
-
     //if user is admin then read the manifests from ./dist/src/ttyManifests/adminTtyManifests
     const files = data.isAdmin
       ? await readdir('./dist/src/ttyManifests/adminTtyManifests', 'utf-8')
@@ -742,18 +731,18 @@ export default class OtomiStack {
     await apply('/tmp/ttyd.yaml')
     await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}`)
 
+    const ISACTIVE_INTERVAL = 10 * 1000
+    const TERMINATE_TIMEOUT = 60 * 1000
+
     const intervalId = setInterval(() => {
-      getPodLogs('team-admin', `tty-${data.emailNoSymbols}`)
-        .then((res) => {
-          if (res) {
-            this.deleteCloudtty(data)
-            clearInterval(intervalId)
-          }
-        })
-        .catch((error) => {
-          console.error('Error in myAsyncFunction:', error)
-        })
-    }, 10 * 1000)
+      getCloudttyActiveTime('team-admin', `tty-${data.emailNoSymbols}`).then((activeTime: number) => {
+        if (activeTime > TERMINATE_TIMEOUT) {
+          this.deleteCloudtty(data)
+          clearInterval(intervalId)
+          debug(`Cloudtty terminated after ${TERMINATE_TIMEOUT / 1000} seconds of inactivity`)
+        }
+      })
+    }, ISACTIVE_INTERVAL)
 
     return { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}` }
   }

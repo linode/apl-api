@@ -77,60 +77,6 @@ export async function watchPodUntilRunning(namespace: string, podName: string) {
   return true
 }
 
-export async function getPodLogs(namespace: string, podName: string) {
-  const kc = new k8s.KubeConfig()
-  kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
-  try {
-    const res = await k8sApi.readNamespacedPodLog(
-      podName,
-      namespace,
-      'po',
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      3,
-    )
-    const inputString = res.body
-    const lines = inputString.split('\n')
-    const filteredLines = lines.filter((line) => line.includes('clients: '))
-    const lastLine = filteredLines[filteredLines.length - 1]
-
-    const timestampRegex = /\[(.*?)\]/
-    const timestampMatch = lastLine.match(timestampRegex)
-
-    const pattern = /clients: (\d+)/
-    const match = pattern.exec(lastLine)
-
-    if (match && timestampMatch) {
-      const [, timestampString] = timestampMatch
-      const dateParts = timestampString.split(' ')
-      const [date, time] = dateParts
-      const [year, month, day] = date.split('/')
-      const [hour, minute, second] = time.split(':')
-      const timestamp = new Date(
-        Number(year),
-        Number(month) - 1,
-        Number(day),
-        Number(hour),
-        Number(minute),
-        Number(second),
-      ).getTime()
-      const currentTime: any = new Date().getTime()
-      const timeDifference = currentTime - timestamp
-      const timeDifferenceInSeconds = Math.floor(timeDifference / 1000)
-      const clientsValue = Number(match[1])
-      debug(`Time difference: ${timeDifferenceInSeconds} seconds`)
-      if (clientsValue === 0 && timeDifferenceInSeconds > 60) return true
-    }
-  } catch (error) {
-    debug('getPodLogs error:', error)
-  }
-}
-
 export async function checkPodExists(namespace: string, podName: string) {
   let isRunning = false
   const kc = new k8s.KubeConfig()
@@ -225,5 +171,59 @@ export async function getKubernetesVersion(envType: string) {
     return response.body.gitVersion
   } catch (err) {
     console.error('Error:', err)
+  }
+}
+
+function getLogTime(timestampMatch): number {
+  const [, timestampString] = timestampMatch
+  const dateParts = timestampString.split(' ')
+  const [date, time] = dateParts
+  const [year, month, day] = date.split('/')
+  const [hour, minute, second] = time.split(':')
+  const timestamp = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+    Number(second),
+  ).getTime()
+  return timestamp
+}
+
+export async function getCloudttyActiveTime(namespace: string, podName: string): Promise<number | undefined> {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  try {
+    const res = await k8sApi.readNamespacedPodLog(
+      podName,
+      namespace,
+      'po',
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      3, // get the updated clients count from the last 3 lines
+    )
+    const lines = res.body.split('\n')
+    const filteredLine = lines.find((line) => line.includes('clients:')) || ''
+    const clientsRegex = /clients: (\d+)/
+    const clientsMatch = clientsRegex.exec(filteredLine)
+    const timestampRegex = /\[(.*?)\]/
+    const timestampMatch = filteredLine.match(timestampRegex)
+
+    if (clientsMatch && timestampMatch) {
+      const clients = Number(clientsMatch[1])
+      if (clients > 0) return 0
+      const currentTime: any = new Date().getTime()
+      const timeDifference = currentTime - getLogTime(timestampMatch)
+      const timeDifferenceInSeconds = Math.floor(timeDifference / 1000)
+      return timeDifferenceInSeconds
+    }
+  } catch (error) {
+    debug('getCloudttyActiveTime error:', error)
   }
 }
