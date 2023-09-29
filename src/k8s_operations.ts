@@ -218,10 +218,9 @@ export async function getCloudttyActiveTime(namespace: string, podName: string):
     if (clientsMatch && timestampMatch) {
       const clients = Number(clientsMatch[1])
       if (clients > 0) return 0
-      const currentTime: any = new Date().getTime()
+      const currentTime = new Date().getTime()
       const timeDifference = currentTime - getLogTime(timestampMatch)
-      const timeDifferenceInSeconds = Math.floor(timeDifference / 1000)
-      return timeDifferenceInSeconds
+      return timeDifference
     }
   } catch (error) {
     debug('getCloudttyActiveTime error:', error)
