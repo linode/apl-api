@@ -731,15 +731,16 @@ export default class OtomiStack {
     await apply('/tmp/ttyd.yaml')
     await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}`)
 
-    const ISACTIVE_INTERVAL = 10 * 1000
-    const TERMINATE_TIMEOUT = 60 * 1000
-
+    // check the pod every 30 minutes and terminate it after 2 hours of inactivity
+    const ISACTIVE_INTERVAL = 3 * 60 * 1000
+    const TERMINATE_TIMEOUT = 10 * 60 * 1000
     const intervalId = setInterval(() => {
       getCloudttyActiveTime('team-admin', `tty-${data.emailNoSymbols}`).then((activeTime: number) => {
+        console.log('activeTime', activeTime)
         if (activeTime > TERMINATE_TIMEOUT) {
           this.deleteCloudtty(data)
           clearInterval(intervalId)
-          debug(`Cloudtty terminated after ${TERMINATE_TIMEOUT / 1000} seconds of inactivity`)
+          debug(`Cloudtty terminated after ${TERMINATE_TIMEOUT / (60 * 60 * 1000)} hours of inactivity`)
         }
       })
     }, ISACTIVE_INTERVAL)
