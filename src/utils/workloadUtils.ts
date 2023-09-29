@@ -10,6 +10,20 @@ function throwChartError(message: string) {
   throw err
 }
 
+function isGiteaURL(url: string) {
+  let hostname = ''
+  if (url) {
+    try {
+      hostname = new URL(url).hostname
+    } catch (e) {
+      // ignore
+      return false
+    }
+  }
+  const giteaPattern = /^gitea\..+/i
+  return giteaPattern.test(hostname)
+}
+
 export async function getWorkloadChart(
   revision: string,
   url: string,
@@ -22,20 +36,25 @@ export async function getWorkloadChart(
   const helmChartsDir = `/tmp/otomi/charts/${emailNoSymbols}/${teamId}-${workloadName}`
   shell.rm('-rf', helmChartsDir)
   shell.mkdir('-p', helmChartsDir)
-  shell.cd(helmChartsDir)
+  let gitUrl = url
+
+  if (isGiteaURL(url)) {
+    const [protocol, bareUrl] = url.split('://')
+    gitUrl = `${protocol}://${process.env.GIT_USER}:${process.env.GIT_PASSWORD}@${bareUrl}`
+  }
 
   if (revision !== 'HEAD') {
     const commitIDRegex = /^[0-9a-fA-F]{40}$/
     const isCommitID = commitIDRegex.test(revision)
 
     if (isCommitID) {
-      shell.exec(`git clone ${url} .`)
+      shell.exec(`git clone ${gitUrl} ${helmChartsDir}`)
       shellResult = shell.exec(`git reset --hard ${revision}`)
-    } else shellResult = shell.exec(`git clone --depth 1 --branch ${revision} ${url} .`)
+    } else shellResult = shell.exec(`git clone --depth 1 --branch ${revision} ${gitUrl} ${helmChartsDir}`)
 
     if (shellResult.code !== 0)
       throwChartError(`Not found ${isCommitID ? 'commit' : 'branch or tag'} '${revision}' in '${url}'`)
-  } else shell.exec(`git clone --depth 1 ${url} .`)
+  } else shell.exec(`git clone --depth 1 ${gitUrl} ${helmChartsDir}`)
 
   try {
     const v = await readFile(`${helmChartsDir}${path}/values.yaml`, 'utf-8')
