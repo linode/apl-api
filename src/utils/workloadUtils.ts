@@ -37,13 +37,13 @@ export async function getWorkloadChart(
     const isCommitID = commitIDRegex.test(revision)
 
     if (isCommitID) {
-      shell.exec(`git clone ${url} helmChartsDir`)
+      shell.exec(`git clone ${url} ${helmChartsDir}`)
       shellResult = shell.exec(`git reset --hard ${revision}`)
-    } else shellResult = shell.exec(`git clone --depth 1 --branch ${revision} ${url} helmChartsDir`)
+    } else shellResult = shell.exec(`git clone --depth 1 --branch ${revision} ${url} ${helmChartsDir}`)
 
     if (shellResult.code !== 0)
       throwChartError(`Not found ${isCommitID ? 'commit' : 'branch or tag'} '${revision}' in '${giturl}'`)
-  } else shell.exec(`git clone --depth 1 ${url} helmChartsDir`)
+  } else shell.exec(`git clone --depth 1 ${url} ${helmChartsDir}`)
 
   shellResult = shell.pwd()
   console.log('shellResult', shellResult)
