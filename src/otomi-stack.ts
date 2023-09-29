@@ -690,6 +690,17 @@ export default class OtomiStack {
 
     if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
 
+    let myfiles: any = []
+
+    try {
+      readdir('./dist/src/ttyManifests/adminTtyManifests', 'utf-8').then((files) => {
+        myfiles = files
+        console.log('myfiles', myfiles)
+      })
+    } catch (error) {
+      console.log('error', error)
+    }
+
     //if user is admin then read the manifests from ./dist/src/ttyManifests/adminTtyManifests
     const files = data.isAdmin
       ? await readdir('./dist/src/ttyManifests/adminTtyManifests', 'utf-8')

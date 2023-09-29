@@ -92,7 +92,7 @@ export async function getPodLogs(namespace: string, podName: string) {
       undefined,
       undefined,
       undefined,
-      5,
+      3,
     )
     const inputString = res.body
     const lines = inputString.split('\n')
