@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/redkubes/otomi-api/compare/v1.0.0...v1.1.0) (2023-10-03)
+
+
+### Features
+
+* add tracing using OpenTelemetry and Grafana Tempo ([#438](https://github.com/redkubes/otomi-api/issues/438)) ([eafdd12](https://github.com/redkubes/otomi-api/commit/eafdd12f5cd69a62287821d1262288a7e933c2f2))
+* auto image updater ([#441](https://github.com/redkubes/otomi-api/issues/441)) ([fe6aff6](https://github.com/redkubes/otomi-api/commit/fe6aff67d4f4aaf5e16a0d15925e01a790217b4d))
+* enhance Velero Backup schedule forms ([#452](https://github.com/redkubes/otomi-api/issues/452)) ([dcddf72](https://github.com/redkubes/otomi-api/commit/dcddf72f525304fcbfb67d46de756449582bae89))
+* get default chart values and  chart metadata on workload creation([#448](https://github.com/redkubes/otomi-api/issues/448)) ([6d84276](https://github.com/redkubes/otomi-api/commit/6d84276c78696aec22126941e139844cd857a827))
+* keycloak upgrade ([#453](https://github.com/redkubes/otomi-api/issues/453)) ([87a7500](https://github.com/redkubes/otomi-api/commit/87a7500f5169a20938c007694516acd399101bd5))
+* trigger build ([#449](https://github.com/redkubes/otomi-api/issues/449)) ([ca5cbcc](https://github.com/redkubes/otomi-api/commit/ca5cbcc253db513c2dd73466611196ff2e1a0863))
+* updated tty-console image version ([#455](https://github.com/redkubes/otomi-api/issues/455)) ([3c66ba8](https://github.com/redkubes/otomi-api/commit/3c66ba87c2cc50ecdbcab85b8a99ef77560edc7d))
+* use ec2 role for s3 access ([#451](https://github.com/redkubes/otomi-api/issues/451)) ([c57d277](https://github.com/redkubes/otomi-api/commit/c57d27746d447b28dd5c4d49e6c88f0aaeb5b23a))
+
+
+### Bug Fixes
+
+* add provider ([#450](https://github.com/redkubes/otomi-api/issues/450)) ([0bc675a](https://github.com/redkubes/otomi-api/commit/0bc675a21b036305a2e16865e480f63685dc6e52))
+* custom workloads for gitea ([#456](https://github.com/redkubes/otomi-api/issues/456)) ([5e9b9ac](https://github.com/redkubes/otomi-api/commit/5e9b9acf59aa58474c8f683de54bb984568e309a))
+* trigger description ([#454](https://github.com/redkubes/otomi-api/issues/454)) ([af27b46](https://github.com/redkubes/otomi-api/commit/af27b46a0354eef7ee40b4933720ecf6760fb445))
+
 ## [1.0.0](https://github.com/redkubes/otomi-api/compare/v0.11.0...v1.0.0) (2023-09-04)
 
 
