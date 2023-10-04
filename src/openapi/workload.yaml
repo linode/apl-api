@@ -36,11 +36,11 @@ Workload:
               additionalProperties: false
               type: object
               properties:
-                chartRepo:
+                chart:
                   type: string
                   description: 'Chart is a Helm chart name, and must be specified for applications sourced from a Helm repo.'
               required:
-                - chartRepo
+                - chart
             type:
               type: string
               enum:
@@ -55,11 +55,11 @@ Workload:
               additionalProperties: false
               type: object
               properties:
-                giteaRepo:
+                path:
                   type: string
                   description: 'A relative directory path within the Git repository. Absolute paths cause errors. (only valid for applications sourced from Git)'
               required:
-                - giteaRepo
+                - path
             type:
               type: string
               enum:
