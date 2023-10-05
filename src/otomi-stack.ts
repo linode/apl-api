@@ -741,7 +741,7 @@ export default class OtomiStack {
   }
 
   async getCustomWorkloadValues(data: any): Promise<any> {
-    const path = data.chartProvider.gitea.path ? `/${data.chartProvider.gitea.path}` : ''
+    const path = data.path ? `/${data.path}` : ''
     const { revision, url, name, teamId, emailNoSymbols } = data
     const { values, chartVersion, chartDescription } = await getWorkloadChart(
       revision,
