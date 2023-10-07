@@ -952,6 +952,7 @@ provider:
     - ovh
     - vultr
     - scaleway
+    - civo
     - custom
 priority:
   title: Minimum priority
