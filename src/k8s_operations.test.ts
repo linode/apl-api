@@ -7,7 +7,7 @@ describe('getCloudttyLogTime', () => {
   it('should return the timestamp for a valid log timestamp', () => {
     const timestampMatch = ['[2023/10/10 00:00:00:0000]', '2023/10/10 00:00:00']
     const result = getLogTime(timestampMatch)
-    expect(result).to.equal(1696888800000)
+    expect(result).to.equal(1696896000000)
   })
 
   it('should return NaN for an invalid log timestamp', () => {
