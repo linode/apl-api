@@ -174,7 +174,7 @@ export async function getKubernetesVersion(envType: string) {
   }
 }
 
-function getLogTime(timestampMatch): number {
+export function getLogTime(timestampMatch): number {
   const [, timestampString] = timestampMatch
   const dateParts = timestampString.split(' ')
   const [date, time] = dateParts
