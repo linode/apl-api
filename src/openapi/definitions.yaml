@@ -503,21 +503,6 @@ dns:
           required:
             - digitalocean
           type: object
-        - title: Civo Cloud
-          properties:
-            civo:
-              x-hideTitle: true
-              properties:
-                apiToken:
-                  type: string
-                  x-acl:
-                    admin: [read-any, update-any]
-                    team: []
-                  x-secret: true
-              type: object
-          required:
-            - civo
-          type: object
         - title: Google
           properties:
             google:
@@ -952,7 +937,6 @@ provider:
     - ovh
     - vultr
     - scaleway
-    - civo
     - custom
 priority:
   title: Minimum priority
