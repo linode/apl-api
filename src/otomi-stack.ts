@@ -50,7 +50,14 @@ import {
   cleanEnv,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
-import { apply, checkPodExists, getKubernetesVersion, k8sdelete, watchPodUntilRunning } from './k8s_operations'
+import {
+  apply,
+  checkPodExists,
+  getCloudttyActiveTime,
+  getKubernetesVersion,
+  k8sdelete,
+  watchPodUntilRunning,
+} from './k8s_operations'
 import connect from './otomiCloud/connect'
 import { validateBackupFields } from './utils/backupUtils'
 import { getWorkloadChart } from './utils/workloadUtils'
@@ -723,6 +730,19 @@ export default class OtomiStack {
     await writeFile('/tmp/ttyd.yaml', fileContents, 'utf-8')
     await apply('/tmp/ttyd.yaml')
     await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}`)
+
+    // check the pod every 30 minutes and terminate it after 2 hours of inactivity
+    const ISACTIVE_INTERVAL = 30 * 60 * 1000
+    const TERMINATE_TIMEOUT = 2 * 60 * 60 * 1000
+    const intervalId = setInterval(() => {
+      getCloudttyActiveTime('team-admin', `tty-${data.emailNoSymbols}`).then((activeTime: number) => {
+        if (activeTime > TERMINATE_TIMEOUT) {
+          this.deleteCloudtty(data)
+          clearInterval(intervalId)
+          debug(`Cloudtty terminated after ${TERMINATE_TIMEOUT / (60 * 60 * 1000)} hours of inactivity`)
+        }
+      })
+    }, ISACTIVE_INTERVAL)
 
     return { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}` }
   }
