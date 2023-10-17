@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/redkubes/otomi-api/compare/v1.1.0...v1.2.0) (2023-10-17)
+
+
+### Features
+
+* add civo dns support ([#459](https://github.com/redkubes/otomi-api/issues/459)) ([37d2a9e](https://github.com/redkubes/otomi-api/commit/37d2a9e496c41a13f8934c2c7c4b00330b9c0c44))
+* terminate the cloudtty shell after timeout ([#457](https://github.com/redkubes/otomi-api/issues/457)) ([da80872](https://github.com/redkubes/otomi-api/commit/da808726baf054426905e46d5ed3e6b0a13455a4))
+* workload improvements ([#458](https://github.com/redkubes/otomi-api/issues/458)) ([627817d](https://github.com/redkubes/otomi-api/commit/627817dc400a55ae92af0f786e3b9358441144c7))
+
 ## [1.1.0](https://github.com/redkubes/otomi-api/compare/v1.0.0...v1.1.0) (2023-10-03)
 
 
