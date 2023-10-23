@@ -47,19 +47,19 @@ AppKeycloak:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: '1'
+                      default: '2'
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 1.5Gi
+                      default: 1Gi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 100m
+                      default: 200m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 1Gi
+                      default: 512Mi
               required:
                 - limits
                 - requests
@@ -71,7 +71,7 @@ AppKeycloak:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: '400m'
+                      default: '1'
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
                       default: '512Mi'
