@@ -26,8 +26,8 @@ function isGiteaURL(url: string) {
 }
 
 export async function getWorkloadCatalog(url: string): Promise<Promise<any>> {
-  const helmChartsDir = `/tmp/otomi/charts`
-  shell.rm('-rf', helmChartsDir)
+  const timestamp = new Date('2023-10-10T00:00:00.000').getTime()
+  const helmChartsDir = `/tmp/otomi/charts/${timestamp}`
   shell.mkdir('-p', helmChartsDir)
   let gitUrl = url
 
@@ -60,5 +60,12 @@ export async function getWorkloadCatalog(url: string): Promise<Promise<any>> {
     }
   }
   if (!catalog.length) throwChartError(`There are no charts in '${url}'`)
+  // remove the related charts folder after 10 minutes
+  const TIMEOUT = 5 * 60 * 1000
+  const intervalId = setInterval(() => {
+    shell.rm('-rf', helmChartsDir)
+    console.log(`Removed ${helmChartsDir}`)
+    clearInterval(intervalId)
+  }, TIMEOUT)
   return { helmCharts, catalog }
 }

@@ -27,7 +27,6 @@ Workload:
           title: Helm chart catalog
           enum: ['https://github.com/redkubes/otomi-charts.git']
           default: https://github.com/redkubes/otomi-charts.git
-          readOnly: true
         helmChart:
           type: string
           title: Helm chart
@@ -42,7 +41,7 @@ Workload:
           default: false
         imageRegistry:
           type: string
-          description: Use an Otomi Build name or the name of the image in Harbor (without '*/team-<name>/')
+          description: Use the url of the container image registry
         strategy:
           type: object
           title: Update strategy
