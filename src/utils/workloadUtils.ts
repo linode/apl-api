@@ -26,7 +26,7 @@ function isGiteaURL(url: string) {
 }
 
 export async function getWorkloadCatalog(url: string): Promise<Promise<any>> {
-  const timestamp = new Date('2023-10-10T00:00:00.000').getTime()
+  const timestamp = new Date().getTime()
   const helmChartsDir = `/tmp/otomi/charts/${timestamp}`
   shell.mkdir('-p', helmChartsDir)
   let gitUrl = url
