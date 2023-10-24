@@ -22,7 +22,6 @@ AppList:
     - keycloak
     - kiali
     - knative
-    - kubeapps
     - kubeclarity
     - kured
     - tekton

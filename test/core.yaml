@@ -51,10 +51,6 @@ k8s:
       app: knative
       disablePolicyChecks: true
       disableIstioInjection: true
-    - name: kubeapps
-      app: kubeapps
-      disableIstioInjection: true
-      disablePolicyChecks: true
     - name: kubeclarity
       app: kubeclarity
     - name: kured
@@ -254,16 +250,6 @@ adminApps:
   - name: knative
     tags: [serverless, functions]
     deps: [istio]
-  - name: kubeapps
-    tags: [dev, apps]
-    deps: [operator-lifecycle-manager]
-    isShared: true
-    ownHost: true
-    ingress:
-      - svc: kubeapps
-        namespace: kubeapps
-        type: public
-        # auth: true
   - name: kubeclarity
     tags: [security]
     ownHost: true

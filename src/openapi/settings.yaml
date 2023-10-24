@@ -93,15 +93,6 @@ Settings:
                   $ref: definitions.yaml#/backupTtl
                 schedule:
                   $ref: definitions.yaml#/backupSchedule
-            kubeapps:
-              title: Kubeapps
-              properties:
-                enabled:
-                  type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
-                schedule:
-                  $ref: definitions.yaml#/backupSchedule
             minio:
               title: Minio
               properties:
