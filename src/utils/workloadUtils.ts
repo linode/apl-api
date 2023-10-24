@@ -1,4 +1,5 @@
 import { readFile } from 'fs-extra'
+import { readdir } from 'fs/promises'
 import shell from 'shelljs'
 import YAML from 'yaml'
 
@@ -24,16 +25,8 @@ function isGiteaURL(url: string) {
   return giteaPattern.test(hostname)
 }
 
-export async function getWorkloadChart(
-  revision: string,
-  url: string,
-  path: string,
-  workloadName: string,
-  teamId: string,
-  emailNoSymbols: string,
-): Promise<Promise<any>> {
-  let shellResult
-  const helmChartsDir = `/tmp/otomi/charts/${emailNoSymbols}/${teamId}-${workloadName}`
+export async function getWorkloadCatalog(url: string): Promise<Promise<any>> {
+  const helmChartsDir = `/tmp/otomi/charts`
   shell.rm('-rf', helmChartsDir)
   shell.mkdir('-p', helmChartsDir)
   let gitUrl = url
@@ -43,30 +36,29 @@ export async function getWorkloadChart(
     gitUrl = `${protocol}://${process.env.GIT_USER}:${process.env.GIT_PASSWORD}@${bareUrl}`
   }
 
-  if (revision !== 'HEAD') {
-    const commitIDRegex = /^[0-9a-fA-F]{40}$/
-    const isCommitID = commitIDRegex.test(revision)
+  shell.exec(`git clone --depth 1 ${gitUrl} ${helmChartsDir}`)
+  const folders = await readdir(`${helmChartsDir}`, 'utf-8')
 
-    if (isCommitID) {
-      shell.exec(`git clone ${gitUrl} ${helmChartsDir}`)
-      shellResult = shell.exec(`git reset --hard ${revision}`)
-    } else shellResult = shell.exec(`git clone --depth 1 --branch ${revision} ${gitUrl} ${helmChartsDir}`)
-
-    if (shellResult.code !== 0)
-      throwChartError(`Not found ${isCommitID ? 'commit' : 'branch or tag'} '${revision}' in '${url}'`)
-  } else shell.exec(`git clone --depth 1 ${gitUrl} ${helmChartsDir}`)
-
-  try {
-    const v = await readFile(`${helmChartsDir}${path}/values.yaml`, 'utf-8')
-    const c = await readFile(`${helmChartsDir}${path}/Chart.yaml`, 'utf-8')
-    const customValues = YAML.parse(v)
-    const customChart = YAML.parse(c)
-    return {
-      values: customValues,
-      chartVersion: customChart.version,
-      chartDescription: customChart.description,
+  const catalog: any[] = []
+  const helmCharts: string[] = []
+  for (const folder of folders) {
+    try {
+      const v = await readFile(`${helmChartsDir}/${folder}/values.yaml`, 'utf-8')
+      const c = await readFile(`${helmChartsDir}/${folder}/Chart.yaml`, 'utf-8')
+      const customValues = YAML.parse(v)
+      const customChart = YAML.parse(c)
+      const catalogItem = {
+        name: folder,
+        values: customValues,
+        chartVersion: customChart.version,
+        chartDescription: customChart.description,
+      }
+      catalog.push(catalogItem)
+      helmCharts.push(folder)
+    } catch (error) {
+      console.error(`Error reading or parsing files for ${folder}: ${error.message}`)
     }
-  } catch (error) {
-    throwChartError(`There is no chart in '${url}' ${path ? ` path '${path}'` : ''}`)
   }
+  if (!catalog.length) throwChartError(`There are no charts in '${url}'`)
+  return { helmCharts, catalog }
 }
