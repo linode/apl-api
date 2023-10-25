@@ -25,13 +25,20 @@ Workload:
         helmChartCatalog:
           type: string
           title: Helm chart catalog
-          enum: ['https://github.com/redkubes/otomi-charts.git']
           default: https://github.com/redkubes/otomi-charts.git
         helmChart:
           type: string
           title: Helm chart
           enum: ['deployment', 'ksvc']
           default: deployment
+        helmChartVersion:
+          type: string
+          title: Helm chart version
+          default: ''
+        helmChartDescription:
+          type: string
+          title: Helm chart description
+          default: ''
     autoUpdate:
       description: Automatically update the image. Only supported with Helm charts in local Gitea repository and images stored in Harbor.
       title: Auto Image Updater
