@@ -584,7 +584,7 @@ export default class OtomiStack {
 
   editProject(id: string, data: Project): Project {
     const { build, workload, workloadValues, service, teamId, name } = data
-    const { values, chartVersion, chartDescription } = workloadValues as WorkloadValues
+    const { values } = workloadValues as WorkloadValues
 
     let b, w, wv, s
     if (!build?.id && build?.mode) b = this.db.createItem('builds', { ...build, teamId }, { teamId, name }) as Build
@@ -593,14 +593,9 @@ export default class OtomiStack {
     if (!workload?.id) w = this.db.createItem('workloads', { ...workload, teamId }, { teamId, name }) as Workload
     else w = this.db.updateItem('workloads', workload, { id: workload.id }) as Workload
 
-    if (!data.workloadValues?.id) {
-      wv = this.db.createItem(
-        'workloadValues',
-        { teamId, values, chartVersion: chartVersion || '', chartDescription: chartDescription || '' },
-        { teamId, name },
-        w.id,
-      ) as WorkloadValues
-    } else wv = this.db.updateItem('workloadValues', { teamId, values }, { id: workloadValues?.id }) as WorkloadValues
+    if (!data.workloadValues?.id)
+      wv = this.db.createItem('workloadValues', { teamId, values }, { teamId, name }, w.id) as WorkloadValues
+    else wv = this.db.updateItem('workloadValues', { teamId, values }, { id: workloadValues?.id }) as WorkloadValues
 
     if (!service?.id) s = this.db.createItem('services', { ...service, teamId }, { teamId, name }) as Service
     else s = this.db.updateItem('services', service, { id: service.id }) as Service

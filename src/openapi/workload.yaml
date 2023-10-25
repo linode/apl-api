@@ -29,7 +29,6 @@ Workload:
         helmChart:
           type: string
           title: Helm chart
-          enum: ['deployment', 'ksvc']
           default: deployment
         helmChartVersion:
           type: string
@@ -243,10 +242,5 @@ WorkloadValues:
               default: false
             endpoints:
               $ref: 'definitions.yaml#/endpoints'
-    chartVersion:
-      type: string
-    chartDescription:
-      type: string
-
   required:
     - values
