@@ -60,7 +60,7 @@ import {
 } from './k8s_operations'
 import connect from './otomiCloud/connect'
 import { validateBackupFields } from './utils/backupUtils'
-import { getWorkloadCatalog } from './utils/workloadUtils'
+import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 const debug = Debug('otomi:otomi-stack')
 
@@ -755,9 +755,9 @@ export default class OtomiStack {
     return this.db.getCollection('workloads') as Array<Workload>
   }
 
-  async getCustomWorkloadValues(data: any): Promise<any> {
+  async getWorkloadCatalog(data: any): Promise<any> {
     const { url } = data
-    const { helmCharts, catalog } = await getWorkloadCatalog(url)
+    const { helmCharts, catalog } = await fetchWorkloadCatalog(url)
     return { helmCharts, catalog }
   }
 

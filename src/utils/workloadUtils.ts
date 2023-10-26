@@ -25,7 +25,7 @@ function isGiteaURL(url: string) {
   return giteaPattern.test(hostname)
 }
 
-export async function getWorkloadCatalog(url: string): Promise<Promise<any>> {
+export async function fetchWorkloadCatalog(url: string): Promise<Promise<any>> {
   const timestamp = new Date().getTime()
   const helmChartsDir = `/tmp/otomi/charts/${timestamp}`
   shell.mkdir('-p', helmChartsDir)
