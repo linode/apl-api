@@ -755,9 +755,9 @@ export default class OtomiStack {
     return this.db.getCollection('workloads') as Array<Workload>
   }
 
-  async getWorkloadCatalog(data: any): Promise<any> {
-    const { url } = data
-    const { helmCharts, catalog } = await fetchWorkloadCatalog(url)
+  async getWorkloadCatalog(data: { url: string; sub: string }): Promise<any> {
+    const { url, sub } = data
+    const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub)
     return { helmCharts, catalog }
   }
 

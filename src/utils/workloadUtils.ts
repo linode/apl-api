@@ -25,9 +25,9 @@ function isGiteaURL(url: string) {
   return giteaPattern.test(hostname)
 }
 
-export async function fetchWorkloadCatalog(url: string): Promise<Promise<any>> {
-  const timestamp = new Date().getTime()
-  const helmChartsDir = `/tmp/otomi/charts/${timestamp}`
+export async function fetchWorkloadCatalog(url: string, sub: string): Promise<Promise<any>> {
+  const helmChartsDir = `/tmp/otomi/charts/${sub}`
+  shell.rm('-rf', helmChartsDir)
   shell.mkdir('-p', helmChartsDir)
   let gitUrl = url
 
@@ -37,7 +37,9 @@ export async function fetchWorkloadCatalog(url: string): Promise<Promise<any>> {
   }
 
   shell.exec(`git clone --depth 1 ${gitUrl} ${helmChartsDir}`)
-  const folders = await readdir(`${helmChartsDir}`, 'utf-8')
+  const files = await readdir(`${helmChartsDir}`, 'utf-8')
+  const filesToExclude = ['.git', '.gitignore', '.vscode', 'LICENSE', 'README.md']
+  const folders = files.filter((f) => !filesToExclude.includes(f))
 
   const catalog: any[] = []
   const helmCharts: string[] = []
@@ -60,12 +62,5 @@ export async function fetchWorkloadCatalog(url: string): Promise<Promise<any>> {
     }
   }
   if (!catalog.length) throwChartError(`There are no charts in '${url}'`)
-  // remove the related charts folder after 10 minutes
-  const TIMEOUT = 5 * 60 * 1000
-  const intervalId = setInterval(() => {
-    shell.rm('-rf', helmChartsDir)
-    console.log(`Removed ${helmChartsDir}`)
-    clearInterval(intervalId)
-  }, TIMEOUT)
   return { helmCharts, catalog }
 }
