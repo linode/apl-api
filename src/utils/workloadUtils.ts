@@ -40,7 +40,6 @@ export async function fetchWorkloadCatalog(url: string, sub: string): Promise<Pr
   const files = await readdir(`${helmChartsDir}`, 'utf-8')
   const filesToExclude = ['.git', '.gitignore', '.vscode', 'LICENSE', 'README.md']
   const folders = files.filter((f) => !filesToExclude.includes(f))
-
   const catalog: any[] = []
   const helmCharts: string[] = []
   for (const folder of folders) {
