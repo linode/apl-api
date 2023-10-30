@@ -45,6 +45,7 @@ import {
   GIT_PASSWORD,
   GIT_REPO_URL,
   GIT_USER,
+  HELM_CHART_CATALOG,
   TOOLS_HOST,
   VERSIONS,
   cleanEnv,
@@ -60,7 +61,7 @@ import {
 } from './k8s_operations'
 import connect from './otomiCloud/connect'
 import { validateBackupFields } from './utils/backupUtils'
-import { getWorkloadChart } from './utils/workloadUtils'
+import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 const debug = Debug('otomi:otomi-stack')
 
@@ -75,6 +76,7 @@ const env = cleanEnv({
   GIT_PASSWORD,
   GIT_REPO_URL,
   GIT_USER,
+  HELM_CHART_CATALOG,
   TOOLS_HOST,
   VERSIONS,
 })
@@ -584,7 +586,7 @@ export default class OtomiStack {
 
   editProject(id: string, data: Project): Project {
     const { build, workload, workloadValues, service, teamId, name } = data
-    const { values, chartVersion, chartDescription } = workloadValues as WorkloadValues
+    const { values } = workloadValues as WorkloadValues
 
     let b, w, wv, s
     if (!build?.id && build?.mode) b = this.db.createItem('builds', { ...build, teamId }, { teamId, name }) as Build
@@ -593,14 +595,9 @@ export default class OtomiStack {
     if (!workload?.id) w = this.db.createItem('workloads', { ...workload, teamId }, { teamId, name }) as Workload
     else w = this.db.updateItem('workloads', workload, { id: workload.id }) as Workload
 
-    if (!data.workloadValues?.id) {
-      wv = this.db.createItem(
-        'workloadValues',
-        { teamId, values, chartVersion: chartVersion || '', chartDescription: chartDescription || '' },
-        { teamId, name },
-        w.id,
-      ) as WorkloadValues
-    } else wv = this.db.updateItem('workloadValues', { teamId, values }, { id: workloadValues?.id }) as WorkloadValues
+    if (!data.workloadValues?.id)
+      wv = this.db.createItem('workloadValues', { teamId, values }, { teamId, name }, w.id) as WorkloadValues
+    else wv = this.db.updateItem('workloadValues', { teamId, values }, { id: workloadValues?.id }) as WorkloadValues
 
     if (!service?.id) s = this.db.createItem('services', { ...service, teamId }, { teamId, name }) as Service
     else s = this.db.updateItem('services', service, { id: service.id }) as Service
@@ -760,18 +757,18 @@ export default class OtomiStack {
     return this.db.getCollection('workloads') as Array<Workload>
   }
 
-  async getCustomWorkloadValues(data: any): Promise<any> {
-    const path = data.path ? `/${data.path}` : ''
-    const { revision, url, name, teamId, emailNoSymbols } = data
-    const { values, chartVersion, chartDescription } = await getWorkloadChart(
-      revision,
-      url,
-      path,
-      name,
-      teamId,
-      emailNoSymbols,
-    )
-    return { values, chartVersion, chartDescription }
+  async getWorkloadCatalog(data: { url: string; sub: string }): Promise<any> {
+    const { url: clientUrl, sub } = data
+    let url = clientUrl
+
+    const clusterInfo = this.getSettings(['cluster'])
+    const domainSuffix = clusterInfo?.cluster?.domainSuffix
+
+    if (env.HELM_CHART_CATALOG) url = env.HELM_CHART_CATALOG
+    else if (domainSuffix) url = `https://gitea.${domainSuffix}/otomi/charts.git`
+
+    const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub)
+    return { url, helmCharts, catalog }
   }
 
   createWorkload(teamId: string, data: Workload): Workload {

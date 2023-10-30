@@ -83,7 +83,7 @@ describe('Workload values', () => {
   })
 
   it('can load workload values (empty dict)', async () => {
-    const w: Workload = { id: '1', teamId: '2', name: 'name', url: 'https://test.local' }
+    const w: Workload = { id: '1', teamId: '2', name: 'name' }
 
     otomiStack.repo.fileExists = sinonStub().returns(true)
     otomiStack.repo.readFile = sinonStub().returns({})
@@ -91,7 +91,7 @@ describe('Workload values', () => {
     expect(res).to.deep.equal({ id: '1', teamId: '2', name: 'name', values: {} })
   })
   it('can load workload values (dict)', async () => {
-    const w: Workload = { id: '1', teamId: '2', name: 'name', url: 'https://test.local' }
+    const w: Workload = { id: '1', teamId: '2', name: 'name' }
 
     otomiStack.repo.fileExists = sinonStub().returns(true)
     otomiStack.repo.readFile = sinonStub().returns({ values: 'test: 1' })
@@ -100,7 +100,7 @@ describe('Workload values', () => {
   })
 
   it('can load workload values (empty string)', async () => {
-    const w: Workload = { id: '1', teamId: '2', name: 'name', url: 'https://test.local' }
+    const w: Workload = { id: '1', teamId: '2', name: 'name' }
 
     otomiStack.repo.fileExists = sinonStub().returns(true)
     otomiStack.repo.readFile = sinonStub().returns({ values: '' })
