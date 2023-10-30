@@ -25,7 +25,6 @@ Workload:
         helmChartCatalog:
           type: string
           title: Helm chart catalog
-          default: https://github.com/redkubes/otomi-charts.git
         helmChart:
           type: string
           title: Helm chart

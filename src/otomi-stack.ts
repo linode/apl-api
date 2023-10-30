@@ -45,6 +45,7 @@ import {
   GIT_PASSWORD,
   GIT_REPO_URL,
   GIT_USER,
+  HELM_CHART_CATALOG,
   TOOLS_HOST,
   VERSIONS,
   cleanEnv,
@@ -75,6 +76,7 @@ const env = cleanEnv({
   GIT_PASSWORD,
   GIT_REPO_URL,
   GIT_USER,
+  HELM_CHART_CATALOG,
   TOOLS_HOST,
   VERSIONS,
 })
@@ -756,9 +758,17 @@ export default class OtomiStack {
   }
 
   async getWorkloadCatalog(data: { url: string; sub: string }): Promise<any> {
-    const { url, sub } = data
+    const { url: clientUrl, sub } = data
+    let url = clientUrl
+
+    const clusterInfo = this.getSettings(['cluster'])
+    const domainSuffix = clusterInfo?.cluster?.domainSuffix
+
+    if (env.HELM_CHART_CATALOG) url = env.HELM_CHART_CATALOG
+    else if (domainSuffix) url = `https://gitea.${domainSuffix}/otomi/charts.git`
+
     const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub)
-    return { helmCharts, catalog }
+    return { url, helmCharts, catalog }
   }
 
   createWorkload(teamId: string, data: Workload): Workload {
