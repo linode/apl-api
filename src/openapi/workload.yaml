@@ -37,6 +37,9 @@ Workload:
           type: string
           title: Helm chart description
           default: ''
+      required:
+        - helmChartCatalog
+        - helmChart
     autoUpdate:
       description: Automatically update the image. Only supported with Helm charts in local Gitea repository and images stored in Harbor.
       title: Auto Image Updater

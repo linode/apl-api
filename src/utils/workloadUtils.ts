@@ -47,20 +47,20 @@ export async function fetchWorkloadCatalog(url: string, sub: string): Promise<Pr
     try {
       const v = await readFile(`${helmChartsDir}/${folder}/values.yaml`, 'utf-8')
       const c = await readFile(`${helmChartsDir}/${folder}/Chart.yaml`, 'utf-8')
-      const customValues = YAML.parse(v)
-      const customChart = YAML.parse(c)
+      const chartValues = YAML.parse(v)
+      const chartMetadata = YAML.parse(c)
       const catalogItem = {
         name: folder,
-        values: customValues,
-        chartVersion: customChart.version,
-        chartDescription: customChart.description,
+        values: chartValues,
+        chartVersion: chartMetadata.version,
+        chartDescription: chartMetadata.description,
       }
       catalog.push(catalogItem)
       helmCharts.push(folder)
     } catch (error) {
-      console.error(`Error reading or parsing files for ${folder}: ${error.message}`)
+      console.error(`Error while parsing ${folder}/Chart.yaml and ${folder}/values.yaml files : ${error.message}`)
     }
   }
-  if (!catalog.length) throwChartError(`There are no charts in '${url}'`)
+  if (!catalog.length) throwChartError(`There are no directories at '${url}'`)
   return { helmCharts, catalog }
 }
