@@ -30,12 +30,10 @@ export async function fetchWorkloadCatalog(url: string, sub: string): Promise<Pr
   shell.rm('-rf', helmChartsDir)
   shell.mkdir('-p', helmChartsDir)
   let gitUrl = url
-
   if (isGiteaURL(url)) {
     const [protocol, bareUrl] = url.split('://')
     gitUrl = `${protocol}://${process.env.GIT_USER}:${process.env.GIT_PASSWORD}@${bareUrl}`
   }
-
   shell.exec(`git clone --depth 1 ${gitUrl} ${helmChartsDir}`)
   const files = await readdir(`${helmChartsDir}`, 'utf-8')
   const filesToExclude = ['.git', '.gitignore', '.vscode', 'LICENSE', 'README.md']
