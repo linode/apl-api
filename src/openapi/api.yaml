@@ -1228,8 +1228,6 @@ components:
       $ref: apps/knative.yaml#/AppKnative
     AppKubeapps:
       $ref: apps/kubeapps.yaml#/AppKubeapps
-    AppKubeclarity:
-      $ref: apps/kubeclarity.yaml#/AppKubeclarity
     AppKured:
       $ref: apps/kured.yaml#/AppKured
     AppTekton:

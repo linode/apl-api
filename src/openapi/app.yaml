@@ -23,7 +23,6 @@ AppList:
     - kiali
     - knative
     - kubeapps
-    - kubeclarity
     - kured
     - tekton
     - loki
