@@ -764,7 +764,7 @@ export default class OtomiStack {
     const clusterInfo = this.getSettings(['cluster'])
     const domainSuffix = clusterInfo?.cluster?.domainSuffix
 
-    if (env.HELM_CHART_CATALOG) url = env.HELM_CHART_CATALOG
+    if (env?.HELM_CHART_CATALOG) url = env.HELM_CHART_CATALOG
     else if (domainSuffix) url = `https://gitea.${domainSuffix}/otomi/charts.git`
 
     const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub)
