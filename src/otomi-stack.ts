@@ -760,13 +760,7 @@ export default class OtomiStack {
   async getWorkloadCatalog(data: { url: string; sub: string }): Promise<any> {
     const { url: clientUrl, sub } = data
     let url = clientUrl
-
-    const clusterInfo = this.getSettings(['cluster'])
-    const domainSuffix = clusterInfo?.cluster?.domainSuffix
-
-    if (env?.HELM_CHART_CATALOG) url = env.HELM_CHART_CATALOG
-    else if (domainSuffix && !clientUrl) url = `https://gitea.${domainSuffix}/otomi/charts.git`
-
+    if (env?.HELM_CHART_CATALOG && !clientUrl) url = env.HELM_CHART_CATALOG
     if (!url) {
       const err = {
         code: 404,
