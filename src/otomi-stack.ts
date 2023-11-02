@@ -764,9 +764,16 @@ export default class OtomiStack {
     const clusterInfo = this.getSettings(['cluster'])
     const domainSuffix = clusterInfo?.cluster?.domainSuffix
 
-    // if (env?.HELM_CHART_CATALOG) url = env.HELM_CHART_CATALOG
-    // else if (domainSuffix) url = `https://gitea.${domainSuffix}/otomi/charts.git`
-    if (domainSuffix) url = `https://gitea.${domainSuffix}/otomi/charts.git`
+    if (env?.HELM_CHART_CATALOG) url = env.HELM_CHART_CATALOG
+    else if (domainSuffix && !clientUrl) url = `https://gitea.${domainSuffix}/otomi/charts.git`
+
+    if (!url) {
+      const err = {
+        code: 404,
+        message: 'No helm chart catalog found!',
+      }
+      throw err
+    }
 
     const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub)
     return { url, helmCharts, catalog }
