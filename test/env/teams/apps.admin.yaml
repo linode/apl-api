@@ -19,7 +19,6 @@ teamConfig:
             kiali: {}
             knative: {}
             kubeapps: {}
-            kubeclarity: {}
             kured: {}
             tekton: {}
             loki: {}
