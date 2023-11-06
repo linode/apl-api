@@ -508,7 +508,7 @@ dns:
             civo:
               x-hideTitle: true
               properties:
-                apiToken:
+                apiKey:
                   type: string
                   x-acl:
                     admin: [read-any, update-any]
@@ -517,6 +517,27 @@ dns:
               type: object
           required:
             - civo
+          type: object
+        - title: Scaleway
+          properties:
+            scaleway:
+              x-hideTitle: true
+              properties:
+                scwAccessKey:
+                  type: string
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
+                  x-secret: true
+                scwSecretKey:
+                  type: string
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
+                  x-secret: true
+              type: object
+          required:
+            - scaleway
           type: object
         - title: Google
           properties:
