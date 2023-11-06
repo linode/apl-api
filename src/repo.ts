@@ -339,11 +339,7 @@ export class Repo {
       debug(`ERROR: ${JSON.stringify(e)}`)
       if (e.response) {
         const { status } = e.response as AxiosResponse
-        if (status === 422) {
-          debug(`VALIDATION ERROR: ${JSON.stringify(e)}`)
-          console.log(`VALIDATION ERROR: ${JSON.stringify(e)}`)
-          throw new ValidationError()
-        }
+        if (status === 422) throw new ValidationError()
         throw HttpError.fromCode(status)
       }
       throw new HttpError(500, `${e}`)
