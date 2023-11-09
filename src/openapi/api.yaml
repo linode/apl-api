@@ -1226,8 +1226,6 @@ components:
       $ref: apps/kiali.yaml#/AppKiali
     AppKnative:
       $ref: apps/knative.yaml#/AppKnative
-    AppKubeapps:
-      $ref: apps/kubeapps.yaml#/AppKubeapps
     AppKured:
       $ref: apps/kured.yaml#/AppKured
     AppTekton:
