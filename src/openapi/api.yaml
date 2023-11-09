@@ -739,10 +739,10 @@ paths:
                 items:
                   $ref: '#/components/schemas/Workload'
 
-  '/customWorkloadValues':
+  '/workloadCatalog':
     post:
-      operationId: customWorkloadValues
-      description: Get custom workload values from a repository
+      operationId: workloadCatalog
+      description: Get workload catalog from a repository
       requestBody:
         content:
           application/json:
@@ -1226,8 +1226,6 @@ components:
       $ref: apps/kiali.yaml#/AppKiali
     AppKnative:
       $ref: apps/knative.yaml#/AppKnative
-    AppKubeclarity:
-      $ref: apps/kubeclarity.yaml#/AppKubeclarity
     AppKured:
       $ref: apps/kured.yaml#/AppKured
     AppTekton:

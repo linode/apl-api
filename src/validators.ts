@@ -36,6 +36,10 @@ export const GIT_LOCAL_PATH = str({
 export const GIT_PASSWORD = str({ desc: 'The git password' })
 export const GIT_REPO_URL = str({ desc: 'The git repo url', devDefault: undefined })
 export const GIT_USER = str({ desc: 'The git username' })
+export const HELM_CHART_CATALOG = str({
+  desc: 'The helm chart catalog',
+  devDefault: 'https://github.com/redkubes/otomi-charts.git',
+})
 export const OIDC_ENDPOINT = str()
 export const REGION = str({ desc: 'The cloud region' })
 export const ROARR_LOG = bool({ desc: 'To enable Lightship logs', default: false })

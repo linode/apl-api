@@ -51,8 +51,6 @@ k8s:
       app: knative
       disablePolicyChecks: true
       disableIstioInjection: true
-    - name: kubeclarity
-      app: kubeclarity
     - name: kured
       app: kured
     - name: tekton
@@ -250,16 +248,6 @@ adminApps:
   - name: knative
     tags: [serverless, functions]
     deps: [istio]
-  - name: kubeclarity
-    tags: [security]
-    ownHost: true
-    isShared: true
-    ingress:
-      - svc: kubeclarity
-        namespace: kubeclarity
-        port: 8080
-        type: public
-        auth: true
   - name: kured
     tags: [security]
   - name: tekton

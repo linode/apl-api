@@ -18,7 +18,6 @@ teamConfig:
             keycloak: {}
             kiali: {}
             knative: {}
-            kubeclarity: {}
             kured: {}
             tekton: {}
             loki: {}

@@ -26,7 +26,7 @@ Workload:
       type: string
       title: Chart provider
       enum: ['helm', 'git']
-      default: helm
+      default: git
     path:
       description: A relative directory path within the Git repository. Absolute paths cause errors. (only valid for applications sourced from Git)
       $ref: 'definitions.yaml#/wordCharacterPattern'
@@ -37,6 +37,17 @@ Workload:
       description: In case of Git, this can be commit, tag, or branch. If omitted, will equal to HEAD. In case of Helm, this is a semver tag for the Chart's version.
       $ref: 'definitions.yaml#/wordCharacterPattern'
       default: HEAD
+    chartMetadata:
+      title: ''
+      properties:
+        helmChartVersion:
+          type: string
+          title: Helm chart version
+          default: ''
+        helmChartDescription:
+          type: string
+          title: Helm chart description
+          default: ''
     namespace:
       description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'
       $ref: 'definitions.yaml#/domain'
@@ -47,9 +58,9 @@ Workload:
         enabled:
           type: boolean
           default: false
-        build:
+        imageRegistry:
           type: string
-          description: Use an Otomi Build name or the name of the image in Harbor (without '*/team-<name>/')
+          description: Use the url of the container image registry
         strategy:
           type: object
           title: Update strategy
@@ -106,9 +117,6 @@ Workload:
                   enum:
                     - semver
                   default: semver
-
-    selectedChart:
-      enum: ['deployment', 'ksvc', 'custom']
   required:
     - name
     - url
@@ -248,10 +256,5 @@ WorkloadValues:
               default: false
             endpoints:
               $ref: 'definitions.yaml#/endpoints'
-    chartVersion:
-      type: string
-    chartDescription:
-      type: string
-
   required:
     - values
