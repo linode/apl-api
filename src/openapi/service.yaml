@@ -42,6 +42,19 @@ Service:
           type: boolean
           default: false
       # x-hidden: true
+    trafficControl:
+      title: Traffic Control
+      description: Split traffic between multiple services (blue-green, canary)
+      properties:
+        enabled:
+          type: boolean
+          default: false
+        weightV1:
+          type: integer
+          default: 90
+        weightV2:
+          type: integer
+          default: 10    
     ingress:
       title: Exposure (ingress)
       description: Determines loadbalancer related configuration for handling the service ingress.
