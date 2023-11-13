@@ -58,9 +58,9 @@ Workload:
         enabled:
           type: boolean
           default: false
-        imageRegistry:
+        imageRepository:
           type: string
-          description: Use the url of the container image registry
+          description: The container image repository name. See list of Builds for all repositories.
         strategy:
           type: object
           title: Update strategy
