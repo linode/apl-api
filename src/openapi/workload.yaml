@@ -52,7 +52,7 @@ Workload:
       description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'
       $ref: 'definitions.yaml#/domain'
     autoUpdate:
-      description: Automatically update the image. Only supported with Helm charts in local Gitea repository and images stored in Harbor.
+      description: Automatically update the image. Only supported with images stored in Harbor.
       title: Auto Image Updater
       properties:
         enabled:
@@ -60,6 +60,7 @@ Workload:
           default: false
         imageRepository:
           type: string
+          title: Image Repository
           description: The container image repository name. See list of Builds for all repositories.
         strategy:
           type: object
@@ -68,7 +69,7 @@ Workload:
           oneOf:
             - title: latest
               type: object
-              description: Update to the most recently built image.
+              description: Update to the most recent build. Can not be used when build tag=latest.
               x-hideTitle: true
               properties:
                 type:
