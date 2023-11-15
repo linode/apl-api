@@ -900,6 +900,7 @@ export default class OtomiStack {
       const intervalId = setInterval(() => {
         getLastPipelineName(sha).then((item: any) => {
           if (item?.status?.completionTime) {
+            console.log('item', item)
             const { completionTime, conditions } = item.status
             getIo().emit('tekton', { completionTime, conditions })
             clearInterval(intervalId)
