@@ -895,6 +895,17 @@ export default class OtomiStack {
       const sha = await rootStack.repo.getCommitSha()
       const msg: DbMessage = { state: 'clean', editor: this.editor!, sha, reason: 'deploy' }
       getIo().emit('db', msg)
+
+      // check Tekton status every 10 seconds and emit it when the pipeline is completed
+      const intervalId = setInterval(() => {
+        getLastPipelineName().then((item: any) => {
+          if (item?.status?.completionTime) {
+            const { completionTime, conditions } = item.status
+            getIo().emit('tekton', { completionTime, conditions })
+            clearInterval(intervalId)
+          }
+        })
+      }, 10 * 1000)
     } catch (e) {
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)
@@ -1492,10 +1503,6 @@ export default class OtomiStack {
   async getSession(user: k8s.User): Promise<Session> {
     const rootStack = await getSessionStack()
     const currentSha = rootStack.repo.commitSha
-    console.log('currentSha', currentSha)
-    const lastPipelineName = await getLastPipelineName(currentSha)
-    console.log('lastPipelineName', lastPipelineName)
-    getIo().emit('tekton', { lastPipelineName })
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
