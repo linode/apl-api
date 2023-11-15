@@ -239,6 +239,7 @@ export async function getLastPipelineName(sha: string): Promise<string | undefin
       'pipelineruns',
     )
     const item = res.body.items[0]
+    console.log('item', item)
     const correctpipeline = item.metadata.name.includes(sha)
     console.log('correctpipeline', correctpipeline)
     return item.status.completionTime
