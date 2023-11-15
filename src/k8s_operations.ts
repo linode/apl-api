@@ -232,10 +232,16 @@ export async function getLastPipelineName(sha: string): Promise<string | undefin
   kc.loadFromDefault()
   const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
   try {
-    const res = await customObjectsApi.listNamespacedCustomObject('tekton.dev', 'v1', 'otomi-pipelines', 'pipelineruns')
-    console.log('res', res)
-    console.log('sha', sha)
-    return sha
+    const res: any = await customObjectsApi.listNamespacedCustomObject(
+      'tekton.dev',
+      'v1',
+      'otomi-pipelines',
+      'pipelineruns',
+    )
+    const item = res.body.items[0]
+    const correctpipeline = item.metadata.name.includes(sha)
+    console.log('correctpipeline', correctpipeline)
+    return item.status.completionTime
   } catch (error) {
     debug('getLastPipelineName error:', error)
   }
