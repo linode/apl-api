@@ -1495,6 +1495,7 @@ export default class OtomiStack {
     console.log('currentSha', currentSha)
     const lastPipelineName = await getLastPipelineName(currentSha)
     console.log('lastPipelineName', lastPipelineName)
+    getIo().emit('tekton', { lastPipelineName })
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
