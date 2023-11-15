@@ -757,8 +757,8 @@ export default class OtomiStack {
     return this.db.getCollection('workloads') as Array<Workload>
   }
 
-  async getWorkloadCatalog(data: { url: string; sub: string }): Promise<any> {
-    const { url: clientUrl, sub } = data
+  async getWorkloadCatalog(data: { url: string; sub: string; teamId: string }): Promise<any> {
+    const { url: clientUrl, sub, teamId } = data
     let url = clientUrl
     if (env?.HELM_CHART_CATALOG && !clientUrl) url = env.HELM_CHART_CATALOG
     if (!url) {
@@ -769,7 +769,7 @@ export default class OtomiStack {
       throw err
     }
 
-    const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub)
+    const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub, teamId)
     return { url, helmCharts, catalog }
   }
 
