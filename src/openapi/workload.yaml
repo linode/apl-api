@@ -65,18 +65,8 @@ Workload:
         strategy:
           type: object
           title: Update strategy
-          description: Choose your prefered update strategy
+          description: Choose your preferred update strategy
           oneOf:
-            - title: latest
-              type: object
-              description: Update to the most recent build. Can not be used when build tag=latest.
-              x-hideTitle: true
-              properties:
-                type:
-                  type: string
-                  enum:
-                    - latest
-                  default: latest
             - title: digest
               type: object
               x-hideTitle: true
