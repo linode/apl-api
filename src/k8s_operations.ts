@@ -238,9 +238,10 @@ export async function getLastPipelineName(sha: string): Promise<string | undefin
       'otomi-pipelines',
       'pipelineruns',
     )
-    const item = res.body.items[0]
-    if (!item.metadata.name.includes(sha)) return undefined
-    return item.status.completionTime
+    const lastPipelineRun = res.body.items.find((item: any) => item.metadata.name.includes(sha))
+    console.log('lastPipelineRun', lastPipelineRun)
+    if (!lastPipelineRun) return undefined
+    return lastPipelineRun
   } catch (error) {
     debug('getLastPipelineName error:', error)
   }
