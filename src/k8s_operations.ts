@@ -227,7 +227,7 @@ export async function getCloudttyActiveTime(namespace: string, podName: string):
   }
 }
 
-export async function getLastPipelineName(): Promise<string | undefined> {
+export async function getLastPipelineName(sha: string): Promise<string | undefined> {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
@@ -239,7 +239,9 @@ export async function getLastPipelineName(): Promise<string | undefined> {
       'pipelineruns',
     )
     const item = res.body.items[0]
-    return item
+    console.log('item', item)
+    if (!item.metadata.name.includes(sha)) return undefined
+    return item.status.completionTime
   } catch (error) {
     debug('getLastPipelineName error:', error)
   }

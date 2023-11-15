@@ -898,7 +898,7 @@ export default class OtomiStack {
 
       // check Tekton status every 10 seconds and emit it when the pipeline is completed
       const intervalId = setInterval(() => {
-        getLastPipelineName().then((item: any) => {
+        getLastPipelineName(sha).then((item: any) => {
           if (item?.status?.completionTime) {
             const { completionTime, conditions } = item.status
             getIo().emit('tekton', { completionTime, conditions })
