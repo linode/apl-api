@@ -226,3 +226,27 @@ export async function getCloudttyActiveTime(namespace: string, podName: string):
     debug('getCloudttyActiveTime error:', error)
   }
 }
+
+export async function getLastPipelineName(sha: string): Promise<string | undefined> {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
+  try {
+    const res = await customObjectsApi.listNamespacedCustomObject('tekton.dev', 'v1', 'otomi-pipelines', 'pipelineruns')
+    console.log('res', res)
+    console.log('sha', sha)
+    return sha
+  } catch (error) {
+    debug('getLastPipelineName error:', error)
+  }
+}
+
+// first: listNamespacedCustomObject
+
+// then: getNamespacedCustomObject
+
+// group: tekton.dev
+// version: v1
+// namespace: otomi-pipelines
+// plural: pipelineruns
+// name: otomi-pipeline-run

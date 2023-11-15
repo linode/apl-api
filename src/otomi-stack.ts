@@ -56,6 +56,7 @@ import {
   checkPodExists,
   getCloudttyActiveTime,
   getKubernetesVersion,
+  getLastPipelineName,
   k8sdelete,
   watchPodUntilRunning,
 } from './k8s_operations'
@@ -1491,6 +1492,9 @@ export default class OtomiStack {
   async getSession(user: k8s.User): Promise<Session> {
     const rootStack = await getSessionStack()
     const currentSha = rootStack.repo.commitSha
+    console.log('currentSha', currentSha)
+    const lastPipelineName = await getLastPipelineName(currentSha)
+    console.log('lastPipelineName', lastPipelineName)
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
