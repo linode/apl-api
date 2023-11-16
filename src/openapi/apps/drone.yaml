@@ -4,6 +4,9 @@ AppDrone:
   properties:
     id:
       $ref: ../definitions.yaml#/idName
+    # enabled:
+    #   type: boolean
+    #   default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:
@@ -153,12 +156,12 @@ AppDrone:
         sharedSecret:
           description: A secret used by drone-admit-members plugin. https://docs.drone.io/runner/kubernetes/configuration/reference/drone-secret-plugin-token/
           type: string
-          x-secret: 'randAlphaNum 32'
+          x-secret: "randAlphaNum 32"
         githubAdmins:
           additionalProperties: false
           title: Github admin group
           type: object
-          description: '[GitHub only] The name of a github group given admin access in drone.'
+          description: "[GitHub only] The name of a github group given admin access in drone."
           properties:
             org:
               $ref: ../definitions.yaml#/wordCharacterPattern
