@@ -57,6 +57,7 @@ appsInfo:
     isDeprecated: true
     deprecationInfo:
       replacement: tekton
+      path: "/#/namespaces/otomi-pipelines/pipelineruns"
       message: Drone is deprecated for enhanced performance, maintainability, and integration.
       reasons:
         - To improve overall system performance.
@@ -152,7 +153,11 @@ appsInfo:
     appVersion: 1.1.2
     repo: https://github.com/kubernetes/ingress-nginx
     maintainers: NGINX
-    relatedLinks: ['https://otomi.io/docs/apps/ingress-nginx', 'https://docs.nginx.com/nginx-ingress-controller/']
+    relatedLinks:
+      [
+        "https://otomi.io/docs/apps/ingress-nginx",
+        "https://docs.nginx.com/nginx-ingress-controller/",
+      ]
     license: Apache 2.0
     about: ingress-nginx is an Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer.
     integration: Otomi integrated ingress-nginx into an advanced ingress architecture.
