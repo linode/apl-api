@@ -4,9 +4,6 @@ AppTekton:
   properties:
     id:
       $ref: ../definitions.yaml#/idName
-    enabled:
-      type: boolean
-      default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
   required: [id]
