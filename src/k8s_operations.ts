@@ -239,10 +239,26 @@ export async function getLastPipelineName(sha: string): Promise<any | undefined>
       'pipelineruns',
     )
     const lastPipelineRun = res.body.items.find((item: any) => item.metadata.name.includes(sha))
-    console.log('lastPipelineRun', lastPipelineRun)
     if (!lastPipelineRun) return undefined
-    const id = res.body.items.length
-    return { lastPipelineRun, id }
+    const order = res.body.items.length
+    const { name } = lastPipelineRun.metadata
+    const { completionTime, conditions } = lastPipelineRun.status
+    let status
+    switch (conditions[0].status) {
+      case 'True':
+        status = 'success'
+        break
+      case 'False':
+        status = 'failed'
+        break
+      case 'Unknown':
+        status = 'pending'
+        break
+      default:
+        status = 'pending'
+        break
+    }
+    return { order, name, completionTime, status }
   } catch (error) {
     debug('getLastPipelineName error:', error)
   }

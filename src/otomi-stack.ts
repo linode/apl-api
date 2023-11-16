@@ -903,30 +903,14 @@ export default class OtomiStack {
       const sha = await rootStack.repo.getCommitSha()
       // check Tekton status every 10 seconds and emit it when the pipeline is completed
       const intervalId = setInterval(() => {
-        getLastPipelineName(sha).then(({ lastPipelineRun, id }: any) => {
-          if (lastPipelineRun?.status?.completionTime) {
-            const datetime = lastPipelineRun.status.completionTime
-            let status
-            switch (lastPipelineRun.status.conditions[0].status) {
-              case 'True':
-                status = 'success'
-                break
-              case 'False':
-                status = 'failed'
-                break
-              case 'Unknown':
-                status = 'pending'
-                break
-              default:
-                status = 'pending'
-                break
-            }
-            getIo().emit('tekton', { datetime, id, sha, status })
+        getLastPipelineName(sha).then(({ order, name, completionTime, status }: any) => {
+          if (completionTime) {
+            getIo().emit('tekton', { order, name, completionTime, sha, status })
             clearInterval(intervalId)
-            debug(`Tekton pipeline ${id} completed with status ${status}`)
+            debug(`Tekton pipeline ${order} completed with status ${status}`)
           }
         })
-      }, 10 * 1000)
+      }, 5 * 1000)
       rootStack.locked = false
     }
   }
