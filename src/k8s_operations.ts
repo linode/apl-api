@@ -250,13 +250,3 @@ export async function getLastTektonMessage(sha: string): Promise<any | undefined
     debug('getLastTektonMessage error:', error)
   }
 }
-
-// first: listNamespacedCustomObject
-
-// then: getNamespacedCustomObject
-
-// group: tekton.dev
-// version: v1
-// namespace: otomi-pipelines
-// plural: pipelineruns
-// name: otomi-pipeline-run
