@@ -77,12 +77,12 @@ Workload:
                 imageRepository:
                   type: string
                   description: The container image repository name.
-                  $ref: ../definitions.yaml#/wordCharacterPattern
+                  $ref: 'definitions.yaml#/wordCharacterPattern'
                 tag:
                   description: Tag of the build.
                   type: string
                   default: latest
-                  $ref: ../definitions.yaml#/wordCharacterPattern
+                  $ref: 'definitions.yaml#/wordCharacterPattern'
               required:
                 - imageRepository
                 - tag
@@ -104,12 +104,12 @@ Workload:
                 imageRepository:
                   type: string
                   description: The container image repository name.
-                  $ref: ../definitions.yaml#/wordCharacterPattern
+                  $ref: 'definitions.yaml#/wordCharacterPattern'
                 versionConstraint:
                   type: string
                   default: 'v1.0'
                   description: 'Example: v1.0 would allow the image to be updated to any patch version within the v1.0 minor release.'
-                  $ref: ../definitions.yaml#/wordCharacterPattern
+                  $ref: 'definitions.yaml#/wordCharacterPattern'
               required:
                 - imageRepository
                 - versionConstraint
