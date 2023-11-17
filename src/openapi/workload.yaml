@@ -57,6 +57,7 @@ Workload:
       type: object
       oneOf:
         - title: Disabled
+          x-hideTitle: true
           type: object
           properties:
             type:
