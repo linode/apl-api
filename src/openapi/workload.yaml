@@ -139,6 +139,3 @@ WorkloadValues:
       $ref: definitions.yaml#/idName
     name:
       $ref: 'definitions.yaml#/wordCharacterPattern'
-
-  required:
-    - values
