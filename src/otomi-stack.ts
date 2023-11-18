@@ -56,6 +56,7 @@ import {
   checkPodExists,
   getCloudttyActiveTime,
   getKubernetesVersion,
+  getLastTektonMessage,
   k8sdelete,
   watchPodUntilRunning,
 } from './k8s_operations'
@@ -757,8 +758,8 @@ export default class OtomiStack {
     return this.db.getCollection('workloads') as Array<Workload>
   }
 
-  async getWorkloadCatalog(data: { url: string; sub: string }): Promise<any> {
-    const { url: clientUrl, sub } = data
+  async getWorkloadCatalog(data: { url: string; sub: string; teamId: string }): Promise<any> {
+    const { url: clientUrl, sub, teamId } = data
     let url = clientUrl
     if (env?.HELM_CHART_CATALOG && !clientUrl) url = env.HELM_CHART_CATALOG
     if (!url) {
@@ -769,7 +770,7 @@ export default class OtomiStack {
       throw err
     }
 
-    const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub)
+    const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub, teamId)
     return { url, helmCharts, catalog }
   }
 
@@ -899,6 +900,17 @@ export default class OtomiStack {
       getIo().emit('db', msg)
       throw e
     } finally {
+      const sha = await rootStack.repo.getCommitSha()
+      // check Tekton status every 5 seconds and emit it when the pipeline is completed
+      const intervalId = setInterval(() => {
+        getLastTektonMessage(sha).then(({ order, name, completionTime, status }: any) => {
+          if (completionTime) {
+            getIo().emit('tekton', { order, name, completionTime, sha, status })
+            clearInterval(intervalId)
+            debug(`Tekton pipeline ${order} completed with status ${status}`)
+          }
+        })
+      }, 5 * 1000)
       rootStack.locked = false
     }
   }
