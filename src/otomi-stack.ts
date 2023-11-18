@@ -56,6 +56,7 @@ import {
   checkPodExists,
   getCloudttyActiveTime,
   getKubernetesVersion,
+  getLastTektonMessage,
   k8sdelete,
   watchPodUntilRunning,
 } from './k8s_operations'
@@ -899,6 +900,17 @@ export default class OtomiStack {
       getIo().emit('db', msg)
       throw e
     } finally {
+      const sha = await rootStack.repo.getCommitSha()
+      // check Tekton status every 5 seconds and emit it when the pipeline is completed
+      const intervalId = setInterval(() => {
+        getLastTektonMessage(sha).then(({ order, name, completionTime, status }: any) => {
+          if (completionTime) {
+            getIo().emit('tekton', { order, name, completionTime, sha, status })
+            clearInterval(intervalId)
+            debug(`Tekton pipeline ${order} completed with status ${status}`)
+          }
+        })
+      }, 5 * 1000)
       rootStack.locked = false
     }
   }
