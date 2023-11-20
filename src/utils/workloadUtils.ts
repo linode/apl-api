@@ -42,7 +42,7 @@ export async function fetchWorkloadCatalog(
   shell.exec(`git clone --depth 1 ${gitUrl} ${helmChartsDir}`)
   const files = await readdir(`${helmChartsDir}`, 'utf-8')
   const filesToExclude = ['.git', '.gitignore', '.vscode', 'LICENSE', 'README.md']
-  if (version.startsWith('v1.1')) filesToExclude.push('deployment', 'ksvc')
+  if (!version.startsWith('v1')) filesToExclude.push('deployment', 'ksvc')
   const folders = files.filter((f) => !filesToExclude.includes(f))
   const catalog: any[] = []
   const helmCharts: string[] = []
