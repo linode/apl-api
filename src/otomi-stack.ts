@@ -769,8 +769,9 @@ export default class OtomiStack {
       }
       throw err
     }
-
-    const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub, teamId)
+    const settings = this.getSettings()
+    const version = settings.otomi?.version as string
+    const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub, teamId, version)
     return { url, helmCharts, catalog }
   }
 
