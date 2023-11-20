@@ -84,6 +84,12 @@ Workload:
                   type: string
                   default: latest
                   $ref: 'definitions.yaml#/wordCharacterPattern'
+                imageParameter:
+                  type: string
+                  default: image.name
+                tagParameter:
+                  type: string
+                  default: image.tag
               required:
                 - imageRepository
                 - tag
@@ -111,6 +117,12 @@ Workload:
                   default: 'v1.0'
                   description: 'Example: v1.0 would allow the image to be updated to any patch version within the v1.0 minor release.'
                   $ref: 'definitions.yaml#/wordCharacterPattern'
+                imageParameter:
+                  type: string
+                  default: image.name
+                tagParameter:
+                  type: string
+                  default: image.tag
               required:
                 - imageRepository
                 - versionConstraint
