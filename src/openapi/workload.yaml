@@ -51,63 +51,74 @@ Workload:
     namespace:
       description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'
       $ref: 'definitions.yaml#/domain'
-    autoUpdate:
-      description: Automatically update the image. Only supported with images stored in Harbor.
+    imageUpdateStrategy:
+      description: Automatically update the image. Only supported when image is stored in Harbor.
       title: Auto Image Updater
-      properties:
-        enabled:
-          type: boolean
-          default: false
-        imageRepository:
-          type: string
-          title: Image Repository
-          description: The container image repository name. See list of Builds for all repositories.
-        strategy:
+      type: object
+      oneOf:
+        - title: Disabled
+          x-hideTitle: true
           type: object
-          title: Update strategy
-          description: Choose your preferred update strategy
-          oneOf:
-            - title: digest
+          properties:
+            type:
+              type: string
+              enum:
+                - disabled
+              default: disabled
+        - title: digest
+          type: object
+          x-hideTitle: true
+          description: Update to the most recent pushed version of a given tag.
+          properties:
+            digest:
+              additionalProperties: false
               type: object
-              x-hideTitle: true
-              description: Update to the most recent pushed version of a given tag.
+              title: Digest
               properties:
-                digest:
-                  additionalProperties: false
-                  type: object
-                  title: Digest
-                  properties:
-                    tag:
-                      description: Tag of the build. Only if strategy is digest.
-                      type: string
-                  required:
-                    - tag
-                type:
+                imageRepository:
                   type: string
-                  enum:
-                    - digest
-                  default: digest
-            - title: semver
-              x-hideTitle: true
+                  description: The container image repository name.
+                  $ref: 'definitions.yaml#/wordCharacterPattern'
+                tag:
+                  description: Tag of the build.
+                  type: string
+                  default: latest
+                  $ref: 'definitions.yaml#/wordCharacterPattern'
+              required:
+                - imageRepository
+                - tag
+            type:
+              type: string
+              enum:
+                - digest
+              default: digest
+        - title: semver
+          x-hideTitle: true
+          type: object
+          description: Update to a semantic version.
+          properties:
+            semver:
+              additionalProperties: false
               type: object
-              description: Update to semantic versions.
+              title: Semver
               properties:
-                semver:
-                  additionalProperties: false
-                  type: object
-                  title: Semver
-                  properties:
-                    versionConstraint:
-                      type: string
-                      default: '1.0'
-                      description: 'Example: 1.0 would allow the image to be updated to any patch version within the 1.0 minor release.'
-                  required:
-                    - versionConstraint
-                type:
+                imageRepository:
                   type: string
-                  enum:
-                    - semver
-                  default: semver
+                  description: The container image repository name.
+                  $ref: 'definitions.yaml#/wordCharacterPattern'
+                versionConstraint:
+                  type: string
+                  default: 'v1.0'
+                  description: 'Example: v1.0 would allow the image to be updated to any patch version within the v1.0 minor release.'
+                  $ref: 'definitions.yaml#/wordCharacterPattern'
+              required:
+                - imageRepository
+                - versionConstraint
+            type:
+              type: string
+              enum:
+                - semver
+              default: semver
   required:
     - name
     - url
@@ -130,122 +141,5 @@ WorkloadValues:
       $ref: 'definitions.yaml#/wordCharacterPattern'
     values:
       type: object
-      # select basic or advanced
-      title: Minimal values
-      properties:
-        fullnameOverride:
-          $ref: 'definitions.yaml#/wordCharacterPattern'
-        image:
-          type: object
-          description: Add the registry and tag of the image to use
-          properties:
-            repository:
-              $ref: 'definitions.yaml#/imageRegistry'
-            tag:
-              $ref: 'definitions.yaml#/imageTag'
-          required:
-            - repository
-            - tag
-        containerPorts:
-          type: array
-          title: Port
-          items:
-            type: object
-            properties:
-              name:
-                type: string
-                $ref: 'definitions.yaml#/wordCharacterPattern'
-                default: http
-              containerPort:
-                type: integer
-                $ref: 'definitions.yaml#/portNumber'
-                default: 8080
-                description: Declare TCP port used by the application
-              protocol:
-                type: string
-                default: TCP
-        resources:
-          type: object
-          title: Resources
-          description: Adjust according to application consumption
-          properties:
-            requests:
-              properties:
-                cpu:
-                  title: vCPU
-                  $ref: 'definitions.yaml#/quantityCpu'
-                  default: 200m
-                memory:
-                  title: Memory
-                  $ref: 'definitions.yaml#/quantityMem'
-                  default: 32Mi
-            # only show in advanced
-            limits:
-              properties:
-                cpu:
-                  title: vCPU
-                  $ref: 'definitions.yaml#/quantityCpu'
-                memory:
-                  title: Memory
-                  $ref: 'definitions.yaml#/quantityMem'
-        autoscaling:
-          type: object
-          title: Instances
-          description: Configure the desired Minimal and Maximal replica's
-          properties:
-            minReplicas:
-              title: Min
-              type: integer
-              default: 2
-            maxReplicas:
-              title: Max
-              type: integer
-              default: 10
-        # only show in advanced
-        env:
-          $ref: 'definitions.yaml#/env'
-        args:
-          $ref: 'definitions.yaml#/args'
-        labels:
-          $ref: 'definitions.yaml#/labels'
-        annotations:
-          title: Annotations
-          $ref: 'definitions.yaml#/annotations'
-        secrets:
-          description: select an existing secret to use as a secretRef.
-          example: example-com
-          title: Secret name
-          type: array
-          items:
-            type: string
-        podSecurityContext:
-          title: Pod Security Context
-          properties:
-            runAsUser:
-              $ref: 'definitions.yaml#/runAsUser'
-            runAsNonRoot:
-              $ref: 'definitions.yaml#/runAsNonRoot'
-            readOnlyRootFilesystem:
-              type: boolean
-              default: false
-        files:
-          $ref: 'definitions.yaml#/files'
-        secretMounts:
-          $ref: 'definitions.yaml#/secretMounts'
-        # only for deployment
-        servicePorts:
-          $ref: 'definitions.yaml#/servicePorts'
-          # default:
-          #   - name: http
-          #     port: 80
-          #     targetPort: http
-          #     protocol: TCP
-        serviceMonitor:
-          properties:
-            create:
-              type: boolean
-              default: false
-            endpoints:
-              $ref: 'definitions.yaml#/endpoints'
   required:
     - values
