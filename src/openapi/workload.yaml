@@ -86,7 +86,7 @@ Workload:
                   $ref: 'definitions.yaml#/wordCharacterPattern'
                 imageParameter:
                   type: string
-                  default: image.name
+                  default: image.repository
                 tagParameter:
                   type: string
                   default: image.tag
@@ -119,7 +119,7 @@ Workload:
                   $ref: 'definitions.yaml#/wordCharacterPattern'
                 imageParameter:
                   type: string
-                  default: image.name
+                  default: image.repository
                 tagParameter:
                   type: string
                   default: image.tag
