@@ -25,7 +25,12 @@ function isGiteaURL(url: string) {
   return giteaPattern.test(hostname)
 }
 
-export async function fetchWorkloadCatalog(url: string, sub: string, teamId: string): Promise<Promise<any>> {
+export async function fetchWorkloadCatalog(
+  url: string,
+  sub: string,
+  teamId: string,
+  version: string,
+): Promise<Promise<any>> {
   const helmChartsDir = `/tmp/otomi/charts/${sub}`
   shell.rm('-rf', helmChartsDir)
   shell.mkdir('-p', helmChartsDir)
@@ -37,6 +42,7 @@ export async function fetchWorkloadCatalog(url: string, sub: string, teamId: str
   shell.exec(`git clone --depth 1 ${gitUrl} ${helmChartsDir}`)
   const files = await readdir(`${helmChartsDir}`, 'utf-8')
   const filesToExclude = ['.git', '.gitignore', '.vscode', 'LICENSE', 'README.md']
+  if (!version.startsWith('v1')) filesToExclude.push('deployment', 'ksvc')
   const folders = files.filter((f) => !filesToExclude.includes(f))
   const catalog: any[] = []
   const helmCharts: string[] = []
