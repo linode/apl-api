@@ -1,4 +1,4 @@
-openapi: '3.0.0'
+openapi: "3.0.0"
 security:
   - groupAuthz: []
 info:
@@ -7,7 +7,7 @@ info:
   version: 0.4.95-rc.21
 
 externalDocs:
-  description: 'This is the base url of the external documentation'
+  description: "This is the base url of the external documentation"
   url: https://otomi.io/ #Using this URL a final docUrl can be made using this+info.version+ the component's x-externalDocsPath
 
 x-responses:
@@ -16,32 +16,32 @@ x-responses:
     content:
       application/json:
         schema:
-          $ref: '#/components/schemas/OpenApiValidationError'
+          $ref: "#/components/schemas/OpenApiValidationError"
 
   OtomiStackError: &OtomiStackError
     description: Resource already exists
     content:
       application/json:
         schema:
-          $ref: '#/components/schemas/OtomiStackError'
+          $ref: "#/components/schemas/OtomiStackError"
 
   NotFound: &NotFound
     description: Resource does not exist
     content:
       application/json:
         schema:
-          $ref: '#/components/schemas/OtomiStackError'
+          $ref: "#/components/schemas/OtomiStackError"
 
 x-post-responses: &DefaultPostResponses
-  '400':
+  "400":
     <<: *BadRequest
-  '409':
+  "409":
     <<: *OtomiStackError
 
 x-get-responses: &DefaultGetResponses
-  '400':
+  "400":
     <<: *BadRequest
-  '404':
+  "404":
     <<: *NotFound
 
 # -------------------------------------------- Paths
@@ -52,7 +52,7 @@ paths:
       description: Delete user license
       x-aclSchema: License
       responses:
-        '200':
+        "200":
           description: Successfully removed user license
   /activate:
     put:
@@ -63,44 +63,44 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LicenseJwt'
+              $ref: "#/components/schemas/LicenseJwt"
         description: License JWT
         required: true
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Uploaded license
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/License'
+                $ref: "#/components/schemas/License"
   /metrics:
     get:
       operationId: getMetrics
       description: Get otomi metrics
       x-aclSchema: Metrics
       responses:
-        '200':
+        "200":
           description: Successfully obtained otomi metrics
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Metrics'
+                $ref: "#/components/schemas/Metrics"
   /secrets:
     get:
       operationId: getAllSecrets
       description: Get all secrets
       x-aclSchema: Secret
       responses:
-        '200':
+        "200":
           description: Successfully obtained all secrets
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Secret'
-        '400':
+                  $ref: "#/components/schemas/Secret"
+        "400":
           <<: *BadRequest
 
   /services:
@@ -109,15 +109,15 @@ paths:
       description: Get all services running on the cluster
       x-aclSchema: Service
       responses:
-        '200':
+        "200":
           description: Successfully obtained all services
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Service'
-        '400':
+                  $ref: "#/components/schemas/Service"
+        "400":
           <<: *BadRequest
 
   /teams:
@@ -126,14 +126,14 @@ paths:
       description: Get teams collection
       x-aclSchema: Team
       responses:
-        '200':
+        "200":
           description: Successfully obtained teams collection
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Team'
+                  $ref: "#/components/schemas/Team"
     post:
       operationId: createTeam
       description: Create a team
@@ -142,32 +142,32 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Team'
+              $ref: "#/components/schemas/Team"
         description: Team object that needs to be added to the collection
         required: true
       responses:
         <<: *DefaultPostResponses
-        '200':
+        "200":
           description: Successfully obtained teams collection
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Team'
-  '/teams/{teamId}':
+                $ref: "#/components/schemas/Team"
+  "/teams/{teamId}":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
+      - $ref: "#/components/parameters/teamParams"
     get:
       operationId: getTeam
       description: Get a specific team
       x-aclSchema: Team
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully obtained team
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Team'
+                $ref: "#/components/schemas/Team"
     put:
       operationId: editTeam
       description: Edit a team
@@ -176,43 +176,43 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Team'
+              $ref: "#/components/schemas/Team"
         description: Team object that contains updated values
         required: true
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully edited team
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Team'
+                $ref: "#/components/schemas/Team"
     delete:
       operationId: deleteTeam
       description: Delete team
       x-aclSchema: Team
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully deleted a team
 
-  '/teams/{teamId}/services':
+  "/teams/{teamId}/services":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
+      - $ref: "#/components/parameters/teamParams"
     get:
       operationId: getTeamServices
       description: Get services from a given team
       x-aclSchema: Service
       responses:
-        '200':
+        "200":
           description: Successfully obtained services
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Service'
-        '400':
+                  $ref: "#/components/schemas/Service"
+        "400":
           <<: *BadRequest
 
     post:
@@ -223,53 +223,53 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Service'
+              $ref: "#/components/schemas/Service"
         description: Service object
         required: true
       responses:
         <<: *DefaultPostResponses
-        '200':
+        "200":
           description: Successfully stored service configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Service'
+                $ref: "#/components/schemas/Service"
 
-  '/teams/{teamId}/kubernetes/services':
+  "/teams/{teamId}/kubernetes/services":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
+      - $ref: "#/components/parameters/teamParams"
     get:
       operationId: getTeamK8sServices
       description: Get services from a given team
       x-aclSchema: Service
       responses:
-        '200':
+        "200":
           description: Successfully obtained kuberntes services
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/K8sService'
-        '400':
+                  $ref: "#/components/schemas/K8sService"
+        "400":
           <<: *BadRequest
 
-  '/teams/{teamId}/services/{serviceId}':
+  "/teams/{teamId}/services/{serviceId}":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/serviceParams'
+      - $ref: "#/components/parameters/teamParams"
+      - $ref: "#/components/parameters/serviceParams"
     get:
       operationId: getService
       description: Get a service from a given team
       x-aclSchema: Service
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully obtained service configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Service'
+                $ref: "#/components/schemas/Service"
     put:
       operationId: editService
       description: Edit a service from a given team
@@ -278,48 +278,48 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Service'
+              $ref: "#/components/schemas/Service"
         description: Service object that contains updated values
         required: true
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully edited service
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Service'
+                $ref: "#/components/schemas/Service"
     delete:
       operationId: deleteService
       description: Delete a service from a given team
       x-aclSchema: Service
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully deleted a service
 
-  '/teams/{teamId}/secrets':
+  "/teams/{teamId}/secrets":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
+      - $ref: "#/components/parameters/teamParams"
     get:
       operationId: getSecrets
       description: Get secrets from a given team
       x-aclSchema: Secret
       responses:
-        '200':
+        "200":
           description: Successfully obtained secrets
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Secret'
-        '400':
+                  $ref: "#/components/schemas/Secret"
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpenApiValidationError'
+                $ref: "#/components/schemas/OpenApiValidationError"
     post:
       operationId: createSecret
       description: Create a team secret
@@ -335,34 +335,34 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Secret'
+              $ref: "#/components/schemas/Secret"
         description: Service object
         required: true
       responses:
         <<: *DefaultPostResponses
-        '200':
+        "200":
           description: Successfully stored secret configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Secret'
+                $ref: "#/components/schemas/Secret"
 
-  '/teams/{teamId}/secrets/{secretId}':
+  "/teams/{teamId}/secrets/{secretId}":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/secretParams'
+      - $ref: "#/components/parameters/teamParams"
+      - $ref: "#/components/parameters/secretParams"
     get:
       operationId: getSecret
       description: Get a secret from a given team
       x-aclSchema: Secret
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully obtained secret configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Secret'
+                $ref: "#/components/schemas/Secret"
     put:
       operationId: editSecret
       description: Edit a secret from a given team
@@ -371,57 +371,57 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Secret'
+              $ref: "#/components/schemas/Secret"
         description: Secret object that contains updated values
         required: true
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully edited a team secret
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Secret'
+                $ref: "#/components/schemas/Secret"
     delete:
       operationId: deleteSecret
       description: Delete a secret from a given team
       x-aclSchema: Secret
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully deleted a team secret
 
-  '/backups':
+  "/backups":
     get:
       operationId: getAllBackups
       x-aclSchema: Backup
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully obtained all backups configuration
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Backup'
+                  $ref: "#/components/schemas/Backup"
 
-  '/teams/{teamId}/backups':
+  "/teams/{teamId}/backups":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
+      - $ref: "#/components/parameters/teamParams"
     get:
       operationId: getTeamBackups
       x-aclSchema: Backup
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully obtained team backups configuration
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Backup'
+                  $ref: "#/components/schemas/Backup"
     post:
       operationId: createBackup
       description: Create a team backup
@@ -430,29 +430,29 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Backup'
+              $ref: "#/components/schemas/Backup"
         description: Backup object
         required: true
       responses:
         <<: *DefaultPostResponses
-        '200':
+        "200":
           description: Successfully stored backup configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Backup'
+                $ref: "#/components/schemas/Backup"
 
-  '/teams/{teamId}/backups/{backupId}':
+  "/teams/{teamId}/backups/{backupId}":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/backupParams'
+      - $ref: "#/components/parameters/teamParams"
+      - $ref: "#/components/parameters/backupParams"
     delete:
       operationId: deleteBackup
       description: Delete a backup from a given team
       x-aclSchema: Backup
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully deleted a backup
     get:
       operationId: getBackup
@@ -460,12 +460,12 @@ paths:
       x-aclSchema: Backup
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully obtained backup configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Backup'
+                $ref: "#/components/schemas/Backup"
     put:
       operationId: editBackup
       description: Edit a backup from a given team
@@ -474,49 +474,49 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Backup'
+              $ref: "#/components/schemas/Backup"
         description: Backup object that contains updated values
         required: true
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully edited a team backup
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Backup'
+                $ref: "#/components/schemas/Backup"
 
-  '/builds':
+  "/builds":
     get:
       operationId: getAllBuilds
       x-aclSchema: Build
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully obtained all builds configuration
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Build'
+                  $ref: "#/components/schemas/Build"
 
-  '/teams/{teamId}/builds':
+  "/teams/{teamId}/builds":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
+      - $ref: "#/components/parameters/teamParams"
     get:
       operationId: getTeamBuilds
       x-aclSchema: Build
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully obtained team builds configuration
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Build'
+                  $ref: "#/components/schemas/Build"
     post:
       operationId: createBuild
       description: Create a team build
@@ -525,29 +525,29 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Build'
+              $ref: "#/components/schemas/Build"
         description: Build object
         required: true
       responses:
         <<: *DefaultPostResponses
-        '200':
+        "200":
           description: Successfully stored build configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Build'
+                $ref: "#/components/schemas/Build"
 
-  '/teams/{teamId}/builds/{buildId}':
+  "/teams/{teamId}/builds/{buildId}":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/buildParams'
+      - $ref: "#/components/parameters/teamParams"
+      - $ref: "#/components/parameters/buildParams"
     delete:
       operationId: deleteBuild
       description: Delete a build from a given team
       x-aclSchema: Build
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully deleted a build
     get:
       operationId: getBuild
@@ -555,12 +555,12 @@ paths:
       x-aclSchema: Build
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully obtained build configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Build'
+                $ref: "#/components/schemas/Build"
     put:
       operationId: editBuild
       description: Edit a build from a given team
@@ -569,32 +569,32 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Build'
+              $ref: "#/components/schemas/Build"
         description: Build object that contains updated values
         required: true
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully edited a team build
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Build'
+                $ref: "#/components/schemas/Build"
 
-  '/k8sVersion':
+  "/k8sVersion":
     get:
       operationId: getK8sVersion
       description: Get cluster k8s version
       responses:
         <<: *DefaultPostResponses
-        '200':
+        "200":
           description: Successfully obtained k8s version
           content:
             application/json:
               schema:
                 type: string
 
-  '/cloudtty':
+  "/cloudtty":
     post:
       operationId: connectCloudtty
       description: Create a cloudtty url
@@ -603,17 +603,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Cloudtty'
+              $ref: "#/components/schemas/Cloudtty"
         description: Cloudtty object
         required: true
       responses:
         <<: *DefaultPostResponses
-        '200':
+        "200":
           description: Successfully stored cloudtty configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Cloudtty'
+                $ref: "#/components/schemas/Cloudtty"
     delete:
       operationId: deleteCloudtty
       description: Delete cloudtty url
@@ -622,44 +622,44 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Cloudtty'
+              $ref: "#/components/schemas/Cloudtty"
         description: Cloudtty object
         required: true
       responses:
-        '200':
+        "200":
           description: Successfully removed cloudtty url
 
-  '/projects':
+  "/projects":
     get:
       operationId: getAllProjects
       x-aclSchema: Project
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully obtained all projects configuration
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Project'
+                  $ref: "#/components/schemas/Project"
 
-  '/teams/{teamId}/projects':
+  "/teams/{teamId}/projects":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
+      - $ref: "#/components/parameters/teamParams"
     get:
       operationId: getTeamProjects
       x-aclSchema: Project
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully obtained team projects configuration
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Project'
+                  $ref: "#/components/schemas/Project"
     post:
       operationId: createProject
       description: Create a team project
@@ -668,29 +668,29 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Project'
+              $ref: "#/components/schemas/Project"
         description: Project object
         required: true
       responses:
         <<: *DefaultPostResponses
-        '200':
+        "200":
           description: Successfully stored project configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Project'
+                $ref: "#/components/schemas/Project"
 
-  '/teams/{teamId}/projects/{projectId}':
+  "/teams/{teamId}/projects/{projectId}":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/projectParams'
+      - $ref: "#/components/parameters/teamParams"
+      - $ref: "#/components/parameters/projectParams"
     delete:
       operationId: deleteProject
       description: Delete a project from a given team
       x-aclSchema: Project
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully deleted a project
     get:
       operationId: getProject
@@ -698,12 +698,12 @@ paths:
       x-aclSchema: Project
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully obtained project configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Project'
+                $ref: "#/components/schemas/Project"
     put:
       operationId: editProject
       description: Edit a project from a given team
@@ -712,34 +712,34 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Project'
+              $ref: "#/components/schemas/Project"
         description: Project object that contains updated values
         required: true
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully edited a team project
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Project'
+                $ref: "#/components/schemas/Project"
 
-  '/workloads':
+  "/workloads":
     get:
       operationId: getAllWorkloads
       x-aclSchema: Workload
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully obtained all workloads configuration
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Workload'
+                  $ref: "#/components/schemas/Workload"
 
-  '/workloadCatalog':
+  "/workloadCatalog":
     post:
       operationId: workloadCatalog
       description: Get workload catalog from a repository
@@ -752,29 +752,42 @@ paths:
         required: true
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully updated a team project
           content:
             application/json:
               schema:
                 type: object
 
-  '/teams/{teamId}/workloads':
+  "/workloadNameGenerator":
+    get:
+      operationId: workloadNameGenerator
+      description: Get a generated workload name
+      responses:
+        <<: *DefaultGetResponses
+        "200":
+          description: Successfully generate a workload name
+          content:
+            application/json:
+              schema:
+                type: string
+
+  "/teams/{teamId}/workloads":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
+      - $ref: "#/components/parameters/teamParams"
     get:
       operationId: getTeamWorkloads
       x-aclSchema: Workload
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully obtained team workloads configuration
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Workload'
+                  $ref: "#/components/schemas/Workload"
     post:
       operationId: createWorkload
       description: Create a team workload
@@ -783,29 +796,29 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Workload'
+              $ref: "#/components/schemas/Workload"
         description: Workload object
         required: true
       responses:
         <<: *DefaultPostResponses
-        '200':
+        "200":
           description: Successfully stored workload configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Workload'
+                $ref: "#/components/schemas/Workload"
 
-  '/teams/{teamId}/workloads/{workloadId}':
+  "/teams/{teamId}/workloads/{workloadId}":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/workloadParams'
+      - $ref: "#/components/parameters/teamParams"
+      - $ref: "#/components/parameters/workloadParams"
     delete:
       operationId: deleteWorkload
       description: Delete a workload from a given team
       x-aclSchema: Workload
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully deleted a workload
     get:
       operationId: getWorkload
@@ -813,12 +826,12 @@ paths:
       x-aclSchema: Workload
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully obtained workload configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Workload'
+                $ref: "#/components/schemas/Workload"
     put:
       operationId: editWorkload
       description: Edit a secret from a given team
@@ -827,34 +840,34 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Workload'
+              $ref: "#/components/schemas/Workload"
         description: Workload object that contains updated values
         required: true
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully edited a team secret
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Workload'
+                $ref: "#/components/schemas/Workload"
 
-  '/teams/{teamId}/workloads/{workloadId}/values':
+  "/teams/{teamId}/workloads/{workloadId}/values":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/workloadParams'
+      - $ref: "#/components/parameters/teamParams"
+      - $ref: "#/components/parameters/workloadParams"
     get:
       operationId: getWorkloadValues
       description: Get workload helm chart values
       x-aclSchema: Workload
       responses:
-        '200':
+        "200":
           description: Successfully obtained all workload values
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkloadValues'
-        '400':
+                $ref: "#/components/schemas/WorkloadValues"
+        "400":
           <<: *BadRequest
     put:
       operationId: editWorkloadValues
@@ -864,17 +877,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WorkloadValues'
+              $ref: "#/components/schemas/WorkloadValues"
         description: Workload values
         required: true
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully edited workload values
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkloadValues'
+                $ref: "#/components/schemas/WorkloadValues"
     patch:
       operationId: updateWorkloadValues
       description: Update workload values
@@ -883,26 +896,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WorkloadValues'
+              $ref: "#/components/schemas/WorkloadValues"
         description: Workload values
         required: true
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully updated workload values
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkloadValues'
+                $ref: "#/components/schemas/WorkloadValues"
   /deploy:
     get:
       x-aclSchema: Deploy
       operationId: deploy
       description: Trigger a deployment (only for admin)
       responses:
-        '202':
+        "202":
           description: Deploy has been triggered
-        '409':
+        "409":
           <<: *OtomiStackError
 
   /revert:
@@ -911,7 +924,7 @@ paths:
       operationId: revert
       description: Revert session to previous state
       responses:
-        '202':
+        "202":
           description: Session state has been reverted
 
   /restore:
@@ -920,61 +933,61 @@ paths:
       operationId: restore
       description: Restore root to previous state
       responses:
-        '202':
+        "202":
           description: Root state has been restored
 
-  '/kubecfg/{teamId}':
+  "/kubecfg/{teamId}":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
+      - $ref: "#/components/parameters/teamParams"
     get:
       operationId: downloadKubecfg
       description: Download a kubecfg for a team
       x-aclSchema: Kubecfg
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Succesfully finished the download
           content:
-            'application/yaml':
+            "application/yaml":
               schema:
-                $ref: '#/components/schemas/Kubecfg'
+                $ref: "#/components/schemas/Kubecfg"
 
-  '/dockerconfig/{teamId}':
+  "/dockerconfig/{teamId}":
     parameters:
-      - $ref: '#/components/parameters/teamParams'
+      - $ref: "#/components/parameters/teamParams"
     get:
       operationId: downloadDockerConfig
       description: Download Docker login creds for a team
       x-aclSchema: DockerConfig
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Succesfully finished the download
           content:
-            'application/yaml':
+            "application/yaml":
               schema:
-                $ref: '#/components/schemas/DockerConfig'
+                $ref: "#/components/schemas/DockerConfig"
 
   /session:
     get:
       operationId: getSession
       description: Get the session for the current user
       responses:
-        '200':
+        "200":
           description: Get the session for the logged in user
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Session'
+                $ref: "#/components/schemas/Session"
         default:
           description: The requested session.
   /apiDocs:
     get:
-      operationId: 'apiDocs'
+      operationId: "apiDocs"
       security: []
       description: Get OpenAPIDoc document
       responses:
-        '200':
+        "200":
           description: The requested apiDoc.
           content:
             application/json:
@@ -998,16 +1011,16 @@ paths:
               type: string
               uniqueItems: true
       responses:
-        '200':
+        "200":
           description: The request is successful.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Settings'
+                $ref: "#/components/schemas/Settings"
 
-  '/settings/{settingId}':
+  "/settings/{settingId}":
     parameters:
-      - $ref: '#/components/parameters/settingsParams'
+      - $ref: "#/components/parameters/settingsParams"
     put:
       operationId: editSettings
       description: Edit settings from the 'settings.yaml' or 'secret.settings.yaml' file.
@@ -1016,12 +1029,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Settings'
+              $ref: "#/components/schemas/Settings"
         description: Put new settings.
         required: true
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully edited settings.
 
   /apps/{teamId}:
@@ -1045,14 +1058,14 @@ paths:
               type: string
               uniqueItems: true
       responses:
-        '200':
+        "200":
           description: The request is successful.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/App'
+                  $ref: "#/components/schemas/App"
     put:
       operationId: toggleApps
       description: Turn on/off list of apps for a team
@@ -1066,7 +1079,7 @@ paths:
         required: true
       responses:
         <<: *DefaultPostResponses
-        '200':
+        "200":
           description: Successfully toggled apps
   /apps/{teamId}/{appId}:
     parameters:
@@ -1085,12 +1098,12 @@ paths:
       description: Get app information
       x-aclSchema: App
       responses:
-        '200':
+        "200":
           description: The request is successful.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/App'
+                $ref: "#/components/schemas/App"
     put:
       operationId: editApp
       description: Edit app values
@@ -1099,18 +1112,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/App'
+              $ref: "#/components/schemas/App"
         description: Edit app values
         required: true
       responses:
         <<: *DefaultGetResponses
-        '200':
+        "200":
           description: Successfully edited app values.
 
 # -------------------------------------------- Servers
 
 servers:
-  - url: '/v1'
+  - url: "/v1"
 
 # -------------------------------------------- Components
 components:

@@ -62,6 +62,7 @@ import {
 } from './k8s_operations'
 import connect from './otomiCloud/connect'
 import { validateBackupFields } from './utils/backupUtils'
+import { workloadNameGenerator } from './utils/workloadNameGenerator/workloadNameGenerator'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 const debug = Debug('otomi:otomi-stack')
@@ -772,6 +773,10 @@ export default class OtomiStack {
     const version = env.VERSIONS.core as string
     const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub, teamId, version)
     return { url, helmCharts, catalog }
+  }
+
+  getGeneratedWorkloadName() {
+    return workloadNameGenerator()
   }
 
   createWorkload(teamId: string, data: Workload): Workload {
