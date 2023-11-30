@@ -94,7 +94,7 @@ Team:
       title: Managed Prometheus and Alert manager
       properties:
         enabled:
-          description: When enabled, a managed Prometheus and Alert manager instance is provisioned for the team.
+          description: When enabled, a managed Prometheus and Alert manager instance are provisioned for the team.
           title: Enabled
           type: boolean
           default: false
