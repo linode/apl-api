@@ -16,7 +16,7 @@ spec:
       configMap:
         name: kconfig-team-$TARGET_TEAM
   containers:
-    - image: otomi/tty:1.0.5
+    - image: otomi/tty:1.1.1
       name: po
       resources:
         requests:

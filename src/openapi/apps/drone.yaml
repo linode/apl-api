@@ -12,6 +12,9 @@ AppDrone:
       nullable: true
       items:
         $ref: ../definitions.yaml#/shortcut
+    enabled:
+      type: boolean
+      default: false
     values:
       x-externalDocsPath: docs/apps/drone
       additionalProperties: false

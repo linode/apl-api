@@ -56,6 +56,7 @@ import {
   checkPodExists,
   getCloudttyActiveTime,
   getKubernetesVersion,
+  getLastTektonMessage,
   k8sdelete,
   watchPodUntilRunning,
 } from './k8s_operations'
@@ -757,17 +758,19 @@ export default class OtomiStack {
     return this.db.getCollection('workloads') as Array<Workload>
   }
 
-  async getWorkloadCatalog(data: { url: string; sub: string }): Promise<any> {
-    const { url: clientUrl, sub } = data
+  async getWorkloadCatalog(data: { url: string; sub: string; teamId: string }): Promise<any> {
+    const { url: clientUrl, sub, teamId } = data
     let url = clientUrl
-
-    const clusterInfo = this.getSettings(['cluster'])
-    const domainSuffix = clusterInfo?.cluster?.domainSuffix
-
-    if (env.HELM_CHART_CATALOG) url = env.HELM_CHART_CATALOG
-    else if (domainSuffix) url = `https://gitea.${domainSuffix}/otomi/charts.git`
-
-    const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub)
+    if (env?.HELM_CHART_CATALOG && !clientUrl) url = env.HELM_CHART_CATALOG
+    if (!url) {
+      const err = {
+        code: 404,
+        message: 'No helm chart catalog found!',
+      }
+      throw err
+    }
+    const version = env.VERSIONS.core as string
+    const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub, teamId, version)
     return { url, helmCharts, catalog }
   }
 
@@ -897,6 +900,17 @@ export default class OtomiStack {
       getIo().emit('db', msg)
       throw e
     } finally {
+      const sha = await rootStack.repo.getCommitSha()
+      // check Tekton status every 5 seconds and emit it when the pipeline is completed
+      const intervalId = setInterval(() => {
+        getLastTektonMessage(sha).then(({ order, name, completionTime, status }: any) => {
+          if (completionTime) {
+            getIo().emit('tekton', { order, name, completionTime, sha, status })
+            clearInterval(intervalId)
+            debug(`Tekton pipeline ${order} completed with status ${status}`)
+          }
+        })
+      }, 5 * 1000)
       rootStack.locked = false
     }
   }

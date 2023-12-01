@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/redkubes/otomi-api/compare/v1.2.0...v2.0.0) (2023-11-21)
+
+
+### Features
+
+* drone 2 tekton ([#474](https://github.com/redkubes/otomi-api/issues/474)) ([4d25d52](https://github.com/redkubes/otomi-api/commit/4d25d52de118ec7ee330fc4d0d050937e83363eb))
+* filter workload catalog for v2 upgrade ([#475](https://github.com/redkubes/otomi-api/issues/475)) ([83cf3f6](https://github.com/redkubes/otomi-api/commit/83cf3f6edd10bc773bdfbf1a44c443cc7eef0d4d))
+* istio vsvc traffic control ([#469](https://github.com/redkubes/otomi-api/issues/469)) ([08043b8](https://github.com/redkubes/otomi-api/commit/08043b8daa87eeeb7c53f04ea37ff026629d39da))
+* schema changes for drone and tekton ([#472](https://github.com/redkubes/otomi-api/issues/472)) ([af87793](https://github.com/redkubes/otomi-api/commit/af87793a1065d967e49aef5ebd93782eab7119b3))
+* specific workload catalog for teamId ([#470](https://github.com/redkubes/otomi-api/issues/470)) ([cfb7b7b](https://github.com/redkubes/otomi-api/commit/cfb7b7be408feb3176af690889874fe68c7e91a7))
+* template catalog ([#466](https://github.com/redkubes/otomi-api/issues/466)) ([0fadacc](https://github.com/redkubes/otomi-api/commit/0fadaccd8f699a3826f02b892d799d58c5cca7e0))
+* workload template catalog ([#465](https://github.com/redkubes/otomi-api/issues/465)) ([2b07999](https://github.com/redkubes/otomi-api/commit/2b07999a49ec319f30f2a6c8bd956b62365d3b39))
+
+
+### Bug Fixes
+
+* align auto image update ([#471](https://github.com/redkubes/otomi-api/issues/471)) ([1fd5d89](https://github.com/redkubes/otomi-api/commit/1fd5d89dc9718621e0ff24cbabb9224b43b5b933))
+* auto update schema ([#473](https://github.com/redkubes/otomi-api/issues/473)) ([cbec8ad](https://github.com/redkubes/otomi-api/commit/cbec8adfdbd87df9105c99d62d6fa4aaf378a681))
+* kc limits ([#462](https://github.com/redkubes/otomi-api/issues/462)) ([aac3ab7](https://github.com/redkubes/otomi-api/commit/aac3ab7df8b4674a4006db56af6fca8760b88be6))
+* rm kubeapps ([#463](https://github.com/redkubes/otomi-api/issues/463)) ([3fa5ec3](https://github.com/redkubes/otomi-api/commit/3fa5ec37087ab9e42d7b5388b18be37936207151))
+* rm kubeclarity ([#464](https://github.com/redkubes/otomi-api/issues/464)) ([fa6381e](https://github.com/redkubes/otomi-api/commit/fa6381e43cafda55212b2a8967d57605caa4afca))
+
 ## [1.2.0](https://github.com/redkubes/otomi-api/compare/v1.1.0...v1.2.0) (2023-10-17)
 
 
