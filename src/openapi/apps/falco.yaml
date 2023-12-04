@@ -20,13 +20,6 @@ AppFalco:
       additionalProperties: false
       type: object
       properties:
-        falcoSidekick:
-          title: Falco Sidekick configuration
-          properties:
-            replicas:
-              $ref: ../definitions.yaml#/replicas      
-            minPrio:
-              $ref: ../definitions.yaml#/priority
         resources:
           type: object
           properties:
@@ -51,30 +44,6 @@ AppFalco:
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
                       default: 128Mi
-              required:
-                - limits
-                - requests
-            falcoSideKick:
-              type: object
-              properties:
-                limits:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 50m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 64Mi
-                requests:
-                  type: object
-                  properties:
-                    cpu:
-                      $ref: ../definitions.yaml#/quantityCpu
-                      default: 20m
-                    memory:
-                      $ref: ../definitions.yaml#/quantityMem
-                      default: 32Mi
               required:
                 - limits
                 - requests
