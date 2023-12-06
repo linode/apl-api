@@ -91,13 +91,13 @@ Team:
     azureMonitor:
       $ref: definitions.yaml#/azureMonitor
     monitoringStack:
-      title: Private team monitoring
+      title: Managed Prometheus and Alert manager
       properties:
         enabled:
-          description: When enabled, a private Prometheus and Grafana instance is provisioned.
+          description: When enabled, a managed Prometheus and Alert manager instance are provisioned for the team.
           title: Enabled
           type: boolean
-          default: true
+          default: false
     networkPolicy:
       properties:
         ingressPrivate:
