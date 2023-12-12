@@ -44,21 +44,29 @@ export async function fetchWorkloadCatalog(
   const filesToExclude = ['.git', '.gitignore', '.vscode', 'LICENSE', 'README.md']
   if (!version.startsWith('v1')) filesToExclude.push('deployment', 'ksvc')
   const folders = files.filter((f) => !filesToExclude.includes(f))
+
+  let rbac = {}
+  try {
+    const r = await readFile(`${helmChartsDir}/rbac.yaml`, 'utf-8')
+    rbac = YAML.parse(r).rbac
+  } catch (error) {
+    console.error(`Error while parsing rbac.yaml file : ${error.message}`)
+  }
+
   const catalog: any[] = []
   const helmCharts: string[] = []
   for (const folder of folders) {
     try {
-      const v = await readFile(`${helmChartsDir}/${folder}/values.yaml`, 'utf-8')
+      const values = await readFile(`${helmChartsDir}/${folder}/values.yaml`, 'utf-8')
       const c = await readFile(`${helmChartsDir}/${folder}/Chart.yaml`, 'utf-8')
-      const chartValues = YAML.parse(v)
       const chartMetadata = YAML.parse(c)
-      const teams = chartMetadata?.teams || []
-      if (!teams.length || teams.includes(`team-${teamId}`) || teams.includes('all') || teamId === 'admin') {
+      if (!rbac[folder] || rbac[folder].includes(`team-${teamId}`) || teamId === 'admin') {
         const catalogItem = {
           name: folder,
-          values: chartValues,
-          chartVersion: chartMetadata.version,
-          chartDescription: chartMetadata.description,
+          values,
+          icon: chartMetadata?.icon,
+          chartVersion: chartMetadata?.version,
+          chartDescription: chartMetadata?.description,
         }
         catalog.push(catalogItem)
         helmCharts.push(folder)
