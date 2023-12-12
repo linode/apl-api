@@ -250,3 +250,17 @@ export async function getLastTektonMessage(sha: string): Promise<any | undefined
     debug('getLastTektonMessage error:', error)
   }
 }
+
+export async function getWorkloadStatus(name: string): Promise<any | undefined> {
+  console.log('name:', name)
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.AppsV1Api)
+  try {
+    const res: any = await k8sApi.readNamespacedDeployment(name, 'argocd')
+    const { status } = res.body
+    return { status }
+  } catch (error) {
+    debug('getWorkloadStatus error:', error)
+  }
+}

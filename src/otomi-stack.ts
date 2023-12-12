@@ -57,6 +57,7 @@ import {
   getCloudttyActiveTime,
   getKubernetesVersion,
   getLastTektonMessage,
+  getWorkloadStatus,
   k8sdelete,
   watchPodUntilRunning,
 } from './k8s_operations'
@@ -775,6 +776,14 @@ export default class OtomiStack {
   }
 
   createWorkload(teamId: string, data: Workload): Workload {
+    const intervalId = setInterval(() => {
+      getWorkloadStatus(`team-${teamId}-${data.name}`).then((status: any) => {
+        console.log('Workload status:', status)
+      })
+    }, 10 * 1000)
+    setTimeout(() => {
+      clearInterval(intervalId)
+    }, 5 * 60 * 1000)
     try {
       const w = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }) as Workload
       this.db.createItem('workloadValues', { teamId, values: {} }, { teamId, name: w.name }, w.id) as WorkloadValues
