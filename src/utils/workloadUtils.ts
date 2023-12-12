@@ -57,14 +57,13 @@ export async function fetchWorkloadCatalog(
   const helmCharts: string[] = []
   for (const folder of folders) {
     try {
-      const v = await readFile(`${helmChartsDir}/${folder}/values.yaml`, 'utf-8')
+      const values = await readFile(`${helmChartsDir}/${folder}/values.yaml`, 'utf-8')
       const c = await readFile(`${helmChartsDir}/${folder}/Chart.yaml`, 'utf-8')
-      const chartValues = YAML.parse(v)
       const chartMetadata = YAML.parse(c)
       if (!rbac[folder] || rbac[folder].includes(`team-${teamId}`) || teamId === 'admin') {
         const catalogItem = {
           name: folder,
-          values: chartValues,
+          values,
           icon: chartMetadata?.icon,
           chartVersion: chartMetadata?.version,
           chartDescription: chartMetadata?.description,
