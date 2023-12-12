@@ -20,6 +20,15 @@ AppFalco:
       additionalProperties: false
       type: object
       properties:
+        driver:
+          type: string
+          description: Choose between module (kernel driver), ebpf (eBPF probe), modern-bpf (modern eBPF probe).
+          title: Driver settings
+          default: module
+          enum:
+            - module
+            - ebpf
+            - modern-bpf
         resources:
           type: object
           properties:
