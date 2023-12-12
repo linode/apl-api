@@ -779,11 +779,12 @@ export default class OtomiStack {
     const intervalId = setInterval(() => {
       getWorkloadStatus(`team-${teamId}-${data.name}`).then((status: any) => {
         console.log('Workload status:', status)
+        if (status === 'Synced') clearInterval(intervalId)
       })
     }, 10 * 1000)
     setTimeout(() => {
       clearInterval(intervalId)
-    }, 5 * 60 * 1000)
+    }, 10 * 60 * 1000)
     try {
       const w = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }) as Workload
       this.db.createItem('workloadValues', { teamId, values: {} }, { teamId, name: w.name }, w.id) as WorkloadValues
