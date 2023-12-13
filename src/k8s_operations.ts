@@ -262,5 +262,6 @@ export async function getWorkloadStatus(name: string): Promise<any | undefined> 
     return status
   } catch (error) {
     debug('getWorkloadStatus error:', error)
+    return 'Unknown'
   }
 }

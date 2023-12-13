@@ -57,6 +57,7 @@ import {
   getCloudttyActiveTime,
   getKubernetesVersion,
   getLastTektonMessage,
+  getWorkloadStatus,
   k8sdelete,
   watchPodUntilRunning,
 } from './k8s_operations'
@@ -754,8 +755,25 @@ export default class OtomiStack {
     return this.db.getCollection('workloads', ids) as Array<Workload>
   }
 
+  emitWorkloadStatus(workloads): void {
+    const workloadStatuses = {}
+    const intervalId = setInterval(() => {
+      workloads.forEach((workload) => {
+        getWorkloadStatus(`team-${workload.teamId}-${workload.name}`).then((status: any) => {
+          workloadStatuses[workload.name] = { status }
+        })
+      })
+      getIo().emit('workloads', workloadStatuses)
+    }, 10 * 1000)
+    setTimeout(() => {
+      clearInterval(intervalId)
+    }, 1 * 60 * 1000)
+  }
+
   getAllWorkloads(): Array<Workload> {
-    return this.db.getCollection('workloads') as Array<Workload>
+    const workloads = this.db.getCollection('workloads') as Array<Workload>
+    this.emitWorkloadStatus(workloads)
+    return workloads
   }
 
   async getWorkloadCatalog(data: { url: string; sub: string; teamId: string }): Promise<any> {
@@ -775,10 +793,10 @@ export default class OtomiStack {
   }
 
   createWorkload(teamId: string, data: Workload): Workload {
-    getIo().emit('workload', { name: data.name, status: 'Pending' })
-    setTimeout(() => {
-      getIo().emit('workload', { name: data.name, status: 'Synced' })
-    }, 10 * 1000)
+    // getIo().emit('workload', { name: data.name, status: 'Pending' })
+    // setTimeout(() => {
+    //   getIo().emit('workload', { name: data.name, status: 'Synced' })
+    // }, 10 * 1000)
 
     // const intervalId = setInterval(() => {
     //   getWorkloadStatus(`team-${teamId}-${data.name}`).then((status: any) => {
