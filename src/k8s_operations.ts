@@ -252,7 +252,6 @@ export async function getLastTektonMessage(sha: string): Promise<any | undefined
 }
 
 export async function getWorkloadStatus(name: string): Promise<any | undefined> {
-  console.log('name:', name)
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
@@ -262,6 +261,6 @@ export async function getWorkloadStatus(name: string): Promise<any | undefined> 
     return status
   } catch (error) {
     debug('getWorkloadStatus error:', error)
-    return 'Unknown'
+    return 'NotFound'
   }
 }
