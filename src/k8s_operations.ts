@@ -257,13 +257,7 @@ export async function getWorkloadStatus(name: string): Promise<any | undefined> 
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
   try {
-    const res: any = await k8sApi.getNamespacedCustomObjectStatus(
-      'argoproj.io',
-      'v1alpha1',
-      'argocd',
-      'applications',
-      name,
-    )
+    const res: any = await k8sApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', 'argocd', 'applications', name)
     const { status } = res.body.status.sync
     return status
   } catch (error) {
