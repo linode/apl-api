@@ -751,13 +751,16 @@ export default class OtomiStack {
   }
 
   status({ resource, operation, intervalId }: { resource: string; operation: string; intervalId: number }): number {
+    const clusterInfo = this.getSettings(['cluster'])
+    const domainSuffix: string = clusterInfo?.cluster?.domainSuffix || ''
+    console.log('domainSuffix', domainSuffix)
     if (operation === 'stop') {
       clearInterval(intervalId)
       console.log('STATUS Interval stopped!', intervalId)
       return intervalId
     }
     const resources = this.db.getCollection(resource) as Array<any>
-    const timeoutObj = setInterval(() => emitStatus(resources, resource), 2 * 1000)
+    const timeoutObj = setInterval(() => emitStatus(resources, resource, domainSuffix), 2 * 1000)
     const timeoutObjId = timeoutObj[Symbol.toPrimitive]()
     console.log('STATUS Interval started!', timeoutObjId)
     setTimeout(() => {

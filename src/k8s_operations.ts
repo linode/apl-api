@@ -298,3 +298,29 @@ export async function getBuildStatus(namespace: string, type: string, name: stri
     return 'NotFound'
   }
 }
+
+export async function getServiceStatus(
+  namespace: string,
+  domainSuffix: string,
+  name: string,
+): Promise<any | undefined> {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
+  const vsName = `${name.replace('-', '')}-${domainSuffix.replace('.', '-')}`
+  console.log('vsName', vsName)
+  try {
+    const res: any = await k8sApi.getNamespacedCustomObject(
+      'networking.istio.io',
+      'v1alpha3',
+      namespace,
+      'virtualservices',
+      vsName,
+    )
+    const status = JSON.stringify(res.body, null, 2)
+    return status.includes(vsName) ? 'Ready' : 'NotFound'
+  } catch (error) {
+    debug('getServiceStatus error:', error)
+    return 'NotFound'
+  }
+}

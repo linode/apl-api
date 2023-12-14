@@ -1,7 +1,7 @@
 import { getBuildStatus, getWorkloadStatus } from 'src/k8s_operations'
 import { getIo } from 'src/middleware'
 
-export function emitStatus(resources: any, resourceName: string): any {
+export function emitStatus(resources: any, resourceName: string, domainSuffix: string): any {
   console.log('emitStatus: ', resourceName)
 
   const resourcesStatusPromises = resources.map((resource) => {
@@ -12,6 +12,11 @@ export function emitStatus(resources: any, resourceName: string): any {
     }
     if (resourceName === 'builds') {
       return getBuildStatus(`team-${resource.teamId}`, resource.mode.type, resource.name).then((status: any) => {
+        return { [resource.name]: { status } }
+      })
+    }
+    if (resourceName === 'services') {
+      return getBuildStatus(`team-${resource.teamId}`, domainSuffix, resource.name).then((status: any) => {
         return { [resource.name]: { status } }
       })
     }
