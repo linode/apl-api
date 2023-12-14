@@ -317,8 +317,9 @@ export async function getServiceStatus(
       'virtualservices',
       vsName,
     )
-    const status = JSON.stringify(res.body, null, 2)
-    return status.includes(vsName) ? 'Ready' : 'NotFound'
+    const status: any = JSON.stringify(res.body, null, 2)
+    console.log('status', status)
+    return status.NAME === vsName ? 'Ready' : 'NotFound'
   } catch (error) {
     debug('getServiceStatus error:', error)
     return 'NotFound'
