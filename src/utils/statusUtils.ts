@@ -1,4 +1,4 @@
-import { getBuildStatus, getWorkloadStatus } from 'src/k8s_operations'
+import { getBuildStatus, getServiceStatus, getWorkloadStatus } from 'src/k8s_operations'
 import { getIo } from 'src/middleware'
 
 export function emitStatus(resources: any, resourceName: string, domainSuffix: string): any {
@@ -16,7 +16,7 @@ export function emitStatus(resources: any, resourceName: string, domainSuffix: s
       })
     }
     if (resourceName === 'services') {
-      return getBuildStatus(`team-${resource.teamId}`, domainSuffix, resource.name).then((status: any) => {
+      return getServiceStatus(`team-${resource.teamId}`, domainSuffix, resource.name).then((status: any) => {
         return { [resource.name]: { status } }
       })
     }
