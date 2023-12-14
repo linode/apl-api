@@ -11,7 +11,8 @@ export function emitStatus(resources: any, resourceName: string): any {
       })
     }
     if (resourceName === 'builds') {
-      return getBuildStatus(`team-${resource.teamId}`).then((status: any) => {
+      console.log('resource', resource)
+      return getBuildStatus(`team-${resource.teamId}`, resource.mode.type, resource.name).then((status: any) => {
         return { [resource.name]: { status } }
       })
     }

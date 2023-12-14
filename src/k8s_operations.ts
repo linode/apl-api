@@ -265,11 +265,11 @@ export async function getWorkloadStatus(name: string): Promise<any | undefined> 
   }
 }
 
-export async function getBuildStatus(namespace: string): Promise<any | undefined> {
+export async function getBuildStatus(namespace: string, type: string, name: string): Promise<any | undefined> {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
-  const labelSelector = 'tekton.dev/pipeline=docker-build-green'
+  const labelSelector = `tekton.dev/pipeline=${type}-build-${name}`
   try {
     const res: any = await k8sApi.listNamespacedCustomObject(
       'tekton.dev',
