@@ -309,7 +309,7 @@ export async function getServiceStatus(teamId: string, domainSuffix: string, nam
   try {
     const res: any = await k8sApi.getNamespacedCustomObject(
       'networking.istio.io',
-      'v1alpha3',
+      'v1beta1',
       namespace,
       'virtualservices',
       vsName,
