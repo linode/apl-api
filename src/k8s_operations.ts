@@ -273,9 +273,10 @@ export async function getBuildStatus(namespace: string, type: string, name: stri
   try {
     const res: any = await k8sApi.listNamespacedCustomObject(
       'tekton.dev',
-      'v1alpha1',
+      'v1beta1',
       namespace,
       'pipelineruns',
+      undefined,
       undefined,
       undefined,
       undefined,
