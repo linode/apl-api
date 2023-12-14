@@ -16,7 +16,7 @@ export function emitStatus(resources: any, resourceName: string, domainSuffix: s
       })
     }
     if (resourceName === 'services') {
-      return getServiceStatus(`team-${resource.teamId}`, domainSuffix, resource.name).then((status: any) => {
+      return getServiceStatus(resource.teamId, domainSuffix, resource.name).then((status: any) => {
         return { [resource.name]: { status } }
       })
     }

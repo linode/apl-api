@@ -299,15 +299,12 @@ export async function getBuildStatus(namespace: string, type: string, name: stri
   }
 }
 
-export async function getServiceStatus(
-  namespace: string,
-  domainSuffix: string,
-  name: string,
-): Promise<any | undefined> {
+export async function getServiceStatus(teamId: string, domainSuffix: string, name: string): Promise<any | undefined> {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
-  const vsName = `${name.replace('-', '')}-${domainSuffix.replace('.', '-')}`
+  const namespace = `team-${teamId}`
+  const vsName = `${name.replace('-', '')}${teamId}-${domainSuffix.replace('.', '-')}`
   console.log('vsName', vsName)
   try {
     const res: any = await k8sApi.getNamespacedCustomObject(
