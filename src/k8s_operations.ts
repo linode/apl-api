@@ -287,12 +287,14 @@ export async function getBuildStatus(namespace: string, type: string, name: stri
       const { conditions } = pipelineRun.status
       if (conditions && conditions.length > 0) {
         const conditionType = conditions[0].type
-        console.log('Condition type:', conditionType)
         return conditionType
       } else console.log('No conditions found for the PipelineRun.')
-    } else console.log('No PipelineRuns found with the specified label selector.')
+    } else {
+      // console.log('No PipelineRuns found with the specified label selector.')
+      return 'NotFound'
+    }
   } catch (error) {
-    debug('getBuildStatus error:', error)
+    // debug('getBuildStatus error:', error)
     return 'NotFound'
   }
 }
