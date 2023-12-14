@@ -264,3 +264,34 @@ export async function getWorkloadStatus(name: string): Promise<any | undefined> 
     return 'NotFound'
   }
 }
+
+export async function getBuildStatus(namespace: string): Promise<any | undefined> {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
+  const labelSelector = 'tekton.dev/pipeline=docker-build-green'
+  try {
+    const res: any = await k8sApi.listNamespacedCustomObject(
+      'tekton.dev',
+      'v1alpha1',
+      namespace,
+      'pipelineruns',
+      undefined,
+      undefined,
+      undefined,
+      labelSelector,
+    )
+    const pipelineRun = res.body.items[0]
+    if (pipelineRun) {
+      const { conditions } = pipelineRun.status
+      if (conditions && conditions.length > 0) {
+        const conditionType = conditions[0].type
+        console.log('Condition type:', conditionType)
+        return conditionType
+      } else console.log('No conditions found for the PipelineRun.')
+    } else console.log('No PipelineRuns found with the specified label selector.')
+  } catch (error) {
+    debug('getBuildStatus error:', error)
+    return 'NotFound'
+  }
+}

@@ -1,14 +1,21 @@
-import { getWorkloadStatus } from 'src/k8s_operations'
+import { getBuildStatus, getWorkloadStatus } from 'src/k8s_operations'
 import { getIo } from 'src/middleware'
 
 export function emitStatus(resources: any, resourceName: string): any {
   console.log('emitStatus: ', resourceName)
 
-  const resourcesStatusPromises = resources.map((workload) =>
-    getWorkloadStatus(`team-${workload.teamId}-${workload.name}`).then((status: any) => {
-      return { [workload.name]: { status } }
-    }),
-  )
+  const resourcesStatusPromises = resources.map((resource) => {
+    if (resourceName === 'workloads') {
+      return getWorkloadStatus(`team-${resource.teamId}-${resource.name}`).then((status: any) => {
+        return { [resource.name]: { status } }
+      })
+    }
+    if (resourceName === 'builds') {
+      return getBuildStatus(`team-${resource.teamId}`).then((status: any) => {
+        return { [resource.name]: { status } }
+      })
+    }
+  })
 
   Promise.all(resourcesStatusPromises).then((statuses) => {
     const resourcesStatus = Object.assign({}, ...statuses)
