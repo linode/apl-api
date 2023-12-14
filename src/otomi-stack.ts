@@ -57,12 +57,12 @@ import {
   getCloudttyActiveTime,
   getKubernetesVersion,
   getLastTektonMessage,
-  getWorkloadStatus,
   k8sdelete,
   watchPodUntilRunning,
 } from './k8s_operations'
 import connect from './otomiCloud/connect'
 import { validateBackupFields } from './utils/backupUtils'
+import { emitStatus } from './utils/statusUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 const debug = Debug('otomi:otomi-stack')
@@ -750,30 +750,30 @@ export default class OtomiStack {
     if (await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`)) await k8sdelete(data)
   }
 
+  status({ resource, operation, intervalId }: { resource: string; operation: string; intervalId: number }): number {
+    if (operation === 'stop') {
+      clearInterval(intervalId)
+      console.log('STATUS Interval stopped!', intervalId)
+      return intervalId
+    }
+    const resources = this.db.getCollection(resource) as Array<any>
+    const timeoutObj = setInterval(() => emitStatus(resources, resource), 2 * 1000)
+    const timeoutObjId = timeoutObj[Symbol.toPrimitive]()
+    console.log('STATUS Interval started!', timeoutObjId)
+    setTimeout(() => {
+      clearInterval(timeoutObjId)
+      console.log('STATUS Interval stopped!', timeoutObjId)
+    }, 5 * 60 * 1000)
+    return timeoutObjId
+  }
+
   getTeamWorkloads(teamId: string): Array<Workload> {
     const ids = { teamId }
     return this.db.getCollection('workloads', ids) as Array<Workload>
   }
 
-  emitWorkloadStatus(workloads): void {
-    const workloadStatuses = {}
-    const intervalId = setInterval(() => {
-      workloads.forEach((workload) => {
-        getWorkloadStatus(`team-${workload.teamId}-${workload.name}`).then((status: any) => {
-          workloadStatuses[workload.name] = { status }
-        })
-      })
-      getIo().emit('workloads', workloadStatuses)
-    }, 10 * 1000)
-    setTimeout(() => {
-      clearInterval(intervalId)
-    }, 1 * 60 * 1000)
-  }
-
   getAllWorkloads(): Array<Workload> {
-    const workloads = this.db.getCollection('workloads') as Array<Workload>
-    this.emitWorkloadStatus(workloads)
-    return workloads
+    return this.db.getCollection('workloads') as Array<Workload>
   }
 
   async getWorkloadCatalog(data: { url: string; sub: string; teamId: string }): Promise<any> {
@@ -793,21 +793,6 @@ export default class OtomiStack {
   }
 
   createWorkload(teamId: string, data: Workload): Workload {
-    // getIo().emit('workload', { name: data.name, status: 'Pending' })
-    // setTimeout(() => {
-    //   getIo().emit('workload', { name: data.name, status: 'Synced' })
-    // }, 10 * 1000)
-
-    // const intervalId = setInterval(() => {
-    //   getWorkloadStatus(`team-${teamId}-${data.name}`).then((status: any) => {
-    //     console.log('Workload status:', status)
-    //     getIo().emit('workload', { name: data.name, status })
-    //     if (status === 'Synced') clearInterval(intervalId)
-    //   })
-    // }, 10 * 1000)
-    // setTimeout(() => {
-    //   clearInterval(intervalId)
-    // }, 10 * 60 * 1000)
     try {
       const w = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }) as Workload
       this.db.createItem('workloadValues', { teamId, values: {} }, { teamId, name: w.name }, w.id) as WorkloadValues

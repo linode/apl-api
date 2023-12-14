@@ -260,7 +260,7 @@ export async function getWorkloadStatus(name: string): Promise<any | undefined> 
     const { status } = res.body.status.sync
     return status
   } catch (error) {
-    debug('getWorkloadStatus error:', error)
+    // debug('getWorkloadStatus error:', error)
     return 'NotFound'
   }
 }
