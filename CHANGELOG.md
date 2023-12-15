@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0](https://github.com/redkubes/otomi-api/compare/v2.0.0...v2.1.0) (2023-12-15)
+
+
+### Features
+
+* change tty image tag ([#476](https://github.com/redkubes/otomi-api/issues/476)) ([7450ec5](https://github.com/redkubes/otomi-api/commit/7450ec51a4773f2de0031943edf7a72c7877fad7))
+* developer catalog page improvements ([#479](https://github.com/redkubes/otomi-api/issues/479)) ([27952ed](https://github.com/redkubes/otomi-api/commit/27952ed2bb9e7e9c311d1c8ce12bf9d3bc617a71))
+* update fetchWorkloadCatalog to get readme files ([#482](https://github.com/redkubes/otomi-api/issues/482)) ([0de278c](https://github.com/redkubes/otomi-api/commit/0de278c2a432f6974e38752346a98cfe6d88ff56))
+* yaml comments ([#481](https://github.com/redkubes/otomi-api/issues/481)) ([fe9c187](https://github.com/redkubes/otomi-api/commit/fe9c187cac02e22443ec607b94705e8eeb47e17c))
+
+
+### Bug Fixes
+
+* rm sidekick from schema ([#478](https://github.com/redkubes/otomi-api/issues/478)) ([b1944ad](https://github.com/redkubes/otomi-api/commit/b1944adf39ecc7f056c85925d12df8c5d1028ba7))
+* team ops ([#477](https://github.com/redkubes/otomi-api/issues/477)) ([f447665](https://github.com/redkubes/otomi-api/commit/f447665033c091d15d537dfc7e7374e3e1af4313))
+
 ## [2.0.0](https://github.com/redkubes/otomi-api/compare/v1.2.0...v2.0.0) (2023-11-21)
 
 
