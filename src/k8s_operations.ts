@@ -265,13 +265,13 @@ export async function getWorkloadStatus(name: string): Promise<any | undefined> 
   }
 }
 
-async function listNamespacedCustomObject(namespace: string, plural: string, labelSelector: string) {
+async function listNamespacedCustomObject(group: string, namespace: string, plural: string, labelSelector: string) {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
   try {
     const res: any = await k8sApi.listNamespacedCustomObject(
-      'tekton.dev',
+      group,
       'v1beta1',
       namespace,
       plural,
@@ -283,14 +283,13 @@ async function listNamespacedCustomObject(namespace: string, plural: string, lab
     )
     return res
   } catch (error) {
-    console.log('error', error)
     return 'NotFound'
   }
 }
 
 export async function getBuildStatus(namespace: string, type: string, name: string): Promise<any | undefined> {
   const labelSelector = `tekton.dev/pipeline=${type}-build-${name}`
-  const resPipelineruns = await listNamespacedCustomObject(namespace, 'pipelineruns', labelSelector)
+  const resPipelineruns = await listNamespacedCustomObject('tekton.dev', namespace, 'pipelineruns', labelSelector)
   try {
     const pipelineRun = resPipelineruns.body.items[0]
     if (pipelineRun) {
@@ -300,51 +299,23 @@ export async function getBuildStatus(namespace: string, type: string, name: stri
         return conditionType
       } else console.log('No conditions found for the PipelineRun.')
     } else {
-      const resEventlisteners = await listNamespacedCustomObject(namespace, 'eventlisteners', labelSelector)
-      console.log('resEventlisteners', resEventlisteners)
+      const resEventlisteners = await listNamespacedCustomObject(
+        'triggers.tekton.dev',
+        namespace,
+        'eventlisteners',
+        labelSelector,
+      )
       const eventlistener = resEventlisteners.body.items[0]
       if (eventlistener) {
-        const { status } = eventlistener.status
-        if (status) {
-          const { conditions } = status
-          if (conditions && conditions.length > 0) {
-            const conditionType = conditions[0].type
-            return conditionType
-          } else console.log('No conditions found for the EventListener.')
-        } else console.log('No status found for the EventListener.')
+        const { conditions } = eventlistener.status
+        console.log('eventlistener', conditions)
+        if (conditions && conditions.length > 0) return 'Pending'
+        else return 'Unknown'
       } else console.log('No EventListeners found with the specified label selector.')
     }
   } catch (error) {
     return 'NotFound'
   }
-
-  // try {
-  //   const res: any = await k8sApi.listNamespacedCustomObject(
-  //     'tekton.dev',
-  //     'v1beta1',
-  //     namespace,
-  //     'pipelineruns',
-  //     undefined,
-  //     undefined,
-  //     undefined,
-  //     undefined,
-  //     labelSelector,
-  //   )
-  //   const pipelineRun = res.body.items[0]
-  //   if (pipelineRun) {
-  //     const { conditions } = pipelineRun.status
-  //     if (conditions && conditions.length > 0) {
-  //       const conditionType = conditions[0].type
-  //       return conditionType
-  //     } else console.log('No conditions found for the PipelineRun.')
-  //   } else {
-  //     // console.log('No PipelineRuns found with the specified label selector.')
-  //     return 'NotFound'
-  //   }
-  // } catch (error) {
-  //   // debug('getBuildStatus error:', error)
-  //   return 'NotFound'
-  // }
 }
 
 export async function getServiceStatus(teamId: string, domainSuffix: string, name: string): Promise<any | undefined> {
