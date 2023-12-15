@@ -1,4 +1,5 @@
 import { expect } from 'chai'
+import OtomiStack from 'src/otomi-stack'
 import { checkLicense } from './license-utils'
 import { License } from './otomi-models'
 
@@ -26,45 +27,41 @@ const noLicense: License = {
   isValid: false,
 }
 
+const capabilities = ['teams', 'services', 'workloads']
+
 describe('License tests', () => {
+  let otomiStack: OtomiStack
+  beforeEach(async () => {
+    otomiStack = new OtomiStack()
+    await otomiStack.init()
+  })
   it('should throw exception on provided license', () => {
+    otomiStack.db.db.set('license', noLicense).write()
     expect(() => {
-      checkLicense('post', 'teams', noLicense, '')
+      checkLicense('post', 'teams', otomiStack)
     }).to.throw('no license found')
   })
   it('should throw exception on invalid license', () => {
+    otomiStack.db.db.set('license', invalidLicense).write()
     expect(() => {
-      checkLicense('post', 'teams', invalidLicense, '')
+      checkLicense('post', 'teams', otomiStack)
     }).to.throw('license is not valid')
   })
-  it('should check if license has team capabilities', (done) => {
-    checkLicense('post', 'teams', validLicense, { teams: ['', ''] })
-    done()
-  })
-  it('should check if license has workloads capabilities', (done) => {
-    checkLicense('post', 'workloads', validLicense, { workloads: ['', ''] })
-    done()
-  })
-  it('should check if license has service capabilities', (done) => {
-    checkLicense('post', 'services', validLicense, { services: ['', ''] })
-    done()
-  })
-  it('should throw exception on license team capabilities', () => {
-    validLicense.body!.capabilities.teams = 2
-    expect(() => {
-      checkLicense('post', 'teams', validLicense, { teams: ['', '', ''] })
-    }).to.throw('maximum number of teams are reached for this license')
-  })
-  it('should throw exception on license workloads capabilities', () => {
-    validLicense.body!.capabilities.workloads = 2
-    expect(() => {
-      checkLicense('post', 'workloads', validLicense, { workloads: ['', ''] })
-    }).to.throw('maximum number of workloads are reached for this license')
-  })
-  it('should throw exception on license services capabilities', () => {
-    validLicense.body!.capabilities.services = 2
-    expect(() => {
-      checkLicense('post', 'services', validLicense, { services: ['', ''] })
-    }).to.throw('maximum number of services are reached for this license')
-  })
+  for (const capability of capabilities) {
+    it(`should check if license has ${capability} capabilities`, (done) => {
+      otomiStack.db.db.set('license', validLicense).write()
+      otomiStack.db.db.set(capability, [{}, {}]).write()
+      checkLicense('post', capability, otomiStack)
+      done()
+    })
+
+    it(`should throw exception on license ${capability} capabilities`, () => {
+      validLicense.body!.capabilities[capability] = 2
+      otomiStack.db.db.set('license', validLicense).write()
+      otomiStack.db.db.set(capability, [{}, {}, {}]).write()
+      expect(() => {
+        checkLicense('post', capability, otomiStack)
+      }).to.throw(`maximum number of ${capability} are reached for this license`)
+    })
+  }
 })
