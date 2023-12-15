@@ -56,18 +56,26 @@ export async function fetchWorkloadCatalog(
   const catalog: any[] = []
   const helmCharts: string[] = []
   for (const folder of folders) {
+    let readme = ''
     try {
-      const v = await readFile(`${helmChartsDir}/${folder}/values.yaml`, 'utf-8')
+      const chartReadme = await readFile(`${helmChartsDir}/${folder}/README.md`, 'utf-8')
+      readme = chartReadme
+    } catch (error) {
+      console.error(`Error while parsing chart README.md file : ${error.message}`)
+      readme = 'There is no `README` for this chart.'
+    }
+    try {
+      const values = await readFile(`${helmChartsDir}/${folder}/values.yaml`, 'utf-8')
       const c = await readFile(`${helmChartsDir}/${folder}/Chart.yaml`, 'utf-8')
-      const chartValues = YAML.parse(v)
       const chartMetadata = YAML.parse(c)
       if (!rbac[folder] || rbac[folder].includes(`team-${teamId}`) || teamId === 'admin') {
         const catalogItem = {
           name: folder,
-          values: chartValues,
+          values,
           icon: chartMetadata?.icon,
           chartVersion: chartMetadata?.version,
           chartDescription: chartMetadata?.description,
+          readme,
         }
         catalog.push(catalogItem)
         helmCharts.push(folder)
