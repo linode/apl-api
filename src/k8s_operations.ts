@@ -307,16 +307,16 @@ export async function getServiceStatus(teamId: string, domainSuffix: string, nam
   const vsName = `${name.replaceAll('-', '')}${teamId}-${domainSuffix.replaceAll('.', '-')}`
   console.log('vsName', vsName)
   try {
-    const res: any = await k8sApi.getNamespacedCustomObject(
+    const res: any = await k8sApi.getNamespacedCustomObjectStatus(
       'networking.istio.io',
       'v1beta1',
       namespace,
       'virtualservices',
       vsName,
     )
-    const status: any = JSON.stringify(res.body, null, 2)
-    console.log('status', status)
-    return status.NAME === vsName ? 'Ready' : 'NotFound'
+    const { metadata } = res.body
+    console.log('metadata', metadata)
+    return metadata.name === vsName ? 'Ready' : 'Unknown'
   } catch (error) {
     debug('getServiceStatus error:', error)
     return 'NotFound'
