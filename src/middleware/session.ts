@@ -11,7 +11,6 @@ import { ApiNotReadyError } from 'src/error'
 import { checkLicense } from 'src/license-utils'
 import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
-// import { myStatus } from 'src/utils/statusUtils'
 import { EDITOR_INACTIVITY_TIMEOUT, cleanEnv } from 'src/validators'
 
 const debug = Debug('otomi:session')
@@ -96,11 +95,6 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
       userID: socket.id,
       email: socket.email,
     })
-    // if (intervalId) {
-    //   console.log('INTERVAL RESTARTED!', intervalId)
-    //   clearInterval(intervalId)
-    // }
-    // intervalId = myStatus(readOnlyStack, intervalId)
   })
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {

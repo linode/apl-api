@@ -62,7 +62,6 @@ import {
 } from './k8s_operations'
 import connect from './otomiCloud/connect'
 import { validateBackupFields } from './utils/backupUtils'
-import { emitStatus } from './utils/statusUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 const debug = Debug('otomi:otomi-stack')
@@ -748,26 +747,6 @@ export default class OtomiStack {
 
   async deleteCloudtty(data: Cloudtty) {
     if (await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`)) await k8sdelete(data)
-  }
-
-  status({ resource, operation, intervalId }: { resource: string; operation: string; intervalId: number }): number {
-    const clusterInfo = this.getSettings(['cluster'])
-    const domainSuffix: string = clusterInfo?.cluster?.domainSuffix || ''
-    console.log('domainSuffix', domainSuffix)
-    if (operation === 'stop') {
-      clearInterval(intervalId)
-      console.log('STATUS Interval stopped!', intervalId)
-      return intervalId
-    }
-    const resources = this.db.getCollection(resource) as Array<any>
-    const timeoutObj = setInterval(() => emitStatus(resources, resource, domainSuffix), 2 * 1000)
-    const timeoutObjId = timeoutObj[Symbol.toPrimitive]()
-    console.log('STATUS Interval started!', timeoutObjId)
-    setTimeout(() => {
-      clearInterval(timeoutObjId)
-      console.log('STATUS Interval stopped!', timeoutObjId)
-    }, 5 * 60 * 1000)
-    return timeoutObjId
   }
 
   getTeamWorkloads(teamId: string): Array<Workload> {

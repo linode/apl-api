@@ -759,26 +759,6 @@ paths:
               schema:
                 type: object
 
-  "/status":
-    post:
-      operationId: status
-      description: Get resource status
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-        description: Project object that contains updated values
-        required: true
-      responses:
-        <<: *DefaultGetResponses
-        "200":
-          description: Successfully obtained status
-          content:
-            application/json:
-              schema:
-                type: number
-
   "/teams/{teamId}/workloads":
     parameters:
       - $ref: "#/components/parameters/teamParams"

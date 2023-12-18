@@ -308,10 +308,12 @@ export async function getBuildStatus(namespace: string, type: string, name: stri
       const eventlistener = resEventlisteners.body.items[0]
       if (eventlistener) {
         const { conditions } = eventlistener.status
-        console.log('eventlistener', conditions)
         if (conditions && conditions.length > 0) return 'Pending'
         else return 'Unknown'
-      } else console.log('No EventListeners found with the specified label selector.')
+      } else {
+        // 'No EventListeners found with the specified label selector.'
+        return 'NotFound'
+      }
     }
   } catch (error) {
     return 'NotFound'
@@ -324,7 +326,6 @@ export async function getServiceStatus(teamId: string, domainSuffix: string, nam
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
   const namespace = `team-${teamId}`
   const vsName = `${name?.replaceAll('-', '')}${teamId}-${domainSuffix?.replaceAll('.', '-')}`
-  // console.log('vsName', vsName)
   try {
     const res: any = await k8sApi.getNamespacedCustomObjectStatus(
       'networking.istio.io',
