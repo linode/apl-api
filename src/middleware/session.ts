@@ -28,7 +28,6 @@ export type DbMessage = {
 // instantiate read-only version of the stack
 let readOnlyStack: OtomiStack
 let sessions: Record<string, OtomiStack> = {}
-let intervalId: number
 // handler to get the correct stack for the user: if never touched any data give the main otomiStack
 export const getSessionStack = async (editor?: string): Promise<OtomiStack> => {
   if (!readOnlyStack) {
@@ -117,7 +116,7 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
       if (['teams', 'services', 'workloads', 'projects'].includes(path))
         checkLicense(req.method.toLowerCase(), path, sessionStack)
       // in the cloudtty or workloadCatalog endpoint(s), don't need to create a session
-      if (req.path === '/v1/cloudtty' || req.path === '/v1/workloadCatalog' || req.path === '/v1/status') return next()
+      if (req.path === '/v1/cloudtty' || req.path === '/v1/workloadCatalog') return next()
       // manipulating data and no editor session yet? create one
       if (!editor) {
         // bootstrap session stack for user

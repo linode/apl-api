@@ -185,9 +185,10 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   }, gitUploadMetricsInterval)
 
   // emit resource status
+  const emitResourceStatusInterval = 5 * 1000
   setInterval(async function () {
     await resourceStatus()
-  }, 5 * 1000)
+  }, emitResourceStatusInterval)
 
   // Drone webhook
   app.all('/drone', async (req, res, next) => {
