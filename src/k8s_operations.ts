@@ -323,8 +323,8 @@ export async function getServiceStatus(teamId: string, domainSuffix: string, nam
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
   const namespace = `team-${teamId}`
-  const vsName = `${name.replaceAll('-', '')}${teamId}-${domainSuffix.replaceAll('.', '-')}`
-  console.log('vsName', vsName)
+  const vsName = `${name?.replaceAll('-', '')}${teamId}-${domainSuffix?.replaceAll('.', '-')}`
+  // console.log('vsName', vsName)
   try {
     const res: any = await k8sApi.getNamespacedCustomObjectStatus(
       'networking.istio.io',
@@ -337,7 +337,6 @@ export async function getServiceStatus(teamId: string, domainSuffix: string, nam
     console.log('metadata', metadata)
     return metadata.name === vsName ? 'Ready' : 'Unknown'
   } catch (error) {
-    debug('getServiceStatus error:', error)
     return 'NotFound'
   }
 }

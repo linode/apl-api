@@ -27,15 +27,15 @@ export function emitStatus(resources: any, resourceName: string, domainSuffix: s
     // getIo().emit(resourceName, resourcesStatus)
   })
 }
-export function myStatus(stack: any, intervalId): any {
-  const getWorkloadNamesAndEmit = (myStack) => {
-    const workloads = myStack.db.getCollection('workloads') as Array<any>
-    const workloadNames = workloads.map((workload) => workload.name)
-    console.log('INTERVAL:', intervalId)
+export function myStatus(): any {
+  const getWorkloadNamesAndEmit = () => {
+    // const workloads = myStack.db.getCollection('workloads') as Array<any>
+    // const workloadNames = workloads.map((workload) => workload.name)
+    const workloadNames = ['test1', 'test2']
     console.log('workloads', workloadNames)
     getIo().emit('workloadNames', workloadNames)
   }
-  const timeoutObj = setInterval(() => getWorkloadNamesAndEmit(stack), 5 * 1000)
+  const timeoutObj = setInterval(() => getWorkloadNamesAndEmit(), 5 * 1000)
   const timeoutObjId = timeoutObj[Symbol.toPrimitive]()
   console.log('timeoutObjId', timeoutObjId)
 

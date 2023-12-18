@@ -38,7 +38,7 @@ import {
 import swaggerUi from 'swagger-ui-express'
 import Db from './db'
 import giteaCheckLatest from './gitea/connect'
-import { getKubernetesVersion, getNodes } from './k8s_operations'
+import { getBuildStatus, getKubernetesVersion, getNodes, getServiceStatus, getWorkloadStatus } from './k8s_operations'
 import uploadMetrics from './otomiCloud/upload-metrics'
 
 const env = cleanEnv({
@@ -108,6 +108,41 @@ const uploadOtomiMetrics = async () => {
   }
 }
 
+const resourceStatus = async () => {
+  const otomiStack = await getSessionStack()
+  const workloads = otomiStack.db.getCollection('workloads') as Array<any>
+  const builds = otomiStack.db.getCollection('builds') as Array<any>
+  const services = otomiStack.db.getCollection('services') as Array<any>
+
+  const workloadsPromises = workloads.map(async (workload) => {
+    const status = await getWorkloadStatus(`team-${workload.teamId}-${workload.name}`)
+    return { [workload.name]: { status } }
+  })
+  const buildsPromises = builds.map(async (build) => {
+    const status = await getBuildStatus(`team-${build.teamId}`, build.mode.type, build.name)
+    return { [build.name]: { status } }
+  })
+  const servicesPromises = services.map(async (service) => {
+    const status = await getServiceStatus(service.teamId, service.ingress.domain, service.name)
+    return { [service.name]: { status } }
+  })
+
+  const workloadsStatus = await Promise.all(workloadsPromises)
+  const buildsStatus = await Promise.all(buildsPromises)
+  const servicesStatus = await Promise.all(servicesPromises)
+
+  const resourcesStatus = Object.assign(
+    {},
+    { workloads: workloadsStatus },
+    { builds: buildsStatus },
+    { services: servicesStatus },
+  )
+  getIo().emit('status', resourcesStatus)
+  // const workloadNames = ['test1', 'test2']
+  // console.log('workloads', workloadNames)
+  // getIo().emit('workloadNames', workloadNames)
+}
+
 let otomiSpec: OtomiSpec
 export const loadSpec = async (): Promise<void> => {
   const openApiPath = path.resolve(__dirname, 'generated-schema.json')
@@ -158,6 +193,13 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   setInterval(async function () {
     await uploadOtomiMetrics()
   }, gitUploadMetricsInterval)
+
+  // emit resource status
+  setInterval(async function () {
+    await resourceStatus()
+  }, 5 * 1000)
+
+  // Drone webhook
   app.all('/drone', async (req, res, next) => {
     const parsed = httpSignature.parseRequest(req, {
       algorithm: 'hmac-sha256',
