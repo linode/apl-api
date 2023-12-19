@@ -308,12 +308,13 @@ export async function getBuildStatus(build: Build): Promise<any | undefined> {
     const [pipelineRun] = resPipelineruns.body.items
     if (pipelineRun) {
       const { conditions } = pipelineRun.status
-      if (conditions && conditions.length > 0) {
+      if (conditions && conditions.length > 0 && conditions[0].type === 'Succeeded') {
+        console.log('conditions[0].status', conditions[0].status)
         const conditionType = conditions[0].status === 'True' ? 'Succeeded' : 'Unknown'
         return conditionType
       } else {
         // No conditions found for the PipelineRun.
-        return 'Unknown'
+        return 'NotFound'
       }
     } else {
       const resEventlisteners = await listNamespacedCustomObject(
