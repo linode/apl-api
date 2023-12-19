@@ -315,8 +315,7 @@ export async function getBuildStatus(build: Build): Promise<any | undefined> {
     if (pipelineRun) {
       const { conditions } = pipelineRun.status
       if (conditions && conditions.length > 0) {
-        const conditionType = conditions[0].type
-        console.log('conditionType', conditionType)
+        const conditionType = conditions[0].status === 'True' && 'Succeeded'
         return conditionType
       } else {
         // No conditions found for the PipelineRun.
