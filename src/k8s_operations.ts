@@ -309,8 +309,16 @@ export async function getBuildStatus(build: Build): Promise<any | undefined> {
     if (pipelineRun) {
       const { conditions } = pipelineRun.status
       if (conditions && conditions.length > 0 && conditions[0].type === 'Succeeded') {
-        const conditionType = conditions[0].status === 'True' ? 'Succeeded' : 'NotFound'
-        return conditionType
+        switch (conditions[0].status) {
+          case 'True':
+            return 'Succeeded'
+          case 'False':
+            return 'Unknown'
+          case 'Unknown':
+            return 'NotFound'
+          default:
+            return 'NotFound'
+        }
       } else {
         // No conditions found for the PipelineRun.
         return 'NotFound'
@@ -355,7 +363,6 @@ export async function getServiceStatus(service: any, domainSuffix: string): Prom
       'gateways',
       name,
     )
-    console.log('hosts: ', gRes.body.spec.servers[0].hosts)
     const { hosts } = gRes.body.spec.servers[0]
     const host = `team-${service.teamId}/${service.name}-${service.teamId}.${domainSuffix}`
     if (hosts.includes(host)) return 'Succeeded'
