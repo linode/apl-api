@@ -258,6 +258,7 @@ export async function getWorkloadStatus(name: string): Promise<any | undefined> 
   try {
     const res: any = await k8sApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', 'argocd', 'applications', name)
     const { status } = res.body.status.sync
+    console.log('getWorkloadStatus', status)
     switch (status) {
       case 'Synced':
         return 'Succeeded'
