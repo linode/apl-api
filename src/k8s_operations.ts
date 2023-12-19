@@ -258,9 +258,17 @@ export async function getWorkloadStatus(name: string): Promise<any | undefined> 
   try {
     const res: any = await k8sApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', 'argocd', 'applications', name)
     const { status } = res.body.status.sync
-    return status
+    switch (status) {
+      case 'Synced':
+        return 'Succeeded'
+      case 'OutOfSync':
+        return 'Pending'
+      case 'Unknown':
+        return 'Unknown'
+      default:
+        return 'Unknown'
+    }
   } catch (error) {
-    // debug('getWorkloadStatus error:', error)
     return 'NotFound'
   }
 }
@@ -291,13 +299,16 @@ export async function getBuildStatus(namespace: string, type: string, name: stri
   const labelSelector = `tekton.dev/pipeline=${type}-build-${name}`
   const resPipelineruns = await listNamespacedCustomObject('tekton.dev', namespace, 'pipelineruns', labelSelector)
   try {
-    const pipelineRun = resPipelineruns.body.items[0]
+    const [pipelineRun] = resPipelineruns.body.items
     if (pipelineRun) {
       const { conditions } = pipelineRun.status
       if (conditions && conditions.length > 0) {
         const conditionType = conditions[0].type
         return conditionType
-      } else console.log('No conditions found for the PipelineRun.')
+      } else {
+        // No conditions found for the PipelineRun.
+        return 'Unknown'
+      }
     } else {
       const resEventlisteners = await listNamespacedCustomObject(
         'triggers.tekton.dev',
@@ -305,11 +316,14 @@ export async function getBuildStatus(namespace: string, type: string, name: stri
         'eventlisteners',
         labelSelector,
       )
-      const eventlistener = resEventlisteners.body.items[0]
+      const [eventlistener] = resEventlisteners.body.items
       if (eventlistener) {
         const { conditions } = eventlistener.status
         if (conditions && conditions.length > 0) return 'Pending'
-        else return 'Unknown'
+        else {
+          // No conditions found for the EventListener.
+          return 'Unknown'
+        }
       } else {
         // 'No EventListeners found with the specified label selector.'
         return 'NotFound'
@@ -335,8 +349,7 @@ export async function getServiceStatus(teamId: string, domainSuffix: string, nam
       vsName,
     )
     const { metadata } = res.body
-    console.log('metadata', metadata)
-    return metadata.name === vsName ? 'Ready' : 'Unknown'
+    return metadata.name === vsName ? 'Succeeded' : 'Unknown'
   } catch (error) {
     return 'NotFound'
   }
