@@ -3,7 +3,7 @@ import Debug from 'debug'
 import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
-import { Cloudtty } from './otomi-models'
+import { Build, Cloudtty, Workload } from './otomi-models'
 
 const debug = Debug('otomi:api:cloudtty')
 
@@ -251,14 +251,19 @@ export async function getLastTektonMessage(sha: string): Promise<any | undefined
   }
 }
 
-export async function getWorkloadStatus(name: string): Promise<any | undefined> {
+export async function getWorkloadStatus(workload: Workload): Promise<any | undefined> {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
   try {
-    const res: any = await k8sApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', 'argocd', 'applications', name)
+    const res: any = await k8sApi.getNamespacedCustomObject(
+      'argoproj.io',
+      'v1alpha1',
+      'argocd',
+      'applications',
+      workload.name,
+    )
     const { status } = res.body.status.sync
-    console.log('getWorkloadStatus', status)
     switch (status) {
       case 'Synced':
         return 'Succeeded'
@@ -296,15 +301,22 @@ async function listNamespacedCustomObject(group: string, namespace: string, plur
   }
 }
 
-export async function getBuildStatus(namespace: string, type: string, name: string): Promise<any | undefined> {
-  const labelSelector = `tekton.dev/pipeline=${type}-build-${name}`
-  const resPipelineruns = await listNamespacedCustomObject('tekton.dev', namespace, 'pipelineruns', labelSelector)
+export async function getBuildStatus(build: Build): Promise<any | undefined> {
+  const labelSelector = `tekton.dev/pipeline=${build.mode?.type}-build-${build.name}`
+  console.log('labelSelector', labelSelector)
+  const resPipelineruns = await listNamespacedCustomObject(
+    'tekton.dev',
+    `team-${build.teamId}`,
+    'pipelineruns',
+    labelSelector,
+  )
   try {
     const [pipelineRun] = resPipelineruns.body.items
     if (pipelineRun) {
       const { conditions } = pipelineRun.status
       if (conditions && conditions.length > 0) {
         const conditionType = conditions[0].type
+        console.log('conditionType', conditionType)
         return conditionType
       } else {
         // No conditions found for the PipelineRun.
@@ -313,7 +325,7 @@ export async function getBuildStatus(namespace: string, type: string, name: stri
     } else {
       const resEventlisteners = await listNamespacedCustomObject(
         'triggers.tekton.dev',
-        namespace,
+        `team-${build.teamId}`,
         'eventlisteners',
         labelSelector,
       )
@@ -335,12 +347,13 @@ export async function getBuildStatus(namespace: string, type: string, name: stri
   }
 }
 
-export async function getServiceStatus(teamId: string, domainSuffix: string, name: string): Promise<any | undefined> {
+export async function getServiceStatus(service: any): Promise<any | undefined> {
+  const domainSuffix = service.ingress?.domain || ''
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
-  const namespace = `team-${teamId}`
-  const vsName = `${name?.replaceAll('-', '')}${teamId}-${domainSuffix?.replaceAll('.', '-')}`
+  const namespace = `team-${service.teamId}`
+  const vsName = `${service.name?.replaceAll('-', '')}${service.teamId}-${domainSuffix?.replaceAll('.', '-')}`
   try {
     const res: any = await k8sApi.getNamespacedCustomObjectStatus(
       'networking.istio.io',

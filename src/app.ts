@@ -125,12 +125,10 @@ const resourceStatus = async () => {
   for (const resourceType in resources) {
     const promises = resources[resourceType].map(async (resource) => {
       const res = await statusFunctions[resourceType](resource)
-      return { [resource.name]: res }
+      return { [resource.id]: res }
     })
     resourcesStatus[resourceType] = Object.assign({}, ...(await Promise.all(promises)))
   }
-
-  console.log('resourcesStatus', resourcesStatus)
   return resourcesStatus
 }
 
