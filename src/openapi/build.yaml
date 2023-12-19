@@ -27,6 +27,18 @@ Build:
       description: Image tag
     mode:
       $ref: '#/buildMode'
+    externalRepo:
+      type: boolean
+      description: Select when using an external private Git repository.
+      default: false
+    secretSelect:
+      description: Select a secret created in Otomi.
+      title: Select team secret
+      type: boolean
+      default: true
+    secretName:
+      description: The name of the secret with the credentials of the external private Git repository
+      type: string
     trigger:
       type: boolean
       default: false
@@ -61,13 +73,6 @@ buildMode:
               description: This can be a commit, a tag, or a branch
               $ref: 'definitions.yaml#/wordCharacterPattern'
               default: HEAD
-            externalRepo:
-              type: boolean
-              description: Select when using an external private Git repository.
-              default: false
-            secretName:
-              description: The name of the secret with the credentials of the external private Git repository
-              type: string
           required:
             - repoUrl
         type:
@@ -99,13 +104,6 @@ buildMode:
               description: This can be a commit, a tag, or a branch
               $ref: 'definitions.yaml#/wordCharacterPattern'
               default: HEAD
-            externalRepo:
-              type: boolean
-              description: Select when using an external private Git repository.
-              default: false
-            secretName:
-              description: The name of the secret with the credentials of the external private Git repository
-              type: string
           required:
             - repoUrl
         type:
