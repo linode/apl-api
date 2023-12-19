@@ -130,6 +130,7 @@ const resourceStatus = async () => {
     resourcesStatus[resourceType] = Object.assign({}, ...(await Promise.all(promises)))
   }
 
+  console.log('resourcesStatus', resourcesStatus)
   return resourcesStatus
 }
 
