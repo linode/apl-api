@@ -348,25 +348,38 @@ export async function getBuildStatus(build: Build): Promise<any | undefined> {
   }
 }
 
-export async function getServiceStatus(service: any, domainSuffix: string): Promise<any | undefined> {
+async function getNamespacedCustomObject(namespace: string, name: string) {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
-  const namespace = `team-${service.teamId}`
-  const vsName = `${service.name?.replaceAll('-', '')}${service.teamId}-${domainSuffix?.replaceAll('.', '-')}`
-  const name = `team-${service.teamId}-public-tlsterm`
   try {
-    const gRes: any = await k8sApi.getNamespacedCustomObject(
+    const res: any = await k8sApi.getNamespacedCustomObject(
       'networking.istio.io',
       'v1beta1',
       namespace,
       'gateways',
-      name,
+      `${name}-tlsterm`,
     )
-    const { hosts } = gRes.body.spec.servers[0]
+    const { hosts } = res.body.spec.servers[0]
+    return hosts
+  } catch (error) {
+    return 'NotFound'
+  }
+}
+
+export async function getServiceStatus(service: any, domainSuffix: string): Promise<any | undefined> {
+  const namespace = `team-${service.teamId}`
+  const name = `team-${service.teamId}-public`
+
+  try {
+    const tlstermHosts = await getNamespacedCustomObject(namespace, `${name}-tlsterm`)
     const host = `team-${service.teamId}/${service.name}-${service.teamId}.${domainSuffix}`
-    if (hosts.includes(host)) return 'Succeeded'
-    else return 'Unknown'
+    if (tlstermHosts.includes(host)) return 'Succeeded'
+    else {
+      const tlspassHosts = await getNamespacedCustomObject(namespace, `${name}-tlspass`)
+      if (tlspassHosts.includes(host)) return 'Succeeded'
+      else return 'Unknown'
+    }
   } catch (error) {
     return 'NotFound'
   }

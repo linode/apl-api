@@ -123,7 +123,6 @@ const resourceStatus = async () => {
     services: getServiceStatus,
   }
   const resourcesStatus = {}
-
   for (const resourceType in resources) {
     const promises = resources[resourceType].map(async (resource) => {
       const res = await statusFunctions[resourceType](resource, domainSuffix)
@@ -131,15 +130,7 @@ const resourceStatus = async () => {
     })
     resourcesStatus[resourceType] = Object.assign({}, ...(await Promise.all(promises)))
   }
-  return resourcesStatus
-}
-
-const emitResourceStatus = () => {
-  // emit resource status every 10 seconds
-  const emitResourceStatusInterval = 10 * 1000
-  setInterval(async function () {
-    getIo().emit('status', await resourceStatus())
-  }, emitResourceStatusInterval)
+  getIo().emit('status', resourcesStatus)
 }
 
 let otomiSpec: OtomiSpec
@@ -233,8 +224,11 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     })
   }
 
-  // emit resource status
-  emitResourceStatus()
+  // emit resource status every 10 seconds
+  const emitResourceStatusInterval = 10 * 1000
+  setInterval(async function () {
+    await resourceStatus()
+  }, emitResourceStatusInterval)
 
   // and register session middleware
   app.use(sessionMiddleware(server as Server))
