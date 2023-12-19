@@ -309,8 +309,7 @@ export async function getBuildStatus(build: Build): Promise<any | undefined> {
     if (pipelineRun) {
       const { conditions } = pipelineRun.status
       if (conditions && conditions.length > 0 && conditions[0].type === 'Succeeded') {
-        console.log('conditions[0].status', conditions[0].status)
-        const conditionType = conditions[0].status === 'True' ? 'Succeeded' : 'Unknown'
+        const conditionType = conditions[0].status === 'True' ? 'Succeeded' : 'NotFound'
         return conditionType
       } else {
         // No conditions found for the PipelineRun.
@@ -341,24 +340,40 @@ export async function getBuildStatus(build: Build): Promise<any | undefined> {
   }
 }
 
-export async function getServiceStatus(service: any): Promise<any | undefined> {
-  const domainSuffix = service.ingress?.domain || ''
+export async function getServiceStatus(service: any, domainSuffix: string): Promise<any | undefined> {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
   const namespace = `team-${service.teamId}`
   const vsName = `${service.name?.replaceAll('-', '')}${service.teamId}-${domainSuffix?.replaceAll('.', '-')}`
+  const name = `team-${service.teamId}-public-tlsterm`
   try {
-    const res: any = await k8sApi.getNamespacedCustomObjectStatus(
+    const gRes: any = await k8sApi.getNamespacedCustomObject(
       'networking.istio.io',
       'v1beta1',
       namespace,
-      'virtualservices',
-      vsName,
+      'gateways',
+      name,
     )
-    const { metadata } = res.body
-    return metadata.name === vsName ? 'Succeeded' : 'Unknown'
+    console.log('hosts: ', gRes.body.spec.servers[0].hosts)
+    const { hosts } = gRes.body.spec.servers[0]
+    const host = `team-${service.teamId}/${service.name}-${service.teamId}.${domainSuffix}`
+    if (hosts.includes(host)) return 'Succeeded'
+    else return 'Unknown'
   } catch (error) {
     return 'NotFound'
   }
+  // try {
+  //   const res: any = await k8sApi.getNamespacedCustomObjectStatus(
+  //     'networking.istio.io',
+  //     'v1beta1',
+  //     namespace,
+  //     'virtualservices',
+  //     vsName,
+  //   )
+  //   const { metadata } = res.body
+  //   return metadata.name === vsName ? 'Succeeded' : 'Unknown'
+  // } catch (error) {
+  //   return 'NotFound'
+  // }
 }

@@ -110,6 +110,8 @@ const uploadOtomiMetrics = async () => {
 
 const resourceStatus = async () => {
   const otomiStack = await getSessionStack()
+  const { cluster } = otomiStack.getSettings(['cluster'])
+  const domainSuffix = cluster?.domainSuffix
   const resources = {
     workloads: otomiStack.db.getCollection('workloads') as Array<any>,
     builds: otomiStack.db.getCollection('builds') as Array<any>,
@@ -124,7 +126,7 @@ const resourceStatus = async () => {
 
   for (const resourceType in resources) {
     const promises = resources[resourceType].map(async (resource) => {
-      const res = await statusFunctions[resourceType](resource)
+      const res = await statusFunctions[resourceType](resource, domainSuffix)
       return { [resource.id]: res }
     })
     resourcesStatus[resourceType] = Object.assign({}, ...(await Promise.all(promises)))
