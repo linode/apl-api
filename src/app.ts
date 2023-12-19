@@ -127,10 +127,18 @@ const resourceStatus = async () => {
       const res = await statusFunctions[resourceType](resource)
       return { [resource.name]: res }
     })
-    resourcesStatus[resourceType] = await Promise.all(promises)
+    resourcesStatus[resourceType] = Object.assign({}, ...(await Promise.all(promises)))
   }
 
-  getIo().emit('status', resourcesStatus)
+  return resourcesStatus
+}
+
+const emitResourceStatus = () => {
+  // emit resource status every 10 seconds
+  const emitResourceStatusInterval = 10 * 1000
+  setInterval(async function () {
+    getIo().emit('status', await resourceStatus())
+  }, emitResourceStatusInterval)
 }
 
 let otomiSpec: OtomiSpec
@@ -183,14 +191,6 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   setInterval(async function () {
     await uploadOtomiMetrics()
   }, gitUploadMetricsInterval)
-
-  // emit resource status
-  const emitResourceStatusInterval = 5 * 1000
-  setInterval(async function () {
-    await resourceStatus()
-  }, emitResourceStatusInterval)
-
-  // Drone webhook
   app.all('/drone', async (req, res, next) => {
     const parsed = httpSignature.parseRequest(req, {
       algorithm: 'hmac-sha256',
@@ -231,6 +231,10 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
       ;(server as Server).close()
     })
   }
+
+  // emit resource status
+  emitResourceStatus()
+
   // and register session middleware
   app.use(sessionMiddleware(server as Server))
 
