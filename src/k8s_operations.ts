@@ -255,14 +255,9 @@ export async function getWorkloadStatus(workload: Workload): Promise<any | undef
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
+  const name = `team-${workload.teamId}-${workload.name}`
   try {
-    const res: any = await k8sApi.getNamespacedCustomObject(
-      'argoproj.io',
-      'v1alpha1',
-      'argocd',
-      'applications',
-      workload.name,
-    )
+    const res: any = await k8sApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', 'argocd', 'applications', name)
     const { status } = res.body.status.sync
     switch (status) {
       case 'Synced':
@@ -303,7 +298,6 @@ async function listNamespacedCustomObject(group: string, namespace: string, plur
 
 export async function getBuildStatus(build: Build): Promise<any | undefined> {
   const labelSelector = `tekton.dev/pipeline=${build.mode?.type}-build-${build.name}`
-  console.log('labelSelector', labelSelector)
   const resPipelineruns = await listNamespacedCustomObject(
     'tekton.dev',
     `team-${build.teamId}`,
@@ -315,7 +309,7 @@ export async function getBuildStatus(build: Build): Promise<any | undefined> {
     if (pipelineRun) {
       const { conditions } = pipelineRun.status
       if (conditions && conditions.length > 0) {
-        const conditionType = conditions[0].status === 'True' && 'Succeeded'
+        const conditionType = conditions[0].status === 'True' ? 'Succeeded' : 'Unknown'
         return conditionType
       } else {
         // No conditions found for the PipelineRun.
