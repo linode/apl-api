@@ -31,11 +31,6 @@ Build:
       type: boolean
       description: Select when using an external private Git repository.
       default: false
-    secretSelect:
-      description: Select a secret created in Otomi.
-      title: Select team secret
-      type: boolean
-      default: false
     secretName:
       description: The name of the secret with the credentials of the external private Git repository
       type: string
