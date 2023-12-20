@@ -60,7 +60,7 @@ AppKiali:
                       default: 200m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
+                      default: 1Gi
                 requests:
                   type: object
                   properties:
@@ -69,7 +69,7 @@ AppKiali:
                       default: 50m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 128Mi
+                      default: 256Mi
               required:
                 - limits
                 - requests
