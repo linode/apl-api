@@ -358,7 +358,7 @@ async function getNamespacedCustomObject(namespace: string, name: string) {
       'v1beta1',
       namespace,
       'gateways',
-      `${name}-tlsterm`,
+      name,
     )
     const { hosts } = res.body.spec.servers[0]
     return hosts
@@ -370,19 +370,22 @@ async function getNamespacedCustomObject(namespace: string, name: string) {
 export async function getServiceStatus(service: any, domainSuffix: string): Promise<any | undefined> {
   const namespace = `team-${service.teamId}`
   const name = `team-${service.teamId}-public`
+  const tlstermHosts = await getNamespacedCustomObject(namespace, `${name}-tlsterm`)
+  const tlspassHosts = await getNamespacedCustomObject(namespace, `${name}-tlspass`)
+  const host = `team-${service.teamId}/${service.name}-${service.teamId}.${domainSuffix}`
 
-  try {
-    const tlstermHosts = await getNamespacedCustomObject(namespace, `${name}-tlsterm`)
-    const host = `team-${service.teamId}/${service.name}-${service.teamId}.${domainSuffix}`
-    if (tlstermHosts.includes(host)) return 'Succeeded'
-    else {
-      const tlspassHosts = await getNamespacedCustomObject(namespace, `${name}-tlspass`)
-      if (tlspassHosts.includes(host)) return 'Succeeded'
-      else return 'Unknown'
-    }
-  } catch (error) {
-    return 'NotFound'
-  }
+  if (tlstermHosts.includes(host) || tlspassHosts.includes(host)) return 'Succeeded'
+  else return 'Unknown'
+
+  // try {
+  //   if (tlstermHosts.includes(host)) return 'Succeeded'
+  //   else {
+  //     if (tlspassHosts.includes(host)) return 'Succeeded'
+  //     else return 'Unknown'
+  //   }
+  // } catch (error) {
+  //   return 'NotFound'
+  // }
   // try {
   //   const res: any = await k8sApi.getNamespacedCustomObjectStatus(
   //     'networking.istio.io',
