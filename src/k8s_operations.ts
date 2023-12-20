@@ -371,16 +371,16 @@ export async function getServiceStatus(service: any, domainSuffix: string): Prom
   const namespace = `team-${service.teamId}`
   const name = `team-${service.teamId}-public`
   const tlstermHosts = await getNamespacedCustomObject(namespace, `${name}-tlsterm`)
-  const tlspassHosts = await getNamespacedCustomObject(namespace, `${name}-tlspass`)
+  // const tlspassHosts = await getNamespacedCustomObject(namespace, `${name}-tlspass`)
   const host = `team-${service.teamId}/${service.name}-${service.teamId}.${domainSuffix}`
 
   if (service.name === 'httpbin') {
     console.log('tlstermHosts', tlstermHosts)
-    console.log('tlspassHosts', tlspassHosts)
+    // console.log('tlspassHosts', tlspassHosts)
     console.log('host', host)
   }
 
-  if (tlstermHosts.includes(host) || tlspassHosts.includes(host)) return 'Succeeded'
+  if (tlstermHosts.includes(host)) return 'Succeeded'
   else return 'Unknown'
 
   // try {
