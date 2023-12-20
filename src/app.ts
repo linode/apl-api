@@ -24,7 +24,7 @@ import {
   sessionMiddleware,
 } from 'src/middleware'
 import { setMockIdx } from 'src/mocks'
-import { OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
+import { Build, OpenAPIDoc, OpenApiRequestExt, Schema, Service, Workload } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
 import {
@@ -113,9 +113,9 @@ const resourceStatus = async () => {
   const { cluster } = otomiStack.getSettings(['cluster'])
   const domainSuffix = cluster?.domainSuffix
   const resources = {
-    workloads: otomiStack.db.getCollection('workloads') as Array<any>,
-    builds: otomiStack.db.getCollection('builds') as Array<any>,
-    services: otomiStack.db.getCollection('services') as Array<any>,
+    workloads: otomiStack.db.getCollection('workloads') as Array<Workload>,
+    builds: otomiStack.db.getCollection('builds') as Array<Build>,
+    services: otomiStack.db.getCollection('services') as Array<Service>,
   }
   const statusFunctions = {
     workloads: getWorkloadStatus,

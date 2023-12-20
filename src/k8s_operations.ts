@@ -3,7 +3,7 @@ import Debug from 'debug'
 import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
-import { Build, Cloudtty, Workload } from './otomi-models'
+import { Build, Cloudtty, Service, Workload } from './otomi-models'
 
 const debug = Debug('otomi:api:cloudtty')
 
@@ -251,7 +251,7 @@ export async function getLastTektonMessage(sha: string): Promise<any | undefined
   }
 }
 
-export async function getWorkloadStatus(workload: Workload): Promise<any | undefined> {
+export async function getWorkloadStatus(workload: Workload): Promise<string> {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
@@ -296,7 +296,7 @@ async function listNamespacedCustomObject(group: string, namespace: string, plur
   }
 }
 
-export async function getBuildStatus(build: Build): Promise<any | undefined> {
+export async function getBuildStatus(build: Build): Promise<string> {
   const labelSelector = `tekton.dev/pipeline=${build.mode?.type}-build-${build.name}`
   const resPipelineruns = await listNamespacedCustomObject(
     'tekton.dev',
@@ -372,7 +372,7 @@ async function checkHostStatus(namespace: string, name: string, host: string) {
   return hosts.includes(host) ? 'Succeeded' : 'Unknown'
 }
 
-export async function getServiceStatus(service: any, domainSuffix: string): Promise<any | undefined> {
+export async function getServiceStatus(service: Service, domainSuffix: string): Promise<string> {
   const namespace = `team-${service.teamId}`
   const name = `team-${service.teamId}-public`
   const host = `team-${service.teamId}/${service.name}-${service.teamId}.${domainSuffix}`
