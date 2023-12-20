@@ -349,6 +349,7 @@ export async function getBuildStatus(build: Build): Promise<any | undefined> {
 }
 
 async function getNamespacedCustomObject(namespace: string, name: string) {
+  console.log('name', name)
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
@@ -361,8 +362,10 @@ async function getNamespacedCustomObject(namespace: string, name: string) {
       name,
     )
     const { hosts } = res.body.spec.servers[0]
+    console.log('hosts', hosts)
     return hosts
   } catch (error) {
+    console.log('error', error)
     return 'NotFound'
   }
 }
@@ -374,11 +377,11 @@ export async function getServiceStatus(service: any, domainSuffix: string): Prom
   // const tlspassHosts = await getNamespacedCustomObject(namespace, `${name}-tlspass`)
   const host = `team-${service.teamId}/${service.name}-${service.teamId}.${domainSuffix}`
 
-  if (service.name === 'httpbin') {
-    console.log('tlstermHosts', tlstermHosts)
-    // console.log('tlspassHosts', tlspassHosts)
-    console.log('host', host)
-  }
+  // if (service.name === 'httpbin') {
+  //   console.log('tlstermHosts', tlstermHosts)
+  //   // console.log('tlspassHosts', tlspassHosts)
+  //   console.log('host', host)
+  // }
 
   if (tlstermHosts.includes(host)) return 'Succeeded'
   else return 'Unknown'
