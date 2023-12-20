@@ -349,7 +349,6 @@ export async function getBuildStatus(build: Build): Promise<any | undefined> {
 }
 
 async function getNamespacedCustomObject(namespace: string, name: string) {
-  console.log('name', name)
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
@@ -362,50 +361,25 @@ async function getNamespacedCustomObject(namespace: string, name: string) {
       name,
     )
     const { hosts } = res.body.spec.servers[0]
-    console.log('hosts', hosts)
     return hosts
   } catch (error) {
-    console.log('error', error)
     return 'NotFound'
   }
+}
+
+async function checkHostStatus(namespace: string, name: string, host: string) {
+  const hosts = await getNamespacedCustomObject(namespace, `${name}`)
+  return hosts.includes(host) ? 'Succeeded' : 'Unknown'
 }
 
 export async function getServiceStatus(service: any, domainSuffix: string): Promise<any | undefined> {
   const namespace = `team-${service.teamId}`
   const name = `team-${service.teamId}-public`
-  const tlstermHosts = await getNamespacedCustomObject(namespace, `${name}-tlsterm`)
-  // const tlspassHosts = await getNamespacedCustomObject(namespace, `${name}-tlspass`)
   const host = `team-${service.teamId}/${service.name}-${service.teamId}.${domainSuffix}`
 
-  // if (service.name === 'httpbin') {
-  //   console.log('tlstermHosts', tlstermHosts)
-  //   // console.log('tlspassHosts', tlspassHosts)
-  //   console.log('host', host)
-  // }
+  const tlstermStatus = await checkHostStatus(namespace, `${name}-tlsterm`, host)
+  if (tlstermStatus === 'Succeeded') return 'Succeeded'
 
-  if (tlstermHosts.includes(host)) return 'Succeeded'
-  else return 'Unknown'
-
-  // try {
-  //   if (tlstermHosts.includes(host)) return 'Succeeded'
-  //   else {
-  //     if (tlspassHosts.includes(host)) return 'Succeeded'
-  //     else return 'Unknown'
-  //   }
-  // } catch (error) {
-  //   return 'NotFound'
-  // }
-  // try {
-  //   const res: any = await k8sApi.getNamespacedCustomObjectStatus(
-  //     'networking.istio.io',
-  //     'v1beta1',
-  //     namespace,
-  //     'virtualservices',
-  //     vsName,
-  //   )
-  //   const { metadata } = res.body
-  //   return metadata.name === vsName ? 'Succeeded' : 'Unknown'
-  // } catch (error) {
-  //   return 'NotFound'
-  // }
+  const tlspassStatus = await checkHostStatus(namespace, `${name}-tlspass`, host)
+  return tlspassStatus
 }
