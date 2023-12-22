@@ -73,7 +73,7 @@ Team:
       properties:
         grafana:
           type: boolean
-          default: true
+          default: false
         prometheus:
           type: boolean
           default: false
