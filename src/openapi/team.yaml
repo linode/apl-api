@@ -67,6 +67,19 @@ Team:
       x-acl:
         admin: [read-any, update-any]
         team: []
+    managedMonitoring:
+      title: Managed monitoring
+      description: Activate managed Grafana, Prometheus or Alertmanager instances
+      properties:
+        grafana:
+          type: boolean
+          default: false
+        prometheus:
+          type: boolean
+          default: false
+        alertmanager:
+          type: boolean
+          default: false
     alerts:
       $ref: definitions.yaml#/alerts
     billingAlertQuotas:
@@ -90,14 +103,6 @@ Team:
       $ref: definitions.yaml#/resourceQuota
     azureMonitor:
       $ref: definitions.yaml#/azureMonitor
-    monitoringStack:
-      title: Managed Prometheus and Alert manager
-      properties:
-        enabled:
-          description: When enabled, a managed Prometheus and Alert manager instance are provisioned for the team.
-          title: Enabled
-          type: boolean
-          default: false
     networkPolicy:
       properties:
         ingressPrivate:
