@@ -24,7 +24,7 @@ import {
   sessionMiddleware,
 } from 'src/middleware'
 import { setMockIdx } from 'src/mocks'
-import { OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
+import { Build, OpenAPIDoc, OpenApiRequestExt, Schema, Service, Workload } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
 import {
@@ -38,7 +38,7 @@ import {
 import swaggerUi from 'swagger-ui-express'
 import Db from './db'
 import giteaCheckLatest from './gitea/connect'
-import { getKubernetesVersion, getNodes } from './k8s_operations'
+import { getBuildStatus, getKubernetesVersion, getNodes, getServiceStatus, getWorkloadStatus } from './k8s_operations'
 import uploadMetrics from './otomiCloud/upload-metrics'
 
 const env = cleanEnv({
@@ -106,6 +106,31 @@ const uploadOtomiMetrics = async () => {
   } catch (error) {
     debug('Could not collect metrics for Otomi-Cloud: ', error)
   }
+}
+
+const resourceStatus = async () => {
+  const otomiStack = await getSessionStack()
+  const { cluster } = otomiStack.getSettings(['cluster'])
+  const domainSuffix = cluster?.domainSuffix
+  const resources = {
+    workloads: otomiStack.db.getCollection('workloads') as Array<Workload>,
+    builds: otomiStack.db.getCollection('builds') as Array<Build>,
+    services: otomiStack.db.getCollection('services') as Array<Service>,
+  }
+  const statusFunctions = {
+    workloads: getWorkloadStatus,
+    builds: getBuildStatus,
+    services: getServiceStatus,
+  }
+  const resourcesStatus = {}
+  for (const resourceType in resources) {
+    const promises = resources[resourceType].map(async (resource) => {
+      const res = await statusFunctions[resourceType](resource, domainSuffix)
+      return { [resource.id]: res }
+    })
+    resourcesStatus[resourceType] = Object.assign({}, ...(await Promise.all(promises)))
+  }
+  getIo().emit('status', resourcesStatus)
 }
 
 let otomiSpec: OtomiSpec
@@ -198,6 +223,13 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
       ;(server as Server).close()
     })
   }
+
+  // emit resource status every 10 seconds
+  const emitResourceStatusInterval = 10 * 1000
+  setInterval(async function () {
+    await resourceStatus()
+  }, emitResourceStatusInterval)
+
   // and register session middleware
   app.use(sessionMiddleware(server as Server))
 
