@@ -241,7 +241,7 @@ networkPolicy:
                     type: string
                   service:
                     title: Service name
-                    description: 'Allow traffic from pods with "app: <some service name>" label'
+                    description: 'Allow traffic from pods with "otomi.io/app: <workload name>" label'
                     type: string
                 required:
                   - team
