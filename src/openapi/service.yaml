@@ -240,7 +240,7 @@ networkPolicy:
                     description: Allow traffic from a given team
                     type: string
                   service:
-                    title: Service name
+                    title: Workload name
                     description: 'Allow traffic from pods with "otomi.io/app: <workload name>" label'
                     type: string
                 required:
