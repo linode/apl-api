@@ -26,6 +26,8 @@ AppHarbor:
         #   type: boolean
         #   default: true
         #   description: Will mark the main project named "library" as private.
+        database:
+          type: object
         databasePassword:
           type: string
           description: Once set and deployed it cannot be changed with manual intervention.
@@ -131,9 +133,10 @@ AppHarbor:
                   required:
                     - azure
                     - type
+
                 - title: GCS
-                  type: object
                   x-hideTitle: true
+                  type: object
                   properties:
                     gcs:
                       additionalProperties: false
