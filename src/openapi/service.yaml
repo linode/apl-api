@@ -233,7 +233,7 @@ networkPolicy:
               enum:
                 - AllowOnly
             allow:
-              title: Allow entire team or just a service
+              title: Allow entire team or just a workload
               type: array
               minItems: 1
               items:
