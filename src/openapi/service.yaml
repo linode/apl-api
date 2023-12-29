@@ -53,12 +53,12 @@ Service:
           type: integer
           default: 90
           title: Weight v1
-          description: "Percentage of traffic to version 1"
+          description: 'Percentage of traffic to version 1'
         weightV2:
           type: integer
-          default: 10  
+          default: 10
           title: Weight v2
-          description: "Percentage of traffic to version 2"  
+          description: 'Percentage of traffic to version 2'
     ingress:
       title: Exposure (ingress)
       description: Determines loadbalancer related configuration for handling the service ingress.
