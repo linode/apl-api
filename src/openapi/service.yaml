@@ -202,6 +202,10 @@ networkPolicy:
   additionalProperties: false
   type: object
   properties:
+    podSelector:
+      title: Pod Selector
+      description: 'Set to use a custom value for the "otomi.io/app:" label. Leave blank if service name equals label value.'
+      type: string
     ingressPrivate:
       # additionalProperties: false
       type: object
@@ -236,12 +240,12 @@ networkPolicy:
                 type: object
                 properties:
                   team:
-                    title: Team name
+                    title: FROM team name
                     description: Allow traffic from a given team
                     type: string
                   service:
-                    title: Service name
-                    description: 'Allow traffic from pods with "app: <some service name>" label'
+                    title: FROM label value
+                    description: 'Allow traffic from pods with label "otomi.io/app: <value>"'
                     type: string
                 required:
                   - team
