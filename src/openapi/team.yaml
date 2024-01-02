@@ -24,7 +24,6 @@ TeamSelfService:
         enum:
           [
             alerts,
-            backup,
             billingAlertQuotas,
             oidc,
             resourceQuota,
