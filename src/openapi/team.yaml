@@ -24,7 +24,6 @@ TeamSelfService:
         enum:
           [
             alerts,
-            backup,
             billingAlertQuotas,
             oidc,
             resourceQuota,
@@ -32,13 +31,6 @@ TeamSelfService:
             downloadDockerConfig,
             networkPolicy,
           ]
-      uniqueItems: true
-    apps:
-      type: array
-      items:
-        type: string
-        enum: [argocd, gitea]
-      default: []
       uniqueItems: true
   x-acl:
     admin: [read-any, update-any]
