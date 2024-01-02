@@ -726,7 +726,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Project"
+              type: object
         description: Project object that contains updated values
         required: true
       responses:
