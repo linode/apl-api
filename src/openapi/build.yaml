@@ -68,6 +68,23 @@ buildMode:
               description: This can be a commit, a tag, or a branch
               $ref: 'definitions.yaml#/wordCharacterPattern'
               default: HEAD
+            envVars:
+              title: Environment variables
+              type: array
+              items:
+                type: object
+                description: Environment variable to set during build-time.
+                properties:
+                  name:
+                    title: Name
+                    type: string
+                  value:
+                    title: Value
+                    type: string
+                    x-secret: true
+                required:
+                  - name
+                  - value
           required:
             - repoUrl
         type:
@@ -99,6 +116,23 @@ buildMode:
               description: This can be a commit, a tag, or a branch
               $ref: 'definitions.yaml#/wordCharacterPattern'
               default: HEAD
+            envVars:
+              title: Environment variables
+              type: array
+              items:
+                type: object
+                description: Environment variable to set during build-time.
+                properties:
+                  name:
+                    title: Name
+                    type: string
+                  value:
+                    title: Value
+                    type: string
+                    x-secret: true
+                required:
+                  - name
+                  - value
           required:
             - repoUrl
         type:
