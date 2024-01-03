@@ -81,7 +81,6 @@ buildMode:
                   value:
                     title: Value
                     type: string
-                    x-secret: true
                 required:
                   - name
                   - value
@@ -129,7 +128,6 @@ buildMode:
                   value:
                     title: Value
                     type: string
-                    x-secret: true
                 required:
                   - name
                   - value
