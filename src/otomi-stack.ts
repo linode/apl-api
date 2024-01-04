@@ -795,7 +795,13 @@ export default class OtomiStack {
   createWorkload(teamId: string, data: Workload): Workload {
     try {
       const w = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }) as Workload
-      this.db.createItem('workloadValues', { teamId, values: {} }, { teamId, name: w.name }, w.id) as WorkloadValues
+      const createdItem = this.db.createItem(
+        'workloadValues',
+        { teamId, values: {} },
+        { teamId, name: w.name },
+        w.id,
+      ) as WorkloadValues
+      console.debug('CREATEDITEM: ', createdItem)
       return w
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Workload name already exists'
@@ -819,7 +825,11 @@ export default class OtomiStack {
         this.db.updateItem('projects', updatedData, { id: project.id }) as Project
       }
     })
+    const wValues = this.db.getItem('workloadValues', { id }) as WorkloadValues
+    console.debug('WORKLOADVALUES: ', wValues)
     this.db.deleteItem('workloadValues', { id })
+    const deletedWValues = this.db.getItem('workloadValues', { id }) as WorkloadValues
+    console.debug('WORKLOADVALUES DELETED?: ', deletedWValues)
     return this.db.deleteItem('workloads', { id })
   }
 
