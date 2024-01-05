@@ -817,7 +817,7 @@ export default class OtomiStack {
     return this.db.updateItem('workloads', data, { id }) as Workload
   }
 
-  deleteWorkload(id: string): void {
+  async deleteWorkload(id: string): Promise<void> {
     const p = this.db.getCollection('projects') as Array<Project>
     p.forEach((project: Project) => {
       if (project?.workload?.id === id) {
@@ -825,11 +825,12 @@ export default class OtomiStack {
         this.db.updateItem('projects', updatedData, { id: project.id }) as Project
       }
     })
-    const wValues = this.db.getItem('workloadValues', { id }) as WorkloadValues
-    console.debug('WORKLOADVALUES: ', wValues)
+    const workloadValues = this.db.getItem('workloadValues', { id }) as WorkloadValues
+
+    const path = getTeamWorkloadValuesFilePath(workloadValues.teamId!, workloadValues.name)
+
+    await this.repo.removeFile(path)
     this.db.deleteItem('workloadValues', { id })
-    const deletedWValues = this.db.getItem('workloadValues', { id }) as WorkloadValues
-    console.debug('WORKLOADVALUES DELETED?: ', deletedWValues)
     return this.db.deleteItem('workloads', { id })
   }
 
