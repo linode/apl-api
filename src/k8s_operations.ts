@@ -383,6 +383,7 @@ export async function getServiceStatus(service: Service, domainSuffix: string): 
   const host = `team-${service.teamId}/${service.name}-${service.teamId}.${domainSuffix}`
 
   if (service?.ksvc?.predeployed) {
+    console.log('service: ', service.name)
     const res = await listNamespacedCustomObject('networking.istio.io', namespace, 'virtualservices', undefined)
     const virtualservices = res.body.items.map((item) => item.metadata.name)
     const ksvcExist = virtualservices.includes(`${service.name}-ingress`)
