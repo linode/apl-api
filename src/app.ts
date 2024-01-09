@@ -109,6 +109,8 @@ const uploadOtomiMetrics = async () => {
 }
 
 const resourceStatus = async () => {
+  const isProd = process.env.NODE_ENV === 'production'
+  if (!isProd) return
   const otomiStack = await getSessionStack()
   const { cluster } = otomiStack.getSettings(['cluster'])
   const domainSuffix = cluster?.domainSuffix

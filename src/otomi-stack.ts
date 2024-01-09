@@ -24,6 +24,7 @@ import {
   Metrics,
   Policies,
   Project,
+  SealedSecret,
   Secret,
   Service,
   Session,
@@ -89,6 +90,10 @@ export function getTeamBackupsJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.backups`
 }
 
+export function getTeamSealedSecretsFilePath(teamId: string): string {
+  return `env/teams/sealedsecrets.${teamId}.yaml`
+}
+
 export function getTeamSecretsFilePath(teamId: string): string {
   return `env/teams/external-secrets.${teamId}.yaml`
 }
@@ -118,6 +123,10 @@ export function getTeamProjectsJsonPath(teamId: string): string {
 
 export function getTeamBuildsJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.builds`
+}
+
+export function getTeamSealedSecretsJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.sealedsecrets`
 }
 
 export function getTeamSecretsJsonPath(teamId: string): string {
@@ -918,17 +927,20 @@ export default class OtomiStack {
       getIo().emit('db', msg)
       throw e
     } finally {
-      const sha = await rootStack.repo.getCommitSha()
-      // check Tekton status every 5 seconds and emit it when the pipeline is completed
-      const intervalId = setInterval(() => {
-        getLastTektonMessage(sha).then(({ order, name, completionTime, status }: any) => {
-          if (completionTime) {
-            getIo().emit('tekton', { order, name, completionTime, sha, status })
-            clearInterval(intervalId)
-            debug(`Tekton pipeline ${order} completed with status ${status}`)
-          }
-        })
-      }, 5 * 1000)
+      const isProd = process.env.NODE_ENV === 'production'
+      if (isProd) {
+        const sha = await rootStack.repo.getCommitSha()
+        // check Tekton status every 5 seconds and emit it when the pipeline is completed
+        const intervalId = setInterval(() => {
+          getLastTektonMessage(sha).then(({ order, name, completionTime, status }: any) => {
+            if (completionTime) {
+              getIo().emit('tekton', { order, name, completionTime, sha, status })
+              clearInterval(intervalId)
+              debug(`Tekton pipeline ${order} completed with status ${status}`)
+            }
+          })
+        }, 5 * 1000)
+      }
       rootStack.locked = false
     }
   }
@@ -1080,6 +1092,38 @@ export default class OtomiStack {
   getSecrets(teamId: string): Array<Secret> {
     return this.db.getCollection('secrets', { teamId }) as Array<Secret>
   }
+  // ===================================================================================================================
+  createSealedSecret(teamId: string, data: Record<string, any>): SealedSecret {
+    console.log('data', data)
+    const s = this.db.createItem('sealedsecrets', { ...data, teamId }, { teamId, name: data.name }) as SealedSecret
+    console.log('createItem secret', s)
+    const all = this.db.getCollection('sealedsecrets', {}) as Array<SealedSecret>
+    console.log('sealed secrets:', all)
+    return s
+  }
+
+  editSealedSecret(id: string, data: SealedSecret): SealedSecret {
+    return this.db.updateItem('sealedsecrets', data, { id }) as SealedSecret
+  }
+
+  deleteSealedSecret(id: string): void {
+    this.db.deleteItem('sealedsecrets', { id })
+  }
+
+  getSealedSecret(id: string): SealedSecret {
+    return this.db.getItem('sealedsecrets', { id }) as SealedSecret
+  }
+
+  getAllSealedSecrets(): Array<SealedSecret> {
+    const s = this.db.getCollection('sealedsecrets', {}) as Array<SealedSecret>
+    console.log('sealed secrets:', s)
+    return s
+  }
+
+  getSealedSecrets(teamId: string): Array<SealedSecret> {
+    return this.db.getCollection('sealedsecrets', { teamId }) as Array<SealedSecret>
+  }
+  // ===================================================================================================================
 
   async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {
     debug('Loading values')
@@ -1112,6 +1156,19 @@ export default class OtomiStack {
     this.db.db.get('settings').assign(data).write()
   }
 
+  async loadTeamSealedSecrets(teamId: string): Promise<void> {
+    const relativePath = getTeamSealedSecretsFilePath(teamId)
+    if (!(await this.repo.fileExists(relativePath))) {
+      debug(`Team ${teamId} has no secrets yet`)
+      return
+    }
+    const data = await this.repo.readFile(relativePath)
+    const secrets: Array<Secret> = get(data, getTeamSealedSecretsJsonPath(teamId), [])
+
+    secrets.forEach((inSecret) => {
+      this.loadSealedSecret(inSecret, teamId)
+    })
+  }
   async loadTeamSecrets(teamId: string): Promise<void> {
     const relativePath = getTeamSecretsFilePath(teamId)
     if (!(await this.repo.fileExists(relativePath))) {
@@ -1219,6 +1276,7 @@ export default class OtomiStack {
     Object.values(tc).forEach((team: Team) => {
       this.loadTeam(team)
       this.loadTeamServices(team.id!)
+      this.loadTeamSealedSecrets(team.id!)
       this.loadTeamSecrets(team.id!)
       this.loadTeamWorkloads(team.id!)
       this.loadTeamBackups(team.id!)
@@ -1318,6 +1376,7 @@ export default class OtomiStack {
         await this.saveTeamApps(teamId)
         await this.saveTeamBackups(teamId)
         await this.saveTeamServices(teamId)
+        await this.saveTeamSealedSecrets(teamId)
         await this.saveTeamSecrets(teamId)
         await this.saveTeamWorkloads(teamId)
         await this.saveTeamProjects(teamId)
@@ -1328,6 +1387,15 @@ export default class OtomiStack {
     )
     const values = set({}, 'teamConfig', teamValues)
     await this.repo.saveConfig(filePath, secretFilePath, values, secretPaths ?? this.getSecretPaths())
+  }
+
+  async saveTeamSealedSecrets(teamId: string): Promise<void> {
+    const secrets = this.db.getCollection('sealedsecrets', { teamId })
+    // const values: any[] = secrets.map((secret) => this.convertDbSecretToValues(secret))
+    await this.repo.writeFile(
+      getTeamSealedSecretsFilePath(teamId),
+      set({}, getTeamSealedSecretsJsonPath(teamId), secrets),
+    )
   }
 
   async saveTeamSecrets(teamId: string): Promise<void> {
@@ -1415,6 +1483,17 @@ export default class OtomiStack {
     const res = this.createTeam(team as Team)
     // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id as string)
     debug(`Loaded team: ${res.id!}`)
+  }
+
+  loadSealedSecret(inSecret, teamId): void {
+    const secret: Record<string, any> = omit(inSecret, ...secretTransferProps)
+    secret.teamId = teamId
+    secret.secret = secretTransferProps.reduce((memo: any, prop) => {
+      if (inSecret[prop] !== undefined) memo[prop] = inSecret[prop]
+      return memo
+    }, {})
+    const res: any = this.db.populateItem('sealedsecrets', secret, { teamId, name: secret.name }, secret.id as string)
+    debug(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
   }
 
   loadSecret(inSecret, teamId): void {
