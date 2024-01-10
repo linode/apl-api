@@ -378,16 +378,15 @@ async function checkHostStatus(namespace: string, name: string, host: string) {
 }
 
 export async function getServiceStatus(service: Service, domainSuffix: string): Promise<string> {
+  const isKsvc = service?.ksvc?.predeployed
   const namespace = `team-${service.teamId}`
   const name = `team-${service.teamId}-public`
   const host = `team-${service.teamId}/${service.name}-${service.teamId}.${domainSuffix}`
 
-  if (service?.ksvc?.predeployed) {
-    console.log('service: ', service.name)
+  if (isKsvc) {
     const res = await listNamespacedCustomObject('networking.istio.io', namespace, 'virtualservices', undefined)
-    const virtualservices = res.body.items.map((item) => item.metadata.name)
-    const ksvcExist = virtualservices.includes(`${service.name}-ingress`)
-    if (ksvcExist) return 'Succeeded'
+    const virtualservices = res?.body?.items?.map((item) => item.metadata.name) || []
+    if (virtualservices.includes(`${service.name}-ingress`)) return 'Succeeded'
     else return 'NotFound'
   }
 
