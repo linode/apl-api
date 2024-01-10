@@ -117,7 +117,7 @@ Team:
           default: true
       type: object
     policyProfileAction:
-      title: Profile policy non-complyance action
+      title: Profile policy non-compliance action
       description: The the validation failure action (the action taken when a Pod resource is not compliant) can be set as default per profile.
       properties:
         baseline:
