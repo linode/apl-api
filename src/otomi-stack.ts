@@ -169,7 +169,6 @@ export default class OtomiStack {
     const metrics: Metrics = {
       otomi_backups: this.getAllBackups().length,
       otomi_builds: this.getAllBuilds().length,
-      otomi_policies: this.getAllPolicies().length,
       otomi_secrets: this.getAllSecrets().length,
       otomi_services: this.getAllServices().length,
       // We do not count team_admin as a regular team
