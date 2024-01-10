@@ -21,6 +21,10 @@ Policy:
       readOnly: true
       description: Name of policy
       $ref: 'definitions.yaml#/wordCharacterPattern'
+    enabled:
+      title: Enabled
+      description: Enable or disable the policy
+      type: boolean
     profile:
       readOnly: true
       description: The profile this policy is part of
@@ -31,21 +35,16 @@ Policy:
       $ref: 'definitions.yaml#/wordCharacterPattern'
     severity:
       title: Severity
-      readOnly: true
       description: The severity of the policy
       type: string
       enum: ['low', 'medium', 'high']
       default: medium
-    actionOverride:
-      title: Action Override
-      description: Change to override the default action
+    action:
+      title: Action
+      description: Action taken when resource is non-compliant to the policy
       type: string
       enum: ['Audit', 'Enforce']
       default: Audit
-    enabled:
-      title: Enabled
-      description: Change to enable or disable the policy
-      type: boolean
     customValues:
       description: Customizable policy configuration
       type: array

@@ -116,32 +116,6 @@ Team:
           type: boolean
           default: true
       type: object
-    policyProfileAction:
-      title: Profile policy non-compliance action
-      description: The the validation failure action (the action taken when a Pod resource is not compliant) can be set as default per profile.
-      properties:
-        baseline:
-          title: Baseline
-          type: string
-          enum: ['Audit', 'Enforce']
-          default: Enforce
-        restricted:
-          type: string
-          enum: ['Audit', 'Enforce']
-          default: Enforce
-        bestPractice:
-          title: Best Practices
-          type: string
-          enum: ['Audit', 'Enforce']
-          default: Audit
-        otomi:
-          type: string
-          enum: ['Audit', 'Enforce']
-          default: Audit
-        other:
-          type: string
-          enum: ['Audit', 'Enforce']
-          default: Audit
     selfService:
       $ref: team.yaml#/TeamSelfService
   required:
