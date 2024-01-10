@@ -595,6 +595,75 @@ paths:
               schema:
                 $ref: "#/components/schemas/Build"
 
+  "/policies":
+    get:
+      operationId: getAllPolicies
+      x-aclSchema: Policy
+      responses:
+        <<: *DefaultGetResponses
+        "200":
+          description: Successfully obtained all policy configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Policy"
+
+  "/teams/{teamId}/policies":
+    parameters:
+      - $ref: "#/components/parameters/teamParams"
+    get:
+      operationId: getTeamPolicies
+      x-aclSchema: Policy
+      responses:
+        <<: *DefaultGetResponses
+        "200":
+          description: Successfully obtained team policy configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Policy"
+
+  "/teams/{teamId}/policies/{policyId}":
+    parameters:
+      - $ref: "#/components/parameters/teamParams"
+      - $ref: "#/components/parameters/policyParams"
+    get:
+      operationId: getPolicy
+      description: Get a policy from a given team
+      x-aclSchema: Policy
+      responses:
+        <<: *DefaultGetResponses
+        "200":
+          description: Successfully obtained policy configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+    put:
+      operationId: editPolicy
+      description: Edit a policy from a given team
+      x-aclSchema: Policy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Policy"
+        description: Policy object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        "200":
+          description: Successfully edited a team policy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+
+
   "/k8sVersion":
     get:
       operationId: getK8sVersion
@@ -1143,10 +1212,17 @@ components:
       required: true
       schema:
         type: string
+    policyParams:
+      name: policyId
+      in: path
+      description: ID of the policy
+      required: true
+      schema:
+        type: string
     projectParams:
       name: projectId
       in: path
-      description: ID of the build
+      description: ID of the projec
       required: true
       schema:
         type: string
@@ -1242,6 +1318,8 @@ components:
       $ref: apps/knative.yaml#/AppKnative
     AppKured:
       $ref: apps/kured.yaml#/AppKured
+    AppKyverno:
+      $ref: apps/kyverno.yaml#/AppKyverno
     AppTekton:
       $ref: apps/tekton.yaml#/AppTekton
     AppLoki:
@@ -1302,6 +1380,8 @@ components:
       $ref: error.yaml#/OtomiStackError
     Project:
       $ref: project.yaml#/Project
+    Policy:
+      $ref: policy.yaml#/Policy
     Restore:
       $ref: restore.yaml#/Restore
     Revert:
@@ -1408,8 +1488,6 @@ components:
       $ref: definitions.yaml#/podSecurityContext
     podSpec:
       $ref: definitions.yaml#/podSpec
-    policies:
-      $ref: policies.yaml#/policies
     priority:
       $ref: definitions.yaml#/priority
     provider:

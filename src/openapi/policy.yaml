@@ -1,0 +1,53 @@
+Policy:
+  x-acl:
+    admin:
+      - delete-any
+      - read-any
+      - create-any
+      - update-any
+    team:
+      - delete
+      - read
+      - create
+      - update
+  type: object
+  x-externalDocsPath: docs/for-devs/console/policies
+  properties:
+    id:
+      type: string
+    teamId:
+      $ref: 'definitions.yaml#/idName'
+    name:
+      readOnly: true
+      description: Name of policy
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+    profile:
+      readOnly: true
+      description: The profile this policy is part of
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+    description:
+      readOnly: true
+      description: Description of the policy
+      $ref: 'definitions.yaml#/wordCharacterPattern'
+    severity:
+      title: Severity
+      readOnly: true
+      description: The severity of the policy
+      type: string
+      enum: ['low', 'medium', 'high']
+      default: medium
+    actionOverride:
+      title: Action Override
+      description: Change to override the default action
+      type: string
+      enum: ['Audit', 'Enforce']
+      default: Audit
+    enabled:
+      title: Enabled
+      description: Change to enable or disable the policy
+      type: boolean
+    customValues:
+      description: Customizable policy configuration
+      type: array
+      items:
+        type: string

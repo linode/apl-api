@@ -21,6 +21,7 @@ export type Workload = components['schemas']['Workload']
 export type WorkloadValues = components['schemas']['WorkloadValues']
 export type Project = components['schemas']['Project']
 export type Build = components['schemas']['Build']
+export type Policy = components['schemas']['Policy']
 export type Cloudtty = components['schemas']['Cloudtty']
 export type TeamAuthz = components['schemas']['TeamAuthz']
 export type Metrics = components['schemas']['Metrics']
@@ -31,7 +32,6 @@ export type Dns = Settings['dns']
 export type Kms = Settings['kms']
 export type Oidc = Settings['oidc']
 export type Otomi = Settings['otomi']
-export type Policies = Settings['policies']
 
 export interface OpenApiRequest extends Request {
   operationDoc: {
@@ -132,7 +132,6 @@ export interface Core {
   kms: Kms
   oidc: Oidc
   otomi: Otomi
-  policies: Policies
   teamApps: Record<string, any>[]
   teamConfig: Record<string, any>
   version: number

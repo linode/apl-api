@@ -30,6 +30,7 @@ TeamSelfService:
             downloadKubeConfig,
             downloadDockerConfig,
             networkPolicy,
+            policyProfile,
           ]
       uniqueItems: true
     apps:
@@ -115,6 +116,42 @@ Team:
           type: boolean
           default: true
       type: object
+    policyProfile:
+      properties:
+        baseline:
+          properties:
+            defaultAction:
+              x-hideTitle: true
+              type: string
+              enum: ['Audit', 'Enforce']
+              default: Enforce
+        restricted:
+          properties:
+            defaultAction:
+              x-hideTitle: true
+              type: string
+              enum: ['Audit', 'Enforce']
+              default: Enforce
+        bestPractice:
+          properties:
+            defaultAction:
+              x-hideTitle: true
+              type: string
+              enum: ['Audit', 'Enforce']
+              default: Audit
+        otomi:
+          properties:
+            defaultAction:
+              x-hideTitle: true
+              type: string
+              enum: ['Audit', 'Enforce']
+              default: Audit
+        other:
+          properties:
+            defaultAction:
+              type: string
+              enum: ['Audit', 'Enforce']
+              default: Audit
     selfService:
       $ref: team.yaml#/TeamSelfService
   required:
