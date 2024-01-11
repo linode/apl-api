@@ -109,32 +109,32 @@ const uploadOtomiMetrics = async () => {
 }
 
 const resourceStatus = async () => {
-  try {
-    const otomiStack = await getSessionStack()
-    const { cluster } = otomiStack.getSettings(['cluster'])
-    const domainSuffix = cluster?.domainSuffix
-    const resources = {
-      workloads: otomiStack.db.getCollection('workloads') as Array<Workload>,
-      builds: otomiStack.db.getCollection('builds') as Array<Build>,
-      services: otomiStack.db.getCollection('services') as Array<Service>,
-    }
-    const statusFunctions = {
-      workloads: getWorkloadStatus,
-      builds: getBuildStatus,
-      services: getServiceStatus,
-    }
-    const resourcesStatus = {}
-    for (const resourceType in resources) {
-      const promises = resources[resourceType].map(async (resource) => {
+  const otomiStack = await getSessionStack()
+  const { cluster } = otomiStack.getSettings(['cluster'])
+  const domainSuffix = cluster?.domainSuffix
+  const resources = {
+    workloads: otomiStack.db.getCollection('workloads') as Array<Workload>,
+    builds: otomiStack.db.getCollection('builds') as Array<Build>,
+    services: otomiStack.db.getCollection('services') as Array<Service>,
+  }
+  const statusFunctions = {
+    workloads: getWorkloadStatus,
+    builds: getBuildStatus,
+    services: getServiceStatus,
+  }
+  const resourcesStatus = {}
+  for (const resourceType in resources) {
+    const promises = resources[resourceType].map(async (resource) => {
+      try {
         const res = await statusFunctions[resourceType](resource, domainSuffix)
         return { [resource.id]: res }
-      })
-      resourcesStatus[resourceType] = Object.assign({}, ...(await Promise.all(promises)))
-    }
-    getIo().emit('status', resourcesStatus)
-  } catch (error) {
-    debug('Could not collect status data: ', error)
+      } catch (error) {
+        debug(`Error processing resource ${resourceType} ${resource.id}:`, error)
+      }
+    })
+    resourcesStatus[resourceType] = Object.assign({}, ...(await Promise.all(promises)))
   }
+  getIo().emit('status', resourcesStatus)
 }
 
 let otomiSpec: OtomiSpec
