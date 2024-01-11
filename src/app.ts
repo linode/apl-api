@@ -129,7 +129,7 @@ const resourceStatus = async () => {
         const res = await statusFunctions[resourceType](resource, domainSuffix)
         return { [resource.id]: res }
       } catch (error) {
-        debug(`Error processing resource ${resourceType} ${resource.id}:`, error)
+        console.log(`Could not collect status data for ${resourceType} ${resource.name} resource:`, error)
       }
     })
     resourcesStatus[resourceType] = Object.assign({}, ...(await Promise.all(promises)))
