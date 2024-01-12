@@ -1,6 +1,5 @@
 FROM node:18.12.1-alpine as ci
 
-ARG KUBESEAL_VERSION='v0.24.5'
 ENV NODE_ENV=test
 ENV BLUEBIRD_DEBUG=0
 ENV HUSKY_SKIP_INSTALL=true
@@ -9,10 +8,6 @@ ARG CI=true
 RUN mkdir /app
 WORKDIR /app
 
-ADD "https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION}/kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz" kubeseal.tar.gz
-RUN tar -xvzf kubeseal.tar.gz kubeseal
-RUN install -m 755 kubeseal /usr/local/bin/kubeseal
-
 COPY . .* ./
 
 RUN npm ci
@@ -20,7 +15,6 @@ RUN npm ci
 RUN npm run build
 RUN npm run lint
 RUN npm run test
-
 
 # --------------- Cleanup
 FROM ci as clean
@@ -40,7 +34,6 @@ RUN mkdir /app
 WORKDIR /app
 COPY --from=clean /app/node_modules node_modules
 COPY --from=ci /app/dist dist
-COPY --from=ci /usr/local/bin/kubeseal /usr/local/bin/kubeseal
 COPY package.json .
 
 USER node
