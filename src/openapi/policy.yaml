@@ -50,3 +50,5 @@ Policy:
       type: array
       items:
         type: string
+  required:
+    - name
