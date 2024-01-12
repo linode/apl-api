@@ -11,7 +11,6 @@ AppList:
     - drone
     - external-dns
     - falco
-    - gatekeeper
     - gitea
     - grafana
     - harbor

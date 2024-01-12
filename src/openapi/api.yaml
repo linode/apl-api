@@ -1294,8 +1294,6 @@ components:
       $ref: apps/external-dns.yaml#/AppExternalDns
     AppFalco:
       $ref: apps/falco.yaml#/AppFalco
-    AppGatekeeper:
-      $ref: apps/gatekeeper.yaml#/AppGatekeeper
     AppGitea:
       $ref: apps/gitea.yaml#/AppGitea
     AppGrafana:
