@@ -20,16 +20,16 @@ Policy:
     name:
       description: Name of policy
       $ref: 'definitions.yaml#/wordCharacterPattern'
-    enabled:
-      title: Enabled
-      description: Enable or disable the policy
-      type: boolean
     profile:
       description: The profile this policy is part of
       $ref: 'definitions.yaml#/wordCharacterPattern'
     description:
       description: Description of the policy
-      $ref: 'definitions.yaml#/wordCharacterPattern'
+      type: string
+    enabled:
+      title: Enabled
+      description: Enable or disable the policy
+      type: boolean
     severity:
       title: Severity
       description: The severity of the policy
