@@ -18,7 +18,6 @@ Policy:
     teamId:
       $ref: 'definitions.yaml#/idName'
     name:
-      readOnly: true
       description: Name of policy
       $ref: 'definitions.yaml#/wordCharacterPattern'
     enabled:
@@ -26,11 +25,9 @@ Policy:
       description: Enable or disable the policy
       type: boolean
     profile:
-      readOnly: true
       description: The profile this policy is part of
       $ref: 'definitions.yaml#/wordCharacterPattern'
     description:
-      readOnly: true
       description: Description of the policy
       $ref: 'definitions.yaml#/wordCharacterPattern'
     severity:
