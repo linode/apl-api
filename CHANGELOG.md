@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.3.0](https://github.com/redkubes/otomi-api/compare/v2.2.0...v2.3.0) (2024-01-12)
+
+
+### Bug Fixes
+
+* knative services ([#495](https://github.com/redkubes/otomi-api/issues/495)) ([011d5ba](https://github.com/redkubes/otomi-api/commit/011d5ba139556571a43f5c33c67bd490087ff55d))
+* remove workload values ([#494](https://github.com/redkubes/otomi-api/issues/494)) ([e1d910e](https://github.com/redkubes/otomi-api/commit/e1d910e38feea2a68ef45347fd1b47e6d8b24a97))
+
 ## [2.2.0](https://github.com/redkubes/otomi-api/compare/v2.1.0...v2.2.0) (2024-01-04)
 
 
