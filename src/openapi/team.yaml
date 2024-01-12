@@ -30,7 +30,6 @@ TeamSelfService:
             downloadKubeConfig,
             downloadDockerConfig,
             networkPolicy,
-            policyProfile,
           ]
       uniqueItems: true
     apps:

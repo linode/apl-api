@@ -1272,38 +1272,6 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/project'
-      policyProfile:
-        properties:
-          baseline:
-            properties:
-              defaultAction:
-                type: string
-                enum: ['Audit', 'Enforce']
-                default: Enforce
-          restricted:
-            properties:
-              defaultAction:
-                type: string
-                enum: ['Audit', 'Enforce']
-                default: Enforce
-          bestPractice:
-            properties:
-              defaultAction:
-                type: string
-                enum: ['Audit', 'Enforce']
-                default: Audit
-          otomi:
-            properties:
-              defaultAction:
-                type: string
-                enum: ['Audit', 'Enforce']
-                default: Audit
-          other:
-            properties:
-              defaultAction:
-                type: string
-                enum: ['Audit', 'Enforce']
-                default: Audit
       policies:
         type: array
         items:
