@@ -125,8 +125,12 @@ const resourceStatus = async () => {
   const resourcesStatus = {}
   for (const resourceType in resources) {
     const promises = resources[resourceType].map(async (resource) => {
-      const res = await statusFunctions[resourceType](resource, domainSuffix)
-      return { [resource.id]: res }
+      try {
+        const res = await statusFunctions[resourceType](resource, domainSuffix)
+        return { [resource.id]: res }
+      } catch (error) {
+        console.log(`Could not collect status data for ${resourceType} ${resource.name} resource:`, error)
+      }
     })
     resourcesStatus[resourceType] = Object.assign({}, ...(await Promise.all(promises)))
   }
