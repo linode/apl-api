@@ -7,7 +7,7 @@ Project:
       - update-any
     team:
       - delete
-      - read
+      - read-any
       - create
       - update
   type: object
@@ -16,17 +16,17 @@ Project:
     id:
       type: string
     teamId:
-      $ref: 'definitions.yaml#/idName'
+      $ref: "definitions.yaml#/idName"
     name:
       title: Project name
-      $ref: 'definitions.yaml#/wordCharacterPattern'
+      $ref: "definitions.yaml#/wordCharacterPattern"
     build:
-      $ref: 'build.yaml#/Build'
+      $ref: "build.yaml#/Build"
     workload:
-      $ref: 'workload.yaml#/Workload'
+      $ref: "workload.yaml#/Workload"
     workloadValues:
-      $ref: 'workload.yaml#/WorkloadValues'
+      $ref: "workload.yaml#/WorkloadValues"
     service:
-      $ref: 'service.yaml#/Service'
+      $ref: "service.yaml#/Service"
   required:
     - name

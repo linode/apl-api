@@ -2,6 +2,51 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.3.0](https://github.com/redkubes/otomi-api/compare/v2.2.0...v2.3.0) (2024-01-12)
+
+
+### Bug Fixes
+
+* knative services ([#495](https://github.com/redkubes/otomi-api/issues/495)) ([011d5ba](https://github.com/redkubes/otomi-api/commit/011d5ba139556571a43f5c33c67bd490087ff55d))
+* remove workload values ([#494](https://github.com/redkubes/otomi-api/issues/494)) ([e1d910e](https://github.com/redkubes/otomi-api/commit/e1d910e38feea2a68ef45347fd1b47e6d8b24a97))
+
+## [2.2.0](https://github.com/redkubes/otomi-api/compare/v2.1.0...v2.2.0) (2024-01-04)
+
+
+### Features
+
+* add get dashboard queries ([#487](https://github.com/redkubes/otomi-api/issues/487)) ([7f75e85](https://github.com/redkubes/otomi-api/commit/7f75e859b7c4194650e2c9ac4e872f5461145bca))
+* license checks with current state ([#480](https://github.com/redkubes/otomi-api/issues/480)) ([da60811](https://github.com/redkubes/otomi-api/commit/da608114a30a6dd5868a40056345cf5f5db822b7))
+* select secret for external private repo ([#483](https://github.com/redkubes/otomi-api/issues/483)) ([9956f98](https://github.com/redkubes/otomi-api/commit/9956f989e917e5073733d470cbbe8d0998deaeeb))
+* team and platform status dashboard ([#485](https://github.com/redkubes/otomi-api/issues/485)) ([0394d7f](https://github.com/redkubes/otomi-api/commit/0394d7f9e22943b98d24bede53be6f21d17ca4d0))
+
+### Bug Fixes
+
+* add env vars for paketo ([#492](https://github.com/redkubes/otomi-api/issues/492)) ([ad6dc71](https://github.com/redkubes/otomi-api/commit/ad6dc7175687d3fc0822004bd676653733103c32))
+* inconsistencies ([#488](https://github.com/redkubes/otomi-api/issues/488)) ([ffdcf67](https://github.com/redkubes/otomi-api/commit/ffdcf676a9cac93ffd94b0591b5c201328b0d352))
+* update kiali default resource limits ([#484](https://github.com/redkubes/otomi-api/issues/484)) ([1c9acc6](https://github.com/redkubes/otomi-api/commit/1c9acc6dfeb7b02d6df938612c7c63230f4ed52b))
+* managed monitoring apps ([#486](https://github.com/redkubes/otomi-api/issues/486)) ([814d080](https://github.com/redkubes/otomi-api/commit/814d080c002b564a11f33dfcfc80619734300eac))
+* netpol selector schema ([#489](https://github.com/redkubes/otomi-api/issues/489)) ([c27d84a](https://github.com/redkubes/otomi-api/commit/c27d84aad1a5e675e9dd1c69277eeace7b2d4d77))
+* project 403 error ([#491](https://github.com/redkubes/otomi-api/issues/491)) ([bd87da9](https://github.com/redkubes/otomi-api/commit/bd87da941e275c70b2ed790267f58afbad7c4e14))
+* rm self-service backup for teams ([#490](https://github.com/redkubes/otomi-api/issues/490)) ([43a2e86](https://github.com/redkubes/otomi-api/commit/43a2e86a97cebb68603b01e1fd91c8db00e7a059))
+* rm x-secret for extra env ([#493](https://github.com/redkubes/otomi-api/issues/493)) ([233076b](https://github.com/redkubes/otomi-api/commit/233076b312978de9f7642d2661b8ab0e44fd53aa))
+
+## [2.1.0](https://github.com/redkubes/otomi-api/compare/v2.0.0...v2.1.0) (2023-12-15)
+
+
+### Features
+
+* change tty image tag ([#476](https://github.com/redkubes/otomi-api/issues/476)) ([7450ec5](https://github.com/redkubes/otomi-api/commit/7450ec51a4773f2de0031943edf7a72c7877fad7))
+* developer catalog page improvements ([#479](https://github.com/redkubes/otomi-api/issues/479)) ([27952ed](https://github.com/redkubes/otomi-api/commit/27952ed2bb9e7e9c311d1c8ce12bf9d3bc617a71))
+* update fetchWorkloadCatalog to get readme files ([#482](https://github.com/redkubes/otomi-api/issues/482)) ([0de278c](https://github.com/redkubes/otomi-api/commit/0de278c2a432f6974e38752346a98cfe6d88ff56))
+* yaml comments ([#481](https://github.com/redkubes/otomi-api/issues/481)) ([fe9c187](https://github.com/redkubes/otomi-api/commit/fe9c187cac02e22443ec607b94705e8eeb47e17c))
+
+
+### Bug Fixes
+
+* rm sidekick from schema ([#478](https://github.com/redkubes/otomi-api/issues/478)) ([b1944ad](https://github.com/redkubes/otomi-api/commit/b1944adf39ecc7f056c85925d12df8c5d1028ba7))
+* team ops ([#477](https://github.com/redkubes/otomi-api/issues/477)) ([f447665](https://github.com/redkubes/otomi-api/commit/f447665033c091d15d537dfc7e7374e3e1af4313))
+
 ## [2.0.0](https://github.com/redkubes/otomi-api/compare/v1.2.0...v2.0.0) (2023-11-21)
 
 

@@ -56,19 +56,19 @@ Service:
           description: "Percentage of traffic to version 1"
         weightV2:
           type: integer
-          default: 10  
+          default: 10
           title: Weight v2
-          description: "Percentage of traffic to version 2"  
+          description: "Percentage of traffic to version 2"
     ingress:
       title: Exposure (ingress)
       description: Determines loadbalancer related configuration for handling the service ingress.
       # Note: the order matters first schema must be nullable empty object
       oneOf:
-        - $ref: '#/IngressCluster'
-        - $ref: '#/IngressPublic'
+        - $ref: "#/IngressCluster"
+        - $ref: "#/IngressPublic"
     networkPolicy:
       title: Network policies
-      $ref: '#/networkPolicy'
+      $ref: "#/networkPolicy"
   required:
     - name
     - ingress
@@ -80,7 +80,7 @@ Ingress:
       description: Assign service to a paricular Load Balancer by selecting ingress class name
       title: Ingress Class Name
       type: string
-      default: 'platform'
+      default: "platform"
     tlsPass:
       description: Pass through the request as is to the backing service. Only available for predeployed regular (non-knative) services.
       title: TLS passthrough
@@ -88,7 +88,7 @@ Ingress:
       default: false
     useDefaultHost:
       description: Use the team domain so that the URL reveals the owner.
-      title: Use default host (preferred)
+      title: Use default host
       type: boolean
       default: true
     subdomain:
@@ -187,7 +187,7 @@ IngressCluster:
 
 IngressPublic:
   allOf:
-    - $ref: '#/Ingress'
+    - $ref: "#/Ingress"
     - properties:
         type:
           type: string
@@ -202,6 +202,10 @@ networkPolicy:
   additionalProperties: false
   type: object
   properties:
+    podSelector:
+      title: Pod Selector
+      description: 'Set to use a custom value for the "otomi.io/app:" label. Leave blank if service name equals label value.'
+      type: string
     ingressPrivate:
       # additionalProperties: false
       type: object
@@ -229,19 +233,19 @@ networkPolicy:
               enum:
                 - AllowOnly
             allow:
-              title: Allow entire team or just a service
+              title: Allow entire team or just a workload
               type: array
               minItems: 1
               items:
                 type: object
                 properties:
                   team:
-                    title: Team name
+                    title: FROM team name
                     description: Allow traffic from a given team
                     type: string
                   service:
-                    title: Service name
-                    description: 'Allow traffic from pods with "app: <some service name>" label'
+                    title: FROM label value
+                    description: 'Allow traffic from pods with label "otomi.io/app: <value>"'
                     type: string
                 required:
                   - team

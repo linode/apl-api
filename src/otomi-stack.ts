@@ -627,6 +627,24 @@ export default class OtomiStack {
     return this.db.deleteItem('projects', { id })
   }
 
+  getDashboard(teamId: string): Array<any> {
+    const ids = teamId !== 'admin' ? { teamId } : undefined
+    const projects = this.db.getCollection('projects', ids) as Array<Project>
+    const builds = this.db.getCollection('builds', ids) as Array<Build>
+    const workloads = this.db.getCollection('workloads', ids) as Array<Workload>
+    const services = this.db.getCollection('services', ids) as Array<Service>
+    const secrets = this.db.getCollection('secrets', ids) as Array<Secret>
+
+    const inventory = [
+      { name: 'projects', count: projects?.length },
+      { name: 'builds', count: builds?.length },
+      { name: 'workloads', count: workloads?.length },
+      { name: 'services', count: services?.length },
+      { name: 'secrets', count: secrets?.length },
+    ]
+    return inventory
+  }
+
   getTeamBuilds(teamId: string): Array<Build> {
     const ids = { teamId }
     return this.db.getCollection('builds', ids) as Array<Build>
@@ -793,7 +811,7 @@ export default class OtomiStack {
     return this.db.updateItem('workloads', data, { id }) as Workload
   }
 
-  deleteWorkload(id: string): void {
+  async deleteWorkload(id: string): Promise<void> {
     const p = this.db.getCollection('projects') as Array<Project>
     p.forEach((project: Project) => {
       if (project?.workload?.id === id) {
@@ -801,6 +819,9 @@ export default class OtomiStack {
         this.db.updateItem('projects', updatedData, { id: project.id }) as Project
       }
     })
+    const workloadValues = this.db.getItem('workloadValues', { id }) as WorkloadValues
+    const path = getTeamWorkloadValuesFilePath(workloadValues.teamId!, workloadValues.name)
+    await this.repo.removeFile(path)
     this.db.deleteItem('workloadValues', { id })
     return this.db.deleteItem('workloads', { id })
   }

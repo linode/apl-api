@@ -120,7 +120,7 @@ lokiValues:
           properties:
             enabled:
               type: boolean
-              default: true
+              default: false
             maxReplicas:
               type: integer
               default: 3
@@ -167,10 +167,10 @@ lokiValues:
               properties:
                 cpu:
                   $ref: ../definitions.yaml#/quantityCpu
-                  default: 200m
+                  default: 500m
                 memory:
                   $ref: ../definitions.yaml#/quantityMem
-                  default: 256Mi
+                  default: 1Gi
             requests:
               type: object
               properties:

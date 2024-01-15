@@ -3,7 +3,7 @@ import Debug from 'debug'
 import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
-import { Cloudtty } from './otomi-models'
+import { Build, Cloudtty, Service, Workload } from './otomi-models'
 
 const debug = Debug('otomi:api:cloudtty')
 
@@ -249,4 +249,150 @@ export async function getLastTektonMessage(sha: string): Promise<any | undefined
   } catch (error) {
     debug('getLastTektonMessage error:', error)
   }
+}
+
+export async function getWorkloadStatus(workload: Workload): Promise<string> {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
+  const name = `team-${workload.teamId}-${workload.name}`
+  try {
+    const res: any = await k8sApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', 'argocd', 'applications', name)
+    const { status } = res.body.status.sync
+    switch (status) {
+      case 'Synced':
+        return 'Succeeded'
+      case 'OutOfSync':
+        return 'Pending'
+      case 'Unknown':
+        return 'Unknown'
+      default:
+        return 'Unknown'
+    }
+  } catch (error) {
+    return 'NotFound'
+  }
+}
+
+async function listNamespacedCustomObject(
+  group: string,
+  namespace: string,
+  plural: string,
+  labelSelector: string | undefined,
+) {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
+  try {
+    const res: any = await k8sApi.listNamespacedCustomObject(
+      group,
+      'v1beta1',
+      namespace,
+      plural,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      labelSelector,
+    )
+    return res
+  } catch (error) {
+    return 'NotFound'
+  }
+}
+
+export async function getBuildStatus(build: Build): Promise<string> {
+  const labelSelector = `tekton.dev/pipeline=${build.mode?.type}-build-${build.name}`
+  const resPipelineruns = await listNamespacedCustomObject(
+    'tekton.dev',
+    `team-${build.teamId}`,
+    'pipelineruns',
+    labelSelector,
+  )
+  try {
+    const [pipelineRun] = resPipelineruns.body.items
+    if (pipelineRun) {
+      const { conditions } = pipelineRun.status
+      if (conditions && conditions.length > 0 && conditions[0].type === 'Succeeded') {
+        switch (conditions[0].status) {
+          case 'True':
+            return 'Succeeded'
+          case 'False':
+            return 'Unknown'
+          case 'Unknown':
+            return 'NotFound'
+          default:
+            return 'NotFound'
+        }
+      } else {
+        // No conditions found for the PipelineRun.
+        return 'NotFound'
+      }
+    } else {
+      const resEventlisteners = await listNamespacedCustomObject(
+        'triggers.tekton.dev',
+        `team-${build.teamId}`,
+        'eventlisteners',
+        labelSelector,
+      )
+      const [eventlistener] = resEventlisteners.body.items
+      if (eventlistener) {
+        const { conditions } = eventlistener.status
+        if (conditions && conditions.length > 0) return 'Pending'
+        else {
+          // No conditions found for the EventListener.
+          return 'Unknown'
+        }
+      } else {
+        // 'No EventListeners found with the specified label selector.'
+        return 'NotFound'
+      }
+    }
+  } catch (error) {
+    return 'NotFound'
+  }
+}
+
+async function getNamespacedCustomObject(namespace: string, name: string) {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
+  try {
+    const res: any = await k8sApi.getNamespacedCustomObject(
+      'networking.istio.io',
+      'v1beta1',
+      namespace,
+      'gateways',
+      name,
+    )
+    const { hosts } = res.body.spec.servers[0]
+    return hosts
+  } catch (error) {
+    return 'NotFound'
+  }
+}
+
+async function checkHostStatus(namespace: string, name: string, host: string) {
+  const hosts = await getNamespacedCustomObject(namespace, `${name}`)
+  return hosts.includes(host) ? 'Succeeded' : 'Unknown'
+}
+
+export async function getServiceStatus(service: Service, domainSuffix: string): Promise<string> {
+  const isKsvc = service?.ksvc?.predeployed
+  const namespace = `team-${service.teamId}`
+  const name = `team-${service.teamId}-public`
+  const host = `team-${service.teamId}/${service.name}-${service.teamId}.${domainSuffix}`
+
+  if (isKsvc) {
+    const res = await listNamespacedCustomObject('networking.istio.io', namespace, 'virtualservices', undefined)
+    const virtualservices = res?.body?.items?.map((item) => item.metadata.name) || []
+    if (virtualservices.includes(`${service.name}-ingress`)) return 'Succeeded'
+    else return 'NotFound'
+  }
+
+  const tlstermStatus = await checkHostStatus(namespace, `${name}-tlsterm`, host)
+  if (tlstermStatus === 'Succeeded') return 'Succeeded'
+
+  const tlspassStatus = await checkHostStatus(namespace, `${name}-tlspass`, host)
+  return tlspassStatus
 }
