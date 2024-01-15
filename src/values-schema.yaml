@@ -1,4 +1,4 @@
-$schema: 'http://json-schema.org/draft-07/schema'
+$schema: "http://json-schema.org/draft-07/schema"
 version: 3
 additionalProperties: true
 definitions:
@@ -21,28 +21,28 @@ definitions:
         additionalProperties: false
         properties:
           critical:
-            $ref: '#/definitions/email'
+            $ref: "#/definitions/email"
             description: One or more email addresses (comma separated) for critical events.
-            x-secret: ''
+            x-secret: ""
           nonCritical:
-            $ref: '#/definitions/email'
+            $ref: "#/definitions/email"
             description: One or more email addresses (comma separated) for non-critical events.
-            x-secret: ''
+            x-secret: ""
       groupInterval:
         default: 5m
         description: How long to wait before sending a notification about new alerts that are added to a group of alerts for which an initial notification has already been sent. (Usually ~5m or more.)
-        $ref: '#/definitions/duration'
+        $ref: "#/definitions/duration"
       msteams:
         additionalProperties: false
         properties:
           highPrio:
             description: The high prio web hook.
-            $ref: '#/definitions/wordCharacterPattern'
-            x-secret: ''
+            $ref: "#/definitions/wordCharacterPattern"
+            x-secret: ""
           lowPrio:
             description: The low prio web hook.
-            $ref: '#/definitions/wordCharacterPattern'
-            x-secret: ''
+            $ref: "#/definitions/wordCharacterPattern"
+            x-secret: ""
       receivers:
         description: Notification receivers.
         items:
@@ -58,33 +58,33 @@ definitions:
       repeatInterval:
         default: 3h
         description: How long to wait before sending a notification again if it has already been sent successfully for an alert. (Usually ~3h or more).
-        $ref: '#/definitions/duration'
+        $ref: "#/definitions/duration"
       slack:
         additionalProperties: false
         properties:
           channel:
             default: mon-otomi
             description: The Slack channel for non-critical notifications.
-            $ref: '#/definitions/wordCharacterPattern'
+            $ref: "#/definitions/wordCharacterPattern"
           channelCrit:
             default: mon-otomi-crit
             description: The Slack channel for critical notifications.
-            $ref: '#/definitions/wordCharacterPattern'
+            $ref: "#/definitions/wordCharacterPattern"
           url:
-            $ref: '#/definitions/url'
+            $ref: "#/definitions/url"
             description: A Slack webhook URL.
-            x-secret: ''
+            x-secret: ""
       opsgenie:
         additionalProperties: false
         properties:
           apiKey:
             description: The api key to use for authn
-            $ref: '#/definitions/wordCharacterPattern'
-            x-secret: ''
+            $ref: "#/definitions/wordCharacterPattern"
+            x-secret: ""
           url:
-            $ref: '#/definitions/url'
+            $ref: "#/definitions/url"
             description: A Slack webhook URL.
-            x-secret: ''
+            x-secret: ""
           responders:
             type: array
             items:
@@ -102,21 +102,21 @@ definitions:
                       required: [id]
                       properties:
                         id:
-                          $ref: '#/definitions/wordCharacterPattern'
+                          $ref: "#/definitions/wordCharacterPattern"
                     - title: Name
                       required: [name]
                       properties:
                         name:
-                          $ref: '#/definitions/idName'
+                          $ref: "#/definitions/idName"
                     - title: Username
                       required: [username]
                       properties:
                         username:
-                          $ref: '#/definitions/wordCharacterPattern'
+                          $ref: "#/definitions/wordCharacterPattern"
               required: [type]
 
   annotations:
-    $ref: '#/definitions/labelsAnnotations'
+    $ref: "#/definitions/labelsAnnotations"
     description: A set of annotations.
   autoscaling:
     additionalProperties: false
@@ -150,52 +150,52 @@ definitions:
       accessKey:
         title: AWS access key
         description: An AWS access key ID.
-        $ref: '#/definitions/wordCharacterPattern'
-        x-secret: ''
+        $ref: "#/definitions/wordCharacterPattern"
+        x-secret: ""
       secretKey:
         title: AWS secret key
         description: An AWS secret key.
         type: string
-        x-secret: ''
+        x-secret: ""
       region:
         title: AWS region
         description: An AWS region.
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
       role:
         description: Role may be set explicitly if no metadata can be accessed.
         example: arn:aws:iam::YYYYYYYYYYYY:role/dns-manager
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
   azure:
     definitions:
       clientId:
         title: Azure client id
         description: An Azure client id.
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
       clientSecret:
         title: Azure client secret
         description: An Azure client secret.
         type: string
-        x-secret: ''
+        x-secret: ""
       dns:
         properties:
           resourceGroup:
-            $ref: '#/definitions/azure/definitions/resourceGroup'
+            $ref: "#/definitions/azure/definitions/resourceGroup"
           hostedZoneName:
             title: Hosted zone name
             description: Name of the DNS zone that should be used.
-            $ref: '#/definitions/wordCharacterPattern'
+            $ref: "#/definitions/wordCharacterPattern"
           tenantId:
-            $ref: '#/definitions/azure/definitions/tenantId'
+            $ref: "#/definitions/azure/definitions/tenantId"
           subscriptionId:
-            $ref: '#/definitions/azure/definitions/subscriptionId'
+            $ref: "#/definitions/azure/definitions/subscriptionId"
           aadClientId:
-            $ref: '#/definitions/azure/definitions/clientId'
+            $ref: "#/definitions/azure/definitions/clientId"
           aadClientSecret:
-            $ref: '#/definitions/azure/definitions/clientSecret'
+            $ref: "#/definitions/azure/definitions/clientSecret"
             title: Client secret
             type: string
             description: Azure Application Client Secret
-            x-secret: ''
+            x-secret: ""
         required:
           - tenantId
           - subscriptionId
@@ -216,30 +216,30 @@ definitions:
         additionalProperties: false
         properties:
           appInsightsApiKey:
-            $ref: '#/definitions/azure/definitions/clientSecret'
+            $ref: "#/definitions/azure/definitions/clientSecret"
             title: AppInsights api key
             description: An Azure AppInsights client secret.
           appInsightsAppId:
-            $ref: '#/definitions/azure/definitions/clientId'
+            $ref: "#/definitions/azure/definitions/clientId"
             title: AppInsights app id
           azureLogAnalyticsSameAs:
             title: LogAnalytics using same creds?
             type: boolean
             default: true
           clientId:
-            $ref: '#/definitions/azure/definitions/clientId'
+            $ref: "#/definitions/azure/definitions/clientId"
           clientSecret:
-            $ref: '#/definitions/azure/definitions/clientSecret'
+            $ref: "#/definitions/azure/definitions/clientSecret"
           logAnalyticsClientId:
-            $ref: '#/definitions/azure/definitions/clientId'
+            $ref: "#/definitions/azure/definitions/clientId"
             title: LogAnalytics client id
             description: An Azure client secret.
           logAnalyticsClientSecret:
-            $ref: '#/definitions/azure/definitions/clientSecret'
+            $ref: "#/definitions/azure/definitions/clientSecret"
             title: LogAnalytics client secret
             description: An Azure client secret.
           logAnalyticsTenantId:
-            $ref: '#/definitions/azure/definitions/tenantId'
+            $ref: "#/definitions/azure/definitions/tenantId"
             title: LogAnalytics tenant id
             description: An Azure tenant id.
           logAnalyticsDefaultWorkspace:
@@ -247,24 +247,24 @@ definitions:
             description: An Azure LogAnalytics workspace.
             type: string
           subscriptionId:
-            $ref: '#/definitions/azure/definitions/subscriptionId'
+            $ref: "#/definitions/azure/definitions/subscriptionId"
           tenantId:
-            $ref: '#/definitions/azure/definitions/tenantId'
+            $ref: "#/definitions/azure/definitions/tenantId"
         required:
           - clientId
           - clientSecret
       tenantId:
         title: Azure tenant id
         description: An Azure tenant id.
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
       subscriptionId:
         title: Azure subscription id
         description: An Azure subscription id.
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
       resourceGroup:
         title: Resource group
         description: An Azure resource group.
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
   cluster:
     additionalProperties: false
     properties:
@@ -272,27 +272,27 @@ definitions:
         description:
           Exact name of cluster as created when on AWS. Optional otherwise and will be generated for UI purposes.
           When on AWS this name is used for chart cluster-autoscaler and aws-alb-ingress-controller (enabled if otomi.hasExternalLB).
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
       apiServer:
         description: Used to generate KUBECONFIG for download, for local access to target cluster.
         pattern: '^https:\/\/.*'
       domainSuffix:
-        $ref: '#/definitions/domain'
+        $ref: "#/definitions/domain"
         description: Domain suffix for the cluster. Also added to list of dns zones in the Otomi Console.
       k8sContext:
-        $ref: '#/definitions/k8sContext'
+        $ref: "#/definitions/k8sContext"
         description: Optional. Must be set for development mode and must point to an existing context in KUBECONFIG.
       name:
-        $ref: '#/definitions/clusterName'
+        $ref: "#/definitions/clusterName"
         description: Short name that will be used in construction of cluster domain and messaging.
       owner:
-        $ref: '#/definitions/idName'
+        $ref: "#/definitions/idName"
         description: The name of the organization owning the cluster.
         default: otomi
       provider:
-        $ref: '#/definitions/provider'
+        $ref: "#/definitions/provider"
       region:
-        description: 'An AWS region. Only required for AWS.'
+        description: "An AWS region. Only required for AWS."
         examples:
           - eu-central-1
     required:
@@ -311,25 +311,25 @@ definitions:
                 provider:
                   enum: [aws]
   clusterName:
-    $ref: '#/definitions/wordCharacterPattern'
+    $ref: "#/definitions/wordCharacterPattern"
     type: string
   containerSpecNoSec:
     properties:
       image:
-        $ref: '#/definitions/image'
+        $ref: "#/definitions/image"
       resources:
-        $ref: '#/definitions/resources'
+        $ref: "#/definitions/resources"
       env:
-        $ref: '#/definitions/env'
+        $ref: "#/definitions/env"
       files:
-        $ref: '#/definitions/files'
+        $ref: "#/definitions/files"
       nativeSecrets:
-        $ref: '#/definitions/nativeSecrets'
+        $ref: "#/definitions/nativeSecrets"
         description: Reserved for internal use.
       secrets:
-        $ref: '#/definitions/secrets'
+        $ref: "#/definitions/secrets"
       secretMounts:
-        $ref: '#/definitions/secretMounts'
+        $ref: "#/definitions/secretMounts"
       command:
         type: array
         items:
@@ -343,12 +343,12 @@ definitions:
       - resources
   containerSpec:
     allOf:
-      - $ref: '#/definitions/securityContext'
-      - $ref: '#/definitions/containerSpecNoSec'
+      - $ref: "#/definitions/securityContext"
+      - $ref: "#/definitions/containerSpecNoSec"
   cpuQuantity:
     description: Amount of cpu cores, or slice of cpu core in millis.
     examples:
-      - '1'
+      - "1"
       - 200m
     pattern: ^([1-9][0-9]*|([0]|[1-9]+)\\.[0-9]{1,3}|[1-9][0-9]*m)$
     type: string
@@ -357,16 +357,16 @@ definitions:
     description: Team backups
     properties:
       name:
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
       ttl:
-        $ref: '#/definitions/backupTtl'
+        $ref: "#/definitions/backupTtl"
       schedule:
-        $ref: '#/definitions/backupSchedule'
+        $ref: "#/definitions/backupSchedule"
       snapshotVolumes:
         type: boolean
         default: false
       labelSelector:
-        $ref: '#/definitions/labels'
+        $ref: "#/definitions/labels"
         description: Individual objects must match this label selector to be included in the backup.
   domain:
     pattern: ^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))|([a-f0-9:]+:+)+[a-f0-9]+$
@@ -374,13 +374,13 @@ definitions:
   droneGit:
     properties:
       clientID:
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
       clientSecretValue:
         type: string
-        x-secret: ''
+        x-secret: ""
   duration:
-    description: 'Prometheus duration (See: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#configuration-file)'
-    pattern: '((([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?|0)'
+    description: "Prometheus duration (See: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#configuration-file)"
+    pattern: "((([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?|0)"
     type: string
     default: 1d
   email:
@@ -392,7 +392,7 @@ definitions:
       - FOO: bar
       - bar: foo
     patternProperties:
-      '[a-zA-Z_]{1,}[a-zA-Z0-9_]*':
+      "[a-zA-Z_]{1,}[a-zA-Z0-9_]*":
         maxLength: 131072
         type: string
     nullable: true
@@ -402,22 +402,22 @@ definitions:
     additionalProperties: false
     description: Dictionary of absolute path > content pairs.
     patternProperties:
-      '^[/].*':
+      "^[/].*":
         type: string
   google:
     additionalProperties: false
     definitions:
       accountJson:
         type: string
-        x-secret: ''
+        x-secret: ""
       project:
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
   hostPort:
     pattern: '^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):()([1-9]|[1-5]?[0-9]{2,4}|6[1-4][0-9]{3}|65[1-4][0-9]{2}|655[1-2][0-9]|6553[1-5])$'
     type: string
   idName:
     description: A lowercase name that starts with a letter and may contain dashes.
-    pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])$'
+    pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])$"
     type: string
   image:
     additionalProperties: false
@@ -429,10 +429,10 @@ definitions:
           - Always
         type: string
       repository:
-        $ref: '#/definitions/repository'
+        $ref: "#/definitions/repository"
       tag:
         default: latest
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
     title: Container image
   imagePullPolicy:
     default: IfNotPresent
@@ -448,9 +448,9 @@ definitions:
   imageSimple:
     properties:
       tag:
-        $ref: '#/definitions/imageTag'
+        $ref: "#/definitions/imageTag"
       pullPolicy:
-        $ref: '#/definitions/imagePullPolicy'
+        $ref: "#/definitions/imagePullPolicy"
     required:
       - tag
     type: object
@@ -459,7 +459,7 @@ definitions:
     additionalProperties: false
     properties:
       _rawValues:
-        $ref: '#/definitions/rawValues'
+        $ref: "#/definitions/rawValues"
       tracing:
         description: Configure Nginx for tracing. Requires Otel Collector to be enabled.
         propterties:
@@ -468,9 +468,9 @@ definitions:
             type: boolean
           samplingRatio:
             type: string
-            default: '100'
+            default: "100"
       autoscaling:
-        $ref: '#/definitions/autoscalingEnabled'
+        $ref: "#/definitions/autoscalingEnabled"
       maxBodySize:
         type: string
         default: 1024m
@@ -498,16 +498,16 @@ definitions:
       image:
         properties:
           tag:
-            $ref: '#/definitions/imageTag'
+            $ref: "#/definitions/imageTag"
             x-default: v1.0.5
           pullPolicy:
-            $ref: '#/definitions/imagePullPolicy'
+            $ref: "#/definitions/imagePullPolicy"
       resources:
-        $ref: '#/definitions/resources'
+        $ref: "#/definitions/resources"
       service:
         properties:
           annotations:
-            $ref: '#/definitions/annotations'
+            $ref: "#/definitions/annotations"
   ingressClassParameters:
     type: object
     properties:
@@ -535,12 +535,13 @@ definitions:
       sourceIpAddressFiltering:
         title: Source IP address filtering
         type: string
-        description: 'Whitelist source IP address ranges. The value is a comma separated list of CIDRs, e.g. 10.0.0.0/24,172.10.0.1'
+        description: "Whitelist source IP address ranges. The value is a comma separated list of CIDRs, e.g. 10.0.0.0/24,172.10.0.1"
   ipV4Address:
     type: string
     pattern: ^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$
   jobs:
-    description: You may pass an array of Job objects. The Kubernetes API accepts
+    description:
+      You may pass an array of Job objects. The Kubernetes API accepts
       a Job specification, which is meant for run-to-completion apps (e.g. batch
       Jobs).
     items:
@@ -551,8 +552,8 @@ definitions:
               type: string
               readOnly: true
           type: object
-        - $ref: '#/definitions/jobSpec'
-        - $ref: '#/definitions/podSpec'
+        - $ref: "#/definitions/jobSpec"
+        - $ref: "#/definitions/podSpec"
     type: array
   jobSpec:
     properties:
@@ -563,7 +564,7 @@ definitions:
           - CronJob
         type: string
       name:
-        $ref: '#/definitions/idName'
+        $ref: "#/definitions/idName"
         title: Name
         description: A job name
         example: some-job
@@ -584,7 +585,7 @@ definitions:
         description: Must give a cron-type expression if the job type is 'Cronjob'.
         type: string
       script:
-        $ref: '#/definitions/script'
+        $ref: "#/definitions/script"
       shell:
         default: /bin/sh
         description: Full path to a shell binary that exists in the image.
@@ -598,7 +599,7 @@ definitions:
       init:
         type: array
         items:
-          $ref: '#/definitions/containerSpec'
+          $ref: "#/definitions/containerSpec"
         nullable: true
     required:
       - name
@@ -607,16 +608,16 @@ definitions:
     type: object
   k8sContext:
     description: The cluster k8s context as found in $KUBECONFIG.
-    $ref: '#/definitions/wordCharacterPattern'
+    $ref: "#/definitions/wordCharacterPattern"
     type: string
   labels:
-    $ref: '#/definitions/labelsAnnotations'
+    $ref: "#/definitions/labelsAnnotations"
     description: A set of labels.
   labelsAnnotations:
     additionalProperties: false
     patternProperties:
-      '^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]){1,253}\/)?([a-z0-9A-Z]+[a-z0-9A-Z-_.]+[a-z0-9A-Z]){1,63}$':
-        pattern: '^((.){1,253}\/)?(.){1,63}$'
+      ? '^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]){1,253}\/)?([a-z0-9A-Z]+[a-z0-9A-Z-_.]+[a-z0-9A-Z]){1,63}$'
+      : pattern: '^((.){1,253}\/)?(.){1,63}$'
         type: string
   logLevel:
     type: string
@@ -638,7 +639,7 @@ definitions:
     description: List of kubernetes secret names.
     additionalProperties: false
     patternProperties:
-      '[a-zA-Z_]{1,}[a-zA-Z0-9_]*':
+      "[a-zA-Z_]{1,}[a-zA-Z0-9_]*":
         maxLength: 131072
         type: string
     nullable: true
@@ -672,7 +673,7 @@ definitions:
                   properties:
                     team:
                       title: Team name
-                      description: 'Allow traffic from a given team'
+                      description: "Allow traffic from a given team"
                       type: string
                     service:
                       title: Service name
@@ -696,7 +697,7 @@ definitions:
           properties:
             host:
               title: FQDN or IP address
-              $ref: '#/definitions/domain'
+              $ref: "#/definitions/domain"
             ports:
               type: array
               items:
@@ -724,14 +725,14 @@ definitions:
   path:
     description: An absolute path
     type: string
-    pattern: '^[/].*$'
+    pattern: "^[/].*$"
   podSecurityContext:
     allOf:
-      - $ref: '#/definitions/securityContext'
+      - $ref: "#/definitions/securityContext"
       - properties:
           fsGroup:
             description: Supplementary group ID. Volumes that support ownership management are modified to be owned and writable by this ID.
-            $ref: '#/definitions/unixOwnerId'
+            $ref: "#/definitions/unixOwnerId"
           fsGroupChangePolicy:
             description: |
               'Defines behavior for changing ownership and permission of the volume before being exposed inside a Pod. This field only applies to volume types that support fsGroup controlled ownership and permissions.
@@ -748,11 +749,11 @@ definitions:
     allOf:
       - properties:
           annotations:
-            $ref: '#/definitions/annotations'
+            $ref: "#/definitions/annotations"
             title: Pod annotations
         type: object
-      - $ref: '#/definitions/podSecurityContext'
-      - $ref: '#/definitions/containerSpec'
+      - $ref: "#/definitions/podSecurityContext"
+      - $ref: "#/definitions/containerSpec"
     type: object
   portNumber:
     maximum: 32768
@@ -774,7 +775,7 @@ definitions:
   redisChart:
     properties:
       _rawValues:
-        $ref: '#/definitions/rawValues'
+        $ref: "#/definitions/rawValues"
       architecture:
         type: string
         enum:
@@ -783,28 +784,28 @@ definitions:
         default: standalone
       password:
         type: string
-        x-secret: '{{ randAlpha 24 }}'
+        x-secret: "{{ randAlpha 24 }}"
       resources:
         additionalProperties: false
         properties:
           master:
-            $ref: '#/definitions/resources'
+            $ref: "#/definitions/resources"
           sentinel:
-            $ref: '#/definitions/resources'
+            $ref: "#/definitions/resources"
           slave:
-            $ref: '#/definitions/resources'
+            $ref: "#/definitions/resources"
       sizes:
         additionalProperties: false
         properties:
           master:
-            $ref: '#/definitions/size'
+            $ref: "#/definitions/size"
           sentinel:
-            $ref: '#/definitions/size'
+            $ref: "#/definitions/size"
           slave:
-            $ref: '#/definitions/size'
+            $ref: "#/definitions/size"
     type: object
   registry:
-    pattern: '^[a-z0-9]+(?:[._-][a-z0-9]+)*$'
+    pattern: "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
     type: string
   repoUrl:
     description: Path to a remote git repo with or without protocol prefix of either https:// or file:// (https:// used if omitted)
@@ -812,15 +813,15 @@ definitions:
     type: string
   repository:
     description: A container image repository.
-    pattern: '^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$'
+    pattern: "^[a-z0-9]+(?:[/._-]{1,2}[a-z0-9]+)*$"
     type: string
   resource:
     additionalProperties: false
     properties:
       cpu:
-        $ref: '#/definitions/cpuQuantity'
+        $ref: "#/definitions/cpuQuantity"
       memory:
-        $ref: '#/definitions/memoryQuantity'
+        $ref: "#/definitions/memoryQuantity"
     required:
       - cpu
       - memory
@@ -829,10 +830,10 @@ definitions:
     description: Compute resources for containers.
     properties:
       limits:
-        $ref: '#/definitions/resource'
+        $ref: "#/definitions/resource"
         description: Requested resources (best effort).
       requests:
-        $ref: '#/definitions/resource'
+        $ref: "#/definitions/resource"
         description: Requested resources (guaranteed).
     required:
       - limits
@@ -850,7 +851,7 @@ definitions:
           type: string
           description: A short description about the target of this shortcut.
         path:
-          $ref: '#/definitions/path'
+          $ref: "#/definitions/path"
       type: object
   unixOwnerIdRange:
     type: object
@@ -879,7 +880,7 @@ definitions:
         readOnly: true
         type: string
       name:
-        $ref: '#/definitions/idName'
+        $ref: "#/definitions/idName"
     required:
       - name
       - type
@@ -902,9 +903,9 @@ definitions:
         type: boolean
         default: false
       name:
-        $ref: '#/definitions/idName'
+        $ref: "#/definitions/idName"
       namespace:
-        $ref: '#/definitions/idName'
+        $ref: "#/definitions/idName"
         description: A kubernetes namespace.
     required:
       - name
@@ -921,7 +922,7 @@ definitions:
               description: A property name at vaultPath
               minItems: 1
               # a valid secret key must consist of alphanumeric characters, '-', '_' or '.' (e.g. 'key.name',  or 'KEY_NAME',  or 'key-name' )
-              pattern: '^[-._a-zA-Z0-9]+$'
+              pattern: "^[-._a-zA-Z0-9]+$"
               type: string
             uniqueItems: true
         required:
@@ -945,13 +946,13 @@ definitions:
             type: string
           crt:
             type: string
-            default: 'tls.crt'
+            default: "tls.crt"
           key:
             type: string
-            default: 'tls.key'
+            default: "tls.key"
           ca:
             type: string
-            default: 'ca.crt'
+            default: "ca.crt"
         required:
           - type
           - crt
@@ -960,7 +961,7 @@ definitions:
     description: List of secret names that will have their props injected as env vars into the container.
     items:
       type: string
-      pattern: '[a-zA-Z_]{1,}[a-zA-Z0-9_]*'
+      pattern: "[a-zA-Z_]{1,}[a-zA-Z0-9_]*"
     nullable: true
     title: Secrets
     type: array
@@ -970,27 +971,27 @@ definitions:
       - /foo: bar
     nullable: true
     patternProperties:
-      '^[/].*$':
+      "^[/].*$":
         type: string
     title: Secret mounts
     type: object
   secretTemplates:
     definitions:
       otomiAdminUsername:
-        x-secret: 'admin'
+        x-secret: "admin"
   securityContext:
     additionalProperties:
       uniqueItems: true
     properties:
       runAsUser:
-        $ref: '#/definitions/unixOwnerId'
+        $ref: "#/definitions/unixOwnerId"
       runAsNonRoot:
         description: Enforces that the container must run as non root. This implies that the UID must also be set with runAsUser.
         type: boolean
         default: true
       runAsGroup:
         description: The GID to run the entrypoint of the container process. Defaults to group specified in image metadata if unspecified. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
-        $ref: '#/definitions/unixOwnerId'
+        $ref: "#/definitions/unixOwnerId"
   service:
     additionalProperties: false
     properties:
@@ -1003,7 +1004,7 @@ definitions:
             description: If true istio will forward the bearer token instead of removing it from the headers.
             type: boolean
           workload:
-            $ref: '#/definitions/labelsAnnotations'
+            $ref: "#/definitions/labelsAnnotations"
       certArn:
         description: Only available on AWS when an external LB is configured. The cert ARN will be registered on the load balancer for SSL termination.
         example: arn:aws:acm:eu-central-1:xxx:certificate/xxx
@@ -1016,7 +1017,7 @@ definitions:
       domain:
         description: A custom service domain name (max 64 bytes).
         maxLength: 64
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
       forwardPath:
         default: false
         description: Whether to forward the path into the service, or 'terminate' it.
@@ -1059,7 +1060,7 @@ definitions:
         type: boolean
       host:
         description: Reference to another core service name. Used by otomi console to show a variation of a core service with a different path (i.e. Loki). Only used by core services.
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
       id:
         description: Unique identifier created by and used in API. Optional.
         type: string
@@ -1084,38 +1085,38 @@ definitions:
         required:
           - name
       name:
-        $ref: '#/definitions/idName'
+        $ref: "#/definitions/idName"
         description: Short name. Will be used for generation of knative service name, as well as service URL.
       namespace:
-        $ref: '#/definitions/idName'
+        $ref: "#/definitions/idName"
         description: A kubernetes namespace. Only used by core services, so should be disallowed for non-admins.
       networkPolicy:
-        $ref: '#/definitions/networkPolicy'
+        $ref: "#/definitions/networkPolicy"
       ownHost:
         default: true
         description: When true the service will get it's own domain by prefixing the app name to the team domain. Mostly set to true. This will probably be removed soon.
         type: boolean
       path:
         description: Used by otomi-console to render a path for the app. Only used by core services.
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
       paths:
         items:
           description: |
             Path mapping to only route certain paths to the service. This allows micro services to operate on the same domain and port.
             When left empty all paths will go to this service.
-          $ref: '#/definitions/wordCharacterPattern'
+          $ref: "#/definitions/wordCharacterPattern"
         # nullable: true
         type: array
       port:
-        $ref: '#/definitions/portNumber'
+        $ref: "#/definitions/portNumber"
         description: Points to the backing k8s service (only used when 'svc' is set).
       ingressClassName:
         description: Ingress class name
         type: string
         default: platform
-        pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])+$'
+        pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])+$"
       svc:
-        $ref: '#/definitions/idName'
+        $ref: "#/definitions/idName"
         description: When given a backing k8s service is expected to be deployed with this name, which will be exposed through this team service.
       tlsPass:
         description: Will pass the request to the backing service without TLS termination.
@@ -1153,44 +1154,44 @@ definitions:
     additionalProperties: false
     properties:
       alerts:
-        $ref: '#/definitions/alerts'
+        $ref: "#/definitions/alerts"
       apps:
         type: object
         properties:
           shortcuts:
-            $ref: '#/definitions/shortcuts'
+            $ref: "#/definitions/shortcuts"
       azureMonitor:
-        $ref: '#/definitions/azure/definitions/monitor'
+        $ref: "#/definitions/azure/definitions/monitor"
       backups:
         type: array
         items:
-          $ref: '#/definitions/backup'
+          $ref: "#/definitions/backup"
       secrets:
         items:
-          $ref: '#/definitions/secret'
+          $ref: "#/definitions/secret"
         type: array
       id:
-        $ref: '#/definitions/idName'
+        $ref: "#/definitions/idName"
         description: Must be the same as the name.
       jobs:
-        $ref: '#/definitions/jobs'
+        $ref: "#/definitions/jobs"
       limitRange:
-        description: 'Kubernetes limit range. As is.'
+        description: "Kubernetes limit range. As is."
         properties:
           default:
-            $ref: '#/definitions/resource'
+            $ref: "#/definitions/resource"
           defaultRequest:
-            $ref: '#/definitions/resource'
+            $ref: "#/definitions/resource"
       oidc:
         additionalProperties: false
         properties:
           groupMapping:
             description: IDP group id to map onto this team.
-            $ref: '#/definitions/wordCharacterPattern'
+            $ref: "#/definitions/wordCharacterPattern"
       password:
         description: Will be used to separate team resources.
         type: string
-        x-secret: ''
+        x-secret: ""
       resourceQuota:
         description: 'List of kubernetes resource quota. Should adhere to the "spec.hard" format as described here: https://kubernetes.io/docs/concepts/policy/resource-quotas/. Not validated as there is no schema published. Change at your own risk.'
         type: object
@@ -1208,10 +1209,10 @@ definitions:
                 type: integer
                 default: 100
       selfService:
-        $ref: '#/definitions/teamSelfService'
+        $ref: "#/definitions/teamSelfService"
       services:
         items:
-          $ref: '#/definitions/service'
+          $ref: "#/definitions/service"
         type: array
       monitoringStack:
         properties:
@@ -1232,15 +1233,15 @@ definitions:
       workloads:
         type: array
         items:
-          $ref: '#/definitions/workload'
+          $ref: "#/definitions/workload"
       projects:
         type: array
         items:
-          $ref: '#/definitions/project'
+          $ref: "#/definitions/project"
       builds:
         type: array
         items:
-          $ref: '#/definitions/build'
+          $ref: "#/definitions/build"
   teamSelfService:
     title: Team self service flags
     description: Grant team permissions to modify certain configuration parameters.
@@ -1293,11 +1294,11 @@ definitions:
       properties:
         name:
           description: Name must match mount name.
-          $ref: '#/definitions/wordCharacterPattern'
+          $ref: "#/definitions/wordCharacterPattern"
         configMap:
           properties:
             name:
-              $ref: '#/definitions/wordCharacterPattern'
+              $ref: "#/definitions/wordCharacterPattern"
     type: array
   wordCharacterPattern:
     type: string
@@ -1309,7 +1310,7 @@ definitions:
     properties:
       name:
         description: Name of the project
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
     required:
       - name
   build:
@@ -1318,10 +1319,10 @@ definitions:
     properties:
       name:
         description: Name of the image
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
       tag:
         description: Image tag
-        $ref: '#/definitions/imageTag'
+        $ref: "#/definitions/imageTag"
       repoAccess:
         properties:
           privateGit:
@@ -1332,10 +1333,10 @@ definitions:
             default: false
           repoUserName:
             description: The username used for basic authentication to access a private github repo.
-            $ref: '#/definitions/wordCharacterPattern'
+            $ref: "#/definitions/wordCharacterPattern"
           repoPassword:
-            x-secret: ''
-            $ref: '#/definitions/wordCharacterPattern'
+            x-secret: ""
+            $ref: "#/definitions/wordCharacterPattern"
             description: The password used for basic authentication to access a private github repo.
       mode:
         properties:
@@ -1343,10 +1344,10 @@ definitions:
             properties:
               repoUrl:
                 description: URL of the Git repository holding the application code.
-                $ref: '#/definitions/url'
+                $ref: "#/definitions/url"
               revision:
                 description: This may be a commit sha, branch name, or tag. If omitted, will equal to HEAD.
-                $ref: '#/definitions/wordCharacterPattern'
+                $ref: "#/definitions/wordCharacterPattern"
                 default: HEAD
               path:
                 description: A relative directory path within the Git repository.
@@ -1356,10 +1357,10 @@ definitions:
             properties:
               repoUrl:
                 description: URL of the Git repository holding the application code.
-                $ref: '#/definitions/url'
+                $ref: "#/definitions/url"
               revision:
                 description: This may be a commit sha, branch name, or tag. If omitted, will equal to HEAD.
-                $ref: '#/definitions/wordCharacterPattern'
+                $ref: "#/definitions/wordCharacterPattern"
                 default: HEAD
               path:
                 description: A relative directory path within the Git repository.
@@ -1372,9 +1373,11 @@ definitions:
     description: Define location of the application's manifests or chart
     properties:
       name:
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
+      icon:
+        $ref: "#/definitions/wordCharacterPattern"
       chart:
-        title: ''
+        title: ""
         properties:
           helmChartCatalog:
             type: string
@@ -1387,11 +1390,11 @@ definitions:
           helmChartVersion:
             type: string
             title: Helm chart version
-            default: ''
+            default: ""
           helmChartDescription:
             type: string
             title: Helm chart description
-            default: ''
+            default: ""
       autoUpdate:
         type: boolean
         default: false
@@ -1423,7 +1426,7 @@ definitions:
             properties:
               accountKey:
                 type: string
-                x-secret: ''
+                x-secret: ""
               accountName:
                 type: string
               containerName:
@@ -1452,20 +1455,20 @@ definitions:
               bucket:
                 type: string
                 description: The name of the bucket.
-                $ref: '#/definitions/wordCharacterPattern'
+                $ref: "#/definitions/wordCharacterPattern"
               s3Url:
                 type: string
                 description: The full S3 URL.
-                $ref: '#/definitions/wordCharacterPattern'
+                $ref: "#/definitions/wordCharacterPattern"
               accessKeyId:
                 type: string
                 description: The ID of the access key. Optional if cloud provider is AWS.
-                $ref: '#/definitions/wordCharacterPattern'
+                $ref: "#/definitions/wordCharacterPattern"
               secretAccessKey:
                 type: string
                 description: The secret of the access key. Optional if cloud provider is AWS.
-                $ref: '#/definitions/wordCharacterPattern'
-                x-secret: ''
+                $ref: "#/definitions/wordCharacterPattern"
+                x-secret: ""
             required:
               - bucket
               - s3Url
@@ -1491,9 +1494,9 @@ definitions:
               bucket:
                 type: string
                 description: Name of the bucket.
-                $ref: '#/definitions/wordCharacterPattern'
+                $ref: "#/definitions/wordCharacterPattern"
               serviceAccountKey:
-                $ref: '#/definitions/google/definitions/accountJson'
+                $ref: "#/definitions/google/definitions/accountJson"
                 description: A service account key in json format for authentication.
             required:
               - bucket
@@ -1509,7 +1512,7 @@ definitions:
 
 properties:
   alerts:
-    $ref: '#/definitions/alerts'
+    $ref: "#/definitions/alerts"
   azure:
     description: Azure specific configuration.
     properties:
@@ -1526,7 +1529,7 @@ properties:
             description: Indicates Azure Application Gateway Ingress Controller add-on is installed by AKS.
             type: boolean
       monitor:
-        $ref: '#/definitions/azure/definitions/monitor'
+        $ref: "#/definitions/azure/definitions/monitor"
 
   cloud:
     additionalProperties: true
@@ -1551,59 +1554,59 @@ properties:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
           image:
-            $ref: '#/definitions/imageSimple'
+            $ref: "#/definitions/imageSimple"
           resources:
-            $ref: '#/definitions/resources'
+            $ref: "#/definitions/resources"
       argocd:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
           autoscaling:
-            $ref: '#/definitions/autoscalingEnabled'
+            $ref: "#/definitions/autoscalingEnabled"
           resources:
             additionalProperties: false
             properties:
               server:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               controller:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               repo:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               redis:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
       cert-manager:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           resources:
-            $ref: '#/definitions/resources'
+            $ref: "#/definitions/resources"
           byoWildcardCert:
-            description: 'Bring your own trusted wildcard certificate. Only applicable for byo-wildcard-cert issuer'
+            description: "Bring your own trusted wildcard certificate. Only applicable for byo-wildcard-cert issuer"
             type: string
           byoWildcardCertKey:
-            description: 'A certificate key corresponding to the byoWildcardCert.'
+            description: "A certificate key corresponding to the byoWildcardCert."
             type: string
-            x-secret: ''
+            x-secret: ""
           customRootCA:
-            x-secret: ''
+            x-secret: ""
             type: string
             description: CA that is used to create and verify self-signed certificates. Leave it empty to generate one automatically.
           customRootCAKey:
-            x-secret: ''
+            x-secret: ""
             type: string
             description: CA private key that is used to issue certificates. Leave it empty to generate one automatically.
           email:
-            $ref: '#/definitions/email'
+            $ref: "#/definitions/email"
           issuer:
             description: |
               Indicates the origin of the wildcard certificate. 
@@ -1626,29 +1629,29 @@ properties:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           resources:
-            $ref: '#/definitions/resources'
+            $ref: "#/definitions/resources"
           storage:
-            $ref: '#/definitions/storageProvider'
+            $ref: "#/definitions/storageProvider"
       cluster-autoscaler:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
       cluster-overprovisioner:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
           cpu:
-            $ref: '#/definitions/cpuQuantity'
+            $ref: "#/definitions/cpuQuantity"
           memory:
-            $ref: '#/definitions/memoryQuantity'
+            $ref: "#/definitions/memoryQuantity"
       demo-tlspass:
         additionalProperties: false
         properties:
@@ -1663,7 +1666,7 @@ properties:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             description: Discarded as this is a core app.
@@ -1671,10 +1674,10 @@ properties:
             type: boolean
             default: false
           adminUser:
-            $ref: '#/definitions/wordCharacterPattern'
+            $ref: "#/definitions/wordCharacterPattern"
           adminToken:
-            $ref: '#/definitions/wordCharacterPattern'
-            x-secret: ''
+            $ref: "#/definitions/wordCharacterPattern"
+            x-secret: ""
           debug:
             type: boolean
             default: false
@@ -1682,26 +1685,26 @@ properties:
             additionalProperties: false
             properties:
               org:
-                $ref: '#/definitions/wordCharacterPattern'
+                $ref: "#/definitions/wordCharacterPattern"
               team:
-                $ref: '#/definitions/wordCharacterPattern'
+                $ref: "#/definitions/wordCharacterPattern"
               token:
-                $ref: '#/definitions/wordCharacterPattern'
+                $ref: "#/definitions/wordCharacterPattern"
           orgsFilter:
-            $ref: '#/definitions/wordCharacterPattern'
+            $ref: "#/definitions/wordCharacterPattern"
           owner:
-            $ref: '#/definitions/wordCharacterPattern'
+            $ref: "#/definitions/wordCharacterPattern"
           repo:
-            $ref: '#/definitions/idName'
+            $ref: "#/definitions/idName"
           repoFilter:
-            $ref: '#/definitions/wordCharacterPattern'
+            $ref: "#/definitions/wordCharacterPattern"
           image:
             additionalProperties: false
             properties:
               agent:
-                $ref: '#/definitions/imageSimple'
+                $ref: "#/definitions/imageSimple"
               server:
-                $ref: '#/definitions/imageSimple'
+                $ref: "#/definitions/imageSimple"
           resources:
             additionalProperties: false
             properties:
@@ -1714,57 +1717,57 @@ properties:
                         type: integer
                         default: 1000
                       memory:
-                        $ref: '#/definitions/memoryQuantity'
+                        $ref: "#/definitions/memoryQuantity"
                         description: Requested memory resources for all the containers started by the runner (guaranteed).
                         default: 1Gi
               agent:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               server:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
           sharedSecret:
             description: A secret used by drone-admit-members plugin. https://docs.drone.io/runner/kubernetes/configuration/reference/drone-secret-plugin-token/
             type: string
-            x-secret: '{{ randAlphaNum 32 }}'
+            x-secret: "{{ randAlphaNum 32 }}"
           sourceControl:
             additionalProperties: false
             properties:
               bitbucketCloud:
-                $ref: '#/definitions/droneGit'
+                $ref: "#/definitions/droneGit"
               bitbucketServer:
                 properties:
                   consumerKey:
                     default: consumerKey
                     type: string
-                    x-secret: ''
+                    x-secret: ""
                   passwordKey:
                     default: password
                     type: string
-                    x-secret: ''
+                    x-secret: ""
                   privateKey:
                     default: privateKey
                     type: string
-                    x-secret: ''
+                    x-secret: ""
                   server:
                     type: string
                   username:
                     type: string
-                    x-secret: ''
+                    x-secret: ""
               gitea:
                 allOf:
-                  - $ref: '#/definitions/droneGit'
+                  - $ref: "#/definitions/droneGit"
                   - properties:
                       server:
                         type: string
               github:
                 allOf:
-                  - $ref: '#/definitions/droneGit'
+                  - $ref: "#/definitions/droneGit"
                   - properties:
                       server:
-                        default: 'https://github.com'
+                        default: "https://github.com"
                         type: string
               gitlab:
                 allOf:
-                  - $ref: '#/definitions/droneGit'
+                  - $ref: "#/definitions/droneGit"
                   - properties:
                       server:
                         type: string
@@ -1795,15 +1798,15 @@ properties:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           logLevel:
             type: string
-            default: 'info'
+            default: "info"
       falco:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
@@ -1827,16 +1830,16 @@ properties:
             additionalProperties: false
             properties:
               falco:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               falcoSidekick:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               falcoExporter:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
       gatekeeper:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
@@ -1879,70 +1882,70 @@ properties:
             default: false
           logLevel:
             type: string
-            default: 'INFO'
+            default: "INFO"
           replicas:
             type: integer
           image:
-            $ref: '#/definitions/imageSimple'
+            $ref: "#/definitions/imageSimple"
           resources:
             additionalProperties: false
             properties:
               audit:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               controller:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
       gitea:
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
           adminPassword:
             type: string
-            x-secret: ''
+            x-secret: ""
           postgresqlPassword:
             type: string
             description: This password was generated and cannot be changed without manual intervention.
-            x-secret: '{{ randAlphaNum 20 }}'
+            x-secret: "{{ randAlphaNum 20 }}"
             readOnly: true
           image:
             additionalProperties: false
             properties:
               gitea:
-                $ref: '#/definitions/imageSimple'
+                $ref: "#/definitions/imageSimple"
               postgresql:
-                $ref: '#/definitions/imageSimple'
+                $ref: "#/definitions/imageSimple"
               memcached:
-                $ref: '#/definitions/imageSimple'
+                $ref: "#/definitions/imageSimple"
           resources:
             additionalProperties: false
             properties:
               gitea:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               postgresql:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               memcached:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
       grafana:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
           adminPassword:
             type: string
-            x-secret: ''
+            x-secret: ""
           image:
-            $ref: '#/definitions/imageSimple'
+            $ref: "#/definitions/imageSimple"
           resources:
-            $ref: '#/definitions/resources'
+            $ref: "#/definitions/resources"
       harbor:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: true
@@ -1952,24 +1955,24 @@ properties:
             description: Will mark the main project named "library" as private.
           adminPassword:
             type: string
-            x-secret: ''
+            x-secret: ""
           databasePassword:
             type: string
             description: Once set and deployed it cannot be changed with manual intervention.
-            x-secret: '{{ randAlphaNum 20 }}'
+            x-secret: "{{ randAlphaNum 20 }}"
           core:
             properties:
               secret:
                 type: string
-                x-secret: '{{ randAlphaNum 16 }}'
+                x-secret: "{{ randAlphaNum 16 }}"
               xsrfKey:
                 type: string
-                x-secret: '{{ randAlphaNum 32 }}'
+                x-secret: "{{ randAlphaNum 32 }}"
           jobservice:
             properties:
               secret:
                 type: string
-                x-secret: '{{ randAlphaNum 16 }}'
+                x-secret: "{{ randAlphaNum 16 }}"
           persistence:
             additionalProperties: false
             properties:
@@ -1981,11 +1984,11 @@ properties:
                     additionalProperties: false
                     properties:
                       accesskey:
-                        $ref: '#/definitions/aws/definitions/accessKey'
+                        $ref: "#/definitions/aws/definitions/accessKey"
                       secretkey:
-                        $ref: '#/definitions/aws/definitions/secretKey'
+                        $ref: "#/definitions/aws/definitions/secretKey"
                       region:
-                        $ref: '#/definitions/aws/definitions/region'
+                        $ref: "#/definitions/aws/definitions/region"
                       regionendpoint:
                         type: string
                       bucket:
@@ -2015,7 +2018,7 @@ properties:
                         type: string
                       accountkey:
                         type: string
-                        x-secret: ''
+                        x-secret: ""
                       container:
                         type: string
                       realm:
@@ -2027,7 +2030,7 @@ properties:
                         type: string
                       encodedkey:
                         type: string
-                        x-secret: ''
+                        x-secret: ""
                       rootdirectory:
                         type: string
                   type:
@@ -2042,18 +2045,18 @@ properties:
             properties:
               secret:
                 type: string
-                x-secret: '{{ randAlpha 16 }}'
+                x-secret: "{{ randAlpha 16 }}"
               credentials:
                 properties:
                   htpasswd:
                     type: string
-                    x-secret: ''
+                    x-secret: ""
                   username:
                     type: string
-                    $ref: '#/definitions/secretTemplates/definitions/otomiAdminUsername'
+                    $ref: "#/definitions/secretTemplates/definitions/otomiAdminUsername"
                   password:
                     type: string
-                    x-secret: '{{ randAlphaNum 32 }}'
+                    x-secret: "{{ randAlphaNum 32 }}"
             required:
               - secret
               - credentials
@@ -2075,31 +2078,31 @@ properties:
                 description: Indicate if an existing database should be importend. (Once set to true you must not change it back)
                 type: boolean
           image:
-            $ref: '#/definitions/imageSimple'
+            $ref: "#/definitions/imageSimple"
           resources:
             additionalProperties: false
             properties:
               chartmuseum:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               core:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               database:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               jobservice:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               portal:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               redis:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               registry:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               registry-controller:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               trivy:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
           secretKey:
             type: string
-            x-secret: '{{ randAlpha 16 }}'
+            x-secret: "{{ randAlpha 16 }}"
         required:
           - databasePassword
       hello:
@@ -2130,7 +2133,7 @@ properties:
         description: A chart for Azure Application Gateway.
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           appgw:
             additionalProperties: false
             description: Application Gateway.
@@ -2151,7 +2154,7 @@ properties:
                 type: string
               subscriptionId:
                 description: The Azure Subscription ID in which Application Gateway resides.
-                $ref: '#/definitions/wordCharacterPattern'
+                $ref: "#/definitions/wordCharacterPattern"
               usePrivateIP:
                 default: false
                 description: Whether a private ip range or not.
@@ -2183,12 +2186,12 @@ properties:
                   - armAuth
                   - appgw
       ingress-nginx-platform:
-        $ref: '#/definitions/ingressNginx'
+        $ref: "#/definitions/ingressNginx"
       istio:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             default: true
             type: boolean
@@ -2200,15 +2203,15 @@ properties:
                 type: boolean
               randomSamplingPercentage:
                 type: string
-                default: '100'
+                default: "100"
           autoscaling:
             properties:
               egressgateway:
-                $ref: '#/definitions/autoscaling'
+                $ref: "#/definitions/autoscaling"
               ingressgateway:
-                $ref: '#/definitions/autoscaling'
+                $ref: "#/definitions/autoscaling"
               pilot:
-                $ref: '#/definitions/autoscaling'
+                $ref: "#/definitions/autoscaling"
           egressGateway:
             properties:
               enabled:
@@ -2225,22 +2228,22 @@ properties:
                 additionalProperties: false
                 properties:
                   resources:
-                    $ref: '#/definitions/resources'
+                    $ref: "#/definitions/resources"
           meshConfig:
-            description: 'See: https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#MeshConfig'
+            description: "See: https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#MeshConfig"
             type: object
           image:
-            $ref: '#/definitions/imageSimple'
+            $ref: "#/definitions/imageSimple"
           resources:
             properties:
               egressgateway:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               ingressgateway:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               ingressgateway-private:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               pilot:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
       jaeger:
         additionalProperties: false
         properties:
@@ -2248,12 +2251,12 @@ properties:
             type: boolean
             default: false
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
       keycloak:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: true
@@ -2264,30 +2267,30 @@ properties:
                 type: string
                 default: otomi-idp
               clientID:
-                $ref: '#/definitions/wordCharacterPattern'
+                $ref: "#/definitions/wordCharacterPattern"
                 default: otomi
               clientSecret:
                 type: string
-                x-secret: 'randAlphaNum 32'
+                x-secret: "randAlphaNum 32"
           adminPassword:
             type: string
-            x-secret: ''
+            x-secret: ""
           theme:
             type: string
             default: otomi
           image:
             properties:
               keycloak:
-                $ref: '#/definitions/imageSimple'
+                $ref: "#/definitions/imageSimple"
               postgresql:
-                $ref: '#/definitions/imageSimple'
+                $ref: "#/definitions/imageSimple"
           resources:
             additionalProperties: false
             properties:
               keycloak:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               postgresql:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
       kiali:
         additionalProperties: false
         properties:
@@ -2295,14 +2298,14 @@ properties:
             type: boolean
             default: false
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           resources:
             additionalProperties: false
             properties:
               operator:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               pod:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
       knative:
         additionalProperties: false
         properties:
@@ -2323,7 +2326,7 @@ properties:
           enabled:
             type: boolean
           logLevel:
-            $ref: '#/definitions/logLevel'
+            $ref: "#/definitions/logLevel"
       kube-descheduler:
         additionalProperties: false
         properties:
@@ -2331,13 +2334,13 @@ properties:
             default: true
             type: boolean
           schedule:
-            default: '*/30 * * * *'
+            default: "*/30 * * * *"
             type: string
       kured:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             default: false
             type: boolean
@@ -2345,12 +2348,12 @@ properties:
             additionalProperties: false
             properties:
               kuredDaemonSet:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
       tekton:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
@@ -2358,7 +2361,7 @@ properties:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
@@ -2366,44 +2369,44 @@ properties:
             additionalProperties: false
             properties:
               compactor:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               ingester:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               gateway:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               querier:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               distributor:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               queryFrontend:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
           autoscaling:
             properties:
               ingester:
-                $ref: '#/definitions/autoscalingEnabled'
+                $ref: "#/definitions/autoscalingEnabled"
               gateway:
-                $ref: '#/definitions/autoscalingEnabled'
+                $ref: "#/definitions/autoscalingEnabled"
               querier:
-                $ref: '#/definitions/autoscalingEnabled'
+                $ref: "#/definitions/autoscalingEnabled"
               distributor:
-                $ref: '#/definitions/autoscalingEnabled'
+                $ref: "#/definitions/autoscalingEnabled"
               queryFrontend:
-                $ref: '#/definitions/autoscalingEnabled'
+                $ref: "#/definitions/autoscalingEnabled"
           adminPassword:
             type: string
-            x-secret: '{{ randAlphaNum 20 }}'
+            x-secret: "{{ randAlphaNum 20 }}"
           persistence:
             properties:
               querier:
                 properties:
                   size:
                     default: 20Gi
-                    $ref: '#/definitions/size'
+                    $ref: "#/definitions/size"
               ingester:
                 properties:
                   size:
                     default: 20Gi
-                    $ref: '#/definitions/size'
+                    $ref: "#/definitions/size"
           retention:
             additionalProperties: false
             properties:
@@ -2421,31 +2424,31 @@ properties:
               azure:
                 properties:
                   accountName:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   containerName:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   accountKey:
-                    $ref: '#/definitions/wordCharacterPattern'
-                    x-secret: ''
+                    $ref: "#/definitions/wordCharacterPattern"
+                    x-secret: ""
               s3:
                 properties:
                   bucket:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   s3Url:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   accessKeyId:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   secretAccessKey:
-                    $ref: '#/definitions/wordCharacterPattern'
-                    x-secret: ''
+                    $ref: "#/definitions/wordCharacterPattern"
+                    x-secret: ""
               gcs:
                 properties:
                   bucket:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   project:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   instance:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
               type:
                 type: string
                 enum:
@@ -2465,7 +2468,7 @@ properties:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: true
@@ -2484,19 +2487,19 @@ properties:
             additionalProperties: false
             properties:
               api:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               tools:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
       minio:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
           resources:
-            $ref: '#/definitions/resources'
+            $ref: "#/definitions/resources"
           provisioning:
             additionalProperties: false
             properties:
@@ -2509,27 +2512,27 @@ properties:
                 type: boolean
                 default: true
               size:
-                $ref: '#/definitions/size'
+                $ref: "#/definitions/size"
                 default: 20Gi
       oauth2-proxy:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           config:
             properties:
               cookieSecret:
                 description: Cookie secret must be 32 byte base64 encoded string.
-                pattern: '^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$'
+                pattern: "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
                 type: string
-                x-secret: '{{ randAlphaNum 32 | b64enc }}'
+                x-secret: "{{ randAlphaNum 32 | b64enc }}"
       oauth2-proxy-redis:
-        $ref: '#/definitions/redisChart'
+        $ref: "#/definitions/redisChart"
       opa-exporter:
         description: Expose OPA/Gatekeeper Constraint Violations metrics.
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
@@ -2537,7 +2540,7 @@ properties:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
@@ -2545,7 +2548,7 @@ properties:
             properties:
               gcp:
                 type: string
-                $ref: '#/definitions/wordCharacterPattern'
+                $ref: "#/definitions/wordCharacterPattern"
           alerts:
             properties:
               enabled:
@@ -2560,14 +2563,14 @@ properties:
             additionalProperties: false
             properties:
               exporter:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               ui:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
       otomi-api:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           editorInactivityTimeout:
             type: integer
             default: 10
@@ -2577,26 +2580,26 @@ properties:
               branch:
                 type: string
               email:
-                $ref: '#/definitions/email'
+                $ref: "#/definitions/email"
               password:
                 type: string
-                x-secret: ''
+                x-secret: ""
               repoUrl:
-                $ref: '#/definitions/repoUrl'
+                $ref: "#/definitions/repoUrl"
               user:
                 type: string
           resources:
             additionalProperties: false
             properties:
               api:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               tools:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
       otomi-console:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
         allOf:
           - anyOf:
               - not:
@@ -2615,7 +2618,7 @@ properties:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
@@ -2623,7 +2626,7 @@ properties:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
@@ -2654,8 +2657,8 @@ properties:
                       username:
                         type: string
                       password:
-                        $ref: '#/definitions/wordCharacterPattern'
-                        x-secret: ''
+                        $ref: "#/definitions/wordCharacterPattern"
+                        x-secret: ""
                   customConfig:
                     description: Custom remote write config. Will be appended to the remoteWrite list.
                     type: string
@@ -2666,33 +2669,33 @@ properties:
             type: string
             default: 60s
           retention:
-            $ref: '#/definitions/duration'
+            $ref: "#/definitions/duration"
           retentionSize:
-            description: 'The maximum number of bytes of storage blocks to retain. The oldest data will be removed first. Defaults to 0 or disabled. Units supported: B, KB, MB, GB, TB, PB, EB'
+            description: "The maximum number of bytes of storage blocks to retain. The oldest data will be removed first. Defaults to 0 or disabled. Units supported: B, KB, MB, GB, TB, PB, EB"
             default: 4GB
             pattern: '^([0-9]+\.)?[0-9]+(B|KB|MB|GB|TB|PB|EB)?$'
           storageSize:
-            $ref: '#/definitions/size'
+            $ref: "#/definitions/size"
             default: 5Gi
           image:
             properties:
               prometheus:
-                $ref: '#/definitions/imageSimple'
+                $ref: "#/definitions/imageSimple"
               kube-state-metrics:
-                $ref: '#/definitions/imageSimple'
+                $ref: "#/definitions/imageSimple"
               node-exporter:
-                $ref: '#/definitions/imageSimple'
+                $ref: "#/definitions/imageSimple"
           resources:
             properties:
               prometheus:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               kube-state-metrics:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               node-exporter:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
       redis-shared:
         allOf:
-          - $ref: '#/definitions/redisChart'
+          - $ref: "#/definitions/redisChart"
           - properties:
               enabled:
                 type: boolean
@@ -2701,7 +2704,7 @@ properties:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
@@ -2709,56 +2712,56 @@ properties:
             additionalProperties: false
             properties:
               compactor:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               ingester:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               querier:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               distributor:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               queryFrontend:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               memcached:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
           autoscaling:
             properties:
               ingester:
-                $ref: '#/definitions/autoscalingEnabled'
+                $ref: "#/definitions/autoscalingEnabled"
               querier:
-                $ref: '#/definitions/autoscalingEnabled'
+                $ref: "#/definitions/autoscalingEnabled"
               distributor:
-                $ref: '#/definitions/autoscalingEnabled'
+                $ref: "#/definitions/autoscalingEnabled"
               queryFrontend:
-                $ref: '#/definitions/autoscalingEnabled'
+                $ref: "#/definitions/autoscalingEnabled"
           persistence:
             properties:
               ingester:
                 properties:
                   size:
                     default: 10Gi
-                    $ref: '#/definitions/size'
+                    $ref: "#/definitions/size"
           storage:
             properties:
               azure:
                 properties:
                   accountName:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   containerName:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   accountKey:
-                    $ref: '#/definitions/wordCharacterPattern'
-                    x-secret: ''
+                    $ref: "#/definitions/wordCharacterPattern"
+                    x-secret: ""
               s3:
                 properties:
                   bucket:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   s3Url:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   accessKeyId:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   secretAccessKey:
-                    $ref: '#/definitions/wordCharacterPattern'
-                    x-secret: ''
+                    $ref: "#/definitions/wordCharacterPattern"
+                    x-secret: ""
               type:
                 type: string
                 enum:
@@ -2769,14 +2772,14 @@ properties:
       tigera-operator:
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
       thanos:
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
@@ -2838,19 +2841,19 @@ properties:
                       bucket:
                         type: string
                         description: Name of the blob container.
-                        $ref: '#/definitions/wordCharacterPattern'
+                        $ref: "#/definitions/wordCharacterPattern"
                       s3Url:
                         description: The name (URL) of the S3 bucket
-                        $ref: '#/definitions/wordCharacterPattern'
+                        $ref: "#/definitions/wordCharacterPattern"
                       accessKeyId:
                         type: string
                         description: The ID of the access key
-                        $ref: '#/definitions/wordCharacterPattern'
+                        $ref: "#/definitions/wordCharacterPattern"
                       secretAccessKey:
                         type: string
                         description: The secret of the access key
-                        $ref: '#/definitions/wordCharacterPattern'
-                        x-secret: ''
+                        $ref: "#/definitions/wordCharacterPattern"
+                        x-secret: ""
                     required:
                       - bucket
                       - s3Url
@@ -2859,12 +2862,12 @@ properties:
                   azureBlob:
                     properties:
                       accountName:
-                        $ref: '#/definitions/wordCharacterPattern'
+                        $ref: "#/definitions/wordCharacterPattern"
                       containerName:
-                        $ref: '#/definitions/wordCharacterPattern'
+                        $ref: "#/definitions/wordCharacterPattern"
                       accountKey:
-                        $ref: '#/definitions/wordCharacterPattern'
-                        x-secret: ''
+                        $ref: "#/definitions/wordCharacterPattern"
+                        x-secret: ""
                     required:
                       - accountName
                       - containerName
@@ -2880,47 +2883,47 @@ properties:
             additionalProperties: false
             properties:
               query:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               queryFrontend:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               receiver:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               storegateway:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               bucketweb:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               compactor:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               receiverDistributor:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               ruler:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
         persistence:
           properties:
             receiver:
               properties:
                 size:
-                  $ref: '#/definitions/size'
+                  $ref: "#/definitions/size"
                   default: 50Gi
             storegateway:
               properties:
                 size:
-                  $ref: '#/definitions/size'
+                  $ref: "#/definitions/size"
                   default: 8Gi
             compactor:
               properties:
                 size:
-                  $ref: '#/definitions/size'
+                  $ref: "#/definitions/size"
                   default: 8Gi
             ruler:
               properties:
                 size:
-                  $ref: '#/definitions/size'
+                  $ref: "#/definitions/size"
                   default: 8Gi
       trivy:
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
@@ -2934,9 +2937,9 @@ properties:
             additionalProperties: false
             properties:
               operator:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               trivy:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
       otel:
         properties:
           enabled:
@@ -2963,11 +2966,11 @@ properties:
             additionalProperties: false
             properties:
               collector:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               manager:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               kubeRBACProxy:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
       vault:
         additionalProperties: false
         properties:
@@ -2975,7 +2978,7 @@ properties:
             type: boolean
             default: false
           logLevel:
-            $ref: '#/definitions/logLevel'
+            $ref: "#/definitions/logLevel"
           seal:
             description: |
               Use a KMS to encrypt and decrypt the master key.\n
@@ -2989,13 +2992,13 @@ properties:
                   gcpckms:
                     properties:
                       project:
-                        $ref: '#/definitions/wordCharacterPattern'
+                        $ref: "#/definitions/wordCharacterPattern"
                       region:
-                        $ref: '#/definitions/wordCharacterPattern'
+                        $ref: "#/definitions/wordCharacterPattern"
                       key_ring:
-                        $ref: '#/definitions/wordCharacterPattern'
+                        $ref: "#/definitions/wordCharacterPattern"
                       kmsAccount:
-                        $ref: '#/definitions/wordCharacterPattern'
+                        $ref: "#/definitions/wordCharacterPattern"
                     required:
                       - project
                       - region
@@ -3008,12 +3011,12 @@ properties:
                   awskms:
                     properties:
                       region:
-                        $ref: '#/definitions/wordCharacterPattern'
+                        $ref: "#/definitions/wordCharacterPattern"
                       access_key:
                         type: string
                       secret_key:
                         type: string
-                        x-secret: ''
+                        x-secret: ""
                       endpoint:
                         type: string
                     required:
@@ -3028,16 +3031,16 @@ properties:
                   azurekeyvault:
                     properties:
                       vault_name:
-                        $ref: '#/definitions/wordCharacterPattern'
+                        $ref: "#/definitions/wordCharacterPattern"
                       tenant_id:
-                        $ref: '#/definitions/wordCharacterPattern'
+                        $ref: "#/definitions/wordCharacterPattern"
                       client_id:
-                        $ref: '#/definitions/wordCharacterPattern'
+                        $ref: "#/definitions/wordCharacterPattern"
                       client_secret:
                         type: string
-                        x-secret: ''
+                        x-secret: ""
                       key_name:
-                        $ref: '#/definitions/wordCharacterPattern'
+                        $ref: "#/definitions/wordCharacterPattern"
                     required:
                       - vault_name
                       - tenant_id
@@ -3052,14 +3055,14 @@ properties:
           image:
             properties:
               tag:
-                $ref: '#/definitions/imageTag'
+                $ref: "#/definitions/imageTag"
           resources:
-            $ref: '#/definitions/resources'
+            $ref: "#/definitions/resources"
       velero:
         additionalProperties: false
         properties:
           _rawValues:
-            $ref: '#/definitions/rawValues'
+            $ref: "#/definitions/rawValues"
           enabled:
             type: boolean
             default: false
@@ -3075,7 +3078,7 @@ properties:
                 properties:
                   resourceGroup:
                     description: The resource group of the worker nodes (VM's and disks)
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   environment:
                     title: Azure environment
                     type: string
@@ -3086,14 +3089,14 @@ properties:
                       - AzureGermanCloud
                     default: AzurePublicCloud
                   tenantId:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   subscriptionId:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   aadClientId:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   aadClientSecret:
-                    $ref: '#/definitions/wordCharacterPattern'
-                    x-secret: ''
+                    $ref: "#/definitions/wordCharacterPattern"
+                    x-secret: ""
                 required:
                   - tenantId
                   - subscriptionId
@@ -3108,16 +3111,16 @@ properties:
                   region:
                     type: string
                     description: The AWS region where the cluster is running.
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   accessKeyId:
                     type: string
                     description: The ID of the access key
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   secretAccessKey:
                     type: string
                     description: The secret of the access key
-                    $ref: '#/definitions/wordCharacterPattern'
-                    x-secret: ''
+                    $ref: "#/definitions/wordCharacterPattern"
+                    x-secret: ""
               google:
                 additionalProperties: false
                 description: Google Cloud Platform
@@ -3125,14 +3128,14 @@ properties:
                   serviceAccount:
                     type: string
                     description: The IAM account with permissions to manage snapshot resources in the GCP Project.
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   project:
                     type: string
                     description: The name of the GCP project.
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   saKeyJson:
                     type: string
-                    x-secret: ''
+                    x-secret: ""
               type:
                 type: string
                 enum:
@@ -3149,24 +3152,24 @@ properties:
                   storageAccount:
                     type: string
                     description: The used Azure storage account
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   resourceGroup:
                     type: string
                     description: The resource group of the storage account
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   bucket:
                     type: string
                     description: Name of the blob container.
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   tenantId:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   subscriptionId:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   aadClientId:
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   aadClientSecret:
-                    $ref: '#/definitions/wordCharacterPattern'
-                    x-secret: ''
+                    $ref: "#/definitions/wordCharacterPattern"
+                    x-secret: ""
                 required:
                   - resourceGroup
                   - storageAccount
@@ -3177,19 +3180,19 @@ properties:
                   bucket:
                     type: string
                     description: Name of the blob container.
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   s3Url:
                     description: The name (URL) of the S3 bucket
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   accessKeyId:
                     type: string
                     description: The ID of the access key
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   secretAccessKey:
                     type: string
                     description: The secret of the access key
-                    $ref: '#/definitions/wordCharacterPattern'
-                    x-secret: ''
+                    $ref: "#/definitions/wordCharacterPattern"
+                    x-secret: ""
                 required:
                   - bucket
                   - s3Url
@@ -3199,13 +3202,13 @@ properties:
                   bucket:
                     type: string
                     description: Name of the bucket.
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   serviceAccount:
                     description: The name of the GCP service account to use.
-                    $ref: '#/definitions/wordCharacterPattern'
+                    $ref: "#/definitions/wordCharacterPattern"
                   saKeyJson:
                     type: string
-                    x-secret: ''
+                    x-secret: ""
                 required:
                   - bucket
                   - serviceAccount
@@ -3228,19 +3231,19 @@ properties:
               - fatal
               - panic
           resources:
-            $ref: '#/definitions/resources'
+            $ref: "#/definitions/resources"
     patternProperties:
-      '^ingress-nginx-[a-z0-9]([-a-z0-9]*[a-z0-9])+$':
-        $ref: '#/definitions/ingressNginx'
+      "^ingress-nginx-[a-z0-9]([-a-z0-9]*[a-z0-9])+$":
+        $ref: "#/definitions/ingressNginx"
   cluster:
-    $ref: '#/definitions/cluster'
+    $ref: "#/definitions/cluster"
   dns:
     additionalProperties: false
     properties:
       zones:
         description: Extra dns zones that the cluster can administer. Team services can use this to publish their URLs on.
         items:
-          $ref: '#/definitions/domain'
+          $ref: "#/definitions/domain"
         type: array
       domainFilters:
         description: Limit possible target zones by domain suffixes.
@@ -3264,14 +3267,14 @@ properties:
                   credentials:
                     properties:
                       secretKey:
-                        $ref: '#/definitions/aws/definitions/secretKey'
+                        $ref: "#/definitions/aws/definitions/secretKey"
                       accessKey:
-                        $ref: '#/definitions/aws/definitions/accessKey'
+                        $ref: "#/definitions/aws/definitions/accessKey"
                     required: [secretKey, accessKey]
                   region:
-                    $ref: '#/definitions/aws/definitions/region'
+                    $ref: "#/definitions/aws/definitions/region"
                   role:
-                    $ref: '#/definitions/aws/definitions/role'
+                    $ref: "#/definitions/aws/definitions/role"
                 required: [region]
                 oneOf:
                   - required: [credentials]
@@ -3286,14 +3289,14 @@ properties:
             additionalProperties: false
             properties:
               azure:
-                $ref: '#/definitions/azure/definitions/dns'
+                $ref: "#/definitions/azure/definitions/dns"
             required:
               - azure
           - title: Azure Private
             additionalProperties: false
             properties:
               azure-private-dns:
-                $ref: '#/definitions/azure/definitions/dns'
+                $ref: "#/definitions/azure/definitions/dns"
             required:
               - azure-private-dns
           - title: Google
@@ -3302,10 +3305,10 @@ properties:
               google:
                 properties:
                   serviceAccountKey:
-                    $ref: '#/definitions/google/definitions/accountJson'
+                    $ref: "#/definitions/google/definitions/accountJson"
                     description: A service account key in json format for managing a DNS zone.
                   project:
-                    $ref: '#/definitions/google/definitions/project'
+                    $ref: "#/definitions/google/definitions/project"
                 required: [project, serviceAccountKey]
             required:
               - google
@@ -3316,7 +3319,7 @@ properties:
                 properties:
                   apiToken:
                     type: string
-                    x-secret: ''
+                    x-secret: ""
                 required:
                   - apiToken
             required:
@@ -3328,13 +3331,13 @@ properties:
                 properties:
                   apiToken:
                     type: string
-                    x-secret: ''
+                    x-secret: ""
                   apiSecret:
                     type: string
-                    x-secret: ''
+                    x-secret: ""
                     description: Required when Email is set.
                   email:
-                    $ref: '#/definitions/email'
+                    $ref: "#/definitions/email"
                     description: Required when Email is set.
                   proxied:
                     type: boolean
@@ -3362,11 +3365,11 @@ properties:
                   external-dns:
                     title: YAML for external-dns.
                     type: object
-                    description: 'The provider config as provided here: https://github.com/redkubes/otomi-core/blob/main/charts/external-dns/values.yaml'
+                    description: "The provider config as provided here: https://github.com/redkubes/otomi-core/blob/main/charts/external-dns/values.yaml"
                   cert-manager:
                     title: YAML for cert-manager.
                     type: object
-                    description: 'The dns01 config as provided here: https://cert-manager.io/docs/configuration/acme/dns01/'
+                    description: "The dns01 config as provided here: https://cert-manager.io/docs/configuration/acme/dns01/"
                 required:
                   - name
                   - external-dns
@@ -3374,13 +3377,13 @@ properties:
             required:
               - other
       entrypoint:
-        $ref: '#/definitions/ipV4Address'
+        $ref: "#/definitions/ipV4Address"
         description: Optional. A public IP address that will override (loadbalancer) ip used for registering hosts. This allows for access to private clusters.
   home:
-    $ref: '#/definitions/alerts'
+    $ref: "#/definitions/alerts"
   files:
     type: object
-    description: 'Custom values for the workload chart.'
+    description: "Custom values for the workload chart."
     patternProperties:
       '^/|(/[\w-]+)+$':
         type: string
@@ -3401,11 +3404,11 @@ properties:
                     title: AWS KMS keys
                     type: string
                   accessKey:
-                    $ref: '#/definitions/aws/definitions/accessKey'
+                    $ref: "#/definitions/aws/definitions/accessKey"
                   secretKey:
-                    $ref: '#/definitions/aws/definitions/secretKey'
+                    $ref: "#/definitions/aws/definitions/secretKey"
                   region:
-                    $ref: '#/definitions/aws/definitions/region'
+                    $ref: "#/definitions/aws/definitions/region"
                 required:
                   - accessKey
                   - keys
@@ -3423,11 +3426,11 @@ properties:
                     title: Azure Keyvault keys
                     type: string
                   clientId:
-                    $ref: '#/definitions/azure/definitions/clientId'
+                    $ref: "#/definitions/azure/definitions/clientId"
                   clientSecret:
-                    $ref: '#/definitions/azure/definitions/clientSecret'
+                    $ref: "#/definitions/azure/definitions/clientSecret"
                   tenantId:
-                    $ref: '#/definitions/azure/definitions/tenantId'
+                    $ref: "#/definitions/azure/definitions/tenantId"
                 required:
                   - clientId
                   - clientSecret
@@ -3445,9 +3448,9 @@ properties:
                     title: GCP KMS keys
                     type: string
                   accountJson:
-                    $ref: '#/definitions/google/definitions/accountJson'
+                    $ref: "#/definitions/google/definitions/accountJson"
                   project:
-                    $ref: '#/definitions/google/definitions/project'
+                    $ref: "#/definitions/google/definitions/project"
                 required:
                   - keys
                   - accountJson
@@ -3466,7 +3469,7 @@ properties:
                     type: string
                   token:
                     type: string
-                    x-secret: ''
+                    x-secret: ""
                 required:
                   - keys
                   - token
@@ -3474,23 +3477,23 @@ properties:
               - vault
   oidc:
     additionalProperties: false
-    description: 'Holds many parts used in different locations. Please see keycloak, grafana, istio and oauth-proxy as those are all consuming (parts of) these settings.'
+    description: "Holds many parts used in different locations. Please see keycloak, grafana, istio and oauth-proxy as those are all consuming (parts of) these settings."
     properties:
       issuer:
-        $ref: '#/definitions/url'
+        $ref: "#/definitions/url"
       clientID:
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
       clientSecret:
         type: string
-        x-secret: ''
+        x-secret: ""
       adminGroupID:
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
       teamAdminGroupID:
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
       usernameClaimMapper:
-        $ref: '#/definitions/wordCharacterPattern'
+        $ref: "#/definitions/wordCharacterPattern"
         description: Claim name from identity provider used by Keycloak to create the username. Best to not change this from the default.
-        default: '${CLAIM.upn}'
+        default: "${CLAIM.upn}"
       subClaimMapper:
         type: string
         description: Claim name passed by Keycloak as a unique user identifier. Best to not change this from the default.
@@ -3509,35 +3512,36 @@ properties:
           description: A k8s cluster managed by Otomi.
           properties:
             domainSuffix:
-              $ref: '#/definitions/domain'
+              $ref: "#/definitions/domain"
             name:
-              $ref: '#/definitions/idName'
+              $ref: "#/definitions/idName"
             provider:
-              $ref: '#/definitions/provider'
+              $ref: "#/definitions/provider"
           required:
             - domainSuffix
             - name
             - provider
       adminPassword:
         type: string
-        x-secret: '{{ randAlphaNum 20 }}'
+        x-secret: "{{ randAlphaNum 20 }}"
       globalPullSecret:
         title: Global pullsecret
-        description: Will be connected to each "default" service account in all otomi app namespaces.
+        description:
+          Will be connected to each "default" service account in all otomi app namespaces.
           Handy for authenticating with DockerHub to avoid rate limiting.
           Also useful when pulling all otomi images from a private repo. (One would need to override all the images in the config first.)
         additionalProperties: false
         properties:
           username:
-            $ref: '#/definitions/wordCharacterPattern'
+            $ref: "#/definitions/wordCharacterPattern"
           password:
             type: string
-            x-secret: ''
+            x-secret: ""
           email:
-            $ref: '#/definitions/email'
+            $ref: "#/definitions/email"
             default: not@us.ed
           server:
-            $ref: '#/definitions/wordCharacterPattern'
+            $ref: "#/definitions/wordCharacterPattern"
             default: docker.io
         required:
           - username
@@ -3563,12 +3567,12 @@ properties:
         description: Whether to separate team metrics and logs. Disabling this lets everybody be admin and see everything.
         type: boolean
       nodeSelector:
-        $ref: '#/definitions/labelsAnnotations'
+        $ref: "#/definitions/labelsAnnotations"
         description: 'One or more "label: value" pairs that must exist on one or more nodes, which will force all otomi platform workloads to be scheduled there.'
       version:
         default: latest
-        description: 'Best pin this to a valid release version found in the repo.'
-        pattern: '(v[0-9]+.[0-9]+.[0-9]+|[a-zA-Z]+[a-zA-Z0-9-])'
+        description: "Best pin this to a valid release version found in the repo."
+        pattern: "(v[0-9]+.[0-9]+.[0-9]+|[a-zA-Z]+[a-zA-Z0-9-])"
   policies:
     type: object
     description: |
@@ -3582,7 +3586,7 @@ properties:
           tags:
             type: array
             items:
-              $ref: '#/definitions/wordCharacterPattern'
+              $ref: "#/definitions/wordCharacterPattern"
           enabled:
             type: boolean
             default: false
@@ -3591,9 +3595,9 @@ properties:
         required: [enabled]
         properties:
           cpu:
-            '$ref': '#/definitions/cpuQuantity'
+            "$ref": "#/definitions/cpuQuantity"
           memory:
-            '$ref': '#/definitions/memoryQuantity'
+            "$ref": "#/definitions/memoryQuantity"
           enabled:
             type: boolean
             default: false
@@ -3604,7 +3608,7 @@ properties:
           repos:
             type: array
             items:
-              $ref: '#/definitions/wordCharacterPattern'
+              $ref: "#/definitions/wordCharacterPattern"
           enabled:
             type: boolean
             default: false
@@ -3641,7 +3645,7 @@ properties:
               ranges:
                 type: array
                 items:
-                  $ref: '#/definitions/unixOwnerIdRange'
+                  $ref: "#/definitions/unixOwnerIdRange"
           runAsGroup:
             type: object
             properties:
@@ -3651,7 +3655,7 @@ properties:
               ranges:
                 type: array
                 items:
-                  $ref: '#/definitions/unixOwnerIdRange'
+                  $ref: "#/definitions/unixOwnerIdRange"
           supplementalGroups:
             type: object
             properties:
@@ -3661,7 +3665,7 @@ properties:
               ranges:
                 type: array
                 items:
-                  $ref: '#/definitions/unixOwnerIdRange'
+                  $ref: "#/definitions/unixOwnerIdRange"
           fsGroup:
             type: object
             properties:
@@ -3671,7 +3675,7 @@ properties:
               ranges:
                 type: array
                 items:
-                  $ref: '#/definitions/unixOwnerIdRange'
+                  $ref: "#/definitions/unixOwnerIdRange"
           enabled:
             type: boolean
             default: false
@@ -3761,13 +3765,13 @@ properties:
               additionalProperties: false
               properties:
                 level:
-                  $ref: '#/definitions/wordCharacterPattern'
+                  $ref: "#/definitions/wordCharacterPattern"
                 role:
-                  $ref: '#/definitions/wordCharacterPattern'
+                  $ref: "#/definitions/wordCharacterPattern"
                 type:
-                  $ref: '#/definitions/wordCharacterPattern'
+                  $ref: "#/definitions/wordCharacterPattern"
                 user:
-                  $ref: '#/definitions/wordCharacterPattern'
+                  $ref: "#/definitions/wordCharacterPattern"
   ingress:
     properties:
       platformClass:
@@ -3777,7 +3781,7 @@ properties:
               className:
                 type: string
                 enum: [platform]
-          - $ref: '#/definitions/ingressClassParameters'
+          - $ref: "#/definitions/ingressClassParameters"
       classes:
         type: array
         items:
@@ -3786,7 +3790,7 @@ properties:
               properties:
                 className:
                   type: string
-            - $ref: '#/definitions/ingressClassParameters'
+            - $ref: "#/definitions/ingressClassParameters"
           required:
             - className
   smtp:
@@ -3796,20 +3800,20 @@ properties:
         type: string
       auth_password:
         type: string
-        x-secret: ''
+        x-secret: ""
       auth_secret:
         type: string
-        x-secret: ''
+        x-secret: ""
       auth_username:
         type: string
       from:
-        $ref: '#/definitions/email'
+        $ref: "#/definitions/email"
         description: The "from" address. Defaults to alerts@$clusterDomain.
       hello:
         type: string
       smarthost:
-        $ref: '#/definitions/hostPort'
-        description: 'The smtp host:port combination.'
+        $ref: "#/definitions/hostPort"
+        description: "The smtp host:port combination."
     required:
       - smarthost
   platformBackups:
@@ -3826,11 +3830,11 @@ properties:
                 type: boolean
                 default: false
               resources:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               retentionPolicy:
-                $ref: '#/definitions/backupRetentionPolicy'
+                $ref: "#/definitions/backupRetentionPolicy"
               schedule:
-                $ref: '#/definitions/backupSchedule'
+                $ref: "#/definitions/backupSchedule"
       persistentVolumes:
         type: object
         title: PersistentVolumes backups
@@ -3842,9 +3846,9 @@ properties:
                 type: boolean
                 default: false
               ttl:
-                $ref: '#/definitions/backupTtl'
+                $ref: "#/definitions/backupTtl"
               schedule:
-                $ref: '#/definitions/backupSchedule'
+                $ref: "#/definitions/backupSchedule"
           drone:
             title: Drone
             properties:
@@ -3852,9 +3856,9 @@ properties:
                 type: boolean
                 default: false
               ttl:
-                $ref: '#/definitions/backupTtl'
+                $ref: "#/definitions/backupTtl"
               schedule:
-                $ref: '#/definitions/backupSchedule'
+                $ref: "#/definitions/backupSchedule"
           keycloak:
             title: Keycloak
             properties:
@@ -3862,9 +3866,9 @@ properties:
                 type: boolean
                 default: false
               ttl:
-                $ref: '#/definitions/backupTtl'
+                $ref: "#/definitions/backupTtl"
               schedule:
-                $ref: '#/definitions/backupSchedule'
+                $ref: "#/definitions/backupSchedule"
           harbor:
             title: Harbor
             properties:
@@ -3872,11 +3876,11 @@ properties:
                 type: boolean
                 default: false
               resources:
-                $ref: '#/definitions/resources'
+                $ref: "#/definitions/resources"
               ttl:
-                $ref: '#/definitions/backupTtl'
+                $ref: "#/definitions/backupTtl"
               schedule:
-                $ref: '#/definitions/backupSchedule'
+                $ref: "#/definitions/backupSchedule"
           vault:
             title: Vault
             properties:
@@ -3884,9 +3888,9 @@ properties:
                 type: boolean
                 default: false
               ttl:
-                $ref: '#/definitions/backupTtl'
+                $ref: "#/definitions/backupTtl"
               schedule:
-                $ref: '#/definitions/backupSchedule'
+                $ref: "#/definitions/backupSchedule"
           argo:
             title: ArgoCD
             properties:
@@ -3894,9 +3898,9 @@ properties:
                 type: boolean
                 default: false
               ttl:
-                $ref: '#/definitions/backupTtl'
+                $ref: "#/definitions/backupTtl"
               schedule:
-                $ref: '#/definitions/backupSchedule'
+                $ref: "#/definitions/backupSchedule"
           minio:
             title: Minio
             properties:
@@ -3904,9 +3908,9 @@ properties:
                 type: boolean
                 default: false
               ttl:
-                $ref: '#/definitions/backupTtl'
+                $ref: "#/definitions/backupTtl"
               schedule:
-                $ref: '#/definitions/backupSchedule'
+                $ref: "#/definitions/backupSchedule"
   databases:
     properties:
       keycloak:
@@ -3918,7 +3922,7 @@ properties:
           size:
             type: string
           resources:
-            $ref: '#/definitions/resources'
+            $ref: "#/definitions/resources"
           replicas:
             type: integer
             default: 2
@@ -3928,21 +3932,21 @@ properties:
   teamConfig:
     additionalProperties: false
     patternProperties:
-      '^[a-z0-9]([-a-z0-9]*[a-z0-9])+$':
-        $ref: '#/definitions/team'
+      "^[a-z0-9]([-a-z0-9]*[a-z0-9])+$":
+        $ref: "#/definitions/team"
     properties:
       admin:
         properties:
           password:
             type: string
-            x-secret: '{{ randAlpha 16 }}'
+            x-secret: "{{ randAlpha 16 }}"
   version:
     type: integer
     description: DO NOT CHANGE! Holds the values-schema version. For more details, see `otomi migrate`.
   license:
     type: string
     describe: License in form of JWT
-    x-secret: ''
+    x-secret: ""
   status:
     type: object
     properties:

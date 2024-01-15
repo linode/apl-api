@@ -112,9 +112,9 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
     }
 
     if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
-      const license = sessionStack.getLicense()
-      const databaseState = sessionStack.db.db.getState()
-      checkLicense(req.method.toLowerCase(), req.originalUrl.split('/').slice(-1)[0], license, databaseState)
+      const [path] = req.originalUrl.split('/').slice(-1)
+      if (['teams', 'services', 'workloads', 'projects'].includes(path))
+        checkLicense(req.method.toLowerCase(), path, sessionStack)
       // in the cloudtty or workloadCatalog endpoint(s), don't need to create a session
       if (req.path === '/v1/cloudtty' || req.path === '/v1/workloadCatalog') return next()
       // manipulating data and no editor session yet? create one
