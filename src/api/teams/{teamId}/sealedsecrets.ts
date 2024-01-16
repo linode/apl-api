@@ -9,14 +9,13 @@ export default function (): OperationHandlerArray {
     ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
       debug(`getSealedSecrets(${teamId})`)
       const v = otomi.getSealedSecrets(teamId)
-      console.log('getSealedSecrets', v)
       res.json(v)
     },
   ]
   const post: Operation = [
-    ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`createSealedSecret(${teamId}, ...)`)
-      const v = otomi.createSealedSecret(teamId, body as SealedSecret)
+      const v = await otomi.createSealedSecret(teamId, body as SealedSecret)
       res.json(v)
     },
   ]

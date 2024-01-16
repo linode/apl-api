@@ -383,3 +383,21 @@ export async function getServiceStatus(service: Service, domainSuffix: string): 
   const tlspassStatus = await checkHostStatus(namespace, `${name}-tlspass`, host)
   return tlspassStatus
 }
+
+export async function getSecretValues(name: string, namespace: string): Promise<any> {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  try {
+    const res: any = await k8sApi.readNamespacedSecret(name, 'sealed-secrets')
+    const { data } = res.body
+    const decodedData = {}
+    for (const key in data) {
+      if (Object.prototype.hasOwnProperty.call(data, key))
+        decodedData[key] = Buffer.from(data[key], 'base64').toString('utf-8')
+    }
+    return decodedData
+  } catch (error) {
+    console.error('getSecretValues error:', error)
+  }
+}

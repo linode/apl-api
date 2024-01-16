@@ -58,11 +58,13 @@ import {
   getCloudttyActiveTime,
   getKubernetesVersion,
   getLastTektonMessage,
+  getSecretValues,
   k8sdelete,
   watchPodUntilRunning,
 } from './k8s_operations'
 import connect from './otomiCloud/connect'
 import { validateBackupFields } from './utils/backupUtils'
+import { encryptSecretItem } from './utils/sealedSecret'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 const debug = Debug('otomi:otomi-stack')
@@ -1095,38 +1097,53 @@ export default class OtomiStack {
   getSecrets(teamId: string): Array<Secret> {
     return this.db.getCollection('secrets', { teamId }) as Array<Secret>
   }
-  // ===================================================================================================================
-  createSealedSecret(teamId: string, data: Record<string, any>): SealedSecret {
-    console.log('data', data)
-    const s = this.db.createItem('sealedsecrets', { ...data, teamId }, { teamId, name: data.name }) as SealedSecret
-    console.log('createItem secret', s)
-    const all = this.db.getCollection('sealedsecrets', {}) as Array<SealedSecret>
-    console.log('sealed secrets:', all)
-    return s
-  }
 
-  editSealedSecret(id: string, data: SealedSecret): SealedSecret {
-    return this.db.updateItem('sealedsecrets', data, { id }) as SealedSecret
+  async createSealedSecret(teamId: string, data: Record<string, any>): Promise<SealedSecret> {
+    try {
+      const encryptedDataPromises = data?.encryptedData.map(async (obj) => {
+        const encryptedItem = await encryptSecretItem(data.name, 'sealed-secrets', obj.value, 'test')
+        return { [obj.key]: encryptedItem }
+      })
+      const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises)))
+      return this.db.createItem(
+        'sealedsecrets',
+        { ...data, teamId, encryptedData },
+        { teamId, name: data.name },
+      ) as SealedSecret
+    } catch (error) {
+      if (error.code === 409) error.publicMessage = 'SealedSecret name already exists'
+      throw error
+    }
   }
-
+  async editSealedSecret(id: string, data: SealedSecret): Promise<SealedSecret> {
+    const encryptedDataPromises = data?.encryptedData.map(async (obj) => {
+      const encryptedItem = await encryptSecretItem(data.name, 'sealed-secrets', obj.value, 'test')
+      return { [obj.key]: encryptedItem }
+    })
+    const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises)))
+    return this.db.updateItem('sealedsecrets', { ...data, encryptedData }, { id }) as SealedSecret
+  }
   deleteSealedSecret(id: string): void {
     this.db.deleteItem('sealedsecrets', { id })
   }
-
-  getSealedSecret(id: string): SealedSecret {
-    return this.db.getItem('sealedsecrets', { id }) as SealedSecret
+  async getSealedSecret(id: string): Promise<SealedSecret> {
+    const item = this.db.getItem('sealedsecrets', { id }) as SealedSecret
+    const decodedData = (await getSecretValues(item.name, `team-${item.teamId}`)) || {}
+    const encryptedData = Object.entries(item.encryptedData).map(([key, value]) => ({
+      key,
+      value: decodedData?.[key] || value,
+    }))
+    const res = { ...item, encryptedData } as any
+    return res
   }
 
   getAllSealedSecrets(): Array<SealedSecret> {
-    const s = this.db.getCollection('sealedsecrets', {}) as Array<SealedSecret>
-    console.log('sealed secrets:', s)
-    return s
+    return this.db.getCollection('sealedsecrets', {}) as Array<SealedSecret>
   }
 
   getSealedSecrets(teamId: string): Array<SealedSecret> {
     return this.db.getCollection('sealedsecrets', { teamId }) as Array<SealedSecret>
   }
-  // ===================================================================================================================
 
   async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {
     debug('Loading values')
@@ -1162,14 +1179,19 @@ export default class OtomiStack {
   async loadTeamSealedSecrets(teamId: string): Promise<void> {
     const relativePath = getTeamSealedSecretsFilePath(teamId)
     if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no secrets yet`)
+      debug(`Team ${teamId} has no sealed secrets yet`)
       return
     }
     const data = await this.repo.readFile(relativePath)
-    const secrets: Array<Secret> = get(data, getTeamSealedSecretsJsonPath(teamId), [])
-
-    secrets.forEach((inSecret) => {
-      this.loadSealedSecret(inSecret, teamId)
+    const inData: Array<SealedSecret> = get(data, getTeamSealedSecretsJsonPath(teamId), [])
+    inData.forEach((inSealedSecret) => {
+      const res: any = this.db.populateItem(
+        'sealedsecrets',
+        { ...inSealedSecret, teamId },
+        undefined,
+        inSealedSecret.id as string,
+      )
+      debug(`Loaded sealed secret: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
     })
   }
   async loadTeamSecrets(teamId: string): Promise<void> {
@@ -1394,11 +1416,13 @@ export default class OtomiStack {
 
   async saveTeamSealedSecrets(teamId: string): Promise<void> {
     const secrets = this.db.getCollection('sealedsecrets', { teamId })
-    // const values: any[] = secrets.map((secret) => this.convertDbSecretToValues(secret))
-    await this.repo.writeFile(
-      getTeamSealedSecretsFilePath(teamId),
-      set({}, getTeamSealedSecretsJsonPath(teamId), secrets),
-    )
+    const cleaneSecrets: Array<Record<string, any>> = secrets.map((obj) => {
+      return omit(obj, ['teamId'])
+    })
+    const relativePath = getTeamSealedSecretsFilePath(teamId)
+    const outData: Record<string, any> = set({}, getTeamSealedSecretsJsonPath(teamId), cleaneSecrets)
+    debug(`Saving sealed secrets of team: ${teamId}`)
+    await this.repo.writeFile(relativePath, outData)
   }
 
   async saveTeamSecrets(teamId: string): Promise<void> {
@@ -1496,7 +1520,7 @@ export default class OtomiStack {
       return memo
     }, {})
     const res: any = this.db.populateItem('sealedsecrets', secret, { teamId, name: secret.name }, secret.id as string)
-    debug(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
+    debug(`Loaded sealed secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
   }
 
   loadSecret(inSecret, teamId): void {
