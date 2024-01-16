@@ -274,7 +274,12 @@ export async function getWorkloadStatus(workload: Workload): Promise<string> {
   }
 }
 
-async function listNamespacedCustomObject(group: string, namespace: string, plural: string, labelSelector: string) {
+async function listNamespacedCustomObject(
+  group: string,
+  namespace: string,
+  plural: string,
+  labelSelector: string | undefined,
+) {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
@@ -373,9 +378,17 @@ async function checkHostStatus(namespace: string, name: string, host: string) {
 }
 
 export async function getServiceStatus(service: Service, domainSuffix: string): Promise<string> {
+  const isKsvc = service?.ksvc?.predeployed
   const namespace = `team-${service.teamId}`
   const name = `team-${service.teamId}-public`
   const host = `team-${service.teamId}/${service.name}-${service.teamId}.${domainSuffix}`
+
+  if (isKsvc) {
+    const res = await listNamespacedCustomObject('networking.istio.io', namespace, 'virtualservices', undefined)
+    const virtualservices = res?.body?.items?.map((item) => item.metadata.name) || []
+    if (virtualservices.includes(`${service.name}-ingress`)) return 'Succeeded'
+    else return 'NotFound'
+  }
 
   const tlstermStatus = await checkHostStatus(namespace, `${name}-tlsterm`, host)
   if (tlstermStatus === 'Succeeded') return 'Succeeded'
