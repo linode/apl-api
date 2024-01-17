@@ -38,7 +38,14 @@ import {
 import swaggerUi from 'swagger-ui-express'
 import Db from './db'
 import giteaCheckLatest from './gitea/connect'
-import { getBuildStatus, getKubernetesVersion, getNodes, getServiceStatus, getWorkloadStatus } from './k8s_operations'
+import {
+  getBuildStatus,
+  getKubernetesVersion,
+  getNodes,
+  getServiceStatus,
+  getWorkloadStatus,
+  readSealedSecretCert,
+} from './k8s_operations'
 import uploadMetrics from './otomiCloud/upload-metrics'
 
 const env = cleanEnv({
@@ -235,6 +242,8 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   setInterval(async function () {
     await resourceStatus()
   }, emitResourceStatusInterval)
+
+  readSealedSecretCert()
 
   // and register session middleware
   app.use(sessionMiddleware(server as Server))

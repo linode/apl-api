@@ -1,6 +1,8 @@
 import * as k8s from '@kubernetes/client-node'
 import Debug from 'debug'
 import * as fs from 'fs'
+import { pathExists, unlink } from 'fs-extra'
+import { writeFile } from 'fs/promises'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
 import { Build, Cloudtty, Service, Workload } from './otomi-models'
@@ -412,5 +414,23 @@ export async function getSecretValues(name: string, namespace: string): Promise<
     return decodedData
   } catch (error) {
     console.error('getSecretValues error:', error)
+  }
+}
+
+export async function readSealedSecretCert(): Promise<any> {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  if (await pathExists('/tmp/sealed-secrets-cert.pem')) await unlink('/tmp/sealed-secrets-cert.pem')
+  try {
+    const response = await k8sApi.readNamespacedPodLog('sealed-secrets-f788f6bd-mbtf6', 'sealed-secrets')
+    const certificateRegex = /-----BEGIN CERTIFICATE-----\n([\s\S]*?)\n-----END CERTIFICATE-----/
+    const matches = response.body.match(certificateRegex)
+    if (matches && matches[0]) {
+      const certificateWithLines = matches[0].trim()
+      await writeFile('/tmp/sealed-secrets-cert.pem', certificateWithLines, 'utf-8')
+    } else console.error('Sealed secrets certificate not found in the pod log.')
+  } catch (err) {
+    console.error('Error reading sealed secrets certificate:', err)
   }
 }
