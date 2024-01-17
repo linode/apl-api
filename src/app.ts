@@ -42,9 +42,9 @@ import {
   getBuildStatus,
   getKubernetesVersion,
   getNodes,
+  getSealedSecretCertFromK8s,
   getServiceStatus,
   getWorkloadStatus,
-  readSealedSecretCert,
 } from './k8s_operations'
 import uploadMetrics from './otomiCloud/upload-metrics'
 
@@ -243,7 +243,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     await resourceStatus()
   }, emitResourceStatusInterval)
 
-  readSealedSecretCert()
+  getSealedSecretCertFromK8s()
 
   // and register session middleware
   app.use(sessionMiddleware(server as Server))

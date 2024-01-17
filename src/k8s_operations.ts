@@ -417,18 +417,38 @@ export async function getSecretValues(name: string, namespace: string): Promise<
   }
 }
 
-export async function readSealedSecretCert(): Promise<any> {
+export async function getSealedSecretCertFromK8s(): Promise<any> {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
-  if (await pathExists('/tmp/sealed-secrets-cert.pem')) await unlink('/tmp/sealed-secrets-cert.pem')
+  const namespace = 'sealed-secrets'
+  const labelSelector = 'app.kubernetes.io/name=sealed-secrets'
+  const certPath = '/tmp/sealed-secrets-cert.pem'
+  let podName = ''
+
+  if (await pathExists(certPath)) await unlink(certPath)
+
   try {
-    const response = await k8sApi.readNamespacedPodLog('sealed-secrets-f788f6bd-mbtf6', 'sealed-secrets')
+    const response = await k8sApi.listNamespacedPod(
+      namespace,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      labelSelector,
+    )
+    podName = response?.body?.items[0]?.metadata?.name || ''
+  } catch (err) {
+    console.error('Error getting Sealed Secrets Controller pod name:', err)
+  }
+
+  try {
+    const response = await k8sApi.readNamespacedPodLog(podName, namespace)
     const certificateRegex = /-----BEGIN CERTIFICATE-----\n([\s\S]*?)\n-----END CERTIFICATE-----/
     const matches = response.body.match(certificateRegex)
     if (matches && matches[0]) {
       const certificateWithLines = matches[0].trim()
-      await writeFile('/tmp/sealed-secrets-cert.pem', certificateWithLines, 'utf-8')
+      await writeFile(certPath, certificateWithLines, 'utf-8')
     } else console.error('Sealed secrets certificate not found in the pod log.')
   } catch (err) {
     console.error('Error reading sealed secrets certificate:', err)
