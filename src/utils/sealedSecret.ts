@@ -36,7 +36,6 @@ function getPublicKey(certificate) {
 
 export async function encryptSecretItem(secretName, ns, data, scope) {
   const certificate = await readFile('/tmp/sealed-secrets-cert.pem', 'utf8')
-  console.log('certificate', certificate)
   const pubKey = getPublicKey(certificate)
   const label = encryptionLabel(ns, secretName, scope)
   const out = hybridEncrypt(pubKey, data, label)

@@ -1099,9 +1099,10 @@ export default class OtomiStack {
   }
 
   async createSealedSecret(teamId: string, data: Record<string, any>): Promise<SealedSecret> {
+    const namespace = data?.namespace ?? `team-${teamId}`
     try {
       const encryptedDataPromises = data?.encryptedData.map(async (obj) => {
-        const encryptedItem = await encryptSecretItem(data.name, 'sealed-secrets', obj.value, 'test')
+        const encryptedItem = await encryptSecretItem(data.name, namespace, obj.value, 'namespace-wide')
         return { [obj.key]: encryptedItem }
       })
       const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises)))
@@ -1116,8 +1117,9 @@ export default class OtomiStack {
     }
   }
   async editSealedSecret(id: string, data: SealedSecret): Promise<SealedSecret> {
+    const namespace = data?.namespace ?? `team-${data?.teamId}`
     const encryptedDataPromises = data?.encryptedData.map(async (obj) => {
-      const encryptedItem = await encryptSecretItem(data.name, 'sealed-secrets', obj.value, 'test')
+      const encryptedItem = await encryptSecretItem(data.name, namespace, obj.value, 'namespace-wide')
       return { [obj.key]: encryptedItem }
     })
     const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises)))
