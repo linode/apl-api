@@ -1129,14 +1129,14 @@ export default class OtomiStack {
     this.db.deleteItem('sealedsecrets', { id })
   }
   async getSealedSecret(id: string): Promise<SealedSecret> {
-    const item = this.db.getItem('sealedsecrets', { id }) as SealedSecret
-    const secretValues = (await getSecretValues(item.name, `team-${item.teamId}`)) || {}
+    const sealedSecret = this.db.getItem('sealedsecrets', { id }) as SealedSecret
+    const secretValues = (await getSecretValues(sealedSecret.name, `team-${sealedSecret.teamId}`)) || {}
     const isDisabled = isEmpty(secretValues)
-    const encryptedData = Object.entries(item.encryptedData).map(([key, value]) => ({
+    const encryptedData = Object.entries(sealedSecret.encryptedData).map(([key, value]) => ({
       key,
       value: secretValues?.[key] || value,
     }))
-    const res = { ...item, encryptedData, isDisabled } as any
+    const res = { ...sealedSecret, encryptedData, isDisabled } as any
     return res
   }
 
