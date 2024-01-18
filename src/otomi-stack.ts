@@ -1108,7 +1108,7 @@ export default class OtomiStack {
       const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises)))
       return this.db.createItem(
         'sealedsecrets',
-        { ...data, teamId, encryptedData },
+        { ...data, teamId, encryptedData, namespace },
         { teamId, name: data.name },
       ) as SealedSecret
     } catch (error) {
