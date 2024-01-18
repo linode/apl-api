@@ -404,7 +404,7 @@ export async function getSecretValues(name: string, namespace: string): Promise<
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
   try {
-    const res: any = await k8sApi.readNamespacedSecret(name, 'sealed-secrets')
+    const res: any = await k8sApi.readNamespacedSecret(name, namespace)
     const { data } = res.body
     const decodedData = {}
     for (const key in data) {
