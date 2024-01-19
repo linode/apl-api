@@ -5,7 +5,7 @@ import { pathExists, unlink } from 'fs-extra'
 import { writeFile } from 'fs/promises'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
-import { Build, Cloudtty, Service, Workload } from './otomi-models'
+import { Build, Cloudtty, SealedSecret, Service, Workload } from './otomi-models'
 
 const debug = Debug('otomi:api:cloudtty')
 
@@ -415,6 +415,15 @@ export async function getSecretValues(name: string, namespace: string): Promise<
   } catch (error) {
     console.error('getSecretValues error:', error)
   }
+}
+
+export async function getSealedSecretStatus(sealedsecret: SealedSecret): Promise<string> {
+  const { name } = sealedsecret
+  const namespace = sealedsecret?.namespace ?? `team-${sealedsecret.teamId}`
+  const value = await getSecretValues(name, namespace)
+
+  if (value) return 'Succeeded'
+  return 'Unknown'
 }
 
 export async function getSealedSecretCertFromK8s(): Promise<any> {

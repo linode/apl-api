@@ -24,7 +24,7 @@ import {
   sessionMiddleware,
 } from 'src/middleware'
 import { setMockIdx } from 'src/mocks'
-import { Build, OpenAPIDoc, OpenApiRequestExt, Schema, Service, Workload } from 'src/otomi-models'
+import { Build, OpenAPIDoc, OpenApiRequestExt, Schema, SealedSecret, Service, Workload } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
 import {
@@ -43,6 +43,7 @@ import {
   getKubernetesVersion,
   getNodes,
   getSealedSecretCertFromK8s,
+  getSealedSecretStatus,
   getServiceStatus,
   getWorkloadStatus,
 } from './k8s_operations'
@@ -116,8 +117,6 @@ const uploadOtomiMetrics = async () => {
 }
 
 const resourceStatus = async () => {
-  const isProd = process.env.NODE_ENV === 'production'
-  if (!isProd) return
   const otomiStack = await getSessionStack()
   const { cluster } = otomiStack.getSettings(['cluster'])
   const domainSuffix = cluster?.domainSuffix
@@ -125,11 +124,13 @@ const resourceStatus = async () => {
     workloads: otomiStack.db.getCollection('workloads') as Array<Workload>,
     builds: otomiStack.db.getCollection('builds') as Array<Build>,
     services: otomiStack.db.getCollection('services') as Array<Service>,
+    sealedSecrets: otomiStack.db.getCollection('sealedsecrets') as Array<SealedSecret>,
   }
   const statusFunctions = {
     workloads: getWorkloadStatus,
     builds: getBuildStatus,
     services: getServiceStatus,
+    sealedSecrets: getSealedSecretStatus,
   }
   const resourcesStatus = {}
   for (const resourceType in resources) {
