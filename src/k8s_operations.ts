@@ -417,13 +417,40 @@ export async function getSecretValues(name: string, namespace: string): Promise<
   }
 }
 
+export async function getSealedSecretSyncedStatus(name: string, namespace: string): Promise<string> {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
+
+  try {
+    const res: any = await k8sApi.getNamespacedCustomObject('bitnami.com', 'v1alpha1', namespace, 'sealedsecrets', name)
+    const { conditions } = res.body.status
+    if (conditions && conditions.length > 0 && conditions[0].type === 'Synced') {
+      switch (conditions[0].status) {
+        case 'True':
+          return 'Succeeded'
+        case 'False':
+          return 'Unknown'
+        case 'Unknown':
+          return 'NotFound'
+        default:
+          return 'NotFound'
+      }
+    }
+    return 'NotFound'
+  } catch (error) {
+    return 'NotFound'
+  }
+}
+
 export async function getSealedSecretStatus(sealedsecret: SealedSecret): Promise<string> {
   const { name } = sealedsecret
   const namespace = sealedsecret?.namespace ?? `team-${sealedsecret.teamId}`
   const value = await getSecretValues(name, namespace)
+  const syncedStatus = await getSealedSecretSyncedStatus(name, namespace)
 
-  if (value) return 'Succeeded'
-  return 'Unknown'
+  if (value && syncedStatus === 'Succeeded') return 'Succeeded'
+  return syncedStatus
 }
 
 export async function getSealedSecretCertFromK8s(): Promise<any> {
