@@ -1,0 +1,44 @@
+AppRabbitMQ:
+  additionalProperties: false
+  type: object
+  properties:
+    storage:
+      $ref: '../definitions.yaml#/storageProvider'
+    rawValues:
+      $ref: ../definitions.yaml#/rawValues
+    shortcuts:
+      description: Resource URL that lands the user in a place of interest within an app.
+      type: array
+      nullable: true
+      items:
+        $ref: ../definitions.yaml#/shortcut
+    values:
+      type: object
+      properties:
+        storage:
+          $ref: ../definitions.yaml#/storageProvider
+        resources:
+          type: object
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 1000m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 512Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 100m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 200Mi
+          required:
+            - limits
+            - requests
+  required: [id]

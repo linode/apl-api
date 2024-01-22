@@ -83,6 +83,9 @@ k8s:
     - name: cluster-overprovisioner
       app: cluster-overprovisioner
       disableIstioInjection: true
+    - name: rabbitmq-cluster-operator
+      app: rabbitmq-cluster-operator
+      disableIstioInjection: true
     - name: redis
       app: prometheus
       disableIstioInjection: true
@@ -350,6 +353,8 @@ adminApps:
         auth: true
   - name: velero
     tags: [backup]
+  - name: rabbitmq-cluster-operator
+    tags: [messaging]
 
 teamApps:
   - name: alertmanager

@@ -23,14 +23,15 @@ AppList:
     - kiali
     - knative
     - kured
-    - tekton
     - loki
     - minio
     - opencost
+    - otel
     - prometheus
+    - rabbitmq-cluster-operator
+    - tekton
     - thanos
     - tempo
-    - otel
     - trivy
     - vault
     - velero
