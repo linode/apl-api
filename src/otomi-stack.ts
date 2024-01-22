@@ -22,8 +22,8 @@ import {
   K8sService,
   License,
   Metrics,
-  Project,
   Policy,
+  Project,
   Secret,
   Service,
   Session,
@@ -1352,6 +1352,7 @@ export default class OtomiStack {
         await this.saveTeamWorkloads(teamId)
         await this.saveTeamProjects(teamId)
         await this.saveTeamBuilds(teamId)
+        await this.saveTeamPolicies(teamId)
         team.resourceQuota = arrayToObject((team.resourceQuota as []) ?? [])
         teamValues[teamId] = team
       }),
@@ -1412,6 +1413,17 @@ export default class OtomiStack {
     const relativePath = getTeamBuildsFilePath(teamId)
     const outData: Record<string, any> = set({}, getTeamBuildsJsonPath(teamId), cleaneBuilds)
     debug(`Saving builds of team: ${teamId}`)
+    await this.repo.writeFile(relativePath, outData)
+  }
+
+  async saveTeamPolicies(teamId: string): Promise<void> {
+    const policies = this.db.getCollection('policies', { teamId }) as Array<Policy>
+    const cleanePolicies: Array<Record<string, any>> = policies.map((obj) => {
+      return omit(obj, ['teamId'])
+    })
+    const relativePath = getTeamPoliciesFilePath(teamId)
+    const outData: Record<string, any> = set({}, getTeamPoliciesJsonPath(teamId), cleanePolicies)
+    debug(`Saving policies of team: ${teamId}`)
     await this.repo.writeFile(relativePath, outData)
   }
 
