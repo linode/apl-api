@@ -7,7 +7,7 @@ import * as yaml from 'js-yaml'
 import { promisify } from 'util'
 import { Build, Cloudtty, SealedSecret, Service, Workload } from './otomi-models'
 
-const debug = Debug('otomi:api:cloudtty')
+const debug = Debug('otomi:api:k8sOperations')
 
 /**
  * Replicate the functionality of `kubectl apply`.  That is, create the resources defined in the `specFile` if they do
@@ -404,7 +404,7 @@ export async function getSecretValues(name: string, namespace: string): Promise<
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
   try {
-    const res: any = await k8sApi.readNamespacedSecret(name, namespace)
+    const res = await k8sApi.readNamespacedSecret(name, namespace)
     const { data } = res.body
     const decodedData = {}
     for (const key in data) {
@@ -413,7 +413,7 @@ export async function getSecretValues(name: string, namespace: string): Promise<
     }
     return decodedData
   } catch (error) {
-    console.error('getSecretValues error:', error)
+    debug('getSecretValues error:', error)
   }
 }
 
@@ -439,6 +439,7 @@ export async function getSealedSecretSyncedStatus(name: string, namespace: strin
     }
     return 'NotFound'
   } catch (error) {
+    debug('getSealedSecretSyncedStatus error:', error)
     return 'NotFound'
   }
 }
@@ -453,7 +454,7 @@ export async function getSealedSecretStatus(sealedsecret: SealedSecret): Promise
   return syncedStatus
 }
 
-export async function getSealedSecretCertFromK8s(): Promise<any> {
+export async function getSealedSecretCertFromK8s(): Promise<void> {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
@@ -474,8 +475,8 @@ export async function getSealedSecretCertFromK8s(): Promise<any> {
       labelSelector,
     )
     podName = response?.body?.items[0]?.metadata?.name || ''
-  } catch (err) {
-    console.error('Error getting Sealed Secrets Controller pod name:', err)
+  } catch (error) {
+    debug('Error getting sealed secrets pod name:', error)
   }
 
   try {
@@ -485,8 +486,8 @@ export async function getSealedSecretCertFromK8s(): Promise<any> {
     if (matches && matches[0]) {
       const certificateWithLines = matches[0].trim()
       await writeFile(certPath, certificateWithLines, 'utf-8')
-    } else console.error('Sealed secrets certificate not found in the pod log.')
-  } catch (err) {
-    console.error('Error reading sealed secrets certificate:', err)
+    } else debug('Sealed secrets certificate not found in the pod log.')
+  } catch (error) {
+    debug('Error reading sealed secrets certificate:', error)
   }
 }
