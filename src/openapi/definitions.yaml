@@ -518,6 +518,21 @@ dns:
           required:
             - civo
           type: object
+        - title: Linode
+          properties:
+            linode:
+              x-hideTitle: true
+              properties:
+                apiToken:
+                  type: string
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
+                  x-secret: true
+              type: object
+          required:
+            - linode
+          type: object
         - title: Google
           properties:
             google:
