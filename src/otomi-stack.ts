@@ -932,8 +932,7 @@ export default class OtomiStack {
       getIo().emit('db', msg)
       throw e
     } finally {
-      const isProd = process.env.NODE_ENV === 'production'
-      if (isProd) {
+      if (env.isProd) {
         const sha = await rootStack.repo.getCommitSha()
         // check Tekton status every 5 seconds and emit it when the pipeline is completed
         const intervalId = setInterval(() => {
@@ -1098,10 +1097,10 @@ export default class OtomiStack {
     return this.db.getCollection('secrets', { teamId }) as Array<Secret>
   }
 
-  async createSealedSecret(teamId: string, data: Record<string, any>): Promise<SealedSecret> {
-    const namespace = data?.namespace ?? `team-${teamId}`
+  async createSealedSecret(teamId: string, data: SealedSecret): Promise<SealedSecret> {
+    const namespace = data.namespace ?? `team-${teamId}`
     try {
-      const encryptedDataPromises = data?.encryptedData.map(async (obj) => {
+      const encryptedDataPromises = data.encryptedData.map(async (obj) => {
         const encryptedItem = await encryptSecretItem(data.name, namespace, obj.value, 'namespace-wide')
         return { [obj.key]: encryptedItem }
       })
@@ -1116,21 +1115,24 @@ export default class OtomiStack {
       throw error
     }
   }
+
   async editSealedSecret(id: string, data: SealedSecret): Promise<SealedSecret> {
-    const namespace = data?.namespace ?? `team-${data?.teamId}`
-    const encryptedDataPromises = data?.encryptedData.map(async (obj) => {
+    const namespace = data.namespace ?? `team-${data?.teamId}`
+    const encryptedDataPromises = data.encryptedData.map(async (obj) => {
       const encryptedItem = await encryptSecretItem(data.name, namespace, obj.value, 'namespace-wide')
       return { [obj.key]: encryptedItem }
     })
     const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises)))
     return this.db.updateItem('sealedsecrets', { ...data, encryptedData }, { id }) as SealedSecret
   }
+
   deleteSealedSecret(id: string): void {
     this.db.deleteItem('sealedsecrets', { id })
   }
+
   async getSealedSecret(id: string): Promise<SealedSecret> {
     const sealedSecret = this.db.getItem('sealedsecrets', { id }) as SealedSecret
-    const namespace = sealedSecret?.namespace ?? `team-${sealedSecret?.teamId}`
+    const namespace = sealedSecret.namespace ?? `team-${sealedSecret.teamId}`
     const secretValues = (await getSecretValues(sealedSecret.name, namespace)) || {}
     const isDisabled = isEmpty(secretValues)
     const encryptedData = Object.entries(sealedSecret.encryptedData).map(([key, value]) => ({
@@ -1514,17 +1516,6 @@ export default class OtomiStack {
     const res = this.createTeam(team as Team)
     // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id as string)
     debug(`Loaded team: ${res.id!}`)
-  }
-
-  loadSealedSecret(inSecret, teamId): void {
-    const secret: Record<string, any> = omit(inSecret, ...secretTransferProps)
-    secret.teamId = teamId
-    secret.secret = secretTransferProps.reduce((memo: any, prop) => {
-      if (inSecret[prop] !== undefined) memo[prop] = inSecret[prop]
-      return memo
-    }, {})
-    const res: any = this.db.populateItem('sealedsecrets', secret, { teamId, name: secret.name }, secret.id as string)
-    debug(`Loaded sealed secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
   }
 
   loadSecret(inSecret, teamId): void {
