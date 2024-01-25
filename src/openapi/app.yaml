@@ -28,7 +28,7 @@ AppList:
     - opencost
     - otel
     - prometheus
-    - rabbitmq-cluster-operator
+    - rabbitmq
     - tekton
     - thanos
     - tempo

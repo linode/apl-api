@@ -151,7 +151,7 @@ export const getSpec = (): OtomiSpec => {
   return otomiSpec
 }
 export const getAppSchema = (appId: string): Schema => {
-  let id: string = appId.startsWith('ingress-nginx') ? 'ingress-nginx' : appId
+  let id: string = appId
   if (appId.startsWith('rabbitmq')) id = 'rabbitmq'
   if (appId.startsWith('ingress-nginx')) id = 'ingress-nginx'
   const appName = `App${pascalCase(id)}`

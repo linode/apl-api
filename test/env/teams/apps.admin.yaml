@@ -24,7 +24,7 @@ teamConfig:
             minio: {}
             opencost: {}
             prometheus: {}
-            rabbitmq-cluster-operator: {}
+            rabbitmq: {}
             thanos: {}
             vault: {}
             velero: {}
