@@ -1,4 +1,4 @@
-AppRabbitMQ:
+AppRabbitmq:
   additionalProperties: false
   type: object
   properties:

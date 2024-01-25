@@ -1252,8 +1252,8 @@ components:
       $ref: apps/opencost.yaml#/AppOpencost
     AppPrometheus:
       $ref: apps/prometheus.yaml#/AppPrometheus
-    AppRabbitMQ:
-      $ref: apps/rabbitmq.yaml#/AppRabbitMQ
+    AppRabbitmq:
+      $ref: apps/rabbitmq.yaml#/AppRabbitmq
     AppTempo:
       $ref: apps/tempo.yaml#/AppTempo
     AppThanos:
