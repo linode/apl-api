@@ -24,6 +24,12 @@ AppOtel:
                 - deployment
                 - daemonset
                 - statefulset
+            attributes:
+              title: Kubernetes Attributes
+              description: Attributes to extract metadata from pods
+              type: array
+              items:
+                type: string
         operator:
           properties:
             replicaCount:
