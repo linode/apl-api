@@ -459,35 +459,31 @@ export async function getSealedSecretCertFromK8s(): Promise<void> {
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
   const namespace = 'sealed-secrets'
-  const labelSelector = 'app.kubernetes.io/name=sealed-secrets'
   const certPath = '/tmp/sealed-secrets-cert.pem'
-  let podName = ''
+  const keyPath = '/tmp/sealed-secrets-key.pem'
 
   if (await pathExists(certPath)) await unlink(certPath)
+  if (await pathExists(keyPath)) await unlink(keyPath)
 
   try {
-    const response = await k8sApi.listNamespacedPod(
-      namespace,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      labelSelector,
+    const response = await k8sApi.listNamespacedSecret(namespace)
+    const sealedSecretsKeys: any = response?.body?.items?.filter(
+      (secret: any) => secret.metadata.labels['sealedsecrets.bitnami.com/sealed-secrets-key'] === 'active',
     )
-    podName = response?.body?.items[0]?.metadata?.name || ''
-  } catch (error) {
-    debug('Error getting sealed secrets pod name:', error)
-  }
+    const newestItem = sealedSecretsKeys.reduce((maxItem, currentItem) => {
+      const maxTimestamp = new Date(maxItem.creationTimestamp as Date).getTime()
+      const currentTimestamp = new Date(currentItem.creationTimestamp as Date).getTime()
+      return currentTimestamp > maxTimestamp ? currentItem : maxItem
+    }, sealedSecretsKeys[0])
 
-  try {
-    const response = await k8sApi.readNamespacedPodLog(podName, namespace)
-    const certificateRegex = /-----BEGIN CERTIFICATE-----\n([\s\S]*?)\n-----END CERTIFICATE-----/
-    const matches = response.body.match(certificateRegex)
-    if (matches && matches[0]) {
-      const certificateWithLines = matches[0].trim()
-      await writeFile(certPath, certificateWithLines, 'utf-8')
-    } else debug('Sealed secrets certificate not found in the pod log.')
+    if (newestItem.data['tls.crt'])
+      await writeFile(certPath, Buffer.from(newestItem.data['tls.crt'], 'base64').toString('utf-8'), 'utf-8')
+    else debug('Sealed secrets certificate not found!')
+
+    if (newestItem.data['tls.key'])
+      await writeFile(keyPath, Buffer.from(newestItem.data['tls.key'], 'base64').toString('utf-8'), 'utf-8')
+    else debug('Sealed secrets key not found!')
   } catch (error) {
-    debug('Error reading sealed secrets certificate:', error)
+    debug('Error getting sealed secrets keys:', error)
   }
 }
