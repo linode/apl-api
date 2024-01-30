@@ -3,7 +3,9 @@ import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
-import { emptyDir, pathExists, unlink } from 'fs-extra'
+import archiver from 'archiver'
+import { once } from 'events'
+import { createReadStream, createWriteStream, emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { cloneDeep, each, filter, get, isArray, isEmpty, omit, pick, set } from 'lodash'
@@ -1149,6 +1151,37 @@ export default class OtomiStack {
 
   getSealedSecrets(teamId: string): Array<SealedSecret> {
     return this.db.getCollection('sealedsecrets', { teamId }) as Array<SealedSecret>
+  }
+
+  async getSealedSecretsKeys(): Promise<any> {
+    const certPath = '/tmp/sealed-secrets-cert.pem'
+    const keyPath = '/tmp/sealed-secrets-key.pem'
+    const date = new Date()
+    const formattedDateTime = date.toISOString().replace(/:/g, '-').replace(/\..+/, '')
+    const fileName = `sealed-secrets-keys-${formattedDateTime}.zip`
+    const filePath = `/tmp/${fileName}`
+    const output = createWriteStream(filePath)
+    const archive = archiver('zip', {
+      zlib: { level: 9 },
+    })
+
+    archive.on('warning', function (err) {
+      if (err.code !== 'ENOENT') throw err
+    })
+    try {
+      archive.pipe(output)
+      archive.append(createReadStream(certPath), { name: 'sealed-secrets-cert.pem' })
+      archive.append(createReadStream(keyPath), { name: 'sealed-secrets-key.pem' })
+      await archive.finalize()
+      await once(output, 'close')
+    } catch (error) {
+      debug('Error creating zip archive:', error)
+      throw error
+    } finally {
+      output.end()
+    }
+
+    return { filePath, fileName }
   }
 
   async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {

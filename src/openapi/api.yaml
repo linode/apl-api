@@ -315,6 +315,22 @@ paths:
         "400":
           <<: *BadRequest
 
+  /sealedsecretskeys:
+    get:
+      operationId: downloadSealedSecretKeys
+      description: Download sealed secret keys
+      x-aclSchema: SealedSecret
+      responses:
+        <<: *DefaultPostResponses
+        "200":
+          description: Successfully downloaded sealed secret keys
+          content:
+            application/zip:
+              schema:
+                type: object
+        "400":
+          <<: *BadRequest
+
   "/teams/{teamId}/sealedsecrets":
     parameters:
       - $ref: "#/components/parameters/teamParams"
