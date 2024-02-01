@@ -5,6 +5,7 @@ import { pathExists, unlink } from 'fs-extra'
 import { writeFile } from 'fs/promises'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
+import YAML from 'yaml'
 import { Build, Cloudtty, SealedSecret, Service, Workload } from './otomi-models'
 
 const debug = Debug('otomi:api:k8sOperations')
@@ -459,30 +460,60 @@ export async function getSealedSecretCertFromK8s(): Promise<void> {
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
   const namespace = 'sealed-secrets'
+  const labelSelector = 'sealedsecrets.bitnami.com/sealed-secrets-key'
   const certPath = '/tmp/sealed-secrets-cert.pem'
-  const keyPath = '/tmp/sealed-secrets-key.pem'
+  const mainkeyPath = '/tmp/sealed-secrets-main.key'
 
   if (await pathExists(certPath)) await unlink(certPath)
-  if (await pathExists(keyPath)) await unlink(keyPath)
+  if (await pathExists(mainkeyPath)) await unlink(mainkeyPath)
 
   try {
-    const response = await k8sApi.listNamespacedSecret(namespace)
-    const sealedSecretsKeys: any = response?.body?.items?.filter(
-      (secret: any) => secret.metadata.labels['sealedsecrets.bitnami.com/sealed-secrets-key'] === 'active',
+    const response = await k8sApi.listNamespacedSecret(
+      namespace,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      labelSelector,
     )
-    const newestItem = sealedSecretsKeys.reduce((maxItem, currentItem) => {
+    const { items } = response.body as any
+
+    const newestItem = items.reduce((maxItem, currentItem) => {
       const maxTimestamp = new Date(maxItem.creationTimestamp as Date).getTime()
       const currentTimestamp = new Date(currentItem.creationTimestamp as Date).getTime()
       return currentTimestamp > maxTimestamp ? currentItem : maxItem
-    }, sealedSecretsKeys[0])
+    }, items[0])
 
+    const myJson: any = {
+      apiVersion: 'v1',
+      items: [],
+      kind: 'List',
+      metadata: {
+        resourceVersion: '',
+      },
+    }
+    for (const item of items) {
+      const newItem = {
+        apiVersion: 'v1',
+        data: item.data,
+        kind: 'Secret',
+        metadata: {
+          creationTimestamp: item.metadata.creationTimestamp,
+          labels: item.metadata.labels,
+          name: item.metadata.name,
+          namespace: item.metadata.namespace,
+          resourceVersion: item.metadata.resourceVersion,
+          uid: item.metadata.uid,
+        },
+        type: item.type,
+      }
+      myJson.items.push(newItem)
+    }
+    const secretYaml = YAML.stringify(myJson)
+    await writeFile(mainkeyPath, secretYaml, 'utf-8')
     if (newestItem.data['tls.crt'])
       await writeFile(certPath, Buffer.from(newestItem.data['tls.crt'], 'base64').toString('utf-8'), 'utf-8')
     else debug('Sealed secrets certificate not found!')
-
-    if (newestItem.data['tls.key'])
-      await writeFile(keyPath, Buffer.from(newestItem.data['tls.key'], 'base64').toString('utf-8'), 'utf-8')
-    else debug('Sealed secrets key not found!')
   } catch (error) {
     debug('Error getting sealed secrets keys:', error)
   }
