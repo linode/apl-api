@@ -518,3 +518,16 @@ export async function getSealedSecretCertFromK8s(): Promise<void> {
     debug('Error getting sealed secrets keys:', error)
   }
 }
+
+export async function getTeamSecretsFromK8s(namespace: string) {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  try {
+    const res: any = await k8sApi.listNamespacedSecret(namespace)
+    const secrets = res.body.items.map((item) => item.metadata.name)
+    return secrets
+  } catch (error) {
+    debug('getTeamSecretsFromK8s error:', error)
+  }
+}

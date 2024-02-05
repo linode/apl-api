@@ -59,6 +59,7 @@ import {
   getKubernetesVersion,
   getLastTektonMessage,
   getSecretValues,
+  getTeamSecretsFromK8s,
   k8sdelete,
   watchPodUntilRunning,
 } from './k8s_operations'
@@ -1149,6 +1150,11 @@ export default class OtomiStack {
 
   getSealedSecrets(teamId: string): Array<SealedSecret> {
     return this.db.getCollection('sealedsecrets', { teamId }) as Array<SealedSecret>
+  }
+
+  async getSecretsFromK8s(teamId: string): Promise<Array<string>> {
+    const secrets = await getTeamSecretsFromK8s(`team-${teamId}`)
+    return secrets
   }
 
   async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {

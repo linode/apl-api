@@ -331,6 +331,24 @@ paths:
         "400":
           <<: *BadRequest
 
+  "/teams/{teamId}/k8sSecrets":
+    parameters:
+      - $ref: "#/components/parameters/teamParams"
+    get:
+      operationId: getSecretsFromK8s
+      description: Get secrets from k8s
+      responses:
+        "200":
+          description: Successfully obtained secrets from k8s
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        "400":
+          <<: *BadRequest
+
   "/teams/{teamId}/sealedsecrets":
     parameters:
       - $ref: "#/components/parameters/teamParams"
