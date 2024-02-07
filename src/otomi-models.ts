@@ -7,6 +7,7 @@ export type AppList = components['schemas']['AppList']
 export type Backup = components['schemas']['Backup']
 export type Kubecfg = components['schemas']['Kubecfg']
 export type K8sService = components['schemas']['K8sService']
+export type Netpol = components['schemas']['Netpol']
 export type Secret = components['schemas']['Secret'] & { teamId?: string }
 export type License = components['schemas']['License']
 export type LicenseJwt = components['schemas']['LicenseJwt']
