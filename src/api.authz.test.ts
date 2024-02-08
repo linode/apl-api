@@ -12,6 +12,7 @@ import { App, License } from './otomi-models'
 
 const adminToken: string = getToken(['team-admin'])
 const teamToken: string = getToken(['team-team1'])
+const userToken: string = getToken([])
 const validLicense: License = {
   isValid: true,
   hasLicense: true,
@@ -120,6 +121,22 @@ describe('API authz tests', () => {
       .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
+  })
+
+  it('admin can get all values', (done) => {
+    agent.get('/v1/otomi/values').set('Authorization', `Bearer ${adminToken}`).expect(200).end(done)
+  })
+
+  it('team cannot get all values', (done) => {
+    agent.get('/v1/otomi/values').set('Authorization', `Bearer ${teamToken}`).expect(403).end(done)
+  })
+
+  it('authenticated user cannot get all values', (done) => {
+    agent.get('/v1/otomi/values').set('Authorization', `Bearer ${userToken}`).expect(403).end(done)
+  })
+
+  it('unauthenticated user cannot get all values', (done) => {
+    agent.get('/v1/otomi/values').expect(401).end(done)
   })
   it('admin can see values from an app', (done) => {
     const values: App['values'] = { shown: true }
