@@ -1111,9 +1111,9 @@ export default class OtomiStack {
         { ...data, teamId, encryptedData, namespace },
         { teamId, name: data.name },
       ) as SealedSecret
-    } catch (error) {
-      if (error.code === 409) error.publicMessage = 'SealedSecret name already exists'
-      throw error
+    } catch (err) {
+      if (err.code === 409) err.publicMessage = 'SealedSecret name already exists'
+      throw err
     }
   }
 
