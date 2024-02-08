@@ -310,6 +310,9 @@ adminApps:
         # namespace: prometheus
         type: public
         auth: true
+  - name: sealed-secrets
+    tags: [secrets, security, observability]
+    isShared: true
   - name: tempo
     tags: [tracing]
     deps: [prometheus, grafana]
