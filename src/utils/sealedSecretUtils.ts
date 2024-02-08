@@ -1,5 +1,4 @@
 import crypto, { X509Certificate } from 'crypto'
-import { readFile } from 'fs/promises'
 
 function hybridEncrypt(pubKey, plaintext, label) {
   const sessionKey = crypto.randomBytes(32)
@@ -34,8 +33,7 @@ function getPublicKey(certificate) {
   })
 }
 
-export async function encryptSecretItem(secretName, ns, data, scope) {
-  const certificate = await readFile('/tmp/sealed-secrets-cert.pem', 'utf8')
+export function encryptSecretItem(certificate, secretName, ns, data, scope) {
   const pubKey = getPublicKey(certificate)
   const label = encryptionLabel(ns, secretName, scope)
   const out = hybridEncrypt(pubKey, data, label)

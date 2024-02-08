@@ -1,11 +1,8 @@
 import * as k8s from '@kubernetes/client-node'
 import Debug from 'debug'
 import * as fs from 'fs'
-import { pathExists, unlink } from 'fs-extra'
-import { writeFile } from 'fs/promises'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
-import YAML from 'yaml'
 import { Build, Cloudtty, SealedSecret, Service, Workload } from './otomi-models'
 
 const debug = Debug('otomi:api:k8sOperations')
@@ -455,17 +452,12 @@ export async function getSealedSecretStatus(sealedsecret: SealedSecret): Promise
   return syncedStatus
 }
 
-export async function getSealedSecretCertFromK8s(): Promise<void> {
+export async function getSealedSecretsCertificate(): Promise<string> {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
   const namespace = 'sealed-secrets'
   const labelSelector = 'sealedsecrets.bitnami.com/sealed-secrets-key'
-  const certPath = '/tmp/sealed-secrets-cert.pem'
-  const mainkeyPath = '/tmp/sealed-secrets-main.key'
-
-  if (await pathExists(certPath)) await unlink(certPath)
-  if (await pathExists(mainkeyPath)) await unlink(mainkeyPath)
 
   try {
     const response = await k8sApi.listNamespacedSecret(
@@ -484,7 +476,36 @@ export async function getSealedSecretCertFromK8s(): Promise<void> {
       return currentTimestamp > maxTimestamp ? currentItem : maxItem
     }, items[0])
 
-    const myJson: any = {
+    if (newestItem.data['tls.crt']) return Buffer.from(newestItem.data['tls.crt'], 'base64').toString('utf-8')
+    else {
+      debug('Sealed secrets certificate not found!')
+      return ''
+    }
+  } catch (error) {
+    debug('Error getting sealed secrets certificate:', error)
+    return ''
+  }
+}
+
+export async function getSealedSecretsKeys(): Promise<any> {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  const namespace = 'sealed-secrets'
+  const labelSelector = 'sealedsecrets.bitnami.com/sealed-secrets-key'
+
+  try {
+    const response = await k8sApi.listNamespacedSecret(
+      namespace,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      labelSelector,
+    )
+    const { items } = response.body as any
+
+    const sealedSecretsKeysJson: any = {
       apiVersion: 'v1',
       items: [],
       kind: 'List',
@@ -507,13 +528,9 @@ export async function getSealedSecretCertFromK8s(): Promise<void> {
         },
         type: item.type,
       }
-      myJson.items.push(newItem)
+      sealedSecretsKeysJson.items.push(newItem)
     }
-    const secretYaml = YAML.stringify(myJson)
-    await writeFile(mainkeyPath, secretYaml, 'utf-8')
-    if (newestItem.data['tls.crt'])
-      await writeFile(certPath, Buffer.from(newestItem.data['tls.crt'], 'base64').toString('utf-8'), 'utf-8')
-    else debug('Sealed secrets certificate not found!')
+    return sealedSecretsKeysJson
   } catch (error) {
     debug('Error getting sealed secrets keys:', error)
   }

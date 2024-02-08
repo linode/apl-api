@@ -58,6 +58,7 @@ import {
   getCloudttyActiveTime,
   getKubernetesVersion,
   getLastTektonMessage,
+  getSealedSecretsCertificate,
   getSecretValues,
   getTeamSecretsFromK8s,
   k8sdelete,
@@ -65,7 +66,7 @@ import {
 } from './k8s_operations'
 import connect from './otomiCloud/connect'
 import { validateBackupFields } from './utils/backupUtils'
-import { encryptSecretItem } from './utils/sealedSecret'
+import { encryptSecretItem } from './utils/sealedSecretUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 const debug = Debug('otomi:otomi-stack')
@@ -1100,9 +1101,15 @@ export default class OtomiStack {
 
   async createSealedSecret(teamId: string, data: SealedSecret): Promise<SealedSecret> {
     const namespace = data.namespace ?? `team-${teamId}`
+    const certificate = await getSealedSecretsCertificate()
+    if (!certificate) {
+      const err = new ValidationError()
+      err.publicMessage = 'SealedSecrets certificate not found'
+      throw err
+    }
     try {
-      const encryptedDataPromises = data.encryptedData.map(async (obj) => {
-        const encryptedItem = await encryptSecretItem(data.name, namespace, obj.value, 'namespace-wide')
+      const encryptedDataPromises = data.encryptedData.map((obj) => {
+        const encryptedItem = encryptSecretItem(certificate, data.name, namespace, obj.value, 'namespace-wide')
         return { [obj.key]: encryptedItem }
       })
       const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises)))
@@ -1119,8 +1126,14 @@ export default class OtomiStack {
 
   async editSealedSecret(id: string, data: SealedSecret): Promise<SealedSecret> {
     const namespace = data.namespace ?? `team-${data?.teamId}`
-    const encryptedDataPromises = data.encryptedData.map(async (obj) => {
-      const encryptedItem = await encryptSecretItem(data.name, namespace, obj.value, 'namespace-wide')
+    const certificate = await getSealedSecretsCertificate()
+    if (!certificate) {
+      const err = new ValidationError()
+      err.publicMessage = 'SealedSecrets certificate not found'
+      throw err
+    }
+    const encryptedDataPromises = data.encryptedData.map((obj) => {
+      const encryptedItem = encryptSecretItem(certificate, data.name, namespace, obj.value, 'namespace-wide')
       return { [obj.key]: encryptedItem }
     })
     const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises)))

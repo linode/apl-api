@@ -42,7 +42,6 @@ import {
   getBuildStatus,
   getKubernetesVersion,
   getNodes,
-  getSealedSecretCertFromK8s,
   getSealedSecretStatus,
   getServiceStatus,
   getWorkloadStatus,
@@ -243,8 +242,6 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   setInterval(async function () {
     await resourceStatus()
   }, emitResourceStatusInterval)
-
-  getSealedSecretCertFromK8s()
 
   // and register session middleware
   app.use(sessionMiddleware(server as Server))
