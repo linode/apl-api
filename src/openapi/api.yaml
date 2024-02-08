@@ -319,15 +319,15 @@ paths:
     get:
       operationId: downloadSealedSecretKeys
       description: Download sealed secret keys
-      x-aclSchema: SealedSecret
+      x-aclSchema: SealedSecretsKeys
       responses:
         <<: *DefaultPostResponses
         "200":
           description: Successfully downloaded sealed secret keys
           content:
-            application/zip:
+            application/key:
               schema:
-                type: object
+                $ref: "#/components/schemas/SealedSecretsKeys"
         "400":
           <<: *BadRequest
 
@@ -337,6 +337,7 @@ paths:
     get:
       operationId: getSecretsFromK8s
       description: Get secrets from k8s
+      x-aclSchema: K8sSecret
       responses:
         "200":
           description: Successfully obtained secrets from k8s
@@ -345,7 +346,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: string
+                  $ref: "#/components/schemas/K8sSecret"
         "400":
           <<: *BadRequest
 
@@ -1452,6 +1453,10 @@ components:
       $ref: revert.yaml#/Revert
     SealedSecret:
       $ref: sealedsecret.yaml#/SealedSecret
+    SealedSecretsKeys:
+      $ref: sealedsecretskeys.yaml#/SealedSecretsKeys
+    K8sSecret:
+      $ref: k8sSecret.yaml#/K8sSecret
     Secret:
       $ref: secret.yaml#/Secret
     SecretDockerRegistry:
