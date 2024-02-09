@@ -108,7 +108,7 @@ paths:
         '200':
           description: Successfully obtained otomi values
           content:
-            text/plain:
+            application/yaml:
               schema:
                 $ref: '#/components/schemas/OtomiCliValues'
   /secrets:
