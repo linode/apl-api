@@ -57,6 +57,7 @@ ruleType:
                   default: AllowAll
                   enum:
                     - AllowAll
+                    - AllowOnly
               required: [mode]
             - title: Allow Only
               additionalProperties: false
