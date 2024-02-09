@@ -16,12 +16,12 @@ Netpol:
     id:
       type: string
     teamId:
-      $ref: 'definitions.yaml#/idName'
+      $ref: "definitions.yaml#/idName"
     name:
       title: Network policy name
-      $ref: 'definitions.yaml#/wordCharacterPattern'
+      $ref: "definitions.yaml#/wordCharacterPattern"
     ruleType:
-      $ref: '#/ruleType'
+      $ref: "#/ruleType"
   required:
     - name
 
@@ -29,110 +29,81 @@ ruleType:
   title: Rule type
   description: Choose between Ingress or Egress
   type: object
-  oneOf:
-    - title: Ingress
-      type: object
-      description: 'Control traffic between Services and Teams'
-      properties:
-        ingress:
-          additionalProperties: false
-          type: object
-          properties:
-            toLabelName:
-              type: string
-              title: Selector label name
-              description: 'The name of the Pod selector label'
-            toLabelValue:
-              type: string
-              title: Selector label value
-              description: 'The value of the Pod selector label'           
-          oneOf:
-            - title: Allow all
-              additionalProperties: false
-              type: object
-              description: Allow traffic from all workload in all teams
-              properties:
-                mode:
-                  type: string
-                  default: AllowAll
-                  enum:
-                    - AllowAll
-                    - AllowOnly
-              required: [mode]
-            - title: Allow Only
-              additionalProperties: false
-              type: object
-              properties:
-                mode:
-                  type: string
-                  default: AllowOnly
-                  enum:
-                    - AllowOnly
-                allow:
-                  title: Allow entire team or specific workloads
-                  type: array
-                  minItems: 1
-                  items:
-                    type: object
-                    properties:
-                      fromNamespace:
-                        type: string
-                        title: Namespace name
-                        description: 'The name of the namespace'
-                      fromLabelName:
-                        type: string
-                        title: Selector label name
-                        description: 'The name of the Pod selector label'
-                      fromLabelValue:
-                        type: string
-                        title: Selector label value
-                        description: 'The value of the Pod selector label'
-                    required:
-                      - fromNamespace
-              required:
-                - mode
-                - allow
-        type:
-          type: string
-          enum:
-            - ingress
-          default: ingress
-    - title: Egress
-      description: Trusted domains a workload can access
+  properties:
+    type:
+      type: string
+      enum:
+        - ingress
+        - egress
+      default: ingress
+    ingress:
+      additionalProperties: false
       type: object
       properties:
-        egress:
-          additionalProperties: false
-          type: object
-          properties:
-            domain:
-              title: FQDN or IP address
-              $ref: definitions.yaml#/domain
-            ports:
-              type: array
-              items:
-                type: object
-                properties:
-                  number:
-                    title: Port number
-                    type: integer
-                    minimum: 1
-                    maximum: 65535
-                  protocol:
-                    title: Protocol
-                    type: string
-                    enum: [HTTPS, HTTP, TCP]
-                    default: HTTPS
-                required:
-                  - number
-                  - protocol
-              default:
-                - number: 443
-                  protocol: HTTPS
-          required:
-            - domain
-        type:
+        toLabelName:
           type: string
+          title: Selector label name
+          description: "The name of the Pod selector label"
+        toLabelValue:
+          type: string
+          title: Selector label value
+          description: "The value of the Pod selector label"
+        mode:
+          type: string
+          default: AllowAll
           enum:
-            - egress
-          default: egress
+            - AllowAll
+            - AllowOnly
+        allow:
+          title: Allow entire team or specific workloads
+          type: array
+          minItems: 1
+          items:
+            type: object
+            properties:
+              fromNamespace:
+                type: string
+                title: Namespace name
+                description: "The name of the namespace"
+              fromLabelName:
+                type: string
+                title: Selector label name
+                description: "The name of the Pod selector label"
+              fromLabelValue:
+                type: string
+                title: Selector label value
+                description: "The value of the Pod selector label"
+            required:
+              - fromNamespace
+      required:
+        - mode
+    egress:
+      additionalProperties: false
+      type: object
+      properties:
+        domain:
+          title: FQDN or IP address
+          $ref: definitions.yaml#/domain
+        ports:
+          type: array
+          items:
+            type: object
+            properties:
+              number:
+                title: Port number
+                type: integer
+                minimum: 1
+                maximum: 65535
+              protocol:
+                title: Protocol
+                type: string
+                enum: [HTTPS, HTTP, TCP]
+                default: HTTPS
+            required:
+              - number
+              - protocol
+          default:
+            - number: 443
+              protocol: HTTPS
+      required:
+        - domain
