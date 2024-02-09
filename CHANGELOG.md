@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.4.0](https://github.com/redkubes/otomi-api/compare/v2.3.0...v2.4.0) (2024-02-05)
+
+
+### Features
+
+* allow defining otel attributes ([#498](https://github.com/redkubes/otomi-api/issues/498)) ([291586f](https://github.com/redkubes/otomi-api/commit/291586f66e4df85221b79c5905f145ffc4919255))
+* add linode dns ([#467](https://github.com/redkubes/otomi-api/issues/467)) ([b1c80d9](https://github.com/redkubes/otomi-api/commit/b1c80d96d155697905d8356560a213972627c78e))
+* add source code scan option for team builds ([#499](https://github.com/redkubes/otomi-api/issues/499)) ([7e7d3bf](https://github.com/redkubes/otomi-api/commit/7e7d3bfabacb48065c26b19c42edd29d35602221))
+
 ## [2.3.0](https://github.com/redkubes/otomi-api/compare/v2.2.0...v2.3.0) (2024-01-12)
 
 
