@@ -94,6 +94,8 @@ k8s:
       app: trivy
       disableIstioInjection: true
       disablePolicyChecks: true
+    - name: sealed-secrets
+      app: sealed-secrets
     - name: vault
       app: vault
     - name: velero
@@ -312,7 +314,7 @@ adminApps:
         auth: true
   - name: sealed-secrets
     tags: [secrets, security, observability]
-    isShared: true
+    isShared: false
     ownHost: true
   - name: tempo
     tags: [tracing]
