@@ -10,10 +10,11 @@ export default function (): OperationHandlerArray {
     async ({ otomi, query }: OpenApiRequestExt, res): Promise<void> => {
       debug('getValues', query)
       const data = await otomi.getValues(query)
-      console.log(query)
       const dateTime = new Date().toISOString()
+      let fileName = `values-${dateTime}.yaml`
+      if (query?.excludeSecrets === 'true') fileName = `values-redacted-${dateTime}.yaml`
       res.setHeader('Content-type', 'application/yaml')
-      res.setHeader('Content-Disposition', `attachment; filename=values-${dateTime}.yaml`)
+      res.setHeader('Content-Disposition', `attachment; filename=${fileName}`)
       res.send(data)
     },
   ]
