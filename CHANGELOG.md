@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.5.0](https://github.com/redkubes/otomi-api/compare/v2.4.0...v2.5.0) (2024-02-13)
+
+
+### Features
+
+* download values ([#503](https://github.com/redkubes/otomi-api/issues/503)) ([d99571d](https://github.com/redkubes/otomi-api/commit/d99571d345b36ac78727d94d09bf2c499c26e24d))
+
+
+### Bug Fixes
+
+* add linode provider to add clusters ([#504](https://github.com/redkubes/otomi-api/issues/504)) ([9b7c15a](https://github.com/redkubes/otomi-api/commit/9b7c15aebfd30eefa5e95f16c3153debeb805ba5))
+
 ## [2.4.0](https://github.com/redkubes/otomi-api/compare/v2.3.0...v2.4.0) (2024-02-05)
 
 
