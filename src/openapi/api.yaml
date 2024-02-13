@@ -104,6 +104,11 @@ paths:
           schema:
             type: string
             enum: ['true', 'false']
+        - name: withWorkloadValues
+          in: query
+          schema:
+            type: string
+            enum: ['true', 'false']
       responses:
         '200':
           description: Successfully obtained otomi values
