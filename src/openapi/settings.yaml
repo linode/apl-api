@@ -239,7 +239,7 @@ Settings:
           # readOnly: true
         additionalClusters:
           title: Additional clusters
-          description: Enter other k8s clusters, if there are any.
+          description: Enter other clusters running Otomi.
           type: array
           items:
             $ref: cluster.yaml#/AdditionalCluster
