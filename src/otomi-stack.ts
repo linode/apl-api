@@ -165,6 +165,9 @@ export default class OtomiStack {
     return apps.concat(ingressApps)
   }
 
+  async getValues(query): Promise<Record<string, any>> {
+    return (await this.repo.requestValues(query)).data
+  }
   getMetrics(): Metrics {
     const metrics: Metrics = {
       otomi_backups: this.getAllBackups().length,

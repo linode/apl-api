@@ -26,6 +26,7 @@ const env = cleanEnv({
 const baseUrl = `http://${env.TOOLS_HOST}:17771/`
 const prepareUrl = `${baseUrl}prepare`
 const initUrl = `${baseUrl}init`
+const valuesUrl = `${baseUrl}otomi/values`
 
 const getProtocol = (url): string => (url && url.includes('://') ? url.split('://')[0] : 'https')
 
@@ -89,6 +90,11 @@ export class Repo {
     return res
   }
 
+  async requestValues(params): Promise<AxiosResponse> {
+    debug(`Tools: requesting "otomi/values" ${this.path}`)
+    const res = await axios.get(valuesUrl, { params: { envDir: this.path, ...params } })
+    return res
+  }
   async addConfig(): Promise<void> {
     debug(`Adding git config`)
     await this.git.addConfig('user.name', this.user)
