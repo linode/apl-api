@@ -41,6 +41,7 @@ function renameKeys(obj: Record<string, any>) {
 export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: Db): RequestHandler {
   const {
     params: { teamId },
+    body,
     user,
   } = req
   const action = HttpMethodMapping[req.method]
@@ -53,9 +54,12 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
   authz.init(user)
 
   let valid
-  if (action === 'read' && schemaName === 'Kubecfg') valid = authz.hasSelfService(teamId, 'team', 'downloadKubeConfig')
+  if (action === 'read' && schemaName === 'Kubecfg')
+    valid = authz.hasSelfService(teamId, 'access', 'downloadKubeConfig')
   else if (action === 'read' && schemaName === 'DockerConfig')
-    valid = authz.hasSelfService(teamId, 'team', 'downloadDockerConfig')
+    valid = authz.hasSelfService(teamId, 'access', 'downloadDockerConfig')
+  else if (action === 'create' && schemaName === 'Cloudtty')
+    valid = authz.hasSelfService(body.teamId, 'access', 'shell')
   else valid = authz.validateWithCasl(action, schemaName, teamId)
   const env = cleanEnv({})
   // TODO: Debug purpose only for removal of license
