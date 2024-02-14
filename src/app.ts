@@ -79,7 +79,7 @@ const checkAgainstGitea = async () => {
 }
 
 // collect and upload metrics to Otomi-Cloud
-const uploadOtomiMetrics = async () => {
+export const uploadOtomiMetrics = async () => {
   try {
     const otomiStack = await getSessionStack()
     const license = otomiStack.getLicense()
