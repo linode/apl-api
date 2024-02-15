@@ -25,6 +25,7 @@ teamConfig:
             opencost: {}
             prometheus: {}
             rabbitmq: {}
+            sealed-secrets: {}
             thanos: {}
             vault: {}
             velero: {}

@@ -30,6 +30,7 @@ AppList:
     - prometheus
     - rabbitmq
     - tekton
+    - sealed-secrets
     - thanos
     - tempo
     - trivy
