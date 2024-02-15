@@ -357,7 +357,7 @@ backupSchedule:
   type: string
 clusterName:
   $ref: '#/idName'
-  description: Short name that will be used in construction of cluster domain and messaging.
+  description: Short name for the cluster.
   type: string
 containerSpecNoSec:
   properties:
@@ -517,6 +517,21 @@ dns:
               type: object
           required:
             - civo
+          type: object
+        - title: Linode
+          properties:
+            linode:
+              x-hideTitle: true
+              properties:
+                apiToken:
+                  type: string
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
+                  x-secret: true
+              type: object
+          required:
+            - linode
           type: object
         - title: Google
           properties:
@@ -953,6 +968,7 @@ provider:
     - vultr
     - scaleway
     - civo
+    - linode
     - custom
 priority:
   title: Minimum priority

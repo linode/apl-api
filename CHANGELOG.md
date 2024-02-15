@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.5.0](https://github.com/redkubes/otomi-api/compare/v2.4.0...v2.5.0) (2024-02-13)
+
+
+### Features
+
+* download values ([#503](https://github.com/redkubes/otomi-api/issues/503)) ([d99571d](https://github.com/redkubes/otomi-api/commit/d99571d345b36ac78727d94d09bf2c499c26e24d))
+
+
+### Bug Fixes
+
+* add linode provider to add clusters ([#504](https://github.com/redkubes/otomi-api/issues/504)) ([9b7c15a](https://github.com/redkubes/otomi-api/commit/9b7c15aebfd30eefa5e95f16c3153debeb805ba5))
+
+## [2.4.0](https://github.com/redkubes/otomi-api/compare/v2.3.0...v2.4.0) (2024-02-05)
+
+
+### Features
+
+* allow defining otel attributes ([#498](https://github.com/redkubes/otomi-api/issues/498)) ([291586f](https://github.com/redkubes/otomi-api/commit/291586f66e4df85221b79c5905f145ffc4919255))
+* add linode dns ([#467](https://github.com/redkubes/otomi-api/issues/467)) ([b1c80d9](https://github.com/redkubes/otomi-api/commit/b1c80d96d155697905d8356560a213972627c78e))
+* add source code scan option for team builds ([#499](https://github.com/redkubes/otomi-api/issues/499)) ([7e7d3bf](https://github.com/redkubes/otomi-api/commit/7e7d3bfabacb48065c26b19c42edd29d35602221))
+
+## [2.3.0](https://github.com/redkubes/otomi-api/compare/v2.2.0...v2.3.0) (2024-01-12)
+
+
+### Bug Fixes
+
+* knative services ([#495](https://github.com/redkubes/otomi-api/issues/495)) ([011d5ba](https://github.com/redkubes/otomi-api/commit/011d5ba139556571a43f5c33c67bd490087ff55d))
+* remove workload values ([#494](https://github.com/redkubes/otomi-api/issues/494)) ([e1d910e](https://github.com/redkubes/otomi-api/commit/e1d910e38feea2a68ef45347fd1b47e6d8b24a97))
+
 ## [2.2.0](https://github.com/redkubes/otomi-api/compare/v2.1.0...v2.2.0) (2024-01-04)
 
 

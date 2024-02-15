@@ -3,9 +3,9 @@ import Debug from 'debug'
 import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
-import { Build, Cloudtty, Service, Workload } from './otomi-models'
+import { Build, Cloudtty, SealedSecret, Service, Workload } from './otomi-models'
 
-const debug = Debug('otomi:api:cloudtty')
+const debug = Debug('otomi:api:k8sOperations')
 
 /**
  * Replicate the functionality of `kubectl apply`.  That is, create the resources defined in the `specFile` if they do
@@ -274,7 +274,12 @@ export async function getWorkloadStatus(workload: Workload): Promise<string> {
   }
 }
 
-async function listNamespacedCustomObject(group: string, namespace: string, plural: string, labelSelector: string) {
+async function listNamespacedCustomObject(
+  group: string,
+  namespace: string,
+  plural: string,
+  labelSelector: string | undefined,
+) {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
@@ -373,13 +378,173 @@ async function checkHostStatus(namespace: string, name: string, host: string) {
 }
 
 export async function getServiceStatus(service: Service, domainSuffix: string): Promise<string> {
+  const isKsvc = service?.ksvc?.predeployed
   const namespace = `team-${service.teamId}`
   const name = `team-${service.teamId}-public`
   const host = `team-${service.teamId}/${service.name}-${service.teamId}.${domainSuffix}`
+
+  if (isKsvc) {
+    const res = await listNamespacedCustomObject('networking.istio.io', namespace, 'virtualservices', undefined)
+    const virtualservices = res?.body?.items?.map((item) => item.metadata.name) || []
+    if (virtualservices.includes(`${service.name}-ingress`)) return 'Succeeded'
+    else return 'NotFound'
+  }
 
   const tlstermStatus = await checkHostStatus(namespace, `${name}-tlsterm`, host)
   if (tlstermStatus === 'Succeeded') return 'Succeeded'
 
   const tlspassStatus = await checkHostStatus(namespace, `${name}-tlspass`, host)
   return tlspassStatus
+}
+
+export async function getSecretValues(name: string, namespace: string): Promise<any> {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  try {
+    const res = await k8sApi.readNamespacedSecret(name, namespace)
+    const { data } = res.body
+    const decodedData = {}
+    for (const key in data) {
+      if (Object.prototype.hasOwnProperty.call(data, key))
+        decodedData[key] = Buffer.from(data[key], 'base64').toString('utf-8')
+    }
+    return decodedData
+  } catch (error) {
+    debug('getSecretValues error:', error)
+  }
+}
+
+export async function getSealedSecretSyncedStatus(name: string, namespace: string): Promise<string> {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
+
+  try {
+    const res: any = await k8sApi.getNamespacedCustomObject('bitnami.com', 'v1alpha1', namespace, 'sealedsecrets', name)
+    const { conditions } = res.body.status
+    if (conditions && conditions.length > 0 && conditions[0].type === 'Synced') {
+      switch (conditions[0].status) {
+        case 'True':
+          return 'Succeeded'
+        case 'False':
+          return 'Unknown'
+        case 'Unknown':
+          return 'NotFound'
+        default:
+          return 'NotFound'
+      }
+    }
+    return 'NotFound'
+  } catch (error) {
+    debug('getSealedSecretSyncedStatus error:', error)
+    return 'NotFound'
+  }
+}
+
+export async function getSealedSecretStatus(sealedsecret: SealedSecret): Promise<string> {
+  const { name } = sealedsecret
+  const namespace = sealedsecret?.namespace ?? `team-${sealedsecret.teamId}`
+  const value = await getSecretValues(name, namespace)
+  const syncedStatus = await getSealedSecretSyncedStatus(name, namespace)
+
+  if (value && syncedStatus === 'Succeeded') return 'Succeeded'
+  return syncedStatus
+}
+
+export async function getSealedSecretsCertificate(): Promise<string> {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  const namespace = 'sealed-secrets'
+  const labelSelector = 'sealedsecrets.bitnami.com/sealed-secrets-key'
+
+  try {
+    const response = await k8sApi.listNamespacedSecret(
+      namespace,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      labelSelector,
+    )
+    const { items } = response.body as any
+
+    const newestItem = items.reduce((maxItem, currentItem) => {
+      const maxTimestamp = new Date(maxItem.creationTimestamp as Date).getTime()
+      const currentTimestamp = new Date(currentItem.creationTimestamp as Date).getTime()
+      return currentTimestamp > maxTimestamp ? currentItem : maxItem
+    }, items[0])
+
+    if (newestItem.data['tls.crt']) return Buffer.from(newestItem.data['tls.crt'], 'base64').toString('utf-8')
+    else {
+      debug('Sealed secrets certificate not found!')
+      return ''
+    }
+  } catch (error) {
+    debug('Error getting sealed secrets certificate:', error)
+    return ''
+  }
+}
+
+export async function getSealedSecretsKeys(): Promise<any> {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  const namespace = 'sealed-secrets'
+  const labelSelector = 'sealedsecrets.bitnami.com/sealed-secrets-key'
+
+  try {
+    const response = await k8sApi.listNamespacedSecret(
+      namespace,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      labelSelector,
+    )
+    const { items } = response.body as any
+
+    const sealedSecretsKeysJson: any = {
+      apiVersion: 'v1',
+      items: [],
+      kind: 'List',
+      metadata: {
+        resourceVersion: '',
+      },
+    }
+    for (const item of items) {
+      const newItem = {
+        apiVersion: 'v1',
+        data: item.data,
+        kind: 'Secret',
+        metadata: {
+          creationTimestamp: item.metadata.creationTimestamp,
+          labels: item.metadata.labels,
+          name: item.metadata.name,
+          namespace: item.metadata.namespace,
+          resourceVersion: item.metadata.resourceVersion,
+          uid: item.metadata.uid,
+        },
+        type: item.type,
+      }
+      sealedSecretsKeysJson.items.push(newItem)
+    }
+    return sealedSecretsKeysJson
+  } catch (error) {
+    debug('Error getting sealed secrets keys:', error)
+  }
+}
+
+export async function getTeamSecretsFromK8s(namespace: string) {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  try {
+    const res: any = await k8sApi.listNamespacedSecret(namespace)
+    const secrets = res.body.items.map((item) => item.metadata.name)
+    return secrets
+  } catch (error) {
+    debug('getTeamSecretsFromK8s error:', error)
+  }
 }
