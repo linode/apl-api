@@ -13,6 +13,8 @@ import { App, License } from './otomi-models'
 const adminToken: string = getToken(['team-admin'])
 const teamToken: string = getToken(['team-team1'])
 const userToken: string = getToken([])
+const teamId = 'team1'
+const otherTeamId = 'team2'
 const validLicense: License = {
   isValid: true,
   hasLicense: true,
@@ -395,5 +397,125 @@ describe('API authz tests', () => {
   })
   it('anonymous user cannot activate license', (done) => {
     agent.put('/v1/activate').send({ jwt: 'mytoken' }).expect(401).end(done)
+  })
+
+  it('team can create its own sealedsecret', (done) => {
+    const data = {
+      name: 'demo',
+      encryptedData: [{ key: 'foo', value: 'bar' }],
+      type: 'kubernetes.io/opaque',
+    }
+    agent
+      .post(`/v1/teams/${teamId}/sealedsecrets`)
+      .send(data)
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect(200)
+      .end(done)
+  })
+
+  it('team can read its own sealedsecret', (done) => {
+    agent
+      .get(`/v1/teams/${teamId}/sealedsecrets/my-uuid`)
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect(200)
+      .end(done)
+  })
+
+  it('team can update its own sealedsecret', (done) => {
+    const data = {
+      name: 'demo',
+      encryptedData: [{ key: 'foo', value: 'baz' }],
+      type: 'kubernetes.io/opaque',
+    }
+    agent
+      .put(`/v1/teams/${teamId}/sealedsecrets/my-uuid`)
+      .send(data)
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect(200)
+      .end(done)
+  })
+
+  it('team can delete its own sealedsecret', (done) => {
+    agent
+      .delete(`/v1/teams/${teamId}/sealedsecrets/my-uuid`)
+      .set('Content-Type', 'application/json')
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+  it('team cannot create others sealedsecret', (done) => {
+    const data = {
+      name: 'demo',
+      encryptedData: [{ key: 'foo', value: 'bar' }],
+      type: 'kubernetes.io/opaque',
+    }
+    agent
+      .post(`/v1/teams/${otherTeamId}/sealedsecrets`)
+      .send(data)
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect(403)
+      .end(done)
+  })
+
+  it('team cannot read others sealedsecret', (done) => {
+    agent
+      .get(`/v1/teams/${otherTeamId}/sealedsecrets/my-uuid`)
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect(403)
+      .end(done)
+  })
+
+  it('team cannot update others sealedsecret', (done) => {
+    const data = {
+      name: 'demo',
+      encryptedData: [{ key: 'foo', value: 'baz' }],
+      type: 'kubernetes.io/opaque',
+    }
+    agent
+      .put(`/v1/teams/${otherTeamId}/sealedsecrets/my-uuid`)
+      .send(data)
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect(403)
+      .end(done)
+  })
+
+  it('team cannot delete others sealedsecret', (done) => {
+    agent
+      .delete(`/v1/teams/${otherTeamId}/sealedsecrets/my-uuid`)
+      .set('Content-Type', 'application/json')
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect(403)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+
+  it('team can get its own sealedsecrets', (done) => {
+    agent
+      .get(`/v1/teams/${teamId}/sealedsecrets`)
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(done)
+  })
+
+  it('team cannot get others sealedsecrets', (done) => {
+    agent
+      .get(`/v1/teams/${otherTeamId}/sealedsecrets`)
+      .set('Authorization', `Bearer ${teamToken}`)
+      .expect(403)
+      .end(done)
+  })
+
+  it('team cannot get all secrets', (done) => {
+    agent.get('/v1/secrets').set('Authorization', `Bearer ${teamToken}`).expect(403).end(done)
+  })
+
+  it('team cannot get all sealedsecrets', (done) => {
+    agent.get('/v1/sealedsecrets').set('Authorization', `Bearer ${teamToken}`).expect(403).end(done)
+  })
+
+  it('team cannot get the sealedsecretskeys', (done) => {
+    agent.get('/v1/sealedsecretskeys').set('Authorization', `Bearer ${teamToken}`).expect(403).end(done)
   })
 })
