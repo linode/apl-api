@@ -20,9 +20,9 @@ import {
   Cloudtty,
   Core,
   K8sService,
-  Netpol,
   License,
   Metrics,
+  Netpol,
   Policies,
   Project,
   SealedSecret,
@@ -98,9 +98,8 @@ export function getTeamBackupsJsonPath(teamId: string): string {
 export function getTeamNetpolsFilePath(teamId: string): string {
   return `env/teams/netpols.${teamId}.yaml`
 }
-
 export function getTeamNetpolsJsonPath(teamId: string): string {
-  return `teamConfig.${teamId}.policies`
+  return `teamConfig.${teamId}.netpols`
 }
 
 export function getTeamSealedSecretsFilePath(teamId: string): string {

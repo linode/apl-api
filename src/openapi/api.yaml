@@ -566,37 +566,37 @@ paths:
         '200':
           description: Successfully deleted a team secret
 
-  "/netpols":
+  '/netpols':
     get:
       operationId: getAllNetpols
       x-aclSchema: Netpol
       responses:
         <<: *DefaultGetResponses
-        "200":
+        '200':
           description: Successfully obtained all network policy configuration
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Netpol"
+                  $ref: '#/components/schemas/Netpol'
 
-  "/teams/{teamId}/netpols":
+  '/teams/{teamId}/netpols':
     parameters:
-      - $ref: "#/components/parameters/teamParams"
+      - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamNetpols
       x-aclSchema: Build
       responses:
         <<: *DefaultGetResponses
-        "200":
+        '200':
           description: Successfully obtained team network policy configuration
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Netpol"
+                  $ref: '#/components/schemas/Netpol'
     post:
       operationId: createNetpol
       description: Create a team network policy
@@ -605,34 +605,34 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Netpol"
+              $ref: '#/components/schemas/Netpol'
         description: Network policy object
         required: true
       responses:
         <<: *DefaultPostResponses
-        "200":
+        '200':
           description: Successfully stored network policy configuration
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Netpol"
+                $ref: '#/components/schemas/Netpol'
 
-  "/teams/{teamId}/netpols/{netpolId}":
+  '/teams/{teamId}/netpols/{netpolId}':
     parameters:
-      - $ref: "#/components/parameters/teamParams"
-      - $ref: "#/components/parameters/netpolParams"
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/netpolParams'
     get:
       operationId: getNetpol
       description: Get a network policy from a given team
       x-aclSchema: Netpol
       responses:
         <<: *DefaultGetResponses
-        "200":
+        '200':
           description: Successfully obtained network policy configuration
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Netpol"
+                $ref: '#/components/schemas/Netpol'
     put:
       operationId: editNetpol
       description: Edit a network policy from a given team
@@ -641,24 +641,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Netpol"
+              $ref: '#/components/schemas/Netpol'
         description: Netwok policy object that contains updated values
         required: true
       responses:
         <<: *DefaultGetResponses
-        "200":
+        '200':
           description: Successfully edited a team network policy
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Netpol"
+                $ref: '#/components/schemas/Netpol'
     delete:
       operationId: deleteNetpol
       description: Delete a network policy from a given team
       x-aclSchema: Netpol
       responses:
         <<: *DefaultGetResponses
-        "200":
+        '200':
           description: Successfully deleted a team network policy
 
   '/backups':
@@ -1116,7 +1116,7 @@ paths:
         required: true
       responses:
         <<: *DefaultGetResponses
-        "200":
+        '200':
           description: Successfully edited a team workload
           content:
             application/json:
