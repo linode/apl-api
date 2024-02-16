@@ -357,7 +357,7 @@ backupSchedule:
   type: string
 clusterName:
   $ref: '#/idName'
-  description: Short name that will be used in construction of cluster domain and messaging.
+  description: Short name for the cluster.
   type: string
 containerSpecNoSec:
   properties:
@@ -968,6 +968,7 @@ provider:
     - vultr
     - scaleway
     - civo
+    - linode
     - custom
 priority:
   title: Minimum priority

@@ -46,9 +46,11 @@ export async function fetchWorkloadCatalog(
   const folders = files.filter((f) => !filesToExclude.includes(f))
 
   let rbac = {}
+  let betaCharts: string[] = []
   try {
     const r = await readFile(`${helmChartsDir}/rbac.yaml`, 'utf-8')
     rbac = YAML.parse(r).rbac
+    if (YAML.parse(r)?.betaCharts) betaCharts = YAML.parse(r).betaCharts
   } catch (error) {
     console.error(`Error while parsing rbac.yaml file : ${error.message}`)
   }
@@ -76,6 +78,7 @@ export async function fetchWorkloadCatalog(
           chartVersion: chartMetadata?.version,
           chartDescription: chartMetadata?.description,
           readme,
+          isBeta: betaCharts.includes(folder),
         }
         catalog.push(catalogItem)
         helmCharts.push(folder)

@@ -28,6 +28,7 @@ AppList:
     - minio
     - opencost
     - prometheus
+    - sealed-secrets
     - thanos
     - tempo
     - otel
