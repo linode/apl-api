@@ -70,7 +70,7 @@ veleroCloudProvider:
   oneOf:
     - title: Custom
       type: object
-      description: Select when the cluster is not running in Azure or AWS.
+      description: Select in case other options are not applicable
       properties:
         type:
           type: string
@@ -97,7 +97,7 @@ veleroCloudProvider:
               description: The ID of the used Azure Subscription.
               $ref: ../definitions.yaml#/wordCharacterPattern
             aadClientId:
-              description: The ID of the Service Principal with permissions for disk and snapshot management. 
+              description: The ID of the Service Principal with permissions for disk and snapshot management.
               $ref: ../definitions.yaml#/wordCharacterPattern
             aadClientSecret:
               description: The password of the Service Principal.

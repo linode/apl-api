@@ -328,6 +328,151 @@ paths:
         '200':
           description: Successfully deleted a service
 
+  /sealedsecrets:
+    get:
+      operationId: getAllSealedSecrets
+      description: Get all sealed secrets
+      x-aclSchema: SealedSecret
+      responses:
+        '200':
+          description: Successfully obtained all sealed secrets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SealedSecret'
+        '400':
+          <<: *BadRequest
+
+  /sealedsecretskeys:
+    get:
+      operationId: downloadSealedSecretKeys
+      description: Download sealed secret keys
+      x-aclSchema: SealedSecretsKeys
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully downloaded sealed secret keys
+          content:
+            application/key:
+              schema:
+                $ref: '#/components/schemas/SealedSecretsKeys'
+        '400':
+          <<: *BadRequest
+
+  '/teams/{teamId}/k8sSecrets':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getSecretsFromK8s
+      description: Get secrets from k8s
+      x-aclSchema: K8sSecret
+      responses:
+        '200':
+          description: Successfully obtained secrets from k8s
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/K8sSecret'
+        '400':
+          <<: *BadRequest
+
+  '/teams/{teamId}/sealedsecrets':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getSealedSecrets
+      description: Get sealed secrets from a given team
+      x-aclSchema: SealedSecret
+      responses:
+        '200':
+          description: Successfully obtained sealed secrets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SealedSecret'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenApiValidationError'
+    post:
+      operationId: createSealedSecret
+      description: Create a team sealed secret
+      x-aclSchema: SealedSecret
+      parameters:
+        - name: teamId
+          in: path
+          description: ID of team
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SealedSecret'
+        description: SealedSecret object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored sealed secret configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SealedSecret'
+
+  '/teams/{teamId}/sealedsecrets/{secretId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/secretParams'
+    get:
+      operationId: getSealedSecret
+      description: Get a sealed secret from a given team
+      x-aclSchema: SealedSecret
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained sealed secret configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SealedSecret'
+    put:
+      operationId: editSealedSecret
+      description: Edit a sealed secret from a given team
+      x-aclSchema: SealedSecret
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SealedSecret'
+        description: SealedSecret object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team sealed secret
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SealedSecret'
+    delete:
+      operationId: deleteSealedSecret
+      description: Delete a sealed secret from a given team
+      x-aclSchema: SealedSecret
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a team sealed secret
+
   '/teams/{teamId}/secrets':
     parameters:
       - $ref: '#/components/parameters/teamParams'
@@ -693,8 +838,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Policy"
 
-
-  "/k8sVersion":
+  '/k8sVersion':
     get:
       operationId: getK8sVersion
       description: Get cluster k8s version
@@ -1358,6 +1502,8 @@ components:
       $ref: apps/opencost.yaml#/AppOpencost
     AppPrometheus:
       $ref: apps/prometheus.yaml#/AppPrometheus
+    AppSealedSecrets:
+      $ref: apps/sealed-secrets.yaml#/AppSealedSecrets
     AppTempo:
       $ref: apps/tempo.yaml#/AppTempo
     AppThanos:
@@ -1416,6 +1562,12 @@ components:
       $ref: restore.yaml#/Restore
     Revert:
       $ref: revert.yaml#/Revert
+    SealedSecret:
+      $ref: sealedsecret.yaml#/SealedSecret
+    SealedSecretsKeys:
+      $ref: sealedsecretskeys.yaml#/SealedSecretsKeys
+    K8sSecret:
+      $ref: k8sSecret.yaml#/K8sSecret
     Secret:
       $ref: secret.yaml#/Secret
     SecretDockerRegistry:

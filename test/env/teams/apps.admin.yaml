@@ -23,6 +23,7 @@ teamConfig:
             minio: {}
             opencost: {}
             prometheus: {}
+            sealed-secrets: {}
             thanos: {}
             vault: {}
             velero: {}
