@@ -99,6 +99,10 @@ export function getTeamNetpolsFilePath(teamId: string): string {
   return `env/teams/netpols.${teamId}.yaml`
 }
 
+export function getTeamNetpolsJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.policies`
+}
+
 export function getTeamSealedSecretsFilePath(teamId: string): string {
   return `env/teams/sealedsecrets.${teamId}.yaml`
 }
