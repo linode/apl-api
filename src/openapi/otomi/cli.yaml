@@ -1,0 +1,6 @@
+OtomiCliValues:
+  x-acl:
+    admin:
+      - read-any
+    team: []
+  type: object
