@@ -1490,9 +1490,6 @@ definitions:
         $ref: '#/definitions/wordCharacterPattern'
         default: HEAD
       chartMetadata:
-      icon:
-        $ref: '#/definitions/wordCharacterPattern'
-      chart:
         title: ''
         properties:
           helmChartVersion:
