@@ -675,8 +675,6 @@ definitions:
                     team:
                       title: FROM team name
                       description: Allow traffic from a given team
-                      title: Team name
-                      description: 'Allow traffic from a given team'
                       type: string
                     service:
                       title: FROM label value
