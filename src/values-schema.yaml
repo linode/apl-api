@@ -608,6 +608,7 @@ definitions:
   k8sContext:
     description: The cluster k8s context as found in $KUBECONFIG.
     $ref: '#/definitions/wordCharacterPattern'
+    type: string
   labels:
     $ref: '#/definitions/labelsAnnotations'
     description: A set of labels.
@@ -674,6 +675,8 @@ definitions:
                     team:
                       title: FROM team name
                       description: Allow traffic from a given team
+                      title: Team name
+                      description: 'Allow traffic from a given team'
                       type: string
                     service:
                       title: FROM label value
@@ -1395,6 +1398,21 @@ definitions:
       secretName:
         description: The name of the secret with the credentials of the external private Git repository
         type: string
+      repoAccess:
+        properties:
+          privateGit:
+            type: boolean
+            default: false
+          otomiGit:
+            type: boolean
+            default: false
+          repoUserName:
+            description: The username used for basic authentication to access a private github repo.
+            $ref: '#/definitions/wordCharacterPattern'
+          repoPassword:
+            x-secret: ''
+            $ref: '#/definitions/wordCharacterPattern'
+            description: The password used for basic authentication to access a private github repo.
       mode:
         properties:
           docker:
@@ -1474,6 +1492,9 @@ definitions:
         $ref: '#/definitions/wordCharacterPattern'
         default: HEAD
       chartMetadata:
+      icon:
+        $ref: '#/definitions/wordCharacterPattern'
+      chart:
         title: ''
         properties:
           helmChartVersion:
@@ -1539,6 +1560,9 @@ definitions:
             default: disabled
         required:
           - type
+      autoUpdate:
+        type: boolean
+        default: false
     required:
       - name
       - url
@@ -1793,6 +1817,16 @@ properties:
             $ref: '#/definitions/cpuQuantity'
           memory:
             $ref: '#/definitions/memoryQuantity'
+      demo-tlspass:
+        additionalProperties: false
+        properties:
+          enabled:
+            default: false
+            type: boolean
+          tlsCert:
+            type: string
+          tlsKey:
+            type: string
       drone:
         additionalProperties: false
         properties:
@@ -2343,6 +2377,9 @@ properties:
             type: array
             items:
               type: object
+          meshConfig:
+            description: 'See: https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#MeshConfig'
+            type: object
           image:
             $ref: '#/definitions/imageSimple'
           resources:
@@ -2382,7 +2419,7 @@ properties:
                 default: otomi
               clientSecret:
                 type: string
-                x-secret: '{{ randAlphaNum 32 }}'
+                x-secret: 'randAlphaNum 32'
           adminPassword:
             type: string
             x-secret: ''
@@ -2425,7 +2462,8 @@ properties:
                 $ref: '#/definitions/resources'
               reportsController:
                 $ref: '#/definitions/resources'
-
+              postgresql:
+                $ref: '#/definitions/resources'
       kiali:
         additionalProperties: false
         properties:
@@ -2494,6 +2532,9 @@ properties:
             properties:
               dashboard:
                 $ref: '#/definitions/resources'
+          enabled:
+            type: boolean
+            default: false
       loki:
         additionalProperties: false
         properties:
@@ -2846,6 +2887,15 @@ properties:
                 $ref: '#/definitions/resources'
               node-exporter:
                 $ref: '#/definitions/resources'
+      rabbitmq:
+        additionalProperties: false
+        properties:
+          _rawValues:
+            $ref: '#/definitions/rawValues'
+          resources:
+            $ref: '#/definitions/resources'
+          storage:
+            $ref: '#/definitions/storageProvider'
       redis-shared:
         allOf:
           - $ref: '#/definitions/redisChart'
@@ -2922,6 +2972,13 @@ properties:
                   - s3
                   - minioLocal
                 default: minioLocal
+      tigera-operator:
+        properties:
+          _rawValues:
+            $ref: '#/definitions/rawValues'
+          enabled:
+            type: boolean
+            default: false
       thanos:
         properties:
           _rawValues:
@@ -3730,6 +3787,205 @@ properties:
         default: latest
         description: 'Best pin this to a valid release version found in the repo.'
         pattern: '(v[0-9]+.[0-9]+.[0-9]+|[a-zA-Z]+[a-zA-Z0-9-])'
+  policies:
+    type: object
+    description: |
+      List of policy objects used by Open Policy Agent tools (Conftest, Gatekeeper) to run policy based validation against both in-cluster Kubernetes contexts and plain Yaml resources
+    additionalProperties: false
+    properties:
+      banned-image-tags:
+        additionalProperties: false
+        required: [enabled]
+        properties:
+          tags:
+            type: array
+            items:
+              $ref: '#/definitions/wordCharacterPattern'
+          enabled:
+            type: boolean
+            default: false
+      container-limits:
+        additionalProperties: false
+        required: [enabled]
+        properties:
+          cpu:
+            '$ref': '#/definitions/cpuQuantity'
+          memory:
+            '$ref': '#/definitions/memoryQuantity'
+          enabled:
+            type: boolean
+            default: false
+      psp-allowed-repos:
+        additionalProperties: false
+        required: [enabled]
+        properties:
+          repos:
+            type: array
+            items:
+              $ref: '#/definitions/wordCharacterPattern'
+          enabled:
+            type: boolean
+            default: false
+      psp-host-filesystem:
+        additionalProperties: false
+        required: [enabled]
+        properties:
+          allowedHostPaths:
+            type: array
+            items:
+              type: object
+              required: [pathPrefix, readOnly]
+              properties:
+                pathPrefix:
+                  type: string
+                readOnly:
+                  type: boolean
+              additionalProperties: false
+          enabled:
+            type: boolean
+            default: false
+      psp-allowed-users:
+        additionalProperties: false
+        required: [enabled]
+        properties:
+          runAsUser:
+            type: object
+            additionalProperties: false
+            required: [rule]
+            properties:
+              rule:
+                type: string
+                enum: [RunAsAny, MustRunAsNonRoot, MustRunAs]
+              ranges:
+                type: array
+                items:
+                  $ref: '#/definitions/unixOwnerIdRange'
+          runAsGroup:
+            type: object
+            properties:
+              rule:
+                type: string
+                enum: [RunAsAny, MayRunAs, MustRunAs]
+              ranges:
+                type: array
+                items:
+                  $ref: '#/definitions/unixOwnerIdRange'
+          supplementalGroups:
+            type: object
+            properties:
+              rule:
+                type: string
+                enum: [RunAsAny, MayRunAs, MustRunAs]
+              ranges:
+                type: array
+                items:
+                  $ref: '#/definitions/unixOwnerIdRange'
+          fsGroup:
+            type: object
+            properties:
+              rule:
+                type: string
+                enum: [RunAsAny, MayRunAs, MustRunAs]
+              ranges:
+                type: array
+                items:
+                  $ref: '#/definitions/unixOwnerIdRange'
+          enabled:
+            type: boolean
+            default: false
+      psp-host-security:
+        additionalProperties: false
+        required: [enabled]
+        properties:
+          enabled:
+            type: boolean
+            default: false
+      psp-host-networking-ports:
+        additionalProperties: false
+        required: [enabled]
+        properties:
+          enabled:
+            type: boolean
+            default: false
+      psp-privileged:
+        additionalProperties: false
+        required: [enabled]
+        properties:
+          enabled:
+            type: boolean
+            default: false
+      psp-capabilities:
+        additionalProperties: false
+        required: [enabled]
+        properties:
+          enabled:
+            type: boolean
+            default: false
+          allowedCapabilities:
+            type: array
+            items:
+              type: string
+          requiredDropCapabilities:
+            type: array
+            items:
+              type: string
+      psp-forbidden-sysctls:
+        additionalProperties: false
+        required: [enabled]
+        properties:
+          enabled:
+            type: boolean
+            default: false
+          forbiddenSysctls:
+            type: array
+            items:
+              type: string
+      psp-apparmor:
+        additionalProperties: false
+        required: [enabled]
+        properties:
+          enabled:
+            type: boolean
+            default: false
+          allowedProfiles:
+            type: array
+            items:
+              type: string
+      psp-seccomp:
+        additionalProperties: false
+        required: [enabled]
+        properties:
+          enabled:
+            type: boolean
+            default: false
+          allowedProfiles:
+            type: array
+            items:
+              type: string
+      psp-selinux:
+        additionalProperties: false
+        required: [enabled]
+        properties:
+          enabled:
+            type: boolean
+            default: false
+          seLinuxContext:
+            type: string
+            enum: [MustRunAs, RunAsAny]
+          allowedSELinuxOptions:
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              properties:
+                level:
+                  $ref: '#/definitions/wordCharacterPattern'
+                role:
+                  $ref: '#/definitions/wordCharacterPattern'
+                type:
+                  $ref: '#/definitions/wordCharacterPattern'
+                user:
+                  $ref: '#/definitions/wordCharacterPattern'
   ingress:
     properties:
       platformClass:

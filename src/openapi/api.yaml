@@ -116,6 +116,7 @@ paths:
             application/yaml:
               schema:
                 $ref: '#/components/schemas/OtomiCliValues'
+
   /secrets:
     get:
       operationId: getAllSecrets
@@ -472,7 +473,6 @@ paths:
         <<: *DefaultGetResponses
         '200':
           description: Successfully deleted a team sealed secret
-
   '/teams/{teamId}/secrets':
     parameters:
       - $ref: '#/components/parameters/teamParams'
@@ -1502,6 +1502,8 @@ components:
       $ref: apps/opencost.yaml#/AppOpencost
     AppPrometheus:
       $ref: apps/prometheus.yaml#/AppPrometheus
+    AppRabbitmq:
+      $ref: apps/rabbitmq.yaml#/AppRabbitmq
     AppSealedSecrets:
       $ref: apps/sealed-secrets.yaml#/AppSealedSecrets
     AppTempo:
