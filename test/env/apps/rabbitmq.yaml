@@ -1,6 +1,6 @@
 apps:
     rabbitmq:
-        enabled: true
+        enabled: false
         resources:
             clusterOperator:
                 requests:
