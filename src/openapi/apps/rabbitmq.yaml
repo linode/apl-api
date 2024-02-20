@@ -2,10 +2,11 @@ AppRabbitmq:
   additionalProperties: false
   type: object
   properties:
-    storage:
-      $ref: '../definitions.yaml#/storageProvider'
     rawValues:
       $ref: ../definitions.yaml#/rawValues
+    enabled:
+      type: boolean
+      default: false
     shortcuts:
       description: Resource URL that lands the user in a place of interest within an app.
       type: array
@@ -15,8 +16,6 @@ AppRabbitmq:
     values:
       type: object
       properties:
-        storage:
-          $ref: ../definitions.yaml#/storageProvider
         resources:
           type: object
           properties:

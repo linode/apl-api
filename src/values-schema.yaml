@@ -2697,10 +2697,11 @@ properties:
         properties:
           _rawValues:
             $ref: '#/definitions/rawValues'
+          enabled:
+            type: boolean
+            default: false
           resources:
             $ref: '#/definitions/resources'
-          storage:
-            $ref: '#/definitions/storageProvider'
       redis-shared:
         allOf:
           - $ref: '#/definitions/redisChart'
