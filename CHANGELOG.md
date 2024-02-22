@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.6.0](https://github.com/redkubes/otomi-api/compare/v2.5.0...v2.6.0) (2024-02-22)
+
+
+### Features
+
+* improve team permissions ([#505](https://github.com/redkubes/otomi-api/issues/505)) ([3cad5f9](https://github.com/redkubes/otomi-api/commit/3cad5f948a524474e9460303ee2a18e3df299139))
+* improve vlereo form description ([#497](https://github.com/redkubes/otomi-api/issues/497)) ([0911464](https://github.com/redkubes/otomi-api/commit/0911464138383ac25ea2b994d3e72fef9ff7bd5b))
+* rabbitmq ([#501](https://github.com/redkubes/otomi-api/issues/501)) ([5b85c0e](https://github.com/redkubes/otomi-api/commit/5b85c0ebe3c7674d866e25e96ed4bef98f9a40ea))
+* sealed secrets ([#500](https://github.com/redkubes/otomi-api/issues/500)) ([7cce0a4](https://github.com/redkubes/otomi-api/commit/7cce0a43b44a46790d0425087ac06bc63f14ab55))
+
+
+### Bug Fixes
+
+* added isbeta removed storage disable app ([#507](https://github.com/redkubes/otomi-api/issues/507)) ([363dfbb](https://github.com/redkubes/otomi-api/commit/363dfbbc181b28408c90ba55234981d3f92bce63))
+
 ## [2.5.0](https://github.com/redkubes/otomi-api/compare/v2.4.0...v2.5.0) (2024-02-13)
 
 
