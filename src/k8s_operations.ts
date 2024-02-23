@@ -548,3 +548,41 @@ export async function getTeamSecretsFromK8s(namespace: string) {
     debug('getTeamSecretsFromK8s error:', error)
   }
 }
+
+export async function updateSecretsOwnerReferences(secrets: any[], namespace: string) {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  for (const secret of secrets) {
+    try {
+      const currentSecret = (await k8sApi.readNamespacedSecret(secret.name, namespace)) as any
+      const { body } = currentSecret
+      const patch: k8s.V1Secret = {
+        metadata: {
+          ownerReferences: [
+            {
+              apiVersion: 'bitnami.com/v1alpha1',
+              controller: true,
+              kind: 'SealedSecret',
+              name: secret.name,
+              uid: body.metadata?.ownerReferences[0].uid,
+            },
+          ],
+        },
+      }
+      const options = {
+        headers: { 'Content-type': 'application/strategic-merge-patch+json' },
+      }
+      await k8sApi
+        .patchNamespacedSecret(secret.name, namespace, patch, undefined, undefined, undefined, undefined, options)
+        .then(() => {
+          console.log(`Secret ${secret.name} updated successfully!`)
+        })
+        .catch((error) => {
+          console.error(`Failed to update secret ${secret.name}:`, error)
+        })
+    } catch (err) {
+      console.error('Error updating secret:', err)
+    }
+  }
+}

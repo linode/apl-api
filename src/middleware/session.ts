@@ -116,7 +116,8 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
       if (['teams', 'services', 'workloads', 'projects'].includes(path))
         checkLicense(req.method.toLowerCase(), path, sessionStack)
       // in the cloudtty or workloadCatalog endpoint(s), don't need to create a session
-      if (req.path === '/v1/cloudtty' || req.path === '/v1/workloadCatalog') return next()
+      if (req.path === '/v1/cloudtty' || req.path === '/v1/workloadCatalog' || req.path === '/v1/migrateSecrets')
+        return next()
       // manipulating data and no editor session yet? create one
       if (!editor) {
         // bootstrap session stack for user

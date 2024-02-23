@@ -329,6 +329,27 @@ paths:
         '200':
           description: Successfully deleted a service
 
+  /migrateSecrets:
+    post:
+      operationId: migrateSecrets
+      description: Migrate HashiCorp Vault secrets to sealed secrets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully migrated secrets to sealed secrets
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          <<: *BadRequest
+
   /sealedsecrets:
     get:
       operationId: getAllSealedSecrets
