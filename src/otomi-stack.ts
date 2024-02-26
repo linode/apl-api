@@ -1107,17 +1107,17 @@ export default class OtomiStack {
     const secrets = this.getSecrets(teamId)
     const k8sSecrets = (await getTeamSecretsFromK8s(`team-${teamId}`)) || {}
     await updateSecretsOwnerReferences(secrets, `team-${teamId}`)
-    const secretValues = getSecretValues(secrets[2].name, `team-${teamId}`)
-    const data = {
-      name: secrets[2].name,
-      encryptedData: [
-        { key: 'foo', value: 'buzz' },
-        { key: 'fizz', value: 'bar' },
-      ],
-      type: 'kubernetes.io/opaque',
-    } as SealedSecret
-    await this.createSealedSecret(teamId, data)
-    this.doDeployment()
+    // const secretValues = getSecretValues(secrets[2].name, `team-${teamId}`)
+    // const data = {
+    //   name: secrets[2].name,
+    //   encryptedData: [
+    //     { key: 'foo', value: 'buzz' },
+    //     { key: 'fizz', value: 'bar' },
+    //   ],
+    //   type: 'kubernetes.io/opaque',
+    // } as SealedSecret
+    // await this.createSealedSecret(teamId, data)
+    // this.doDeployment()
     return { secrets, k8sSecrets }
   }
 
