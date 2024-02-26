@@ -62,7 +62,7 @@ import {
   getSecretValues,
   getTeamSecretsFromK8s,
   k8sdelete,
-  updateSecretsOwnerReferences,
+  migrateSecretsToSealedSecrets,
   watchPodUntilRunning,
 } from './k8s_operations'
 import connect from './otomiCloud/connect'
@@ -1105,20 +1105,15 @@ export default class OtomiStack {
 
   async migrateSecrets({ teamId, isAdmin }: { teamId: string; isAdmin: boolean }): Promise<any> {
     const secrets = this.getSecrets(teamId)
-    const k8sSecrets = (await getTeamSecretsFromK8s(`team-${teamId}`)) || {}
-    await updateSecretsOwnerReferences(secrets, `team-${teamId}`)
-    // const secretValues = getSecretValues(secrets[2].name, `team-${teamId}`)
-    // const data = {
-    //   name: secrets[2].name,
-    //   encryptedData: [
-    //     { key: 'foo', value: 'buzz' },
-    //     { key: 'fizz', value: 'bar' },
-    //   ],
-    //   type: 'kubernetes.io/opaque',
-    // } as SealedSecret
-    // await this.createSealedSecret(teamId, data)
-    // this.doDeployment()
-    return { secrets, k8sSecrets }
+    const sealedSecrets = [] as SealedSecret[]
+    for (const secret of secrets) {
+      const namespace = `team-${secret.teamId}`
+      const data = (await migrateSecretsToSealedSecrets(secret.name, namespace)) as SealedSecret
+      await this.createSealedSecret(teamId, data)
+      sealedSecrets.push(data)
+    }
+    this.doDeployment()
+    return { secrets, sealedSecrets }
   }
 
   async createSealedSecret(teamId: string, data: SealedSecret): Promise<SealedSecret> {

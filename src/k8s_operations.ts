@@ -2,6 +2,7 @@ import * as k8s from '@kubernetes/client-node'
 import Debug from 'debug'
 import * as fs from 'fs'
 import * as yaml from 'js-yaml'
+import { isEmpty } from 'lodash'
 import { promisify } from 'util'
 import { v4 as uuidv4 } from 'uuid'
 import { Build, Cloudtty, SealedSecret, Service, Workload } from './otomi-models'
@@ -560,9 +561,25 @@ export async function updateSecretsOwnerReferences(secrets: any[], namespace: st
       const { body } = currentSecret
       const id = uuidv4()
       console.log('new secret uid:::', id)
-      const patch: k8s.V1Secret = {
-        metadata: {
-          ownerReferences: [
+      // const patch: k8s.V1Secret = {
+      //   metadata: {
+      //     ownerReferences: [
+      //       {
+      //         apiVersion: 'bitnami.com/v1alpha1',
+      //         controller: true,
+      //         kind: 'SealedSecret',
+      //         name: secret.name,
+      //         uid: id,
+      //       },
+      //     ],
+      //   },
+      //   type: 'kubernetes.io/opaque',
+      // }
+      const patch = [
+        {
+          op: 'replace',
+          path: '/metadata/ownerReferences',
+          value: [
             {
               apiVersion: 'bitnami.com/v1alpha1',
               controller: true,
@@ -572,13 +589,27 @@ export async function updateSecretsOwnerReferences(secrets: any[], namespace: st
             },
           ],
         },
-        type: 'kubernetes.io/opaque',
-      }
+      ]
       const options = {
-        headers: { 'Content-type': 'application/strategic-merge-patch+json' },
+        headers: { 'Content-type': 'application/json' },
+      }
+      const replace = {
+        apiVersion: 'v1',
+        kind: 'Secret',
+        metadata: {
+          name: secret.name,
+          namespace,
+          ownerReferences: [],
+        },
+        data: {
+          foo: 'YmFy',
+          fizz: 'YmF6',
+        },
+        type: 'Opaque',
       }
       await k8sApi
-        .patchNamespacedSecret(secret.name, namespace, patch, undefined, undefined, undefined, undefined, options)
+        .replaceNamespacedSecret(secret.name, namespace, replace, undefined, undefined, undefined, options)
+        // .patchNamespacedSecret(secret.name, namespace, patch, undefined, undefined, undefined, undefined, options)
         .then(() => {
           console.log(`Secret ${secret.name} updated successfully!`)
         })
@@ -588,5 +619,91 @@ export async function updateSecretsOwnerReferences(secrets: any[], namespace: st
     } catch (err) {
       console.error('Error updating secret:', err)
     }
+  }
+}
+
+export async function migrateSecretsToSealedSecrets(name: string, namespace: string) {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  const options = {
+    headers: { 'Content-type': 'application/strategic-merge-patch+json' },
+  }
+  try {
+    const currentSecret = (await k8sApi.readNamespacedSecret(name, namespace)) as any
+    const { body } = currentSecret
+    const patch: k8s.V1Secret = {
+      metadata: {
+        ownerReferences: [
+          {
+            apiVersion: 'bitnami.com/v1alpha1',
+            controller: true,
+            kind: 'SealedSecret',
+            name,
+            uid: body.metadata?.ownerReferences[0].uid,
+          },
+        ],
+      },
+    }
+    const resPatch = await k8sApi.patchNamespacedSecret(
+      name,
+      namespace,
+      patch,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      options,
+    )
+
+    await k8sApi.deleteNamespacedSecret(name, namespace)
+    console.log(`Deleted secret: ${name}`)
+
+    const res = resPatch.body as any
+    const anno = res.metadata?.annotations || {}
+    const annotations = {} as any
+    for (const key in anno) {
+      if (key !== 'reconcile.external-secrets.io/data-hash') {
+        annotations.key = key
+        annotations.value = anno[key]
+      }
+    }
+    const lbl = res.metadata?.labels || {}
+    const labels = {} as any
+    for (const key in lbl) {
+      labels.key = key
+      labels.value = lbl[key]
+    }
+    const metadata = {
+      ...(!isEmpty(annotations) && { annotations }),
+      ...(!isEmpty(res.metadata.finalizers) && { finalizers: res.metadata.finalizers }),
+      ...(!isEmpty(labels) && { labels }),
+    }
+    const encryptedData = [] as any
+    for (const key in res.data) {
+      if (Object.prototype.hasOwnProperty.call(res.data, key)) {
+        const encryptedValue = Buffer.from(res.data[key], 'base64').toString('utf-8')
+        encryptedData.push({
+          key,
+          value: encryptedValue,
+        })
+      }
+    }
+    const types = {
+      Opaque: 'kubernetes.io/opaque',
+      DockerConfig: 'kubernetes.io/dockerconfigjson',
+      tls: 'kubernetes.io/tls',
+    }
+    const data = {
+      name: res.metadata.name,
+      namespace: res.metadata.namespace || namespace,
+      immutable: res.immutable,
+      ...(!isEmpty(metadata) && { metadata }),
+      encryptedData,
+      type: types[res.type],
+    } as SealedSecret
+    return data
+  } catch (err) {
+    console.error('Error deleting secret:', err)
   }
 }
