@@ -569,6 +569,7 @@ export async function updateSecretsOwnerReferences(secrets: any[], namespace: st
             },
           ],
         },
+        type: 'kubernetes.io/opaque',
       }
       const options = {
         headers: { 'Content-type': 'application/strategic-merge-patch+json' },
