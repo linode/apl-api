@@ -3,6 +3,7 @@ import Debug from 'debug'
 import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
+import { v4 as uuidv4 } from 'uuid'
 import { Build, Cloudtty, SealedSecret, Service, Workload } from './otomi-models'
 
 const debug = Debug('otomi:api:k8sOperations')
@@ -557,6 +558,8 @@ export async function updateSecretsOwnerReferences(secrets: any[], namespace: st
     try {
       const currentSecret = (await k8sApi.readNamespacedSecret(secret.name, namespace)) as any
       const { body } = currentSecret
+      const id = uuidv4()
+      console.log('new secret uid:::', id)
       const patch: k8s.V1Secret = {
         metadata: {
           ownerReferences: [
@@ -565,7 +568,7 @@ export async function updateSecretsOwnerReferences(secrets: any[], namespace: st
               controller: true,
               kind: 'SealedSecret',
               name: secret.name,
-              uid: body.metadata?.ownerReferences[0].uid,
+              uid: id,
             },
           ],
         },
