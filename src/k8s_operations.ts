@@ -697,7 +697,7 @@ export async function migrateSecretsToSealedSecrets(name: string, namespace: str
     const data = {
       name: res.metadata.name,
       namespace: res.metadata.namespace || namespace,
-      immutable: res.immutable,
+      ...(res.immutable && { immutable: res.immutable }),
       ...(!isEmpty(metadata) && { metadata }),
       encryptedData,
       type: types[res.type],

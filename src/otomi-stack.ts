@@ -1109,15 +1109,16 @@ export default class OtomiStack {
     for (const secret of secrets) {
       const namespace = `team-${secret.teamId}`
       const data = (await migrateSecretsToSealedSecrets(secret.name, namespace)) as SealedSecret
+      this.editor = teamId
       await this.createSealedSecret(teamId, data)
       sealedSecrets.push(data)
     }
-    this.doDeployment()
+    await this.doDeployment()
+    this.editor = undefined
     return { secrets, sealedSecrets }
   }
 
   async createSealedSecret(teamId: string, data: SealedSecret): Promise<SealedSecret> {
-    console.log('data', data)
     const namespace = data.namespace ?? `team-${teamId}`
     const certificate = await getSealedSecretsCertificate()
     if (!certificate) {
