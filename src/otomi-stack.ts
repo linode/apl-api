@@ -1107,18 +1107,23 @@ export default class OtomiStack {
   async migrateSecrets({ teamId, isAdmin }: { teamId: string; isAdmin: boolean }): Promise<any> {
     const secrets = this.getSecrets(teamId)
     const sealedSecrets = [] as SealedSecret[]
-    for (const secret of secrets) {
-      const namespace = `team-${secret.teamId}`
-      const body = await updateSecretOwnerReferences(secret.name, namespace)
-      const data = prepareSealedSecretData(body)
-      this.createSealedSecret(teamId, data).then(async () => {
-        await deleteSecretFromK8s(secret.name, namespace)
-        this.db.deleteItem('secrets', { id: secret.id })
-        console.log(`Secret ${secret.name} ${secret.id} deleted!`)
-      })
-      sealedSecrets.push(data)
+    try {
+      for (const secret of secrets) {
+        const namespace = `team-${secret.teamId}`
+        const body = await updateSecretOwnerReferences(secret.name, namespace)
+        const data = prepareSealedSecretData(body)
+        this.createSealedSecret(teamId, data).then(async () => {
+          await deleteSecretFromK8s(secret.name, namespace)
+          this.db.deleteItem('secrets', { id: secret.id })
+          console.log(`Secret ${secret.name} ${secret.id} deleted!`)
+        })
+        sealedSecrets.push(data)
+      }
+    } catch (error) {
+      console.log('Something went wrong!', error)
+    } finally {
+      await this.doDeployment()
     }
-    await this.doDeployment()
     return { secrets, sealedSecrets }
   }
 

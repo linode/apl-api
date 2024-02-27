@@ -72,18 +72,14 @@ export function prepareSealedSecretData(body) {
       })
     }
   }
-  const types = {
-    Opaque: 'kubernetes.io/opaque',
-    DockerConfig: 'kubernetes.io/dockerconfigjson',
-    tls: 'kubernetes.io/tls',
-  }
+  const type = body.type === 'Opaque' ? 'kubernetes.io/opaque' : body.type
   const data = {
     name: body.metadata.name,
     namespace: body.metadata.namespace,
     ...(body.immutable && { immutable: body.immutable }),
     ...(!isEmpty(metadata) && { metadata }),
     encryptedData,
-    type: types[body.type],
+    type,
   } as SealedSecret
   return data
 }
