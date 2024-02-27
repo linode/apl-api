@@ -1,4 +1,6 @@
 import crypto, { X509Certificate } from 'crypto'
+import { isEmpty } from 'lodash'
+import { SealedSecret } from 'src/otomi-models'
 
 function hybridEncrypt(pubKey, plaintext, label) {
   const sessionKey = crypto.randomBytes(32)
@@ -38,4 +40,50 @@ export function encryptSecretItem(certificate, secretName, ns, data, scope) {
   const label = encryptionLabel(ns, secretName, scope)
   const out = hybridEncrypt(pubKey, data, label)
   return out
+}
+
+export function prepareSealedSecretData(body) {
+  const anno = body.metadata?.annotations || {}
+  const annotations = {} as any
+  for (const key in anno) {
+    if (key !== 'reconcile.external-secrets.io/data-hash') {
+      annotations.key = key
+      annotations.value = anno[key]
+    }
+  }
+  const lbl = body.metadata?.labels || {}
+  const labels = {} as any
+  for (const key in lbl) {
+    labels.key = key
+    labels.value = lbl[key]
+  }
+  const metadata = {
+    ...(!isEmpty(annotations) && { annotations }),
+    ...(!isEmpty(body.metadata.finalizers) && { finalizers: body.metadata.finalizers }),
+    ...(!isEmpty(labels) && { labels }),
+  }
+  const encryptedData = [] as any
+  for (const key in body.data) {
+    if (Object.prototype.hasOwnProperty.call(body.data, key)) {
+      const encryptedValue = Buffer.from(body.data[key], 'base64').toString('utf-8')
+      encryptedData.push({
+        key,
+        value: encryptedValue,
+      })
+    }
+  }
+  const types = {
+    Opaque: 'kubernetes.io/opaque',
+    DockerConfig: 'kubernetes.io/dockerconfigjson',
+    tls: 'kubernetes.io/tls',
+  }
+  const data = {
+    name: body.metadata.name,
+    namespace: body.metadata.namespace,
+    ...(body.immutable && { immutable: body.immutable }),
+    ...(!isEmpty(metadata) && { metadata }),
+    encryptedData,
+    type: types[body.type],
+  } as SealedSecret
+  return data
 }

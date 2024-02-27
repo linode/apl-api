@@ -55,7 +55,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import {
   apply,
   checkPodExists,
-  deleteSecrets,
+  deleteSecretFromK8s,
   getCloudttyActiveTime,
   getKubernetesVersion,
   getLastTektonMessage,
@@ -63,12 +63,12 @@ import {
   getSecretValues,
   getTeamSecretsFromK8s,
   k8sdelete,
-  migrateSecretsToSealedSecrets,
+  updateSecretOwnerReferences,
   watchPodUntilRunning,
 } from './k8s_operations'
 import connect from './otomiCloud/connect'
 import { validateBackupFields } from './utils/backupUtils'
-import { encryptSecretItem } from './utils/sealedSecretUtils'
+import { encryptSecretItem, prepareSealedSecretData } from './utils/sealedSecretUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 const debug = Debug('otomi:otomi-stack')
@@ -1109,10 +1109,12 @@ export default class OtomiStack {
     const sealedSecrets = [] as SealedSecret[]
     for (const secret of secrets) {
       const namespace = `team-${secret.teamId}`
-      const data = (await migrateSecretsToSealedSecrets(secret.name, namespace)) as SealedSecret
+      const body = await updateSecretOwnerReferences(secret.name, namespace)
+      const data = prepareSealedSecretData(body)
       this.createSealedSecret(teamId, data).then(async () => {
-        await deleteSecrets(secret.name, namespace)
-        this.deleteSecret(secret.id!)
+        await deleteSecretFromK8s(secret.name, namespace)
+        this.db.deleteItem('secrets', { id: secret.id })
+        console.log(`Secret ${secret.name} ${secret.id} deleted!`)
       })
       sealedSecrets.push(data)
     }
