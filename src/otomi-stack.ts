@@ -55,6 +55,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import {
   apply,
   checkPodExists,
+  deleteSecrets,
   getCloudttyActiveTime,
   getKubernetesVersion,
   getLastTektonMessage,
@@ -1110,9 +1111,14 @@ export default class OtomiStack {
       const namespace = `team-${secret.teamId}`
       const data = (await migrateSecretsToSealedSecrets(secret.name, namespace)) as SealedSecret
       await this.createSealedSecret(teamId, data)
+      await this.doDeployment()
+      await deleteSecrets(secret.name, namespace)
+      this.deleteSecret(secret.id!)
+      this.editor = teamId
+      await this.doDeployment()
+      this.editor = undefined
       sealedSecrets.push(data)
     }
-    await this.doDeployment()
     return { secrets, sealedSecrets }
   }
 

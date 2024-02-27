@@ -656,8 +656,8 @@ export async function migrateSecretsToSealedSecrets(name: string, namespace: str
       options,
     )
 
-    await k8sApi.deleteNamespacedSecret(name, namespace)
-    console.log(`Deleted secret: ${name}`)
+    // await k8sApi.deleteNamespacedSecret(name, namespace)
+    // console.log(`Deleted secret: ${name}`)
 
     const res = resPatch.body as any
     const anno = res.metadata?.annotations || {}
@@ -703,6 +703,17 @@ export async function migrateSecretsToSealedSecrets(name: string, namespace: str
       type: types[res.type],
     } as SealedSecret
     return data
+  } catch (err) {
+    console.error('Error deleting secret:', err)
+  }
+}
+export async function deleteSecrets(name: string, namespace: string) {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  try {
+    await k8sApi.deleteNamespacedSecret(name, namespace)
+    console.log(`Deleted secret: ${name}`)
   } catch (err) {
     console.error('Error deleting secret:', err)
   }
