@@ -1112,7 +1112,7 @@ export default class OtomiStack {
         const namespace = `team-${secret.teamId}`
         const body = await updateSecretOwnerReferences(secret.name, namespace)
         const data = prepareSealedSecretData(body)
-        this.createSealedSecret(teamId, data).then(async () => {
+        await this.createSealedSecret(teamId, data).then(async () => {
           await deleteSecretFromK8s(secret.name, namespace)
           this.db.deleteItem('secrets', { id: secret.id })
           console.log(`Secret ${secret.name} ${secret.id} deleted!`)
