@@ -1107,8 +1107,16 @@ export default class OtomiStack {
   async migrateSecrets({ teamId, isAdmin }: { teamId: string; isAdmin: boolean }): Promise<any> {
     const teams: string[] = this.getTeams().map((t) => t.id as string)
     console.log('migrateSecrets teams:', teams)
-    const allSecrets = {}
-    const allSealedSecrets = {}
+    const allSecrets = {
+      admin: [],
+      demo: [],
+      dev: [],
+    }
+    const allSealedSecrets = {
+      admin: [],
+      demo: [],
+      dev: [],
+    }
     try {
       for (const id of teams) {
         const secrets = this.getSecrets(id)
@@ -1122,7 +1130,7 @@ export default class OtomiStack {
             this.db.deleteItem('secrets', { id: secret.id })
             console.log(`Secret ${secret.name} ${secret.id} deleted!`)
           })
-          allSealedSecrets[id].push(data)
+          allSealedSecrets[id]?.push(data)
         }
       }
     } catch (error) {
