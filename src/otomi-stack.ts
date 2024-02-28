@@ -22,6 +22,7 @@ import {
   K8sService,
   License,
   Metrics,
+  MigrateSecrets,
   Policies,
   Project,
   SealedSecret,
@@ -1104,23 +1105,12 @@ export default class OtomiStack {
     return this.db.getCollection('secrets', { teamId }) as Array<Secret>
   }
 
-  async migrateSecrets({ teamId, isAdmin }: { teamId: string; isAdmin: boolean }): Promise<any> {
+  async migrateSecrets({ isAdmin }: MigrateSecrets): Promise<any> {
+    if (!isAdmin) return { message: 'Only super admin can perform secrets migration!' }
     const teams: string[] = this.getTeams().map((t) => t.id as string)
-    console.log('migrateSecrets teams:', teams)
-    const allSecrets = {
-      admin: [],
-      demo: [],
-      dev: [],
-    }
-    const allSealedSecrets = {
-      admin: [],
-      demo: [],
-      dev: [],
-    }
     try {
       for (const id of teams) {
         const secrets = this.getSecrets(id)
-        allSecrets[id] = secrets
         for (const secret of secrets) {
           const namespace = `team-${secret.teamId}`
           const body = await updateSecretOwnerReferences(secret.name, namespace)
@@ -1130,7 +1120,6 @@ export default class OtomiStack {
             this.db.deleteItem('secrets', { id: secret.id })
             console.log(`Secret ${secret.name} ${secret.id} deleted!`)
           })
-          allSealedSecrets[id]?.push(data)
         }
       }
     } catch (error) {
@@ -1138,7 +1127,7 @@ export default class OtomiStack {
     } finally {
       await this.doDeployment()
     }
-    return { allSecrets, allSealedSecrets }
+    return { message: 'Secrets migration completed successfully! Sealed Secrets will be available in a minute!' }
   }
 
   async createSealedSecret(teamId: string, data: SealedSecret): Promise<SealedSecret> {

@@ -333,11 +333,12 @@ paths:
     post:
       operationId: migrateSecrets
       description: Migrate HashiCorp Vault secrets to sealed secrets
+      x-aclSchema: MigrateSecrets
       requestBody:
         content:
           application/json:
             schema:
-              type: object
+              $ref: '#/components/schemas/MigrateSecrets'
         required: true
       responses:
         <<: *DefaultPostResponses
@@ -346,7 +347,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                properties:
+                  message:
+                    type: string
         '400':
           <<: *BadRequest
 
@@ -1512,6 +1515,8 @@ components:
       $ref: sealedsecret.yaml#/SealedSecret
     SealedSecretsKeys:
       $ref: sealedsecretskeys.yaml#/SealedSecretsKeys
+    MigrateSecrets:
+      $ref: migratesecrets.yaml#/MigrateSecrets
     K8sSecret:
       $ref: k8sSecret.yaml#/K8sSecret
     Secret:
