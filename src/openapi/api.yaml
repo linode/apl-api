@@ -348,6 +348,8 @@ paths:
             application/json:
               schema:
                 properties:
+                  status:
+                    type: string
                   message:
                     type: string
         '400':
