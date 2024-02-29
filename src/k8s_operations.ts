@@ -584,7 +584,7 @@ export async function updateSecretOwnerReferences(name: string, namespace: strin
     )
     return res.body
   } catch (err) {
-    console.error('Error updating secret owner references:', err)
+    debug('Error updating secret owner references:', err)
   }
 }
 
@@ -594,8 +594,7 @@ export async function deleteSecretFromK8s(name: string, namespace: string) {
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
   try {
     await k8sApi.deleteNamespacedSecret(name, namespace)
-    console.log(`Deleted secret: ${name}`)
   } catch (err) {
-    console.error('Error deleting secret:', err)
+    debug(`Error deleting secret: ${name}`, err)
   }
 }

@@ -1105,17 +1105,17 @@ export default class OtomiStack {
     return this.db.getCollection('secrets', { teamId }) as Array<Secret>
   }
 
-  async migrateSecrets({ isAdmin }: MigrateSecrets): Promise<any> {
+  async migrateSecrets({ isAdmin }: MigrateSecrets): Promise<{ status: string; message: string }> {
     if (!isAdmin) return { status: 'error', message: 'Only admin can perform secrets migration.' }
     const teams: string[] = this.getTeams().map((t) => t.id as string)
     try {
-      for (const id of teams) {
-        const secrets = this.getSecrets(id)
+      for (const teamId of teams) {
+        const secrets = this.getSecrets(teamId)
         for (const secret of secrets) {
-          const namespace = `team-${secret.teamId}`
+          const namespace = secret.namespace || `team-${secret.teamId}`
           const body = await updateSecretOwnerReferences(secret.name, namespace)
           const data = prepareSealedSecretData(body)
-          await this.createSealedSecret(id, data).then(async () => {
+          await this.createSealedSecret(teamId, data).then(async () => {
             await deleteSecretFromK8s(secret.name, namespace)
             this.db.deleteItem('secrets', { id: secret.id })
           })

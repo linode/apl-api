@@ -43,36 +43,28 @@ export function encryptSecretItem(certificate, secretName, ns, data, scope) {
 }
 
 export function prepareSealedSecretData(body) {
-  const anno = body.metadata?.annotations || {}
-  const annotations = {} as any
-  for (const key in anno) {
-    if (key !== 'reconcile.external-secrets.io/data-hash') {
-      annotations.key = key
-      annotations.value = anno[key]
-    }
-  }
-  const lbl = body.metadata?.labels || {}
-  const labels = {} as any
-  for (const key in lbl) {
-    labels.key = key
-    labels.value = lbl[key]
-  }
+  const bodyAnnotations = body.metadata?.annotations || {}
+  const annotations: Record<string, string> = {}
+  for (const key in bodyAnnotations)
+    if (key !== 'reconcile.external-secrets.io/data-hash') annotations[key] = bodyAnnotations[key]
+
+  const bodyLabels = body.metadata?.labels || {}
+  const labels: Record<string, string> = {}
+  for (const key in bodyLabels) labels[key] = bodyLabels[key]
+
   const metadata = {
     ...(!isEmpty(annotations) && { annotations }),
     ...(!isEmpty(body.metadata.finalizers) && { finalizers: body.metadata.finalizers }),
     ...(!isEmpty(labels) && { labels }),
   }
-  const encryptedData = [] as any
-  for (const key in body.data) {
-    if (Object.prototype.hasOwnProperty.call(body.data, key)) {
-      const encryptedValue = Buffer.from(body.data[key], 'base64').toString('utf-8')
-      encryptedData.push({
-        key,
-        value: encryptedValue,
-      })
-    }
-  }
+
+  const encryptedData = Object.entries(body.data || {}).map(([key, value]) => ({
+    key,
+    value: Buffer.from(value as string, 'base64').toString('utf-8'),
+  }))
+
   const type = body.type === 'Opaque' ? 'kubernetes.io/opaque' : body.type
+
   const data = {
     name: body.metadata.name,
     namespace: body.metadata.namespace,
