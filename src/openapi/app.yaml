@@ -23,7 +23,6 @@ AppList:
     - knative
     - kured
     - kyverno
-    - tekton
     - loki
     - minio
     - opencost
