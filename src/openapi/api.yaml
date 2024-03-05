@@ -350,8 +350,15 @@ paths:
                 properties:
                   status:
                     type: string
+                    enum: [success, error, info]
                   message:
                     type: string
+                  total:
+                    type: integer
+                  migrated:
+                    type: integer
+                  remaining:
+                    type: integer
         '400':
           <<: *BadRequest
 

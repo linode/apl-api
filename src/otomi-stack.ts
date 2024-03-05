@@ -1105,8 +1105,16 @@ export default class OtomiStack {
     return this.db.getCollection('secrets', { teamId }) as Array<Secret>
   }
 
-  async migrateSecrets({ isAdmin }: MigrateSecrets): Promise<{ status: string; message: string }> {
+  async migrateSecrets({ isAdmin }: MigrateSecrets): Promise<{
+    status: 'success' | 'error' | 'info'
+    message: string
+    total?: number
+    migrated?: number
+    remaining?: number
+  }> {
     if (!isAdmin) return { status: 'error', message: 'Only admin can perform secrets migration.' }
+    const totalSecrets = this.getAllSecrets().length
+    let migratedSecrets = 0
     const teams: string[] = this.getTeams().map((t) => t.id as string)
     try {
       for (const teamId of teams) {
@@ -1118,18 +1126,30 @@ export default class OtomiStack {
           await this.createSealedSecret(teamId, data).then(async () => {
             await deleteSecretFromK8s(secret.name, namespace)
             this.db.deleteItem('secrets', { id: secret.id })
+            migratedSecrets += 1
           })
         }
       }
+      debug(`Secrets migration completed successfully! ${migratedSecrets} secrets migrated.`)
     } catch (error) {
       debug('Secrets migration error:', error)
-      return { status: 'info', message: 'Something went wrong, secrets migration interrupted.' }
+      debug(`Secrets migration interrupted. ${migratedSecrets} secrets migrated out of ${totalSecrets}.`)
+      return {
+        status: 'info',
+        message: 'Something went wrong, secrets migration interrupted.',
+        total: totalSecrets,
+        migrated: migratedSecrets,
+        remaining: totalSecrets - migratedSecrets,
+      }
     } finally {
       await this.doDeployment()
     }
     return {
       status: 'success',
       message: 'Secrets migration completed successfully! The Sealed Secrets will be available in a few minutes.',
+      total: totalSecrets,
+      migrated: migratedSecrets,
+      remaining: totalSecrets - migratedSecrets,
     }
   }
 
