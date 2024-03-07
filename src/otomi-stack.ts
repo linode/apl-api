@@ -22,7 +22,6 @@ import {
   K8sService,
   License,
   Metrics,
-  MigrateSecrets,
   Policies,
   Project,
   SealedSecret,
@@ -1105,14 +1104,13 @@ export default class OtomiStack {
     return this.db.getCollection('secrets', { teamId }) as Array<Secret>
   }
 
-  async migrateSecrets({ isAdmin }: MigrateSecrets): Promise<{
-    status: 'success' | 'error' | 'info'
+  async migrateSecrets(): Promise<{
+    status: 'success' | 'info'
     message: string
     total?: number
     migrated?: number
     remaining?: number
   }> {
-    if (!isAdmin) return { status: 'error', message: 'Only admin can perform secrets migration.' }
     const totalSecrets = this.getAllSecrets().length
     let migratedSecrets = 0
     const teams: string[] = this.getTeams().map((t) => t.id as string)

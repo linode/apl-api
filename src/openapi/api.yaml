@@ -334,12 +334,6 @@ paths:
       operationId: migrateSecrets
       description: Migrate HashiCorp Vault secrets to sealed secrets
       x-aclSchema: MigrateSecrets
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MigrateSecrets'
-        required: true
       responses:
         <<: *DefaultPostResponses
         '200':
@@ -350,7 +344,7 @@ paths:
                 properties:
                   status:
                     type: string
-                    enum: [success, error, info]
+                    enum: [success, info]
                   message:
                     type: string
                   total:
