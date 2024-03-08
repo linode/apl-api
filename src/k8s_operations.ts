@@ -548,3 +548,53 @@ export async function getTeamSecretsFromK8s(namespace: string) {
     debug('getTeamSecretsFromK8s error:', error)
   }
 }
+
+export async function updateSecretOwnerReferences(name: string, namespace: string) {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  const options = {
+    headers: { 'Content-type': 'application/strategic-merge-patch+json' },
+  }
+  try {
+    const currentSecret = (await k8sApi.readNamespacedSecret(name, namespace)) as any
+    const { body } = currentSecret
+    const patch: k8s.V1Secret = {
+      metadata: {
+        ownerReferences: [
+          {
+            apiVersion: 'bitnami.com/v1alpha1',
+            controller: true,
+            kind: 'SealedSecret',
+            name,
+            uid: body.metadata?.ownerReferences[0].uid,
+          },
+        ],
+      },
+    }
+    const res = await k8sApi.patchNamespacedSecret(
+      name,
+      namespace,
+      patch,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      options,
+    )
+    return res.body
+  } catch (err) {
+    debug('Error updating secret owner references:', err)
+  }
+}
+
+export async function deleteSecretFromK8s(name: string, namespace: string) {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  try {
+    await k8sApi.deleteNamespacedSecret(name, namespace)
+  } catch (err) {
+    debug(`Error deleting secret: ${name}`, err)
+  }
+}

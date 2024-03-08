@@ -10,6 +10,7 @@ export type K8sService = components['schemas']['K8sService']
 export type Secret = components['schemas']['Secret'] & { teamId?: string }
 export type SealedSecret = components['schemas']['SealedSecret'] & { teamId?: string }
 export type SealedSecretsKeys = components['schemas']['SealedSecretsKeys']
+export type MigrateSecrets = components['schemas']['MigrateSecrets']
 export type K8sSecret = components['schemas']['K8sSecret']
 export type License = components['schemas']['License']
 export type LicenseJwt = components['schemas']['LicenseJwt']
