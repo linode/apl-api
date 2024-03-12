@@ -376,16 +376,8 @@ lokiStorageProvider:
               type: string
               description: Name of the bucket.
               $ref: ../definitions.yaml#/wordCharacterPattern
-            project:
-              description: Big Table Project.
-              $ref: ../definitions.yaml#/wordCharacterPattern
-            instance:
-              description: Big Table Instance.
-              $ref: ../definitions.yaml#/wordCharacterPattern
           required:
             - bucket
-            - project
-            - instance
         type:
           type: string
           enum:
