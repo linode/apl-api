@@ -147,6 +147,14 @@ export function getTeamServicesJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.services`
 }
 
+function deletePropertiesWithPassword(obj: any) {
+  for (const prop in obj) {
+    if (typeof obj[prop] === 'object') deletePropertiesWithPassword(obj[prop])
+    // eslint-disable-next-line no-param-reassign
+    else if (typeof obj[prop] === 'string' && prop.toLowerCase().includes('password')) delete obj[prop]
+  }
+}
+
 export const rootPath = '/tmp/otomi/values'
 
 export default class OtomiStack {
@@ -334,7 +342,8 @@ export default class OtomiStack {
   }
 
   getSettings(keys?: string[]): Settings {
-    const settings = this.db.db.get(['settings']).value()
+    const settings: Settings = this.db.db.get(['settings']).value()
+    deletePropertiesWithPassword(settings)
     if (!keys) return settings
     return pick(settings, keys) as Settings
   }
