@@ -343,7 +343,7 @@ export default class OtomiStack {
 
   getSettings(keys?: string[]): Settings {
     const settings: Settings = this.db.db.get(['settings']).value()
-    deletePropertiesWithPassword(settings)
+    // deletePropertiesWithPassword(settings)
     if (!keys) return settings
     return pick(settings, keys) as Settings
   }
