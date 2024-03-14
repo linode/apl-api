@@ -1,7 +1,7 @@
 Settings:
   x-acl:
     admin: [read-any, update-any]
-    team: [read]
+    team: [read-any]
   additionalProperties: false
   properties:
     alerts:
