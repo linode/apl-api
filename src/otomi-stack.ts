@@ -22,6 +22,7 @@ import {
   K8sService,
   License,
   Metrics,
+  Netpol,
   Policies,
   Project,
   SealedSecret,
@@ -94,6 +95,13 @@ export function getTeamBackupsFilePath(teamId: string): string {
 }
 export function getTeamBackupsJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.backups`
+}
+
+export function getTeamNetpolsFilePath(teamId: string): string {
+  return `env/teams/netpols.${teamId}.yaml`
+}
+export function getTeamNetpolsJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.netpols`
 }
 
 export function getTeamSealedSecretsFilePath(teamId: string): string {
@@ -179,6 +187,7 @@ export default class OtomiStack {
     const metrics: Metrics = {
       otomi_backups: this.getAllBackups().length,
       otomi_builds: this.getAllBuilds().length,
+      otomi_netpols: this.getAllNetpols().length,
       otomi_secrets: this.getAllSecrets().length,
       otomi_services: this.getAllServices().length,
       // We do not count team_admin as a regular team
@@ -547,6 +556,37 @@ export default class OtomiStack {
 
   deleteBackup(id: string): void {
     return this.db.deleteItem('backups', { id })
+  }
+
+  getTeamNetpols(teamId: string): Array<Netpol> {
+    const ids = { teamId }
+    return this.db.getCollection('netpols', ids) as Array<Netpol>
+  }
+
+  getAllNetpols(): Array<Netpol> {
+    return this.db.getCollection('netpols') as Array<Netpol>
+  }
+
+  createNetpol(teamId: string, data: Netpol): Netpol {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      return this.db.createItem('netpols', { ...data, teamId }, { teamId, name: data.name }) as Netpol
+    } catch (err) {
+      if (err.code === 409) err.publicMessage = 'Network policy name already exists'
+      throw err
+    }
+  }
+  getNetpol(id: string): Netpol {
+    return this.db.getItem('netpols', { id }) as Netpol
+  }
+
+  editNetpol(id: string, data: Netpol): Netpol {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    return this.db.updateItem('netpols', data, { id }) as Netpol
+  }
+
+  deleteNetpol(id: string): void {
+    return this.db.deleteItem('netpols', { id })
   }
 
   getTeamProjects(teamId: string): Array<Project> {
@@ -1299,6 +1339,20 @@ export default class OtomiStack {
     })
   }
 
+  async loadTeamNetpols(teamId: string): Promise<void> {
+    const relativePath = getTeamNetpolsFilePath(teamId)
+    if (!(await this.repo.fileExists(relativePath))) {
+      debug(`Team ${teamId} has no network policies yet`)
+      return
+    }
+    const data = await this.repo.readFile(relativePath)
+    const inData: Array<Netpol> = get(data, getTeamNetpolsJsonPath(teamId), [])
+    inData.forEach((inNetpol) => {
+      const res: any = this.db.populateItem('netpols', { ...inNetpol, teamId }, undefined, inNetpol.id as string)
+      debug(`Loaded network policy: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
+    })
+  }
+
   async loadTeamProjects(teamId: string): Promise<void> {
     const relativePath = getTeamProjectsFilePath(teamId)
     if (!(await this.repo.fileExists(relativePath))) {
@@ -1377,6 +1431,7 @@ export default class OtomiStack {
     if (!tc.admin) tc.admin = { id: 'admin' }
     Object.values(tc).forEach((team: Team) => {
       this.loadTeam(team)
+      this.loadTeamNetpols(team.id!)
       this.loadTeamServices(team.id!)
       this.loadTeamSealedSecrets(team.id!)
       this.loadTeamSecrets(team.id!)
@@ -1477,6 +1532,7 @@ export default class OtomiStack {
         const teamId = team.id as string
         await this.saveTeamApps(teamId)
         await this.saveTeamBackups(teamId)
+        await this.saveTeamNetpols(teamId)
         await this.saveTeamServices(teamId)
         await this.saveTeamSealedSecrets(teamId)
         await this.saveTeamSecrets(teamId)
@@ -1516,6 +1572,17 @@ export default class OtomiStack {
     const relativePath = getTeamBackupsFilePath(teamId)
     const outData: Record<string, any> = set({}, getTeamBackupsJsonPath(teamId), cleaneBackups)
     debug(`Saving backups of team: ${teamId}`)
+    await this.repo.writeFile(relativePath, outData)
+  }
+
+  async saveTeamNetpols(teamId: string): Promise<void> {
+    const netpols = this.db.getCollection('netpols', { teamId }) as Array<Netpol>
+    const cleaneNetpols: Array<Record<string, any>> = netpols.map((obj) => {
+      return omit(obj, ['teamId'])
+    })
+    const relativePath = getTeamNetpolsFilePath(teamId)
+    const outData: Record<string, any> = set({}, getTeamNetpolsJsonPath(teamId), cleaneNetpols)
+    debug(`Saving network policies of team: ${teamId}`)
     await this.repo.writeFile(relativePath, outData)
   }
 
