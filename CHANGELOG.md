@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.7.0](https://github.com/redkubes/otomi-api/compare/v2.6.0...v2.7.0) (2024-03-14)
+
+
+### Features
+
+* secrets migration ([#508](https://github.com/redkubes/otomi-api/issues/508)) ([9176fcd](https://github.com/redkubes/otomi-api/commit/9176fcd7a3f6611c47e5ad48b269dcac9a192216))
+
 ## [2.6.0](https://github.com/redkubes/otomi-api/compare/v2.5.0...v2.6.0) (2024-02-22)
 
 
