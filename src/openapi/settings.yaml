@@ -323,6 +323,9 @@ Settings:
       required:
         - version
       x-externalDocsPath: docs/for-ops/console/settings/otomi
+      x-acl:
+        admin: [read-any, update-any]
+        team: [read-any]
     policies:
       $ref: policies.yaml#/policies
       x-acl:

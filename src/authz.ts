@@ -238,6 +238,7 @@ export default class Authz {
   getAbacDenied = (action: string, schemaName: string, teamId: string): string[] => {
     const schema = this.specRules[schemaName]
     const aclProps = getAclProps(schema)
+    console.log('ACLPROPS: ', aclProps)
     const violatedAttributes: Array<string> = aclProps.filter(
       (prop) => !this.validateWithCasl(action, `${schemaName}.${prop}`, teamId),
     )
@@ -245,6 +246,7 @@ export default class Authz {
   }
 
   filterWithAbac = (schemaName: string, teamId: string, body: Record<string, any>): any => {
+    console.log('IAIOSBDHASBDHASB')
     if (typeof body !== 'object') return body
     const deniedRoleAttributes = this.getAbacDenied('read', schemaName, teamId)
     const ret = (body.length !== undefined ? body : [body]).map((obj) => omit(obj, deniedRoleAttributes))
@@ -252,6 +254,7 @@ export default class Authz {
   }
 
   hasSelfService = (teamId: string, schema, attribute: string) => {
+    console.log('OASJDKASJDKASDJOAS')
     const deniedAttributes = get(this.user.authz, `${teamId}.deniedAttributes.${schema}`, []) as Array<string>
     if (deniedAttributes.includes(attribute)) return false
     return true
@@ -264,7 +267,7 @@ export const getTeamSelfServiceAuthz = (
   otomi: OtomiStack,
 ): UserAuthz => {
   const permissionMap: UserAuthz = {}
-
+  console.log('QWJNEKJLQWBEKQWJB')
   teams.forEach((teamId) => {
     const authz: TeamAuthz = {} as TeamAuthz
     Object.keys(schema.properties).forEach((propName) => {
@@ -278,5 +281,6 @@ export const getTeamSelfServiceAuthz = (
     })
     permissionMap[teamId] = authz
   })
+  console.log('AUTHZ: ', permissionMap)
   return permissionMap
 }
