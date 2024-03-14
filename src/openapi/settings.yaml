@@ -263,13 +263,13 @@ Settings:
               type: string
               x-acl:
                 admin: [read-any, update-any]
-                team: []
+                team: [read]
             password:
               type: string
               x-secret: true
               x-acl:
                 admin: [read-any, update-any]
-                team: []
+                team: [read]
             email:
               type: string
               x-acl:
@@ -286,7 +286,7 @@ Settings:
           type: object
           x-acl:
             admin: [read-any, update-any]
-            team: []
+            team: [read]
         hasCloudLB:
           description: Set this to true when using a cloud specific ingress controller. By default the Nginx Ingress Controller is used.
           title: Cloud ingress controller
