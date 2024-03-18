@@ -1,7 +1,7 @@
 SettingsInfo:
   x-acl:
     admin: [read-any]
-    team: [read]
+    team: [read-any]
   properties:
     cluster:
       properties:
