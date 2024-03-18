@@ -376,6 +376,9 @@ lokiStorageProvider:
               type: string
               description: Name of the bucket.
               $ref: ../definitions.yaml#/wordCharacterPattern
+            serviceAccount:
+              type: string
+              description: Name of the service account to use for accessing the storage bucket.              
           required:
             - bucket
         type:
