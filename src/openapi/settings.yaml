@@ -1,7 +1,7 @@
 Settings:
   x-acl:
     admin: [read-any, update-any]
-    team: [read-any]
+    team: [read]
   additionalProperties: false
   properties:
     alerts:
@@ -263,13 +263,13 @@ Settings:
               type: string
               x-acl:
                 admin: [read-any, update-any]
-                team: [read]
+                team: []
             password:
               type: string
               x-secret: true
               x-acl:
                 admin: [read-any, update-any]
-                team: [read]
+                team: []
             email:
               type: string
               x-acl:
@@ -286,7 +286,7 @@ Settings:
           type: object
           x-acl:
             admin: [read-any, update-any]
-            team: [read]
+            team: []
         hasCloudLB:
           description: Set this to true when using a cloud specific ingress controller. By default the Nginx Ingress Controller is used.
           title: Cloud ingress controller
