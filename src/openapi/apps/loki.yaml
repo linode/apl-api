@@ -369,8 +369,8 @@ lokiStorageProvider:
       properties:
         gcs:
           type: object
-          title: Google Object Storage
-          description: Select to store backups in Google Object Storage.
+          title: Google Cloud Storage
+          description: Select to store backups in Google Cloud Storage.
           properties:
             bucket:
               type: string
