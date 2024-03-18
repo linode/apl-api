@@ -1,0 +1,39 @@
+SettingsInfo:
+  x-acl:
+    admin: [read-any]
+    team: [read]
+  properties:
+    cluster:
+      properties:
+        name:
+          $ref: definitions.yaml#/clusterName
+        domainSuffix:
+          $ref: definitions.yaml#/domainSuffix
+        provider:
+          $ref: definitions.yaml#/provider
+    dns:
+      properties:
+        zones:
+          description: Extra dns zones that the cluster can administer (see dns). Team services can use this to publish their URLs on.
+          items:
+            type: string
+            title: Zone
+          title: Zones
+          type: array
+          uniqueItems: true
+    otomi:
+      properties:
+        additionalClusters:
+          type: array
+          items:
+            $ref: cluster.yaml#/AdditionalCluster
+        hasCloudLB:
+          type: boolean
+          default: false
+        hasExternalDNS:
+          type: boolean
+          default: false
+        hasExternalIDP:
+          type: boolean
+          default: false
+  type: object
