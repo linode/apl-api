@@ -15,7 +15,11 @@ Metrics:
     otomi_secrets:
       type: integer
       minimum: 0
-      default: 0q
+      default: 0
+    otomi_netpols:
+      type: integer
+      minimum: 0
+      default: 0
     otomi_services:
       type: integer
       minimum: 0
@@ -31,6 +35,7 @@ Metrics:
   required:
     - otomi_backups
     - otomi_builds
+    - otomi_netpols
     - otomi_secrets
     - otomi_services
     - otomi_teams
