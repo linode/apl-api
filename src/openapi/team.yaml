@@ -1,43 +1,55 @@
 TeamSelfService:
-  title: Team self service flags
+  title: Team permissions
   description: Grant team permissions to modify certain configuration parameters.
   type: object
   properties:
     service:
+      title: Service
       type: array
       items:
         type: string
-        enum: [ingress, networkPolicy]
+        enum: [ingress]
       x-allow-values:
         ingress:
           type: 'cluster'
-        networkPolicy:
-          ingressPrivate:
-            mode: 'DenyAll'
-      default: [ingress, networkPolicy]
+      default: [ingress]
       uniqueItems: true
     team:
+      title: Team settings
       type: array
       items:
         type: string
         # downloadKubeConfig - is an action that a user can perform, not an attribute of the input form
         enum:
           [
+            oidc,
+            managedMonitoring,
             alerts,
             billingAlertQuotas,
-            oidc,
             resourceQuota,
-            downloadKubeConfig,
-            downloadDockerConfig,
             networkPolicy,
           ]
       uniqueItems: true
     apps:
+      title: Apps
       type: array
       items:
         type: string
         enum: [argocd, gitea]
       default: []
+      uniqueItems: true
+    access:
+      title: Access
+      type: array
+      items:
+        type: string
+        enum:
+          [
+            shell,
+            downloadKubeConfig,
+            downloadDockerConfig,
+            downloadCertificateAuthority,
+          ]
       uniqueItems: true
   x-acl:
     admin: [read-any, update-any]

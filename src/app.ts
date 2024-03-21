@@ -24,7 +24,7 @@ import {
   sessionMiddleware,
 } from 'src/middleware'
 import { setMockIdx } from 'src/mocks'
-import { Build, OpenAPIDoc, OpenApiRequestExt, Schema, Service, Workload } from 'src/otomi-models'
+import { Build, OpenAPIDoc, OpenApiRequestExt, Schema, SealedSecret, Service, Workload } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
 import {
@@ -38,7 +38,14 @@ import {
 import swaggerUi from 'swagger-ui-express'
 import Db from './db'
 import giteaCheckLatest from './gitea/connect'
-import { getBuildStatus, getKubernetesVersion, getNodes, getServiceStatus, getWorkloadStatus } from './k8s_operations'
+import {
+  getBuildStatus,
+  getKubernetesVersion,
+  getNodes,
+  getSealedSecretStatus,
+  getServiceStatus,
+  getWorkloadStatus,
+} from './k8s_operations'
 import uploadMetrics from './otomiCloud/upload-metrics'
 
 const env = cleanEnv({
@@ -116,11 +123,13 @@ const resourceStatus = async () => {
     workloads: otomiStack.db.getCollection('workloads') as Array<Workload>,
     builds: otomiStack.db.getCollection('builds') as Array<Build>,
     services: otomiStack.db.getCollection('services') as Array<Service>,
+    sealedSecrets: otomiStack.db.getCollection('sealedsecrets') as Array<SealedSecret>,
   }
   const statusFunctions = {
     workloads: getWorkloadStatus,
     builds: getBuildStatus,
     services: getServiceStatus,
+    sealedSecrets: getSealedSecretStatus,
   }
   const resourcesStatus = {}
   for (const resourceType in resources) {
@@ -151,8 +160,10 @@ export const getSpec = (): OtomiSpec => {
   return otomiSpec
 }
 export const getAppSchema = (appId: string): Schema => {
-  const id: string = appId.startsWith('ingress-nginx') ? 'ingress-nginx' : appId
-  return getSpec().spec.components.schemas[`App${pascalCase(id)}`]
+  let id: string = appId
+  if (appId.startsWith('ingress-nginx')) id = 'ingress-nginx'
+  const appName = `App${pascalCase(id)}`
+  return getSpec().spec.components.schemas[appName]
 }
 
 export const getAppList = (): string[] => {

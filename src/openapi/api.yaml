@@ -116,6 +116,7 @@ paths:
             application/yaml:
               schema:
                 $ref: '#/components/schemas/OtomiCliValues'
+
   /secrets:
     get:
       operationId: getAllSecrets
@@ -328,6 +329,177 @@ paths:
         '200':
           description: Successfully deleted a service
 
+  /migrateSecrets:
+    post:
+      operationId: migrateSecrets
+      description: Migrate HashiCorp Vault secrets to sealed secrets
+      x-aclSchema: MigrateSecrets
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully migrated secrets to sealed secrets
+          content:
+            application/json:
+              schema:
+                properties:
+                  status:
+                    type: string
+                    enum: [success, info]
+                  message:
+                    type: string
+                  total:
+                    type: integer
+                  migrated:
+                    type: integer
+                  remaining:
+                    type: integer
+        '400':
+          <<: *BadRequest
+
+  /sealedsecrets:
+    get:
+      operationId: getAllSealedSecrets
+      description: Get all sealed secrets
+      x-aclSchema: SealedSecret
+      responses:
+        '200':
+          description: Successfully obtained all sealed secrets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SealedSecret'
+        '400':
+          <<: *BadRequest
+
+  /sealedsecretskeys:
+    get:
+      operationId: downloadSealedSecretKeys
+      description: Download sealed secret keys
+      x-aclSchema: SealedSecretsKeys
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully downloaded sealed secret keys
+          content:
+            application/key:
+              schema:
+                $ref: '#/components/schemas/SealedSecretsKeys'
+        '400':
+          <<: *BadRequest
+
+  '/teams/{teamId}/k8sSecrets':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getSecretsFromK8s
+      description: Get secrets from k8s
+      x-aclSchema: K8sSecret
+      responses:
+        '200':
+          description: Successfully obtained secrets from k8s
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/K8sSecret'
+        '400':
+          <<: *BadRequest
+
+  '/teams/{teamId}/sealedsecrets':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getSealedSecrets
+      description: Get sealed secrets from a given team
+      x-aclSchema: SealedSecret
+      responses:
+        '200':
+          description: Successfully obtained sealed secrets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SealedSecret'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenApiValidationError'
+    post:
+      operationId: createSealedSecret
+      description: Create a team sealed secret
+      x-aclSchema: SealedSecret
+      parameters:
+        - name: teamId
+          in: path
+          description: ID of team
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SealedSecret'
+        description: SealedSecret object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored sealed secret configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SealedSecret'
+
+  '/teams/{teamId}/sealedsecrets/{secretId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/secretParams'
+    get:
+      operationId: getSealedSecret
+      description: Get a sealed secret from a given team
+      x-aclSchema: SealedSecret
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained sealed secret configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SealedSecret'
+    put:
+      operationId: editSealedSecret
+      description: Edit a sealed secret from a given team
+      x-aclSchema: SealedSecret
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SealedSecret'
+        description: SealedSecret object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team sealed secret
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SealedSecret'
+    delete:
+      operationId: deleteSealedSecret
+      description: Delete a sealed secret from a given team
+      x-aclSchema: SealedSecret
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a team sealed secret
   '/teams/{teamId}/secrets':
     parameters:
       - $ref: '#/components/parameters/teamParams'
@@ -420,6 +592,101 @@ paths:
         <<: *DefaultGetResponses
         '200':
           description: Successfully deleted a team secret
+
+  '/netpols':
+    get:
+      operationId: getAllNetpols
+      x-aclSchema: Netpol
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all network policy configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Netpol'
+
+  '/teams/{teamId}/netpols':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamNetpols
+      x-aclSchema: Build
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team network policy configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Netpol'
+    post:
+      operationId: createNetpol
+      description: Create a team network policy
+      x-aclSchema: Netpol
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Netpol'
+        description: Network policy object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored network policy configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Netpol'
+
+  '/teams/{teamId}/netpols/{netpolId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/netpolParams'
+    get:
+      operationId: getNetpol
+      description: Get a network policy from a given team
+      x-aclSchema: Netpol
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained network policy configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Netpol'
+    put:
+      operationId: editNetpol
+      description: Edit a network policy from a given team
+      x-aclSchema: Netpol
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Netpol'
+        description: Netwok policy object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team network policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Netpol'
+    delete:
+      operationId: deleteNetpol
+      description: Delete a network policy from a given team
+      x-aclSchema: Netpol
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a team network policy
 
   '/backups':
     get:
@@ -865,7 +1132,7 @@ paths:
                 $ref: '#/components/schemas/Workload'
     put:
       operationId: editWorkload
-      description: Edit a secret from a given team
+      description: Edit a workload from a given team
       x-aclSchema: Workload
       requestBody:
         content:
@@ -877,7 +1144,7 @@ paths:
       responses:
         <<: *DefaultGetResponses
         '200':
-          description: Successfully edited a team secret
+          description: Successfully edited a team workload
           content:
             application/json:
               schema:
@@ -1176,7 +1443,7 @@ components:
     projectParams:
       name: projectId
       in: path
-      description: ID of the build
+      description: ID of the project
       required: true
       schema:
         type: string
@@ -1184,6 +1451,13 @@ components:
       name: teamId
       in: path
       description: ID of team to return
+      required: true
+      schema:
+        type: string
+    netpolParams:
+      name: netpolId
+      in: path
+      description: ID of the network policy
       required: true
       schema:
         type: string
@@ -1282,6 +1556,10 @@ components:
       $ref: apps/opencost.yaml#/AppOpencost
     AppPrometheus:
       $ref: apps/prometheus.yaml#/AppPrometheus
+    AppRabbitmq:
+      $ref: apps/rabbitmq.yaml#/AppRabbitmq
+    AppSealedSecrets:
+      $ref: apps/sealed-secrets.yaml#/AppSealedSecrets
     AppTempo:
       $ref: apps/tempo.yaml#/AppTempo
     AppThanos:
@@ -1324,6 +1602,8 @@ components:
       $ref: license.yaml#/License
     Metrics:
       $ref: metrics.yaml#/Metrics
+    Netpol:
+      $ref: netpol.yaml#/Netpol
     DockerConfig:
       $ref: dockerconfig.yaml#/DockerConfig
     OpenApiValidationError:
@@ -1338,6 +1618,14 @@ components:
       $ref: restore.yaml#/Restore
     Revert:
       $ref: revert.yaml#/Revert
+    SealedSecret:
+      $ref: sealedsecret.yaml#/SealedSecret
+    SealedSecretsKeys:
+      $ref: sealedsecretskeys.yaml#/SealedSecretsKeys
+    MigrateSecrets:
+      $ref: migratesecrets.yaml#/MigrateSecrets
+    K8sSecret:
+      $ref: k8sSecret.yaml#/K8sSecret
     Secret:
       $ref: secret.yaml#/Secret
     SecretDockerRegistry:

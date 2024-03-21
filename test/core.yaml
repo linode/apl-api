@@ -83,6 +83,9 @@ k8s:
     - name: cluster-overprovisioner
       app: cluster-overprovisioner
       disableIstioInjection: true
+    - name: rabbitmq
+      app: rabbitmq
+      disableIstioInjection: true
     - name: redis
       app: prometheus
       disableIstioInjection: true
@@ -94,6 +97,8 @@ k8s:
       app: trivy
       disableIstioInjection: true
       disablePolicyChecks: true
+    - name: sealed-secrets
+      app: sealed-secrets
     - name: vault
       app: vault
     - name: velero
@@ -310,6 +315,9 @@ adminApps:
         # namespace: prometheus
         type: public
         auth: true
+  - name: sealed-secrets
+    tags: [secrets, security, observability]
+    ownHost: true
   - name: tempo
     tags: [tracing]
     deps: [prometheus, grafana]
@@ -350,6 +358,8 @@ adminApps:
         auth: true
   - name: velero
     tags: [backup]
+  - name: rabbitmq
+    tags: [messaging]
 
 teamApps:
   - name: alertmanager

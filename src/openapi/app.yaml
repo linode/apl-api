@@ -23,14 +23,16 @@ AppList:
     - kiali
     - knative
     - kured
-    - tekton
     - loki
     - minio
     - opencost
+    - otel
     - prometheus
+    - rabbitmq
+    - tekton
+    - sealed-secrets
     - thanos
     - tempo
-    - otel
     - trivy
     - vault
     - velero
