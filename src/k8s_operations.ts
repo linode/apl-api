@@ -248,6 +248,7 @@ export async function getLastTektonMessage(sha: string): Promise<any | undefined
     return { order, name, completionTime, status }
   } catch (error) {
     debug('getLastTektonMessage error:', error)
+    return {}
   }
 }
 

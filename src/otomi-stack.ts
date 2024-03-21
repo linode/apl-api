@@ -974,6 +974,18 @@ export default class OtomiStack {
       const sha = await rootStack.repo.getCommitSha()
       const msg: DbMessage = { state: 'clean', editor: this.editor!, sha, reason: 'deploy' }
       getIo().emit('db', msg)
+      // check Tekton status every 5 seconds and emit it when the pipeline is completed
+      const intervalId = setInterval(() => {
+        getLastTektonMessage(sha).then((res: any) => {
+          console.log('tekton res:', res)
+          const { order, name, completionTime, status } = res
+          if (completionTime) {
+            getIo().emit('tekton', { order, name, completionTime, sha, status })
+            clearInterval(intervalId)
+            debug(`Tekton pipeline ${order} completed with status ${status}`)
+          }
+        })
+      }, 5 * 1000)
     } catch (e) {
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)
@@ -981,16 +993,6 @@ export default class OtomiStack {
     } finally {
       if (env.isProd) {
         const sha = await rootStack.repo.getCommitSha()
-        // check Tekton status every 5 seconds and emit it when the pipeline is completed
-        const intervalId = setInterval(() => {
-          getLastTektonMessage(sha).then(({ order, name, completionTime, status }: any) => {
-            if (completionTime) {
-              getIo().emit('tekton', { order, name, completionTime, sha, status })
-              clearInterval(intervalId)
-              debug(`Tekton pipeline ${order} completed with status ${status}`)
-            }
-          })
-        }, 5 * 1000)
       }
       rootStack.locked = false
     }
