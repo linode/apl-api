@@ -80,7 +80,7 @@ Team:
         team: []
     managedMonitoring:
       title: Managed monitoring
-      description: Activate managed Grafana, Prometheus or Alertmanager instances
+      description: Activate managed Grafana, Prometheus or Alertmanager instances; optionally disable cross-team access
       properties:
         grafana:
           type: boolean
@@ -89,6 +89,9 @@ Team:
           type: boolean
           default: false
         alertmanager:
+          type: boolean
+          default: false
+        private:
           type: boolean
           default: false
     alerts:
