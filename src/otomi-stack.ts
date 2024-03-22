@@ -970,10 +970,10 @@ export default class OtomiStack {
         })
       }, 5 * 1000)
 
-      // fallback to clear interval after 10 minutes
-      setTimeout(() => {
-        clearInterval(intervalId)
-      }, 10 * 60 * 1000)
+      // // fallback to clear interval after 10 minutes
+      // setTimeout(() => {
+      //   clearInterval(intervalId)
+      // }, 10 * 60 * 1000)
     } catch (error) {
       debug('Error emitting pipeline status:', error)
     }
