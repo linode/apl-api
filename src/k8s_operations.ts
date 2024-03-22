@@ -239,7 +239,7 @@ export async function getLastTektonMessage(sha: string): Promise<any> {
       'pipelineruns',
     )
     const lastPipelineRun = res.body.items.find((item: any) => item.metadata.name.includes(sha))
-    if (!lastPipelineRun) return undefined
+    if (!lastPipelineRun) return {}
     const order = res.body.items.length
     const { name } = lastPipelineRun.metadata
     const { completionTime, conditions } = lastPipelineRun.status

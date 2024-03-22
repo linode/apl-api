@@ -958,7 +958,7 @@ export default class OtomiStack {
 
   emitPipelineStatus(sha: string): void {
     try {
-      // check pipeline status every 5 seconds and emit it when it's completed
+      // check pipeline status every 5 seconds and emit the status when it's completed
       const intervalId = setInterval(() => {
         getLastTektonMessage(sha).then((res: any) => {
           const { order, name, completionTime, status } = res
@@ -969,6 +969,11 @@ export default class OtomiStack {
           }
         })
       }, 5 * 1000)
+
+      // fallback to clear interval after 10 minutes
+      setTimeout(() => {
+        clearInterval(intervalId)
+      }, 10 * 60 * 1000)
     } catch (error) {
       debug('Error emitting pipeline status:', error)
     }
