@@ -8,14 +8,11 @@ TeamSelfService:
       type: array
       items:
         type: string
-        enum: [ingress, networkPolicy]
+        enum: [ingress]
       x-allow-values:
         ingress:
           type: 'cluster'
-        networkPolicy:
-          ingressPrivate:
-            mode: 'DenyAll'
-      default: [ingress, networkPolicy]
+      default: [ingress]
       uniqueItems: true
     team:
       title: Team settings
