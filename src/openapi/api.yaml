@@ -1294,6 +1294,19 @@ paths:
         default:
           description: The requested apiDoc.
 
+  /settingsInfo:
+    get:
+      operationId: getSettingsInfo
+      description: Get settings information from the 'settings.yaml' file.
+      x-aclSchema: SettingsInfo
+      responses:
+        '200':
+          description: The request is successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsInfo'
+
   /settings:
     get:
       operationId: getSettings
@@ -1640,6 +1653,8 @@ components:
       $ref: session.yaml#/Session
     Settings:
       $ref: settings.yaml#/Settings
+    SettingsInfo:
+      $ref: settingsinfo.yaml#/SettingsInfo
     Team:
       $ref: team.yaml#/Team
     TeamAuthz:
