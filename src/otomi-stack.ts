@@ -9,7 +9,7 @@ import jwt, { JwtPayload } from 'jsonwebtoken'
 import { cloneDeep, each, filter, get, isArray, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
 import * as osPath from 'path'
-import { getAppList, getAppSchema, getSpec } from 'src/app'
+import { getAppList, getAppSchema, getSpec, uploadOtomiMetrics } from 'src/app'
 import Db from 'src/db'
 import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
 import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
@@ -307,6 +307,7 @@ export default class OtomiStack {
     const envType = license.body?.envType as string
     await connect(apiKey, envType, clusterInfo)
     this.doDeployment()
+    await uploadOtomiMetrics()
     debug('License uploaded')
     return license
   }
