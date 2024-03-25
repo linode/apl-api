@@ -969,6 +969,29 @@ export default class OtomiStack {
     if (servicesFiltered.length > 0) throw new PublicUrlExists()
   }
 
+  emitPipelineStatus(sha: string): void {
+    try {
+      // check pipeline status every 5 seconds and emit the status when it's completed
+      const intervalId = setInterval(() => {
+        getLastTektonMessage(sha).then((res: any) => {
+          const { order, name, completionTime, status } = res
+          if (completionTime) {
+            getIo().emit('tekton', { order, name, completionTime, sha, status })
+            clearInterval(intervalId)
+            debug(`Tekton pipeline ${order} completed with status ${status}`)
+          }
+        })
+      }, 5 * 1000)
+
+      // fallback to clear interval after 10 minutes
+      setTimeout(() => {
+        clearInterval(intervalId)
+      }, 10 * 60 * 1000)
+    } catch (error) {
+      debug('Error emitting pipeline status:', error)
+    }
+  }
+
   async doDeployment(): Promise<void> {
     const rootStack = await getSessionStack()
     if (rootStack.locked) throw new DeployLockError()
@@ -987,26 +1010,13 @@ export default class OtomiStack {
       const sha = await rootStack.repo.getCommitSha()
       const msg: DbMessage = { state: 'clean', editor: this.editor!, sha, reason: 'deploy' }
       getIo().emit('db', msg)
+      this.emitPipelineStatus(sha)
     } catch (e) {
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)
       throw e
-    } finally {
-      if (env.isProd) {
-        const sha = await rootStack.repo.getCommitSha()
-        // check Tekton status every 5 seconds and emit it when the pipeline is completed
-        const intervalId = setInterval(() => {
-          getLastTektonMessage(sha).then(({ order, name, completionTime, status }: any) => {
-            if (completionTime) {
-              getIo().emit('tekton', { order, name, completionTime, sha, status })
-              clearInterval(intervalId)
-              debug(`Tekton pipeline ${order} completed with status ${status}`)
-            }
-          })
-        }, 5 * 1000)
-      }
-      rootStack.locked = false
     }
+    rootStack.locked = false
   }
 
   async doRevert(): Promise<void> {

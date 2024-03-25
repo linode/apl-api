@@ -227,7 +227,7 @@ export async function getCloudttyActiveTime(namespace: string, podName: string):
   }
 }
 
-export async function getLastTektonMessage(sha: string): Promise<any | undefined> {
+export async function getLastTektonMessage(sha: string): Promise<any> {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
@@ -239,7 +239,7 @@ export async function getLastTektonMessage(sha: string): Promise<any | undefined
       'pipelineruns',
     )
     const lastPipelineRun = res.body.items.find((item: any) => item.metadata.name.includes(sha))
-    if (!lastPipelineRun) return undefined
+    if (!lastPipelineRun) return {}
     const order = res.body.items.length
     const { name } = lastPipelineRun.metadata
     const { completionTime, conditions } = lastPipelineRun.status
@@ -247,7 +247,8 @@ export async function getLastTektonMessage(sha: string): Promise<any | undefined
     if (['True', 'False', 'Unknown'].includes(conditions[0].status)) status = conditions[0].reason.toLowerCase()
     return { order, name, completionTime, status }
   } catch (error) {
-    debug('getLastTektonMessage error:', error)
+    debug('Error getting last tekton message:', error)
+    return {}
   }
 }
 
