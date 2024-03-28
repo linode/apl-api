@@ -382,6 +382,7 @@ lokiStorageProvider:
               $ref: ../definitions.yaml#/wordCharacterPattern
           required:
             - bucket
+            - serviceAccount
         type:
           type: string
           enum:
