@@ -6,8 +6,8 @@ const debug = Debug('otomi:api:apps')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [
-    ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
-      res.json(otomi.getApps(teamId))
+    ({ otomi, params: { teamId }, query: { picks } }: OpenApiRequestExt, res): void => {
+      res.json(otomi.getApps(teamId, picks as string[]))
     },
   ]
   const put: Operation = [
