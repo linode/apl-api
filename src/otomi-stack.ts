@@ -9,7 +9,7 @@ import jwt, { JwtPayload } from 'jsonwebtoken'
 import { cloneDeep, each, filter, get, isArray, isEmpty, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
 import * as osPath from 'path'
-import { getAppList, getAppSchema, getSpec } from 'src/app'
+import { getAppList, getAppSchema, getSpec, uploadOtomiMetrics } from 'src/app'
 import Db from 'src/db'
 import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
 import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
@@ -22,6 +22,7 @@ import {
   K8sService,
   License,
   Metrics,
+  Netpol,
   Policy,
   Project,
   SealedSecret,
@@ -29,6 +30,7 @@ import {
   Service,
   Session,
   Settings,
+  SettingsInfo,
   Team,
   TeamSelfService,
   User,
@@ -55,6 +57,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import {
   apply,
   checkPodExists,
+  deleteSecretFromK8s,
   getCloudttyActiveTime,
   getKubernetesVersion,
   getLastTektonMessage,
@@ -62,11 +65,12 @@ import {
   getSecretValues,
   getTeamSecretsFromK8s,
   k8sdelete,
+  updateSecretOwnerReferences,
   watchPodUntilRunning,
 } from './k8s_operations'
 import connect from './otomiCloud/connect'
 import { validateBackupFields } from './utils/backupUtils'
-import { encryptSecretItem } from './utils/sealedSecretUtils'
+import { encryptSecretItem, prepareSealedSecretData } from './utils/sealedSecretUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 const debug = Debug('otomi:otomi-stack')
@@ -92,6 +96,13 @@ export function getTeamBackupsFilePath(teamId: string): string {
 }
 export function getTeamBackupsJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.backups`
+}
+
+export function getTeamNetpolsFilePath(teamId: string): string {
+  return `env/teams/netpols.${teamId}.yaml`
+}
+export function getTeamNetpolsJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.netpols`
 }
 
 export function getTeamSealedSecretsFilePath(teamId: string): string {
@@ -185,6 +196,7 @@ export default class OtomiStack {
     const metrics: Metrics = {
       otomi_backups: this.getAllBackups().length,
       otomi_builds: this.getAllBuilds().length,
+      otomi_netpols: this.getAllNetpols().length,
       otomi_secrets: this.getAllSecrets().length,
       otomi_services: this.getAllServices().length,
       // We do not count team_admin as a regular team
@@ -303,6 +315,7 @@ export default class OtomiStack {
     const envType = license.body?.envType as string
     await connect(apiKey, envType, clusterInfo)
     this.doDeployment()
+    await uploadOtomiMetrics()
     debug('License uploaded')
     return license
   }
@@ -337,6 +350,17 @@ export default class OtomiStack {
       { license: license.jwt },
       secretPaths ?? this.getSecretPaths(),
     )
+  }
+
+  getSettingsInfo(): SettingsInfo {
+    const settings = this.db.db.get(['settings']).value() as Settings
+    const { cluster, dns, otomi } = pick(settings, ['cluster', 'dns', 'otomi']) as Settings
+    const settingsInfo = {
+      cluster: pick(cluster, ['name', 'domainSuffix', 'provider']),
+      dns: pick(dns, ['zones']),
+      otomi: pick(otomi, ['additionalClusters', 'hasCloudLB', 'hasExternalDNS', 'hasExternalIDP']),
+    }
+    return settingsInfo
   }
 
   getSettings(keys?: string[]): Settings {
@@ -547,6 +571,37 @@ export default class OtomiStack {
 
   deleteBackup(id: string): void {
     return this.db.deleteItem('backups', { id })
+  }
+
+  getTeamNetpols(teamId: string): Array<Netpol> {
+    const ids = { teamId }
+    return this.db.getCollection('netpols', ids) as Array<Netpol>
+  }
+
+  getAllNetpols(): Array<Netpol> {
+    return this.db.getCollection('netpols') as Array<Netpol>
+  }
+
+  createNetpol(teamId: string, data: Netpol): Netpol {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      return this.db.createItem('netpols', { ...data, teamId }, { teamId, name: data.name }) as Netpol
+    } catch (err) {
+      if (err.code === 409) err.publicMessage = 'Network policy name already exists'
+      throw err
+    }
+  }
+  getNetpol(id: string): Netpol {
+    return this.db.getItem('netpols', { id }) as Netpol
+  }
+
+  editNetpol(id: string, data: Netpol): Netpol {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    return this.db.updateItem('netpols', data, { id }) as Netpol
+  }
+
+  deleteNetpol(id: string): void {
+    return this.db.deleteItem('netpols', { id })
   }
 
   getTeamProjects(teamId: string): Array<Project> {
@@ -934,6 +989,29 @@ export default class OtomiStack {
     if (servicesFiltered.length > 0) throw new PublicUrlExists()
   }
 
+  emitPipelineStatus(sha: string): void {
+    try {
+      // check pipeline status every 5 seconds and emit the status when it's completed
+      const intervalId = setInterval(() => {
+        getLastTektonMessage(sha).then((res: any) => {
+          const { order, name, completionTime, status } = res
+          if (completionTime) {
+            getIo().emit('tekton', { order, name, completionTime, sha, status })
+            clearInterval(intervalId)
+            debug(`Tekton pipeline ${order} completed with status ${status}`)
+          }
+        })
+      }, 5 * 1000)
+
+      // fallback to clear interval after 10 minutes
+      setTimeout(() => {
+        clearInterval(intervalId)
+      }, 10 * 60 * 1000)
+    } catch (error) {
+      debug('Error emitting pipeline status:', error)
+    }
+  }
+
   async doDeployment(): Promise<void> {
     const rootStack = await getSessionStack()
     if (rootStack.locked) throw new DeployLockError()
@@ -952,26 +1030,13 @@ export default class OtomiStack {
       const sha = await rootStack.repo.getCommitSha()
       const msg: DbMessage = { state: 'clean', editor: this.editor!, sha, reason: 'deploy' }
       getIo().emit('db', msg)
+      this.emitPipelineStatus(sha)
     } catch (e) {
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)
       throw e
-    } finally {
-      if (env.isProd) {
-        const sha = await rootStack.repo.getCommitSha()
-        // check Tekton status every 5 seconds and emit it when the pipeline is completed
-        const intervalId = setInterval(() => {
-          getLastTektonMessage(sha).then(({ order, name, completionTime, status }: any) => {
-            if (completionTime) {
-              getIo().emit('tekton', { order, name, completionTime, sha, status })
-              clearInterval(intervalId)
-              debug(`Tekton pipeline ${order} completed with status ${status}`)
-            }
-          })
-        }, 5 * 1000)
-      }
-      rootStack.locked = false
     }
+    rootStack.locked = false
   }
 
   async doRevert(): Promise<void> {
@@ -1122,6 +1187,53 @@ export default class OtomiStack {
     return this.db.getCollection('secrets', { teamId }) as Array<Secret>
   }
 
+  async migrateSecrets(): Promise<{
+    status: 'success' | 'info'
+    message: string
+    total?: number
+    migrated?: number
+    remaining?: number
+  }> {
+    const totalSecrets = this.getAllSecrets().length
+    let migratedSecrets = 0
+    const teams: string[] = this.getTeams().map((t) => t.id as string)
+    try {
+      for (const teamId of teams) {
+        const secrets = this.getSecrets(teamId)
+        for (const secret of secrets) {
+          const namespace = secret.namespace || `team-${secret.teamId}`
+          const body = await updateSecretOwnerReferences(secret.name, namespace)
+          const data = prepareSealedSecretData(body)
+          await this.createSealedSecret(teamId, data).then(async () => {
+            await deleteSecretFromK8s(secret.name, namespace)
+            this.db.deleteItem('secrets', { id: secret.id })
+            migratedSecrets += 1
+          })
+        }
+      }
+      debug(`Secrets migration completed successfully! ${migratedSecrets} secrets migrated.`)
+    } catch (error) {
+      debug('Secrets migration error:', error)
+      debug(`Secrets migration interrupted. ${migratedSecrets} secrets migrated out of ${totalSecrets}.`)
+      return {
+        status: 'info',
+        message: 'Something went wrong, secrets migration interrupted.',
+        total: totalSecrets,
+        migrated: migratedSecrets,
+        remaining: totalSecrets - migratedSecrets,
+      }
+    } finally {
+      await this.doDeployment()
+    }
+    return {
+      status: 'success',
+      message: 'Secrets migration completed successfully! The Sealed Secrets will be available in a few minutes.',
+      total: totalSecrets,
+      migrated: migratedSecrets,
+      remaining: totalSecrets - migratedSecrets,
+    }
+  }
+
   async createSealedSecret(teamId: string, data: SealedSecret): Promise<SealedSecret> {
     const namespace = data.namespace ?? `team-${teamId}`
     const certificate = await getSealedSecretsCertificate()
@@ -1263,6 +1375,20 @@ export default class OtomiStack {
     })
   }
 
+  async loadTeamNetpols(teamId: string): Promise<void> {
+    const relativePath = getTeamNetpolsFilePath(teamId)
+    if (!(await this.repo.fileExists(relativePath))) {
+      debug(`Team ${teamId} has no network policies yet`)
+      return
+    }
+    const data = await this.repo.readFile(relativePath)
+    const inData: Array<Netpol> = get(data, getTeamNetpolsJsonPath(teamId), [])
+    inData.forEach((inNetpol) => {
+      const res: any = this.db.populateItem('netpols', { ...inNetpol, teamId }, undefined, inNetpol.id as string)
+      debug(`Loaded network policy: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
+    })
+  }
+
   async loadTeamProjects(teamId: string): Promise<void> {
     const relativePath = getTeamProjectsFilePath(teamId)
     if (!(await this.repo.fileExists(relativePath))) {
@@ -1355,6 +1481,7 @@ export default class OtomiStack {
     if (!tc.admin) tc.admin = { id: 'admin' }
     Object.values(tc).forEach((team: Team) => {
       this.loadTeam(team)
+      this.loadTeamNetpols(team.id!)
       this.loadTeamServices(team.id!)
       this.loadTeamSealedSecrets(team.id!)
       this.loadTeamSecrets(team.id!)
@@ -1452,6 +1579,7 @@ export default class OtomiStack {
         const teamId = team.id as string
         await this.saveTeamApps(teamId)
         await this.saveTeamBackups(teamId)
+        await this.saveTeamNetpols(teamId)
         await this.saveTeamServices(teamId)
         await this.saveTeamSealedSecrets(teamId)
         await this.saveTeamSecrets(teamId)
@@ -1492,6 +1620,17 @@ export default class OtomiStack {
     const relativePath = getTeamBackupsFilePath(teamId)
     const outData: Record<string, any> = set({}, getTeamBackupsJsonPath(teamId), cleaneBackups)
     debug(`Saving backups of team: ${teamId}`)
+    await this.repo.writeFile(relativePath, outData)
+  }
+
+  async saveTeamNetpols(teamId: string): Promise<void> {
+    const netpols = this.db.getCollection('netpols', { teamId }) as Array<Netpol>
+    const cleaneNetpols: Array<Record<string, any>> = netpols.map((obj) => {
+      return omit(obj, ['teamId'])
+    })
+    const relativePath = getTeamNetpolsFilePath(teamId)
+    const outData: Record<string, any> = set({}, getTeamNetpolsJsonPath(teamId), cleaneNetpols)
+    debug(`Saving network policies of team: ${teamId}`)
     await this.repo.writeFile(relativePath, outData)
   }
 

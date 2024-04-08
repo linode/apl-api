@@ -8,21 +8,18 @@ TeamSelfService:
       type: array
       items:
         type: string
-        enum: [ingress, networkPolicy]
+        enum: [ingress]
       x-allow-values:
         ingress:
-          type: "cluster"
-        networkPolicy:
-          ingressPrivate:
-            mode: "DenyAll"
-      default: [ingress, networkPolicy]
+          type: 'cluster'
+      default: [ingress]
       uniqueItems: true
     policies:
       type: array
       items:
         type: string
-        enum: ["edit policies"]
-      default: ["edit policies"]
+        enum: ['edit policies']
+      default: ['edit policies']
       uniqueItems: true
     team:
       title: Team settings
@@ -90,7 +87,7 @@ Team:
         team: []
     managedMonitoring:
       title: Managed monitoring
-      description: Activate managed Grafana, Prometheus or Alertmanager instances
+      description: Activate managed Grafana, Prometheus or Alertmanager instances; optionally disable cross-team access
       properties:
         grafana:
           type: boolean
@@ -99,6 +96,9 @@ Team:
           type: boolean
           default: false
         alertmanager:
+          type: boolean
+          default: false
+        private:
           type: boolean
           default: false
     alerts:

@@ -1,7 +1,7 @@
 Settings:
   x-acl:
     admin: [read-any, update-any]
-    team: [read-any]
+    team: [read]
   additionalProperties: false
   properties:
     alerts:
@@ -253,7 +253,8 @@ Settings:
         globalPullSecret:
           nullable: true
           title: Global pullsecret
-          description: Will be connected to each "default" service account in all otomi app namespaces.
+          description:
+            Will be connected to each "default" service account in all otomi app namespaces.
             Handy for authenticating with DockerHub to avoid rate limiting.
             Also useful when pulling all otomi images from a private repo. (One would need to override all the images in the config first.)
           additionalProperties: false
@@ -325,7 +326,12 @@ Settings:
       x-externalDocsPath: docs/for-ops/console/settings/otomi
       x-acl:
         admin: [read-any, update-any]
-        team: [read-any]
+        team: [read]
+    policies:
+      $ref: policies.yaml#/policies
+      x-acl:
+        admin: [read-any, update-any]
+        team: []
     smtp:
       title: SMTP
       description: Mail server settings.

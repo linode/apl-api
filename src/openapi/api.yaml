@@ -329,6 +329,33 @@ paths:
         '200':
           description: Successfully deleted a service
 
+  /migrateSecrets:
+    post:
+      operationId: migrateSecrets
+      description: Migrate HashiCorp Vault secrets to sealed secrets
+      x-aclSchema: MigrateSecrets
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully migrated secrets to sealed secrets
+          content:
+            application/json:
+              schema:
+                properties:
+                  status:
+                    type: string
+                    enum: [success, info]
+                  message:
+                    type: string
+                  total:
+                    type: integer
+                  migrated:
+                    type: integer
+                  remaining:
+                    type: integer
+        '400':
+          <<: *BadRequest
+
   /sealedsecrets:
     get:
       operationId: getAllSealedSecrets
@@ -566,6 +593,101 @@ paths:
         '200':
           description: Successfully deleted a team secret
 
+  '/netpols':
+    get:
+      operationId: getAllNetpols
+      x-aclSchema: Netpol
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all network policy configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Netpol'
+
+  '/teams/{teamId}/netpols':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamNetpols
+      x-aclSchema: Build
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team network policy configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Netpol'
+    post:
+      operationId: createNetpol
+      description: Create a team network policy
+      x-aclSchema: Netpol
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Netpol'
+        description: Network policy object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored network policy configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Netpol'
+
+  '/teams/{teamId}/netpols/{netpolId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/netpolParams'
+    get:
+      operationId: getNetpol
+      description: Get a network policy from a given team
+      x-aclSchema: Netpol
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained network policy configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Netpol'
+    put:
+      operationId: editNetpol
+      description: Edit a network policy from a given team
+      x-aclSchema: Netpol
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Netpol'
+        description: Netwok policy object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team network policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Netpol'
+    delete:
+      operationId: deleteNetpol
+      description: Delete a network policy from a given team
+      x-aclSchema: Netpol
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a team network policy
+
   '/backups':
     get:
       operationId: getAllBackups
@@ -770,54 +892,54 @@ paths:
               schema:
                 $ref: '#/components/schemas/Build'
 
-  "/policies":
+  '/policies':
     get:
       operationId: getAllPolicies
       x-aclSchema: Policy
       responses:
         <<: *DefaultGetResponses
-        "200":
+        '200':
           description: Successfully obtained all policy configuration
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Policy"
+                  $ref: '#/components/schemas/Policy'
 
-  "/teams/{teamId}/policies":
+  '/teams/{teamId}/policies':
     parameters:
-      - $ref: "#/components/parameters/teamParams"
+      - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamPolicies
       x-aclSchema: Policy
       responses:
         <<: *DefaultGetResponses
-        "200":
+        '200':
           description: Successfully obtained team policy configuration
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Policy"
+                  $ref: '#/components/schemas/Policy'
 
-  "/teams/{teamId}/policies/{policyId}":
+  '/teams/{teamId}/policies/{policyId}':
     parameters:
-      - $ref: "#/components/parameters/teamParams"
-      - $ref: "#/components/parameters/policyParams"
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/policyParams'
     get:
       operationId: getPolicy
       description: Get a policy from a given team
       x-aclSchema: Policy
       responses:
         <<: *DefaultGetResponses
-        "200":
+        '200':
           description: Successfully obtained policy configuration
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Policy"
+                $ref: '#/components/schemas/Policy'
     put:
       operationId: editPolicy
       description: Edit a policy from a given team
@@ -826,17 +948,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Policy"
+              $ref: '#/components/schemas/Policy'
         description: Policy object that contains updated values
         required: true
       responses:
         <<: *DefaultGetResponses
-        "200":
+        '200':
           description: Successfully edited a team policy
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Policy"
+                $ref: '#/components/schemas/Policy'
 
   '/k8sVersion':
     get:
@@ -1078,7 +1200,7 @@ paths:
                 $ref: '#/components/schemas/Workload'
     put:
       operationId: editWorkload
-      description: Edit a secret from a given team
+      description: Edit a workload from a given team
       x-aclSchema: Workload
       requestBody:
         content:
@@ -1090,7 +1212,7 @@ paths:
       responses:
         <<: *DefaultGetResponses
         '200':
-          description: Successfully edited a team secret
+          description: Successfully edited a team workload
           content:
             application/json:
               schema:
@@ -1239,6 +1361,19 @@ paths:
                 type: object
         default:
           description: The requested apiDoc.
+
+  /settingsInfo:
+    get:
+      operationId: getSettingsInfo
+      description: Get settings information from the 'settings.yaml' file.
+      x-aclSchema: SettingsInfo
+      responses:
+        '200':
+          description: The request is successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsInfo'
 
   /settings:
     get:
@@ -1396,7 +1531,7 @@ components:
     projectParams:
       name: projectId
       in: path
-      description: ID of the projec
+      description: ID of the project
       required: true
       schema:
         type: string
@@ -1404,6 +1539,13 @@ components:
       name: teamId
       in: path
       description: ID of team to return
+      required: true
+      schema:
+        type: string
+    netpolParams:
+      name: netpolId
+      in: path
+      description: ID of the network policy
       required: true
       schema:
         type: string
@@ -1548,6 +1690,8 @@ components:
       $ref: license.yaml#/License
     Metrics:
       $ref: metrics.yaml#/Metrics
+    Netpol:
+      $ref: netpol.yaml#/Netpol
     DockerConfig:
       $ref: dockerconfig.yaml#/DockerConfig
     OpenApiValidationError:
@@ -1568,6 +1712,8 @@ components:
       $ref: sealedsecret.yaml#/SealedSecret
     SealedSecretsKeys:
       $ref: sealedsecretskeys.yaml#/SealedSecretsKeys
+    MigrateSecrets:
+      $ref: migratesecrets.yaml#/MigrateSecrets
     K8sSecret:
       $ref: k8sSecret.yaml#/K8sSecret
     Secret:
@@ -1584,6 +1730,8 @@ components:
       $ref: session.yaml#/Session
     Settings:
       $ref: settings.yaml#/Settings
+    SettingsInfo:
+      $ref: settingsinfo.yaml#/SettingsInfo
     Team:
       $ref: team.yaml#/Team
     TeamAuthz:

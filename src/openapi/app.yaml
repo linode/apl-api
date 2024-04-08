@@ -57,7 +57,7 @@ AppList:
 App:
   x-acl:
     admin: [read-any, update-any]
-    team: [read-any, update]
+    team: [read, update]
   type: object
   properties:
     enabled:

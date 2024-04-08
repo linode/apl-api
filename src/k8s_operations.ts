@@ -227,7 +227,7 @@ export async function getCloudttyActiveTime(namespace: string, podName: string):
   }
 }
 
-export async function getLastTektonMessage(sha: string): Promise<any | undefined> {
+export async function getLastTektonMessage(sha: string): Promise<any> {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
@@ -239,7 +239,7 @@ export async function getLastTektonMessage(sha: string): Promise<any | undefined
       'pipelineruns',
     )
     const lastPipelineRun = res.body.items.find((item: any) => item.metadata.name.includes(sha))
-    if (!lastPipelineRun) return undefined
+    if (!lastPipelineRun) return {}
     const order = res.body.items.length
     const { name } = lastPipelineRun.metadata
     const { completionTime, conditions } = lastPipelineRun.status
@@ -247,7 +247,8 @@ export async function getLastTektonMessage(sha: string): Promise<any | undefined
     if (['True', 'False', 'Unknown'].includes(conditions[0].status)) status = conditions[0].reason.toLowerCase()
     return { order, name, completionTime, status }
   } catch (error) {
-    debug('getLastTektonMessage error:', error)
+    debug('Error getting last tekton message:', error)
+    return {}
   }
 }
 
@@ -546,5 +547,55 @@ export async function getTeamSecretsFromK8s(namespace: string) {
     return secrets
   } catch (error) {
     debug('getTeamSecretsFromK8s error:', error)
+  }
+}
+
+export async function updateSecretOwnerReferences(name: string, namespace: string) {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  const options = {
+    headers: { 'Content-type': 'application/strategic-merge-patch+json' },
+  }
+  try {
+    const currentSecret = (await k8sApi.readNamespacedSecret(name, namespace)) as any
+    const { body } = currentSecret
+    const patch: k8s.V1Secret = {
+      metadata: {
+        ownerReferences: [
+          {
+            apiVersion: 'bitnami.com/v1alpha1',
+            controller: true,
+            kind: 'SealedSecret',
+            name,
+            uid: body.metadata?.ownerReferences[0].uid,
+          },
+        ],
+      },
+    }
+    const res = await k8sApi.patchNamespacedSecret(
+      name,
+      namespace,
+      patch,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      options,
+    )
+    return res.body
+  } catch (err) {
+    debug('Error updating secret owner references:', err)
+  }
+}
+
+export async function deleteSecretFromK8s(name: string, namespace: string) {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  try {
+    await k8sApi.deleteNamespacedSecret(name, namespace)
+  } catch (err) {
+    debug(`Error deleting secret: ${name}`, err)
   }
 }

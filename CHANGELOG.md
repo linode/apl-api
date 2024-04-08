@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.8.0](https://github.com/redkubes/otomi-api/compare/v2.7.0...v2.8.0) (2024-04-05)
+
+
+### Features
+
+* added schema changes for private monitoring ([#513](https://github.com/redkubes/otomi-api/issues/513)) ([3ab08a9](https://github.com/redkubes/otomi-api/commit/3ab08a9381e3a2156ff2ff151504226050bb3bfd))
+* move netpols out of svc ([#502](https://github.com/redkubes/otomi-api/issues/502)) ([0a41001](https://github.com/redkubes/otomi-api/commit/0a410010c24d4928295ef9b4fcd2d03f02e0c532))
+* remove deprecated Loki storage option ([#509](https://github.com/redkubes/otomi-api/issues/509)) ([1ee5f0c](https://github.com/redkubes/otomi-api/commit/1ee5f0cff1cd8e09b73e2795e4519ca46c712c14))
+* send metrics on upload license ([#512](https://github.com/redkubes/otomi-api/issues/512)) ([8de1266](https://github.com/redkubes/otomi-api/commit/8de1266de4064b3d2e78660871411c5b8a1fd059))
+
+
+### Bug Fixes
+
+* make service account required field ([#515](https://github.com/redkubes/otomi-api/issues/515)) ([7f72502](https://github.com/redkubes/otomi-api/commit/7f72502f5c3096a812fc558b7762c8ff46381537))
+* tekton pipeline emit message error ([#514](https://github.com/redkubes/otomi-api/issues/514)) ([4deb5c4](https://github.com/redkubes/otomi-api/commit/4deb5c4c98cdb7eac8bc4bc56dac5399887db5d6))
+* vulnerability in settings data ([#511](https://github.com/redkubes/otomi-api/issues/511)) ([3002980](https://github.com/redkubes/otomi-api/commit/300298015e527234332c365dc81bb9f0df3fa124))
+
+## [2.7.0](https://github.com/redkubes/otomi-api/compare/v2.6.0...v2.7.0) (2024-03-14)
+
+
+### Features
+
+* secrets migration ([#508](https://github.com/redkubes/otomi-api/issues/508)) ([9176fcd](https://github.com/redkubes/otomi-api/commit/9176fcd7a3f6611c47e5ad48b269dcac9a192216))
+
 ## [2.6.0](https://github.com/redkubes/otomi-api/compare/v2.5.0...v2.6.0) (2024-02-22)
 
 

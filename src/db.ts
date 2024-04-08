@@ -12,6 +12,7 @@ import {
   Cloudtty,
   Cluster,
   License,
+  Netpol,
   Policy,
   Project,
   SealedSecret,
@@ -30,6 +31,7 @@ export type DbType =
   | Build
   | Cloudtty
   | Cluster
+  | Netpol
   | SealedSecret
   | Secret
   | Service
@@ -46,6 +48,7 @@ export type Schema = {
   sealedsecrets: SealedSecret[]
   secrets: Secret[]
   services: Service[]
+  netpols: Netpol[]
   settings: Settings
   teams: Team[]
   workloads: Workload[]
@@ -75,6 +78,7 @@ export default class Db {
         builds: [],
         cloudttys: [],
         license: {},
+        netpols: [],
         projects: [],
         policies: [],
         sealedsecrets: [],

@@ -369,23 +369,20 @@ lokiStorageProvider:
       properties:
         gcs:
           type: object
-          title: Google Object Storage
-          description: Select to store backups in Google Object Storage.
+          title: Google Cloud Storage
+          description: Select to store backups in Google Cloud Storage.
           properties:
             bucket:
               type: string
               description: Name of the bucket.
               $ref: ../definitions.yaml#/wordCharacterPattern
-            project:
-              description: Big Table Project.
-              $ref: ../definitions.yaml#/wordCharacterPattern
-            instance:
-              description: Big Table Instance.
+            serviceAccount:
+              type: string
+              description: Name of the service account to use for accessing the storage bucket.              
               $ref: ../definitions.yaml#/wordCharacterPattern
           required:
             - bucket
-            - project
-            - instance
+            - serviceAccount
         type:
           type: string
           enum:
