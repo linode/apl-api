@@ -352,7 +352,7 @@ export default class OtomiStack {
       dns: pick(dns, ['zones']),
       otomi: pick(otomi, ['additionalClusters', 'hasCloudLB', 'hasExternalDNS', 'hasExternalIDP']),
       ingressClassNames: pick(ingress, ['classes'])?.classes?.map((obj) => obj.className) ?? [],
-    }
+    } as SettingsInfo
     return settingsInfo
   }
 
