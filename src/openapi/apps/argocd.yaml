@@ -34,19 +34,19 @@ AppArgocd:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 200m
+                      default: 1
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
+                      default: 2Gi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 40m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 32Mi
+                      default: 1Gi
               required:
                 - limits
                 - requests
@@ -58,19 +58,19 @@ AppArgocd:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 200m
+                      default: 1
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
+                      default: 1Gi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 40m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 32Mi
+                      default: 256M
               required:
                 - limits
                 - requests
@@ -82,19 +82,19 @@ AppArgocd:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 200m
+                      default: 1
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
+                      default: 1Gi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 40m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 32Mi
+                      default: 256M
               required:
                 - limits
                 - requests
@@ -106,19 +106,19 @@ AppArgocd:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 200m
+                      default: 1
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 256Mi
+                      default: 1Gi
                 requests:
                   type: object
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 40m
+                      default: 100m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
-                      default: 32Mi
+                      default: 256M
               required:
                 - limits
                 - requests
