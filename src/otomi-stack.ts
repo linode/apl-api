@@ -390,16 +390,27 @@ export default class OtomiStack {
     return { ...cloneDeep(app), enabled: adminApp.enabled }
   }
 
-  getApps(teamId, picks?: string[]): Array<App> {
+  getApps(teamId: string, picks?: string[]): Array<App> {
     const apps = this.db.getCollection('apps', { teamId }) as Array<App>
     if (teamId === 'admin') return apps
-    // map apps enabled to the one from adminApps
-    const mapped = apps.map((a: App) => {
-      const adminApp = this.db.getItem('apps', { teamId: 'admin', id: a.id }) as App
-      return { ...cloneDeep(a), enabled: adminApp.enabled }
+
+    let teamApps = apps.map((app: App) => {
+      const adminApp = this.db.getItem('apps', { teamId: 'admin', id: app.id }) as App
+      return { ...cloneDeep(app), enabled: adminApp.enabled }
     })
-    if (!picks) return mapped
-    return pick(mapped, picks) as Array<App>
+
+    if (!picks) return teamApps
+
+    if (picks.includes('enabled')) {
+      const adminApps = this.db.getCollection('apps', { teamId: 'admin' }) as Array<App>
+
+      teamApps = adminApps.map((adminApp) => {
+        const teamApp = teamApps.find((app) => app.id === adminApp.id)
+        return teamApp || { id: adminApp.id, enabled: adminApp.enabled }
+      })
+    }
+
+    return teamApps.map((app) => pick(app, picks)) as Array<App>
   }
 
   editApp(teamId, id, data: App): App {
