@@ -6,7 +6,7 @@ AppArgocd:
       $ref: ../definitions.yaml#/idName
     enabled:
       type: boolean
-      default: false
+      default: true
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     shortcuts:
