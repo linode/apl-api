@@ -115,8 +115,6 @@ Team:
               default: 100
     resourceQuota:
       $ref: definitions.yaml#/resourceQuota
-    azureMonitor:
-      $ref: definitions.yaml#/azureMonitor
     networkPolicy:
       properties:
         ingressPrivate:
