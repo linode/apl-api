@@ -532,7 +532,8 @@ export default class OtomiStack {
       if (id !== 'admin' && (isShared || inTeamApps))
         this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
     })
-    if (!data.id) {
+    const teamPolicies = this.getTeamPolicies(id)
+    if (!data.id || teamPolicies.length === 0) {
       const policies = getPolicies()
       policies.forEach((policy) => {
         this.db.createItem('policies', { ...policy, teamId: id }, { teamId: id, name: policy.name }) as Policy
