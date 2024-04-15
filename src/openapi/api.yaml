@@ -895,7 +895,7 @@ paths:
   '/policies':
     get:
       operationId: getAllPolicies
-      x-aclSchema: Policy
+      x-aclSchema: Policies
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -903,16 +903,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Policy'
+                $ref: '#/components/schemas/Policies'
 
   '/teams/{teamId}/policies':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamPolicies
-      x-aclSchema: Policy
+      x-aclSchema: Policies
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -920,9 +918,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Policy'
+                $ref: '#/components/schemas/Policies'
 
   '/teams/{teamId}/policies/{policyId}':
     parameters:
@@ -1703,7 +1699,9 @@ components:
     Project:
       $ref: project.yaml#/Project
     Policy:
-      $ref: policy.yaml#/Policy
+      $ref: policies.yaml#/Policy
+    Policies:
+      $ref: policies.yaml#/Policies
     Restore:
       $ref: restore.yaml#/Restore
     Revert:

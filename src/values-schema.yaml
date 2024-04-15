@@ -540,7 +540,8 @@ definitions:
     type: string
     pattern: ^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$
   jobs:
-    description: You may pass an array of Job objects. The Kubernetes API accepts
+    description:
+      You may pass an array of Job objects. The Kubernetes API accepts
       a Job specification, which is meant for run-to-completion apps (e.g. batch
       Jobs).
     items:
@@ -615,8 +616,8 @@ definitions:
   labelsAnnotations:
     additionalProperties: false
     patternProperties:
-      '^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]){1,253}\/)?([a-z0-9A-Z]+[a-z0-9A-Z-_.]+[a-z0-9A-Z]){1,63}$':
-        pattern: '^((.){1,253}\/)?(.){1,63}$'
+      ? '^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]){1,253}\/)?([a-z0-9A-Z]+[a-z0-9A-Z-_.]+[a-z0-9A-Z]){1,63}$'
+      : pattern: '^((.){1,253}\/)?(.){1,63}$'
         type: string
   logLevel:
     type: string
@@ -1358,24 +1359,27 @@ definitions:
       name:
         description: Name of policy
         $ref: '#/definitions/wordCharacterPattern'
-      profile:
-        description: Profile that contains this policy
-        $ref: '#/definitions/wordCharacterPattern'
-      actionOverride:
+      action:
         type: string
-        enum: ['Audit', 'Enforce']
+        enum:
+          - Audit
+          - Enforce
         default: Audit
-      description:
-        description: Description of the policy
-        $ref: '#/definitions/wordCharacterPattern'
-      enabled:
-        type: boolean
       severity:
         type: string
-        enum: ['low', 'medium', 'high']
+        enum:
+          - low
+          - medium
+          - high
         default: medium
       customValues:
         type: array
+        items:
+          type: string
+    required:
+      - name
+      - action
+      - severity
   build:
     type: object
     description: Define location of code to build
@@ -3737,7 +3741,8 @@ properties:
         x-secret: '{{ randAlphaNum 20 }}'
       globalPullSecret:
         title: Global pullsecret
-        description: Will be connected to each "default" service account in all otomi app namespaces.
+        description:
+          Will be connected to each "default" service account in all otomi app namespaces.
           Handy for authenticating with DockerHub to avoid rate limiting.
           Also useful when pulling all otomi images from a private repo. (One would need to override all the images in the config first.)
         additionalProperties: false

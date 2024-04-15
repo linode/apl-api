@@ -70,6 +70,7 @@ import {
 } from './k8s_operations'
 import connect from './otomiCloud/connect'
 import { validateBackupFields } from './utils/backupUtils'
+import { getPolicies } from './utils/policiesUtils'
 import { encryptSecretItem, prepareSealedSecretData } from './utils/sealedSecretUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
@@ -520,6 +521,12 @@ export default class OtomiStack {
       if (id !== 'admin' && (isShared || inTeamApps))
         this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
     })
+    if (!data.id) {
+      const policies = getPolicies()
+      policies.forEach((policy) => {
+        this.db.createItem('policies', { ...policy, teamId: id }, { teamId: id, name: policy.name }) as Policy
+      })
+    }
     return team
   }
 
