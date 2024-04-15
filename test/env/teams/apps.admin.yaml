@@ -22,7 +22,6 @@ teamConfig:
             tekton: {}
             loki: {}
             minio: {}
-            opencost: {}
             prometheus: {}
             rabbitmq: {}
             sealed-secrets: {}

@@ -25,7 +25,6 @@ TeamSelfService:
             oidc,
             managedMonitoring,
             alerts,
-            billingAlertQuotas,
             resourceQuota,
             networkPolicy,
           ]
@@ -96,23 +95,6 @@ Team:
           default: false
     alerts:
       $ref: definitions.yaml#/alerts
-    billingAlertQuotas:
-      title: Billing alert quotas
-      properties:
-        teamCpuMonthQuotaReached:
-          title: Max total Team CPU cost per month in $
-          description: Sends an alert when team total CPU costs per month hits the quota.
-          properties:
-            quota:
-              type: integer
-              default: 100
-        teamMemMonthQuotaReached:
-          title: Max total Team Memory cost per month in $
-          description: Sends an alert when team total Memory costs per month hits the quota.
-          properties:
-            quota:
-              type: integer
-              default: 100
     resourceQuota:
       $ref: definitions.yaml#/resourceQuota
     azureMonitor:

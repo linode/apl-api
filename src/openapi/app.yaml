@@ -25,7 +25,6 @@ AppList:
     - kured
     - loki
     - minio
-    - opencost
     - otel
     - prometheus
     - rabbitmq

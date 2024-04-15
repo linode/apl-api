@@ -1194,19 +1194,6 @@ definitions:
       resourceQuota:
         description: 'List of kubernetes resource quota. Should adhere to the "spec.hard" format as described here: https://kubernetes.io/docs/concepts/policy/resource-quotas/. Not validated as there is no schema published. Change at your own risk.'
         type: object
-      billingAlertQuotas:
-        title: Billing alert quotas
-        properties:
-          teamCpuMonthQuotaReached:
-            properties:
-              quota:
-                type: integer
-                default: 100
-          teamMemMonthQuotaReached:
-            properties:
-              quota:
-                type: integer
-                default: 100
       selfService:
         $ref: '#/definitions/teamSelfService'
       services:
@@ -1260,7 +1247,6 @@ definitions:
             [
               alerts,
               backup,
-              billingAlertQuotas,
               oidc,
               resourceQuota,
               downloadKubeConfig,
@@ -2535,36 +2521,6 @@ properties:
           enabled:
             type: boolean
             default: false
-      opencost:
-        additionalProperties: false
-        properties:
-          _rawValues:
-            $ref: '#/definitions/rawValues'
-          enabled:
-            type: boolean
-            default: false
-          keys:
-            properties:
-              gcp:
-                type: string
-                $ref: '#/definitions/wordCharacterPattern'
-          alerts:
-            properties:
-              enabled:
-                type: boolean
-                default: false
-              costOfAllNodesQuotaPerMonthReached:
-                properties:
-                  quota:
-                    type: integer
-                    default: 500
-          resources:
-            additionalProperties: false
-            properties:
-              exporter:
-                $ref: '#/definitions/resources'
-              ui:
-                $ref: '#/definitions/resources'
       otomi-api:
         additionalProperties: false
         properties:
