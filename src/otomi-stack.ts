@@ -6,7 +6,7 @@ import Debug from 'debug'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import jwt, { JwtPayload } from 'jsonwebtoken'
-import { cloneDeep, each, filter, get, isArray, isEmpty, omit, pick, set } from 'lodash'
+import { cloneDeep, each, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
 import * as osPath from 'path'
 import { getAppList, getAppSchema, getSpec, uploadOtomiMetrics } from 'src/app'
@@ -346,12 +346,13 @@ export default class OtomiStack {
 
   getSettingsInfo(): SettingsInfo {
     const settings = this.db.db.get(['settings']).value() as Settings
-    const { cluster, dns, otomi } = pick(settings, ['cluster', 'dns', 'otomi']) as Settings
+    const { cluster, dns, otomi, ingress } = pick(settings, ['cluster', 'dns', 'otomi', 'ingress']) as Settings
     const settingsInfo = {
       cluster: pick(cluster, ['name', 'domainSuffix', 'provider']),
       dns: pick(dns, ['zones']),
       otomi: pick(otomi, ['additionalClusters', 'hasCloudLB', 'hasExternalDNS', 'hasExternalIDP']),
-    }
+      ingressClassNames: map(ingress?.classes, 'className') ?? [],
+    } as SettingsInfo
     return settingsInfo
   }
 

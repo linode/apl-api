@@ -36,4 +36,10 @@ SettingsInfo:
         hasExternalIDP:
           type: boolean
           default: false
+    ingressClassNames:
+      description: Ingress class names that are used by the cluster
+      items:
+        type: string
+      type: array
+      uniqueItems: true
   type: object
