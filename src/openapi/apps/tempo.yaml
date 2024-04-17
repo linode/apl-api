@@ -211,6 +211,29 @@ tempoValues:
           required:
             - limits
             - requests
+        metricsGenerator:
+          properties:
+            limits:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 200m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 256Mi
+            requests:
+              type: object
+              properties:
+                cpu:
+                  $ref: ../definitions.yaml#/quantityCpu
+                  default: 50m
+                memory:
+                  $ref: ../definitions.yaml#/quantityMem
+                  default: 64Mi
+          required:
+            - limits
+            - requests
 
 tempoStorageProvider:
   type: object
