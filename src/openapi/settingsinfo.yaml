@@ -27,9 +27,6 @@ SettingsInfo:
           type: array
           items:
             $ref: cluster.yaml#/AdditionalCluster
-        hasCloudLB:
-          type: boolean
-          default: false
         hasExternalDNS:
           type: boolean
           default: false

@@ -287,11 +287,6 @@ Settings:
           x-acl:
             admin: [read-any, update-any]
             team: []
-        hasCloudLB:
-          description: Set this to true when using a cloud specific ingress controller. By default the Nginx Ingress Controller is used.
-          title: Cloud ingress controller
-          type: boolean
-          default: false
         hasExternalDNS:
           description: Set this to true when an external dns zone is available to manage dns records. (Expects required `dns:` fields to be set.)
           title: External DNS
