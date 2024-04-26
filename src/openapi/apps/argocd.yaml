@@ -34,7 +34,7 @@ AppArgocd:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 1
+                      default: 1000m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
                       default: 2Gi
@@ -58,7 +58,7 @@ AppArgocd:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 1
+                      default: 1000m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
                       default: 1Gi
@@ -82,7 +82,7 @@ AppArgocd:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 1
+                      default: 1000m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
                       default: 1Gi
@@ -106,7 +106,7 @@ AppArgocd:
                   properties:
                     cpu:
                       $ref: ../definitions.yaml#/quantityCpu
-                      default: 1
+                      default: 1000m
                     memory:
                       $ref: ../definitions.yaml#/quantityMem
                       default: 1Gi
