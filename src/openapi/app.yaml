@@ -34,7 +34,6 @@ AppList:
     - thanos
     - tempo
     - trivy
-    - vault
     - velero
 
 # AppBase:

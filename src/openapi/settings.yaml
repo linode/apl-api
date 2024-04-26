@@ -75,15 +75,6 @@ Settings:
                   $ref: definitions.yaml#/backupTtl
                 schedule:
                   $ref: definitions.yaml#/backupSchedule
-            vault:
-              title: Vault
-              properties:
-                enabled:
-                  type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
-                schedule:
-                  $ref: definitions.yaml#/backupSchedule
             argo:
               title: ArgoCD
               properties:
@@ -253,8 +244,7 @@ Settings:
         globalPullSecret:
           nullable: true
           title: Global pullsecret
-          description:
-            Will be connected to each "default" service account in all otomi app namespaces.
+          description: Will be connected to each "default" service account in all otomi app namespaces.
             Handy for authenticating with DockerHub to avoid rate limiting.
             Also useful when pulling all otomi images from a private repo. (One would need to override all the images in the config first.)
           additionalProperties: false

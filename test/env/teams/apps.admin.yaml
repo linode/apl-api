@@ -27,7 +27,6 @@ teamConfig:
             rabbitmq: {}
             sealed-secrets: {}
             thanos: {}
-            vault: {}
             velero: {}
             falco: {}
             trivy: {}
