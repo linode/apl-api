@@ -129,8 +129,6 @@ Settings:
               type: boolean
               default: false
           type: object
-        monitor:
-          $ref: definitions.yaml#/azureMonitor
         storageType:
           title: Storage types
           description: Disk types used for storage classes in Otomi.
