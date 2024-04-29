@@ -97,8 +97,6 @@ Team:
       $ref: definitions.yaml#/alerts
     resourceQuota:
       $ref: definitions.yaml#/resourceQuota
-    azureMonitor:
-      $ref: definitions.yaml#/azureMonitor
     networkPolicy:
       properties:
         ingressPrivate:

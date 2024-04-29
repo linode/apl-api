@@ -1573,8 +1573,6 @@ components:
       $ref: apps/sealed-secrets.yaml#/AppSealedSecrets
     AppTempo:
       $ref: apps/tempo.yaml#/AppTempo
-    AppThanos:
-      $ref: apps/thanos.yaml#/AppThanos
     AppTrivy:
       $ref: apps/trivy.yaml#/AppTrivy
     AppOtel:
@@ -1687,8 +1685,6 @@ components:
       $ref: definitions.yaml#/azureClientId
     azureClientSecret:
       $ref: definitions.yaml#/azureClientSecret
-    azureMonitor:
-      $ref: definitions.yaml#/azureMonitor
     azureSubscriptionId:
       $ref: definitions.yaml#/azureSubscriptionId
     azureTenantId:

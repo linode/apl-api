@@ -309,23 +309,6 @@ adminApps:
   - name: tempo
     tags: [tracing]
     deps: [prometheus, grafana]
-  - name: thanos
-    tags: [metrics, observability]
-    ownHost: true
-    deps: [prometheus, grafana, minio]
-    ingress:
-      - svc: thanos-query-frontend
-        port: 9090
-        namespace: monitoring
-        forwardPath: true
-        type: public
-        auth: true
-      - svc: thanos-receive
-        port: 19291
-        namespace: monitoring
-        paths: [/api/]
-        forwardPath: true
-        type: public
   - name: trivy
     tags: [security]
     deps: [prometheus, grafana]

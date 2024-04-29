@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.9.0](https://github.com/redkubes/otomi-api/compare/v2.8.0...v2.9.0) (2024-04-19)
+
+
+### Bug Fixes
+
+* align default resource values with core ([#517](https://github.com/redkubes/otomi-api/issues/517)) ([a799295](https://github.com/redkubes/otomi-api/commit/a799295cbe15711710383a8fae3897adb28b70bc))
+* Error 403: Forbidden ([#518](https://github.com/redkubes/otomi-api/issues/518)) ([d039697](https://github.com/redkubes/otomi-api/commit/d0396978da6c2715ac1596ce8a086af8202d6cd9))
+* get apps enabled data for team users ([#516](https://github.com/redkubes/otomi-api/issues/516)) ([7e76ba8](https://github.com/redkubes/otomi-api/commit/7e76ba810ada8a9a033ac5da9cefe213577653e6))
+
 ## [2.8.0](https://github.com/redkubes/otomi-api/compare/v2.7.0...v2.8.0) (2024-04-05)
 
 

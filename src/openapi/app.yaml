@@ -30,7 +30,6 @@ AppList:
     - rabbitmq
     - tekton
     - sealed-secrets
-    - thanos
     - tempo
     - trivy
     - vault
