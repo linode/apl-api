@@ -1565,8 +1565,6 @@ components:
       $ref: apps/loki.yaml#/AppLoki
     AppMinio:
       $ref: apps/minio.yaml#/AppMinio
-    AppOpencost:
-      $ref: apps/opencost.yaml#/AppOpencost
     AppPrometheus:
       $ref: apps/prometheus.yaml#/AppPrometheus
     AppRabbitmq:
