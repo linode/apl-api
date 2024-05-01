@@ -33,16 +33,12 @@ AppPrometheus:
               type: boolean
               default: false
               description: Enable to forward (stream) metrics collected by Prometheus to a remote location.
-            otomiThanos:
-              type: boolean
-              default: false
-              description: Enable to use default Otomi remote write config for Thanos.
             rwConfig:
               title: Remote write configuration
               properties:
                 target:
                   type: string
-                  description: Full URL of the remote write target (use 'https://thanos.<domain>/api/v1/receive' for Otomi Thanos)
+                  description: Full URL of the remote write target.
                 basicAuth:
                   properties:
                     enabled:

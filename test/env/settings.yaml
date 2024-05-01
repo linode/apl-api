@@ -55,7 +55,6 @@ otomi:
           provider: aws
     globalPullSecret:
         username: otomi
-    hasCloudLB: false
     isHomeMonitored: true
     isMultitenant: true
     version: latest

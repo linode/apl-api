@@ -21,11 +21,9 @@ teamConfig:
             tekton: {}
             loki: {}
             minio: {}
-            opencost: {}
             prometheus: {}
             rabbitmq: {}
             sealed-secrets: {}
-            thanos: {}
             vault: {}
             velero: {}
             falco: {}

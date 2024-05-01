@@ -359,7 +359,7 @@ export default class OtomiStack {
     const settingsInfo = {
       cluster: pick(cluster, ['name', 'domainSuffix', 'provider']),
       dns: pick(dns, ['zones']),
-      otomi: pick(otomi, ['additionalClusters', 'hasCloudLB', 'hasExternalDNS', 'hasExternalIDP']),
+      otomi: pick(otomi, ['additionalClusters', 'hasExternalDNS', 'hasExternalIDP']),
       ingressClassNames: map(ingress?.classes, 'className') ?? [],
     } as SettingsInfo
     return settingsInfo
