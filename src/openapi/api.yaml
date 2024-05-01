@@ -1577,8 +1577,6 @@ components:
       $ref: apps/trivy.yaml#/AppTrivy
     AppOtel:
       $ref: apps/otel.yaml#/AppOtel
-    AppVault:
-      $ref: apps/vault.yaml#/AppVault
     AppVelero:
       $ref: apps/velero.yaml#/AppVelero
     AppList:
