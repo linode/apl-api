@@ -536,7 +536,12 @@ export default class OtomiStack {
     if (!data.id) {
       const policies = getPolicies()
       policies.forEach((policy) => {
-        this.db.createItem('policies', { ...policy, teamId: id }, { teamId: id, name: policy.name }) as Policy
+        this.db.createItem(
+          'policies',
+          { ...policy, teamId: id },
+          { teamId: id, name: policy.name },
+          policy.name,
+        ) as Policy
       })
     }
     return team
@@ -1443,9 +1448,10 @@ export default class OtomiStack {
       return
     }
     const data = await this.repo.readFile(relativePath)
-    const inData: Array<Policy> = get(data, getTeamPoliciesJsonPath(teamId), [])
+    let inData: any = get(data, getTeamPoliciesJsonPath(teamId), {})
+    inData = Object.entries(inData).map(([key, value]: any) => ({ name: key, ...value })) || []
     inData.forEach((inPolicy) => {
-      const res: any = this.db.populateItem('policies', { ...inPolicy, teamId }, undefined, inPolicy.id as string)
+      const res: any = this.db.populateItem('policies', { ...inPolicy, teamId }, undefined, inPolicy.name as string)
       debug(`Loaded policy: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
     })
   }
@@ -1696,8 +1702,12 @@ export default class OtomiStack {
     const cleanePolicies: Array<Record<string, any>> = policies.map((obj) => {
       return omit(obj, ['teamId'])
     })
+    const cleanedPoliciesObj = cleanePolicies.reduce((acc: Record<string, any>, item) => {
+      const { name, ...rest } = item
+      return { ...acc, [name]: rest }
+    }, {})
     const relativePath = getTeamPoliciesFilePath(teamId)
-    const outData: Record<string, any> = set({}, getTeamPoliciesJsonPath(teamId), cleanePolicies)
+    const outData: Record<string, any> = set({}, getTeamPoliciesJsonPath(teamId), cleanedPoliciesObj)
     debug(`Saving policies of team: ${teamId}`)
     await this.repo.writeFile(relativePath, outData)
   }
