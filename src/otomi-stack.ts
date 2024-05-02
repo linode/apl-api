@@ -1451,8 +1451,7 @@ export default class OtomiStack {
     let inData: any = get(data, getTeamPoliciesJsonPath(teamId), {})
     inData = Object.entries(inData).map(([key, value]: any) => ({ name: key, ...value })) || []
     inData.forEach((inPolicy) => {
-      const policyId = `${teamId}-${inPolicy.name}`
-      const res: any = this.db.populateItem('policies', { ...inPolicy, teamId }, undefined, policyId)
+      const res: any = this.db.populateItem('policies', { ...inPolicy, teamId }, undefined)
       debug(`Loaded policy: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
     })
   }
