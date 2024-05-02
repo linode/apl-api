@@ -536,12 +536,7 @@ export default class OtomiStack {
     if (!data.id) {
       const policies = getPolicies()
       policies.forEach((policy) => {
-        this.db.createItem(
-          'policies',
-          { ...policy, teamId: id },
-          { teamId: id, name: policy.name },
-          policy.name,
-        ) as Policy
+        this.db.createItem('policies', { ...policy, teamId: id }, { teamId: id, name: policy.name }) as Policy
       })
     }
     return team
