@@ -23,6 +23,7 @@ import {
   License,
   Metrics,
   Netpol,
+  Policies,
   Policy,
   Project,
   SealedSecret,
@@ -535,9 +536,7 @@ export default class OtomiStack {
     })
     if (!data.id) {
       const policies = getPolicies()
-      policies.forEach((policy) => {
-        this.db.createItem('policies', { ...policy, teamId: id }, { teamId: id, name: policy.name }) as Policy
-      })
+      this.db.db.set(`policies[${data.name}]`, policies).write()
     }
     return team
   }
@@ -776,22 +775,24 @@ export default class OtomiStack {
     return this.db.deleteItem('builds', { id })
   }
 
-  getTeamPolicies(teamId: string): Array<Policy> {
-    const ids = { teamId }
-    return this.db.getCollection('policies', ids) as Array<Policy>
+  getTeamPolicies(teamId: string): Policies {
+    const policies = this.db.db.get(['policies']).value()
+    return policies[teamId]
   }
 
-  getAllPolicies(): Array<Policy> {
-    return this.db.getCollection('policies') as Array<Policy>
+  getAllPolicies(): Record<string, Policies> {
+    return this.db.db.get(['policies']).value()
   }
 
-  getPolicy(id: string): Policy {
-    return this.db.getItem('policies', { id }) as Policy
+  getPolicy(teamId: string, id: string): Policy {
+    const policies = this.db.db.get(['policies']).value()
+    return policies[teamId][id]
   }
 
-  editPolicy(id: string, data: Policy): Policy {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    return this.db.updateItem('policies', data, { id }) as Policy
+  editPolicy(teamId: string, policyId: string, data: Policy): Policy {
+    const teamPolicies = this.getTeamPolicies(teamId)
+    teamPolicies[policyId] = removeBlankAttributes(data)
+    return this.getPolicy(teamId, policyId)
   }
 
   async getK8sVersion(): Promise<string> {
@@ -1443,12 +1444,9 @@ export default class OtomiStack {
       return
     }
     const data = await this.repo.readFile(relativePath)
-    let inData: any = get(data, getTeamPoliciesJsonPath(teamId), {})
-    inData = Object.entries(inData).map(([key, value]: any) => ({ name: key, ...value })) || []
-    inData.forEach((inPolicy) => {
-      const res: any = this.db.populateItem('policies', { ...inPolicy, teamId }, undefined)
-      debug(`Loaded policy: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
-    })
+    const inData: any = get(data, getTeamPoliciesJsonPath(teamId), {})
+    this.db.db.set(`policies[${teamId}]`, inData).write()
+    debug(`Loaded policies of team: ${teamId}`)
   }
 
   async loadTeamWorkloads(teamId: string): Promise<void> {
@@ -1693,16 +1691,9 @@ export default class OtomiStack {
   }
 
   async saveTeamPolicies(teamId: string): Promise<void> {
-    const policies = this.db.getCollection('policies', { teamId }) as Array<Policy>
-    const cleanePolicies: Array<Record<string, any>> = policies.map((obj) => {
-      return omit(obj, ['teamId'])
-    })
-    const cleanedPoliciesObj = cleanePolicies.reduce((acc: Record<string, any>, item) => {
-      const { name, ...rest } = item
-      return { ...acc, [name]: rest }
-    }, {})
+    const policies = this.getTeamPolicies(teamId)
     const relativePath = getTeamPoliciesFilePath(teamId)
-    const outData: Record<string, any> = set({}, getTeamPoliciesJsonPath(teamId), cleanedPoliciesObj)
+    const outData: Record<string, Policies> = set({}, getTeamPoliciesJsonPath(teamId), policies)
     debug(`Saving policies of team: ${teamId}`)
     await this.repo.writeFile(relativePath, outData)
   }

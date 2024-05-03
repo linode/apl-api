@@ -147,13 +147,6 @@ Policy:
   type: object
   x-externalDocsPath: docs/for-devs/console/policies
   properties:
-    id:
-      type: string
-    teamId:
-      $ref: 'definitions.yaml#/idName'
-    name:
-      description: Name of policy
-      $ref: 'definitions.yaml#/wordCharacterPattern'
     action:
       type: string
       enum:
@@ -172,7 +165,6 @@ Policy:
       items:
         type: string
   required:
-    - name
     - action
     - severity
 

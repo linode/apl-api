@@ -2,11 +2,11 @@ import schema from '../generated-schema.json'
 
 export function getPolicies() {
   const policies = schema.components.schemas.Policies.properties
-  const convertedPolicies = Object.entries(policies).map(([name, policy]: any) => ({
-    name,
-    action: policy.properties.action.default,
-    severity: policy.properties.severity.default,
-    ...(policy.properties.customValues && { customValues: [] }),
-  }))
-  return convertedPolicies
+  return Object.entries(policies).reduce((acc: Record<string, any>, [name, policy]: any) => {
+    const action = policy.properties.action.default
+    const severity = policy.properties.severity.default
+    const customValues = policy.properties.customValues ? [] : undefined
+    const newAcc = { ...acc, [name]: { action, severity, customValues } }
+    return newAcc
+  }, {})
 }
