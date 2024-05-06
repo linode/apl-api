@@ -815,32 +815,6 @@ kms:
             - google
           title: Google
           type: object
-        - properties:
-            provider:
-              type: string
-              default: vault
-              enum:
-                - vault
-            vault:
-              type: object
-              properties:
-                keys:
-                  description: Comma separated list of one or two paths to keys as defined in Vault. One if used for both enc+dec. Two if one for enc, other for dec.
-                  title: Vault keys
-                  type: string
-                token:
-                  $ref: '#/vaultToken'
-                  x-acl:
-                    admin: [read-any, update-any]
-                    team: []
-              required:
-                - keys
-                - token
-              title: ''
-          required:
-            - vault
-          title: Vault
-          type: object
 labels:
   $ref: '#/annotations'
   description: A set of labels.

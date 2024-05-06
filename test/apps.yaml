@@ -321,18 +321,6 @@ appsInfo:
     dependencies: Prometheus, Grafana, Minio (if no external Object Storage is used)
     about: Grafana Tempo is an open source, easy-to-use and high-scale distributed tracing backend. Tempo is cost-efficient, requiring only object storage to operate, and is deeply integrated with Grafana, Prometheus, and Loki.
     integration: Otomi installs and configures Tempo based
-  vault:
-    title: Vault
-    appVersion: 1.6.1
-    repo: https://github.com/hashicorp/vault
-    maintainers: HashiCorp
-    relatedLinks:
-      - https://otomi.io/docs/apps/vault
-      - https://www.vaultproject.io/
-      - https://www.vaultproject.io/docs/configuration/storage
-    license: MPL-2.0
-    about: Vault is a tool for securely accessing secrets. A secret is anything that you want to tightly control access to, such as API keys, passwords, certificates, and more. Vault provides a unified interface to any secret, while providing tight access control and recording a detailed audit log.
-    integration: Vault has been made team aware. When enabled, a space will automatically be created for each team, and only team members are allowed access. Vault is automatically configured to use Otomi's Keycloak OIDC settings for SSO. Vault runs natively on Kubernetes. To prevent data from Vault being lost during a rolling cluster upgrade, data persistence can be configured in combination with external (blob) storage.
   velero:
     title: Velero
     appVersion: 1.9.0
