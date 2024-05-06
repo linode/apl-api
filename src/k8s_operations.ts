@@ -136,6 +136,21 @@ export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty
   }
 }
 
+export async function getKubernetesVersion() {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+
+  const k8sApi = kc.makeApiClient(k8s.VersionApi)
+
+  try {
+    const response = await k8sApi.getCode()
+    const version = response.body.gitVersion || 'x.x.x'
+    return version
+  } catch (err) {
+    console.error('Error:', err)
+  }
+}
+
 export function getLogTime(timestampMatch): number {
   const [, timestampString] = timestampMatch
   const dateParts = timestampString.split(' ')

@@ -69,7 +69,7 @@ const checkAgainstGitea = async () => {
   }
 }
 
-const resourceStatus = async () => {
+const resourceStatus = async (errorSet) => {
   const otomiStack = await getSessionStack()
   const { cluster } = otomiStack.getSettings(['cluster'])
   const domainSuffix = cluster?.domainSuffix
@@ -86,17 +86,23 @@ const resourceStatus = async () => {
     sealedSecrets: getSealedSecretStatus,
   }
   const resourcesStatus = {}
+
   for (const resourceType in resources) {
     const promises = resources[resourceType].map(async (resource) => {
       try {
         const res = await statusFunctions[resourceType](resource, domainSuffix)
         return { [resource.id]: res }
       } catch (error) {
-        console.log(`Could not collect status data for ${resourceType} ${resource.name} resource:`, error)
+        const errorMessage = `${resourceType}-${resource.name}-${error.message}`
+        if (!errorSet.has(errorMessage)) {
+          console.log(`Could not collect status data for ${resourceType} ${resource.name} resource:`, error.message)
+          errorSet.add(errorMessage)
+        }
       }
     })
     resourcesStatus[resourceType] = Object.assign({}, ...(await Promise.all(promises)))
   }
+
   getIo().emit('status', resourcesStatus)
 }
 
@@ -191,8 +197,9 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
 
   // emit resource status every 10 seconds
   const emitResourceStatusInterval = 10 * 1000
+  const errorSet = new Set()
   setInterval(async function () {
-    await resourceStatus()
+    await resourceStatus(errorSet)
   }, emitResourceStatusInterval)
 
   // and register session middleware

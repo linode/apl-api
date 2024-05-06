@@ -55,6 +55,7 @@ import {
   checkPodExists,
   deleteSecretFromK8s,
   getCloudttyActiveTime,
+  getKubernetesVersion,
   getLastTektonMessage,
   getSealedSecretsCertificate,
   getSecretValues,
@@ -660,6 +661,11 @@ export default class OtomiStack {
       }
     })
     return this.db.deleteItem('builds', { id })
+  }
+
+  async getK8sVersion(): Promise<string> {
+    const version = (await getKubernetesVersion()) as string
+    return version
   }
 
   async connectCloudtty(data: Cloudtty): Promise<Cloudtty | any> {
