@@ -15,8 +15,6 @@ Session:
     inactivityTimeout:
       type: integer
       default: 10
-    license:
-      $ref: license.yaml#/License
     user:
       $ref: user.yaml#/User
       # readOnly: true
