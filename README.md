@@ -1,4 +1,4 @@
-# Otomi Api - Test
+# Otomi Api - Test - Test
 
 This application provides a HTTP REST API (definition in [OpenApiV3](https://swagger.io/specification/) standard) to manipulate values for teams and their services.
 Git is used as the persistent storage for the values that will be consumed by [otomi-stack](https://github.com/redkubes/otomi-stack) for reconciling the state of the cluster landscape. (For an example look at the [otomi-values](https://github.com/redkubes/otomi-values-demo) repo with demo values.)
