@@ -137,6 +137,9 @@ export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty
 }
 
 export async function getKubernetesVersion() {
+  if(process.env.NODE_ENV === 'development') {
+    return 'x.x.x'
+  }
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
 
@@ -144,8 +147,8 @@ export async function getKubernetesVersion() {
 
   try {
     const response = await k8sApi.getCode()
-    const version = response.body.gitVersion || 'x.x.x'
-    return version
+    console.log('Kubernetes Server Version:', response.body.gitVersion)
+    return response.body.gitVersion
   } catch (err) {
     console.error('Error:', err)
   }
