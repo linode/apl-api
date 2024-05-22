@@ -8,7 +8,6 @@ import { cloneDeep } from 'lodash'
 import { join } from 'path'
 import { Server } from 'socket.io'
 import { ApiNotReadyError } from 'src/error'
-import { checkLicense } from 'src/license-utils'
 import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
 import { EDITOR_INACTIVITY_TIMEOUT, cleanEnv } from 'src/validators'
@@ -112,9 +111,6 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
     }
 
     if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
-      const [path] = req.originalUrl.split('/').slice(-1)
-      if (['teams', 'services', 'workloads', 'projects'].includes(path))
-        checkLicense(req.method.toLowerCase(), path, sessionStack)
       // in the cloudtty or workloadCatalog endpoint(s), don't need to create a session
       if (req.path === '/v1/cloudtty' || req.path === '/v1/workloadCatalog') return next()
       // manipulating data and no editor session yet? create one
