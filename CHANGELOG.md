@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.9.1](https://github.com/redkubes/otomi-api/compare/v2.8.0...v2.9.1) (2024-05-23)
+
+
+### Features
+
+* removed license ([#525](https://github.com/redkubes/otomi-api/issues/525)) ([44d36b0](https://github.com/redkubes/otomi-api/commit/44d36b0bbb3d9aa26896894d27c5b1a77afe0c75))
+
+
+
 ## [2.9.0](https://github.com/redkubes/otomi-api/compare/v2.8.0...v2.9.0) (2024-04-19)
 
 
