@@ -27,31 +27,15 @@ import { setMockIdx } from 'src/mocks'
 import { Build, OpenAPIDoc, OpenApiRequestExt, Schema, SealedSecret, Service, Workload } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
-import {
-  CHECK_LATEST_COMMIT_INTERVAL,
-  DRONE_WEBHOOK_SECRET,
-  GIT_PASSWORD,
-  GIT_USER,
-  UPLOAD_METRICS_INTERVAL,
-  cleanEnv,
-} from 'src/validators'
+import { CHECK_LATEST_COMMIT_INTERVAL, DRONE_WEBHOOK_SECRET, GIT_PASSWORD, GIT_USER, cleanEnv } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
 import Db from './db'
 import giteaCheckLatest from './gitea/connect'
-import {
-  getBuildStatus,
-  getKubernetesVersion,
-  getNodes,
-  getSealedSecretStatus,
-  getServiceStatus,
-  getWorkloadStatus,
-} from './k8s_operations'
-import uploadMetrics from './otomiCloud/upload-metrics'
+import { getBuildStatus, getSealedSecretStatus, getServiceStatus, getWorkloadStatus } from './k8s_operations'
 
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
   CHECK_LATEST_COMMIT_INTERVAL,
-  UPLOAD_METRICS_INTERVAL,
   GIT_USER,
   GIT_PASSWORD,
 })
@@ -85,37 +69,7 @@ const checkAgainstGitea = async () => {
   }
 }
 
-// collect and upload metrics to Otomi-Cloud
-export const uploadOtomiMetrics = async () => {
-  try {
-    const otomiStack = await getSessionStack()
-    const license = otomiStack.getLicense()
-    // if license is valid collect metrics and send them to Otomi-Cloud
-    if (license && license.isValid) {
-      const apiKey = license.body?.key as string
-      const envType = license.body?.envType as string
-      // if not local development get the total amount of nodes from the cluster otherwise return 0
-      const totalNodes = await getNodes(envType)
-      const k8sVersion = await getKubernetesVersion(envType)
-      const settings = otomiStack.getSettings()
-      const metrics = otomiStack.getMetrics()
-      const otomiMetrics = {
-        workerNodeCount: totalNodes,
-        k8sVersion,
-        otomiVersion: settings.otomi!.version,
-        teams: metrics.otomi_teams,
-        services: metrics.otomi_services,
-        workloads: metrics.otomi_workloads,
-      }
-      // upload to the Otomi-Cloud server
-      if (envType) await uploadMetrics(apiKey, envType, otomiMetrics)
-    }
-  } catch (error) {
-    debug('Could not collect metrics for Otomi-Cloud: ', error)
-  }
-}
-
-const resourceStatus = async () => {
+const resourceStatus = async (errorSet) => {
   const otomiStack = await getSessionStack()
   const { cluster } = otomiStack.getSettings(['cluster'])
   const domainSuffix = cluster?.domainSuffix
@@ -132,17 +86,23 @@ const resourceStatus = async () => {
     sealedSecrets: getSealedSecretStatus,
   }
   const resourcesStatus = {}
+
   for (const resourceType in resources) {
     const promises = resources[resourceType].map(async (resource) => {
       try {
         const res = await statusFunctions[resourceType](resource, domainSuffix)
         return { [resource.id]: res }
       } catch (error) {
-        console.log(`Could not collect status data for ${resourceType} ${resource.name} resource:`, error)
+        const errorMessage = `${resourceType}-${resource.name}-${error.message}`
+        if (!errorSet.has(errorMessage)) {
+          console.log(`Could not collect status data for ${resourceType} ${resource.name} resource:`, error.message)
+          errorSet.add(errorMessage)
+        }
       }
     })
     resourcesStatus[resourceType] = Object.assign({}, ...(await Promise.all(promises)))
   }
+
   getIo().emit('status', resourcesStatus)
 }
 
@@ -191,13 +151,9 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   }
   // Transforms the interval to minutes
   const gitCheckVersionInterval = env.CHECK_LATEST_COMMIT_INTERVAL * 60 * 1000
-  const gitUploadMetricsInterval = env.UPLOAD_METRICS_INTERVAL * 60 * 1000
   setInterval(async function () {
     await checkAgainstGitea()
   }, gitCheckVersionInterval)
-  setInterval(async function () {
-    await uploadOtomiMetrics()
-  }, gitUploadMetricsInterval)
   app.all('/drone', async (req, res, next) => {
     const parsed = httpSignature.parseRequest(req, {
       algorithm: 'hmac-sha256',
@@ -241,8 +197,9 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
 
   // emit resource status every 10 seconds
   const emitResourceStatusInterval = 10 * 1000
+  const errorSet = new Set()
   setInterval(async function () {
-    await resourceStatus()
+    await resourceStatus(errorSet)
   }, emitResourceStatusInterval)
 
   // and register session middleware

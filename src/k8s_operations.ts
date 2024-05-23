@@ -136,29 +136,8 @@ export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty
   }
 }
 
-// Get the amount of nodes from the cluster
-export async function getNodes(envType: string) {
-  const metricsDebug = Debug('otomi:api:k8sOperations')
-  if (!envType) {
-    metricsDebug('k8sGetNodes: Local development! Returning 0 nodes')
-    return 0
-  }
-  try {
-    const kc = new k8s.KubeConfig()
-    kc.loadFromDefault()
-    const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
-    const nodesResponse = await k8sApi.listNode()
-    const numberOfNodes = nodesResponse.body.items.length
-    return numberOfNodes
-  } catch (error) {
-    metricsDebug('k8sGetNodes error:', error)
-    metricsDebug('k8sGetNodes error: Error encountered, returning -1 nodes')
-    return -1
-  }
-}
-
-export async function getKubernetesVersion(envType: string) {
-  if (envType === 'dev') return 'x.x.x'
+export async function getKubernetesVersion() {
+  if (process.env.NODE_ENV === 'development') return 'x.x.x'
 
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
