@@ -1200,16 +1200,7 @@ definitions:
         type: array
         items:
           type: string
-          enum:
-            [
-              alerts,
-              backup,
-              oidc,
-              resourceQuota,
-              downloadKubeConfig,
-              downloadDockerConfig,
-              networkPolicy,
-            ]
+          enum: [alerts, backup, oidc, resourceQuota, downloadKubeConfig, downloadDockerConfig, networkPolicy]
         uniqueItems: true
       apps:
         type: array
@@ -1470,7 +1461,6 @@ properties:
             default: false
             description: Indicates Azure Application Gateway Ingress Controller add-on is installed by AKS.
             type: boolean
-
 
   cloud:
     additionalProperties: true
@@ -3694,10 +3684,6 @@ properties:
   version:
     type: integer
     description: DO NOT CHANGE! Holds the values-schema version. For more details, see `otomi migrate`.
-  license:
-    type: string
-    describe: License in form of JWT
-    x-secret: ''
   status:
     type: object
     properties:

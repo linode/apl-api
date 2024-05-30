@@ -8,28 +8,13 @@ import request, { SuperAgentTest } from 'supertest'
 import getToken from 'src/fixtures/jwt'
 import OtomiStack from 'src/otomi-stack'
 import { getSessionStack } from './middleware'
-import { App, License } from './otomi-models'
+import { App } from './otomi-models'
 
 const adminToken: string = getToken(['team-admin'])
 const teamToken: string = getToken(['team-team1'])
 const userToken: string = getToken([])
 const teamId = 'team1'
 const otherTeamId = 'team2'
-const validLicense: License = {
-  isValid: true,
-  hasLicense: true,
-  jwt: '',
-  body: {
-    version: 1,
-    key: 'abc',
-    type: 'professional',
-    capabilities: {
-      teams: 30,
-      services: 30,
-      workloads: 30,
-    },
-  },
-}
 
 describe('API authz tests', () => {
   let app: Express
@@ -41,10 +26,6 @@ describe('API authz tests', () => {
     // await _otomiStack.init()
     _otomiStack.createTeam({ name: 'team1' })
     otomiStack = sinonStub(_otomiStack)
-    otomiStack.getLicense.restore()
-    sinonStub(otomiStack, 'getLicense').callsFake(function () {
-      return validLicense
-    })
     app = await initApp(otomiStack)
     agent = request.agent(app)
     agent.set('Accept', 'application/json')
@@ -382,21 +363,6 @@ describe('API authz tests', () => {
         // stub.reset()
         done()
       })
-  })
-
-  it('authenticated user can not activate license', (done) => {
-    agent.put('/v1/activate').send({ jwt: 'mytoken' }).expect(403).set('Authorization', `Bearer ${teamToken}`).end(done)
-  })
-  it('admin can activate license', (done) => {
-    agent
-      .put('/v1/activate')
-      .send({ jwt: 'mytoken' })
-      .expect(200)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .end(done)
-  })
-  it('anonymous user cannot activate license', (done) => {
-    agent.put('/v1/activate').send({ jwt: 'mytoken' }).expect(401).end(done)
   })
 
   it('team can create its own sealedsecret', (done) => {
