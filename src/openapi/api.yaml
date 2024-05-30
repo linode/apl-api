@@ -46,47 +46,6 @@ x-get-responses: &DefaultGetResponses
 
 # -------------------------------------------- Paths
 paths:
-  /license:
-    delete:
-      operationId: deleteLicense
-      description: Delete user license
-      x-aclSchema: License
-      responses:
-        '200':
-          description: Successfully removed user license
-  /activate:
-    put:
-      operationId: activateLicense
-      description: Upload and activate license
-      x-aclSchema: LicenseJwt
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LicenseJwt'
-        description: License JWT
-        required: true
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Uploaded license
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/License'
-  /metrics:
-    get:
-      operationId: getMetrics
-      description: Get otomi metrics
-      x-aclSchema: Metrics
-      responses:
-        '200':
-          description: Successfully obtained otomi metrics
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Metrics'
-
   /otomi/values:
     get:
       operationId: getValues
@@ -1676,12 +1635,6 @@ components:
       $ref: k8s.yaml#/K8sService
     Kubecfg:
       $ref: kubecfg.yaml#/Kubecfg
-    LicenseJwt:
-      $ref: license.yaml#/LicenseJwt
-    License:
-      $ref: license.yaml#/License
-    Metrics:
-      $ref: metrics.yaml#/Metrics
     Netpol:
       $ref: netpol.yaml#/Netpol
     DockerConfig:

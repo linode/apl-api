@@ -5,11 +5,9 @@ import Debug from 'debug'
 
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
-import jwt, { JwtPayload } from 'jsonwebtoken'
 import { cloneDeep, each, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
-import * as osPath from 'path'
-import { getAppList, getAppSchema, getSpec, uploadOtomiMetrics } from 'src/app'
+import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
 import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
@@ -20,8 +18,6 @@ import {
   Cloudtty,
   Core,
   K8sService,
-  License,
-  Metrics,
   Netpol,
   Policies,
   Policy,
@@ -69,7 +65,6 @@ import {
   updateSecretOwnerReferences,
   watchPodUntilRunning,
 } from './k8s_operations'
-import connect from './otomiCloud/connect'
 import { validateBackupFields } from './utils/backupUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { encryptSecretItem, prepareSealedSecretData } from './utils/sealedSecretUtils'
@@ -194,19 +189,6 @@ export default class OtomiStack {
   async getValues(query): Promise<Record<string, any>> {
     return (await this.repo.requestValues(query)).data
   }
-  getMetrics(): Metrics {
-    const metrics: Metrics = {
-      otomi_backups: this.getAllBackups().length,
-      otomi_builds: this.getAllBuilds().length,
-      otomi_netpols: this.getAllNetpols().length,
-      otomi_secrets: this.getAllSecrets().length,
-      otomi_services: this.getAllServices().length,
-      // We do not count team_admin as a regular team
-      otomi_teams: this.getTeams().length - 1,
-      otomi_workloads: this.getAllWorkloads().length,
-    }
-    return metrics
-  }
   getRepoPath() {
     if (env.isTest || this.editor === undefined) return env.GIT_LOCAL_PATH
     const folder = `${rootPath}/${this.editor}`
@@ -266,92 +248,6 @@ export default class OtomiStack {
     })
     // debug('secretPaths: ', cleanSecretPaths)
     return cleanSecretPaths
-  }
-
-  getLicense(): License {
-    const license = this.db.db.get(['license']).value() as License
-    return license
-  }
-
-  async validateLicense(jwtLicense: string): Promise<License> {
-    const licensePath = osPath.resolve(__dirname, 'license/license.pem')
-    const publicKey = await readFile(licensePath, 'utf8')
-    return this.verifyLicense(jwtLicense, publicKey)
-  }
-
-  verifyLicense(jwtLicense: string, rsaPublicKey: string): License {
-    const license: License = { isValid: false, hasLicense: true, body: undefined, jwt: jwtLicense }
-    try {
-      const jwtPayload = jwt.verify(jwtLicense, rsaPublicKey) as JwtPayload
-      license.body = jwtPayload.body
-      license.isValid = true
-    } catch (err) {
-      return license
-    }
-    return license
-  }
-
-  // TODO: Delete - Debug purposes only
-  async removeLicense() {
-    if (await this.repo.fileExists('env/secrets.license.yaml')) {
-      await this.repo.removeFile('env/secrets.license.yaml').then(() => {
-        const license: License = { isValid: false, hasLicense: false, body: undefined }
-        this.db.db.set('license', license).write()
-        this.doDeployment()
-      })
-    }
-  }
-
-  async uploadLicense(jwtLicense: string): Promise<License> {
-    debug('Uploading the license')
-
-    const license = await this.validateLicense(jwtLicense)
-    if (!license.isValid) {
-      debug('License invalid')
-      return license
-    }
-
-    this.db.db.set('license', license).write()
-    const clusterInfo = this.getSettings(['cluster'])
-    const apiKey = license.body?.key as string
-    const envType = license.body?.envType as string
-    await connect(apiKey, envType, clusterInfo)
-    this.doDeployment()
-    await uploadOtomiMetrics()
-    debug('License uploaded')
-    return license
-  }
-
-  async loadLicense(): Promise<void> {
-    debug('Loading license')
-    if (!(await this.repo.fileExists('env/secrets.license.yaml'))) {
-      debug('License file does not exists')
-      const license: License = { isValid: false, hasLicense: false, body: undefined }
-      this.db.db.set('license', license).write()
-      return
-    }
-
-    const licenseValues = await this.repo.readFile('env/secrets.license.yaml', true)
-    const jwtLicense: string = licenseValues.license
-    const license = await this.validateLicense(jwtLicense)
-
-    if (!license.isValid) {
-      debug('License file invalid')
-      return
-    }
-    this.db.db.set('license', license).write()
-    debug('Loaded license')
-  }
-
-  async saveLicense(secretPaths?: string[]): Promise<void> {
-    const license = this.db.db.get(['license']).value() as License
-    if (!license.hasLicense) return
-    await this.repo.saveConfig(
-      'env/license.yaml',
-      'env/secrets.license.yaml',
-      { license: license.jwt },
-      secretPaths ?? this.getSecretPaths(),
-    )
   }
 
   getSettingsInfo(): SettingsInfo {
@@ -796,9 +692,7 @@ export default class OtomiStack {
   }
 
   async getK8sVersion(): Promise<string> {
-    const license = this.getLicense()
-    const envType = license.body?.envType as string
-    const version = (await getKubernetesVersion(envType)) as string
+    const version = (await getKubernetesVersion()) as string
     return version
   }
 
@@ -1327,12 +1221,10 @@ export default class OtomiStack {
 
   async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {
     debug('Loading values')
-    await this.loadLicense()
     await this.loadCluster()
     await this.loadSettings()
     await this.loadTeams()
     await this.loadApps()
-    // load license
     this.isLoaded = true
   }
 
@@ -1827,7 +1719,6 @@ export default class OtomiStack {
     // also save admin apps
     await this.saveAdminApps(secretPaths)
     await this.saveTeamApps('admin')
-    await this.saveLicense(secretPaths)
   }
 
   async getSession(user: k8s.User): Promise<Session> {
@@ -1846,7 +1737,6 @@ export default class OtomiStack {
         console: env.VERSIONS.console,
         values: currentSha,
       },
-      license: rootStack.getLicense(),
     }
     return data
   }
