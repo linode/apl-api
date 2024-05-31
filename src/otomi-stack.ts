@@ -1235,7 +1235,6 @@ export default class OtomiStack {
     })
   }
 
-
   async loadTeamBackups(teamId: string): Promise<void> {
     const relativePath = getTeamBackupsFilePath(teamId)
     if (!(await this.repo.fileExists(relativePath))) {
@@ -1345,7 +1344,6 @@ export default class OtomiStack {
       this.loadTeamNetpols(team.id!)
       this.loadTeamServices(team.id!)
       this.loadTeamSealedSecrets(team.id!)
-      this.loadTeamSecrets(team.id!)
       this.loadTeamWorkloads(team.id!)
       this.loadTeamBackups(team.id!)
       this.loadTeamProjects(team.id!)
@@ -1446,7 +1444,6 @@ export default class OtomiStack {
         await this.saveTeamNetpols(teamId)
         await this.saveTeamServices(teamId)
         await this.saveTeamSealedSecrets(teamId)
-        await this.saveTeamSecrets(teamId)
         await this.saveTeamWorkloads(teamId)
         await this.saveTeamProjects(teamId)
         await this.saveTeamBuilds(teamId)
