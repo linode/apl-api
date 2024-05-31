@@ -45,8 +45,9 @@ export function encryptSecretItem(certificate, secretName, ns, data, scope) {
 export function prepareSealedSecretData(body) {
   const bodyAnnotations = body.metadata?.annotations || {}
   const annotations: Record<string, string> = {}
-  for (const key in bodyAnnotations)
-    if (key !== 'reconcile.external-secrets.io/data-hash') annotations[key] = bodyAnnotations[key]
+  for (const key in bodyAnnotations) {
+    annotations[key] = bodyAnnotations[key]
+  }
 
   const bodyLabels = body.metadata?.labels || {}
   const labels: Record<string, string> = {}

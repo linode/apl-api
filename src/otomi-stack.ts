@@ -104,10 +104,6 @@ export function getTeamSealedSecretsFilePath(teamId: string): string {
   return `env/teams/sealedsecrets.${teamId}.yaml`
 }
 
-export function getTeamSecretsFilePath(teamId: string): string {
-  return `env/teams/external-secrets.${teamId}.yaml`
-}
-
 export function getTeamWorkloadsFilePath(teamId: string): string {
   return `env/teams/workloads.${teamId}.yaml`
 }
