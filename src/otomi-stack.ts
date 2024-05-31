@@ -1234,19 +1234,7 @@ export default class OtomiStack {
       debug(`Loaded sealed secret: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
     })
   }
-  async loadTeamSecrets(teamId: string): Promise<void> {
-    const relativePath = getTeamSecretsFilePath(teamId)
-    if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no secrets yet`)
-      return
-    }
-    const data = await this.repo.readFile(relativePath)
-    const secrets: Array<Secret> = get(data, getTeamSecretsJsonPath(teamId), [])
 
-    secrets.forEach((inSecret) => {
-      this.loadSecret(inSecret, teamId)
-    })
-  }
 
   async loadTeamBackups(teamId: string): Promise<void> {
     const relativePath = getTeamBackupsFilePath(teamId)
@@ -1479,12 +1467,6 @@ export default class OtomiStack {
     const outData: Record<string, any> = set({}, getTeamSealedSecretsJsonPath(teamId), cleaneSecrets)
     debug(`Saving sealed secrets of team: ${teamId}`)
     await this.repo.writeFile(relativePath, outData)
-  }
-
-  async saveTeamSecrets(teamId: string): Promise<void> {
-    const secrets = this.db.getCollection('secrets', { teamId })
-    const values: any[] = secrets.map((secret) => this.convertDbSecretToValues(secret))
-    await this.repo.writeFile(getTeamSecretsFilePath(teamId), set({}, getTeamSecretsJsonPath(teamId), values))
   }
 
   async saveTeamBackups(teamId: string): Promise<void> {
