@@ -96,8 +96,6 @@ k8s:
       disablePolicyChecks: true
     - name: sealed-secrets
       app: sealed-secrets
-    - name: vault
-      app: vault
     - name: velero
       app: velero
 
@@ -315,18 +313,6 @@ adminApps:
   - name: otel
     tags: [tracing]
     deps: [prometheus, grafana, tempo, loki]
-  - name: vault
-    tags: [secrets, security, observability]
-    deps: [external-secrets]
-    isShared: true
-    ownHost: true
-    path: /ui/vault/auth?redirect_to=%2Fvault%2Fsecrets%2Fsecret%2Flist%2Fteams%2F#NS#%2F&with=oidc
-    ingress:
-      - namespace: vault
-        svc: vault
-        port: 8200
-        type: public
-        auth: true
   - name: velero
     tags: [backup]
   - name: rabbitmq

@@ -75,15 +75,6 @@ Settings:
                   $ref: definitions.yaml#/backupTtl
                 schedule:
                   $ref: definitions.yaml#/backupSchedule
-            vault:
-              title: Vault
-              properties:
-                enabled:
-                  type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
-                schedule:
-                  $ref: definitions.yaml#/backupSchedule
             argo:
               title: ArgoCD
               properties:

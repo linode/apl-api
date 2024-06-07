@@ -32,7 +32,6 @@ AppList:
     - sealed-secrets
     - tempo
     - trivy
-    - vault
     - velero
 
 # AppBase:
