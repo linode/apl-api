@@ -24,7 +24,6 @@ teamConfig:
             prometheus: {}
             rabbitmq: {}
             sealed-secrets: {}
-            vault: {}
             velero: {}
             falco: {}
             trivy: {}

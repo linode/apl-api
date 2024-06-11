@@ -106,10 +106,6 @@ export function getTeamSealedSecretsFilePath(teamId: string): string {
   return `env/teams/sealedsecrets.${teamId}.yaml`
 }
 
-export function getTeamSecretsFilePath(teamId: string): string {
-  return `env/teams/external-secrets.${teamId}.yaml`
-}
-
 export function getTeamWorkloadsFilePath(teamId: string): string {
   return `env/teams/workloads.${teamId}.yaml`
 }
@@ -1259,19 +1255,6 @@ export default class OtomiStack {
       debug(`Loaded sealed secret: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
     })
   }
-  async loadTeamSecrets(teamId: string): Promise<void> {
-    const relativePath = getTeamSecretsFilePath(teamId)
-    if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no secrets yet`)
-      return
-    }
-    const data = await this.repo.readFile(relativePath)
-    const secrets: Array<Secret> = get(data, getTeamSecretsJsonPath(teamId), [])
-
-    secrets.forEach((inSecret) => {
-      this.loadSecret(inSecret, teamId)
-    })
-  }
 
   async loadTeamBackups(teamId: string): Promise<void> {
     const relativePath = getTeamBackupsFilePath(teamId)
@@ -1394,7 +1377,6 @@ export default class OtomiStack {
       this.loadTeamNetpols(team.id!)
       this.loadTeamServices(team.id!)
       this.loadTeamSealedSecrets(team.id!)
-      this.loadTeamSecrets(team.id!)
       this.loadTeamWorkloads(team.id!)
       this.loadTeamBackups(team.id!)
       this.loadTeamProjects(team.id!)
@@ -1492,7 +1474,6 @@ export default class OtomiStack {
         await this.saveTeamNetpols(teamId)
         await this.saveTeamServices(teamId)
         await this.saveTeamSealedSecrets(teamId)
-        await this.saveTeamSecrets(teamId)
         await this.saveTeamWorkloads(teamId)
         await this.saveTeamProjects(teamId)
         await this.saveTeamBuilds(teamId)
@@ -1514,12 +1495,6 @@ export default class OtomiStack {
     const outData: Record<string, any> = set({}, getTeamSealedSecretsJsonPath(teamId), cleaneSecrets)
     debug(`Saving sealed secrets of team: ${teamId}`)
     await this.repo.writeFile(relativePath, outData)
-  }
-
-  async saveTeamSecrets(teamId: string): Promise<void> {
-    const secrets = this.db.getCollection('secrets', { teamId })
-    const values: any[] = secrets.map((secret) => this.convertDbSecretToValues(secret))
-    await this.repo.writeFile(getTeamSecretsFilePath(teamId), set({}, getTeamSecretsJsonPath(teamId), values))
   }
 
   async saveTeamBackups(teamId: string): Promise<void> {
