@@ -99,10 +99,14 @@ Policies:
       description: 'Startup probes need to be configured to correctly manage a Pod`s lifecycle during deployments, restarts, and upgrades. Sometimes, applications are temporarily unable to serve traffic. For example, an application might need to load large data or configuration files during startup, or depend on external services after startup. In such cases, you don`t want to kill the application, but you don`t want to send it requests either. Kubernetes provides readiness probes to detect and mitigate these situations. A pod with containers reporting that they are not ready does not receive traffic through Kubernetes Services. This policy validates that all containers have a livenessProbe defined.'
       properties:
         $ref: '#/definitions/policyCommon'
-    required-otomi-label:
-      description: 'Define and use labels that identify your application or Deployment. This policy validates that the `otomi.io/app` label is specified with some value. The `otomi.io/app` is required for using network policies in Otomi.'
+    require-labels:
+      description: 'Define and use labels that identify your application or Deployment, for example `otomi.io/app`.'
       properties:
         $ref: '#/definitions/policyCommon'
+        customValues:
+          type: array
+          items:
+            type: string        
     restrict-apparmor-profiles:
       description: 'On supported hosts, the `runtime/default` AppArmor profile is applied by default. The default policy should prevent overriding or disabling the policy, or restrict overrides to an allowed set of profiles. This policy ensures Pods do not specify any other AppArmor profiles than `runtime/default` or `localhost/*`.'
       properties:
