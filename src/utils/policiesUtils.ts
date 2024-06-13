@@ -19,18 +19,9 @@ function getCustomValues(policyName: string) {
       "''",
     ]
   }
-  if (policyName === 'restrict-volume-types') {
-    return [
-      'configMap',
-      'csi',
-      'downwardAPI',
-      'emptyDir',
-      'ephemeral',
-      'persistentVolumeClaim',
-      'projected',
-      'secret',
-    ]
-  }
+  if (policyName === 'restrict-volume-types')
+    return ['configMap', 'csi', 'downwardAPI', 'emptyDir', 'ephemeral', 'persistentVolumeClaim', 'projected', 'secret']
+
   return undefined
 }
 
