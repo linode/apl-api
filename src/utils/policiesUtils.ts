@@ -21,7 +21,6 @@ function getCustomValues(policyName: string) {
   }
   if (policyName === 'restrict-volume-types') {
     return [
-      'name',
       'configMap',
       'csi',
       'downwardAPI',
@@ -30,7 +29,6 @@ function getCustomValues(policyName: string) {
       'persistentVolumeClaim',
       'projected',
       'secret',
-      "''",
     ]
   }
   return undefined
