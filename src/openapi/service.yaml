@@ -128,8 +128,8 @@ Ingress:
       type: boolean
       default: false
     certSelect:
-      description: Select one of the TLS secrets created in Otomi.
-      title: Select team secret
+      description: Select one of the TLS Sealed Secrets created in APL.
+      title: Select Team Sealed Secret
       type: boolean
       default: true
     certName:

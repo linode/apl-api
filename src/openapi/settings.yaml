@@ -8,7 +8,7 @@ Settings:
       additionalProperties: false
       $ref: definitions.yaml#/alerts
       title: Alerts
-      description: Configure alerting endpoints to receive notifications from Alertmanager and Otomi deployments.
+      description: Configure alerting endpoints to receive notifications from Alertmanager.
       x-externalDocsPath: docs/for-ops/console/settings#alerts
     cluster:
       additionalProperties: false
@@ -214,21 +214,20 @@ Settings:
         - clientID
         - clientSecret
     otomi:
-      title: Otomi
+      x-hideTitle: true
       type: object
-      description: Settings for Otomi.
       additionalProperties: false
       properties:
         adminPassword:
-          description: Master admin password that will be used for all apps that are not configured to use their own password.
+          description: Super admin password that will be used for all apps that are not configured to use their own password.
           $ref: definitions.yaml#/adminPassword
           x-acl:
             admin: [read-any]
             team: []
           # readOnly: true
         additionalClusters:
-          title: Additional clusters
-          description: Enter other clusters running Otomi.
+          title: Linked clusters
+          description: Add links to other clusters running APL.
           type: array
           items:
             $ref: cluster.yaml#/AdditionalCluster
@@ -243,9 +242,9 @@ Settings:
           nullable: true
           title: Global pullsecret
           description:
-            Will be connected to each "default" service account in all otomi app namespaces.
+            Will be connected to each "default" service account in all APL app namespaces.
             Handy for authenticating with DockerHub to avoid rate limiting.
-            Also useful when pulling all otomi images from a private repo. (One would need to override all the images in the config first.)
+            Also useful when pulling all APL images from a private repo. (One would need to override all the images in the config first.)
           additionalProperties: false
           properties:
             username:
@@ -298,9 +297,9 @@ Settings:
           default: true
         nodeSelector:
           $ref: definitions.yaml#/labels
-          description: 'One or more "label: value" pairs that must exist on one or more nodes, which will force all otomi platform workloads to be scheduled there.'
+          description: 'One or more "label: value" pairs that must exist on one or more nodes, which will force all APL platform workloads to be scheduled there.'
         version:
-          title: Otomi version
+          title: APL version
           default: latest
           description: |
             Please pin this to a valid release version found in the repo. Suggestion: try the most recent stable version.

@@ -51,7 +51,7 @@ AppGatekeeper:
                 type: string
             required: [kind, version]
           title: Data sync
-          description: Additional resources that Gatekeeper policies will operate on, next to the ones Otomi already watches (core/Pod, apps/DaemonSet, apps/Deployment, apps/StatefulSet, batch/CronJob, batch/Job, serving.knative.dev/Service)
+          description: Additional resources that Gatekeeper policies will operate on, next to the ones APL already watches (core/Pod, apps/DaemonSet, apps/Deployment, apps/StatefulSet, batch/CronJob, batch/Job, serving.knative.dev/Service)
         disableValidatingWebhook:
           title: Disable validating webhook
           description: Disables Gatekeeper from blocking violating admission requests. Check the audit logs in Loki for violations.

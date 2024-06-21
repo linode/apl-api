@@ -10,8 +10,8 @@ AdditionalCluster:
       - delete-any
     team:
       - read-any
-  title: Additional cluster
-  description: A k8s cluster managed by Otomi.
+  title: Linked cluster
+  description: A K8s cluster managed by APL.
   properties:
     domainSuffix:
       $ref: definitions.yaml#/domainSuffix
@@ -35,7 +35,7 @@ Cluster:
     team:
       - read-any
   title: Cluster
-  description: The k8s cluster managed by this Otomi instance.
+  description: The K8s cluster managed by this APL instance.
   properties:
     name:
       $ref: definitions.yaml#/clusterName
