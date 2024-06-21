@@ -311,11 +311,6 @@ Settings:
       x-acl:
         admin: [read-any, update-any]
         team: [read]
-    policies:
-      $ref: policies.yaml#/policies
-      x-acl:
-        admin: [read-any, update-any]
-        team: []
     smtp:
       title: SMTP
       description: Mail server settings.

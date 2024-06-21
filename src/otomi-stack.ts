@@ -20,6 +20,7 @@ import {
   K8sService,
   Netpol,
   Policies,
+  Policy,
   Project,
   SealedSecret,
   Secret,
@@ -65,6 +66,7 @@ import {
   watchPodUntilRunning,
 } from './k8s_operations'
 import { validateBackupFields } from './utils/backupUtils'
+import { getPolicies } from './utils/policiesUtils'
 import { encryptSecretItem, prepareSealedSecretData } from './utils/sealedSecretUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
@@ -119,6 +121,10 @@ export function getTeamBuildsFilePath(teamId: string): string {
   return `env/teams/builds.${teamId}.yaml`
 }
 
+export function getTeamPoliciesFilePath(teamId: string): string {
+  return `env/teams/policies.${teamId}.yaml`
+}
+
 export function getTeamWorkloadsJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.workloads`
 }
@@ -129,6 +135,10 @@ export function getTeamProjectsJsonPath(teamId: string): string {
 
 export function getTeamBuildsJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.builds`
+}
+
+export function getTeamPoliciesJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.policies`
 }
 
 export function getTeamSealedSecretsJsonPath(teamId: string): string {
@@ -256,12 +266,6 @@ export default class OtomiStack {
 
   editSettings(data: Settings, settingId: string) {
     const settings = this.db.db.get('settings').value()
-    // do not merge as oneOf properties cannot be merged
-    // for the policies we do want to merge
-    if (data.policies) {
-      Object.assign(settings.policies, data.policies)
-      Object.assign(data[settingId], settings.policies)
-    }
     settings[settingId] = removeBlankAttributes(data[settingId] as Record<string, any>)
     this.db.db.set('settings', settings).write()
     return settings
@@ -422,6 +426,10 @@ export default class OtomiStack {
       if (id !== 'admin' && (isShared || inTeamApps))
         this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
     })
+    if (!data.id) {
+      const policies = getPolicies()
+      this.db.db.set(`policies[${data.name}]`, policies).write()
+    }
     return team
   }
 
@@ -657,6 +665,26 @@ export default class OtomiStack {
       }
     })
     return this.db.deleteItem('builds', { id })
+  }
+
+  getTeamPolicies(teamId: string): Policies {
+    const policies = this.db.db.get(['policies']).value()
+    return policies[teamId]
+  }
+
+  getAllPolicies(): Record<string, Policies> {
+    return this.db.db.get(['policies']).value()
+  }
+
+  getPolicy(teamId: string, id: string): Policy {
+    const policies = this.db.db.get(['policies']).value()
+    return policies[teamId][id]
+  }
+
+  editPolicy(teamId: string, policyId: string, data: Policy): Policy {
+    const teamPolicies = this.getTeamPolicies(teamId)
+    teamPolicies[policyId] = removeBlankAttributes(data)
+    return this.getPolicy(teamId, policyId)
   }
 
   async getK8sVersion(): Promise<string> {
@@ -1190,7 +1218,6 @@ export default class OtomiStack {
   async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {
     debug('Loading values')
     await this.loadCluster()
-    await this.loadPolicies()
     await this.loadSettings()
     await this.loadTeams()
     await this.loadApps()
@@ -1199,12 +1226,6 @@ export default class OtomiStack {
 
   async loadCluster(): Promise<void> {
     const data = await this.repo.loadConfig('env/cluster.yaml', 'env/secrets.cluster.yaml')
-    // @ts-ignore
-    this.db.db.get('settings').assign(data).write()
-  }
-
-  async loadPolicies(): Promise<void> {
-    const data: Policies = await this.repo.readFile('env/policies.yaml')
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
   }
@@ -1291,6 +1312,18 @@ export default class OtomiStack {
     })
   }
 
+  async loadTeamPolicies(teamId: string): Promise<void> {
+    const relativePath = getTeamPoliciesFilePath(teamId)
+    if (!(await this.repo.fileExists(relativePath))) {
+      debug(`Team ${teamId} has no policies yet`)
+      return
+    }
+    const data = await this.repo.readFile(relativePath)
+    const inData: any = get(data, getTeamPoliciesJsonPath(teamId), {})
+    this.db.db.set(`policies[${teamId}]`, inData).write()
+    debug(`Loaded policies of team: ${teamId}`)
+  }
+
   async loadTeamWorkloads(teamId: string): Promise<void> {
     const relativePath = getTeamWorkloadsFilePath(teamId)
     if (!(await this.repo.fileExists(relativePath))) {
@@ -1348,6 +1381,7 @@ export default class OtomiStack {
       this.loadTeamBackups(team.id!)
       this.loadTeamProjects(team.id!)
       this.loadTeamBuilds(team.id!)
+      this.loadTeamPolicies(team.id!)
     })
   }
 
@@ -1371,10 +1405,6 @@ export default class OtomiStack {
       this.getSettings(['cluster']),
       secretPaths ?? this.getSecretPaths(),
     )
-  }
-
-  async savePolicies(): Promise<void> {
-    await this.repo.writeFile('env/policies.yaml', this.getSettings(['policies']))
   }
 
   async saveAdminApps(secretPaths?: string[]): Promise<void> {
@@ -1425,7 +1455,7 @@ export default class OtomiStack {
     await this.repo.saveConfig(
       'env/settings.yaml',
       `env/secrets.settings.yaml`,
-      omit(settings, ['cluster', 'policies']),
+      omit(settings, ['cluster']),
       secretPaths ?? this.getSecretPaths(),
     )
   }
@@ -1447,6 +1477,7 @@ export default class OtomiStack {
         await this.saveTeamWorkloads(teamId)
         await this.saveTeamProjects(teamId)
         await this.saveTeamBuilds(teamId)
+        await this.saveTeamPolicies(teamId)
         team.resourceQuota = arrayToObject((team.resourceQuota as []) ?? [])
         teamValues[teamId] = team
       }),
@@ -1523,6 +1554,14 @@ export default class OtomiStack {
     const relativePath = getTeamBuildsFilePath(teamId)
     const outData: Record<string, any> = set({}, getTeamBuildsJsonPath(teamId), cleaneBuilds)
     debug(`Saving builds of team: ${teamId}`)
+    await this.repo.writeFile(relativePath, outData)
+  }
+
+  async saveTeamPolicies(teamId: string): Promise<void> {
+    const policies = this.getTeamPolicies(teamId)
+    const relativePath = getTeamPoliciesFilePath(teamId)
+    const outData: Record<string, Policies> = set({}, getTeamPoliciesJsonPath(teamId), policies)
+    debug(`Saving policies of team: ${teamId}`)
     await this.repo.writeFile(relativePath, outData)
   }
 
@@ -1650,7 +1689,6 @@ export default class OtomiStack {
   async saveValues(): Promise<void> {
     const secretPaths = this.getSecretPaths()
     await this.saveCluster(secretPaths)
-    await this.savePolicies()
     await this.saveSettings(secretPaths)
     await this.saveTeams(secretPaths)
     // also save admin apps

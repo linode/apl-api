@@ -7,7 +7,6 @@ teamConfig:
             cnpg: {}
             drone: {}
             external-dns: {}
-            gatekeeper: {}
             gitea: {}
             grafana: {}
             harbor: {}
@@ -30,3 +29,4 @@ teamConfig:
             trivy: {}
             tempo: {}
             otel: {}
+            kyverno: {}
