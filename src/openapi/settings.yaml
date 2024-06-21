@@ -1,4 +1,5 @@
 Settings:
+  x-hideTitle: true
   x-acl:
     admin: [read-any, update-any]
     team: [read]
