@@ -616,14 +616,16 @@ export default class OtomiStack {
     const builds = this.db.getCollection('builds', ids) as Array<Build>
     const workloads = this.db.getCollection('workloads', ids) as Array<Workload>
     const services = this.db.getCollection('services', ids) as Array<Service>
-    const secrets = this.db.getCollection('secrets', ids) as Array<Secret>
+    const secrets = this.db.getCollection('sealed-secrets', ids) as Array<SealedSecret>
+    const netpols = this.db.getCollection('netpols', ids) as Array<Netpol>
 
     const inventory = [
       { name: 'projects', count: projects?.length },
       { name: 'builds', count: builds?.length },
       { name: 'workloads', count: workloads?.length },
       { name: 'services', count: services?.length },
-      { name: 'secrets', count: secrets?.length },
+      { name: 'sealed secrets', count: secrets?.length },
+      { name: 'network policies', count: netpols?.length },
     ]
     return inventory
   }
