@@ -102,40 +102,6 @@ Settings:
       x-acl:
         admin: [read-any, update-any]
         team: []
-    azure:
-      title: Azure
-      additionalProperties: false
-      description: Azure specific configuration. Only applicable on Azure clusters.
-      x-externalDocsPath: docs/for-ops/console/settings/azure
-      x-acl:
-        admin: [read-any, update-any]
-        team: []
-      properties:
-        appgw:
-          title: Azure Application Gateway Ingress Controller
-          properties:
-            isManaged:
-              title: Managed by AKS
-              description: Indicates Azure Application Gateway Ingress Controller add-on is installed by AKS.
-              type: boolean
-              default: false
-          type: object
-        storageType:
-          title: Storage types
-          description: Disk types used for storage classes in Otomi.
-          properties:
-            fast:
-              type: string
-              default: StandardSSD_LRS
-            standard:
-              type: string
-              default: StandardLRS
-          type: object
-      required:
-        - resourceGroup
-        - subscriptionId
-        - tenantId
-      type: object
     dns:
       $ref: definitions.yaml#/dns
       x-externalDocsPath: docs/for-ops/console/settings/dns
