@@ -9,12 +9,6 @@ AppMinio:
       default: false
     rawValues:
       $ref: ../definitions.yaml#/rawValues
-    shortcuts:
-      description: Resource URL that lands the user in a place of interest within an app.
-      type: array
-      nullable: true
-      items:
-        $ref: ../definitions.yaml#/shortcut
     values:
       x-externalDocsPath: docs/apps/minio
       type: object

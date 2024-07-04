@@ -499,8 +499,7 @@ definitions:
     type: string
     pattern: ^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$
   jobs:
-    description:
-      You may pass an array of Job objects. The Kubernetes API accepts
+    description: You may pass an array of Job objects. The Kubernetes API accepts
       a Job specification, which is meant for run-to-completion apps (e.g. batch
       Jobs).
     items:
@@ -575,8 +574,8 @@ definitions:
   labelsAnnotations:
     additionalProperties: false
     patternProperties:
-      ? '^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]){1,253}\/)?([a-z0-9A-Z]+[a-z0-9A-Z-_.]+[a-z0-9A-Z]){1,63}$'
-      : pattern: '^((.){1,253}\/)?(.){1,63}$'
+      '^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]){1,253}\/)?([a-z0-9A-Z]+[a-z0-9A-Z-_.]+[a-z0-9A-Z]){1,63}$':
+        pattern: '^((.){1,253}\/)?(.){1,63}$'
         type: string
   logLevel:
     type: string
@@ -801,20 +800,6 @@ definitions:
       - limits
       - requests
     title: Pod resources
-  shortcuts:
-    type: array
-    items:
-      additionalProperties: false
-      properties:
-        title:
-          type: string
-          description: Title for the shortcut
-        description:
-          type: string
-          description: A short description about the target of this shortcut.
-        path:
-          $ref: '#/definitions/path'
-      type: object
   unixOwnerIdRange:
     type: object
     additionalProperties: false
@@ -1144,9 +1129,6 @@ definitions:
         $ref: '#/definitions/alerts'
       apps:
         type: object
-        properties:
-          shortcuts:
-            $ref: '#/definitions/shortcuts'
       backups:
         type: array
         items:
@@ -3471,8 +3453,7 @@ properties:
         x-secret: '{{ randAlphaNum 20 }}'
       globalPullSecret:
         title: Global pullsecret
-        description:
-          Will be connected to each "default" service account in all otomi app namespaces.
+        description: Will be connected to each "default" service account in all otomi app namespaces.
           Handy for authenticating with DockerHub to avoid rate limiting.
           Also useful when pulling all otomi images from a private repo. (One would need to override all the images in the config first.)
         additionalProperties: false
