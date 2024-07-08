@@ -91,15 +91,15 @@ Settings:
                     region:
                       type: string
                       description: The name of the bucket.
-                      $ref: ../definitions.yaml#/wordCharacterPattern
+                      $ref: definitions.yaml#/wordCharacterPattern
                     accessKeyId:
                       type: string
                       description: The ID of the access key. Optional if cloud provider is AWS.
-                      $ref: ../definitions.yaml#/wordCharacterPattern
+                      $ref: definitions.yaml#/wordCharacterPattern
                     secretAccessKey:
                       type: string
                       description: The secret of the access key. Optional if cloud provider is AWS.
-                      $ref: ../definitions.yaml#/wordCharacterPattern
+                      $ref: definitions.yaml#/wordCharacterPattern
                       x-secret: true
                   required:
                     - region

@@ -1129,3 +1129,4 @@ wordCharacterPattern:
   type: string
   pattern: ^[^\s]+$
   x-error: At least one non whitespace character
+
