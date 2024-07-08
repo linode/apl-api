@@ -1751,8 +1751,6 @@ components:
       $ref: definitions.yaml#/ingressClassParameters
     kms:
       $ref: definitions.yaml#/kms
-    lokiStorageProvider:
-      $ref: apps/loki.yaml#/lokiStorageProvider
     lokiValues:
       $ref: apps/loki.yaml#/lokiValues
     offChoice:
