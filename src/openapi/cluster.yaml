@@ -44,10 +44,6 @@ Cluster:
     provider:
       $ref: definitions.yaml#/provider
       # readOnly: true
-    apiName:
-      $ref: definitions.yaml#/k8sName
-      title: API name
-      description: Name of cluster. On AWS this must match the exact EKS cluster name.
     apiServer:
       $ref: definitions.yaml#/url
       title: API server
@@ -55,9 +51,6 @@ Cluster:
     owner:
       $ref: definitions.yaml#/idName
       description: A cluster owner. Used in alerts/reports to distinguish between resources for different customers.
-    region:
-      $ref: definitions.yaml#/awsRegion
-      description: 'An AWS region. Used by charts such as cluster-autoscaler and aws-certs job. Example: eu-central-1'
     k8sContext:
       type: string
       x-hidden: true
