@@ -34,7 +34,7 @@ Settings:
                 schedule:
                   $ref: definitions.yaml#/backupSchedule
             gitea:
-              title: Harbor
+              title: Gitea
               properties:
                 enabled:
                   type: boolean
@@ -44,7 +44,7 @@ Settings:
                 schedule:
                   $ref: definitions.yaml#/backupSchedule
             keycloak:
-              title: Harbor
+              title: Keycloak
               properties:
                 enabled:
                   type: boolean
@@ -233,7 +233,6 @@ Settings:
         - issuer
         - clientID
         - clientSecret
-    obj:
 
     otomi:
       title: Otomi
