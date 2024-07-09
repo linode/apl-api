@@ -5,7 +5,7 @@ import Debug from 'debug'
 
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
-import { cloneDeep, each, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
+import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
 import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
@@ -312,7 +312,7 @@ export default class OtomiStack {
   editApp(teamId, id, data: App): App {
     // @ts-ignore
     let app: App = this.db.getItem('apps', { teamId, id })
-    // Shallow merge, so only first level attributes can be replaced (values, rawValues, shortcuts, etc.)
+    // Shallow merge, so only first level attributes can be replaced (values, rawValues, etc.)
     app = { ...app, ...data }
     return this.db.updateItem('apps', app as Record<string, any>, { teamId, id }) as App
   }
@@ -356,38 +356,12 @@ export default class OtomiStack {
     this.db.createItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appInstanceId }, appInstanceId)
   }
 
-  async loadTeamShortcuts(teamId): Promise<void> {
-    const teamAppsFile = `env/teams/apps.${teamId}.yaml`
-    if (!(await this.repo.fileExists(teamAppsFile))) return
-    const content = await this.repo.readFile(teamAppsFile)
-    if (!content) return
-    const {
-      teamConfig: {
-        [`${teamId}`]: { apps: _apps },
-      },
-    } = content
-    each(_apps, ({ shortcuts }, appId) => {
-      // use merge strategy to not overwrite apps that were loaded before
-      const item = this.db.getItemReference('apps', { teamId, id: appId }, false)
-      if (item) this.db.updateItem('apps', { shortcuts }, { teamId, id: appId }, true)
-    })
-  }
-
   async loadApps(): Promise<void> {
     const apps = this.getAppList()
     await Promise.all(
       apps.map(async (appId) => {
         await this.loadApp(appId)
       }),
-    )
-
-    // now also load the shortcuts that teams created and were stored in apps.* files
-    await Promise.all(
-      this.getTeams()
-        .map((t) => t.id)
-        .map(async (teamId) => {
-          await this.loadTeamShortcuts(teamId)
-        }),
     )
   }
 
@@ -417,15 +391,7 @@ export default class OtomiStack {
       data.password = generatePassword(16, false)
     }
     const team = this.db.createItem('teams', data, { id }, id) as Team
-    const apps = getAppList()
-    const core = this.getCore()
-    apps.forEach((appId) => {
-      const isShared = !!core.adminApps.find((a) => a.name === appId)?.isShared
-      const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
-      // Admin apps are loaded by loadApps function
-      if (id !== 'admin' && (isShared || inTeamApps))
-        this.db.createItem('apps', { shortcuts: [] }, { teamId: id, id: appId }, appId)
-    })
+
     if (!data.id) {
       const policies = getPolicies()
       this.db.db.set(`policies[${data.name}]`, policies).write()
@@ -1434,13 +1400,7 @@ export default class OtomiStack {
 
   async saveTeamApps(teamId: string): Promise<void> {
     const apps = {}
-    this.getApps(teamId).forEach((app) => {
-      const { id, shortcuts } = app
-      if (teamId !== 'admin' && !shortcuts?.length) return
-      apps[id] = {
-        shortcuts,
-      }
-    })
+
     const content = {
       teamConfig: {
         [teamId]: {

@@ -6,12 +6,6 @@ AppIngressNginx:
       $ref: ../definitions.yaml#/idName
     rawValues:
       $ref: ../definitions.yaml#/rawValues
-    shortcuts:
-      description: Resource URL that lands the user in a place of interest within an app.
-      type: array
-      nullable: true
-      items:
-        $ref: ../definitions.yaml#/shortcut
     values:
       x-externalDocsPath: docs/apps/ingress-nginx
       additionalProperties: false
@@ -33,7 +27,7 @@ AppIngressNginx:
               default: false
             samplingRatio:
               type: string
-              default: "0.01"
+              default: '0.01'
         autoscaling:
           $ref: ../definitions.yaml#/autoscalingEnabled
         modsecurity:
