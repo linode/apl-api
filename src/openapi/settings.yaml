@@ -53,6 +53,32 @@ Settings:
                   $ref: definitions.yaml#/backupRetentionPolicy
                 schedule:
                   $ref: definitions.yaml#/backupSchedule
+    obj:
+      additionalProperties: false
+      type: object
+      properties:
+        bucket:
+          properties:
+            loki:
+              type: string
+              $ref: definitions.yaml#/wordCharacterPattern
+              default: loki
+            cnpg:
+              type: string
+              $ref: definitions.yaml#/wordCharacterPattern
+              default: cnpg
+            velero:
+              type: string
+              $ref: definitions.yaml#/wordCharacterPattern
+              default: velero
+            harbor:
+              type: string
+              $ref: definitions.yaml#/wordCharacterPattern
+              default: harbor
+            tempo:
+              type: string
+              $ref: definitions.yaml#/wordCharacterPattern
+              default: tempo   
         provider:
           type: object
           title: Object Storage provider
@@ -90,15 +116,15 @@ Settings:
                   properties:
                     region:
                       type: string
-                      description: The name of the bucket.
+                      description: The name of the Linode region.
                       $ref: definitions.yaml#/wordCharacterPattern
                     accessKeyId:
                       type: string
-                      description: The ID of the access key. Optional if cloud provider is AWS.
+                      description: The ID of the access key.
                       $ref: definitions.yaml#/wordCharacterPattern
                     secretAccessKey:
                       type: string
-                      description: The secret of the access key. Optional if cloud provider is AWS.
+                      description: The secret of the access key.
                       $ref: definitions.yaml#/wordCharacterPattern
                       x-secret: true
                   required:
