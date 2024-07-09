@@ -5,11 +5,9 @@ import { getServiceUrl } from 'src/utils'
 describe('Utils', () => {
   const cluster: Cluster = {
     domainSuffix: 'dev.otomi.cloud',
-    apiName: 'onprem',
     apiServer: 'apiServer.onprem.example.com',
     name: 'dev',
     provider: 'custom',
-    region: 'eu-central-1',
   }
   const dns = {
     aws: { region: 'r' },
