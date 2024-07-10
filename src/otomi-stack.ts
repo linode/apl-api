@@ -391,6 +391,14 @@ export default class OtomiStack {
       data.password = generatePassword(16, false)
     }
     const team = this.db.createItem('teams', data, { id }, id) as Team
+    const apps = getAppList()
+    const core = this.getCore()
+    apps.forEach((appId) => {
+      const isShared = !!core.adminApps.find((a) => a.name === appId)?.isShared
+      const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
+      // Admin apps are loaded by loadApps function
+      if (id !== 'admin' && (isShared || inTeamApps)) this.db.createItem('apps', {}, { teamId: id, id: appId }, appId)
+    })
 
     if (!data.id) {
       const policies = getPolicies()
