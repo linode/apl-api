@@ -53,6 +53,15 @@ Settings:
                   $ref: definitions.yaml#/backupRetentionPolicy
                 schedule:
                   $ref: definitions.yaml#/backupSchedule
+        persistentVolumes:
+          title: Persistent Volume Backups
+          description: Credentials to create Persistent Volume backups in Linode.
+          properties:
+            linodeApiToken:
+              type: string
+              description: Linode API Token
+              $ref: definitions.yaml#/wordCharacterPattern
+              x-secret: true
     obj:
       additionalProperties: false
       type: object
