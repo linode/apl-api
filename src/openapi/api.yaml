@@ -1787,8 +1787,6 @@ components:
       $ref: definitions.yaml#/script
     secrets:
       $ref: definitions.yaml#/secrets
-    shortcut:
-      $ref: definitions.yaml#/shortcut
     svcPredeployed:
       $ref: definitions.yaml#/svcPredeployed
     url:

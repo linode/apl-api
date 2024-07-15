@@ -1074,22 +1074,6 @@ secretMounts:
 s3Url:
   type: string
   description: An url to an AWS S3 bucket
-shortcut:
-  additionalProperties: false
-  properties:
-    title:
-      type: string
-      description: Title for the shortcut
-    description:
-      type: string
-      description: A short description about the target of this shortcut.
-    path:
-      $ref: '#/path'
-  required:
-    - title
-    - description
-    - path
-  type: object
 size:
   description: Disk size. Valid units are E|P|T|G|Ti|Gi.
   pattern: '^([0-9]+\.)?[0-9]+(E|P|T|G||Ti|Gi)?$'

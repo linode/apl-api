@@ -66,7 +66,7 @@ tempoValues:
               default: 80
             targetMemoryUtilizationPercentage:
               type: integer
-              default: 80 
+              default: 80
     resources:
       additionalProperties: false
       type: object
@@ -221,12 +221,6 @@ AppTempo:
       default: true
     rawValues:
       $ref: ../definitions.yaml#/rawValues
-    shortcuts:
-      description: Resource URL that lands the user in a place of interest within an app.
-      type: array
-      nullable: true
-      items:
-        $ref: ../definitions.yaml#/shortcut
     values:
       type: object
       x-externalDocsPath: docs/apps/tempo
