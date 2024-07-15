@@ -886,14 +886,6 @@ provider:
   description: The cloud provider of this cluster.
   type: string
   enum:
-    - aws
-    - azure
-    - digitalocean
-    - google
-    - ovh
-    - vultr
-    - scaleway
-    - civo
     - linode
     - custom
 priority:

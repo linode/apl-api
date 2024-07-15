@@ -55,13 +55,23 @@ Settings:
                   $ref: definitions.yaml#/backupSchedule
         persistentVolumes:
           title: Persistent Volume Backups
-          description: Credentials to create Persistent Volume backups in Linode.
+          description: Create backups of Persistent Volumes.
           properties:
             linodeApiToken:
               type: string
               description: Linode API Token
               $ref: definitions.yaml#/wordCharacterPattern
               x-secret: true
+            gitea:
+              title: Gitea
+              description: Enable to create backups of Gitea Persisten Volumes. Requires Velero to be enabled.
+              properties:
+                enabled:
+                  type: boolean
+                ttl:
+                  $ref: definitions.yaml#/backupTtl
+                schedule:
+                  $ref: definitions.yaml#/backupSchedule
     obj:
       additionalProperties: false
       type: object
