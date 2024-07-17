@@ -15,11 +15,13 @@ on:
 env:
   COMMIT_MSG: ${{ github.event.head_commit.message }}
   CACHE_REGISTRY: ghcr.io
-  CACHE_REPO: redkubes/otomi-api
+  CACHE_REPO: linode/apl-api
   REPO: otomi/api
-  GIT_USER: redkubesbot
-  GIT_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-  DOCKER_PASSWORD: '${{ secrets.DOCKERHUB_OTOMI_TOKEN }}'
+  DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_OTOMI_TOKEN }}
+  DOCKER_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+  BOT_EMAIL: ${{ vars.BOT_EMAIL }}
+  BOT_USERNAME: ${{ vars.BOT_USERNAME }}
+  BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
 
 jobs:
   build-test-push-release:
@@ -32,27 +34,26 @@ jobs:
           echo "Creating tag: $tag"
           echo "TAG=$tag" >> $GITHUB_ENV
       - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          token: ${{ env.GIT_PASSWORD }}
+        uses: actions/checkout@v4
       - name: CI tests, image build and push tag for main or branch
         uses: whoan/docker-build-with-cache-action@v6
         with:
-          username: redkubesbot
-          password: '${{ secrets.NPM_TOKEN }}'
+          username: ${{ env.BOT_USERNAME }}
+          password: '${{ env.BOT_TOKEN }}'
           registry: ${{ env.CACHE_REGISTRY }}
           image_name: ${{ env.CACHE_REPO }}
           image_tag: ${{ env.TAG }}
-          build_extra_args: '--build-arg=NPM_TOKEN=${{ secrets.NPM_TOKEN }}'
       - name: Retag from cache and push
         run: |
-          docker login -u otomi -p $DOCKER_PASSWORD
+          set -u
+          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
           docker tag $CACHE_REGISTRY/$CACHE_REPO:$TAG $REPO:$TAG
           docker push $REPO:$TAG
       - if: (startsWith(github.ref, 'refs/heads/releases/') || startsWith(github.ref, 'refs/heads/main'))&& startsWith(github.event.head_commit.message, 'chore(release)')
         name: Docker tag and push. Git tag and push.
         id: git_tag
         run: |
+          set -u
           # docker tag $REPO:$TAG $REPO:latest
           # docker push $REPO:latest
           release_tag=v${COMMIT_MSG#* }
@@ -60,9 +61,9 @@ jobs:
           echo "Releasing $REPO:$release_tag"
           docker tag $REPO:$TAG $REPO:$release_tag
           docker push $REPO:$release_tag
-          git config --global user.email $GIT_USER@users.noreply.github.com
-          git config --global user.name $GIT_USER
-          echo "machine github.com login $GIT_USER password $GIT_PASSWORD" > ~/.netrc
+          git config --global user.email $BOT_EMAIL
+          git config --global user.name $BOT_USERNAME
+          echo "machine github.com login $BOT_USERNAME password $BOT_TOKEN" > ~/.netrc
           git tag -am "$COMMIT_MSG" $release_tag && git push --follow-tags
           changelog=$(cat CHANGELOG.md | awk -v n=2 '/### \[[0-9]*/&&!--n{exit}{print}')
           # now do some escaping because github does not help us here:
