@@ -76,28 +76,6 @@ Settings:
       additionalProperties: false
       type: object
       properties:
-        bucket:
-          properties:
-            loki:
-              type: string
-              $ref: definitions.yaml#/wordCharacterPattern
-              default: loki
-            cnpg:
-              type: string
-              $ref: definitions.yaml#/wordCharacterPattern
-              default: cnpg
-            velero:
-              type: string
-              $ref: definitions.yaml#/wordCharacterPattern
-              default: velero
-            harbor:
-              type: string
-              $ref: definitions.yaml#/wordCharacterPattern
-              default: harbor
-            tempo:
-              type: string
-              $ref: definitions.yaml#/wordCharacterPattern
-              default: tempo   
         provider:
           type: object
           title: Object Storage provider
@@ -158,6 +136,28 @@ Settings:
               required:
                 - linode
                 - type
+        bucket:
+          properties:
+            loki:
+              type: string
+              $ref: definitions.yaml#/wordCharacterPattern
+              default: loki
+            cnpg:
+              type: string
+              $ref: definitions.yaml#/wordCharacterPattern
+              default: cnpg
+            velero:
+              type: string
+              $ref: definitions.yaml#/wordCharacterPattern
+              default: velero
+            harbor:
+              type: string
+              $ref: definitions.yaml#/wordCharacterPattern
+              default: harbor
+            tempo:
+              type: string
+              $ref: definitions.yaml#/wordCharacterPattern
+              default: tempo   
     home:
       additionalProperties: false
       $ref: definitions.yaml#/alerts
