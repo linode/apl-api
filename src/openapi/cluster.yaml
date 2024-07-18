@@ -43,7 +43,6 @@ Cluster:
       $ref: definitions.yaml#/domainSuffix
     provider:
       $ref: definitions.yaml#/provider
-      # readOnly: true
     apiServer:
       $ref: definitions.yaml#/url
       title: API server
