@@ -33,28 +33,14 @@ Settings:
                   $ref: definitions.yaml#/backupRetentionPolicy
                 schedule:
                   $ref: definitions.yaml#/backupSchedule
-        persistentVolumes:
-          x-externalDocsPath: docs/for-ops/console/settings/backup
-          title: PersistentVolumes backups
-          description: Platform app Persistent Volume backup schedules.
-          type: object
-          properties:
             gitea:
               title: Gitea
               properties:
                 enabled:
                   type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
-                schedule:
-                  $ref: definitions.yaml#/backupSchedule
-            drone:
-              title: Drone
-              properties:
-                enabled:
-                  type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
+                  default: false
+                retentionPolicy:
+                  $ref: definitions.yaml#/backupRetentionPolicy
                 schedule:
                   $ref: definitions.yaml#/backupSchedule
             keycloak:
@@ -62,37 +48,116 @@ Settings:
               properties:
                 enabled:
                   type: boolean
+                  default: false
+                retentionPolicy:
+                  $ref: definitions.yaml#/backupRetentionPolicy
+                schedule:
+                  $ref: definitions.yaml#/backupSchedule
+        persistentVolumes:
+          title: Persistent Volume Backups
+          description: Create backups of Persistent Volumes.
+          properties:
+            linodeApiToken:
+              type: string
+              description: Linode API Token
+              $ref: definitions.yaml#/wordCharacterPattern
+              x-secret: true
+            gitea:
+              title: Gitea
+              description: Enable to create backups of Gitea Persisten Volumes. Requires Velero to be enabled.
+              properties:
+                enabled:
+                  type: boolean
                 ttl:
                   $ref: definitions.yaml#/backupTtl
                 schedule:
                   $ref: definitions.yaml#/backupSchedule
+    obj:
+      additionalProperties: false
+      type: object
+      properties:
+        provider:
+          type: object
+          title: Object Storage provider
+          description: Select the preferred Object Storage provider.
+          oneOf:
+            - title: Disabled
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - disabled
+                  default: disabled
+            - title: minioLocal
+              type: object
+              x-hideTitle: true
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - minioLocal
+                  default: minioLocal
+              required:
+                - minioLocal
+                - type
+            - title: Linode
+              type: object
+              x-hideTitle: true
+              properties:
+                linode:
+                  additionalProperties: false
+                  type: object
+                  title: Linode
+                  description: Select to store backups in AWS S3 or S3 compatible blob storage.
+                  properties:
+                    region:
+                      type: string
+                      description: The name of the Linode region.
+                      $ref: definitions.yaml#/wordCharacterPattern
+                    accessKeyId:
+                      type: string
+                      description: The ID of the access key.
+                      $ref: definitions.yaml#/wordCharacterPattern
+                    secretAccessKey:
+                      type: string
+                      description: The secret of the access key.
+                      $ref: definitions.yaml#/wordCharacterPattern
+                      x-secret: true
+                  required:
+                    - region
+                    - accessKeyId
+                    - secretAccessKey
+                type:
+                  type: string
+                  enum:
+                    - linode
+                  default: linode
+              required:
+                - linode
+                - type
+        bucket:
+          properties:
+            loki:
+              type: string
+              $ref: definitions.yaml#/wordCharacterPattern
+              default: loki
+            cnpg:
+              type: string
+              $ref: definitions.yaml#/wordCharacterPattern
+              default: cnpg
+            velero:
+              type: string
+              $ref: definitions.yaml#/wordCharacterPattern
+              default: velero
             harbor:
-              title: Harbor
-              properties:
-                enabled:
-                  type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
-                schedule:
-                  $ref: definitions.yaml#/backupSchedule
-            argo:
-              title: ArgoCD
-              properties:
-                enabled:
-                  type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
-                schedule:
-                  $ref: definitions.yaml#/backupSchedule
-            minio:
-              title: Minio
-              properties:
-                enabled:
-                  type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
-                schedule:
-                  $ref: definitions.yaml#/backupSchedule
+              type: string
+              $ref: definitions.yaml#/wordCharacterPattern
+              default: harbor
+            tempo:
+              type: string
+              $ref: definitions.yaml#/wordCharacterPattern
+              default: tempo   
     home:
       additionalProperties: false
       $ref: definitions.yaml#/alerts
@@ -102,40 +167,6 @@ Settings:
       x-acl:
         admin: [read-any, update-any]
         team: []
-    azure:
-      title: Azure
-      additionalProperties: false
-      description: Azure specific configuration. Only applicable on Azure clusters.
-      x-externalDocsPath: docs/for-ops/console/settings/azure
-      x-acl:
-        admin: [read-any, update-any]
-        team: []
-      properties:
-        appgw:
-          title: Azure Application Gateway Ingress Controller
-          properties:
-            isManaged:
-              title: Managed by AKS
-              description: Indicates Azure Application Gateway Ingress Controller add-on is installed by AKS.
-              type: boolean
-              default: false
-          type: object
-        storageType:
-          title: Storage types
-          description: Disk types used for storage classes in Otomi.
-          properties:
-            fast:
-              type: string
-              default: StandardSSD_LRS
-            standard:
-              type: string
-              default: StandardLRS
-          type: object
-      required:
-        - resourceGroup
-        - subscriptionId
-        - tenantId
-      type: object
     dns:
       $ref: definitions.yaml#/dns
       x-externalDocsPath: docs/for-ops/console/settings/dns
@@ -213,6 +244,7 @@ Settings:
         - issuer
         - clientID
         - clientSecret
+
     otomi:
       title: Otomi
       type: object

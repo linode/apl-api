@@ -2,15 +2,11 @@ AppCnpg:
   additionalProperties: false
   type: object
   properties:
-    storage:
-      $ref: '../definitions.yaml#/storageProvider'
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     values:
       type: object
       properties:
-        storage:
-          $ref: ../definitions.yaml#/storageProvider
         resources:
           type: object
           properties:
