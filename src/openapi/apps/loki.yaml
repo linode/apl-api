@@ -378,7 +378,7 @@ lokiStorageProvider:
               $ref: ../definitions.yaml#/wordCharacterPattern
             serviceAccount:
               type: string
-              description: Name of the service account to use for accessing the storage bucket.              
+              description: Name of the service account to use for accessing the storage bucket.
               $ref: ../definitions.yaml#/wordCharacterPattern
           required:
             - bucket
@@ -416,12 +416,6 @@ AppLoki:
       default: true
     rawValues:
       $ref: ../definitions.yaml#/rawValues
-    shortcuts:
-      description: Resource URL that lands the user in a place of interest within an app.
-      type: array
-      nullable: true
-      items:
-        $ref: ../definitions.yaml#/shortcut
     values:
       type: object
       x-externalDocsPath: docs/apps/loki
