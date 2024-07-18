@@ -227,11 +227,6 @@ definitions:
   cluster:
     additionalProperties: false
     properties:
-      apiName:
-        description:
-          Exact name of cluster as created when on AWS. Optional otherwise and will be generated for UI purposes.
-          When on AWS this name is used for chart cluster-autoscaler and aws-alb-ingress-controller (enabled if otomi.hasExternalLB).
-        $ref: '#/definitions/wordCharacterPattern'
       apiServer:
         description: Used to generate KUBECONFIG for download, for local access to target cluster.
         pattern: '^https:\/\/.*'
@@ -250,10 +245,6 @@ definitions:
         default: otomi
       provider:
         $ref: '#/definitions/provider'
-      region:
-        description: 'An AWS region. Only required for AWS.'
-        examples:
-          - eu-central-1
     required:
       - name
       - provider
