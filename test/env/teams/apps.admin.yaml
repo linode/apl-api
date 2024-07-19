@@ -7,7 +7,6 @@ teamConfig:
             cnpg: {}
             drone: {}
             external-dns: {}
-            gatekeeper: {}
             gitea: {}
             grafana: {}
             harbor: {}
@@ -22,14 +21,12 @@ teamConfig:
             tekton: {}
             loki: {}
             minio: {}
-            opencost: {}
             prometheus: {}
             rabbitmq: {}
             sealed-secrets: {}
-            thanos: {}
-            vault: {}
             velero: {}
             falco: {}
             trivy: {}
             tempo: {}
             otel: {}
+            kyverno: {}

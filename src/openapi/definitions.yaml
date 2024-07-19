@@ -281,54 +281,6 @@ azureDns:
     - resourceGroup
     - aadClientId
     - aadClientSecret
-azureMonitor:
-  description: Azure Monitor data can be made available in Grafana.
-  title: Azure Monitor
-  type: object
-  nullable: true
-  oneOf:
-    - $ref: '#/offChoice'
-    - properties:
-        appInsightsApiKey:
-          $ref: '#/azureClientSecret'
-          title: AppInsights api key
-          description: An Azure AppInsights client secret.
-        appInsightsAppId:
-          $ref: '#/azureClientId'
-          title: AppInsights app id
-        azureLogAnalyticsSameAs:
-          title: LogAnalytics using same creds?
-          type: boolean
-          default: true
-        clientId:
-          $ref: '#/azureClientId'
-        clientSecret:
-          $ref: '#/azureClientSecret'
-        logAnalyticsClientId:
-          $ref: '#/azureClientId'
-          title: LogAnalytics client id
-          description: An Azure client secret.
-        logAnalyticsClientSecret:
-          $ref: '#/azureClientSecret'
-          title: LogAnalytics client secret
-          description: An Azure client secret.
-        logAnalyticsTenantId:
-          $ref: '#/azureTenantId'
-          title: LogAnalytics tenant id
-          description: An Azure tenant id.
-        logAnalyticsDefaultWorkspace:
-          title: LogAnalytics workspace
-          description: An Azure LogAnalytics workspace.
-          type: string
-        subscriptionId:
-          $ref: '#/azureSubscriptionId'
-        tenantId:
-          $ref: '#/azureTenantId'
-      title: 'On'
-      type: object
-      required:
-        - clientId
-        - clientSecret
 azureResourceGroup:
   title: Azure resource group
   description: An Azure resource group.
@@ -863,32 +815,6 @@ kms:
             - google
           title: Google
           type: object
-        - properties:
-            provider:
-              type: string
-              default: vault
-              enum:
-                - vault
-            vault:
-              type: object
-              properties:
-                keys:
-                  description: Comma separated list of one or two paths to keys as defined in Vault. One if used for both enc+dec. Two if one for enc, other for dec.
-                  title: Vault keys
-                  type: string
-                token:
-                  $ref: '#/vaultToken'
-                  x-acl:
-                    admin: [read-any, update-any]
-                    team: []
-              required:
-                - keys
-                - token
-              title: ''
-          required:
-            - vault
-          title: Vault
-          type: object
 labels:
   $ref: '#/annotations'
   description: A set of labels.
@@ -960,14 +886,6 @@ provider:
   description: The cloud provider of this cluster.
   type: string
   enum:
-    - aws
-    - azure
-    - digitalocean
-    - google
-    - ovh
-    - vultr
-    - scaleway
-    - civo
     - linode
     - custom
 priority:
@@ -1148,22 +1066,6 @@ secretMounts:
 s3Url:
   type: string
   description: An url to an AWS S3 bucket
-shortcut:
-  additionalProperties: false
-  properties:
-    title:
-      type: string
-      description: Title for the shortcut
-    description:
-      type: string
-      description: A short description about the target of this shortcut.
-    path:
-      $ref: '#/path'
-  required:
-    - title
-    - description
-    - path
-  type: object
 size:
   description: Disk size. Valid units are E|P|T|G|Ti|Gi.
   pattern: '^([0-9]+\.)?[0-9]+(E|P|T|G||Ti|Gi)?$'
@@ -1204,115 +1106,3 @@ wordCharacterPattern:
   pattern: ^[^\s]+$
   x-error: At least one non whitespace character
 
-storageProvider:
-  type: object
-  title: Storage provider
-  description: Select the preferred provider for storing database backups.
-  oneOf:
-    - title: Local Minio
-      type: object
-      description: Select to use the in-cluster Minio instance.
-      properties:
-        type:
-          type: string
-          enum:
-            - minioLocal
-          default: minioLocal
-    - title: Azure Blob
-      type: object
-      x-hideTitle: true
-      properties:
-        azure:
-          type: object
-          description: Select to store in Azure Blob storage.
-          title: Azure blob (container) storage
-          properties:
-            accountKey:
-              type: string
-              x-secret: ''
-            accountName:
-              type: string
-            containerName:
-              type: string
-          required:
-            - accountKey
-            - accountName
-            - containerName
-        type:
-          type: string
-          enum:
-            - azure
-          default: azure
-      required:
-        - azure
-        - type
-    - title: S3
-      type: object
-      x-hideTitle: true
-      properties:
-        s3:
-          type: object
-          title: S3
-          description: Select to store in AWS S3 or S3 compatible blob storage.
-          properties:
-            bucket:
-              type: string
-              description: The name of the bucket.
-              $ref: '#/wordCharacterPattern'
-            s3Url:
-              type: string
-              description: The full S3 URL.
-              $ref: '#/wordCharacterPattern'
-            accessKeyId:
-              type: string
-              description: The ID of the access key. Optional if cloud provider is AWS.
-              $ref: '#/wordCharacterPattern'
-            secretAccessKey:
-              type: string
-              description: The secret of the access key. Optional if cloud provider is AWS.
-              $ref: '#/wordCharacterPattern'
-              x-secret: true
-          required:
-            - bucket
-            - s3Url
-            - accessKeyId
-            - secretAccessKey
-        type:
-          type: string
-          enum:
-            - s3
-          default: s3
-      required:
-        - s3
-        - type
-    - title: gcs
-      type: object
-      x-hideTitle: true
-      properties:
-        gcs:
-          type: object
-          title: Google Cloud Storage
-          description: Select to store backups in Google Cloud Storage.
-          properties:
-            bucket:
-              type: string
-              description: Name of the bucket.
-              $ref: '#/wordCharacterPattern'
-            serviceAccountKey:
-              $ref: '#/googleAccountJson'
-              description: A service account key in json format for authentication.
-              x-acl:
-                admin: [read-any, update-any]
-                team: []
-                x-secret: true
-          required:
-            - bucket
-            - serviceAccountKey
-        type:
-          type: string
-          enum:
-            - gcs
-          default: gcs
-      required:
-        - gcs
-        - type

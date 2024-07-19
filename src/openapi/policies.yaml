@@ -1,337 +1,185 @@
-policies:
-  title: Policies
-  type: object
-  description: |
-    List of policy objects used by Open Policy Agent tools (Conftest, Gatekeeper) to run policy based validation against both in-cluster Kubernetes contexts and plain Yaml resources
-  additionalProperties: false
+Policies:
+  x-acl:
+    admin:
+      - delete-any
+      - read-any
+      - create-any
+      - update-any
+    team:
+      - delete
+      - read
+      - create
+      - update
   properties:
-    banned-image-tags:
-      title: Banned image tags
-      type: object
-      description: Add any image tags for containers that are not allowed in your cluster.
-      additionalProperties: false
-      required: [enabled]
+    disallow-capabilities-strict:
+      description: 'Adding capabilities other than `NET_BIND_SERVICE` is disallowed. In addition, all containers must explicitly drop `ALL` capabilities.'
       properties:
-        tags:
-          title: Tags
-          description: Docker image tags that should be banned. E.g. 'latest', 'master'.
+        $ref: '#/definitions/policyCommon'
+    allowed-image-repositories:
+      description: 'In addition to restricting the image registry from which images are pulled, in some cases and environments it may be required to also restrict which image repositories are used, for example in some restricted Namespaces. This policy ensures that the only allowed image repositories present in a given Pod, across any container type, come from the designated list.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+        customValues:
           type: array
           items:
             type: string
-        enabled:
-          title: Enabled
-          description: Enable or disable the 'banned-image-tags' policy.
-          type: boolean
-          default: false
-    container-limits:
-      title: Container limits
-      type: object
-      description: Set global compute limits for your containers.
-      additionalProperties: false
-      required: [enabled]
+    disallow-capabilities:
+      description: 'Container capabilities beyond those listed in the policy must be disallowed.'
       properties:
-        cpu:
-          $ref: definitions.yaml#/quantityCpu
-        memory:
-          $ref: definitions.yaml#/quantityMem
-        enabled:
-          title: Enabled
-          description: Enable or disable the 'container-limits' policy.
-          type: boolean
-          default: false
-    psp-allowed-repos:
-      title: Allowed repositories
-      type: object
-      description: Add globally allowed repositories for version control.
-      additionalProperties: false
-      required: [enabled]
-      properties:
-        repos:
-          title: Repositories
-          description: Enter a list of allowed repositories.
+        $ref: '#/definitions/policyCommon'
+        customValues:
           type: array
           items:
             type: string
-        enabled:
-          title: Enabled
-          description: Enable or disable the 'allowed-repos' policy.
-          type: boolean
-          default: false
-    psp-host-filesystem:
-      title: Host Filesystem
-      type: object
-      description: Set policies for the host filesystem of all Kubernetes cluster nodes.
-      additionalProperties: false
-      required: [enabled]
+    disallow-host-namespaces:
+      description: 'Host namespaces (Process ID namespace, Inter-Process Communication namespace, and network namespace) allow access to shared information and can be used to elevate privileges. Pods should not be allowed access to host namespaces. This policy ensures fields which make use of these host namespaces are unset or set to `false`.'
       properties:
-        allowedHostPaths:
-          title: Allowed host paths
+        $ref: '#/definitions/policyCommon'
+    disallow-host-path:
+      description: 'HostPath volumes let Pods use host directories and volumes in containers. Using host resources can be used to access shared data or escalate privilegesand should not be allowed. This policy ensures no hostPath volumes are in use.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+    disallow-host-ports:
+      description: 'Access to host ports allows potential snooping of network traffic and should not be allowed, or at minimum restricted to a known list. This policy ensures the `hostPort` field is unset or set to `0`.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+    disallow-host-process:
+      description: 'Windows pods offer the ability to run HostProcess containers which enables privileged access to the Windows node. Privileged access to the host is disallowed in the baseline policy. HostProcess pods are an alpha feature as of Kubernetes v1.22. This policy ensures the `hostProcess` field, if present, is set to `false`.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+    disallow-latest-tag:
+      description: 'The `latest` tag is mutable and can lead to unexpected errors if the image changes. A best practice is to use an immutable tag that maps to a specific version of an application Pod. This policy validates that the image specifies a tag and that it is not called `latest`.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+    disallow-privilege-escalation:
+      description: 'Privilege escalation, such as via set-user-ID or set-group-ID file mode, should not be allowed. This policy ensures the `allowPrivilegeEscalation` field is set to `false`.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+    disallow-privileged-containers:
+      description: 'Privileged mode disables most security mechanisms and must not be allowed. This policy ensures Pods do not call for privileged mode.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+    disallow-proc-mount:
+      description: 'The default /proc masks are set up to reduce attack surface and should be required. This policy ensures nothing but the default procMount can be specified. Note that in order for users to deviate from the `Default` procMount requires setting a feature gate at the API server.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+    disallow-selinux:
+      description: 'SELinux options can be used to escalate privileges and should not be allowed. This policy ensures that the `seLinuxOptions` field is undefined.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+    require-limits:
+      description: 'As application workloads share cluster resources, it is important to limit resources requested and consumed by each Pod. It is recommended to require resource limits per Pod, especially for memory and CPU. If a Namespace level limit is specified, defaults will automatically be applied to each Pod based on the LimitRange configuration. This policy validates that all containers have memory and CPU limits specified.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+    require-liveness-probe:
+      description: 'Liveness probes need to be configured to correctly manage a Pod`s lifecycle during deployments, restarts, and upgrades. For each Pod, a periodic `livenessProbe` is performed by the kubelet to determine if the Pod`s containers are running or need to be restarted. This policy validates that all containers have a livenessProbe defined.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+    require-non-root-groups:
+      description: 'Containers should be forbidden from running with a root primary or supplementary GID. This policy ensures the `runAsGroup`, `supplementalGroups`, and `fsGroup` fields are set to a number greater than zero (i.e., non root). A known issue prevents a policy such as this using `anyPattern` from being persisted properly in Kubernetes 1.23.0-1.23.2.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+    require-readiness-probe:
+      description: 'Readiness probes need to be configured to correctly manage a Pod`s lifecycle during deployments, restarts, and upgrades. A `readinessProbe` is used by Service and Deployments to determine if the Pod is ready to receive network traffic. This policy validates that all containers have a readinessProbe defined.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+    require-requests:
+      description: 'As application workloads share cluster resources, it is important to limit resources requested and consumed by each Pod. It is recommended to require resource requests per Pod, especially for memory and CPU. If a Namespace level request is specified, defaults will automatically be applied to each Pod based on the LimitRange configuration. This policy validates that all containers have memory and CPU requests specified.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+    require-run-as-non-root-user:
+      description: 'Containers must be required to run as non-root users. This policy ensures `runAsUser` is either unset or set to a number greater than zero.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+    require-run-as-nonroot:
+      description: 'Containers must be required to run as non-root users. This policy ensures `runAsNonRoot` is set to `true`. A known issue prevents a policy such as this using `anyPattern` from being persisted properly in Kubernetes 1.23.0-1.23.2.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+    require-startup-probe:
+      description: 'Startup probes need to be configured to correctly manage a Pod`s lifecycle during deployments, restarts, and upgrades. Sometimes, applications are temporarily unable to serve traffic. For example, an application might need to load large data or configuration files during startup, or depend on external services after startup. In such cases, you don`t want to kill the application, but you don`t want to send it requests either. Kubernetes provides readiness probes to detect and mitigate these situations. A pod with containers reporting that they are not ready does not receive traffic through Kubernetes Services. This policy validates that all containers have a livenessProbe defined.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+    require-labels:
+      description: 'Define and use labels that identify your application or Deployment, for example `otomi.io/app`.'
+      properties:
+        $ref: '#/definitions/policyCommon'
+        customValues:
           type: array
           items:
-            type: object
-            required: [pathPrefix, readOnly]
-            properties:
-              pathPrefix:
-                title: Path prefix
-                description: E.g. '/opt', '/tmp' or '/home'
-                type: string
-              readOnly:
-                title: Read-only
-                description: If enabled, files can only be read and not written or executed.
-                type: boolean
-                default: false
-            additionalProperties: false
-        enabled:
-          title: Enabled
-          description: Enable or disable the 'host-filesystem' policy.
-          type: boolean
-          default: false
-    psp-allowed-users:
-      title: Allowed users
-      type: object
-      description: Default user (UID) and group (GID) settings to force containers to run with.
-      additionalProperties: false
-      required: [enabled]
+            type: string        
+    restrict-apparmor-profiles:
+      description: 'On supported hosts, the `runtime/default` AppArmor profile is applied by default. The default policy should prevent overriding or disabling the policy, or restrict overrides to an allowed set of profiles. This policy ensures Pods do not specify any other AppArmor profiles than `runtime/default` or `localhost/*`.'
       properties:
-        runAsUser:
-          title: Run as user
-          description: It is recommended to at least set 'runAsUser' to 'MustRunAsNonRoot' to disallow root.
-          additionalProperties: false
-          required: [rule]
-          type: object
-          properties:
-            rule:
-              title: Rule
-              description: Choose one rule to apply.
-              type: string
-              enum: [RunAsAny, MustRunAsNonRoot, MustRunAs]
-            ranges:
-              title: Ranges
-              type: array
-              items:
-                type: object
-                additionalProperties: false
-                required: [min, max]
-                properties:
-                  min:
-                    title: Minimal
-                    type: integer
-                  max:
-                    title: Maximal
-                    type: integer
-        runAsGroup:
-          title: Run as group
-          type: object
-          properties:
-            rule:
-              type: string
-              enum: [RunAsAny, MayRunAs, MustRunAs]
-            ranges:
-              type: array
-              items:
-                type: object
-                additionalProperties: false
-                required: [min, max]
-                properties:
-                  min:
-                    title: Minimal
-                    type: integer
-                  max:
-                    title: Maximal
-                    type: integer
-        supplementalGroups:
-          title: Supplemental groups
-          type: object
-          properties:
-            rule:
-              title: Rule
-              description: Choose one rule to apply.
-              type: string
-              enum: [RunAsAny, MayRunAs, MustRunAs]
-            ranges:
-              title: Ranges
-              type: array
-              items:
-                additionalProperties: false
-                required: [min, max]
-                properties:
-                  min:
-                    title: Minimal
-                    type: integer
-                  max:
-                    title: Maximal
-                    type: integer
-        fsGroup:
-          title: Filesystem group
-          type: object
-          properties:
-            rule:
-              title: Rule
-              type: string
-              enum: [RunAsAny, MayRunAs, MustRunAs]
-            ranges:
-              title: Ranges
-              type: array
-              items:
-                additionalProperties: false
-                required: [min, max]
-                properties:
-                  min:
-                    title: Minimal
-                    type: integer
-                  max:
-                    title: Maximal
-                    type: integer
-        enabled:
-          title: Enabled
-          description: Enable or disable the 'allowed-users' policy.
-          type: boolean
-          default: false
-    psp-host-security:
-      title: Host security
-      type: object
-      description: Whether a pod is allowed to access the host PID namespace/host IPC, or if a pod defines host aliases.
-      additionalProperties: false
-      required: [enabled]
+        $ref: '#/definitions/policyCommon'
+    restrict-seccomp:
+      description: 'The seccomp profile must not be explicitly set to Unconfined. This policy, requiring Kubernetes v1.19 or later, ensures that seccomp is unset or set to `RuntimeDefault` or `Localhost`.'
       properties:
-        enabled:
-          title: Enabled
-          description: Enable or disable the 'host-security' policy.
-          type: boolean
-          default: false
-    psp-host-networking-ports:
-      title: Container host networking ports
-      type: object
-      description: Whether a pod can access ports on the host.
-      additionalProperties: false
-      required: [enabled]
+        $ref: '#/definitions/policyCommon'
+    restrict-seccomp-strict:
+      description: 'The seccomp profile in the Restricted group must not be explicitly set to Unconfined but additionally must also not allow an unset value. This policy, requiring Kubernetes v1.19 or later, ensures that seccomp is set to `RuntimeDefault` or `Localhost`. A known issue prevents a policy such as this using `anyPattern` from being persisted properly in Kubernetes 1.23.0-1.23.2.'
       properties:
-        enabled:
-          title: Enabled
-          description: Enable or disable the 'host-networking-ports' policy.
-          type: boolean
-          default: false
-    psp-privileged:
-      title: Privileged containers
-      type: object
-      description: Whether privileged containers can escalate to root privileges on the node.
-      additionalProperties: false
-      required: [enabled]
+        $ref: '#/definitions/policyCommon'
+    restrict-sysctls:
+      description: 'Sysctls can disable security mechanisms or affect all containers on a host, and should be disallowed except for an allowed "safe" subset. A sysctl is considered safe if it is namespaced in the container or the Pod, and it is isolated from other Pods or processes on the same Node. This policy ensures that only those "safe" subsets can be specified in a Pod.'
       properties:
-        enabled:
-          title: Enabled
-          description: Enable or disable the 'privileged' policy.
-          type: boolean
-          default: false
-    psp-capabilities:
-      title: Container capabilities
-      type: object
-      description: Whether to allow containers with sufficient capabilities granted to obtain escalated access.
-      additionalProperties: false
-      required: [enabled]
+        $ref: '#/definitions/policyCommon'
+    restrict-volume-types:
+      description: 'In addition to restricting HostPath volumes, the restricted pod security profile limits usage of non-core volume types to those defined through PersistentVolumes. This policy blocks any other type of volume other than those in the allow list.'
       properties:
-        enabled:
-          title: Enabled
-          description: Enable or disable the 'capabilities' policy.
-          type: boolean
-          default: false
-        allowedCapabilities:
-          title: Allowed capabilities
+        $ref: '#/definitions/policyCommon'
+        customValues:
           type: array
           items:
             type: string
-        requiredDropCapabilities:
-          title: Required capabilities to drop
-          type: array
-          items:
-            type: string
-    psp-forbidden-sysctls:
-      title: Forbidden system controls (sysctls)
-      type: object
-      description: Determine what system controls are allowed or not.
-      additionalProperties: false
-      required: [enabled]
-      properties:
-        enabled:
-          title: Enabled
-          description: Enable or disable the 'forbidden-sysctls' policy.
-          type: boolean
-          default: false
-        forbiddenSysctls:
-          title: Forbidden system controls
-          description: List the forbidden system controls here.
-          type: array
-          items:
-            type: string
-    psp-apparmor:
-      title: AppArmor
-      type: object
-      description: Prevents an application from accessing files it should not access.
-      additionalProperties: false
-      required: [enabled]
-      properties:
-        enabled:
-          title: Enabled
-          description: Enable or disable the 'forbidden-sysctls' policy.
-          type: boolean
-          default: false
-        allowedProfiles:
-          title: Allowed profiles
-          type: array
-          items:
-            type: string
-    psp-seccomp:
-      title: Seccomp
-      type: object
-      description: Reduces the chance that a kernel vulnerability will be successfully exploited.
-      additionalProperties: false
-      required: [enabled]
-      properties:
-        enabled:
-          title: Enabled
-          description: Enable or disable the 'seccomp' policy.
-          type: boolean
-          default: false
-        allowedProfiles:
-          title: Allowed profiles
-          type: array
-          items:
-            type: string
-    psp-selinux:
-      title: SELinux
-      type: object
-      description: Security-enhanced Linux
-      additionalProperties: false
-      required: [enabled]
-      properties:
-        enabled:
-          title: Enabled
-          description: Enable or disable the 'selinux' policy.
-          type: boolean
-          default: false
-        seLinuxContext:
-          title: SELinux context
-          description: Choose one rule to apply.
-          type: string
-          enum: [MustRunAs, RunAsAny]
-        allowedSELinuxOptions:
-          title: Allowed SELinux options
-          description: Enter SELinux options for this context.
-          type: array
-          items:
-            additionalProperties: false
-            type: object
-            properties:
-              level:
-                title: Level
-                type: string
-              role:
-                title: Role
-                type: string
-              type:
-                title: Type
-                type: string
-              user:
-                title: User
-                type: string
-  x-externalDocsPath: docs/for-ops/console/policies
+
+Policy:
+  x-acl:
+    admin:
+      - delete-any
+      - read-any
+      - create-any
+      - update-any
+    team:
+      - delete
+      - read
+      - create
+      - update
+  type: object
+  x-externalDocsPath: docs/for-devs/console/policies
+  properties:
+    action:
+      type: string
+      enum:
+        - Audit
+        - Enforce
+      default: Audit
+    severity:
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+      default: medium
+    customValues:
+      type: array
+      items:
+        type: string
+  required:
+    - action
+    - severity
+
+definitions:
+  policyCommon:
+    action:
+      type: string
+      enum:
+        - Audit
+        - Enforce
+      default: Audit
+    severity:
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+      default: medium

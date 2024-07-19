@@ -6,10 +6,4 @@ AppExternalDns:
       $ref: ../definitions.yaml#/idName
     rawValues:
       $ref: ../definitions.yaml#/rawValues
-    shortcuts:
-      description: Resource URL that lands the user in a place of interest within an app.
-      type: array
-      nullable: true
-      items:
-        $ref: ../definitions.yaml#/shortcut
   required: [id]

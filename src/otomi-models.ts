@@ -13,8 +13,6 @@ export type SealedSecret = components['schemas']['SealedSecret'] & { teamId?: st
 export type SealedSecretsKeys = components['schemas']['SealedSecretsKeys']
 export type MigrateSecrets = components['schemas']['MigrateSecrets']
 export type K8sSecret = components['schemas']['K8sSecret']
-export type License = components['schemas']['License']
-export type LicenseJwt = components['schemas']['LicenseJwt']
 export type Service = components['schemas']['Service']
 export type Session = components['schemas']['Session']
 export type Settings = components['schemas']['Settings']
@@ -27,9 +25,10 @@ export type Workload = components['schemas']['Workload']
 export type WorkloadValues = components['schemas']['WorkloadValues']
 export type Project = components['schemas']['Project']
 export type Build = components['schemas']['Build']
+export type Policy = components['schemas']['Policy']
+export type Policies = components['schemas']['Policies']
 export type Cloudtty = components['schemas']['Cloudtty']
 export type TeamAuthz = components['schemas']['TeamAuthz']
-export type Metrics = components['schemas']['Metrics']
 // Derived setting models
 export type Alerts = Settings['alerts']
 export type Cluster = Settings['cluster']
@@ -37,7 +36,6 @@ export type Dns = Settings['dns']
 export type Kms = Settings['kms']
 export type Oidc = Settings['oidc']
 export type Otomi = Settings['otomi']
-export type Policies = Settings['policies']
 
 export interface OpenApiRequest extends Request {
   operationDoc: {
@@ -138,7 +136,6 @@ export interface Core {
   kms: Kms
   oidc: Oidc
   otomi: Otomi
-  policies: Policies
   teamApps: Record<string, any>[]
   teamConfig: Record<string, any>
   version: number

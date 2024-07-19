@@ -11,7 +11,6 @@ AppList:
     - drone
     - external-dns
     - falco
-    - gatekeeper
     - gitea
     - grafana
     - harbor
@@ -23,36 +22,17 @@ AppList:
     - kiali
     - knative
     - kured
+    - kyverno
     - loki
     - minio
-    - opencost
     - otel
     - prometheus
     - rabbitmq
     - tekton
     - sealed-secrets
-    - thanos
     - tempo
     - trivy
-    - vault
     - velero
-
-# AppBase:
-#   x-acl:
-#     admin: [read-any, update-any]
-#     team: [read, update]
-#   type: object
-#   properties:
-#     id:
-#       $ref: definitions.yaml#/idName
-#     rawValues:
-#       $ref: definitions.yaml#/rawValues
-#     shortcuts:
-#       description: Resource URL that lands the user in a place of interest within an app.
-#       type: array
-#       nullable: true
-#       items:
-#         $ref: definitions.yaml#/shortcut
 
 App:
   x-acl:
@@ -70,14 +50,6 @@ App:
       # readOnly: true
     rawValues:
       $ref: definitions.yaml#/rawValues
-      x-acl:
-        admin: [read-any, update-any]
-        team: []
-    shortcuts:
-      description: Resource URL that lands the user in a place of interest within an app.
-      type: array
-      items:
-        $ref: definitions.yaml#/shortcut
       x-acl:
         admin: [read-any, update-any]
         team: []

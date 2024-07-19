@@ -6,12 +6,6 @@ AppIstio:
       $ref: ../definitions.yaml#/idName
     rawValues:
       $ref: ../definitions.yaml#/rawValues
-    shortcuts:
-      description: Resource URL that lands the user in a place of interest within an app.
-      type: array
-      nullable: true
-      items:
-        $ref: ../definitions.yaml#/shortcut
     values:
       x-externalDocsPath: docs/apps/istio
       additionalProperties: false
@@ -25,7 +19,7 @@ AppIstio:
               default: false
             samplingRatio:
               type: string
-              default: "0.01"
+              default: '0.01'
         autoscaling:
           additionalProperties: false
           type: object

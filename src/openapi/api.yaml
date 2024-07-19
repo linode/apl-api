@@ -46,47 +46,6 @@ x-get-responses: &DefaultGetResponses
 
 # -------------------------------------------- Paths
 paths:
-  /license:
-    delete:
-      operationId: deleteLicense
-      description: Delete user license
-      x-aclSchema: License
-      responses:
-        '200':
-          description: Successfully removed user license
-  /activate:
-    put:
-      operationId: activateLicense
-      description: Upload and activate license
-      x-aclSchema: LicenseJwt
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LicenseJwt'
-        description: License JWT
-        required: true
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Uploaded license
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/License'
-  /metrics:
-    get:
-      operationId: getMetrics
-      description: Get otomi metrics
-      x-aclSchema: Metrics
-      responses:
-        '200':
-          description: Successfully obtained otomi metrics
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Metrics'
-
   /otomi/values:
     get:
       operationId: getValues
@@ -892,6 +851,70 @@ paths:
               schema:
                 $ref: '#/components/schemas/Build'
 
+  '/policies':
+    get:
+      operationId: getAllPolicies
+      x-aclSchema: Policies
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all policy configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policies'
+
+  '/teams/{teamId}/policies':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamPolicies
+      x-aclSchema: Policies
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team policy configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policies'
+
+  '/teams/{teamId}/policies/{policyId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/policyParams'
+    get:
+      operationId: getPolicy
+      description: Get a policy from a given team
+      x-aclSchema: Policy
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained policy configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policy'
+    put:
+      operationId: editPolicy
+      description: Edit a policy from a given team
+      x-aclSchema: Policy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Policy'
+        description: Policy object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policy'
+
   '/k8sVersion':
     get:
       operationId: getK8sVersion
@@ -1453,6 +1476,13 @@ components:
       required: true
       schema:
         type: string
+    policyParams:
+      name: policyId
+      in: path
+      description: ID of the policy
+      required: true
+      schema:
+        type: string
     projectParams:
       name: projectId
       in: path
@@ -1535,8 +1565,6 @@ components:
       $ref: apps/external-dns.yaml#/AppExternalDns
     AppFalco:
       $ref: apps/falco.yaml#/AppFalco
-    AppGatekeeper:
-      $ref: apps/gatekeeper.yaml#/AppGatekeeper
     AppGitea:
       $ref: apps/gitea.yaml#/AppGitea
     AppGrafana:
@@ -1559,14 +1587,14 @@ components:
       $ref: apps/knative.yaml#/AppKnative
     AppKured:
       $ref: apps/kured.yaml#/AppKured
+    AppKyverno:
+      $ref: apps/kyverno.yaml#/AppKyverno
     AppTekton:
       $ref: apps/tekton.yaml#/AppTekton
     AppLoki:
       $ref: apps/loki.yaml#/AppLoki
     AppMinio:
       $ref: apps/minio.yaml#/AppMinio
-    AppOpencost:
-      $ref: apps/opencost.yaml#/AppOpencost
     AppPrometheus:
       $ref: apps/prometheus.yaml#/AppPrometheus
     AppRabbitmq:
@@ -1575,14 +1603,10 @@ components:
       $ref: apps/sealed-secrets.yaml#/AppSealedSecrets
     AppTempo:
       $ref: apps/tempo.yaml#/AppTempo
-    AppThanos:
-      $ref: apps/thanos.yaml#/AppThanos
     AppTrivy:
       $ref: apps/trivy.yaml#/AppTrivy
     AppOtel:
       $ref: apps/otel.yaml#/AppOtel
-    AppVault:
-      $ref: apps/vault.yaml#/AppVault
     AppVelero:
       $ref: apps/velero.yaml#/AppVelero
     AppList:
@@ -1609,12 +1633,6 @@ components:
       $ref: k8s.yaml#/K8sService
     Kubecfg:
       $ref: kubecfg.yaml#/Kubecfg
-    LicenseJwt:
-      $ref: license.yaml#/LicenseJwt
-    License:
-      $ref: license.yaml#/License
-    Metrics:
-      $ref: metrics.yaml#/Metrics
     Netpol:
       $ref: netpol.yaml#/Netpol
     DockerConfig:
@@ -1627,6 +1645,10 @@ components:
       $ref: otomi/cli.yaml#/OtomiCliValues
     Project:
       $ref: project.yaml#/Project
+    Policy:
+      $ref: policies.yaml#/Policy
+    Policies:
+      $ref: policies.yaml#/Policies
     Restore:
       $ref: restore.yaml#/Restore
     Revert:
@@ -1689,8 +1711,6 @@ components:
       $ref: definitions.yaml#/azureClientId
     azureClientSecret:
       $ref: definitions.yaml#/azureClientSecret
-    azureMonitor:
-      $ref: definitions.yaml#/azureMonitor
     azureSubscriptionId:
       $ref: definitions.yaml#/azureSubscriptionId
     azureTenantId:
@@ -1731,8 +1751,6 @@ components:
       $ref: definitions.yaml#/ingressClassParameters
     kms:
       $ref: definitions.yaml#/kms
-    lokiStorageProvider:
-      $ref: apps/loki.yaml#/lokiStorageProvider
     lokiValues:
       $ref: apps/loki.yaml#/lokiValues
     offChoice:
@@ -1743,8 +1761,6 @@ components:
       $ref: definitions.yaml#/podSecurityContext
     podSpec:
       $ref: definitions.yaml#/podSpec
-    policies:
-      $ref: policies.yaml#/policies
     priority:
       $ref: definitions.yaml#/priority
     provider:
@@ -1771,8 +1787,6 @@ components:
       $ref: definitions.yaml#/script
     secrets:
       $ref: definitions.yaml#/secrets
-    shortcut:
-      $ref: definitions.yaml#/shortcut
     svcPredeployed:
       $ref: definitions.yaml#/svcPredeployed
     url:
