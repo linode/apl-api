@@ -18,7 +18,7 @@ Netpol:
     teamId:
       $ref: "definitions.yaml#/idName"
     name:
-      title: Network policy name
+      title: The name of the network policy.
       $ref: "definitions.yaml#/wordCharacterPattern"
     ruleType:
       $ref: "#/ruleType"
@@ -27,7 +27,7 @@ Netpol:
 
 ruleType:
   title: Rule type
-  description: Choose between Ingress or Egress
+  description: Choose between Ingress or Egress.
   type: object
   properties:
     type:
@@ -43,11 +43,11 @@ ruleType:
         toLabelName:
           type: string
           title: Selector label name
-          description: "The name of the Pod selector label"
+          description: "The name of the Pod selector label."
         toLabelValue:
           type: string
           title: Selector label value
-          description: "The value of the Pod selector label"
+          description: "The value of the Pod selector label."
         mode:
           type: string
           default: AllowAll
@@ -55,7 +55,7 @@ ruleType:
             - AllowAll
             - AllowOnly
         allow:
-          title: Allow entire team or specific workloads
+          title: Allow an entire Team or specific Workloads.
           type: array
           minItems: 1
           items:
@@ -64,15 +64,15 @@ ruleType:
               fromNamespace:
                 type: string
                 title: Namespace name
-                description: "The name of the namespace"
+                description: "The name of the namespace."
               fromLabelName:
                 type: string
                 title: Selector label name
-                description: "The name of the Pod selector label"
+                description: "The name of the Pod selector label."
               fromLabelValue:
                 type: string
                 title: Selector label value
-                description: "The value of the Pod selector label"
+                description: "The value of the Pod selector label."
             required:
               - fromNamespace
       required:

@@ -8,7 +8,7 @@ Settings:
       additionalProperties: false
       $ref: definitions.yaml#/alerts
       title: Alerts
-      description: Configure alerting endpoints to receive notifications from Alertmanager and Otomi deployments.
+      description: Configure alerting endpoints to receive notifications from Alertmanager.
       x-externalDocsPath: docs/for-ops/console/settings#alerts
     cluster:
       additionalProperties: false
@@ -64,7 +64,7 @@ Settings:
               x-secret: true
             gitea:
               title: Gitea
-              description: Enable to create backups of Gitea Persisten Volumes. Requires Velero to be enabled.
+              description: Enable to create backups of Gitea Persistent Volumes. Requires Velero to be enabled.
               properties:
                 enabled:
                   type: boolean
@@ -92,6 +92,7 @@ Settings:
             - title: minioLocal
               type: object
               x-hideTitle: true
+              description: Select to use the self-hosted Minio instance.
               properties:
                 type:
                   type: string
@@ -109,7 +110,7 @@ Settings:
                   additionalProperties: false
                   type: object
                   title: Linode
-                  description: Select to store backups in AWS S3 or S3 compatible blob storage.
+                  description: Select to use Linode Object Storage.
                   properties:
                     region:
                       type: string
@@ -136,7 +137,8 @@ Settings:
               required:
                 - linode
                 - type
-        bucket:
+        buckets:
+          description: Add the preferred bucket names for each app.
           properties:
             loki:
               type: string
@@ -248,7 +250,7 @@ Settings:
     otomi:
       title: Otomi
       type: object
-      description: Settings for Otomi.
+      description: Settings for APL.
       additionalProperties: false
       properties:
         adminPassword:
@@ -260,7 +262,7 @@ Settings:
           # readOnly: true
         additionalClusters:
           title: Additional clusters
-          description: Enter other clusters running Otomi.
+          description: Enter other clusters running APL.
           type: array
           items:
             $ref: cluster.yaml#/AdditionalCluster
@@ -275,9 +277,9 @@ Settings:
           nullable: true
           title: Global pullsecret
           description:
-            Will be connected to each "default" service account in all otomi app namespaces.
+            Will be connected to each "default" service account in all APL app namespaces.
             Handy for authenticating with DockerHub to avoid rate limiting.
-            Also useful when pulling all otomi images from a private repo. (One would need to override all the images in the config first.)
+            Also useful when pulling all APL images from a private repo. (One would need to override all the images in the config first.)
           additionalProperties: false
           properties:
             username:
@@ -330,12 +332,12 @@ Settings:
           default: true
         nodeSelector:
           $ref: definitions.yaml#/labels
-          description: 'One or more "label: value" pairs that must exist on one or more nodes, which will force all otomi platform workloads to be scheduled there.'
+          description: 'One or more "label: value" pairs that must exist on one or more nodes, which will force all APL services to be scheduled there.'
         version:
-          title: Otomi version
+          title: APL version
           default: latest
           description: |
-            Please pin this to a valid release version found in the repo. Suggestion: try the most recent stable version.
+            Please pin this to a valid release version found in the repo.
           type: string
       required:
         - version

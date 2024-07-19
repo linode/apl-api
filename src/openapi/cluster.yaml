@@ -11,7 +11,7 @@ AdditionalCluster:
     team:
       - read-any
   title: Additional cluster
-  description: A k8s cluster managed by Otomi.
+  description: A Kubernetes cluster running APL.
   properties:
     domainSuffix:
       $ref: definitions.yaml#/domainSuffix
@@ -35,21 +35,18 @@ Cluster:
     team:
       - read-any
   title: Cluster
-  description: The k8s cluster managed by this Otomi instance.
+  description: The Kubernetes cluster running APL.
   properties:
     name:
       $ref: definitions.yaml#/clusterName
     domainSuffix:
       $ref: definitions.yaml#/domainSuffix
-    provider:
-      $ref: definitions.yaml#/provider
     apiServer:
       $ref: definitions.yaml#/url
       title: API server
-      description: Full url to a kubernetes api server. Used to generate KUBECONFIG for download, for local access to target cluster.
-    owner:
-      $ref: definitions.yaml#/idName
-      description: A cluster owner. Used in alerts/reports to distinguish between resources for different customers.
+      description: Full url to a Kubernetes api server. Used to generate KUBECONFIG for download, for local access to target cluster.
     k8sContext:
       type: string
       x-hidden: true
+    provider:
+      $ref: definitions.yaml#/provider

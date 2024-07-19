@@ -20,7 +20,7 @@ Build:
     name:
       title: Build name
       $ref: 'definitions.yaml#/wordCharacterPattern'
-      description: Results in image name harbor.<your-domain>/<team-name>/name
+      description: Results in image name harbor.<your-domain>/<team-name>/name.
     tag:
       $ref: 'definitions.yaml#/imageTag'
       default: latest
@@ -29,31 +29,31 @@ Build:
       $ref: '#/buildMode'
     externalRepo:
       type: boolean
-      description: Select when using an external private Git repository
+      description: Select when using an external private Git repository.
       default: false
     secretName:
-      description: The name of the secret with the credentials of the external private Git repository
+      description: The name of the secret with the credentials of the external private Git repository.
       type: string
     trigger:
       type: boolean
       default: false
-      description: "Trigger the build based on a Gitea webhook. Use this URL for the webhook: http://el-gitea-webhook-<build-name>.team-<team-name>.svc.cluster.local:8080"
+      description: "Trigger the build based on a Gitea webhook. Use this URL for the webhook: http://el-gitea-webhook-<build-name>.team-<team-name>.svc.cluster.local:8080."
     scanSource:
       type: boolean
       default: true
-      description: Select to scan source code
+      description: Select to scan source code.
   required:
     - name
 
 buildMode:
   title: Mode
-  description: Choose between Docker or Buildpacks
+  description: Choose between Docker or Buildpacks.
   type: object
   oneOf:
     - title: Docker
       type: object
       x-hideTitle: true
-      description: Build from source using a Dockerfile
+      description: Build from source with a Dockerfile.
       properties:
         docker:
           additionalProperties: false
@@ -61,15 +61,15 @@ buildMode:
           title: Docker
           properties:
             repoUrl:
-              description: The URL of the Git repo that contains the application code
+              description: The URL of the Git repo that contains the application code.
               $ref: 'definitions.yaml#/url'
               title: Repo URL
             path:
-              description: The path to the Dockerfile to execute (defaults to ./Dockerfile)
+              description: The path to the Dockerfile to execute (defaults to ./Dockerfile).
               type: string
               default: ./Dockerfile
             revision:
-              description: This can be a commit, a tag, or a branch
+              description: This can be a commit, a tag, or a branch.
               $ref: 'definitions.yaml#/wordCharacterPattern'
               default: HEAD
             envVars:
@@ -77,7 +77,7 @@ buildMode:
               type: array
               items:
                 type: object
-                description: Environment variable to set during build-time
+                description: Environment variable to set during build-time.
                 properties:
                   name:
                     title: Name
@@ -101,22 +101,22 @@ buildMode:
     - title: Buildpacks
       type: object
       x-hideTitle: true
-      description: Build from source using Buildpacks
+      description: Build from source using Buildpacks.
       properties:
         buildpacks:
           additionalProperties: false
           type: object
           properties:
             repoUrl:
-              description: The URL of the Git repo that contains the application code
+              description: The URL of the Git repo that contains the application code.
               $ref: 'definitions.yaml#/url'
               title: Repo URL
             path:
-              description: A subpath within the repo where the source to build is located (optional)
+              description: "Optional: A subpath within the repo where the source is located"
               type: string
               default: ''
             revision:
-              description: This can be a commit, a tag, or a branch
+              description: This can be a commit, a tag, or a branch.
               $ref: 'definitions.yaml#/wordCharacterPattern'
               default: HEAD
             envVars:
@@ -124,7 +124,7 @@ buildMode:
               type: array
               items:
                 type: object
-                description: Environment variable to set during build-time
+                description: Environment variable to set during build-time.
                 properties:
                   name:
                     title: Name

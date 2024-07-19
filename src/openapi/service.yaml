@@ -24,7 +24,7 @@ Service:
       x-formtype: SelectWidget
     namespace:
       $ref: definitions.yaml#/idName
-      description: "A kubernetes namespace. Tip: give each app it's own"
+      description: A Kubernetes namespace.
       x-acl:
         admin: [read-any, create-any, update-any, delete-any]
         team: []
@@ -38,7 +38,7 @@ Service:
       type: object
       properties:
         predeployed:
-          description: Set this flag it the service is managed by knative service
+          description: Set this flag it the service is managed by Knative service.
           type: boolean
           default: false
       # x-hidden: true
@@ -53,12 +53,12 @@ Service:
           type: integer
           default: 90
           title: Weight v1
-          description: "Percentage of traffic to version 1"
+          description: "Percentage of traffic to version 1."
         weightV2:
           type: integer
           default: 10
           title: Weight v2
-          description: "Percentage of traffic to version 2"
+          description: "Percentage of traffic to version 2."
     ingress:
       title: Exposure (ingress)
       description: Determines loadbalancer related configuration for handling the service ingress.
@@ -74,12 +74,12 @@ Service:
 Ingress:
   properties:
     ingressClassName:
-      description: Assign service to a paricular Load Balancer by selecting ingress class name
+      description: Assign service to a paricular Load Balancer by selecting ingress class name.
       title: Ingress Class Name
       type: string
       default: "platform"
     tlsPass:
-      description: Pass through the request as is to the backing service. Only available for predeployed regular (non-knative) services.
+      description: Pass through the request as is to the backing service. Only available for pre-deployed regular (non-Knative) services.
       title: TLS passthrough
       type: boolean
       default: false
@@ -90,7 +90,7 @@ Ingress:
       default: true
     subdomain:
       $ref: definitions.yaml#/domain
-      description: A host that is used to set DNS 'A' records
+      description: A host that is used to set DNS 'A' records.
       title: Host
       type: string
     domain:
@@ -100,25 +100,25 @@ Ingress:
       type: string
     useCname:
       title: Use CNAME
-      description: Define CNAME for the service
+      description: Define a CNAME for the service.
       type: boolean
       default: false
     cname:
       properties:
         domain:
-          description: A domain name (an alias)
+          description: A domain name (an alias).
           type: string
         tlsSecretName:
-          description: Kubernets secret name of type TLS.
+          description: Name of a Kubernetes secret of type TLS.
           type: string
     paths:
-      description: The paths in the URL that the service should be mapped to (e.g. for microservices on one app/domain.)
+      description: The paths in the URL that the service should be mapped to (e.g. for micro services on one app/domain.).
       title: URL paths
       type: array
       items:
         $ref: definitions.yaml#/path
     forwardPath:
-      description: Forward the URL path into the service (don't rewrite to /)
+      description: Forward the URL path into the service (don't rewrite to /).
       title: Forward path
       type: boolean
       default: false
@@ -128,7 +128,7 @@ Ingress:
       type: boolean
       default: false
     certSelect:
-      description: Select one of the TLS secrets created in Otomi.
+      description: Select one of the TLS secrets created in APL.
       title: Select team secret
       type: boolean
       default: true
