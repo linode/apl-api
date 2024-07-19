@@ -79,7 +79,7 @@ Ingress:
       type: string
       default: "platform"
     tlsPass:
-      description: Pass through the request as is to the backing service. Only available for predeployed regular (non-knative) services.
+      description: Pass through the request as is to the backing service. Only available for pre-deployed regular (non-Knative) services.
       title: TLS passthrough
       type: boolean
       default: false
@@ -109,10 +109,10 @@ Ingress:
           description: A domain name (an alias).
           type: string
         tlsSecretName:
-          description: Name of a Kubernets secret of type TLS.
+          description: Name of a Kubernetes secret of type TLS.
           type: string
     paths:
-      description: The paths in the URL that the service should be mapped to (e.g. for microservices on one app/domain.).
+      description: The paths in the URL that the service should be mapped to (e.g. for micro services on one app/domain.).
       title: URL paths
       type: array
       items:
