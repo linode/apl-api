@@ -34,7 +34,7 @@ alerts:
         type: string
       uniqueItems: true
     drone:
-      description: Select default notification channels for Otomi deployments by Drone.
+      description: Select default notification channels for APL deployments by Drone.
       items:
         enum:
           - slack
@@ -49,12 +49,12 @@ alerts:
       additionalProperties: false
       properties:
         channel:
-          default: mon-otomi
+          default: mon-apl
           description: The Slack channel for non-critical notifications.
           title: Non-critical
           type: string
         channelCrit:
-          default: mon-otomi-crit
+          default: mon-apl-crit
           description: The Slack channel for critical notifications.
           title: Critical
           type: string
@@ -516,7 +516,7 @@ dns:
                 external-dns:
                   title: YAML for external-dns.
                   type: object
-                  description: 'The provider config as provided here: https://github.com/redkubes/otomi-core/blob/main/charts/external-dns/values.yaml'
+                  description: 'The provider config'
                   x-acl:
                     admin: [read-any, update-any]
                     team: []
@@ -542,7 +542,7 @@ domain:
 domainSuffix:
   $ref: '#/domain'
   title: Domain suffix
-  description: Domain suffix for the cluster. Also added to list of dns zones in the Otomi Console.
+  description: Domain suffix for the cluster. Also added to list of DNS zones in the APL Console.
 droneGit:
   properties:
     clientID:
@@ -890,7 +890,7 @@ provider:
     - custom
 priority:
   title: Minimum priority
-  description: minimum priority of alert events
+  description: Minimum priority of alert events.
   type: string
   default: informational
   enum:
@@ -904,7 +904,7 @@ priority:
     - debug
 quantityCpu:
   title: CPU quantity
-  description: Amount of cores, or slice of cpu in millis.
+  description: Amount of cores, or slice of CPU in millis.
   example: 50m
   pattern: (^[1-9][0-9]*(?!<.*)$)|(^([0]|[1-9]+)\.[0-9]{1,3}(?!<.*)$)|(^[1-9][0-9]*m$)
   type: string
@@ -915,7 +915,7 @@ quantityMem:
   pattern: ^([0-9]+\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)$
   type: string
 rawValues:
-  description: "May define value overrides for a chart. WARNING: these values currently have no schema and can't be validated as such, and may break deployment. You are on your own here."
+  description: "May define value overrides for a chart. WARNING: these values currently have no schema and will not be validated."
   type: object
   x-acl:
     admin: [read-any, update-any]
@@ -953,7 +953,7 @@ resources:
     - requests
   type: object
 resourceQuota:
-  description: 'List of kubernetes resource quota. Should adhere to the "spec.hard" format as described here: https://kubernetes.io/docs/concepts/policy/resource-quotas/. Not validated as there is no schema published. Change at your own risk.'
+  description: 'Kubernetes resource quota. Should adhere to format as described here: https://kubernetes.io/docs/concepts/policy/resource-quotas/.'
   title: Resource quota
   type: array
   items:
@@ -972,19 +972,19 @@ resourceQuota:
     - name: services.loadbalancers
       value: '0'
 runAsNonRoot:
-  description: Will prevent the container from starting with UID 0
+  description: Will prevent the container from starting with UID 0.
   title: Run as non-root
   type: boolean
   default: true
 runAsUser:
-  description: The UID to run the entrypoint of the container process
+  description: The UID to run the entrypoint of the container process.
   default: 1001
   maximum: 65535
   minimum: 0
   title: Run as user
   type: integer
 runAsGroup:
-  description: The GID to run the entrypoint of the container process
+  description: The GID to run the entrypoint of the container process.
   default: 1001
   maximum: 65535
   minimum: 0
@@ -995,10 +995,10 @@ scaling:
   properties:
     minReplicas:
       type: integer
-      title: Minimum nr of replicas
+      title: Minimum number of replicas
     maxReplicas:
       type: integer
-      title: Maximum nr of replicas
+      title: Maximum number of replicas
   type: object
 script:
   description: May specify a non-empty string containing an executable script.
@@ -1015,7 +1015,7 @@ securityContext:
       $ref: '#/runAsNonRoot'
   type: object
 secrets:
-  description: A list of team secrets that will be mounted into the pod as env vars.
+  description: A list of Team secrets that will be mounted into the pod as environment variables.
   items:
     type: string
   title: Secrets
@@ -1065,7 +1065,7 @@ secretMounts:
     required: [name, path]
 s3Url:
   type: string
-  description: An url to an AWS S3 bucket
+  description: An url to an AWS S3 bucket.
 size:
   description: Disk size. Valid units are E|P|T|G|Ti|Gi.
   pattern: '^([0-9]+\.)?[0-9]+(E|P|T|G||Ti|Gi)?$'

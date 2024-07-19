@@ -16,7 +16,7 @@ AppDrone:
       properties:
         sourceControl:
           title: Source control
-          description: Provide data to connect to a remote git host. When none is provided Otomi will deploy and configure an in-cluster Gitea repo.
+          description: Provide data to connect to a remote git host. When none is provided APL will deploy and configure an in-cluster Gitea repo.
           type: object
           oneOf:
             - $ref: ../definitions.yaml#/offChoice

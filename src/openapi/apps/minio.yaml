@@ -14,7 +14,7 @@ AppMinio:
       type: object
       properties:
         provisioning:
-          description: Automatically provision buckets and policies for all Otomi apps.
+          description: Automatically provision buckets and policies for all APL apps.
           properties:
             enabled:
               type: boolean
