@@ -11,7 +11,7 @@ Workload:
       - create
       - update
   type: object
-  description: Define location of the application's manifests or chart
+  description: Define the location of the Workloads's manifests or Helm chart.
   properties:
     id:
       type: string
@@ -30,7 +30,7 @@ Workload:
       enum: ["helm", "git"]
       default: git
     path:
-      description: A relative directory path within the Git repository. Absolute paths cause errors. (only valid for applications sourced from Git)
+      description: A relative directory path within the Git repository. Absolute paths cause errors. (only valid for applications sourced from Git).
       $ref: "definitions.yaml#/wordCharacterPattern"
     chart:
       description: Chart is a Helm chart name, and must be specified for applications sourced from a Helm repo.
@@ -51,10 +51,10 @@ Workload:
           title: Helm chart description
           default: ""
     namespace:
-      description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'
+      description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'.
       $ref: "definitions.yaml#/domain"
     imageUpdateStrategy:
-      description: Automatically update the image. Only supported when image is stored in Harbor.
+      description: Automatically update the image. Only supported when the image is stored in Harbor.
       title: Auto Image Updater
       type: object
       oneOf:
@@ -79,7 +79,7 @@ Workload:
               properties:
                 imageRepository:
                   type: string
-                  description: The container image repository name.
+                  description: The image repository name.
                   $ref: "definitions.yaml#/wordCharacterPattern"
                 tag:
                   description: Tag of the build.

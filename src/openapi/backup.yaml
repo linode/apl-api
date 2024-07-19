@@ -11,7 +11,7 @@ Backup:
       - create
       - update
   type: object
-  description: Create Velero backup schedules for Persistent Volumes
+  description: Create Velero backup schedules for Persistent Volumes.
   x-externalDocsPath: docs/for-devs/console/backups
   properties:
     id:

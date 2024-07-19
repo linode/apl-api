@@ -74,7 +74,7 @@ Team:
     oidc:
       properties:
         groupMapping:
-          description: An OIDC group name/id granting access to this team
+          description: An OIDC group (name/id) granting access to this Team.
           title: Group mapping
           type: string
       title: OIDC
@@ -87,7 +87,7 @@ Team:
         team: []
     managedMonitoring:
       title: Managed monitoring
-      description: Activate managed Grafana, Prometheus or Alertmanager instances; optionally disable cross-team access
+      description: "Activate APL managed Grafana, Prometheus or Alertmanager instances. Optionally disable cross-team access."
       properties:
         grafana:
           type: boolean
@@ -109,12 +109,12 @@ Team:
       properties:
         ingressPrivate:
           title: Network policies
-          description: When enabled team services will be bound by (ingress) network policies. Turning this off introduces a security risk!
+          description: When enabled Team Workloads will be bound by ingress network policies. Turning this off introduces a security risk!
           type: boolean
           default: true
         egressPublic:
           title: Egress control
-          description: When enabled team service egress traffic will be limited to pre-defined endpoints. Turning this off introduces a security risk!
+          description: When enabled egress traffic will be limited to pre-defined endpoints. Turning this off introduces a security risk!
           type: boolean
           default: true
       type: object

@@ -27,7 +27,7 @@ User:
     isAdmin:
       type: boolean
       default: false
-      description: If the user is admin
+      description: If the user is admin.
       # readOnly: true
     authz:
       type: object
@@ -37,7 +37,7 @@ User:
     teams:
       type: array
       default: []
-      description: A list of teams the user belongs to
+      description: A list of teams the user belongs to.
       items:
         type: string
       # readOnly: true
@@ -45,14 +45,14 @@ User:
     roles:
       type: array
       default: []
-      description: A list of roles that the user has
+      description: A list of roles that the user has.
       items:
         type: string
       # readOnly: true
       uniqueItems: true
     sub:
       type: string
-      description: A user subject
+      description: A user subject.
   required:
     - authz
     - isAdmin
