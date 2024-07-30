@@ -248,10 +248,17 @@ export default class OtomiStack {
 
   getSettingsInfo(): SettingsInfo {
     const settings = this.db.db.get(['settings']).value() as Settings
-    const { cluster, dns, otomi, ingress } = pick(settings, ['cluster', 'dns', 'otomi', 'ingress']) as Settings
+    const { cluster, dns, obj, otomi, ingress } = pick(settings, [
+      'cluster',
+      'dns',
+      'obj',
+      'otomi',
+      'ingress',
+    ]) as Settings
     const settingsInfo = {
       cluster: pick(cluster, ['name', 'domainSuffix', 'provider']),
       dns: pick(dns, ['zones']),
+      obj: pick(obj, ['provider']),
       otomi: pick(otomi, ['additionalClusters', 'hasExternalDNS', 'hasExternalIDP']),
       ingressClassNames: map(ingress?.classes, 'className') ?? [],
     } as SettingsInfo
@@ -337,13 +344,13 @@ export default class OtomiStack {
     const secretsPath = `env/apps/secrets.${appInstanceId}.yaml`
     const content = await this.repo.loadConfig(path, secretsPath)
     const values = (content?.apps && content.apps[appInstanceId]) || {}
-    let rawValues = {}
+    const rawValues = {}
 
     // eslint-disable-next-line no-underscore-dangle
     if (values._rawValues) {
-      // eslint-disable-next-line no-underscore-dangle
-      rawValues = values._rawValues
-      // eslint-disable-next-line no-underscore-dangle
+      // Merge properties of _rawValues into values
+      Object.assign(values, values._rawValues)
+
       delete values._rawValues
     }
     let enabled
