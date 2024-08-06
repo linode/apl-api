@@ -346,13 +346,6 @@ export default class OtomiStack {
     const values = (content?.apps && content.apps[appInstanceId]) || {}
     const rawValues = {}
 
-    // eslint-disable-next-line no-underscore-dangle
-    if (values._rawValues) {
-      // Merge properties of _rawValues into values
-      Object.assign(values, values._rawValues)
-
-      delete values._rawValues
-    }
     let enabled
     const app = getAppSchema(appId)
     if (app.properties!.enabled !== undefined) enabled = !!values.enabled
