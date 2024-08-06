@@ -337,15 +337,8 @@ export default class OtomiStack {
     const secretsPath = `env/apps/secrets.${appInstanceId}.yaml`
     const content = await this.repo.loadConfig(path, secretsPath)
     const values = (content?.apps && content.apps[appInstanceId]) || {}
-    let rawValues = {}
+    const rawValues = {}
 
-    // eslint-disable-next-line no-underscore-dangle
-    if (values._rawValues) {
-      // eslint-disable-next-line no-underscore-dangle
-      rawValues = values._rawValues
-      // eslint-disable-next-line no-underscore-dangle
-      delete values._rawValues
-    }
     let enabled
     const app = getAppSchema(appId)
     if (app.properties!.enabled !== undefined) enabled = !!values.enabled
