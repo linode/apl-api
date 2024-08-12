@@ -4,9 +4,6 @@ AppArgocd:
   properties:
     id:
       $ref: ../definitions.yaml#/idName
-    enabled:
-      type: boolean
-      default: true
     rawValues:
       $ref: ../definitions.yaml#/rawValues
     values:
