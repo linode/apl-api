@@ -1,12 +1,12 @@
-import $RefParser from '@apidevtools/json-schema-ref-parser'
+import axios from 'axios'
 import cleanDeep, { CleanOptions } from 'clean-deep'
 import { pathExists } from 'fs-extra'
 import { readFile } from 'fs/promises'
 import { isArray, memoize, mergeWith, omit } from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
-import { resolve } from 'path'
 import { Cluster, Dns } from 'src/otomi-models'
 import { parse } from 'yaml'
+import { BASEURL } from './constants'
 
 export function arrayToObject(array: [] = [], keyName = 'name', keyValue = 'value'): Record<string, unknown> {
   const obj = {}
@@ -55,12 +55,12 @@ export const loadYaml = async (path: string, opts?: { noError: boolean }): Promi
   return parse(await readFile(path, 'utf-8')) as Record<string, any>
 }
 
+const valuesSchemaEndpointUrl = `${BASEURL}/apl/schema`
 let valuesSchema: Record<string, any>
+
 export const getValuesSchema = async (): Promise<Record<string, any>> => {
-  if (valuesSchema) return valuesSchema
-  const schema = await loadYaml(resolve(__dirname, 'values-schema.yaml'))
-  const derefSchema = await $RefParser.dereference(schema as $RefParser.JSONSchema)
-  valuesSchema = omit(derefSchema, ['definitions'])
+  const res = await axios.get(valuesSchemaEndpointUrl)
+  valuesSchema = omit(res.data, ['definitions'])
   return valuesSchema
 }
 
