@@ -4,4 +4,4 @@ const env = cleanEnv({
   TOOLS_HOST,
 })
 
-export const BASEURL = `http://${env.TOOLS_HOST}:17771/`
+export const BASEURL = `http://${env.TOOLS_HOST}:17771`

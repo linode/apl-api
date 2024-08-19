@@ -5,13 +5,8 @@ import { readFile } from 'fs/promises'
 import { isArray, memoize, mergeWith, omit } from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
 import { Cluster, Dns } from 'src/otomi-models'
-import { TOOLS_HOST, cleanEnv } from 'src/validators'
 import { parse } from 'yaml'
 import { BASEURL } from './constants'
-
-const utilEnv = cleanEnv({
-  TOOLS_HOST,
-})
 
 export function arrayToObject(array: [] = [], keyName = 'name', keyValue = 'value'): Record<string, unknown> {
   const obj = {}

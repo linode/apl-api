@@ -25,9 +25,9 @@ const env = cleanEnv({
 })
 
 const baseUrl = BASEURL
-const prepareUrl = `${baseUrl}prepare`
-const initUrl = `${baseUrl}init`
-const valuesUrl = `${baseUrl}otomi/values`
+const prepareUrl = `${baseUrl}/prepare`
+const initUrl = `${baseUrl}/init`
+const valuesUrl = `${baseUrl}/otomi/values`
 
 const getProtocol = (url): string => (url && url.includes('://') ? url.split('://')[0] : 'https')
 
