@@ -9,6 +9,7 @@ import { dirname, join } from 'path'
 import simpleGit, { CheckRepoActions, CleanOptions, CommitResult, ResetMode, SimpleGit } from 'simple-git'
 import { GIT_BRANCH, GIT_LOCAL_PATH, GIT_REPO_URL, TOOLS_HOST, cleanEnv } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
+import { BASEURL } from './constants'
 import { GitPullError, HttpError, ValidationError } from './error'
 import { DbMessage, getIo } from './middleware'
 import { Core } from './otomi-models'
@@ -23,7 +24,7 @@ const env = cleanEnv({
   TOOLS_HOST,
 })
 
-const baseUrl = `http://${env.TOOLS_HOST}:17771/`
+const baseUrl = BASEURL
 const prepareUrl = `${baseUrl}prepare`
 const initUrl = `${baseUrl}init`
 const valuesUrl = `${baseUrl}otomi/values`

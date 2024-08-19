@@ -7,6 +7,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import { Cluster, Dns } from 'src/otomi-models'
 import { TOOLS_HOST, cleanEnv } from 'src/validators'
 import { parse } from 'yaml'
+import { BASEURL } from './constants'
 
 const utilEnv = cleanEnv({
   TOOLS_HOST,
@@ -59,7 +60,7 @@ export const loadYaml = async (path: string, opts?: { noError: boolean }): Promi
   return parse(await readFile(path, 'utf-8')) as Record<string, any>
 }
 
-const valuesSchemaEndpointUrl = `http://${utilEnv.TOOLS_HOST}:17771/apl/schema`
+const valuesSchemaEndpointUrl = `${BASEURL}/apl/schema`
 let valuesSchema: Record<string, any>
 
 export const getValuesSchema = async (): Promise<Record<string, any>> => {
