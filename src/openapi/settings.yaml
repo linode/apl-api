@@ -159,7 +159,11 @@ Settings:
             tempo:
               type: string
               $ref: definitions.yaml#/wordCharacterPattern
-              default: tempo   
+              default: tempo
+            thanos:
+              type: string
+              $ref: definitions.yaml#/wordCharacterPattern
+              default: thanos  
     home:
       additionalProperties: false
       $ref: definitions.yaml#/alerts

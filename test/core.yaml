@@ -347,6 +347,15 @@ adminApps:
     tags: [security]
   - name: rabbitmq
     tags: [messaging]
+  - name: thanos
+    tags: [metrics, observability]
+    ownHost: true
+    ingress:
+      - svc: thanos-query
+        port: 9090
+        namespace: monitoring
+        type: public
+        auth: true
 
 teamApps:
   - name: alertmanager

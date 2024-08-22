@@ -1603,6 +1603,8 @@ components:
       $ref: apps/sealed-secrets.yaml#/AppSealedSecrets
     AppTempo:
       $ref: apps/tempo.yaml#/AppTempo
+    AppThanos:
+      $ref: apps/thanos.yaml#/AppThanos
     AppTrivy:
       $ref: apps/trivy.yaml#/AppTrivy
     AppOtel:
