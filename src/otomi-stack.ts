@@ -332,7 +332,7 @@ export default class OtomiStack {
   }
 
   async loadApp(appInstanceId: string): Promise<void> {
-    const appId = appInstanceId.startsWith('ingress-nginx-') ? 'ingress-nginx' : appInstanceId
+    const appId = appInstanceId.startsWith('ingress-nginx-') ? 'ingress-nginx-platform' : appInstanceId
     const path = `env/apps/${appInstanceId}.yaml`
     const secretsPath = `env/apps/secrets.${appInstanceId}.yaml`
     const content = await this.repo.loadConfig(path, secretsPath)
