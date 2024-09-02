@@ -35,7 +35,7 @@ import {
   WorkloadValues,
 } from 'src/otomi-models'
 import getRepo, { Repo } from 'src/repo'
-import { arrayToObject, getServiceUrl, objectToArray, removeBlankAttributes } from 'src/utils'
+import { arrayToObject, getServiceUrl, getValuesSchema, objectToArray, removeBlankAttributes } from 'src/utils'
 import {
   CUSTOM_ROOT_CA,
   EDITOR_INACTIVITY_TIMEOUT,
@@ -1668,6 +1668,7 @@ export default class OtomiStack {
 
   async getSession(user: k8s.User): Promise<Session> {
     const rootStack = await getSessionStack()
+    const valuesSchema = await getValuesSchema()
     const currentSha = rootStack.repo.commitSha
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
@@ -1682,6 +1683,7 @@ export default class OtomiStack {
         console: env.VERSIONS.console,
         values: currentSha,
       },
+      valuesSchema,
     }
     return data
   }

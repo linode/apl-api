@@ -4,6 +4,7 @@ import { default as chaiAsPromised } from 'chai-as-promised'
 import { stub } from 'sinon'
 import { default as sinonChai } from 'sinon-chai'
 import { loadSpec } from 'src/app'
+import * as getValuesSchemaModule from './utils'
 
 config.truncateThreshold = 0
 use(chaiAsPromised)
@@ -16,5 +17,6 @@ before(async () => {
     stub(console, 'info')
     stub(console, 'warn')
   }
+  stub(getValuesSchemaModule, 'getValuesSchema').resolves({})
   await loadSpec()
 })

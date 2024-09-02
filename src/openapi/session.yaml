@@ -30,4 +30,6 @@ Session:
           type: string
         values:
           type: string
+    valuesSchema:
+      type: object
   type: object
