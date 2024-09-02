@@ -248,10 +248,17 @@ export default class OtomiStack {
 
   getSettingsInfo(): SettingsInfo {
     const settings = this.db.db.get(['settings']).value() as Settings
-    const { cluster, dns, otomi, ingress } = pick(settings, ['cluster', 'dns', 'otomi', 'ingress']) as Settings
+    const { cluster, dns, obj, otomi, ingress } = pick(settings, [
+      'cluster',
+      'dns',
+      'obj',
+      'otomi',
+      'ingress',
+    ]) as Settings
     const settingsInfo = {
       cluster: pick(cluster, ['name', 'domainSuffix', 'provider']),
       dns: pick(dns, ['zones']),
+      obj: pick(obj, ['provider']),
       otomi: pick(otomi, ['additionalClusters', 'hasExternalDNS', 'hasExternalIDP']),
       ingressClassNames: map(ingress?.classes, 'className') ?? [],
     } as SettingsInfo
@@ -332,7 +339,7 @@ export default class OtomiStack {
   }
 
   async loadApp(appInstanceId: string): Promise<void> {
-    const appId = appInstanceId.startsWith('ingress-nginx-') ? 'ingress-nginx' : appInstanceId
+    const appId = appInstanceId.startsWith('ingress-nginx-') ? 'ingress-nginx-platform' : appInstanceId
     const path = `env/apps/${appInstanceId}.yaml`
     const secretsPath = `env/apps/secrets.${appInstanceId}.yaml`
     const content = await this.repo.loadConfig(path, secretsPath)

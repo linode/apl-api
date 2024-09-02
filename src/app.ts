@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import $parser from '@apidevtools/json-schema-ref-parser'
 import { json } from 'body-parser'
-import { pascalCase } from 'change-case'
 import cors from 'cors'
 import Debug from 'debug'
 import express, { request } from 'express'
@@ -46,6 +45,7 @@ debug('NODE_ENV: ', process.env.NODE_ENV)
 type OtomiSpec = {
   spec: OpenAPIDoc
   secretPaths: string[]
+  valuesSchema: Record<string, any>
 }
 
 // get the latest commit from Gitea and checks it against the local values
@@ -114,20 +114,19 @@ export const loadSpec = async (): Promise<void> => {
   const valuesSchema = await getValuesSchema()
   const secrets = extract(valuesSchema, (o, i) => i === 'x-secret')
   const secretPaths = getPaths(secrets)
-  otomiSpec = { spec, secretPaths }
+  otomiSpec = { spec, secretPaths, valuesSchema }
 }
 export const getSpec = (): OtomiSpec => {
   return otomiSpec
 }
 export const getAppSchema = (appId: string): Schema => {
   let id: string = appId
-  if (appId.startsWith('ingress-nginx')) id = 'ingress-nginx'
-  const appName = `App${pascalCase(id)}`
-  return getSpec().spec.components.schemas[appName]
+  if (appId.startsWith('ingress-nginx')) id = 'ingress-nginx-platform'
+  return getSpec().valuesSchema.properties.apps.properties[id]
 }
 
 export const getAppList = (): string[] => {
-  const appsSchema = getAppSchema('List')
+  const appsSchema = getSpec().spec.components.schemas['AppList']
   return appsSchema.enum as string[]
 }
 
