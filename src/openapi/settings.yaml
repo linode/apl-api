@@ -54,12 +54,11 @@ Settings:
                 schedule:
                   $ref: definitions.yaml#/backupSchedule
         persistentVolumes:
-          title: Persistent Volume Backups
-          description: Create backups of Persistent Volumes.
+          title:  Backup Persistent Volumes
+          description: To create backups of PVs, add a Linode API token and enable the Velero App.
           properties:
             linodeApiToken:
               type: string
-              description: Linode API Token
               $ref: definitions.yaml#/wordCharacterPattern
               x-secret: true
     obj:
