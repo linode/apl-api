@@ -1,6 +1,4 @@
 import crypto, { X509Certificate } from 'crypto'
-import { isEmpty } from 'lodash'
-import { SealedSecret } from 'src/otomi-models'
 
 function hybridEncrypt(pubKey, plaintext, label) {
   const sessionKey = crypto.randomBytes(32)
@@ -40,37 +38,4 @@ export function encryptSecretItem(certificate, secretName, ns, data, scope) {
   const label = encryptionLabel(ns, secretName, scope)
   const out = hybridEncrypt(pubKey, data, label)
   return out
-}
-
-export function prepareSealedSecretData(body) {
-  const bodyAnnotations = body.metadata?.annotations || {}
-  const annotations: Record<string, string> = {}
-  for (const key in bodyAnnotations) annotations[key] = bodyAnnotations[key]
-
-  const bodyLabels = body.metadata?.labels || {}
-  const labels: Record<string, string> = {}
-  for (const key in bodyLabels) labels[key] = bodyLabels[key]
-
-  const metadata = {
-    ...(!isEmpty(annotations) && { annotations }),
-    ...(!isEmpty(body.metadata.finalizers) && { finalizers: body.metadata.finalizers }),
-    ...(!isEmpty(labels) && { labels }),
-  }
-
-  const encryptedData = Object.entries(body.data || {}).map(([key, value]) => ({
-    key,
-    value: Buffer.from(value as string, 'base64').toString('utf-8'),
-  }))
-
-  const type = body.type === 'Opaque' ? 'kubernetes.io/opaque' : body.type
-
-  const data = {
-    name: body.metadata.name,
-    namespace: body.metadata.namespace,
-    ...(body.immutable && { immutable: body.immutable }),
-    ...(!isEmpty(metadata) && { metadata }),
-    encryptedData,
-    type,
-  } as SealedSecret
-  return data
 }

@@ -288,33 +288,6 @@ paths:
         '200':
           description: Successfully deleted a service
 
-  /migrateSecrets:
-    post:
-      operationId: migrateSecrets
-      description: Migrate HashiCorp Vault secrets to sealed secrets
-      x-aclSchema: MigrateSecrets
-      responses:
-        <<: *DefaultPostResponses
-        '200':
-          description: Successfully migrated secrets to sealed secrets
-          content:
-            application/json:
-              schema:
-                properties:
-                  status:
-                    type: string
-                    enum: [success, info]
-                  message:
-                    type: string
-                  total:
-                    type: integer
-                  migrated:
-                    type: integer
-                  remaining:
-                    type: integer
-        '400':
-          <<: *BadRequest
-
   /sealedsecrets:
     get:
       operationId: getAllSealedSecrets
@@ -1599,8 +1572,6 @@ components:
       $ref: sealedsecret.yaml#/SealedSecret
     SealedSecretsKeys:
       $ref: sealedsecretskeys.yaml#/SealedSecretsKeys
-    MigrateSecrets:
-      $ref: migratesecrets.yaml#/MigrateSecrets
     K8sSecret:
       $ref: k8sSecret.yaml#/K8sSecret
     Secret:
