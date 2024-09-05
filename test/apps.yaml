@@ -170,11 +170,7 @@ appsInfo:
     appVersion: 1.7.1
     repo: https://github.com/kubernetes/ingress-nginx
     maintainers: NGINX
-    relatedLinks:
-      [
-        'https://apl-docs.net/docs/apps/ingress-nginx',
-        'https://docs.nginx.com/nginx-ingress-controller/',
-      ]
+    relatedLinks: ['https://apl-docs.net/docs/apps/ingress-nginx', 'https://docs.nginx.com/nginx-ingress-controller/']
     license: Apache 2.0
     about: ingress-nginx is an Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer.
     integration: Otomi integrated ingress-nginx into an advanced ingress architecture.
@@ -330,7 +326,6 @@ appsInfo:
     license: Apache 2.0
     about: Sealed Secrets is a Kubernetes Custom Resource Definition Controller which allows you to store even sensitive information in Git repositories.
     integration: Otomi uses Sealed Secrets to provide a secure way to store Kubernetes secrets in Git repositories. Sealed Secrets can be used to store secrets in the values repository.
-    isBeta: true
   tempo:
     title: Tempo
     appVersion: 2.1.1
