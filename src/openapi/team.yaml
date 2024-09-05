@@ -15,7 +15,7 @@ TeamSelfService:
       default: [ingress]
       uniqueItems: true
     policies:
-      title: Policies
+      title: Security policies
       type: array
       items:
         type: string
