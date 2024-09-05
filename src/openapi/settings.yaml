@@ -239,7 +239,7 @@ Settings:
         - clientSecret
 
     otomi:
-      title: Otomi
+      title: APL
       type: object
       description: Settings for APL.
       additionalProperties: false
