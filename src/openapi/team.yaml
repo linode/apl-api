@@ -106,6 +106,7 @@ Team:
     resourceQuota:
       $ref: definitions.yaml#/resourceQuota
     networkPolicy:
+      title: Network policies
       properties:
         ingressPrivate:
           title: Ingress control
