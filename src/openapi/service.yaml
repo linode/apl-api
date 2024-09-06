@@ -64,8 +64,9 @@ Service:
       description: Determines loadbalancer related configuration for handling the service ingress.
       # Note: the order matters first schema must be nullable empty object
       oneOf:
-        - $ref: "#/IngressCluster"
         - $ref: "#/IngressPublic"
+        - $ref: "#/IngressCluster"
+
   required:
     - name
     - ingress
@@ -167,7 +168,7 @@ Ingress:
 
 IngressCluster:
   additionalProperties: false
-  title: Private (in-cluster)
+  title: No Exposure
   type: object
   nullable: true
   properties:
@@ -188,4 +189,4 @@ IngressPublic:
           default: public
   nullable: true
   description: Will only accept traffic coming from an external loadbalancer.
-  title: External (public or private network)
+  title: External
