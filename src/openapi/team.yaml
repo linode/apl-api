@@ -108,13 +108,13 @@ Team:
     networkPolicy:
       properties:
         ingressPrivate:
-          title: Network policies
+          title: Ingress control
           description: When enabled Team Workloads will be bound by ingress network policies. Turning this off introduces a security risk!
           type: boolean
           default: true
         egressPublic:
           title: Egress control
-          description: When enabled egress traffic will be limited to pre-defined endpoints. Turning this off introduces a security risk!
+          description: When enabled all egress traffic will be limited to pre-defined endpoints. Turning this off introduces a security risk!
           type: boolean
           default: true
       type: object
