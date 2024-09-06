@@ -143,16 +143,7 @@ Settings:
                   default: linode
               required:
                 - linode
-                - type  
-    home:
-      additionalProperties: false
-      $ref: definitions.yaml#/alerts
-      title: Co-monitoring
-      description: Send alerts to a 3rd party for co-monitoring
-      x-externalDocsPath: docs/for-ops/console/settings#co-monitoring
-      x-acl:
-        admin: [read-any, update-any]
-        team: []
+                - type
     dns:
       $ref: definitions.yaml#/dns
       x-externalDocsPath: docs/for-ops/console/settings/dns
@@ -230,9 +221,8 @@ Settings:
         - issuer
         - clientID
         - clientSecret
-
     otomi:
-      title: Otomi
+      title: APL
       type: object
       description: Settings for APL.
       additionalProperties: false
@@ -302,11 +292,6 @@ Settings:
         hasExternalIDP:
           description: Set this to true when bringing your own external IDP such as Azure AD. (Expects required `oidc:` fields to be set.)
           title: External IDP
-          type: boolean
-          default: false
-        isHomeMonitored:
-          description: Whether this cluster is monitored by a third party.
-          title: Co-monitoring
           type: boolean
           default: false
         isMultitenant:

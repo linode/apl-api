@@ -33,16 +33,6 @@ alerts:
           - none
         type: string
       uniqueItems: true
-    drone:
-      description: Select default notification channels for APL deployments by Drone.
-      items:
-        enum:
-          - slack
-          - msteams
-          - opsgenie
-        type: string
-      type: array
-      uniqueItems: true
     slack:
       title: Slack
       description: Configure Slack endpoints for alerts.
@@ -454,21 +444,6 @@ dns:
               type: object
           required:
             - digitalocean
-          type: object
-        - title: Civo Cloud
-          properties:
-            civo:
-              x-hideTitle: true
-              properties:
-                apiToken:
-                  type: string
-                  x-acl:
-                    admin: [read-any, update-any]
-                    team: []
-                  x-secret: true
-              type: object
-          required:
-            - civo
           type: object
         - title: Linode
           properties:
