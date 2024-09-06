@@ -54,26 +54,14 @@ Settings:
                 schedule:
                   $ref: definitions.yaml#/backupSchedule
         persistentVolumes:
-          title: Persistent Volume Backups
-          description: Create backups of Persistent Volumes.
+          title:  Backup Persistent Volumes
+          description: To create backups of PVs, add a Linode API token and enable the Velero App.
           properties:
             linodeApiToken:
               type: string
-              description: Linode API Token
               $ref: definitions.yaml#/wordCharacterPattern
               x-secret: true
-            gitea:
-              title: Gitea
-              description: Enable to create backups of Gitea Persistent Volumes. Requires Velero to be enabled.
-              properties:
-                enabled:
-                  type: boolean
-                ttl:
-                  $ref: definitions.yaml#/backupTtl
-                schedule:
-                  $ref: definitions.yaml#/backupSchedule
     obj:
-      additionalProperties: false
       type: object
       properties:
         provider:
@@ -92,22 +80,18 @@ Settings:
             - title: minioLocal
               type: object
               x-hideTitle: true
-              description: Select to use the self-hosted Minio instance.
+              description: Select to use the self-hosted Minio instance. Make sure to activate Minio first.
               properties:
                 type:
                   type: string
                   enum:
                     - minioLocal
                   default: minioLocal
-              required:
-                - minioLocal
-                - type
             - title: Linode
               type: object
               x-hideTitle: true
               properties:
                 linode:
-                  additionalProperties: false
                   type: object
                   title: Linode
                   description: Select to use Linode Object Storage.
@@ -125,6 +109,29 @@ Settings:
                       description: The secret of the access key.
                       $ref: definitions.yaml#/wordCharacterPattern
                       x-secret: true
+                    buckets:
+                      description: Add the preferred bucket names for each app.
+                      properties:
+                        loki:
+                          type: string
+                          $ref: definitions.yaml#/wordCharacterPattern
+                          default: loki
+                        cnpg:
+                          type: string
+                          $ref: definitions.yaml#/wordCharacterPattern
+                          default: cnpg
+                        velero:
+                          type: string
+                          $ref: definitions.yaml#/wordCharacterPattern
+                          default: velero
+                        harbor:
+                          type: string
+                          $ref: definitions.yaml#/wordCharacterPattern
+                          default: harbor
+                        tempo:
+                          type: string
+                          $ref: definitions.yaml#/wordCharacterPattern
+                          default: tempo 
                   required:
                     - region
                     - accessKeyId
@@ -137,29 +144,6 @@ Settings:
               required:
                 - linode
                 - type
-        buckets:
-          description: Add the preferred bucket names for each app.
-          properties:
-            loki:
-              type: string
-              $ref: definitions.yaml#/wordCharacterPattern
-              default: loki
-            cnpg:
-              type: string
-              $ref: definitions.yaml#/wordCharacterPattern
-              default: cnpg
-            velero:
-              type: string
-              $ref: definitions.yaml#/wordCharacterPattern
-              default: velero
-            harbor:
-              type: string
-              $ref: definitions.yaml#/wordCharacterPattern
-              default: harbor
-            tempo:
-              type: string
-              $ref: definitions.yaml#/wordCharacterPattern
-              default: tempo
     dns:
       $ref: definitions.yaml#/dns
       x-externalDocsPath: docs/for-ops/console/settings/dns
@@ -237,7 +221,6 @@ Settings:
         - issuer
         - clientID
         - clientSecret
-
     otomi:
       title: APL
       type: object
