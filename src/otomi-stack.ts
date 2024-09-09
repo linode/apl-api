@@ -921,8 +921,9 @@ export default class OtomiStack {
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)
       throw e
+    } finally {
+      rootStack.locked = false
     }
-    rootStack.locked = false
   }
 
   async doRevert(): Promise<void> {
