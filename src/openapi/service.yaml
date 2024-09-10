@@ -64,8 +64,8 @@ Service:
       description: Determines loadbalancer related configuration for handling the service ingress.
       # Note: the order matters first schema must be nullable empty object
       oneOf:
-        - $ref: "#/IngressPublic"
         - $ref: "#/IngressCluster"
+        - $ref: "#/IngressPublic"
 
   required:
     - name
