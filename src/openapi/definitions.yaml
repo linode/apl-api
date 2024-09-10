@@ -716,12 +716,9 @@ kms:
                   x-acl:
                     admin: [read-any, update-any]
                     team: []
-              required:
-                - publicKey
-                - privateKey
               title: ''
           required:
-            - age
+            - provider
           title: Age
           type: object
         - properties:
