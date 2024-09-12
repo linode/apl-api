@@ -653,24 +653,10 @@ imageSimple:
 ingressClassParameters:
   type: object
   properties:
-    network:
-      title: Load balancer type
-      type: string
-      enum:
-        - public
-        - private
-      default: public
     loadBalancerIP:
       title: Load balancer IP address
-      description: A static IP address assigned to a load balancer
+      description: Optional. A static IP address assigned to a load balancer
       type: string
-    loadBalancerRG:
-      title: Load balancer Azure resource group
-      type: string
-    loadBalancerSubnet:
-      title: Load balancer subnet
-      type: string
-      description: Specify Azure subnet provider for load balancer IP address (applies to private network only)
     sourceIpAddressFiltering:
       title: Source IP address filtering
       type: string
