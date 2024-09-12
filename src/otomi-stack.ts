@@ -6,7 +6,6 @@ import Debug from 'debug'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
-import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
@@ -385,11 +384,6 @@ export default class OtomiStack {
   createTeam(data: Team): Team {
     const id = data.id || data.name
 
-    if (isEmpty(data.password)) {
-      debug(`creating password for team '${data.name}'`)
-      // eslint-disable-next-line no-param-reassign
-      data.password = generatePassword(16, false)
-    }
     const team = this.db.createItem('teams', data, { id }, id) as Team
     const apps = getAppList()
     const core = this.getCore()
