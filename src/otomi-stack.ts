@@ -275,10 +275,10 @@ export default class OtomiStack {
     try {
       console.log(`Loading ingress apps for ${id}`)
       const content = await this.repo.loadConfig('env/apps/ingress-nginx.yaml', 'env/apps/secrets.ingress-nginx.yaml')
-      const values = (content?.apps && content.apps['ingress-nginx-platform']) || {}
-      const rawValues = {}
+      const values = (content?.apps && content.apps['ingress-nginx']) || {}
+      console.log('values', values)
       const teamId = 'admin'
-      this.db.createItem('apps', { enabled: true, values, rawValues, teamId }, { teamId, id }, id)
+      this.db.createItem('apps', { enabled: true, values, rawValues: {}, teamId }, { teamId, id }, id)
       console.log(`Ingress app loaded for ${id}`)
     } catch (error) {
       console.error(`Failed to load ingress apps for ${id}:`)
@@ -368,7 +368,7 @@ export default class OtomiStack {
 
   async loadApp(appInstanceId: string): Promise<void> {
     const isIngressApp = appInstanceId.startsWith('ingress-nginx-')
-    const appId = isIngressApp ? 'ingress-nginx-platform' : appInstanceId
+    const appId = isIngressApp ? 'ingress-nginx' : appInstanceId
     const path = `env/apps/${appInstanceId}.yaml`
     const secretsPath = `env/apps/secrets.${appInstanceId}.yaml`
     const content = await this.repo.loadConfig(path, secretsPath)
