@@ -272,38 +272,36 @@ export default class OtomiStack {
   }
 
   async loadIngressApps(id: string): Promise<void> {
-    const content = await this.repo.loadConfig('env/apps/ingress-nginx.yaml', 'env/apps/secrets.ingress-nginx.yaml')
-    const values = (content?.apps && content.apps['ingress-nginx-platform']) || {}
-    const rawValues = {}
-    const teamId = 'admin'
-    this.db.createItem('apps', { enabled: true, values, rawValues, teamId }, { teamId, id }, id)
+    try {
+      console.log(`Loading ingress apps for ${id}`)
+      const content = await this.repo.loadConfig('env/apps/ingress-nginx.yaml', 'env/apps/secrets.ingress-nginx.yaml')
+      const values = (content?.apps && content.apps['ingress-nginx-platform']) || {}
+      const rawValues = {}
+      const teamId = 'admin'
+      this.db.createItem('apps', { enabled: true, values, rawValues, teamId }, { teamId, id }, id)
+      console.log(`Ingress app loaded for ${id}`)
+    } catch (error) {
+      console.error(`Failed to load ingress apps for ${id}:`)
+    }
   }
 
-  editSettings(data: Settings, settingId: string) {
+  async editSettings(data: Settings, settingId: string): Promise<Settings> {
     const settings = this.db.db.get('settings').value()
     settings[settingId] = removeBlankAttributes(data[settingId] as Record<string, any>)
     this.db.db.set('settings', settings).write()
 
     if (settingId === 'ingress') {
       const ingressClasses = data[settingId]?.classes || []
-      ingressClasses.forEach((ingressClass) => {
+      for (const ingressClass of ingressClasses) {
         const id = `ingress-nginx-${ingressClass.className}`
         let app = null
         try {
-          app = this.db.getItem('apps', { teamId: 'admin', id: `ingress-nginx-${ingressClass.className}` }) as any
+          app = this.db.getItem('apps', { teamId: 'admin', id }) as any
         } catch (e) {
           console.log(`Ingress app not found for ${id}`)
         }
-        if (app === null) {
-          this.loadIngressApps(id)
-            .then(() => {
-              console.log(`Ingress app created for ${id}`)
-            })
-            .catch(() => {
-              console.log(`Ingress app creation failed for ${id}`)
-            })
-        }
-      })
+        if (!app) await this.loadIngressApps(id)
+      }
     }
     return settings
   }
