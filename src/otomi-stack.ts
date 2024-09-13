@@ -271,10 +271,40 @@ export default class OtomiStack {
     return pick(settings, keys) as Settings
   }
 
+  async loadIngressApps(id: string): Promise<void> {
+    const content = await this.repo.loadConfig('env/apps/ingress-nginx.yaml', 'env/apps/secrets.ingress-nginx.yaml')
+    const values = (content?.apps && content.apps['ingress-nginx-platform']) || {}
+    const rawValues = {}
+    const teamId = 'admin'
+    this.db.createItem('apps', { enabled: true, values, rawValues, teamId }, { teamId, id }, id)
+  }
+
   editSettings(data: Settings, settingId: string) {
     const settings = this.db.db.get('settings').value()
     settings[settingId] = removeBlankAttributes(data[settingId] as Record<string, any>)
     this.db.db.set('settings', settings).write()
+
+    if (settingId === 'ingress') {
+      const ingressClasses = data[settingId]?.classes || []
+      ingressClasses.forEach((ingressClass) => {
+        const id = `ingress-nginx-${ingressClass.className}`
+        let app = null
+        try {
+          app = this.db.getItem('apps', { teamId: 'admin', id: `ingress-nginx-${ingressClass.className}` }) as any
+        } catch (e) {
+          console.log(`Ingress app not found for ${id}`)
+        }
+        if (app === null) {
+          this.loadIngressApps(id)
+            .then(() => {
+              console.log(`Ingress app created for ${id}`)
+            })
+            .catch(() => {
+              console.log(`Ingress app creation failed for ${id}`)
+            })
+        }
+      })
+    }
     return settings
   }
 
@@ -343,13 +373,8 @@ export default class OtomiStack {
     const appId = isIngressApp ? 'ingress-nginx-platform' : appInstanceId
     const path = `env/apps/${appInstanceId}.yaml`
     const secretsPath = `env/apps/secrets.${appInstanceId}.yaml`
-    let content = await this.repo.loadConfig(path, secretsPath)
-    let values = (content?.apps && (content.apps[appInstanceId] || content.apps[appId])) || {}
-    const isExist = await this.repo.fileExists(path)
-    if (isIngressApp && !isExist) {
-      content = await this.repo.loadConfig('env/apps/ingress-nginx.yaml', 'env/apps/secrets.ingress-nginx.yaml')
-      values = (content?.apps && content.apps['ingress-nginx-platform']) || {}
-    }
+    const content = await this.repo.loadConfig(path, secretsPath)
+    const values = (content?.apps && (content.apps[appInstanceId] || content.apps[appId])) || {}
     const rawValues = {}
 
     let enabled
