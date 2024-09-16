@@ -6,10 +6,11 @@ const debug = Debug('otomi:api:settings')
 
 export default function (): OperationHandlerArray {
   const put: Operation = [
-    ({ otomi, body, params: { settingId } }: OpenApiRequestExt, res): void => {
+    async ({ otomi, body, params: { settingId } }: OpenApiRequestExt, res): Promise<void> => {
       const ids = Object.keys(body as Settings)
       debug(`editSettings(${ids.join(',')})`)
-      res.json(otomi.editSettings(body as Settings, settingId))
+      const v = await otomi.editSettings(body as Settings, settingId)
+      res.json(v)
     },
   ]
   const api = {
