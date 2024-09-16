@@ -379,6 +379,7 @@ dns:
                 accessToken:
                   title: Akamai access token
                   description: Akamai Edgegrid API access token
+                  type: string
                   x-acl:
                     admin: [read-any, update-any]
                     team: []
@@ -386,6 +387,7 @@ dns:
                 clientToken:
                   title: Akamai client token
                   description: Akamai Edgegrid API client token
+                  type: string
                   x-acl:
                     admin: [read-any, update-any]
                     team: []
@@ -393,6 +395,7 @@ dns:
                 clientSecret:
                   title: Akamai client secret
                   description: Akamai Edgegrid API client secret
+                  type: string
                   x-acl:
                     admin: [read-any, update-any]
                     team: []
