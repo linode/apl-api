@@ -364,6 +364,48 @@ dns:
       title: Provider
       oneOf:
         - $ref: '#/offChoice'
+        - title: Akamai
+          properties:
+            akamai:
+              x-hideTitle: true
+              properties:
+                host:
+                  title: Akamai API host
+                  description: Akamai Edgegrid API server
+                  type: string
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
+                accessToken:
+                  title: Akamai access token
+                  description: Akamai Edgegrid API access token
+                  type: string
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
+                  x-secret: true
+                clientToken:
+                  title: Akamai client token
+                  description: Akamai Edgegrid API client token
+                  type: string
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
+                  x-secret: true
+                clientSecret:
+                  title: Akamai client secret
+                  description: Akamai Edgegrid API client secret
+                  type: string
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
+                  x-secret: true
+              required:
+                - host
+                - accessToken
+                - clientToken
+                - clientSecret
+              type: object
         - title: AWS
           properties:
             aws:
@@ -890,7 +932,7 @@ quantityMem:
   pattern: ^([0-9]+\.)?[0-9]+(E|P|T|G|M|K|Ei|Pi|Ti|Gi|Mi|Ki)$
   type: string
 rawValues:
-  description: "May define value overrides for a chart. WARNING: these values currently have no schema and will not be validated."
+  description: 'May define value overrides for a chart. WARNING: these values currently have no schema and will not be validated.'
   type: object
   x-acl:
     admin: [read-any, update-any]
@@ -1080,4 +1122,3 @@ wordCharacterPattern:
   type: string
   pattern: ^[^\s]+$
   x-error: At least one non whitespace character
-
