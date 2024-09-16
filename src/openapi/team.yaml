@@ -83,8 +83,8 @@ Team:
       type: string
       writeOnly: true
       x-acl:
-        admin: [read-any, update-any]
-        team: []
+        admin: [ read-any, update-any ]
+        team: [ ]
     managedMonitoring:
       title: Managed monitoring
       description: "Activate APL managed Grafana, Prometheus or Alertmanager instances. Optionally disable cross-team access."
