@@ -68,6 +68,7 @@ import { validateBackupFields } from './utils/backupUtils'
 import { encryptSecretItem, prepareSealedSecretData } from './utils/sealedSecretUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
+
 const debug = Debug('otomi:otomi-stack')
 
 const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'dockerconfig']
@@ -416,6 +417,7 @@ export default class OtomiStack {
       // eslint-disable-next-line no-param-reassign
       data.password = generatePassword(16, false)
     }
+
     const team = this.db.createItem('teams', data, { id }, id) as Team
     const apps = getAppList()
     const core = this.getCore()
