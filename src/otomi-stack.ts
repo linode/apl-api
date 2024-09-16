@@ -67,6 +67,7 @@ import {
 import { validateBackupFields } from './utils/backupUtils'
 import { encryptSecretItem, prepareSealedSecretData } from './utils/sealedSecretUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
+import generatePassword from 'password-generator'
 
 const debug = Debug('otomi:otomi-stack')
 
@@ -416,6 +417,7 @@ export default class OtomiStack {
       // eslint-disable-next-line no-param-reassign
       data.password = generatePassword(16, false)
     }
+
     const team = this.db.createItem('teams', data, { id }, id) as Team
     const apps = getAppList()
     const core = this.getCore()
