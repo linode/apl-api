@@ -45,6 +45,3 @@ kms.json*
 /vendors/client/
 /src/generated-*
 secrets.*.yaml.dec
-
-#intelij
-.idea/
