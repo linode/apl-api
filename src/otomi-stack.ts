@@ -54,7 +54,6 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import {
   apply,
   checkPodExists,
-  deleteSecretFromK8s,
   getCloudttyActiveTime,
   getKubernetesVersion,
   getLastTektonMessage,
@@ -62,12 +61,11 @@ import {
   getSecretValues,
   getTeamSecretsFromK8s,
   k8sdelete,
-  updateSecretOwnerReferences,
   watchPodUntilRunning,
 } from './k8s_operations'
 import { validateBackupFields } from './utils/backupUtils'
 import { getPolicies } from './utils/policiesUtils'
-import { encryptSecretItem, prepareSealedSecretData } from './utils/sealedSecretUtils'
+import { encryptSecretItem } from './utils/sealedSecretUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 const debug = Debug('otomi:otomi-stack')
@@ -1134,53 +1132,6 @@ export default class OtomiStack {
 
   getSecrets(teamId: string): Array<Secret> {
     return this.db.getCollection('secrets', { teamId }) as Array<Secret>
-  }
-
-  async migrateSecrets(): Promise<{
-    status: 'success' | 'info'
-    message: string
-    total?: number
-    migrated?: number
-    remaining?: number
-  }> {
-    const totalSecrets = this.getAllSecrets().length
-    let migratedSecrets = 0
-    const teams: string[] = this.getTeams().map((t) => t.id as string)
-    try {
-      for (const teamId of teams) {
-        const secrets = this.getSecrets(teamId)
-        for (const secret of secrets) {
-          const namespace = secret.namespace || `team-${secret.teamId}`
-          const body = await updateSecretOwnerReferences(secret.name, namespace)
-          const data = prepareSealedSecretData(body)
-          await this.createSealedSecret(teamId, data).then(async () => {
-            await deleteSecretFromK8s(secret.name, namespace)
-            this.db.deleteItem('secrets', { id: secret.id })
-            migratedSecrets += 1
-          })
-        }
-      }
-      debug(`Secrets migration completed successfully! ${migratedSecrets} secrets migrated.`)
-    } catch (error) {
-      debug('Secrets migration error:', error)
-      debug(`Secrets migration interrupted. ${migratedSecrets} secrets migrated out of ${totalSecrets}.`)
-      return {
-        status: 'info',
-        message: 'Something went wrong, secrets migration interrupted.',
-        total: totalSecrets,
-        migrated: migratedSecrets,
-        remaining: totalSecrets - migratedSecrets,
-      }
-    } finally {
-      await this.doDeployment()
-    }
-    return {
-      status: 'success',
-      message: 'Secrets migration completed successfully! The Sealed Secrets will be available in a few minutes.',
-      total: totalSecrets,
-      migrated: migratedSecrets,
-      remaining: totalSecrets - migratedSecrets,
-    }
   }
 
   async createSealedSecret(teamId: string, data: SealedSecret): Promise<SealedSecret> {
