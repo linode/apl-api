@@ -2,13 +2,6 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### [2.9.2](https://github.com/redkubes/otomi-api/compare/v2.9.1...v2.9.2) (2024-09-17)
-
-
-### Features
-
-* **apl-201:** remove password from teams endpoint ([#557](https://github.com/redkubes/otomi-api/issues/557)) ([d1ae50f](https://github.com/redkubes/otomi-api/commit/d1ae50fbb896ce5d5c78582478508d90b7146c3d))
-
 ### [2.9.1](https://github.com/redkubes/otomi-api/compare/v2.8.0...v2.9.1) (2024-05-23)
 
 
