@@ -699,10 +699,10 @@ ingressClassParameters:
       title: Load balancer IP address
       description: Optional. A static IP address assigned to a load balancer
       type: string
-    sourceIpAddressFiltering:
-      title: Source IP address filtering
-      type: string
-      description: 'Whitelist source IP address ranges. The value is a comma separated list of CIDRs, e.g. 10.0.0.0/24,172.10.0.1'
+    # sourceIpAddressFiltering:
+    #   title: Source IP address filtering
+    #   type: string
+    #   description: 'Whitelist source IP address ranges. The value is a comma separated list of CIDRs, e.g. 10.0.0.0/24,172.10.0.1'
     entrypoint:
       $ref: '#/ipV4Address'
       description: Optional. An IP address that will override the external Load balancer IP address used for registering hosts in DNS.
