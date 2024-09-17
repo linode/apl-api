@@ -6,7 +6,6 @@ import Debug from 'debug'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
-import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
@@ -67,6 +66,7 @@ import { validateBackupFields } from './utils/backupUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { encryptSecretItem } from './utils/sealedSecretUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
+import generatePassword from 'password-generator'
 
 const debug = Debug('otomi:otomi-stack')
 
@@ -269,10 +269,37 @@ export default class OtomiStack {
     return pick(settings, keys) as Settings
   }
 
-  editSettings(data: Settings, settingId: string) {
+  async loadIngressApps(id: string): Promise<void> {
+    try {
+      debug(`Loading ingress apps for ${id}`)
+      const content = await this.repo.loadConfig('env/apps/ingress-nginx.yaml', 'env/apps/secrets.ingress-nginx.yaml')
+      const values = content?.apps?.['ingress-nginx'] ?? {}
+      const teamId = 'admin'
+      this.db.createItem('apps', { enabled: true, values, rawValues: {}, teamId }, { teamId, id }, id)
+      debug(`Ingress app loaded for ${id}`)
+    } catch (error) {
+      debug(`Failed to load ingress apps for ${id}:`)
+    }
+  }
+
+  async editSettings(data: Settings, settingId: string): Promise<Settings> {
     const settings = this.db.db.get('settings').value()
     settings[settingId] = removeBlankAttributes(data[settingId] as Record<string, any>)
     this.db.db.set('settings', settings).write()
+
+    if (settingId === 'ingress') {
+      const ingressClasses = data[settingId]?.classes || []
+      for (const ingressClass of ingressClasses) {
+        const id = `ingress-nginx-${ingressClass.className}`
+        let app = null
+        try {
+          app = this.db.getItem('apps', { teamId: 'admin', id }) as any
+        } catch (e) {
+          debug(`Ingress app not found for ${id}`)
+        }
+        if (!app) await this.loadIngressApps(id)
+      }
+    }
     return settings
   }
 
@@ -337,11 +364,22 @@ export default class OtomiStack {
   }
 
   async loadApp(appInstanceId: string): Promise<void> {
-    const appId = appInstanceId.startsWith('ingress-nginx-') ? 'ingress-nginx-platform' : appInstanceId
+    const isIngressApp = appInstanceId.startsWith('ingress-nginx-')
+    const appId = isIngressApp ? 'ingress-nginx' : appInstanceId
     const path = `env/apps/${appInstanceId}.yaml`
     const secretsPath = `env/apps/secrets.${appInstanceId}.yaml`
     const content = await this.repo.loadConfig(path, secretsPath)
-    const values = (content?.apps && content.apps[appInstanceId]) || {}
+    let values = content?.apps?.[appInstanceId] ?? {}
+    if (appInstanceId === 'ingress-nginx-platform') {
+      const isIngressNginxPlatformAppExists = await this.repo.fileExists(`env/apps/ingress-nginx-platform.yaml`)
+      if (!isIngressNginxPlatformAppExists) {
+        const defaultIngressNginxContent = await this.repo.loadConfig(
+          `env/apps/ingress-nginx.yaml`,
+          `env/apps/secrets.ingress-nginx.yaml`,
+        )
+        values = defaultIngressNginxContent?.apps?.['ingress-nginx'] ?? {}
+      }
+    }
     const rawValues = {}
 
     let enabled
@@ -388,6 +426,7 @@ export default class OtomiStack {
       // eslint-disable-next-line no-param-reassign
       data.password = generatePassword(16, false)
     }
+
     const team = this.db.createItem('teams', data, { id }, id) as Team
     const apps = getAppList()
     const core = this.getCore()
@@ -919,8 +958,9 @@ export default class OtomiStack {
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)
       throw e
+    } finally {
+      rootStack.locked = false
     }
-    rootStack.locked = false
   }
 
   async doRevert(): Promise<void> {
