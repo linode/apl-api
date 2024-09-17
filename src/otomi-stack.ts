@@ -6,6 +6,7 @@ import Debug from 'debug'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
+import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
@@ -68,7 +69,6 @@ import { validateBackupFields } from './utils/backupUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { encryptSecretItem, prepareSealedSecretData } from './utils/sealedSecretUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
-import generatePassword from 'password-generator'
 
 const debug = Debug('otomi:otomi-stack')
 
@@ -284,24 +284,47 @@ export default class OtomiStack {
     }
   }
 
-  async editSettings(data: Settings, settingId: string): Promise<Settings> {
-    const settings = this.db.db.get('settings').value()
-    settings[settingId] = removeBlankAttributes(data[settingId] as Record<string, any>)
-    this.db.db.set('settings', settings).write()
+  async removeIngressApps(id: string): Promise<void> {
+    try {
+      debug(`Removing ingress apps for ${id}`)
+      const path = `env/apps/${id}.yaml`
+      const secretsPath = `env/apps/secrets.${id}.yaml`
+      this.db.deleteItem('apps', { teamId: 'admin', id })
+      await this.repo.removeFile(path)
+      await this.repo.removeFile(secretsPath)
+      debug(`Ingress app removed for ${id}`)
+    } catch (error) {
+      debug(`Failed to remove ingress app for ${id}:`)
+    }
+  }
 
-    if (settingId === 'ingress') {
-      const ingressClasses = data[settingId]?.classes || []
-      for (const ingressClass of ingressClasses) {
+  async editIngressApps(settings: Settings, data: Settings, settingId: string): Promise<void> {
+    if (settingId !== 'ingress') return
+    const initClasses = settings[settingId]?.classes || []
+    const initClassNames = initClasses.map((obj) => obj.className)
+    const dataClasses = data[settingId]?.classes || []
+    const dataClassNames = dataClasses.map((obj) => obj.className)
+    // Ingress app addition
+    for (const ingressClass of dataClasses) {
+      if (!initClassNames.includes(ingressClass.className)) {
         const id = `ingress-nginx-${ingressClass.className}`
-        let app = null
-        try {
-          app = this.db.getItem('apps', { teamId: 'admin', id }) as any
-        } catch (e) {
-          debug(`Ingress app not found for ${id}`)
-        }
-        if (!app) await this.loadIngressApps(id)
+        await this.loadIngressApps(id)
       }
     }
+    // Ingress app deletion
+    for (const ingressClass of initClasses) {
+      if (!dataClassNames.includes(ingressClass.className)) {
+        const id = `ingress-nginx-${ingressClass.className}`
+        await this.removeIngressApps(id)
+      }
+    }
+  }
+
+  async editSettings(data: Settings, settingId: string): Promise<Settings> {
+    const settings = this.db.db.get('settings').value() as Settings
+    await this.editIngressApps(settings, data, settingId)
+    settings[settingId] = removeBlankAttributes(data[settingId] as Record<string, any>)
+    this.db.db.set('settings', settings).write()
     return settings
   }
 
