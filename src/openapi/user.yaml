@@ -81,11 +81,24 @@ TeamUser:
       $ref: 'definitions.yaml#/idName'
     name:
       type: string
-      description: A user name
+      title: Username
+      description: A unique username
       # readOnly: true
     email:
       $ref: definitions.yaml#/email
+      title: Email
+      description: A unique email
+    firstName:
+      type: string
+      title: First Name
+      description: The first name of the user
+    lastName:
+      type: string
+      title: Last Name
+      description: The last name of the user
   required:
     - name
     - email
+    - firstName
+    - lastName
   type: object
