@@ -63,6 +63,17 @@ User:
   type: object
 
 TeamUser:
+  x-acl:
+    admin:
+      - delete-any
+      - read-any
+      - create-any
+      - update-any
+    team:
+      - delete
+      - read
+      - create
+      - update
   properties:
     id:
       type: string

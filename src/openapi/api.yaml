@@ -939,7 +939,7 @@ paths:
   '/users':
     get:
       operationId: getAllUsers
-      x-aclSchema: User
+      x-aclSchema: TeamUser
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -956,7 +956,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamUsers
-      x-aclSchema: User
+      x-aclSchema: TeamUser
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -970,7 +970,7 @@ paths:
     post:
       operationId: createUser
       description: Create a team user
-      x-aclSchema: User
+      x-aclSchema: TeamUser
       requestBody:
         content:
           application/json:
@@ -994,7 +994,7 @@ paths:
     delete:
       operationId: deleteUser
       description: Delete a user from a given team
-      x-aclSchema: User
+      x-aclSchema: TeamUser
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -1002,7 +1002,7 @@ paths:
     get:
       operationId: getUser
       description: Get a user from a given team
-      x-aclSchema: User
+      x-aclSchema: TeamUser
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -1014,7 +1014,7 @@ paths:
     put:
       operationId: editUser
       description: Edit a user from a given team
-      x-aclSchema: User
+      x-aclSchema: TeamUser
       requestBody:
         content:
           application/json:
