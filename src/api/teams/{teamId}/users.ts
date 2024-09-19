@@ -1,6 +1,6 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequestExt, User } from 'src/otomi-models'
+import { OpenApiRequestExt, TeamUser } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:teams:users')
 
@@ -15,7 +15,7 @@ export default function (): OperationHandlerArray {
   const post: Operation = [
     ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): void => {
       debug(`createUser(${teamId}, ...)`)
-      const v = otomi.createUser(teamId, body as User)
+      const v = otomi.createUser(teamId, body as TeamUser)
       res.json(v)
     },
   ]
