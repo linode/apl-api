@@ -61,3 +61,20 @@ User:
     - teams
     - roles
   type: object
+
+TeamUser:
+  properties:
+    id:
+      type: string
+    teamId:
+      $ref: 'definitions.yaml#/idName'
+    name:
+      type: string
+      description: A user name
+      # readOnly: true
+    email:
+      $ref: definitions.yaml#/email
+  required:
+    - name
+    - email
+  type: object

@@ -30,6 +30,7 @@ import {
   SettingsInfo,
   Team,
   TeamSelfService,
+  TeamUser,
   User,
   Workload,
   WorkloadValues,
@@ -111,6 +112,10 @@ export function getTeamWorkloadValuesFilePath(teamId: string, workloadName): str
   return `env/teams/workloads/${teamId}/${workloadName}.yaml`
 }
 
+export function getTeamUsersFilePath(teamId: string): string {
+  return `env/teams/users.${teamId}.yaml`
+}
+
 export function getTeamProjectsFilePath(teamId: string): string {
   return `env/teams/projects.${teamId}.yaml`
 }
@@ -125,6 +130,10 @@ export function getTeamPoliciesFilePath(teamId: string): string {
 
 export function getTeamWorkloadsJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.workloads`
+}
+
+export function getTeamUsersJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.users`
 }
 
 export function getTeamProjectsJsonPath(teamId: string): string {
@@ -546,6 +555,38 @@ export default class OtomiStack {
 
   deleteNetpol(id: string): void {
     return this.db.deleteItem('netpols', { id })
+  }
+
+  getTeamUsers(teamId: string): Array<TeamUser> {
+    const ids = { teamId }
+    return this.db.getCollection('users', ids) as Array<TeamUser>
+  }
+
+  getAllUsers(): Array<TeamUser> {
+    return this.db.getCollection('users') as Array<TeamUser>
+  }
+
+  createUser(teamId: string, data: TeamUser): TeamUser {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      return this.db.createItem('users', { ...data, teamId }, { teamId, name: data.name }) as TeamUser
+    } catch (err) {
+      if (err.code === 409) err.publicMessage = 'User name already exists'
+      throw err
+    }
+  }
+
+  getUser(id: string): TeamUser {
+    return this.db.getItem('users', { id }) as TeamUser
+  }
+
+  editUser(id: string, data: TeamUser): TeamUser {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    return this.db.updateItem('users', data, { id }) as TeamUser
+  }
+
+  deleteUser(id: string): void {
+    return this.db.deleteItem('users', { id })
   }
 
   getTeamProjects(teamId: string): Array<Project> {
@@ -1274,6 +1315,20 @@ export default class OtomiStack {
     })
   }
 
+  async loadTeamUsers(teamId: string): Promise<void> {
+    const relativePath = getTeamUsersFilePath(teamId)
+    if (!(await this.repo.fileExists(relativePath))) {
+      debug(`Team ${teamId} has no users yet`)
+      return
+    }
+    const data = await this.repo.readFile(relativePath)
+    const inData: Array<TeamUser> = get(data, getTeamUsersJsonPath(teamId), [])
+    inData.forEach((inUser) => {
+      const res: any = this.db.populateItem('users', { ...inUser, teamId }, undefined, inUser.id as string)
+      debug(`Loaded user: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
+    })
+  }
+
   async loadTeamProjects(teamId: string): Promise<void> {
     const relativePath = getTeamProjectsFilePath(teamId)
     if (!(await this.repo.fileExists(relativePath))) {
@@ -1369,6 +1424,7 @@ export default class OtomiStack {
       this.loadTeamSealedSecrets(team.id!)
       this.loadTeamWorkloads(team.id!)
       this.loadTeamBackups(team.id!)
+      this.loadTeamUsers(team.id!)
       this.loadTeamProjects(team.id!)
       this.loadTeamBuilds(team.id!)
       this.loadTeamPolicies(team.id!)
@@ -1459,6 +1515,7 @@ export default class OtomiStack {
         await this.saveTeamServices(teamId)
         await this.saveTeamSealedSecrets(teamId)
         await this.saveTeamWorkloads(teamId)
+        await this.saveTeamUsers(teamId)
         await this.saveTeamProjects(teamId)
         await this.saveTeamBuilds(teamId)
         await this.saveTeamPolicies(teamId)
@@ -1517,6 +1574,17 @@ export default class OtomiStack {
         this.saveWorkloadValues(workload)
       }),
     )
+  }
+
+  async saveTeamUsers(teamId: string): Promise<void> {
+    const users = this.db.getCollection('users', { teamId }) as Array<Build>
+    const cleaneUsers: Array<Record<string, any>> = users.map((obj) => {
+      return omit(obj, ['teamId'])
+    })
+    const relativePath = getTeamUsersFilePath(teamId)
+    const outData: Record<string, any> = set({}, getTeamUsersJsonPath(teamId), cleaneUsers)
+    debug(`Saving users of team: ${teamId}`)
+    await this.repo.writeFile(relativePath, outData)
   }
 
   async saveTeamProjects(teamId: string): Promise<void> {

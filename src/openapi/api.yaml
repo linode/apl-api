@@ -936,6 +936,101 @@ paths:
         '200':
           description: Successfully removed cloudtty url
 
+  '/users':
+    get:
+      operationId: getAllUsers
+      x-aclSchema: User
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all users configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamUser'
+
+  '/teams/{teamId}/users':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamUsers
+      x-aclSchema: User
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team users configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamUser'
+    post:
+      operationId: createUser
+      description: Create a team user
+      x-aclSchema: User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamUser'
+        description: User object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored user configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamUser'
+
+  '/teams/{teamId}/users/{userId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/userParams'
+    delete:
+      operationId: deleteUser
+      description: Delete a user from a given team
+      x-aclSchema: User
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a user
+    get:
+      operationId: getUser
+      description: Get a user from a given team
+      x-aclSchema: User
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained user configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamUser'
+    put:
+      operationId: editUser
+      description: Edit a user from a given team
+      x-aclSchema: User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamUser'
+        description: User object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamUser'
+
   '/projects':
     get:
       operationId: getAllProjects
@@ -1456,6 +1551,13 @@ components:
       required: true
       schema:
         type: string
+    userParams:
+      name: userId
+      in: path
+      description: ID of the user
+      required: true
+      schema:
+        type: string
     projectParams:
       name: projectId
       in: path
@@ -1596,6 +1698,8 @@ components:
       $ref: user.yaml#/TeamAuthz
     TeamSelfService:
       $ref: team.yaml#/TeamSelfService
+    TeamUser:
+      $ref: user.yaml#/TeamUser
     User:
       $ref: user.yaml#/User
     Workload:
