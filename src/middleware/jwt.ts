@@ -22,8 +22,8 @@ export function getUser(user: JWT, otomi: OtomiStack): User {
         sessionUser.roles.push('admin')
       }
     } else if (!sessionUser.roles.includes('team')) sessionUser.roles.push('team')
-    console.log('sessionUser', JSON.stringify(sessionUser))
-    if (user.roles?.includes('member')) sessionUser.roles.push('member')
+
+    if (group === 'member') sessionUser.roles.push('member')
     // if in team-(not admin), remove 'team-' prefix
     const teamId = group.substring(5)
     if (group.substring(0, 5) === 'team-' && group !== 'team-admin' && !sessionUser.teams.includes(teamId)) {
@@ -32,7 +32,7 @@ export function getUser(user: JWT, otomi: OtomiStack): User {
       if (existing) sessionUser.teams.push(teamId)
     }
   })
-
+  console.log('sessionUser', JSON.stringify(sessionUser))
   return sessionUser
 }
 
