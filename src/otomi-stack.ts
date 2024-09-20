@@ -54,7 +54,6 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import {
   apply,
   checkPodExists,
-  deleteSecretFromK8s,
   getCloudttyActiveTime,
   getKubernetesVersion,
   getLastTektonMessage,
@@ -62,12 +61,11 @@ import {
   getSecretValues,
   getTeamSecretsFromK8s,
   k8sdelete,
-  updateSecretOwnerReferences,
   watchPodUntilRunning,
 } from './k8s_operations'
 import { validateBackupFields } from './utils/backupUtils'
 import { getPolicies } from './utils/policiesUtils'
-import { encryptSecretItem, prepareSealedSecretData } from './utils/sealedSecretUtils'
+import { encryptSecretItem } from './utils/sealedSecretUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 const debug = Debug('otomi:otomi-stack')
@@ -271,8 +269,58 @@ export default class OtomiStack {
     return pick(settings, keys) as Settings
   }
 
-  editSettings(data: Settings, settingId: string) {
-    const settings = this.db.db.get('settings').value()
+  async loadIngressApps(id: string): Promise<void> {
+    try {
+      debug(`Loading ingress apps for ${id}`)
+      const content = await this.repo.loadConfig('env/apps/ingress-nginx.yaml', 'env/apps/secrets.ingress-nginx.yaml')
+      const values = content?.apps?.['ingress-nginx'] ?? {}
+      const teamId = 'admin'
+      this.db.createItem('apps', { enabled: true, values, rawValues: {}, teamId }, { teamId, id }, id)
+      debug(`Ingress app loaded for ${id}`)
+    } catch (error) {
+      debug(`Failed to load ingress apps for ${id}:`)
+    }
+  }
+
+  async removeIngressApps(id: string): Promise<void> {
+    try {
+      debug(`Removing ingress apps for ${id}`)
+      const path = `env/apps/${id}.yaml`
+      const secretsPath = `env/apps/secrets.${id}.yaml`
+      this.db.deleteItem('apps', { teamId: 'admin', id })
+      await this.repo.removeFile(path)
+      await this.repo.removeFile(secretsPath)
+      debug(`Ingress app removed for ${id}`)
+    } catch (error) {
+      debug(`Failed to remove ingress app for ${id}:`)
+    }
+  }
+
+  async editIngressApps(settings: Settings, data: Settings, settingId: string): Promise<void> {
+    if (settingId !== 'ingress') return
+    const initClasses = settings[settingId]?.classes || []
+    const initClassNames = initClasses.map((obj) => obj.className)
+    const dataClasses = data[settingId]?.classes || []
+    const dataClassNames = dataClasses.map((obj) => obj.className)
+    // Ingress app addition
+    for (const ingressClass of dataClasses) {
+      if (!initClassNames.includes(ingressClass.className)) {
+        const id = `ingress-nginx-${ingressClass.className}`
+        await this.loadIngressApps(id)
+      }
+    }
+    // Ingress app deletion
+    for (const ingressClass of initClasses) {
+      if (!dataClassNames.includes(ingressClass.className)) {
+        const id = `ingress-nginx-${ingressClass.className}`
+        await this.removeIngressApps(id)
+      }
+    }
+  }
+
+  async editSettings(data: Settings, settingId: string): Promise<Settings> {
+    const settings = this.db.db.get('settings').value() as Settings
+    await this.editIngressApps(settings, data, settingId)
     settings[settingId] = removeBlankAttributes(data[settingId] as Record<string, any>)
     this.db.db.set('settings', settings).write()
     return settings
@@ -339,11 +387,22 @@ export default class OtomiStack {
   }
 
   async loadApp(appInstanceId: string): Promise<void> {
-    const appId = appInstanceId.startsWith('ingress-nginx-') ? 'ingress-nginx-platform' : appInstanceId
+    const isIngressApp = appInstanceId.startsWith('ingress-nginx-')
+    const appId = isIngressApp ? 'ingress-nginx' : appInstanceId
     const path = `env/apps/${appInstanceId}.yaml`
     const secretsPath = `env/apps/secrets.${appInstanceId}.yaml`
     const content = await this.repo.loadConfig(path, secretsPath)
-    const values = (content?.apps && content.apps[appInstanceId]) || {}
+    let values = content?.apps?.[appInstanceId] ?? {}
+    if (appInstanceId === 'ingress-nginx-platform') {
+      const isIngressNginxPlatformAppExists = await this.repo.fileExists(`env/apps/ingress-nginx-platform.yaml`)
+      if (!isIngressNginxPlatformAppExists) {
+        const defaultIngressNginxContent = await this.repo.loadConfig(
+          `env/apps/ingress-nginx.yaml`,
+          `env/apps/secrets.ingress-nginx.yaml`,
+        )
+        values = defaultIngressNginxContent?.apps?.['ingress-nginx'] ?? {}
+      }
+    }
     const rawValues = {}
 
     let enabled
@@ -390,6 +449,7 @@ export default class OtomiStack {
       // eslint-disable-next-line no-param-reassign
       data.password = generatePassword(16, false)
     }
+
     const team = this.db.createItem('teams', data, { id }, id) as Team
     const apps = getAppList()
     const core = this.getCore()
@@ -1072,53 +1132,6 @@ export default class OtomiStack {
 
   getSecrets(teamId: string): Array<Secret> {
     return this.db.getCollection('secrets', { teamId }) as Array<Secret>
-  }
-
-  async migrateSecrets(): Promise<{
-    status: 'success' | 'info'
-    message: string
-    total?: number
-    migrated?: number
-    remaining?: number
-  }> {
-    const totalSecrets = this.getAllSecrets().length
-    let migratedSecrets = 0
-    const teams: string[] = this.getTeams().map((t) => t.id as string)
-    try {
-      for (const teamId of teams) {
-        const secrets = this.getSecrets(teamId)
-        for (const secret of secrets) {
-          const namespace = secret.namespace || `team-${secret.teamId}`
-          const body = await updateSecretOwnerReferences(secret.name, namespace)
-          const data = prepareSealedSecretData(body)
-          await this.createSealedSecret(teamId, data).then(async () => {
-            await deleteSecretFromK8s(secret.name, namespace)
-            this.db.deleteItem('secrets', { id: secret.id })
-            migratedSecrets += 1
-          })
-        }
-      }
-      debug(`Secrets migration completed successfully! ${migratedSecrets} secrets migrated.`)
-    } catch (error) {
-      debug('Secrets migration error:', error)
-      debug(`Secrets migration interrupted. ${migratedSecrets} secrets migrated out of ${totalSecrets}.`)
-      return {
-        status: 'info',
-        message: 'Something went wrong, secrets migration interrupted.',
-        total: totalSecrets,
-        migrated: migratedSecrets,
-        remaining: totalSecrets - migratedSecrets,
-      }
-    } finally {
-      await this.doDeployment()
-    }
-    return {
-      status: 'success',
-      message: 'Secrets migration completed successfully! The Sealed Secrets will be available in a few minutes.',
-      total: totalSecrets,
-      migrated: migratedSecrets,
-      remaining: totalSecrets - migratedSecrets,
-    }
   }
 
   async createSealedSecret(teamId: string, data: SealedSecret): Promise<SealedSecret> {
