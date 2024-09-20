@@ -1524,66 +1524,6 @@ components:
   schemas:
     App:
       $ref: app.yaml#/App
-    AppAlertmanager:
-      $ref: apps/alertmanager.yaml#/AppAlertmanager
-    AppArgocd:
-      $ref: apps/argocd.yaml#/AppArgocd
-    AppCertManager:
-      $ref: apps/cert-manager.yaml#/AppCertManager
-    AppCnpg:
-      $ref: apps/cnpg.yaml#/AppCnpg
-    AppDrone:
-      $ref: apps/drone.yaml#/AppDrone
-    AppExternalDns:
-      $ref: apps/external-dns.yaml#/AppExternalDns
-    AppFalco:
-      $ref: apps/falco.yaml#/AppFalco
-    AppGitea:
-      $ref: apps/gitea.yaml#/AppGitea
-    AppGrafana:
-      $ref: apps/grafana.yaml#/AppGrafana
-    AppHarbor:
-      $ref: apps/harbor.yaml#/AppHarbor
-    AppHttpbin:
-      $ref: apps/httpbin.yaml#/AppHttpbin
-    AppIngressNginx:
-      $ref: apps/ingress-nginx.yaml#/AppIngressNginx
-    AppIstio:
-      $ref: apps/istio.yaml#/AppIstio
-    AppJaeger:
-      $ref: apps/jaeger.yaml#/AppJaeger
-    AppKeycloak:
-      $ref: apps/keycloak.yaml#/AppKeycloak
-    AppKiali:
-      $ref: apps/kiali.yaml#/AppKiali
-    AppKnative:
-      $ref: apps/knative.yaml#/AppKnative
-    AppKured:
-      $ref: apps/kured.yaml#/AppKured
-    AppKyverno:
-      $ref: apps/kyverno.yaml#/AppKyverno
-    AppTekton:
-      $ref: apps/tekton.yaml#/AppTekton
-    AppLoki:
-      $ref: apps/loki.yaml#/AppLoki
-    AppMinio:
-      $ref: apps/minio.yaml#/AppMinio
-    AppPrometheus:
-      $ref: apps/prometheus.yaml#/AppPrometheus
-    AppRabbitmq:
-      $ref: apps/rabbitmq.yaml#/AppRabbitmq
-    AppSealedSecrets:
-      $ref: apps/sealed-secrets.yaml#/AppSealedSecrets
-    AppTempo:
-      $ref: apps/tempo.yaml#/AppTempo
-    AppThanos:
-      $ref: apps/thanos.yaml#/AppThanos
-    AppTrivy:
-      $ref: apps/trivy.yaml#/AppTrivy
-    AppOtel:
-      $ref: apps/otel.yaml#/AppOtel
-    AppVelero:
-      $ref: apps/velero.yaml#/AppVelero
     AppList:
       $ref: app.yaml#/AppList
     AdditionalCluster:
