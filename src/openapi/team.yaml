@@ -92,9 +92,6 @@ Team:
         grafana:
           type: boolean
           default: false
-        prometheus:
-          type: boolean
-          default: false
         alertmanager:
           type: boolean
           default: false
