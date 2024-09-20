@@ -11,6 +11,7 @@ import { getSessionStack } from './session'
 const env = cleanEnv({})
 
 export function getUser(user: JWT, otomi: OtomiStack): User {
+  console.log('user', JSON.stringify(user))
   const sessionUser: User = { ...user, teams: [], roles: [], isAdmin: false, authz: {} }
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
@@ -21,6 +22,8 @@ export function getUser(user: JWT, otomi: OtomiStack): User {
         sessionUser.roles.push('admin')
       }
     } else if (!sessionUser.roles.includes('team')) sessionUser.roles.push('team')
+    console.log('sessionUser', JSON.stringify(sessionUser))
+    if (user.roles?.includes('member')) sessionUser.roles.push('member')
     // if in team-(not admin), remove 'team-' prefix
     const teamId = group.substring(5)
     if (group.substring(0, 5) === 'team-' && group !== 'team-admin' && !sessionUser.teams.includes(teamId)) {
