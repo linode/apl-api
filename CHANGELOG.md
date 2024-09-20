@@ -2,6 +2,60 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.0.0-rc.0](https://github.com/redkubes/otomi-api/compare/v2.9.0...v3.0.0-rc.0) (2024-09-18)
+
+
+### Features
+
+* **apl-201:** remove password from teams endpoint ([#557](https://github.com/redkubes/otomi-api/issues/557)) ([e7a84df](https://github.com/redkubes/otomi-api/commit/e7a84df637a87c7fcd4f98e31edc5b4a5557292e))
+* call values-schema from core and serve to console ([#541](https://github.com/redkubes/otomi-api/issues/541)) ([693f9ec](https://github.com/redkubes/otomi-api/commit/693f9ec4088d781cb29c0a0da7b7ed5d434bfdbf))
+* hide minio object storage ([#537](https://github.com/redkubes/otomi-api/issues/537)) ([856819d](https://github.com/redkubes/otomi-api/commit/856819d1de26c1d3125938b7f63cf0bc39e3f955))
+* kyverno policies ([#496](https://github.com/redkubes/otomi-api/issues/496)) ([174c318](https://github.com/redkubes/otomi-api/commit/174c31853f34ad4cd2140c8da67d47f5c41a3d90)), closes [#503](https://github.com/redkubes/otomi-api/issues/503) [#504](https://github.com/redkubes/otomi-api/issues/504)
+* linode dockerhub apl-tty ([#542](https://github.com/redkubes/otomi-api/issues/542)) ([c9afde8](https://github.com/redkubes/otomi-api/commit/c9afde84e854c0efcdd6d4e19d5cf4b9706c0d73))
+* one backend obj for all apps ([#530](https://github.com/redkubes/otomi-api/issues/530)) ([8073082](https://github.com/redkubes/otomi-api/commit/8073082d6ef43f5c517bcb12d0014f58ebf46d82))
+* one values schema ([#543](https://github.com/redkubes/otomi-api/issues/543)) ([10d6663](https://github.com/redkubes/otomi-api/commit/10d66635ac7f3e08e3cc22c3ca2bcf2e01228e26))
+* removed license ([#525](https://github.com/redkubes/otomi-api/issues/525)) ([d7750d0](https://github.com/redkubes/otomi-api/commit/d7750d05ab2fd70d3b989b8183ebd4efebd9f209))
+* removed seperate ravalues object ([#538](https://github.com/redkubes/otomi-api/issues/538)) ([a004c78](https://github.com/redkubes/otomi-api/commit/a004c78efb15a172a962d4791cd816faa6e5cd0f))
+* removed shortcuts ([#528](https://github.com/redkubes/otomi-api/issues/528)) ([3b8fa8a](https://github.com/redkubes/otomi-api/commit/3b8fa8a29b63d3c2d41ef8d4c5d2fdb386414dd2))
+* removing hashicorp vault ([#526](https://github.com/redkubes/otomi-api/issues/526)) ([f386bec](https://github.com/redkubes/otomi-api/commit/f386bec5cebea21298803b7d681c2281a955655a))
+* support for Akamai EdgeDNS ([#559](https://github.com/redkubes/otomi-api/issues/559)) ([2d07bab](https://github.com/redkubes/otomi-api/commit/2d07babc32595aa80815d95de2d35cfc0566ae94))
+* update github workflow to push image to the linode dockerhub ([#540](https://github.com/redkubes/otomi-api/issues/540)) ([82fe14a](https://github.com/redkubes/otomi-api/commit/82fe14ae1c0399eaea582b36d6888e5108c2633f))
+
+
+### Bug Fixes
+
+* always release lock ([#550](https://github.com/redkubes/otomi-api/issues/550)) ([eb14dc6](https://github.com/redkubes/otomi-api/commit/eb14dc6e07d48ff47ecdc79b2f4a3328d0cb70bf))
+* apl-chart devDefault url ([#555](https://github.com/redkubes/otomi-api/issues/555)) ([9feed28](https://github.com/redkubes/otomi-api/commit/9feed281378a5faf1a7245b5b6e3cc8f0ef65d6d))
+* bucket only linode ([#546](https://github.com/redkubes/otomi-api/issues/546)) ([7750b16](https://github.com/redkubes/otomi-api/commit/7750b160d804c24dade1715300d937e561e55bc0))
+* change items ([#527](https://github.com/redkubes/otomi-api/issues/527)) ([1d95926](https://github.com/redkubes/otomi-api/commit/1d9592602f13ce62451e3b6677060163bd8fd599))
+* change title of ingress netpol in team settings ([#552](https://github.com/redkubes/otomi-api/issues/552)) ([571ac7f](https://github.com/redkubes/otomi-api/commit/571ac7fe3336f8697c97ddd1f7943ebac337269d))
+* default values for argocd resources ([#524](https://github.com/redkubes/otomi-api/issues/524)) ([e02506b](https://github.com/redkubes/otomi-api/commit/e02506bc3be4337a548df049bd21b93134c584d9))
+* ingress app ([#558](https://github.com/redkubes/otomi-api/issues/558)) ([6678f98](https://github.com/redkubes/otomi-api/commit/6678f98a70c3cbab928c6cde71af2c2dfb888c77))
+* rebranding and description consistency ([#535](https://github.com/redkubes/otomi-api/issues/535)) ([2e59abf](https://github.com/redkubes/otomi-api/commit/2e59abf4201a11845ec5eb3a77471a86e6c5a463))
+* remove enabled flag for argocd ([#539](https://github.com/redkubes/otomi-api/issues/539)) ([b8ffc91](https://github.com/redkubes/otomi-api/commit/b8ffc91555373845f3c9a67ba4fd003edef84cf5))
+* remove secrets migration related code ([#549](https://github.com/redkubes/otomi-api/issues/549)) ([d35a930](https://github.com/redkubes/otomi-api/commit/d35a9305f892f7f112eed06145f352f59e0a42da))
+* rename docs links to new domain ([#545](https://github.com/redkubes/otomi-api/issues/545)) ([7c5597c](https://github.com/redkubes/otomi-api/commit/7c5597c75431daf7b9fc60d74825ede1a6c29ce6))
+* revert oneoff order in service ([#554](https://github.com/redkubes/otomi-api/issues/554)) ([60127c0](https://github.com/redkubes/otomi-api/commit/60127c0c12698653eaee84d91fba859ce4fdd815))
+* rm aws cluster prop ([#531](https://github.com/redkubes/otomi-api/issues/531)) ([4a5d307](https://github.com/redkubes/otomi-api/commit/4a5d307a23ca2fe310140ca7fe224aaaebed44d9))
+* rm azure monitor ([#519](https://github.com/redkubes/otomi-api/issues/519)) ([6aa9f8d](https://github.com/redkubes/otomi-api/commit/6aa9f8d6650917784c13d91778fa610b755b09ff))
+* rm azure settings ([#529](https://github.com/redkubes/otomi-api/issues/529)) ([7dfe2f1](https://github.com/redkubes/otomi-api/commit/7dfe2f10b3c7d69c403abe74abd5b47a2c87dcd1))
+* rm certArn ([#534](https://github.com/redkubes/otomi-api/issues/534)) ([38665a8](https://github.com/redkubes/otomi-api/commit/38665a8402c4d52fae845b21e18ead47410c149b))
+* rm civo and drone notifications ([#547](https://github.com/redkubes/otomi-api/issues/547)) ([35af5b1](https://github.com/redkubes/otomi-api/commit/35af5b1dd929a0b7308b19968c69e544f85b55fd))
+* rm hasCloudLB flag ([#523](https://github.com/redkubes/otomi-api/issues/523)) ([1a81a50](https://github.com/redkubes/otomi-api/commit/1a81a507ec6fbce30fb43c54c804ea5ee76a46fe))
+* rm home alerts ([#548](https://github.com/redkubes/otomi-api/issues/548)) ([bec7d39](https://github.com/redkubes/otomi-api/commit/bec7d394b596ade7d4f795f28a691a8798d51f59))
+* rm ip filter ([#561](https://github.com/redkubes/otomi-api/issues/561)) ([ca93c3d](https://github.com/redkubes/otomi-api/commit/ca93c3dd266c4e680c0060d063cdf3145bbe16a5))
+* rm opencost ([#520](https://github.com/redkubes/otomi-api/issues/520)) ([e893769](https://github.com/redkubes/otomi-api/commit/e893769fcdd1eaae3635f9d517eb1d268084cf86))
+* rm private ingress props ([#556](https://github.com/redkubes/otomi-api/issues/556)) ([fa70af4](https://github.com/redkubes/otomi-api/commit/fa70af45200d1eb47018e5eaa8d74e089ce03b66))
+* rm thanos ([#521](https://github.com/redkubes/otomi-api/issues/521)) ([0a3e2b6](https://github.com/redkubes/otomi-api/commit/0a3e2b6c4d16de6c1d000cf50e1a09422f84830e))
+* set exposure external as default ([#551](https://github.com/redkubes/otomi-api/issues/551)) ([d6fe879](https://github.com/redkubes/otomi-api/commit/d6fe87987f9438053c0cf52e394c4279906a083a))
+* teamapps are now shown correctly again ([#532](https://github.com/redkubes/otomi-api/issues/532)) ([f29bcc5](https://github.com/redkubes/otomi-api/commit/f29bcc52d96e771e359887095d8bb0d6a469543c))
+* update editSettings for ingress app deletion ([#560](https://github.com/redkubes/otomi-api/issues/560)) ([8864933](https://github.com/redkubes/otomi-api/commit/8864933ba8105ff2c3ecfb0b565cfd2c039b15bd))
+
+
+### CI
+
+* use new github secrets and variables ([#533](https://github.com/redkubes/otomi-api/issues/533)) ([035132b](https://github.com/redkubes/otomi-api/commit/035132b215abc114c8a8794eda8a62565b7ea111))
+
 ## [2.9.0](https://github.com/redkubes/otomi-api/compare/v2.8.0...v2.9.0) (2024-04-19)
 
 

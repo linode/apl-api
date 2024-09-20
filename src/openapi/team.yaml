@@ -15,7 +15,7 @@ TeamSelfService:
       default: [ingress]
       uniqueItems: true
     policies:
-      title: Policies
+      title: Security policies
       type: array
       items:
         type: string
@@ -83,8 +83,8 @@ Team:
       type: string
       writeOnly: true
       x-acl:
-        admin: [read-any, update-any]
-        team: []
+        admin: [ read-any, update-any ]
+        team: [ ]
     managedMonitoring:
       title: Managed monitoring
       description: "Activate APL managed Grafana, Prometheus or Alertmanager instances. Optionally disable cross-team access."
@@ -106,15 +106,16 @@ Team:
     resourceQuota:
       $ref: definitions.yaml#/resourceQuota
     networkPolicy:
+      title: Network policies
       properties:
         ingressPrivate:
-          title: Network policies
+          title: Ingress control
           description: When enabled Team Workloads will be bound by ingress network policies. Turning this off introduces a security risk!
           type: boolean
           default: true
         egressPublic:
           title: Egress control
-          description: When enabled egress traffic will be limited to pre-defined endpoints. Turning this off introduces a security risk!
+          description: When enabled all egress traffic will be limited to pre-defined endpoints. Turning this off introduces a security risk!
           type: boolean
           default: true
       type: object

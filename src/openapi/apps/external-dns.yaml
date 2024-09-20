@@ -1,9 +1,0 @@
-AppExternalDns:
-  additionalProperties: false
-  type: object
-  properties:
-    id:
-      $ref: ../definitions.yaml#/idName
-    rawValues:
-      $ref: ../definitions.yaml#/rawValues
-  required: [id]
