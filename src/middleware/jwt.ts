@@ -11,6 +11,8 @@ import { getSessionStack } from './session'
 const env = cleanEnv({})
 
 export function getUser(user: JWT, otomi: OtomiStack): User {
+  const myuser = JSON.stringify(user)
+  console.log('myuser', myuser)
   const sessionUser: User = { ...user, teams: [], roles: [], isAdmin: false, authz: {} }
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
@@ -21,6 +23,9 @@ export function getUser(user: JWT, otomi: OtomiStack): User {
         sessionUser.roles.push('admin')
       }
     } else if (!sessionUser.roles.includes('team')) sessionUser.roles.push('team')
+    if (sessionUser.roles.includes('member')) sessionUser.roles.push('member')
+    const mySessionUser = JSON.stringify(sessionUser)
+    console.log('mySessionUser', mySessionUser)
     // if in team-(not admin), remove 'team-' prefix
     const teamId = group.substring(5)
     if (group.substring(0, 5) === 'team-' && group !== 'team-admin' && !sessionUser.teams.includes(teamId)) {
@@ -37,6 +42,7 @@ export function jwtMiddleware(): RequestHandler {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
     const token = req.header('Authorization')
+    console.log('token', token)
     const otomi = await getSessionStack() // we can use the readonly version
     if (env.isDev) {
       req.user = getUser(
@@ -44,7 +50,7 @@ export function jwtMiddleware(): RequestHandler {
           name: getMockName(),
           email: getMockEmail(),
           groups: getMockGroups(),
-          roles: [],
+          roles: ['member'],
           sub: 'mock-sub-value',
         },
         otomi,
