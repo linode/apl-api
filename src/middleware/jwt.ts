@@ -17,16 +17,16 @@ export function getUser(user: JWT, otomi: OtomiStack): User {
   // for now we map correct group names to roles
   user.groups.forEach((group) => {
     if (['platform-admin', 'all-teams-admin'].includes(group)) {
-      if (!sessionUser.roles.includes('platform-admin')) {
+      if (!sessionUser.roles.includes('platformAdmin')) {
         sessionUser.isPlatformAdmin = true
-        sessionUser.roles.push('platform-admin')
+        sessionUser.roles.push('platformAdmin')
       }
     } else if (['team-admin'].includes(group)) {
-      if (!sessionUser.roles.includes('team-admin')) {
+      if (!sessionUser.roles.includes('teamAdmin')) {
         sessionUser.isTeamAdmin = true
-        sessionUser.roles.push('team-admin')
+        sessionUser.roles.push('teamAdmin')
       }
-    } else if (!sessionUser.roles.includes('member')) sessionUser.roles.push('member')
+    } else if (!sessionUser.roles.includes('teamMember')) sessionUser.roles.push('teamMember')
     // if in team-(not admin), remove 'team-' prefix
     const teamId = group.substring(5)
     if (group.substring(0, 5) === 'team-' && group !== 'team-admin' && !sessionUser.teams.includes(teamId)) {

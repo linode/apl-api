@@ -10,7 +10,8 @@ import OtomiStack from 'src/otomi-stack'
 import { getSessionStack } from './middleware'
 import { App } from './otomi-models'
 
-const adminToken: string = getToken(['team-admin'])
+const platformAdminToken: string = getToken(['platform-admin'])
+const teamAdminToken: string = getToken(['team-admin'])
 const teamToken: string = getToken(['team-team1'])
 const userToken: string = getToken([])
 const teamId = 'team1'
@@ -35,7 +36,7 @@ describe('API authz tests', () => {
     it(`admin can get /settings/alerts`, (done) => {
       agent
         .get(`/v1/settings`)
-        .set('Authorization', `Bearer ${adminToken}`)
+        .set('Authorization', `Bearer ${platformAdminToken}`)
         .expect(200)
         .expect('Content-Type', /json/)
         .end(done)
@@ -56,7 +57,7 @@ describe('API authz tests', () => {
             randomProp: 'randomValue',
           },
         })
-        .set('Authorization', `Bearer ${adminToken}`)
+        .set('Authorization', `Bearer ${platformAdminToken}`)
         .expect(400)
         .end(done)
     })
@@ -73,14 +74,14 @@ describe('API authz tests', () => {
           service: [],
         },
       })
-      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Authorization', `Bearer ${platformAdminToken}`)
       .expect(200)
       .end(done)
   })
   it('admin can get all teams', (done) => {
     agent
       .get('/v1/teams')
-      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Authorization', `Bearer ${platformAdminToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
@@ -88,26 +89,26 @@ describe('API authz tests', () => {
   it('admin can get a given team', (done) => {
     agent
       .get('/v1/teams/team1')
-      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Authorization', `Bearer ${platformAdminToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
   })
   it('admin can create a team', (done) => {
     const data = { name: 'otomi', password: 'test' }
-    agent.post('/v1/teams').send(data).set('Authorization', `Bearer ${adminToken}`).expect(200).end(done)
+    agent.post('/v1/teams').send(data).set('Authorization', `Bearer ${platformAdminToken}`).expect(200).end(done)
   })
   it('admin can deploy changes', (done) => {
     agent
       .get('/v1/deploy')
-      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Authorization', `Bearer ${platformAdminToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
   })
 
   it('admin can get all values', (done) => {
-    agent.get('/v1/otomi/values').set('Authorization', `Bearer ${adminToken}`).expect(200).end(done)
+    agent.get('/v1/otomi/values').set('Authorization', `Bearer ${platformAdminToken}`).expect(200).end(done)
   })
 
   it('team cannot get all values', (done) => {
@@ -126,7 +127,7 @@ describe('API authz tests', () => {
     otomiStack.getApp.callsFake(() => ({ id: 'adminapp', values }))
     agent
       .get('/v1/apps/admin/loki')
-      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Authorization', `Bearer ${platformAdminToken}`)
       .expect(200)
       .then((response) => {
         assert(isEqual(response.body.values, values), 'values property is not filtered')
@@ -357,7 +358,7 @@ describe('API authz tests', () => {
     agent
       .post('/v1/teams')
       .send(data)
-      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Authorization', `Bearer ${platformAdminToken}`)
       .expect(409)
       .end(() => {
         // stub.reset()

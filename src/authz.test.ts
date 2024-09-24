@@ -4,14 +4,15 @@ import { OpenAPIDoc, SessionRole, User } from 'src/otomi-models'
 
 const sessionTeam: User = {
   authz: {},
-  isAdmin: false,
-  roles: [SessionRole.User],
+  isPlatformAdmin: false,
+  isTeamAdmin: false,
+  roles: [SessionRole.TeamMember],
   name: 'joe',
   email: 'a@b.c',
   teams: ['mercury'],
 }
 
-const sessionAdmin: User = { ...sessionTeam, roles: [SessionRole.Admin] }
+const sessionAdmin: User = { ...sessionTeam, roles: [SessionRole.PlatformAdmin] }
 
 describe('Schema wise permissions', () => {
   const spec: OpenAPIDoc = {
@@ -20,8 +21,9 @@ describe('Schema wise permissions', () => {
         Service: {
           type: 'object',
           'x-acl': {
-            admin: ['read-any', 'update-any'],
-            team: ['read'],
+            platformAdmin: ['read-any', 'update-any'],
+            teamAdmin: ['read-any', 'update-any'],
+            teamMember: ['read'],
           },
           properties: {
             name: {
@@ -62,7 +64,7 @@ describe('Ownership wise resource permissions', () => {
         Service: {
           type: 'object',
           'x-acl': {
-            team: ['update'],
+            teamMember: ['update'],
           },
           properties: {
             name: {
@@ -97,8 +99,9 @@ describe('Schema collection wise permissions', () => {
           properties: {},
           type: 'array',
           'x-acl': {
-            admin: ['read-any'],
-            team: ['read-any'],
+            platformAdmin: ['read-any'],
+            teamAdmin: ['read-any'],
+            teamMember: ['read-any'],
           },
           items: {
             type: 'object',

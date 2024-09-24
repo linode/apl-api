@@ -106,8 +106,9 @@ export type AclAction =
   | 'update-any'
 
 export enum SessionRole {
-  Admin = 'admin',
-  User = 'team',
+  PlatformAdmin = 'platformAdmin',
+  TeamAdmin = 'teamAdmin',
+  TeamMember = 'teamMember',
 }
 
 export interface JWT {
