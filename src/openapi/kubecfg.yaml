@@ -1,6 +1,7 @@
 Kubecfg:
   x-acl:
-    admin: [read-any]
-    team: [read]
+    platformAdmin: [read-any]
+    teamAdmin: [read-any]
+    teamMember: [read]
   properties: {}
   type: object

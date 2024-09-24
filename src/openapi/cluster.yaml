@@ -3,12 +3,17 @@
 AdditionalCluster:
   additionalProperties: false
   x-acl:
-    admin:
+    platformAdmin:
+      - create-any
       - read-any
       - update-any
-      - create-any
       - delete-any
-    team:
+    teamAdmin:
+      - create-any
+      - read-any
+      - update-any
+      - delete-any
+    teamMember:
       - read-any
   title: Additional cluster
   description: A Kubernetes cluster running APL.
@@ -29,10 +34,13 @@ Cluster:
   additionalProperties: false
   type: object
   x-acl:
-    admin:
+    platformAdmin:
       - read-any
       - update-any
-    team:
+    teamAdmin:
+      - read-any
+      - update-any
+    teamMember:
       - read-any
   title: Cluster
   description: The Kubernetes cluster running APL.

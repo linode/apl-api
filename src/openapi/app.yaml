@@ -36,8 +36,9 @@ AppList:
 
 App:
   x-acl:
-    admin: [read-any, update-any]
-    team: [read, update]
+    platformAdmin: [read-any, update-any]
+    teamAdmin: [read-any, update-any]
+    teamMember: [read, update]
   type: object
   properties:
     enabled:
@@ -45,17 +46,20 @@ App:
     id:
       $ref: definitions.yaml#/idName
       x-acl:
-        admin: [read-any]
-        team: [read-any]
+        platformAdmin: [read-any]
+        teamAdmin: [read-any]
+        teamMember: [read-any]
       # readOnly: true
     rawValues:
       $ref: definitions.yaml#/rawValues
       x-acl:
-        admin: [read-any, update-any]
-        team: []
+        platformAdmin: [read-any, update-any]
+        teamAdmin: [read-any, update-any]
+        teamMember: []
     values:
       x-acl:
-        admin: [read-any, update-any]
-        team: []
+        platformAdmin: [read-any, update-any]
+        teamAdmin: [read-any, update-any]
+        teamMember: []
       type: object
   required: [id]

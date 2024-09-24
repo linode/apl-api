@@ -1,7 +1,8 @@
 SettingsInfo:
   x-acl:
-    admin: [read-any]
-    team: [read-any]
+    platformAdmin: [read-any]
+    teamAdmin: [read-any]
+    teamMember: [read-any]
   properties:
     cluster:
       properties:

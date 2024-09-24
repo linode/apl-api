@@ -4,8 +4,9 @@ adminPassword:
   description: Uses `otomi.adminPassword` when left empty.
   x-secret: true
   x-acl:
-    admin: [read-any, update-any]
-    team: []
+    platformAdmin: [read-any, update-any]
+    teamAdmin: [read-any, update-any]
+    teamMember: []
 alerts:
   additionalProperties: false
   type: object
@@ -52,8 +53,9 @@ alerts:
           $ref: '#/url'
           description: A Slack webhook URL.
           x-acl:
-            admin: [read-any, update-any]
-            team: []
+            platformAdmin: [read-any, update-any]
+            teamAdmin: [read-any, update-any]
+            teamMember: []
           x-secret: true
       # TODO: Enable again when form rework is done
       # required:
@@ -67,15 +69,17 @@ alerts:
           title: High prio web hook
           type: string
           x-acl:
-            admin: [read-any, update-any]
-            team: []
+            platformAdmin: [read-any, update-any]
+            teamAdmin: [read-any, update-any]
+            teamMember: []
           x-secret: true
         lowPrio:
           title: Low prio web hook
           type: string
           x-acl:
-            admin: [read-any, update-any]
-            team: []
+            platformAdmin: [read-any, update-any]
+            teamAdmin: [read-any, update-any]
+            teamMember: []
           x-secret: true
       # TODO: Enable again when form rework is done
       # required:
@@ -244,8 +248,9 @@ azureClientSecret:
   type: string
   x-secret: true
   x-acl:
-    admin: [read-any, update-any]
-    team: []
+    platformAdmin: [read-any, update-any]
+    teamAdmin: [read-any, update-any]
+    teamMember: []
 azureDns:
   x-hideTitle: true
   properties:
@@ -267,8 +272,9 @@ azureDns:
       type: string
       description: Azure Application Client Secret
       x-acl:
-        admin: [read-any, update-any]
-        team: []
+        platformAdmin: [read-any, update-any]
+        teamAdmin: [read-any, update-any]
+        teamMember: []
       x-secret: true
   required:
     - tenantId
@@ -379,31 +385,35 @@ dns:
                   description: Akamai Edgegrid API server
                   type: string
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                 accessToken:
                   title: Akamai access token
                   description: Akamai Edgegrid API access token
                   type: string
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                   x-secret: true
                 clientToken:
                   title: Akamai client token
                   description: Akamai Edgegrid API client token
                   type: string
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                   x-secret: true
                 clientSecret:
                   title: Akamai client secret
                   description: Akamai Edgegrid API client secret
                   type: string
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                   x-secret: true
               required:
                 - host
@@ -423,8 +433,9 @@ dns:
                     accessKey:
                       $ref: '#/awsAccessKey'
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                   type: object
                 region:
                   $ref: '#/awsRegion'
@@ -457,15 +468,17 @@ dns:
                 apiToken:
                   type: string
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                   x-secret: true
                 apiSecret:
                   type: string
                   description: Required when Email is set.
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                   x-secret: true
                 email:
                   $ref: '#/email'
@@ -485,8 +498,9 @@ dns:
                 apiToken:
                   type: string
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                   x-secret: true
               type: object
           required:
@@ -500,8 +514,9 @@ dns:
                 apiToken:
                   type: string
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                   x-secret: true
               type: object
           required:
@@ -516,8 +531,9 @@ dns:
                   $ref: '#/googleAccountJson'
                   description: A service account key in json format for managing a DNS zone.
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                     x-secret: true
                 project:
                   $ref: '#/googleProject'
@@ -540,16 +556,18 @@ dns:
                   type: object
                   description: 'The provider config'
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                   x-secret: true
                 cert-manager:
                   title: YAML for cert-manager.
                   type: object
                   description: 'The dns01 config as provided here: https://cert-manager.io/docs/configuration/acme/dns01/'
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                   x-secret: true
               required:
                 - name
@@ -572,8 +590,9 @@ droneGit:
     clientSecretValue:
       type: string
       x-acl:
-        admin: [read-any, update-any]
-        team: []
+        platformAdmin: [read-any, update-any]
+        teamAdmin: [read-any, update-any]
+        teamMember: []
       x-secret: true
   type: object
   required: [clientID, clientSecretValue]
@@ -756,8 +775,9 @@ kms:
                 privateKey:
                   $ref: '#/agePrivateKey'
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
               required:
                 - publicKey
                 - privateKey
@@ -782,13 +802,15 @@ kms:
                 accessKey:
                   $ref: '#/awsAccessKey'
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                 secretKey:
                   $ref: '#/awsSecretKey'
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                 region:
                   $ref: '#/awsRegion'
               required:
@@ -816,13 +838,15 @@ kms:
                 clientId:
                   $ref: '#/azureClientId'
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                 clientSecret:
                   $ref: '#/azureClientSecret'
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                 tenantId:
                   $ref: '#/azureTenantId'
               required:
@@ -850,8 +874,9 @@ kms:
                 accountJson:
                   $ref: '#/googleAccountJson'
                   x-acl:
-                    admin: [read-any, update-any]
-                    team: []
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: [read-any, update-any]
+                    teamMember: []
                 project:
                   $ref: '#/googleProject'
               required:
@@ -966,8 +991,9 @@ rawValues:
   description: 'May define value overrides for a chart. WARNING: these values currently have no schema and will not be validated.'
   type: object
   x-acl:
-    admin: [read-any, update-any]
-    team: []
+    platformAdmin: [read-any, update-any]
+    teamAdmin: [read-any, update-any]
+    teamMember: []
 replicas:
   type: integer
   title: Number of replicas

@@ -1,15 +1,20 @@
 Workload:
   x-acl:
-    admin:
-      - delete-any
-      - read-any
+    platformAdmin:
       - create-any
+      - read-any
       - update-any
-    team:
-      - delete
-      - read
+      - delete-any
+    teamAdmin:
+      - create-any
+      - read-any
+      - update-any
+      - delete-any
+    teamMember:
       - create
+      - read
       - update
+      - delete
   type: object
   description: Define the location of the Workloads's manifests or Helm chart.
   properties:
@@ -18,41 +23,41 @@ Workload:
     teamId:
       $ref: definitions.yaml#/idName
     name:
-      $ref: "definitions.yaml#/wordCharacterPattern"
+      $ref: 'definitions.yaml#/wordCharacterPattern'
     icon:
-      $ref: "definitions.yaml#/wordCharacterPattern"
+      $ref: 'definitions.yaml#/wordCharacterPattern'
     url:
       description: URL to either Helm or Git repository
-      $ref: "definitions.yaml#/url"
+      $ref: 'definitions.yaml#/url'
     chartProvider:
       type: string
       title: Chart provider
-      enum: ["helm", "git"]
+      enum: ['helm', 'git']
       default: git
     path:
       description: A relative directory path within the Git repository. Absolute paths cause errors. (only valid for applications sourced from Git).
-      $ref: "definitions.yaml#/wordCharacterPattern"
+      $ref: 'definitions.yaml#/wordCharacterPattern'
     chart:
       description: Chart is a Helm chart name, and must be specified for applications sourced from a Helm repo.
-      $ref: "definitions.yaml#/wordCharacterPattern"
+      $ref: 'definitions.yaml#/wordCharacterPattern'
     revision:
       description: In case of Git, this can be commit, tag, or branch. If omitted, will equal to HEAD. In case of Helm, this is a semver tag for the Chart's version.
-      $ref: "definitions.yaml#/wordCharacterPattern"
+      $ref: 'definitions.yaml#/wordCharacterPattern'
       default: HEAD
     chartMetadata:
-      title: ""
+      title: ''
       properties:
         helmChartVersion:
           type: string
           title: Helm chart version
-          default: ""
+          default: ''
         helmChartDescription:
           type: string
           title: Helm chart description
-          default: ""
+          default: ''
     namespace:
       description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'.
-      $ref: "definitions.yaml#/domain"
+      $ref: 'definitions.yaml#/domain'
     imageUpdateStrategy:
       description: Automatically update the image. Only supported when the image is stored in Harbor.
       title: Auto Image Updater
@@ -80,12 +85,12 @@ Workload:
                 imageRepository:
                   type: string
                   description: The image repository name.
-                  $ref: "definitions.yaml#/wordCharacterPattern"
+                  $ref: 'definitions.yaml#/wordCharacterPattern'
                 tag:
                   description: Tag of the build.
                   type: string
                   default: latest
-                  $ref: "definitions.yaml#/wordCharacterPattern"
+                  $ref: 'definitions.yaml#/wordCharacterPattern'
                 imageParameter:
                   type: string
                   default: image.repository
@@ -113,12 +118,12 @@ Workload:
                 imageRepository:
                   type: string
                   description: The container image repository name.
-                  $ref: "definitions.yaml#/wordCharacterPattern"
+                  $ref: 'definitions.yaml#/wordCharacterPattern'
                 versionConstraint:
                   type: string
-                  default: "v1.0"
-                  description: "Example: v1.0 would allow the image to be updated to any patch version within the v1.0 minor release."
-                  $ref: "definitions.yaml#/wordCharacterPattern"
+                  default: 'v1.0'
+                  description: 'Example: v1.0 would allow the image to be updated to any patch version within the v1.0 minor release.'
+                  $ref: 'definitions.yaml#/wordCharacterPattern'
                 imageParameter:
                   type: string
                   default: image.repository
@@ -139,12 +144,9 @@ Workload:
 
 WorkloadValues:
   x-acl:
-    admin:
-      - read-any
-      - update-any
-    team:
-      - read
-      - update
+    platformAdmin: [read-any, update-any]
+    teamAdmin: [read-any, update-any]
+    teamMember: [read, update]
   type: object
   properties:
     id:
@@ -152,7 +154,7 @@ WorkloadValues:
     teamId:
       $ref: definitions.yaml#/idName
     name:
-      $ref: "definitions.yaml#/wordCharacterPattern"
+      $ref: 'definitions.yaml#/wordCharacterPattern'
     values:
       type: object
   required:

@@ -1,7 +1,8 @@
 K8sService:
   x-acl:
-    admin: [read-any]
-    team: [read]
+    platformAdmin: [read-any]
+    teamAdmin: [read-any]
+    teamMember: [read]
   properties:
     name:
       type: string

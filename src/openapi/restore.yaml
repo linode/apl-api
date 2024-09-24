@@ -1,7 +1,8 @@
 Restore:
   x-externalDocsPath: docs/for-devs/console/deploy-changes
   x-acl:
-    admin: [read-any]
-    team: []
+    platformAdmin: [read-any]
+    teamAdmin: [read-any]
+    teamMember: []
   properties: {}
   type: object
