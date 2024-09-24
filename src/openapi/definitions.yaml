@@ -210,6 +210,11 @@ autoscalingTargets:
     targetMemoryUtilizationPercentage:
       type: integer
       default: 80
+agePrivateKey:
+  title: Private key
+  description: Age private key
+  type: string
+  x-secret: true
 awsAccessKey:
   title: AWS access key
   description: An AWS access key ID.
@@ -726,15 +731,41 @@ ipV4Address:
 kms:
   additionalProperties: false
   description: Manage settings for retrieving encryption/decryption keys.
-  title: Key Management Service settings
+  title: Platform Secrets Engine settings
   type: object
   properties:
     sops:
-      description: Encryption credentials for SOPS to encrypt the platform secrets.
-      title: SOPS credentials
+      description: Select encryption engine for SOPS to encrypt the platform secrets.
+      title: SOPS configuration
       type: object
       oneOf:
         - $ref: '#/offChoice'
+        - properties:
+            provider:
+              type: string
+              enum:
+                - age
+              default: age
+            age:
+              type: object
+              properties:
+                publicKey:
+                  title: Public key
+                  description: Age public key
+                  type: string
+                privateKey:
+                  $ref: '#/agePrivateKey'
+                  x-acl:
+                    admin: [read-any, update-any]
+                    team: []
+              required:
+                - publicKey
+                - privateKey
+              title: ''
+          required:
+            - age
+          title: Age
+          type: object
         - properties:
             provider:
               type: string
@@ -767,7 +798,7 @@ kms:
               title: ''
           required:
             - aws
-          title: AWS
+          title: AWS KMS
           type: object
         - properties:
             provider:
@@ -801,7 +832,7 @@ kms:
               title: ''
           required:
             - azure
-          title: Azure
+          title: Azure Keyvault
           type: object
         - properties:
             provider:
@@ -830,7 +861,7 @@ kms:
               title: ''
           required:
             - google
-          title: Google
+          title: Google KMS
           type: object
 labels:
   $ref: '#/annotations'
