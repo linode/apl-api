@@ -19,6 +19,17 @@ Settings:
       additionalProperties: false
       type: object
       properties:
+        gitea:
+          title: Gitea
+          description: Enable application-level backup of Gitea repositories.
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            retentionPolicy:
+              $ref: definitions.yaml#/backupRetentionPolicy
+            schedule:
+              $ref: definitions.yaml#/backupSchedule
         database:
           type: object
           title: Database backups
@@ -54,7 +65,7 @@ Settings:
                 schedule:
                   $ref: definitions.yaml#/backupSchedule
         persistentVolumes:
-          title:  Backup Persistent Volumes
+          title: Backup Persistent Volumes
           description: To create backups of PVs, add a Linode API token and enable the Velero App.
           properties:
             linodeApiToken:
@@ -131,7 +142,11 @@ Settings:
                         tempo:
                           type: string
                           $ref: definitions.yaml#/wordCharacterPattern
-                          default: tempo 
+                          default: tempo
+                        gitea:
+                          type: string
+                          $ref: definitions.yaml#/wordCharacterPattern
+                          default: gitea
                   required:
                     - region
                     - accessKeyId
