@@ -12,18 +12,21 @@ const env = cleanEnv({})
 
 export function getUser(user: JWT, otomi: OtomiStack): User {
   console.log('user', JSON.stringify(user))
-  const sessionUser: User = { ...user, teams: [], roles: [], isAdmin: false, authz: {} }
+  const sessionUser: User = { ...user, teams: [], roles: [], isPlatformAdmin: false, isTeamAdmin: false, authz: {} }
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
   user.groups.forEach((group) => {
-    if (['admin', 'team-admin'].includes(group)) {
-      if (!sessionUser.roles.includes('admin')) {
-        sessionUser.isAdmin = true
-        sessionUser.roles.push('admin')
+    if (['platform-admin', 'all-teams-admin'].includes(group)) {
+      if (!sessionUser.roles.includes('platform-admin')) {
+        sessionUser.isPlatformAdmin = true
+        sessionUser.roles.push('platform-admin')
       }
-    } else if (!sessionUser.roles.includes('team')) sessionUser.roles.push('team')
-
-    if (group === 'member') sessionUser.roles.push('member')
+    } else if (['team-admin'].includes(group)) {
+      if (!sessionUser.roles.includes('team-admin')) {
+        sessionUser.isTeamAdmin = true
+        sessionUser.roles.push('team-admin')
+      }
+    } else if (!sessionUser.roles.includes('member')) sessionUser.roles.push('member')
     // if in team-(not admin), remove 'team-' prefix
     const teamId = group.substring(5)
     if (group.substring(0, 5) === 'team-' && group !== 'team-admin' && !sessionUser.teams.includes(teamId)) {

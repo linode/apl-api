@@ -15,8 +15,18 @@ TeamAuthz:
 User:
   # readOnly: true
   x-acl:
-    admin: [read]
-    team: [read]
+    platformAdmin:
+      - delete-any
+      - read-any
+      - create-any
+      - update-any
+    teamAdmin:
+      - delete
+      - read
+      - create
+      - update
+    teamMember:
+      - read
   properties:
     name:
       type: string
@@ -24,7 +34,12 @@ User:
       # readOnly: true
     email:
       $ref: definitions.yaml#/email
-    isAdmin:
+    isPlatformAdmin:
+      type: boolean
+      default: false
+      description: If the user is admin.
+      # readOnly: true
+    isTeamAdmin:
       type: boolean
       default: false
       description: If the user is admin.
@@ -55,7 +70,8 @@ User:
       description: A user subject.
   required:
     - authz
-    - isAdmin
+    - isPlatformAdmin
+    - isTeamAdmin
     - name
     - email
     - teams
@@ -64,16 +80,18 @@ User:
 
 TeamUser:
   x-acl:
-    admin:
+    platformAdmin:
       - delete-any
       - read-any
       - create-any
       - update-any
-    team:
+    teamAdmin:
       - delete
       - read
       - create
       - update
+    teamMember:
+      - read
   properties:
     id:
       type: string

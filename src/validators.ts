@@ -1,7 +1,11 @@
 import { CleanOptions, CleanedEnvAccessors, ValidatorSpec, bool, cleanEnv as clean, json, num, str } from 'envalid'
 
-export const AUTHZ_MOCK_IS_ADMIN = bool({
-  desc: 'Indicate if a mocked user is an admin',
+export const AUTHZ_MOCK_IS_PLATFORM_ADMIN = bool({
+  desc: 'Indicate if a mocked user is a platform admin',
+  default: true,
+})
+export const AUTHZ_MOCK_IS_TEAM_ADMIN = bool({
+  desc: 'Indicate if a mocked user is a platform admin',
   default: true,
 })
 export const AUTHZ_MOCK_TEAM = str({ desc: 'Comma separated list of teams a user belongs to', default: undefined })
