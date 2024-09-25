@@ -939,7 +939,7 @@ paths:
   '/users':
     get:
       operationId: getAllUsers
-      x-aclSchema: TeamUser
+      x-aclSchema: User
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -949,14 +949,14 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TeamUser'
+                  $ref: '#/components/schemas/User'
 
   '/teams/{teamId}/users':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamUsers
-      x-aclSchema: TeamUser
+      x-aclSchema: User
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -966,16 +966,16 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TeamUser'
+                  $ref: '#/components/schemas/User'
     post:
       operationId: createUser
       description: Create a team user
-      x-aclSchema: TeamUser
+      x-aclSchema: User
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TeamUser'
+              $ref: '#/components/schemas/User'
         description: User object
         required: true
       responses:
@@ -985,7 +985,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TeamUser'
+                $ref: '#/components/schemas/User'
 
   '/teams/{teamId}/users/{userId}':
     parameters:
@@ -994,7 +994,7 @@ paths:
     delete:
       operationId: deleteUser
       description: Delete a user from a given team
-      x-aclSchema: TeamUser
+      x-aclSchema: User
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -1002,7 +1002,7 @@ paths:
     get:
       operationId: getUser
       description: Get a user from a given team
-      x-aclSchema: TeamUser
+      x-aclSchema: User
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -1010,16 +1010,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TeamUser'
+                $ref: '#/components/schemas/User'
     put:
       operationId: editUser
       description: Edit a user from a given team
-      x-aclSchema: TeamUser
+      x-aclSchema: User
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TeamUser'
+              $ref: '#/components/schemas/User'
         description: User object that contains updated values
         required: true
       responses:
@@ -1029,7 +1029,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TeamUser'
+                $ref: '#/components/schemas/User'
 
   '/projects':
     get:
@@ -1698,8 +1698,8 @@ components:
       $ref: user.yaml#/TeamAuthz
     TeamSelfService:
       $ref: team.yaml#/TeamSelfService
-    TeamUser:
-      $ref: user.yaml#/TeamUser
+    User:
+      $ref: user.yaml#/User
     SessionUser:
       $ref: user.yaml#/SessionUser
     Workload:

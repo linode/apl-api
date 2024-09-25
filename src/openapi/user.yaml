@@ -78,7 +78,7 @@ SessionUser:
     - roles
   type: object
 
-TeamUser:
+User:
   x-acl:
     platformAdmin:
       - delete-any
@@ -100,7 +100,6 @@ TeamUser:
       type: string
       title: Username
       description: A unique username
-      # readOnly: true
     email:
       $ref: definitions.yaml#/email
       title: Email
@@ -117,12 +116,10 @@ TeamUser:
       type: boolean
       default: false
       description: If the user is platform admin.
-      # readOnly: true
     isTeamAdmin:
       type: boolean
       default: false
       description: If the user is team admin.
-      # readOnly: true
   required:
     - name
     - email

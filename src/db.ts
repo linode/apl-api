@@ -19,7 +19,7 @@ import {
   Service,
   Settings,
   Team,
-  TeamUser,
+  User,
   Workload,
   WorkloadValues,
 } from 'src/otomi-models'
@@ -40,7 +40,7 @@ export type DbType =
   | App
   | Workload
   | WorkloadValues
-  | TeamUser
+  | User
   | Project
   | Policies
 export type Schema = {
@@ -56,7 +56,7 @@ export type Schema = {
   builds: Build[]
   policies: Record<string, Policies>
   cloudttys: Cloudtty[]
-  users: TeamUser[]
+  users: User[]
   projects: Project[]
 }
 

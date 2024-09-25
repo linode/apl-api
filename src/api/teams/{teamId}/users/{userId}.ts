@@ -1,6 +1,6 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequestExt, TeamUser } from 'src/otomi-models'
+import { OpenApiRequestExt, User } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:teams:users')
 
@@ -25,7 +25,7 @@ export default function (): OperationHandlerArray {
       const data = otomi.editUser(decodeURIComponent(userId), {
         ...body,
         teamId: decodeURIComponent(teamId),
-      } as TeamUser)
+      } as User)
       res.json(data)
     },
   ]

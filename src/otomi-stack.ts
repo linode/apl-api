@@ -31,7 +31,7 @@ import {
   SettingsInfo,
   Team,
   TeamSelfService,
-  TeamUser,
+  User,
   Workload,
   WorkloadValues,
 } from 'src/otomi-models'
@@ -558,16 +558,16 @@ export default class OtomiStack {
     return this.db.deleteItem('netpols', { id })
   }
 
-  getTeamUsers(teamId: string): Array<TeamUser> {
+  getTeamUsers(teamId: string): Array<User> {
     const ids = { teamId }
-    return this.db.getCollection('users', ids) as Array<TeamUser>
+    return this.db.getCollection('users', ids) as Array<User>
   }
 
-  getAllUsers(): Array<TeamUser> {
-    return this.db.getCollection('users') as Array<TeamUser>
+  getAllUsers(): Array<User> {
+    return this.db.getCollection('users') as Array<User>
   }
 
-  async createUser(sessionUser: SessionUser, teamId: string, data: TeamUser): Promise<TeamUser> {
+  async createUser(sessionUser: SessionUser, teamId: string, data: User): Promise<User> {
     if (!sessionUser.roles.includes('platformAdmin') && data.isPlatformAdmin)
       throw new ForbiddenError('Only platform admins can create platform admins')
     let users = this.db.getCollection('users') as any
@@ -582,7 +582,7 @@ export default class OtomiStack {
       if (users.some((user) => user.username === data.name || user.email === data.email))
         throw new AlreadyExists('User name or email already exists')
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      return this.db.createItem('users', { ...data, teamId }, { teamId, name: data.name }) as TeamUser
+      return this.db.createItem('users', { ...data, teamId }, { teamId, name: data.name }) as User
     } catch (err) {
       console.log('err', err)
       if (err.code === 409) err.publicMessage = 'User name or email already exists'
@@ -590,13 +590,13 @@ export default class OtomiStack {
     }
   }
 
-  getUser(id: string): TeamUser {
-    return this.db.getItem('users', { id }) as TeamUser
+  getUser(id: string): User {
+    return this.db.getItem('users', { id }) as User
   }
 
-  editUser(id: string, data: TeamUser): TeamUser {
+  editUser(id: string, data: User): User {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    return this.db.updateItem('users', data, { id }) as TeamUser
+    return this.db.updateItem('users', data, { id }) as User
   }
 
   deleteUser(id: string): void {
@@ -1336,7 +1336,7 @@ export default class OtomiStack {
       return
     }
     const data = await this.repo.readFile(relativePath)
-    const inData: Array<TeamUser> = get(data, getTeamUsersJsonPath(teamId), [])
+    const inData: Array<User> = get(data, getTeamUsersJsonPath(teamId), [])
     inData.forEach((inUser) => {
       const res: any = this.db.populateItem('users', { ...inUser, teamId }, undefined, inUser.id as string)
       debug(`Loaded user: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
