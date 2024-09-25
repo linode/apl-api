@@ -26,12 +26,12 @@ import {
   Secret,
   Service,
   Session,
+  SessionUser,
   Settings,
   SettingsInfo,
   Team,
   TeamSelfService,
   TeamUser,
-  User,
   Workload,
   WorkloadValues,
 } from 'src/otomi-models'
@@ -567,7 +567,7 @@ export default class OtomiStack {
     return this.db.getCollection('users') as Array<TeamUser>
   }
 
-  async createUser(sessionUser: User, teamId: string, data: TeamUser): Promise<TeamUser> {
+  async createUser(sessionUser: SessionUser, teamId: string, data: TeamUser): Promise<TeamUser> {
     if (!sessionUser.roles.includes('platformAdmin') && data.isPlatformAdmin)
       throw new ForbiddenError('Only platform admins can create platform admins')
     let users = this.db.getCollection('users') as any
@@ -1772,7 +1772,7 @@ export default class OtomiStack {
       corrupt: rootStack.repo.corrupt,
       editor: this.editor,
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
-      user: user as User,
+      user: user as SessionUser,
       versions: {
         core: env.VERSIONS.core,
         api: env.VERSIONS.api ?? process.env.npm_package_version,

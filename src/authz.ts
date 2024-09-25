@@ -2,7 +2,16 @@
 import { Ability, Subject, subject } from '@casl/ability'
 import Debug from 'debug'
 import { each, forIn, get, isEmpty, isEqual, omit, set } from 'lodash'
-import { Acl, AclAction, OpenAPIDoc, PermissionSchema, Schema, TeamAuthz, User, UserAuthz } from 'src/otomi-models'
+import {
+  Acl,
+  AclAction,
+  OpenAPIDoc,
+  PermissionSchema,
+  Schema,
+  SessionUser,
+  TeamAuthz,
+  UserAuthz,
+} from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { extract, flattenObject } from 'src/utils'
 
@@ -136,7 +145,7 @@ export const loadSpecRules = (apiDoc: OpenAPIDoc): any => {
 }
 
 export default class Authz {
-  user: User
+  user: SessionUser
 
   specRules: Record<string, Schema>
 
@@ -146,7 +155,7 @@ export default class Authz {
     this.specRules = loadSpecRules(apiDoc)
   }
 
-  init(user: User) {
+  init(user: SessionUser) {
     this.user = user
     const canRules: any[] = []
     const createRule =

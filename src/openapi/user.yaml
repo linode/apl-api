@@ -12,7 +12,7 @@ TeamAuthz:
           type: string
   required:
     - deniedAttributes
-User:
+SessionUser:
   # readOnly: true
   x-acl:
     platformAdmin:

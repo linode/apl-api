@@ -1700,8 +1700,8 @@ components:
       $ref: team.yaml#/TeamSelfService
     TeamUser:
       $ref: user.yaml#/TeamUser
-    User:
-      $ref: user.yaml#/User
+    SessionUser:
+      $ref: user.yaml#/SessionUser
     Workload:
       $ref: workload.yaml#/Workload
     WorkloadValues:

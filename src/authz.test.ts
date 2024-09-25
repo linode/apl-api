@@ -1,8 +1,8 @@
 import { expect } from 'chai'
 import Authz from 'src/authz'
-import { OpenAPIDoc, SessionRole, User } from 'src/otomi-models'
+import { OpenAPIDoc, SessionRole, SessionUser } from 'src/otomi-models'
 
-const sessionTeam: User = {
+const sessionTeam: SessionUser = {
   authz: {},
   isPlatformAdmin: false,
   isTeamAdmin: false,
@@ -12,7 +12,7 @@ const sessionTeam: User = {
   teams: ['mercury'],
 }
 
-const sessionAdmin: User = { ...sessionTeam, roles: [SessionRole.PlatformAdmin] }
+const sessionAdmin: SessionUser = { ...sessionTeam, roles: [SessionRole.PlatformAdmin] }
 
 describe('Schema wise permissions', () => {
   const spec: OpenAPIDoc = {

@@ -3,15 +3,22 @@ import { debug } from 'console'
 import { RequestHandler } from 'express'
 import jwtDecode from 'jwt-decode'
 import { getMockEmail, getMockGroups, getMockName } from 'src/mocks'
-import { JWT, OpenApiRequestExt, User } from 'src/otomi-models'
+import { JWT, OpenApiRequestExt, SessionUser } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { cleanEnv } from 'src/validators'
 import { getSessionStack } from './session'
 
 const env = cleanEnv({})
 
-export function getUser(user: JWT, otomi: OtomiStack): User {
-  const sessionUser: User = { ...user, teams: [], roles: [], isPlatformAdmin: false, isTeamAdmin: false, authz: {} }
+export function getUser(user: JWT, otomi: OtomiStack): SessionUser {
+  const sessionUser: SessionUser = {
+    ...user,
+    teams: [],
+    roles: [],
+    isPlatformAdmin: false,
+    isTeamAdmin: false,
+    authz: {},
+  }
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
   user.groups.forEach((group) => {
