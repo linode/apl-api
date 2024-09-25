@@ -114,9 +114,21 @@ TeamUser:
       type: string
       title: Last Name
       description: The last name of the user
+    isPlatformAdmin:
+      type: boolean
+      default: false
+      description: If the user is platform admin.
+      # readOnly: true
+    isTeamAdmin:
+      type: boolean
+      default: false
+      description: If the user is team admin.
+      # readOnly: true
   required:
     - name
     - email
     - firstName
     - lastName
+    - isPlatformAdmin
+    - isTeamAdmin
   type: object
