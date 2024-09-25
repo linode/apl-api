@@ -11,7 +11,6 @@ import { getSessionStack } from './session'
 const env = cleanEnv({})
 
 export function getUser(user: JWT, otomi: OtomiStack): User {
-  console.log('user', JSON.stringify(user))
   const sessionUser: User = { ...user, teams: [], roles: [], isPlatformAdmin: false, isTeamAdmin: false, authz: {} }
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
@@ -35,7 +34,6 @@ export function getUser(user: JWT, otomi: OtomiStack): User {
       if (existing) sessionUser.teams.push(teamId)
     }
   })
-  console.log('sessionUser', JSON.stringify(sessionUser))
   return sessionUser
 }
 

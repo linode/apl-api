@@ -90,8 +90,7 @@ TeamUser:
       - read
       - create
       - update
-    teamMember:
-      - read
+    teamMember: []
   properties:
     id:
       type: string

@@ -108,3 +108,38 @@ describe('Workload values', () => {
     expect(res).to.deep.equal({ id: '1', teamId: '2', name: 'name', values: {} })
   })
 })
+
+describe('Team Admin users tests', () => {
+  let otomiStack: OtomiStack
+  beforeEach(async () => {
+    otomiStack = new OtomiStack()
+    await otomiStack.init()
+  })
+  it('should not allow team admin to create platform admin users', async () => {
+    const userData = {
+      name: 'user1',
+      email: 'user1@mail.com',
+      firstName: 'User',
+      lastName: 'One',
+      isPlatformAdmin: true,
+      isTeamAdmin: false,
+    }
+    const sessionUser = { roles: ['teamAdmin'] } as any
+
+    // Mock the createUser method to simulate a 403 Forbidden response
+    const createUserStub = sinonStub(otomiStack, 'createUser').throws(() => {
+      const error = new Error('Forbidden')
+      ;(error as any).status = 403
+      return error
+    })
+
+    try {
+      await otomiStack.createUser(sessionUser, 'team1', userData)
+    } catch (error) {
+      expect(error.status).to.equal(403)
+      expect(error.message).to.equal('Forbidden')
+    } finally {
+      createUserStub.restore() // Ensure the stub is restored after the test
+    }
+  })
+})

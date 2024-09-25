@@ -9,7 +9,7 @@ import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from '
 import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
-import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
+import { AlreadyExists, DeployLockError, ForbiddenError, PublicUrlExists, ValidationError } from 'src/error'
 import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
@@ -567,7 +567,9 @@ export default class OtomiStack {
     return this.db.getCollection('users') as Array<TeamUser>
   }
 
-  async createUser(teamId: string, data: TeamUser): Promise<TeamUser> {
+  async createUser(sessionUser: User, teamId: string, data: TeamUser): Promise<TeamUser> {
+    if (!sessionUser.roles.includes('platformAdmin') && data.isPlatformAdmin)
+      throw new ForbiddenError('Only platform admins can create platform admins')
     let users = this.db.getCollection('users') as any
     if (!env.isDev) {
       const { otomi } = this.getSettings(['otomi'])

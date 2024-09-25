@@ -13,6 +13,12 @@ export class OtomiError extends CustomError {
     this.publicMessage = msg
   }
 }
+export class ForbiddenError extends OtomiError {
+  public constructor(err?: string) {
+    super('Forbidden', err)
+    this.code = 403
+  }
+}
 export class NotExistError extends OtomiError {
   public constructor(err?: string) {
     super('Not Found', err)

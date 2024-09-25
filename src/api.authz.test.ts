@@ -11,8 +11,8 @@ import { getSessionStack } from './middleware'
 import { App } from './otomi-models'
 
 const platformAdminToken: string = getToken(['platform-admin'])
-const teamAdminToken: string = getToken(['team-admin'])
-const teamToken: string = getToken(['team-team1'])
+const teamAdminToken: string = getToken(['team-admin', 'team-team1'])
+const teamMemberToken: string = getToken(['team-team1'])
 const userToken: string = getToken([])
 const teamId = 'team1'
 const otherTeamId = 'team2'
@@ -32,8 +32,8 @@ describe('API authz tests', () => {
     agent.set('Accept', 'application/json')
   })
 
-  describe('Admin /settings endpoint tests', () => {
-    it(`admin can get /settings/alerts`, (done) => {
+  describe('Platform Admin /settings endpoint tests', () => {
+    it(`platform admin can get /settings/alerts`, (done) => {
       agent
         .get(`/v1/settings`)
         .set('Authorization', `Bearer ${platformAdminToken}`)
@@ -41,7 +41,7 @@ describe('API authz tests', () => {
         .expect('Content-Type', /json/)
         .end(done)
     })
-    it('admin cannot put /settings/alerts with extra properties', (done) => {
+    it('platform admin cannot put /settings/alerts with extra properties', (done) => {
       agent
         .put('/v1/settings/alerts')
         .send({
@@ -63,7 +63,7 @@ describe('API authz tests', () => {
     })
   })
 
-  it('admin can update team self-service-flags', (done) => {
+  it('platform admin can update team self-service-flags', (done) => {
     agent
       .put('/v1/teams/team1')
       .send({
@@ -78,7 +78,7 @@ describe('API authz tests', () => {
       .expect(200)
       .end(done)
   })
-  it('admin can get all teams', (done) => {
+  it('platform admin can get all teams', (done) => {
     agent
       .get('/v1/teams')
       .set('Authorization', `Bearer ${platformAdminToken}`)
@@ -86,7 +86,7 @@ describe('API authz tests', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('admin can get a given team', (done) => {
+  it('platform admin can get a given team', (done) => {
     agent
       .get('/v1/teams/team1')
       .set('Authorization', `Bearer ${platformAdminToken}`)
@@ -94,11 +94,11 @@ describe('API authz tests', () => {
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('admin can create a team', (done) => {
+  it('platform admin can create a team', (done) => {
     const data = { name: 'otomi', password: 'test' }
     agent.post('/v1/teams').send(data).set('Authorization', `Bearer ${platformAdminToken}`).expect(200).end(done)
   })
-  it('admin can deploy changes', (done) => {
+  it('platform admin can deploy changes', (done) => {
     agent
       .get('/v1/deploy')
       .set('Authorization', `Bearer ${platformAdminToken}`)
@@ -107,12 +107,12 @@ describe('API authz tests', () => {
       .end(done)
   })
 
-  it('admin can get all values', (done) => {
+  it('platform admin can get all values', (done) => {
     agent.get('/v1/otomi/values').set('Authorization', `Bearer ${platformAdminToken}`).expect(200).end(done)
   })
 
-  it('team cannot get all values', (done) => {
-    agent.get('/v1/otomi/values').set('Authorization', `Bearer ${teamToken}`).expect(403).end(done)
+  it('team member cannot get all values', (done) => {
+    agent.get('/v1/otomi/values').set('Authorization', `Bearer ${teamMemberToken}`).expect(403).end(done)
   })
 
   it('authenticated user cannot get all values', (done) => {
@@ -122,7 +122,7 @@ describe('API authz tests', () => {
   it('unauthenticated user cannot get all values', (done) => {
     agent.get('/v1/otomi/values').expect(401).end(done)
   })
-  it('admin can see values from an app', (done) => {
+  it('platform admin can see values from an app', (done) => {
     const values: App['values'] = { shown: true }
     otomiStack.getApp.callsFake(() => ({ id: 'adminapp', values }))
     agent
@@ -136,62 +136,62 @@ describe('API authz tests', () => {
       .catch((err) => done(err))
   })
 
-  it('team can deploy changes', (done) => {
+  it('team member can deploy changes', (done) => {
     agent
       .get('/v1/deploy')
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
   })
 
-  it('team cannot get all teams', (done) => {
+  it('team member cannot get all teams', (done) => {
     agent
       .get('/v1/deploy')
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
   })
 
-  it('team can get all teams', (done) => {
+  it('team member can get all teams', (done) => {
     agent
       .get('/v1/teams')
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('team cannot delete all teams', (done) => {
-    agent.delete('/v1/teams').set('Authorization', `Bearer ${teamToken}`).expect(404).end(done)
+  it('team member cannot delete all teams', (done) => {
+    agent.delete('/v1/teams').set('Authorization', `Bearer ${teamMemberToken}`).expect(404).end(done)
   })
-  it('team cannot create a new team', (done) => {
+  it('team member cannot create a new team', (done) => {
     agent
       .post('/v1/teams')
       .send({ name: 'otomi', password: 'test' })
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
       .end(done)
   })
 
-  it('team can get other teams', (done) => {
+  it('team member can get other teams', (done) => {
     agent
       .get('/v1/teams/team2')
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('team can get its team data', (done) => {
+  it('team member can get its team data', (done) => {
     agent
       .get('/v1/teams/team1')
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
   })
 
-  it('team can create its own services', (done) => {
+  it('team member can create its own services', (done) => {
     agent
       .post('/v1/teams/team1/services')
       .send({
@@ -205,40 +205,44 @@ describe('API authz tests', () => {
         },
       })
       .set('Content-Type', 'application/json')
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('team can get its services', (done) => {
+  it('team member can get its services', (done) => {
     agent
       .get('/v1/teams/team1/services')
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('team can get a specific service', (done) => {
+  it('team member can get a specific service', (done) => {
     agent
       .get('/v1/teams/team1/services/service1')
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('team can delete its own service', (done) => {
+  it('team member can delete its own service', (done) => {
     agent
       .delete('/v1/teams/team1/services/service')
       .set('Content-Type', 'application/json')
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('team can not delete service from other team', (done) => {
-    agent.delete('/v1/teams/team2/services/service1').set('Authorization', `Bearer ${teamToken}`).expect(403).end(done)
+  it('team member can not delete service from other team', (done) => {
+    agent
+      .delete('/v1/teams/team2/services/service1')
+      .set('Authorization', `Bearer ${teamMemberToken}`)
+      .expect(403)
+      .end(done)
   })
-  it('team can not update service from other team', (done) => {
+  it('team member can not update service from other team', (done) => {
     agent
       .put('/v1/teams/team2/services/service1')
       .send({
@@ -246,40 +250,44 @@ describe('API authz tests', () => {
         serviceType: 'ksvcPredeployed',
         ingress: {},
       })
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
       .end(done)
   })
-  it('team can not update workload from other team', (done) => {
+  it('team member can not update workload from other team', (done) => {
     agent
       .put('/v1/teams/team2/workloads/my-uuid')
       .send({
         name: 'wid',
         url: 'https://test.local/',
       })
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
       .end(done)
   })
 
-  it('team can not delete workload from other team', (done) => {
-    agent.delete('/v1/teams/team2/workloads/my-uuid').set('Authorization', `Bearer ${teamToken}`).expect(403).end(done)
+  it('team member can not delete workload from other team', (done) => {
+    agent
+      .delete('/v1/teams/team2/workloads/my-uuid')
+      .set('Authorization', `Bearer ${teamMemberToken}`)
+      .expect(403)
+      .end(done)
   })
-  it('team can not update workload values from other team', (done) => {
+  it('team member can not update workload values from other team', (done) => {
     agent
       .put('/v1/teams/team2/workloads/my-uuid/values')
       .send({
         values: { a: 'b' },
       })
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
       .end(done)
   })
-  xit('team can not see filtered values', (done) => {
+  xit('team member can not see filtered values', (done) => {
     otomiStack.getApp.callsFake(() => ({ id: 'teamapp', values: { hidden: true } }))
     agent
       .get('/v1/apps/team1/loki')
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .then((response) => {
         assert(response.body.values === undefined, 'values property is filtered')
@@ -291,7 +299,7 @@ describe('API authz tests', () => {
     agent
       .get('/v1/apiDocs')
       .expect(200)
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect('Content-Type', /json/)
       .end(done)
   })
@@ -299,11 +307,11 @@ describe('API authz tests', () => {
     agent
       .get('/v1/session')
       .expect(200)
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('anonymous cannot get session', (done) => {
+  it('anonymous user cannot get session', (done) => {
     agent.get('/v1/session').expect(401).expect('Content-Type', /json/).end(done)
   })
 
@@ -366,7 +374,7 @@ describe('API authz tests', () => {
       })
   })
 
-  it('team can create its own sealedsecret', (done) => {
+  it('team member can create its own sealedsecret', (done) => {
     const data = {
       name: 'demo',
       encryptedData: [{ key: 'foo', value: 'bar' }],
@@ -375,20 +383,20 @@ describe('API authz tests', () => {
     agent
       .post(`/v1/teams/${teamId}/sealedsecrets`)
       .send(data)
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .end(done)
   })
 
-  it('team can read its own sealedsecret', (done) => {
+  it('team member can read its own sealedsecret', (done) => {
     agent
       .get(`/v1/teams/${teamId}/sealedsecrets/my-uuid`)
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .end(done)
   })
 
-  it('team can update its own sealedsecret', (done) => {
+  it('team member can update its own sealedsecret', (done) => {
     const data = {
       name: 'demo',
       encryptedData: [{ key: 'foo', value: 'baz' }],
@@ -397,21 +405,21 @@ describe('API authz tests', () => {
     agent
       .put(`/v1/teams/${teamId}/sealedsecrets/my-uuid`)
       .send(data)
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .end(done)
   })
 
-  it('team can delete its own sealedsecret', (done) => {
+  it('team member can delete its own sealedsecret', (done) => {
     agent
       .delete(`/v1/teams/${teamId}/sealedsecrets/my-uuid`)
       .set('Content-Type', 'application/json')
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
   })
-  it('team cannot create others sealedsecret', (done) => {
+  it('team member cannot create others sealedsecret', (done) => {
     const data = {
       name: 'demo',
       encryptedData: [{ key: 'foo', value: 'bar' }],
@@ -420,20 +428,20 @@ describe('API authz tests', () => {
     agent
       .post(`/v1/teams/${otherTeamId}/sealedsecrets`)
       .send(data)
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
       .end(done)
   })
 
-  it('team cannot read others sealedsecret', (done) => {
+  it('team member cannot read others sealedsecret', (done) => {
     agent
       .get(`/v1/teams/${otherTeamId}/sealedsecrets/my-uuid`)
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
       .end(done)
   })
 
-  it('team cannot update others sealedsecret', (done) => {
+  it('team member cannot update others sealedsecret', (done) => {
     const data = {
       name: 'demo',
       encryptedData: [{ key: 'foo', value: 'baz' }],
@@ -442,47 +450,138 @@ describe('API authz tests', () => {
     agent
       .put(`/v1/teams/${otherTeamId}/sealedsecrets/my-uuid`)
       .send(data)
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
       .end(done)
   })
 
-  it('team cannot delete others sealedsecret', (done) => {
+  it('team member cannot delete others sealedsecret', (done) => {
     agent
       .delete(`/v1/teams/${otherTeamId}/sealedsecrets/my-uuid`)
       .set('Content-Type', 'application/json')
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
       .expect('Content-Type', /json/)
       .end(done)
   })
 
-  it('team can get its own sealedsecrets', (done) => {
+  it('team member can get its own sealedsecrets', (done) => {
     agent
       .get(`/v1/teams/${teamId}/sealedsecrets`)
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
       .end(done)
   })
 
-  it('team cannot get others sealedsecrets', (done) => {
+  it('team member cannot get others sealedsecrets', (done) => {
     agent
       .get(`/v1/teams/${otherTeamId}/sealedsecrets`)
-      .set('Authorization', `Bearer ${teamToken}`)
+      .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
       .end(done)
   })
 
-  it('team cannot get all secrets', (done) => {
-    agent.get('/v1/secrets').set('Authorization', `Bearer ${teamToken}`).expect(403).end(done)
+  it('team member cannot get all secrets', (done) => {
+    agent.get('/v1/secrets').set('Authorization', `Bearer ${teamMemberToken}`).expect(403).end(done)
   })
 
-  it('team cannot get all sealedsecrets', (done) => {
-    agent.get('/v1/sealedsecrets').set('Authorization', `Bearer ${teamToken}`).expect(403).end(done)
+  it('team member cannot get all sealedsecrets', (done) => {
+    agent.get('/v1/sealedsecrets').set('Authorization', `Bearer ${teamMemberToken}`).expect(403).end(done)
   })
 
-  it('team cannot get the sealedsecretskeys', (done) => {
-    agent.get('/v1/sealedsecretskeys').set('Authorization', `Bearer ${teamToken}`).expect(403).end(done)
+  it('team member cannot get the sealedsecretskeys', (done) => {
+    agent.get('/v1/sealedsecretskeys').set('Authorization', `Bearer ${teamMemberToken}`).expect(403).end(done)
+  })
+
+  describe('Platform Admin /users endpoint tests', () => {
+    const userData = {
+      name: 'user1',
+      email: 'user1@mail.com',
+      firstName: 'user',
+      lastName: 'one',
+    }
+    it('platform admin can create platform admin users', (done) => {
+      agent
+        .post(`/v1/teams/${teamId}/users`)
+        .send({ ...userData, isPlatformAdmin: true, isTeamAdmin: false })
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .end(done)
+    })
+    it('platform admin can create team admin users', (done) => {
+      agent
+        .post(`/v1/teams/${teamId}/users`)
+        .send({ ...userData, isPlatformAdmin: false, isTeamAdmin: true })
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .end(done)
+    })
+    it('platform admin can create team member users', (done) => {
+      agent
+        .post(`/v1/teams/${teamId}/users`)
+        .send({ ...userData, isPlatformAdmin: false, isTeamAdmin: false })
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .end(done)
+    })
+  })
+  describe('Team Admin /users endpoint tests', () => {
+    const userData = {
+      name: 'user1',
+      email: 'user1@mail.com',
+      firstName: 'user',
+      lastName: 'one',
+      teamId,
+    }
+    it('team admin can create team admin users in their team', (done) => {
+      agent
+        .post(`/v1/teams/${teamId}/users`)
+        .send({ ...userData, isPlatformAdmin: false, isTeamAdmin: true })
+        .set('Authorization', `Bearer ${teamAdminToken}`)
+        .expect(200)
+        .end(done)
+    })
+    it('team admin can create team member users in their team', (done) => {
+      agent
+        .post(`/v1/teams/${teamId}/users`)
+        .send({ ...userData, isPlatformAdmin: false, isTeamAdmin: false })
+        .set('Authorization', `Bearer ${teamAdminToken}`)
+        .expect(200)
+        .end(done)
+    })
+  })
+  describe('Team Member /users endpoint tests', () => {
+    const userData = {
+      name: 'user1',
+      email: 'user1@mail.com',
+      firstName: 'user',
+      lastName: 'one',
+      teamId,
+    }
+    it('team member cannot create platform admin users', (done) => {
+      agent
+        .post(`/v1/teams/${teamId}/users`)
+        .send({ ...userData, isPlatformAdmin: true, isTeamAdmin: false })
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(403)
+        .end(done)
+    })
+    it('team member cannot create team admin users in their team', (done) => {
+      agent
+        .post(`/v1/teams/${teamId}/users`)
+        .send({ ...userData, isPlatformAdmin: false, isTeamAdmin: true })
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(403)
+        .end(done)
+    })
+    it('team member cannot create team member users in their team', (done) => {
+      agent
+        .post(`/v1/teams/${teamId}/users`)
+        .send({ ...userData, isPlatformAdmin: false, isTeamAdmin: false })
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(403)
+        .end(done)
+    })
   })
 })
