@@ -564,32 +564,31 @@ export default class OtomiStack {
   }
 
   getAllUsers(): Array<TeamUser> {
-    const { otomi } = this.getSettings(['otomi'])
-    const keycloak = this.getApp('admin', 'keycloak')
-    console.log('keycloak', keycloak)
-    console.log('otomi', otomi)
     return this.db.getCollection('users') as Array<TeamUser>
   }
 
   async createUser(teamId: string, data: TeamUser): Promise<TeamUser> {
-    const { otomi } = this.getSettings(['otomi'])
-    const keycloak = this.getApp('admin', 'keycloak')
-    const username = (keycloak?.values?.adminUsername as string) || 'otomi-admin'
-    const password = otomi?.adminPassword || 'welcomeotomi'
+    let users = this.db.getCollection('users') as any
+    if (!env.isDev) {
+      const { otomi } = this.getSettings(['otomi'])
+      const keycloak = this.getApp('admin', 'keycloak')
+      const username = (keycloak?.values?.adminUsername as string) || 'otomi-admin'
+      const password = otomi?.adminPassword || 'welcomeotomi'
 
-    console.log('keycloak?.values?.adminUsername', keycloak?.values?.adminUsername)
-    console.log('otomi?.adminPassword', otomi?.adminPassword)
+      console.log('keycloak?.values?.adminUsername', keycloak?.values?.adminUsername)
+      console.log('otomi?.adminPassword', otomi?.adminPassword)
 
-    const users = await getKeycloakUsers(username, password)
-
-    if (users.some((user) => user.username === data.name)) throw new AlreadyExists('User name already exists')
-    if (users.some((user) => user.email === data.email)) throw new AlreadyExists('User email already exists')
+      users = await getKeycloakUsers(username, password)
+    }
 
     try {
+      if (users.some((user) => user.username === data.name || user.email === data.email))
+        throw new AlreadyExists('User name or email already exists')
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return this.db.createItem('users', { ...data, teamId }, { teamId, name: data.name }) as TeamUser
     } catch (err) {
-      if (err.code === 409) err.publicMessage = 'User name already exists'
+      console.log('err', err)
+      if (err.code === 409) err.publicMessage = 'User name or email already exists'
       throw err
     }
   }
