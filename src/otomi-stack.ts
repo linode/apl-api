@@ -573,14 +573,9 @@ export default class OtomiStack {
       const { otomi } = this.getSettings(['otomi'])
       const keycloak = this.getApp('admin', 'keycloak')
       const username = (keycloak?.values?.adminUsername as string) || 'otomi-admin'
-      const password = otomi?.adminPassword || 'welcomeotomi'
-
-      console.log('keycloak?.values?.adminUsername', keycloak?.values?.adminUsername)
-      console.log('otomi?.adminPassword', otomi?.adminPassword)
-
+      const password = otomi?.adminPassword as string
       users = await getKeycloakUsers(username, password)
     }
-
     try {
       if (users.some((user) => user.username === data.name || user.email === data.email))
         throw new AlreadyExists('User name or email already exists')
