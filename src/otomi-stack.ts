@@ -67,6 +67,7 @@ import {
 import { validateBackupFields } from './utils/backupUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { encryptSecretItem } from './utils/sealedSecretUtils'
+import { getKeycloakUsers } from './utils/userUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 const debug = Debug('otomi:otomi-stack')
@@ -563,10 +564,27 @@ export default class OtomiStack {
   }
 
   getAllUsers(): Array<TeamUser> {
+    const { otomi } = this.getSettings(['otomi'])
+    const keycloak = this.getApp('admin', 'keycloak')
+    console.log('keycloak', keycloak)
+    console.log('otomi', otomi)
     return this.db.getCollection('users') as Array<TeamUser>
   }
 
-  createUser(teamId: string, data: TeamUser): TeamUser {
+  async createUser(teamId: string, data: TeamUser): Promise<TeamUser> {
+    const { otomi } = this.getSettings(['otomi'])
+    const keycloak = this.getApp('admin', 'keycloak')
+    const username = (keycloak?.values?.adminUsername as string) || 'otomi-admin'
+    const password = otomi?.adminPassword || 'welcomeotomi'
+
+    console.log('keycloak?.values?.adminUsername', keycloak?.values?.adminUsername)
+    console.log('otomi?.adminPassword', otomi?.adminPassword)
+
+    const users = await getKeycloakUsers(username, password)
+
+    if (users.some((user) => user.username === data.name)) throw new AlreadyExists('User name already exists')
+    if (users.some((user) => user.email === data.email)) throw new AlreadyExists('User email already exists')
+
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return this.db.createItem('users', { ...data, teamId }, { teamId, name: data.name }) as TeamUser
