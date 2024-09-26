@@ -571,6 +571,7 @@ export default class OtomiStack {
     if (!sessionUser.roles.includes('platformAdmin') && data.isPlatformAdmin)
       throw new ForbiddenError('Only platform admins can create platform admins')
     let users = this.db.getCollection('users') as any
+    console.log('users 1:', users)
     if (!env.isDev) {
       const { otomi } = this.getSettings(['otomi'])
       const keycloak = this.getApp('admin', 'keycloak')
@@ -579,8 +580,10 @@ export default class OtomiStack {
       users = await getKeycloakUsers(username, password)
     }
     try {
-      if (users.some((user) => user.username === data.name || user.email === data.email))
-        throw new AlreadyExists('User name or email already exists')
+      if (users.some((user) => user.username === data.name || user.email === data.email)) {
+        console.log('User name or email already exists')
+        console.log('users 2:', users)
+      }
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return this.db.createItem('users', { ...data, teamId }, { teamId, name: data.name }) as User
     } catch (err) {
