@@ -496,7 +496,7 @@ describe('API authz tests', () => {
 
   describe('Platform Admin /users endpoint tests', () => {
     const userData = {
-      name: 'user1',
+      username: 'user1',
       email: 'user1@mail.com',
       firstName: 'user',
       lastName: 'one',
@@ -528,7 +528,7 @@ describe('API authz tests', () => {
   })
   describe('Team Admin /users endpoint tests', () => {
     const userData = {
-      name: 'user1',
+      username: 'user1',
       email: 'user1@mail.com',
       firstName: 'user',
       lastName: 'one',
@@ -553,7 +553,7 @@ describe('API authz tests', () => {
   })
   describe('Team Member /users endpoint tests', () => {
     const userData = {
-      name: 'user1',
+      username: 'user1',
       email: 'user1@mail.com',
       firstName: 'user',
       lastName: 'one',
