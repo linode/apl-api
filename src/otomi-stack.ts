@@ -114,7 +114,7 @@ export function getTeamWorkloadValuesFilePath(teamId: string, workloadName): str
 }
 
 export function getTeamUsersFilePath(teamId: string): string {
-  return `env/teams/users.${teamId}.yaml`
+  return `env/teams/secrets.users.${teamId}.yaml`
 }
 
 export function getTeamProjectsFilePath(teamId: string): string {
@@ -571,21 +571,21 @@ export default class OtomiStack {
     if (!sessionUser.roles.includes('platformAdmin') && data.isPlatformAdmin)
       throw new ForbiddenError('Only platform admins can create platform admins')
     let users = this.db.getCollection('users') as any
-    console.log('users 1:', users)
     if (!env.isDev) {
-      const { otomi } = this.getSettings(['otomi'])
+      const { otomi, cluster } = this.getSettings(['otomi', 'cluster'])
       const keycloak = this.getApp('admin', 'keycloak')
+      const keycloakBaseUrl = `https://keycloak.${cluster?.domainSuffix}` || 'https://keycloak.172.233.36.231.nip.io'
+      console.log('cluster?.domainSuffix', cluster?.domainSuffix)
+      const realm = 'otomi'
       const username = (keycloak?.values?.adminUsername as string) || 'otomi-admin'
       const password = otomi?.adminPassword as string
-      users = await getKeycloakUsers(username, password)
+      users = await getKeycloakUsers(keycloakBaseUrl, realm, username, password)
     }
     try {
-      if (users.some((user) => user.username === data.name || user.email === data.email)) {
-        console.log('User name or email already exists')
-        console.log('users 2:', users)
-      }
+      if (users.some((user) => user.username === data.username || user.email === data.email))
+        throw new AlreadyExists('User name or email already exists')
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      return this.db.createItem('users', { ...data, teamId }, { teamId, name: data.name }) as User
+      return this.db.createItem('users', { ...data, teamId }, { teamId, name: data.username }) as User
     } catch (err) {
       console.log('err', err)
       if (err.code === 409) err.publicMessage = 'User name or email already exists'

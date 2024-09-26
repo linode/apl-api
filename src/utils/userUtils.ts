@@ -1,14 +1,11 @@
 import axios from 'axios'
 import https from 'https'
 
-const keycloakBaseUrl = 'https://keycloak.172.233.37.47.nip.io'
-const realm = 'otomi'
-
 const httpsAgent = new https.Agent({
   rejectUnauthorized: false,
 })
 
-async function getKeycloakToken(username: string, password: string) {
+async function getKeycloakToken(keycloakBaseUrl: string, realm: string, username: string, password: string) {
   try {
     const response = await axios.post(
       `${keycloakBaseUrl}/realms/${realm}/protocol/openid-connect/token`,
@@ -33,11 +30,13 @@ async function getKeycloakToken(username: string, password: string) {
 }
 
 export async function getKeycloakUsers(
+  keycloakBaseUrl: string,
+  realm: string,
   username: string,
   password: string,
 ): Promise<{ username: string; email: string }[]> {
   try {
-    const token = await getKeycloakToken(username, password)
+    const token = await getKeycloakToken(keycloakBaseUrl, realm, username, password)
     const url = `${keycloakBaseUrl}/admin/realms/${realm}/users`
 
     const response = await axios.get(url, {

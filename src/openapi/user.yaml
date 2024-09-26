@@ -96,7 +96,7 @@ User:
       type: string
     teamId:
       $ref: 'definitions.yaml#/idName'
-    name:
+    username:
       type: string
       title: Username
       description: A unique username
@@ -121,7 +121,7 @@ User:
       default: false
       description: If the user is team admin.
   required:
-    - name
+    - username
     - email
     - firstName
     - lastName
