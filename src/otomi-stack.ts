@@ -1333,7 +1333,7 @@ export default class OtomiStack {
   }
 
   async loadTeamUsers(teamId: string): Promise<void> {
-    const relativePath = getTeamUsersFilePath(teamId)
+    const relativePath = `${getTeamUsersFilePath(teamId)}${env.isDev ? '' : '.dec'}`
     if (!(await this.repo.fileExists(relativePath))) {
       debug(`Team ${teamId} has no users yet`)
       return
