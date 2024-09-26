@@ -1598,7 +1598,7 @@ export default class OtomiStack {
     const cleaneUsers: Array<Record<string, any>> = users.map((obj) => {
       return omit(obj, ['teamId'])
     })
-    const relativePath = getTeamUsersFilePath(teamId)
+    const relativePath = `${getTeamUsersFilePath(teamId)}${env.isDev ? '' : '.dec'}`
     const outData: Record<string, any> = set({}, getTeamUsersJsonPath(teamId), cleaneUsers)
     debug(`Saving users of team: ${teamId}`)
     await this.repo.writeFile(relativePath, outData)
