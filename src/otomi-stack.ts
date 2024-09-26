@@ -574,8 +574,7 @@ export default class OtomiStack {
     if (!env.isDev) {
       const { otomi, cluster } = this.getSettings(['otomi', 'cluster'])
       const keycloak = this.getApp('admin', 'keycloak')
-      const keycloakBaseUrl = `https://keycloak.${cluster?.domainSuffix}` || 'https://keycloak.172.233.36.231.nip.io'
-      console.log('cluster?.domainSuffix', cluster?.domainSuffix)
+      const keycloakBaseUrl = `https://keycloak.${cluster?.domainSuffix}`
       const realm = 'otomi'
       const username = (keycloak?.values?.adminUsername as string) || 'otomi-admin'
       const password = otomi?.adminPassword as string
