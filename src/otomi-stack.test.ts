@@ -117,7 +117,7 @@ describe('Team Admin users tests', () => {
   })
   it('should not allow team admin to create platform admin users', async () => {
     const userData = {
-      name: 'user1',
+      username: 'user1',
       email: 'user1@mail.com',
       firstName: 'User',
       lastName: 'One',
