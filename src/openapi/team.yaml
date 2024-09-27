@@ -76,12 +76,9 @@ Team:
         teamMember: []
     managedMonitoring:
       title: Managed monitoring
-      description: 'Activate APL managed Grafana, Prometheus or Alertmanager instances. Optionally disable cross-team access.'
+      description: 'Activate APL managed Grafana or Alertmanager instances. Optionally disable cross-team access.'
       properties:
         grafana:
-          type: boolean
-          default: false
-        prometheus:
           type: boolean
           default: false
         alertmanager:

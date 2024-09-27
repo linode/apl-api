@@ -20,6 +20,17 @@ Settings:
       additionalProperties: false
       type: object
       properties:
+        gitea:
+          title: Gitea
+          description: Enable application-level backup of Gitea repositories.
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            retentionPolicy:
+              $ref: definitions.yaml#/backupRetentionPolicy
+            schedule:
+              $ref: definitions.yaml#/backupSchedule
         database:
           type: object
           title: Database backups
@@ -133,6 +144,10 @@ Settings:
                           type: string
                           $ref: definitions.yaml#/wordCharacterPattern
                           default: tempo
+                        gitea:
+                          type: string
+                          $ref: definitions.yaml#/wordCharacterPattern
+                          default: gitea
                   required:
                     - region
                     - accessKeyId
