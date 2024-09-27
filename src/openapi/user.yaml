@@ -16,15 +16,15 @@ SessionUser:
   # readOnly: true
   x-acl:
     platformAdmin:
-      - delete-any
-      - read-any
       - create-any
+      - read-any
       - update-any
+      - delete-any
     teamAdmin:
-      - delete
-      - read
       - create
+      - read
       - update
+      - delete
     teamMember:
       - read
   properties:
@@ -81,14 +81,13 @@ SessionUser:
 User:
   x-acl:
     platformAdmin:
-      - delete-any
-      - read-any
       - create-any
+      - read-any
       - update-any
+      - delete-any
     teamAdmin:
-      - delete
-      - read
       - create
+      - read
       - update
     teamMember: []
   properties:
@@ -120,6 +119,13 @@ User:
       type: boolean
       default: false
       description: If the user is team admin.
+    teams:
+      description: A list of teams the user belongs to.
+      title: Teams
+      type: array
+      items:
+        type: string
+      uniqueItems: true
   required:
     - username
     - email

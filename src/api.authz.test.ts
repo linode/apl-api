@@ -550,6 +550,14 @@ describe('API authz tests', () => {
         .expect(200)
         .end(done)
     })
+    it('team admin cannot delete team member users', (done) => {
+      agent
+        .delete(`/v1/teams/${teamId}/users/user1`)
+        .send({ id: 'user1' })
+        .set('Authorization', `Bearer ${teamAdminToken}`)
+        .expect(403)
+        .end(done)
+    })
   })
   describe('Team Member /users endpoint tests', () => {
     const userData = {
