@@ -1597,10 +1597,24 @@ export default class OtomiStack {
     const cleaneUsers: Array<Record<string, any>> = users.map((obj) => {
       return omit(obj, ['teamId'])
     })
-    const relativePath = `${getTeamUsersFilePath(teamId)}${env.isDev ? '' : '.dec'}`
+    // const teamUsersSafeFilePath = this.repo.getSafePath(getTeamUsersFilePath(teamId))
+    // const relativePath = (await this.repo.fileExists(teamUsersSafeFilePath))
+    //   ? teamUsersSafeFilePath
+    //   : getTeamUsersFilePath(teamId)
     const outData: Record<string, any> = set({}, getTeamUsersJsonPath(teamId), cleaneUsers)
+    // debug(`Saving users of team: ${teamId}`)
+    // await this.repo.writeFile(relativePath, outData)
+
+    const inSecretRelativeFilePath = getTeamUsersFilePath(teamId)
+    const { secretFilePostfix } = this.repo
+    let secretDataRelativePath = `${inSecretRelativeFilePath}${secretFilePostfix}`
+    if (secretFilePostfix) {
+      const secretExists = await this.repo.fileExists(inSecretRelativeFilePath)
+      // In case secret file does not exists, create new one and let sops to encrypt it in place
+      if (!secretExists) secretDataRelativePath = inSecretRelativeFilePath
+    }
     debug(`Saving users of team: ${teamId}`)
-    await this.repo.writeFile(relativePath, outData)
+    await this.repo.writeFile(secretDataRelativePath, outData)
   }
 
   async saveTeamProjects(teamId: string): Promise<void> {
