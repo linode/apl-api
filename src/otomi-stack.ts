@@ -1332,7 +1332,8 @@ export default class OtomiStack {
   }
 
   async loadTeamUsers(teamId: string): Promise<void> {
-    const relativePath = `${getTeamUsersFilePath(teamId)}${env.isDev ? '' : '.dec'}`
+    const { secretFilePostfix } = this.repo
+    const relativePath = `${getTeamUsersFilePath(teamId)}${secretFilePostfix}`
     if (!(await this.repo.fileExists(relativePath))) {
       debug(`Team ${teamId} has no users yet`)
       return
@@ -1597,24 +1598,16 @@ export default class OtomiStack {
     const cleaneUsers: Array<Record<string, any>> = users.map((obj) => {
       return omit(obj, ['teamId'])
     })
-    // const teamUsersSafeFilePath = this.repo.getSafePath(getTeamUsersFilePath(teamId))
-    // const relativePath = (await this.repo.fileExists(teamUsersSafeFilePath))
-    //   ? teamUsersSafeFilePath
-    //   : getTeamUsersFilePath(teamId)
-    const outData: Record<string, any> = set({}, getTeamUsersJsonPath(teamId), cleaneUsers)
-    // debug(`Saving users of team: ${teamId}`)
-    // await this.repo.writeFile(relativePath, outData)
-
-    const inSecretRelativeFilePath = getTeamUsersFilePath(teamId)
+    const relativePath = getTeamUsersFilePath(teamId)
     const { secretFilePostfix } = this.repo
-    let secretDataRelativePath = `${inSecretRelativeFilePath}${secretFilePostfix}`
+    let secretRelativePath = `${relativePath}${secretFilePostfix}`
     if (secretFilePostfix) {
-      const secretExists = await this.repo.fileExists(inSecretRelativeFilePath)
-      // In case secret file does not exists, create new one and let sops to encrypt it in place
-      if (!secretExists) secretDataRelativePath = inSecretRelativeFilePath
+      const secretExists = await this.repo.fileExists(relativePath)
+      if (!secretExists) secretRelativePath = relativePath
     }
+    const outData: Record<string, any> = set({}, getTeamUsersJsonPath(teamId), cleaneUsers)
     debug(`Saving users of team: ${teamId}`)
-    await this.repo.writeFile(secretDataRelativePath, outData, false)
+    await this.repo.writeFile(secretRelativePath, outData, false)
   }
 
   async saveTeamProjects(teamId: string): Promise<void> {
