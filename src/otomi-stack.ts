@@ -1614,7 +1614,7 @@ export default class OtomiStack {
       if (!secretExists) secretDataRelativePath = inSecretRelativeFilePath
     }
     debug(`Saving users of team: ${teamId}`)
-    await this.repo.writeFile(secretDataRelativePath, outData)
+    await this.repo.writeFile(secretDataRelativePath, outData, false)
   }
 
   async saveTeamProjects(teamId: string): Promise<void> {
