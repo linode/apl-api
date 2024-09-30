@@ -1606,7 +1606,7 @@ export default class OtomiStack {
     }
     const outData: Record<string, any> = set({}, getTeamUsersJsonPath(teamId), cleaneUsers)
     debug(`Saving users of team: ${teamId}`)
-    await this.repo.writeFile(secretRelativePath, outData)
+    await this.repo.writeFile(secretRelativePath, outData, false)
     if (cleaneUsers.length === 0) {
       await this.repo.removeFile(relativePath)
       await this.repo.removeFile(secretRelativePath)
