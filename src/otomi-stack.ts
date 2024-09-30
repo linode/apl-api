@@ -1605,8 +1605,8 @@ export default class OtomiStack {
       if (!secretExists) secretRelativePath = relativePath
     }
     if (cleaneUsers.length === 0) {
-      await this.repo.removeFile(relativePath)
       await this.repo.removeFile(secretRelativePath)
+      await this.repo.removeFile(relativePath)
     } else {
       const outData: Record<string, any> = set({}, getTeamUsersJsonPath(teamId), cleaneUsers)
       debug(`Saving users of team: ${teamId}`)
