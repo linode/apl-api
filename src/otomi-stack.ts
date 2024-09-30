@@ -586,7 +586,6 @@ export default class OtomiStack {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return this.db.createItem('users', { ...data, teamId }, { teamId, name: data.username }) as User
     } catch (err) {
-      console.log('err', err)
       if (err.code === 409) err.publicMessage = 'User name or email already exists'
       throw err
     }
@@ -1605,9 +1604,14 @@ export default class OtomiStack {
       const secretExists = await this.repo.fileExists(relativePath)
       if (!secretExists) secretRelativePath = relativePath
     }
-    const outData: Record<string, any> = set({}, getTeamUsersJsonPath(teamId), cleaneUsers)
-    debug(`Saving users of team: ${teamId}`)
-    await this.repo.writeFile(secretRelativePath, outData, false)
+    if (cleaneUsers.length === 0) {
+      await this.repo.removeFile(relativePath)
+      await this.repo.removeFile(secretRelativePath)
+    } else {
+      const outData: Record<string, any> = set({}, getTeamUsersJsonPath(teamId), cleaneUsers)
+      debug(`Saving users of team: ${teamId}`)
+      await this.repo.writeFile(secretRelativePath, outData, false)
+    }
   }
 
   async saveTeamProjects(teamId: string): Promise<void> {
