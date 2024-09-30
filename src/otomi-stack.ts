@@ -1332,12 +1332,13 @@ export default class OtomiStack {
 
   async loadTeamUsers(teamId: string): Promise<void> {
     const { secretFilePostfix } = this.repo
-    const relativePath = `${getTeamUsersFilePath(teamId)}${secretFilePostfix}`
-    if (!(await this.repo.fileExists(getTeamUsersFilePath(teamId))) || !(await this.repo.fileExists(relativePath))) {
+    const relativePath = getTeamUsersFilePath(teamId)
+    const secretRelativePath = `${relativePath}${secretFilePostfix}`
+    if (!(await this.repo.fileExists(relativePath)) || !(await this.repo.fileExists(secretRelativePath))) {
       debug(`Team ${teamId} has no users yet`)
       return
     }
-    const data = await this.repo.readFile(relativePath)
+    const data = await this.repo.readFile(secretRelativePath)
     const inData: Array<User> = get(data, getTeamUsersJsonPath(teamId), [])
     inData.forEach((inUser) => {
       const res: any = this.db.populateItem('users', { ...inUser, teamId }, undefined, inUser.id as string)
@@ -1606,7 +1607,11 @@ export default class OtomiStack {
     }
     const outData: Record<string, any> = set({}, getTeamUsersJsonPath(teamId), cleaneUsers)
     debug(`Saving users of team: ${teamId}`)
-    await this.repo.writeFile(secretRelativePath, outData)
+    await this.repo.writeFile(secretRelativePath, outData, false)
+    if (cleaneUsers.length === 0) {
+      await this.repo.removeFile(relativePath)
+      await this.repo.removeFile(secretRelativePath)
+    }
   }
 
   async saveTeamProjects(teamId: string): Promise<void> {
