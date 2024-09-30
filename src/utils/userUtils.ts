@@ -1,9 +1,4 @@
 import axios from 'axios'
-import https from 'https'
-
-const httpsAgent = new https.Agent({
-  rejectUnauthorized: false,
-})
 
 async function getKeycloakToken(keycloakBaseUrl: string, realm: string, username: string, password: string) {
   try {
@@ -43,7 +38,6 @@ export async function getKeycloakUsers(
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      httpsAgent,
     })
 
     const users = [] as { username: string; email: string }[]
