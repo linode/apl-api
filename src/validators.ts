@@ -5,7 +5,7 @@ export const AUTHZ_MOCK_IS_PLATFORM_ADMIN = bool({
   default: true,
 })
 export const AUTHZ_MOCK_IS_TEAM_ADMIN = bool({
-  desc: 'Indicate if a mocked user is a platform admin',
+  desc: 'Indicate if a mocked user is a team admin',
   default: true,
 })
 export const AUTHZ_MOCK_TEAM = str({ desc: 'Comma separated list of teams a user belongs to', default: undefined })
