@@ -216,8 +216,11 @@ Settings:
           title: Client Secret
           type: string
           x-secret: true
-        adminGroupID:
-          title: Admin group ID
+        platformAdminGroupID:
+          title: Platform admin group ID
+          type: string
+        allTeamsAdminGroupID:
+          title: All teams admin group ID
           type: string
         teamAdminGroupID:
           title: Team admin group ID
