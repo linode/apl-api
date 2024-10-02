@@ -2,16 +2,9 @@ import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
 import { OpenApiRequestExt, User } from 'src/otomi-models'
 
-const debug = Debug('otomi:api:teams:users')
+const debug = Debug('otomi:api:users')
 
 export default function (): OperationHandlerArray {
-  const del: Operation = [
-    ({ otomi, params: { userId } }: OpenApiRequestExt, res): void => {
-      debug(`deleteUser(${userId})`)
-      otomi.deleteUser(decodeURIComponent(userId))
-      res.json({})
-    },
-  ]
   const get: Operation = [
     ({ otomi, params: { userId } }: OpenApiRequestExt, res): void => {
       debug(`getUser(${userId})`)
@@ -20,19 +13,23 @@ export default function (): OperationHandlerArray {
     },
   ]
   const put: Operation = [
-    ({ otomi, params: { teamId, userId }, body }: OpenApiRequestExt, res): void => {
+    ({ otomi, params: { userId }, body }: OpenApiRequestExt, res): void => {
       debug(`editUser(${userId})`)
-      const data = otomi.editUser(decodeURIComponent(userId), {
-        ...body,
-        teamId: decodeURIComponent(teamId),
-      } as User)
+      const data = otomi.editUser(decodeURIComponent(userId), body as User)
       res.json(data)
     },
   ]
+  const del: Operation = [
+    ({ otomi, params: { userId } }: OpenApiRequestExt, res): void => {
+      debug(`deleteUser(${userId})`)
+      otomi.deleteUser(decodeURIComponent(userId))
+      res.json({})
+    },
+  ]
   const api = {
-    delete: del,
     get,
     put,
+    delete: del,
   }
   return api
 }

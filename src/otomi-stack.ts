@@ -9,7 +9,7 @@ import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from '
 import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
-import { AlreadyExists, DeployLockError, ForbiddenError, PublicUrlExists, ValidationError } from 'src/error'
+import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
 import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
@@ -113,10 +113,6 @@ export function getTeamWorkloadValuesFilePath(teamId: string, workloadName): str
   return `env/teams/workloads/${teamId}/${workloadName}.yaml`
 }
 
-export function getTeamUsersFilePath(teamId: string): string {
-  return `env/teams/secrets.users.${teamId}.yaml`
-}
-
 export function getTeamProjectsFilePath(teamId: string): string {
   return `env/teams/projects.${teamId}.yaml`
 }
@@ -131,10 +127,6 @@ export function getTeamPoliciesFilePath(teamId: string): string {
 
 export function getTeamWorkloadsJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.workloads`
-}
-
-export function getTeamUsersJsonPath(teamId: string): string {
-  return `teamConfig.${teamId}.users`
 }
 
 export function getTeamProjectsJsonPath(teamId: string): string {
@@ -558,18 +550,11 @@ export default class OtomiStack {
     return this.db.deleteItem('netpols', { id })
   }
 
-  getTeamUsers(teamId: string): Array<User> {
-    const ids = { teamId }
-    return this.db.getCollection('users', ids) as Array<User>
-  }
-
   getAllUsers(): Array<User> {
     return this.db.getCollection('users') as Array<User>
   }
 
-  async createUser(sessionUser: SessionUser, teamId: string, data: User): Promise<User> {
-    if (!sessionUser.roles.includes('platformAdmin') && data.isPlatformAdmin)
-      throw new ForbiddenError('Only platform admins can create platform admins')
+  async createUser(sessionUser: SessionUser, data: User): Promise<User> {
     let users = this.db.getCollection('users') as any
     if (!env.isDev) {
       const { otomi, cluster } = this.getSettings(['otomi', 'cluster'])
@@ -581,10 +566,9 @@ export default class OtomiStack {
       users = await getKeycloakUsers(keycloakBaseUrl, realm, username, password)
     }
     try {
-      if (users.some((user) => user.username === data.username || user.email === data.email))
-        throw new AlreadyExists('User name or email already exists')
+      if (users.some((user) => user.email === data.email)) throw new AlreadyExists('User name or email already exists')
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      return this.db.createItem('users', { ...data, teamId }, { teamId, name: data.username }) as User
+      return this.db.createItem('users', data, { name: data.email }) as User
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'User name or email already exists'
       throw err
@@ -602,6 +586,13 @@ export default class OtomiStack {
 
   deleteUser(id: string): void {
     return this.db.deleteItem('users', { id })
+  }
+
+  editTeamUsers(data: User[]): Array<User> {
+    data.forEach((user) => {
+      this.db.updateItem('users', user, { id: user.id }) as User
+    })
+    return this.db.getCollection('users') as Array<User>
   }
 
   getTeamProjects(teamId: string): Array<Project> {
@@ -1265,6 +1256,7 @@ export default class OtomiStack {
     debug('Loading values')
     await this.loadCluster()
     await this.loadSettings()
+    await this.loadUsers()
     await this.loadTeams()
     await this.loadApps()
     this.isLoaded = true
@@ -1281,6 +1273,22 @@ export default class OtomiStack {
     data.otomi!.nodeSelector = objectToArray((data.otomi!.nodeSelector ?? {}) as Record<string, any>)
     // @ts-ignore
     this.db.db.get('settings').assign(data).write()
+  }
+
+  async loadUsers(): Promise<void> {
+    const { secretFilePostfix } = this.repo
+    const relativePath = `env/secrets.users.yaml`
+    const secretRelativePath = `${relativePath}${secretFilePostfix}`
+    if (!(await this.repo.fileExists(relativePath)) || !(await this.repo.fileExists(secretRelativePath))) {
+      debug(`No users found`)
+      return
+    }
+    const data = await this.repo.readFile(secretRelativePath)
+    const inData: Array<User> = get(data, `users`, [])
+    inData.forEach((inUser) => {
+      const res: any = this.db.populateItem('users', { ...inUser }, undefined, inUser.id as string)
+      debug(`Loaded user: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
+    })
   }
 
   async loadTeamSealedSecrets(teamId: string): Promise<void> {
@@ -1327,22 +1335,6 @@ export default class OtomiStack {
     inData.forEach((inNetpol) => {
       const res: any = this.db.populateItem('netpols', { ...inNetpol, teamId }, undefined, inNetpol.id as string)
       debug(`Loaded network policy: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
-    })
-  }
-
-  async loadTeamUsers(teamId: string): Promise<void> {
-    const { secretFilePostfix } = this.repo
-    const relativePath = getTeamUsersFilePath(teamId)
-    const secretRelativePath = `${relativePath}${secretFilePostfix}`
-    if (!(await this.repo.fileExists(relativePath)) || !(await this.repo.fileExists(secretRelativePath))) {
-      debug(`Team ${teamId} has no users yet`)
-      return
-    }
-    const data = await this.repo.readFile(secretRelativePath)
-    const inData: Array<User> = get(data, getTeamUsersJsonPath(teamId), [])
-    inData.forEach((inUser) => {
-      const res: any = this.db.populateItem('users', { ...inUser, teamId }, undefined, inUser.id as string)
-      debug(`Loaded user: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
     })
   }
 
@@ -1441,7 +1433,6 @@ export default class OtomiStack {
       this.loadTeamSealedSecrets(team.id!)
       this.loadTeamWorkloads(team.id!)
       this.loadTeamBackups(team.id!)
-      this.loadTeamUsers(team.id!)
       this.loadTeamProjects(team.id!)
       this.loadTeamBuilds(team.id!)
       this.loadTeamPolicies(team.id!)
@@ -1517,6 +1508,27 @@ export default class OtomiStack {
     )
   }
 
+  async saveUsers(secretPaths?: string[]): Promise<void> {
+    const users = this.db.getCollection('users') as Array<Build>
+    const cleaneUsers: Array<Record<string, any>> = users.map((obj) => {
+      return omit(obj, ['teamId'])
+    })
+    const relativePath = `env/secrets.users.yaml`
+    const { secretFilePostfix } = this.repo
+    let secretRelativePath = `${relativePath}${secretFilePostfix}`
+    if (secretFilePostfix) {
+      const secretExists = await this.repo.fileExists(relativePath)
+      if (!secretExists) secretRelativePath = relativePath
+    }
+    const outData: Record<string, any> = set({}, `users`, cleaneUsers)
+    debug(`Saving users of team`)
+    await this.repo.writeFile(secretRelativePath, outData, false)
+    if (cleaneUsers.length === 0) {
+      await this.repo.removeFile(relativePath)
+      await this.repo.removeFile(secretRelativePath)
+    }
+  }
+
   async saveTeams(secretPaths?: string[]): Promise<void> {
     const filePath = 'env/teams.yaml'
     const secretFilePath = `env/secrets.teams.yaml`
@@ -1532,7 +1544,6 @@ export default class OtomiStack {
         await this.saveTeamServices(teamId)
         await this.saveTeamSealedSecrets(teamId)
         await this.saveTeamWorkloads(teamId)
-        await this.saveTeamUsers(teamId)
         await this.saveTeamProjects(teamId)
         await this.saveTeamBuilds(teamId)
         await this.saveTeamPolicies(teamId)
@@ -1591,27 +1602,6 @@ export default class OtomiStack {
         this.saveWorkloadValues(workload)
       }),
     )
-  }
-
-  async saveTeamUsers(teamId: string): Promise<void> {
-    const users = this.db.getCollection('users', { teamId }) as Array<Build>
-    const cleaneUsers: Array<Record<string, any>> = users.map((obj) => {
-      return omit(obj, ['teamId'])
-    })
-    const relativePath = getTeamUsersFilePath(teamId)
-    const { secretFilePostfix } = this.repo
-    let secretRelativePath = `${relativePath}${secretFilePostfix}`
-    if (secretFilePostfix) {
-      const secretExists = await this.repo.fileExists(relativePath)
-      if (!secretExists) secretRelativePath = relativePath
-    }
-    const outData: Record<string, any> = set({}, getTeamUsersJsonPath(teamId), cleaneUsers)
-    debug(`Saving users of team: ${teamId}`)
-    await this.repo.writeFile(secretRelativePath, outData, false)
-    if (cleaneUsers.length === 0) {
-      await this.repo.removeFile(relativePath)
-      await this.repo.removeFile(secretRelativePath)
-    }
   }
 
   async saveTeamProjects(teamId: string): Promise<void> {
@@ -1769,6 +1759,7 @@ export default class OtomiStack {
     const secretPaths = this.getSecretPaths()
     await this.saveCluster(secretPaths)
     await this.saveSettings(secretPaths)
+    await this.saveUsers(secretPaths)
     await this.saveTeams(secretPaths)
     // also save admin apps
     await this.saveAdminApps(secretPaths)

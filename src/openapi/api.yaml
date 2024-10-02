@@ -950,23 +950,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/User'
-
-  '/teams/{teamId}/users':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-    get:
-      operationId: getTeamUsers
-      x-aclSchema: User
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully obtained team users configuration
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
     post:
       operationId: createUser
       description: Create a team user
@@ -987,18 +970,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
 
-  '/teams/{teamId}/users/{userId}':
+  '/users/{userId}':
     parameters:
-      - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/userParams'
-    delete:
-      operationId: deleteUser
-      description: Delete a user from a given team
-      x-aclSchema: User
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully deleted a user
     get:
       operationId: getUser
       description: Get a user from a given team
@@ -1030,6 +1004,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+    delete:
+      operationId: deleteUser
+      description: Delete a user from a given team
+      x-aclSchema: User
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a user
+
+  '/teams/{teamId}/users':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    put:
+      operationId: editTeamUsers
+      description: Edit a user from a given team
+      x-aclSchema: User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/User'
+        description: User object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
 
   '/projects':
     get:

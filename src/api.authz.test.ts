@@ -496,14 +496,14 @@ describe('API authz tests', () => {
 
   describe('Platform Admin /users endpoint tests', () => {
     const userData = {
-      username: 'user1',
-      email: 'user1@mail.com',
+      email: 'user@one.com',
       firstName: 'user',
       lastName: 'one',
+      teams: ['team1'],
     }
     it('platform admin can create platform admin users', (done) => {
       agent
-        .post(`/v1/teams/${teamId}/users`)
+        .post(`/v1/users`)
         .send({ ...userData, isPlatformAdmin: true, isTeamAdmin: false })
         .set('Authorization', `Bearer ${platformAdminToken}`)
         .expect(200)
@@ -511,7 +511,7 @@ describe('API authz tests', () => {
     })
     it('platform admin can create team admin users', (done) => {
       agent
-        .post(`/v1/teams/${teamId}/users`)
+        .post(`/v1/users`)
         .send({ ...userData, isPlatformAdmin: false, isTeamAdmin: true })
         .set('Authorization', `Bearer ${platformAdminToken}`)
         .expect(200)
@@ -519,8 +519,27 @@ describe('API authz tests', () => {
     })
     it('platform admin can create team member users', (done) => {
       agent
-        .post(`/v1/teams/${teamId}/users`)
+        .post(`/v1/users`)
         .send({ ...userData, isPlatformAdmin: false, isTeamAdmin: false })
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .end(done)
+    })
+    it('platform admin can get all users', (done) => {
+      agent.get(`/v1/users`).set('Authorization', `Bearer ${platformAdminToken}`).expect(200).end(done)
+    })
+    it('platform admin can update users', (done) => {
+      agent
+        .put(`/v1/users/user1`)
+        .send({ ...userData })
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .end(done)
+    })
+    it('platform admin can delete users', (done) => {
+      agent
+        .delete(`/v1/users/user1`)
+        .send({ id: 'user1' })
         .set('Authorization', `Bearer ${platformAdminToken}`)
         .expect(200)
         .end(done)
@@ -528,31 +547,34 @@ describe('API authz tests', () => {
   })
   describe('Team Admin /users endpoint tests', () => {
     const userData = {
-      username: 'user1',
-      email: 'user1@mail.com',
+      email: 'user@one.com',
       firstName: 'user',
       lastName: 'one',
-      teamId,
+      isPlatformAdmin: false,
+      isTeamAdmin: false,
     }
-    it('team admin can create team admin users in their team', (done) => {
+    it('team admin cannot create users', (done) => {
       agent
-        .post(`/v1/teams/${teamId}/users`)
-        .send({ ...userData, isPlatformAdmin: false, isTeamAdmin: true })
+        .post(`/v1/users`)
+        .send({ ...userData })
         .set('Authorization', `Bearer ${teamAdminToken}`)
+        .expect(403)
+        .end(done)
+    })
+    it('team admin can get all users', (done) => {
+      agent.get(`/v1/users`).set('Authorization', `Bearer ${teamAdminToken}`).expect(200).end(done)
+    })
+    it('team admin can update all users', (done) => {
+      agent
+        .put(`/v1/teams/${teamId}/users`)
+        .send([{ ...userData }])
+        .set('Authorization', `Bearer ${platformAdminToken}`)
         .expect(200)
         .end(done)
     })
-    it('team admin can create team member users in their team', (done) => {
+    it('team admin cannot delete users', (done) => {
       agent
-        .post(`/v1/teams/${teamId}/users`)
-        .send({ ...userData, isPlatformAdmin: false, isTeamAdmin: false })
-        .set('Authorization', `Bearer ${teamAdminToken}`)
-        .expect(200)
-        .end(done)
-    })
-    it('team admin cannot delete team member users', (done) => {
-      agent
-        .delete(`/v1/teams/${teamId}/users/user1`)
+        .delete(`/v1/users/user1`)
         .send({ id: 'user1' })
         .set('Authorization', `Bearer ${teamAdminToken}`)
         .expect(403)
@@ -561,32 +583,38 @@ describe('API authz tests', () => {
   })
   describe('Team Member /users endpoint tests', () => {
     const userData = {
-      username: 'user1',
-      email: 'user1@mail.com',
+      email: 'user@one.com',
       firstName: 'user',
       lastName: 'one',
-      teamId,
+      isPlatformAdmin: false,
+      isTeamAdmin: false,
     }
-    it('team member cannot create platform admin users', (done) => {
+    it('team member cannot get all users', (done) => {
+      agent.get(`/v1/users`).set('Authorization', `Bearer ${teamMemberToken}`).expect(403).end(done)
+    })
+    it('team member cannot get user', (done) => {
+      agent.get(`/v1/users/user1`).set('Authorization', `Bearer ${teamMemberToken}`).expect(403).end(done)
+    })
+    it('team member cannot create users', (done) => {
       agent
-        .post(`/v1/teams/${teamId}/users`)
-        .send({ ...userData, isPlatformAdmin: true, isTeamAdmin: false })
+        .post(`/v1/users`)
+        .send({ ...userData })
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(403)
         .end(done)
     })
-    it('team member cannot create team admin users in their team', (done) => {
+    it('team member cannot update users', (done) => {
       agent
-        .post(`/v1/teams/${teamId}/users`)
-        .send({ ...userData, isPlatformAdmin: false, isTeamAdmin: true })
+        .put(`/v1/users/user1`)
+        .send({ ...userData })
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(403)
         .end(done)
     })
-    it('team member cannot create team member users in their team', (done) => {
+    it('team member cannot delete users', (done) => {
       agent
-        .post(`/v1/teams/${teamId}/users`)
-        .send({ ...userData, isPlatformAdmin: false, isTeamAdmin: false })
+        .delete(`/v1/users/user1`)
+        .send({ id: 'user1' })
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(403)
         .end(done)

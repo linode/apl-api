@@ -86,19 +86,14 @@ User:
       - update-any
       - delete-any
     teamAdmin:
-      - create
-      - read
-      - update
+      - read-any
+      - update-any
     teamMember: []
   properties:
     id:
       type: string
     teamId:
       $ref: 'definitions.yaml#/idName'
-    username:
-      type: string
-      title: Username
-      description: A unique username
     email:
       $ref: definitions.yaml#/email
       title: Email
@@ -127,7 +122,6 @@ User:
         type: string
       uniqueItems: true
   required:
-    - username
     - email
     - firstName
     - lastName
