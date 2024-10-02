@@ -150,7 +150,7 @@ Settings:
                         thanos:
                           type: string
                           $ref: definitions.yaml#/wordCharacterPattern
-                          default: gitea
+                          default: thanos
                   required:
                     - region
                     - accessKeyId
