@@ -13,9 +13,9 @@ export default function (): OperationHandlerArray {
     },
   ]
   const post: Operation = [
-    async ({ otomi, user: sessionUser, body }: OpenApiRequestExt, res): Promise<void> => {
+    async ({ otomi, body }: OpenApiRequestExt, res): Promise<void> => {
       debug('createUser')
-      const v = await otomi.createUser(sessionUser, body as User)
+      const v = await otomi.createUser(body as User)
       res.json(v)
     },
   ]

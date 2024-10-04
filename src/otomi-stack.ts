@@ -67,7 +67,7 @@ import {
 import { validateBackupFields } from './utils/backupUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { encryptSecretItem } from './utils/sealedSecretUtils'
-import { getKeycloakUsers } from './utils/userUtils'
+import { generateInitialPassword, getKeycloakUsers } from './utils/userUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 const debug = Debug('otomi:otomi-stack')
@@ -554,8 +554,9 @@ export default class OtomiStack {
     return this.db.getCollection('users') as Array<User>
   }
 
-  async createUser(sessionUser: SessionUser, data: User): Promise<User> {
-    let users = this.db.getCollection('users') as any
+  async createUser(data: User): Promise<User> {
+    const user = { ...data, initialPassword: generateInitialPassword(16) }
+    let existingUsers = this.db.getCollection('users') as any
     if (!env.isDev) {
       const { otomi, cluster } = this.getSettings(['otomi', 'cluster'])
       const keycloak = this.getApp('admin', 'keycloak')
@@ -563,12 +564,13 @@ export default class OtomiStack {
       const realm = 'otomi'
       const username = (keycloak?.values?.adminUsername as string) || 'otomi-admin'
       const password = otomi?.adminPassword as string
-      users = await getKeycloakUsers(keycloakBaseUrl, realm, username, password)
+      existingUsers = await getKeycloakUsers(keycloakBaseUrl, realm, username, password)
     }
     try {
-      if (users.some((user) => user.email === data.email)) throw new AlreadyExists('User name or email already exists')
+      if (existingUsers.some((existingUser) => existingUser.email === user.email))
+        throw new AlreadyExists('User name or email already exists')
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      return this.db.createItem('users', data, { name: data.email }) as User
+      return this.db.createItem('users', user, { name: user.email }) as User
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'User name or email already exists'
       throw err

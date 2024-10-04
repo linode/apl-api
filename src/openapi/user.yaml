@@ -121,6 +121,9 @@ User:
       items:
         type: string
       uniqueItems: true
+    initialPassword:
+      type: string
+      description: The initial password of the user
   required:
     - email
     - firstName

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import generatePassword from 'password-generator'
 
 async function getKeycloakToken(keycloakBaseUrl: string, realm: string, username: string, password: string) {
   try {
@@ -58,4 +59,13 @@ export async function getKeycloakUsers(
 
     return []
   }
+}
+
+export function generateInitialPassword(length: number): string {
+  const SPECIAL_CHARS = '!@#$%^&*()_+-=[]{};:,.<>?~'
+  const specialChar = SPECIAL_CHARS[Math.floor(Math.random() * SPECIAL_CHARS.length)]
+  const generatedPassword = generatePassword(length, false)
+  const randomIndex = Math.floor(Math.random() * length)
+  const initialPassword = generatedPassword.slice(0, randomIndex) + specialChar + generatedPassword.slice(randomIndex)
+  return initialPassword
 }
