@@ -148,6 +148,10 @@ Settings:
                           type: string
                           $ref: definitions.yaml#/wordCharacterPattern
                           default: gitea
+                        thanos:
+                          type: string
+                          $ref: definitions.yaml#/wordCharacterPattern
+                          default: thanos
                   required:
                     - region
                     - accessKeyId
