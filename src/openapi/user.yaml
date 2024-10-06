@@ -37,12 +37,12 @@ SessionUser:
     isPlatformAdmin:
       type: boolean
       default: false
-      description: If the user is admin.
+      description: Select to assign the user the platform-admin role.
       # readOnly: true
     isTeamAdmin:
       type: boolean
       default: false
-      description: If the user is admin.
+      description: Select to assign the user the team-admin role.
       # readOnly: true
     authz:
       type: object
@@ -52,7 +52,7 @@ SessionUser:
     teams:
       type: array
       default: []
-      description: A list of teams the user belongs to.
+      description: Select the team(s) to assign the user the team-member role.
       items:
         type: string
       # readOnly: true
@@ -97,25 +97,25 @@ User:
     email:
       $ref: definitions.yaml#/email
       title: Email
-      description: A unique email
+      description: A unique email address.
     firstName:
       type: string
       title: First Name
-      description: The first name of the user
+      description: The first name of the user.
     lastName:
       type: string
       title: Last Name
-      description: The last name of the user
+      description: The last name of the user.
     isPlatformAdmin:
       type: boolean
       default: false
-      description: If the user is platform admin.
+      description: Select to assign the user the platform-admin role.
     isTeamAdmin:
       type: boolean
       default: false
-      description: If the user is team admin.
+      description: Select to assign the user the team-admin role.
     teams:
-      description: A list of teams the user belongs to.
+      description: Select the team(s) to assign the user the team-member role.
       title: Teams
       type: array
       items:
