@@ -55,6 +55,7 @@ import {
   apply,
   checkPodExists,
   getCloudttyActiveTime,
+  getClusterProvider,
   getKubernetesVersion,
   getLastTektonMessage,
   getSealedSecretsCertificate,
@@ -342,10 +343,17 @@ export default class OtomiStack {
   }
 
   getApps(teamId: string, picks?: string[]): Array<App> {
+    const aplExlcludedApps = ['cert-manager', 'minio', 'kured', 'falco', 'drone']
     const apps = this.db.getCollection('apps', { teamId }) as Array<App>
-    if (teamId === 'admin') return apps
+    const clusterProvider = getClusterProvider()
+    let providerSpecificApps: Array<App> = []
+    if (clusterProvider != undefined && clusterProvider === 'apl')
+      providerSpecificApps = apps.filter((app) => !aplExlcludedApps.includes(app.id))
+    else providerSpecificApps = apps
 
-    let teamApps = apps.map((app: App) => {
+    if (teamId === 'admin') return providerSpecificApps
+
+    let teamApps = providerSpecificApps.map((app: App) => {
       const adminApp = this.db.getItem('apps', { teamId: 'admin', id: app.id }) as App
       return { ...cloneDeep(app), enabled: adminApp.enabled }
     })
@@ -407,7 +415,8 @@ export default class OtomiStack {
 
     let enabled
     const app = getAppSchema(appId)
-    if (app.properties!.enabled !== undefined) enabled = !!values.enabled
+    if (app != undefined && app.properties != undefined && app.properties.enabled !== undefined)
+      enabled = !!values.enabled
 
     // we do not want to send enabled flag to the input forms
     delete values.enabled

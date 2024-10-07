@@ -5,6 +5,10 @@ import * as yaml from 'js-yaml'
 import { promisify } from 'util'
 import { Build, Cloudtty, SealedSecret, Service, Workload } from './otomi-models'
 
+interface ExtendedCluster extends k8s.Cluster {
+  provider?: string
+}
+
 const debug = Debug('otomi:api:k8sOperations')
 
 /**
@@ -527,4 +531,13 @@ export async function getTeamSecretsFromK8s(namespace: string) {
   } catch (error) {
     debug('getTeamSecretsFromK8s error:', error)
   }
+}
+
+export function getClusterProvider(): string | undefined {
+  const kc = new k8s.KubeConfig()
+  kc.loadFromDefault()
+  kc.clusters.find((cluster: ExtendedCluster) => {
+    if (cluster.provider !== undefined) return cluster.provider
+  })
+  return undefined
 }
