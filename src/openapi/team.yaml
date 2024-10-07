@@ -108,19 +108,19 @@ Team:
               type: object
               properties:
                 cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
+                  $ref: definitions.yaml#/quantityCpu
                   default: 10m
                 memory:
-                  $ref: ../definitions.yaml#/quantityMem
+                  $ref: definitions.yaml#/quantityMem
                   default: 64Mi
             limits:
               type: object
               properties:
                 cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
+                  $ref: definitions.yaml#/quantityCpu
                   default: 200m
                 memory:
-                  $ref: ../definitions.yaml#/quantityMem
+                  $ref: definitions.yaml#/quantityMem
                   default: 256Mi
           required:
             - limits
@@ -132,19 +132,19 @@ Team:
               type: object
               properties:
                 cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
+                  $ref: definitions.yaml#/quantityCpu
                   default: 10m
                 memory:
-                  $ref: ../definitions.yaml#/quantityMem
+                  $ref: definitions.yaml#/quantityMem
                   default: 128Mi
             limits:
               type: object
               properties:
                 cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
+                  $ref: definitions.yaml#/quantityCpu
                   default: '1'
                 memory:
-                  $ref: ../definitions.yaml#/quantityMem
+                  $ref: definitions.yaml#/quantityMem
                   default: 1Gi
           required:
             - limits
@@ -156,19 +156,19 @@ Team:
               type: object
               properties:
                 cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
+                  $ref: definitions.yaml#/quantityCpu
                   default: 10m
                 memory:
-                  $ref: ../definitions.yaml#/quantityMem
+                  $ref: definitions.yaml#/quantityMem
                   default: 128Mi
             limits:
               type: object
               properties:
                 cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
+                  $ref: definitions.yaml#/quantityCpu
                   default: 200m
                 memory:
-                  $ref: ../definitions.yaml#/quantityMem
+                  $ref: definitions.yaml#/quantityMem
                   default: 256Mi
           required:
             - limits
@@ -180,19 +180,19 @@ Team:
               type: object
               properties:
                 cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
+                  $ref: definitions.yaml#/quantityCpu
                   default: 200m
                 memory:
-                  $ref: ../definitions.yaml#/quantityMem
+                  $ref: definitions.yaml#/quantityMem
                   default: 128Mi
             limits:
               type: object
               properties:
                 cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
+                  $ref: definitions.yaml#/quantityCpu
                   default: '2'
                 memory:
-                  $ref: ../definitions.yaml#/quantityMem
+                  $ref: definitions.yaml#/quantityMem
                   default: 2Gi
           required:
             - limits
@@ -204,19 +204,19 @@ Team:
               type: object
               properties:
                 cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
+                  $ref: definitions.yaml#/quantityCpu
                   default: 200m
                 memory:
-                  $ref: ../definitions.yaml#/quantityMem
+                  $ref: definitions.yaml#/quantityMem
                   default: 128Mi
             limits:
               type: object
               properties:
                 cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
+                  $ref: definitions.yaml#/quantityCpu
                   default: '2'
                 memory:
-                  $ref: ../definitions.yaml#/quantityMem
+                  $ref: definitions.yaml#/quantityMem
                   default: 2Gi
           required:
             - limits
@@ -228,19 +228,19 @@ Team:
               type: object
               properties:
                 cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
+                  $ref: definitions.yaml#/quantityCpu
                   default: 200m
                 memory:
-                  $ref: ../definitions.yaml#/quantityMem
+                  $ref: definitions.yaml#/quantityMem
                   default: 128Mi
             limits:
               type: object
               properties:
                 cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
+                  $ref: definitions.yaml#/quantityCpu
                   default: '2'
                 memory:
-                  $ref: ../definitions.yaml#/quantityMem
+                  $ref: definitions.yaml#/quantityMem
                   default: 2Gi
           required:
             - limits
@@ -252,19 +252,19 @@ Team:
               type: object
               properties:
                 cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
+                  $ref: definitions.yaml#/quantityCpu
                   default: 200m
                 memory:
-                  $ref: ../definitions.yaml#/quantityMem
+                  $ref: definitions.yaml#/quantityMem
                   default: 128Mi
             limits:
               type: object
               properties:
                 cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
+                  $ref: definitions.yaml#/quantityCpu
                   default: '2'
                 memory:
-                  $ref: ../definitions.yaml#/quantityMem
+                  $ref: definitions.yaml#/quantityMem
                   default: 2Gi
           required:
             - limits
@@ -276,19 +276,19 @@ Team:
               type: object
               properties:
                 cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
+                  $ref: definitions.yaml#/quantityCpu
                   default: 10m
                 memory:
-                  $ref: ../definitions.yaml#/quantityMem
+                  $ref: definitions.yaml#/quantityMem
                   default: 64Mi
             limits:
               type: object
               properties:
                 cpu:
-                  $ref: ../definitions.yaml#/quantityCpu
+                  $ref: definitions.yaml#/quantityCpu
                   default: 100m
                 memory:
-                  $ref: ../definitions.yaml#/quantityMem
+                  $ref: definitions.yaml#/quantityMem
                   default: 128Mi
           required:
             - limits
