@@ -562,17 +562,17 @@ export default class OtomiStack {
       const keycloak = this.getApp('admin', 'keycloak')
       const keycloakBaseUrl = `https://keycloak.${cluster?.domainSuffix}`
       const realm = 'otomi'
-      const username = (keycloak?.values?.adminUsername as string) || 'otomi-admin'
+      const username = keycloak?.values?.adminUsername as string
       const password = otomi?.adminPassword as string
       existingUsers = await getKeycloakUsers(keycloakBaseUrl, realm, username, password)
     }
     try {
       if (existingUsers.some((existingUser) => existingUser.email === user.email))
-        throw new AlreadyExists('User name or email already exists')
+        throw new AlreadyExists('User email already exists')
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return this.db.createItem('users', user, { name: user.email }) as User
     } catch (err) {
-      if (err.code === 409) err.publicMessage = 'User name or email already exists'
+      if (err.code === 409) err.publicMessage = 'User email already exists'
       throw err
     }
   }
@@ -1289,7 +1289,7 @@ export default class OtomiStack {
     const inData: Array<User> = get(data, `users`, [])
     inData.forEach((inUser) => {
       const res: any = this.db.populateItem('users', { ...inUser }, undefined, inUser.id as string)
-      debug(`Loaded user: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
+      debug(`Loaded user: email: ${res.name}, id: ${res.id}`)
     })
   }
 
@@ -1510,11 +1510,8 @@ export default class OtomiStack {
     )
   }
 
-  async saveUsers(secretPaths?: string[]): Promise<void> {
-    const users = this.db.getCollection('users') as Array<Build>
-    const cleaneUsers: Array<Record<string, any>> = users.map((obj) => {
-      return omit(obj, ['teamId'])
-    })
+  async saveUsers(): Promise<void> {
+    const users = this.getAllUsers()
     const relativePath = `env/secrets.users.yaml`
     const { secretFilePostfix } = this.repo
     let secretRelativePath = `${relativePath}${secretFilePostfix}`
@@ -1522,10 +1519,10 @@ export default class OtomiStack {
       const secretExists = await this.repo.fileExists(relativePath)
       if (!secretExists) secretRelativePath = relativePath
     }
-    const outData: Record<string, any> = set({}, `users`, cleaneUsers)
-    debug(`Saving users of team`)
+    const outData: Record<string, any> = set({}, `users`, users)
+    debug(`Saving users`)
     await this.repo.writeFile(secretRelativePath, outData, false)
-    if (cleaneUsers.length === 0) {
+    if (users.length === 0) {
       await this.repo.removeFile(relativePath)
       await this.repo.removeFile(secretRelativePath)
     }
@@ -1761,7 +1758,7 @@ export default class OtomiStack {
     const secretPaths = this.getSecretPaths()
     await this.saveCluster(secretPaths)
     await this.saveSettings(secretPaths)
-    await this.saveUsers(secretPaths)
+    await this.saveUsers()
     await this.saveTeams(secretPaths)
     // also save admin apps
     await this.saveAdminApps(secretPaths)

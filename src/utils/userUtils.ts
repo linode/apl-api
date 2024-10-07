@@ -30,7 +30,7 @@ export async function getKeycloakUsers(
   realm: string,
   username: string,
   password: string,
-): Promise<{ username: string; email: string }[]> {
+): Promise<{ email: string }[]> {
   try {
     const token = await getKeycloakToken(keycloakBaseUrl, realm, username, password)
     const url = `${keycloakBaseUrl}/admin/realms/${realm}/users`
@@ -41,11 +41,10 @@ export async function getKeycloakUsers(
       },
     })
 
-    const users = [] as { username: string; email: string }[]
+    const users = [] as { email: string }[]
     for (const user of response.data) {
       if (user.username === 'otomi-admin') continue
       users.push({
-        username: user.username,
         email: user.email,
       })
     }
