@@ -1,5 +1,10 @@
 import axios from 'axios'
 import generatePassword from 'password-generator'
+import { ROOT_KEYCLOAK_USER, cleanEnv } from 'src/validators'
+
+const env = cleanEnv({
+  ROOT_KEYCLOAK_USER,
+})
 
 async function getKeycloakToken(keycloakBaseUrl: string, realm: string, username: string, password: string) {
   try {
@@ -43,7 +48,7 @@ export async function getKeycloakUsers(
 
     const users = [] as { email: string }[]
     for (const user of response.data) {
-      if (user.username === 'otomi-admin') continue
+      if (user.username === env.ROOT_KEYCLOAK_USER) continue
       users.push({
         email: user.email,
       })

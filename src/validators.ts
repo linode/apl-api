@@ -44,6 +44,10 @@ export const OIDC_ENDPOINT = str()
 export const REGION = str({ desc: 'The cloud region' })
 export const ROARR_LOG = bool({ desc: 'To enable Lightship logs', default: false })
 export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '127.0.0.1' })
+export const ROOT_KEYCLOAK_USER = str({
+  desc: 'The default username for the root keycloak user for administrative purposes.',
+  default: 'otomi-admin',
+})
 const { env } = process
 export function cleanEnv<T>(
   validators: { [K in keyof T]: ValidatorSpec<T[K]> },
