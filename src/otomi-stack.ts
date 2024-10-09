@@ -46,6 +46,7 @@ import {
   GIT_REPO_URL,
   GIT_USER,
   HELM_CHART_CATALOG,
+  PREINSTALLED_EXCLUDED_APPS,
   TOOLS_HOST,
   VERSIONS,
   cleanEnv,
@@ -84,6 +85,7 @@ const env = cleanEnv({
   HELM_CHART_CATALOG,
   TOOLS_HOST,
   VERSIONS,
+  PREINSTALLED_EXCLUDED_APPS,
 })
 
 export function getTeamBackupsFilePath(teamId: string): string {
@@ -342,12 +344,12 @@ export default class OtomiStack {
   }
 
   getApps(teamId: string, picks?: string[]): Array<App> {
-    const aplExcludedApps = ['cert-manager', 'minio', 'kured', 'falco', 'drone', 'external-dns']
+    const excludedApps = PREINSTALLED_EXCLUDED_APPS.default.apps
     const apps = this.db.getCollection('apps', { teamId }) as Array<App>
     const settingsInfo = this.getSettingsInfo()
     let providerSpecificApps: Array<App> = []
     if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled)
-      providerSpecificApps = apps.filter((app) => !aplExcludedApps.includes(app.id))
+      providerSpecificApps = apps.filter((app) => !excludedApps.includes(app.id))
     else providerSpecificApps = apps
 
     if (teamId === 'admin') return providerSpecificApps

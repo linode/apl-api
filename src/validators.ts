@@ -40,6 +40,12 @@ export const OIDC_ENDPOINT = str()
 export const REGION = str({ desc: 'The cloud region' })
 export const ROARR_LOG = bool({ desc: 'To enable Lightship logs', default: false })
 export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '127.0.0.1' })
+export const PREINSTALLED_EXCLUDED_APPS = json({
+  desc: 'Applications that are managed by Linode, so they should be excluded from the apps page',
+  default: {
+    apps: ['cert-manager', 'minio', 'kured', 'falco', 'drone', 'external-dns'],
+  },
+})
 const { env } = process
 export function cleanEnv<T>(
   validators: { [K in keyof T]: ValidatorSpec<T[K]> },
