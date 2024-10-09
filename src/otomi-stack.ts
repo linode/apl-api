@@ -5,8 +5,8 @@ import Debug from 'debug'
 
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
+import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
-import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
@@ -67,7 +67,7 @@ import {
 import { validateBackupFields } from './utils/backupUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { encryptSecretItem } from './utils/sealedSecretUtils'
-import { generateInitialPassword, getKeycloakUsers } from './utils/userUtils'
+import { getKeycloakUsers } from './utils/userUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 const debug = Debug('otomi:otomi-stack')
@@ -449,7 +449,13 @@ export default class OtomiStack {
     if (isEmpty(data.password)) {
       debug(`creating password for team '${data.name}'`)
       // eslint-disable-next-line no-param-reassign
-      data.password = generatePassword(16, false)
+      data.password = generatePassword({
+        length: 16,
+        numbers: true,
+        symbols: true,
+        lowercase: true,
+        uppercase: true,
+      })
     }
 
     const team = this.db.createItem('teams', data, { id }, id) as Team
@@ -555,7 +561,14 @@ export default class OtomiStack {
   }
 
   async createUser(data: User): Promise<User> {
-    const user = { ...data, initialPassword: generateInitialPassword(16) }
+    const initialPassword = generatePassword({
+      length: 16,
+      numbers: true,
+      symbols: true,
+      lowercase: true,
+      uppercase: true,
+    })
+    const user = { ...data, initialPassword }
     let existingUsers = this.db.getCollection('users') as any
     if (!env.isDev) {
       const { otomi, cluster } = this.getSettings(['otomi', 'cluster'])
