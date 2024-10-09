@@ -266,11 +266,14 @@ Settings:
           x-acl:
             admin: [read-any, update-any]
             team: []
+        isPreInstalled:
+          type: boolean
+          default: false
+          description: Defines if APL was installed by the cloud manager or not
         globalPullSecret:
           nullable: true
           title: Global pullsecret
-          description:
-            Will be connected to each "default" service account in all APL app namespaces.
+          description: Will be connected to each "default" service account in all APL app namespaces.
             Handy for authenticating with DockerHub to avoid rate limiting.
             Also useful when pulling all APL images from a private repo. (One would need to override all the images in the config first.)
           additionalProperties: false
