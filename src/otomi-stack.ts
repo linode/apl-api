@@ -342,12 +342,12 @@ export default class OtomiStack {
   }
 
   getApps(teamId: string, picks?: string[]): Array<App> {
-    const aplExlcludedApps = ['cert-manager', 'minio', 'kured', 'falco', 'drone', 'external-dns']
+    const aplExcludedApps = ['cert-manager', 'minio', 'kured', 'falco', 'drone', 'external-dns']
     const apps = this.db.getCollection('apps', { teamId }) as Array<App>
     const settingsInfo = this.getSettingsInfo()
     let providerSpecificApps: Array<App> = []
     if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled)
-      providerSpecificApps = apps.filter((app) => !aplExlcludedApps.includes(app.id))
+      providerSpecificApps = apps.filter((app) => !aplExcludedApps.includes(app.id))
     else providerSpecificApps = apps
 
     if (teamId === 'admin') return providerSpecificApps
