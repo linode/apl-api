@@ -532,12 +532,3 @@ export async function getTeamSecretsFromK8s(namespace: string) {
     debug('getTeamSecretsFromK8s error:', error)
   }
 }
-
-export function getClusterProvider(): string | undefined {
-  const kc = new k8s.KubeConfig()
-  kc.loadFromDefault()
-  kc.clusters.find((cluster: ExtendedCluster) => {
-    if (cluster.provider !== undefined) return cluster.provider
-  })
-  return undefined
-}

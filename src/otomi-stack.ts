@@ -55,7 +55,6 @@ import {
   apply,
   checkPodExists,
   getCloudttyActiveTime,
-  getClusterProvider,
   getKubernetesVersion,
   getLastTektonMessage,
   getSealedSecretsCertificate,
@@ -343,11 +342,11 @@ export default class OtomiStack {
   }
 
   getApps(teamId: string, picks?: string[]): Array<App> {
-    const aplExlcludedApps = ['cert-manager', 'minio', 'kured', 'falco', 'drone']
+    const aplExlcludedApps = ['cert-manager', 'minio', 'kured', 'falco', 'drone', 'external-dns']
     const apps = this.db.getCollection('apps', { teamId }) as Array<App>
-    const clusterProvider = getClusterProvider()
+    const settingsInfo = this.getSettingsInfo()
     let providerSpecificApps: Array<App> = []
-    if (clusterProvider != undefined && clusterProvider === 'apl')
+    if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled)
       providerSpecificApps = apps.filter((app) => !aplExlcludedApps.includes(app.id))
     else providerSpecificApps = apps
 
