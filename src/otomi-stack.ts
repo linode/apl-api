@@ -335,26 +335,33 @@ export default class OtomiStack {
     })
   }
 
-  getApp(teamId: string, id: string): App {
+  filterExcludedApp(apps: App | App[]) {
     const excludedApps = PREINSTALLED_EXCLUDED_APPS.default.apps
+    const settingsInfo = this.getSettingsInfo()
+    if (!Array.isArray(apps)) {
+      if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled && excludedApps.includes(apps.id))
+        throw new HttpError(404, 'App not found')
+    } else if (Array.isArray(apps)) {
+      if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled)
+        return apps.filter((app) => !excludedApps.includes(app.id))
+      else return apps
+    }
+    return apps
+  }
+
+  getApp(teamId: string, id: string): App {
     // @ts-ignore
     const app = this.db.getItem('apps', { teamId, id }) as App
-    const settingsInfo = this.getSettingsInfo()
-    if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled && excludedApps.includes(app.id))
-      throw new HttpError(404, 'App not found')
+    this.filterExcludedApp(app)
+
     if (teamId === 'admin') return app
     const adminApp = this.db.getItem('apps', { teamId: 'admin', id: app.id }) as App
     return { ...cloneDeep(app), enabled: adminApp.enabled }
   }
 
   getApps(teamId: string, picks?: string[]): Array<App> {
-    const excludedApps = PREINSTALLED_EXCLUDED_APPS.default.apps
     const apps = this.db.getCollection('apps', { teamId }) as Array<App>
-    const settingsInfo = this.getSettingsInfo()
-    let providerSpecificApps: Array<App> = []
-    if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled)
-      providerSpecificApps = apps.filter((app) => !excludedApps.includes(app.id))
-    else providerSpecificApps = apps
+    const providerSpecificApps = this.filterExcludedApp(apps) as App[]
 
     if (teamId === 'admin') return providerSpecificApps
 
