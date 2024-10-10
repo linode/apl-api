@@ -241,9 +241,9 @@ Settings:
         - clientID
         - clientSecret
     otomi:
-      title: General
+      title: APL
       type: object
-      description: General platform settings.
+      description: Settings for APL.
       additionalProperties: false
       properties:
         adminPassword:
@@ -255,7 +255,7 @@ Settings:
           # readOnly: true
         additionalClusters:
           title: Additional clusters
-          description: Create links to other platform instances.
+          description: Enter other clusters running APL.
           type: array
           items:
             $ref: cluster.yaml#/AdditionalCluster
@@ -270,7 +270,9 @@ Settings:
           nullable: true
           title: Global pullsecret
           description:
-            Will be connected to each "default" service account in all platform namespaces. Handy for authenticating with DockerHub to avoid rate limiting.
+            Will be connected to each "default" service account in all APL app namespaces.
+            Handy for authenticating with DockerHub to avoid rate limiting.
+            Also useful when pulling all APL images from a private repo. (One would need to override all the images in the config first.)
           additionalProperties: false
           properties:
             username:
@@ -318,12 +320,12 @@ Settings:
           default: true
         nodeSelector:
           $ref: definitions.yaml#/labels
-          description: 'One or more "label/value" pairs that must exist on one or more nodes, which will force all platform services to be scheduled there.'
+          description: 'One or more "label: value" pairs that must exist on one or more nodes, which will force all APL services to be scheduled there.'
         version:
-          title: Core version
+          title: APL version
           default: latest
           description: |
-            Please pin this to a valid release version found in the apl-core repo.
+            Please pin this to a valid release version found in the repo.
           type: string
       required:
         - version
