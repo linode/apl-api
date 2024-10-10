@@ -166,7 +166,7 @@ components:
     Service:
       x-acl:
         platformAdmin: [delete-any, read-any, create-any, update-any]
-        teamAdmin: [delete-any, read-any, create-any, update-any]
+        teamAdmin: [delete, read, create, update]
         teamMember: [delete, read, create, update]
       type: object
       properties:
@@ -204,7 +204,7 @@ For example:
     Service:
       x-acl:
         platformAdmin: [delete-any, read-any, create-any, update-any]
-        teamAdmin: [delete-any, read-any, create-any, update-any]
+        teamAdmin: [delete, read, create, update]
         teamMember: [delete, read, create, update]
       type: object
       properties:
@@ -214,7 +214,7 @@ For example:
           type: object
           x-acl:
             platformAdmin: [read, create]
-            teamAdmin: [read, create]
+            teamAdmin: [read]
             teamMember: [read]
 ```
 

@@ -561,14 +561,14 @@ describe('API authz tests', () => {
         .expect(403)
         .end(done)
     })
-    it('team admin can get all users', (done) => {
+    it('team admin can get all users with basic info', (done) => {
       agent.get(`/v1/users`).set('Authorization', `Bearer ${teamAdminToken}`).expect(200).end(done)
     })
-    it('team admin can update all users', (done) => {
+    it('team admin can update all users teams field', (done) => {
       agent
         .put(`/v1/teams/${teamId}/users`)
         .send([{ ...userData }])
-        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .set('Authorization', `Bearer ${teamAdminToken}`)
         .expect(200)
         .end(done)
     })

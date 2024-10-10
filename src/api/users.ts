@@ -6,9 +6,9 @@ const debug = Debug('otomi:api:users')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [
-    ({ otomi }: OpenApiRequestExt, res): void => {
+    ({ otomi, user: sessionUser }: OpenApiRequestExt, res): void => {
       debug('getAllUsers')
-      const v = otomi.getAllUsers()
+      const v = otomi.getAllUsers(sessionUser)
       res.json(v)
     },
   ]

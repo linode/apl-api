@@ -5,7 +5,7 @@ adminPassword:
   x-secret: true
   x-acl:
     platformAdmin: [read-any, update-any]
-    teamAdmin: [read-any, update-any]
+    teamAdmin: []
     teamMember: []
 alerts:
   additionalProperties: false
@@ -54,7 +54,7 @@ alerts:
           description: A Slack webhook URL.
           x-acl:
             platformAdmin: [read-any, update-any]
-            teamAdmin: [read-any, update-any]
+            teamAdmin: []
             teamMember: []
           x-secret: true
       # TODO: Enable again when form rework is done
@@ -70,7 +70,7 @@ alerts:
           type: string
           x-acl:
             platformAdmin: [read-any, update-any]
-            teamAdmin: [read-any, update-any]
+            teamAdmin: []
             teamMember: []
           x-secret: true
         lowPrio:
@@ -78,7 +78,7 @@ alerts:
           type: string
           x-acl:
             platformAdmin: [read-any, update-any]
-            teamAdmin: [read-any, update-any]
+            teamAdmin: []
             teamMember: []
           x-secret: true
       # TODO: Enable again when form rework is done
@@ -249,7 +249,7 @@ azureClientSecret:
   x-secret: true
   x-acl:
     platformAdmin: [read-any, update-any]
-    teamAdmin: [read-any, update-any]
+    teamAdmin: []
     teamMember: []
 azureDns:
   x-hideTitle: true
@@ -273,7 +273,7 @@ azureDns:
       description: Azure Application Client Secret
       x-acl:
         platformAdmin: [read-any, update-any]
-        teamAdmin: [read-any, update-any]
+        teamAdmin: []
         teamMember: []
       x-secret: true
   required:
@@ -386,7 +386,7 @@ dns:
                   type: string
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                 accessToken:
                   title: Akamai access token
@@ -394,7 +394,7 @@ dns:
                   type: string
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                   x-secret: true
                 clientToken:
@@ -403,7 +403,7 @@ dns:
                   type: string
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                   x-secret: true
                 clientSecret:
@@ -412,7 +412,7 @@ dns:
                   type: string
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                   x-secret: true
               required:
@@ -434,7 +434,7 @@ dns:
                       $ref: '#/awsAccessKey'
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                   type: object
                 region:
@@ -469,7 +469,7 @@ dns:
                   type: string
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                   x-secret: true
                 apiSecret:
@@ -477,7 +477,7 @@ dns:
                   description: Required when Email is set.
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                   x-secret: true
                 email:
@@ -499,7 +499,7 @@ dns:
                   type: string
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                   x-secret: true
               type: object
@@ -515,7 +515,7 @@ dns:
                   type: string
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                   x-secret: true
               type: object
@@ -532,7 +532,7 @@ dns:
                   description: A service account key in json format for managing a DNS zone.
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                     x-secret: true
                 project:
@@ -557,7 +557,7 @@ dns:
                   description: 'The provider config'
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                   x-secret: true
                 cert-manager:
@@ -566,7 +566,7 @@ dns:
                   description: 'The dns01 config as provided here: https://cert-manager.io/docs/configuration/acme/dns01/'
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                   x-secret: true
               required:
@@ -591,7 +591,7 @@ droneGit:
       type: string
       x-acl:
         platformAdmin: [read-any, update-any]
-        teamAdmin: [read-any, update-any]
+        teamAdmin: []
         teamMember: []
       x-secret: true
   type: object
@@ -776,7 +776,7 @@ kms:
                   $ref: '#/agePrivateKey'
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
               required:
                 - publicKey
@@ -803,13 +803,13 @@ kms:
                   $ref: '#/awsAccessKey'
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                 secretKey:
                   $ref: '#/awsSecretKey'
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                 region:
                   $ref: '#/awsRegion'
@@ -839,13 +839,13 @@ kms:
                   $ref: '#/azureClientId'
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                 clientSecret:
                   $ref: '#/azureClientSecret'
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                 tenantId:
                   $ref: '#/azureTenantId'
@@ -875,7 +875,7 @@ kms:
                   $ref: '#/googleAccountJson'
                   x-acl:
                     platformAdmin: [read-any, update-any]
-                    teamAdmin: [read-any, update-any]
+                    teamAdmin: []
                     teamMember: []
                 project:
                   $ref: '#/googleProject'
@@ -992,7 +992,7 @@ rawValues:
   type: object
   x-acl:
     platformAdmin: [read-any, update-any]
-    teamAdmin: [read-any, update-any]
+    teamAdmin: []
     teamMember: []
 replicas:
   type: integer

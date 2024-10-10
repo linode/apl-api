@@ -1026,7 +1026,17 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/User'
+                properties:
+                  id:
+                    $ref: '#/components/schemas/User/properties/id'
+                  email:
+                    $ref: '#/components/schemas/User/properties/email'
+                  isPlatformAdmin:
+                    $ref: '#/components/schemas/User/properties/isPlatformAdmin'
+                  isTeamAdmin:
+                    $ref: '#/components/schemas/User/properties/isTeamAdmin'
+                  teams:
+                    $ref: '#/components/schemas/User/properties/teams'
         description: User object that contains updated values
         required: true
       responses:

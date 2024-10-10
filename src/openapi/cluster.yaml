@@ -9,10 +9,7 @@ AdditionalCluster:
       - update-any
       - delete-any
     teamAdmin:
-      - create-any
       - read-any
-      - update-any
-      - delete-any
     teamMember:
       - read-any
   title: Additional cluster
@@ -39,7 +36,6 @@ Cluster:
       - update-any
     teamAdmin:
       - read-any
-      - update-any
     teamMember:
       - read-any
   title: Cluster

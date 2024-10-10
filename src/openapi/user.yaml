@@ -16,15 +16,9 @@ SessionUser:
   # readOnly: true
   x-acl:
     platformAdmin:
-      - create-any
-      - read-any
-      - update-any
-      - delete-any
-    teamAdmin:
-      - create
       - read
-      - update
-      - delete
+    teamAdmin:
+      - read
     teamMember:
       - read
   properties:
@@ -92,8 +86,6 @@ User:
   properties:
     id:
       type: string
-    teamId:
-      $ref: 'definitions.yaml#/idName'
     email:
       $ref: definitions.yaml#/email
       title: Email

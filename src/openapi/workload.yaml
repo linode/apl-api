@@ -6,10 +6,10 @@ Workload:
       - update-any
       - delete-any
     teamAdmin:
-      - create-any
-      - read-any
-      - update-any
-      - delete-any
+      - create
+      - read
+      - update
+      - delete
     teamMember:
       - create
       - read
@@ -145,7 +145,7 @@ Workload:
 WorkloadValues:
   x-acl:
     platformAdmin: [read-any, update-any]
-    teamAdmin: [read-any, update-any]
+    teamAdmin: [read, update]
     teamMember: [read, update]
   type: object
   properties:

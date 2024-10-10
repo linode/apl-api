@@ -6,10 +6,10 @@ Policies:
       - update-any
       - delete-any
     teamAdmin:
-      - create-any
-      - read-any
-      - update-any
-      - delete-any
+      - create
+      - read
+      - update
+      - delete
     teamMember:
       - create
       - read
@@ -145,10 +145,10 @@ Policy:
       - update-any
       - delete-any
     teamAdmin:
-      - create-any
-      - read-any
-      - update-any
-      - delete-any
+      - create
+      - read
+      - update
+      - delete
     teamMember:
       - create
       - read

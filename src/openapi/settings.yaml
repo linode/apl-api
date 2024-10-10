@@ -1,7 +1,7 @@
 Settings:
   x-acl:
     platformAdmin: [read-any, update-any]
-    teamAdmin: [read-any, update-any]
+    teamAdmin: [read]
     teamMember: [read]
   additionalProperties: false
   properties:
@@ -169,7 +169,7 @@ Settings:
       x-externalDocsPath: docs/for-ops/console/settings/dns
       x-acl:
         platformAdmin: [read-any, update-any]
-        teamAdmin: [read-any, update-any]
+        teamAdmin: []
         teamMember: []
     ingress:
       type: object
@@ -203,7 +203,7 @@ Settings:
       x-externalDocsPath: docs/for-ops/console/settings/key-management
       x-acl:
         platformAdmin: [read-any, update-any]
-        teamAdmin: [read-any, update-any]
+        teamAdmin: []
         teamMember: []
     oidc:
       title: OIDC
@@ -241,7 +241,7 @@ Settings:
       x-externalDocsPath: docs/for-ops/console/settings/oidc
       x-acl:
         platformAdmin: [read-any, update-any]
-        teamAdmin: [read-any, update-any]
+        teamAdmin: []
         teamMember: []
       required:
         - issuer
@@ -258,7 +258,7 @@ Settings:
           $ref: definitions.yaml#/adminPassword
           x-acl:
             platformAdmin: [read-any]
-            teamAdmin: [read-any]
+            teamAdmin: []
             teamMember: []
           # readOnly: true
         additionalClusters:
@@ -273,7 +273,7 @@ Settings:
               - provider
           x-acl:
             platformAdmin: [read-any, update-any]
-            teamAdmin: [read-any, update-any]
+            teamAdmin: []
             teamMember: []
         globalPullSecret:
           nullable: true
@@ -287,20 +287,20 @@ Settings:
               type: string
               x-acl:
                 platformAdmin: [read-any, update-any]
-                teamAdmin: [read-any, update-any]
+                teamAdmin: []
                 teamMember: []
             password:
               type: string
               x-secret: true
               x-acl:
                 platformAdmin: [read-any, update-any]
-                teamAdmin: [read-any, update-any]
+                teamAdmin: []
                 teamMember: []
             email:
               type: string
               x-acl:
                 platformAdmin: [read-any, update-any]
-                teamAdmin: [read-any, update-any]
+                teamAdmin: []
                 teamMember: []
               x-default: not@us.ed
             server:
@@ -313,7 +313,7 @@ Settings:
           type: object
           x-acl:
             platformAdmin: [read-any, update-any]
-            teamAdmin: [read-any, update-any]
+            teamAdmin: []
             teamMember: []
         hasExternalDNS:
           description: Set this to true when an external dns zone is available to manage dns records. (Expects required `dns:` fields to be set.)
@@ -344,7 +344,7 @@ Settings:
       x-externalDocsPath: docs/for-ops/console/settings/otomi
       x-acl:
         platformAdmin: [read-any, update-any]
-        teamAdmin: [read-any, update-any]
+        teamAdmin: [read]
         teamMember: [read]
     smtp:
       title: SMTP
@@ -383,6 +383,6 @@ Settings:
       x-externalDocsPath: docs/for-ops/console/settings/smtp
       x-acl:
         platformAdmin: [read-any, update-any]
-        teamAdmin: [read-any, update-any]
+        teamAdmin: []
         teamMember: []
   type: object

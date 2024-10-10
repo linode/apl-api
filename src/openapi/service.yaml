@@ -6,10 +6,10 @@ Service:
       - update-any
       - delete-any
     teamAdmin:
-      - create-any
-      - read-any
-      - update-any
-      - delete-any
+      - create
+      - read
+      - update
+      - delete
     teamMember:
       - create
       - read
@@ -36,11 +36,7 @@ Service:
           - read-any
           - update-any
           - delete-any
-        teamAdmin:
-          - create-any
-          - read-any
-          - update-any
-          - delete-any
+        teamAdmin: []
         teamMember: []
     port:
       type: integer

@@ -38,7 +38,7 @@ AppList:
 App:
   x-acl:
     platformAdmin: [read-any, update-any]
-    teamAdmin: [read-any, update-any]
+    teamAdmin: [read, update]
     teamMember: [read, update]
   type: object
   properties:
@@ -55,12 +55,12 @@ App:
       $ref: definitions.yaml#/rawValues
       x-acl:
         platformAdmin: [read-any, update-any]
-        teamAdmin: [read-any, update-any]
+        teamAdmin: []
         teamMember: []
     values:
       x-acl:
         platformAdmin: [read-any, update-any]
-        teamAdmin: [read-any, update-any]
+        teamAdmin: []
         teamMember: []
       type: object
   required: [id]

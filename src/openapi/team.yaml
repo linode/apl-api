@@ -47,7 +47,7 @@ TeamSelfService:
       uniqueItems: true
   x-acl:
     platformAdmin: [read-any, update-any]
-    teamAdmin: [read-any, update-any]
+    teamAdmin: [read]
     teamMember: [read]
 
 Team:
@@ -72,7 +72,7 @@ Team:
       writeOnly: true
       x-acl:
         platformAdmin: [read-any, update-any]
-        teamAdmin: [read-any, update-any]
+        teamAdmin: []
         teamMember: []
     managedMonitoring:
       title: Managed monitoring
@@ -116,10 +116,8 @@ Team:
       - create-any
       - update-any
     teamAdmin:
-      - delete-any
       - read-any
-      - create-any
-      - update-any
+      - update
     teamMember:
       - read-any
       - update

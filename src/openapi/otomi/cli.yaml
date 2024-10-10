@@ -1,6 +1,6 @@
 OtomiCliValues:
   x-acl:
     platformAdmin: [read-any]
-    teamAdmin: [read-any]
+    teamAdmin: []
     teamMember: []
   type: object

@@ -556,8 +556,16 @@ export default class OtomiStack {
     return this.db.deleteItem('netpols', { id })
   }
 
-  getAllUsers(): Array<User> {
-    return this.db.getCollection('users') as Array<User>
+  getAllUsers(sessionUser: SessionUser): Array<User> {
+    const users = this.db.getCollection('users') as Array<User>
+    if (sessionUser.isPlatformAdmin) return users
+    else if (sessionUser.isTeamAdmin) {
+      const usersWithBasicInfo = users.map((user) => {
+        const { id, email, isPlatformAdmin, isTeamAdmin, teams } = user
+        return { id, email, isPlatformAdmin, isTeamAdmin, teams }
+      })
+      return usersWithBasicInfo as Array<User>
+    } else return []
   }
 
   async createUser(data: User): Promise<User> {
@@ -603,9 +611,10 @@ export default class OtomiStack {
     return this.db.deleteItem('users', { id })
   }
 
-  editTeamUsers(data: User[]): Array<User> {
+  editTeamUsers(data: Pick<User, 'id' | 'email' | 'isPlatformAdmin' | 'isTeamAdmin' | 'teams'>[]): Array<User> {
     data.forEach((user) => {
-      this.db.updateItem('users', user, { id: user.id }) as User
+      const existingUser = this.db.getItem('users', { id: user.id }) as User
+      this.db.updateItem('users', { ...existingUser, teams: user.teams }, { id: user.id }) as User
     })
     return this.db.getCollection('users') as Array<User>
   }
@@ -1524,7 +1533,7 @@ export default class OtomiStack {
   }
 
   async saveUsers(): Promise<void> {
-    const users = this.getAllUsers()
+    const users = this.db.getCollection('users') as Array<User>
     const relativePath = `env/secrets.users.yaml`
     const { secretFilePostfix } = this.repo
     let secretRelativePath = `${relativePath}${secretFilePostfix}`
