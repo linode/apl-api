@@ -9,7 +9,7 @@ import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from '
 import generatePassword from 'password-generator'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
-import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
+import { AlreadyExists, DeployLockError, HttpError, PublicUrlExists, ValidationError } from 'src/error'
 import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
@@ -336,8 +336,12 @@ export default class OtomiStack {
   }
 
   getApp(teamId: string, id: string): App {
+    const excludedApps = PREINSTALLED_EXCLUDED_APPS.default.apps
     // @ts-ignore
     const app = this.db.getItem('apps', { teamId, id }) as App
+    const settingsInfo = this.getSettingsInfo()
+    if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled && excludedApps.includes(app.id))
+      throw new HttpError(404, 'App not found')
     if (teamId === 'admin') return app
     const adminApp = this.db.getItem('apps', { teamId: 'admin', id: app.id }) as App
     return { ...cloneDeep(app), enabled: adminApp.enabled }
