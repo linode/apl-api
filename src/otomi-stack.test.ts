@@ -137,7 +137,7 @@ describe('Workload values', () => {
     ] as App[])
   })
 
-  it('returns error 404 if single App is in excludedList and isPreinstalled flag is true', () => {
+  it('returns error if single App is in excludedList and isPreinstalled flag is true', () => {
     const app: App = {
       id: 'external-dns',
     }
