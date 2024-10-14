@@ -141,8 +141,9 @@ components:
   schemas:
     Services:
       x-acl:
-        admin: [read]
-        team: [read]
+        platformAdmin: [read]
+        teamAdmin: [read]
+        teamMember: [read]
       type: array
 ```
 
@@ -164,8 +165,9 @@ components:
   schemas:
     Service:
       x-acl:
-        admin: [delete-any, read-any, create-any, update-any]
-        team: [delete, read, create, update]
+        platformAdmin: [delete-any, read-any, create-any, update-any]
+        teamAdmin: [delete, read, create, update]
+        teamMember: [delete, read, create, update]
       type: object
       properties:
 ```
@@ -201,8 +203,9 @@ For example:
 ```
     Service:
       x-acl:
-        admin: [delete-any, read-any, create-any, update-any]
-        team: [delete, read, create, update]
+        platformAdmin: [delete-any, read-any, create-any, update-any]
+        teamAdmin: [delete, read, create, update]
+        teamMember: [delete, read, create, update]
       type: object
       properties:
         name:
@@ -210,8 +213,9 @@ For example:
         ingress:
           type: object
           x-acl:
-            admin: [read, create]
-            team: [read]
+            platformAdmin: [read, create]
+            teamAdmin: [read]
+            teamMember: [read]
 ```
 
 From above:

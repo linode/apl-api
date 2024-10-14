@@ -1,15 +1,20 @@
 Policies:
   x-acl:
-    admin:
-      - delete-any
-      - read-any
+    platformAdmin:
       - create-any
+      - read-any
       - update-any
-    team:
-      - delete
-      - read
+      - delete-any
+    teamAdmin:
       - create
+      - read
       - update
+      - delete
+    teamMember:
+      - create
+      - read
+      - update
+      - delete
   properties:
     disallow-capabilities-strict:
       description: 'Adding capabilities other than `NET_BIND_SERVICE` is disallowed. In addition, all containers must explicitly drop `ALL` capabilities.'
@@ -106,7 +111,7 @@ Policies:
         customValues:
           type: array
           items:
-            type: string        
+            type: string
     restrict-apparmor-profiles:
       description: 'On supported hosts, the `runtime/default` AppArmor profile is applied by default. The default policy should prevent overriding or disabling the policy, or restrict overrides to an allowed set of profiles. This policy ensures Pods do not specify any other AppArmor profiles than `runtime/default` or `localhost/*`.'
       properties:
@@ -134,16 +139,21 @@ Policies:
 
 Policy:
   x-acl:
-    admin:
-      - delete-any
-      - read-any
+    platformAdmin:
       - create-any
+      - read-any
       - update-any
-    team:
-      - delete
-      - read
+      - delete-any
+    teamAdmin:
       - create
+      - read
       - update
+      - delete
+    teamMember:
+      - create
+      - read
+      - update
+      - delete
   type: object
   x-externalDocsPath: docs/for-devs/console/policies
   properties:

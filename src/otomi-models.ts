@@ -18,10 +18,11 @@ export type Settings = components['schemas']['Settings']
 export type SettingsInfo = components['schemas']['SettingsInfo']
 export type Team = components['schemas']['Team']
 export type TeamSelfService = components['schemas']['Team']['selfService']
-export type User = components['schemas']['User']
-export type UserAuthz = components['schemas']['User']['authz']
+export type SessionUser = components['schemas']['SessionUser']
+export type UserAuthz = components['schemas']['SessionUser']['authz']
 export type Workload = components['schemas']['Workload']
 export type WorkloadValues = components['schemas']['WorkloadValues']
+export type User = components['schemas']['User']
 export type Project = components['schemas']['Project']
 export type Build = components['schemas']['Build']
 export type Policy = components['schemas']['Policy']
@@ -45,7 +46,7 @@ export interface OpenApiRequest extends Request {
   }
   apiDoc: OpenAPIDoc
   session: Session
-  user?: User
+  user?: SessionUser
 }
 
 type HttpMethodType = 'delete' | 'read' | 'create' | 'update'
@@ -105,8 +106,9 @@ export type AclAction =
   | 'update-any'
 
 export enum SessionRole {
-  Admin = 'admin',
-  User = 'team',
+  PlatformAdmin = 'platformAdmin',
+  TeamAdmin = 'teamAdmin',
+  TeamMember = 'teamMember',
 }
 
 export interface JWT {
@@ -118,7 +120,7 @@ export interface JWT {
 }
 
 export interface OpenApiRequestExt extends OpenApiRequest, Session {
-  user: User
+  user: SessionUser
   // Flag that indicates if experess-openapi middleware take up further authorization action
   isSecurityHandler?: boolean
   otomi: OtomiStack

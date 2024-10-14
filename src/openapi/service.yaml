@@ -1,15 +1,20 @@
 Service:
   x-acl:
-    admin:
-      - delete-any
-      - read-any
+    platformAdmin:
       - create-any
-      - update-any
-    team:
-      - delete
       - read-any
+      - update-any
+      - delete-any
+    teamAdmin:
       - create
+      - read
       - update
+      - delete
+    teamMember:
+      - create
+      - read
+      - update
+      - delete
   x-externalDocsPath: docs/for-devs/console/services
   properties:
     id:
@@ -26,8 +31,13 @@ Service:
       $ref: definitions.yaml#/idName
       description: A Kubernetes namespace.
       x-acl:
-        admin: [read-any, create-any, update-any, delete-any]
-        team: []
+        platformAdmin:
+          - create-any
+          - read-any
+          - update-any
+          - delete-any
+        teamAdmin: []
+        teamMember: []
     port:
       type: integer
       minimum: 1
@@ -53,19 +63,19 @@ Service:
           type: integer
           default: 90
           title: Weight v1
-          description: "Percentage of traffic to version 1."
+          description: 'Percentage of traffic to version 1.'
         weightV2:
           type: integer
           default: 10
           title: Weight v2
-          description: "Percentage of traffic to version 2."
+          description: 'Percentage of traffic to version 2.'
     ingress:
       title: Exposure (ingress)
       description: Determines loadbalancer related configuration for handling the service ingress.
       # Note: the order matters first schema must be nullable empty object
       oneOf:
-        - $ref: "#/IngressCluster"
-        - $ref: "#/IngressPublic"
+        - $ref: '#/IngressCluster'
+        - $ref: '#/IngressPublic'
 
   required:
     - name
@@ -78,7 +88,7 @@ Ingress:
       description: Assign service to a paricular Load Balancer by selecting ingress class name.
       title: Ingress Class Name
       type: string
-      default: "platform"
+      default: 'platform'
     tlsPass:
       description: Pass through the request as is to the backing service. Only available for pre-deployed regular (non-Knative) services.
       title: TLS passthrough
@@ -180,7 +190,7 @@ IngressCluster:
 
 IngressPublic:
   allOf:
-    - $ref: "#/Ingress"
+    - $ref: '#/Ingress'
     - properties:
         type:
           type: string

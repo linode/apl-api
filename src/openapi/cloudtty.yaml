@@ -1,15 +1,20 @@
 Cloudtty:
   x-acl:
-    admin:
-      - delete-any
-      - read-any
+    platformAdmin:
       - create-any
-      - update-any
-    team:
-      - delete-any
       - read-any
-      - create-any
       - update-any
+      - delete-any
+    teamAdmin:
+      - create-any
+      - read-any
+      - update-any
+      - delete-any
+    teamMember:
+      - create-any
+      - read-any
+      - update-any
+      - delete-any
   type: object
   x-externalDocsPath: docs/for-devs/console/cloudtty
   properties:

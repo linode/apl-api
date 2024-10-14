@@ -1,15 +1,20 @@
 Build:
   x-acl:
-    admin:
-      - delete-any
-      - read-any
+    platformAdmin:
       - create-any
+      - read-any
       - update-any
-    team:
-      - delete
-      - read
+      - delete-any
+    teamAdmin:
       - create
+      - read
       - update
+      - delete
+    teamMember:
+      - create
+      - read
+      - update
+      - delete
   type: object
   x-externalDocsPath: docs/for-devs/console/builds
   properties:
@@ -37,7 +42,7 @@ Build:
     trigger:
       type: boolean
       default: false
-      description: "Trigger the build based on a Gitea webhook. Use this URL for the webhook: http://el-gitea-webhook-<build-name>.team-<team-name>.svc.cluster.local:8080."
+      description: 'Trigger the build based on a Gitea webhook. Use this URL for the webhook: http://el-gitea-webhook-<build-name>.team-<team-name>.svc.cluster.local:8080.'
     scanSource:
       type: boolean
       default: true
@@ -112,7 +117,7 @@ buildMode:
               $ref: 'definitions.yaml#/url'
               title: Repo URL
             path:
-              description: "Optional: A subpath within the repo where the source is located"
+              description: 'Optional: A subpath within the repo where the source is located'
               type: string
               default: ''
             revision:
