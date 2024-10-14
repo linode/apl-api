@@ -936,6 +936,120 @@ paths:
         '200':
           description: Successfully removed cloudtty url
 
+  '/users':
+    get:
+      operationId: getAllUsers
+      x-aclSchema: User
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all users configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      operationId: createUser
+      description: Create a team user
+      x-aclSchema: User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        description: User object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored user configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  '/users/{userId}':
+    parameters:
+      - $ref: '#/components/parameters/userParams'
+    get:
+      operationId: getUser
+      description: Get a user from a given team
+      x-aclSchema: User
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained user configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      operationId: editUser
+      description: Edit a user from a given team
+      x-aclSchema: User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        description: User object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      operationId: deleteUser
+      description: Delete a user from a given team
+      x-aclSchema: User
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a user
+
+  '/teams/{teamId}/users':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    put:
+      operationId: editTeamUsers
+      description: Edit a user from a given team
+      x-aclSchema: User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                properties:
+                  id:
+                    $ref: '#/components/schemas/User/properties/id'
+                  email:
+                    $ref: '#/components/schemas/User/properties/email'
+                  isPlatformAdmin:
+                    $ref: '#/components/schemas/User/properties/isPlatformAdmin'
+                  isTeamAdmin:
+                    $ref: '#/components/schemas/User/properties/isTeamAdmin'
+                  teams:
+                    $ref: '#/components/schemas/User/properties/teams'
+        description: User object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
   '/projects':
     get:
       operationId: getAllProjects
@@ -1456,6 +1570,13 @@ components:
       required: true
       schema:
         type: string
+    userParams:
+      name: userId
+      in: path
+      description: ID of the user
+      required: true
+      schema:
+        type: string
     projectParams:
       name: projectId
       in: path
@@ -1598,6 +1719,8 @@ components:
       $ref: team.yaml#/TeamSelfService
     User:
       $ref: user.yaml#/User
+    SessionUser:
+      $ref: user.yaml#/SessionUser
     Workload:
       $ref: workload.yaml#/Workload
     WorkloadValues:

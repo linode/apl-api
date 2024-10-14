@@ -43,9 +43,10 @@ home:
         channel: mon-otomi
         channelCrit: mon-otomi-crit
 oidc:
-    adminGroupID: someAdminGroupID
+    platformAdminGroupID: someAdminGroupID
     clientID: someClientID
     issuer: https://login.microsoftonline.com/xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    allTeamsAdminGroupID: xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     teamAdminGroupID: xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 otomi:
     adminPassword: okidoki

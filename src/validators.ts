@@ -1,7 +1,11 @@
 import { CleanOptions, CleanedEnvAccessors, ValidatorSpec, bool, cleanEnv as clean, json, num, str } from 'envalid'
 
-export const AUTHZ_MOCK_IS_ADMIN = bool({
-  desc: 'Indicate if a mocked user is an admin',
+export const AUTHZ_MOCK_IS_PLATFORM_ADMIN = bool({
+  desc: 'Indicate if a mocked user is a platform admin',
+  default: true,
+})
+export const AUTHZ_MOCK_IS_TEAM_ADMIN = bool({
+  desc: 'Indicate if a mocked user is a team admin',
   default: true,
 })
 export const AUTHZ_MOCK_TEAM = str({ desc: 'Comma separated list of teams a user belongs to', default: undefined })
@@ -45,6 +49,10 @@ export const PREINSTALLED_EXCLUDED_APPS = json({
   default: {
     apps: ['cert-manager', 'minio', 'kured', 'falco', 'drone', 'external-dns'],
   },
+})
+export const ROOT_KEYCLOAK_USER = str({
+  desc: 'The default username for the root keycloak user for administrative purposes.',
+  default: 'otomi-admin',
 })
 const { env } = process
 export function cleanEnv<T>(

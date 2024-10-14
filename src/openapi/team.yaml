@@ -28,14 +28,7 @@ TeamSelfService:
       items:
         type: string
         # downloadKubeConfig - is an action that a user can perform, not an attribute of the input form
-        enum:
-          [
-            oidc,
-            managedMonitoring,
-            alerts,
-            resourceQuota,
-            networkPolicy,
-          ]
+        enum: [oidc, managedMonitoring, alerts, resourceQuota, networkPolicy]
       uniqueItems: true
     apps:
       title: Apps
@@ -50,17 +43,12 @@ TeamSelfService:
       type: array
       items:
         type: string
-        enum:
-          [
-            shell,
-            downloadKubeConfig,
-            downloadDockerConfig,
-            downloadCertificateAuthority,
-          ]
+        enum: [shell, downloadKubeConfig, downloadDockerConfig, downloadCertificateAuthority]
       uniqueItems: true
   x-acl:
-    admin: [read-any, update-any]
-    team: [read]
+    platformAdmin: [read-any, update-any]
+    teamAdmin: [read]
+    teamMember: [read]
 
 Team:
   properties:
@@ -83,11 +71,12 @@ Team:
       type: string
       writeOnly: true
       x-acl:
-        admin: [ read-any, update-any ]
-        team: [ ]
+        platformAdmin: [read-any, update-any]
+        teamAdmin: []
+        teamMember: []
     managedMonitoring:
       title: Managed monitoring
-      description: "Activate APL managed Grafana or Alertmanager instances. Optionally disable cross-team access."
+      description: 'Activate APL managed Grafana or Alertmanager instances. Optionally disable cross-team access.'
       properties:
         grafana:
           type: boolean
@@ -121,12 +110,15 @@ Team:
   required:
     - name
   x-acl:
-    admin:
+    platformAdmin:
       - delete-any
       - read-any
       - create-any
       - update-any
-    team:
+    teamAdmin:
+      - read-any
+      - update
+    teamMember:
       - read-any
       - update
   type: object

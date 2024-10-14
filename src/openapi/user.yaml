@@ -12,11 +12,15 @@ TeamAuthz:
           type: string
   required:
     - deniedAttributes
-User:
+SessionUser:
   # readOnly: true
   x-acl:
-    admin: [read]
-    team: [read]
+    platformAdmin:
+      - read
+    teamAdmin:
+      - read
+    teamMember:
+      - read
   properties:
     name:
       type: string
@@ -24,10 +28,15 @@ User:
       # readOnly: true
     email:
       $ref: definitions.yaml#/email
-    isAdmin:
+    isPlatformAdmin:
       type: boolean
       default: false
-      description: If the user is admin.
+      description: Select to assign the user the platform-admin role.
+      # readOnly: true
+    isTeamAdmin:
+      type: boolean
+      default: false
+      description: Select to assign the user the team-admin role.
       # readOnly: true
     authz:
       type: object
@@ -37,7 +46,7 @@ User:
     teams:
       type: array
       default: []
-      description: A list of teams the user belongs to.
+      description: Select the team(s) to assign the user the team-member role.
       items:
         type: string
       # readOnly: true
@@ -55,9 +64,60 @@ User:
       description: A user subject.
   required:
     - authz
-    - isAdmin
+    - isPlatformAdmin
+    - isTeamAdmin
     - name
     - email
     - teams
     - roles
+  type: object
+
+User:
+  x-acl:
+    platformAdmin:
+      - create-any
+      - read-any
+      - update-any
+      - delete-any
+    teamAdmin:
+      - read-any
+      - update-any
+    teamMember: []
+  properties:
+    id:
+      type: string
+    email:
+      $ref: definitions.yaml#/email
+      title: Email
+      description: A unique email address.
+    firstName:
+      type: string
+      title: First Name
+      description: The first name of the user.
+    lastName:
+      type: string
+      title: Last Name
+      description: The last name of the user.
+    isPlatformAdmin:
+      type: boolean
+      default: false
+      description: Select to assign the user the platform-admin role.
+    isTeamAdmin:
+      type: boolean
+      default: false
+      description: Select to assign the user the team-admin role.
+    teams:
+      description: Select the team(s) to assign the user the team-member role.
+      title: Teams
+      type: array
+      items:
+        type: string
+      uniqueItems: true
+    initialPassword:
+      type: string
+      description: The initial password of the user
+  required:
+    - email
+    - firstName
+    - lastName
   type: object

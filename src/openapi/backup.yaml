@@ -1,15 +1,20 @@
 Backup:
   x-acl:
-    admin:
-      - delete-any
-      - read-any
+    platformAdmin:
       - create-any
+      - read-any
       - update-any
-    team:
-      - delete
-      - read
+      - delete-any
+    teamAdmin:
       - create
+      - read
       - update
+      - delete
+    teamMember:
+      - create
+      - read
+      - update
+      - delete
   type: object
   description: Create Velero backup schedules for Persistent Volumes.
   x-externalDocsPath: docs/for-devs/console/backups

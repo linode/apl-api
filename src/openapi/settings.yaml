@@ -1,7 +1,8 @@
 Settings:
   x-acl:
-    admin: [read-any, update-any]
-    team: [read]
+    platformAdmin: [read-any, update-any]
+    teamAdmin: [read]
+    teamMember: [read]
   additionalProperties: false
   properties:
     alerts:
@@ -167,8 +168,9 @@ Settings:
       $ref: definitions.yaml#/dns
       x-externalDocsPath: docs/for-ops/console/settings/dns
       x-acl:
-        admin: [read-any, update-any]
-        team: []
+        platformAdmin: [read-any, update-any]
+        teamAdmin: []
+        teamMember: []
     ingress:
       type: object
       properties:
@@ -200,8 +202,9 @@ Settings:
       $ref: definitions.yaml#/kms
       x-externalDocsPath: docs/for-ops/console/settings/key-management
       x-acl:
-        admin: [read-any, update-any]
-        team: []
+        platformAdmin: [read-any, update-any]
+        teamAdmin: []
+        teamMember: []
     oidc:
       title: OIDC
       description: OpenID Connect settings.
@@ -217,8 +220,11 @@ Settings:
           title: Client Secret
           type: string
           x-secret: true
-        adminGroupID:
-          title: Admin group ID
+        platformAdminGroupID:
+          title: Platform admin group ID
+          type: string
+        allTeamsAdminGroupID:
+          title: All teams admin group ID
           type: string
         teamAdminGroupID:
           title: Team admin group ID
@@ -234,8 +240,9 @@ Settings:
       type: object
       x-externalDocsPath: docs/for-ops/console/settings/oidc
       x-acl:
-        admin: [read-any, update-any]
-        team: []
+        platformAdmin: [read-any, update-any]
+        teamAdmin: []
+        teamMember: []
       required:
         - issuer
         - clientID
@@ -250,8 +257,9 @@ Settings:
           description: Master admin password that will be used for all apps that are not configured to use their own password.
           $ref: definitions.yaml#/adminPassword
           x-acl:
-            admin: [read-any]
-            team: []
+            platformAdmin: [read-any]
+            teamAdmin: []
+            teamMember: []
           # readOnly: true
         additionalClusters:
           title: Additional clusters
@@ -264,12 +272,17 @@ Settings:
               - name
               - provider
           x-acl:
-            admin: [read-any, update-any]
-            team: []
+            platformAdmin: [read-any, update-any]
+            teamAdmin: []
+            teamMember: []
         isPreInstalled:
           type: boolean
           default: false
           description: Defines if APL is installed and managed by Linode
+          x-acl:
+            platformAdmin: [read-any, update-any]
+            teamAdmin: []
+            teamMember: []
         globalPullSecret:
           nullable: true
           title: Global pullsecret
@@ -281,19 +294,22 @@ Settings:
             username:
               type: string
               x-acl:
-                admin: [read-any, update-any]
-                team: []
+                platformAdmin: [read-any, update-any]
+                teamAdmin: []
+                teamMember: []
             password:
               type: string
               x-secret: true
               x-acl:
-                admin: [read-any, update-any]
-                team: []
+                platformAdmin: [read-any, update-any]
+                teamAdmin: []
+                teamMember: []
             email:
               type: string
               x-acl:
-                admin: [read-any, update-any]
-                team: []
+                platformAdmin: [read-any, update-any]
+                teamAdmin: []
+                teamMember: []
               x-default: not@us.ed
             server:
               type: string
@@ -304,8 +320,9 @@ Settings:
           #   - password
           type: object
           x-acl:
-            admin: [read-any, update-any]
-            team: []
+            platformAdmin: [read-any, update-any]
+            teamAdmin: []
+            teamMember: []
         hasExternalDNS:
           description: Set this to true when an external dns zone is available to manage dns records. (Expects required `dns:` fields to be set.)
           title: External DNS
@@ -334,8 +351,9 @@ Settings:
         - version
       x-externalDocsPath: docs/for-ops/console/settings/otomi
       x-acl:
-        admin: [read-any, update-any]
-        team: [read]
+        platformAdmin: [read-any, update-any]
+        teamAdmin: [read]
+        teamMember: [read]
     smtp:
       title: SMTP
       description: Mail server settings.
@@ -372,6 +390,7 @@ Settings:
       type: object
       x-externalDocsPath: docs/for-ops/console/settings/smtp
       x-acl:
-        admin: [read-any, update-any]
-        team: []
+        platformAdmin: [read-any, update-any]
+        teamAdmin: []
+        teamMember: []
   type: object

@@ -1,27 +1,32 @@
 Netpol:
   x-acl:
-    admin:
-      - delete-any
-      - read-any
+    platformAdmin:
       - create-any
+      - read-any
       - update-any
-    team:
-      - delete
-      - read
+      - delete-any
+    teamAdmin:
       - create
+      - read
       - update
+      - delete
+    teamMember:
+      - create
+      - read
+      - update
+      - delete
   type: object
   x-externalDocsPath: docs/for-devs/console/netpols
   properties:
     id:
       type: string
     teamId:
-      $ref: "definitions.yaml#/idName"
+      $ref: 'definitions.yaml#/idName'
     name:
       title: The name of the network policy.
-      $ref: "definitions.yaml#/wordCharacterPattern"
+      $ref: 'definitions.yaml#/wordCharacterPattern'
     ruleType:
-      $ref: "#/ruleType"
+      $ref: '#/ruleType'
   required:
     - name
 
@@ -43,11 +48,11 @@ ruleType:
         toLabelName:
           type: string
           title: Selector label name
-          description: "The name of the Pod selector label."
+          description: 'The name of the Pod selector label.'
         toLabelValue:
           type: string
           title: Selector label value
-          description: "The value of the Pod selector label."
+          description: 'The value of the Pod selector label.'
         mode:
           type: string
           default: AllowAll
@@ -64,15 +69,15 @@ ruleType:
               fromNamespace:
                 type: string
                 title: Namespace name
-                description: "The name of the namespace."
+                description: 'The name of the namespace.'
               fromLabelName:
                 type: string
                 title: Selector label name
-                description: "The name of the Pod selector label."
+                description: 'The name of the Pod selector label.'
               fromLabelValue:
                 type: string
                 title: Selector label value
-                description: "The value of the Pod selector label."
+                description: 'The value of the Pod selector label.'
             required:
               - fromNamespace
       required:
