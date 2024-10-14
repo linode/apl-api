@@ -269,7 +269,7 @@ Settings:
         isPreInstalled:
           type: boolean
           default: false
-          description: Defines if APL was installed by the cloud manager or not
+          description: Defines if APL is installed and managed by Linode
         globalPullSecret:
           nullable: true
           title: Global pullsecret
