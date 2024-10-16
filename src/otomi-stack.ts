@@ -9,7 +9,7 @@ import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
-import { AlreadyExists, DeployLockError, HttpError, PublicUrlExists, ValidationError } from 'src/error'
+import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
 import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
@@ -71,6 +71,9 @@ import { encryptSecretItem } from './utils/sealedSecretUtils'
 import { getKeycloakUsers } from './utils/userUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
+interface ExcludedApp extends App {
+  managed: boolean
+}
 const debug = Debug('otomi:otomi-stack')
 
 const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'dockerconfig']
@@ -341,8 +344,11 @@ export default class OtomiStack {
     const excludedApps = PREINSTALLED_EXCLUDED_APPS.default.apps
     const settingsInfo = this.getSettingsInfo()
     if (!Array.isArray(apps)) {
-      if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled && excludedApps.includes(apps.id))
-        throw new HttpError(404, 'App not found')
+      if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled && excludedApps.includes(apps.id)) {
+        // eslint-disable-next-line no-param-reassign
+        ;(apps as ExcludedApp).managed = true
+        return apps as ExcludedApp
+      }
     } else if (Array.isArray(apps)) {
       if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled)
         return apps.filter((app) => !excludedApps.includes(app.id))
@@ -351,7 +357,7 @@ export default class OtomiStack {
     return apps
   }
 
-  getApp(teamId: string, id: string): App {
+  getApp(teamId: string, id: string): App | ExcludedApp {
     // @ts-ignore
     const app = this.db.getItem('apps', { teamId, id }) as App
     this.filterExcludedApp(app)
