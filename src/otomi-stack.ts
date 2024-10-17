@@ -608,6 +608,12 @@ export default class OtomiStack {
   }
 
   deleteUser(id: string): void {
+    const user = this.db.getItem('users', { id }) as User
+    if (user.isPlatformAdmin) {
+      const users = this.db.getCollection('users') as Array<User>
+      const platformAdminUsersCount = users.filter((u) => u.isPlatformAdmin).length
+      if (platformAdminUsersCount === 1) throw new Error('Cannot delete the last platform admin user')
+    }
     return this.db.deleteItem('users', { id })
   }
 
