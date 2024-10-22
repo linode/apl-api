@@ -135,4 +135,13 @@ describe('Workload values', () => {
       },
     ] as App[])
   })
+
+  it('returns app with managed = true if single App is in excludedList and isPreinstalled flag is true', () => {
+    const app: App = {
+      id: 'external-dns',
+    }
+    otomiStack.getSettingsInfo = sinonStub().returns({ otomi: { isPreInstalled: true } })
+    const filteredApp = otomiStack.filterExcludedApp(app)
+    expect(filteredApp).to.deep.equal({ id: 'external-dns', managed: true })
+  })
 })
