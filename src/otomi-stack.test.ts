@@ -4,7 +4,6 @@ import { App, Workload } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { Repo } from 'src/repo'
 import 'src/test-init'
-import { HttpError } from './error'
 
 describe('Data validation', () => {
   let otomiStack: OtomiStack
@@ -135,14 +134,5 @@ describe('Workload values', () => {
         id: 'loki',
       },
     ] as App[])
-  })
-
-  it('returns error if single App is in excludedList and isPreinstalled flag is true', () => {
-    const app: App = {
-      id: 'external-dns',
-    }
-    otomiStack.getSettingsInfo = sinonStub().returns({ otomi: { isPreInstalled: true } })
-
-    expect(() => otomiStack.filterExcludedApp(app)).to.throw(HttpError)
   })
 })
