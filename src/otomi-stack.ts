@@ -47,6 +47,7 @@ import {
   GIT_REPO_URL,
   GIT_USER,
   HELM_CHART_CATALOG,
+  PREINSTALLED_EXCLUDED_APPS,
   TOOLS_HOST,
   VERSIONS,
   cleanEnv,
@@ -70,6 +71,9 @@ import { encryptSecretItem } from './utils/sealedSecretUtils'
 import { getKeycloakUsers } from './utils/userUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
+interface ExcludedApp extends App {
+  managed: boolean
+}
 const debug = Debug('otomi:otomi-stack')
 
 const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'dockerconfig']
@@ -86,6 +90,7 @@ const env = cleanEnv({
   HELM_CHART_CATALOG,
   TOOLS_HOST,
   VERSIONS,
+  PREINSTALLED_EXCLUDED_APPS,
 })
 
 export function getTeamBackupsFilePath(teamId: string): string {
@@ -259,7 +264,7 @@ export default class OtomiStack {
       cluster: pick(cluster, ['name', 'domainSuffix', 'provider']),
       dns: pick(dns, ['zones']),
       obj: pick(obj, ['provider']),
-      otomi: pick(otomi, ['additionalClusters', 'hasExternalDNS', 'hasExternalIDP']),
+      otomi: pick(otomi, ['additionalClusters', 'hasExternalDNS', 'hasExternalIDP', 'isPreInstalled']),
       ingressClassNames: map(ingress?.classes, 'className') ?? [],
     } as SettingsInfo
     return settingsInfo
@@ -335,9 +340,28 @@ export default class OtomiStack {
     })
   }
 
-  getApp(teamId: string, id: string): App {
+  filterExcludedApp(apps: App | App[]) {
+    const excludedApps = PREINSTALLED_EXCLUDED_APPS.default.apps
+    const settingsInfo = this.getSettingsInfo()
+    if (!Array.isArray(apps)) {
+      if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled && excludedApps.includes(apps.id)) {
+        // eslint-disable-next-line no-param-reassign
+        ;(apps as ExcludedApp).managed = true
+        return apps as ExcludedApp
+      }
+    } else if (Array.isArray(apps)) {
+      if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled)
+        return apps.filter((app) => !excludedApps.includes(app.id))
+      else return apps
+    }
+    return apps
+  }
+
+  getApp(teamId: string, id: string): App | ExcludedApp {
     // @ts-ignore
     const app = this.db.getItem('apps', { teamId, id }) as App
+    this.filterExcludedApp(app)
+
     if (teamId === 'admin') return app
     const adminApp = this.db.getItem('apps', { teamId: 'admin', id: app.id }) as App
     return { ...cloneDeep(app), enabled: adminApp.enabled }
@@ -345,9 +369,11 @@ export default class OtomiStack {
 
   getApps(teamId: string, picks?: string[]): Array<App> {
     const apps = this.db.getCollection('apps', { teamId }) as Array<App>
-    if (teamId === 'admin') return apps
+    const providerSpecificApps = this.filterExcludedApp(apps) as App[]
 
-    let teamApps = apps.map((app: App) => {
+    if (teamId === 'admin') return providerSpecificApps
+
+    let teamApps = providerSpecificApps.map((app: App) => {
       const adminApp = this.db.getItem('apps', { teamId: 'admin', id: app.id }) as App
       return { ...cloneDeep(app), enabled: adminApp.enabled }
     })
@@ -409,7 +435,7 @@ export default class OtomiStack {
 
     let enabled
     const app = getAppSchema(appId)
-    if (app.properties!.enabled !== undefined) enabled = !!values.enabled
+    if (app?.properties?.enabled) enabled = !!values.enabled
 
     // we do not want to send enabled flag to the input forms
     delete values.enabled

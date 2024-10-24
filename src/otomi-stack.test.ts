@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { stub as sinonStub } from 'sinon'
-import { Workload } from 'src/otomi-models'
+import { App, Workload } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { Repo } from 'src/repo'
 import 'src/test-init'
@@ -106,5 +106,42 @@ describe('Workload values', () => {
     otomiStack.repo.readFile = sinonStub().returns({ values: '' })
     const res = await otomiStack.loadWorkloadValues(w)
     expect(res).to.deep.equal({ id: '1', teamId: '2', name: 'name', values: {} })
+  })
+
+  it('returns filtered apps if App array is submitted isPreinstalled flag is true', () => {
+    const apps: App[] = [
+      {
+        id: 'external-dns',
+      },
+      {
+        id: 'drone',
+      },
+      {
+        id: 'cnpg',
+      },
+      {
+        id: 'loki',
+      },
+    ]
+    otomiStack.getSettingsInfo = sinonStub().returns({ otomi: { isPreInstalled: true } })
+    const filteredApps = otomiStack.filterExcludedApp(apps)
+
+    expect(filteredApps).to.deep.equal([
+      {
+        id: 'cnpg',
+      },
+      {
+        id: 'loki',
+      },
+    ] as App[])
+  })
+
+  it('returns app with managed = true if single App is in excludedList and isPreinstalled flag is true', () => {
+    const app: App = {
+      id: 'external-dns',
+    }
+    otomiStack.getSettingsInfo = sinonStub().returns({ otomi: { isPreInstalled: true } })
+    const filteredApp = otomiStack.filterExcludedApp(app)
+    expect(filteredApp).to.deep.equal({ id: 'external-dns', managed: true })
   })
 })
