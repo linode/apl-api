@@ -435,8 +435,7 @@ export default class OtomiStack {
 
     let enabled
     const app = getAppSchema(appId)
-    if (app != undefined && app.properties != undefined && app.properties.enabled !== undefined)
-      enabled = !!values.enabled
+    if (app?.properties?.enabled) enabled = !!values.enabled
 
     // we do not want to send enabled flag to the input forms
     delete values.enabled
