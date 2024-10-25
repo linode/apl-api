@@ -275,6 +275,14 @@ Settings:
             platformAdmin: [read-any, update-any]
             teamAdmin: []
             teamMember: []
+        isPreInstalled:
+          type: boolean
+          default: false
+          description: Defines if APL is installed and managed by Linode
+          x-acl:
+            platformAdmin: [read-any, update-any]
+            teamAdmin: []
+            teamMember: []
         globalPullSecret:
           nullable: true
           title: Global pullsecret
