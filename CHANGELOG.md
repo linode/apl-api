@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.0.0](https://github.com/redkubes/otomi-api/compare/v3.0.0-rc.0...v3.0.0) (2024-10-25)
+
+
+### Features
+
+* add thanos ([#564](https://github.com/redkubes/otomi-api/issues/564)) ([8f346d5](https://github.com/redkubes/otomi-api/commit/8f346d54c21003bd26f89a566fbe0e1ffb2c567a))
+* added gitea app backup config ([#562](https://github.com/redkubes/otomi-api/issues/562)) ([6c8c6f4](https://github.com/redkubes/otomi-api/commit/6c8c6f411d090027089ad00e6b1c4d87b520ebd2))
+* age values encryption ([#553](https://github.com/redkubes/otomi-api/issues/553)) ([cb7191b](https://github.com/redkubes/otomi-api/commit/cb7191b1da72598655743aace96e1597eaa068d2))
+* ispreinstalled flag is added and apps filtering ([#568](https://github.com/redkubes/otomi-api/issues/568)) ([986fc53](https://github.com/redkubes/otomi-api/commit/986fc53af13d6adcb20266866626df51d6e46d83))
+* one prom ([#563](https://github.com/redkubes/otomi-api/issues/563)) ([e9823f4](https://github.com/redkubes/otomi-api/commit/e9823f45ee9f37684b5168a535fb99e9041b4d71))
+* user management ([#565](https://github.com/redkubes/otomi-api/issues/565)) ([ac23f0a](https://github.com/redkubes/otomi-api/commit/ac23f0af56b0b4b063937bfafe8980d7e6c19e1e))
+
+
+### Bug Fixes
+
+* res config for teams ([#566](https://github.com/redkubes/otomi-api/issues/566)) ([750c881](https://github.com/redkubes/otomi-api/commit/750c8818017ac7b82b3d8c2f8a4bbbaee0d0f66c))
+
+
+### Reverts
+
+* Revert "fix: res config for teams (#566)" (#567) ([fa0aa4f](https://github.com/redkubes/otomi-api/commit/fa0aa4f0b5c59c968292f54274f8a41095a8c3ed)), closes [#566](https://github.com/redkubes/otomi-api/issues/566) [#567](https://github.com/redkubes/otomi-api/issues/567)
+
 ## [3.0.0-rc.0](https://github.com/redkubes/otomi-api/compare/v2.9.0...v3.0.0-rc.0) (2024-09-18)
 
 
