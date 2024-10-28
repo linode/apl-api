@@ -481,6 +481,7 @@ export default class OtomiStack {
         symbols: true,
         lowercase: true,
         uppercase: true,
+        exclude: String(':,;"/=|%\\\''),
       })
     }
 
@@ -601,6 +602,7 @@ export default class OtomiStack {
       symbols: true,
       lowercase: true,
       uppercase: true,
+      exclude: String(':,;"/=|%\\\''),
     })
     const user = { ...data, initialPassword }
     let existingUsers = this.db.getCollection('users') as any
