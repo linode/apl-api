@@ -9,7 +9,7 @@ import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
-import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
+import { AlreadyExists, DeployLockError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
 import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
@@ -639,7 +639,12 @@ export default class OtomiStack {
     const user = this.db.getItem('users', { id }) as User
     const { cluster } = this.getSettings(['cluster'])
     const defaultPlatformAdminEmail = `platform-admin@${cluster?.domainSuffix}`
-    if (user.email === defaultPlatformAdminEmail) throw new Error('Cannot delete the default platform admin user')
+    if (user.email === defaultPlatformAdminEmail) {
+      const error = new OtomiError('Forbidden')
+      error.code = 403
+      error.publicMessage = 'Cannot delete the default platform admin user'
+      throw error
+    }
     return this.db.deleteItem('users', { id })
   }
 
