@@ -9,7 +9,7 @@ import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
-import { AlreadyExists, DeployLockError, PublicUrlExists, ValidationError } from 'src/error'
+import { AlreadyExists, DeployLockError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
 import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
@@ -39,6 +39,7 @@ import getRepo, { Repo } from 'src/repo'
 import { arrayToObject, getServiceUrl, getValuesSchema, objectToArray, removeBlankAttributes } from 'src/utils'
 import {
   CUSTOM_ROOT_CA,
+  DEFAULT_PLATFORM_ADMIN_EMAIL,
   EDITOR_INACTIVITY_TIMEOUT,
   GIT_BRANCH,
   GIT_EMAIL,
@@ -80,6 +81,7 @@ const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'dockerconfi
 
 const env = cleanEnv({
   CUSTOM_ROOT_CA,
+  DEFAULT_PLATFORM_ADMIN_EMAIL,
   EDITOR_INACTIVITY_TIMEOUT,
   GIT_BRANCH,
   GIT_EMAIL,
@@ -481,6 +483,7 @@ export default class OtomiStack {
         symbols: true,
         lowercase: true,
         uppercase: true,
+        exclude: String(':,;"/=|%\\\''),
       })
     }
 
@@ -601,6 +604,7 @@ export default class OtomiStack {
       symbols: true,
       lowercase: true,
       uppercase: true,
+      exclude: String(':,;"/=|%\\\''),
     })
     const user = { ...data, initialPassword }
     let existingUsers = this.db.getCollection('users') as any
@@ -634,6 +638,13 @@ export default class OtomiStack {
   }
 
   deleteUser(id: string): void {
+    const user = this.db.getItem('users', { id }) as User
+    if (user.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
+      const error = new OtomiError('Forbidden')
+      error.code = 403
+      error.publicMessage = 'Cannot delete the default platform admin user'
+      throw error
+    }
     return this.db.deleteItem('users', { id })
   }
 
@@ -1824,6 +1835,7 @@ export default class OtomiStack {
       editor: this.editor,
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
       user: user as SessionUser,
+      defaultPlatformAdminEmail: env.DEFAULT_PLATFORM_ADMIN_EMAIL,
       versions: {
         core: env.VERSIONS.core,
         api: env.VERSIONS.api ?? process.env.npm_package_version,

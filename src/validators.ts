@@ -9,6 +9,10 @@ export const AUTHZ_MOCK_IS_TEAM_ADMIN = bool({
   default: true,
 })
 export const AUTHZ_MOCK_TEAM = str({ desc: 'Comma separated list of teams a user belongs to', default: undefined })
+export const DEFAULT_PLATFORM_ADMIN_EMAIL = str({
+  desc: 'The email address for the default platform admin user.',
+  devDefault: 'platform-admin@dev.linode-apl.net',
+})
 export const VERSIONS = json({
   desc: 'The versions of the otomi components',
   default: {

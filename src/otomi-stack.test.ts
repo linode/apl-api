@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { stub as sinonStub } from 'sinon'
-import { App, Workload } from 'src/otomi-models'
+import { App, User, Workload } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { Repo } from 'src/repo'
 import 'src/test-init'
@@ -143,5 +143,68 @@ describe('Workload values', () => {
     otomiStack.getSettingsInfo = sinonStub().returns({ otomi: { isPreInstalled: true } })
     const filteredApp = otomiStack.filterExcludedApp(app)
     expect(filteredApp).to.deep.equal({ id: 'external-dns', managed: true })
+  })
+})
+
+describe('Users tests', () => {
+  let otomiStack: OtomiStack
+  let dbStub: any
+  let settingsStub: any
+  const domainSuffix = 'local.host'
+
+  const defaultPlatformAdmin: User = {
+    id: '1',
+    email: `platform-admin@${domainSuffix}`,
+    firstName: 'platform',
+    lastName: 'admin',
+    isPlatformAdmin: true,
+    isTeamAdmin: false,
+    teams: [],
+  }
+  const anyPlatformAdmin: User = {
+    id: '2',
+    email: `any-admin@${domainSuffix}`,
+    firstName: 'any',
+    lastName: 'admin',
+    isPlatformAdmin: true,
+    isTeamAdmin: false,
+    teams: [],
+  }
+
+  beforeEach(async () => {
+    otomiStack = new OtomiStack()
+    await otomiStack.init()
+
+    dbStub = sinonStub(otomiStack, 'db').value({
+      getItem: sinonStub().callsFake((collection, query) => {
+        return [defaultPlatformAdmin, anyPlatformAdmin].find((user) => user.id === query.id)
+      }),
+      deleteItem: sinonStub().returns(true),
+    })
+    settingsStub = sinonStub(otomiStack, 'getSettings').returns({
+      cluster: { domainSuffix },
+    })
+  })
+
+  afterEach(() => {
+    dbStub.restore()
+    settingsStub.restore()
+  })
+
+  it('should not allow deleting the default platform admin user', () => {
+    try {
+      otomiStack.deleteUser('1')
+    } catch (error) {
+      expect(error.code).to.equal(403)
+      expect(error.publicMessage).to.equal('Cannot delete the default platform admin user')
+    }
+  })
+
+  it('should allow deleting any other platform admin user', () => {
+    try {
+      otomiStack.deleteUser('2')
+    } catch (error) {
+      expect(error).to.be.undefined
+    }
   })
 })
