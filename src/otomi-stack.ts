@@ -639,7 +639,6 @@ export default class OtomiStack {
 
   deleteUser(id: string): void {
     const user = this.db.getItem('users', { id }) as User
-
     if (user.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
       const error = new OtomiError('Forbidden')
       error.code = 403
