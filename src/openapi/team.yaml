@@ -84,9 +84,6 @@ Team:
         alertmanager:
           type: boolean
           default: false
-        private:
-          type: boolean
-          default: false
     alerts:
       $ref: definitions.yaml#/alerts
     resourceQuota:
