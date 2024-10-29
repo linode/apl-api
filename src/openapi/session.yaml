@@ -18,6 +18,8 @@ Session:
     user:
       $ref: user.yaml#/SessionUser
       # readOnly: true
+    defaultPlatformAdminEmail:
+      type: string
     versions:
       type: object
       # readOnly: true

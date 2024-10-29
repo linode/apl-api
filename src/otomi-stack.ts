@@ -39,6 +39,7 @@ import getRepo, { Repo } from 'src/repo'
 import { arrayToObject, getServiceUrl, getValuesSchema, objectToArray, removeBlankAttributes } from 'src/utils'
 import {
   CUSTOM_ROOT_CA,
+  DEFAULT_PLATFORM_ADMIN_EMAIL,
   EDITOR_INACTIVITY_TIMEOUT,
   GIT_BRANCH,
   GIT_EMAIL,
@@ -80,6 +81,7 @@ const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'dockerconfi
 
 const env = cleanEnv({
   CUSTOM_ROOT_CA,
+  DEFAULT_PLATFORM_ADMIN_EMAIL,
   EDITOR_INACTIVITY_TIMEOUT,
   GIT_BRANCH,
   GIT_EMAIL,
@@ -637,9 +639,8 @@ export default class OtomiStack {
 
   deleteUser(id: string): void {
     const user = this.db.getItem('users', { id }) as User
-    const { cluster } = this.getSettings(['cluster'])
-    const defaultPlatformAdminEmail = `platform-admin@${cluster?.domainSuffix}`
-    if (user.email === defaultPlatformAdminEmail) {
+
+    if (user.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
       const error = new OtomiError('Forbidden')
       error.code = 403
       error.publicMessage = 'Cannot delete the default platform admin user'
@@ -1835,6 +1836,7 @@ export default class OtomiStack {
       editor: this.editor,
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
       user: user as SessionUser,
+      defaultPlatformAdminEmail: env.DEFAULT_PLATFORM_ADMIN_EMAIL,
       versions: {
         core: env.VERSIONS.core,
         api: env.VERSIONS.api ?? process.env.npm_package_version,
