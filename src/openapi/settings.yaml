@@ -15,7 +15,6 @@ Settings:
       additionalProperties: false
       $ref: cluster.yaml#/Cluster
       title: Cluster
-      description: Cluster configuration.
     platformBackups:
       additionalProperties: false
       type: object
@@ -207,7 +206,6 @@ Settings:
         teamMember: []
     oidc:
       title: OIDC
-      description: OpenID Connect settings.
       additionalProperties: false
       properties:
         issuer:
@@ -250,7 +248,6 @@ Settings:
     otomi:
       title: Platform
       type: object
-      description: Platform settings.
       additionalProperties: false
       properties:
         adminPassword:
@@ -354,7 +351,6 @@ Settings:
         teamMember: [read]
     smtp:
       title: SMTP
-      description: Mail server settings.
       additionalProperties: false
       nullable: true
       properties:
