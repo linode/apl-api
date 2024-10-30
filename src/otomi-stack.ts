@@ -19,6 +19,7 @@ import {
   Core,
   K8sService,
   Netpol,
+  ObjWizard,
   Policies,
   Policy,
   Project,
@@ -70,6 +71,7 @@ import { validateBackupFields } from './utils/backupUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { encryptSecretItem } from './utils/sealedSecretUtils'
 import { getKeycloakUsers } from './utils/userUtils'
+import { createObjectStorageAccessKey, createObjectStorageBucket, getClusterRegion } from './utils/wizardUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 interface ExcludedApp extends App {
@@ -270,6 +272,47 @@ export default class OtomiStack {
       ingressClassNames: map(ingress?.classes, 'className') ?? [],
     } as SettingsInfo
     return settingsInfo
+  }
+
+  getObjWizard(): ObjWizard {
+    return {} as ObjWizard
+  }
+
+  async createObjWizard(data: ObjWizard): Promise<void> {
+    if (!data.apiToken) return
+    const { cluster } = this.getSettings(['cluster'])
+    const clusterId = cluster?.k8sContext?.split('-')[0].replace('lke', '')
+    const region = await getClusterRegion(data.apiToken, clusterId)
+    const { access_key, secret_key } = await createObjectStorageAccessKey(data.apiToken, region)
+    const buckets = ['cnpg', 'harbor', 'loki', 'tempo', 'velero', 'gitea', 'thanos']
+    for (const bucket of buckets) {
+      const res = await createObjectStorageBucket(data.apiToken, `wizard-${clusterId}-${bucket}`, region)
+      console.log(`${res.label} is created!`)
+    }
+    const settingsdata = {
+      obj: {
+        provider: {
+          type: 'linode',
+          linode: {
+            accessKeyId: access_key,
+            buckets: {
+              cnpg: `wizard-${clusterId}-cnpg`,
+              harbor: `wizard-${clusterId}-harbor`,
+              loki: `wizard-${clusterId}-loki`,
+              tempo: `wizard-${clusterId}-tempo`,
+              velero: `wizard-${clusterId}-velero`,
+              gitea: `wizard-${clusterId}-gitea`,
+              thanos: `wizard-${clusterId}-thanos`,
+            },
+            region,
+            secretAccessKey: secret_key,
+          },
+        },
+      },
+    }
+    await this.editSettings(settingsdata as Settings, 'obj')
+    await this.doDeployment()
+    await new Promise((resolve) => setTimeout(resolve, 500))
   }
 
   getSettings(keys?: string[]): Settings {
