@@ -10,7 +10,7 @@ Settings:
       $ref: definitions.yaml#/alerts
       title: Alerts
       description: Configure alerting endpoints to receive notifications from Alertmanager.
-      x-externalDocsPath: docs/for-ops/console/settings#alerts
+      x-externalDocsPath: docs/for-ops/console/settings/alerts
     cluster:
       additionalProperties: false
       $ref: cluster.yaml#/Cluster
@@ -67,7 +67,7 @@ Settings:
                   $ref: definitions.yaml#/backupSchedule
         persistentVolumes:
           title: Backup Persistent Volumes
-          description: To create backups of PVs, add a Linode API token and enable the Velero App.
+          description: 'Add a Linode API token and enable the Velero App to create backups of PVs.'
           properties:
             linodeApiToken:
               type: string
@@ -118,7 +118,7 @@ Settings:
                       $ref: definitions.yaml#/wordCharacterPattern
                     secretAccessKey:
                       type: string
-                      description: The secret of the access key.
+                      description: The Secret of the access key.
                       $ref: definitions.yaml#/wordCharacterPattern
                       x-secret: true
                     buckets:
@@ -180,7 +180,7 @@ Settings:
               properties:
                 className:
                   title: Class name
-                  description: The platform ingress class is assigned to all platform applications
+                  description: The platform ingress class is used for all platform services.
                   type: string
                   default: platform
                   # readOnly: true
@@ -193,7 +193,7 @@ Settings:
               - type: object
                 properties:
                   className:
-                    description: An arbitrary name that will be used to assign an ingress class to a team service
+                    description: An arbitrary name that will be used to assign an ingress class to a team service.
                     type: string
               - $ref: definitions.yaml#/ingressClassParameters
             required:
@@ -221,13 +221,13 @@ Settings:
           type: string
           x-secret: true
         platformAdminGroupID:
-          title: Platform admin group ID
+          title: Platform admin group ID.
           type: string
         allTeamsAdminGroupID:
-          title: All teams admin group ID
+          title: All teams admin group ID.
           type: string
         teamAdminGroupID:
-          title: Team admin group ID
+          title: Team admin group ID.
           type: string
         usernameClaimMapper:
           description: Claim name used by Keycloak to identify incoming users from the identity provider.
@@ -235,7 +235,7 @@ Settings:
           type: string
         subClaimMapper:
           type: string
-          description: Select OIDC claim to be passed by Keycloak as a unique user identifier. Best to not change this from the default.
+          description: Set OIDC claim to be passed by Keycloak as a unique user identifier. It is advised to not change the default.
           default: sub
       type: object
       x-externalDocsPath: docs/for-ops/console/settings/oidc
@@ -248,9 +248,9 @@ Settings:
         - clientID
         - clientSecret
     otomi:
-      title: APL
+      title: Platform
       type: object
-      description: Settings for APL.
+      description: Platform settings.
       additionalProperties: false
       properties:
         adminPassword:
@@ -278,7 +278,7 @@ Settings:
         isPreInstalled:
           type: boolean
           default: false
-          description: Defines if APL is installed and managed by Linode
+          description: Defines if platform is installed through Akamai Connected Cloud.
           x-acl:
             platformAdmin: [read-any, update-any]
             teamAdmin: []
@@ -286,9 +286,7 @@ Settings:
         globalPullSecret:
           nullable: true
           title: Global pullsecret
-          description: Will be connected to each "default" service account in all APL app namespaces.
-            Handy for authenticating with DockerHub to avoid rate limiting.
-            Also useful when pulling all APL images from a private repo. (One would need to override all the images in the config first.)
+          description: Will be connected to each "default" service account in all Team namespaces to avoid rate limiting.
           additionalProperties: false
           properties:
             username:
@@ -324,12 +322,12 @@ Settings:
             teamAdmin: []
             teamMember: []
         hasExternalDNS:
-          description: Set this to true when an external dns zone is available to manage dns records. (Expects required `dns:` fields to be set.)
+          description: Set this to true when an external DNS zone is available to manage dns records (Expects required DNS fields to be set).
           title: External DNS
           type: boolean
           default: false
         hasExternalIDP:
-          description: Set this to true when bringing your own external IDP such as Azure AD. (Expects required `oidc:` fields to be set.)
+          description: Set this to true when bringing your own external IDP such as Azure Entra ID (Expects required OIDC fields to be set).
           title: External IDP
           type: boolean
           default: false
@@ -340,16 +338,16 @@ Settings:
           default: true
         nodeSelector:
           $ref: definitions.yaml#/labels
-          description: 'One or more "label: value" pairs that must exist on one or more nodes, which will force all APL services to be scheduled there.'
+          description: 'One or more label/value pairs of one or more nodes. This will force all platform services to be scheduled on these nodes.'
         version:
-          title: APL version
+          title: Version
           default: latest
           description: |
-            Please pin this to a valid release version found in the repo.
+            Set the version to a valid release found in the linode/apl-core Github repository.
           type: string
       required:
         - version
-      x-externalDocsPath: docs/for-ops/console/settings/otomi
+      x-externalDocsPath: docs/for-ops/console/settings/platform
       x-acl:
         platformAdmin: [read-any, update-any]
         teamAdmin: [read]
@@ -374,7 +372,7 @@ Settings:
           type: string
         from:
           $ref: definitions.yaml#/email
-          description: The "from" address. Defaults to alerts@$clusterDomain.
+          description: The from address. Defaults to alerts@$clusterDomain.
           title: From address
         hello:
           description: The hostname to identify to the SMTP server.
