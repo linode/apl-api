@@ -1647,8 +1647,6 @@ components:
       $ref: app.yaml#/App
     AppList:
       $ref: app.yaml#/AppList
-    AdditionalCluster:
-      $ref: cluster.yaml#/AdditionalCluster
     Backup:
       $ref: backup.yaml#/Backup
     Build:
