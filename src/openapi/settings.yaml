@@ -319,7 +319,7 @@ Settings:
             teamAdmin: []
             teamMember: []
         hasExternalDNS:
-          description: Set this to true when an external DNS zone is available to manage dns records (Expects required DNS fields to be set).
+          description: Set this to true when an external DNS zone is available to manage DNS records (Expects required DNS fields to be set).
           title: External DNS
           type: boolean
           default: false
@@ -335,7 +335,7 @@ Settings:
           default: true
         nodeSelector:
           $ref: definitions.yaml#/labels
-          description: 'One or more label/value pairs of one or more nodes. This will force all platform services to be scheduled on these nodes.'
+          description: 'One or more label/value pairs of one or more nodes. This will enforce scheduling of all platform services on these nodes.'
         version:
           title: Version
           default: latest
