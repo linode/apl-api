@@ -14,10 +14,10 @@ export const getClusterRegion = async (linodeApiToken, clusterId) => {
   return res.data.region
 }
 
-export const createObjectStorageAccessKey = async (linodeApiToken, region) => {
+export const createObjectStorageAccessKey = async (linodeApiToken, clusterId, region) => {
   const dateTime = new Date().toISOString().slice(0, 19).replace('T', '-')
   const res = await axiosInstance(linodeApiToken).post('/object-storage/keys', {
-    label: `wizard-key-${dateTime}`,
+    label: `${clusterId}-key-${dateTime}`,
     region,
     permissions: 'read_write',
   })

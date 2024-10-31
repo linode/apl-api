@@ -76,6 +76,9 @@ Settings:
     obj:
       type: object
       properties:
+        showWizard:
+          type: boolean
+          default: true
         provider:
           type: object
           title: Object Storage provider
