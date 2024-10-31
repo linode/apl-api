@@ -76,7 +76,7 @@ Team:
         teamMember: []
     managedMonitoring:
       title: Managed monitoring
-      description: 'Activate APL managed Grafana or Alertmanager instances. Optionally disable cross-team access.'
+      description: 'Activate a platform managed Grafana or Alertmanager instance.'
       properties:
         grafana:
           type: boolean

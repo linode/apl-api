@@ -123,7 +123,7 @@ Ingress:
           description: Name of a Kubernetes secret of type TLS.
           type: string
     paths:
-      description: The paths in the URL that the service should be mapped to (e.g. for micro services on one app/domain.).
+      description: The paths in the URL that the service should be mapped to (e.g. for microservices on one app/domain).
       title: URL paths
       type: array
       items:
@@ -139,12 +139,12 @@ Ingress:
       type: boolean
       default: false
     certSelect:
-      description: Select one of the TLS secrets created in APL.
+      description: Select a TLS SealedSecret.
       title: Select team secret
       type: boolean
       default: true
     certName:
-      description: The name of a TLS secret known to exist in the team namespace.
+      description: The name of a TLS secret known to exist in the Team namespace.
       example: example-com
       title: Secret name
       type: string
