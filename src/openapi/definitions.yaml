@@ -310,7 +310,7 @@ backupSchedule:
   type: string
 clusterName:
   $ref: '#/idName'
-  description: Short name for the cluster.
+  description: Name of the cluster.
   type: string
 containerSpecNoSec:
   properties:
@@ -353,7 +353,7 @@ dns:
   additionalProperties: false
   properties:
     zones:
-      description: Extra dns zones that the cluster can administer (see dns). Team services can use this to publish their URLs on.
+      description: Extra DNS zones the cluster can administer (see DNS). Teams can use this domain for Service exposure.
       items:
         type: string
         title: Zone
@@ -582,7 +582,7 @@ domain:
 domainSuffix:
   $ref: '#/domain'
   title: Domain suffix
-  description: Domain suffix for the cluster. Also added to list of DNS zones in the APL Console.
+  description: The domain suffix for the cluster.
 droneGit:
   properties:
     clientID:
@@ -721,7 +721,7 @@ ingressClassParameters:
   properties:
     loadBalancerIP:
       title: Load balancer IP address
-      description: Optional. A static IP address assigned to a load balancer
+      description: 'Optional: A static IP address assigned to a load balancer.'
       type: string
     # sourceIpAddressFiltering:
     #   title: Source IP address filtering
@@ -729,11 +729,11 @@ ingressClassParameters:
     #   description: 'Whitelist source IP address ranges. The value is a comma separated list of CIDRs, e.g. 10.0.0.0/24,172.10.0.1'
     entrypoint:
       $ref: '#/ipV4Address'
-      description: Optional. An IP address that will override the external Load balancer IP address used for registering hosts in DNS.
+      description: 'Optional: An IP address that will be used for DNS records.'
     annotations:
       additionalProperties: false
       title: Annotations
-      description: Configure the Load Balancer by applying annotations to the Service resource.
+      description: Annotations for the Load Balancer service resource.
       type: array
       items:
         type: object
