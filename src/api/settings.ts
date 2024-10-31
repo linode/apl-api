@@ -1,6 +1,5 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { unset } from 'lodash'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:settings')
@@ -10,8 +9,12 @@ export default function (): OperationHandlerArray {
     ({ otomi, query: { ids } }: OpenApiRequestExt, res): void => {
       debug(`getSettings(${ids})`)
       const v = otomi.getSettings(ids as string[] | undefined)
-      unset(v, 'otomi.adminPassword')
-      res.json(v)
+      if (v?.otomi) {
+        const { otomi: otomiSettings, ...restSettings } = v
+        // Remove the otomi.adminPassword from otomi settings response
+        const { adminPassword, ...restOtomiSettings } = otomiSettings
+        res.json({ ...restSettings, otomi: restOtomiSettings })
+      } else res.json(v)
     },
   ]
   const api = {
