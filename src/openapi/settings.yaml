@@ -258,20 +258,6 @@ Settings:
             teamAdmin: []
             teamMember: []
           # readOnly: true
-        additionalClusters:
-          title: Additional clusters
-          description: Enter other clusters running APL.
-          type: array
-          items:
-            $ref: cluster.yaml#/AdditionalCluster
-            required:
-              - domainSuffix
-              - name
-              - provider
-          x-acl:
-            platformAdmin: [read-any, update-any]
-            teamAdmin: []
-            teamMember: []
         isPreInstalled:
           type: boolean
           default: false

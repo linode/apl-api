@@ -266,7 +266,7 @@ export default class OtomiStack {
       cluster: pick(cluster, ['name', 'domainSuffix', 'provider']),
       dns: pick(dns, ['zones']),
       obj: pick(obj, ['provider']),
-      otomi: pick(otomi, ['additionalClusters', 'hasExternalDNS', 'hasExternalIDP', 'isPreInstalled']),
+      otomi: pick(otomi, ['hasExternalDNS', 'hasExternalIDP', 'isPreInstalled']),
       ingressClassNames: map(ingress?.classes, 'className') ?? [],
     } as SettingsInfo
     return settingsInfo

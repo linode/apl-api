@@ -1,32 +1,3 @@
-# Please leave the following line so yaml-language-server doesn't incorrectly validate this file according to its cluster.yaml schema:
-# yaml-language-server: $schema=https://raw.githubusercontent.com/json-schema-org/json-schema-spec/draft-04/schema.json
-AdditionalCluster:
-  additionalProperties: false
-  x-acl:
-    platformAdmin:
-      - create-any
-      - read-any
-      - update-any
-      - delete-any
-    teamAdmin:
-      - read-any
-    teamMember:
-      - read-any
-  title: Additional cluster
-  description: A Kubernetes cluster running APL.
-  properties:
-    domainSuffix:
-      $ref: definitions.yaml#/domainSuffix
-    name:
-      $ref: definitions.yaml#/clusterName
-    provider:
-      $ref: definitions.yaml#/provider
-  required:
-    - domainSuffix
-    - name
-    - provider
-  type: object
-
 Cluster:
   additionalProperties: false
   type: object
