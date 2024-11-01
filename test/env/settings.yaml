@@ -50,10 +50,6 @@ oidc:
     teamAdminGroupID: xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 otomi:
     adminPassword: okidoki
-    additionalClusters:
-        - domainSuffix: demo.eks.otomi.cloud
-          name: demo
-          provider: aws
     globalPullSecret:
         username: otomi
     isHomeMonitored: true

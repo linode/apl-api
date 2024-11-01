@@ -24,10 +24,6 @@ SettingsInfo:
           uniqueItems: true
     otomi:
       properties:
-        additionalClusters:
-          type: array
-          items:
-            $ref: cluster.yaml#/AdditionalCluster
         hasExternalDNS:
           type: boolean
           default: false
