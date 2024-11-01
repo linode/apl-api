@@ -266,7 +266,7 @@ export default class OtomiStack {
       cluster: pick(cluster, ['name', 'domainSuffix', 'provider']),
       dns: pick(dns, ['zones']),
       obj: pick(obj, ['provider']),
-      otomi: pick(otomi, ['additionalClusters', 'hasExternalDNS', 'hasExternalIDP', 'isPreInstalled']),
+      otomi: pick(otomi, ['hasExternalDNS', 'hasExternalIDP', 'isPreInstalled']),
       ingressClassNames: map(ingress?.classes, 'className') ?? [],
     } as SettingsInfo
     return settingsInfo
@@ -330,7 +330,15 @@ export default class OtomiStack {
   async editSettings(data: Settings, settingId: string): Promise<Settings> {
     const settings = this.db.db.get('settings').value() as Settings
     await this.editIngressApps(settings, data, settingId)
-    settings[settingId] = removeBlankAttributes(data[settingId] as Record<string, any>)
+    const updatedSettingsData: any = { ...data }
+    // Preserve the otomi.adminPassword when editing otomi settings
+    if (settingId === 'otomi') {
+      updatedSettingsData.otomi = {
+        ...updatedSettingsData.otomi,
+        adminPassword: settings.otomi?.adminPassword,
+      }
+    }
+    settings[settingId] = removeBlankAttributes(updatedSettingsData[settingId] as Record<string, any>)
     this.db.db.set('settings', settings).write()
     return settings
   }
