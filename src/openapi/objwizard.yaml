@@ -4,7 +4,6 @@ ObjWizard:
       - create-any
       - read-any
       - update-any
-      - delete-any
     teamAdmin: []
     teamMember: []
   properties:
