@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.1.0](https://github.com/redkubes/otomi-api/compare/v3.0.0...v3.1.0) (2024-11-01)
+
+
+### Features
+
+* default platform admin user  ([#569](https://github.com/redkubes/otomi-api/issues/569)) ([d2d4e44](https://github.com/redkubes/otomi-api/commit/d2d4e4429de1df5dad2a46704880919c8e1edb16))
+
+
+### Bug Fixes
+
+* admin password error ([#575](https://github.com/redkubes/otomi-api/issues/575)) ([d10a130](https://github.com/redkubes/otomi-api/commit/d10a13069293f271f18e95136d641b0e6b96f409))
+* remove additional cluster logic ([#574](https://github.com/redkubes/otomi-api/issues/574)) ([be1759c](https://github.com/redkubes/otomi-api/commit/be1759ca5972c1fef60ddcf72831d210231d2e51))
+* titles descriptions and doc links ([#572](https://github.com/redkubes/otomi-api/issues/572)) ([e756956](https://github.com/redkubes/otomi-api/commit/e756956203cfcbbda2676bd7cefbb063ea8e31b4))
+* updated depencies to remove critical issues ([#573](https://github.com/redkubes/otomi-api/issues/573)) ([2adda1f](https://github.com/redkubes/otomi-api/commit/2adda1feec2478ee9add2a4a83e694cd3588503e))
+
+
+### Others
+
+* removed private flag from values schema ([#571](https://github.com/redkubes/otomi-api/issues/571)) ([e68b777](https://github.com/redkubes/otomi-api/commit/e68b777cbd7ab5a047e8c6e50b680eaebe5c25ff))
+
 ## [3.0.0](https://github.com/redkubes/otomi-api/compare/v3.0.0-rc.0...v3.0.0) (2024-10-25)
 
 
