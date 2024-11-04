@@ -59,7 +59,7 @@ export const OBJ_STORAGE_APPS = json({
   default: [
     { appId: 'harbor', required: false },
     { appId: 'loki', required: false },
-    { appId: 'tempo', required: false },
+    { appId: 'tempo', required: true },
     { appId: 'velero', required: true },
     { appId: 'thanos', required: true },
   ],
