@@ -54,6 +54,16 @@ export const PREINSTALLED_EXCLUDED_APPS = json({
     apps: ['cert-manager', 'minio', 'kured', 'velero', 'falco', 'drone', 'external-dns', 'trivy'],
   },
 })
+export const OBJ_STORAGE_APPS = json({
+  desc: 'Applications',
+  default: [
+    { appId: 'harbor', required: false },
+    { appId: 'loki', required: false },
+    { appId: 'tempo', required: false },
+    { appId: 'velero', required: true },
+    { appId: 'thanos', required: true },
+  ],
+})
 export const ROOT_KEYCLOAK_USER = str({
   desc: 'The default username for the root keycloak user for administrative purposes.',
   default: 'otomi-admin',

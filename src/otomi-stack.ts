@@ -49,6 +49,7 @@ import {
   GIT_REPO_URL,
   GIT_USER,
   HELM_CHART_CATALOG,
+  OBJ_STORAGE_APPS,
   PREINSTALLED_EXCLUDED_APPS,
   TOOLS_HOST,
   VERSIONS,
@@ -95,6 +96,7 @@ const env = cleanEnv({
   TOOLS_HOST,
   VERSIONS,
   PREINSTALLED_EXCLUDED_APPS,
+  OBJ_STORAGE_APPS,
 })
 
 export function getTeamBackupsFilePath(teamId: string): string {
@@ -1889,6 +1891,7 @@ export default class OtomiStack {
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
       user: user as SessionUser,
       defaultPlatformAdminEmail: env.DEFAULT_PLATFORM_ADMIN_EMAIL,
+      objStorageApps: env.OBJ_STORAGE_APPS,
       versions: {
         core: env.VERSIONS.core,
         api: env.VERSIONS.api ?? process.env.npm_package_version,
