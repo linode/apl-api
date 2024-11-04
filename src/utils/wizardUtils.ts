@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { OtomiError } from 'src/error'
 
 const axiosInstance = (linodeApiToken) =>
   axios.create({
@@ -10,24 +11,45 @@ const axiosInstance = (linodeApiToken) =>
   })
 
 export const getClusterRegion = async (linodeApiToken, clusterId) => {
-  const res = await axiosInstance(linodeApiToken).get(`/lke/clusters/${clusterId}`)
-  return res.data.region
+  try {
+    const res = await axiosInstance(linodeApiToken).get(`/lke/clusters/${clusterId}`)
+    return res.data.region
+  } catch (err) {
+    const error = new OtomiError(err.response.statusText ?? 'Error getting cluster region')
+    error.code = err.response.status ?? 500
+    error.publicMessage = err.response.data.errors[0].reason ?? ''
+    throw error
+  }
 }
 
 export const createObjectStorageAccessKey = async (linodeApiToken, clusterId, region) => {
   const dateTime = new Date().toISOString().slice(0, 19).replace('T', '-')
-  const res = await axiosInstance(linodeApiToken).post('/object-storage/keys', {
-    label: `${clusterId}-key-${dateTime}`,
-    region,
-    permissions: 'read_write',
-  })
-  return res.data
+  try {
+    const res = await axiosInstance(linodeApiToken).post('/object-storage/keys', {
+      label: `${clusterId}-key-${dateTime}`,
+      region,
+      permissions: 'read_write',
+    })
+    return res.data
+  } catch (err) {
+    const error = new OtomiError(err.response.statusText ?? 'Error creating object storage access key')
+    error.code = err.response.status ?? 500
+    error.publicMessage = err.response.data.errors[0].reason ?? ''
+    throw error
+  }
 }
 
 export const createObjectStorageBucket = async (linodeApiToken, label, region) => {
-  const res = await axiosInstance(linodeApiToken).post('/object-storage/buckets', {
-    label,
-    region,
-  })
-  return res.data
+  try {
+    const res = await axiosInstance(linodeApiToken).post('/object-storage/buckets', {
+      label,
+      region,
+    })
+    return res.data
+  } catch (err) {
+    const error = new OtomiError(err.response.statusText ?? 'Error creating object storage bucket')
+    error.code = err.response.status ?? 500
+    error.publicMessage = err.response.data.errors[0].reason ?? ''
+    throw error
+  }
 }
