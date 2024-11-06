@@ -31,6 +31,7 @@ Build:
       default: latest
       description: Image tag
     repoType:
+      title: Repository type
       properties:
         type:
           title: ''
@@ -40,6 +41,7 @@ Build:
             - external
           default: internal
         external:
+          title: ''
           properties:
             private:
               type: boolean

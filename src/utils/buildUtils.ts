@@ -3,19 +3,19 @@ import { OtomiError } from 'src/error'
 
 export async function getGiteaRepoUrls(username, password, orgName, domainSuffix) {
   try {
-    const response = await axios.get(`https://gitea.${domainSuffix}/api/v1/orgs/${orgName}/repos`, {
+    const response = await axios.get(`https://gitea.${domainSuffix}/api/v1/user/repos`, {
       auth: {
         username,
         password,
       },
     })
-    const repoNames = response.data.map((repo) => repo.name)
+    const repoNames = response.data.map((repo) => repo.full_name)
+    // filter out values, charts and team-<teamId>-argocd repositories
+    const regex = new RegExp(`^${orgName}\\/team-[\\w-]+-argocd$`)
     const filteredRepoNames = repoNames.filter(
-      (item: string) => item !== 'values' && item !== 'charts' && !/^team-\w+-argocd$/.test(item),
+      (item: string) => item !== `${orgName}/values` && item !== `${orgName}/charts` && !regex.test(item),
     )
-    const giteaRepoUrls = filteredRepoNames.map(
-      (name: string) => `https://gitea.${domainSuffix}/${orgName}/${name}.git`,
-    )
+    const giteaRepoUrls = filteredRepoNames.map((name: string) => `https://gitea.${domainSuffix}/${name}.git`)
     return giteaRepoUrls
   } catch (err) {
     console.log('err', err)
