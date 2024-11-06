@@ -67,6 +67,7 @@ import {
   watchPodUntilRunning,
 } from './k8s_operations'
 import { validateBackupFields } from './utils/backupUtils'
+import { getGiteaRepoUrls } from './utils/buildUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { encryptSecretItem } from './utils/sealedSecretUtils'
 import { getKeycloakUsers } from './utils/userUtils'
@@ -778,6 +779,17 @@ export default class OtomiStack {
       { name: 'network policies', count: netpols?.length },
     ]
     return inventory
+  }
+
+  async getInternalRepoUrls(): Promise<string[]> {
+    if (env.isDev) return []
+    const { cluster, otomi } = this.getSettings(['cluster', 'otomi'])
+    const username = 'otomi-admin'
+    const password = otomi?.adminPassword
+    const orgName = 'otomi'
+    const domainSuffix = cluster?.domainSuffix
+    const internalRepoUrls = (await getGiteaRepoUrls(username, password, orgName, domainSuffix)) || []
+    return internalRepoUrls
   }
 
   getTeamBuilds(teamId: string): Array<Build> {

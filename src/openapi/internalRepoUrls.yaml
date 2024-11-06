@@ -1,0 +1,10 @@
+InternalRepoUrls:
+  x-acl:
+    platformAdmin:
+      - read-any
+    teamAdmin:
+      - read
+    teamMember:
+      - read
+  properties: {}
+  type: array

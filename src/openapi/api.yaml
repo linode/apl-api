@@ -729,6 +729,21 @@ paths:
               schema:
                 type: object
 
+  '/internalRepoUrls':
+    get:
+      operationId: getInternalRepoUrls
+      x-aclSchema: InternalRepoUrls
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained internal repo urls
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
   '/builds':
     get:
       operationId: getAllBuilds
@@ -1651,6 +1666,8 @@ components:
       $ref: backup.yaml#/Backup
     Build:
       $ref: build.yaml#/Build
+    InternalRepoUrls:
+      $ref: internalRepoUrls.yaml#/InternalRepoUrls
     Cloudtty:
       $ref: cloudtty.yaml#/Cloudtty
     Cluster:
