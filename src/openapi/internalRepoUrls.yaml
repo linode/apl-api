@@ -3,8 +3,8 @@ InternalRepoUrls:
     platformAdmin:
       - read-any
     teamAdmin:
-      - read
+      - read-any
     teamMember:
-      - read
+      - read-any
   properties: {}
   type: array
