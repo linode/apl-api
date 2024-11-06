@@ -1,18 +1,30 @@
 import axios from 'axios'
 import { OtomiError } from 'src/error'
 
-export async function getGiteaRepoUrls(username, password, orgName, domainSuffix) {
+const axiosInstance = (adminUsername, adminPassword, domainSuffix) =>
+  axios.create({
+    baseURL: `https://gitea.${domainSuffix}/api/v1`,
+    auth: {
+      username: adminUsername,
+      password: adminPassword,
+    },
+  })
+
+export async function getGiteaRepoUrls(adminUsername, adminPassword, orgName, domainSuffix) {
   try {
-    const response = await axios.get(`https://gitea.${domainSuffix}/api/v1/user/repos`, {
-      auth: {
-        username,
-        password,
-      },
-    })
-    const repoNames = response.data.map((repo) => repo.full_name)
+    const repoNames = new Set<string>()
+    const orgResponse = await axiosInstance(adminUsername, adminPassword, domainSuffix).get(`/orgs/${orgName}/repos`)
+    orgResponse.data.forEach((repo) => repoNames.add(repo.full_name as string))
+
+    const users = await axiosInstance(adminUsername, adminPassword, domainSuffix).get('/admin/users')
+    const usernames = users.data.map((user) => user.username)
+    for (const username of usernames) {
+      const response = await axiosInstance(adminUsername, adminPassword, domainSuffix).get(`/users/${username}/repos`)
+      response.data.forEach((repo) => repoNames.add(repo.full_name as string))
+    }
     // filter out values, charts and team-<teamId>-argocd repositories
     const regex = new RegExp(`^${orgName}\\/team-[\\w-]+-argocd$`)
-    const filteredRepoNames = repoNames.filter(
+    const filteredRepoNames = Array.from(repoNames).filter(
       (item: string) => item !== `${orgName}/values` && item !== `${orgName}/charts` && !regex.test(item),
     )
     const giteaRepoUrls = filteredRepoNames.map((name: string) => `https://gitea.${domainSuffix}/${name}.git`)

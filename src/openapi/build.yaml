@@ -64,7 +64,7 @@ Build:
     - name
 
 buildMode:
-  title: Mode
+  title: Build Mode
   description: Choose between Docker or Buildpacks.
   type: object
   oneOf:
