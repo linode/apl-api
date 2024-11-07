@@ -1432,6 +1432,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/SettingsInfo'
 
+  '/objwizard':
+    get:
+      operationId: getObjWizard
+      x-aclSchema: ObjWizard
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained obj wizard configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjWizard'
+    post:
+      operationId: createObjWizard
+      description: Create a obj wizard configuration
+      x-aclSchema: ObjWizard
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ObjWizard'
+        description: ObjWizard object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully configured obj wizard configuration
+          content:
+            application/json:
+              schema:
+                type: object
+
   /settings:
     get:
       operationId: getSettings
@@ -1722,6 +1754,8 @@ components:
       $ref: service.yaml#/Service
     Session:
       $ref: session.yaml#/Session
+    ObjWizard:
+      $ref: objwizard.yaml#/ObjWizard
     Settings:
       $ref: settings.yaml#/Settings
     SettingsInfo:

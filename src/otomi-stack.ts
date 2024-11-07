@@ -19,6 +19,7 @@ import {
   Core,
   K8sService,
   Netpol,
+  ObjWizard,
   Policies,
   Policy,
   Project,
@@ -48,6 +49,7 @@ import {
   GIT_REPO_URL,
   GIT_USER,
   HELM_CHART_CATALOG,
+  OBJ_STORAGE_APPS,
   PREINSTALLED_EXCLUDED_APPS,
   TOOLS_HOST,
   VERSIONS,
@@ -71,6 +73,7 @@ import { getGiteaRepoUrls } from './utils/buildUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { encryptSecretItem } from './utils/sealedSecretUtils'
 import { getKeycloakUsers } from './utils/userUtils'
+import { createObjectStorageAccessKey, createObjectStorageBucket, getClusterRegion } from './utils/wizardUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 interface ExcludedApp extends App {
@@ -94,6 +97,7 @@ const env = cleanEnv({
   TOOLS_HOST,
   VERSIONS,
   PREINSTALLED_EXCLUDED_APPS,
+  OBJ_STORAGE_APPS,
 })
 
 export function getTeamBackupsFilePath(teamId: string): string {
@@ -271,6 +275,55 @@ export default class OtomiStack {
       ingressClassNames: map(ingress?.classes, 'className') ?? [],
     } as SettingsInfo
     return settingsInfo
+  }
+
+  getObjWizard(): ObjWizard {
+    const { obj } = this.getSettings(['obj'])
+    return { showWizard: obj?.showWizard ?? true } as ObjWizard
+  }
+
+  async createObjWizard(data: ObjWizard): Promise<void> {
+    const { obj } = this.getSettings(['obj'])
+    const settingsdata = { obj: { ...obj, showWizard: data.showWizard } }
+    if (data?.apiToken) {
+      const { cluster } = this.getSettings(['cluster'])
+      const clusterId = cluster?.name?.replace('aplinstall', '')
+      const clusterRegion = await getClusterRegion(data.apiToken, clusterId)
+      const { access_key, secret_key, regions } = await createObjectStorageAccessKey(
+        data.apiToken,
+        clusterId,
+        clusterRegion,
+      )
+      const { s3_endpoint } = regions.find((region) => region.id === clusterRegion)
+      const objStorageRegion = s3_endpoint.split('.')[0] as string
+      const buckets = ['cnpg', 'harbor', 'loki', 'tempo', 'velero', 'gitea', 'thanos']
+      for (const bucket of buckets) {
+        const res = await createObjectStorageBucket(data.apiToken, `lke${clusterId}-${bucket}`, clusterRegion)
+        debug(`${res.label} is created!`)
+      }
+      settingsdata.obj = {
+        showWizard: false,
+        provider: {
+          type: 'linode',
+          linode: {
+            accessKeyId: access_key,
+            buckets: {
+              cnpg: `lke${clusterId}-cnpg`,
+              harbor: `lke${clusterId}-harbor`,
+              loki: `lke${clusterId}-loki`,
+              tempo: `lke${clusterId}-tempo`,
+              velero: `lke${clusterId}-velero`,
+              gitea: `lke${clusterId}-gitea`,
+              thanos: `lke${clusterId}-thanos`,
+            },
+            region: objStorageRegion,
+            secretAccessKey: secret_key,
+          },
+        },
+      }
+    }
+    await this.editSettings(settingsdata as Settings, 'obj')
+    await this.doDeployment()
   }
 
   getSettings(keys?: string[]): Settings {
@@ -1857,6 +1910,7 @@ export default class OtomiStack {
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
       user: user as SessionUser,
       defaultPlatformAdminEmail: env.DEFAULT_PLATFORM_ADMIN_EMAIL,
+      objStorageApps: env.OBJ_STORAGE_APPS,
       versions: {
         core: env.VERSIONS.core,
         api: env.VERSIONS.api ?? process.env.npm_package_version,
