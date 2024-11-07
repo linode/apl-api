@@ -75,6 +75,10 @@ Settings:
     obj:
       type: object
       properties:
+        showWizard:
+          type: boolean
+          default: true
+          description: Show the Object Storage wizard.
         provider:
           type: object
           title: Object Storage provider
