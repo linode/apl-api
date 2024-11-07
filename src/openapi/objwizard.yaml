@@ -1,0 +1,16 @@
+ObjWizard:
+  x-acl:
+    platformAdmin:
+      - create-any
+      - read-any
+      - update-any
+    teamAdmin: []
+    teamMember: []
+  properties:
+    showWizard:
+      type: boolean
+    apiToken:
+      type: string
+      description: The Linode API token for creating object storage access key and buckets.
+      $ref: definitions.yaml#/wordCharacterPattern
+  type: object
