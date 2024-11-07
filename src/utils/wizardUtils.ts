@@ -27,9 +27,11 @@ export const createObjectStorageAccessKey = async (linodeApiToken, clusterId, re
   try {
     const res = await axiosInstance(linodeApiToken).post('/object-storage/keys', {
       label: `lke${clusterId}-key-${dateTime}`,
-      region,
+      regions: [region],
       permissions: 'read_write',
     })
+
+    //{"bucket_access":null,"label":"test-jeho","regions":["jp-osa"]}
     return res.data
   } catch (err) {
     const error = new OtomiError(err.response.statusText ?? 'Error creating object storage access key')
