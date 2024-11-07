@@ -287,11 +287,17 @@ export default class OtomiStack {
     if (data?.apiToken) {
       const { cluster } = this.getSettings(['cluster'])
       const clusterId = cluster?.name?.replace('aplinstall', '')
-      const region = await getClusterRegion(data.apiToken, clusterId)
-      const { access_key, secret_key } = await createObjectStorageAccessKey(data.apiToken, clusterId, region)
+      const clusterRegion = await getClusterRegion(data.apiToken, clusterId)
+      const { access_key, secret_key, regions } = await createObjectStorageAccessKey(
+        data.apiToken,
+        clusterId,
+        clusterRegion,
+      )
+      const { s3_endpoint } = regions.find((region) => region.id === clusterRegion)
+      const objStorageRegion = s3_endpoint.split('.')[0] as string
       const buckets = ['cnpg', 'harbor', 'loki', 'tempo', 'velero', 'gitea', 'thanos']
       for (const bucket of buckets) {
-        const res = await createObjectStorageBucket(data.apiToken, `lke${clusterId}-${bucket}`, region)
+        const res = await createObjectStorageBucket(data.apiToken, `lke${clusterId}-${bucket}`, clusterRegion)
         debug(`${res.label} is created!`)
       }
       settingsdata.obj = {
@@ -309,7 +315,7 @@ export default class OtomiStack {
               gitea: `lke${clusterId}-gitea`,
               thanos: `lke${clusterId}-thanos`,
             },
-            region,
+            region: objStorageRegion,
             secretAccessKey: secret_key,
           },
         },
