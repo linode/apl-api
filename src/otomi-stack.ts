@@ -286,7 +286,7 @@ export default class OtomiStack {
     const settingsdata = { obj: { ...obj, showWizard: data.showWizard } }
     if (data?.apiToken) {
       const { cluster } = this.getSettings(['cluster'])
-      const clusterId = cluster?.k8sContext?.replace('aplinstall', '')
+      const clusterId = cluster?.name?.replace('aplinstall', '')
       const region = await getClusterRegion(data.apiToken, clusterId)
       const { access_key, secret_key } = await createObjectStorageAccessKey(data.apiToken, clusterId, region)
       const buckets = ['cnpg', 'harbor', 'loki', 'tempo', 'velero', 'gitea', 'thanos']
