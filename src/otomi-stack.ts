@@ -291,8 +291,8 @@ export default class OtomiStack {
       const { access_key, secret_key } = await createObjectStorageAccessKey(data.apiToken, clusterId, region)
       const buckets = ['cnpg', 'harbor', 'loki', 'tempo', 'velero', 'gitea', 'thanos']
       for (const bucket of buckets) {
-        const res = await createObjectStorageBucket(data.apiToken, `${clusterId}-${bucket}`, region)
-        console.log(`${res.label} is created!`)
+        const res = await createObjectStorageBucket(data.apiToken, `lke${clusterId}-${bucket}`, region)
+        debug(`${res.label} is created!`)
       }
       settingsdata.obj = {
         showWizard: false,
@@ -301,13 +301,13 @@ export default class OtomiStack {
           linode: {
             accessKeyId: access_key,
             buckets: {
-              cnpg: `${clusterId}-cnpg`,
-              harbor: `${clusterId}-harbor`,
-              loki: `${clusterId}-loki`,
-              tempo: `${clusterId}-tempo`,
-              velero: `${clusterId}-velero`,
-              gitea: `${clusterId}-gitea`,
-              thanos: `${clusterId}-thanos`,
+              cnpg: `lke${clusterId}-cnpg`,
+              harbor: `lke${clusterId}-harbor`,
+              loki: `lke${clusterId}-loki`,
+              tempo: `lke${clusterId}-tempo`,
+              velero: `lke${clusterId}-velero`,
+              gitea: `lke${clusterId}-gitea`,
+              thanos: `lke${clusterId}-thanos`,
             },
             region,
             secretAccessKey: secret_key,

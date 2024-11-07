@@ -26,7 +26,7 @@ export const createObjectStorageAccessKey = async (linodeApiToken, clusterId, re
   const dateTime = new Date().toISOString().slice(0, 19).replace('T', '-')
   try {
     const res = await axiosInstance(linodeApiToken).post('/object-storage/keys', {
-      label: `${clusterId}-key-${dateTime}`,
+      label: `lke${clusterId}-key-${dateTime}`,
       region,
       permissions: 'read_write',
     })
