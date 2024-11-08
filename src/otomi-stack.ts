@@ -298,7 +298,7 @@ export default class OtomiStack {
       const buckets = ['cnpg', 'harbor', 'loki', 'tempo', 'velero', 'gitea', 'thanos']
       for (const bucket of buckets) {
         const res = await createObjectStorageBucket(data.apiToken, `lke${clusterId}-${bucket}`, clusterRegion)
-        debug(`${res.label} is created!`)
+        debug(`${res.label} bucket is created!`)
       }
       settingsdata.obj = {
         showWizard: false,
