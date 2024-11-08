@@ -3,6 +3,7 @@ import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
+import { ObjectStorageKeyRegions } from '@linode/api-v4'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
@@ -72,7 +73,7 @@ import { validateBackupFields } from './utils/backupUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { encryptSecretItem } from './utils/sealedSecretUtils'
 import { getKeycloakUsers } from './utils/userUtils'
-import { createObjectStorageAccessKey, createObjectStorageBucket, getClusterRegion } from './utils/wizardUtils'
+import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 interface ExcludedApp extends App {
@@ -285,20 +286,33 @@ export default class OtomiStack {
     const { obj } = this.getSettings(['obj'])
     const settingsdata = { obj: { ...obj, showWizard: data.showWizard } }
     if (data?.apiToken) {
+      const objectStorageClient = new ObjectStorageClient(data.apiToken)
       const { cluster } = this.getSettings(['cluster'])
-      const clusterId = cluster?.name?.replace('aplinstall', '')
-      const clusterRegion = await getClusterRegion(data.apiToken, clusterId)
-      const { access_key, secret_key, regions } = await createObjectStorageAccessKey(
-        data.apiToken,
+      const clusterId = Number(cluster?.name?.replace('aplinstall', ''))
+      const clusterRegion = await objectStorageClient.getClusterRegion(clusterId)
+      const bucketNames = {
+        cnpg: `lke${clusterId}-cnpg`,
+        harbor: `lke${clusterId}-harbor`,
+        loki: `lke${clusterId}-loki`,
+        tempo: `lke${clusterId}-tempo`,
+        velero: `lke${clusterId}-velero`,
+        gitea: `lke${clusterId}-gitea`,
+        thanos: `lke${clusterId}-thanos`,
+      }
+      const { access_key, secret_key, regions } = await objectStorageClient.createObjectStorageKey(
         clusterId,
         clusterRegion,
+        Object.values(bucketNames),
       )
-      const { s3_endpoint } = regions.find((region) => region.id === clusterRegion)
-      const objStorageRegion = s3_endpoint.split('.')[0] as string
+      const { s3_endpoint } = regions.find((region) => region.id === clusterRegion) as ObjectStorageKeyRegions
+      const [objStorageRegion] = s3_endpoint.split('.')
       const buckets = ['cnpg', 'harbor', 'loki', 'tempo', 'velero', 'gitea', 'thanos']
       for (const bucket of buckets) {
-        const res = await createObjectStorageBucket(data.apiToken, `lke${clusterId}-${bucket}`, clusterRegion)
-        debug(`${res.label} bucket is created!`)
+        const bucketLabel = await objectStorageClient.createObjectStorageBucket(
+          `lke${clusterId}-${bucket}`,
+          clusterRegion,
+        )
+        debug(`${bucketLabel} bucket is created!`)
       }
       settingsdata.obj = {
         showWizard: false,
@@ -306,15 +320,7 @@ export default class OtomiStack {
           type: 'linode',
           linode: {
             accessKeyId: access_key,
-            buckets: {
-              cnpg: `lke${clusterId}-cnpg`,
-              harbor: `lke${clusterId}-harbor`,
-              loki: `lke${clusterId}-loki`,
-              tempo: `lke${clusterId}-tempo`,
-              velero: `lke${clusterId}-velero`,
-              gitea: `lke${clusterId}-gitea`,
-              thanos: `lke${clusterId}-thanos`,
-            },
+            buckets: bucketNames,
             region: objStorageRegion,
             secretAccessKey: secret_key,
           },
