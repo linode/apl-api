@@ -6,9 +6,9 @@ const debug = Debug('otomi:api:objwizard')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [
-    ({ otomi }: OpenApiRequestExt, res): void => {
+    async ({ otomi }: OpenApiRequestExt, res): Promise<void> => {
       debug('getObjWizard')
-      const v = otomi.getObjWizard()
+      const v = await otomi.getObjWizard()
       res.json(v)
     },
   ]

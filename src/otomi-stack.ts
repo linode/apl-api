@@ -3,7 +3,7 @@ import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
-import { ObjectStorageKeyRegions } from '@linode/api-v4'
+import { ObjectStorageKeyRegions, getRegions } from '@linode/api-v4'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
@@ -277,19 +277,25 @@ export default class OtomiStack {
     return settingsInfo
   }
 
-  getObjWizard(): ObjWizard {
+  async getObjWizard(): Promise<ObjWizard> {
     const { obj } = this.getSettings(['obj'])
-    return { showWizard: obj?.showWizard ?? true } as ObjWizard
+    const regions = await getRegions()
+    const objStorageRegions = regions.data
+      .filter((region) => region.capabilities.includes('Object Storage'))
+      .map(({ id, label }) => ({ id, label }))
+      .sort((a, b) => a.label.localeCompare(b.label))
+    const region = obj?.provider?.type === 'linode' ? obj.provider.linode.region : ''
+    const regionId = region ? region.substring(0, region.lastIndexOf('-')) : ''
+    return { showWizard: obj?.showWizard ?? true, regions: objStorageRegions, regionId } as ObjWizard
   }
 
   async createObjWizard(data: ObjWizard): Promise<void> {
     const { obj } = this.getSettings(['obj'])
     const settingsdata = { obj: { ...obj, showWizard: data.showWizard } }
-    if (data?.apiToken) {
-      const objectStorageClient = new ObjectStorageClient(data.apiToken)
+    if (data?.apiToken && data?.regionId) {
       const { cluster } = this.getSettings(['cluster'])
       const clusterId = Number(cluster?.name?.replace('aplinstall', ''))
-      const clusterRegion = await objectStorageClient.getClusterRegion(clusterId)
+      if (!clusterId) throw new OtomiError('Cluster ID is not found in the cluster name')
       const bucketNames = {
         cnpg: `lke${clusterId}-cnpg`,
         harbor: `lke${clusterId}-harbor`,
@@ -299,21 +305,25 @@ export default class OtomiStack {
         gitea: `lke${clusterId}-gitea`,
         thanos: `lke${clusterId}-thanos`,
       }
+      const objectStorageClient = new ObjectStorageClient(data.apiToken)
+      // create object storage buckets
+      for (const bucket in bucketNames) {
+        const bucketLabel = await objectStorageClient.createObjectStorageBucket(
+          bucketNames[bucket] as string,
+          data.regionId as string,
+        )
+        debug(`${bucketLabel} bucket is created.`)
+      }
+      // create object storage keys
       const { access_key, secret_key, regions } = await objectStorageClient.createObjectStorageKey(
         clusterId,
-        clusterRegion,
+        data.regionId as string,
         Object.values(bucketNames),
       )
-      const { s3_endpoint } = regions.find((region) => region.id === clusterRegion) as ObjectStorageKeyRegions
+      const { s3_endpoint } = regions.find((region) => region.id === data.regionId) as ObjectStorageKeyRegions
       const [objStorageRegion] = s3_endpoint.split('.')
-      const buckets = ['cnpg', 'harbor', 'loki', 'tempo', 'velero', 'gitea', 'thanos']
-      for (const bucket of buckets) {
-        const bucketLabel = await objectStorageClient.createObjectStorageBucket(
-          `lke${clusterId}-${bucket}`,
-          clusterRegion,
-        )
-        debug(`${bucketLabel} bucket is created!`)
-      }
+      debug(`Object Storage keys are created.`)
+      // modify object storage settings
       settingsdata.obj = {
         showWizard: false,
         provider: {
@@ -329,6 +339,7 @@ export default class OtomiStack {
     }
     await this.editSettings(settingsdata as Settings, 'obj')
     await this.doDeployment()
+    debug('Object storage settings have been configured.')
   }
 
   getSettings(keys?: string[]): Settings {

@@ -43,32 +43,59 @@ describe('ObjectStorageClient', () => {
     })
   })
 
-  describe('getClusterRegion', () => {
-    it('should successfully return cluster region', async () => {
-      const mockResponse = { region: 'us-east' }
-      getKubernetesClusterStub.resolves(mockResponse)
-      const region = await client.getClusterRegion(clusterId)
+  describe('createObjectStorageBucket', () => {
+    const label = 'test-bucket'
+    const region = 'us-east'
 
-      expect(getKubernetesClusterStub.calledOnceWith(clusterId)).to.be.true
-      expect(region).to.equal(mockResponse.region)
+    it('should successfully create bucket', async () => {
+      const mockResponse = { label: 'test-bucket' }
+      createBucketStub.resolves(mockResponse)
+
+      const result = await client.createObjectStorageBucket(label, region)
+
+      expect(
+        createBucketStub.calledOnceWith({
+          label,
+          region,
+        }),
+      ).to.be.true
+      expect(result).to.equal('test-bucket')
     })
 
-    it('should throw OtomiError with API error reason', async () => {
+    it('should throw OtomiError when bucket creation fails', async () => {
       const mockError = {
         response: {
-          data: { errors: [{ reason: 'Not found' }] },
-          status: 404,
+          status: 401,
+          data: { errors: [{ reason: 'Your OAuth token is not authorized to use this endpoint' }] },
         },
       }
-      getKubernetesClusterStub.rejects(mockError)
+      createBucketStub.rejects(mockError)
 
       try {
-        await client.getClusterRegion(clusterId)
+        await client.createObjectStorageBucket(label, region)
         expect.fail('Should have thrown an error')
       } catch (error) {
         expect(error).to.be.instanceOf(OtomiError)
-        expect(error.publicMessage).to.equal('Not found')
-        expect(error.code).to.equal(404)
+        expect(error.publicMessage).to.equal('Your OAuth token is not authorized to use this endpoint')
+        expect(error.code).to.equal(401)
+      }
+    })
+
+    it('should throw OtomiError with default message when no specific error info', async () => {
+      const mockError = {
+        response: {
+          status: 500,
+        },
+      }
+      createBucketStub.rejects(mockError)
+
+      try {
+        await client.createObjectStorageBucket(label, region)
+        expect.fail('Should have thrown an error')
+      } catch (error) {
+        expect(error).to.be.instanceOf(OtomiError)
+        expect(error.publicMessage).to.equal('Error creating object storage bucket')
+        expect(error.code).to.equal(500)
       }
     })
   })
@@ -108,11 +135,11 @@ describe('ObjectStorageClient', () => {
       expect(result).to.deep.equal(mockResponse)
     })
 
-    it('should throw OtomiError when creation fails', async () => {
+    it('should throw OtomiError when keys creation fails', async () => {
       const mockError = {
         response: {
-          data: { errors: [{ reason: 'Invalid bucket configuration' }] },
-          status: 400,
+          data: { errors: [{ reason: 'Your OAuth token is not authorized to use this endpoint' }] },
+          status: 401,
         },
       }
       createObjectStorageKeysStub.rejects(mockError)
@@ -122,65 +149,8 @@ describe('ObjectStorageClient', () => {
         expect.fail('Should have thrown an error')
       } catch (error) {
         expect(error).to.be.instanceOf(OtomiError)
-        expect(error.publicMessage).to.equal('Invalid bucket configuration')
-        expect(error.code).to.equal(400)
-      }
-    })
-  })
-
-  describe('createObjectStorageBucket', () => {
-    const label = 'test-bucket'
-    const region = 'us-east'
-
-    it('should successfully create bucket', async () => {
-      const mockResponse = { label: 'test-bucket' }
-      createBucketStub.resolves(mockResponse)
-
-      const result = await client.createObjectStorageBucket(label, region)
-
-      expect(
-        createBucketStub.calledOnceWith({
-          label,
-          region,
-        }),
-      ).to.be.true
-      expect(result).to.equal('test-bucket')
-    })
-
-    it('should throw OtomiError when bucket creation fails', async () => {
-      const mockError = {
-        response: {
-          status: 409,
-          data: { errors: [{ reason: 'Bucket already exists' }] },
-        },
-      }
-      createBucketStub.rejects(mockError)
-
-      try {
-        await client.createObjectStorageBucket(label, region)
-        expect.fail('Should have thrown an error')
-      } catch (error) {
-        expect(error).to.be.instanceOf(OtomiError)
-        expect(error.publicMessage).to.equal('Bucket already exists')
-        expect(error.code).to.equal(409)
-      }
-    })
-
-    it('should throw OtomiError with default message when no specific error info', async () => {
-      const mockError = {
-        response: {
-          status: 500,
-        },
-      }
-      createBucketStub.rejects(mockError)
-
-      try {
-        await client.createObjectStorageBucket(label, region)
-        expect.fail('Should have thrown an error')
-      } catch (error) {
-        expect(error).to.be.instanceOf(OtomiError)
-        expect(error.publicMessage).to.equal('Error creating object storage bucket')
-        expect(error.code).to.equal(500)
+        expect(error.publicMessage).to.equal('Your OAuth token is not authorized to use this endpoint')
+        expect(error.code).to.equal(401)
       }
     })
   })

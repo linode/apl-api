@@ -1,4 +1,4 @@
-import { createBucket, createObjectStorageKeys, getKubernetesCluster, ObjectStorageKey, setToken } from '@linode/api-v4'
+import { createBucket, createObjectStorageKeys, ObjectStorageKey, setToken } from '@linode/api-v4'
 import { OtomiError } from 'src/error'
 
 export class ObjectStorageClient {
@@ -10,13 +10,16 @@ export class ObjectStorageClient {
     setToken(this.apiToken)
   }
 
-  public async getClusterRegion(clusterId: number): Promise<string> {
+  public async createObjectStorageBucket(label: string, region: string): Promise<string> {
     try {
-      const cluster = await getKubernetesCluster(clusterId)
-      return cluster.region
+      const bucket = await createBucket({
+        label,
+        region,
+      })
+      return bucket.label
     } catch (err) {
       const error = new OtomiError(
-        err.response?.data?.errors?.[0]?.reason ?? err.response?.statusText ?? 'Error getting cluster region',
+        err.response?.data?.errors?.[0]?.reason ?? err.response?.statusText ?? 'Error creating object storage bucket',
       )
       error.code = err.response?.status ?? 500
       throw error
@@ -46,22 +49,6 @@ export class ObjectStorageClient {
         err.response?.data?.errors?.[0]?.reason ??
           err.response?.statusText ??
           'Error creating object storage access key',
-      )
-      error.code = err.response?.status ?? 500
-      throw error
-    }
-  }
-
-  public async createObjectStorageBucket(label: string, region: string): Promise<string> {
-    try {
-      const bucket = await createBucket({
-        label,
-        region,
-      })
-      return bucket.label
-    } catch (err) {
-      const error = new OtomiError(
-        err.response?.data?.errors?.[0]?.reason ?? err.response?.statusText ?? 'Error creating object storage bucket',
       )
       error.code = err.response?.status ?? 500
       throw error
