@@ -310,14 +310,14 @@ export default class OtomiStack {
       for (const bucket in bucketNames) {
         const bucketLabel = await objectStorageClient.createObjectStorageBucket(
           bucketNames[bucket] as string,
-          data.regionId as string,
+          data.regionId,
         )
         debug(`${bucketLabel} bucket is created.`)
       }
       // create object storage keys
       const { access_key, secret_key, regions } = await objectStorageClient.createObjectStorageKey(
         clusterId,
-        data.regionId as string,
+        data.regionId,
         Object.values(bucketNames),
       )
       const { s3_endpoint } = regions.find((region) => region.id === data.regionId) as ObjectStorageKeyRegions
