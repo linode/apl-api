@@ -280,10 +280,11 @@ export default class OtomiStack {
   async getObjWizard(): Promise<ObjWizard> {
     const { obj } = this.getSettings(['obj'])
     const regions = await getRegions()
-    const objStorageRegions = regions.data
-      .filter((region) => region.capabilities.includes('Object Storage'))
-      .map(({ id, label }) => ({ id, label }))
-      .sort((a, b) => a.label.localeCompare(b.label))
+    const objStorageRegions =
+      regions.data
+        .filter((region) => region.capabilities.includes('Object Storage'))
+        .map(({ id, label }) => ({ id, label }))
+        .sort((a, b) => a.label.localeCompare(b.label)) || []
     const region = obj?.provider?.type === 'linode' ? obj.provider.linode.region : ''
     const regionId = region ? region.substring(0, region.lastIndexOf('-')) : ''
     return { showWizard: obj?.showWizard ?? true, regions: objStorageRegions, regionId } as ObjWizard
