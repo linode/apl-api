@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.2.0](https://github.com/redkubes/otomi-api/compare/v3.1.0...v3.2.0) (2024-11-07)
+
+
+### Features
+
+* object storage wizard ([#577](https://github.com/redkubes/otomi-api/issues/577)) ([ab06759](https://github.com/redkubes/otomi-api/commit/ab0675950ddc9bcdf862d2af7f5d2b02b5e064ff))
+
+
+### Bug Fixes
+
+* restore falco when isPreInstalled ([#578](https://github.com/redkubes/otomi-api/issues/578)) ([df4263b](https://github.com/redkubes/otomi-api/commit/df4263bbafa04c93916985123ebb5267b9c3ad87))
+
 ## [3.1.0](https://github.com/redkubes/otomi-api/compare/v3.0.0...v3.1.0) (2024-11-01)
 
 
