@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.3.0](https://github.com/redkubes/otomi-api/compare/v3.2.0...v3.3.0) (2024-11-12)
+
+
+### Features
+
+* add selectable regions to object storage wizard ([#581](https://github.com/redkubes/otomi-api/issues/581)) ([d302f3e](https://github.com/redkubes/otomi-api/commit/d302f3e687da2e758b7c8886b2e915194bb1d046))
+
 ## [3.2.0](https://github.com/redkubes/otomi-api/compare/v3.1.0...v3.2.0) (2024-11-07)
 
 
