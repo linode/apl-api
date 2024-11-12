@@ -282,16 +282,16 @@ export default class OtomiStack {
     const settingsdata = { obj: { ...obj, showWizard: data.showWizard } }
     if (data?.apiToken && data?.regionId) {
       const { cluster } = this.getSettings(['cluster'])
-      const clusterId = Number(cluster?.name?.replace('aplinstall', ''))
-      if (!clusterId) throw new OtomiError('Cluster ID is not found in the cluster name')
+      const lkeClusterId = Number(cluster?.name?.replace('aplinstall', ''))
+      if (!lkeClusterId) throw new OtomiError('Cluster ID is not found in the cluster name')
       const bucketNames = {
-        cnpg: `lke${clusterId}-cnpg`,
-        harbor: `lke${clusterId}-harbor`,
-        loki: `lke${clusterId}-loki`,
-        tempo: `lke${clusterId}-tempo`,
-        velero: `lke${clusterId}-velero`,
-        gitea: `lke${clusterId}-gitea`,
-        thanos: `lke${clusterId}-thanos`,
+        cnpg: `lke${lkeClusterId}-cnpg`,
+        harbor: `lke${lkeClusterId}-harbor`,
+        loki: `lke${lkeClusterId}-loki`,
+        tempo: `lke${lkeClusterId}-tempo`,
+        velero: `lke${lkeClusterId}-velero`,
+        gitea: `lke${lkeClusterId}-gitea`,
+        thanos: `lke${lkeClusterId}-thanos`,
       }
       const objectStorageClient = new ObjectStorageClient(data.apiToken)
       // create object storage buckets
@@ -304,7 +304,7 @@ export default class OtomiStack {
       }
       // create object storage keys
       const { access_key, secret_key, regions } = await objectStorageClient.createObjectStorageKey(
-        clusterId,
+        lkeClusterId,
         data.regionId,
         Object.values(bucketNames),
       )

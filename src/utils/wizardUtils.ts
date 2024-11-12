@@ -27,7 +27,7 @@ export class ObjectStorageClient {
   }
 
   public async createObjectStorageKey(
-    clusterId: number,
+    lkeClusterId: number,
     region: string,
     bucketNames: string[],
   ): Promise<Pick<ObjectStorageKey, 'access_key' | 'secret_key' | 'regions'>> {
@@ -39,7 +39,7 @@ export class ObjectStorageClient {
     }))
     try {
       const objectStorageKeys = await createObjectStorageKeys({
-        label: `lke${clusterId}-key-${timestamp}`,
+        label: `lke${lkeClusterId}-key-${timestamp}`,
         regions: [region],
         bucket_access: bucketAccesses,
       })
