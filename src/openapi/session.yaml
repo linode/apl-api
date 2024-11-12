@@ -20,10 +20,29 @@ Session:
       # readOnly: true
     defaultPlatformAdminEmail:
       type: string
-    objStorageApps:
-      type: array
-      items:
-        type: object
+    objectStorage:
+      type: object
+      properties:
+        showWizard:
+          type: boolean
+        objStorageApps:
+          type: array
+          items:
+            type: object
+            properties:
+              appId:
+                type: string
+              required:
+                type: boolean
+        objStorageRegions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              label:
+                type: string
     versions:
       type: object
       # readOnly: true
