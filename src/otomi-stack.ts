@@ -294,7 +294,7 @@ export default class OtomiStack {
         thanos: `lke${lkeClusterId}-thanos`,
       }
       const objectStorageClient = new ObjectStorageClient(data.apiToken)
-      // create object storage buckets
+      // Create object storage buckets
       for (const bucket in bucketNames) {
         const bucketLabel = await objectStorageClient.createObjectStorageBucket(
           bucketNames[bucket] as string,
@@ -302,16 +302,19 @@ export default class OtomiStack {
         )
         debug(`${bucketLabel} bucket is created.`)
       }
-      // create object storage keys
+      // Create object storage keys
       const { access_key, secret_key, regions } = await objectStorageClient.createObjectStorageKey(
         lkeClusterId,
         data.regionId,
         Object.values(bucketNames),
       )
+      // The data.regionId (for example 'eu-central') does not include the zone.
+      // However, we need to add the region with the zone suffix (for example 'eu-central-1') in the object storage values.
+      // Therefore, we need to extract the region with the zone suffix from the s3_endpoint.
       const { s3_endpoint } = regions.find((region) => region.id === data.regionId) as ObjectStorageKeyRegions
       const [objStorageRegion] = s3_endpoint.split('.')
       debug(`Object Storage keys are created.`)
-      // modify object storage settings
+      // Modify object storage settings
       settingsdata.obj = {
         showWizard: false,
         provider: {
