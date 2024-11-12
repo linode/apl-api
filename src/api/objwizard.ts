@@ -5,13 +5,6 @@ import { ObjWizard, OpenApiRequestExt } from 'src/otomi-models'
 const debug = Debug('otomi:api:objwizard')
 
 export default function (): OperationHandlerArray {
-  const get: Operation = [
-    async ({ otomi }: OpenApiRequestExt, res): Promise<void> => {
-      debug('getObjWizard')
-      const v = await otomi.getObjWizard()
-      res.json(v)
-    },
-  ]
   const post: Operation = [
     async ({ otomi, body }: OpenApiRequestExt, res): Promise<void> => {
       debug('createObjWizard')
@@ -20,7 +13,6 @@ export default function (): OperationHandlerArray {
     },
   ]
   const api = {
-    get,
     post,
   }
   return api

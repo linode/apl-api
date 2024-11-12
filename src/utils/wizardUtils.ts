@@ -31,7 +31,7 @@ export class ObjectStorageClient {
     region: string,
     bucketNames: string[],
   ): Promise<Pick<ObjectStorageKey, 'access_key' | 'secret_key' | 'regions'>> {
-    const dateTime = new Date().toISOString().slice(0, 19).replace('T', '-')
+    const timestamp = new Date().getTime()
     const bucketAccesses: any[] = bucketNames.map((bucketName) => ({
       bucket_name: bucketName,
       permissions: 'read_write',
@@ -39,7 +39,7 @@ export class ObjectStorageClient {
     }))
     try {
       const objectStorageKeys = await createObjectStorageKeys({
-        label: `lke${clusterId}-key-${dateTime}`,
+        label: `lke${clusterId}-key-${timestamp}`,
         regions: [region],
         bucket_access: bucketAccesses,
       })

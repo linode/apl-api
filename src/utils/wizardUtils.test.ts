@@ -125,7 +125,7 @@ describe('ObjectStorageClient', () => {
 
       expect(createObjectStorageKeysStub.calledOnce).to.be.true
       expect(createObjectStorageKeysStub.firstCall.args[0]).to.deep.equal({
-        label: `lke${clusterId}-key-2024-01-01-12:00:00`,
+        label: `lke${clusterId}-key-1704110400000`,
         regions: [region],
         bucket_access: [
           { bucket_name: 'bucket1', permissions: 'read_write', region },

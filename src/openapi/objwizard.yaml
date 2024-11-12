@@ -16,13 +16,4 @@ ObjWizard:
     regionId:
       type: string
       description: The region where the object storage buckets will be created.
-    regions:
-      type: array
-      items:
-        type: object
-        properties:
-          id:
-            type: string
-          label:
-            type: string
   type: object

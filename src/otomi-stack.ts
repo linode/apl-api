@@ -277,19 +277,6 @@ export default class OtomiStack {
     return settingsInfo
   }
 
-  async getObjWizard(): Promise<ObjWizard> {
-    const { obj } = this.getSettings(['obj'])
-    const regions = await getRegions()
-    const objStorageRegions =
-      regions.data
-        .filter((region) => region.capabilities.includes('Object Storage'))
-        .map(({ id, label }) => ({ id, label }))
-        .sort((a, b) => a.label.localeCompare(b.label)) || []
-    const region = obj?.provider?.type === 'linode' ? obj.provider.linode.region : ''
-    const regionId = region ? region.substring(0, region.lastIndexOf('-')) : ''
-    return { showWizard: obj?.showWizard ?? true, regions: objStorageRegions, regionId } as ObjWizard
-  }
-
   async createObjWizard(data: ObjWizard): Promise<void> {
     const { obj } = this.getSettings(['obj'])
     const settingsdata = { obj: { ...obj, showWizard: data.showWizard } }
@@ -1907,6 +1894,13 @@ export default class OtomiStack {
     const rootStack = await getSessionStack()
     const valuesSchema = await getValuesSchema()
     const currentSha = rootStack.repo.commitSha
+    const { obj } = this.getSettings(['obj'])
+    const regions = await getRegions()
+    const objStorageRegions =
+      regions.data
+        .filter((region) => region.capabilities.includes('Object Storage'))
+        .map(({ id, label }) => ({ id, label }))
+        .sort((a, b) => a.label.localeCompare(b.label)) || []
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
@@ -1915,7 +1909,11 @@ export default class OtomiStack {
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
       user: user as SessionUser,
       defaultPlatformAdminEmail: env.DEFAULT_PLATFORM_ADMIN_EMAIL,
-      objStorageApps: env.OBJ_STORAGE_APPS,
+      objectStorage: {
+        showWizard: obj?.showWizard ?? true,
+        objStorageApps: env.OBJ_STORAGE_APPS,
+        objStorageRegions,
+      },
       versions: {
         core: env.VERSIONS.core,
         api: env.VERSIONS.api ?? process.env.npm_package_version,
