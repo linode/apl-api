@@ -37,7 +37,9 @@ function getUrlAuth(url, user, password): string | undefined {
   if (!url) return
   const protocol = getProtocol(url)
   const [_, bareUrl] = url.split('://')
-  return protocol === 'file' ? `${protocol}://${bareUrl}` : `${protocol}://${user}:${password}@${bareUrl}`
+  const encodedUser = encodeURIComponent(user as string)
+  const encodedPassword = encodeURIComponent(password as string)
+  return protocol === 'file' ? `${protocol}://${bareUrl}` : `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
 }
 
 const secretFileRegex = new RegExp(`^(.*/)?secrets.*.yaml(.dec)?$`)

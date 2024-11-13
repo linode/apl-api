@@ -37,7 +37,9 @@ export async function fetchWorkloadCatalog(
   let gitUrl = url
   if (isGiteaURL(url)) {
     const [protocol, bareUrl] = url.split('://')
-    gitUrl = `${protocol}://${process.env.GIT_USER}:${process.env.GIT_PASSWORD}@${bareUrl}`
+    const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
+    const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
+    gitUrl = `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
   }
   shell.exec(`git clone --depth 1 ${gitUrl} ${helmChartsDir}`)
   const files = await readdir(`${helmChartsDir}`, 'utf-8')
