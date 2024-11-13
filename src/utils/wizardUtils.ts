@@ -1,55 +1,57 @@
-import axios from 'axios'
+import { createBucket, createObjectStorageKeys, ObjectStorageKey, setToken } from '@linode/api-v4'
 import { OtomiError } from 'src/error'
 
-const axiosInstance = (linodeApiToken) =>
-  axios.create({
-    baseURL: 'https://api.linode.com/v4',
-    headers: {
-      Authorization: `Bearer ${linodeApiToken}`,
-      'Content-Type': 'application/json',
-    },
-  })
-
-export const getClusterRegion = async (linodeApiToken, clusterId) => {
-  try {
-    const res = await axiosInstance(linodeApiToken).get(`/lke/clusters/${clusterId}`)
-    return res.data.region
-  } catch (err) {
-    const error = new OtomiError(err.response.statusText ?? 'Error getting cluster region')
-    error.code = err.response.status ?? 500
-    error.publicMessage = err.response.data.errors[0].reason ?? ''
-    throw error
+export class ObjectStorageClient {
+  constructor(private apiToken: string) {
+    this.setToken()
   }
-}
 
-export const createObjectStorageAccessKey = async (linodeApiToken, clusterId, region) => {
-  const dateTime = new Date().toISOString().slice(0, 19).replace('T', '-')
-  try {
-    const res = await axiosInstance(linodeApiToken).post('/object-storage/keys', {
-      label: `lke${clusterId}-key-${dateTime}`,
-      region,
+  private setToken() {
+    setToken(this.apiToken)
+  }
+
+  public async createObjectStorageBucket(label: string, region: string): Promise<string> {
+    try {
+      const bucket = await createBucket({
+        label,
+        region,
+      })
+      return bucket.label
+    } catch (err) {
+      const error = new OtomiError(
+        err.response?.data?.errors?.[0]?.reason ?? err.response?.statusText ?? 'Error creating object storage bucket',
+      )
+      error.code = err.response?.status ?? 500
+      throw error
+    }
+  }
+
+  public async createObjectStorageKey(
+    lkeClusterId: number,
+    region: string,
+    bucketNames: string[],
+  ): Promise<Pick<ObjectStorageKey, 'access_key' | 'secret_key' | 'regions'>> {
+    const timestamp = new Date().getTime()
+    const bucketAccesses: any[] = bucketNames.map((bucketName) => ({
+      bucket_name: bucketName,
       permissions: 'read_write',
-    })
-    return res.data
-  } catch (err) {
-    const error = new OtomiError(err.response.statusText ?? 'Error creating object storage access key')
-    error.code = err.response.status ?? 500
-    error.publicMessage = err.response.data.errors[0].reason ?? ''
-    throw error
-  }
-}
-
-export const createObjectStorageBucket = async (linodeApiToken, label, region) => {
-  try {
-    const res = await axiosInstance(linodeApiToken).post('/object-storage/buckets', {
-      label,
       region,
-    })
-    return res.data
-  } catch (err) {
-    const error = new OtomiError(err.response.statusText ?? 'Error creating object storage bucket')
-    error.code = err.response.status ?? 500
-    error.publicMessage = err.response.data.errors[0].reason ?? ''
-    throw error
+    }))
+    try {
+      const objectStorageKeys = await createObjectStorageKeys({
+        label: `lke${lkeClusterId}-key-${timestamp}`,
+        regions: [region],
+        bucket_access: bucketAccesses,
+      })
+      return objectStorageKeys
+    } catch (err) {
+      const error = new OtomiError(
+        err.response?.data?.errors?.[0]?.reason ??
+          err.response?.statusText ??
+          'Error creating object storage access key',
+      )
+      error.code = err.response?.status ?? 500
+      throw error
+    }
   }
 }
