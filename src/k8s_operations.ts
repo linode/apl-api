@@ -87,7 +87,7 @@ export async function checkPodExists(namespace: string, podName: string) {
     const res = await k8sApi.readNamespacedPodStatus(podName, namespace)
     isRunning = res.body.status?.phase === 'Running'
   } catch (error) {
-    debug('checkPodExist error:', error)
+    debug(error.response?.body?.message ?? error.response?.body?.reason ?? 'Error checking if pod exists')
   }
 
   return isRunning
