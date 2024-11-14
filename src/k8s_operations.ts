@@ -3,6 +3,7 @@ import Debug from 'debug'
 import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
+import { OtomiError } from './error'
 import { Build, Cloudtty, SealedSecret, Service, Workload } from './otomi-models'
 
 const debug = Debug('otomi:api:k8sOperations')
@@ -86,11 +87,15 @@ export async function checkPodExists(namespace: string, podName: string) {
   try {
     const res = await k8sApi.readNamespacedPodStatus(podName, namespace)
     isRunning = res.body.status?.phase === 'Running'
-  } catch (error) {
-    debug(error.response?.body?.message ?? error.response?.body?.reason ?? 'Error checking if pod exists')
+    return isRunning
+  } catch (err) {
+    debug(err.response?.body?.message ?? err.response?.body?.reason ?? 'Error checking if pod exists')
+    const error = new OtomiError(
+      err.response?.body?.message ?? err.response?.body?.reason ?? 'Error checking if pod exists',
+    )
+    error.code = err.response?.body?.code ?? 500
+    throw error
   }
-
-  return isRunning
 }
 
 export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty) {
