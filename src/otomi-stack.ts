@@ -979,8 +979,7 @@ export default class OtomiStack {
 
   async deleteCloudtty(data: Cloudtty) {
     try {
-      const isPodExists = await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`)
-      if (isPodExists) await k8sdelete(data)
+      if (await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`)) await k8sdelete(data)
     } catch (error) {
       debug('Failed to delete cloudtty')
     }
