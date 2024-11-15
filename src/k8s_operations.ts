@@ -86,11 +86,11 @@ export async function checkPodExists(namespace: string, podName: string) {
   try {
     const res = await k8sApi.readNamespacedPodStatus(podName, namespace)
     isRunning = res.body.status?.phase === 'Running'
-    return isRunning
   } catch (err) {
     const errorMessage = err.response?.body?.message ?? err.response?.body?.reason ?? 'Error checking if pod exists'
     debug(errorMessage)
   }
+  return isRunning
 }
 
 export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty) {
