@@ -89,10 +89,9 @@ export async function checkPodExists(namespace: string, podName: string) {
     isRunning = res.body.status?.phase === 'Running'
     return isRunning
   } catch (err) {
-    debug(err.response?.body?.message ?? err.response?.body?.reason ?? 'Error checking if pod exists')
-    const error = new OtomiError(
-      err.response?.body?.message ?? err.response?.body?.reason ?? 'Error checking if pod exists',
-    )
+    const errorMessage = err.response?.body?.message ?? err.response?.body?.reason ?? 'Error checking if pod exists'
+    debug(errorMessage)
+    const error = new OtomiError(errorMessage)
     error.code = err.response?.body?.code ?? 500
     throw error
   }
