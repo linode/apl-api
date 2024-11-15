@@ -3,7 +3,6 @@ import Debug from 'debug'
 import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
-import { OtomiError } from './error'
 import { Build, Cloudtty, SealedSecret, Service, Workload } from './otomi-models'
 
 const debug = Debug('otomi:api:k8sOperations')
@@ -91,9 +90,6 @@ export async function checkPodExists(namespace: string, podName: string) {
   } catch (err) {
     const errorMessage = err.response?.body?.message ?? err.response?.body?.reason ?? 'Error checking if pod exists'
     debug(errorMessage)
-    const error = new OtomiError(errorMessage)
-    error.code = err.response?.body?.code ?? 500
-    throw error
   }
 }
 
