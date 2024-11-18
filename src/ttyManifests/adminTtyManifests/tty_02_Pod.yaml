@@ -16,7 +16,7 @@ spec:
       configMap:
         name: kconfig-team-$TARGET_TEAM
   containers:
-    - image: linode/apl-tty:1.1.3
+    - image: linode/apl-tty:latest
       name: po
       resources:
         requests:
