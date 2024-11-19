@@ -991,7 +991,11 @@ export default class OtomiStack {
   }
 
   async deleteCloudtty(data: Cloudtty) {
-    if (await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`)) await k8sdelete(data)
+    try {
+      if (await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`)) await k8sdelete(data)
+    } catch (error) {
+      debug('Failed to delete cloudtty')
+    }
   }
 
   getTeamWorkloads(teamId: string): Array<Workload> {
