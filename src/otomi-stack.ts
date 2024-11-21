@@ -853,7 +853,9 @@ export default class OtomiStack {
   createBuild(teamId: string, data: Build): Build {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      return this.db.createItem('builds', { ...data, teamId }, { teamId, name: data.name }) as Build
+      const newBuild = this.db.createItem('builds', { ...data, teamId }, { teamId, name: data.name }) as Build
+      this.doDeployment()
+      return newBuild
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Build name already exists'
       throw err
@@ -866,7 +868,9 @@ export default class OtomiStack {
 
   editBuild(id: string, data: Build): Build {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    return this.db.updateItem('builds', data, { id }) as Build
+    const updatedBuild = this.db.updateItem('builds', data, { id }) as Build
+    this.doDeployment()
+    return updatedBuild
   }
 
   deleteBuild(id: string): void {
@@ -877,7 +881,9 @@ export default class OtomiStack {
         this.db.updateItem('projects', updatedData, { id: project.id }) as Project
       }
     })
-    return this.db.deleteItem('builds', { id })
+    const deletedBuild = this.db.deleteItem('builds', { id })
+    this.doDeployment()
+    return deletedBuild
   }
 
   getTeamPolicies(teamId: string): Policies {
