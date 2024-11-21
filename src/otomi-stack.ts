@@ -3,7 +3,7 @@ import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
-import { ObjectStorageKeyRegions, getRegions } from '@linode/api-v4'
+import { ObjectStorageKey, ObjectStorageKeyRegions, getRegions } from '@linode/api-v4'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
@@ -308,11 +308,11 @@ export default class OtomiStack {
       }
       // Create object storage keys
       try {
-        const { access_key, secret_key, regions } = await objectStorageClient.createObjectStorageKey(
+        const { access_key, secret_key, regions } = (await objectStorageClient.createObjectStorageKey(
           lkeClusterId,
           data.regionId,
           Object.values(bucketNames),
-        )
+        )) as Pick<ObjectStorageKey, 'access_key' | 'secret_key' | 'regions'>
         // The data.regionId (for example 'eu-central') does not include the zone.
         // However, we need to add the region with the zone suffix (for example 'eu-central-1') in the object storage values.
         // Therefore, we need to extract the region with the zone suffix from the s3_endpoint.
