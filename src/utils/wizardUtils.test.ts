@@ -62,7 +62,7 @@ describe('ObjectStorageClient', () => {
       expect(result).to.equal('test-bucket')
     })
 
-    it('should throw OtomiError when bucket creation fails', async () => {
+    it('should return OtomiError when bucket creation fails', async () => {
       const mockError = {
         response: {
           status: 401,
@@ -71,17 +71,13 @@ describe('ObjectStorageClient', () => {
       }
       createBucketStub.rejects(mockError)
 
-      try {
-        await client.createObjectStorageBucket(label, region)
-        expect.fail('Should have thrown an error')
-      } catch (error) {
-        expect(error).to.be.instanceOf(OtomiError)
-        expect(error.publicMessage).to.equal('Your OAuth token is not authorized to use this endpoint')
-        expect(error.code).to.equal(401)
-      }
+      const result = await client.createObjectStorageBucket(label, region)
+      expect(result).to.be.instanceOf(OtomiError)
+      expect(result.publicMessage).to.equal('Your OAuth token is not authorized to use this endpoint')
+      expect(result.code).to.equal(401)
     })
 
-    it('should throw OtomiError with default message when no specific error info', async () => {
+    it('should return OtomiError with default message when no specific error info', async () => {
       const mockError = {
         response: {
           status: 500,
@@ -89,14 +85,10 @@ describe('ObjectStorageClient', () => {
       }
       createBucketStub.rejects(mockError)
 
-      try {
-        await client.createObjectStorageBucket(label, region)
-        expect.fail('Should have thrown an error')
-      } catch (error) {
-        expect(error).to.be.instanceOf(OtomiError)
-        expect(error.publicMessage).to.equal('Error creating object storage bucket')
-        expect(error.code).to.equal(500)
-      }
+      const result = await client.createObjectStorageBucket(label, region)
+      expect(result).to.be.instanceOf(OtomiError)
+      expect(result.publicMessage).to.equal('Error creating object storage bucket')
+      expect(result.code).to.equal(500)
     })
   })
 
