@@ -10,7 +10,7 @@ export class ObjectStorageClient {
     setToken(this.apiToken)
   }
 
-  public async createObjectStorageBucket(label: string, region: string): Promise<string> {
+  public async createObjectStorageBucket(label: string, region: string): Promise<string | OtomiError> {
     try {
       const bucket = await createBucket({
         label,
@@ -22,7 +22,7 @@ export class ObjectStorageClient {
         err.response?.data?.errors?.[0]?.reason ?? err.response?.statusText ?? 'Error creating object storage bucket',
       )
       error.code = err.response?.status ?? 500
-      throw error
+      return error
     }
   }
 
@@ -30,7 +30,7 @@ export class ObjectStorageClient {
     lkeClusterId: number,
     region: string,
     bucketNames: string[],
-  ): Promise<Pick<ObjectStorageKey, 'access_key' | 'secret_key' | 'regions'>> {
+  ): Promise<Pick<ObjectStorageKey, 'access_key' | 'secret_key' | 'regions'> | OtomiError> {
     const timestamp = new Date().getTime()
     const bucketAccesses: any[] = bucketNames.map((bucketName) => ({
       bucket_name: bucketName,

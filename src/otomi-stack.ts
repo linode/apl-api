@@ -277,13 +277,13 @@ export default class OtomiStack {
     return settingsInfo
   }
 
-  async createObjWizard(data: ObjWizard): Promise<void> {
+  async createObjWizard(data: ObjWizard): Promise<void | ObjWizard> {
     const { obj } = this.getSettings(['obj'])
     const settingsdata = { obj: { ...obj, showWizard: data.showWizard } }
     if (data?.apiToken && data?.regionId) {
       const { cluster } = this.getSettings(['cluster'])
       const lkeClusterId = Number(cluster?.name?.replace('aplinstall', ''))
-      if (!lkeClusterId) throw new OtomiError('Cluster ID is not found in the cluster name')
+      if (!lkeClusterId) return { status: 'error', errorMessage: 'Cluster ID is not found in the cluster name' }
       const bucketNames = {
         cnpg: `lke${lkeClusterId}-cnpg`,
         harbor: `lke${lkeClusterId}-harbor`,
@@ -296,36 +296,44 @@ export default class OtomiStack {
       const objectStorageClient = new ObjectStorageClient(data.apiToken)
       // Create object storage buckets
       for (const bucket in bucketNames) {
-        const bucketLabel = await objectStorageClient.createObjectStorageBucket(
-          bucketNames[bucket] as string,
-          data.regionId,
-        )
-        debug(`${bucketLabel} bucket is created.`)
+        try {
+          const bucketLabel = await objectStorageClient.createObjectStorageBucket(
+            bucketNames[bucket] as string,
+            data.regionId,
+          )
+          debug(`${bucketLabel} bucket is created.`)
+        } catch (error) {
+          return { status: 'error', errorMessage: (error as OtomiError).publicMessage }
+        }
       }
       // Create object storage keys
-      const { access_key, secret_key, regions } = await objectStorageClient.createObjectStorageKey(
-        lkeClusterId,
-        data.regionId,
-        Object.values(bucketNames),
-      )
-      // The data.regionId (for example 'eu-central') does not include the zone.
-      // However, we need to add the region with the zone suffix (for example 'eu-central-1') in the object storage values.
-      // Therefore, we need to extract the region with the zone suffix from the s3_endpoint.
-      const { s3_endpoint } = regions.find((region) => region.id === data.regionId) as ObjectStorageKeyRegions
-      const [objStorageRegion] = s3_endpoint.split('.')
-      debug(`Object Storage keys are created.`)
-      // Modify object storage settings
-      settingsdata.obj = {
-        showWizard: false,
-        provider: {
-          type: 'linode',
-          linode: {
-            accessKeyId: access_key,
-            buckets: bucketNames,
-            region: objStorageRegion,
-            secretAccessKey: secret_key,
+      try {
+        const { access_key, secret_key, regions } = await objectStorageClient.createObjectStorageKey(
+          lkeClusterId,
+          data.regionId,
+          Object.values(bucketNames),
+        )
+        // The data.regionId (for example 'eu-central') does not include the zone.
+        // However, we need to add the region with the zone suffix (for example 'eu-central-1') in the object storage values.
+        // Therefore, we need to extract the region with the zone suffix from the s3_endpoint.
+        const { s3_endpoint } = regions.find((region) => region.id === data.regionId) as ObjectStorageKeyRegions
+        const [objStorageRegion] = s3_endpoint.split('.')
+        debug(`Object Storage keys are created.`)
+        // Modify object storage settings
+        settingsdata.obj = {
+          showWizard: false,
+          provider: {
+            type: 'linode',
+            linode: {
+              accessKeyId: access_key,
+              buckets: bucketNames,
+              region: objStorageRegion,
+              secretAccessKey: secret_key,
+            },
           },
-        },
+        }
+      } catch (error) {
+        return { status: 'error', errorMessage: (error as OtomiError).publicMessage }
       }
     }
     await this.editSettings(settingsdata as Settings, 'obj')
