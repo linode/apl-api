@@ -22,6 +22,7 @@ export default function (): OperationHandlerArray {
     express.json({ limit: '500kb' }),
     ({ otomi, params: { teamId, workloadId }, body }: OpenApiRequestExt, res): void => {
       debug(`editWorkloadValues(${workloadId})`)
+      console.log('body put')
       const data = otomi.editWorkloadValues(decodeURIComponent(workloadId), {
         ...body,
         teamId: decodeURIComponent(teamId),
@@ -35,6 +36,7 @@ export default function (): OperationHandlerArray {
     express.json({ limit: '500kb' }),
     ({ otomi, params: { teamId, workloadId }, body }: OpenApiRequestExt, res): void => {
       const { image, containerPorts, fullnameOverride, ...rest } = body.values
+      console.log('body patch')
       debug(`editWorkloadValues(${workloadId})`)
       const data = otomi.editWorkloadValues(decodeURIComponent(workloadId), {
         id: workloadId,
