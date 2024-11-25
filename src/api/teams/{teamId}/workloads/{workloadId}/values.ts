@@ -2,11 +2,12 @@ import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
 import { OpenApiRequestExt, WorkloadValues } from 'src/otomi-models'
 import express from 'express'
+import bodyParser from 'body-parser'
 
 const debug = Debug('otomi:api:teams:workloadValues')
 
 export default function (): OperationHandlerArray {
-  const limitPayloadSize = express.json({ limit: '1mb' }) // Set your desired payload size, e.g., 1 MB
+  const limitPayloadSize = bodyParser.json({ limit: '1mb' }) // Set your desired payload size, e.g., 1 MB
 
   const get: Operation = [
     ({ otomi, params: { workloadId } }: OpenApiRequestExt, res): void => {
