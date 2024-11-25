@@ -29,7 +29,7 @@ export default function (): OperationHandlerArray {
   ]
 
   const patch: Operation = [
-    limitPayloadSize,
+    express.json({ limit: '500kb' }),
     ({ otomi, params: { teamId, workloadId }, body }: OpenApiRequestExt, res): void => {
       const { image, containerPorts, fullnameOverride, ...rest } = body.values
       debug(`editWorkloadValues(${workloadId})`)

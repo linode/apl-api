@@ -141,6 +141,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   app.use(cors())
   app.use(json())
   app.use(jwtMiddleware())
+  app.use(express.json({ limit: '1mb' }))
   if (env.isDev) {
     app.all('/mock/:idx', (req, res, next) => {
       const { idx } = req.params
