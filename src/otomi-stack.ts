@@ -3,6 +3,7 @@ import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
+import { ObjectStorageKeyRegions, getRegions } from '@linode/api-v4'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
@@ -72,7 +73,7 @@ import { validateBackupFields } from './utils/backupUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { encryptSecretItem } from './utils/sealedSecretUtils'
 import { getKeycloakUsers } from './utils/userUtils'
-import { createObjectStorageAccessKey, createObjectStorageBucket, getClusterRegion } from './utils/wizardUtils'
+import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 interface ExcludedApp extends App {
@@ -276,45 +277,51 @@ export default class OtomiStack {
     return settingsInfo
   }
 
-  getObjWizard(): ObjWizard {
-    const { obj } = this.getSettings(['obj'])
-    return { showWizard: obj?.showWizard ?? true } as ObjWizard
-  }
-
   async createObjWizard(data: ObjWizard): Promise<void> {
     const { obj } = this.getSettings(['obj'])
     const settingsdata = { obj: { ...obj, showWizard: data.showWizard } }
-    if (data?.apiToken) {
+    if (data?.apiToken && data?.regionId) {
       const { cluster } = this.getSettings(['cluster'])
-      const clusterId = cluster?.name?.replace('aplinstall', '')
-      const clusterRegion = await getClusterRegion(data.apiToken, clusterId)
-      const { access_key, secret_key, regions } = await createObjectStorageAccessKey(
-        data.apiToken,
-        clusterId,
-        clusterRegion,
-      )
-      const { s3_endpoint } = regions.find((region) => region.id === clusterRegion)
-      const objStorageRegion = s3_endpoint.split('.')[0] as string
-      const buckets = ['cnpg', 'harbor', 'loki', 'tempo', 'velero', 'gitea', 'thanos']
-      for (const bucket of buckets) {
-        const res = await createObjectStorageBucket(data.apiToken, `lke${clusterId}-${bucket}`, clusterRegion)
-        debug(`${res.label} is created!`)
+      const lkeClusterId = Number(cluster?.name?.replace('aplinstall', ''))
+      if (!lkeClusterId) throw new OtomiError('Cluster ID is not found in the cluster name')
+      const bucketNames = {
+        cnpg: `lke${lkeClusterId}-cnpg`,
+        harbor: `lke${lkeClusterId}-harbor`,
+        loki: `lke${lkeClusterId}-loki`,
+        tempo: `lke${lkeClusterId}-tempo`,
+        velero: `lke${lkeClusterId}-velero`,
+        gitea: `lke${lkeClusterId}-gitea`,
+        thanos: `lke${lkeClusterId}-thanos`,
       }
+      const objectStorageClient = new ObjectStorageClient(data.apiToken)
+      // Create object storage buckets
+      for (const bucket in bucketNames) {
+        const bucketLabel = await objectStorageClient.createObjectStorageBucket(
+          bucketNames[bucket] as string,
+          data.regionId,
+        )
+        debug(`${bucketLabel} bucket is created.`)
+      }
+      // Create object storage keys
+      const { access_key, secret_key, regions } = await objectStorageClient.createObjectStorageKey(
+        lkeClusterId,
+        data.regionId,
+        Object.values(bucketNames),
+      )
+      // The data.regionId (for example 'eu-central') does not include the zone.
+      // However, we need to add the region with the zone suffix (for example 'eu-central-1') in the object storage values.
+      // Therefore, we need to extract the region with the zone suffix from the s3_endpoint.
+      const { s3_endpoint } = regions.find((region) => region.id === data.regionId) as ObjectStorageKeyRegions
+      const [objStorageRegion] = s3_endpoint.split('.')
+      debug(`Object Storage keys are created.`)
+      // Modify object storage settings
       settingsdata.obj = {
         showWizard: false,
         provider: {
           type: 'linode',
           linode: {
             accessKeyId: access_key,
-            buckets: {
-              cnpg: `lke${clusterId}-cnpg`,
-              harbor: `lke${clusterId}-harbor`,
-              loki: `lke${clusterId}-loki`,
-              tempo: `lke${clusterId}-tempo`,
-              velero: `lke${clusterId}-velero`,
-              gitea: `lke${clusterId}-gitea`,
-              thanos: `lke${clusterId}-thanos`,
-            },
+            buckets: bucketNames,
             region: objStorageRegion,
             secretAccessKey: secret_key,
           },
@@ -323,6 +330,7 @@ export default class OtomiStack {
     }
     await this.editSettings(settingsdata as Settings, 'obj')
     await this.doDeployment()
+    debug('Object storage settings have been configured.')
   }
 
   getSettings(keys?: string[]): Settings {
@@ -970,7 +978,11 @@ export default class OtomiStack {
   }
 
   async deleteCloudtty(data: Cloudtty) {
-    if (await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`)) await k8sdelete(data)
+    try {
+      if (await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`)) await k8sdelete(data)
+    } catch (error) {
+      debug('Failed to delete cloudtty')
+    }
   }
 
   getTeamWorkloads(teamId: string): Array<Workload> {
@@ -1889,6 +1901,13 @@ export default class OtomiStack {
     const rootStack = await getSessionStack()
     const valuesSchema = await getValuesSchema()
     const currentSha = rootStack.repo.commitSha
+    const { obj } = this.getSettings(['obj'])
+    const regions = await getRegions()
+    const objStorageRegions =
+      regions.data
+        .filter((region) => region.capabilities.includes('Object Storage'))
+        .map(({ id, label }) => ({ id, label }))
+        .sort((a, b) => a.label.localeCompare(b.label)) || []
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
@@ -1897,7 +1916,11 @@ export default class OtomiStack {
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
       user: user as SessionUser,
       defaultPlatformAdminEmail: env.DEFAULT_PLATFORM_ADMIN_EMAIL,
-      objStorageApps: env.OBJ_STORAGE_APPS,
+      objectStorage: {
+        showWizard: obj?.showWizard ?? true,
+        objStorageApps: env.OBJ_STORAGE_APPS,
+        objStorageRegions,
+      },
       versions: {
         core: env.VERSIONS.core,
         api: env.VERSIONS.api ?? process.env.npm_package_version,

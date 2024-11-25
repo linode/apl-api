@@ -1418,17 +1418,6 @@ paths:
                 $ref: '#/components/schemas/SettingsInfo'
 
   '/objwizard':
-    get:
-      operationId: getObjWizard
-      x-aclSchema: ObjWizard
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully obtained obj wizard configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ObjWizard'
     post:
       operationId: createObjWizard
       description: Create a obj wizard configuration
