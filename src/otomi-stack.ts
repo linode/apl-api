@@ -297,7 +297,8 @@ export default class OtomiStack {
         gitea: `lke${lkeClusterId}-gitea`,
         thanos: `lke${lkeClusterId}-thanos`,
       }
-      const objectStorageClient = new ObjectStorageClient(data.apiToken)
+      const objectStorageClient = new ObjectStorageClient()
+      objectStorageClient.setToken(data.apiToken)
       // Create object storage buckets
       for (const bucket in bucketNames) {
         console.log('BucketLabel: ', bucket)

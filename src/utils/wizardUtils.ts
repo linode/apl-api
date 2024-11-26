@@ -2,12 +2,8 @@ import { createBucket, createObjectStorageKeys, ObjectStorageKey, setToken } fro
 import { OtomiError } from 'src/error'
 
 export class ObjectStorageClient {
-  constructor(private apiToken: string) {
-    this.setToken()
-  }
-
-  private setToken() {
-    setToken(this.apiToken)
+  public setToken(token: string) {
+    setToken(token)
   }
 
   public async createObjectStorageBucket(label: string, region: string): Promise<string | OtomiError> {
