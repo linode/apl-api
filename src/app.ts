@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import $parser from '@apidevtools/json-schema-ref-parser'
-import bodyParser, { json } from 'body-parser'
+import { json } from 'body-parser'
 import cors from 'cors'
 import Debug from 'debug'
 import express, { request } from 'express'
@@ -136,13 +136,10 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   const apiRoutesPath = path.resolve(__dirname, 'api')
   await loadSpec()
   const authz = new Authz(otomiSpec.spec)
-
   app.use(logger('dev'))
   app.use(cors())
-  app.use(json())
+  app.use(json({ limit: '500kb' }))
   app.use(jwtMiddleware())
-  app.use(bodyParser.json({ limit: '1mb' }))
-  app.use(express.json({ limit: '1mb' }))
   if (env.isDev) {
     app.all('/mock/:idx', (req, res, next) => {
       const { idx } = req.params
@@ -205,7 +202,6 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
 
   // and register session middleware
   app.use(sessionMiddleware(server as Server))
-
   // now we can initialize the more specific routes
   initialize({
     // @ts-ignore
