@@ -283,6 +283,7 @@ export default class OtomiStack {
     if (data?.apiToken && data?.regionId) {
       const { cluster } = this.getSettings(['cluster'])
       let lkeClusterId: null | number = null
+      console.log('cluster: ', cluster)
       if (cluster?.name?.includes('aplinstall')) lkeClusterId = Number(cluster?.name?.replace('aplinstall', ''))
       else if (cluster?.name?.includes('lke')) lkeClusterId = Number(cluster?.name?.replace('lke', ''))
       else if (lkeClusterId === null)
@@ -299,15 +300,13 @@ export default class OtomiStack {
       const objectStorageClient = new ObjectStorageClient(data.apiToken)
       // Create object storage buckets
       for (const bucket in bucketNames) {
-        try {
-          const bucketLabel = await objectStorageClient.createObjectStorageBucket(
-            bucketNames[bucket] as string,
-            data.regionId,
-          )
-          debug(`${bucketLabel} bucket is created.`)
-        } catch (error) {
-          return { status: 'error', errorMessage: (error as OtomiError).publicMessage }
-        }
+        console.log('BucketLabel: ', bucket)
+        const bucketLabel = await objectStorageClient.createObjectStorageBucket(
+          bucketNames[bucket] as string,
+          data.regionId,
+        )
+        if (bucketLabel instanceof String) debug(`${bucketLabel} bucket is created.`)
+        else return { status: 'error', errorMessage: (bucketLabel as OtomiError).publicMessage }
       }
       // Create object storage keys
       try {
