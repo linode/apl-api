@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import $parser from '@apidevtools/json-schema-ref-parser'
-import { json } from 'body-parser'
 import cors from 'cors'
 import Debug from 'debug'
 import express, { request } from 'express'
@@ -138,7 +137,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   const authz = new Authz(otomiSpec.spec)
   app.use(logger('dev'))
   app.use(cors())
-  app.use(json({ limit: '500kb' }))
+  app.use(express.json({ limit: '500kb' }))
   app.use(jwtMiddleware())
   if (env.isDev) {
     app.all('/mock/:idx', (req, res, next) => {

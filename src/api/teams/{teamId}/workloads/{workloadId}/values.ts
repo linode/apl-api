@@ -1,7 +1,6 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
 import { OpenApiRequestExt, WorkloadValues } from 'src/otomi-models'
-import { json } from 'body-parser'
 
 const debug = Debug('otomi:api:teams:workloadValues')
 
