@@ -14,7 +14,7 @@ spec:
             prefix: /logout-otomi
       redirect:
         authority: auth.$FQDN
-        uri: /oauth2/sign_out?rd=https://keycloak.$FQDN/realms/otomi/protocol/openid-connect/logout?redirect_uri=https://otomi.$FQDN
+        uri: /oauth2/sign_out?rd=https://keycloak.$FQDN/realms/otomi/protocol/openid-connect/logout?redirect_uri=https://console.$FQDN
     - match:
         - uri:
             prefix: /$EMAIL
