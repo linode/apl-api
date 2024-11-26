@@ -51,7 +51,7 @@ export class ObjectStorageClient {
           'Error creating object storage access key',
       )
       error.code = err.response?.status ?? 500
-      throw error
+      return error
     }
   }
 }

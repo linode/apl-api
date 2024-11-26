@@ -3,7 +3,7 @@ import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
-import { ObjectStorageKey, ObjectStorageKeyRegions, getRegions } from '@linode/api-v4'
+import { ObjectStorageKeyRegions, getRegions } from '@linode/api-v4'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
@@ -309,33 +309,33 @@ export default class OtomiStack {
         else return { status: 'error', errorMessage: (bucketLabel as OtomiError).publicMessage }
       }
       // Create object storage keys
-      try {
-        const { access_key, secret_key, regions } = (await objectStorageClient.createObjectStorageKey(
-          lkeClusterId,
-          data.regionId,
-          Object.values(bucketNames),
-        )) as Pick<ObjectStorageKey, 'access_key' | 'secret_key' | 'regions'>
-        // The data.regionId (for example 'eu-central') does not include the zone.
-        // However, we need to add the region with the zone suffix (for example 'eu-central-1') in the object storage values.
-        // Therefore, we need to extract the region with the zone suffix from the s3_endpoint.
-        const { s3_endpoint } = regions.find((region) => region.id === data.regionId) as ObjectStorageKeyRegions
-        const [objStorageRegion] = s3_endpoint.split('.')
-        debug(`Object Storage keys are created.`)
-        // Modify object storage settings
-        settingsdata.obj = {
-          showWizard: false,
-          provider: {
-            type: 'linode',
-            linode: {
-              accessKeyId: access_key,
-              buckets: bucketNames,
-              region: objStorageRegion,
-              secretAccessKey: secret_key,
-            },
+      const objStorageKey = await objectStorageClient.createObjectStorageKey(
+        lkeClusterId,
+        data.regionId,
+        Object.values(bucketNames),
+      )
+
+      if (objStorageKey instanceof OtomiError) return { status: 'error', errorMessage: objStorageKey.publicMessage }
+
+      const { access_key, secret_key, regions } = objStorageKey
+      // The data.regionId (for example 'eu-central') does not include the zone.
+      // However, we need to add the region with the zone suffix (for example 'eu-central-1') in the object storage values.
+      // Therefore, we need to extract the region with the zone suffix from the s3_endpoint.
+      const { s3_endpoint } = regions.find((region) => region.id === data.regionId) as ObjectStorageKeyRegions
+      const [objStorageRegion] = s3_endpoint.split('.')
+      debug(`Object Storage keys are created.`)
+      // Modify object storage settings
+      settingsdata.obj = {
+        showWizard: false,
+        provider: {
+          type: 'linode',
+          linode: {
+            accessKeyId: access_key,
+            buckets: bucketNames,
+            region: objStorageRegion,
+            secretAccessKey: secret_key,
           },
-        }
-      } catch (error) {
-        return { status: 'error', errorMessage: (error as OtomiError).publicMessage }
+        },
       }
     }
     await this.editSettings(settingsdata as Settings, 'obj')
