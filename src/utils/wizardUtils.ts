@@ -3,7 +3,9 @@ import { OtomiError } from 'src/error'
 
 export class ObjectStorageClient {
   public setToken(token: string) {
+    console.log('Token: ', token)
     setToken(token)
+    console.log('Token is set!')
   }
 
   public async createObjectStorageBucket(label: string, region: string): Promise<string | OtomiError> {
