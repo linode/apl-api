@@ -282,8 +282,11 @@ export default class OtomiStack {
     const settingsdata = { obj: { ...obj, showWizard: data.showWizard } }
     if (data?.apiToken && data?.regionId) {
       const { cluster } = this.getSettings(['cluster'])
-      const lkeClusterId = Number(cluster?.name?.replace('aplinstall', ''))
-      if (!lkeClusterId) return { status: 'error', errorMessage: 'Cluster ID is not found in the cluster name' }
+      let lkeClusterId: null | number = null
+      if (cluster?.name?.includes('aplinstall')) lkeClusterId = Number(cluster?.name?.replace('aplinstall', ''))
+      else if (cluster?.name?.includes('lke')) lkeClusterId = Number(cluster?.name?.replace('lke', ''))
+      else if (lkeClusterId === null)
+        return { status: 'error', errorMessage: 'Cluster ID is not found in the cluster name' }
       const bucketNames = {
         cnpg: `lke${lkeClusterId}-cnpg`,
         harbor: `lke${lkeClusterId}-harbor`,
