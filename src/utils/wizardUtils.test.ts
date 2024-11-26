@@ -136,14 +136,10 @@ describe('ObjectStorageClient', () => {
       }
       createObjectStorageKeysStub.rejects(mockError)
 
-      try {
-        await client.createObjectStorageKey(clusterId, region, bucketNames)
-        expect.fail('Should have thrown an error')
-      } catch (error) {
-        expect(error).to.be.instanceOf(OtomiError)
-        expect(error.publicMessage).to.equal('Your OAuth token is not authorized to use this endpoint')
-        expect(error.code).to.equal(401)
-      }
+      const result = await client.createObjectStorageKey(clusterId, region, bucketNames)
+      expect(result).to.be.instanceOf(OtomiError)
+      expect(result.publicMessage).to.equal('Your OAuth token is not authorized to use this endpoint')
+      expect(result.code).to.equal(401)
     })
   })
 })
