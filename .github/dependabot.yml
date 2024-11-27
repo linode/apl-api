@@ -22,9 +22,9 @@ updates:
       interval: 'weekly'
     commit-message:
       prefix: 'chore(deps)'
-    labels:
-      - 'dependencies'
-
+    ignore:
+      - dependency-name: 'node'
+        versions: ['>=21']
   # github-actions
   - package-ecosystem: 'github-actions'
     directory: '/'
