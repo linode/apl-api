@@ -1,11 +1,16 @@
-import { createBucket, createObjectStorageKeys, ObjectStorageKey, setToken } from '@linode/api-v4'
+import { baseRequest, createBucket, createObjectStorageKeys, ObjectStorageKey, setToken } from '@linode/api-v4'
 import { OtomiError } from 'src/error'
 
 export class ObjectStorageClient {
-  public setToken(token: string) {
-    console.log('Token: ', token)
-    setToken(token)
+  constructor(private apiToken: string) {
+    baseRequest.interceptors.request.clear()
+    console.log('Token: ', apiToken)
+    this.setToken()
     console.log('Token is set!')
+  }
+
+  private setToken() {
+    setToken(this.apiToken)
   }
 
   public async createObjectStorageBucket(label: string, region: string): Promise<string | OtomiError> {

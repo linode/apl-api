@@ -285,7 +285,6 @@ export default class OtomiStack {
       let lkeClusterId: null | number = null
       console.log('cluster: ', cluster)
       if (cluster?.name?.includes('aplinstall')) lkeClusterId = Number(cluster?.name?.replace('aplinstall', ''))
-      else if (cluster?.name?.includes('lke')) lkeClusterId = Number(cluster?.name?.replace('lke', ''))
       else if (lkeClusterId === null)
         return { status: 'error', errorMessage: 'Cluster ID is not found in the cluster name' }
       const bucketNames = {
@@ -297,17 +296,15 @@ export default class OtomiStack {
         gitea: `lke${lkeClusterId}-gitea`,
         thanos: `lke${lkeClusterId}-thanos`,
       }
-      const objectStorageClient = new ObjectStorageClient()
-      objectStorageClient.setToken(data.apiToken)
+      const objectStorageClient = new ObjectStorageClient(data.apiToken)
       // Create object storage buckets
       for (const bucket in bucketNames) {
-        console.log('BucketLabel: ', bucket)
         const bucketLabel = await objectStorageClient.createObjectStorageBucket(
           bucketNames[bucket] as string,
           data.regionId,
         )
-        if (bucketLabel instanceof String) debug(`${bucketLabel} bucket is created.`)
-        else return { status: 'error', errorMessage: (bucketLabel as OtomiError).publicMessage }
+        if (bucketLabel instanceof OtomiError) return { status: 'error', errorMessage: bucketLabel.publicMessage }
+        else debug(`${bucketLabel} bucket is created.`)
       }
       // Create object storage keys
       const objStorageKey = await objectStorageClient.createObjectStorageKey(
