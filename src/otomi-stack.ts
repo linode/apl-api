@@ -286,7 +286,7 @@ export default class OtomiStack {
       console.log('cluster: ', cluster)
       if (cluster?.name?.includes('aplinstall')) lkeClusterId = Number(cluster?.name?.replace('aplinstall', ''))
       else if (lkeClusterId === null)
-        return { status: 'error', errorMessage: 'Cluster ID is not found in the cluster name' }
+        return { status: 'error', errorMessage: 'Cluster ID is not found in the cluster name.' }
       const bucketNames = {
         cnpg: `lke${lkeClusterId}-cnpg`,
         harbor: `lke${lkeClusterId}-harbor`,
@@ -336,6 +336,7 @@ export default class OtomiStack {
         },
       }
     }
+    console.log('Settings data: ', settingsdata)
     await this.editSettings(settingsdata as Settings, 'obj')
     await this.doDeployment()
     debug('Object storage settings have been configured.')
