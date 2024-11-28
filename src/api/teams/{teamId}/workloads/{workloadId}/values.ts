@@ -7,7 +7,7 @@ const debug = Debug('otomi:api:teams:workloadValues')
 export default function (): OperationHandlerArray {
   const get: Operation = [
     ({ otomi, params: { workloadId } }: OpenApiRequestExt, res): void => {
-      debug(`editWorkloadValues(${workloadId})`)
+      debug(`getWorkloadValues(${workloadId})`)
       const data = otomi.getWorkloadValues(decodeURIComponent(workloadId))
       res.json(data)
     },
@@ -15,7 +15,7 @@ export default function (): OperationHandlerArray {
 
   const put: Operation = [
     ({ otomi, params: { teamId, workloadId }, body }: OpenApiRequestExt, res): void => {
-      debug(`editWorkloadValues(${workloadId})`)
+      debug(`putWorkloadValues(${workloadId})`)
       const data = otomi.editWorkloadValues(decodeURIComponent(workloadId), {
         ...body,
         teamId: decodeURIComponent(teamId),
@@ -27,7 +27,7 @@ export default function (): OperationHandlerArray {
   const patch: Operation = [
     ({ otomi, params: { teamId, workloadId }, body }: OpenApiRequestExt, res): void => {
       const { image, containerPorts, fullnameOverride, ...rest } = body.values
-      debug(`editWorkloadValues(${workloadId})`)
+      debug(`patchWorkloadValues(${workloadId})`)
       const data = otomi.editWorkloadValues(decodeURIComponent(workloadId), {
         id: workloadId,
         values: {
