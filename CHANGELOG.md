@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.4.0](https://github.com/redkubes/otomi-api/compare/v3.3.0...v3.4.0) (2024-11-28)
+
+
+### Features
+
+* Apl-369 updated apl-tty version ([#588](https://github.com/redkubes/otomi-api/issues/588)) ([ceec232](https://github.com/redkubes/otomi-api/commit/ceec232851fde6334937e51b5edc73c9dedc922f))
+* increase payload size to 500kb ([#589](https://github.com/redkubes/otomi-api/issues/589)) ([e66bb60](https://github.com/redkubes/otomi-api/commit/e66bb600b783cfb7a27f1915272fcdeb1dfbc190))
+* remove saveTeamApps function ([#587](https://github.com/redkubes/otomi-api/issues/587)) ([65ed84a](https://github.com/redkubes/otomi-api/commit/65ed84ab407228a19baf8c7d61fbe5d09839dc95))
+* updated release tag generation ([#585](https://github.com/redkubes/otomi-api/issues/585)) ([f33415d](https://github.com/redkubes/otomi-api/commit/f33415df24d02d5501691f599b07e0ab72e98e4e))
+
+
+### Bug Fixes
+
+* git clone command ([#579](https://github.com/redkubes/otomi-api/issues/579)) ([4f80e5a](https://github.com/redkubes/otomi-api/commit/4f80e5a9e27e2eb1220f4d7354c1a4e8a5b000d9))
+* logout error ([#584](https://github.com/redkubes/otomi-api/issues/584)) ([1eaf488](https://github.com/redkubes/otomi-api/commit/1eaf488440f2dd9a666c3c00d2f7a19da8e051a5))
+* update jwt for team-admin users ([#590](https://github.com/redkubes/otomi-api/issues/590)) ([8b61c75](https://github.com/redkubes/otomi-api/commit/8b61c75ae44bf5d109cd67f56bb812aa8fa24d2d))
+* updated tty rolebinding ([#586](https://github.com/redkubes/otomi-api/issues/586)) ([9b73f6d](https://github.com/redkubes/otomi-api/commit/9b73f6d6c2add25e72eb4d4012bf336555636d11))
+
+
+### CI
+
+* add dependabot ([#583](https://github.com/redkubes/otomi-api/issues/583)) ([064be28](https://github.com/redkubes/otomi-api/commit/064be28ae342a9a679c874d01bf35054956ffd60))
+
 ## [3.3.0](https://github.com/redkubes/otomi-api/compare/v3.2.0...v3.3.0) (2024-11-12)
 
 
