@@ -283,6 +283,32 @@ describe('API authz tests', () => {
       .expect(403)
       .end(done)
   })
+
+  it('team member can update workload values with payload lower than than limit', (done) => {
+    const largePayload = { data: 'A'.repeat(400000) } // 400KB
+
+    agent
+      .put('/v1/teams/team1/workloads/my-uuid/values')
+      .send({
+        values: largePayload,
+      })
+      .set('Authorization', `Bearer ${teamMemberToken}`)
+      .expect(200)
+      .end(done)
+  })
+
+  it('team member can not update workload values with payload  higher than limit', (done) => {
+    const largePayload = { data: 'A'.repeat(600000) } // 600KB
+
+    agent
+      .put('/v1/teams/team1/workloads/my-uuid/values')
+      .send({
+        values: largePayload,
+      })
+      .set('Authorization', `Bearer ${teamMemberToken}`)
+      .expect(413)
+      .end(done)
+  })
   xit('team member can not see filtered values', (done) => {
     otomiStack.getApp.callsFake(() => ({ id: 'teamapp', values: { hidden: true } }))
     agent
