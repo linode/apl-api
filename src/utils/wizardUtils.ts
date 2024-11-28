@@ -4,9 +4,7 @@ import { OtomiError } from 'src/error'
 export class ObjectStorageClient {
   constructor(private apiToken: string) {
     baseRequest.interceptors.request.clear()
-    console.log('Token: ', apiToken)
     this.setToken()
-    console.log('Token is set!')
   }
 
   private setToken() {

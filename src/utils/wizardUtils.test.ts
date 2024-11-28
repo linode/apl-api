@@ -37,11 +37,11 @@ describe('ObjectStorageClient', () => {
     sinon.restore()
   })
 
-  // describe('constructor', () => {
-  //   it('should set token when initialized', () => {
-  //     expect(setTokenStub.calledOnceWith('test-token')).to.be.true
-  //   })
-  // })
+  describe('constructor', () => {
+    it('should set token when initialized', () => {
+      expect(setTokenStub.calledOnceWith('test-token')).to.be.true
+    })
+  })
 
   describe('createObjectStorageBucket', () => {
     const label = 'test-bucket'
