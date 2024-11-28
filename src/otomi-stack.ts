@@ -284,7 +284,6 @@ export default class OtomiStack {
     if (data?.apiToken && data?.regionId) {
       const { cluster } = this.getSettings(['cluster'])
       let lkeClusterId: null | number = null
-      console.log('cluster: ', cluster)
       if (cluster?.name?.includes('aplinstall')) lkeClusterId = Number(cluster?.name?.replace('aplinstall', ''))
       else if (lkeClusterId === null)
         return { status: 'error', errorMessage: 'Cluster ID is not found in the cluster name.' }
@@ -345,7 +344,6 @@ export default class OtomiStack {
         },
       }
     }
-    console.log('Settings data: ', settingsdata)
     await this.editSettings(settingsdata as Settings, 'obj')
     await this.doDeployment()
     debug('Object storage settings have been configured.')
