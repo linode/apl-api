@@ -35,7 +35,7 @@ export function getUser(user: JWT, otomi: OtomiStack): SessionUser {
     } else if (!sessionUser.roles.includes('teamMember')) sessionUser.roles.push('teamMember')
     // if in team-(not admin), remove 'team-' prefix
     const teamId = group.substring(5)
-    if (group.substring(0, 5) === 'team-' && group !== 'team-admin' && !sessionUser.teams.includes(teamId)) {
+    if (group.substring(0, 5) === 'team-' && !sessionUser.teams.includes(teamId)) {
       // we might be assigned team-* without that team yet existing in the values, so ignore those
       const existing = otomi.db.getItemReference('teams', { id: teamId }, false)
       if (existing) sessionUser.teams.push(teamId)
