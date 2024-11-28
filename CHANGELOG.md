@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### Features
 
-* Apl-369 updated apl-tty version ([#588](https://github.com/redkubes/otomi-api/issues/588)) ([ceec232](https://github.com/redkubes/otomi-api/commit/ceec232851fde6334937e51b5edc73c9dedc922f))
+* updated apl-tty version ([#588](https://github.com/redkubes/otomi-api/issues/588)) ([ceec232](https://github.com/redkubes/otomi-api/commit/ceec232851fde6334937e51b5edc73c9dedc922f))
 * increase payload size to 500kb ([#589](https://github.com/redkubes/otomi-api/issues/589)) ([e66bb60](https://github.com/redkubes/otomi-api/commit/e66bb600b783cfb7a27f1915272fcdeb1dfbc190))
 * remove saveTeamApps function ([#587](https://github.com/redkubes/otomi-api/issues/587)) ([65ed84a](https://github.com/redkubes/otomi-api/commit/65ed84ab407228a19baf8c7d61fbe5d09839dc95))
 * updated release tag generation ([#585](https://github.com/redkubes/otomi-api/issues/585)) ([f33415d](https://github.com/redkubes/otomi-api/commit/f33415df24d02d5501691f599b07e0ab72e98e4e))
