@@ -68,6 +68,10 @@ export const ROOT_KEYCLOAK_USER = str({
   desc: 'The default username for the root keycloak user for administrative purposes.',
   default: 'otomi-admin',
 })
+export const EXPRESS_PAYLOAD_LIMIT = str({
+  desc: 'The express payload limit',
+  default: '500kb',
+})
 const { env } = process
 export function cleanEnv<T>(
   validators: { [K in keyof T]: ValidatorSpec<T[K]> },
