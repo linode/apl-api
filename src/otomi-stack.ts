@@ -1639,19 +1639,6 @@ export default class OtomiStack {
     )
   }
 
-  async saveTeamApps(teamId: string): Promise<void> {
-    const apps = {}
-
-    const content = {
-      teamConfig: {
-        [teamId]: {
-          apps,
-        },
-      },
-    }
-    await this.repo.writeFile(`env/teams/apps.${teamId}.yaml`, content)
-  }
-
   async saveSettings(secretPaths?: string[]): Promise<void> {
     const settings = cloneDeep(this.getSettings()) as Record<string, Record<string, any>>
     settings.otomi.nodeSelector = arrayToObject(settings.otomi.nodeSelector as [])
@@ -1690,7 +1677,6 @@ export default class OtomiStack {
       teams.map(async (inTeam) => {
         const team: Record<string, any> = omit(inTeam, 'name')
         const teamId = team.id as string
-        await this.saveTeamApps(teamId)
         await this.saveTeamBackups(teamId)
         await this.saveTeamNetpols(teamId)
         await this.saveTeamServices(teamId)
@@ -1915,7 +1901,6 @@ export default class OtomiStack {
     await this.saveTeams(secretPaths)
     // also save admin apps
     await this.saveAdminApps(secretPaths)
-    await this.saveTeamApps('admin')
   }
 
   async getSession(user: k8s.User): Promise<Session> {

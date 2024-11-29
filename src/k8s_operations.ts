@@ -119,7 +119,7 @@ export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty
     await k8sApi.deleteNamespacedPod(`tty-${resourceName}`, namespace)
     if (!isAdmin) {
       for (const team of userTeams!)
-        await rbacAuthorizationV1Api.deleteNamespacedRoleBinding(`tty-${team}-rolebinding`, team)
+        await rbacAuthorizationV1Api.deleteNamespacedRoleBinding(`tty-${team}-${resourceName}-rolebinding`, team)
     } else await rbacAuthorizationV1Api.deleteClusterRoleBinding('tty-admin-clusterrolebinding')
     await k8sApi.deleteNamespacedService(`tty-${resourceName}`, namespace)
 
