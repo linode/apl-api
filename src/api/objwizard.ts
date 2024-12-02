@@ -10,7 +10,6 @@ export default function (): OperationHandlerArray {
       debug('createObjWizard')
       const v = await otomi.createObjWizard(body as ObjWizard)
       res.json(v)
-      debug('Returned Value', v)
     },
   ]
   const api = {
