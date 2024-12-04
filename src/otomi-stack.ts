@@ -260,18 +260,20 @@ export default class OtomiStack {
 
   getSettingsInfo(): SettingsInfo {
     const settings = this.db.db.get(['settings']).value() as Settings
-    const { cluster, dns, obj, otomi, ingress } = pick(settings, [
+    const { cluster, dns, obj, otomi, ingress, smtp } = pick(settings, [
       'cluster',
       'dns',
       'obj',
       'otomi',
       'ingress',
+      'smtp',
     ]) as Settings
     const settingsInfo = {
       cluster: pick(cluster, ['name', 'domainSuffix', 'provider']),
       dns: pick(dns, ['zones']),
       obj: pick(obj, ['provider']),
       otomi: pick(otomi, ['hasExternalDNS', 'hasExternalIDP', 'isPreInstalled']),
+      smtp: pick(smtp, ['smarthost']),
       ingressClassNames: map(ingress?.classes, 'className') ?? [],
     } as SettingsInfo
     return settingsInfo
