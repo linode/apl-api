@@ -23,7 +23,7 @@ Workload:
     teamId:
       $ref: definitions.yaml#/idName
     name:
-      $ref: 'definitions.yaml#/wordCharacterPattern'
+      $ref: 'definitions.yaml#/idName'
     icon:
       $ref: 'definitions.yaml#/wordCharacterPattern'
     url:
@@ -57,7 +57,7 @@ Workload:
           default: ''
     namespace:
       description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'.
-      $ref: 'definitions.yaml#/domain'
+      $ref: 'definitions.yaml#/idName'
     imageUpdateStrategy:
       description: Automatically update the image. Only supported when the image is stored in Harbor.
       title: Auto Image Updater

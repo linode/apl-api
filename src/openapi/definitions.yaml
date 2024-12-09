@@ -1168,11 +1168,11 @@ volumes:
       configMap:
         properties:
           name:
-            type: string
+            $ref: 'definitions.yaml#/idName'
         type: object
       name:
         description: Name must match mount name.
-        type: string
+        $ref: 'definitions.yaml#/idName'
     type: object
   type: array
 wordCharacterPattern:
