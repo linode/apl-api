@@ -154,7 +154,7 @@ WorkloadValues:
     teamId:
       $ref: definitions.yaml#/idName
     name:
-      $ref: 'definitions.yaml#/wordCharacterPattern'
+      $ref: definitions.yaml#/idName
     values:
       type: object
   required:
