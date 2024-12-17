@@ -87,7 +87,7 @@ Ingress:
     ingressClassName:
       description: Assign service to a paricular Load Balancer by selecting ingress class name.
       title: Ingress Class Name
-      type: string
+      $ref: 'definitions.yaml#/idName'
       default: 'platform'
     tlsPass:
       description: Pass through the request as is to the backing service. Only available for pre-deployed regular (non-Knative) services.
@@ -121,7 +121,7 @@ Ingress:
           type: string
         tlsSecretName:
           description: Name of a Kubernetes secret of type TLS.
-          type: string
+          $ref: 'definitions.yaml#/idName'
     paths:
       description: The paths in the URL that the service should be mapped to (e.g. for microservices on one app/domain).
       title: URL paths
