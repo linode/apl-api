@@ -23,7 +23,7 @@ Build:
     teamId:
       $ref: 'definitions.yaml#/idName'
     name:
-      title: Build name
+      title: Name
       $ref: 'definitions.yaml#/idName'
       description: Results in image name harbor.<your-domain>/<team-name>/name.
     tag:

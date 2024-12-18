@@ -13,6 +13,7 @@ Cluster:
   description: The Kubernetes cluster running APL.
   properties:
     name:
+      title: Name
       $ref: definitions.yaml#/idName
     domainSuffix:
       $ref: definitions.yaml#/domainSuffix
