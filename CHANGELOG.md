@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.5.0](https://github.com/redkubes/otomi-api/compare/v3.4.0...v3.5.0) (2024-12-17)
+
+
+### Features
+
+* add path for gitea ([#601](https://github.com/redkubes/otomi-api/issues/601)) ([68b4171](https://github.com/redkubes/otomi-api/commit/68b4171b3374aa3593a131a2e60fa771e8ffe8e2))
+
+
+### Bug Fixes
+
+* added smtp to settingsInfo ([#600](https://github.com/redkubes/otomi-api/issues/600)) ([5eb42eb](https://github.com/redkubes/otomi-api/commit/5eb42eba074c473bbfe280e8ae19f66e233f8f84))
+* improved error handling for objwizard ([#599](https://github.com/redkubes/otomi-api/issues/599)) ([66981a1](https://github.com/redkubes/otomi-api/commit/66981a183c68f4b87bace3541fb8f4d8f235cc15))
+* update values schema to adhere k8s naming ([#604](https://github.com/redkubes/otomi-api/issues/604)) ([d5e73c3](https://github.com/redkubes/otomi-api/commit/d5e73c3d63d9d0ef517d63df81e248b700b1f16b))
+
+
+### Others
+
+* node 20 and npm 10 ([#602](https://github.com/redkubes/otomi-api/issues/602)) ([4b2bd0f](https://github.com/redkubes/otomi-api/commit/4b2bd0ffd03d3123edb186414a9dd34eada15fb2))
+
 ## [3.4.0](https://github.com/redkubes/otomi-api/compare/v3.3.0...v3.4.0) (2024-11-28)
 
 
