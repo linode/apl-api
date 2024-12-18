@@ -23,7 +23,7 @@ Netpol:
     teamId:
       $ref: 'definitions.yaml#/idName'
     name:
-      title: The name of the network policy.
+      title: Name
       $ref: 'definitions.yaml#/idName'
     ruleType:
       $ref: '#/ruleType'
