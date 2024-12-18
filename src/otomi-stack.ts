@@ -873,10 +873,12 @@ export default class OtomiStack {
     return this.db.getCollection('builds') as Array<Build>
   }
 
-  createBuild(teamId: string, data: Build): Build {
+  async createBuild(teamId: string, data: Build): Promise<Build> {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      return this.db.createItem('builds', { ...data, teamId }, { teamId, name: data.name }) as Build
+      const build = this.db.createItem('builds', { ...data, teamId }, { teamId, name: data.name }) as Build
+      await this.doDeployment()
+      return build
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Build name already exists'
       throw err
@@ -887,12 +889,14 @@ export default class OtomiStack {
     return this.db.getItem('builds', { id }) as Build
   }
 
-  editBuild(id: string, data: Build): Build {
+  async editBuild(id: string, data: Build): Promise<Build> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    return this.db.updateItem('builds', data, { id }) as Build
+    const build = this.db.updateItem('builds', data, { id }) as Build
+    await this.doDeployment()
+    return build
   }
 
-  deleteBuild(id: string): void {
+  async deleteBuild(id: string): Promise<void> {
     const p = this.db.getCollection('projects') as Array<Project>
     p.forEach((project: Project) => {
       if (project?.build?.id === id) {
@@ -900,7 +904,9 @@ export default class OtomiStack {
         this.db.updateItem('projects', updatedData, { id: project.id }) as Project
       }
     })
-    return this.db.deleteItem('builds', { id })
+    const build = this.db.deleteItem('builds', { id })
+    await this.doDeployment()
+    return build
   }
 
   getTeamPolicies(teamId: string): Policies {
