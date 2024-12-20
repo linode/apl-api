@@ -24,6 +24,7 @@ Backup:
     teamId:
       $ref: definitions.yaml#/idName
     name:
+      title: Name
       $ref: 'definitions.yaml#/idName'
     schedule:
       $ref: definitions.yaml#/backupSchedule
