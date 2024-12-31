@@ -62,8 +62,9 @@ export async function watchPodUntilRunning(namespace: string, podName: string) {
     try {
       const res = await k8sApi.readNamespacedPodStatus(podName, namespace)
       isRunning = res.body.status?.phase === 'Running'
-    } catch (error) {
-      debug('watchPodUntilRunning error:', error)
+    } catch (err) {
+      const errorMessage = err.response?.body?.message ?? err.response?.body?.reason ?? 'Error checking if pod running'
+      debug(`Failed to check pod status for ${podName} in namespace ${namespace}: ${errorMessage}`)
     }
 
     if (!isRunning) {
@@ -131,7 +132,7 @@ export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty
       `tty-${resourceName}`,
     )
   } catch (error) {
-    debug('k8sdelete error:', error)
+    debug(`Failed to delete resources for ${resourceName} in namespace ${namespace}.`)
   }
 }
 
@@ -147,8 +148,8 @@ export async function getKubernetesVersion() {
     const response = await k8sApi.getCode()
     console.log('Kubernetes Server Version:', response.body.gitVersion)
     return response.body.gitVersion
-  } catch (err) {
-    console.error('Error:', err)
+  } catch (error) {
+    debug(`Failed to get Kubernetes version.`)
   }
 }
 
@@ -201,7 +202,7 @@ export async function getCloudttyActiveTime(namespace: string, podName: string):
       return timeDifference
     }
   } catch (error) {
-    debug('getCloudttyActiveTime error:', error)
+    debug(`Failed to get active time for ${podName} in namespace ${namespace}.`)
   }
 }
 
@@ -225,7 +226,7 @@ export async function getLastTektonMessage(sha: string): Promise<any> {
     if (['True', 'False', 'Unknown'].includes(conditions[0].status)) status = conditions[0].reason.toLowerCase()
     return { order, name, completionTime, status }
   } catch (error) {
-    debug('Error getting last tekton message:', error)
+    debug(`Failed to get last Tekton message for ${sha}.`)
     return {}
   }
 }
@@ -390,7 +391,7 @@ export async function getSecretValues(name: string, namespace: string): Promise<
     }
     return decodedData
   } catch (error) {
-    debug('getSecretValues error:', error)
+    debug(`Failed to get secret values for ${name} in ${namespace}.`)
   }
 }
 
@@ -416,7 +417,7 @@ export async function getSealedSecretSyncedStatus(name: string, namespace: strin
     }
     return 'NotFound'
   } catch (error) {
-    debug('getSealedSecretSyncedStatus error:', error)
+    debug(`Failed to get SealedSecret synced status for ${name} in ${namespace}.`)
     return 'NotFound'
   }
 }
@@ -461,7 +462,7 @@ export async function getSealedSecretsCertificate(): Promise<string> {
       return ''
     }
   } catch (error) {
-    debug('Error getting sealed secrets certificate:', error)
+    debug(`Failed to get SealedSecrets certificate.`)
     return ''
   }
 }
@@ -511,7 +512,7 @@ export async function getSealedSecretsKeys(): Promise<any> {
     }
     return sealedSecretsKeysJson
   } catch (error) {
-    debug('Error getting sealed secrets keys:', error)
+    debug(`Failed to get SealedSecrets keys.`)
   }
 }
 
@@ -524,6 +525,6 @@ export async function getTeamSecretsFromK8s(namespace: string) {
     const secrets = res.body.items.map((item) => item.metadata.name)
     return secrets
   } catch (error) {
-    debug('getTeamSecretsFromK8s error:', error)
+    debug(`Failed to get team secrets from k8s for ${namespace}.`)
   }
 }
