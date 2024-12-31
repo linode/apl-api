@@ -1,14 +1,14 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequestExt, Backup } from 'src/otomi-models'
+import { Backup, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:teams:backups')
 
 export default function (): OperationHandlerArray {
   const del: Operation = [
-    ({ otomi, params: { backupId } }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { backupId } }: OpenApiRequestExt, res): Promise<void> => {
       debug(`deleteBackup(${backupId})`)
-      otomi.deleteBackup(decodeURIComponent(backupId))
+      await otomi.deleteBackup(decodeURIComponent(backupId))
       res.json({})
     },
   ]
@@ -20,9 +20,9 @@ export default function (): OperationHandlerArray {
     },
   ]
   const put: Operation = [
-    ({ otomi, params: { teamId, backupId }, body }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { teamId, backupId }, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`editBackup(${backupId})`)
-      const data = otomi.editBackup(decodeURIComponent(backupId), {
+      const data = await otomi.editBackup(decodeURIComponent(backupId), {
         ...body,
         teamId: decodeURIComponent(teamId),
       } as Backup)

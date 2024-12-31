@@ -13,9 +13,9 @@ export default function (): OperationHandlerArray {
     },
   ]
   const put: Operation = [
-    ({ otomi, params: { teamId, policyId }, body }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { teamId, policyId }, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`editPolicy(${policyId})`)
-      const data = otomi.editPolicy(decodeURIComponent(teamId), decodeURIComponent(policyId), body as Policy)
+      const data = await otomi.editPolicy(decodeURIComponent(teamId), decodeURIComponent(policyId), body as Policy)
       res.json(data)
     },
   ]

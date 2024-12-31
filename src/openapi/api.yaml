@@ -1296,25 +1296,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorkloadValues'
-    patch:
-      operationId: updateWorkloadValues
-      description: Update workload values
-      x-aclSchema: Workload
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WorkloadValues'
-        description: Workload values
-        required: true
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully updated workload values
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WorkloadValues'
   /deploy:
     get:
       x-aclSchema: Deploy

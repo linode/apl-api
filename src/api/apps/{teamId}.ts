@@ -11,9 +11,9 @@ export default function (): OperationHandlerArray {
     },
   ]
   const put: Operation = [
-    ({ otomi, body: { ids, enabled }, params: { teamId } }: OpenApiRequestExt, res): void => {
+    async ({ otomi, body: { ids, enabled }, params: { teamId } }: OpenApiRequestExt, res): Promise<void> => {
       debug('toggleApps')
-      otomi.toggleApps(teamId, ids as string[], enabled as boolean)
+      await otomi.toggleApps(teamId, ids as string[], enabled as boolean)
       res.end()
     },
   ]
