@@ -1224,7 +1224,16 @@ export default class OtomiStack {
 
   async doDeployment(): Promise<void> {
     const rootStack = await getSessionStack()
-    if (rootStack.locked) throw new DeployLockError()
+    const waitForUnlock = async (retries: number, delay: number): Promise<void> => {
+      let attempts = 0
+      while (rootStack.locked && attempts < retries) {
+        attempts += 1
+        await new Promise((resolve) => setTimeout(resolve, attempts * delay))
+      }
+      if (rootStack.locked) throw new DeployLockError()
+    }
+    // wait for unlock 3 times with (attempts * 5) seconds delay
+    if (rootStack.locked) await waitForUnlock(3, 5000)
     rootStack.locked = true
     try {
       await this.saveValues()
