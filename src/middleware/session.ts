@@ -4,7 +4,7 @@ import { RequestHandler } from 'express'
 import 'express-async-errors'
 import { emptyDir } from 'fs-extra'
 import http from 'http'
-import { cloneDeep } from 'lodash'
+import { cloneDeep, uniqueId } from 'lodash'
 import { join } from 'path'
 import { Server } from 'socket.io'
 import { ApiNotReadyError } from 'src/error'
@@ -36,18 +36,16 @@ export const getSessionStack = async (editor?: string): Promise<OtomiStack> => {
   if (!editor || !sessions[editor]) return readOnlyStack
   return sessions[editor]
 }
-export const setSessionStack = async (editor: string): Promise<void> => {
-  if (env.isTest) return
-  if (!sessions[editor]) {
-    debug(`Creating editor session for user ${editor}`)
-    sessions[editor] = new OtomiStack(editor, readOnlyStack.db)
+export const setSessionStack = async (editor: string, sessionId: string): Promise<OtomiStack> => {
+  if (env.isTest) return readOnlyStack
+  if (!sessions[sessionId]) {
+    debug(`Creating session ${sessionId} for user ${editor}`)
+    sessions[sessionId] = new OtomiStack(sessionId, readOnlyStack.db)
     // init repo without inflating db from files as its slow and we just need a copy of the db
-    await sessions[editor].initRepo(true)
-    sessions[editor].db = cloneDeep(readOnlyStack.db)
-    // let users know someone started editing
-    const msg: DbMessage = { state: 'dirty', editor, reason: 'started' }
-    io.emit('db', msg)
-  } else sessions[editor].editor = editor
+    await sessions[sessionId].initRepo(true)
+    sessions[sessionId].db = cloneDeep(readOnlyStack.db)
+  } else sessions[sessionId].editor = sessionId
+  return sessions[sessionId]
 }
 
 export const getEditors = () => Object.keys(sessions)
@@ -75,7 +73,6 @@ export const getIo = () => io
 // we use session middleware so we can give each user their own otomiStack
 // with a snapshot of the db, the moment they start touching data
 export function sessionMiddleware(server: http.Server): RequestHandler {
-  const timeout: Record<string, NodeJS.Timeout | undefined> = {}
   // socket setup
   io = new Server(server, { path: '/ws' })
   io.on('connection', (socket: any) => {
@@ -98,32 +95,19 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
     if (!env.isTest && (!readOnlyStack || !readOnlyStack.isLoaded)) throw new ApiNotReadyError()
     const { email } = req.user || {}
-    const sessionStack = await getSessionStack(email)
+    const roStack = await getSessionStack()
     // eslint-disable-next-line no-param-reassign
-    req.otomi = sessionStack
-    const { editor } = sessionStack
-    // remove session after x days to avoid mem leaks
-    const interval = env.EDITOR_INACTIVITY_TIMEOUT * 24 * 60 * 60 * 1000
-    // clear when active
-    if (timeout[email]) {
-      clearInterval(timeout[email])
-      timeout[email] = undefined
-    }
+    req.otomi = roStack
 
     if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
       // in the cloudtty or workloadCatalog endpoint(s), don't need to create a session
       if (req.path === '/v1/cloudtty' || req.path === '/v1/workloadCatalog') return next()
       // manipulating data and no editor session yet? create one
-      if (!editor) {
-        // bootstrap session stack for user
-        await setSessionStack(email)
-        // eslint-disable-next-line no-param-reassign
-        req.otomi = await getSessionStack(email)
-        timeout[email] = setTimeout(() => {
-          sessionStack.doRevert()
-        }, interval)
-        return next()
-      }
+      // bootstrap session stack for user
+      const sessionId = uniqueId()
+      // eslint-disable-next-line no-param-reassign
+      req.otomi = await setSessionStack(email, sessionId)
+      return next()
     }
     return next()
   }
