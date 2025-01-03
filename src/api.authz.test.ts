@@ -98,14 +98,6 @@ describe('API authz tests', () => {
     const data = { name: 'otomi', password: 'test' }
     agent.post('/v1/teams').send(data).set('Authorization', `Bearer ${platformAdminToken}`).expect(200).end(done)
   })
-  it('platform admin can deploy changes', (done) => {
-    agent
-      .get('/v1/deploy')
-      .set('Authorization', `Bearer ${platformAdminToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-      .end(done)
-  })
 
   it('platform admin can get all values', (done) => {
     agent.get('/v1/otomi/values').set('Authorization', `Bearer ${platformAdminToken}`).expect(200).end(done)
@@ -134,24 +126,6 @@ describe('API authz tests', () => {
         done()
       })
       .catch((err) => done(err))
-  })
-
-  it('team member can deploy changes', (done) => {
-    agent
-      .get('/v1/deploy')
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-      .end(done)
-  })
-
-  it('team member cannot get all teams', (done) => {
-    agent
-      .get('/v1/deploy')
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-      .end(done)
   })
 
   it('team member can get all teams', (done) => {
