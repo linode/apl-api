@@ -2,15 +2,16 @@
 import Debug from 'debug'
 import { RequestHandler } from 'express'
 import 'express-async-errors'
-import { emptyDir } from 'fs-extra'
+import { remove } from 'fs-extra'
 import http from 'http'
-import { cloneDeep, uniqueId } from 'lodash'
+import { cloneDeep } from 'lodash'
 import { join } from 'path'
 import { Server } from 'socket.io'
 import { ApiNotReadyError } from 'src/error'
 import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
 import { EDITOR_INACTIVITY_TIMEOUT, cleanEnv } from 'src/validators'
+import { v4 as uuidv4 } from 'uuid'
 
 const debug = Debug('otomi:session')
 const env = cleanEnv({
@@ -40,11 +41,11 @@ export const setSessionStack = async (editor: string, sessionId: string): Promis
   if (env.isTest) return readOnlyStack
   if (!sessions[sessionId]) {
     debug(`Creating session ${sessionId} for user ${editor}`)
-    sessions[sessionId] = new OtomiStack(sessionId, readOnlyStack.db)
+    sessions[sessionId] = new OtomiStack(editor, sessionId, readOnlyStack.db)
     // init repo without inflating db from files as its slow and we just need a copy of the db
     await sessions[sessionId].initRepo(true)
     sessions[sessionId].db = cloneDeep(readOnlyStack.db)
-  } else sessions[sessionId].editor = sessionId
+  } else sessions[sessionId].sessionId = sessionId
   return sessions[sessionId]
 }
 
@@ -57,14 +58,10 @@ export const cleanAllSessions = (): void => {
   readOnlyStack = undefined
 }
 
-export const cleanSession = async (editor: string, sendMsg = true): Promise<void> => {
-  debug(`Cleaning editor session for ${editor}`)
-  const sha = await readOnlyStack.repo.getCommitSha()
-  delete sessions[editor]
-  await emptyDir(join(rootPath, editor))
-  if (!sendMsg) return
-  const msg: DbMessage = { state: 'clean', editor, sha, reason: 'revert' }
-  io.emit('db', msg)
+export const cleanSession = async (sessionId: string): Promise<void> => {
+  debug(`Cleaning session ${sessionId}`)
+  delete sessions[sessionId]
+  await remove(join(rootPath, sessionId))
 }
 
 let io: Server
@@ -102,9 +99,8 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
     if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
       // in the cloudtty or workloadCatalog endpoint(s), don't need to create a session
       if (req.path === '/v1/cloudtty' || req.path === '/v1/workloadCatalog') return next()
-      // manipulating data and no editor session yet? create one
-      // bootstrap session stack for user
-      const sessionId = uniqueId()
+      // bootstrap session stack with unique sessionId to manipulate data
+      const sessionId = uuidv4() as string
       // eslint-disable-next-line no-param-reassign
       req.otomi = await setSessionStack(email, sessionId)
       return next()

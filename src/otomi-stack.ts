@@ -4,14 +4,14 @@ import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { ObjectStorageKeyRegions, getRegions } from '@linode/api-v4'
-import { emptyDir, pathExists, unlink } from 'fs-extra'
+import { pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { AlreadyExists, DeployLockError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
-import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
+import { DbMessage, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
   Backup,
@@ -176,12 +176,14 @@ export default class OtomiStack {
 
   db: Db
   editor?: string
+  sessionId?: string
   locked = false
   isLoaded = false
   repo: Repo
 
-  constructor(editor?: string, inDb?: Db) {
+  constructor(editor?: string, sessionId?: string, inDb?: Db) {
     this.editor = editor
+    this.sessionId = sessionId ?? 'main'
     this.db = inDb ?? new Db()
   }
 
@@ -198,8 +200,8 @@ export default class OtomiStack {
     return (await this.repo.requestValues(query)).data
   }
   getRepoPath() {
-    if (env.isTest || this.editor === undefined) return env.GIT_LOCAL_PATH
-    const folder = `${rootPath}/${this.editor}`
+    if (env.isTest || this.sessionId === undefined) return env.GIT_LOCAL_PATH
+    const folder = `${rootPath}/${this.sessionId}`
     return folder
   }
 
@@ -1200,6 +1202,7 @@ export default class OtomiStack {
   }
 
   emitPipelineStatus(sha: string): void {
+    if (env.isDev) return
     try {
       // check pipeline status every 5 seconds and emit the status when it's completed
       const intervalId = setInterval(() => {
@@ -1245,10 +1248,8 @@ export default class OtomiStack {
       rootStack.db = new Db()
       await rootStack.loadValues()
       // and remove editor from the session
-      await cleanSession(this.editor!, false)
+      await cleanSession(this.sessionId!)
       const sha = await rootStack.repo.getCommitSha()
-      const msg: DbMessage = { state: 'clean', editor: this.editor!, sha, reason: 'deploy' }
-      getIo().emit('db', msg)
       this.emitPipelineStatus(sha)
     } catch (e) {
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
@@ -1257,23 +1258,6 @@ export default class OtomiStack {
     } finally {
       rootStack.locked = false
     }
-  }
-
-  async doRevert(): Promise<void> {
-    // other sessions active, can't do full reload
-    // remove editor from the session
-    await cleanSession(this.editor!)
-  }
-
-  async doRestore(): Promise<void> {
-    cleanAllSessions()
-    await emptyDir(rootPath)
-    // and re-init root
-    const rootStack = await getSessionStack()
-    await rootStack.initRepo()
-    // and msg
-    const msg: DbMessage = { state: 'clean', editor: 'system', sha: rootStack.repo.commitSha, reason: 'restore' }
-    getIo().emit('db', msg)
   }
 
   apiClient?: k8s.CoreV1Api
