@@ -10,7 +10,7 @@ import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
-import { AlreadyExists, DeployLockError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
+import { AlreadyExists, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
 import { DbMessage, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
@@ -1227,16 +1227,7 @@ export default class OtomiStack {
 
   async doDeployment(): Promise<void> {
     const rootStack = await getSessionStack()
-    const waitForUnlock = async (retries: number, delay: number): Promise<void> => {
-      let attempts = 0
-      while (rootStack.locked && attempts < retries) {
-        attempts += 1
-        await new Promise((resolve) => setTimeout(resolve, attempts * delay))
-      }
-      if (rootStack.locked) throw new DeployLockError()
-    }
-    // wait for unlock 3 times with (attempts * 5) seconds delay
-    if (rootStack.locked) await waitForUnlock(3, 5000)
+    if (rootStack.locked) return
     rootStack.locked = true
     try {
       await this.saveValues()
