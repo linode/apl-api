@@ -10,9 +10,9 @@ sequenceDiagram
     participant Client as Client
     participant API as Express API
     participant SC as Session Controller
-    participant MC as Master Controller
+    participant MC as Master Session Controller
     participant IMDB as In-Memory DB
-    participant SR as Session Repo
+    participant SR as Session Repo 1
     participant MR as Master Repo
     participant RR as Remote Repo
     participant ACA as APL Core API
@@ -41,16 +41,20 @@ alt Modify resource
     MR-->>SC: pulled
     SC->>MR: git push
     MR-->>SC: accepted
-    SC->>MC: trigger push
-    critical: blocking operation
-    activate MC
-    MC->>RR: git push
-    RR-->>MC: accepted
     SC->>SR: remove session repo
     deactivate SR
+    SC->>MC: trigger push
+    activate MC
+    critical: blocking operation
     MC->>RR: git pull
+    activate RR
     RR->>MR: pulling
     RR-->>MC: pulled
+    deactivate RR
+    MC->>RR: git push
+    activate RR
+    RR-->>MC: accepted
+    deactivate RR
     MC->>ACA: decrypt
     activate ACA
     ACA->>MR: decrypting
@@ -70,7 +74,7 @@ end
 
 alt Read resource
     Client->>API: HTTP GET
-    API->>+SC: req
-    SC->>+IMDB: get()
+    API->>SC: req
+    SC->>IMDB: get()
 end
 ```
