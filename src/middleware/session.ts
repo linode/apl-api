@@ -19,7 +19,7 @@ const env = cleanEnv({
 })
 
 export type DbMessage = {
-  state: 'clean' | 'corrupt' | 'dirty'
+  state: 'clean' | 'corrupt'
   editor: string
   reason: 'deploy' | 'revert' | 'conflict' | 'restored'
   sha?: string
