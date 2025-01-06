@@ -1,18 +1,19 @@
 import axios, { AxiosResponse } from 'axios'
 import Debug from 'debug'
 import diff from 'deep-diff'
-import { copy, ensureDir, pathExists, readFile, writeFile } from 'fs-extra'
+import { copy, emptyDir, ensureDir, pathExists, readFile, writeFile } from 'fs-extra'
 import { unlink } from 'fs/promises'
 import stringifyJson from 'json-stable-stringify'
 import { cloneDeep, get, isEmpty, merge, set, unset } from 'lodash'
 import { dirname, join } from 'path'
 import simpleGit, { CheckRepoActions, CleanOptions, CommitResult, ResetMode, SimpleGit } from 'simple-git'
-import { GIT_BRANCH, GIT_LOCAL_PATH, GIT_REPO_URL, TOOLS_HOST, cleanEnv } from 'src/validators'
+import { cleanEnv, GIT_BRANCH, GIT_LOCAL_PATH, GIT_REPO_URL, TOOLS_HOST } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { BASEURL } from './constants'
 import { GitPullError, HttpError, ValidationError } from './error'
-import { DbMessage, getIo } from './middleware'
+import { cleanAllSessions, DbMessage, getIo, getSessionStack } from './middleware'
 import { Core } from './otomi-models'
+import { rootPath } from './otomi-stack'
 import { removeBlankAttributes } from './utils'
 
 const debug = Debug('otomi:repo')
@@ -319,6 +320,10 @@ export class Repo {
         await this.git.push([this.remote, this.branch, '--force'])
       } catch (error) {
         debug('Failed to remove upstream commits: ', error)
+        cleanAllSessions()
+        await emptyDir(rootPath)
+        const rootStack = await getSessionStack()
+        await rootStack.initRepo()
         throw new GitPullError('Failed to remove upstream commits!')
       }
       debug('Removed upstream commits!')
