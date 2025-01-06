@@ -29,13 +29,13 @@ export type DbMessage = {
 let readOnlyStack: OtomiStack
 let sessions: Record<string, OtomiStack> = {}
 // handler to get the correct stack for the user: if never touched any data give the main otomiStack
-export const getSessionStack = async (editor?: string): Promise<OtomiStack> => {
+export const getSessionStack = async (sessionId?: string): Promise<OtomiStack> => {
   if (!readOnlyStack) {
     readOnlyStack = new OtomiStack()
     await readOnlyStack.init()
   }
-  if (!editor || !sessions[editor]) return readOnlyStack
-  return sessions[editor]
+  if (!sessionId || !sessions[sessionId]) return readOnlyStack
+  return sessions[sessionId]
 }
 export const setSessionStack = async (editor: string, sessionId: string): Promise<OtomiStack> => {
   if (env.isTest) return readOnlyStack
