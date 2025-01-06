@@ -17,9 +17,9 @@ sequenceDiagram
     participant RR as Remote Repo
     participant ACA as APL Core API
 
-alt Modify resource
     activate MR
     activate MC
+    activate IMDB
     Client->>API: HTTP POST/PUT/PATCH
     activate API
     API->>SC: req
@@ -70,11 +70,24 @@ alt Modify resource
     deactivate API
     deactivate MR
     deactivate MC
-end
+    deactivate IMDB
+```
 
-alt Read resource
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as Client
+    participant API as Express API
+    participant MC as Master Session Controller
+    participant IMDB as In-Memory DB
+
     Client->>API: HTTP GET
-    API->>SC: req
-    SC->>IMDB: get()
-end
+    activate API
+    API->>MC: req
+    activate MC
+    MC->>IMDB: get
+    MC-->>API: res
+    deactivate MC
+    API-->>Client: res
+    deactivate API
 ```
