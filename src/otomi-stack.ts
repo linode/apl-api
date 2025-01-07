@@ -4,14 +4,14 @@ import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { ObjectStorageKeyRegions, getRegions } from '@linode/api-v4'
-import { pathExists, unlink } from 'fs-extra'
+import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
-import { AlreadyExists, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
-import { DbMessage, cleanSession, getIo, getSessionStack } from 'src/middleware'
+import { AlreadyExists, GitPullError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
+import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
   Backup,
@@ -1243,12 +1243,22 @@ export default class OtomiStack {
       const sha = await rootStack.repo.getCommitSha()
       this.emitPipelineStatus(sha)
     } catch (e) {
+      // git conflict with upstream changes, clean up and restore the DB
+      if (e instanceof GitPullError) await this.doRestore()
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)
       throw e
     } finally {
       rootStack.locked = false
     }
+  }
+
+  async doRestore(): Promise<void> {
+    cleanAllSessions()
+    await emptyDir(rootPath)
+    // and re-init root
+    const rootStack = await getSessionStack()
+    await rootStack.initRepo()
   }
 
   apiClient?: k8s.CoreV1Api
