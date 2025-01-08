@@ -23,8 +23,8 @@ Build:
     teamId:
       $ref: 'definitions.yaml#/idName'
     name:
-      title: Build name
-      $ref: 'definitions.yaml#/wordCharacterPattern'
+      title: Name
+      $ref: 'definitions.yaml#/idName'
       description: Results in image name harbor.<your-domain>/<team-name>/name.
     tag:
       $ref: 'definitions.yaml#/imageTag'
@@ -38,7 +38,7 @@ Build:
       default: false
     secretName:
       description: The name of the secret with the credentials of the external private Git repository.
-      type: string
+      $ref: 'definitions.yaml#/idName'
     trigger:
       type: boolean
       default: false

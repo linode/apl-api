@@ -24,7 +24,8 @@ Backup:
     teamId:
       $ref: definitions.yaml#/idName
     name:
-      $ref: 'definitions.yaml#/wordCharacterPattern'
+      title: Name
+      $ref: 'definitions.yaml#/idName'
     schedule:
       $ref: definitions.yaml#/backupSchedule
     snapshotVolumes:

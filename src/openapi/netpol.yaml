@@ -23,8 +23,8 @@ Netpol:
     teamId:
       $ref: 'definitions.yaml#/idName'
     name:
-      title: The name of the network policy.
-      $ref: 'definitions.yaml#/wordCharacterPattern'
+      title: Name
+      $ref: 'definitions.yaml#/idName'
     ruleType:
       $ref: '#/ruleType'
   required:
@@ -67,7 +67,7 @@ ruleType:
             type: object
             properties:
               fromNamespace:
-                type: string
+                $ref: 'definitions.yaml#/idName'
                 title: Namespace name
                 description: 'The name of the namespace.'
               fromLabelName:
