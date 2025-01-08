@@ -16,4 +16,14 @@ ObjWizard:
     regionId:
       type: string
       description: The region where the object storage buckets will be created.
+    errorMessage:
+      type: string
+      description: The error message that is returned when the wizard encounters an error.
+    status:
+      type: string
+      description: Status of the objectWizard, will be success or an error.
+    objBuckets:
+      type: array
+      items:
+        type: string
   type: object
