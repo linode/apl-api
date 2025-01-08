@@ -23,8 +23,8 @@ Project:
     teamId:
       $ref: 'definitions.yaml#/idName'
     name:
-      title: Project name
-      $ref: 'definitions.yaml#/wordCharacterPattern'
+      title: Name
+      $ref: 'definitions.yaml#/idName'
     build:
       $ref: 'build.yaml#/Build'
     workload:

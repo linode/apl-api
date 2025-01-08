@@ -260,30 +260,35 @@ export default class OtomiStack {
 
   getSettingsInfo(): SettingsInfo {
     const settings = this.db.db.get(['settings']).value() as Settings
-    const { cluster, dns, obj, otomi, ingress } = pick(settings, [
+    const { cluster, dns, obj, otomi, ingress, smtp } = pick(settings, [
       'cluster',
       'dns',
       'obj',
       'otomi',
       'ingress',
+      'smtp',
     ]) as Settings
     const settingsInfo = {
       cluster: pick(cluster, ['name', 'domainSuffix', 'provider']),
       dns: pick(dns, ['zones']),
       obj: pick(obj, ['provider']),
       otomi: pick(otomi, ['hasExternalDNS', 'hasExternalIDP', 'isPreInstalled']),
+      smtp: pick(smtp, ['smarthost']),
       ingressClassNames: map(ingress?.classes, 'className') ?? [],
     } as SettingsInfo
     return settingsInfo
   }
 
-  async createObjWizard(data: ObjWizard): Promise<void> {
+  async createObjWizard(data: ObjWizard): Promise<ObjWizard> {
     const { obj } = this.getSettings(['obj'])
     const settingsdata = { obj: { ...obj, showWizard: data.showWizard } }
+    const createdBuckets = [] as Array<string>
     if (data?.apiToken && data?.regionId) {
       const { cluster } = this.getSettings(['cluster'])
-      const lkeClusterId = Number(cluster?.name?.replace('aplinstall', ''))
-      if (!lkeClusterId) throw new OtomiError('Cluster ID is not found in the cluster name')
+      let lkeClusterId: null | number = null
+      if (cluster?.name?.includes('aplinstall')) lkeClusterId = Number(cluster?.name?.replace('aplinstall', ''))
+      else if (lkeClusterId === null)
+        return { status: 'error', errorMessage: 'Cluster ID is not found in the cluster name.' }
       const bucketNames = {
         cnpg: `lke${lkeClusterId}-cnpg`,
         harbor: `lke${lkeClusterId}-harbor`,
@@ -300,14 +305,27 @@ export default class OtomiStack {
           bucketNames[bucket] as string,
           data.regionId,
         )
-        debug(`${bucketLabel} bucket is created.`)
+        if (bucketLabel instanceof OtomiError) {
+          return {
+            objBuckets: createdBuckets,
+            status: 'error',
+            errorMessage: bucketLabel.publicMessage,
+          }
+        } else {
+          createdBuckets.push(bucketLabel)
+          debug(`${bucketLabel} bucket is created.`)
+        }
       }
       // Create object storage keys
-      const { access_key, secret_key, regions } = await objectStorageClient.createObjectStorageKey(
+      const objStorageKey = await objectStorageClient.createObjectStorageKey(
         lkeClusterId,
         data.regionId,
         Object.values(bucketNames),
       )
+
+      if (objStorageKey instanceof OtomiError) return { status: 'error', errorMessage: objStorageKey.publicMessage }
+
+      const { access_key, secret_key, regions } = objStorageKey
       // The data.regionId (for example 'eu-central') does not include the zone.
       // However, we need to add the region with the zone suffix (for example 'eu-central-1') in the object storage values.
       // Therefore, we need to extract the region with the zone suffix from the s3_endpoint.
@@ -331,6 +349,11 @@ export default class OtomiStack {
     await this.editSettings(settingsdata as Settings, 'obj')
     await this.doDeployment()
     debug('Object storage settings have been configured.')
+    return {
+      status: 'success',
+      regionId: data.regionId,
+      objBuckets: createdBuckets,
+    } as ObjWizard
   }
 
   getSettings(keys?: string[]): Settings {
@@ -1618,19 +1641,6 @@ export default class OtomiStack {
     )
   }
 
-  async saveTeamApps(teamId: string): Promise<void> {
-    const apps = {}
-
-    const content = {
-      teamConfig: {
-        [teamId]: {
-          apps,
-        },
-      },
-    }
-    await this.repo.writeFile(`env/teams/apps.${teamId}.yaml`, content)
-  }
-
   async saveSettings(secretPaths?: string[]): Promise<void> {
     const settings = cloneDeep(this.getSettings()) as Record<string, Record<string, any>>
     settings.otomi.nodeSelector = arrayToObject(settings.otomi.nodeSelector as [])
@@ -1669,7 +1679,6 @@ export default class OtomiStack {
       teams.map(async (inTeam) => {
         const team: Record<string, any> = omit(inTeam, 'name')
         const teamId = team.id as string
-        await this.saveTeamApps(teamId)
         await this.saveTeamBackups(teamId)
         await this.saveTeamNetpols(teamId)
         await this.saveTeamServices(teamId)
@@ -1894,7 +1903,6 @@ export default class OtomiStack {
     await this.saveTeams(secretPaths)
     // also save admin apps
     await this.saveAdminApps(secretPaths)
-    await this.saveTeamApps('admin')
   }
 
   async getSession(user: k8s.User): Promise<Session> {

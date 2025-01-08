@@ -51,7 +51,7 @@ export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '
 export const PREINSTALLED_EXCLUDED_APPS = json({
   desc: 'Applications that are managed by Linode, so they should be excluded from the apps page',
   default: {
-    apps: ['cert-manager', 'minio', 'kured', 'velero', 'drone', 'external-dns', 'trivy'],
+    apps: ['cert-manager', 'minio', 'kured', 'velero', 'drone', 'external-dns'],
   },
 })
 export const OBJ_STORAGE_APPS = json({
@@ -67,6 +67,10 @@ export const OBJ_STORAGE_APPS = json({
 export const ROOT_KEYCLOAK_USER = str({
   desc: 'The default username for the root keycloak user for administrative purposes.',
   default: 'otomi-admin',
+})
+export const EXPRESS_PAYLOAD_LIMIT = str({
+  desc: 'The express payload limit',
+  default: '500kb',
 })
 const { env } = process
 export function cleanEnv<T>(
