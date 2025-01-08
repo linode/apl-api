@@ -111,8 +111,8 @@
     "watch": "0.19.2"
   },
   "engines": {
-    "npm": "10.7.0",
-    "node": "18.20.4"
+    "node": ">=20 <21",
+    "npm": "^10"
   },
   "engineStrict": true,
   "homepage": "https://github.com/redkubes/otomi-api#readme",
@@ -168,7 +168,7 @@
       "tag": true
     }
   },
-  "version": "3.4.0",
+  "version": "3.5.0",
   "watch": {
     "build:models": {
       "patterns": [
