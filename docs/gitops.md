@@ -22,7 +22,7 @@ sequenceDiagram
     activate MR
     activate MC
     activate IMDB
-    Client->>API: HTTP POST/PUT/PATCH
+    Client->>API: HTTP POST/PUT/PATCH/DELETE
     activate API
     API->>SC: req
     activate SC
