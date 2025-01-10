@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import Debug from 'debug'
-import { RequestHandler } from 'express'
+import { NextFunction, RequestHandler, Response } from 'express'
 import 'express-async-errors'
 import { remove } from 'fs-extra'
 import http from 'http'
@@ -28,6 +28,12 @@ export type DbMessage = {
 // instantiate read-only version of the stack
 let readOnlyStack: OtomiStack
 let sessions: Record<string, OtomiStack> = {}
+let isProcessing = false
+const requestQueue: Array<{
+  req: OpenApiRequestExt
+  res: Response
+  next: NextFunction
+}> = []
 // handler to get the correct stack for the user: if never touched any data give the main otomiStack
 export const getSessionStack = async (sessionId?: string): Promise<OtomiStack> => {
   if (!readOnlyStack) {
@@ -67,6 +73,46 @@ export const cleanSession = async (sessionId: string): Promise<void> => {
 let io: Server
 export const getIo = () => io
 
+const processQueue = async () => {
+  if (isProcessing || requestQueue.length === 0) return
+  isProcessing = true
+
+  const request = requestQueue.shift()
+  if (!request) return
+  const { req, res, next } = request
+  try {
+    const { email } = req.user || {}
+    const roStack = await getSessionStack()
+    req.otomi = roStack
+
+    if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
+      if (req.path === '/v1/cloudtty' || req.path === '/v1/workloadCatalog') next()
+      else {
+        const waitForUnlock = async (retries: number, delay: number): Promise<void> => {
+          debug(`Waiting for deploy lock to be released`)
+          let attempts = 0
+          while (roStack.locked && attempts < retries) {
+            attempts += 1
+            await new Promise((resolve) => setTimeout(resolve, attempts * delay))
+          }
+          if (roStack.locked) throw new DeployLockError()
+        }
+
+        if (roStack.locked) await waitForUnlock(3, 5000)
+
+        const sessionId = uuidv4() as string
+        req.otomi = await setSessionStack(email, sessionId)
+        next()
+      }
+    } else next()
+  } catch (error) {
+    res.status(500).send(error.message)
+  } finally {
+    isProcessing = false
+    processQueue()
+  }
+}
+
 // we use session middleware so we can give each user their own otomiStack
 // with a snapshot of the db, the moment they start touching data
 export function sessionMiddleware(server: http.Server): RequestHandler {
@@ -89,33 +135,9 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
     })
   })
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
+  return async function nextHandler(req: OpenApiRequestExt, res: Response, next: NextFunction): Promise<any> {
     if (!env.isTest && (!readOnlyStack || !readOnlyStack.isLoaded)) throw new ApiNotReadyError()
-    const { email } = req.user || {}
-    const roStack = await getSessionStack()
-    // eslint-disable-next-line no-param-reassign
-    req.otomi = roStack
-
-    if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
-      // in the cloudtty or workloadCatalog endpoint(s), don't need to create a session
-      if (req.path === '/v1/cloudtty' || req.path === '/v1/workloadCatalog') return next()
-      const waitForUnlock = async (retries: number, delay: number): Promise<void> => {
-        debug(`Waiting for deploy lock to be released`)
-        let attempts = 0
-        while (roStack.locked && attempts < retries) {
-          attempts += 1
-          await new Promise((resolve) => setTimeout(resolve, attempts * delay))
-        }
-        if (roStack.locked) throw new DeployLockError()
-      }
-      // wait for unlock 3 times with (attempts * 5) seconds delay
-      if (roStack.locked) await waitForUnlock(3, 5000)
-      // bootstrap session stack with unique sessionId to manipulate data
-      const sessionId = uuidv4() as string
-      // eslint-disable-next-line no-param-reassign
-      req.otomi = await setSessionStack(email, sessionId)
-      return next()
-    }
-    return next()
+    requestQueue.push({ req, res, next })
+    await processQueue()
   }
 }
