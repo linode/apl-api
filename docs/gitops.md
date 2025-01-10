@@ -149,7 +149,7 @@ The locking mechanism is removed by abandoning the master repo and master repo c
 The following diagram presents GitOps without locking mechanism. It is worth noting that is performs eight operations less comparing to its predecessor.
 An important change is made to Session Controller, which is updating the In-memory DB. This operation is needed to ensure that GET requests can obtain the updated resources.
 
-The loop form the diagram indicates that there some concurrent pushes can still occur,and that apl-api may need to retry the git operations. However it is not a blocking operation for any other HTTP request.
+The loop form in the diagram indicates that some concurrent pushes can still occur,and that apl-api may need to retry the git operations. However it is not a blocking operation for any other HTTP request.
 
 ```mermaid
 sequenceDiagram
