@@ -111,7 +111,7 @@ sequenceDiagram
     deactivate IMDB
 ```
 
-## Version one
+## Version two
 
 The locking mechanism is removed by removing the master session controller concept. The session repo controller pulls and pushes from/to Gitea instead of master repo.
 **Sequence diagram for the accepted request**
