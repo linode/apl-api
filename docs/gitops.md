@@ -145,11 +145,12 @@ sequenceDiagram
 
 ## Removing the locking mechanism
 
-The locking mechanism is removed by abandoning the master repo and master repo controller concepts. The session repo controller pulls and pushes from/to Gitea instead of master repo.
+The locking mechanism is removed by removing the master session controller concept. The session repo controller pulls and pushes from/to Gitea instead of master repo.
 The following diagram presents GitOps without locking mechanism. It is worth noting that is performs eight operations less comparing to its predecessor.
 An important change is made to Session Controller, which is updating the In-memory DB. This operation is needed to ensure that GET requests can obtain the updated resources.
 
 The loop form in the diagram indicates that some concurrent pushes can still occur,and that apl-api may need to retry the git operations. However it is not a blocking operation for any other HTTP request.
+The encryption is an optional step, depending on secrets being modified or not.
 
 ```mermaid
 sequenceDiagram
