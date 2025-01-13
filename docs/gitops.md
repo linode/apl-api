@@ -71,7 +71,7 @@ sequenceDiagram
 **Sequence diagram for the rejected request**
 
 ```mermaid
-ssequenceDiagram
+sequenceDiagram
     autonumber
     participant Client as Client
     participant API as Express API
@@ -102,7 +102,6 @@ ssequenceDiagram
     SC->>MC: git push
     activate MC
     MC-->>SC: rejected
-
     deactivate MC
     SC-->>API: res(HTTP 409)
     deactivate SC
@@ -140,7 +139,6 @@ sequenceDiagram
     SC->>RR: git clone to session directory
     activate RR
     RR-->>SC: cloned
-
     deactivate RR
     SC->>SC: save file(req.body)
     alt optional
@@ -153,7 +151,6 @@ sequenceDiagram
     loop try three times
     SC->>RR: git pull
     activate RR
-
     RR-->>SC: pulled
     deactivate RR
     SC->>RR: git push
@@ -163,7 +160,6 @@ sequenceDiagram
     end
     SC->>SC: remove session repo
     SC->>IMDB: update_db(req.body)
-
     SC-->>API: res(resource ID)
     deactivate SC
     API-->>Client: resource ID
