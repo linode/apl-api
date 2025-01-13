@@ -4,6 +4,10 @@ This application provides a HTTP REST API (definition in [OpenApiV3](https://swa
 Git is used as the persistent storage for the values that will be consumed by [otomi-stack](https://github.com/redkubes/otomi-stack) for reconciling the state of the cluster landscape. (For an example look at the [otomi-values](https://github.com/redkubes/otomi-values-demo) repo with demo values.)
 Every api deployment will result in a commit to the values repo with the author's email in the title.
 
+## Design documents
+
+- [REST API and GitOps](docs/gitops.md)
+
 ## 1. Development
 
 ### 1.1 Prerequisites
