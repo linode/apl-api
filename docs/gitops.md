@@ -6,9 +6,9 @@
 
 The below diagram depicts what happens with each request that modifies the values repository.
 
-The `Session Repo` and Session Controller are created on each HTTP POST/PUT/PATCH and DELETE requests that aims modifying gitops repo (i.e. values repo). The `Session Repo` is a local clone of the `Master repo`. The `Master repo` and `Master controller` are used to merge changes from the `Session Repo(s)`. The `In-Memory DB` serves as cache made out of `Master repo`. The `APL Core API` contains tools to perform SOPS encryption on files in both `Session repos` and `Master repo`.
+The `Session Controller` is created on each HTTP POST/PUT/PATCH and DELETE requests that aims modifying gitops repo (i.e. values repo). The `Session Controller` is a local clone of the `Master session controller`. The `In-Memory DB` serves as cache made out of `Master session controller`. The `APL Core API` contains tools to perform SOPS encryption on files in both `Session Controller` and `Master session controller`.
 
-There is a critical section that introduces locking mechanism. The locking mechanism ensures that single git operation (merge) happens on the master repo at the time.
+There is a critical section that introduces locking mechanism. The locking mechanism ensures that single git operation (merge) happens on the `Master session controller` at the time.
 
 ```mermaid
 sequenceDiagram
@@ -17,8 +17,8 @@ sequenceDiagram
     participant API as Express API
     participant SC as Session Controller
     participant MC as Master Session Controller
-    participant RR as Remote Repo
     participant ACA as APL Core API
+    participant RR as Remote Repo
     participant IMDB as In-Memory DB
     activate MC
     activate IMDB
@@ -30,10 +30,12 @@ sequenceDiagram
     SC->>MC: git clone
     MC-->>SC: cloned
     SC->>SC: save file(s)
-    SC->>ACA: encrypt
+    alt optional
+    SC->>ACA: encrypt (secrets.*.yaml.dec)
     activate ACA
-    ACA-->>SC: encrypted
+    ACA-->>SC: encrypted (secrets.*.yaml)
     deactivate ACA
+    end
     SC->>SC: git commit
     SC->>MC: git pull
     activate MC
@@ -53,9 +55,9 @@ sequenceDiagram
     deactivate RR
     activate RR
     deactivate RR
-    MC->>ACA: decrypt
+    MC->>ACA: decrypt (secrets.*.yaml)
     activate ACA
-    ACA-->>MC: decrypted
+    ACA-->>MC: decrypted (secrets.*.yaml.dec)
     deactivate ACA
     MC->>IMDB: reload
     end
@@ -114,7 +116,7 @@ sequenceDiagram
 
 ## Version two
 
-The locking mechanism is removed by removing the master session controller concept. The session repo controller pulls and pushes from/to Gitea instead of master repo. The Session Controller is also renamed to `git handler` to not confuse it with user session.
+The locking mechanism is removed by removing the master session controller concept. The session repo controller pulls and pushes from/to Gitea instead of master repo. The Session Controller is also renamed to `Git handler` to not confuse it with user session.
 
 **Sequence diagram for the accepted request**
 The following diagram presents GitOps without locking mechanism. It is worth noting that is performs eight operations less comparing to its predecessor.
