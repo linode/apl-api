@@ -156,35 +156,33 @@ sequenceDiagram
     autonumber
     participant Client as Client
     participant API as Express API
-    participant SC as Session Controller
-    participant IMDB as In-Memory DB
-    participant SR as Session Repo 1
+    participant SC as Git Handler
     participant RR as Remote Repo
     participant ACA as APL Core API
-
+    participant IMDB as In-Memory DB
     activate IMDB
     Client->>API: HTTP POST/PUT/PATCH/DELETE
     activate API
     API->>SC: req
     activate SC
-    SC->>SR: create unique session repo
-    activate SR
-    SC->>RR: git clone
+    SC->>SC: create session directory
+    SC->>RR: git clone to session directory
     activate RR
-    RR->>SR: cloning
     RR-->>SC: cloned
+
     deactivate RR
-    SC->>SR: save file(req.body)
-    SC->>ACA: encrypt
+    SC->>SC: save file(req.body)
+    alt optional
+    SC->>ACA: encrypt (secrets.*.yaml.dec)
     activate ACA
-    ACA->>SR: encrypting
-    ACA-->>SC: encrypted
+    ACA-->>SC: encrypted (secrets.*.yaml)
     deactivate ACA
-    SC->>SR: git commit
+    end
+    SC->>SC: git commit
     loop try three times
     SC->>RR: git pull
     activate RR
-    RR->>SR: pulling
+
     RR-->>SC: pulled
     deactivate RR
     SC->>RR: git push
@@ -192,8 +190,7 @@ sequenceDiagram
     RR-->>SC: accepted
     deactivate RR
     end
-    SC->>SR: remove session repo
-    deactivate SR
+    SC->>SC: remove session repo
     SC->>IMDB: update_db(req.body)
 
     SC-->>API: res(resource ID)
