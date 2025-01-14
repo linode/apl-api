@@ -7,7 +7,7 @@ import http from 'http'
 import { cloneDeep } from 'lodash'
 import { join } from 'path'
 import { Server } from 'socket.io'
-import { ApiNotReadyError, DeployLockError } from 'src/error'
+import { ApiNotReadyError } from 'src/error'
 import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
 import { EDITOR_INACTIVITY_TIMEOUT, cleanEnv } from 'src/validators'
@@ -99,17 +99,6 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
     if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
       // in the cloudtty or workloadCatalog endpoint(s), don't need to create a session
       if (req.path === '/v1/cloudtty' || req.path === '/v1/workloadCatalog') return next()
-      const waitForUnlock = async (retries: number, delay: number): Promise<void> => {
-        debug(`Waiting for deploy lock to be released`)
-        let attempts = 0
-        while (roStack.locked && attempts < retries) {
-          attempts += 1
-          await new Promise((resolve) => setTimeout(resolve, attempts * delay))
-        }
-        if (roStack.locked) throw new DeployLockError()
-      }
-      // wait for unlock 3 times with (attempts * 5) seconds delay
-      if (roStack.locked) await waitForUnlock(3, 5000)
       // bootstrap session stack with unique sessionId to manipulate data
       const sessionId = uuidv4() as string
       // eslint-disable-next-line no-param-reassign

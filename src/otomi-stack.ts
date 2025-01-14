@@ -169,7 +169,7 @@ export function getTeamServicesJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.services`
 }
 
-export const rootPath = '/tmp/otomi/values'
+export const rootPath = '/tmp/apl/values'
 
 export default class OtomiStack {
   private coreValues: Core
@@ -1227,17 +1227,12 @@ export default class OtomiStack {
 
   async doDeployment(): Promise<void> {
     const rootStack = await getSessionStack()
-    if (rootStack.locked) return
-    rootStack.locked = true
     try {
       await this.saveValues()
+      // commit and pull-push root
       await this.repo.save(this.editor!)
-      // pull push root
-      await rootStack.repo.pull(undefined, true)
-      await rootStack.repo.push()
-      // inflate new db
-      rootStack.db = new Db()
-      await rootStack.loadValues()
+      // update db with the new values
+      rootStack.db = this.db
       // and remove editor from the session
       await cleanSession(this.sessionId!)
       const sha = await rootStack.repo.getCommitSha()
@@ -1248,8 +1243,6 @@ export default class OtomiStack {
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)
       throw e
-    } finally {
-      rootStack.locked = false
     }
   }
 

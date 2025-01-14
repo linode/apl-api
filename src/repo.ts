@@ -249,12 +249,12 @@ export class Repo {
   async clone(): Promise<void> {
     debug(`Checking if local git repository exists at: ${this.path}`)
     const isRepo = await this.git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT)
+    this.url = `file://${env.GIT_REPO_URL}`
     if (!isRepo) {
       debug(`Initializing repo...`)
       if (!this.hasRemote() && this.isRootClone()) return await this.initFromTestFolder()
       else if (!this.isRootClone()) {
         // child clone, point to root
-        this.url = `file://${env.GIT_LOCAL_PATH}`
         this.urlAuth = this.url
       }
       debug(`Cloning from '${this.url}' to '${this.path}'`)

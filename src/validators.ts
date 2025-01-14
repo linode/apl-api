@@ -35,10 +35,13 @@ export const CHECK_LATEST_COMMIT_INTERVAL = num({
 export const GIT_EMAIL = str({ desc: 'The git user email', default: 'not@us.ed' })
 export const GIT_LOCAL_PATH = str({
   desc: 'The local file path to the repo',
-  default: '/tmp/otomi/values/main',
+  default: '/tmp/apl/values/main',
 })
 export const GIT_PASSWORD = str({ desc: 'The git password' })
-export const GIT_REPO_URL = str({ desc: 'The git repo url', devDefault: undefined })
+export const GIT_REPO_URL = str({
+  desc: 'The git repo url',
+  devDefault: `file://${process.env.HOME}/workspace/linode/values-ofld1`,
+})
 export const GIT_USER = str({ desc: 'The git username' })
 export const HELM_CHART_CATALOG = str({
   desc: 'The helm chart catalog',

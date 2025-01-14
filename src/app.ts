@@ -28,10 +28,10 @@ import { extract, getPaths, getValuesSchema } from 'src/utils'
 import {
   CHECK_LATEST_COMMIT_INTERVAL,
   DRONE_WEBHOOK_SECRET,
+  EXPRESS_PAYLOAD_LIMIT,
   GIT_PASSWORD,
   GIT_USER,
   cleanEnv,
-  EXPRESS_PAYLOAD_LIMIT,
 } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
 import Db from './db'
@@ -72,7 +72,6 @@ const checkAgainstGitea = async () => {
     const sha = await otomiStack.repo.getCommitSha()
     const msg: DbMessage = { state: 'clean', editor: 'system', sha, reason: 'conflict' }
     getIo().emit('db', msg)
-    otomiStack.locked = false
   }
 }
 
