@@ -35,7 +35,7 @@ export const CHECK_LATEST_COMMIT_INTERVAL = num({
 export const GIT_EMAIL = str({ desc: 'The git user email', default: 'not@us.ed' })
 export const GIT_LOCAL_PATH = str({
   desc: 'The local file path to the repo',
-  default: '/tmp/apl/values/main',
+  default: '/tmp/otomi/values/main',
 })
 export const GIT_PASSWORD = str({ desc: 'The git password' })
 export const GIT_REPO_URL = str({

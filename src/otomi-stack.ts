@@ -169,7 +169,7 @@ export function getTeamServicesJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.services`
 }
 
-export const rootPath = '/tmp/apl/values'
+export const rootPath = '/tmp/otomi/values'
 
 export default class OtomiStack {
   private coreValues: Core
