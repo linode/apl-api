@@ -4,7 +4,6 @@ import { RequestHandler } from 'express'
 import 'express-async-errors'
 import { remove } from 'fs-extra'
 import http from 'http'
-import { cloneDeep } from 'lodash'
 import { join } from 'path'
 import { Server } from 'socket.io'
 import { ApiNotReadyError } from 'src/error'
@@ -41,10 +40,10 @@ export const setSessionStack = async (editor: string, sessionId: string): Promis
   if (env.isTest) return readOnlyStack
   if (!sessions[sessionId]) {
     debug(`Creating session ${sessionId} for user ${editor}`)
-    sessions[sessionId] = new OtomiStack(editor, sessionId, readOnlyStack.db)
+    sessions[sessionId] = new OtomiStack(editor, sessionId)
     // init repo without inflating db from files as its slow and we just need a copy of the db
-    await sessions[sessionId].initRepo(true)
-    sessions[sessionId].db = cloneDeep(readOnlyStack.db)
+    await sessions[sessionId].initRepo()
+    // sessions[sessionId].db = cloneDeep(readOnlyStack.db)
   } else sessions[sessionId].sessionId = sessionId
   return sessions[sessionId]
 }

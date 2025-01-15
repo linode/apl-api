@@ -15,7 +15,7 @@ import { DbMessage, getIo } from './middleware'
 import { Core } from './otomi-models'
 import { removeBlankAttributes } from './utils'
 
-const debug = Debug('otomi:repo')
+const debug = Debug('otomi:.repo')
 
 const env = cleanEnv({
   GIT_BRANCH,
