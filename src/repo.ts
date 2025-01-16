@@ -283,7 +283,7 @@ export class Repo {
     return summary
   }
 
-  async pull(skipRequest = true, skipMsg = false): Promise<any> {
+  async pull(skipRequest = false, skipMsg = false): Promise<any> {
     // test root can't pull as it has no remote
     if (!this.url) return
     debug('Pulling')
@@ -292,8 +292,8 @@ export class Repo {
       const summJson = JSON.stringify(summary)
       debug(`Pull summary: ${summJson}`)
       this.commitSha = await this.getCommitSha()
-      await this.initSops()
       if (!skipRequest) await this.requestInitValues()
+      await this.initSops()
     } catch (e) {
       debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', e)
       this.corrupt = true
