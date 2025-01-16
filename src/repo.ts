@@ -85,13 +85,15 @@ export class Repo {
 
   async requestInitValues(): Promise<AxiosResponse | void> {
     debug(`Tools: requesting "init" on values repo path ${this.path}`)
-    const res = await axios.get(initUrl, { params: { envDir: this.path } })
+    const requestId = this.path.split('/').pop()
+    const res = await axios.get(initUrl, { params: { envDir: this.path, requestId } })
     return res
   }
 
   async requestPrepareValues(): Promise<AxiosResponse | void> {
     debug(`Tools: requesting "prepare" on values repo path ${this.path}`)
-    const res = await axios.get(prepareUrl, { params: { envDir: this.path } })
+    const requestId = this.path.split('/').pop()
+    const res = await axios.get(prepareUrl, { params: { envDir: this.path, requestId } })
     return res
   }
 
