@@ -1411,6 +1411,7 @@ export default class OtomiStack {
 
   async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {
     debug('Loading values')
+    await this.repo.initSops()
     await this.loadCluster()
     await this.loadSettings()
     await this.loadUsers()
