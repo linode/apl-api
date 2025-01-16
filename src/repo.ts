@@ -283,7 +283,7 @@ export class Repo {
     return summary
   }
 
-  async pull(skipRequest = false, skipMsg = false): Promise<any> {
+  async pull(skipRequest = true, skipMsg = false): Promise<any> {
     // test root can't pull as it has no remote
     if (!this.url) return
     debug('Pulling')
