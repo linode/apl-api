@@ -13,16 +13,16 @@ export default function (): OperationHandlerArray {
     },
   ]
   const put: Operation = [
-    ({ otomi, params: { userId }, body }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { userId }, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`editUser(${userId})`)
-      const data = otomi.editUser(decodeURIComponent(userId), body as User)
+      const data = await otomi.editUser(decodeURIComponent(userId), body as User)
       res.json(data)
     },
   ]
   const del: Operation = [
-    ({ otomi, params: { userId } }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { userId } }: OpenApiRequestExt, res): Promise<void> => {
       debug(`deleteUser(${userId})`)
-      otomi.deleteUser(decodeURIComponent(userId))
+      await otomi.deleteUser(decodeURIComponent(userId))
       res.json({})
     },
   ]

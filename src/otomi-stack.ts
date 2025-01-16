@@ -10,7 +10,7 @@ import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
-import { AlreadyExists, DeployLockError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
+import { AlreadyExists, GitPullError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
 import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
@@ -176,12 +176,14 @@ export default class OtomiStack {
 
   db: Db
   editor?: string
+  sessionId?: string
   locked = false
   isLoaded = false
   repo: Repo
 
-  constructor(editor?: string, inDb?: Db) {
+  constructor(editor?: string, sessionId?: string, inDb?: Db) {
     this.editor = editor
+    this.sessionId = sessionId ?? 'main'
     this.db = inDb ?? new Db()
   }
 
@@ -198,8 +200,8 @@ export default class OtomiStack {
     return (await this.repo.requestValues(query)).data
   }
   getRepoPath() {
-    if (env.isTest || this.editor === undefined) return env.GIT_LOCAL_PATH
-    const folder = `${rootPath}/${this.editor}`
+    if (env.isTest || this.sessionId === undefined) return env.GIT_LOCAL_PATH
+    const folder = `${rootPath}/${this.sessionId}`
     return folder
   }
 
@@ -424,6 +426,7 @@ export default class OtomiStack {
     }
     settings[settingId] = removeBlankAttributes(updatedSettingsData[settingId] as Record<string, any>)
     this.db.db.set('settings', settings).write()
+    await this.doDeployment()
     return settings
   }
 
@@ -486,12 +489,14 @@ export default class OtomiStack {
     return teamApps.map((app) => pick(app, picks)) as Array<App>
   }
 
-  editApp(teamId, id, data: App): App {
+  async editApp(teamId, id, data: App): Promise<App> {
     // @ts-ignore
     let app: App = this.db.getItem('apps', { teamId, id })
     // Shallow merge, so only first level attributes can be replaced (values, rawValues, etc.)
     app = { ...app, ...data }
-    return this.db.updateItem('apps', app as Record<string, any>, { teamId, id }) as App
+    const updatedApp = this.db.updateItem('apps', app as Record<string, any>, { teamId, id }) as App
+    await this.doDeployment()
+    return updatedApp
   }
 
   canToggleApp(id: string): boolean {
@@ -499,13 +504,14 @@ export default class OtomiStack {
     return app.properties!.enabled !== undefined
   }
 
-  toggleApps(teamId: string, ids: string[], enabled: boolean): void {
+  async toggleApps(teamId: string, ids: string[], enabled: boolean): Promise<void> {
     ids.map((id) => {
       // we might be given a dep that is only relevant to core, or
       // which is essential, so skip it
       const orig = this.db.getItemReference('apps', { teamId, id }, false) as App
       if (orig && this.canToggleApp(id)) this.db.updateItem('apps', { enabled }, { teamId, id }, true)
     })
+    await this.doDeployment()
   }
 
   async loadApp(appInstanceId: string): Promise<void> {
@@ -563,7 +569,7 @@ export default class OtomiStack {
     return this.db.getItem('teams', { id }) as Team
   }
 
-  createTeam(data: Team): Team {
+  async createTeam(data: Team, deploy = true): Promise<Team> {
     const id = data.id || data.name
 
     if (isEmpty(data.password)) {
@@ -593,20 +599,24 @@ export default class OtomiStack {
       const policies = getPolicies()
       this.db.db.set(`policies[${data.name}]`, policies).write()
     }
+    if (deploy) await this.doDeployment()
     return team
   }
 
-  editTeam(id: string, data: Team): Team {
-    return this.db.updateItem('teams', data, { id }) as Team
+  async editTeam(id: string, data: Team): Promise<Team> {
+    const team = this.db.updateItem('teams', data, { id }) as Team
+    await this.doDeployment()
+    return team
   }
 
-  deleteTeam(id: string): void {
+  async deleteTeam(id: string): Promise<void> {
     try {
       this.db.deleteItem('services', { id })
     } catch (e) {
       // no services found
     }
     this.db.deleteItem('teams', { id })
+    await this.doDeployment()
   }
 
   getTeamServices(teamId: string): Array<Service> {
@@ -623,27 +633,33 @@ export default class OtomiStack {
     return this.db.getCollection('backups') as Array<Backup>
   }
 
-  createBackup(teamId: string, data: Backup): Backup {
+  async createBackup(teamId: string, data: Backup): Promise<Backup> {
     validateBackupFields(data.name, data.ttl)
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      return this.db.createItem('backups', { ...data, teamId }, { teamId, name: data.name }) as Backup
+      const backup = this.db.createItem('backups', { ...data, teamId }, { teamId, name: data.name }) as Backup
+      await this.doDeployment()
+      return backup
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Backup name already exists'
       throw err
     }
   }
+
   getBackup(id: string): Backup {
     return this.db.getItem('backups', { id }) as Backup
   }
 
-  editBackup(id: string, data: Backup): Backup {
+  async editBackup(id: string, data: Backup): Promise<Backup> {
     validateBackupFields(data.name, data.ttl)
-    return this.db.updateItem('backups', data, { id }) as Backup
+    const backup = this.db.updateItem('backups', data, { id }) as Backup
+    await this.doDeployment()
+    return backup
   }
 
-  deleteBackup(id: string): void {
-    return this.db.deleteItem('backups', { id })
+  async deleteBackup(id: string): Promise<void> {
+    this.db.deleteItem('backups', { id })
+    await this.doDeployment()
   }
 
   getTeamNetpols(teamId: string): Array<Netpol> {
@@ -655,26 +671,32 @@ export default class OtomiStack {
     return this.db.getCollection('netpols') as Array<Netpol>
   }
 
-  createNetpol(teamId: string, data: Netpol): Netpol {
+  async createNetpol(teamId: string, data: Netpol): Promise<Netpol> {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      return this.db.createItem('netpols', { ...data, teamId }, { teamId, name: data.name }) as Netpol
+      const netpol = this.db.createItem('netpols', { ...data, teamId }, { teamId, name: data.name }) as Netpol
+      await this.doDeployment()
+      return netpol
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Network policy name already exists'
       throw err
     }
   }
+
   getNetpol(id: string): Netpol {
     return this.db.getItem('netpols', { id }) as Netpol
   }
 
-  editNetpol(id: string, data: Netpol): Netpol {
+  async editNetpol(id: string, data: Netpol): Promise<Netpol> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    return this.db.updateItem('netpols', data, { id }) as Netpol
+    const netpol = this.db.updateItem('netpols', data, { id }) as Netpol
+    await this.doDeployment()
+    return netpol
   }
 
-  deleteNetpol(id: string): void {
-    return this.db.deleteItem('netpols', { id })
+  async deleteNetpol(id: string): Promise<void> {
+    this.db.deleteItem('netpols', { id })
+    await this.doDeployment()
   }
 
   getAllUsers(sessionUser: SessionUser): Array<User> {
@@ -713,7 +735,9 @@ export default class OtomiStack {
       if (existingUsers.some((existingUser) => existingUser.email === user.email))
         throw new AlreadyExists('User email already exists')
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      return this.db.createItem('users', user, { name: user.email }) as User
+      const createdUser = this.db.createItem('users', user, { name: user.email }) as User
+      await this.doDeployment()
+      return createdUser
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'User email already exists'
       throw err
@@ -724,12 +748,14 @@ export default class OtomiStack {
     return this.db.getItem('users', { id }) as User
   }
 
-  editUser(id: string, data: User): User {
+  async editUser(id: string, data: User): Promise<User> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    return this.db.updateItem('users', data, { id }) as User
+    const user = this.db.updateItem('users', data, { id }) as User
+    await this.doDeployment()
+    return user
   }
 
-  deleteUser(id: string): void {
+  async deleteUser(id: string): Promise<void> {
     const user = this.db.getItem('users', { id }) as User
     if (user.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
       const error = new OtomiError('Forbidden')
@@ -737,15 +763,20 @@ export default class OtomiStack {
       error.publicMessage = 'Cannot delete the default platform admin user'
       throw error
     }
-    return this.db.deleteItem('users', { id })
+    this.db.deleteItem('users', { id })
+    await this.doDeployment()
   }
 
-  editTeamUsers(data: Pick<User, 'id' | 'email' | 'isPlatformAdmin' | 'isTeamAdmin' | 'teams'>[]): Array<User> {
+  async editTeamUsers(
+    data: Pick<User, 'id' | 'email' | 'isPlatformAdmin' | 'isTeamAdmin' | 'teams'>[],
+  ): Promise<Array<User>> {
     data.forEach((user) => {
       const existingUser = this.db.getItem('users', { id: user.id }) as User
       this.db.updateItem('users', { ...existingUser, teams: user.teams }, { id: user.id }) as User
     })
-    return this.db.getCollection('users') as Array<User>
+    const users = this.db.getCollection('users') as Array<User>
+    await this.doDeployment()
+    return users
   }
 
   getTeamProjects(teamId: string): Array<Project> {
@@ -758,7 +789,7 @@ export default class OtomiStack {
   }
 
   // Creates a new project and reserves a given name for 'builds', 'workloads' and 'services' resources
-  createProject(teamId: string, data: Project): Project {
+  async createProject(teamId: string, data: Project): Promise<Project> {
     // Check if the project name already exists in any collection
     const projectNameTaken = ['builds', 'workloads', 'services'].some((collectionName) =>
       this.isCollectionNameTaken(collectionName, teamId, data.name),
@@ -768,7 +799,9 @@ export default class OtomiStack {
     try {
       if (projectNameTaken) throw new AlreadyExists(projectNameTakenPublicMessage)
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      return this.db.createItem('projects', { ...data, teamId }, { teamId, name: data.name }) as Project
+      const project = this.db.createItem('projects', { ...data, teamId }, { teamId, name: data.name }) as Project
+      await this.doDeployment()
+      return project
     } catch (err) {
       if (err.code === 409 && projectNameTaken) err.publicMessage = projectNameTakenPublicMessage
       else if (err.code === 409) err.publicMessage = 'Project name already exists'
@@ -802,7 +835,7 @@ export default class OtomiStack {
     return { ...p, build: b, workload: w, workloadValues: wv, service: s }
   }
 
-  editProject(id: string, data: Project): Project {
+  async editProject(id: string, data: Project): Promise<Project> {
     const { build, workload, workloadValues, service, teamId, name } = data
     const { values } = workloadValues as WorkloadValues
 
@@ -831,17 +864,20 @@ export default class OtomiStack {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    return this.db.updateItem('projects', updatedData, { id }) as Project
+    const project = this.db.updateItem('projects', updatedData, { id }) as Project
+    await this.doDeployment()
+    return project
   }
 
   // Deletes a project and all its related resources
-  deleteProject(id: string): void {
+  async deleteProject(id: string): Promise<void> {
     const p = this.db.getItem('projects', { id }) as Project
     if (p.build?.id) this.db.deleteItem('builds', { id: p.build.id })
     if (p.workload?.id) this.db.deleteItem('workloads', { id: p.workload.id })
     if (p.workloadValues?.id) this.db.deleteItem('workloadValues', { id: p.workloadValues.id })
     if (p.service?.id) this.db.deleteItem('services', { id: p.service.id })
-    return this.db.deleteItem('projects', { id })
+    this.db.deleteItem('projects', { id })
+    await this.doDeployment()
   }
 
   getDashboard(teamId: string): Array<any> {
@@ -873,10 +909,12 @@ export default class OtomiStack {
     return this.db.getCollection('builds') as Array<Build>
   }
 
-  createBuild(teamId: string, data: Build): Build {
+  async createBuild(teamId: string, data: Build): Promise<Build> {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      return this.db.createItem('builds', { ...data, teamId }, { teamId, name: data.name }) as Build
+      const build = this.db.createItem('builds', { ...data, teamId }, { teamId, name: data.name }) as Build
+      await this.doDeployment()
+      return build
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Build name already exists'
       throw err
@@ -887,12 +925,14 @@ export default class OtomiStack {
     return this.db.getItem('builds', { id }) as Build
   }
 
-  editBuild(id: string, data: Build): Build {
+  async editBuild(id: string, data: Build): Promise<Build> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    return this.db.updateItem('builds', data, { id }) as Build
+    const build = this.db.updateItem('builds', data, { id }) as Build
+    await this.doDeployment()
+    return build
   }
 
-  deleteBuild(id: string): void {
+  async deleteBuild(id: string): Promise<void> {
     const p = this.db.getCollection('projects') as Array<Project>
     p.forEach((project: Project) => {
       if (project?.build?.id === id) {
@@ -900,7 +940,8 @@ export default class OtomiStack {
         this.db.updateItem('projects', updatedData, { id: project.id }) as Project
       }
     })
-    return this.db.deleteItem('builds', { id })
+    this.db.deleteItem('builds', { id })
+    await this.doDeployment()
   }
 
   getTeamPolicies(teamId: string): Policies {
@@ -917,10 +958,12 @@ export default class OtomiStack {
     return policies[teamId][id]
   }
 
-  editPolicy(teamId: string, policyId: string, data: Policy): Policy {
+  async editPolicy(teamId: string, policyId: string, data: Policy): Promise<Policy> {
     const teamPolicies = this.getTeamPolicies(teamId)
     teamPolicies[policyId] = removeBlankAttributes(data)
-    return this.getPolicy(teamId, policyId)
+    const policy = this.getPolicy(teamId, policyId)
+    await this.doDeployment()
+    return policy
   }
 
   async getK8sVersion(): Promise<string> {
@@ -1033,11 +1076,17 @@ export default class OtomiStack {
     return { url, helmCharts, catalog }
   }
 
-  createWorkload(teamId: string, data: Workload): Workload {
+  async createWorkload(teamId: string, data: Workload): Promise<Workload> {
     try {
-      const w = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }) as Workload
-      this.db.createItem('workloadValues', { teamId, values: {} }, { teamId, name: w.name }, w.id) as WorkloadValues
-      return w
+      const workload = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }) as Workload
+      this.db.createItem(
+        'workloadValues',
+        { teamId, values: {} },
+        { teamId, name: workload.name },
+        workload.id,
+      ) as WorkloadValues
+      await this.doDeployment()
+      return workload
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Workload name already exists'
       throw err
@@ -1048,8 +1097,10 @@ export default class OtomiStack {
     return this.db.getItem('workloads', { id }) as Workload
   }
 
-  editWorkload(id: string, data: Workload): Workload {
-    return this.db.updateItem('workloads', data, { id }) as Workload
+  async editWorkload(id: string, data: Workload): Promise<Workload> {
+    const workload = this.db.updateItem('workloads', data, { id }) as Workload
+    await this.doDeployment()
+    return workload
   }
 
   async deleteWorkload(id: string): Promise<void> {
@@ -1064,11 +1115,14 @@ export default class OtomiStack {
     const path = getTeamWorkloadValuesFilePath(workloadValues.teamId!, workloadValues.name)
     await this.repo.removeFile(path)
     this.db.deleteItem('workloadValues', { id })
-    return this.db.deleteItem('workloads', { id })
+    this.db.deleteItem('workloads', { id })
+    await this.doDeployment()
   }
 
-  editWorkloadValues(id: string, data: WorkloadValues): WorkloadValues {
-    return this.db.updateItem('workloadValues', data, { id }) as WorkloadValues
+  async editWorkloadValues(id: string, data: WorkloadValues): Promise<WorkloadValues> {
+    const workloadValues = this.db.updateItem('workloadValues', data, { id }) as WorkloadValues
+    await this.doDeployment()
+    return workloadValues
   }
 
   getWorkloadValues(id: string): WorkloadValues {
@@ -1079,13 +1133,19 @@ export default class OtomiStack {
     return this.db.getCollection('services') as Array<Service>
   }
 
-  createService(teamId: string, data: Service): Service {
+  async createService(teamId: string, data: Service): Promise<Service> {
     this.checkPublicUrlInUse(data)
     try {
-      return this.db.createItem('services', { ...data, teamId }, { teamId, name: data.name }, data?.id) as Service
+      const service = this.db.createItem(
+        'services',
+        { ...data, teamId },
+        { teamId, name: data.name },
+        data?.id,
+      ) as Service
+      await this.doDeployment()
+      return service
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Service name already exists'
-
       throw err
     }
   }
@@ -1094,12 +1154,13 @@ export default class OtomiStack {
     return this.db.getItem('services', { id }) as Service
   }
 
-  editService(id: string, data: Service): Service {
-    this.deleteService(id, false)
-    return this.createService(data.teamId!, { ...data, id })
+  async editService(id: string, data: Service): Promise<Service> {
+    const service = this.db.updateItem('services', data, { id }) as Service
+    await this.doDeployment()
+    return service
   }
 
-  deleteService(id: string, deleteProjectService = true): void {
+  async deleteService(id: string, deleteProjectService = true): Promise<void> {
     if (deleteProjectService) {
       const p = this.db.getCollection('projects') as Array<Project>
       p.forEach((project: Project) => {
@@ -1109,7 +1170,8 @@ export default class OtomiStack {
         }
       })
     }
-    return this.db.deleteItem('services', { id })
+    this.db.deleteItem('services', { id })
+    await this.doDeployment()
   }
 
   checkPublicUrlInUse(data: any): void {
@@ -1140,6 +1202,7 @@ export default class OtomiStack {
   }
 
   emitPipelineStatus(sha: string): void {
+    if (env.isDev) return
     try {
       // check pipeline status every 5 seconds and emit the status when it's completed
       const intervalId = setInterval(() => {
@@ -1164,7 +1227,7 @@ export default class OtomiStack {
 
   async doDeployment(): Promise<void> {
     const rootStack = await getSessionStack()
-    if (rootStack.locked) throw new DeployLockError()
+    if (rootStack.locked) return
     rootStack.locked = true
     try {
       await this.saveValues()
@@ -1176,12 +1239,12 @@ export default class OtomiStack {
       rootStack.db = new Db()
       await rootStack.loadValues()
       // and remove editor from the session
-      await cleanSession(this.editor!, false)
+      await cleanSession(this.sessionId!)
       const sha = await rootStack.repo.getCommitSha()
-      const msg: DbMessage = { state: 'clean', editor: this.editor!, sha, reason: 'deploy' }
-      getIo().emit('db', msg)
       this.emitPipelineStatus(sha)
     } catch (e) {
+      // git conflict with upstream changes, clean up and restore the DB
+      if (e instanceof GitPullError) await this.doRestore()
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)
       throw e
@@ -1190,21 +1253,12 @@ export default class OtomiStack {
     }
   }
 
-  async doRevert(): Promise<void> {
-    // other sessions active, can't do full reload
-    // remove editor from the session
-    await cleanSession(this.editor!)
-  }
-
   async doRestore(): Promise<void> {
     cleanAllSessions()
     await emptyDir(rootPath)
     // and re-init root
     const rootStack = await getSessionStack()
     await rootStack.initRepo()
-    // and msg
-    const msg: DbMessage = { state: 'clean', editor: 'system', sha: rootStack.repo.commitSha, reason: 'restore' }
-    getIo().emit('db', msg)
   }
 
   apiClient?: k8s.CoreV1Api
@@ -1352,11 +1406,13 @@ export default class OtomiStack {
         return { [obj.key]: encryptedItem }
       })
       const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises)))
-      return this.db.createItem(
+      const sealedSecret = this.db.createItem(
         'sealedsecrets',
         { ...data, teamId, encryptedData, namespace },
         { teamId, name: data.name },
       ) as SealedSecret
+      await this.doDeployment()
+      return sealedSecret
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'SealedSecret name already exists'
       throw err
@@ -1376,11 +1432,14 @@ export default class OtomiStack {
       return { [obj.key]: encryptedItem }
     })
     const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises)))
-    return this.db.updateItem('sealedsecrets', { ...data, encryptedData }, { id }) as SealedSecret
+    const sealedSecret = this.db.updateItem('sealedsecrets', { ...data, encryptedData }, { id }) as SealedSecret
+    await this.doDeployment()
+    return sealedSecret
   }
 
-  deleteSealedSecret(id: string): void {
+  async deleteSealedSecret(id: string): Promise<void> {
     this.db.deleteItem('sealedsecrets', { id })
+    await this.doDeployment()
   }
 
   async getSealedSecret(id: string): Promise<SealedSecret> {
@@ -1583,17 +1642,19 @@ export default class OtomiStack {
     const mergedData: Core = await this.repo.loadConfig('env/teams.yaml', `env/secrets.teams.yaml`)
     const tc = mergedData?.teamConfig || {}
     if (!tc.admin) tc.admin = { id: 'admin' }
-    Object.values(tc).forEach((team: Team) => {
-      this.loadTeam(team)
-      this.loadTeamNetpols(team.id!)
-      this.loadTeamServices(team.id!)
-      this.loadTeamSealedSecrets(team.id!)
-      this.loadTeamWorkloads(team.id!)
-      this.loadTeamBackups(team.id!)
-      this.loadTeamProjects(team.id!)
-      this.loadTeamBuilds(team.id!)
-      this.loadTeamPolicies(team.id!)
-    })
+    await Promise.all(
+      Object.values(tc).map(async (team: Team) => {
+        await this.loadTeam(team)
+        this.loadTeamNetpols(team.id!)
+        this.loadTeamServices(team.id!)
+        this.loadTeamSealedSecrets(team.id!)
+        this.loadTeamWorkloads(team.id!)
+        this.loadTeamBackups(team.id!)
+        this.loadTeamProjects(team.id!)
+        this.loadTeamBuilds(team.id!)
+        this.loadTeamPolicies(team.id!)
+      }),
+    )
   }
 
   async loadTeamServices(teamId: string): Promise<void> {
@@ -1798,10 +1859,10 @@ export default class OtomiStack {
     await this.repo.writeFile(filePath, data)
   }
 
-  loadTeam(inTeam: Team): void {
+  async loadTeam(inTeam: Team): Promise<void> {
     const team = { ...inTeam, name: inTeam.id } as Record<string, any>
     team.resourceQuota = objectToArray(inTeam.resourceQuota as Record<string, any>)
-    const res = this.createTeam(team as Team)
+    const res = await this.createTeam(team as Team, false)
     // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id as string)
     debug(`Loaded team: ${res.id!}`)
   }

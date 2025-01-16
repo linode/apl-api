@@ -2,15 +2,16 @@
 import Debug from 'debug'
 import { RequestHandler } from 'express'
 import 'express-async-errors'
-import { emptyDir } from 'fs-extra'
+import { remove } from 'fs-extra'
 import http from 'http'
 import { cloneDeep } from 'lodash'
 import { join } from 'path'
 import { Server } from 'socket.io'
-import { ApiNotReadyError } from 'src/error'
+import { ApiNotReadyError, DeployLockError } from 'src/error'
 import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
 import { EDITOR_INACTIVITY_TIMEOUT, cleanEnv } from 'src/validators'
+import { v4 as uuidv4 } from 'uuid'
 
 const debug = Debug('otomi:session')
 const env = cleanEnv({
@@ -18,9 +19,9 @@ const env = cleanEnv({
 })
 
 export type DbMessage = {
-  state: 'clean' | 'corrupt' | 'dirty'
+  state: 'clean' | 'corrupt'
   editor: string
-  reason: 'deploy' | 'revert' | 'restore' | 'conflict' | 'started' | 'restored'
+  reason: 'deploy' | 'revert' | 'conflict' | 'restored'
   sha?: string
 }
 
@@ -28,26 +29,24 @@ export type DbMessage = {
 let readOnlyStack: OtomiStack
 let sessions: Record<string, OtomiStack> = {}
 // handler to get the correct stack for the user: if never touched any data give the main otomiStack
-export const getSessionStack = async (editor?: string): Promise<OtomiStack> => {
+export const getSessionStack = async (sessionId?: string): Promise<OtomiStack> => {
   if (!readOnlyStack) {
     readOnlyStack = new OtomiStack()
     await readOnlyStack.init()
   }
-  if (!editor || !sessions[editor]) return readOnlyStack
-  return sessions[editor]
+  if (!sessionId || !sessions[sessionId]) return readOnlyStack
+  return sessions[sessionId]
 }
-export const setSessionStack = async (editor: string): Promise<void> => {
-  if (env.isTest) return
-  if (!sessions[editor]) {
-    debug(`Creating editor session for user ${editor}`)
-    sessions[editor] = new OtomiStack(editor, readOnlyStack.db)
+export const setSessionStack = async (editor: string, sessionId: string): Promise<OtomiStack> => {
+  if (env.isTest) return readOnlyStack
+  if (!sessions[sessionId]) {
+    debug(`Creating session ${sessionId} for user ${editor}`)
+    sessions[sessionId] = new OtomiStack(editor, sessionId, readOnlyStack.db)
     // init repo without inflating db from files as its slow and we just need a copy of the db
-    await sessions[editor].initRepo(true)
-    sessions[editor].db = cloneDeep(readOnlyStack.db)
-    // let users know someone started editing
-    const msg: DbMessage = { state: 'dirty', editor, reason: 'started' }
-    io.emit('db', msg)
-  } else sessions[editor].editor = editor
+    await sessions[sessionId].initRepo(true)
+    sessions[sessionId].db = cloneDeep(readOnlyStack.db)
+  } else sessions[sessionId].sessionId = sessionId
+  return sessions[sessionId]
 }
 
 export const getEditors = () => Object.keys(sessions)
@@ -59,14 +58,10 @@ export const cleanAllSessions = (): void => {
   readOnlyStack = undefined
 }
 
-export const cleanSession = async (editor: string, sendMsg = true): Promise<void> => {
-  debug(`Cleaning editor session for ${editor}`)
-  const sha = await readOnlyStack.repo.getCommitSha()
-  delete sessions[editor]
-  await emptyDir(join(rootPath, editor))
-  if (!sendMsg) return
-  const msg: DbMessage = { state: 'clean', editor, sha, reason: 'revert' }
-  io.emit('db', msg)
+export const cleanSession = async (sessionId: string): Promise<void> => {
+  debug(`Cleaning session ${sessionId}`)
+  delete sessions[sessionId]
+  await remove(join(rootPath, sessionId))
 }
 
 let io: Server
@@ -75,7 +70,6 @@ export const getIo = () => io
 // we use session middleware so we can give each user their own otomiStack
 // with a snapshot of the db, the moment they start touching data
 export function sessionMiddleware(server: http.Server): RequestHandler {
-  const timeout: Record<string, NodeJS.Timeout | undefined> = {}
   // socket setup
   io = new Server(server, { path: '/ws' })
   io.on('connection', (socket: any) => {
@@ -98,32 +92,29 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
     if (!env.isTest && (!readOnlyStack || !readOnlyStack.isLoaded)) throw new ApiNotReadyError()
     const { email } = req.user || {}
-    const sessionStack = await getSessionStack(email)
+    const roStack = await getSessionStack()
     // eslint-disable-next-line no-param-reassign
-    req.otomi = sessionStack
-    const { editor } = sessionStack
-    // remove session after x days to avoid mem leaks
-    const interval = env.EDITOR_INACTIVITY_TIMEOUT * 24 * 60 * 60 * 1000
-    // clear when active
-    if (timeout[email]) {
-      clearInterval(timeout[email])
-      timeout[email] = undefined
-    }
+    req.otomi = roStack
 
     if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
       // in the cloudtty or workloadCatalog endpoint(s), don't need to create a session
       if (req.path === '/v1/cloudtty' || req.path === '/v1/workloadCatalog') return next()
-      // manipulating data and no editor session yet? create one
-      if (!editor) {
-        // bootstrap session stack for user
-        await setSessionStack(email)
-        // eslint-disable-next-line no-param-reassign
-        req.otomi = await getSessionStack(email)
-        timeout[email] = setTimeout(() => {
-          sessionStack.doRevert()
-        }, interval)
-        return next()
+      const waitForUnlock = async (retries: number, delay: number): Promise<void> => {
+        debug(`Waiting for deploy lock to be released`)
+        let attempts = 0
+        while (roStack.locked && attempts < retries) {
+          attempts += 1
+          await new Promise((resolve) => setTimeout(resolve, attempts * delay))
+        }
+        if (roStack.locked) throw new DeployLockError()
       }
+      // wait for unlock 3 times with (attempts * 5) seconds delay
+      if (roStack.locked) await waitForUnlock(3, 5000)
+      // bootstrap session stack with unique sessionId to manipulate data
+      const sessionId = uuidv4() as string
+      // eslint-disable-next-line no-param-reassign
+      req.otomi = await setSessionStack(email, sessionId)
+      return next()
     }
     return next()
   }

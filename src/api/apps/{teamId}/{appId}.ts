@@ -8,8 +8,8 @@ export default function (): OperationHandlerArray {
     },
   ]
   const put: Operation = [
-    ({ otomi, body, params: { teamId, appId } }: OpenApiRequestExt, res): void => {
-      res.json(otomi.editApp(teamId, appId, body as App))
+    async ({ otomi, body, params: { teamId, appId } }: OpenApiRequestExt, res): Promise<void> => {
+      res.json(await otomi.editApp(teamId, appId, body as App))
     },
   ]
   const api = {

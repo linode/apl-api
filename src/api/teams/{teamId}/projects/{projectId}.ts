@@ -6,9 +6,9 @@ const debug = Debug('otomi:api:teams:projects')
 
 export default function (): OperationHandlerArray {
   const del: Operation = [
-    ({ otomi, params: { projectId } }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { projectId } }: OpenApiRequestExt, res): Promise<void> => {
       debug(`deleteProject(${projectId})`)
-      otomi.deleteProject(decodeURIComponent(projectId))
+      await otomi.deleteProject(decodeURIComponent(projectId))
       res.json({})
     },
   ]
@@ -20,9 +20,9 @@ export default function (): OperationHandlerArray {
     },
   ]
   const put: Operation = [
-    ({ otomi, params: { teamId, projectId }, body }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { teamId, projectId }, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`editProject(${projectId})`)
-      const data = otomi.editProject(decodeURIComponent(projectId), {
+      const data = await otomi.editProject(decodeURIComponent(projectId), {
         ...body,
         teamId: decodeURIComponent(teamId),
       } as Project)

@@ -1,14 +1,14 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequestExt, Netpol } from 'src/otomi-models'
+import { Netpol, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:teams:netpols')
 
 export default function (): OperationHandlerArray {
   const del: Operation = [
-    ({ otomi, params: { netpolId } }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { netpolId } }: OpenApiRequestExt, res): Promise<void> => {
       debug(`deleteNetpol(${netpolId})`)
-      otomi.deleteNetpol(decodeURIComponent(netpolId))
+      await otomi.deleteNetpol(decodeURIComponent(netpolId))
       res.json({})
     },
   ]
@@ -20,9 +20,9 @@ export default function (): OperationHandlerArray {
     },
   ]
   const put: Operation = [
-    ({ otomi, params: { teamId, netpolId }, body }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { teamId, netpolId }, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`editNetpol(${netpolId})`)
-      const data = otomi.editNetpol(decodeURIComponent(netpolId), {
+      const data = await otomi.editNetpol(decodeURIComponent(netpolId), {
         ...body,
         teamId: decodeURIComponent(teamId),
       } as Netpol)

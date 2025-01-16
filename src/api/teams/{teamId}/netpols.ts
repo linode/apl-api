@@ -1,6 +1,6 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequestExt, Netpol } from 'src/otomi-models'
+import { Netpol, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:teams:netpols')
 
@@ -13,9 +13,9 @@ export default function (): OperationHandlerArray {
     },
   ]
   const post: Operation = [
-    ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`createNetpol(${teamId}, ...)`)
-      const v = otomi.createNetpol(teamId, body as Netpol)
+      const v = await otomi.createNetpol(teamId, body as Netpol)
       res.json(v)
     },
   ]
