@@ -285,19 +285,6 @@ export class Repo {
     return summary
   }
 
-  async retryRequestInitValues(retries = 3): Promise<void> {
-    for (let attempt = 1; attempt <= retries; attempt++) {
-      try {
-        await this.requestInitValues()
-        return // Exit the function if successful
-      } catch (error) {
-        if (attempt === retries) throw error // Rethrow the error if it's the last attempt
-
-        console.error(`Attempt ${attempt} failed. Retrying...`)
-      }
-    }
-  }
-
   async pull(skipRequest = false, skipMsg = false): Promise<any> {
     // test root can't pull as it has no remote
     if (!this.url) return
@@ -308,7 +295,13 @@ export class Repo {
       debug(`Pull summary: ${summJson}`)
       this.commitSha = await this.getCommitSha()
       await this.initSops()
-      if (!skipRequest) await this.retryRequestInitValues()
+      if (!skipRequest) {
+        try {
+          await this.requestInitValues()
+        } catch (error) {
+          debug('error', error)
+        }
+      }
     } catch (e) {
       debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', e)
       this.corrupt = true
