@@ -638,6 +638,7 @@ export default class OtomiStack {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const backup = this.db.createItem('backups', { ...data, teamId }, { teamId, name: data.name }) as Backup
+      await this.saveTeamBackups(teamId)
       await this.doDeployment()
       return backup
     } catch (err) {
@@ -653,12 +654,15 @@ export default class OtomiStack {
   async editBackup(id: string, data: Backup): Promise<Backup> {
     validateBackupFields(data.name, data.ttl)
     const backup = this.db.updateItem('backups', data, { id }) as Backup
+    await this.saveTeamBackups(data.teamId!)
     await this.doDeployment()
     return backup
   }
 
   async deleteBackup(id: string): Promise<void> {
+    const backup = this.getBackup(id)
     this.db.deleteItem('backups', { id })
+    await this.saveTeamBackups(backup.teamId!)
     await this.doDeployment()
   }
 
@@ -675,6 +679,7 @@ export default class OtomiStack {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const netpol = this.db.createItem('netpols', { ...data, teamId }, { teamId, name: data.name }) as Netpol
+      await this.saveTeamNetpols(teamId)
       await this.doDeployment()
       return netpol
     } catch (err) {
@@ -690,12 +695,15 @@ export default class OtomiStack {
   async editNetpol(id: string, data: Netpol): Promise<Netpol> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const netpol = this.db.updateItem('netpols', data, { id }) as Netpol
+    await this.saveTeamNetpols(netpol.teamId!)
     await this.doDeployment()
     return netpol
   }
 
   async deleteNetpol(id: string): Promise<void> {
+    const netpol = this.getNetpol(id)
     this.db.deleteItem('netpols', { id })
+    await this.saveTeamNetpols(netpol.teamId!)
     await this.doDeployment()
   }
 
@@ -736,6 +744,7 @@ export default class OtomiStack {
         throw new AlreadyExists('User email already exists')
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const createdUser = this.db.createItem('users', user, { name: user.email }) as User
+      await this.saveUsers()
       await this.doDeployment()
       return createdUser
     } catch (err) {
@@ -751,6 +760,7 @@ export default class OtomiStack {
   async editUser(id: string, data: User): Promise<User> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const user = this.db.updateItem('users', data, { id }) as User
+    await this.saveUsers()
     await this.doDeployment()
     return user
   }
@@ -764,6 +774,7 @@ export default class OtomiStack {
       throw error
     }
     this.db.deleteItem('users', { id })
+    await this.saveUsers()
     await this.doDeployment()
   }
 
@@ -775,6 +786,7 @@ export default class OtomiStack {
       this.db.updateItem('users', { ...existingUser, teams: user.teams }, { id: user.id }) as User
     })
     const users = this.db.getCollection('users') as Array<User>
+    await this.saveUsers()
     await this.doDeployment()
     return users
   }
@@ -800,6 +812,7 @@ export default class OtomiStack {
       if (projectNameTaken) throw new AlreadyExists(projectNameTakenPublicMessage)
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const project = this.db.createItem('projects', { ...data, teamId }, { teamId, name: data.name }) as Project
+      await this.saveTeamProjects(teamId)
       await this.doDeployment()
       return project
     } catch (err) {
@@ -865,6 +878,7 @@ export default class OtomiStack {
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const project = this.db.updateItem('projects', updatedData, { id }) as Project
+    await this.saveTeamProjects(project.teamId!)
     await this.doDeployment()
     return project
   }
@@ -877,6 +891,7 @@ export default class OtomiStack {
     if (p.workloadValues?.id) this.db.deleteItem('workloadValues', { id: p.workloadValues.id })
     if (p.service?.id) this.db.deleteItem('services', { id: p.service.id })
     this.db.deleteItem('projects', { id })
+    await this.saveTeamProjects(p.teamId!)
     await this.doDeployment()
   }
 
@@ -913,6 +928,7 @@ export default class OtomiStack {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const build = this.db.createItem('builds', { ...data, teamId }, { teamId, name: data.name }) as Build
+      await this.saveTeamBuilds(teamId)
       await this.doDeployment()
       return build
     } catch (err) {
@@ -928,11 +944,13 @@ export default class OtomiStack {
   async editBuild(id: string, data: Build): Promise<Build> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const build = this.db.updateItem('builds', data, { id }) as Build
+    await this.saveTeamBuilds(build.teamId!)
     await this.doDeployment()
     return build
   }
 
   async deleteBuild(id: string): Promise<void> {
+    const build = this.getBuild(id)
     const p = this.db.getCollection('projects') as Array<Project>
     p.forEach((project: Project) => {
       if (project?.build?.id === id) {
@@ -941,6 +959,7 @@ export default class OtomiStack {
       }
     })
     this.db.deleteItem('builds', { id })
+    await this.saveTeamBuilds(build.teamId!)
     await this.doDeployment()
   }
 
@@ -962,6 +981,7 @@ export default class OtomiStack {
     const teamPolicies = this.getTeamPolicies(teamId)
     teamPolicies[policyId] = removeBlankAttributes(data)
     const policy = this.getPolicy(teamId, policyId)
+    await this.saveTeamPolicies(teamId)
     await this.doDeployment()
     return policy
   }
@@ -1085,6 +1105,7 @@ export default class OtomiStack {
         { teamId, name: workload.name },
         workload.id,
       ) as WorkloadValues
+      await this.saveTeamWorkloads(teamId)
       await this.doDeployment()
       return workload
     } catch (err) {
@@ -1100,6 +1121,7 @@ export default class OtomiStack {
   async editWorkload(id: string, data: Workload): Promise<Workload> {
     const workload = this.db.updateItem('workloads', data, { id }) as Workload
     await this.doDeployment()
+    await this.saveTeamWorkloads(workload.teamId!)
     return workload
   }
 
@@ -1116,11 +1138,13 @@ export default class OtomiStack {
     await this.repo.removeFile(path)
     this.db.deleteItem('workloadValues', { id })
     this.db.deleteItem('workloads', { id })
+    await this.saveTeamWorkloads(workloadValues.teamId!)
     await this.doDeployment()
   }
 
   async editWorkloadValues(id: string, data: WorkloadValues): Promise<WorkloadValues> {
     const workloadValues = this.db.updateItem('workloadValues', data, { id }) as WorkloadValues
+    await this.saveTeamWorkloads(workloadValues.teamId!)
     await this.doDeployment()
     return workloadValues
   }
@@ -1142,6 +1166,7 @@ export default class OtomiStack {
         { teamId, name: data.name },
         data?.id,
       ) as Service
+      await this.saveTeamServices(teamId)
       await this.doDeployment()
       return service
     } catch (err) {
@@ -1156,11 +1181,13 @@ export default class OtomiStack {
 
   async editService(id: string, data: Service): Promise<Service> {
     const service = this.db.updateItem('services', data, { id }) as Service
+    await this.saveTeamServices(service.teamId!)
     await this.doDeployment()
     return service
   }
 
   async deleteService(id: string, deleteProjectService = true): Promise<void> {
+    const service = this.getService(id)
     if (deleteProjectService) {
       const p = this.db.getCollection('projects') as Array<Project>
       p.forEach((project: Project) => {
@@ -1171,6 +1198,7 @@ export default class OtomiStack {
       })
     }
     this.db.deleteItem('services', { id })
+    await this.saveTeamServices(service.teamId!)
     await this.doDeployment()
   }
 
@@ -1228,7 +1256,7 @@ export default class OtomiStack {
   async doDeployment(): Promise<void> {
     const rootStack = await getSessionStack()
     try {
-      await this.saveValues()
+      // await this.saveValues()
       // commit and pull-push root
       await this.repo.save(this.editor!)
       // update db with the new values
@@ -1265,6 +1293,7 @@ export default class OtomiStack {
   }
 
   async getK8sServices(teamId: string): Promise<Array<K8sService>> {
+    if (env.isDev) return []
     // const teams = user.teams.map((name) => {
     //   return `team-${name}`
     // })
@@ -1404,6 +1433,7 @@ export default class OtomiStack {
         { ...data, teamId, encryptedData, namespace },
         { teamId, name: data.name },
       ) as SealedSecret
+      await this.saveTeamSealedSecrets(teamId)
       await this.doDeployment()
       return sealedSecret
     } catch (err) {
@@ -1426,12 +1456,15 @@ export default class OtomiStack {
     })
     const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises)))
     const sealedSecret = this.db.updateItem('sealedsecrets', { ...data, encryptedData }, { id }) as SealedSecret
+    await this.saveTeamSealedSecrets(sealedSecret.teamId!)
     await this.doDeployment()
     return sealedSecret
   }
 
   async deleteSealedSecret(id: string): Promise<void> {
+    const sealedSecret = await this.getSealedSecret(id)
     this.db.deleteItem('sealedsecrets', { id })
+    await this.saveTeamSealedSecrets(sealedSecret.teamId!)
     await this.doDeployment()
   }
 
@@ -1457,6 +1490,7 @@ export default class OtomiStack {
   }
 
   async getSecretsFromK8s(teamId: string): Promise<Array<string>> {
+    if (env.isDev) return []
     const secrets = await getTeamSecretsFromK8s(`team-${teamId}`)
     return secrets
   }
@@ -1730,17 +1764,9 @@ export default class OtomiStack {
     const teamValues = {}
     const teams = this.getTeams()
     await Promise.all(
-      teams.map(async (inTeam) => {
+      teams.map((inTeam) => {
         const team: Record<string, any> = omit(inTeam, 'name')
         const teamId = team.id as string
-        await this.saveTeamBackups(teamId)
-        await this.saveTeamNetpols(teamId)
-        await this.saveTeamServices(teamId)
-        await this.saveTeamSealedSecrets(teamId)
-        await this.saveTeamWorkloads(teamId)
-        await this.saveTeamProjects(teamId)
-        await this.saveTeamBuilds(teamId)
-        await this.saveTeamPolicies(teamId)
         team.resourceQuota = arrayToObject((team.resourceQuota as []) ?? [])
         teamValues[teamId] = team
       }),
@@ -1953,7 +1979,6 @@ export default class OtomiStack {
     const secretPaths = this.getSecretPaths()
     await this.saveCluster(secretPaths)
     await this.saveSettings(secretPaths)
-    await this.saveUsers()
     await this.saveTeams(secretPaths)
     // also save admin apps
     await this.saveAdminApps(secretPaths)
