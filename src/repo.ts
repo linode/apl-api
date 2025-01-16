@@ -7,7 +7,7 @@ import stringifyJson from 'json-stable-stringify'
 import { cloneDeep, get, isEmpty, merge, set, unset } from 'lodash'
 import { dirname, join } from 'path'
 import simpleGit, { CheckRepoActions, CleanOptions, CommitResult, ResetMode, SimpleGit } from 'simple-git'
-import { cleanEnv, GIT_BRANCH, GIT_LOCAL_PATH, GIT_REPO_URL, TOOLS_HOST } from 'src/validators'
+import { cleanEnv, GIT_BRANCH, GIT_LOCAL_PATH, GIT_PASSWORD, GIT_REPO_URL, GIT_USER, TOOLS_HOST } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { BASEURL } from './constants'
 import { GitPullError, HttpError, ValidationError } from './error'
@@ -20,7 +20,9 @@ const debug = Debug('otomi:repo')
 const env = cleanEnv({
   GIT_BRANCH,
   GIT_LOCAL_PATH,
+  GIT_PASSWORD,
   GIT_REPO_URL,
+  GIT_USER,
   TOOLS_HOST,
 })
 
@@ -249,13 +251,13 @@ export class Repo {
   async clone(): Promise<void> {
     debug(`Checking if local git repository exists at: ${this.path}`)
     const isRepo = await this.git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT)
+    this.url = getUrl(`${env.GIT_REPO_URL}`)
     if (!isRepo) {
       debug(`Initializing repo...`)
       if (!this.hasRemote() && this.isRootClone()) return await this.initFromTestFolder()
       else if (!this.isRootClone()) {
         // child clone, point to root
-        this.url = `file://${env.GIT_LOCAL_PATH}`
-        this.urlAuth = this.url
+        this.urlAuth = getUrlAuth(this.url, env.GIT_USER, env.GIT_PASSWORD)
       }
       debug(`Cloning from '${this.url}' to '${this.path}'`)
       await this.git.clone(this.urlAuth!, this.path)

@@ -4,7 +4,7 @@ import { Response } from 'express'
 import { HttpError, OtomiError } from 'src/error'
 import { OpenApiRequest } from 'src/otomi-models'
 import { cleanEnv } from 'src/validators'
-import { cleanSession } from './session'
+// import { cleanSession } from './session'
 
 const env = cleanEnv({})
 
@@ -28,6 +28,6 @@ export function errorMiddleware(e, req: OpenApiRequest, res: Response, next): vo
     msg = `Required property missing! '${requiredProperties}'`
   }
   const { otomi } = req as any
-  if (otomi?.sessionId) cleanSession(otomi.sessionId as string)
+  // if (otomi?.sessionId) cleanSession(otomi.sessionId as string)
   res.status(code).json({ error: msg })
 }
