@@ -119,6 +119,7 @@ export class Repo {
   }
 
   async initSops(): Promise<void> {
+    if (this.secretFilePostfix === '.dec') return
     this.secretFilePostfix = (await pathExists(join(this.path, '.sops.yaml'))) ? '.dec' : ''
   }
 
