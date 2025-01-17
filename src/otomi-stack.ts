@@ -239,7 +239,7 @@ export default class OtomiStack {
     }
     // branches get a copy of the "main" branch db, so we don't need to inflate
     if (!skipDbInflation) await this.loadValues()
-    debug('Values are loaded')
+    debug(`Values are loaded for ${this.editor} in ${this.sessionId}`)
   }
 
   getSecretPaths(): string[] {
@@ -744,6 +744,7 @@ export default class OtomiStack {
         throw new AlreadyExists('User email already exists')
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const createdUser = this.db.createItem('users', user, { name: user.email }) as User
+      console.log('createdUser', createdUser)
       await this.saveUsers()
       await this.doDeployment()
       return createdUser
@@ -1258,6 +1259,7 @@ export default class OtomiStack {
     try {
       // await this.saveValues()
       // commit and pull-push root
+      console.log('doDeployment')
       await this.repo.save(this.editor!)
       // update db with the new values
       rootStack.db = this.db

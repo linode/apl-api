@@ -348,6 +348,7 @@ export class Repo {
     // prepare values first
     try {
       await new Promise((resolve) => setTimeout(resolve, 2000))
+      console.log(`Request prepare values for ${this.path} by ${editor}`)
       await this.requestPrepareValues()
     } catch (e) {
       debug(`ERROR: ${JSON.stringify(e)}`)
