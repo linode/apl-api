@@ -347,6 +347,7 @@ export class Repo {
   async save(editor: string): Promise<void> {
     // prepare values first
     try {
+      await new Promise((resolve) => setTimeout(resolve, 2000))
       await this.requestPrepareValues()
     } catch (e) {
       debug(`ERROR: ${JSON.stringify(e)}`)
