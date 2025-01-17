@@ -39,14 +39,14 @@ describe('JWT claims mapping', () => {
     expect(user.isTeamAdmin).to.be.false
   })
   it('Multiple team groups should result in the same amount of teams existing', async () => {
-    await Promise.all(multiTeamUser.map((teamId) => otomiStack.createTeam({ name: teamId })))
+    await Promise.all(multiTeamUser.map(async (teamId) => await otomiStack.createTeam({ name: teamId }, false)))
     const user = getUser(multiTeamJWT, otomiStack)
     expect(user.teams).to.deep.equal(multiTeamUser)
     expect(user.isPlatformAdmin).to.be.false
   })
   it("Non existing team groups should not be added to the user's list of teams", async () => {
     const extraneousTeamsList = [...multiTeamUser, 'nonexisting']
-    await Promise.all(extraneousTeamsList.map((teamId) => otomiStack.createTeam({ name: teamId })))
+    await Promise.all(extraneousTeamsList.map(async (teamId) => await otomiStack.createTeam({ name: teamId }, false)))
     const user = getUser(multiTeamJWT, otomiStack)
     expect(user.teams).to.deep.equal(multiTeamUser)
     expect(user.isPlatformAdmin).to.be.false

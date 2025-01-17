@@ -14,28 +14,10 @@ export default function (): OperationHandlerArray {
   ]
 
   const put: Operation = [
-    ({ otomi, params: { teamId, workloadId }, body }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { teamId, workloadId }, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`putWorkloadValues(${workloadId})`)
-      const data = otomi.editWorkloadValues(decodeURIComponent(workloadId), {
+      const data = await otomi.editWorkloadValues(decodeURIComponent(workloadId), {
         ...body,
-        teamId: decodeURIComponent(teamId),
-      } as WorkloadValues)
-      res.json(data)
-    },
-  ]
-
-  const patch: Operation = [
-    ({ otomi, params: { teamId, workloadId }, body }: OpenApiRequestExt, res): void => {
-      const { image, containerPorts, fullnameOverride, ...rest } = body.values
-      debug(`patchWorkloadValues(${workloadId})`)
-      const data = otomi.editWorkloadValues(decodeURIComponent(workloadId), {
-        id: workloadId,
-        values: {
-          fullnameOverride,
-          image,
-          containerPorts,
-          ...rest,
-        },
         teamId: decodeURIComponent(teamId),
       } as WorkloadValues)
       res.json(data)
@@ -45,7 +27,6 @@ export default function (): OperationHandlerArray {
   const api = {
     get,
     put,
-    patch,
   }
   return api
 }
