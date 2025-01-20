@@ -1136,8 +1136,8 @@ export default class OtomiStack {
 
   async editWorkload(id: string, data: Workload): Promise<Workload> {
     const workload = this.db.updateItem('workloads', data, { id }) as Workload
-    await this.doDeployment('workloads')
     await this.saveTeamWorkloads(workload.teamId!)
+    await this.doDeployment('workloads')
     return workload
   }
 

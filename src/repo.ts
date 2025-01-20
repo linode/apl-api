@@ -85,15 +85,13 @@ export class Repo {
 
   async requestInitValues(): Promise<AxiosResponse | void> {
     debug(`Tools: requesting "init" on values repo path ${this.path}`)
-    const requestId = this.path.split('/').pop()
-    const res = await axios.get(initUrl, { params: { envDir: this.path, requestId } })
+    const res = await axios.get(initUrl, { params: { envDir: this.path } })
     return res
   }
 
   async requestPrepareValues(): Promise<AxiosResponse | void> {
     debug(`Tools: requesting "prepare" on values repo path ${this.path}`)
-    const requestId = this.path.split('/').pop()
-    const res = await axios.get(prepareUrl, { params: { envDir: this.path, requestId } })
+    const res = await axios.get(prepareUrl, { params: { envDir: this.path } })
     return res
   }
 
@@ -253,12 +251,13 @@ export class Repo {
   async clone(): Promise<void> {
     debug(`Checking if local git repository exists at: ${this.path}`)
     const isRepo = await this.git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT)
+    // remote root url
     this.url = getUrl(`${env.GIT_REPO_URL}`)
     if (!isRepo) {
       debug(`Initializing repo...`)
       if (!this.hasRemote() && this.isRootClone()) return await this.initFromTestFolder()
       else if (!this.isRootClone()) {
-        // child clone, point to root
+        // child clone, point to remote root
         this.urlAuth = getUrlAuth(this.url, env.GIT_USER, env.GIT_PASSWORD)
       }
       debug(`Cloning from '${this.url}' to '${this.path}'`)
@@ -347,8 +346,6 @@ export class Repo {
   async save(editor: string): Promise<void> {
     // prepare values first
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      console.log(`Request prepare values for ${this.path} by ${editor}`)
       await this.requestPrepareValues()
     } catch (e) {
       debug(`ERROR: ${JSON.stringify(e)}`)
@@ -362,11 +359,22 @@ export class Repo {
     // all good? commit
     await this.commit(editor)
     try {
-      // we are in a developer branch so first merge in root which might be changed by another dev
-      // but since we are a child we don't need to re-init, just wait for root db to be copied
+      // we are in a unique developer branch, so we can pull, push, and merge
+      // with the remote root, which might have been modified by another developer
+      // since this is a child branch, we don't need to re-init
+      // retry up to 3 times to pull and push if there are conflicts
       const skipInit = true
-      await this.pull(skipInit)
-      await this.push()
+      const retries = 3
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          await this.pull(skipInit)
+          await this.push()
+          break
+        } catch (error) {
+          if (attempt === retries) throw error
+          debug(`Attempt ${attempt} failed. Retrying...`)
+        }
+      }
     } catch (e) {
       debug(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
       debug(`Merge error: ${JSON.stringify(e)}`)
