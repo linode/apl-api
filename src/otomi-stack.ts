@@ -177,7 +177,6 @@ export default class OtomiStack {
   db: Db
   editor?: string
   sessionId?: string
-  locked = false
   isLoaded = false
   repo: Repo
 
@@ -1279,6 +1278,7 @@ export default class OtomiStack {
       // update db with the new values
       const collection = this.db.db.get(collectionId!).value()
       rootStack.db.db.set(collectionId!, collection).write()
+      debug(`Updated root stack values with ${this.sessionId} changes`)
       // and remove editor from the session
       await cleanSession(this.sessionId!)
       const sha = await rootStack.repo.getCommitSha()
