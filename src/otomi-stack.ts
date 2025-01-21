@@ -1271,8 +1271,6 @@ export default class OtomiStack {
   async doDeployment(collectionIds?: string[]): Promise<void> {
     const rootStack = await getSessionStack()
     try {
-      const secretPaths = this.getSecretPaths()
-      await this.saveCluster(secretPaths)
       // commit and pull-push root
       await this.repo.save(this.editor!)
       // update db with the new values
