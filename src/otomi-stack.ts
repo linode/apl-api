@@ -1271,7 +1271,7 @@ export default class OtomiStack {
   async doDeployment(collectionIds?: string[]): Promise<void> {
     const rootStack = await getSessionStack()
     try {
-      // commit and pull-push root
+      // commit and pull-push remote root
       await this.repo.save(this.editor!)
       // update db with the new values
       if (collectionIds) {
@@ -1280,8 +1280,6 @@ export default class OtomiStack {
           rootStack.db.db.set(collectionId, collection).write()
         })
       }
-      // const collection = this.db.db.get(collectionId!).value()
-      // rootStack.db.db.set(collectionId!, collection).write()
       debug(`Updated root stack values with ${this.sessionId} changes`)
       // and remove editor from the session
       await cleanSession(this.sessionId!)
