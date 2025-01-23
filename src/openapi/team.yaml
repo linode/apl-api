@@ -12,7 +12,7 @@ TeamSelfService:
       x-allow-values:
         ingress:
           type: 'cluster'
-      default: [ingress]
+      default: []
       uniqueItems: true
     policies:
       title: Security policies
