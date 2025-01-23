@@ -119,6 +119,7 @@ export class Repo {
   }
 
   async initSops(): Promise<void> {
+    if (this.secretFilePostfix === '.dec') return
     this.secretFilePostfix = (await pathExists(join(this.path, '.sops.yaml'))) ? '.dec' : ''
   }
 
@@ -292,8 +293,8 @@ export class Repo {
       const summJson = JSON.stringify(summary)
       debug(`Pull summary: ${summJson}`)
       this.commitSha = await this.getCommitSha()
-      await this.initSops()
       if (!skipRequest) await this.requestInitValues()
+      await this.initSops()
     } catch (e) {
       debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', e)
       this.corrupt = true
