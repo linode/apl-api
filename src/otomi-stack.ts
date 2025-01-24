@@ -17,6 +17,7 @@ import {
   Backup,
   Build,
   Cloudtty,
+  Coderepo,
   Core,
   K8sService,
   Netpol,
@@ -129,6 +130,10 @@ export function getTeamProjectsFilePath(teamId: string): string {
   return `env/teams/projects.${teamId}.yaml`
 }
 
+export function getTeamCodereposFilePath(teamId: string): string {
+  return `env/teams/coderepos.${teamId}.yaml`
+}
+
 export function getTeamBuildsFilePath(teamId: string): string {
   return `env/teams/builds.${teamId}.yaml`
 }
@@ -143,6 +148,10 @@ export function getTeamWorkloadsJsonPath(teamId: string): string {
 
 export function getTeamProjectsJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.projects`
+}
+
+export function getTeamCodereposJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.coderepos`
 }
 
 export function getTeamBuildsJsonPath(teamId: string): string {
@@ -880,6 +889,47 @@ export default class OtomiStack {
     await this.doDeployment()
   }
 
+  getTeamCoderepos(teamId: string): Array<Coderepo> {
+    const ids = { teamId }
+    return this.db.getCollection('coderepos', ids) as Array<Coderepo>
+  }
+
+  getAllCoderepos(): Array<Coderepo> {
+    const allrepos = this.db.getCollection('coderepos') as Array<Coderepo>
+    console.log('allrepos', allrepos)
+    return allrepos
+  }
+
+  async createCoderepo(teamId: string, data: Project): Promise<Coderepo> {
+    console.log('data', data)
+    try {
+      const project = this.db.createItem('coderepos', { ...data, teamId }, { teamId, name: data.name }) as Coderepo
+      const allrepos = this.db.getCollection('coderepos') as Array<Coderepo>
+      console.log('allrepos', allrepos)
+      await this.doDeployment()
+      return project
+    } catch (err) {
+      if (err.code === 409) err.publicMessage = 'Code repo name already exists'
+      throw err
+    }
+  }
+
+  getCoderepo(id: string): Coderepo {
+    return this.db.getItem('coderepos', { id }) as Coderepo
+  }
+
+  async editCoderepo(id: string, data: Coderepo): Promise<Coderepo> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const coderepo = this.db.updateItem('coderepos', data, { id }) as Coderepo
+    await this.doDeployment()
+    return coderepo
+  }
+
+  async deleteCoderepo(id: string): Promise<void> {
+    this.db.deleteItem('coderepos', { id })
+    await this.doDeployment()
+  }
+
   getDashboard(teamId: string): Array<any> {
     const ids = teamId !== 'admin' ? { teamId } : undefined
     const projects = this.db.getCollection('projects', ids) as Array<Project>
@@ -1568,6 +1618,20 @@ export default class OtomiStack {
     })
   }
 
+  async loadTeamCoderepos(teamId: string): Promise<void> {
+    const relativePath = getTeamCodereposFilePath(teamId)
+    if (!(await this.repo.fileExists(relativePath))) {
+      debug(`Team ${teamId} has no coderepos yet`)
+      return
+    }
+    const data = await this.repo.readFile(relativePath)
+    const inData: Array<Project> = get(data, getTeamCodereposJsonPath(teamId), [])
+    inData.forEach((inCoderepo) => {
+      const res: any = this.db.populateItem('coderepos', { ...inCoderepo, teamId }, undefined, inCoderepo.id as string)
+      debug(`Loaded coderepo: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
+    })
+  }
+
   async loadTeamBuilds(teamId: string): Promise<void> {
     const relativePath = getTeamBuildsFilePath(teamId)
     if (!(await this.repo.fileExists(relativePath))) {
@@ -1651,6 +1715,7 @@ export default class OtomiStack {
         this.loadTeamWorkloads(team.id!)
         this.loadTeamBackups(team.id!)
         this.loadTeamProjects(team.id!)
+        this.loadTeamCoderepos(team.id!)
         this.loadTeamBuilds(team.id!)
         this.loadTeamPolicies(team.id!)
       }),
@@ -1746,6 +1811,7 @@ export default class OtomiStack {
         await this.saveTeamSealedSecrets(teamId)
         await this.saveTeamWorkloads(teamId)
         await this.saveTeamProjects(teamId)
+        await this.saveTeamCoderepos(teamId)
         await this.saveTeamBuilds(teamId)
         await this.saveTeamPolicies(teamId)
         team.resourceQuota = arrayToObject((team.resourceQuota as []) ?? [])
@@ -1813,6 +1879,17 @@ export default class OtomiStack {
     const relativePath = getTeamProjectsFilePath(teamId)
     const outData: Record<string, any> = set({}, getTeamProjectsJsonPath(teamId), cleaneProjects)
     debug(`Saving projects of team: ${teamId}`)
+    await this.repo.writeFile(relativePath, outData)
+  }
+
+  async saveTeamCoderepos(teamId: string): Promise<void> {
+    const coderepos = this.db.getCollection('coderepos', { teamId }) as Array<Coderepo>
+    const cleaneProjects: Array<Record<string, any>> = coderepos.map((obj) => {
+      return omit(obj, ['teamId'])
+    })
+    const relativePath = getTeamCodereposFilePath(teamId)
+    const outData: Record<string, any> = set({}, getTeamCodereposJsonPath(teamId), cleaneProjects)
+    debug(`Saving coderepos of team: ${teamId}`)
     await this.repo.writeFile(relativePath, outData)
   }
 
