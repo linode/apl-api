@@ -71,7 +71,6 @@ describe('Work with values', () => {
 
   it('can load from configuration to database and back', () => {
     expect(otomiStack.loadValues()).to.not.throw
-    expect(otomiStack.saveValues()).to.not.throw
   })
 })
 

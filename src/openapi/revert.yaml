@@ -1,8 +1,0 @@
-Revert:
-  x-externalDocsPath: docs/for-devs/console/deploy-changes
-  x-acl:
-    platformAdmin: [read-any]
-    teamAdmin: [read-any]
-    teamMember: [read-any]
-  properties: {}
-  type: object

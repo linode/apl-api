@@ -7,7 +7,7 @@ import stringifyJson from 'json-stable-stringify'
 import { cloneDeep, get, isEmpty, merge, set, unset } from 'lodash'
 import { dirname, join } from 'path'
 import simpleGit, { CheckRepoActions, CleanOptions, CommitResult, ResetMode, SimpleGit } from 'simple-git'
-import { cleanEnv, GIT_BRANCH, GIT_LOCAL_PATH, GIT_REPO_URL, TOOLS_HOST } from 'src/validators'
+import { cleanEnv, GIT_BRANCH, GIT_LOCAL_PATH, GIT_PASSWORD, GIT_REPO_URL, GIT_USER, TOOLS_HOST } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { BASEURL } from './constants'
 import { GitPullError, HttpError, ValidationError } from './error'
@@ -20,7 +20,9 @@ const debug = Debug('otomi:repo')
 const env = cleanEnv({
   GIT_BRANCH,
   GIT_LOCAL_PATH,
+  GIT_PASSWORD,
   GIT_REPO_URL,
+  GIT_USER,
   TOOLS_HOST,
 })
 
@@ -250,13 +252,14 @@ export class Repo {
   async clone(): Promise<void> {
     debug(`Checking if local git repository exists at: ${this.path}`)
     const isRepo = await this.git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT)
+    // remote root url
+    this.url = getUrl(`${env.GIT_REPO_URL}`)
     if (!isRepo) {
       debug(`Initializing repo...`)
       if (!this.hasRemote() && this.isRootClone()) return await this.initFromTestFolder()
       else if (!this.isRootClone()) {
-        // child clone, point to root
-        this.url = `file://${env.GIT_LOCAL_PATH}`
-        this.urlAuth = this.url
+        // child clone, point to remote root
+        this.urlAuth = getUrlAuth(this.url, env.GIT_USER, env.GIT_PASSWORD)
       }
       debug(`Cloning from '${this.url}' to '${this.path}'`)
       await this.git.clone(this.urlAuth!, this.path)
@@ -357,11 +360,22 @@ export class Repo {
     // all good? commit
     await this.commit(editor)
     try {
-      // we are in a developer branch so first merge in root which might be changed by another dev
-      // but since we are a child we don't need to re-init, just wait for root db to be copied
+      // we are in a unique developer branch, so we can pull, push, and merge
+      // with the remote root, which might have been modified by another developer
+      // since this is a child branch, we don't need to re-init
+      // retry up to 3 times to pull and push if there are conflicts
       const skipInit = true
-      await this.pull(skipInit)
-      await this.push()
+      const retries = 3
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          await this.pull(skipInit)
+          await this.push()
+          break
+        } catch (error) {
+          if (attempt === retries) throw error
+          debug(`Attempt ${attempt} failed. Retrying...`)
+        }
+      }
     } catch (e) {
       debug(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
       debug(`Merge error: ${JSON.stringify(e)}`)
