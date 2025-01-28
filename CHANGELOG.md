@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.6.0](https://github.com/redkubes/otomi-api/compare/v3.5.0...v3.6.0) (2025-01-28)
+
+
+### Features
+
+* execute initSops before we loadValues to prevent data being shown as encrypted ([#610](https://github.com/redkubes/otomi-api/issues/610)) ([9a61589](https://github.com/redkubes/otomi-api/commit/9a61589df24919debd9d57ee159dd95aa13f0a1b))
+* remove deploy changes button ([#608](https://github.com/redkubes/otomi-api/issues/608)) ([6e045c9](https://github.com/redkubes/otomi-api/commit/6e045c984689df81c5b7e8dfad0e3a958856940d))
+* remove locking mechanism & update api flow ([#611](https://github.com/redkubes/otomi-api/issues/611)) ([7829668](https://github.com/redkubes/otomi-api/commit/782966887068cc6a10aeb53e3adca4b960a390e7))
+
+
+### Bug Fixes
+
+* align name field titles in the resource forms ([#605](https://github.com/redkubes/otomi-api/issues/605)) ([2f0db13](https://github.com/redkubes/otomi-api/commit/2f0db133254e993a7807105efcf30cf2e2917265))
+* enable trivy for isPreInstalled=true ([#603](https://github.com/redkubes/otomi-api/issues/603)) ([810e6f4](https://github.com/redkubes/otomi-api/commit/810e6f40b76c954412f7109d0ae97dc1a4933d85))
+
+
+### Others
+
+* **deps:** bump nock from 13.2.4 to 13.5.6 ([#595](https://github.com/redkubes/otomi-api/issues/595)) ([dc50f67](https://github.com/redkubes/otomi-api/commit/dc50f67ada29a7fb0fab8c8e78be948b148bad37))
+* **deps:** bump npm-watch from 0.11.0 to 0.13.0 ([#593](https://github.com/redkubes/otomi-api/issues/593)) ([09c97ab](https://github.com/redkubes/otomi-api/commit/09c97ab42f1ed35232ab2efe29741bbff869c79b))
+* **deps:** bump sinon from 8.1.1 to 19.0.2 ([#592](https://github.com/redkubes/otomi-api/issues/592)) ([dcd3a1c](https://github.com/redkubes/otomi-api/commit/dcd3a1c81d1889c7eacf56cd9fe153e6a0da20c1))
+* **deps:** bump swagger-client from 3.18.4 to 3.32.1 ([#597](https://github.com/redkubes/otomi-api/issues/597)) ([e286cd4](https://github.com/redkubes/otomi-api/commit/e286cd4abfe02d6dfa2ebae7e0aeb7fe53b4cb78))
+* **deps:** bump whoan/docker-build-with-cache-action from 6 to 8 ([#591](https://github.com/redkubes/otomi-api/issues/591)) ([aa7f740](https://github.com/redkubes/otomi-api/commit/aa7f74091b4733bd901d7a670dd05c74c28e5ecb))
+
+
+### Docs
+
+* rest api and gitops ([#607](https://github.com/redkubes/otomi-api/issues/607)) ([f3db1cd](https://github.com/redkubes/otomi-api/commit/f3db1cd6da7b736dfb565f1424a9faeae98b2604))
+
 ## [3.5.0](https://github.com/redkubes/otomi-api/compare/v3.4.0...v3.5.0) (2024-12-17)
 
 
