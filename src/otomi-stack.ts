@@ -941,8 +941,13 @@ export default class OtomiStack {
 
   async createBuild(teamId: string, data: Build): Promise<Build> {
     try {
+      const serviceAccount = `organization-${teamId}`
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const build = this.db.createItem('builds', { ...data, teamId }, { teamId, name: data.name }) as Build
+      const build = this.db.createItem(
+        'builds',
+        { ...data, teamId },
+        { teamId, name: data.name, secretName: serviceAccount },
+      ) as Build
       await this.saveTeamBuilds(teamId)
       await this.doDeployment(['builds'])
       return build
