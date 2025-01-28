@@ -297,4 +297,4 @@ When any of the `src/openapi/*.yaml` files change, new models will be generated 
 
 Because openapi bundler optimizes by re-using schema blocks but does not take into account depth of the schema, it creates a schema that is not usable by the `npm run build:client` task. This only happens when a subschema references root schemas, and only for certain props. We had to apply some yaml anchor hacking to make it work.
 
-When you encounter errors during client generation, instead of referencing the faulty props by `$ref` use a yaml anchor. Example file: `src/openapi/team.yaml`.
+When you encounter errors during client generation, instead of referencing the faulty props by `$ref` use a yaml anchor.Example file: `src/openapi/team.yaml`.
