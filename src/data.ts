@@ -8,6 +8,7 @@ interface FileMap {
 }
 
 export const fileMap: Array<FileMap> = [
+  { tableName: 'settings', pathGlob: '**/settings/*.yaml' },
   { tableName: 'users', pathGlob: '**/users/*.yaml' },
   { tableName: 'apps', pathGlob: '**/apps/*.yaml' },
   { tableName: 'builds', pathGlob: '**/teams/*/builds/*.yaml' },
@@ -20,7 +21,6 @@ export const fileMap: Array<FileMap> = [
   { tableName: 'teams', pathGlob: '**/teams/*/settings.yaml' },
   { tableName: 'policies', pathGlob: '**/teams/*/policies.yaml' },
   { tableName: 'apps', pathGlob: '**/apps/*/*.yaml' },
-  { tableName: 'settings', pathGlob: '**/settings/*.yaml' },
 ]
 
 export const extractTeamDirectory = (filePath: string): string | null => {
