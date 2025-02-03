@@ -10,7 +10,7 @@ import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
-import { AlreadyExists, GitPullError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
+import { AlreadyExists, GitPullError, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
 import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
@@ -72,7 +72,7 @@ import {
 import { validateBackupFields } from './utils/backupUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { encryptSecretItem } from './utils/sealedSecretUtils'
-import { getKeycloakUsers } from './utils/userUtils'
+import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
@@ -735,6 +735,11 @@ export default class OtomiStack {
   }
 
   async createUser(data: User): Promise<User> {
+    const { valid, error } = isValidUsername(data.email.split('@')[0])
+    if (!valid) {
+      const err = new HttpError(400, error as string)
+      throw err
+    }
     const initialPassword = generatePassword({
       length: 16,
       numbers: true,
