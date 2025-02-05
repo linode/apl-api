@@ -833,7 +833,10 @@ export default class OtomiStack {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const project = this.db.createItem('projects', { ...data, teamId }, { teamId, name: data.name }) as Project
       await this.saveTeamProjects(teamId)
-      await this.doDeployment(['projects'])
+      await this.saveTeamBuilds(teamId)
+      await this.saveTeamWorkloads(teamId)
+      await this.saveTeamServices(teamId)
+      await this.doDeployment(['projects', 'builds', 'workloads', 'workloadValues', 'services'])
       return project
     } catch (err) {
       if (err.code === 409 && projectNameTaken) err.publicMessage = projectNameTakenPublicMessage
@@ -899,7 +902,10 @@ export default class OtomiStack {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const project = this.db.updateItem('projects', updatedData, { id }) as Project
     await this.saveTeamProjects(project.teamId!)
-    await this.doDeployment(['projects'])
+    await this.saveTeamBuilds(project.teamId!)
+    await this.saveTeamWorkloads(project.teamId!)
+    await this.saveTeamServices(project.teamId!)
+    await this.doDeployment(['projects', 'builds', 'workloads', 'workloadValues', 'services'])
     return project
   }
 
@@ -912,7 +918,10 @@ export default class OtomiStack {
     if (p.service?.id) this.db.deleteItem('services', { id: p.service.id })
     this.db.deleteItem('projects', { id })
     await this.saveTeamProjects(p.teamId!)
-    await this.doDeployment(['projects'])
+    await this.saveTeamBuilds(p.teamId!)
+    await this.saveTeamWorkloads(p.teamId!)
+    await this.saveTeamServices(p.teamId!)
+    await this.doDeployment(['projects', 'builds', 'workloads', 'workloadValues', 'services'])
   }
 
   getDashboard(teamId: string): Array<any> {
