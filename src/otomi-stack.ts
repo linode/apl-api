@@ -25,7 +25,6 @@ import {
   Policy,
   Project,
   SealedSecret,
-  SealedSecretsValues,
   Secret,
   Service,
   Session,
@@ -115,16 +114,12 @@ export function getTeamNetpolsJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.netpols`
 }
 
-export function getTeamSealedSecretsFilePath(teamId: string): string {
-  return `env/teams/sealedsecrets.${teamId}.yaml`
-}
-export function getTeamSealedSecretsValuesRootPath(teamId: string, sealedSecretsName: string): string {
-  return `env/teams/${teamId}/sealedsecrets/${sealedSecretsName}.yaml`
+export function getTeamSealedSecretsValuesRootPath(teamId: string): string {
+  return `env/teams/${teamId}/sealedsecrets`
 }
 export function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: string): string {
-  return `env/teams/${teamId}/sealedsecrets/${sealedSecretsName}.yaml`
+  return `env/teams/${teamId}/sealedsecrets/${sealedSecretsName}`
 }
-
 export function getTeamWorkloadsFilePath(teamId: string): string {
   return `env/teams/workloads.${teamId}.yaml`
 }
@@ -1175,11 +1170,6 @@ export default class OtomiStack {
     return this.db.getItem('workloadValues', { id }) as WorkloadValues
   }
 
-  getSealedSecretsValues(id: string): SealedSecretsValues {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    return this.db.getItem('sealedSecretsValues', { id }) as SealedSecretsValues
-  }
-
   getAllServices(): Array<Service> {
     return this.db.getCollection('services') as Array<Service>
   }
@@ -1502,23 +1492,14 @@ export default class OtomiStack {
         return { [obj.key]: encryptedItem }
       })
       const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises)))
-      const sealedSecretChartValues = this.createSealedSecretsChart(data, encryptedData, namespace)
-      console.log('halo reach sealed chart values', sealedSecretChartValues)
       const sealedSecret = this.db.createItem(
         'sealedsecrets',
         { ...data, teamId, encryptedData, namespace },
         { teamId, name: data.name },
       ) as SealedSecret
-
-      this.db.createItem(
-        'sealedSecretsValues',
-        { teamId, ...sealedSecretChartValues },
-        { teamId, name: sealedSecret.name },
-        sealedSecret.id,
-      )
-
-      await this.saveTeamSealedSecrets(teamId)
-      await this.doDeployment(['sealedsecrets', 'sealedSecretsValues'])
+      const sealedSecretChartValues = this.createSealedSecretsChart(data, encryptedData, namespace)
+      await this.saveTeamSealedSecrets(teamId, sealedSecretChartValues, sealedSecret.id!)
+      await this.doDeployment(['sealedsecrets'])
       return sealedSecret
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'SealedSecret name already exists'
@@ -1541,7 +1522,8 @@ export default class OtomiStack {
     })
     const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises)))
     const sealedSecret = this.db.updateItem('sealedsecrets', { ...data, encryptedData }, { id }) as SealedSecret
-    await this.saveTeamSealedSecrets(sealedSecret.teamId!)
+    const sealedSecretChartValues = this.createSealedSecretsChart(data, encryptedData, namespace)
+    await this.saveTeamSealedSecrets(data.teamId!, sealedSecretChartValues, id)
     await this.doDeployment(['sealedsecrets'])
     return sealedSecret
   }
@@ -1549,15 +1531,13 @@ export default class OtomiStack {
   async deleteSealedSecret(id: string): Promise<void> {
     const sealedSecret = await this.getSealedSecret(id)
     this.db.deleteItem('sealedsecrets', { id })
-    await this.saveTeamSealedSecrets(sealedSecret.teamId!)
+    const relativePath = getTeamSealedSecretsValuesFilePath(sealedSecret.teamId!, `${id}.yaml`)
+    await this.repo.removeFile(relativePath)
     await this.doDeployment(['sealedsecrets'])
   }
 
   async getSealedSecret(id: string): Promise<SealedSecret> {
     const sealedSecret = this.db.getItem('sealedsecrets', { id }) as SealedSecret
-    const selector = `metadata/name/${sealedSecret.name}`
-    const sealedSecretValues = this.db.getItem('sealedSecretsValues', { selector }) as SealedSecretsValues
-    console.log('sealedSecretValues in getsealedsecret', sealedSecretValues)
     const namespace = sealedSecret.namespace ?? `team-${sealedSecret.teamId}`
     const secretValues = (await getSecretValues(sealedSecret.name, namespace)) || {}
     const isDisabled = isEmpty(secretValues)
@@ -1624,19 +1604,28 @@ export default class OtomiStack {
   }
 
   async loadTeamSealedSecrets(teamId: string): Promise<void> {
-    const relativePath = getTeamSealedSecretsFilePath(teamId)
-    if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no sealed secrets yet`)
-      return
-    }
-    const data = await this.repo.readFile(relativePath)
-    const inData: Array<SealedSecret> = get(data, getTeamSealedSecretsJsonPath(teamId), [])
-    inData.forEach((inSealedSecret) => {
+    const sealedSecretsValuesRootPath = getTeamSealedSecretsValuesRootPath(teamId)
+    const sealedSecretsFileNames = await this.repo.readDir(sealedSecretsValuesRootPath)
+    if (sealedSecretsFileNames.length === 0) return
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    sealedSecretsFileNames.forEach(async (id: string) => {
+      const relativePath = getTeamSealedSecretsValuesFilePath(teamId, id)
+      if (!(await this.repo.fileExists(relativePath))) {
+        debug(`Team ${teamId} has no sealed secrets yet`)
+        return
+      }
+      const data = await this.repo.readFile(relativePath)
       const res: any = this.db.populateItem(
         'sealedsecrets',
-        { ...inSealedSecret, teamId },
+        {
+          encryptedData: data.spec.encryptedData,
+          metadata: data.spec.template.metadata,
+          type: data.spec.template.type,
+          name: data.metadata.name,
+          teamId,
+        },
         undefined,
-        inSealedSecret.id as string,
+        id.replace('.yaml', ''),
       )
       debug(`Loaded sealed secret: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
     })
@@ -1864,20 +1853,10 @@ export default class OtomiStack {
     await this.repo.saveConfig(filePath, secretFilePath, values, secretPaths ?? this.getSecretPaths())
   }
 
-  async saveTeamSealedSecrets(teamId: string): Promise<void> {
-    const secrets = this.db.getCollection('sealedsecrets', { teamId }) as Array<SealedSecret>
-    const cleaneSecrets: Array<Record<string, any>> = secrets.map((obj) => {
-      return omit(obj, ['teamId'])
-    })
-    const relativePath = getTeamSealedSecretsFilePath(teamId)
-    const outData: Record<string, any> = set({}, getTeamSealedSecretsJsonPath(teamId), cleaneSecrets)
+  async saveTeamSealedSecrets(teamId: string, data: any, id: string): Promise<void> {
+    const relativePath = getTeamSealedSecretsValuesFilePath(teamId, `${id}.yaml`)
     debug(`Saving sealed secrets of team: ${teamId}`)
-    await this.repo.writeFile(relativePath, outData)
-    await Promise.all(
-      secrets.map((secret) => {
-        this.saveSealedSecretsValues(secret)
-      }),
-    )
+    await this.repo.writeFile(relativePath, data)
   }
 
   async saveTeamBackups(teamId: string): Promise<void> {
@@ -1954,16 +1933,6 @@ export default class OtomiStack {
     const outData = omit(data, ['id', 'teamId', 'name']) as Record<string, any>
     outData.values = stringifyYaml(data.values, undefined, 4)
     const path = getTeamWorkloadValuesFilePath(workload.teamId!, workload.name)
-
-    await this.repo.writeFile(path, outData, false)
-  }
-
-  async saveSealedSecretsValues(sealedSecret: SealedSecret): Promise<void> {
-    debug(`Saving secret values: id: ${sealedSecret.id!} teamId: ${sealedSecret.teamId!} name: ${sealedSecret.name}`)
-    const data = this.getSealedSecretsValues(sealedSecret.id!)
-    const outData = omit(data, ['id', 'teamId', 'name']) as Record<string, any>
-    outData.values = stringifyYaml(data.values, undefined, 4)
-    const path = getTeamSealedSecretsValuesFilePath(sealedSecret.teamId!, sealedSecret.name)
 
     await this.repo.writeFile(path, outData, false)
   }

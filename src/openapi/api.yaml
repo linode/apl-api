@@ -355,7 +355,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SealedSecretsValues'
+                  $ref: '#/components/schemas/SealedSecret'
         '400':
           description: Bad Request
           content:
@@ -1657,8 +1657,6 @@ components:
       $ref: policies.yaml#/Policies
     SealedSecret:
       $ref: sealedsecret.yaml#/SealedSecret
-    SealedSecretsValues:
-      $ref: sealedsecret.yaml#/SealedSecretsValues
     SealedSecretsKeys:
       $ref: sealedsecretskeys.yaml#/SealedSecretsKeys
     K8sSecret:

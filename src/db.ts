@@ -15,7 +15,6 @@ import {
   Policies,
   Project,
   SealedSecret,
-  SealedSecretsValues,
   Secret,
   Service,
   Settings,
@@ -34,7 +33,6 @@ export type DbType =
   | Cluster
   | Netpol
   | SealedSecret
-  | SealedSecretsValues
   | Secret
   | Service
   | Team
@@ -48,7 +46,6 @@ export type DbType =
 export type Schema = {
   apps: App[]
   sealedsecrets: SealedSecret[]
-  sealedSecretsValues: SealedSecretsValues[]
   secrets: Secret[]
   services: Service[]
   netpols: Netpol[]
@@ -86,7 +83,6 @@ export default class Db {
         projects: [],
         policies: {},
         sealedsecrets: [],
-        sealedSecretsValues: [],
         secrets: [],
         services: [],
         settings: {},

@@ -10,7 +10,6 @@ export type K8sService = components['schemas']['K8sService']
 export type Netpol = components['schemas']['Netpol']
 export type Secret = components['schemas']['Secret'] & { teamId?: string }
 export type SealedSecret = components['schemas']['SealedSecret'] & { teamId?: string }
-export type SealedSecretsValues = components['schemas']['SealedSecretsValues']
 export type SealedSecretsKeys = components['schemas']['SealedSecretsKeys']
 export type K8sSecret = components['schemas']['K8sSecret']
 export type Service = components['schemas']['Service']
