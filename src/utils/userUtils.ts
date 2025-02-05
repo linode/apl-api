@@ -63,3 +63,72 @@ export async function getKeycloakUsers(
     return []
   }
 }
+
+// gitea username blacklist and validation
+// https://github.com/go-gitea/gitea/blob/b8b856c7455166ef580d83a29b57c9b877d052b4/models/user/user.go#L563
+const reservedUsernames = [
+  '.',
+  '..',
+  '.well-known',
+  'admin',
+  'api',
+  'assets',
+  'attachments',
+  'avatar',
+  'avatars',
+  'captcha',
+  'commits',
+  'debug',
+  'error',
+  'explore',
+  'favicon.ico',
+  'ghost',
+  'issues',
+  'login',
+  'manifest.json',
+  'metrics',
+  'milestones',
+  'new',
+  'notifications',
+  'org',
+  'pulls',
+  'raw',
+  'repo',
+  'repo-avatars',
+  'robots.txt',
+  'search',
+  'serviceworker.js',
+  'ssh_info',
+  'swagger.v1.json',
+  'user',
+  'v2',
+  'gitea-actions',
+  // reserved for keycloak root user
+  'otomi-admin',
+]
+
+const reservedUserPatterns = ['*.keys', '*.gpg', '*.rss', '*.atom']
+
+const reservedRegexPatterns = reservedUserPatterns.map((pattern) => new RegExp(`^.*\\${pattern.slice(1)}$`))
+
+export function isValidUsername(username: string): { valid: boolean; error: string | null } {
+  const usernameRegex = /^(?![-_.])(?!.*[-_.]{2})[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9]$/
+
+  if (!username || username.length < 3 || username.length > 30)
+    return { valid: false, error: 'Username (the part of the email before "@") must be between 3 and 30 characters.' }
+
+  if (!usernameRegex.test(username))
+    return { valid: false, error: 'Invalid username (the part of the email before "@") format.' }
+
+  if (reservedUsernames.includes(username))
+    return { valid: false, error: 'This username (the part of the email before "@") is reserved.' }
+
+  if (reservedRegexPatterns.some((regex) => regex.test(username))) {
+    return {
+      valid: false,
+      error: 'Usernames (the part of the email before "@") ending with .keys, .gpg, .rss, or .atom are not allowed.',
+    }
+  }
+
+  return { valid: true, error: null }
+}
