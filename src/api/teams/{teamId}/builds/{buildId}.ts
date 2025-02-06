@@ -1,14 +1,14 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequestExt, Build } from 'src/otomi-models'
+import { Build, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:teams:builds')
 
 export default function (): OperationHandlerArray {
   const del: Operation = [
-    ({ otomi, params: { buildId } }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { buildId } }: OpenApiRequestExt, res): Promise<void> => {
       debug(`deleteBuild(${buildId})`)
-      otomi.deleteBuild(decodeURIComponent(buildId))
+      await otomi.deleteBuild(decodeURIComponent(buildId))
       res.json({})
     },
   ]

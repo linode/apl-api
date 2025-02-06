@@ -1296,53 +1296,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorkloadValues'
-    patch:
-      operationId: updateWorkloadValues
-      description: Update workload values
-      x-aclSchema: Workload
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WorkloadValues'
-        description: Workload values
-        required: true
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully updated workload values
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WorkloadValues'
-  /deploy:
-    get:
-      x-aclSchema: Deploy
-      operationId: deploy
-      description: Trigger a deployment (only for admin)
-      responses:
-        '202':
-          description: Deploy has been triggered
-        '409':
-          <<: *OtomiStackError
-
-  /revert:
-    get:
-      x-aclSchema: Revert
-      operationId: revert
-      description: Revert session to previous state
-      responses:
-        '202':
-          description: Session state has been reverted
-
-  /restore:
-    get:
-      x-aclSchema: Restore
-      operationId: restore
-      description: Restore root to previous state
-      responses:
-        '202':
-          description: Root state has been restored
 
   '/kubecfg/{teamId}':
     parameters:
@@ -1676,8 +1629,6 @@ components:
       $ref: cloudtty.yaml#/Cloudtty
     Cluster:
       $ref: cluster.yaml#/Cluster
-    Deploy:
-      $ref: deploy.yaml#/Deploy
     Ingress:
       $ref: service.yaml#/Ingress
     IngressCluster:
@@ -1704,10 +1655,6 @@ components:
       $ref: policies.yaml#/Policy
     Policies:
       $ref: policies.yaml#/Policies
-    Restore:
-      $ref: restore.yaml#/Restore
-    Revert:
-      $ref: revert.yaml#/Revert
     SealedSecret:
       $ref: sealedsecret.yaml#/SealedSecret
     SealedSecretsKeys:

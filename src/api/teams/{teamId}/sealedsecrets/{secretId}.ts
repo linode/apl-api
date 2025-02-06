@@ -6,16 +6,15 @@ const debug = Debug('otomi:api:teams:sealedsecrets')
 
 export default function (): OperationHandlerArray {
   const del: Operation = [
-    ({ otomi, params: { secretId } }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { secretId } }: OpenApiRequestExt, res): Promise<void> => {
       debug(`deleteSealedSecret(${secretId})`)
-      otomi.deleteSealedSecret(decodeURIComponent(secretId))
+      await otomi.deleteSealedSecret(decodeURIComponent(secretId))
       res.json({})
     },
   ]
   const get: Operation = [
     async ({ otomi, params: { secretId } }: OpenApiRequestExt, res): Promise<void> => {
       debug(`getSealedSecret(${secretId})`)
-      console.log('getSealedSecret secretId', secretId)
       const data = await otomi.getSealedSecret(decodeURIComponent(secretId))
       res.json(data)
     },

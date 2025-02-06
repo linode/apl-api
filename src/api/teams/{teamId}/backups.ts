@@ -1,6 +1,6 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequestExt, Backup } from 'src/otomi-models'
+import { Backup, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:teams:backups')
 
@@ -13,9 +13,9 @@ export default function (): OperationHandlerArray {
     },
   ]
   const post: Operation = [
-    ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`createBackup(${teamId}, ...)`)
-      const v = otomi.createBackup(teamId, body as Backup)
+      const v = await otomi.createBackup(teamId, body as Backup)
       res.json(v)
     },
   ]

@@ -17,9 +17,9 @@ export default function (): OperationHandlerArray {
     },
   ]
   const post: Operation = [
-    ({ otomi, body }: OpenApiRequestExt, res): void => {
+    async ({ otomi, body }: OpenApiRequestExt, res): Promise<void> => {
       debug('createTeam')
-      const data = otomi.createTeam(body as Team)
+      const data = await otomi.createTeam(body as Team)
       res.json(data)
     },
   ]
