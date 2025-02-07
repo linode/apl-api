@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.6.1](https://github.com/redkubes/otomi-api/compare/v3.6.0...v3.6.1) (2025-02-07)
+
+
+### Bug Fixes
+
+* create project ([#624](https://github.com/redkubes/otomi-api/issues/624)) ([676253e](https://github.com/redkubes/otomi-api/commit/676253e24568a889ca877fd3d5120a61d1a75f6b))
+
 ## [3.6.0](https://github.com/redkubes/otomi-api/compare/v3.5.0...v3.6.0) (2025-01-28)
 
 
