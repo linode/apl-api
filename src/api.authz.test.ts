@@ -3,7 +3,7 @@
 import { Express } from 'express'
 import request, { SuperAgentTest } from 'supertest'
 import getToken from 'src/fixtures/jwt'
-import { initApp } from 'src/app'
+import { initApp, loadSpec } from 'src/app'
 import OtomiStack from 'src/otomi-stack'
 import { getSessionStack } from './middleware'
 import { App, SealedSecret } from './otomi-models'
@@ -29,7 +29,6 @@ beforeAll(async () => {
 
   jest.spyOn(getValuesSchemaModule, 'getValuesSchema').mockResolvedValue({})
 
-  const { loadSpec } = await import('src/app') // Dynamic import
   await loadSpec()
 })
 

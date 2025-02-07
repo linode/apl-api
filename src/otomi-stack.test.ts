@@ -4,7 +4,18 @@ import OtomiStack from 'src/otomi-stack'
 import { Repo } from 'src/repo'
 import { mockDeep } from 'jest-mock-extended'
 import { PublicUrlExists } from './error'
-import * as getValuesSchemaModule from './utils'
+import { loadSpec } from './app'
+
+jest.mock('src/utils', () => {
+  const originalModule = jest.requireActual('src/utils')
+
+  return {
+    __esModule: true,
+    ...originalModule,
+    getServiceUrl: jest.fn().mockResolvedValue({ subdomain: '', domain: 'test' }),
+    getValuesSchema: jest.fn().mockResolvedValue({}),
+  }
+})
 
 beforeAll(async () => {
   jest.spyOn(console, 'log').mockImplementation(() => {})
@@ -12,9 +23,6 @@ beforeAll(async () => {
   jest.spyOn(console, 'info').mockImplementation(() => {})
   jest.spyOn(console, 'warn').mockImplementation(() => {})
 
-  jest.spyOn(getValuesSchemaModule, 'getValuesSchema').mockResolvedValue({})
-
-  const { loadSpec } = await import('src/app') // Dynamic import
   await loadSpec()
 })
 
@@ -28,53 +36,53 @@ describe('Data validation', () => {
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
   })
 
-  test('should throw exception on duplicated domain', () => {
+  test('should throw exception on duplicated domain', async () => {
     const svc = { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b' } }
     const svc1 = { ...svc }
-    otomiStack.createService('aa', svc)
+    await otomiStack.createService('aa', svc)
     expect(() => otomiStack.checkPublicUrlInUse(svc1)).toThrow(new PublicUrlExists())
   })
 
-  test('should throw exception on duplicated url with path', () => {
+  test('should throw exception on duplicated url with path', async () => {
     const svc = { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b', paths: ['/test/'] } }
-    otomiStack.createService('aa', svc)
+    await otomiStack.createService('aa', svc)
     expect(() => otomiStack.checkPublicUrlInUse(svc)).toThrow(new PublicUrlExists())
   })
 
-  test('should not throw exception on unique url', () => {
+  test('should not throw exception on unique url', async () => {
     const svc1 = { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b', paths: ['/test/'] } }
-    otomiStack.createService('aa', svc1)
+    await otomiStack.createService('aa', svc1)
     const svc2 = { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b' } }
     const svc3 = { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b', paths: ['/bla'] } }
     expect(() => otomiStack.checkPublicUrlInUse(svc2)).not.toThrow()
     expect(() => otomiStack.checkPublicUrlInUse(svc3)).not.toThrow()
   })
 
-  test('should not throw exception when of type cluster', () => {
+  test('should not throw exception when of type cluster', async () => {
     const svc = { name: 'svc', ingress: { type: 'cluster' } }
     // @ts-ignore
-    otomiStack.createService('aa', svc)
+    await otomiStack.createService('aa', svc)
     expect(() => otomiStack.checkPublicUrlInUse(svc)).not.toThrow()
   })
 
-  test('should not throw exception when editing', () => {
+  test('should not throw exception when editing', async () => {
     const svc = { id: 'x1', name: 'svc', ingress: { domain: 'a.com', subdomain: 'b', paths: ['/test/'] } }
-    otomiStack.createService('aa', svc)
+    await otomiStack.createService('aa', svc)
     const svc1 = { id: 'x1', name: 'svc', ingress: { domain: 'a.com', subdomain: 'c' } }
     expect(() => otomiStack.checkPublicUrlInUse(svc1)).not.toThrow()
   })
 
-  test('should create a password when password is not specified', () => {
+  test('should create a password when password is not specified', async () => {
     const createItemSpy = jest.spyOn(otomiStack.db, 'createItem')
-    otomiStack.createTeam({ name: 'test' })
+    await otomiStack.createTeam({ name: 'test' })
     expect(createItemSpy.mock.calls[0][1].password).not.toEqual('')
     createItemSpy.mockRestore()
   })
 
-  test('should not create a password when password is specified', () => {
+  test('should not create a password when password is specified', async () => {
     const createItemSpy = jest.spyOn(otomiStack.db, 'createItem')
     const myPassword = 'someAwesomePassword'
-    otomiStack.createTeam({ name: 'test', password: myPassword })
+    await otomiStack.createTeam({ name: 'test', password: myPassword })
     expect(createItemSpy.mock.calls[0][1].password).toEqual(myPassword)
     createItemSpy.mockRestore()
   })
@@ -82,23 +90,24 @@ describe('Data validation', () => {
 
 describe('Work with values', () => {
   let otomiStack: OtomiStack
-  beforeEach(() => {
+  beforeEach(async () => {
     otomiStack = new OtomiStack()
-    otomiStack.init()
+    await otomiStack.init()
     otomiStack.repo = new Repo('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
+    jest.spyOn(otomiStack, 'loadApp').mockResolvedValue()
   })
 
-  test('can load from configuration to database and back', () => {
-    expect(() => otomiStack.loadValues()).not.toThrow()
+  test('can load from configuration to database and back', async () => {
+    await expect(otomiStack.loadValues()).resolves.not.toThrow()
   })
 })
 
 describe('Workload values', () => {
   let otomiStack: OtomiStack
-  beforeEach(() => {
+  beforeEach(async () => {
     otomiStack = new OtomiStack()
-    otomiStack.init()
+    await otomiStack.init()
     otomiStack.repo = new Repo('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
   })
@@ -147,8 +156,7 @@ describe('Workload values', () => {
 
 describe('Users tests', () => {
   let otomiStack: OtomiStack
-  let dbStub: any
-  let settingsStub: jest.SpyInstance
+
   const domainSuffix = 'dev.linode-apl.net'
 
   const defaultPlatformAdmin: User = {
@@ -173,21 +181,25 @@ describe('Users tests', () => {
   beforeEach(async () => {
     otomiStack = new OtomiStack()
     await otomiStack.init()
+    otomiStack.repo = mockDeep<Repo>()
+    otomiStack.loadApps = jest.fn().mockResolvedValue([])
+    const dbMock = mockDeep<OtomiStack['db']>()
+    dbMock.getItem.mockImplementation((collection, query) => {
+      return [defaultPlatformAdmin, anyPlatformAdmin].find((user) => user.id === query.id)
+    })
+    dbMock.deleteItem.mockReturnValue()
 
-    dbStub = {
-      getItem: jest.fn((collection, query) => {
-        return [defaultPlatformAdmin, anyPlatformAdmin].find((user) => user.id === query.id)
-      }),
-      deleteItem: jest.fn().mockReturnValue(true),
-    }
-    otomiStack.db = dbStub
-    settingsStub = jest.spyOn(otomiStack, 'getSettings').mockReturnValue({ cluster: { domainSuffix } })
+    otomiStack.db = dbMock
+
+    jest.spyOn(otomiStack, 'getSettings').mockReturnValue({
+      cluster: { domainSuffix },
+    })
     jest.spyOn(otomiStack, 'saveUsers').mockResolvedValue()
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
   })
 
   afterEach(() => {
-    settingsStub.mockRestore()
+    jest.restoreAllMocks()
   })
 
   test('should not allow deleting the default platform admin user', async () => {
@@ -201,81 +213,64 @@ describe('Users tests', () => {
     expect(await otomiStack.deleteUser('2')).toBeUndefined()
   })
 
-  it('should not create a user with less than 3 characters', () => {
-    try {
-      otomiStack.createUser({ email: 'a@b.c', firstName: 'a', lastName: 'b' })
-    } catch (error) {
-      expect(error.code).to.equal(400)
-      expect(error.publicMessage).to.equal(
-        'Username (the part of the email before "@") must be between 3 and 30 characters.',
-      )
-    }
+  it('should not create a user with less than 3 characters', async () => {
+    await expect(otomiStack.createUser({ email: 'a@b.c', firstName: 'a', lastName: 'b' })).rejects.toMatchObject({
+      code: 400,
+      publicMessage: 'Username (the part of the email before "@") must be between 3 and 30 characters.',
+    })
   })
 
-  it('should not create a user with more than 30 characters', () => {
-    try {
-      otomiStack.createUser({ email: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@b.c', firstName: 'a', lastName: 'b' })
-    } catch (error) {
-      expect(error.code).to.equal(400)
-      expect(error.publicMessage).to.equal(
-        'Username (the part of the email before "@") must be between 3 and 30 characters.',
-      )
-    }
+  it('should not create a user with more than 30 characters', async () => {
+    await expect(
+      otomiStack.createUser({ email: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@b.c', firstName: 'a', lastName: 'b' }),
+    ).rejects.toMatchObject({
+      code: 400,
+      publicMessage: 'Username (the part of the email before "@") must be between 3 and 30 characters.',
+    })
   })
 
-  it('should not create a user if the username starts with non-alphanumeric characters', () => {
-    try {
-      otomiStack.createUser({ email: '-abc@b.c', firstName: 'a', lastName: 'b' })
-    } catch (error) {
-      expect(error.code).to.equal(400)
-      expect(error.publicMessage).to.equal('Invalid username (the part of the email before "@") format.')
-    }
+  it('should not create a user if the username starts with non-alphanumeric characters', async () => {
+    await expect(otomiStack.createUser({ email: '-abc@b.c', firstName: 'a', lastName: 'b' })).rejects.toMatchObject({
+      code: 400,
+      publicMessage: 'Invalid username (the part of the email before "@") format.',
+    })
   })
 
-  it('should not create a user if the username ends with non-alphanumeric characters', () => {
-    try {
-      otomiStack.createUser({ email: 'abc-@b.c', firstName: 'a', lastName: 'b' })
-    } catch (error) {
-      expect(error.code).to.equal(400)
-      expect(error.publicMessage).to.equal('Invalid username (the part of the email before "@") format.')
-    }
+  it('should not create a user if the username ends with non-alphanumeric characters', async () => {
+    await expect(otomiStack.createUser({ email: 'abc-@b.c', firstName: 'a', lastName: 'b' })).rejects.toMatchObject({
+      code: 400,
+      publicMessage: 'Invalid username (the part of the email before "@") format.',
+    })
   })
 
-  it('should not create a user if the username includes consecutive non-alphanumeric characters', () => {
-    try {
-      otomiStack.createUser({ email: 'ab--c@b.c', firstName: 'a', lastName: 'b' })
-    } catch (error) {
-      expect(error.code).to.equal(400)
-      expect(error.publicMessage).to.equal('Invalid username (the part of the email before "@") format.')
-    }
+  it('should not create a user if the username includes consecutive non-alphanumeric characters', async () => {
+    await expect(otomiStack.createUser({ email: 'ab--c@b.c', firstName: 'a', lastName: 'b' })).rejects.toMatchObject({
+      code: 400,
+      publicMessage: 'Invalid username (the part of the email before "@") format.',
+    })
   })
 
-  it('should not create a user with gitea reserved usernames', () => {
-    try {
-      otomiStack.createUser({ email: 'user@b.c', firstName: 'a', lastName: 'b' })
-    } catch (error) {
-      expect(error.code).to.equal(400)
-      expect(error.publicMessage).to.equal('This username (the part of the email before "@") is reserved.')
-    }
+  it('should not create a user with gitea reserved usernames', async () => {
+    await expect(otomiStack.createUser({ email: 'user@b.c', firstName: 'a', lastName: 'b' })).rejects.toMatchObject({
+      code: 400,
+      publicMessage: 'This username (the part of the email before "@") is reserved.',
+    })
   })
 
-  it('should not create a user with keycloak root user username', () => {
-    try {
-      otomiStack.createUser({ email: 'otomi-admin@b.c', firstName: 'a', lastName: 'b' })
-    } catch (error) {
-      expect(error.code).to.equal(400)
-      expect(error.publicMessage).to.equal('This username (the part of the email before "@") is reserved.')
-    }
+  it('should not create a user with keycloak root user username', async () => {
+    await expect(
+      otomiStack.createUser({ email: 'otomi-admin@b.c', firstName: 'a', lastName: 'b' }),
+    ).rejects.toMatchObject({
+      code: 400,
+      publicMessage: 'This username (the part of the email before "@") is reserved.',
+    })
   })
 
-  it('should not create a user with gitea reserved user patterns', () => {
-    try {
-      otomiStack.createUser({ email: 'a.keys@b.c', firstName: 'a', lastName: 'b' })
-    } catch (error) {
-      expect(error.code).to.equal(400)
-      expect(error.publicMessage).to.equal(
+  it('should not create a user with gitea reserved user patterns', async () => {
+    await expect(otomiStack.createUser({ email: 'a.keys@b.c', firstName: 'a', lastName: 'b' })).rejects.toMatchObject({
+      code: 400,
+      publicMessage:
         'Usernames (the part of the email before "@") ending with .keys, .gpg, .rss, or .atom are not allowed.',
-      )
-    }
+    })
   })
 })
