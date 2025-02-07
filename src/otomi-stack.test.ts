@@ -186,4 +186,82 @@ describe('Users tests', () => {
   test('should allow deleting any other platform admin user', async () => {
     expect(await otomiStack.deleteUser('2')).toBeUndefined()
   })
+
+  it('should not create a user with less than 3 characters', () => {
+    try {
+      otomiStack.createUser({ email: 'a@b.c', firstName: 'a', lastName: 'b' })
+    } catch (error) {
+      expect(error.code).to.equal(400)
+      expect(error.publicMessage).to.equal(
+        'Username (the part of the email before "@") must be between 3 and 30 characters.',
+      )
+    }
+  })
+
+  it('should not create a user with more than 30 characters', () => {
+    try {
+      otomiStack.createUser({ email: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@b.c', firstName: 'a', lastName: 'b' })
+    } catch (error) {
+      expect(error.code).to.equal(400)
+      expect(error.publicMessage).to.equal(
+        'Username (the part of the email before "@") must be between 3 and 30 characters.',
+      )
+    }
+  })
+
+  it('should not create a user if the username starts with non-alphanumeric characters', () => {
+    try {
+      otomiStack.createUser({ email: '-abc@b.c', firstName: 'a', lastName: 'b' })
+    } catch (error) {
+      expect(error.code).to.equal(400)
+      expect(error.publicMessage).to.equal('Invalid username (the part of the email before "@") format.')
+    }
+  })
+
+  it('should not create a user if the username ends with non-alphanumeric characters', () => {
+    try {
+      otomiStack.createUser({ email: 'abc-@b.c', firstName: 'a', lastName: 'b' })
+    } catch (error) {
+      expect(error.code).to.equal(400)
+      expect(error.publicMessage).to.equal('Invalid username (the part of the email before "@") format.')
+    }
+  })
+
+  it('should not create a user if the username includes consecutive non-alphanumeric characters', () => {
+    try {
+      otomiStack.createUser({ email: 'ab--c@b.c', firstName: 'a', lastName: 'b' })
+    } catch (error) {
+      expect(error.code).to.equal(400)
+      expect(error.publicMessage).to.equal('Invalid username (the part of the email before "@") format.')
+    }
+  })
+
+  it('should not create a user with gitea reserved usernames', () => {
+    try {
+      otomiStack.createUser({ email: 'user@b.c', firstName: 'a', lastName: 'b' })
+    } catch (error) {
+      expect(error.code).to.equal(400)
+      expect(error.publicMessage).to.equal('This username (the part of the email before "@") is reserved.')
+    }
+  })
+
+  it('should not create a user with keycloak root user username', () => {
+    try {
+      otomiStack.createUser({ email: 'otomi-admin@b.c', firstName: 'a', lastName: 'b' })
+    } catch (error) {
+      expect(error.code).to.equal(400)
+      expect(error.publicMessage).to.equal('This username (the part of the email before "@") is reserved.')
+    }
+  })
+
+  it('should not create a user with gitea reserved user patterns', () => {
+    try {
+      otomiStack.createUser({ email: 'a.keys@b.c', firstName: 'a', lastName: 'b' })
+    } catch (error) {
+      expect(error.code).to.equal(400)
+      expect(error.publicMessage).to.equal(
+        'Usernames (the part of the email before "@") ending with .keys, .gpg, .rss, or .atom are not allowed.',
+      )
+    }
+  })
 })

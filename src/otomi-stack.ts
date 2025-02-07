@@ -10,7 +10,7 @@ import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
-import { AlreadyExists, GitPullError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
+import { AlreadyExists, GitPullError, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
 import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
@@ -72,7 +72,7 @@ import {
 import { validateBackupFields } from './utils/backupUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { encryptSecretItem } from './utils/sealedSecretUtils'
-import { getKeycloakUsers } from './utils/userUtils'
+import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
@@ -735,6 +735,11 @@ export default class OtomiStack {
   }
 
   async createUser(data: User): Promise<User> {
+    const { valid, error } = isValidUsername(data.email.split('@')[0])
+    if (!valid) {
+      const err = new HttpError(400, error as string)
+      throw err
+    }
     const initialPassword = generatePassword({
       length: 16,
       numbers: true,
@@ -828,7 +833,10 @@ export default class OtomiStack {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const project = this.db.createItem('projects', { ...data, teamId }, { teamId, name: data.name }) as Project
       await this.saveTeamProjects(teamId)
-      await this.doDeployment(['projects'])
+      await this.saveTeamBuilds(teamId)
+      await this.saveTeamWorkloads(teamId)
+      await this.saveTeamServices(teamId)
+      await this.doDeployment(['projects', 'builds', 'workloads', 'workloadValues', 'services'])
       return project
     } catch (err) {
       if (err.code === 409 && projectNameTaken) err.publicMessage = projectNameTakenPublicMessage
@@ -894,7 +902,10 @@ export default class OtomiStack {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const project = this.db.updateItem('projects', updatedData, { id }) as Project
     await this.saveTeamProjects(project.teamId!)
-    await this.doDeployment(['projects'])
+    await this.saveTeamBuilds(project.teamId!)
+    await this.saveTeamWorkloads(project.teamId!)
+    await this.saveTeamServices(project.teamId!)
+    await this.doDeployment(['projects', 'builds', 'workloads', 'workloadValues', 'services'])
     return project
   }
 
@@ -907,7 +918,10 @@ export default class OtomiStack {
     if (p.service?.id) this.db.deleteItem('services', { id: p.service.id })
     this.db.deleteItem('projects', { id })
     await this.saveTeamProjects(p.teamId!)
-    await this.doDeployment(['projects'])
+    await this.saveTeamBuilds(p.teamId!)
+    await this.saveTeamWorkloads(p.teamId!)
+    await this.saveTeamServices(p.teamId!)
+    await this.doDeployment(['projects', 'builds', 'workloads', 'workloadValues', 'services'])
   }
 
   getDashboard(teamId: string): Array<any> {
