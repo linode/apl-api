@@ -1450,31 +1450,6 @@ export default class OtomiStack {
     return this.db.getCollection('secrets', { teamId }) as Array<Secret>
   }
 
-  createSealedSecretsChart(data: SealedSecret, encryptedData: any, namespace: string): any {
-    const SealedSecretSchema = {
-      apiVersion: 'bitnami.com/v1alpha1',
-      kind: 'SealedSecret',
-      metadata: {
-        ...data.metadata,
-        name: data.name,
-        namespace,
-      },
-      spec: {
-        encryptedData,
-        template: {
-          type: data.type || 'kubernetes.io/opaque',
-          immutable: data.immutable || false,
-          metadata: {
-            name: data.name,
-            namespace,
-          },
-        },
-      },
-    }
-
-    return SealedSecretSchema
-  }
-
   async createSealedSecret(teamId: string, data: SealedSecret): Promise<SealedSecret> {
     const namespace = data.namespace ?? `team-${teamId}`
     const certificate = await getSealedSecretsCertificate()
@@ -1517,9 +1492,9 @@ export default class OtomiStack {
       const encryptedItem = encryptSecretItem(certificate, data.name, namespace, obj.value, 'namespace-wide')
       return { [obj.key]: encryptedItem }
     })
-    const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises)))
+    const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises))) as EncryptedDataRecord
     const sealedSecret = this.db.updateItem('sealedsecrets', { ...data, encryptedData }, { id }) as SealedSecret
-    const sealedSecretChartValues = this.createSealedSecretsChart(data, encryptedData, namespace)
+    const sealedSecretChartValues = SealedSecretManifest(data, encryptedData, namespace)
     await this.saveTeamSealedSecrets(data.teamId!, sealedSecretChartValues, id)
     await this.doDeployment(['sealedsecrets'])
     return sealedSecret

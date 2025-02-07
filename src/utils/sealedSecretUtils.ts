@@ -49,15 +49,9 @@ export interface SealedSecretManifestType {
   metadata: {
     name: string
     namespace: string
-    annotations?: {
-      key: string
-      value: string
-    }[]
+    annotations?: Record<string, string>
     finalizers?: string[]
-    labels?: {
-      key: string
-      value: string
-    }[]
+    labels?: Record<string, string>
   }
   spec: {
     encryptedData: EncryptedDataRecord
@@ -84,11 +78,22 @@ export function SealedSecretManifest(
   encryptedData: EncryptedDataRecord,
   namespace: string,
 ): SealedSecretManifestType {
+  const annotations = data.metadata?.annotations?.reduce((acc, item) => {
+    return { ...acc, [item.key]: item.value }
+  }, {})
+  const labels = data.metadata?.labels?.reduce((acc, item) => {
+    return { ...acc, [item.key]: item.value }
+  }, {})
   const SealedSecretSchema = {
     apiVersion: 'bitnami.com/v1alpha1',
     kind: 'SealedSecret',
     metadata: {
       ...data.metadata,
+      annotations: {
+        ...annotations,
+        'sealedsecrets.bitnami.com/namespace-wide': 'true',
+      },
+      labels,
       name: data.name,
       namespace,
     },
