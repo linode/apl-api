@@ -49,10 +49,7 @@ export interface SealedSecretManifestType {
   metadata: {
     name: string
     namespace: string
-    annotations?: {
-      key: string
-      value: string
-    }[]
+    annotations?: any
     finalizers?: string[]
     labels?: {
       key: string
