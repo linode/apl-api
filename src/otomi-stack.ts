@@ -71,7 +71,7 @@ import {
 } from './k8s_operations'
 import { validateBackupFields } from './utils/backupUtils'
 import { getPolicies } from './utils/policiesUtils'
-import { encryptSecretItem } from './utils/sealedSecretUtils'
+import { EncryptedDataRecord, SealedSecretManifest, encryptSecretItem } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
@@ -1442,27 +1442,11 @@ export default class OtomiStack {
   }
 
   createSealedSecretsChart(data: SealedSecret, encryptedData: any, namespace: string): any {
-    let finalizers = [] as string[]
-    let annotations = {}
-    let labels = {}
-    const timestamp = (new Date()).toISOString()
-
-    if (data.metadata && typeof data.metadata === 'object') {
-      finalizers = data.metadata.finalizers || []
-      annotations = data.metadata.annotations || {}
-      labels = data.metadata.labels || {}
-    }
-
     const SealedSecretSchema = {
       apiVersion: 'bitnami.com/v1alpha1',
       kind: 'SealedSecret',
       metadata: {
-        annotations,
-        // Only include labels if they exist.
-        ...(Object.keys(labels).length > 0 && { labels }),
-        // Only include finalizers if they exist.
-        ...(finalizers.length > 0 && { finalizers }),
-        creationTimestamp: timestamp,
+        ...data.metadata,
         name: data.name,
         namespace,
       },
@@ -1472,7 +1456,6 @@ export default class OtomiStack {
           type: data.type || 'kubernetes.io/opaque',
           immutable: data.immutable || false,
           metadata: {
-            creationTimestamp: timestamp,
             name: data.name,
             namespace,
           },
@@ -1496,13 +1479,13 @@ export default class OtomiStack {
         const encryptedItem = encryptSecretItem(certificate, data.name, namespace, obj.value, 'namespace-wide')
         return { [obj.key]: encryptedItem }
       })
-      const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises)))
+      const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises))) as EncryptedDataRecord
       const sealedSecret = this.db.createItem(
         'sealedsecrets',
         { ...data, teamId, encryptedData, namespace },
         { teamId, name: data.name },
       ) as SealedSecret
-      const sealedSecretChartValues = this.createSealedSecretsChart(data, encryptedData, namespace)
+      const sealedSecretChartValues = SealedSecretManifest(data, encryptedData, namespace)
       await this.saveTeamSealedSecrets(teamId, sealedSecretChartValues, sealedSecret.id!)
       await this.doDeployment(['sealedsecrets'])
       return sealedSecret
@@ -1520,7 +1503,7 @@ export default class OtomiStack {
       err.publicMessage = 'SealedSecrets certificate not found'
       throw err
     }
-    //@ts-ignore
+
     const encryptedDataPromises = data.encryptedData.map((obj) => {
       const encryptedItem = encryptSecretItem(certificate, data.name, namespace, obj.value, 'namespace-wide')
       return { [obj.key]: encryptedItem }
@@ -1612,28 +1595,30 @@ export default class OtomiStack {
     const sealedSecretsValuesRootPath = getTeamSealedSecretsValuesRootPath(teamId)
     const sealedSecretsFileNames = await this.repo.readDir(sealedSecretsValuesRootPath)
     if (sealedSecretsFileNames.length === 0) return
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    sealedSecretsFileNames.forEach(async (id: string) => {
-      const relativePath = getTeamSealedSecretsValuesFilePath(teamId, id)
-      if (!(await this.repo.fileExists(relativePath))) {
-        debug(`Team ${teamId} has no sealed secrets yet`)
-        return
-      }
-      const data = await this.repo.readFile(relativePath)
-      const res: any = this.db.populateItem(
-        'sealedsecrets',
-        {
-          encryptedData: data.spec.encryptedData,
-          metadata: data.spec.template.metadata,
-          type: data.spec.template.type,
-          name: data.metadata.name,
-          teamId,
-        },
-        undefined,
-        id.replace('.yaml', ''),
-      )
-      debug(`Loaded sealed secret: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
-    })
+
+    await Promise.all(
+      sealedSecretsFileNames.map(async (id: string) => {
+        const relativePath = getTeamSealedSecretsValuesFilePath(teamId, id)
+        if (!(await this.repo.fileExists(relativePath))) {
+          debug(`Team ${teamId} has no sealed secrets yet`)
+          return
+        }
+        const data = await this.repo.readFile(relativePath)
+        const res: any = this.db.populateItem(
+          'sealedsecrets',
+          {
+            encryptedData: data.spec.encryptedData,
+            metadata: data.spec.template.metadata,
+            type: data.spec.template.type,
+            name: data.metadata.name,
+            teamId,
+          },
+          undefined,
+          id.replace('.yaml', ''),
+        )
+        debug(`Loaded sealed secret: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
+      }),
+    )
   }
 
   async loadTeamBackups(teamId: string): Promise<void> {
