@@ -1748,8 +1748,6 @@ components:
       $ref: cluster.yaml#/Cluster
     Coderepo:
       $ref: coderepo.yaml#/Coderepo
-    Deploy:
-      $ref: deploy.yaml#/Deploy
     Ingress:
       $ref: service.yaml#/Ingress
     IngressCluster:
@@ -1776,10 +1774,6 @@ components:
       $ref: policies.yaml#/Policy
     Policies:
       $ref: policies.yaml#/Policies
-    Restore:
-      $ref: restore.yaml#/Restore
-    Revert:
-      $ref: revert.yaml#/Revert
     SealedSecret:
       $ref: sealedsecret.yaml#/SealedSecret
     SealedSecretsKeys:

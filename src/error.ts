@@ -51,12 +51,6 @@ export class ApiNotReadyError extends OtomiError {
     this.code = 503
   }
 }
-export class DeployLockError extends OtomiError {
-  public constructor(err?: string) {
-    super('Deployment in progress. Please try again in 15 seconds.', err)
-    this.code = 409
-  }
-}
 
 export class HttpError extends OtomiError {
   protected static messages: Record<number, string> = {
