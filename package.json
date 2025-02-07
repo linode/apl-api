@@ -32,7 +32,6 @@
     "json-stable-stringify": "^1.0.1",
     "jsonwebtoken": "^9.0.0",
     "jwt-decode": "^2.2.0",
-    "leaked-handles": "^5.2.0",
     "lightship": "^6.7.2",
     "lodash": "^4.17.21",
     "lowdb": "^1.0.0",
