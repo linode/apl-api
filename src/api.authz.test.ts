@@ -1,57 +1,65 @@
-import { assert } from 'chai'
 import { Express } from 'express'
-import { isEqual } from 'lodash'
-import { SinonStubbedInstance, stub as sinonStub } from 'sinon'
-import { initApp } from 'src/app'
 import request, { SuperAgentTest } from 'supertest'
-// import { AlreadyExists } from 'src/error'
 import getToken from 'src/fixtures/jwt'
+import { initApp } from 'src/app'
 import OtomiStack from 'src/otomi-stack'
 import { getSessionStack } from './middleware'
-import { App } from './otomi-models'
+import { App, SealedSecret } from './otomi-models'
+import { HttpError } from './error'
+import { Repo } from './repo'
+import { mockDeep } from 'jest-mock-extended'
 
-const platformAdminToken: string = getToken(['platform-admin'])
-const teamAdminToken: string = getToken(['team-admin', 'team-team1'])
-const teamMemberToken: string = getToken(['team-team1'])
-const userToken: string = getToken([])
+const platformAdminToken = getToken(['platform-admin'])
+const teamAdminToken = getToken(['team-admin', 'team-team1'])
+const teamMemberToken = getToken(['team-team1'])
+const userToken = getToken([])
 const teamId = 'team1'
 const otherTeamId = 'team2'
 
+jest.mock('./k8s_operations')
+jest.mock('./utils/sealedSecretUtils')
 describe('API authz tests', () => {
   let app: Express
-  let otomiStack: SinonStubbedInstance<OtomiStack>
+  let otomiStack: OtomiStack
   let agent: SuperAgentTest
-  before(async () => {
-    // we need to get the session stack here, which was attached to req
+
+  beforeAll(async () => {
     const _otomiStack = await getSessionStack()
-    // await _otomiStack.init()
-    _otomiStack.createTeam({ name: 'team1' })
-    otomiStack = sinonStub(_otomiStack)
+    _otomiStack.repo = mockDeep<Repo>()
+    _otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
+    await _otomiStack.createTeam({ name: 'team1' })
+    otomiStack = _otomiStack as jest.Mocked<OtomiStack>
+
+    otomiStack.createTeam = jest.fn().mockResolvedValue(undefined)
+    otomiStack.saveTeams = jest.fn().mockResolvedValue(undefined)
+    otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
+    await otomiStack.init()
     app = await initApp(otomiStack)
     agent = request.agent(app)
     agent.set('Accept', 'application/json')
   })
 
+  beforeEach(() => {
+    jest.spyOn(otomiStack, 'createTeam').mockResolvedValue({ name: 'team' })
+  })
+
   describe('Platform Admin /settings endpoint tests', () => {
-    it(`platform admin can get /settings/alerts`, (done) => {
-      agent
-        .get(`/v1/settings`)
+    test('platform admin can get /settings/alerts', async () => {
+      await agent
+        .get('/v1/settings')
         .set('Authorization', `Bearer ${platformAdminToken}`)
         .expect(200)
         .expect('Content-Type', /json/)
-        .end(done)
     })
-    it('platform admin cannot put /settings/alerts with extra properties', (done) => {
-      agent
+
+    test('platform admin cannot put /settings/alerts with extra properties', async () => {
+      await agent
         .put('/v1/settings/alerts')
         .send({
           alerts: {
             drone: ['msteams'],
             groupInterval: '5m',
-            msteams: {
-              highPrio: 'bla',
-              lowPrio: 'bla',
-            },
+            msteams: { highPrio: 'bla', lowPrio: 'bla' },
             receivers: ['slack'],
             repeatInterval: '3h',
             randomProp: 'randomValue',
@@ -59,12 +67,11 @@ describe('API authz tests', () => {
         })
         .set('Authorization', `Bearer ${platformAdminToken}`)
         .expect(400)
-        .end(done)
     })
   })
 
-  it('platform admin can update team self-service-flags', (done) => {
-    agent
+  test('platform admin can update team self-service-flags', async () => {
+    await agent
       .put('/v1/teams/team1')
       .send({
         name: 'team1',
@@ -76,148 +83,147 @@ describe('API authz tests', () => {
       })
       .set('Authorization', `Bearer ${platformAdminToken}`)
       .expect(200)
-      .end(done)
   })
-  it('platform admin can get all teams', (done) => {
-    agent
+
+  test('platform admin can get all teams', async () => {
+    await agent
       .get('/v1/teams')
       .set('Authorization', `Bearer ${platformAdminToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
-      .end(done)
   })
-  it('platform admin can get a given team', (done) => {
-    agent
+
+  test('platform admin can get a given team', async () => {
+    await agent
       .get('/v1/teams/team1')
       .set('Authorization', `Bearer ${platformAdminToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
-      .end(done)
   })
-  it('platform admin can create a team', (done) => {
+
+  test('platform admin can create a team', async () => {
     const data = { name: 'otomi', password: 'test' }
-    agent.post('/v1/teams').send(data).set('Authorization', `Bearer ${platformAdminToken}`).expect(200).end(done)
+    await agent.post('/v1/teams').send(data).set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
   })
 
-  it('platform admin can get all values', (done) => {
-    agent.get('/v1/otomi/values').set('Authorization', `Bearer ${platformAdminToken}`).expect(200).end(done)
+  test('platform admin can get all values', async () => {
+    jest.spyOn(otomiStack, 'getValues').mockResolvedValue({})
+    await agent.get('/v1/otomi/values').set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
   })
 
-  it('team member cannot get all values', (done) => {
-    agent.get('/v1/otomi/values').set('Authorization', `Bearer ${teamMemberToken}`).expect(403).end(done)
+  test('team member cannot get all values', async () => {
+    await agent.get('/v1/otomi/values').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
   })
 
-  it('authenticated user cannot get all values', (done) => {
-    agent.get('/v1/otomi/values').set('Authorization', `Bearer ${userToken}`).expect(403).end(done)
+  test('authenticated user cannot get all values', async () => {
+    await agent.get('/v1/otomi/values').set('Authorization', `Bearer ${userToken}`).expect(403)
   })
 
-  it('unauthenticated user cannot get all values', (done) => {
-    agent.get('/v1/otomi/values').expect(401).end(done)
+  test('unauthenticated user cannot get all values', async () => {
+    await agent.get('/v1/otomi/values').expect(401)
   })
-  it('platform admin can see values from an app', (done) => {
-    const values: App['values'] = { shown: true }
-    otomiStack.getApp.callsFake(() => ({ id: 'adminapp', values }))
-    agent
+
+  test('platform admin can see values from an app', async () => {
+    const values = { shown: true } as App['values']
+    jest.spyOn(otomiStack, 'getApp').mockImplementation(() => ({ id: 'adminapp', values }))
+    const response = await agent
       .get('/v1/apps/admin/loki')
       .set('Authorization', `Bearer ${platformAdminToken}`)
       .expect(200)
-      .then((response) => {
-        assert(isEqual(response.body.values, values), 'values property is not filtered')
-        done()
-      })
-      .catch((err) => done(err))
+    expect(response.body.values).toEqual(values)
   })
 
-  it('team member can get all teams', (done) => {
-    agent
+  test('team member can get all teams', async () => {
+    await agent
       .get('/v1/teams')
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
-      .end(done)
   })
-  it('team member cannot delete all teams', (done) => {
-    agent.delete('/v1/teams').set('Authorization', `Bearer ${teamMemberToken}`).expect(404).end(done)
+
+  test('team member cannot delete all teams', async () => {
+    await agent.delete('/v1/teams').set('Authorization', `Bearer ${teamMemberToken}`).expect(404)
   })
-  it('team member cannot create a new team', (done) => {
-    agent
+
+  test('team member cannot create a new team', async () => {
+    await agent
       .post('/v1/teams')
       .send({ name: 'otomi', password: 'test' })
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
-      .end(done)
   })
 
-  it('team member can get other teams', (done) => {
-    agent
+  test('team member can get other teams', async () => {
+    jest.spyOn(otomiStack, 'getTeam').mockResolvedValue({} as never)
+    await agent
       .get('/v1/teams/team2')
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
-      .end(done)
   })
-  it('team member can get its team data', (done) => {
-    agent
+
+  test('team member can get its team data', async () => {
+    await agent
       .get('/v1/teams/team1')
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
-      .end(done)
   })
 
-  it('team member can create its own services', (done) => {
-    agent
+  test('team member can create its own services', async () => {
+    jest.spyOn(otomiStack, 'createService').mockResolvedValue({} as any)
+    await agent
       .post('/v1/teams/team1/services')
       .send({
-        name: 'service1',
+        name: 'newservice',
         serviceType: 'ksvcPredeployed',
         ingress: { type: 'cluster' },
         networkPolicy: {
-          ingressPrivate: {
-            mode: 'DenyAll',
-          },
+          ingressPrivate: { mode: 'DenyAll' },
         },
       })
       .set('Content-Type', 'application/json')
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
-      .end(done)
   })
-  it('team member can get its services', (done) => {
-    agent
+
+  test('team member can get its services', async () => {
+    await agent
       .get('/v1/teams/team1/services')
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
-      .end(done)
   })
-  it('team member can get a specific service', (done) => {
-    agent
+
+  test('team member can get a specific service', async () => {
+    jest.spyOn(otomiStack, 'getService').mockResolvedValue({} as never)
+    await agent
       .get('/v1/teams/team1/services/service1')
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
-      .end(done)
   })
-  it('team member can delete its own service', (done) => {
-    agent
-      .delete('/v1/teams/team1/services/service')
+
+  test('team member can delete its own service', async () => {
+    jest.spyOn(otomiStack, 'deleteService').mockResolvedValue()
+    await agent
+      .delete('/v1/teams/team1/services/service2')
       .set('Content-Type', 'application/json')
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
-      .end(done)
   })
-  it('team member can not delete service from other team', (done) => {
-    agent
+
+  test('team member cannot delete service from other team', async () => {
+    await agent
       .delete('/v1/teams/team2/services/service1')
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
-      .end(done)
   })
-  it('team member can not update service from other team', (done) => {
-    agent
+
+  test('team member cannot update service from other team', async () => {
+    await agent
       .put('/v1/teams/team2/services/service1')
       .send({
         name: 'service1',
@@ -226,272 +232,252 @@ describe('API authz tests', () => {
       })
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
-      .end(done)
-  })
-  it('team member can not update workload from other team', (done) => {
-    agent
-      .put('/v1/teams/team2/workloads/my-uuid')
-      .send({
-        name: 'wid',
-        url: 'https://test.local/',
-      })
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(403)
-      .end(done)
   })
 
-  it('team member can not delete workload from other team', (done) => {
-    agent
+  test('team member cannot update workload from other team', async () => {
+    await agent
+      .put('/v1/teams/team2/workloads/my-uuid')
+      .send({ name: 'wid', url: 'https://test.local/' })
+      .set('Authorization', `Bearer ${teamMemberToken}`)
+      .expect(403)
+  })
+
+  test('team member cannot delete workload from other team', async () => {
+    await agent
       .delete('/v1/teams/team2/workloads/my-uuid')
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
-      .end(done)
   })
-  it('team member can not update workload values from other team', (done) => {
-    agent
+
+  test('team member cannot update workload values from other team', async () => {
+    await agent
       .put('/v1/teams/team2/workloads/my-uuid/values')
-      .send({
-        values: { a: 'b' },
-      })
+      .send({ values: { a: 'b' } })
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
-      .end(done)
   })
 
-  it('team member can update workload values with payload lower than than limit', (done) => {
-    const largePayload = { data: 'A'.repeat(400000) } // 400KB
+  test('team member can update workload values with payload lower than limit', async () => {
+    jest.spyOn(otomiStack, 'editWorkloadValues').mockResolvedValue({} as any)
 
-    agent
+    const largePayload = { data: 'A'.repeat(400000) } // 400KB
+    await agent
       .put('/v1/teams/team1/workloads/my-uuid/values')
-      .send({
-        values: largePayload,
-      })
+      .send({ values: largePayload })
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
-      .end(done)
   })
 
-  it('team member can not update workload values with payload  higher than limit', (done) => {
+  test('team member cannot update workload values with payload higher than limit', async () => {
     const largePayload = { data: 'A'.repeat(600000) } // 600KB
-
-    agent
+    await agent
       .put('/v1/teams/team1/workloads/my-uuid/values')
-      .send({
-        values: largePayload,
-      })
+      .send({ values: largePayload })
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(413)
-      .end(done)
   })
-  xit('team member can not see filtered values', (done) => {
-    otomiStack.getApp.callsFake(() => ({ id: 'teamapp', values: { hidden: true } }))
-    agent
-      .get('/v1/apps/team1/loki')
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
-      .then((response) => {
-        assert(response.body.values === undefined, 'values property is filtered')
-        done()
-      })
-      .catch((err) => done(err))
-  })
-  it('authenticated user should get api spec', (done) => {
-    agent
+
+  test('authenticated user should get api spec', async () => {
+    await agent
       .get('/v1/apiDocs')
-      .expect(200)
       .set('Authorization', `Bearer ${teamMemberToken}`)
+      .expect(200)
       .expect('Content-Type', /json/)
-      .end(done)
   })
-  it('authenticated user can get session', (done) => {
-    agent
+
+  test('authenticated user can get session', async () => {
+    jest.spyOn(otomiStack, 'getSession').mockResolvedValue({} as any)
+
+    await agent
       .get('/v1/session')
-      .expect(200)
       .set('Authorization', `Bearer ${teamMemberToken}`)
+      .expect(200)
       .expect('Content-Type', /json/)
-      .end(done)
-  })
-  it('anonymous user cannot get session', (done) => {
-    agent.get('/v1/session').expect(401).expect('Content-Type', /json/).end(done)
   })
 
-  it('anonymous user should get api spec', (done) => {
-    agent.get('/v1/apiDocs').expect(200).expect('Content-Type', /json/).end(done)
-  })
-  it('anonymous user cannot get a specific team', (done) => {
-    agent.get('/v1/teams/team1').expect(401).end(done)
-  })
-  it('anonymous user cannot modify a team', (done) => {
-    agent.put('/v1/teams/team1').expect(401).end(done)
-  })
-  it('anonymous user cannot delete a team', (done) => {
-    agent.delete('/v1/teams/team1').expect(401).end(done)
-  })
-  it('anonymous user cannot create a team', (done) => {
-    agent.post('/v1/teams').expect(401).end(done)
-  })
-  it('anonymous user cannot get services', (done) => {
-    agent.get('/v1/teams/team1/services').expect(401).end(done)
-  })
-  it('anonymous user cannot get workloads', (done) => {
-    agent.get('/v1/teams/team1/workloads').expect(401).end(done)
-  })
-  it('anonymous user cannot modify a workload', (done) => {
-    agent.put('/v1/teams/team1/workloads/my-uuid').expect(401).end(done)
-  })
-  it('anonymous user cannot modify a workload values', (done) => {
-    agent.put('/v1/teams/team1/workloads/my-uuid/values').expect(401).end(done)
-  })
-  it('anonymous user cannot delete a workload', (done) => {
-    agent.delete('/v1/teams/team1/workloads/my-uuid').expect(401).end(done)
-  })
-  it('anonymous user cannot get a given service', (done) => {
-    agent.get('/v1/teams/team1/services/service1').expect(401).end(done)
+  test('anonymous user cannot get session', async () => {
+    await agent.get('/v1/session').expect(401).expect('Content-Type', /json/)
   })
 
-  it('anonymous user cannot edit a given service', (done) => {
-    agent.put('/v1/teams/team1/services/service1').expect(401).end(done)
-  })
-  it('anonymous user cannot delete a given service', (done) => {
-    agent.delete('/v1/teams/team1/services/service1').expect(401).end(done)
-  })
-  it('anonymous user cannot create a new service', (done) => {
-    agent.post('/v1/teams/team1/services').expect(401).end(done)
-  })
-  it('should handle exists exception and transform it to HTTP response with code 409', (done) => {
-    // const stub = otomiStack.createTeam.callsFake(() => {
-    //   throw new AlreadyExists('test')
-    // })
-    const data = { name: 'test1', password: 'test' }
-    agent
-      .post('/v1/teams')
-      .send(data)
-      .set('Authorization', `Bearer ${platformAdminToken}`)
-      .expect(409)
-      .end(() => {
-        // stub.reset()
-        done()
-      })
+  test('anonymous user should get api spec', async () => {
+    await agent.get('/v1/apiDocs').expect(200).expect('Content-Type', /json/)
   })
 
-  it('team member can create its own sealedsecret', (done) => {
+  test('anonymous user cannot get a specific team', async () => {
+    await agent.get('/v1/teams/team1').expect(401)
+  })
+
+  test('anonymous user cannot modify a team', async () => {
+    await agent.put('/v1/teams/team1').expect(401)
+  })
+
+  test('anonymous user cannot delete a team', async () => {
+    await agent.delete('/v1/teams/team1').expect(401)
+  })
+
+  test('anonymous user cannot create a team', async () => {
+    await agent.post('/v1/teams').expect(401)
+  })
+
+  test('anonymous user cannot get services', async () => {
+    await agent.get('/v1/teams/team1/services').expect(401)
+  })
+
+  test('anonymous user cannot get workloads', async () => {
+    await agent.get('/v1/teams/team1/workloads').expect(401)
+  })
+
+  test('anonymous user cannot modify a workload', async () => {
+    await agent.put('/v1/teams/team1/workloads/my-uuid').expect(401)
+  })
+
+  test('anonymous user cannot modify a workload values', async () => {
+    await agent.put('/v1/teams/team1/workloads/my-uuid/values').expect(401)
+  })
+
+  test('anonymous user cannot delete a workload', async () => {
+    await agent.delete('/v1/teams/team1/workloads/my-uuid').expect(401)
+  })
+
+  test('anonymous user cannot get a given service', async () => {
+    await agent.get('/v1/teams/team1/services/service1').expect(401)
+  })
+
+  test('anonymous user cannot edit a given service', async () => {
+    await agent.put('/v1/teams/team1/services/service1').expect(401)
+  })
+
+  test('anonymous user cannot delete a given service', async () => {
+    await agent.delete('/v1/teams/team1/services/service1').expect(401)
+  })
+
+  test('anonymous user cannot create a new service', async () => {
+    await agent.post('/v1/teams/team1/services').expect(401)
+  })
+
+  test('should handle exists exception and transform it to HTTP response with code 409', async () => {
+    const data = { name: 'team1', password: 'test' }
+    jest.spyOn(otomiStack, 'createTeam').mockRejectedValue(new HttpError(409))
+    await agent.post('/v1/teams').send(data).set('Authorization', `Bearer ${platformAdminToken}`).expect(409)
+  })
+
+  test('team member can create its own sealedsecret', async () => {
+    jest.spyOn(otomiStack, 'createSealedSecret').mockResolvedValue({} as SealedSecret)
+
     const data = {
       name: 'demo',
       encryptedData: [{ key: 'foo', value: 'bar' }],
       type: 'kubernetes.io/opaque',
     }
-    agent
+    await agent
       .post(`/v1/teams/${teamId}/sealedsecrets`)
       .send(data)
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
-      .end(done)
   })
 
-  it('team member can read its own sealedsecret', (done) => {
-    agent
+  test('team member can read its own sealedsecret', async () => {
+    jest.spyOn(otomiStack, 'getSealedSecret').mockResolvedValue({} as SealedSecret)
+
+    await agent
       .get(`/v1/teams/${teamId}/sealedsecrets/my-uuid`)
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
-      .end(done)
   })
 
-  it('team member can update its own sealedsecret', (done) => {
+  test('team member can update its own sealedsecret', async () => {
+    jest.spyOn(otomiStack, 'editSealedSecret').mockResolvedValue({} as SealedSecret)
+
     const data = {
       name: 'demo',
       encryptedData: [{ key: 'foo', value: 'baz' }],
       type: 'kubernetes.io/opaque',
     }
-    agent
+    await agent
       .put(`/v1/teams/${teamId}/sealedsecrets/my-uuid`)
       .send(data)
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
-      .end(done)
   })
 
-  it('team member can delete its own sealedsecret', (done) => {
-    agent
+  test('team member can delete its own sealedsecret', async () => {
+    jest.spyOn(otomiStack, 'deleteSealedSecret').mockResolvedValue()
+
+    await agent
       .delete(`/v1/teams/${teamId}/sealedsecrets/my-uuid`)
       .set('Content-Type', 'application/json')
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
-      .end(done)
   })
-  it('team member cannot create others sealedsecret', (done) => {
+
+  test('team member cannot create others sealedsecret', async () => {
     const data = {
       name: 'demo',
       encryptedData: [{ key: 'foo', value: 'bar' }],
       type: 'kubernetes.io/opaque',
     }
-    agent
+    await agent
       .post(`/v1/teams/${otherTeamId}/sealedsecrets`)
       .send(data)
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
-      .end(done)
   })
 
-  it('team member cannot read others sealedsecret', (done) => {
-    agent
+  test('team member cannot read others sealedsecret', async () => {
+    await agent
       .get(`/v1/teams/${otherTeamId}/sealedsecrets/my-uuid`)
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
-      .end(done)
   })
 
-  it('team member cannot update others sealedsecret', (done) => {
+  test('team member cannot update others sealedsecret', async () => {
     const data = {
       name: 'demo',
       encryptedData: [{ key: 'foo', value: 'baz' }],
       type: 'kubernetes.io/opaque',
     }
-    agent
+    await agent
       .put(`/v1/teams/${otherTeamId}/sealedsecrets/my-uuid`)
       .send(data)
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
-      .end(done)
   })
 
-  it('team member cannot delete others sealedsecret', (done) => {
-    agent
+  test('team member cannot delete others sealedsecret', async () => {
+    await agent
       .delete(`/v1/teams/${otherTeamId}/sealedsecrets/my-uuid`)
       .set('Content-Type', 'application/json')
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
       .expect('Content-Type', /json/)
-      .end(done)
   })
 
-  it('team member can get its own sealedsecrets', (done) => {
-    agent
+  test('team member can get its own sealedsecrets', async () => {
+    await agent
       .get(`/v1/teams/${teamId}/sealedsecrets`)
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
-      .end(done)
   })
 
-  it('team member cannot get others sealedsecrets', (done) => {
-    agent
+  test('team member cannot get others sealedsecrets', async () => {
+    await agent
       .get(`/v1/teams/${otherTeamId}/sealedsecrets`)
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
-      .end(done)
   })
 
-  it('team member cannot get all secrets', (done) => {
-    agent.get('/v1/secrets').set('Authorization', `Bearer ${teamMemberToken}`).expect(403).end(done)
+  test('team member cannot get all secrets', async () => {
+    await agent.get('/v1/secrets').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
   })
 
-  it('team member cannot get all sealedsecrets', (done) => {
-    agent.get('/v1/sealedsecrets').set('Authorization', `Bearer ${teamMemberToken}`).expect(403).end(done)
+  test('team member cannot get all sealedsecrets', async () => {
+    await agent.get('/v1/sealedsecrets').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
   })
 
-  it('team member cannot get the sealedsecretskeys', (done) => {
-    agent.get('/v1/sealedsecretskeys').set('Authorization', `Bearer ${teamMemberToken}`).expect(403).end(done)
+  test('team member cannot get the sealedsecretskeys', async () => {
+    await agent.get('/v1/sealedsecretskeys').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
   })
 
   describe('Platform Admin /users endpoint tests', () => {
@@ -501,50 +487,61 @@ describe('API authz tests', () => {
       lastName: 'one',
       teams: ['team1'],
     }
-    it('platform admin can create platform admin users', (done) => {
-      agent
-        .post(`/v1/users`)
+
+    test('platform admin can create platform admin users', async () => {
+      jest.spyOn(otomiStack, 'createUser').mockResolvedValue({} as any)
+      await agent
+        .post('/v1/users')
         .send({ ...userData, isPlatformAdmin: true, isTeamAdmin: false })
         .set('Authorization', `Bearer ${platformAdminToken}`)
         .expect(200)
-        .end(done)
     })
-    it('platform admin can create team admin users', (done) => {
-      agent
-        .post(`/v1/users`)
+
+    test('platform admin can create team admin users', async () => {
+      jest.spyOn(otomiStack, 'createUser').mockResolvedValue({} as any)
+
+      await agent
+        .post('/v1/users')
         .send({ ...userData, isPlatformAdmin: false, isTeamAdmin: true })
         .set('Authorization', `Bearer ${platformAdminToken}`)
         .expect(200)
-        .end(done)
     })
-    it('platform admin can create team member users', (done) => {
-      agent
-        .post(`/v1/users`)
+
+    test('platform admin can create team member users', async () => {
+      jest.spyOn(otomiStack, 'createUser').mockResolvedValue({} as any)
+
+      await agent
+        .post('/v1/users')
         .send({ ...userData, isPlatformAdmin: false, isTeamAdmin: false })
         .set('Authorization', `Bearer ${platformAdminToken}`)
         .expect(200)
-        .end(done)
     })
-    it('platform admin can get all users', (done) => {
-      agent.get(`/v1/users`).set('Authorization', `Bearer ${platformAdminToken}`).expect(200).end(done)
+
+    test('platform admin can get all users', async () => {
+      await agent.get('/v1/users').set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
     })
-    it('platform admin can update users', (done) => {
-      agent
-        .put(`/v1/users/user1`)
+
+    test('platform admin can update users', async () => {
+      jest.spyOn(otomiStack, 'editUser').mockResolvedValue({} as any)
+
+      await agent
+        .put('/v1/users/user1')
         .send({ ...userData })
         .set('Authorization', `Bearer ${platformAdminToken}`)
         .expect(200)
-        .end(done)
     })
-    it('platform admin can delete users', (done) => {
-      agent
-        .delete(`/v1/users/user1`)
+
+    test('platform admin can delete users', async () => {
+      jest.spyOn(otomiStack, 'deleteUser').mockResolvedValue({} as any)
+
+      await agent
+        .delete('/v1/users/user1')
         .send({ id: 'user1' })
         .set('Authorization', `Bearer ${platformAdminToken}`)
         .expect(200)
-        .end(done)
     })
   })
+
   describe('Team Admin /users endpoint tests', () => {
     const userData = {
       email: 'user@one.com',
@@ -553,34 +550,38 @@ describe('API authz tests', () => {
       isPlatformAdmin: false,
       isTeamAdmin: false,
     }
-    it('team admin cannot create users', (done) => {
-      agent
-        .post(`/v1/users`)
+
+    test('team admin cannot create users', async () => {
+      await agent
+        .post('/v1/users')
         .send({ ...userData })
         .set('Authorization', `Bearer ${teamAdminToken}`)
         .expect(403)
-        .end(done)
     })
-    it('team admin can get all users with basic info', (done) => {
-      agent.get(`/v1/users`).set('Authorization', `Bearer ${teamAdminToken}`).expect(200).end(done)
+
+    test('team admin can get all users with basic info', async () => {
+      await agent.get('/v1/users').set('Authorization', `Bearer ${teamAdminToken}`).expect(200)
     })
-    it('team admin can update all users teams field', (done) => {
-      agent
+
+    test('team admin can update all users teams field', async () => {
+      jest.spyOn(otomiStack, 'editTeamUsers').mockResolvedValue({} as any)
+
+      await agent
         .put(`/v1/teams/${teamId}/users`)
         .send([{ ...userData }])
         .set('Authorization', `Bearer ${teamAdminToken}`)
         .expect(200)
-        .end(done)
     })
-    it('team admin cannot delete users', (done) => {
-      agent
-        .delete(`/v1/users/user1`)
+
+    test('team admin cannot delete users', async () => {
+      await agent
+        .delete('/v1/users/user1')
         .send({ id: 'user1' })
         .set('Authorization', `Bearer ${teamAdminToken}`)
         .expect(403)
-        .end(done)
     })
   })
+
   describe('Team Member /users endpoint tests', () => {
     const userData = {
       email: 'user@one.com',
@@ -589,35 +590,37 @@ describe('API authz tests', () => {
       isPlatformAdmin: false,
       isTeamAdmin: false,
     }
-    it('team member cannot get all users', (done) => {
-      agent.get(`/v1/users`).set('Authorization', `Bearer ${teamMemberToken}`).expect(403).end(done)
+
+    test('team member cannot get all users', async () => {
+      await agent.get('/v1/users').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
     })
-    it('team member cannot get user', (done) => {
-      agent.get(`/v1/users/user1`).set('Authorization', `Bearer ${teamMemberToken}`).expect(403).end(done)
+
+    test('team member cannot get user', async () => {
+      await agent.get('/v1/users/user1').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
     })
-    it('team member cannot create users', (done) => {
-      agent
-        .post(`/v1/users`)
+
+    test('team member cannot create users', async () => {
+      await agent
+        .post('/v1/users')
         .send({ ...userData })
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(403)
-        .end(done)
     })
-    it('team member cannot update users', (done) => {
-      agent
-        .put(`/v1/users/user1`)
+
+    test('team member cannot update users', async () => {
+      await agent
+        .put('/v1/users/user1')
         .send({ ...userData })
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(403)
-        .end(done)
     })
-    it('team member cannot delete users', (done) => {
-      agent
-        .delete(`/v1/users/user1`)
+
+    test('team member cannot delete users', async () => {
+      await agent
+        .delete('/v1/users/user1')
         .send({ id: 'user1' })
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(403)
-        .end(done)
     })
   })
 })

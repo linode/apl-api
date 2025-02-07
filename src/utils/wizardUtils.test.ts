@@ -1,45 +1,35 @@
-import { ObjectStorageKey } from '@linode/api-v4'
-import { expect } from 'chai'
-import proxyquire from 'proxyquire'
-import sinon from 'sinon'
+process.env.JEST_LOADSPEC = 'false'
+jest.mock('@linode/api-v4', () => ({
+  __esModule: true,
+  baseRequest: {
+    interceptors: {
+      request: {
+        clear: jest.fn(),
+      },
+    },
+  },
+  setToken: jest.fn(),
+  createBucket: jest.fn(),
+  createObjectStorageKeys: jest.fn(),
+  getKubernetesCluster: jest.fn(),
+}))
+
+import { createBucket, createObjectStorageKeys, ObjectStorageKey, setToken } from '@linode/api-v4'
 import { OtomiError } from 'src/error'
+import { ObjectStorageClient } from './wizardUtils'
 
 describe('ObjectStorageClient', () => {
-  let ObjectStorageClient: any
-  let setTokenStub: sinon.SinonStub
-  let getKubernetesClusterStub: sinon.SinonStub
-  let createObjectStorageKeysStub: sinon.SinonStub
-  let createBucketStub: sinon.SinonStub
-  let client: any
+  let client: ObjectStorageClient
   const clusterId = 12345
 
   beforeEach(() => {
-    setTokenStub = sinon.stub()
-    getKubernetesClusterStub = sinon.stub()
-    createObjectStorageKeysStub = sinon.stub()
-    createBucketStub = sinon.stub()
-
-    // Use proxyquire to mock the module imports
-    const module = proxyquire('./wizardUtils.ts', {
-      '@linode/api-v4': {
-        setToken: setTokenStub,
-        getKubernetesCluster: getKubernetesClusterStub,
-        createObjectStorageKeys: createObjectStorageKeysStub,
-        createBucket: createBucketStub,
-      },
-    })
-
-    ObjectStorageClient = module.ObjectStorageClient
     client = new ObjectStorageClient('test-token')
-  })
-
-  afterEach(() => {
-    sinon.restore()
   })
 
   describe('constructor', () => {
     it('should set token when initialized', () => {
-      expect(setTokenStub.calledOnceWith('test-token')).to.be.true
+      ;(setToken as jest.Mock).mockResolvedValue(undefined)
+      expect(setToken).toHaveBeenCalledWith('test-token')
     })
   })
 
@@ -49,17 +39,15 @@ describe('ObjectStorageClient', () => {
 
     it('should successfully create bucket', async () => {
       const mockResponse = { label: 'test-bucket' }
-      createBucketStub.resolves(mockResponse)
+      ;(createBucket as jest.Mock).mockResolvedValue(mockResponse)
 
       const result = await client.createObjectStorageBucket(label, region)
 
-      expect(
-        createBucketStub.calledOnceWith({
-          label,
-          region,
-        }),
-      ).to.be.true
-      expect(result).to.equal('test-bucket')
+      expect(createBucket).toHaveBeenCalledWith({
+        label,
+        region,
+      })
+      expect(result).toBe('test-bucket')
     })
 
     it('should return OtomiError when bucket creation fails', async () => {
@@ -69,12 +57,14 @@ describe('ObjectStorageClient', () => {
           data: { errors: [{ reason: 'Your OAuth token is not authorized to use this endpoint' }] },
         },
       }
-      createBucketStub.rejects(mockError)
+      ;(createBucket as jest.Mock).mockRejectedValue(mockError)
 
       const result = await client.createObjectStorageBucket(label, region)
-      expect(result).to.be.instanceOf(OtomiError)
-      expect(result.publicMessage).to.equal('Your OAuth token is not authorized to use this endpoint')
-      expect(result.code).to.equal(401)
+      expect(result).toBeInstanceOf(OtomiError)
+      // @ts-ignore
+      expect(result.publicMessage).toBe('Your OAuth token is not authorized to use this endpoint')
+      // @ts-ignore
+      expect(result.code).toBe(401)
     })
 
     it('should return OtomiError with default message when no specific error info', async () => {
@@ -83,27 +73,27 @@ describe('ObjectStorageClient', () => {
           status: 500,
         },
       }
-      createBucketStub.rejects(mockError)
+      ;(createBucket as jest.Mock).mockRejectedValue(mockError)
 
       const result = await client.createObjectStorageBucket(label, region)
-      expect(result).to.be.instanceOf(OtomiError)
-      expect(result.publicMessage).to.equal('Error creating object storage bucket')
-      expect(result.code).to.equal(500)
+      expect(result).toBeInstanceOf(OtomiError)
+      // @ts-ignore
+      expect(result.publicMessage).toBe('Error creating object storage bucket')
+      // @ts-ignore
+      expect(result.code).toBe(500)
     })
   })
 
   describe('createObjectStorageKey', () => {
     const region = 'us-east'
     const bucketNames = ['bucket1', 'bucket2']
-    let clock: sinon.SinonFakeTimers
 
     beforeEach(() => {
-      const fixedDate = new Date('2024-01-01T12:00:00.000Z')
-      clock = sinon.useFakeTimers(fixedDate.getTime())
+      jest.useFakeTimers().setSystemTime(new Date('2024-01-01T12:00:00.000Z'))
     })
 
     afterEach(() => {
-      clock.restore()
+      jest.useRealTimers()
     })
 
     it('should successfully create object storage keys', async () => {
@@ -112,11 +102,11 @@ describe('ObjectStorageClient', () => {
         secret_key: 'test-secret-key',
         regions: [{ id: 'us-east', s3_endpoint: 'us-east-1.linodeobjects.com' }],
       }
-      createObjectStorageKeysStub.resolves(mockResponse)
+      ;(createObjectStorageKeys as jest.Mock).mockResolvedValue(mockResponse)
+
       const result = await client.createObjectStorageKey(clusterId, region, bucketNames)
 
-      expect(createObjectStorageKeysStub.calledOnce).to.be.true
-      expect(createObjectStorageKeysStub.firstCall.args[0]).to.deep.equal({
+      expect(createObjectStorageKeys).toHaveBeenCalledWith({
         label: `lke${clusterId}-key-1704110400000`,
         regions: [region],
         bucket_access: [
@@ -124,7 +114,7 @@ describe('ObjectStorageClient', () => {
           { bucket_name: 'bucket2', permissions: 'read_write', region },
         ],
       })
-      expect(result).to.deep.equal(mockResponse)
+      expect(result).toEqual(mockResponse)
     })
 
     it('should throw OtomiError when keys creation fails', async () => {
@@ -134,12 +124,14 @@ describe('ObjectStorageClient', () => {
           status: 401,
         },
       }
-      createObjectStorageKeysStub.rejects(mockError)
+      ;(createObjectStorageKeys as jest.Mock).mockRejectedValue(mockError)
 
       const result = await client.createObjectStorageKey(clusterId, region, bucketNames)
-      expect(result).to.be.instanceOf(OtomiError)
-      expect(result.publicMessage).to.equal('Your OAuth token is not authorized to use this endpoint')
-      expect(result.code).to.equal(401)
+      expect(result).toBeInstanceOf(OtomiError)
+      // @ts-ignore
+      expect(result.publicMessage).toBe('Your OAuth token is not authorized to use this endpoint')
+      // @ts-ignore
+      expect(result.code).toBe(401)
     })
   })
 })

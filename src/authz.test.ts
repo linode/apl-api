@@ -1,4 +1,3 @@
-import { expect } from 'chai'
 import Authz from 'src/authz'
 import { OpenAPIDoc, SessionRole, SessionUser } from 'src/otomi-models'
 
@@ -26,12 +25,8 @@ describe('Schema wise permissions', () => {
             teamMember: ['read'],
           },
           properties: {
-            name: {
-              type: 'string',
-            },
-            ingress: {
-              type: 'object',
-            },
+            name: { type: 'string' },
+            ingress: { type: 'object' },
             teamId: { type: 'string' },
           },
         },
@@ -39,21 +34,20 @@ describe('Schema wise permissions', () => {
     },
   }
 
-  it('An admin can get and update all services', () => {
+  test('An admin can get and update all services', () => {
     const authz = new Authz(spec).init(sessionAdmin)
-    expect(authz.validateWithCasl('create', 'Service', 'mercury')).to.be.false
-    expect(authz.validateWithCasl('delete', 'Service', 'mercury')).to.be.false
-    expect(authz.validateWithCasl('read', 'Service', 'mercury')).to.be.true
-    expect(authz.validateWithCasl('update', 'Service', 'mercury')).to.be.true
+    expect(authz.validateWithCasl('create', 'Service', 'mercury')).toBe(false)
+    expect(authz.validateWithCasl('delete', 'Service', 'mercury')).toBe(false)
+    expect(authz.validateWithCasl('read', 'Service', 'mercury')).toBe(true)
+    expect(authz.validateWithCasl('update', 'Service', 'mercury')).toBe(true)
   })
 
-  it('A team can only get its own service', () => {
+  test('A team can only get its own service', () => {
     const authz = new Authz(spec).init(sessionTeam)
-
-    expect(authz.validateWithCasl('create', 'Service', 'mercury')).to.be.false
-    expect(authz.validateWithCasl('delete', 'Service', 'mercury')).to.be.false
-    expect(authz.validateWithCasl('read', 'Service', 'mercury')).to.be.true
-    expect(authz.validateWithCasl('update', 'Service', 'mercury')).to.be.false
+    expect(authz.validateWithCasl('create', 'Service', 'mercury')).toBe(false)
+    expect(authz.validateWithCasl('delete', 'Service', 'mercury')).toBe(false)
+    expect(authz.validateWithCasl('read', 'Service', 'mercury')).toBe(true)
+    expect(authz.validateWithCasl('update', 'Service', 'mercury')).toBe(false)
   })
 })
 
@@ -67,12 +61,8 @@ describe('Ownership wise resource permissions', () => {
             teamMember: ['update'],
           },
           properties: {
-            name: {
-              type: 'string',
-            },
-            teamId: {
-              type: 'string',
-            },
+            name: { type: 'string' },
+            teamId: { type: 'string' },
           },
         },
       },
@@ -81,13 +71,14 @@ describe('Ownership wise resource permissions', () => {
     security: [],
   }
 
-  it('A team cannot update service from another team', () => {
+  test('A team cannot update service from another team', () => {
     const authz = new Authz(spec).init(sessionTeam)
-    expect(authz.validateWithCasl('update', 'Service', 'venus')).to.be.false
+    expect(authz.validateWithCasl('update', 'Service', 'venus')).toBe(false)
   })
-  it('A team can update its own service', () => {
+
+  test('A team can update its own service', () => {
     const authz = new Authz(spec).init(sessionTeam)
-    expect(authz.validateWithCasl('update', 'Service', 'mercury')).to.be.true
+    expect(authz.validateWithCasl('update', 'Service', 'mercury')).toBe(true)
   })
 })
 
@@ -113,32 +104,33 @@ describe('Schema collection wise permissions', () => {
     security: [],
   }
 
-  it('An admin can only get collection of services', () => {
+  test('An admin can only get collection of services', () => {
     const authz = new Authz(spec).init(sessionAdmin)
-    expect(authz.validateWithCasl('create', 'Services', 'mercury')).to.be.false
-    expect(authz.validateWithCasl('delete', 'Services', 'mercury')).to.be.false
-    expect(authz.validateWithCasl('read', 'Services', 'mercury')).to.be.true
-    expect(authz.validateWithCasl('update', 'Services', 'mercury')).to.be.false
+    expect(authz.validateWithCasl('create', 'Services', 'mercury')).toBe(false)
+    expect(authz.validateWithCasl('delete', 'Services', 'mercury')).toBe(false)
+    expect(authz.validateWithCasl('read', 'Services', 'mercury')).toBe(true)
+    expect(authz.validateWithCasl('update', 'Services', 'mercury')).toBe(false)
   })
 
-  it('A team can only get collection of services', () => {
+  test('A team can only get collection of services', () => {
     const authz = new Authz(spec).init(sessionTeam)
-    expect(authz.validateWithCasl('create', 'Services', 'mercury')).to.be.false
-    expect(authz.validateWithCasl('delete', 'Services', 'mercury')).to.be.false
-    expect(authz.validateWithCasl('read', 'Services', 'mercury')).to.be.true
-    expect(authz.validateWithCasl('update', 'Services', 'mercury')).to.be.false
+    expect(authz.validateWithCasl('create', 'Services', 'mercury')).toBe(false)
+    expect(authz.validateWithCasl('delete', 'Services', 'mercury')).toBe(false)
+    expect(authz.validateWithCasl('read', 'Services', 'mercury')).toBe(true)
+    expect(authz.validateWithCasl('update', 'Services', 'mercury')).toBe(false)
   })
 
-  it('A team can doSomething', () => {
+  test('A team can doSomething', () => {
     const authz = new Authz(spec).init(sessionTeam)
     sessionTeam.authz = { teamA: { deniedAttributes: { Team: ['a', 'b'] } } }
-    authz.hasSelfService('teamA', 'Team', 'doSomething')
+    expect(() => authz.hasSelfService('teamA', 'Team', 'doSomething')).not.toThrow()
     sessionTeam.authz = {}
   })
-  it('A team can not doSomething', () => {
+
+  test('A team cannot doSomething', () => {
     const authz = new Authz(spec).init(sessionTeam)
     sessionTeam.authz = { teamA: { deniedAttributes: { Team: ['a', 'b', 'doSomething'] } } }
-    authz.hasSelfService('teamA', 'Team', 'doSomething')
+    expect(() => authz.hasSelfService('teamA', 'Team', 'doSomething')).not.toThrow()
     sessionTeam.authz = {}
   })
 })

@@ -1,75 +1,71 @@
 import * as k8s from '@kubernetes/client-node'
-import { expect } from 'chai'
-import sinon from 'sinon'
 import { getCloudttyActiveTime, getLogTime } from './k8s_operations'
-
 describe('getCloudttyLogTime', () => {
-  it('should return the timestamp for a valid log timestamp', () => {
+  test('should return the timestamp for a valid log timestamp', () => {
     const timestampMatch = ['[2023/10/10 00:00:00:0000]', '2023/10/10 00:00:00:0000']
     const result = getLogTime(timestampMatch)
     const timestamp = new Date('2023-10-10T00:00:00.000').getTime()
-    expect(result).to.equal(timestamp)
+    expect(result).toBe(timestamp)
   })
 
-  it('should return NaN for an invalid log timestamp', () => {
+  test('should return NaN for an invalid log timestamp', () => {
     const timestampMatch = ['[invalid-timestamp]', 'invalid-date invalid-time']
-
     const result = getLogTime(timestampMatch)
-    expect(result).to.be.NaN
+    expect(result).toBeNaN()
   })
 })
 
 describe('getCloudttyActiveTime', () => {
   afterEach(() => {
-    sinon.restore()
+    jest.restoreAllMocks()
   })
 
-  it('should return the time difference if no clients', async () => {
+  test('should return the time difference if no clients', async () => {
     const namespace = 'test-namespace'
     const podName = 'test-pod'
     const log = '[2023/10/10 00:00:00:0000] [INFO] clients: 0'
-    sinon.stub(k8s.CoreV1Api.prototype, 'readNamespacedPodLog').resolves({ body: log } as any)
+    jest.spyOn(k8s.CoreV1Api.prototype, 'readNamespacedPodLog').mockResolvedValue({ body: log } as any)
 
     const result = await getCloudttyActiveTime(namespace, podName)
-    expect(result).to.be.greaterThan(0)
+    expect(result).toBeGreaterThan(0)
   })
 
-  it('should return 0 if clients are connected', async () => {
+  test('should return 0 if clients are connected', async () => {
     const namespace = 'test-namespace'
     const podName = 'test-pod'
     const log = '[2023/10/10 00:00:00:0000] [INFO] clients: 1'
-    sinon.stub(k8s.CoreV1Api.prototype, 'readNamespacedPodLog').resolves({ body: log } as any)
+    jest.spyOn(k8s.CoreV1Api.prototype, 'readNamespacedPodLog').mockResolvedValue({ body: log } as any)
 
     const result = await getCloudttyActiveTime(namespace, podName)
-    expect(result).to.equal(0)
+    expect(result).toBe(0)
   })
 
-  it('should return undefined if log does not contain client count', async () => {
+  test('should return undefined if log does not contain client count', async () => {
     const namespace = 'test-namespace'
     const podName = 'test-pod'
     const log = '[2023/10/10 00:00:00:0000] [INFO] some other log message'
-    sinon.stub(k8s.CoreV1Api.prototype, 'readNamespacedPodLog').resolves({ body: log } as any)
+    jest.spyOn(k8s.CoreV1Api.prototype, 'readNamespacedPodLog').mockResolvedValue({ body: log } as any)
 
     const result = await getCloudttyActiveTime(namespace, podName)
-    expect(result).to.be.undefined
+    expect(result).toBeUndefined()
   })
 
-  it('should return undefined if log is empty', async () => {
+  test('should return undefined if log is empty', async () => {
     const namespace = 'test-namespace'
     const podName = 'test-pod'
     const log = ''
-    sinon.stub(k8s.CoreV1Api.prototype, 'readNamespacedPodLog').resolves({ body: log } as any)
+    jest.spyOn(k8s.CoreV1Api.prototype, 'readNamespacedPodLog').mockResolvedValue({ body: log } as any)
 
     const result = await getCloudttyActiveTime(namespace, podName)
-    expect(result).to.be.undefined
+    expect(result).toBeUndefined()
   })
 
-  it('should return undefined if an error occurs', async () => {
+  test('should return undefined if an error occurs', async () => {
     const namespace = 'test-namespace'
     const podName = 'test-pod'
-    sinon.stub(k8s.CoreV1Api.prototype, 'readNamespacedPodLog').rejects(new Error('test error'))
+    jest.spyOn(k8s.CoreV1Api.prototype, 'readNamespacedPodLog').mockRejectedValue(new Error('test error'))
 
     const result = await getCloudttyActiveTime(namespace, podName)
-    expect(result).to.be.undefined
+    expect(result).toBeUndefined()
   })
 })
