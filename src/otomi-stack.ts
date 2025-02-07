@@ -1445,7 +1445,7 @@ export default class OtomiStack {
     let finalizers = [] as string[]
     let annotations = {}
     let labels = {}
-    const timestamp = Date.now().toString()
+    const timestamp = (new Date()).toISOString()
 
     if (data.metadata && typeof data.metadata === 'object') {
       finalizers = data.metadata.finalizers || []
