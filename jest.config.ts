@@ -10,10 +10,8 @@ const config: Config.InitialOptions = {
   },
   silent: false,
   verbose: true,
-  setupFilesAfterEnv: ['<rootDir>/src/init-test.ts'],
 }
 export default config
 process.env = Object.assign(process.env, {
-  isDev: false,
   NODE_ENV: 'test',
 })

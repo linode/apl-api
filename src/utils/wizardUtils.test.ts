@@ -1,4 +1,3 @@
-process.env.JEST_LOADSPEC = 'false'
 jest.mock('@linode/api-v4', () => ({
   __esModule: true,
   baseRequest: {

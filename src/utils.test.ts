@@ -1,6 +1,6 @@
 import { Cluster } from 'src/otomi-models'
 import { getServiceUrl } from 'src/utils'
-jest.mock('src/otomi-stack')
+
 describe('Utils', () => {
   const cluster: Cluster = {
     domainSuffix: 'dev.otomi.cloud',

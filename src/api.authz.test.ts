@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
+
 import { Express } from 'express'
 import request, { SuperAgentTest } from 'supertest'
 import getToken from 'src/fixtures/jwt'
@@ -8,6 +10,7 @@ import { App, SealedSecret } from './otomi-models'
 import { HttpError } from './error'
 import { Repo } from './repo'
 import { mockDeep } from 'jest-mock-extended'
+import * as getValuesSchemaModule from './utils'
 
 const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
@@ -18,6 +21,18 @@ const otherTeamId = 'team2'
 
 jest.mock('./k8s_operations')
 jest.mock('./utils/sealedSecretUtils')
+beforeAll(async () => {
+  jest.spyOn(console, 'log').mockImplementation(() => {})
+  jest.spyOn(console, 'debug').mockImplementation(() => {})
+  jest.spyOn(console, 'info').mockImplementation(() => {})
+  jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+  jest.spyOn(getValuesSchemaModule, 'getValuesSchema').mockResolvedValue({})
+
+  const { loadSpec } = await import('src/app') // Dynamic import
+  await loadSpec()
+})
+
 describe('API authz tests', () => {
   let app: Express
   let otomiStack: OtomiStack

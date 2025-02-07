@@ -1,6 +1,19 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
+import * as getValuesSchemaModule from './utils'
 import OpenAPISchemaValidator from 'openapi-schema-validator'
 import { getSpec } from 'src/app'
 import { isValidAuthzSpec } from 'src/authz'
+beforeAll(async () => {
+  jest.spyOn(console, 'log').mockImplementation(() => {})
+  jest.spyOn(console, 'debug').mockImplementation(() => {})
+  jest.spyOn(console, 'info').mockImplementation(() => {})
+  jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+  jest.spyOn(getValuesSchemaModule, 'getValuesSchema').mockResolvedValue({})
+
+  const { loadSpec } = await import('src/app') // Dynamic import
+  await loadSpec()
+})
 
 describe('Api spec validation', () => {
   it('should indicate that api spec is valid', () => {
