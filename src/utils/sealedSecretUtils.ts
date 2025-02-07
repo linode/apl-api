@@ -89,6 +89,9 @@ export function SealedSecretManifest(
     kind: 'SealedSecret',
     metadata: {
       ...data.metadata,
+      annotations: {
+        'sealedsecrets.bitnami.com/namespace-wide': 'true',
+      },
       name: data.name,
       namespace,
     },
