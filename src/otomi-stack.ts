@@ -951,7 +951,11 @@ export default class OtomiStack {
       const build = this.db.createItem(
         'builds',
         { ...data, teamId },
-        { teamId, name: data.name, secretName: serviceAccount },
+        {
+          teamId,
+          name: data.name,
+          ...(data.externalRepo ? {} : { secretName: serviceAccount }),
+        },
       ) as Build
       await this.saveTeamBuilds(teamId)
       await this.doDeployment(['builds'])
