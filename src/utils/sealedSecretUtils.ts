@@ -73,7 +73,7 @@ export interface SealedSecretManifestType {
   }
 }
 
-export function SealedSecretManifest(
+export function sealedSecretManifest(
   data: SealedSecret,
   encryptedData: EncryptedDataRecord,
   namespace: string,

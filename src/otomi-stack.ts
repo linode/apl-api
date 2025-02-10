@@ -71,7 +71,7 @@ import {
 } from './k8s_operations'
 import { validateBackupFields } from './utils/backupUtils'
 import { getPolicies } from './utils/policiesUtils'
-import { EncryptedDataRecord, SealedSecretManifest, encryptSecretItem } from './utils/sealedSecretUtils'
+import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
@@ -1469,7 +1469,7 @@ export default class OtomiStack {
         { ...data, teamId, encryptedData, namespace },
         { teamId, name: data.name },
       ) as SealedSecret
-      const sealedSecretChartValues = SealedSecretManifest(data, encryptedData, namespace)
+      const sealedSecretChartValues = sealedSecretManifest(data, encryptedData, namespace)
       await this.saveTeamSealedSecrets(teamId, sealedSecretChartValues, sealedSecret.id!)
       await this.doDeployment(['sealedsecrets'])
       return sealedSecret
@@ -1494,7 +1494,7 @@ export default class OtomiStack {
     })
     const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises))) as EncryptedDataRecord
     const sealedSecret = this.db.updateItem('sealedsecrets', { ...data, encryptedData }, { id }) as SealedSecret
-    const sealedSecretChartValues = SealedSecretManifest(data, encryptedData, namespace)
+    const sealedSecretChartValues = sealedSecretManifest(data, encryptedData, namespace)
     await this.saveTeamSealedSecrets(data.teamId!, sealedSecretChartValues, id)
     await this.doDeployment(['sealedsecrets'])
     return sealedSecret
