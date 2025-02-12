@@ -941,16 +941,17 @@ export default class OtomiStack {
   }
 
   getAllCoderepos(): Array<Coderepo> {
-    const allrepos = this.db.getCollection('coderepos') as Array<Coderepo>
-    return allrepos
+    const allCoderepos = this.db.getCollection('coderepos') as Array<Coderepo>
+    return allCoderepos
   }
 
-  async createCoderepo(teamId: string, data: Project): Promise<Coderepo> {
+  async createCoderepo(teamId: string, data: Coderepo): Promise<Coderepo> {
     try {
-      const project = this.db.createItem('coderepos', { ...data, teamId }, { teamId, name: data.name }) as Coderepo
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      const coderepo = this.db.createItem('coderepos', { ...data, teamId }, { teamId, name: data.label }) as Coderepo
       await this.saveTeamCoderepos(teamId)
       await this.doDeployment(['coderepos'])
-      return project
+      return coderepo
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Code repo name already exists'
       throw err
