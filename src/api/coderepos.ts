@@ -6,7 +6,6 @@ const debug = Debug('otomi:api:coderepos')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [
-    /* business middleware not expressible by OpenAPI documentation goes here */
     ({ otomi }: OpenApiRequestExt, res): void => {
       debug('getAllCoderepos')
       const v = otomi.getAllCoderepos()

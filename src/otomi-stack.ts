@@ -942,16 +942,12 @@ export default class OtomiStack {
 
   getAllCoderepos(): Array<Coderepo> {
     const allrepos = this.db.getCollection('coderepos') as Array<Coderepo>
-    console.log('allrepos', allrepos)
     return allrepos
   }
 
   async createCoderepo(teamId: string, data: Project): Promise<Coderepo> {
-    console.log('data', data)
     try {
       const project = this.db.createItem('coderepos', { ...data, teamId }, { teamId, name: data.name }) as Coderepo
-      const allrepos = this.db.getCollection('coderepos') as Array<Coderepo>
-      console.log('allrepos', allrepos)
       await this.saveTeamCoderepos(teamId)
       await this.doDeployment(['coderepos'])
       return project
