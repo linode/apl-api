@@ -587,10 +587,10 @@ export default class OtomiStack {
       data.password = generatePassword({
         length: 16,
         numbers: true,
-        symbols: true,
+        symbols: '!@#$%&*',
         lowercase: true,
         uppercase: true,
-        exclude: String(':,;"/=|%\\\''),
+        strict: true,
       })
     }
 
@@ -745,10 +745,10 @@ export default class OtomiStack {
     const initialPassword = generatePassword({
       length: 16,
       numbers: true,
-      symbols: true,
+      symbols: '!@#$%&*',
       lowercase: true,
       uppercase: true,
-      exclude: String(':,;"/=|%\\\''),
+      strict: true,
     })
     const user = { ...data, initialPassword }
     let existingUsers = this.db.getCollection('users') as any
