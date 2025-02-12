@@ -1,4 +1,3 @@
-import { expect } from 'chai'
 import { Cluster } from 'src/otomi-models'
 import { getServiceUrl } from 'src/utils'
 
@@ -13,25 +12,24 @@ describe('Utils', () => {
     aws: { region: 'r' },
   }
 
-  it('should retrieve host part from service domain', (done) => {
+  test('should retrieve host part from service domain', () => {
     const x = getServiceUrl({ domain: 'aa.bb.cc.dd.ee', cluster, dns: { ...dns, zones: ['dd.ee'] } })
-    expect(x.subdomain).to.equal('aa.bb.cc')
-    done()
+    expect(x.subdomain).toEqual('aa.bb.cc')
   })
 
-  it('should retrieve only domain', (done) => {
+  test('should retrieve only domain', () => {
     const x = getServiceUrl({ domain: 'my.custom.domain', cluster, dns: { ...dns, zones: ['dd.ee'] } })
-    expect(x.subdomain).to.be.empty
-    expect(x.domain).to.equal('my.custom.domain')
-    done()
+    expect(x.subdomain).toEqual('')
+    expect(x.domain).toEqual('my.custom.domain')
   })
-  it('should retrieve default host if service domain not defined', (done) => {
+
+  test('should retrieve default host if service domain not defined', () => {
     const x = getServiceUrl({ name: 'aa', teamId: 'bb', cluster, dns: { ...dns, zones: ['dd.ee'] } })
-    expect(x.subdomain).to.equal('aa-bb')
-    expect(x.domain).to.equal('dev.otomi.cloud')
-    done()
+    expect(x.subdomain).toEqual('aa-bb')
+    expect(x.domain).toEqual('dev.otomi.cloud')
   })
-  it('should retrieve host and domain part from service domai (many zones)n', (done) => {
+
+  test('should retrieve host and domain part from service domain (many zones)', () => {
     const x = getServiceUrl({
       domain: 'aa.bb.cc.dd.ee',
       name: 'aa',
@@ -39,8 +37,7 @@ describe('Utils', () => {
       cluster,
       dns: { ...dns, zones: ['cc.dd.ee', 'dd.ee', 'bb.cc.dd.ee'] },
     })
-    expect(x.subdomain).to.equal('aa')
-    expect(x.domain).to.equal('bb.cc.dd.ee')
-    done()
+    expect(x.subdomain).toEqual('aa')
+    expect(x.domain).toEqual('bb.cc.dd.ee')
   })
 })
