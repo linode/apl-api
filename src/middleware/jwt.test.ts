@@ -1,7 +1,8 @@
-import { expect } from 'chai'
 import { JWT } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { getUser } from './jwt'
+import * as getValuesSchemaModule from '../utils'
+import { loadSpec } from '../app'
 
 const email = 'test@user.net'
 const platformAdminGroups = ['platform-admin', 'all-teams-admin']
@@ -21,34 +22,46 @@ const multiTeamJWT: JWT = { ...platformAdminJWT, groups: multiTeamGroups }
 
 describe('JWT claims mapping', () => {
   let otomiStack: OtomiStack
+
+  beforeAll(async () => {
+    jest.spyOn(getValuesSchemaModule, 'getValuesSchema').mockResolvedValue({})
+
+    await loadSpec()
+  })
+
   beforeEach(async () => {
     otomiStack = new OtomiStack()
     await otomiStack.init()
   })
-  it('A user in either platform-admin or all-teams-admin group should get platformAdmin role and have isPlatformAdmin', () => {
+
+  test('A user in either platform-admin or all-teams-admin group should get platformAdmin role and have isPlatformAdmin', () => {
     const user = getUser(platformAdminJWT, otomiStack)
-    expect(user.isPlatformAdmin).to.be.true
+    expect(user.isPlatformAdmin).toBeTruthy()
   })
-  it('A user in team-admin group should get teamAdmin role and have isTeamAdmin', () => {
+
+  test('A user in team-admin group should get teamAdmin role and have isTeamAdmin', () => {
     const user = getUser(teamAdminJWT, otomiStack)
-    expect(user.isTeamAdmin).to.be.true
+    expect(user.isTeamAdmin).toBeTruthy()
   })
-  it('A user in team-member group should get teamMember role and not have either isPlatformAdmin or isTeamAdmin', () => {
+
+  test('A user in team-member group should get teamMember role and not have either isPlatformAdmin or isTeamAdmin', () => {
     const user = getUser(teamMemberJWT, otomiStack)
-    expect(user.isPlatformAdmin).to.be.false
-    expect(user.isTeamAdmin).to.be.false
+    expect(user.isPlatformAdmin).toBeFalsy()
+    expect(user.isTeamAdmin).toBeFalsy()
   })
-  it('Multiple team groups should result in the same amount of teams existing', async () => {
-    await Promise.all(multiTeamUser.map(async (teamId) => await otomiStack.createTeam({ name: teamId }, false)))
+
+  test('Multiple team groups should result in the same amount of teams existing', async () => {
+    await Promise.all(multiTeamUser.map(async (teamId) => otomiStack.createTeam({ name: teamId }, false)))
     const user = getUser(multiTeamJWT, otomiStack)
-    expect(user.teams).to.deep.equal(multiTeamUser)
-    expect(user.isPlatformAdmin).to.be.false
+    expect(user.teams).toEqual(multiTeamUser)
+    expect(user.isPlatformAdmin).toBeFalsy()
   })
-  it("Non existing team groups should not be added to the user's list of teams", async () => {
+
+  test("Non existing team groups should not be added to the user's list of teams", async () => {
     const extraneousTeamsList = [...multiTeamUser, 'nonexisting']
-    await Promise.all(extraneousTeamsList.map(async (teamId) => await otomiStack.createTeam({ name: teamId }, false)))
+    await Promise.all(extraneousTeamsList.map(async (teamId) => otomiStack.createTeam({ name: teamId }, false)))
     const user = getUser(multiTeamJWT, otomiStack)
-    expect(user.teams).to.deep.equal(multiTeamUser)
-    expect(user.isPlatformAdmin).to.be.false
+    expect(user.teams).toEqual(multiTeamUser)
+    expect(user.isPlatformAdmin).toBeFalsy()
   })
 })

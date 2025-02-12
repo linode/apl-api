@@ -16,7 +16,6 @@ extends:
   - plugin:import/warnings
   - plugin:import/typescript
   - plugin:prettier/recommended
-  - plugin:chai-friendly/recommended
   - prettier
 
 plugins:
@@ -33,7 +32,6 @@ settings:
 
 env:
   es6: true
-  mocha: true
   node: true
 
 rules:
