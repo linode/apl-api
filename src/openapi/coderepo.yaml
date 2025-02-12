@@ -20,23 +20,24 @@ Coderepo:
       type: string
     teamId:
       $ref: definitions.yaml#/idName
-    name:
-      title: Name
+    label:
       $ref: 'definitions.yaml#/idName'
-    type:
+    gitService:
       type: string
       default: gitea
       enum:
         - gitea
         - github
         - gitlab
-    isPrivate:
+    repositoryUrl:
+      $ref: 'definitions.yaml#/url'
+    private:
       type: boolean
       default: false
-    url:
-      $ref: 'definitions.yaml#/url'
-    sealedSecret:
+    secret:
       type: string
   required:
-    - name
+    - label
+    - gitService
+    - repositoryUrl
   type: object

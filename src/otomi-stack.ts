@@ -4,6 +4,7 @@ import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { ObjectStorageKeyRegions, getRegions } from '@linode/api-v4'
+import axios from 'axios'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
@@ -34,6 +35,7 @@ import {
   SettingsInfo,
   Team,
   TeamSelfService,
+  TestRepoConnect,
   User,
   Workload,
   WorkloadValues,
@@ -976,6 +978,24 @@ export default class OtomiStack {
     this.db.deleteItem('coderepos', { id })
     await this.saveTeamCoderepos(coderepo.teamId as string)
     await this.doDeployment(['coderepos'])
+  }
+
+  async getTestRepoConnect(repoUrl: string): Promise<TestRepoConnect> {
+    try {
+      if (!repoUrl) return { status: 'unknown' }
+      const cleanUrl = repoUrl
+        .trim()
+        .replace(/\.git$/, '')
+        .replace(/\/$/, '')
+      const match = cleanUrl.match(/^https?:\/\/(github\.com|gitlab\.com|gitea\.[^/]+|[^/]+)\/([^/]+)\/([^/]+)/)
+      if (!match) return { status: 'failed' }
+      const repoCheckUrl = `${cleanUrl}/info/refs?service=git-upload-pack`
+      const response = await axios.get(repoCheckUrl, { validateStatus: () => true })
+      if (response.status === 200) return { status: 'success' }
+      return { status: 'failed' }
+    } catch (error) {
+      return { status: 'failed' }
+    }
   }
 
   getDashboard(teamId: string): Array<any> {
