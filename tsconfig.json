@@ -9,7 +9,7 @@
     "lib": ["es2021", "esnext", "dom", "dom.iterable"],
     "module": "commonjs",
     "moduleResolution": "node",
-    "outDir": "dist/src",
+    "outDir": "dist/",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
