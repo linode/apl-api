@@ -999,8 +999,7 @@ export default class OtomiStack {
   }
 
   async getInternalRepoUrls(teamId: string): Promise<string[]> {
-    // if (env.isDev || !teamId) return []
-    if (teamId === 'admin') return []
+    if (env.isDev || !teamId || teamId === 'admin') return []
     const { cluster } = this.getSettings(['cluster', 'otomi'])
     const gitea = this.getApp('admin', 'gitea')
     const username = gitea?.values?.adminUsername as string
