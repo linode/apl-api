@@ -73,6 +73,7 @@ import {
   watchPodUntilRunning,
 } from './k8s_operations'
 import { validateBackupFields } from './utils/backupUtils'
+import { getGiteaRepoUrls } from './utils/coderepoUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
@@ -995,6 +996,19 @@ export default class OtomiStack {
     } catch (error) {
       return { status: 'failed' }
     }
+  }
+
+  async getInternalRepoUrls(teamId: string): Promise<string[]> {
+    // if (env.isDev || !teamId) return []
+    if (teamId === 'admin') return []
+    const { cluster } = this.getSettings(['cluster', 'otomi'])
+    const gitea = this.getApp('admin', 'gitea')
+    const username = gitea?.values?.adminUsername as string
+    const password = gitea?.values?.adminPassword as string
+    const orgName = `team-${teamId}`
+    const domainSuffix = cluster?.domainSuffix
+    const internalRepoUrls = (await getGiteaRepoUrls(username, password, orgName, domainSuffix)) || []
+    return internalRepoUrls
   }
 
   getDashboard(teamId: string): Array<any> {

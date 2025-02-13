@@ -1499,6 +1499,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/TestRepoConnect'
 
+  /internalRepoUrls:
+    get:
+      operationId: getInternalRepoUrls
+      x-aclSchema: InternalRepoUrls
+      parameters:
+        - name: teamId
+          in: query
+          description: ID of the team
+          schema:
+            type: string
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained internal repo urls
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
   '/objwizard':
     post:
       operationId: createObjWizard
@@ -1819,6 +1840,8 @@ components:
       $ref: settingsinfo.yaml#/SettingsInfo
     TestRepoConnect:
       $ref: testrepoconnect.yaml#/TestRepoConnect
+    InternalRepoUrls:
+      $ref: internalRepoUrls.yaml#/InternalRepoUrls
     Team:
       $ref: team.yaml#/Team
     TeamAuthz:
