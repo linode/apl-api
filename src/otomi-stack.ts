@@ -8,7 +8,7 @@ import axios from 'axios'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
-import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
+import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { AlreadyExists, GitPullError, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
@@ -950,8 +950,10 @@ export default class OtomiStack {
 
   async createCoderepo(teamId: string, data: Coderepo): Promise<Coderepo> {
     try {
+      const body = { ...data }
+      if (!body.private) unset(body, 'secret')
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const coderepo = this.db.createItem('coderepos', { ...data, teamId }, { teamId, label: data.label }) as Coderepo
+      const coderepo = this.db.createItem('coderepos', { ...body, teamId }, { teamId, label: body.label }) as Coderepo
       await this.saveTeamCoderepos(teamId)
       await this.doDeployment(['coderepos'])
       return coderepo
@@ -966,8 +968,10 @@ export default class OtomiStack {
   }
 
   async editCoderepo(id: string, data: Coderepo): Promise<Coderepo> {
+    const body = { ...data }
+    if (!body.private) unset(body, 'secret')
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const coderepo = this.db.updateItem('coderepos', data, { id }) as Coderepo
+    const coderepo = this.db.updateItem('coderepos', body, { id }) as Coderepo
     await this.saveTeamCoderepos(coderepo.teamId as string)
     await this.doDeployment(['coderepos'])
     return coderepo
