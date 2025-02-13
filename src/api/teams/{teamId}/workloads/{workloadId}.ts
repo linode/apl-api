@@ -6,16 +6,16 @@ const debug = Debug('otomi:api:teams:workloads')
 
 export default function (): OperationHandlerArray {
   const del: Operation = [
-    async ({ otomi, params: { workloadId } }: OpenApiRequestExt, res): Promise<void> => {
+    async ({ otomi, params: { teamId, workloadId } }: OpenApiRequestExt, res): Promise<void> => {
       debug(`deleteWorkload(${workloadId})`)
-      await otomi.deleteWorkload(decodeURIComponent(workloadId))
+      await otomi.deleteWorkload(decodeURIComponent(teamId), decodeURIComponent(workloadId))
       res.json({})
     },
   ]
   const get: Operation = [
-    ({ otomi, params: { workloadId } }: OpenApiRequestExt, res): void => {
+    ({ otomi, params: { teamId, workloadId } }: OpenApiRequestExt, res): void => {
       debug(`getWorkload(${workloadId})`)
-      const data = otomi.getWorkload(decodeURIComponent(workloadId))
+      const data = otomi.getWorkload(decodeURIComponent(teamId), decodeURIComponent(workloadId))
       res.json(data)
     },
   ]

@@ -6,16 +6,16 @@ const debug = Debug('otomi:api:teams:builds')
 
 export default function (): OperationHandlerArray {
   const del: Operation = [
-    async ({ otomi, params: { buildId } }: OpenApiRequestExt, res): Promise<void> => {
+    async ({ otomi, params: { teamId, buildId } }: OpenApiRequestExt, res): Promise<void> => {
       debug(`deleteBuild(${buildId})`)
-      await otomi.deleteBuild(decodeURIComponent(buildId))
+      await otomi.deleteBuild(decodeURIComponent(teamId), decodeURIComponent(buildId))
       res.json({})
     },
   ]
   const get: Operation = [
-    ({ otomi, params: { buildId } }: OpenApiRequestExt, res): void => {
+    ({ otomi, params: { teamId, buildId } }: OpenApiRequestExt, res): void => {
       debug(`getBuild(${buildId})`)
-      const data = otomi.getBuild(decodeURIComponent(buildId))
+      const data = otomi.getBuild(decodeURIComponent(teamId), decodeURIComponent(buildId))
       res.json(data)
     },
   ]

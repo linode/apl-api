@@ -18,7 +18,7 @@ sequenceDiagram
     participant SC as Session Controller
     participant MC as Master Session Controller
     participant ACA as APL Core API
-    participant RR as Remote Repo
+    participant RR as Remote Git
     participant IMDB as In-Memory DB
     activate MC
     activate IMDB
@@ -80,7 +80,7 @@ sequenceDiagram
     participant API as Express API
     participant SC as Session Controller
     participant MC as Master Session Controller
-    participant RR as Remote Repo
+    participant RR as Remote Git
     participant ACA as APL Core API
     participant IMDB as In-Memory DB
     activate MC
@@ -131,7 +131,7 @@ sequenceDiagram
     participant Client as Client
     participant API as Express API
     participant SC as Git Handler
-    participant RR as Remote Repo
+    participant RR as Remote Git
     participant ACA as APL Core API
     participant IMDB as In-Memory DB
     activate IMDB
@@ -179,7 +179,7 @@ sequenceDiagram
     participant Client as Client
     participant API as Express API
     participant SC as Git Handler
-    participant RR as Remote Repo
+    participant RR as Remote Git
     participant ACA as APL Core API
     Client->>API: HTTP POST/PUT/PATCH/DELETE
     activate API

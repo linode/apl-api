@@ -6,16 +6,16 @@ const debug = Debug('otomi:api:teams:backups')
 
 export default function (): OperationHandlerArray {
   const del: Operation = [
-    async ({ otomi, params: { backupId } }: OpenApiRequestExt, res): Promise<void> => {
+    async ({ otomi, params: { teamId, backupId } }: OpenApiRequestExt, res): Promise<void> => {
       debug(`deleteBackup(${backupId})`)
-      await otomi.deleteBackup(decodeURIComponent(backupId))
+      await otomi.deleteBackup(decodeURIComponent(teamId), decodeURIComponent(backupId))
       res.json({})
     },
   ]
   const get: Operation = [
-    ({ otomi, params: { backupId } }: OpenApiRequestExt, res): void => {
+    ({ otomi, params: { teamId, backupId } }: OpenApiRequestExt, res): void => {
       debug(`getBackup(${backupId})`)
-      const data = otomi.getBackup(decodeURIComponent(backupId))
+      const data = otomi.getBackup(decodeURIComponent(teamId), decodeURIComponent(backupId))
       res.json(data)
     },
   ]

@@ -6,16 +6,16 @@ const debug = Debug('otomi:api:teams:services')
 
 export default function (): OperationHandlerArray {
   const del: Operation = [
-    async ({ otomi, params: { serviceId } }: OpenApiRequestExt, res): Promise<void> => {
+    async ({ otomi, params: { teamId, serviceId } }: OpenApiRequestExt, res): Promise<void> => {
       debug(`deleteService(${serviceId})`)
-      await otomi.deleteService(decodeURIComponent(serviceId))
+      await otomi.deleteService(decodeURIComponent(teamId), decodeURIComponent(serviceId))
       res.json({})
     },
   ]
   const get: Operation = [
-    ({ otomi, params: { serviceId } }: OpenApiRequestExt, res): void => {
+    ({ otomi, params: { teamId, serviceId } }: OpenApiRequestExt, res): void => {
       debug(`getService(${serviceId})`)
-      const data = otomi.getService(decodeURIComponent(serviceId))
+      const data = otomi.getService(decodeURIComponent(teamId), decodeURIComponent(serviceId))
       res.json(data)
     },
   ]

@@ -60,7 +60,7 @@ rules:
   '@typescript-eslint/naming-convention':
     ['error', { 'selector': 'function', 'format': ['camelCase'], 'leadingUnderscore': 'allow' }]
   comma-dangle: [error, only-multiline]
-  curly: [error, multi-or-nest]
+#  curly: [error, multi-or-nest]
   eol-last: ['error', 'always']
   func-names: off
   import/extensions: off

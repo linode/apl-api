@@ -37,6 +37,8 @@ export type TeamAuthz = components['schemas']['TeamAuthz']
 export type Alerts = Settings['alerts']
 export type Cluster = Settings['cluster']
 export type Dns = Settings['dns']
+export type Ingress = Settings['ingress']
+export type Smtp = Settings['smtp']
 export type Kms = Settings['kms']
 export type Oidc = Settings['oidc']
 export type Otomi = Settings['otomi']
@@ -144,4 +146,36 @@ export interface Core {
   teamApps: Record<string, any>[]
   teamConfig: Record<string, any>
   version: number
+}
+
+export interface Repo {
+  apps: Record<string, any>
+  alerts: Alerts
+  cluster: Cluster
+  databases: Record<string, any>
+  dns: Dns
+  ingress: Ingress
+  kms: Kms
+  obj: Record<string, any>
+  oidc: Oidc
+  otomi: Otomi
+  platformBackups: Record<string, any>
+  smtp: Smtp
+  users: User[]
+  versions: Record<string, any>
+  teamConfig: Record<string, TeamConfig>
+}
+
+export interface TeamConfig {
+  apps: Record<string, any>
+  backups: Backup[]
+  builds: Build[]
+  netpols: Netpol[]
+  policies: Policies
+  projects: Project[]
+  sealedSecrets: SealedSecret[]
+  services: Service[]
+  settings: Team
+  workloads: Workload[]
+  workloadValues: WorkloadValues[]
 }

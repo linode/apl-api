@@ -6,9 +6,9 @@ const debug = Debug('otomi:api:teams:workloadValues')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [
-    ({ otomi, params: { workloadId } }: OpenApiRequestExt, res): void => {
+    ({ otomi, params: { teamId, workloadId } }: OpenApiRequestExt, res): void => {
       debug(`getWorkloadValues(${workloadId})`)
-      const data = otomi.getWorkloadValues(decodeURIComponent(workloadId))
+      const data = otomi.getWorkloadValues(decodeURIComponent(teamId), decodeURIComponent(workloadId))
       res.json(data)
     },
   ]
