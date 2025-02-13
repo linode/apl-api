@@ -951,12 +951,12 @@ export default class OtomiStack {
   async createCoderepo(teamId: string, data: Coderepo): Promise<Coderepo> {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const coderepo = this.db.createItem('coderepos', { ...data, teamId }, { teamId, name: data.label }) as Coderepo
+      const coderepo = this.db.createItem('coderepos', { ...data, teamId }, { teamId, label: data.label }) as Coderepo
       await this.saveTeamCoderepos(teamId)
       await this.doDeployment(['coderepos'])
       return coderepo
     } catch (err) {
-      if (err.code === 409) err.publicMessage = 'Code repo name already exists'
+      if (err.code === 409) err.publicMessage = 'Code repe label already exists'
       throw err
     }
   }
