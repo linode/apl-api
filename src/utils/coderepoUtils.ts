@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { execSync, spawn } from 'child_process'
 import { writeFile } from 'fs/promises'
 import simpleGit, { SimpleGit } from 'simple-git'
 import { OtomiError } from 'src/error'
@@ -70,16 +71,27 @@ async function connectPrivateRepo(
 
     if (url.startsWith('git@') && sshKey) {
       await writeFile(keyPath, `${sshKey}\n`, { mode: 0o600 })
-      const GIT_SSH_COMMAND = `ssh -i ${keyPath} -o StrictHostKeyChecking=no`
-      // process.env.GIT_SSH_COMMAND = GIT_SSH_COMMAND
+      // Start SSH agent
+      const sshAgentOutput = execSync('ssh-agent -s').toString()
+      const agentSocketMatch = sshAgentOutput.match(/SSH_AUTH_SOCK=([^;]+)/)
+      const agentPidMatch = sshAgentOutput.match(/SSH_AGENT_PID=([0-9]+)/)
+      if (!agentSocketMatch || !agentPidMatch) throw new Error('Failed to start SSH agent')
+      process.env.SSH_AUTH_SOCK = agentSocketMatch[1]
+      process.env.SSH_AGENT_PID = agentPidMatch[1]
+      if (!sshKey) throw new Error('SSH key is required for SSH authentication')
+
+      // Add SSH private key
+      const sshAdd = spawn('ssh-add', ['-'], { stdio: ['pipe', 'inherit', 'inherit'] })
+      sshAdd.stdin.write(`${sshKey}\n`)
+      sshAdd.stdin.end()
+      await new Promise((resolve, reject) => {
+        sshAdd.on('close', (code) => (code === 0 ? resolve(undefined) : reject(new Error('Failed to add SSH key'))))
+      })
+
+      const GIT_SSH_COMMAND = 'ssh -o StrictHostKeyChecking=no'
 
       git = simpleGit()
-      git
-        .env('GIT_SSH_COMMAND', GIT_SSH_COMMAND)
-        .env('GIT_COMMITTER_NAME', 'Not Used')
-        .env('GIT_COMMITTER_EMAIL', 'not@us.ed')
-        .env('GIT_AUTHOR_NAME', 'Not Used')
-        .env('GIT_AUTHOR_EMAIL', 'not@us.ed')
+      git.env('GIT_SSH_COMMAND', GIT_SSH_COMMAND)
     } else if (url.startsWith('https://')) {
       if (!username || !accessToken) throw new Error('Username and access token are required for HTTPS authentication')
       const urlWithAuth = repoUrl.replace(
@@ -97,7 +109,7 @@ async function connectPrivateRepo(
     console.log('error', error)
     return { status: 'failed' }
   } finally {
-    // if (repoUrl.startsWith('git@') && (await pathExists(keyPath))) await unlink(keyPath)
+    if (process.env.SSH_AGENT_PID && repoUrl.startsWith('git@')) execSync(`kill ${process.env.SSH_AGENT_PID}`)
   }
 }
 
