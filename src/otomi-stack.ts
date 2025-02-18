@@ -1127,6 +1127,11 @@ export default class OtomiStack {
     return { url, helmCharts, catalog }
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async createWorkloadCatalog(body: any): Promise<any> {
+    console.log('halo reach triggered create catalog chart', body)
+  }
+
   async createWorkload(teamId: string, data: Workload): Promise<Workload> {
     try {
       const workload = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }) as Workload
