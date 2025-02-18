@@ -88,10 +88,9 @@ async function connectPrivateRepo(
         sshAdd.on('close', (code) => (code === 0 ? resolve(undefined) : reject(new Error('Failed to add SSH key'))))
       })
 
-      const GIT_SSH_COMMAND = 'ssh -o StrictHostKeyChecking=no'
+      process.env.GIT_SSH_COMMAND = 'ssh -o StrictHostKeyChecking=no'
 
       git = simpleGit()
-      git.env('GIT_SSH_COMMAND', GIT_SSH_COMMAND)
     } else if (url.startsWith('https://')) {
       if (!username || !accessToken) throw new Error('Username and access token are required for HTTPS authentication')
       const urlWithAuth = repoUrl.replace(
