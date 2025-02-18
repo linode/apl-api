@@ -27,7 +27,7 @@ ENV NODE_ENV=production
 ENV NODE_PATH='dist'
 
 # Install dependencies
-RUN apk --no-cache add python3 git jq
+RUN apk --no-cache add python3 git jq openssh
 
 # Install app
 RUN mkdir /app
