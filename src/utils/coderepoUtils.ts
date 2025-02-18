@@ -1,5 +1,6 @@
 import axios from 'axios'
-import { execSync, spawn } from 'child_process'
+import { pathExists } from 'fs-extra'
+import { unlink, writeFile } from 'fs/promises'
 import simpleGit, { SimpleGit } from 'simple-git'
 import { OtomiError } from 'src/error'
 
@@ -63,29 +64,15 @@ async function connectPrivateRepo(
   username?: string,
   accessToken?: string,
 ): Promise<{ status: string }> {
+  const keyPath = '/tmp/otomi/sshKey'
   try {
     let git: SimpleGit
     let url = repoUrl
 
-    if (url.startsWith('git@')) {
-      // Start SSH agent
-      const sshAgentOutput = execSync('ssh-agent -s').toString()
-      const agentSocketMatch = sshAgentOutput.match(/SSH_AUTH_SOCK=([^;]+)/)
-      const agentPidMatch = sshAgentOutput.match(/SSH_AGENT_PID=([0-9]+)/)
-      if (!agentSocketMatch || !agentPidMatch) throw new Error('Failed to start SSH agent')
-      process.env.SSH_AUTH_SOCK = agentSocketMatch[1]
-      process.env.SSH_AGENT_PID = agentPidMatch[1]
-      if (!sshKey) throw new Error('SSH key is required for SSH authentication')
+    if (url.startsWith('git@') && sshKey) {
+      await writeFile(keyPath, `${sshKey}\n`, { mode: 0o600 })
+      process.env.GIT_SSH_COMMAND = `ssh -i ${keyPath} -o StrictHostKeyChecking=no`
 
-      // Add SSH private key
-      const sshAdd = spawn('ssh-add', ['-'], { stdio: ['pipe', 'inherit', 'inherit'] })
-      sshAdd.stdin.write(`${sshKey}\n`)
-      sshAdd.stdin.end()
-      await new Promise((resolve, reject) => {
-        sshAdd.on('close', (code) => (code === 0 ? resolve(undefined) : reject(new Error('Failed to add SSH key'))))
-      })
-
-      process.env.GIT_SSH_COMMAND = 'ssh -o StrictHostKeyChecking=no'
       git = simpleGit()
     } else if (url.startsWith('https://')) {
       if (!username || !accessToken) throw new Error('Username and access token are required for HTTPS authentication')
@@ -103,7 +90,7 @@ async function connectPrivateRepo(
   } catch (error) {
     return { status: 'failed' }
   } finally {
-    if (process.env.SSH_AGENT_PID && repoUrl.startsWith('git@')) execSync(`kill ${process.env.SSH_AGENT_PID}`)
+    if (repoUrl.startsWith('git@') && (await pathExists(keyPath))) await unlink(keyPath)
   }
 }
 
