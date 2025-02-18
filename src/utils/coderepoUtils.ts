@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { writeFile } from 'fs/promises'
+import { chmod, readFile, writeFile } from 'fs/promises'
 import simpleGit, { SimpleGit } from 'simple-git'
 import { OtomiError } from 'src/error'
 
@@ -70,6 +70,9 @@ async function connectPrivateRepo(
 
     if (url.startsWith('git@') && sshKey) {
       await writeFile(keyPath, `${sshKey}\n`, { mode: 0o600 })
+      await chmod(keyPath, 0o600)
+      const ssh = await readFile(keyPath)
+      console.log('ssh', ssh)
       process.env.GIT_SSH_COMMAND = `ssh -i ${keyPath} -o StrictHostKeyChecking=no`
       console.log(process.env)
 
