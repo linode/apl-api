@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { chmod, readFile, writeFile } from 'fs/promises'
+import { writeFile } from 'fs/promises'
 import simpleGit, { SimpleGit } from 'simple-git'
 import { OtomiError } from 'src/error'
 
@@ -69,14 +69,12 @@ async function connectPrivateRepo(
     let url = repoUrl
 
     if (url.startsWith('git@') && sshKey) {
-      await writeFile(keyPath, `${sshKey}\n`, { mode: 0o777 })
-      await chmod(keyPath, 0o777)
-      const ssh = await readFile(keyPath)
-      console.log('ssh', ssh)
-      process.env.GIT_SSH_COMMAND = `ssh -i ${keyPath} -o StrictHostKeyChecking=no`
-      console.log(process.env)
+      await writeFile(keyPath, `${sshKey}\n`, { mode: 0o600 })
+      const GIT_SSH_COMMAND = `ssh -i ${keyPath} -o StrictHostKeyChecking=no`
+      // process.env.GIT_SSH_COMMAND = GIT_SSH_COMMAND
 
       git = simpleGit()
+      git.env('GIT_SSH_COMMAND', GIT_SSH_COMMAND)
     } else if (url.startsWith('https://')) {
       if (!username || !accessToken) throw new Error('Username and access token are required for HTTPS authentication')
       const urlWithAuth = repoUrl.replace(
@@ -91,6 +89,7 @@ async function connectPrivateRepo(
     await git.listRemote([url])
     return { status: 'success' }
   } catch (error) {
+    console.log('error', error)
     return { status: 'failed' }
   } finally {
     // if (repoUrl.startsWith('git@') && (await pathExists(keyPath))) await unlink(keyPath)
