@@ -74,7 +74,12 @@ async function connectPrivateRepo(
       // process.env.GIT_SSH_COMMAND = GIT_SSH_COMMAND
 
       git = simpleGit()
-      git.env('GIT_SSH_COMMAND', GIT_SSH_COMMAND)
+      git
+        .env('GIT_SSH_COMMAND', GIT_SSH_COMMAND)
+        .env('GIT_COMMITTER_NAME', 'Not Used')
+        .env('GIT_COMMITTER_EMAIL', 'not@us.ed')
+        .env('GIT_AUTHOR_NAME', 'Not Used')
+        .env('GIT_AUTHOR_EMAIL', 'not@us.ed')
     } else if (url.startsWith('https://')) {
       if (!username || !accessToken) throw new Error('Username and access token are required for HTTPS authentication')
       const urlWithAuth = repoUrl.replace(
