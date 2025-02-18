@@ -88,7 +88,7 @@ async function connectPrivateRepo(
         sshAdd.on('close', (code) => (code === 0 ? resolve(undefined) : reject(new Error('Failed to add SSH key'))))
       })
 
-      process.env.GIT_SSH_COMMAND = 'ssh -o StrictHostKeyChecking=no'
+      process.env.GIT_SSH_COMMAND = 'ssh -o User=node StrictHostKeyChecking=no'
 
       git = simpleGit()
     } else if (url.startsWith('https://')) {
