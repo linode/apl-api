@@ -1491,6 +1491,16 @@ paths:
           description: URL of the repository
           schema:
             type: string
+        - name: teamId
+          in: query
+          description: Id of the team
+          schema:
+            type: string
+        - name: secret
+          in: query
+          description: Name of the secret for private repositories
+          schema:
+            type: string
       responses:
         '200':
           description: The request is successful.

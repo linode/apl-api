@@ -73,7 +73,7 @@ import {
   watchPodUntilRunning,
 } from './k8s_operations'
 import { validateBackupFields } from './utils/backupUtils'
-import { getGiteaRepoUrls } from './utils/coderepoUtils'
+import { getGiteaRepoUrls, testPrivateRepoConnect } from './utils/coderepoUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
@@ -984,18 +984,27 @@ export default class OtomiStack {
     await this.doDeployment(['coderepos'])
   }
 
-  async getTestRepoConnect(repoUrl: string): Promise<TestRepoConnect> {
+  async getTestRepoConnect(repoUrl: string, teamId: string, secretName: string): Promise<TestRepoConnect> {
     try {
       if (!repoUrl) return { status: 'unknown' }
-      const cleanUrl = repoUrl
-        .trim()
-        .replace(/\.git$/, '')
-        .replace(/\/$/, '')
-      const match = cleanUrl.match(/^https?:\/\/(github\.com|gitlab\.com|gitea\.[^/]+|[^/]+)\/([^/]+)\/([^/]+)/)
-      if (!match) return { status: 'failed' }
-      const repoCheckUrl = `${cleanUrl}/info/refs?service=git-upload-pack`
-      const response = await axios.get(repoCheckUrl, { validateStatus: () => true })
-      if (response.status === 200) return { status: 'success' }
+      if (secretName) {
+        const secret = await getSecretValues(secretName, `team-${teamId}`)
+        const sshPrivateKey: string = secret?.['ssh-privatekey'] || ''
+        const username: string = secret?.username || ''
+        const accessToken: string = secret?.password || ''
+        const privateRepoConnect = await testPrivateRepoConnect(repoUrl, sshPrivateKey, username, accessToken)
+        return privateRepoConnect as TestRepoConnect
+      } else {
+        const cleanUrl = repoUrl
+          .trim()
+          .replace(/\.git$/, '')
+          .replace(/\/$/, '')
+        const match = cleanUrl.match(/^https?:\/\/(github\.com|gitlab\.com|gitea\.[^/]+|[^/]+)\/([^/]+)\/([^/]+)/)
+        if (!match) return { status: 'failed' }
+        const repoCheckUrl = `${cleanUrl}/info/refs?service=git-upload-pack`
+        const response = await axios.get(repoCheckUrl, { validateStatus: () => true })
+        if (response.status === 200) return { status: 'success' }
+      }
       return { status: 'failed' }
     } catch (error) {
       return { status: 'failed' }

@@ -8,7 +8,8 @@ export default function (): OperationHandlerArray {
   const get: Operation = [
     async ({ otomi, query }: OpenApiRequestExt, res): Promise<void> => {
       debug(`getTestRepoConnect`, query)
-      res.json(await otomi.getTestRepoConnect(query?.url as string))
+      const { url, teamId, secret }: { url: string; teamId: string; secret: string } = query as any
+      res.json(await otomi.getTestRepoConnect(url, teamId, secret))
     },
   ]
   const api = {
