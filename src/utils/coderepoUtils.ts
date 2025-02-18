@@ -1,6 +1,5 @@
 import axios from 'axios'
-import { pathExists } from 'fs-extra'
-import { unlink, writeFile } from 'fs/promises'
+import { writeFile } from 'fs/promises'
 import simpleGit, { SimpleGit } from 'simple-git'
 import { OtomiError } from 'src/error'
 
@@ -72,6 +71,7 @@ async function connectPrivateRepo(
     if (url.startsWith('git@') && sshKey) {
       await writeFile(keyPath, `${sshKey}\n`, { mode: 0o600 })
       process.env.GIT_SSH_COMMAND = `ssh -i ${keyPath} -o StrictHostKeyChecking=no`
+      console.log(process.env)
 
       git = simpleGit()
     } else if (url.startsWith('https://')) {
@@ -90,7 +90,7 @@ async function connectPrivateRepo(
   } catch (error) {
     return { status: 'failed' }
   } finally {
-    if (repoUrl.startsWith('git@') && (await pathExists(keyPath))) await unlink(keyPath)
+    // if (repoUrl.startsWith('git@') && (await pathExists(keyPath))) await unlink(keyPath)
   }
 }
 
