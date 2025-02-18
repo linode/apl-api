@@ -69,8 +69,8 @@ async function connectPrivateRepo(
     let url = repoUrl
 
     if (url.startsWith('git@') && sshKey) {
-      await writeFile(keyPath, `${sshKey}\n`, { mode: 0o600 })
-      await chmod(keyPath, 0o600)
+      await writeFile(keyPath, `${sshKey}\n`, { mode: 0o777 })
+      await chmod(keyPath, 0o777)
       const ssh = await readFile(keyPath)
       console.log('ssh', ssh)
       process.env.GIT_SSH_COMMAND = `ssh -i ${keyPath} -o StrictHostKeyChecking=no`
