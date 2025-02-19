@@ -72,7 +72,12 @@ import {
   watchPodUntilRunning,
 } from './k8s_operations'
 import { validateBackupFields } from './utils/backupUtils'
-import { getGiteaRepoUrls, testPrivateRepoConnect, testPublicRepoConnect } from './utils/coderepoUtils'
+import {
+  getGiteaRepoUrls,
+  normalizeRepoUrl,
+  testPrivateRepoConnect,
+  testPublicRepoConnect,
+} from './utils/coderepoUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
@@ -983,26 +988,29 @@ export default class OtomiStack {
     await this.doDeployment(['coderepos'])
   }
 
-  async getTestRepoConnect(repoUrl: string, teamId: string, secretName: string): Promise<TestRepoConnect> {
+  async getTestRepoConnect(url: string, teamId: string, secretName: string): Promise<TestRepoConnect> {
     try {
-      if (!repoUrl) return { status: 'unknown' }
+      let sshPrivateKey = '',
+        username = '',
+        accessToken = ''
+
       if (secretName) {
         const secret = await getSecretValues(secretName, `team-${teamId}`)
-        const sshPrivateKey: string = secret?.['ssh-privatekey'] || ''
-        const username: string = secret?.username || ''
-        const accessToken: string = secret?.password || ''
-        const privateRepoConnect = await testPrivateRepoConnect(repoUrl, sshPrivateKey, username, accessToken)
-        return privateRepoConnect as TestRepoConnect
-      } else {
-        const cleanUrl = repoUrl
-          .trim()
-          .replace(/\.git$/, '')
-          .replace(/\/$/, '')
-        const match = cleanUrl.match(/^https?:\/\/(github\.com|gitlab\.com|gitea\.[^/]+|[^/]+)\/([^/]+)\/([^/]+)/)
-        if (!match) return { status: 'failed' }
-        const publicRepoConnect = await testPublicRepoConnect(cleanUrl)
-        return publicRepoConnect as TestRepoConnect
+        sshPrivateKey = secret?.['ssh-privatekey'] || ''
+        username = secret?.username || ''
+        accessToken = secret?.password || ''
       }
+
+      const isPrivate = !!secretName
+      const isSSH = !!sshPrivateKey
+      const repoUrl = normalizeRepoUrl(url, isPrivate, isSSH)
+
+      if (!repoUrl) return { status: 'failed' }
+
+      if (isPrivate)
+        return (await testPrivateRepoConnect(repoUrl, sshPrivateKey, username, accessToken)) as TestRepoConnect
+
+      return (await testPublicRepoConnect(repoUrl)) as TestRepoConnect
     } catch (error) {
       return { status: 'failed' }
     }

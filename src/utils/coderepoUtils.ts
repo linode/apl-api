@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 import axios from 'axios'
 import { pathExists, unlink } from 'fs-extra'
 import { chmod, writeFile } from 'fs/promises'
@@ -39,6 +40,43 @@ export async function getGiteaRepoUrls(adminUsername, adminPassword, orgName, do
     error.code = 500
     error.publicMessage = 'Error getting internal repository names'
     throw error
+  }
+}
+
+export function normalizeRepoUrl(inputUrl: string, isPrivate: boolean, isSSH: boolean): string | null {
+  try {
+    let parsedUrl: URL
+    let owner: string
+    let repoName: string
+
+    const cleanUrl = inputUrl
+      .trim()
+      .replace(/\.git$/, '')
+      .replace(/\/$/, '')
+    const initMatch = cleanUrl.match(
+      /^(https?:\/\/(github\.com|gitlab\.com)\/([^/]+)\/([^/]+)|git@(github\.com|gitlab\.com):([^/]+)\/([^/]+))/,
+    )
+
+    if (!initMatch) throw new Error('Invalid repository URL.')
+
+    if (inputUrl.startsWith('git@')) {
+      const match = inputUrl.match(/^git@([^:]+):([^/]+)\/(.+?)(\.git)?$/)
+      if (!match) throw new Error('Invalid SSH repository URL.')
+      const [, hostname, extractedOwner, extractedRepo] = match
+      owner = extractedOwner
+      repoName = extractedRepo.endsWith('.git') ? extractedRepo : `${extractedRepo}.git`
+      parsedUrl = new URL(`https://${hostname}/${owner}/${repoName}`)
+    } else {
+      parsedUrl = new URL(inputUrl)
+      const segments = parsedUrl.pathname.split('/').filter(Boolean)
+      if (segments.length < 2) throw new Error('Invalid repository URL: not enough segments.')
+      owner = segments[0]
+      repoName = segments[1].endsWith('.git') ? segments[1] : `${segments[1]}.git`
+    }
+    if (isPrivate && isSSH) return `git@${parsedUrl.hostname}:${owner}/${repoName}`
+    else return `https://${parsedUrl.hostname}/${owner}/${repoName}`
+  } catch (error) {
+    return null
   }
 }
 

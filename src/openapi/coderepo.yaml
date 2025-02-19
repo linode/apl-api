@@ -30,7 +30,7 @@ Coderepo:
         - github
         - gitlab
     repositoryUrl:
-      $ref: 'definitions.yaml#/url'
+      $ref: 'definitions.yaml#/repoUrl'
     private:
       type: boolean
       default: false
