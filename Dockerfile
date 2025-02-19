@@ -36,8 +36,8 @@ COPY --from=clean /app/node_modules node_modules
 COPY --from=ci /app/dist dist
 COPY package.json .
 
-# Add fakeuser to /etc/passwd
-RUN echo 'fakeuser:x:999:999::/home/fakeuser:/bin/sh' >> /etc/passwd
+# Add nouser to /etc/passwd for ssh connection
+RUN echo 'nouser:x:999:999::/home/nouser:/bin/sh' >> /etc/passwd
 
 USER node
 EXPOSE 8080
