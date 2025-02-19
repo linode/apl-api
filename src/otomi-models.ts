@@ -2,6 +2,7 @@ import { Request } from 'express'
 import { JSONSchema4 } from 'json-schema'
 import { components, external, operations, paths } from 'src/generated-schema'
 import OtomiStack from 'src/otomi-stack'
+
 export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
 export type Backup = components['schemas']['Backup']
@@ -149,7 +150,7 @@ export interface Core {
 }
 
 export interface Repo {
-  apps: Record<string, any>
+  apps: App[]
   alerts: Alerts
   cluster: Cluster
   databases: Record<string, any>
@@ -167,7 +168,7 @@ export interface Repo {
 }
 
 export interface TeamConfig {
-  apps: Record<string, any>
+  apps: App[]
   backups: Backup[]
   builds: Build[]
   netpols: Netpol[]

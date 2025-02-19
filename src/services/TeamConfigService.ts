@@ -1,4 +1,5 @@
 import {
+  App,
   Backup,
   Build,
   Netpol,
@@ -316,35 +317,35 @@ export class TeamConfigService {
   // == APPS CRUD ==
   // =====================================
 
-  public createApp(key: string, app: any): void {
+  public createApp(app: App): App {
     const newApp = { ...app, id: app.id ?? uuidv4() }
-    if (has(this.teamConfig.apps, key)) {
-      throw new Error(`App[${key}] already exists.`)
+    if (find(this.teamConfig.apps, { id: newApp.id })) {
+      throw new Error(`App[${app.id}] already exists.`)
     }
-    this.teamConfig.apps[key] = newApp
+    this.teamConfig.apps.push(newApp)
     return newApp
   }
 
-  public getApp(key: string): any | undefined {
-    return this.teamConfig.apps[key]
+  public getApp(id: string): App {
+    const app = find(this.teamConfig.apps, { id })
+    if (!app) {
+      throw new Error(`App[${id}] does not exist.`)
+    }
+    return app
   }
 
-  public getApps(): any | undefined {
+  public getApps(): App[] {
     return this.teamConfig.apps
   }
 
-  public updateApp(key: string, updates: any): void {
-    if (!has(this.teamConfig.apps, key)) {
-      throw new Error(`App[${key}] does not exist.`)
-    }
-    merge(this.teamConfig.apps[key], updates)
+  public updateApp(id: string, updates: Partial<App>): App {
+    const app = find(this.teamConfig.apps, { id })
+    if (!app) throw new Error(`App[${id}] does not exist.`)
+    return merge(app, updates)
   }
 
-  public deleteApp(key: string): void {
-    if (!has(this.teamConfig.apps, key)) {
-      throw new Error(`App[${key}] does not exist.`)
-    }
-    delete this.teamConfig.apps[key]
+  public deleteApp(id: string): void {
+    remove(this.teamConfig.apps, { id })
   }
 
   // =====================================

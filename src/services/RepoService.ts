@@ -1,5 +1,6 @@
 import {
   Alerts,
+  App,
   Build,
   Cluster,
   Dns,
@@ -29,7 +30,7 @@ export class RepoService {
   private teamConfigServiceCache = new Map<string, TeamConfigService>()
 
   constructor(private repo: Repo) {
-    this.repo.apps ??= {}
+    this.repo.apps ??= []
     this.repo.alerts ??= {} as Alerts
     this.repo.cluster ??= {} as Cluster
     this.repo.databases ??= {}
@@ -65,31 +66,24 @@ export class RepoService {
   // == APPS CRUD (Dictionary) ==
   // =====================================
 
-  public createApp(key: string, app: any) {
-    if (has(this.repo.apps, key)) {
-      throw new Error(`App[${key}] already exists.`)
+  public getApp(id: string): App {
+    const app = find(this.repo.apps, { id })
+    if (!app) {
+      throw new Error(`User[${id}] does not exist.`)
     }
-    const newApp = { ...app, id: app.id ?? uuidv4() }
-    this.repo.apps[key] = newApp
-    return newApp
+    return app
   }
 
-  public getApp(key: string): any | undefined {
-    return this.repo.apps[key]
+  public getApps(): App[] {
+    return this.repo.apps
   }
 
-  public updateApp(key: string, updates: any): void {
-    if (!has(this.repo.apps, key)) {
-      throw new Error(`App[${key}] does not exist.`)
+  public updateApp(id: string, updates: Partial<App>): App {
+    const app = find(this.repo.apps, { id })
+    if (!app) {
+      throw new Error(`App[${id}] does not exist.`)
     }
-    merge(this.repo.apps[key], updates)
-  }
-
-  public deleteApp(key: string): void {
-    if (!has(this.repo.apps, key)) {
-      throw new Error(`App[${key}] does not exist.`)
-    }
-    delete this.repo.apps[key]
+    return merge(app, updates)
   }
 
   // =====================================
@@ -144,7 +138,7 @@ export class RepoService {
       projects: [],
       netpols: [],
       settings: {} as Team,
-      apps: {},
+      apps: [],
       policies: {} as Policies,
       workloadValues: [],
     }
@@ -394,19 +388,19 @@ export class RepoService {
   }
 
   public getAllTeamSettings(): Team[] {
-    return map(this.repo.teamConfig, 'settings')
+    return map(this.repo.teamConfig, 'settings').filter(Boolean)
   }
 
   public getAllNetpols(): Netpol[] {
-    return flatMap(this.repo.teamConfig, 'netpols')
+    return flatMap(this.repo.teamConfig, 'netpols').filter(Boolean)
   }
 
   public getAllProjects(): Project[] {
-    return flatMap(this.repo.teamConfig, 'projects')
+    return flatMap(this.repo.teamConfig, 'projects').filter(Boolean)
   }
 
   public getAllBuilds(): Build[] {
-    return flatMap(this.repo.teamConfig, 'builds')
+    return flatMap(this.repo.teamConfig, 'builds').filter(Boolean)
   }
 
   public getAllPolicies(): Record<string, Policies> {
@@ -414,15 +408,15 @@ export class RepoService {
   }
 
   public getAllWorkloads(): Workload[] {
-    return flatMap(this.repo.teamConfig, 'workloads')
+    return flatMap(this.repo.teamConfig, 'workloads').filter(Boolean)
   }
 
   public getAllServices(): Service[] {
-    return flatMap(this.repo.teamConfig, 'services')
+    return flatMap(this.repo.teamConfig, 'services').filter(Boolean)
   }
 
   public getAllSealedSecrets(): SealedSecret[] {
-    return flatMap(this.repo.teamConfig, 'sealedSecrets')
+    return flatMap(this.repo.teamConfig, 'sealedSecrets').filter(Boolean)
   }
 
   /** Retrieve a collection dynamically from the Repo */

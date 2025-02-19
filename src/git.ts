@@ -14,6 +14,8 @@ import { GitPullError, HttpError, ValidationError } from './error'
 import { DbMessage, getIo } from './middleware'
 import { Core } from './otomi-models'
 import { removeBlankAttributes } from './utils'
+import { FileMap, getFilePath, renderManifest, renderManifestForSecrets } from './repo'
+import jsonpath from 'jsonpath'
 
 const debug = Debug('otomi:repo')
 
@@ -199,11 +201,30 @@ export class Git {
     return merge(data, secretData) as Core
   }
 
-  async saveConfig(
-    dataPath: string,
+  async saveConfig(config: Record<string, any>, fileMap: FileMap): Promise<Promise<void>> {
+    const jsonPathsValuesPublic = jsonpath.nodes(config, fileMap.jsonPathExpression)
+    await Promise.all(
+      jsonPathsValuesPublic.map(async (node) => {
+        const nodePath = node.path
+        const nodeValue = node.value
+        try {
+          const filePath = getFilePath(fileMap, nodePath, nodeValue, '')
+          const manifest = renderManifest(fileMap, nodePath, nodeValue)
+          await this.writeFile(filePath, manifest)
+        } catch (e) {
+          console.log(nodePath)
+          console.log(fileMap)
+          throw e
+        }
+      }),
+    )
+  }
+
+  async saveConfigWithSecrets(
     inSecretRelativeFilePath: string,
     config: Record<string, any>,
     secretJsonPaths: string[],
+    fileMap: FileMap,
   ): Promise<Promise<void>> {
     const secretData = {}
     const plainData = cloneDeep(config)
@@ -223,8 +244,26 @@ export class Git {
       if (!secretExists) secretDataRelativePath = inSecretRelativeFilePath
     }
 
-    await this.writeFile(secretDataRelativePath, secretData)
-    await this.writeFile(dataPath, plainData)
+    const jsonPathsValuesPublic = jsonpath.nodes(plainData, fileMap.jsonPathExpression)
+    await Promise.all(
+      jsonPathsValuesPublic.map(async (node) => {
+        const nodePath = node.path
+        const nodeValue = node.value
+        try {
+          const filePath = getFilePath(fileMap, nodePath, nodeValue, '')
+          const manifest = renderManifest(fileMap, nodePath, nodeValue)
+          await this.writeFile(filePath, manifest)
+        } catch (e) {
+          console.log(nodePath)
+          console.log(fileMap)
+          throw e
+        }
+      }),
+    )
+    if (secretData && Object.keys(secretData).length > 0) {
+      const secretManifest = renderManifestForSecrets(fileMap, secretData)
+      await this.writeFile(secretDataRelativePath, secretManifest)
+    }
   }
 
   isRootClone(): boolean {

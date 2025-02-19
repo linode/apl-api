@@ -7,7 +7,7 @@ import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readdir, readFile, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
-import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set, unset } from 'lodash'
+import { cloneDeep, filter, get, isArray, isEmpty, map, mapValues, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import { AlreadyExists, GitPullError, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
 import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
@@ -82,15 +82,14 @@ import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
-import { loadValues } from './repo'
+import { getFileMaps, getFilePath, loadValues, renderManifestForSecrets } from './repo'
 import { RepoService } from './services/RepoService'
+import jsonpath from 'jsonpath'
 
 interface ExcludedApp extends App {
   managed: boolean
 }
 const debug = Debug('otomi:otomi-stack')
-
-const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'dockerconfig']
 
 const env = cleanEnv({
   CUSTOM_ROOT_CA,
@@ -232,19 +231,38 @@ export default class OtomiStack {
     }
   }
 
+  transformApps(appsObj: Record<string, any>): App[] {
+    if (!appsObj || typeof appsObj !== 'object') return []
+
+    return Object.entries(appsObj).map(([appId, appData]) => ({
+      id: appId,
+      enabled: appData.enabled ?? false,
+      values: omit(appData, ['enabled']), // Remove `enabled` from values
+      rawValues: {},
+    }))
+  }
+
   async initRepo(repoService?: RepoService): Promise<void> {
     if (repoService) {
       this.repoService = repoService
       return
     } else {
-      const repo = (await loadValues(this.getRepoPath())) as Repo
+      // We need to map the app values so it adheres the App interface
+      const rawRepo = await loadValues(this.getRepoPath())
+
+      rawRepo.apps = this.transformApps(rawRepo.apps)
+      rawRepo.teamConfig = mapValues(rawRepo.teamConfig, (teamConfig) => ({
+        ...teamConfig,
+        apps: this.transformApps(teamConfig.apps),
+      }))
+
+      const repo = rawRepo as Repo
       this.repoService = new RepoService(repo)
     }
   }
 
   async initGit(skipDbInflation = false): Promise<void> {
     await this.init()
-    await this.initRepo()
     // every editor gets their own folder to detect conflicts upon deploy
     const path = this.getRepoPath()
     const branch = env.GIT_BRANCH
@@ -253,7 +271,8 @@ export default class OtomiStack {
       try {
         this.git = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, branch)
         await this.git.pull()
-        if (await this.git.fileExists('env/cluster.yaml')) break
+        //TODO fetch this url from the repo
+        if (await this.git.fileExists('env/settings/cluster.yaml')) break
         debug(`Values are not present at ${url}:${branch}`)
       } catch (e) {
         debug(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
@@ -264,7 +283,7 @@ export default class OtomiStack {
       await new Promise((resolve) => setTimeout(resolve, timeoutMs))
     }
     // branches get a copy of the "main" branch db, so we don't need to inflate
-    if (!skipDbInflation) await this.loadValues()
+    await this.loadValues()
     debug(`Values are loaded for ${this.editor} in ${this.sessionId}`)
   }
 
@@ -385,7 +404,7 @@ export default class OtomiStack {
       const content = await this.git.loadConfig('env/apps/ingress-nginx.yaml', 'env/apps/secrets.ingress-nginx.yaml')
       const values = content?.apps?.['ingress-nginx'] ?? {}
       const teamId = 'admin'
-      this.repoService.getTeamConfigService(teamId).createApp(id, { enabled: true, values, rawValues: {}, teamId })
+      this.repoService.getTeamConfigService(teamId).createApp({ enabled: true, values, rawValues: {}, id })
       debug(`Ingress app loaded for ${id}`)
     } catch (error) {
       debug(`Failed to load ingress apps for ${id}:`)
@@ -476,30 +495,40 @@ export default class OtomiStack {
     return apps
   }
 
-  getApp(teamId: string, id: string): App | ExcludedApp {
-    const app = this.repoService.getTeamConfigService(teamId).getApp(id) as App
+  getTeamApp(teamId: string, id: string): App | ExcludedApp {
+    const app = this.getApp(id)
     this.filterExcludedApp(app)
 
     if (teamId === 'admin') return app
-    const adminApp = this.repoService.getTeamConfigService(teamId).getApp(id) as App
+    const adminApp = this.repoService.getTeamConfigService(teamId).getApp(id)
     return { ...cloneDeep(app), enabled: adminApp.enabled }
   }
 
+  getApp(name: string): App {
+    return this.repoService.getApp(name)
+  }
+
   getApps(teamId: string, picks?: string[]): Array<App> {
-    const apps = this.repoService.getTeamConfigService(teamId).getApps() as Array<App>
+    const appList = this.getAppList()
+    const apps = this.repoService.getApps().filter((app) => appList.includes(app.id))
     const providerSpecificApps = this.filterExcludedApp(apps) as App[]
 
     if (teamId === 'admin') return providerSpecificApps
 
-    let teamApps = providerSpecificApps.map((app: App) => {
-      const adminApp = this.repoService.getTeamConfigService('admin').getApp(app.id) as App
-      return { ...cloneDeep(app), enabled: adminApp.enabled }
-    })
+    // If not team admin load available teamApps
+    const core = this.getCore()
+    let teamApps = providerSpecificApps
+      .map((app: App) => {
+        const isShared = !!core.adminApps.find((a) => a.name === app.id)?.isShared
+        const inTeamApps = !!core.teamApps.find((a) => a.name === app.id)
+        if (isShared || inTeamApps) return app
+      })
+      .filter((app): app is App => app !== undefined) // Ensures no `undefined` elements
 
     if (!picks) return teamApps
 
     if (picks.includes('enabled')) {
-      const adminApps = this.repoService.getTeamConfigService('admin').getApps() as Array<App>
+      const adminApps = this.repoService.getApps()
 
       teamApps = adminApps.map((adminApp) => {
         const teamApp = teamApps.find((app) => app.id === adminApp.id)
@@ -511,15 +540,15 @@ export default class OtomiStack {
   }
 
   async editApp(teamId: string, id: string, data: App): Promise<App> {
-    let app: App = this.repoService.getTeamConfigService(teamId).getApp(id)
+    let app: App = this.repoService.getApp(id)
     // Shallow merge, so only first level attributes can be replaced (values, rawValues, etc.)
     app = { ...app, ...data }
-    this.repoService.getTeamConfigService(teamId).updateApp(id, app)
+    this.repoService.updateApp(id, app)
     const secretPaths = this.getSecretPaths()
     // also save admin apps
     await this.saveAdminApps(secretPaths)
     await this.doDeployment(['apps'])
-    return this.repoService.getTeamConfigService(teamId).getApp(id) as App
+    return this.repoService.getApp(id)
   }
 
   canToggleApp(id: string): boolean {
@@ -529,11 +558,15 @@ export default class OtomiStack {
 
   async toggleApps(teamId: string, ids: string[], enabled: boolean): Promise<void> {
     ids.map((id) => {
-      // we might be given a dep that is only relevant to core, or
-      // which is essential, so skip it
-      const orig = this.repoService.getTeamConfigService(teamId).getApp(id) as App
-      if (orig && this.canToggleApp(id)) this.repoService.getTeamConfigService(teamId).updateApp(id, { enabled })
+      const orig = this.repoService.getApp(id)
+      console.log(JSON.stringify(orig))
+      console.log(JSON.stringify(this.canToggleApp(id)))
+      if (orig && this.canToggleApp(id)) {
+        const app = this.repoService.updateApp(id, { enabled })
+        console.log(JSON.stringify(app))
+      }
     })
+
     const secretPaths = this.getSecretPaths()
     // also save admin apps
     await this.saveAdminApps(secretPaths)
@@ -566,7 +599,7 @@ export default class OtomiStack {
     // we do not want to send enabled flag to the input forms
     delete values.enabled
     const teamId = 'admin'
-    this.repoService.getTeamConfigService(teamId).createApp(appInstanceId, { enabled, values, rawValues, teamId })
+    this.repoService.getTeamConfigService(teamId).createApp({ enabled, values, rawValues, id: appId })
   }
 
   async loadApps(): Promise<void> {
@@ -619,7 +652,7 @@ export default class OtomiStack {
       const isShared = !!core.adminApps.find((a) => a.name === appId)?.isShared
       const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
       // Admin apps are loaded by loadApps function
-      if (id !== 'admin' && (isShared || inTeamApps)) this.repoService.getTeamConfigService(id).createApp(appId, {})
+      if (id !== 'admin' && (isShared || inTeamApps)) this.repoService.getTeamConfigService(id).createApp({ id: appId })
     })
 
     if (!data.id) {
@@ -763,7 +796,7 @@ export default class OtomiStack {
     let existingUsersEmail = this.repoService.getUsersEmail()
     if (!env.isDev) {
       const { otomi, cluster } = this.getSettings(['otomi', 'cluster'])
-      const keycloak = this.getApp('admin', 'keycloak')
+      const keycloak = this.getApp('keycloak')
       const keycloakBaseUrl = `https://keycloak.${cluster?.domainSuffix}`
       const realm = 'otomi'
       const username = keycloak?.values?.adminUsername as string
@@ -1617,11 +1650,12 @@ export default class OtomiStack {
   async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {
     debug('Loading values')
     await this.git.initSops()
-    await this.loadCluster()
-    await this.loadSettings()
-    await this.loadUsers()
-    await this.loadTeams()
-    await this.loadApps()
+    await this.initRepo()
+    // await this.loadCluster()
+    // await this.loadSettings()
+    // await this.loadUsers()
+    // await this.loadTeams()
+    // await this.loadApps()
     this.isLoaded = true
   }
 
@@ -1847,15 +1881,6 @@ export default class OtomiStack {
     })
   }
 
-  async saveCluster(secretPaths?: string[]): Promise<void> {
-    await this.git.saveConfig(
-      'env/cluster.yaml',
-      'env/secrets.cluster.yaml',
-      this.getSettings(['cluster']),
-      secretPaths ?? this.getSecretPaths(),
-    )
-  }
-
   async saveAdminApps(secretPaths?: string[]): Promise<void> {
     await Promise.all(
       this.getApps('admin').map(async (app) => {
@@ -1869,11 +1894,12 @@ export default class OtomiStack {
         if (this.canToggleApp(id)) apps[id].enabled = !!enabled
         else delete apps[id].enabled
 
-        await this.git.saveConfig(
-          `env/apps/${id}.yaml`,
+        const fileMap = getFileMaps(this.getRepoPath()).find((fm) => fm.kind === 'AplApp')!
+        await this.git.saveConfigWithSecrets(
           `env/apps/secrets.${id}.yaml`,
           { apps },
           secretPaths ?? this.getSecretPaths(),
+          fileMap,
         )
       }),
     )
@@ -1882,34 +1908,40 @@ export default class OtomiStack {
   async saveSettings(secretPaths?: string[]): Promise<void> {
     const settings = cloneDeep(this.getSettings()) as Record<string, Record<string, any>>
     settings.otomi.nodeSelector = arrayToObject(settings.otomi.nodeSelector as [])
-    await this.git.saveConfig(
-      'env/settings.yaml',
+    //TODO this one needs to be done for all settings
+    const fileMap = getFileMaps(this.getRepoPath()).find((fm) => fm.kind === 'AplSmtp')!
+    await this.git.saveConfigWithSecrets(
       `env/secrets.settings.yaml`,
       omit(settings, ['cluster']),
       secretPaths ?? this.getSecretPaths(),
+      fileMap,
     )
   }
 
   async saveUsers(): Promise<void> {
     const users = this.repoService.getUsers()
-    const relativePath = `env/secrets.users.yaml`
-    const { secretFilePostfix } = this.git
-    let secretRelativePath = `${relativePath}${secretFilePostfix}`
-    if (secretFilePostfix) {
-      const secretExists = await this.git.fileExists(relativePath)
-      if (!secretExists) secretRelativePath = relativePath
-    }
-    const outData: Record<string, any> = set({}, `users`, users)
     debug(`Saving users`)
-    await this.git.writeFile(secretRelativePath, outData, false)
-    if (users.length === 0) {
-      await this.git.removeFile(relativePath)
-      await this.git.removeFile(secretRelativePath)
-    }
+    const fileMap = getFileMaps(this.getRepoPath()).find((fm) => fm.kind === 'AplUser')!
+    const jsonPathsvaluesSecrets = jsonpath.nodes(users, fileMap.jsonPathExpression)
+    //TODO check what to do when we delete a user
+    await Promise.all(
+      jsonPathsvaluesSecrets.map(async (node) => {
+        const nodePath = node.path
+        const nodeValue = node.value
+        try {
+          const filePath = getFilePath(fileMap, nodePath, nodeValue, 'secrets.')
+          const manifest = renderManifestForSecrets(fileMap, nodeValue)
+          await this.git.writeFile(filePath, manifest, false)
+        } catch (e) {
+          console.log(nodePath)
+          console.log(fileMap)
+          throw e
+        }
+      }),
+    )
   }
 
   async saveTeams(secretPaths?: string[]): Promise<void> {
-    const filePath = 'env/teams.yaml'
     const secretFilePath = `env/secrets.teams.yaml`
     const teamValues = {}
     const teams = this.getTeams()
@@ -1922,7 +1954,8 @@ export default class OtomiStack {
       }),
     )
     const values = set({}, 'teamConfig', teamValues)
-    await this.git.saveConfig(filePath, secretFilePath, values, secretPaths ?? this.getSecretPaths())
+    const fileMap = getFileMaps(this.getRepoPath()).find((fm) => fm.kind === 'AplTeamSettingSet')!
+    await this.git.saveConfigWithSecrets(secretFilePath, values, secretPaths ?? this.getSecretPaths(), fileMap)
   }
 
   async saveTeamSealedSecrets(teamId: string, data: any, id: string): Promise<void> {
@@ -1933,35 +1966,23 @@ export default class OtomiStack {
 
   async saveTeamBackups(teamId: string): Promise<void> {
     const backups = this.repoService.getTeamConfigService(teamId).getBackups()
-    const cleaneBackups: Array<Record<string, any>> = backups.map((obj) => {
-      return omit(obj, ['teamId'])
-    })
-    const relativePath = getTeamBackupsFilePath(teamId)
-    const outData: Record<string, any> = set({}, getTeamBackupsJsonPath(teamId), cleaneBackups)
     debug(`Saving backups of team: ${teamId}`)
-    await this.git.writeFile(relativePath, outData)
+    const fileMap = getFileMaps(this.getRepoPath()).find((fm) => fm.kind === 'AplTeamBackup')!
+    await this.git.saveConfig(backups, fileMap)
   }
 
   async saveTeamNetpols(teamId: string): Promise<void> {
     const netpols = this.repoService.getTeamConfigService(teamId).getNetpols()
-    const cleaneNetpols: Array<Record<string, any>> = netpols.map((obj) => {
-      return omit(obj, ['teamId'])
-    })
-    const relativePath = getTeamNetpolsFilePath(teamId)
-    const outData: Record<string, any> = set({}, getTeamNetpolsJsonPath(teamId), cleaneNetpols)
     debug(`Saving network policies of team: ${teamId}`)
-    await this.git.writeFile(relativePath, outData)
+    const fileMap = getFileMaps(this.getRepoPath()).find((fm) => fm.kind === 'AplTeamNetworkControl')!
+    await this.git.saveConfig(netpols, fileMap)
   }
 
   async saveTeamWorkloads(teamId: string): Promise<void> {
     const workloads = this.repoService.getTeamConfigService(teamId).getWorkloads()
-    const cleaneWorkloads: Array<Record<string, any>> = workloads.map((obj) => {
-      return omit(obj, ['teamId'])
-    })
-    const relativePath = getTeamWorkloadsFilePath(teamId)
-    const outData: Record<string, any> = set({}, getTeamWorkloadsJsonPath(teamId), cleaneWorkloads)
     debug(`Saving workloads of team: ${teamId}`)
-    await this.git.writeFile(relativePath, outData)
+    const fileMap = getFileMaps(this.getRepoPath()).find((fm) => fm.kind === 'AplTeamWorkload')!
+    await this.git.saveConfig(workloads, fileMap)
     await Promise.all(
       workloads.map((workload) => {
         this.saveWorkloadValues(teamId, workload)
@@ -1971,13 +1992,9 @@ export default class OtomiStack {
 
   async saveTeamProjects(teamId: string): Promise<void> {
     const projects = this.repoService.getTeamConfigService(teamId).getProjects()
-    const cleaneProjects: Array<Record<string, any>> = projects.map((obj) => {
-      return omit(obj, ['teamId'])
-    })
-    const relativePath = getTeamProjectsFilePath(teamId)
-    const outData: Record<string, any> = set({}, getTeamProjectsJsonPath(teamId), cleaneProjects)
     debug(`Saving projects of team: ${teamId}`)
-    await this.git.writeFile(relativePath, outData)
+    const fileMap = getFileMaps(this.getRepoPath()).find((fm) => fm.kind === 'AplTeamProject')!
+    await this.git.saveConfig(projects, fileMap)
   }
 
   async saveTeamCoderepos(teamId: string): Promise<void> {
@@ -1993,21 +2010,16 @@ export default class OtomiStack {
 
   async saveTeamBuilds(teamId: string): Promise<void> {
     const builds = this.repoService.getTeamConfigService(teamId).getBuilds()
-    const cleaneBuilds: Array<Record<string, any>> = builds.map((obj) => {
-      return omit(obj, ['teamId'])
-    })
-    const relativePath = getTeamBuildsFilePath(teamId)
-    const outData: Record<string, any> = set({}, getTeamBuildsJsonPath(teamId), cleaneBuilds)
     debug(`Saving builds of team: ${teamId}`)
-    await this.git.writeFile(relativePath, outData)
+    const fileMap = getFileMaps(this.getRepoPath()).find((fm) => fm.kind === 'AplTeamBuild')!
+    await this.git.saveConfig(builds, fileMap)
   }
 
   async saveTeamPolicies(teamId: string): Promise<void> {
     const policies = this.getTeamPolicies(teamId)
-    const relativePath = getTeamPoliciesFilePath(teamId)
-    const outData: Record<string, Policies> = set({}, getTeamPoliciesJsonPath(teamId), policies)
     debug(`Saving policies of team: ${teamId}`)
-    await this.git.writeFile(relativePath, outData)
+    const fileMap = getFileMaps(this.getRepoPath()).find((fm) => fm.kind === 'AplTeamPolicy')!
+    await this.git.saveConfig(policies, fileMap)
   }
 
   async saveWorkloadValues(teamId: string, workload: Workload): Promise<void> {
@@ -2015,23 +2027,23 @@ export default class OtomiStack {
     const data = this.getWorkloadValues(teamId, workload.id!)
     const outData = omit(data, ['id', 'teamId', 'name']) as Record<string, any>
     outData.values = stringifyYaml(data.values, undefined, 4)
-    const path = getTeamWorkloadValuesFilePath(teamId, workload.name)
-
-    await this.git.writeFile(path, outData, false)
+    const fileMap = getFileMaps(this.getRepoPath()).find((fm) => fm.kind === 'AplTeamWorkloadValues')!
+    await this.git.saveConfig(outData, fileMap)
   }
 
   async saveTeamServices(teamId: string): Promise<void> {
     const services = this.repoService.getTeamConfigService(teamId).getServices()
+    //TODO do we need this
     const data = {}
     const values: any[] = []
     services.forEach((service) => {
       const value = this.convertDbServiceToValues(service)
       values.push(value)
     })
-
     set(data, getTeamServicesJsonPath(teamId), values)
-    const filePath = getTeamServicesFilePath(teamId)
-    await this.git.writeFile(filePath, data)
+
+    const fileMap = getFileMaps(this.getRepoPath()).find((fm) => fm.kind === 'AplTeamService')!
+    await this.git.saveConfig(services, fileMap)
   }
 
   async loadTeam(inTeam: Team): Promise<void> {

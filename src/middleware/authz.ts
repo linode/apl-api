@@ -76,9 +76,11 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
   const schemaToRepoMap: Record<string, string> = {
     Service: 'services',
     Team: 'teamConfig',
+    App: 'apps',
   }
 
   const selector = renameKeys(req.params)
+  console.log(schemaName)
   const collectionId = schemaToRepoMap[schemaName]
   if (['create', 'update'].includes(action)) {
     let dataOrig = get(

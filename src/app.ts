@@ -66,7 +66,6 @@ const checkAgainstGitea = async () => {
     debug('Local values differentiate from Git repository, retrieving latest values')
     await otomiStack.git.pull()
     // inflate new db
-    await otomiStack.initRepo()
     await otomiStack.loadValues()
     const sha = await otomiStack.git.getCommitSha()
     const msg: DbMessage = { state: 'clean', editor: 'system', sha, reason: 'conflict' }

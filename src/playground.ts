@@ -1,6 +1,6 @@
 #!/usr/bin/env node --nolazy -r ts-node/register -r tsconfig-paths/register
 
-import { loadValues } from './repo'
+import { getFileMaps, getFilePath, loadValues } from './repo'
 import { Repo } from './otomi-models'
 
 async function play() {
@@ -10,8 +10,17 @@ async function play() {
   const allSpecs = await loadValues(envDir)
 
   const repo = allSpecs as Repo
+
+  const build = repo.teamConfig['demo'].builds[0]
+  const jsonPath = ['$', 'teamConfig', 'demo']
+  const filePath = getFilePath(
+    getFileMaps(envDir).find((filemap) => filemap.kind === 'AplTeamBuild')!,
+    jsonPath,
+    build,
+    '',
+  )
   console.log(allSpecs)
-  console.log(repo)
+  console.log(filePath)
 }
 
 play()
