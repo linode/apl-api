@@ -106,3 +106,13 @@ export async function testPrivateRepoConnect(
   const normalizedKey: string = sshPrivateKey ? normalizeSSHKey(sshPrivateKey) : ''
   return connectPrivateRepo(repoUrl, normalizedKey, username, accessToken)
 }
+
+export async function testPublicRepoConnect(repoUrl: string) {
+  const git = simpleGit()
+  try {
+    await git.listRemote([repoUrl])
+    return { status: 'success' }
+  } catch (error) {
+    return { status: 'failed' }
+  }
+}
