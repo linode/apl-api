@@ -1,6 +1,6 @@
 import axios from 'axios'
-import { execSync, spawn } from 'child_process'
-import { mkdir, writeFile } from 'fs/promises'
+import { execSync } from 'child_process'
+import { chmod, mkdir, writeFile } from 'fs/promises'
 import simpleGit, { SimpleGit } from 'simple-git'
 import { OtomiError } from 'src/error'
 
@@ -71,31 +71,36 @@ async function connectPrivateRepo(
 
     if (url.startsWith('git@') && sshKey) {
       await writeFile(keyPath, `${sshKey}\n`, { mode: 0o600 })
-      // Start SSH agent
-      const sshAgentOutput = execSync('ssh-agent -s').toString()
-      const agentSocketMatch = sshAgentOutput.match(/SSH_AUTH_SOCK=([^;]+)/)
-      const agentPidMatch = sshAgentOutput.match(/SSH_AGENT_PID=([0-9]+)/)
-      if (!agentSocketMatch || !agentPidMatch) throw new Error('Failed to start SSH agent')
-      process.env.SSH_AUTH_SOCK = agentSocketMatch[1]
-      process.env.SSH_AGENT_PID = agentPidMatch[1]
-      if (!sshKey) throw new Error('SSH key is required for SSH authentication')
+      await chmod(keyPath, 0o600)
+      // // Start SSH agent
+      // const sshAgentOutput = execSync('ssh-agent -s').toString()
+      // const agentSocketMatch = sshAgentOutput.match(/SSH_AUTH_SOCK=([^;]+)/)
+      // const agentPidMatch = sshAgentOutput.match(/SSH_AGENT_PID=([0-9]+)/)
+      // if (!agentSocketMatch || !agentPidMatch) throw new Error('Failed to start SSH agent')
+      // process.env.SSH_AUTH_SOCK = agentSocketMatch[1]
+      // process.env.SSH_AGENT_PID = agentPidMatch[1]
+      // if (!sshKey) throw new Error('SSH key is required for SSH authentication')
 
-      // Add SSH private key
-      const sshAdd = spawn('ssh-add', ['-'], { stdio: ['pipe', 'inherit', 'inherit'] })
-      sshAdd.stdin.write(`${sshKey}\n`)
-      sshAdd.stdin.end()
-      await new Promise((resolve, reject) => {
-        sshAdd.on('close', (code) => (code === 0 ? resolve(undefined) : reject(new Error('Failed to add SSH key'))))
-      })
-      process.env.GIT_SSH_COMMAND = 'ssh -o StrictHostKeyChecking=no'
-      console.log(process.env)
+      // // Add SSH private key
+      // const sshAdd = spawn('ssh-add', ['-'], { stdio: ['pipe', 'inherit', 'inherit'] })
+      // sshAdd.stdin.write(`${sshKey}\n`)
+      // sshAdd.stdin.end()
+      // await new Promise((resolve, reject) => {
+      //   sshAdd.on('close', (code) => (code === 0 ? resolve(undefined) : reject(new Error('Failed to add SSH key'))))
+      // })
+      // process.env.GIT_SSH_COMMAND = 'ssh -o StrictHostKeyChecking=no'
+      // console.log(process.env)
+
+      const GIT_SSH_COMMAND = `ssh -i ${keyPath} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null`
 
       const cloneLocation = '/tmp/otomi/test'
       await mkdir(cloneLocation, { recursive: true })
-      const result = execSync(`su - root -c 'git clone ${url} ${cloneLocation}'`).toString()
-      console.log(result)
+      // const result = execSync(`su - root -c 'git clone ${url} ${cloneLocation}'`).toString()
+      // console.log(result)
 
       git = simpleGit()
+      git.env('GIT_SSH_COMMAND', GIT_SSH_COMMAND)
+      await git.clone(repoUrl, cloneLocation)
     } else if (url.startsWith('https://')) {
       if (!username || !accessToken) throw new Error('Username and access token are required for HTTPS authentication')
       const urlWithAuth = repoUrl.replace(
@@ -123,7 +128,6 @@ export async function testPrivateRepoConnect(
   username?: string,
   accessToken?: string,
 ) {
-  await new Promise((r) => setTimeout(r, 10))
   const normalizedKey: string = sshPrivateKey ? normalizeSSHKey(sshPrivateKey) : ''
   return connectPrivateRepo(repoUrl, normalizedKey, username, accessToken)
 }
