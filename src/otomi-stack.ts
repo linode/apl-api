@@ -74,7 +74,7 @@ import { getPolicies } from './utils/policiesUtils'
 import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
-import { fetchWorkloadCatalog } from './utils/workloadUtils'
+import { NewChartPayload, fetchWorkloadCatalog } from './utils/workloadUtils'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -1122,14 +1122,19 @@ export default class OtomiStack {
       }
       throw err
     }
+    //todo add env local check
+
     const version = env.VERSIONS.core as string
+    console.log('halo url get workload catalog', url)
+    console.log('halo sub get workload catalog', sub)
     const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub, teamId, version)
     return { url, helmCharts, catalog }
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
-  async createWorkloadCatalog(body: any): Promise<any> {
-    console.log('halo reach triggered create catalog chart', body)
+  async createWorkloadCatalog(body: NewChartPayload): Promise<any> {
+    const { url, chartName, chartPath, chartIcon, revision, teamId } = body
+    console.log('halo create workload payload', body)
+    await fetchWorkloadCatalog(url, 'mock-sub-value', teamId, revision, true, chartName, chartPath)
   }
 
   async createWorkload(teamId: string, data: Workload): Promise<Workload> {

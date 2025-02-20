@@ -101,7 +101,7 @@ const resourceStatus = async (errorSet) => {
       } catch (error) {
         const errorMessage = `${resourceType}-${resource.name}-${error.message}`
         if (!errorSet.has(errorMessage)) {
-          console.log(`Could not collect status data for ${resourceType} ${resource.name} resource:`, error.message)
+          //console.log(`Could not collect status data for ${resourceType} ${resource.name} resource:`, error.message)
           errorSet.add(errorMessage)
         }
       }
@@ -203,7 +203,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   const emitResourceStatusInterval = 10 * 1000
   const errorSet = new Set()
   setInterval(async function () {
-    await resourceStatus(errorSet)
+    // await resourceStatus(errorSet)
   }, emitResourceStatusInterval)
 
   // and register session middleware

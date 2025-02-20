@@ -105,7 +105,7 @@ export default class Db {
     // @ts-ignore
     const data = coll.find(selector).value()
     if (data === undefined) {
-      debug(`Selector props do not exist in '${type}': ${JSON.stringify(selector)}`)
+      //debug(`Selector props do not exist in '${type}': ${JSON.stringify(selector)}`)
       if (mustThrow) throw new NotExistError()
       else return
     }
