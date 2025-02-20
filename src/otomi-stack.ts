@@ -1556,10 +1556,11 @@ export default class OtomiStack {
   }
 
   async saveAdminApps(app: App, secretPaths?: string[]): Promise<void> {
-    const apps = {}
     const { id, enabled, values, rawValues } = app
-    apps[id] = {
-      ...(values || {}),
+    const apps = {
+      [id]: {
+        ...(values || {}),
+      },
     }
     if (!isEmpty(rawValues)) {
       apps[id]._rawValues = rawValues
