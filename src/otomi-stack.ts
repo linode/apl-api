@@ -4,6 +4,7 @@ import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { ObjectStorageKeyRegions, getRegions } from '@linode/api-v4'
+import axios from 'axios'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
@@ -961,11 +962,41 @@ export default class OtomiStack {
       const build = this.db.createItem('builds', { ...data, teamId }, { teamId, name: data.name }) as Build
       await this.saveTeamBuilds(teamId)
       await this.doDeployment(['builds'])
+      if (process.env.NODE_ENV !== 'development')
+        if (data.trigger && !data.externalRepo) await this.createGiteaHook(teamId, data)
       return build
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Build name already exists'
       throw err
     }
+  }
+  async createGiteaHook(teamId: string, data: Build): Promise<any> {
+    const authHeader = `Basic ${Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')}`
+    const type = data.mode?.type
+    const repoUrl: string = data.mode![type!] ? data.mode!['docker'].repoUrl : data.mode!['buildpacks'].repoUrl
+    const repoName = repoUrl.split('/').pop()
+    const url = `${env.GIT_REPO_URL}/api/v1/repos/team-${teamId}/${repoName}/hooks`
+    const serviceUrl = `http://el-gitea-webhook-${data.name}.${teamId}.svc.cluster.local:8080`
+    const hookConfig = {
+      type: 'gitea',
+      active: true,
+      events: ['push_only'],
+      config: {
+        content_type: 'json',
+        url: serviceUrl,
+      },
+    }
+    console.log('url: ', url)
+    console.log('serviceUrl: ', serviceUrl)
+    console.log('hookConfig: ', hookConfig)
+    const response = await axios.post(url, hookConfig, {
+      headers: {
+        Authorization: authHeader,
+        'Content-Type': 'application/json',
+      },
+    })
+    console.log('HOOK: ', response.data)
+    return response
   }
 
   getBuild(id: string): Build {
