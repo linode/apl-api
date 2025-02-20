@@ -43,7 +43,7 @@ export const setSessionStack = async (editor: string, sessionId: string): Promis
     debug(`Creating session ${sessionId} for user ${editor}`)
     sessions[sessionId] = new OtomiStack(editor, sessionId)
     // init repo without inflating db from files as its slow and we just need a copy of the db
-    await sessions[sessionId].initGit(true)
+    await sessions[sessionId].initGit()
     sessions[sessionId].repoService.setRepo(cloneDeep(readOnlyStack.repoService.getRepo()))
   } else sessions[sessionId].sessionId = sessionId
   return sessions[sessionId]

@@ -14,7 +14,7 @@ import {
   WorkloadValues,
 } from '../otomi-models'
 import { find, has, merge, remove } from 'lodash'
-import { NotExistError } from '../error'
+import { AlreadyExists, NotExistError } from '../error'
 import { v4 as uuidv4 } from 'uuid'
 
 export class TeamConfigService {
@@ -25,9 +25,10 @@ export class TeamConfigService {
   // =====================================
 
   public createBuild(build: Build): Build {
+    this.teamConfig.builds ??= []
     const newBuild = { ...build, id: build.id ?? uuidv4() }
-    if (find(this.teamConfig.builds, { id: newBuild.id })) {
-      throw new Error(`Build[${newBuild.id}] already exists.`)
+    if (find(this.teamConfig.builds, { name: newBuild.name })) {
+      throw new AlreadyExists(`Build[${newBuild.name}] already exists.`)
     }
     this.teamConfig.builds.push(newBuild)
     return newBuild
@@ -42,17 +43,17 @@ export class TeamConfigService {
   }
 
   public getBuilds(): Build[] {
-    return this.teamConfig.builds
+    return this.teamConfig.builds ?? []
   }
 
   public updateBuild(id: string, updates: Partial<Build>): Build {
     const build = find(this.teamConfig.builds, { id })
-    if (!build) throw new Error(`Build[${id}] does not exist.`)
+    if (!build) throw new NotExistError(`Build[${id}] does not exist.`)
     return merge(build, updates)
   }
 
-  public deleteBuild(id: string): void {
-    remove(this.teamConfig.builds, { id })
+  public deleteBuild(name: string): void {
+    remove(this.teamConfig.builds, { name })
   }
 
   // =====================================
@@ -60,9 +61,10 @@ export class TeamConfigService {
   // =====================================
 
   public createWorkload(workload: Workload): Workload {
+    this.teamConfig.workloads ??= []
     const newWorkload = { ...workload, id: workload.id ?? uuidv4() }
-    if (find(this.teamConfig.workloads, { id: newWorkload.id })) {
-      throw new Error(`Workload[${newWorkload.id}] already exists.`)
+    if (find(this.teamConfig.workloads, { name: newWorkload.name })) {
+      throw new AlreadyExists(`Workload[${newWorkload.name}] already exists.`)
     }
 
     this.teamConfig.workloads.push(newWorkload)
@@ -78,17 +80,17 @@ export class TeamConfigService {
   }
 
   public getWorkloads(): Workload[] {
-    return this.teamConfig.workloads
+    return this.teamConfig.workloads ?? []
   }
 
   public updateWorkload(id: string, updates: Partial<Workload>): Workload {
     const workload = find(this.teamConfig.workloads, { id })
-    if (!workload) throw new Error(`Workload[${id}] does not exist.`)
+    if (!workload) throw new NotExistError(`Workload[${id}] does not exist.`)
     return merge(workload, updates)
   }
 
-  public deleteWorkload(id: string): void {
-    remove(this.teamConfig.workloads, { id })
+  public deleteWorkload(name: string): void {
+    remove(this.teamConfig.workloads, { name })
   }
 
   // =====================================
@@ -96,9 +98,10 @@ export class TeamConfigService {
   // =====================================
 
   public createWorkloadValues(workloadValues: WorkloadValues): WorkloadValues {
+    this.teamConfig.workloadValues ??= []
     const newWorkloadValues = { ...workloadValues, id: workloadValues.id ?? uuidv4() }
-    if (find(this.teamConfig.workloadValues, { id: newWorkloadValues.id })) {
-      throw new Error(`WorkloadValues[${newWorkloadValues.id}] already exists.`)
+    if (find(this.teamConfig.workloadValues, { name: newWorkloadValues.name })) {
+      throw new AlreadyExists(`WorkloadValues[${newWorkloadValues.name}] already exists.`)
     }
     this.teamConfig.workloadValues.push(newWorkloadValues)
     return newWorkloadValues
@@ -114,12 +117,12 @@ export class TeamConfigService {
 
   public updateWorkloadValues(id: string, updates: Partial<WorkloadValues>): WorkloadValues {
     const workloadValues = find(this.teamConfig.workloadValues, { id })
-    if (!workloadValues) throw new Error(`WorkloadValues[${id}] does not exist.`)
+    if (!workloadValues) throw new NotExistError(`WorkloadValues[${id}] does not exist.`)
     return merge(workloadValues, updates)
   }
 
-  public deleteWorkloadValues(id: string): void {
-    remove(this.teamConfig.workloadValues, { id })
+  public deleteWorkloadValues(name: string): void {
+    remove(this.teamConfig.workloadValues, { name })
   }
 
   // =====================================
@@ -127,9 +130,10 @@ export class TeamConfigService {
   // =====================================
 
   public createService(service: Service): Service {
+    this.teamConfig.services ??= []
     const newService = { ...service, id: service.id ?? uuidv4() }
-    if (find(this.teamConfig.services, { id: newService.id })) {
-      throw new Error(`Service[${newService.id}] already exists.`)
+    if (find(this.teamConfig.services, { name: newService.name })) {
+      throw new AlreadyExists(`Service[${newService.name}] already exists.`)
     }
     this.teamConfig.services.push(newService)
     return newService
@@ -144,16 +148,16 @@ export class TeamConfigService {
   }
 
   public getServices(): Service[] {
-    return this.teamConfig.services
+    return this.teamConfig.services ?? []
   }
   public updateService(id: string, updates: Partial<Service>): Service {
     const service = find(this.teamConfig.services, { id })
-    if (!service) throw new Error(`Service[${id}] does not exist.`)
+    if (!service) throw new NotExistError(`Service[${id}] does not exist.`)
     return merge(service, updates)
   }
 
-  public deleteService(id: string): void {
-    remove(this.teamConfig.services, { id })
+  public deleteService(name: string): void {
+    remove(this.teamConfig.services, { name })
   }
 
   // =====================================
@@ -161,9 +165,10 @@ export class TeamConfigService {
   // =====================================
 
   public createSealedSecret(secret: SealedSecret): SealedSecret {
+    this.teamConfig.sealedSecrets ??= []
     const newSecret = { ...secret, id: secret.id ?? uuidv4() }
-    if (find(this.teamConfig.sealedSecrets, { id: newSecret.id })) {
-      throw new Error(`SealedSecret[${newSecret.id}] already exists.`)
+    if (find(this.teamConfig.sealedSecrets, { name: newSecret.name })) {
+      throw new AlreadyExists(`SealedSecret[${newSecret.name}] already exists.`)
     }
     this.teamConfig.sealedSecrets.push(newSecret)
     return newSecret
@@ -178,17 +183,17 @@ export class TeamConfigService {
   }
 
   public getSealedSecrets(): SealedSecret[] {
-    return this.teamConfig.sealedSecrets
+    return this.teamConfig.sealedSecrets ?? []
   }
 
   public updateSealedSecret(id: string, updates: Partial<SealedSecret>): SealedSecret {
     const secret = find(this.teamConfig.sealedSecrets, { id })
-    if (!secret) throw new Error(`SealedSecret[${id}] does not exist.`)
+    if (!secret) throw new NotExistError(`SealedSecret[${id}] does not exist.`)
     return merge(secret, updates)
   }
 
-  public deleteSealedSecret(id: string): void {
-    remove(this.teamConfig.sealedSecrets, { id })
+  public deleteSealedSecret(name: string): void {
+    remove(this.teamConfig.sealedSecrets, { name })
   }
 
   // =====================================
@@ -196,9 +201,10 @@ export class TeamConfigService {
   // =====================================
 
   public createBackup(backup: Backup): Backup {
+    this.teamConfig.backups ??= []
     const newBackup = { ...backup, id: backup.id ?? uuidv4() }
-    if (find(this.teamConfig.backups, { id: newBackup.id })) {
-      throw new Error(`Backup[${newBackup.id}] already exists.`)
+    if (find(this.teamConfig.backups, { name: newBackup.name })) {
+      throw new AlreadyExists(`Backup[${newBackup.name}] already exists.`)
     }
     this.teamConfig.backups.push(newBackup)
     return newBackup
@@ -213,17 +219,17 @@ export class TeamConfigService {
   }
 
   public getBackups(): Backup[] {
-    return this.teamConfig.backups
+    return this.teamConfig.backups ?? []
   }
 
   public updateBackup(id: string, updates: Partial<Backup>): Backup {
     const backup = find(this.teamConfig.backups, { id })
-    if (!backup) throw new Error(`Backup[${id}] does not exist.`)
+    if (!backup) throw new NotExistError(`Backup[${id}] does not exist.`)
     return merge(backup, updates)
   }
 
-  public deleteBackup(id: string): void {
-    remove(this.teamConfig.backups, { id })
+  public deleteBackup(name: string): void {
+    remove(this.teamConfig.backups, { name })
   }
 
   // =====================================
@@ -231,9 +237,10 @@ export class TeamConfigService {
   // =====================================
 
   public createProject(project: Project): Project {
+    this.teamConfig.projects ??= []
     const newProject = { ...project, id: project.id ?? uuidv4() }
-    if (find(this.teamConfig.projects, { id: newProject.id })) {
-      throw new Error(`Project[${newProject.id}] already exists.`)
+    if (find(this.teamConfig.projects, { name: newProject.name })) {
+      throw new AlreadyExists(`Project[${newProject.name}] already exists.`)
     }
     this.teamConfig.projects.push(newProject)
     return newProject
@@ -248,17 +255,17 @@ export class TeamConfigService {
   }
 
   public getProjects(): Project[] {
-    return this.teamConfig.projects
+    return this.teamConfig.projects ?? []
   }
 
   public updateProject(id: string, updates: Partial<Project>): Project {
     const project = find(this.teamConfig.projects, { id })
-    if (!project) throw new Error(`Project[${id}] does not exist.`)
+    if (!project) throw new NotExistError(`Project[${id}] does not exist.`)
     return merge(project, updates)
   }
 
-  public deleteProject(id: string): void {
-    remove(this.teamConfig.projects, { id })
+  public deleteProject(name: string): void {
+    remove(this.teamConfig.projects, { name })
   }
 
   // =====================================
@@ -266,9 +273,10 @@ export class TeamConfigService {
   // =====================================
 
   public createNetpol(netpol: Netpol): Netpol {
+    this.teamConfig.netpols ??= []
     const newNetpol = { ...netpol, id: netpol.id ?? uuidv4() }
-    if (find(this.teamConfig.netpols, { id: newNetpol.id })) {
-      throw new Error(`Netpol[${newNetpol.id}] already exists.`)
+    if (find(this.teamConfig.netpols, { name: newNetpol.name })) {
+      throw new AlreadyExists(`Netpol[${newNetpol.name}] already exists.`)
     }
     this.teamConfig.netpols.push(newNetpol)
     return newNetpol
@@ -283,19 +291,19 @@ export class TeamConfigService {
   }
 
   public getNetpols(): Netpol[] {
-    return this.teamConfig.netpols
+    return this.teamConfig.netpols ?? []
   }
 
   public updateNetpol(id: string, updates: Partial<Netpol>): Netpol {
     const netpol = find(this.teamConfig.netpols, { id })
     if (!netpol) {
-      throw new Error(`Netpol[${id}] does not exist.`)
+      throw new NotExistError(`Netpol[${id}] does not exist.`)
     }
     return merge(netpol, updates)
   }
 
-  public deleteNetpol(id: string): void {
-    remove(this.teamConfig.netpols, { id })
+  public deleteNetpol(name: string): void {
+    remove(this.teamConfig.netpols, { name })
   }
 
   // =====================================
@@ -318,9 +326,10 @@ export class TeamConfigService {
   // =====================================
 
   public createApp(app: App): App {
+    this.teamConfig.apps ??= []
     const newApp = { ...app, id: app.id ?? uuidv4() }
     if (find(this.teamConfig.apps, { id: newApp.id })) {
-      throw new Error(`App[${app.id}] already exists.`)
+      throw new AlreadyExists(`App[${app.id}] already exists.`)
     }
     this.teamConfig.apps.push(newApp)
     return newApp
@@ -329,23 +338,13 @@ export class TeamConfigService {
   public getApp(id: string): App {
     const app = find(this.teamConfig.apps, { id })
     if (!app) {
-      throw new Error(`App[${id}] does not exist.`)
+      throw new NotExistError(`App[${id}] does not exist.`)
     }
     return app
   }
 
   public getApps(): App[] {
-    return this.teamConfig.apps
-  }
-
-  public updateApp(id: string, updates: Partial<App>): App {
-    const app = find(this.teamConfig.apps, { id })
-    if (!app) throw new Error(`App[${id}] does not exist.`)
-    return merge(app, updates)
-  }
-
-  public deleteApp(id: string): void {
-    remove(this.teamConfig.apps, { id })
+    return this.teamConfig.apps ?? []
   }
 
   // =====================================
@@ -369,9 +368,9 @@ export class TeamConfigService {
 
   public doesProjectNameExist(name: string): boolean {
     return (
-      this.teamConfig.builds.some((build) => build.name === name) ||
-      this.teamConfig.workloads.some((workload) => workload.name === name) ||
-      this.teamConfig.services.some((service) => service.name === name)
+      (this.teamConfig.builds && this.teamConfig.builds.some((build) => build.name === name)) ||
+      (this.teamConfig.workloads && this.teamConfig.workloads.some((workload) => workload.name === name)) ||
+      (this.teamConfig.services && this.teamConfig.services.some((service) => service.name === name))
     )
   }
 
@@ -385,9 +384,6 @@ export class TeamConfigService {
 
   /** Update a collection dynamically in the Teamconfig */
   public updateCollection(collectionId: string, data: any): void {
-    if (!has(this.teamConfig, collectionId)) {
-      throw new Error(`Updating TeamConfig collection [${collectionId}] does not exist.`)
-    }
     merge(this.teamConfig[collectionId], data)
   }
 }

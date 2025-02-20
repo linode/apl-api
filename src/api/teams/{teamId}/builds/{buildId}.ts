@@ -22,9 +22,8 @@ export default function (): OperationHandlerArray {
   const put: Operation = [
     ({ otomi, params: { teamId, buildId }, body }: OpenApiRequestExt, res): void => {
       debug(`editBuild(${buildId})`)
-      const data = otomi.editBuild(decodeURIComponent(buildId), {
+      const data = otomi.editBuild(decodeURIComponent(teamId), decodeURIComponent(buildId), {
         ...body,
-        teamId: decodeURIComponent(teamId),
       } as Build)
       res.json(data)
     },

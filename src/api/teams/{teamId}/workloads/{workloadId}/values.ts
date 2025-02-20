@@ -16,9 +16,8 @@ export default function (): OperationHandlerArray {
   const put: Operation = [
     async ({ otomi, params: { teamId, workloadId }, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`putWorkloadValues(${workloadId})`)
-      const data = await otomi.editWorkloadValues(decodeURIComponent(workloadId), {
+      const data = await otomi.editWorkloadValues(decodeURIComponent(teamId), decodeURIComponent(workloadId), {
         ...body,
-        teamId: decodeURIComponent(teamId),
       } as WorkloadValues)
       res.json(data)
     },

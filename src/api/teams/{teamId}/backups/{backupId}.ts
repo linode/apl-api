@@ -22,9 +22,8 @@ export default function (): OperationHandlerArray {
   const put: Operation = [
     async ({ otomi, params: { teamId, backupId }, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`editBackup(${backupId})`)
-      const data = await otomi.editBackup(decodeURIComponent(backupId), {
+      const data = await otomi.editBackup(decodeURIComponent(teamId), decodeURIComponent(backupId), {
         ...body,
-        teamId: decodeURIComponent(teamId),
       } as Backup)
       res.json(data)
     },

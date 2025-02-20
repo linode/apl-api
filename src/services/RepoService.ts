@@ -24,6 +24,7 @@ import {
 import { TeamConfigService } from './TeamConfigService'
 import { find, flatMap, has, map, mapValues, merge, remove } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
+import { AlreadyExists } from '../error'
 
 export class RepoService {
   // We can create an LRU cache if needed with a lot of teams.
@@ -75,7 +76,7 @@ export class RepoService {
   }
 
   public getApps(): App[] {
-    return this.repo.apps
+    return this.repo.apps ?? []
   }
 
   public updateApp(id: string, updates: Partial<App>): App {
@@ -86,14 +87,18 @@ export class RepoService {
     return merge(app, updates)
   }
 
+  public deleteApp(id: string): void {
+    remove(this.repo.apps, { id })
+  }
+
   // =====================================
   // == USERS CRUD (Array) ==
   // =====================================
 
   public createUser(user: User): User {
     const newUser = { ...user, id: user.id ?? uuidv4() }
-    if (find(this.repo.users, { id: newUser.id })) {
-      throw new Error(`User[${user.id}] already exists.`)
+    if (find(this.repo.users, { email: newUser.email })) {
+      throw new AlreadyExists(`User[${user.email}] already exists.`)
     }
     this.repo.users.push(newUser)
     return newUser
@@ -108,7 +113,7 @@ export class RepoService {
   }
 
   public getUsers(): User[] {
-    return this.repo.users
+    return this.repo.users ?? []
   }
 
   public getUsersEmail(): string[] {
@@ -144,14 +149,15 @@ export class RepoService {
     }
   }
 
-  public createTeamConfig(teamId: string, team: Team): TeamConfig {
-    if (has(this.repo.teamConfig, teamId)) {
-      throw new Error(`TeamConfig[${teamId}] already exists.`)
+  public createTeamConfig(teamName: string, team: Team): TeamConfig {
+    if (has(this.repo.teamConfig, teamName)) {
+      throw new AlreadyExists(`TeamConfig[${teamName}] already exists.`)
     }
-    const newTeam = merge({}, this.getDefaultTeamConfig(), team)
-    newTeam.id ??= uuidv4()
-    this.repo.teamConfig[teamId] = newTeam
-    return this.repo.teamConfig[teamId]
+    const newTeam = this.getDefaultTeamConfig()
+    newTeam.settings = team
+    newTeam.settings.id = teamName
+    this.repo.teamConfig[teamName] = newTeam
+    return this.repo.teamConfig[teamName]
   }
 
   public getTeamConfig(teamId: string): TeamConfig | undefined {
@@ -388,19 +394,19 @@ export class RepoService {
   }
 
   public getAllTeamSettings(): Team[] {
-    return map(this.repo.teamConfig, 'settings').filter(Boolean)
+    return map(this.repo.teamConfig, 'settings').filter(Boolean) ?? []
   }
 
   public getAllNetpols(): Netpol[] {
-    return flatMap(this.repo.teamConfig, 'netpols').filter(Boolean)
+    return flatMap(this.repo.teamConfig, 'netpols').filter(Boolean) ?? []
   }
 
   public getAllProjects(): Project[] {
-    return flatMap(this.repo.teamConfig, 'projects').filter(Boolean)
+    return flatMap(this.repo.teamConfig, 'projects').filter(Boolean) ?? []
   }
 
   public getAllBuilds(): Build[] {
-    return flatMap(this.repo.teamConfig, 'builds').filter(Boolean)
+    return flatMap(this.repo.teamConfig, 'builds').filter(Boolean) ?? []
   }
 
   public getAllPolicies(): Record<string, Policies> {
@@ -408,15 +414,15 @@ export class RepoService {
   }
 
   public getAllWorkloads(): Workload[] {
-    return flatMap(this.repo.teamConfig, 'workloads').filter(Boolean)
+    return flatMap(this.repo.teamConfig, 'workloads').filter(Boolean) ?? []
   }
 
   public getAllServices(): Service[] {
-    return flatMap(this.repo.teamConfig, 'services').filter(Boolean)
+    return flatMap(this.repo.teamConfig, 'services').filter(Boolean) ?? []
   }
 
   public getAllSealedSecrets(): SealedSecret[] {
-    return flatMap(this.repo.teamConfig, 'sealedSecrets').filter(Boolean)
+    return flatMap(this.repo.teamConfig, 'sealedSecrets').filter(Boolean) ?? []
   }
 
   /** Retrieve a collection dynamically from the Repo */

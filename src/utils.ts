@@ -10,6 +10,7 @@ import { BASEURL } from './constants'
 
 export function arrayToObject(array: [] = [], keyName = 'name', keyValue = 'value'): Record<string, unknown> {
   const obj = {}
+  if (!Array.isArray(array)) return array
   array.forEach((item) => {
     const cloneItem = cloneDeep(item)
     obj[cloneItem[keyName]] = cloneItem[keyValue]

@@ -77,7 +77,12 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
     Service: 'services',
     Team: 'teamConfig',
     App: 'apps',
+    Build: 'builds',
+    Workload: 'workloads',
+    Settings: 'otomi',
+    Project: 'projects',
   }
+  const teamSpecificCollections = ['builds', 'services', 'workloads', 'projects'] // <-- These are fetched per team
 
   const selector = renameKeys(req.params)
   console.log(schemaName)
@@ -90,7 +95,12 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
     )
 
     try {
-      const collection = repoService.getCollection(collectionId)
+      let collection
+      if (teamSpecificCollections.includes(collectionId)) {
+        collection = repoService.getTeamConfigService(teamId).getCollection(collectionId)
+      } else {
+        collection = repoService.getCollection(collectionId)
+      }
       dataOrig = find(collection, selector) || {}
     } catch (error) {
       debug('Error in authzMiddleware', error)

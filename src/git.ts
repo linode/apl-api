@@ -16,6 +16,7 @@ import { Core } from './otomi-models'
 import { removeBlankAttributes } from './utils'
 import { FileMap, getFilePath, renderManifest, renderManifestForSecrets } from './repo'
 import jsonpath from 'jsonpath'
+import { rmSync } from 'fs'
 
 const debug = Debug('otomi:repo')
 
@@ -153,6 +154,15 @@ export class Git {
     }
   }
 
+  async removeDir(dir: string): Promise<void> {
+    const absolutePath = join(this.path, dir)
+    const exists = await this.fileExists(dir)
+    if (exists) {
+      debug(`Removing directory: ${absolutePath}`)
+      rmSync(absolutePath, { recursive: true, force: true })
+    }
+  }
+
   async diffFile(file: string, data: Record<string, any>): Promise<boolean> {
     const repoFile: string = this.getSafePath(file)
     const oldData = await this.readFile(repoFile)
@@ -221,7 +231,6 @@ export class Git {
   }
 
   async saveConfigWithSecrets(
-    inSecretRelativeFilePath: string,
     config: Record<string, any>,
     secretJsonPaths: string[],
     fileMap: FileMap,
@@ -235,14 +244,6 @@ export class Git {
         unset(plainData, objectPath)
       }
     })
-
-    let secretDataRelativePath = `${inSecretRelativeFilePath}${this.secretFilePostfix}`
-
-    if (this.secretFilePostfix) {
-      const secretExists = await this.fileExists(inSecretRelativeFilePath)
-      // In case secret file does not exists, create new one and let sops to encrypt it in place
-      if (!secretExists) secretDataRelativePath = inSecretRelativeFilePath
-    }
 
     const jsonPathsValuesPublic = jsonpath.nodes(plainData, fileMap.jsonPathExpression)
     await Promise.all(
@@ -260,10 +261,22 @@ export class Git {
         }
       }),
     )
-    if (secretData && Object.keys(secretData).length > 0) {
-      const secretManifest = renderManifestForSecrets(fileMap, secretData)
-      await this.writeFile(secretDataRelativePath, secretManifest)
-    }
+    const jsonPathsValuesSecrets = jsonpath.nodes(secretData, fileMap.jsonPathExpression)
+    await Promise.all(
+      jsonPathsValuesSecrets.map(async (node) => {
+        const nodePath = node.path
+        const nodeValue = node.value
+        try {
+          const filePath = getFilePath(fileMap, nodePath, nodeValue, 'secrets.')
+          const manifest = renderManifestForSecrets(fileMap, nodeValue)
+          await this.writeFile(filePath, manifest)
+        } catch (e) {
+          console.log(nodePath)
+          console.log(fileMap)
+          throw e
+        }
+      }),
+    )
   }
 
   isRootClone(): boolean {
