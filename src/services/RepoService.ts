@@ -246,6 +246,10 @@ export class RepoService {
     return flatMap(this.repo.teamConfig, 'sealedSecrets').filter(Boolean) ?? []
   }
 
+  public getAllBackups(): SealedSecret[] {
+    return flatMap(this.repo.teamConfig, 'backups').filter(Boolean) ?? []
+  }
+
   /** Retrieve a collection dynamically from the Repo */
   public getCollection(collectionId: string): any {
     if (!has(this.repo, collectionId)) {

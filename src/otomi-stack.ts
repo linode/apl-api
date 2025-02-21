@@ -564,7 +564,7 @@ export default class OtomiStack {
   }
 
   getAllBackups(): Array<Backup> {
-    return this.repoService.getPlatformBackups()
+    return this.repoService.getAllBackups()
   }
 
   async createBackup(teamId: string, data: Backup): Promise<Backup> {
