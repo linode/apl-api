@@ -1019,10 +1019,10 @@ export default class OtomiStack {
       buildData.webHookId = webhook.id
     } else if (buildData.trigger && !buildData.externalRepo && oldBuild.webHookId) {
       console.log('Edit Webhook')
-      await this.updateGiteaWebhook(oldBuild.webHookId!, buildData.teamId!, data)
+      await this.updateGiteaWebhook(oldBuild.webHookId! as number, buildData.teamId!, data)
     } else if (!buildData.trigger && oldBuild.webHookId) {
       console.log('Remove Webhook')
-      await this.deleteGiteaWebhook(oldBuild.webHookId!, buildData.teamId!, buildData)
+      await this.deleteGiteaWebhook(oldBuild.webHookId! as number, buildData.teamId!, buildData)
       buildData.webHookId = undefined
     }
     const build = this.db.updateItem('builds', buildData, { id }) as Build
