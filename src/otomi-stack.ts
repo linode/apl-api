@@ -1094,6 +1094,7 @@ export default class OtomiStack {
       console.log('HOOK: ', response.data)
       return response
     } catch (error) {
+      console.log('ERROR REMOVING WEBHOOK: ', error)
       if (error.status === 404) console.error('Webhook could not be found')
       else console.error(`Probelem removing webhook: ${error.message}`)
     }
