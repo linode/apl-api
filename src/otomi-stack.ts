@@ -1074,7 +1074,7 @@ export default class OtomiStack {
     const url = `https://${giteaUrl}/api/v1/repos/team-${teamId}/${repoName}/hooks/${webhookId}`
     console.log('giteaUrl: ', giteaUrl)
     console.log('url: ', url)
-    const response = await axios.post(url, {
+    const response = await axios.delete(url, {
       headers: {
         Authorization: authHeader,
         'Content-Type': 'application/json',
