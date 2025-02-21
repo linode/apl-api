@@ -48,20 +48,28 @@ function isGiteaURL(url: string) {
  * @param revision - The branch or commit to checkout (e.g. "main")
  */
 export function sparseCloneChart(
-  url: string,
-  chartName: string,
-  chartPath: string,
-  sparsePath: string,
-  revision: string,
+  url: string, // "https://github.com/bitnami/charts.git"
+  chartName: string, // "cassandra"
+  chartPath: string, // "bitnami/cassandra"
+  sparsePath: string, // /tmp/otomi/charts/mock-sub-value
+  revision: string, // "main"
 ): void {
   // Clone the repository into the folder named chartName
-  // const checkoutPath = `${sparsePath}/${chartName}`
-  const cloneCmd = `git clone --filter=blob:none --no-checkout ${url} ${sparsePath}`
+  const checkoutPath = `${sparsePath}/${chartName}`
+
+  // if (!shell.test('-d', checkoutPath)) {
+  //   console.log(`Directory ${checkoutPath} does not exist. Creating it...`)
+  //   shell.mkdir('-p', checkoutPath)
+  // }
+
+  console.log('halo checkout', `git clone --filter=blob:none --no-checkout ${url} ${checkoutPath}`)
+
+  const cloneCmd = `git clone --filter=blob:none --no-checkout ${url} ${checkoutPath}`
   console.log(`Running: ${cloneCmd}`)
   shell.exec(cloneCmd)
 
   // Change directory to the newly cloned repository
-  shell.cd(chartName)
+  shell.cd(checkoutPath)
 
   // Initialize sparse checkout in cone mode
   const initCmd = `git sparse-checkout init --cone`
@@ -121,18 +129,19 @@ export async function fetchWorkloadCatalog(
   }
 
   // Only remove and re-clone if needed.
-  // if (shouldClone) {
-  //   shell.rm('-rf', helmChartsDir)
-  //   shell.mkdir('-p', helmChartsDir)
-  //   let gitUrl = url
-  //   if (isGiteaURL(url)) {
-  //     const [protocol, bareUrl] = url.split('://')
-  //     const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
-  //     const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
-  //     gitUrl = `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
-  //   }
-  //   shell.exec(`git clone --depth 1 ${gitUrl} ${helmChartsDir}`)
-  // }
+  if (shouldClone) {
+    console.log('halo should be cloning')
+    shell.rm('-rf', helmChartsDir)
+    shell.mkdir('-p', helmChartsDir)
+    let gitUrl = url
+    if (isGiteaURL(url)) {
+      const [protocol, bareUrl] = url.split('://')
+      const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
+      const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
+      gitUrl = `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
+    }
+    shell.exec(`git clone --depth 1 ${gitUrl} ${helmChartsDir}`)
+  }
 
   if (newChart) sparseCloneChart(url, newChartName as string, newChartPath as string, helmChartsDir, version)
 
