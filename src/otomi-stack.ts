@@ -1048,6 +1048,7 @@ export default class OtomiStack {
         url: serviceUrl,
       },
     }
+    console.log('Is this updating?')
     console.log('giteaUrl: ', giteaUrl)
     console.log('url: ', url)
     console.log('serviceUrl: ', serviceUrl)
