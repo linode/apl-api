@@ -1005,7 +1005,7 @@ export default class OtomiStack {
       },
     })
     console.log('HOOK: ', response.data)
-    return response
+    return response.data
   }
 
   getBuild(id: string): Build {
@@ -1062,7 +1062,7 @@ export default class OtomiStack {
       },
     })
     console.log('HOOK: ', response.data)
-    return response
+    return response.data
   }
 
   async deleteGiteaWebhook(webhookId: number, teamId: string, data: Build): Promise<any> {
