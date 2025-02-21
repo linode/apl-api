@@ -366,7 +366,6 @@ export default class OtomiStack {
       }
     }
     await this.editSettings(settingsdata as Settings, 'obj')
-    await this.doDeployment(['settings'])
     debug('Object storage settings have been configured.')
     return {
       status: 'success',
