@@ -18,7 +18,18 @@ import { AlreadyExists, NotExistError } from '../error'
 import { v4 as uuidv4 } from 'uuid'
 
 export class TeamConfigService {
-  constructor(private teamConfig: TeamConfig) {}
+  constructor(private teamConfig: TeamConfig) {
+    this.teamConfig.builds ??= []
+    this.teamConfig.workloads ??= []
+    this.teamConfig.workloadValues ??= []
+    this.teamConfig.services ??= []
+    this.teamConfig.sealedSecrets ??= []
+    this.teamConfig.backups ??= []
+    this.teamConfig.projects ??= []
+    this.teamConfig.netpols ??= []
+    this.teamConfig.apps ??= []
+    this.teamConfig.policies ??= {}
+  }
 
   // =====================================
   // == BUILDS CRUD ==

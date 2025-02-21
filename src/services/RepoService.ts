@@ -63,10 +63,6 @@ export class RepoService {
     return this.teamConfigServiceCache.get(teamId)!
   }
 
-  // =====================================
-  // == APPS CRUD (Dictionary) ==
-  // =====================================
-
   public getApp(id: string): App {
     const app = find(this.repo.apps, { id })
     if (!app) {
@@ -90,10 +86,6 @@ export class RepoService {
   public deleteApp(id: string): void {
     remove(this.repo.apps, { id })
   }
-
-  // =====================================
-  // == USERS CRUD (Array) ==
-  // =====================================
 
   public createUser(user: User): User {
     const newUser = { ...user, id: user.id ?? uuidv4() }
@@ -130,9 +122,6 @@ export class RepoService {
     remove(this.repo.users, { id })
   }
 
-  // =====================================
-  // == TEAM CONFIG CRUD (Dictionary) ==
-  // =====================================
   private getDefaultTeamConfig(): TeamConfig {
     return {
       builds: [],
@@ -164,13 +153,6 @@ export class RepoService {
     return this.repo.teamConfig[teamId]
   }
 
-  public updateTeamConfig(teamId: string, updates: Partial<TeamConfig>): void {
-    if (!has(this.repo.teamConfig, teamId)) {
-      throw new Error(`TeamConfig[${teamId}] does not exist.`)
-    }
-    merge(this.repo.teamConfig[teamId], updates)
-  }
-
   public deleteTeamConfig(teamId: string): void {
     if (!has(this.repo.teamConfig, teamId)) {
       throw new Error(`TeamConfig[${teamId}] does not exist.`)
@@ -178,192 +160,31 @@ export class RepoService {
     delete this.repo.teamConfig[teamId]
   }
 
-  // =====================================
-  // == SINGLE OBJECT CRUD (alerts, cluster, dns, etc.) ==
-  // =====================================
-
-  public getAlerts(): Alerts {
-    return this.repo.alerts
-  }
-
-  public updateAlerts(updates: Partial<Alerts>): void {
-    merge(this.repo.alerts, updates)
-  }
-
   public getCluster(): Cluster {
     return this.repo.cluster
-  }
-
-  public updateCluster(updates: Partial<Cluster>): void {
-    merge(this.repo.cluster, updates)
   }
 
   public getDns(): Dns {
     return this.repo.dns
   }
 
-  public updateDns(updates: Partial<Dns>): void {
-    merge(this.repo.dns, updates)
-  }
-
   public getIngress(): Ingress {
     return this.repo.ingress
   }
-
-  public updateIngress(updates: Partial<Ingress>): void {
-    merge(this.repo.ingress, updates)
-  }
-
-  public getKms(): Kms {
-    return this.repo.kms
-  }
-
-  public updateKms(updates: Partial<Kms>): void {
-    if (!this.repo.kms) {
-      throw new Error(`KMS object does not exist.`)
-    }
-    merge(this.repo.kms, updates)
-  }
-
-  public getOidc(): Oidc {
-    return this.repo.oidc
-  }
-
-  public updateOidc(updates: Partial<Oidc>): void {
-    merge(this.repo.oidc, updates)
-  }
-
   public getOtomi(): Otomi {
     return this.repo.otomi
-  }
-
-  public updateOtomi(updates: Partial<Otomi>): void {
-    merge(this.repo.otomi, updates)
   }
 
   public getSmtp(): Smtp {
     return this.repo.smtp
   }
 
-  public updateSmtp(updates: Partial<Smtp>): void {
-    merge(this.repo.smtp, updates)
-  }
-
-  // =====================================
-  // == OTHER DICTIONARIES (databases, obj, versions, etc.) ==
-  // =====================================
-
-  public createDatabase(key: string, database: any) {
-    if (has(this.repo.databases, key)) {
-      throw new Error(`Database[${key}] already exists.`)
-    }
-    const newDatabase = { ...database, id: database.id ?? uuidv4() }
-
-    this.repo.databases[key] = newDatabase
-    return newDatabase
-  }
-
-  public getDatabase(key: string): any | undefined {
-    return this.repo.databases[key]
-  }
-
-  public updateDatabase(key: string, updates: any): void {
-    if (!has(this.repo.databases, key)) {
-      throw new Error(`Database[${key}] does not exist.`)
-    }
-    merge(this.repo.databases[key], updates)
-  }
-
-  public deleteDatabase(key: string): void {
-    if (!has(this.repo.databases, key)) {
-      throw new Error(`Database[${key}] does not exist.`)
-    }
-    delete this.repo.databases[key]
-  }
-
-  public createVersion(key: string, version: any) {
-    if (has(this.repo.versions, key)) {
-      throw new Error(`Version[${key}] already exists.`)
-    }
-    const newVersion = { ...version, id: version.id ?? uuidv4() }
-    this.repo.versions[key] = newVersion
-    return newVersion
-  }
-
-  public getVersion(key: string): any | undefined {
-    return this.repo.versions[key]
-  }
-
-  public updateVersion(key: string, updates: any): void {
-    if (!has(this.repo.versions, key)) {
-      throw new Error(`Version[${key}] does not exist.`)
-    }
-    merge(this.repo.versions[key], updates)
-  }
-
-  public deleteVersion(key: string): void {
-    if (!has(this.repo.versions, key)) {
-      throw new Error(`Version[${key}] does not exist.`)
-    }
-    delete this.repo.versions[key]
-  }
-
-  public createObj(key: string, obj: any) {
-    if (has(this.repo.obj, key)) {
-      throw new Error(`Obj[${key}] already exists.`)
-    }
-    const newObj = { ...obj, id: obj.id ?? uuidv4() }
-    this.repo.obj[key] = newObj
-    return newObj
-  }
-
   public getObj(): any | undefined {
     return this.repo.obj
   }
 
-  public updateObj(key: string, updates: any): void {
-    if (!has(this.repo.obj, key)) {
-      throw new Error(`Obj[${key}] does not exist.`)
-    }
-    merge(this.repo.obj[key], updates)
-  }
-
-  public deleteObj(key: string): void {
-    if (!has(this.repo.obj, key)) {
-      throw new Error(`Obj[${key}] does not exist.`)
-    }
-    delete this.repo.obj[key]
-  }
-
-  public createPlatformBackups(key: string, platformBackup: any) {
-    if (has(this.repo.platformBackups, key)) {
-      throw new Error(`PlatformBackups[${key}] already exists.`)
-    }
-    const newBackup = { ...platformBackup, id: platformBackup.id ?? uuidv4() }
-    this.repo.platformBackups[key] = newBackup
-    return newBackup
-  }
-
   public getPlatformBackups(): any | undefined {
     return this.repo.platformBackups
-  }
-
-  public getPlatformBackup(key: string): any | undefined {
-    return this.repo.platformBackups[key]
-  }
-
-  public updatePlatformBackups(key: string, updates: any): void {
-    if (!has(this.repo.platformBackups, key)) {
-      throw new Error(`PlatformBackups[${key}] does not exist.`)
-    }
-    merge(this.repo.platformBackups[key], updates)
-  }
-
-  public deletePlatformBackups(key: string): void {
-    if (!has(this.repo.platformBackups, key)) {
-      throw new Error(`Obj[${key}] does not exist.`)
-    }
-    delete this.repo.platformBackups[key]
   }
 
   public getSettings(): Settings {
