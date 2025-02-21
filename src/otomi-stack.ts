@@ -109,6 +109,13 @@ const env = cleanEnv({
 
 export const rootPath = '/tmp/otomi/values'
 
+export function getTeamSealedSecretsValuesRootPath(teamId: string): string {
+  return `env/teams/${teamId}/sealedsecrets`
+}
+export function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: string): string {
+  return `env/teams/${teamId}/sealedsecrets/${sealedSecretsName}`
+}
+
 export default class OtomiStack {
   private coreValues: Core
   editor?: string
@@ -1473,7 +1480,7 @@ export default class OtomiStack {
         const encryptedItem = encryptSecretItem(certificate, data.name, namespace, obj.value, 'namespace-wide')
         return { [obj.key]: encryptedItem }
       })
-      const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises))) as EncryptedDataRecord
+      const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises))) as EncryptedDataRecord[]
       const sealedSecret = this.repoService
         .getTeamConfigService(teamId)
         .createSealedSecret({ ...data, teamId, encryptedData, namespace })
@@ -1500,20 +1507,22 @@ export default class OtomiStack {
       const encryptedItem = encryptSecretItem(certificate, data.name, namespace, obj.value, 'namespace-wide')
       return { [obj.key]: encryptedItem }
     })
-    const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises))) as EncryptedDataRecord
-    const sealedSecret = this.db.updateItem('sealedsecrets', { ...data, encryptedData }, { id }) as SealedSecret
+    const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises))) as EncryptedDataRecord[]
+    const sealedSecret = this.repoService
+      .getTeamConfigService(data.teamId!)
+      .createSealedSecret({ ...data, encryptedData })
     const sealedSecretChartValues = sealedSecretManifest(data, encryptedData, namespace)
     await this.saveTeamSealedSecrets(data.teamId!, sealedSecretChartValues, id)
-    await this.doDeployment(['sealedsecrets'])
+    await this.doDeployment(['sealedsecrets'], data.teamId)
     return sealedSecret
   }
 
-  async deleteSealedSecret(id: string): Promise<void> {
-    const sealedSecret = await this.getSealedSecret(id)
-    this.db.deleteItem('sealedsecrets', { id })
+  async deleteSealedSecret(teamId: string, id: string): Promise<void> {
+    const sealedSecret = await this.getSealedSecret(teamId, id)
+    this.repoService.getTeamConfigService(teamId).deleteSealedSecret(id)
     const relativePath = getTeamSealedSecretsValuesFilePath(sealedSecret.teamId!, `${id}.yaml`)
-    await this.repo.removeFile(relativePath)
-    await this.doDeployment(['sealedsecrets'])
+    await this.git.removeFile(relativePath)
+    await this.doDeployment(['sealedsecrets'], teamId)
   }
 
   async getSealedSecret(teamId: string, id: string): Promise<SealedSecret> {
@@ -1608,11 +1617,10 @@ export default class OtomiStack {
     await this.git.removeDir(teamDir)
   }
 
-  async saveTeamSealedSecrets(teamId: string, sealedSecret: SealedSecret): Promise<void> {
-    debug(`Saving sealed secret ${sealedSecret.name} for team ${teamId}`)
-    const repo = this.createTeamConfigInRepo(teamId, 'sealedSecrets', sealedSecret)
-    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamSecret')!
-    await this.git.saveConfig(repo, fileMap)
+  async saveTeamSealedSecrets(teamId: string, data: any, id: string): Promise<void> {
+    const relativePath = getTeamSealedSecretsValuesFilePath(teamId, `${id}.yaml`)
+    debug(`Saving sealed secrets of team: ${teamId}`)
+    await this.git.writeFile(relativePath, data)
   }
 
   async deleteTeamSealedSecrets(teamId: string, id: string): Promise<void> {

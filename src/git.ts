@@ -5,7 +5,7 @@ import { copy, ensureDir, pathExists, readFile, writeFile } from 'fs-extra'
 import { unlink } from 'fs/promises'
 import stringifyJson from 'json-stable-stringify'
 import { cloneDeep, get, isEmpty, merge, set, unset } from 'lodash'
-import { dirname, join } from 'path'
+import { basename, dirname, join } from 'path'
 import simpleGit, { CheckRepoActions, CleanOptions, CommitResult, ResetMode, SimpleGit } from 'simple-git'
 import { cleanEnv, GIT_BRANCH, GIT_LOCAL_PATH, GIT_PASSWORD, GIT_REPO_URL, GIT_USER, TOOLS_HOST } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
@@ -17,6 +17,7 @@ import { removeBlankAttributes } from './utils'
 import { FileMap, getFilePath, renderManifest, renderManifestForSecrets } from './repo'
 import jsonpath from 'jsonpath'
 import { rmSync } from 'fs'
+import { glob } from 'glob'
 
 const debug = Debug('otomi:repo')
 
@@ -194,6 +195,13 @@ export class Git {
   async fileExists(relativePath: string): Promise<boolean> {
     const absolutePath = join(this.path, relativePath)
     return await pathExists(absolutePath)
+  }
+
+  async readDir(relativePath: string): Promise<string[]> {
+    const absolutePath = join(this.path, relativePath)
+    const files = await glob([`${absolutePath}/**/*.yaml`])
+    const filenames = files.map((file) => basename(file))
+    return filenames
   }
 
   async readFile(file: string, checkSuffix = false): Promise<Record<string, any>> {
