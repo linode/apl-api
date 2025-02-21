@@ -521,9 +521,7 @@ export default class OtomiStack {
     }
 
     const teamConfig = this.repoService.createTeamConfig(teamName, data)
-    console.log('teamConfig', teamConfig)
     const team = teamConfig.settings
-    console.log('team', team)
     const apps = getAppList()
     const core = this.getCore()
     apps.forEach((appId) => {
@@ -631,7 +629,7 @@ export default class OtomiStack {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const netpol = this.repoService.getTeamConfigService(teamId).updateNetpol(id, data)
     await this.saveTeamNetpols(teamId, data)
-    await this.doDeployment(['netpols'], data.teamId)
+    await this.doDeployment(['netpols'], teamId)
     return netpol
   }
 
@@ -1012,7 +1010,7 @@ export default class OtomiStack {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const build = this.repoService.getTeamConfigService(teamId).updateBuild(id, data)
     await this.saveTeamBuild(teamId, build)
-    await this.doDeployment(['builds'], data.teamId)
+    await this.doDeployment(['builds'], teamId)
     return build
   }
 
@@ -1181,7 +1179,7 @@ export default class OtomiStack {
   async editWorkload(teamId: string, id: string, data: Workload): Promise<Workload> {
     const workload = this.repoService.getTeamConfigService(teamId).updateWorkload(id, data)
     await this.saveTeamWorkload(teamId, workload)
-    await this.doDeployment(['workloads'], data.teamId)
+    await this.doDeployment(['workloads'], teamId)
     return workload
   }
 
@@ -1243,7 +1241,7 @@ export default class OtomiStack {
   async editService(teamId: string, id: string, data: Service): Promise<Service> {
     const service = this.repoService.getTeamConfigService(teamId).updateService(id, data)
     await this.saveTeamService(teamId, service)
-    await this.doDeployment(['services'], data.teamId)
+    await this.doDeployment(['services'], teamId)
     return service
   }
 

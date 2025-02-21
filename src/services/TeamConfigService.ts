@@ -100,7 +100,10 @@ export class TeamConfigService {
   public createWorkloadValues(workloadValues: WorkloadValues): WorkloadValues {
     this.teamConfig.workloadValues ??= []
     const newWorkloadValues = { ...workloadValues, id: workloadValues.id ?? uuidv4() }
-    if (find(this.teamConfig.workloadValues, { name: newWorkloadValues.name })) {
+    if (
+      find(this.teamConfig.workloadValues, { name: newWorkloadValues.name }) ||
+      find(this.teamConfig.workloadValues, { id: newWorkloadValues.id })
+    ) {
       throw new AlreadyExists(`WorkloadValues[${newWorkloadValues.name}] already exists.`)
     }
     this.teamConfig.workloadValues.push(newWorkloadValues)

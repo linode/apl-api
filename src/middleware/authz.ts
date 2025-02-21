@@ -81,13 +81,23 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
     Workload: 'workloads',
     Settings: 'otomi',
     Project: 'projects',
+    Netpol: 'netpols',
+    Policy: 'policies',
+    SealedSecret: 'sealedSecrets',
   }
-  const teamSpecificCollections = ['builds', 'services', 'workloads', 'projects'] // <-- These are fetched per team
+  const teamSpecificCollections = [
+    'builds',
+    'services',
+    'workloads',
+    'netpols',
+    'projects',
+    'policies',
+    'sealedSecrets',
+  ] // <-- These are fetched per team
 
   const selector = renameKeys(req.params)
-  console.log(schemaName)
   const collectionId = schemaToRepoMap[schemaName]
-  if (['create', 'update'].includes(action)) {
+  if (collectionId && ['create', 'update'].includes(action)) {
     let dataOrig = get(
       req,
       `apiDoc.components.schemas.TeamSelfService.properties.${schemaName.toLowerCase()}.x-allow-values`,
