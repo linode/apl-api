@@ -4,6 +4,7 @@ import { pathExists, unlink } from 'fs-extra'
 import { chmod, writeFile } from 'fs/promises'
 import simpleGit, { SimpleGit } from 'simple-git'
 import { OtomiError } from 'src/error'
+import { v4 as uuidv4 } from 'uuid'
 
 const axiosInstance = (adminUsername, adminPassword, domainSuffix) =>
   axios.create({
@@ -102,7 +103,8 @@ async function connectPrivateRepo(
   username?: string,
   accessToken?: string,
 ): Promise<{ status: string }> {
-  const keyPath = '/tmp/otomi/sshKey'
+  const keyId = uuidv4() as string
+  const keyPath = `/tmp/otomi/sshKey-${keyId}`
   try {
     let git: SimpleGit
     let url = repoUrl
