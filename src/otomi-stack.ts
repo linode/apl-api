@@ -961,8 +961,8 @@ export default class OtomiStack {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const buildData = data
       if (process.env.NODE_ENV !== 'development') {
-        if (data.trigger && !data.externalRepo) {
-          const webhook = await this.createGiteaHook(teamId, buildData)
+        if (buildData.trigger && !buildData.externalRepo) {
+          const webhook = await this.createGiteaWebHook(teamId, buildData)
           buildData.webHookId = webhook.id
         }
       }
@@ -975,7 +975,7 @@ export default class OtomiStack {
       throw err
     }
   }
-  async createGiteaHook(teamId: string, data: Build): Promise<any> {
+  async createGiteaWebHook(teamId: string, data: Build): Promise<any> {
     const authHeader = `Basic ${Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')}`
     const type = data.mode?.type
     const repoUrl: string = data.mode![type!] ? data.mode!['docker'].repoUrl : data.mode!['buildpacks'].repoUrl
@@ -1012,14 +1012,77 @@ export default class OtomiStack {
 
   async editBuild(id: string, data: Build): Promise<Build> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const build = this.db.updateItem('builds', data, { id }) as Build
+    const buildData = data
+    const oldBuild = this.getBuild(id)
+    if (buildData.trigger && !buildData.externalRepo && oldBuild.webHookId) {
+      const webhook = await this.createGiteaWebHook(buildData.teamId!, buildData)
+      buildData.webHookId = webhook.id
+    } else if (buildData.trigger && !buildData.externalRepo && !oldBuild.webHookId) {
+      console.log('Edit Webhook')
+      await this.updateGiteaWebhook(oldBuild.webHookId!, buildData.teamId!, data)
+    } else if (!buildData.trigger && !oldBuild.webHookId) {
+      console.log('Remove Webhook')
+      await this.deleteGiteaWebhook(oldBuild.webHookId)
+    }
+    const build = this.db.updateItem('builds', buildData, { id }) as Build
     await this.saveTeamBuilds(build.teamId!)
     await this.doDeployment(['builds'])
     return build
   }
 
+  async updateGiteaWebhook(webhookId: number, teamId: string, data: Build): Promise<any> {
+    const authHeader = `Basic ${Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')}`
+    const type = data.mode?.type
+    const repoUrl: string = data.mode![type!] ? data.mode!['docker'].repoUrl : data.mode!['buildpacks'].repoUrl
+    const repoName = repoUrl.split('/').pop()
+    const giteaUrl = env.GIT_REPO_URL.split('/')[0]
+    const url = `${giteaUrl}/api/v1/repos/team-${teamId}/${repoName}/hooks/${webhookId}`
+    const serviceUrl = `http://el-gitea-webhook-${data.name}.${teamId}.svc.cluster.local:8080`
+    const hookConfig = {
+      type: 'gitea',
+      active: true,
+      events: ['push'],
+      config: {
+        content_type: 'json',
+        url: serviceUrl,
+      },
+    }
+    console.log('giteaUrl: ', giteaUrl)
+    console.log('url: ', url)
+    console.log('serviceUrl: ', serviceUrl)
+    console.log('hookConfig: ', hookConfig)
+    const response = await axios.patch(url, hookConfig, {
+      headers: {
+        Authorization: authHeader,
+        'Content-Type': 'application/json',
+      },
+    })
+    console.log('HOOK: ', response.data)
+    return response
+  }
+
+  async deleteGiteaWebhook(webhookId: number, teamId: string, data: Build): Promise<any> {
+    const authHeader = `Basic ${Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')}`
+    const type = data.mode?.type
+    const repoUrl: string = data.mode![type!] ? data.mode!['docker'].repoUrl : data.mode!['buildpacks'].repoUrl
+    const repoName = repoUrl.split('/').pop()
+    const giteaUrl = env.GIT_REPO_URL.split('/')[0]
+    const url = `${giteaUrl}/api/v1/repos/team-${teamId}/${repoName}/hooks/${webhookId}`
+    console.log('giteaUrl: ', giteaUrl)
+    console.log('url: ', url)
+    const response = await axios.post(url, {
+      headers: {
+        Authorization: authHeader,
+        'Content-Type': 'application/json',
+      },
+    })
+    console.log('HOOK: ', response.data)
+    return response
+  }
+
   async deleteBuild(id: string): Promise<void> {
     const build = this.getBuild(id)
+
     const p = this.db.getCollection('projects') as Array<Project>
     p.forEach((project: Project) => {
       if (project?.build?.id === id) {
@@ -1028,6 +1091,8 @@ export default class OtomiStack {
       }
     })
     this.db.deleteItem('builds', { id })
+    if (isEmpty(build.webHookId)) await this.deleteGiteaWebhook(build.webHookId!, build.teamId!, build)
+
     await this.saveTeamBuilds(build.teamId!)
     await this.doDeployment(['builds'])
   }
