@@ -4,9 +4,16 @@ import { pathExists } from 'fs-extra'
 import { readFile } from 'fs/promises'
 import { isArray, memoize, mergeWith, omit } from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
-import { Cluster, Dns } from 'src/otomi-models'
+import { Build, Cluster, Dns } from 'src/otomi-models'
 import { parse } from 'yaml'
 import { BASEURL } from './constants'
+import { cleanEnv, GIT_PASSWORD, GIT_REPO_URL, GIT_USER } from './validators'
+
+const env = cleanEnv({
+  GIT_PASSWORD,
+  GIT_REPO_URL,
+  GIT_USER,
+})
 
 export function arrayToObject(array: [] = [], keyName = 'name', keyValue = 'value'): Record<string, unknown> {
   const obj = {}
@@ -165,3 +172,97 @@ export const argQuoteStrip = (s: string) => {
 
 // use lodash mergeWith to avoid merging arrays
 export const mergeData = (orig, extra) => mergeWith(orig, extra, (a, b) => (isArray(b) ? b : undefined))
+
+function webhookData(
+  teamId: string,
+  data: Build,
+): {
+  authHeader: string
+  repoUrl: string
+  repoName: string
+  giteaUrl: string
+  serviceUrl: string
+} {
+  const authHeader = `Basic ${Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')}`
+  const { type } = data.mode!
+  const repoUrl: string = data.mode![type] ? data.mode!['docker'].repoUrl : data.mode!['buildpacks'].repoUrl
+  const repoName: string = repoUrl.split('/').pop()!
+  const giteaUrl = env.GIT_REPO_URL.split('/')[0]
+  const serviceUrl = `http://el-gitea-webhook-${data.name}.${teamId}.svc.cluster.local:8080`
+
+  return { authHeader, repoUrl, repoName, giteaUrl, serviceUrl }
+}
+
+function webhookConfig(serviceUrl: string): {
+  type: string
+  active: boolean
+  events: string[]
+  config: { content_type: string; url: string }
+} {
+  return {
+    type: 'gitea',
+    active: true,
+    events: ['push'],
+    config: {
+      content_type: 'json',
+      url: serviceUrl,
+    },
+  }
+}
+
+export async function createGiteaWebHook(teamId: string, data: Build): Promise<any> {
+  try {
+    const hookSetup = webhookData(teamId, data)
+    const url = `https://${hookSetup.giteaUrl}/api/v1/repos/team-${teamId}/${hookSetup.repoName}/hooks`
+    const response = await axios.post(url, webhookConfig(hookSetup.serviceUrl), {
+      headers: {
+        Authorization: hookSetup.authHeader,
+        'Content-Type': 'application/json',
+      },
+    })
+    return response.data
+  } catch (error) {
+    console.error(`Probelem creating webhook: ${error.message}`)
+    return { id: undefined }
+  }
+}
+
+export async function updateGiteaWebhook(webhookId: number, teamId: string, data: Build): Promise<any> {
+  try {
+    const hookSetup = webhookData(teamId, data)
+    const url = `https://${hookSetup.giteaUrl}/api/v1/repos/team-${teamId}/${hookSetup.repoName}/hooks/${webhookId}`
+    const response = await axios.patch(url, webhookConfig(hookSetup.serviceUrl), {
+      headers: {
+        Authorization: hookSetup.authHeader,
+        'Content-Type': 'application/json',
+      },
+    })
+    return response.data
+  } catch (error) {
+    if (error.response.status === 404) {
+      console.error('Webhook could not be found')
+      console.log('Creating new instead webhook')
+      return await this.createGiteaWebHook(teamId, data)
+    } else {
+      console.error(`Error updating webhook: ${error.message}`)
+      return { id: undefined }
+    }
+  }
+}
+
+export async function deleteGiteaWebhook(webhookId: number, teamId: string, data: Build): Promise<any> {
+  try {
+    const hookSetup = this.webhookData(teamId, data)
+    const url = `https://${hookSetup.giteaUrl}/api/v1/repos/team-${teamId}/${hookSetup.repoName}/hooks/${webhookId}`
+    const response = await axios.delete(url, {
+      headers: {
+        Authorization: hookSetup.authHeader,
+        'Content-Type': 'application/json',
+      },
+    })
+    return response
+  } catch (error) {
+    if (error.response.status === 404) console.error('Webhook could not be found')
+    else console.error(`Error removing webhook: ${error.message}`)
+  }
+}

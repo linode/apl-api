@@ -4,7 +4,6 @@ import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { ObjectStorageKeyRegions, getRegions } from '@linode/api-v4'
-import axios from 'axios'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
@@ -39,7 +38,16 @@ import {
   WorkloadValues,
 } from 'src/otomi-models'
 import getRepo, { Repo } from 'src/repo'
-import { arrayToObject, getServiceUrl, getValuesSchema, objectToArray, removeBlankAttributes } from 'src/utils'
+import {
+  arrayToObject,
+  createGiteaWebHook,
+  deleteGiteaWebhook,
+  getServiceUrl,
+  getValuesSchema,
+  objectToArray,
+  removeBlankAttributes,
+  updateGiteaWebhook,
+} from 'src/utils'
 import {
   CUSTOM_ROOT_CA,
   DEFAULT_PLATFORM_ADMIN_EMAIL,
@@ -962,7 +970,7 @@ export default class OtomiStack {
       const buildData = data
       if (process.env.NODE_ENV !== 'development') {
         if (buildData.trigger && !buildData.externalRepo) {
-          const webhook = await this.createGiteaWebHook(teamId, buildData)
+          const webhook = await createGiteaWebHook(teamId, buildData)
           buildData.webHookId = webhook.id
         }
       }
@@ -976,95 +984,6 @@ export default class OtomiStack {
     }
   }
 
-  async createGiteaWebHook(teamId: string, data: Build): Promise<any> {
-    try {
-      const authHeader = `Basic ${Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')}`
-      const type = data.mode?.type
-      const repoUrl: string = data.mode![type!] ? data.mode!['docker'].repoUrl : data.mode!['buildpacks'].repoUrl
-      const repoName = repoUrl.split('/').pop()
-      const giteaUrl = env.GIT_REPO_URL.split('/')[0]
-      const url = `https://${giteaUrl}/api/v1/repos/team-${teamId}/${repoName}/hooks`
-      const serviceUrl = `http://el-gitea-webhook-${data.name}.${teamId}.svc.cluster.local:8080`
-      const hookConfig = {
-        type: 'gitea',
-        active: true,
-        events: ['push'],
-        config: {
-          content_type: 'json',
-          url: serviceUrl,
-        },
-      }
-      const response = await axios.post(url, hookConfig, {
-        headers: {
-          Authorization: authHeader,
-          'Content-Type': 'application/json',
-        },
-      })
-      return response.data
-    } catch (error) {
-      console.error(`Probelem creating webhook: ${error.message}`)
-      return { id: undefined }
-    }
-  }
-
-  async updateGiteaWebhook(webhookId: number, teamId: string, data: Build): Promise<any> {
-    try {
-      const authHeader = `Basic ${Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')}`
-      const type = data.mode?.type
-      const repoUrl: string = data.mode![type!] ? data.mode!['docker'].repoUrl : data.mode!['buildpacks'].repoUrl
-      const repoName = repoUrl.split('/').pop()
-      const giteaUrl = env.GIT_REPO_URL.split('/')[0]
-      const url = `https://${giteaUrl}/api/v1/repos/team-${teamId}/${repoName}/hooks/${webhookId}`
-      const serviceUrl = `http://el-gitea-webhook-${data.name}.${teamId}.svc.cluster.local:8080`
-      const hookConfig = {
-        type: 'gitea',
-        active: true,
-        events: ['push'],
-        config: {
-          content_type: 'json',
-          url: serviceUrl,
-        },
-      }
-      const response = await axios.patch(url, hookConfig, {
-        headers: {
-          Authorization: authHeader,
-          'Content-Type': 'application/json',
-        },
-      })
-      return response.data
-    } catch (error) {
-      if (error.response.status === 404) {
-        console.error('Webhook could not be found')
-        console.log('Creating new instead webhook')
-        return await this.createGiteaWebHook(teamId, data)
-      } else {
-        console.error(`Error updating webhook: ${error.message}`)
-        return { id: undefined }
-      }
-    }
-  }
-
-  async deleteGiteaWebhook(webhookId: number, teamId: string, data: Build): Promise<any> {
-    try {
-      const authHeader = `Basic ${Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')}`
-      const type = data.mode?.type
-      const repoUrl: string = data.mode![type!] ? data.mode!['docker'].repoUrl : data.mode!['buildpacks'].repoUrl
-      const repoName = repoUrl.split('/').pop()
-      const giteaUrl = env.GIT_REPO_URL.split('/')[0]
-      const url = `https://${giteaUrl}/api/v1/repos/team-${teamId}/${repoName}/hooks/${webhookId}`
-      const response = await axios.delete(url, {
-        headers: {
-          Authorization: authHeader,
-          'Content-Type': 'application/json',
-        },
-      })
-      return response
-    } catch (error) {
-      if (error.response.status === 404) console.error('Webhook could not be found')
-      else console.error(`Error removing webhook: ${error.message}`)
-    }
-  }
-
   getBuild(id: string): Build {
     return this.db.getItem('builds', { id }) as Build
   }
@@ -1074,13 +993,13 @@ export default class OtomiStack {
     const buildData = data
     const oldBuild = this.getBuild(id)
     if (buildData.trigger && !buildData.externalRepo && !oldBuild.webHookId) {
-      const webhook = await this.createGiteaWebHook(buildData.teamId!, buildData)
+      const webhook = await createGiteaWebHook(buildData.teamId!, buildData)
       buildData.webHookId = webhook.id
     } else if (buildData.trigger && !buildData.externalRepo && oldBuild.webHookId) {
-      const webhook = await this.updateGiteaWebhook(oldBuild.webHookId, buildData.teamId!, data)
+      const webhook = await updateGiteaWebhook(oldBuild.webHookId, buildData.teamId!, data)
       buildData.webHookId = webhook.id
     } else if (!buildData.trigger && oldBuild.webHookId) {
-      await this.deleteGiteaWebhook(oldBuild.webHookId, buildData.teamId!, buildData)
+      await deleteGiteaWebhook(oldBuild.webHookId, buildData.teamId!, buildData)
       buildData.webHookId = undefined
     }
     const build = this.db.updateItem('builds', buildData, { id }) as Build
@@ -1100,18 +1019,9 @@ export default class OtomiStack {
       }
     })
     this.db.deleteItem('builds', { id })
-    console.log('build to delete: ', build)
     console.log(!isEmpty(build.webHookId!))
-    if (!isEmpty(build.webHookId!)) {
-      console.log('isempty check')
-      console.log('deleting webhook', build.webHookId)
-      await this.deleteGiteaWebhook(build.webHookId!, build.teamId!, build)
-    }
-    if (build.webHookId !== undefined) {
-      console.log('not undefined')
-      console.log('deleting webhook', build.webHookId)
-      await this.deleteGiteaWebhook(build.webHookId, build.teamId!, build)
-    }
+    if (build.webHookId !== undefined) await deleteGiteaWebhook(build.webHookId, build.teamId!, build)
+
     await this.saveTeamBuilds(build.teamId!)
     await this.doDeployment(['builds'])
   }
