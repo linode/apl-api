@@ -1118,13 +1118,14 @@ export default class OtomiStack {
     console.log('build to delete: ', build)
     console.log(!isEmpty(build.webHookId!))
     if (!isEmpty(build.webHookId!)) {
-      console.log('deleting webhook', build.webHookId!)
+      console.log('isempty check')
+      console.log('deleting webhook', build.webHookId)
       await this.deleteGiteaWebhook(build.webHookId!, build.teamId!, build)
     }
     if (build.webHookId !== undefined) {
       console.log('not undefined')
-      console.log('deleting webhook', build.webHookId!)
-      await this.deleteGiteaWebhook(build.webHookId!, build.teamId!, build)
+      console.log('deleting webhook', build.webHookId)
+      await this.deleteGiteaWebhook(build.webHookId, build.teamId!, build)
     }
     await this.saveTeamBuilds(build.teamId!)
     await this.doDeployment(['builds'])
