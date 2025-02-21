@@ -214,7 +214,7 @@ export async function createGiteaWebHook(teamId: string, data: Build): Promise<a
   try {
     const hookSetup = webhookData(teamId, data)
     const url = `https://${hookSetup.giteaUrl}/api/v1/repos/team-${teamId}/${hookSetup.repoName}/hooks`
-    console.log(`Creating webhook for ${data.name} in ${hookSetup.repoName}`)
+    console.log(`Creating webhook for Build '${data.name}' in 'team-${teamId}/${hookSetup.repoName}'`)
     const response = await axios.post(url, webhookConfig(hookSetup.serviceUrl), {
       headers: {
         Authorization: hookSetup.authHeader,
@@ -232,7 +232,7 @@ export async function updateGiteaWebhook(webhookId: number, teamId: string, data
   try {
     const hookSetup = webhookData(teamId, data)
     const url = `https://${hookSetup.giteaUrl}/api/v1/repos/team-${teamId}/${hookSetup.repoName}/hooks/${webhookId}`
-    console.log(`Updating webhook for ${data.name} in ${hookSetup.repoName}`)
+    console.log(`Updating webhook for Build '${data.name}' in 'team-${teamId}/${hookSetup.repoName}'`)
     const response = await axios.patch(url, webhookConfig(hookSetup.serviceUrl), {
       headers: {
         Authorization: hookSetup.authHeader,
@@ -242,10 +242,10 @@ export async function updateGiteaWebhook(webhookId: number, teamId: string, data
     return response.data
   } catch (error) {
     if (error.response.status === 404) {
-      console.error(`Webhook '${data.name}' could not be found`)
+      console.error(`Webhook for Build '${data.name}' could not be found in team-${teamId}`)
       return await createGiteaWebHook(teamId, data)
     } else {
-      console.error(`Error updating webhook: ${error.message}`)
+      console.error(`Error updating webhook '${data.name}' in team-${teamId}: ${error.message}`)
       return { id: undefined }
     }
   }
@@ -255,7 +255,7 @@ export async function deleteGiteaWebhook(webhookId: number, teamId: string, data
   try {
     const hookSetup = webhookData(teamId, data)
     const url = `https://${hookSetup.giteaUrl}/api/v1/repos/team-${teamId}/${hookSetup.repoName}/hooks/${webhookId}`
-    console.log(`Deleting webhook for ${data.name} in ${hookSetup.repoName}`)
+    console.log(`Deleting webhook for Build '${data.name}' in 'team-${teamId}/${hookSetup.repoName}'`)
     const response = await axios.delete(url, {
       headers: {
         Authorization: hookSetup.authHeader,
@@ -264,7 +264,8 @@ export async function deleteGiteaWebhook(webhookId: number, teamId: string, data
     })
     return response
   } catch (error) {
-    if (error.response.status === 404) console.error(`Webhook '${data.name}' could not be found`)
-    else console.error(`Error removing webhook: ${error.message}`)
+    if (error.response.status === 404)
+      console.error(`Webhook for Build '${data.name}' could not be found in team-${teamId}`)
+    else console.error(`Error removing webhook '${data.name}' in team-${teamId}: ${error.message}`)
   }
 }

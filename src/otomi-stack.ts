@@ -1019,7 +1019,6 @@ export default class OtomiStack {
       }
     })
     this.db.deleteItem('builds', { id })
-    console.log(!isEmpty(build.webHookId!))
     if (build.webHookId !== undefined) await deleteGiteaWebhook(build.webHookId, build.teamId!, build)
 
     await this.saveTeamBuilds(build.teamId!)
