@@ -975,17 +975,19 @@ export default class OtomiStack {
     const type = data.mode?.type
     const repoUrl: string = data.mode![type!] ? data.mode!['docker'].repoUrl : data.mode!['buildpacks'].repoUrl
     const repoName = repoUrl.split('/').pop()
-    const url = `${env.GIT_REPO_URL}/api/v1/repos/team-${teamId}/${repoName}/hooks`
+    const giteaUrl = env.GIT_REPO_URL.split('/')[0]
+    const url = `${giteaUrl}/api/v1/repos/team-${teamId}/${repoName}/hooks`
     const serviceUrl = `http://el-gitea-webhook-${data.name}.${teamId}.svc.cluster.local:8080`
     const hookConfig = {
       type: 'gitea',
       active: true,
-      events: ['push_only'],
+      events: ['push'],
       config: {
         content_type: 'json',
         url: serviceUrl,
       },
     }
+    console.log('giteaUrl: ', giteaUrl)
     console.log('url: ', url)
     console.log('serviceUrl: ', serviceUrl)
     console.log('hookConfig: ', hookConfig)
