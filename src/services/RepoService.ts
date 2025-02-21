@@ -1,6 +1,7 @@
 import {
   Alerts,
   App,
+  Backup,
   Build,
   Cluster,
   Dns,
@@ -246,7 +247,7 @@ export class RepoService {
     return flatMap(this.repo.teamConfig, 'sealedSecrets').filter(Boolean) ?? []
   }
 
-  public getAllBackups(): SealedSecret[] {
+  public getAllBackups(): Backup[] {
     return flatMap(this.repo.teamConfig, 'backups').filter(Boolean) ?? []
   }
 
