@@ -981,7 +981,7 @@ export default class OtomiStack {
     const repoUrl: string = data.mode![type!] ? data.mode!['docker'].repoUrl : data.mode!['buildpacks'].repoUrl
     const repoName = repoUrl.split('/').pop()
     const giteaUrl = env.GIT_REPO_URL.split('/')[0]
-    const url = `${giteaUrl}/api/v1/repos/team-${teamId}/${repoName}/hooks`
+    const url = `https://${giteaUrl}/api/v1/repos/team-${teamId}/${repoName}/hooks`
     const serviceUrl = `http://el-gitea-webhook-${data.name}.${teamId}.svc.cluster.local:8080`
     const hookConfig = {
       type: 'gitea',
@@ -1069,7 +1069,7 @@ export default class OtomiStack {
     const repoUrl: string = data.mode![type!] ? data.mode!['docker'].repoUrl : data.mode!['buildpacks'].repoUrl
     const repoName = repoUrl.split('/').pop()
     const giteaUrl = env.GIT_REPO_URL.split('/')[0]
-    const url = `${giteaUrl}/api/v1/repos/team-${teamId}/${repoName}/hooks/${webhookId}`
+    const url = `https://${giteaUrl}/api/v1/repos/team-${teamId}/${repoName}/hooks/${webhookId}`
     console.log('giteaUrl: ', giteaUrl)
     console.log('url: ', url)
     const response = await axios.post(url, {
