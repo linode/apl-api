@@ -959,11 +959,16 @@ export default class OtomiStack {
   async createBuild(teamId: string, data: Build): Promise<Build> {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const build = this.db.createItem('builds', { ...data, teamId }, { teamId, name: data.name }) as Build
+      const buildData = data
+      if (process.env.NODE_ENV !== 'development') {
+        if (data.trigger && !data.externalRepo) {
+          const webhook = await this.createGiteaHook(teamId, buildData)
+          buildData.webHookId = webhook.id
+        }
+      }
+      const build = this.db.createItem('builds', { ...buildData, teamId }, { teamId, name: buildData.name }) as Build
       await this.saveTeamBuilds(teamId)
       await this.doDeployment(['builds'])
-      if (process.env.NODE_ENV !== 'development')
-        if (data.trigger && !data.externalRepo) await this.createGiteaHook(teamId, data)
       return build
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Build name already exists'

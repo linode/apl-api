@@ -43,6 +43,10 @@ Build:
       type: boolean
       default: false
       description: 'Trigger the build based on a Gitea webhook. Use this URL for the webhook: http://el-gitea-webhook-<build-name>.team-<team-name>.svc.cluster.local:8080.'
+    webHookId:
+      type: integer
+      description: Gitea WebhookId to trigger the build that is set for when a trigger is 'true' and the externalRepo is 'false'
+      $ref: 'definitions.yaml#/giteaWebHookId'
     scanSource:
       type: boolean
       default: true
