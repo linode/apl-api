@@ -13,7 +13,7 @@ import {
   Workload,
   WorkloadValues,
 } from '../otomi-models'
-import { find, has, merge, remove } from 'lodash'
+import { find, has, merge, remove, set } from 'lodash'
 import { AlreadyExists, NotExistError } from '../error'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -63,8 +63,8 @@ export class TeamConfigService {
     return merge(build, updates)
   }
 
-  public deleteBuild(name: string): void {
-    remove(this.teamConfig.builds, { name })
+  public deleteBuild(id: string): void {
+    remove(this.teamConfig.builds, { id })
   }
 
   // =====================================
@@ -100,8 +100,8 @@ export class TeamConfigService {
     return merge(workload, updates)
   }
 
-  public deleteWorkload(name: string): void {
-    remove(this.teamConfig.workloads, { name })
+  public deleteWorkload(id: string): void {
+    remove(this.teamConfig.workloads, { id })
   }
 
   // =====================================
@@ -135,8 +135,8 @@ export class TeamConfigService {
     return merge(workloadValues, updates)
   }
 
-  public deleteWorkloadValues(name: string): void {
-    remove(this.teamConfig.workloadValues, { name })
+  public deleteWorkloadValues(id: string): void {
+    remove(this.teamConfig.workloadValues, { id })
   }
 
   // =====================================
@@ -206,8 +206,8 @@ export class TeamConfigService {
     return merge(secret, updates)
   }
 
-  public deleteSealedSecret(name: string): void {
-    remove(this.teamConfig.sealedSecrets, { name })
+  public deleteSealedSecret(id: string): void {
+    remove(this.teamConfig.sealedSecrets, { id })
   }
 
   // =====================================
@@ -242,8 +242,8 @@ export class TeamConfigService {
     return merge(backup, updates)
   }
 
-  public deleteBackup(name: string): void {
-    remove(this.teamConfig.backups, { name })
+  public deleteBackup(id: string): void {
+    remove(this.teamConfig.backups, { id })
   }
 
   // =====================================
@@ -278,8 +278,8 @@ export class TeamConfigService {
     return merge(project, updates)
   }
 
-  public deleteProject(name: string): void {
-    remove(this.teamConfig.projects, { name })
+  public deleteProject(id: string): void {
+    remove(this.teamConfig.projects, { id })
   }
 
   // =====================================
@@ -398,6 +398,6 @@ export class TeamConfigService {
 
   /** Update a collection dynamically in the Teamconfig */
   public updateCollection(collectionId: string, data: any): void {
-    merge(this.teamConfig[collectionId], data)
+    set(this.teamConfig, collectionId, data)
   }
 }

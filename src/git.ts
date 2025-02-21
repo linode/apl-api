@@ -211,7 +211,11 @@ export class Git {
     return merge(data, secretData) as Core
   }
 
-  async saveConfig(config: Record<string, any>, fileMap: FileMap): Promise<Promise<void>> {
+  async saveConfig(
+    config: Record<string, any>,
+    fileMap: FileMap,
+    unsetBlankAttributes?: boolean,
+  ): Promise<Promise<void>> {
     const jsonPathsValuesPublic = jsonpath.nodes(config, fileMap.jsonPathExpression)
     await Promise.all(
       jsonPathsValuesPublic.map(async (node) => {
@@ -220,7 +224,7 @@ export class Git {
         try {
           const filePath = getFilePath(fileMap, nodePath, nodeValue, '')
           const manifest = renderManifest(fileMap, nodePath, nodeValue)
-          await this.writeFile(filePath, manifest)
+          await this.writeFile(filePath, manifest, unsetBlankAttributes)
         } catch (e) {
           console.log(nodePath)
           console.log(fileMap)
@@ -245,23 +249,12 @@ export class Git {
       }
     })
 
-    const jsonPathsValuesPublic = jsonpath.nodes(plainData, fileMap.jsonPathExpression)
-    await Promise.all(
-      jsonPathsValuesPublic.map(async (node) => {
-        const nodePath = node.path
-        const nodeValue = node.value
-        try {
-          const filePath = getFilePath(fileMap, nodePath, nodeValue, '')
-          const manifest = renderManifest(fileMap, nodePath, nodeValue)
-          await this.writeFile(filePath, manifest)
-        } catch (e) {
-          console.log(nodePath)
-          console.log(fileMap)
-          throw e
-        }
-      }),
-    )
-    const jsonPathsValuesSecrets = jsonpath.nodes(secretData, fileMap.jsonPathExpression)
+    await this.saveConfig(plainData, fileMap)
+    await this.saveSecretConfig(secretData, fileMap)
+  }
+
+  async saveSecretConfig(secretConfig: Record<string, any>, fileMap: FileMap, unsetBlankAttributes?: boolean) {
+    const jsonPathsValuesSecrets = jsonpath.nodes(secretConfig, fileMap.jsonPathExpression)
     await Promise.all(
       jsonPathsValuesSecrets.map(async (node) => {
         const nodePath = node.path
@@ -269,7 +262,25 @@ export class Git {
         try {
           const filePath = getFilePath(fileMap, nodePath, nodeValue, 'secrets.')
           const manifest = renderManifestForSecrets(fileMap, nodeValue)
-          await this.writeFile(filePath, manifest)
+          await this.writeFile(filePath, manifest, unsetBlankAttributes)
+        } catch (e) {
+          console.log(nodePath)
+          console.log(fileMap)
+          throw e
+        }
+      }),
+    )
+  }
+
+  async deleteConfig(config: Record<string, any>, fileMap: FileMap, fileNamePrefix = '') {
+    const jsonPathsValuesSecrets = jsonpath.nodes(config, fileMap.jsonPathExpression)
+    await Promise.all(
+      jsonPathsValuesSecrets.map(async (node) => {
+        const nodePath = node.path
+        const nodeValue = node.value
+        try {
+          const filePath = getFilePath(fileMap, nodePath, nodeValue, fileNamePrefix)
+          await this.removeFile(filePath)
         } catch (e) {
           console.log(nodePath)
           console.log(fileMap)

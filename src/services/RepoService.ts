@@ -22,7 +22,7 @@ import {
   Workload,
 } from '../otomi-models'
 import { TeamConfigService } from './TeamConfigService'
-import { find, flatMap, has, map, mapValues, merge, remove } from 'lodash'
+import { find, flatMap, has, map, mapValues, merge, remove, set } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
 import { AlreadyExists } from '../error'
 
@@ -259,6 +259,6 @@ export class RepoService {
     if (!has(this.repo, collectionId)) {
       throw new Error(`Updating repo collection [${collectionId}] does not exist.`)
     }
-    merge(this.repo[collectionId], data)
+    set(this.repo, collectionId, data)
   }
 }
