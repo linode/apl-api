@@ -1014,15 +1014,16 @@ export default class OtomiStack {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const buildData = data
     const oldBuild = this.getBuild(id)
-    if (buildData.trigger && !buildData.externalRepo && oldBuild.webHookId) {
+    if (buildData.trigger && !buildData.externalRepo && !oldBuild.webHookId) {
       const webhook = await this.createGiteaWebHook(buildData.teamId!, buildData)
       buildData.webHookId = webhook.id
-    } else if (buildData.trigger && !buildData.externalRepo && !oldBuild.webHookId) {
+    } else if (buildData.trigger && !buildData.externalRepo && oldBuild.webHookId) {
       console.log('Edit Webhook')
       await this.updateGiteaWebhook(oldBuild.webHookId!, buildData.teamId!, data)
-    } else if (!buildData.trigger && !oldBuild.webHookId) {
+    } else if (!buildData.trigger && oldBuild.webHookId) {
       console.log('Remove Webhook')
-      await this.deleteGiteaWebhook(oldBuild.webHookId)
+      await this.deleteGiteaWebhook(oldBuild.webHookId!, buildData.teamId!, buildData)
+      buildData.webHookId = undefined
     }
     const build = this.db.updateItem('builds', buildData, { id }) as Build
     await this.saveTeamBuilds(build.teamId!)
