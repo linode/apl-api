@@ -964,10 +964,8 @@ export default class OtomiStack {
         if (buildData.trigger && !buildData.externalRepo) {
           const webhook = await this.createGiteaWebHook(teamId, buildData)
           buildData.webHookId = webhook.id
-          console.log('webhook ID: ', buildData.webHookId)
         }
       }
-      console.log('CREATING BUILD')
       const build = this.db.createItem('builds', { ...buildData, teamId }, { teamId, name: buildData.name }) as Build
       await this.saveTeamBuilds(teamId)
       await this.doDeployment(['builds'])
@@ -977,6 +975,7 @@ export default class OtomiStack {
       throw err
     }
   }
+
   async createGiteaWebHook(teamId: string, data: Build): Promise<any> {
     try {
       const authHeader = `Basic ${Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')}`
@@ -995,48 +994,17 @@ export default class OtomiStack {
           url: serviceUrl,
         },
       }
-      console.log('giteaUrl: ', giteaUrl)
-      console.log('url: ', url)
-      console.log('serviceUrl: ', serviceUrl)
-      console.log('hookConfig: ', hookConfig)
       const response = await axios.post(url, hookConfig, {
         headers: {
           Authorization: authHeader,
           'Content-Type': 'application/json',
         },
       })
-      console.log('HOOK: ', response.data)
       return response.data
     } catch (error) {
       console.error(`Probelem creating webhook: ${error.message}`)
       return { id: undefined }
     }
-  }
-
-  getBuild(id: string): Build {
-    return this.db.getItem('builds', { id }) as Build
-  }
-
-  async editBuild(id: string, data: Build): Promise<Build> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const buildData = data
-    const oldBuild = this.getBuild(id)
-    if (buildData.trigger && !buildData.externalRepo && !oldBuild.webHookId) {
-      const webhook = await this.createGiteaWebHook(buildData.teamId!, buildData)
-      buildData.webHookId = webhook.id
-    } else if (buildData.trigger && !buildData.externalRepo && oldBuild.webHookId) {
-      console.log('Edit Webhook')
-      const webhook = await this.updateGiteaWebhook(oldBuild.webHookId, buildData.teamId!, data)
-      buildData.webHookId = webhook.id
-    } else if (!buildData.trigger && oldBuild.webHookId) {
-      console.log('Remove Webhook')
-      await this.deleteGiteaWebhook(oldBuild.webHookId, buildData.teamId!, buildData)
-      buildData.webHookId = undefined
-    }
-    const build = this.db.updateItem('builds', buildData, { id }) as Build
-    await this.saveTeamBuilds(build.teamId!)
-    await this.doDeployment(['builds'])
-    return build
   }
 
   async updateGiteaWebhook(webhookId: number, teamId: string, data: Build): Promise<any> {
@@ -1057,18 +1025,12 @@ export default class OtomiStack {
           url: serviceUrl,
         },
       }
-      console.log('Is this updating?')
-      console.log('giteaUrl: ', giteaUrl)
-      console.log('url: ', url)
-      console.log('serviceUrl: ', serviceUrl)
-      console.log('hookConfig: ', hookConfig)
       const response = await axios.patch(url, hookConfig, {
         headers: {
           Authorization: authHeader,
           'Content-Type': 'application/json',
         },
       })
-      console.log('HOOK: ', response.data)
       return response.data
     } catch (error) {
       if (error.response.status === 404) {
@@ -1076,7 +1038,7 @@ export default class OtomiStack {
         console.log('Creating new instead webhook')
         return await this.createGiteaWebHook(teamId, data)
       } else {
-        console.error(`Probelem updating webhook: ${error.message}`)
+        console.error(`Error updating webhook: ${error.message}`)
         return { id: undefined }
       }
     }
@@ -1090,21 +1052,41 @@ export default class OtomiStack {
       const repoName = repoUrl.split('/').pop()
       const giteaUrl = env.GIT_REPO_URL.split('/')[0]
       const url = `https://${giteaUrl}/api/v1/repos/team-${teamId}/${repoName}/hooks/${webhookId}`
-      console.log('giteaUrl: ', giteaUrl)
-      console.log('url: ', url)
       const response = await axios.delete(url, {
         headers: {
           Authorization: authHeader,
           'Content-Type': 'application/json',
         },
       })
-      console.log('HOOK: ', response.data)
       return response
     } catch (error) {
-      console.log('ERROR REMOVING WEBHOOK: ', error)
       if (error.response.status === 404) console.error('Webhook could not be found')
-      else console.error(`Probelem removing webhook: ${error.message}`)
+      else console.error(`Error removing webhook: ${error.message}`)
     }
+  }
+
+  getBuild(id: string): Build {
+    return this.db.getItem('builds', { id }) as Build
+  }
+
+  async editBuild(id: string, data: Build): Promise<Build> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const buildData = data
+    const oldBuild = this.getBuild(id)
+    if (buildData.trigger && !buildData.externalRepo && !oldBuild.webHookId) {
+      const webhook = await this.createGiteaWebHook(buildData.teamId!, buildData)
+      buildData.webHookId = webhook.id
+    } else if (buildData.trigger && !buildData.externalRepo && oldBuild.webHookId) {
+      const webhook = await this.updateGiteaWebhook(oldBuild.webHookId, buildData.teamId!, data)
+      buildData.webHookId = webhook.id
+    } else if (!buildData.trigger && oldBuild.webHookId) {
+      await this.deleteGiteaWebhook(oldBuild.webHookId, buildData.teamId!, buildData)
+      buildData.webHookId = undefined
+    }
+    const build = this.db.updateItem('builds', buildData, { id }) as Build
+    await this.saveTeamBuilds(build.teamId!)
+    await this.doDeployment(['builds'])
+    return build
   }
 
   async deleteBuild(id: string): Promise<void> {
