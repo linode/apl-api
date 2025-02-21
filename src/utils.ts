@@ -214,6 +214,7 @@ export async function createGiteaWebHook(teamId: string, data: Build): Promise<a
   try {
     const hookSetup = webhookData(teamId, data)
     const url = `https://${hookSetup.giteaUrl}/api/v1/repos/team-${teamId}/${hookSetup.repoName}/hooks`
+    console.log(`Creating webhook for ${data.name} in ${hookSetup.repoName}`)
     const response = await axios.post(url, webhookConfig(hookSetup.serviceUrl), {
       headers: {
         Authorization: hookSetup.authHeader,
@@ -231,6 +232,7 @@ export async function updateGiteaWebhook(webhookId: number, teamId: string, data
   try {
     const hookSetup = webhookData(teamId, data)
     const url = `https://${hookSetup.giteaUrl}/api/v1/repos/team-${teamId}/${hookSetup.repoName}/hooks/${webhookId}`
+    console.log(`Updating webhook for ${data.name} in ${hookSetup.repoName}`)
     const response = await axios.patch(url, webhookConfig(hookSetup.serviceUrl), {
       headers: {
         Authorization: hookSetup.authHeader,
@@ -240,8 +242,7 @@ export async function updateGiteaWebhook(webhookId: number, teamId: string, data
     return response.data
   } catch (error) {
     if (error.response.status === 404) {
-      console.error('Webhook could not be found')
-      console.log('Creating new instead webhook')
+      console.error(`Webhook '${data.name}' could not be found`)
       return await this.createGiteaWebHook(teamId, data)
     } else {
       console.error(`Error updating webhook: ${error.message}`)
@@ -254,6 +255,7 @@ export async function deleteGiteaWebhook(webhookId: number, teamId: string, data
   try {
     const hookSetup = this.webhookData(teamId, data)
     const url = `https://${hookSetup.giteaUrl}/api/v1/repos/team-${teamId}/${hookSetup.repoName}/hooks/${webhookId}`
+    console.log(`Deleting webhook for ${data.name} in ${hookSetup.repoName}`)
     const response = await axios.delete(url, {
       headers: {
         Authorization: hookSetup.authHeader,
@@ -262,7 +264,7 @@ export async function deleteGiteaWebhook(webhookId: number, teamId: string, data
     })
     return response
   } catch (error) {
-    if (error.response.status === 404) console.error('Webhook could not be found')
+    if (error.response.status === 404) console.error(`Webhook '${data.name}' could not be found`)
     else console.error(`Error removing webhook: ${error.message}`)
   }
 }
