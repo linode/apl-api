@@ -964,8 +964,10 @@ export default class OtomiStack {
         if (buildData.trigger && !buildData.externalRepo) {
           const webhook = await this.createGiteaWebHook(teamId, buildData)
           buildData.webHookId = webhook.id
+          console.log('webhook ID: ', buildData.webHookId)
         }
       }
+      console.log('CREATING BUILD')
       const build = this.db.createItem('builds', { ...buildData, teamId }, { teamId, name: buildData.name }) as Build
       await this.saveTeamBuilds(teamId)
       await this.doDeployment(['builds'])
