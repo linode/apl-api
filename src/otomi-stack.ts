@@ -1026,7 +1026,8 @@ export default class OtomiStack {
       buildData.webHookId = webhook.id
     } else if (buildData.trigger && !buildData.externalRepo && oldBuild.webHookId) {
       console.log('Edit Webhook')
-      await this.updateGiteaWebhook(oldBuild.webHookId, buildData.teamId!, data)
+      const webhook = await this.updateGiteaWebhook(oldBuild.webHookId, buildData.teamId!, data)
+      buildData.webHookId = webhook.id
     } else if (!buildData.trigger && oldBuild.webHookId) {
       console.log('Remove Webhook')
       await this.deleteGiteaWebhook(oldBuild.webHookId, buildData.teamId!, buildData)
@@ -1070,8 +1071,11 @@ export default class OtomiStack {
       console.log('HOOK: ', response.data)
       return response.data
     } catch (error) {
-      if (error.status === 404) console.error('Webhook could not be found')
-      else console.error(`Probelem updating webhook: ${error.message}`)
+      if (error.status === 404) {
+        console.error('Webhook could not be found')
+        console.log('Creating new instead webhook')
+        return await this.createGiteaWebHook(teamId, data)
+      } else console.error(`Probelem updating webhook: ${error.message}`)
     }
   }
 
@@ -1112,7 +1116,13 @@ export default class OtomiStack {
     })
     this.db.deleteItem('builds', { id })
     console.log('build to delete: ', build)
-    if (!isEmpty(build.webHookId)) {
+    console.log(!isEmpty(build.webHookId!))
+    if (!isEmpty(build.webHookId!)) {
+      console.log('deleting webhook', build.webHookId!)
+      await this.deleteGiteaWebhook(build.webHookId!, build.teamId!, build)
+    }
+    if (build.webHookId !== undefined) {
+      console.log('not undefined')
       console.log('deleting webhook', build.webHookId!)
       await this.deleteGiteaWebhook(build.webHookId!, build.teamId!, build)
     }
