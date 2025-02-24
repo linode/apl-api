@@ -1,0 +1,16 @@
+TestRepoConnect:
+  x-acl:
+    platformAdmin: [read-any]
+    teamAdmin: [read-any]
+    teamMember: [read-any]
+  properties:
+    url:
+      $ref: 'definitions.yaml#/url'
+    status:
+      type: string
+      default: unknown
+      enum:
+        - unknown
+        - success
+        - failed
+  type: object
