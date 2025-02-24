@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.6.2](https://github.com/redkubes/otomi-api/compare/v3.6.1...v3.6.2) (2025-02-24)
+
+
+### Bug Fixes
+
+* createObjWizard 500 errors ([#636](https://github.com/redkubes/otomi-api/issues/636)) ([04ff68f](https://github.com/redkubes/otomi-api/commit/04ff68ffb4792b34e31c2d3302b499eef655951b))
+
 ### [3.6.1](https://github.com/redkubes/otomi-api/compare/v3.6.0...v3.6.1) (2025-02-07)
 
 
