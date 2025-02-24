@@ -57,44 +57,38 @@ export function sparseCloneChart(
   // The final folder where the chart will reside.
   const checkoutPath = `${sparsePath}/${chartName}`
 
-  console.log('halo checkout', `git clone --filter=blob:none --no-checkout ${url} ${checkoutPath}`)
+  // Clone the repository into the folder named checkoutPath.
   const cloneCmd = `git clone --filter=blob:none --no-checkout ${url} ${checkoutPath}`
   console.log(`Running clone cmd: ${cloneCmd}`)
   shell.exec(cloneCmd)
 
-  // Change directory to the newly cloned repository.
-  shell.cd(checkoutPath)
-
-  // Initialize sparse checkout in cone mode.
+  // Initialize sparse checkout in cone mode within checkoutPath.
   const initCmd = `git sparse-checkout init --cone`
   console.log(`Running init cmd: ${initCmd}`)
-  shell.exec(initCmd)
+  shell.exec(initCmd, { cwd: checkoutPath })
 
   // Set the sparse checkout to only include the specified chartPath.
   const setCmd = `git sparse-checkout set ${chartPath}`
   console.log(`Running set cmd: ${setCmd}`)
-  shell.exec(setCmd)
+  shell.exec(setCmd, { cwd: checkoutPath })
 
-  // Checkout the desired revision (branch or commit).
+  // Checkout the desired revision (branch or commit) within checkoutPath.
   const checkoutCmd = `git checkout ${revision}`
   console.log(`Running checkout cmd: ${checkoutCmd}`)
-  shell.exec(checkoutCmd)
+  shell.exec(checkoutCmd, { cwd: checkoutPath })
 
-  // Now, move the contents of the sparse folder (chartPath) to the repository root.
-  // Since we're already in checkoutPath, we use the relative path.
+  // Move the contents of the sparse folder (chartPath) to the repository root.
+  // This moves files from "checkoutPath/chartPath/*" to "checkoutPath/"
   const moveCmd = `mv ${chartPath}/* .`
   console.log(`Running move cmd: ${moveCmd}`)
-  shell.exec(moveCmd)
+  shell.exec(moveCmd, { cwd: checkoutPath })
 
   // Remove the leftover top-level directory.
   // For chartPath "bitnami/cassandra", the top-level folder is "bitnami".
   const topLevelDir = chartPath.split('/')[0]
   const removeCmd = `rm -rf ${topLevelDir}`
   console.log(`Running remove cmd: ${removeCmd}`)
-  shell.exec(removeCmd)
-
-  // Optionally, change directory back to the parent directory.
-  shell.cd('..')
+  shell.exec(removeCmd, { cwd: checkoutPath })
 }
 
 export async function fetchWorkloadCatalog(
