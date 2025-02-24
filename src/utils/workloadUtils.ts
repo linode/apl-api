@@ -48,58 +48,52 @@ function isGiteaURL(url: string) {
  * @param revision - The branch or commit to checkout (e.g. "main")
  */
 export function sparseCloneChart(
-  url: string, // "https://github.com/bitnami/charts.git"
-  chartName: string, // "cassandra"
-  chartPath: string, // "bitnami/cassandra"
-  sparsePath: string, // /tmp/otomi/charts/mock-sub-value
-  revision: string, // "main"
+  url: string, // e.g. "https://github.com/bitnami/charts.git"
+  chartName: string, // e.g. "cassandra"
+  chartPath: string, // e.g. "bitnami/cassandra"
+  sparsePath: string, // e.g. "/tmp/otomi/charts/mock-sub-value"
+  revision: string, // e.g. "main"
 ): void {
-  // Clone the repository into the folder named chartName
+  // The final folder where the chart will reside.
   const checkoutPath = `${sparsePath}/${chartName}`
 
-  // if (!shell.test('-d', checkoutPath)) {
-  //   console.log(`Directory ${checkoutPath} does not exist. Creating it...`)
-  //   shell.mkdir('-p', checkoutPath)
-  // }
-
   console.log('halo checkout', `git clone --filter=blob:none --no-checkout ${url} ${checkoutPath}`)
-
   const cloneCmd = `git clone --filter=blob:none --no-checkout ${url} ${checkoutPath}`
-  console.log(`Running: ${cloneCmd}`)
+  console.log(`Running clone cmd: ${cloneCmd}`)
   shell.exec(cloneCmd)
 
-  // Change directory to the newly cloned repository
+  // Change directory to the newly cloned repository.
   shell.cd(checkoutPath)
 
-  // Initialize sparse checkout in cone mode
+  // Initialize sparse checkout in cone mode.
   const initCmd = `git sparse-checkout init --cone`
-  console.log(`Running: ${initCmd}`)
+  console.log(`Running init cmd: ${initCmd}`)
   shell.exec(initCmd)
 
-  // Set the sparse checkout to only include the specified path
+  // Set the sparse checkout to only include the specified chartPath.
   const setCmd = `git sparse-checkout set ${chartPath}`
-  console.log(`Running: ${setCmd}`)
+  console.log(`Running set cmd: ${setCmd}`)
   shell.exec(setCmd)
 
-  // Checkout the desired revision (branch/commit)
+  // Checkout the desired revision (branch or commit).
   const checkoutCmd = `git checkout ${revision}`
-  console.log(`Running: ${checkoutCmd}`)
+  console.log(`Running checkout cmd: ${checkoutCmd}`)
   shell.exec(checkoutCmd)
 
-  // Move the contents of the sparsePath directory to the repository root.
-  // Note: The shell command expands the wildcard to all files and directories in sparsePath.
-  const moveCmd = `mv ${sparsePath}/* .`
-  console.log(`Running: ${moveCmd}`)
+  // Now, move the contents of the sparse folder (chartPath) to the repository root.
+  // Since we're already in checkoutPath, we use the relative path.
+  const moveCmd = `mv ${chartPath}/* .`
+  console.log(`Running move cmd: ${moveCmd}`)
   shell.exec(moveCmd)
 
-  // Remove the leftover directory structure.
-  // Here we remove the top-level directory from sparsePath.
-  const topLevelDir = sparsePath.split('/')[0]
+  // Remove the leftover top-level directory.
+  // For chartPath "bitnami/cassandra", the top-level folder is "bitnami".
+  const topLevelDir = chartPath.split('/')[0]
   const removeCmd = `rm -rf ${topLevelDir}`
-  console.log(`Running: ${removeCmd}`)
+  console.log(`Running remove cmd: ${removeCmd}`)
   shell.exec(removeCmd)
 
-  // Change directory back to the parent directory
+  // Optionally, change directory back to the parent directory.
   shell.cd('..')
 }
 
