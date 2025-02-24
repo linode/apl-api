@@ -43,6 +43,7 @@ export type Smtp = Settings['smtp']
 export type Kms = Settings['kms']
 export type Oidc = Settings['oidc']
 export type Otomi = Settings['otomi']
+export type Versions = Settings['versions']
 
 export interface OpenApiRequest extends Request {
   operationDoc: {
@@ -163,7 +164,7 @@ export interface Repo {
   platformBackups: Record<string, any>
   smtp: Smtp
   users: User[]
-  versions: Record<string, any>
+  versions: Versions
   teamConfig: Record<string, TeamConfig>
 }
 

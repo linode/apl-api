@@ -399,6 +399,7 @@ export default class OtomiStack {
       'otomi',
       'platformBackups',
       'smtp',
+      'versions',
     ])
     return settings
   }

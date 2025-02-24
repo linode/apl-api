@@ -20,6 +20,7 @@ import {
   Team,
   TeamConfig,
   User,
+  Versions,
   Workload,
 } from '../otomi-models'
 import { TeamConfigService } from './TeamConfigService'
@@ -45,7 +46,7 @@ export class RepoService {
     this.repo.platformBackups ??= {}
     this.repo.smtp ??= {} as Smtp
     this.repo.users ??= []
-    this.repo.versions ??= {}
+    this.repo.versions ??= {} as Versions
     this.repo.teamConfig ??= {}
   }
 

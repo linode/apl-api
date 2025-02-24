@@ -316,8 +316,8 @@ export class TeamConfigService {
     return merge(netpol, updates)
   }
 
-  public deleteNetpol(name: string): void {
-    remove(this.teamConfig.netpols, { name })
+  public deleteNetpol(id: string): void {
+    remove(this.teamConfig.netpols, { id })
   }
 
   // =====================================
