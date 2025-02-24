@@ -1,5 +1,5 @@
 import { readFile } from 'fs-extra'
-import { readdir } from 'fs/promises'
+import { readdir, writeFile } from 'fs/promises'
 import shell from 'shelljs'
 import YAML from 'yaml'
 
@@ -38,6 +38,37 @@ function isGiteaURL(url: string) {
 }
 
 /**
+ * Updates the rbac.yaml file in the specified folder by adding a new chart key.
+ *
+ * @param sparsePath - The folder where rbac.yaml resides (e.g. "/tmp/otomi/charts/mock-sub-value")
+ * @param chartKey - The key to add under the "rbac" section (e.g. "quickstart-cassandra")
+ */
+export async function updateRbacForNewChart(sparsePath: string, chartKey: string): Promise<void> {
+  const rbacFilePath = `${sparsePath}/rbac.yaml`
+  let rbacData: any = {}
+  console.log('update rbac reach rbacFilePath', rbacFilePath)
+  try {
+    const fileContent = await readFile(rbacFilePath, 'utf-8')
+    rbacData = YAML.parse(fileContent) || {}
+  } catch (error) {
+    console.error('Error reading rbac.yaml:', error)
+    // Optionally, create a default structure if the file doesn't exist.
+    rbacData = { rbac: {}, betaCharts: [] }
+  }
+
+  // Ensure the "rbac" section exists.
+  if (!rbacData.rbac) rbacData.rbac = {}
+
+  // Add the new chart entry if it doesn't exist.
+  if (!(chartKey in rbacData.rbac)) rbacData.rbac[chartKey] = null
+
+  // Stringify the updated YAML content and write it back.
+  const newContent = YAML.stringify(rbacData)
+  await writeFile(rbacFilePath, newContent, 'utf-8')
+  console.log(`Updated rbac.yaml: added ${chartKey}: null`)
+}
+
+/**
  * Clones a repository using sparse checkout, checks out a specific revision,
  * and moves the contents of the desired subdirectory (sparsePath) to the root of the target folder.
  *
@@ -47,13 +78,13 @@ function isGiteaURL(url: string) {
  * @param sparsePath - The subdirectory to sparse checkout (e.g. "helm/charts/nats")
  * @param revision - The branch or commit to checkout (e.g. "main")
  */
-export function sparseCloneChart(
+export async function sparseCloneChart(
   url: string, // e.g. "https://github.com/bitnami/charts.git"
   chartName: string, // e.g. "cassandra"
   chartPath: string, // e.g. "bitnami/cassandra"
   sparsePath: string, // e.g. "/tmp/otomi/charts/mock-sub-value"
   revision: string, // e.g. "main"
-): void {
+): Promise<void> {
   // The final folder where the chart will reside.
   const checkoutPath = `${sparsePath}/${chartName}`
 
@@ -89,6 +120,10 @@ export function sparseCloneChart(
   const removeCmd = `rm -rf ${topLevelDir}`
   console.log(`Running remove cmd: ${removeCmd}`)
   shell.exec(removeCmd, { cwd: checkoutPath })
+
+  const chartKey = `quickstart-${chartName}`
+  // update rbac file
+  await updateRbacForNewChart(sparsePath, chartKey)
 }
 
 export async function fetchWorkloadCatalog(
@@ -131,7 +166,7 @@ export async function fetchWorkloadCatalog(
     shell.exec(`git clone --depth 1 ${gitUrl} ${helmChartsDir}`)
   }
 
-  if (newChart) sparseCloneChart(url, newChartName as string, newChartPath as string, helmChartsDir, version)
+  if (newChart) await sparseCloneChart(url, newChartName as string, newChartPath as string, helmChartsDir, version)
 
   // Read the folder contents.
   const files = await readdir(helmChartsDir, 'utf-8')
