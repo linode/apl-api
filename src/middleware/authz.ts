@@ -104,17 +104,20 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
       {},
     )
 
-    try {
-      let collection
-      if (teamSpecificCollections.includes(collectionId)) {
-        collection = repoService.getTeamConfigService(teamId).getCollection(collectionId)
-      } else {
-        collection = repoService.getCollection(collectionId)
+    if (action === 'update') {
+      try {
+        let collection
+        if (teamSpecificCollections.includes(collectionId)) {
+          collection = repoService.getTeamConfigService(teamId).getCollection(collectionId)
+        } else {
+          collection = repoService.getCollection(collectionId)
+        }
+        dataOrig = find(collection, selector) || {}
+      } catch (error) {
+        debug('Error in authzMiddleware', error)
       }
-      dataOrig = find(collection, selector) || {}
-    } catch (error) {
-      debug('Error in authzMiddleware', error)
     }
+
     const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body, dataOrig)
     if (violatedAttributes.length > 0) {
       return res.status(403).send({

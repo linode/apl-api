@@ -43,14 +43,13 @@ describe('API authz tests', () => {
     _otomiStack.git = mockDeep<Git>()
     _otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
     await _otomiStack.initRepo()
-    await _otomiStack.createTeam({ name: 'team1' })
-    await _otomiStack.createTeam({ name: 'team2' })
     otomiStack = _otomiStack as jest.Mocked<OtomiStack>
 
-    otomiStack.createTeam = jest.fn().mockResolvedValue(undefined)
     otomiStack.saveTeam = jest.fn().mockResolvedValue(undefined)
     otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
-    await otomiStack.init()
+    await otomiStack.loadValues()
+    await otomiStack.createTeam({ name: 'team1' })
+    await otomiStack.createTeam({ name: 'team2' })
     app = await initApp(otomiStack)
     agent = request.agent(app)
     agent.set('Accept', 'application/json')

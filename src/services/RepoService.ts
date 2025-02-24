@@ -67,7 +67,7 @@ export class RepoService {
   public getApp(id: string): App {
     const app = find(this.repo.apps, { id })
     if (!app) {
-      throw new Error(`User[${id}] does not exist.`)
+      throw new Error(`App[${id}] does not exist.`)
     }
     return app
   }

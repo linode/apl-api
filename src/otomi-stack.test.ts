@@ -206,6 +206,7 @@ describe('Users tests', () => {
     })
     jest.spyOn(otomiStack, 'saveUser').mockResolvedValue()
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
+    jest.spyOn(otomiStack, 'getApp').mockReturnValue({ id: 'keycloak' })
     await otomiStack.initRepo()
     await otomiStack.createUser(defaultPlatformAdmin)
     await otomiStack.createUser(anyPlatformAdmin)
