@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { App, User, Workload } from 'src/otomi-models'
+import { mockDeep } from 'jest-mock-extended'
+import { App, Build, User, Workload } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { Repo } from 'src/repo'
-import { mockDeep } from 'jest-mock-extended'
-import { PublicUrlExists } from './error'
 import { loadSpec } from './app'
+import { PublicUrlExists } from './error'
+import * as utils from './utils'
 
 jest.mock('src/utils', () => {
   const originalModule = jest.requireActual('src/utils')
@@ -151,6 +152,130 @@ describe('Workload values', () => {
     jest.spyOn(otomiStack, 'getSettingsInfo').mockReturnValue({ otomi: { isPreInstalled: true } })
     const filteredApp = otomiStack.filterExcludedApp(app)
     expect(filteredApp).toEqual({ id: 'external-dns', managed: true })
+  })
+})
+
+describe('Gitea webhook tests', () => {
+  let otomiStack: OtomiStack
+
+  const teamId = 'demo'
+  const buildData: Build = {
+    teamId: 'demo',
+    name: 'blue-demo',
+    tag: 'latest',
+    mode: {
+      docker: {
+        repoUrl: 'https://gitea.demo.com/repos/team-demo/blue-demo',
+      },
+      type: 'docker',
+    },
+  }
+  const buildResponse: Build = {
+    id: '1',
+    teamId,
+    name: 'blue-demo',
+    tag: 'latest',
+    mode: {
+      docker: {
+        repoUrl: 'https://gitea.demo.com/repos/team-demo/blue-demo',
+      },
+      type: 'docker',
+    },
+    webHookId: 1,
+  }
+  const buildResponseWithoutWebhookId: Build = {
+    id: '1',
+    teamId,
+    name: 'blue-demo',
+    tag: 'latest',
+    mode: {
+      docker: {
+        repoUrl: 'https://gitea.demo.com/repos/team-demo/blue-demo',
+      },
+      type: 'docker',
+    },
+  }
+  const mockWebHookResponse = {
+    id: 1,
+    type: 'gitea',
+    config: {
+      content_type: 'json',
+      url: 'http://el-gitea-webhook-test.demo.svc.cluster.local:8080',
+    },
+    events: ['push'],
+    authorization_header: '',
+    active: true,
+    updated_at: '2025-02-21T13:26:03Z',
+    created_at: '2025-02-21T13:26:03Z',
+  }
+  beforeEach(async () => {
+    jest.clearAllMocks()
+    otomiStack = new OtomiStack()
+    await otomiStack.init()
+
+    jest.spyOn(otomiStack, 'saveTeamBuilds').mockImplementation(async () => {})
+    jest.spyOn(otomiStack, 'doDeployment').mockImplementation(async () => {})
+  })
+
+  // With "trigger = true" and "isExternal = false"
+  test('Should create a gitea wehbook when creating a build', async () => {
+    buildData.trigger = true
+    buildData.externalRepo = false
+    jest.spyOn(utils, 'createGiteaWebhook').mockResolvedValue(mockWebHookResponse)
+    jest.spyOn(otomiStack.db, 'createItem').mockReturnValue({})
+
+    await otomiStack.createBuild(teamId, buildData)
+
+    expect(utils.createGiteaWebhook).toHaveBeenCalled()
+  })
+
+  // With "trigger = true" and "isExternal = false"
+  test('Should update a gitea wehbook when updating a build', async () => {
+    buildData.trigger = true
+    buildData.externalRepo = false
+    jest.spyOn(otomiStack, 'getBuild').mockReturnValue(buildResponse)
+    jest.spyOn(utils, 'updateGiteaWebhook').mockResolvedValue(mockWebHookResponse)
+    jest.spyOn(otomiStack.db, 'updateItem').mockReturnValue({})
+
+    await otomiStack.editBuild(teamId, buildData)
+
+    expect(utils.updateGiteaWebhook).toHaveBeenCalled()
+  })
+
+  // With "trigger = true" and "isExternal = false"
+  test('Should create a gitea wehbook when updating a build and a gitea webhook does not exists', async () => {
+    buildData.trigger = true
+    buildData.externalRepo = false
+    jest.spyOn(otomiStack, 'getBuild').mockReturnValue(buildResponseWithoutWebhookId)
+    jest.spyOn(utils, 'createGiteaWebhook').mockResolvedValue(mockWebHookResponse)
+    jest.spyOn(otomiStack.db, 'updateItem').mockReturnValue({})
+
+    await otomiStack.editBuild(teamId, buildData)
+
+    expect(utils.createGiteaWebhook).toHaveBeenCalled()
+  })
+
+  test('Should delete a gitea wehbook when updating a build that disables "trigger" and a gitea webhook does exists', async () => {
+    buildData.trigger = false
+    buildData.externalRepo = false
+    jest.spyOn(otomiStack, 'getBuild').mockReturnValue(buildResponse)
+    jest.spyOn(utils, 'deleteGiteaWebhook').mockResolvedValue({})
+    jest.spyOn(otomiStack.db, 'updateItem').mockReturnValue({})
+
+    await otomiStack.editBuild(teamId, buildData)
+
+    expect(utils.deleteGiteaWebhook).toHaveBeenCalled()
+  })
+
+  test('Should delete a gitea wehbook when deleting a build', async () => {
+    jest.spyOn(otomiStack, 'getBuild').mockReturnValue(buildResponse)
+    jest.spyOn(utils, 'deleteGiteaWebhook').mockResolvedValue({})
+    jest.spyOn(otomiStack.db, 'getCollection').mockReturnValue([])
+    jest.spyOn(otomiStack.db, 'updateItem').mockReturnValue({})
+
+    await otomiStack.editBuild(teamId, buildData)
+
+    expect(utils.deleteGiteaWebhook).toHaveBeenCalled()
   })
 })
 

@@ -9,6 +9,20 @@ import { parse } from 'yaml'
 import { BASEURL } from './constants'
 import { cleanEnv, GIT_PASSWORD, GIT_REPO_URL, GIT_USER } from './validators'
 
+interface GiteaWebHook {
+  id: number
+  type: string
+  config: {
+    content_type: string
+    url: string
+  }
+  events: string[]
+  authorization_header: string
+  active: boolean
+  updated_at: string
+  created_at: string
+}
+
 const env = cleanEnv({
   GIT_PASSWORD,
   GIT_REPO_URL,
@@ -193,7 +207,7 @@ function webhookData(
   return { authHeader, repoUrl, repoName, giteaUrl, serviceUrl }
 }
 
-function webhookConfig(serviceUrl: string): {
+export function webhookConfig(serviceUrl: string): {
   type: string
   active: boolean
   events: string[]
@@ -210,7 +224,7 @@ function webhookConfig(serviceUrl: string): {
   }
 }
 
-export async function createGiteaWebHook(teamId: string, data: Build): Promise<any> {
+export async function createGiteaWebhook(teamId: string, data: Build): Promise<GiteaWebHook | { id: undefined }> {
   try {
     const hookSetup = webhookData(teamId, data)
     const url = `https://${hookSetup.giteaUrl}/api/v1/repos/team-${teamId}/${hookSetup.repoName}/hooks`
@@ -228,7 +242,11 @@ export async function createGiteaWebHook(teamId: string, data: Build): Promise<a
   }
 }
 
-export async function updateGiteaWebhook(webhookId: number, teamId: string, data: Build): Promise<any> {
+export async function updateGiteaWebhook(
+  webhookId: number,
+  teamId: string,
+  data: Build,
+): Promise<GiteaWebHook | { id: undefined }> {
   try {
     const hookSetup = webhookData(teamId, data)
     const url = `https://${hookSetup.giteaUrl}/api/v1/repos/team-${teamId}/${hookSetup.repoName}/hooks/${webhookId}`
@@ -243,7 +261,7 @@ export async function updateGiteaWebhook(webhookId: number, teamId: string, data
   } catch (error) {
     if (error.response.status === 404) {
       console.error(`Webhook for Build '${data.name}' could not be found in team-${teamId}`)
-      return await createGiteaWebHook(teamId, data)
+      return await createGiteaWebhook(teamId, data)
     } else {
       console.error(`Error updating webhook '${data.name}' in team-${teamId}: ${error.message}`)
       return { id: undefined }

@@ -40,7 +40,7 @@ import {
 import getRepo, { Repo } from 'src/repo'
 import {
   arrayToObject,
-  createGiteaWebHook,
+  createGiteaWebhook,
   deleteGiteaWebhook,
   getServiceUrl,
   getValuesSchema,
@@ -970,7 +970,7 @@ export default class OtomiStack {
       const buildData = data
       if (process.env.NODE_ENV !== 'development') {
         if (buildData.trigger && !buildData.externalRepo) {
-          const webhook = await createGiteaWebHook(teamId, buildData)
+          const webhook = await createGiteaWebhook(teamId, buildData)
           buildData.webHookId = webhook.id
         }
       }
@@ -993,7 +993,7 @@ export default class OtomiStack {
     const buildData = data
     const oldBuild = this.getBuild(id)
     if (buildData.trigger && !buildData.externalRepo && !oldBuild.webHookId) {
-      const webhook = await createGiteaWebHook(buildData.teamId!, buildData)
+      const webhook = await createGiteaWebhook(buildData.teamId!, buildData)
       buildData.webHookId = webhook.id
     } else if (buildData.trigger && !buildData.externalRepo && oldBuild.webHookId) {
       const webhook = await updateGiteaWebhook(oldBuild.webHookId, buildData.teamId!, data)
