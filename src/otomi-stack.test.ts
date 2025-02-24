@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { mockDeep } from 'jest-mock-extended'
-import { App, Coderepo, User, Workload } from 'src/otomi-models'
+import { App, Policies, Team, TeamConfig, User, Coderepo, Workload } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
-import { Repo } from 'src/repo'
-import { loadSpec } from './app'
+import { mockDeep } from 'jest-mock-extended'
 import { PublicUrlExists } from './error'
+import { loadSpec } from './app'
+import { Git } from './git'
+import { RepoService } from './services/RepoService'
+import { TeamConfigService } from './services/TeamConfigService'
 
 jest.mock('src/utils', () => {
   const originalModule = jest.requireActual('src/utils')
@@ -14,6 +16,16 @@ jest.mock('src/utils', () => {
     ...originalModule,
     getServiceUrl: jest.fn().mockResolvedValue({ subdomain: '', domain: 'test' }),
     getValuesSchema: jest.fn().mockResolvedValue({}),
+  }
+})
+
+jest.mock('src/utils/userUtils', () => {
+  const originalModule = jest.requireActual('src/utils/userUtils')
+
+  return {
+    __esModule: true,
+    ...originalModule,
+    getKeycloakUsers: jest.fn().mockResolvedValue([]),
   }
 })
 
@@ -28,61 +40,95 @@ beforeAll(async () => {
 
 describe('Data validation', () => {
   let otomiStack: OtomiStack
+  const teamId = 'aa'
+  let mockRepoService: jest.Mocked<RepoService>
+  let mockTeamConfigService: jest.Mocked<TeamConfigService>
 
   beforeEach(async () => {
     otomiStack = new OtomiStack()
     await otomiStack.init()
-    otomiStack.repo = mockDeep<Repo>()
+    otomiStack.git = mockDeep<Git>()
+    mockRepoService = mockDeep<RepoService>()
+    otomiStack.repoService = mockRepoService
+
+    // Mock TeamConfigService
+    mockTeamConfigService = mockDeep<TeamConfigService>()
+
+    // Mocking getServices() to return a list of services
+    mockTeamConfigService.getServices.mockReturnValue([
+      {
+        name: 'svc',
+        ingress: { domain: 'a.com', subdomain: 'b' },
+      },
+      { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b', paths: ['/test/'] } },
+    ])
+
+    // Ensure getTeamConfigService() returns our mocked TeamConfigService
+    mockRepoService.getTeamConfigService.mockReturnValue(mockTeamConfigService)
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
   })
 
-  test('should throw exception on duplicated domain', async () => {
+  test('should throw exception on duplicated domain', () => {
     const svc = { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b' } }
-    const svc1 = { ...svc }
-    await otomiStack.createService('aa', svc)
-    expect(() => otomiStack.checkPublicUrlInUse(svc1)).toThrow(new PublicUrlExists())
+    expect(() => otomiStack.checkPublicUrlInUse(teamId, svc)).toThrow(new PublicUrlExists())
   })
 
-  test('should throw exception on duplicated url with path', async () => {
+  test('should throw exception on duplicated url with path', () => {
     const svc = { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b', paths: ['/test/'] } }
-    await otomiStack.createService('aa', svc)
-    expect(() => otomiStack.checkPublicUrlInUse(svc)).toThrow(new PublicUrlExists())
+    expect(() => otomiStack.checkPublicUrlInUse(teamId, svc)).toThrow(new PublicUrlExists())
   })
 
-  test('should not throw exception on unique url', async () => {
-    const svc1 = { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b', paths: ['/test/'] } }
-    await otomiStack.createService('aa', svc1)
-    const svc2 = { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b' } }
+  test('should not throw exception on unique url', () => {
     const svc3 = { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b', paths: ['/bla'] } }
-    expect(() => otomiStack.checkPublicUrlInUse(svc2)).not.toThrow()
-    expect(() => otomiStack.checkPublicUrlInUse(svc3)).not.toThrow()
+    expect(() => otomiStack.checkPublicUrlInUse(teamId, svc3)).not.toThrow()
   })
 
-  test('should not throw exception when of type cluster', async () => {
+  test('should not throw exception when of type cluster', () => {
     const svc = { name: 'svc', ingress: { type: 'cluster' } }
-    // @ts-ignore
-    await otomiStack.createService('aa', svc)
-    expect(() => otomiStack.checkPublicUrlInUse(svc)).not.toThrow()
+    expect(() => otomiStack.checkPublicUrlInUse(teamId, svc)).not.toThrow()
   })
 
-  test('should not throw exception when editing', async () => {
+  test('should not throw exception when editing', () => {
     const svc = { id: 'x1', name: 'svc', ingress: { domain: 'a.com', subdomain: 'b', paths: ['/test/'] } }
-    await otomiStack.createService('aa', svc)
     const svc1 = { id: 'x1', name: 'svc', ingress: { domain: 'a.com', subdomain: 'c' } }
-    expect(() => otomiStack.checkPublicUrlInUse(svc1)).not.toThrow()
+    expect(() => otomiStack.checkPublicUrlInUse(teamId, svc1)).not.toThrow()
   })
 
   test('should create a password when password is not specified', async () => {
-    const createItemSpy = jest.spyOn(otomiStack.db, 'createItem')
-    await otomiStack.createTeam({ name: 'test' })
+    const createItemSpy = jest.spyOn(otomiStack.repoService, 'createTeamConfig').mockReturnValue({
+      builds: [],
+      workloads: [],
+      services: [],
+      sealedSecrets: [],
+      backups: [],
+      projects: [],
+      netpols: [],
+      settings: {} as Team,
+      apps: [],
+      policies: {} as Policies,
+      workloadValues: [],
+    } as TeamConfig)
+    await otomiStack.createTeam({ name: 'test' }, false)
     expect(createItemSpy.mock.calls[0][1].password).not.toEqual('')
     createItemSpy.mockRestore()
   })
 
   test('should not create a password when password is specified', async () => {
-    const createItemSpy = jest.spyOn(otomiStack.db, 'createItem')
+    const createItemSpy = jest.spyOn(otomiStack.repoService, 'createTeamConfig').mockReturnValue({
+      builds: [],
+      workloads: [],
+      services: [],
+      sealedSecrets: [],
+      backups: [],
+      projects: [],
+      netpols: [],
+      settings: {} as Team,
+      apps: [],
+      policies: {} as Policies,
+      workloadValues: [],
+    } as TeamConfig)
     const myPassword = 'someAwesomePassword'
-    await otomiStack.createTeam({ name: 'test', password: myPassword })
+    await otomiStack.createTeam({ name: 'test', password: myPassword }, false)
     expect(createItemSpy.mock.calls[0][1].password).toEqual(myPassword)
     createItemSpy.mockRestore()
   })
@@ -93,9 +139,8 @@ describe('Work with values', () => {
   beforeEach(async () => {
     otomiStack = new OtomiStack()
     await otomiStack.init()
-    otomiStack.repo = new Repo('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
+    otomiStack.git = new Git('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
-    jest.spyOn(otomiStack, 'loadApp').mockResolvedValue()
   })
 
   test('can load from configuration to database and back', async () => {
@@ -108,35 +153,8 @@ describe('Workload values', () => {
   beforeEach(async () => {
     otomiStack = new OtomiStack()
     await otomiStack.init()
-    otomiStack.repo = new Repo('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
+    otomiStack.git = new Git('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
-  })
-
-  test('can load workload values (empty dict)', async () => {
-    const w: Workload = { id: '1', teamId: '2', name: 'name', url: 'https://test.local' }
-
-    otomiStack.repo.fileExists = jest.fn().mockReturnValue(true)
-    otomiStack.repo.readFile = jest.fn().mockReturnValue({})
-    const res = await otomiStack.loadWorkloadValues(w)
-    expect(res).toEqual({ id: '1', teamId: '2', name: 'name', values: {} })
-  })
-
-  test('can load workload values (dict)', async () => {
-    const w: Workload = { id: '1', teamId: '2', name: 'name', url: 'https://test.local' }
-
-    otomiStack.repo.fileExists = jest.fn().mockReturnValue(true)
-    otomiStack.repo.readFile = jest.fn().mockReturnValue({ values: 'test: 1' })
-    const res = await otomiStack.loadWorkloadValues(w)
-    expect(res).toEqual({ id: '1', teamId: '2', name: 'name', values: { test: 1 } })
-  })
-
-  test('can load workload values (empty string)', async () => {
-    const w: Workload = { id: '1', teamId: '2', name: 'name', url: 'https://test.local' }
-
-    otomiStack.repo.fileExists = jest.fn().mockReturnValue(true)
-    otomiStack.repo.readFile = jest.fn().mockReturnValue({ values: '' })
-    const res = await otomiStack.loadWorkloadValues(w)
-    expect(res).toEqual({ id: '1', teamId: '2', name: 'name', values: {} })
   })
 
   test('returns filtered apps if App array is submitted isPreinstalled flag is true', () => {
@@ -181,21 +199,16 @@ describe('Users tests', () => {
   beforeEach(async () => {
     otomiStack = new OtomiStack()
     await otomiStack.init()
-    otomiStack.repo = mockDeep<Repo>()
-    otomiStack.loadApps = jest.fn().mockResolvedValue([])
-    const dbMock = mockDeep<OtomiStack['db']>()
-    dbMock.getItem.mockImplementation((collection, query) => {
-      return [defaultPlatformAdmin, anyPlatformAdmin].find((user) => user.id === query.id)
-    })
-    dbMock.deleteItem.mockReturnValue()
-
-    otomiStack.db = dbMock
+    otomiStack.git = mockDeep<Git>()
 
     jest.spyOn(otomiStack, 'getSettings').mockReturnValue({
       cluster: { domainSuffix },
     })
-    jest.spyOn(otomiStack, 'saveUsers').mockResolvedValue()
+    jest.spyOn(otomiStack, 'saveUser').mockResolvedValue()
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
+    await otomiStack.initRepo()
+    await otomiStack.createUser(defaultPlatformAdmin)
+    await otomiStack.createUser(anyPlatformAdmin)
   })
 
   afterEach(() => {

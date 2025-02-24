@@ -13,5 +13,5 @@ const config: Config.InitialOptions = {
 }
 export default config
 process.env = Object.assign(process.env, {
-  NODE_ENV: 'test',
+  NODE_ENV: 'test'
 })

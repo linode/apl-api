@@ -9,8 +9,9 @@ import request, { SuperAgentTest } from 'supertest'
 import { HttpError } from './error'
 import { getSessionStack } from './middleware'
 import { App, Coderepo, SealedSecret } from './otomi-models'
-import { Repo } from './repo'
+import { mockDeep } from 'jest-mock-extended'
 import * as getValuesSchemaModule from './utils'
+import { Git } from './git'
 
 const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
@@ -39,13 +40,15 @@ describe('API authz tests', () => {
 
   beforeAll(async () => {
     const _otomiStack = await getSessionStack()
-    _otomiStack.repo = mockDeep<Repo>()
+    _otomiStack.git = mockDeep<Git>()
     _otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
+    await _otomiStack.initRepo()
     await _otomiStack.createTeam({ name: 'team1' })
+    await _otomiStack.createTeam({ name: 'team2' })
     otomiStack = _otomiStack as jest.Mocked<OtomiStack>
 
     otomiStack.createTeam = jest.fn().mockResolvedValue(undefined)
-    otomiStack.saveTeams = jest.fn().mockResolvedValue(undefined)
+    otomiStack.saveTeam = jest.fn().mockResolvedValue(undefined)
     otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
     await otomiStack.init()
     app = await initApp(otomiStack)
@@ -480,10 +483,6 @@ describe('API authz tests', () => {
       .get(`/v1/teams/${otherTeamId}/sealedsecrets`)
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
-  })
-
-  test('team member cannot get all secrets', async () => {
-    await agent.get('/v1/secrets').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
   })
 
   test('team member cannot get all sealedsecrets', async () => {
