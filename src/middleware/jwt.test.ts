@@ -34,6 +34,8 @@ describe('JWT claims mapping', () => {
   beforeEach(async () => {
     otomiStack = new OtomiStack()
     otomiStack.git = mockDeep<Git>()
+    jest.spyOn(otomiStack, 'transformApps').mockReturnValue([])
+
     await otomiStack.init()
     await otomiStack.loadValues()
   })

@@ -4,7 +4,7 @@ import { pathExists } from 'fs-extra'
 import { rm, writeFile } from 'fs/promises'
 import { globSync } from 'glob'
 import jsonpath from 'jsonpath'
-import { cloneDeep, get, merge, set } from 'lodash'
+import { cloneDeep, get, merge, omit, set } from 'lodash'
 import path from 'path'
 import { getDirNames, loadYaml, objectToYaml } from './utils'
 
@@ -29,7 +29,7 @@ export interface FileMap {
     | 'AplSmtp'
     | 'AplBackupCollection'
     | 'AplUser'
-    | 'AplTeamCoderepo'
+    | 'AplTeamCodeRepo'
     | 'AplTeamBuild'
     | 'AplTeamPolicy'
     | 'AplTeamSettingSet'
@@ -234,13 +234,13 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceDir: 'settings',
     },
     {
-      kind: 'AplTeamCoderepo',
+      kind: 'AplTeamCodeRepo',
       envDir,
-      jsonPathExpression: '$.teamConfig.*.coderepos[*]',
-      pathGlob: `${envDir}/env/teams/*/coderepos/*.yaml`,
+      jsonPathExpression: '$.teamConfig.*.codeRepos[*]',
+      pathGlob: `${envDir}/env/teams/*/codeRepos/*.yaml`,
       processAs: 'arrayItem',
       resourceGroup: 'team',
-      resourceDir: 'coderepos',
+      resourceDir: 'codeRepos',
     },
     {
       kind: 'AplTeamBuild',
@@ -349,15 +349,19 @@ export function hasCorrespondingDecryptedFile(filePath: string, fileList: Array<
 }
 
 export function renderManifest(fileMap: FileMap, jsonPath: jsonpath.PathComponent[], data: Record<string, any>) {
-  const manifest = {
-    kind: fileMap.kind,
-    metadata: {
-      name: getResourceName(fileMap, jsonPath, data),
-      labels: {},
-    },
-    spec: data,
-  }
-  if (fileMap.resourceGroup === 'team') {
+  //TODO remove this custom workaround for workloadValues
+  const manifest =
+    fileMap.kind === 'AplTeamWorkloadValues'
+      ? omit(data, ['id', 'name', 'teamId'])
+      : {
+          kind: fileMap.kind,
+          metadata: {
+            name: getResourceName(fileMap, jsonPath, data),
+            labels: {},
+          },
+          spec: data,
+        }
+  if (fileMap.resourceGroup === 'team' && fileMap.kind !== 'AplTeamWorkloadValues') {
     manifest.metadata.labels['apl.io/teamId'] = getTeamNameFromJsonPath(jsonPath)
   }
 

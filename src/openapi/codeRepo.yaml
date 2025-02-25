@@ -1,4 +1,4 @@
-Coderepo:
+CodeRepo:
   x-acl:
     platformAdmin:
       - create-any

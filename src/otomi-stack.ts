@@ -16,7 +16,7 @@ import {
   Backup,
   Build,
   Cloudtty,
-  Coderepo,
+  CodeRepo,
   Core,
   K8sService,
   Netpol,
@@ -76,7 +76,7 @@ import {
   normalizeRepoUrl,
   testPrivateRepoConnect,
   testPublicRepoConnect,
-} from './utils/coderepoUtils'
+} from './utils/codeRepoUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
@@ -890,47 +890,47 @@ export default class OtomiStack {
     await this.doDeployment(['projects', 'builds', 'workloads', 'workloadValues', 'services'], teamId)
   }
 
-  getTeamCoderepos(teamId: string): Array<Coderepo> {
-    return this.repoService.getTeamConfigService(teamId).getCoderepos()
+  getTeamCodeRepos(teamId: string): Array<CodeRepo> {
+    return this.repoService.getTeamConfigService(teamId).getCodeRepos()
   }
 
-  getAllCoderepos(): Array<Coderepo> {
-    const allCoderepos = this.repoService.getAllCoderepos()
-    return allCoderepos
+  getAllCodeRepos(): Array<CodeRepo> {
+    const allCodeRepos = this.repoService.getAllCodeRepos()
+    return allCodeRepos
   }
 
-  async createCoderepo(teamId: string, data: Coderepo): Promise<Coderepo> {
+  async createCodeRepo(teamId: string, data: CodeRepo): Promise<CodeRepo> {
     try {
       const body = { ...data }
       if (!body.private) unset(body, 'secret')
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const coderepo = this.repoService.getTeamConfigService(teamId).createCoderepo({ ...data, teamId })
-      await this.saveTeamCoderepo(teamId, coderepo)
-      await this.doDeployment(['coderepos'], teamId)
-      return coderepo
+      const codeRepo = this.repoService.getTeamConfigService(teamId).createCodeRepo({ ...data, teamId })
+      await this.saveTeamCodeRepo(teamId, codeRepo)
+      await this.doDeployment(['codeRepos'], teamId)
+      return codeRepo
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Code repo label already exists'
       throw err
     }
   }
 
-  getCoderepo(teamId: string, id: string): Coderepo {
-    return this.repoService.getTeamConfigService(teamId).getCoderepo(id)
+  getCodeRepo(teamId: string, id: string): CodeRepo {
+    return this.repoService.getTeamConfigService(teamId).getCodeRepo(id)
   }
 
-  async editCoderepo(teamId: string, id: string, data: Coderepo): Promise<Coderepo> {
+  async editCodeRepo(teamId: string, id: string, data: CodeRepo): Promise<CodeRepo> {
     const body = { ...data }
     if (!body.private) unset(body, 'secret')
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const coderepo = this.repoService.getTeamConfigService(teamId).updateCoderepo(id, body)
-    await this.saveTeamCoderepo(teamId, coderepo)
-    await this.doDeployment(['coderepos'], teamId)
-    return coderepo
+    const codeRepo = this.repoService.getTeamConfigService(teamId).updateCodeRepo(id, body)
+    await this.saveTeamCodeRepo(teamId, codeRepo)
+    await this.doDeployment(['codeRepos'], teamId)
+    return codeRepo
   }
 
-  async deleteCoderepo(teamId: string, id: string): Promise<void> {
-    await this.deleteTeamCoderepo(teamId, id)
-    await this.doDeployment(['coderepos'], teamId)
+  async deleteCodeRepo(teamId: string, id: string): Promise<void> {
+    await this.deleteTeamCodeRepo(teamId, id)
+    await this.doDeployment(['codeRepos'], teamId)
   }
 
   async getTestRepoConnect(url: string, teamId: string, secretName: string): Promise<TestRepoConnect> {
@@ -1716,19 +1716,19 @@ export default class OtomiStack {
     await this.git.deleteConfig(repo, fileMap)
   }
 
-  async saveTeamCoderepo(teamId: string, coderepo: Coderepo): Promise<void> {
-    debug(`Saving coderepo ${coderepo.label} for team ${teamId}`)
-    const repo = this.createTeamConfigInRepo(teamId, 'coderepos', coderepo)
-    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamCoderepo')!
+  async saveTeamCodeRepo(teamId: string, codeRepo: CodeRepo): Promise<void> {
+    debug(`Saving codeRepo ${codeRepo.label} for team ${teamId}`)
+    const repo = this.createTeamConfigInRepo(teamId, 'codeRepos', codeRepo)
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamCodeRepo')!
     await this.git.saveConfig(repo, fileMap)
   }
 
-  async deleteTeamCoderepo(teamId: string, id: string): Promise<void> {
-    const coderepo = this.repoService.getTeamConfigService(teamId).getCoderepo(id)
-    this.repoService.getTeamConfigService(teamId).deleteCoderepo(id)
+  async deleteTeamCodeRepo(teamId: string, id: string): Promise<void> {
+    const codeRepo = this.repoService.getTeamConfigService(teamId).getCodeRepo(id)
+    this.repoService.getTeamConfigService(teamId).deleteCodeRepo(id)
 
-    const repo = this.createTeamConfigInRepo(teamId, 'coderepos', coderepo)
-    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamCoderepo')!
+    const repo = this.createTeamConfigInRepo(teamId, 'codeRepos', codeRepo)
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamCodeRepo')!
     await this.git.deleteConfig(repo, fileMap)
   }
 

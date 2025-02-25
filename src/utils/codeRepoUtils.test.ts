@@ -4,7 +4,7 @@ import { chmod, writeFile } from 'fs/promises'
 import simpleGit, { SimpleGit } from 'simple-git'
 import { OtomiError } from 'src/error'
 import { v4 as uuidv4 } from 'uuid'
-import { getGiteaRepoUrls, normalizeRepoUrl, testPrivateRepoConnect, testPublicRepoConnect } from './coderepoUtils'
+import { getGiteaRepoUrls, normalizeRepoUrl, testPrivateRepoConnect, testPublicRepoConnect } from './codeRepoUtils'
 
 jest.mock('simple-git', () => ({
   __esModule: true,
@@ -27,7 +27,7 @@ jest.mock('src/error', () => ({
   }),
 }))
 
-describe('coderepoUtils', () => {
+describe('codeRepoUtils', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })

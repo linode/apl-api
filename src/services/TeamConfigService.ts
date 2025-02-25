@@ -2,7 +2,7 @@ import {
   App,
   Backup,
   Build,
-  Coderepo,
+  CodeRepo,
   Netpol,
   Policies,
   Policy,
@@ -72,36 +72,36 @@ export class TeamConfigService {
   // == CODEREPOS CRUD ==
   // =====================================
 
-  public createCoderepo(coderepo: Coderepo): Coderepo {
-    this.teamConfig.coderepos ??= []
-    const newCoderepo = { ...coderepo, id: coderepo.id ?? uuidv4() }
-    if (find(this.teamConfig.coderepos, { name: newCoderepo.id })) {
-      throw new AlreadyExists(`Coderepo[${newCoderepo.id}] already exists.`)
+  public createCodeRepo(codeRepo: CodeRepo): CodeRepo {
+    this.teamConfig.codeRepos ??= []
+    const newCodeRepo = { ...codeRepo, id: codeRepo.id ?? uuidv4() }
+    if (find(this.teamConfig.codeRepos, { name: newCodeRepo.id })) {
+      throw new AlreadyExists(`CodeRepo[${newCodeRepo.id}] already exists.`)
     }
-    this.teamConfig.coderepos.push(newCoderepo)
-    return newCoderepo
+    this.teamConfig.codeRepos.push(newCodeRepo)
+    return newCodeRepo
   }
 
-  public getCoderepo(id: string): Coderepo {
-    const coderepo = find(this.teamConfig.coderepos, { id })
-    if (!coderepo) {
-      throw new NotExistError(`Coderepo[${id}] does not exist.`)
+  public getCodeRepo(id: string): CodeRepo {
+    const codeRepo = find(this.teamConfig.codeRepos, { id })
+    if (!codeRepo) {
+      throw new NotExistError(`CodeRepo[${id}] does not exist.`)
     }
-    return coderepo
+    return codeRepo
   }
 
-  public getCoderepos(): Coderepo[] {
-    return this.teamConfig.coderepos ?? []
+  public getCodeRepos(): CodeRepo[] {
+    return this.teamConfig.codeRepos ?? []
   }
 
-  public updateCoderepo(id: string, updates: Partial<Coderepo>): Coderepo {
-    const coderepo = find(this.teamConfig.coderepos, { id })
-    if (!coderepo) throw new NotExistError(`Coderepo[${id}] does not exist.`)
-    return merge(coderepo, updates)
+  public updateCodeRepo(id: string, updates: Partial<CodeRepo>): CodeRepo {
+    const codeRepo = find(this.teamConfig.codeRepos, { id })
+    if (!codeRepo) throw new NotExistError(`CodeRepo[${id}] does not exist.`)
+    return merge(codeRepo, updates)
   }
 
-  public deleteCoderepo(id: string): void {
-    remove(this.teamConfig.coderepos, { id })
+  public deleteCodeRepo(id: string): void {
+    remove(this.teamConfig.codeRepos, { id })
   }
 
   // =====================================
