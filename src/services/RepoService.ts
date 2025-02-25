@@ -25,7 +25,7 @@ import {
   Workload,
 } from '../otomi-models'
 import { TeamConfigService } from './TeamConfigService'
-import { find, flatMap, has, map, mapValues, merge, remove, set } from 'lodash'
+import { find, has, map, mapValues, merge, remove, set } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
 import { AlreadyExists } from '../error'
 
@@ -223,15 +223,27 @@ export class RepoService {
   }
 
   public getAllNetpols(): Netpol[] {
-    return flatMap(this.repo.teamConfig, 'netpols').filter(Boolean) ?? []
+    return (
+      Object.entries(this.repo.teamConfig)
+        .flatMap(([teamId, config]) => config.netpols.map((netpol) => ({ ...netpol, teamId })))
+        .filter(Boolean) ?? []
+    )
   }
 
   public getAllProjects(): Project[] {
-    return flatMap(this.repo.teamConfig, 'projects').filter(Boolean) ?? []
+    return (
+      Object.entries(this.repo.teamConfig)
+        .flatMap(([teamId, config]) => config.projects.map((project) => ({ ...project, teamId })))
+        .filter(Boolean) ?? []
+    )
   }
 
   public getAllBuilds(): Build[] {
-    return flatMap(this.repo.teamConfig, 'builds').filter(Boolean) ?? []
+    return (
+      Object.entries(this.repo.teamConfig)
+        .flatMap(([teamId, config]) => config.builds.map((build) => ({ ...build, teamId })))
+        .filter(Boolean) ?? []
+    )
   }
 
   public getAllPolicies(): Record<string, Policies> {
@@ -239,23 +251,43 @@ export class RepoService {
   }
 
   public getAllWorkloads(): Workload[] {
-    return flatMap(this.repo.teamConfig, 'workloads').filter(Boolean) ?? []
+    return (
+      Object.entries(this.repo.teamConfig)
+        .flatMap(([teamId, config]) => config.workloads.map((workload) => ({ ...workload, teamId })))
+        .filter(Boolean) ?? []
+    )
   }
 
   public getAllServices(): Service[] {
-    return flatMap(this.repo.teamConfig, 'services').filter(Boolean) ?? []
+    return (
+      Object.entries(this.repo.teamConfig)
+        .flatMap(([teamId, config]) => config.services.map((service) => ({ ...service, teamId })))
+        .filter(Boolean) ?? []
+    )
   }
 
   public getAllSealedSecrets(): SealedSecret[] {
-    return flatMap(this.repo.teamConfig, 'sealedSecrets').filter(Boolean) ?? []
+    return (
+      Object.entries(this.repo.teamConfig)
+        .flatMap(([teamId, config]) => config.sealedSecrets.map((secret) => ({ ...secret, teamId })))
+        .filter(Boolean) ?? []
+    )
   }
 
   public getAllBackups(): Backup[] {
-    return flatMap(this.repo.teamConfig, 'backups').filter(Boolean) ?? []
+    return (
+      Object.entries(this.repo.teamConfig)
+        .flatMap(([teamId, config]) => config.backups.map((backup) => ({ ...backup, teamId })))
+        .filter(Boolean) ?? []
+    )
   }
 
   public getAllCoderepos(): Coderepo[] {
-    return flatMap(this.repo.teamConfig, 'coderepos').filter(Boolean) ?? []
+    return (
+      Object.entries(this.repo.teamConfig)
+        .flatMap(([teamId, config]) => config.coderepos.map((repo) => ({ ...repo, teamId })))
+        .filter(Boolean) ?? []
+    )
   }
 
   /** Retrieve a collection dynamically from the Repo */
