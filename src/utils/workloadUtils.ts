@@ -38,6 +38,27 @@ function isGiteaURL(url: string) {
 }
 
 /**
+ * Reads the Chart.yaml file at the given path, updates (or sets) its icon field,
+ * and writes the updated content back to disk.
+ *
+ * @param chartYamlPath - Path to Chart.yaml (e.g. "/tmp/otomi/charts/mock-sub-value/cassandra/Chart.yaml")
+ * @param newIcon - The user-selected icon URL.
+ */
+export async function updateChartIconInYaml(chartYamlPath: string, newIcon: string): Promise<void> {
+  try {
+    const fileContent = await readFile(chartYamlPath, 'utf-8')
+    const chartObject = YAML.parse(fileContent)
+    if (newIcon && newIcon.trim() !== '') chartObject.icon = newIcon
+
+    const newContent = YAML.stringify(chartObject)
+    await writeFile(chartYamlPath, newContent, 'utf-8')
+    console.log(`Updated icon in ${chartYamlPath} to ${newIcon}`)
+  } catch (error) {
+    console.error(`Error updating chart icon in ${chartYamlPath}:`, error)
+  }
+}
+
+/**
  * Updates the rbac.yaml file in the specified folder by adding a new chart key.
  *
  * @param sparsePath - The folder where rbac.yaml resides (e.g. "/tmp/otomi/charts/mock-sub-value")
@@ -77,6 +98,7 @@ export async function updateRbacForNewChart(sparsePath: string, chartKey: string
  * @param chartPath - The path in github where the chart is located
  * @param sparsePath - The subdirectory to sparse checkout (e.g. "helm/charts/nats")
  * @param revision - The branch or commit to checkout (e.g. "main")
+ * @param chartIcon - the icon path
  */
 export async function sparseCloneChart(
   url: string, // e.g. "https://github.com/bitnami/charts.git"
@@ -84,6 +106,7 @@ export async function sparseCloneChart(
   chartPath: string, // e.g. "bitnami/cassandra"
   sparsePath: string, // e.g. "/tmp/otomi/charts/mock-sub-value"
   revision: string, // e.g. "main"
+  chartIcon?: string,
 ): Promise<void> {
   // The final folder where the chart will reside.
   const checkoutPath = `${sparsePath}/${chartName}`
@@ -121,6 +144,12 @@ export async function sparseCloneChart(
   console.log(`Running remove cmd: ${removeCmd}`)
   shell.exec(removeCmd, { cwd: checkoutPath })
 
+  // Update Chart.yaml with the new icon if one is provided.
+  if (chartIcon && chartIcon.trim() !== '') {
+    const chartYamlPath = `${checkoutPath}/Chart.yaml`
+    await updateChartIconInYaml(chartYamlPath, chartIcon)
+  }
+
   const chartKey = `quickstart-${chartName}`
   // update rbac file
   await updateRbacForNewChart(sparsePath, chartKey)
@@ -134,6 +163,7 @@ export async function fetchWorkloadCatalog(
   newChart?: boolean,
   newChartName?: string,
   newChartPath?: string,
+  newChartIcon?: string,
 ): Promise<any> {
   const helmChartsDir = `/tmp/otomi/charts/${sub}`
   const helmChartsRootDir = `/tmp/otomi/charts/mock-sub-value`
@@ -166,7 +196,8 @@ export async function fetchWorkloadCatalog(
     shell.exec(`git clone --depth 1 ${gitUrl} ${helmChartsDir}`)
   }
 
-  if (newChart) await sparseCloneChart(url, newChartName as string, newChartPath as string, helmChartsDir, version)
+  if (newChart)
+    await sparseCloneChart(url, newChartName as string, newChartPath as string, helmChartsDir, version, newChartIcon)
 
   // Read the folder contents.
   const files = await readdir(helmChartsDir, 'utf-8')
