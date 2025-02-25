@@ -28,6 +28,6 @@ export function errorMiddleware(e, req: OpenApiRequest, res: Response, next): vo
     msg = `Required property missing! '${requiredProperties}'`
   }
   const { otomi } = req as any
-  if (otomi?.sessionId !== 'main') cleanSession(otomi.sessionId as string)
+  if (otomi?.sessionId && otomi?.sessionId !== 'main') cleanSession(otomi.sessionId as string)
   res.status(code).json({ error: msg })
 }
