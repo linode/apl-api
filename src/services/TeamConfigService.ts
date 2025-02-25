@@ -46,10 +46,10 @@ export class TeamConfigService {
     return newBuild
   }
 
-  public getBuild(id: string): Build {
-    const build = find(this.teamConfig.builds, { id })
+  public getBuild(name: string): Build {
+    const build = find(this.teamConfig.builds, { name })
     if (!build) {
-      throw new NotExistError(`Build[${id}] does not exist.`)
+      throw new NotExistError(`Build[${name}] does not exist.`)
     }
     return build
   }
@@ -58,14 +58,14 @@ export class TeamConfigService {
     return this.teamConfig.builds ?? []
   }
 
-  public updateBuild(id: string, updates: Partial<Build>): Build {
-    const build = find(this.teamConfig.builds, { id })
-    if (!build) throw new NotExistError(`Build[${id}] does not exist.`)
+  public updateBuild(name: string, updates: Partial<Build>): Build {
+    const build = find(this.teamConfig.builds, { name })
+    if (!build) throw new NotExistError(`Build[${name}] does not exist.`)
     return merge(build, updates)
   }
 
-  public deleteBuild(id: string): void {
-    remove(this.teamConfig.builds, { id })
+  public deleteBuild(name: string): void {
+    remove(this.teamConfig.builds, { name })
   }
 
   // =====================================
@@ -119,10 +119,10 @@ export class TeamConfigService {
     return newWorkload
   }
 
-  public getWorkload(id: string): Workload {
-    const workload = find(this.teamConfig.workloads, { id })
+  public getWorkload(name: string): Workload {
+    const workload = find(this.teamConfig.workloads, { name })
     if (!workload) {
-      throw new NotExistError(`Workload[${id}] does not exist.`)
+      throw new NotExistError(`Workload[${name}] does not exist.`)
     }
     return workload
   }
@@ -131,14 +131,14 @@ export class TeamConfigService {
     return this.teamConfig.workloads ?? []
   }
 
-  public updateWorkload(id: string, updates: Partial<Workload>): Workload {
-    const workload = find(this.teamConfig.workloads, { id })
-    if (!workload) throw new NotExistError(`Workload[${id}] does not exist.`)
+  public updateWorkload(name: string, updates: Partial<Workload>): Workload {
+    const workload = find(this.teamConfig.workloads, { name })
+    if (!workload) throw new NotExistError(`Workload[${name}] does not exist.`)
     return merge(workload, updates)
   }
 
-  public deleteWorkload(id: string): void {
-    remove(this.teamConfig.workloads, { id })
+  public deleteWorkload(name: string): void {
+    remove(this.teamConfig.workloads, { name })
   }
 
   // =====================================
@@ -158,22 +158,22 @@ export class TeamConfigService {
     return newWorkloadValues
   }
 
-  public getWorkloadValues(id: string): WorkloadValues {
-    const workloadValues = find(this.teamConfig.workloadValues, { id })
+  public getWorkloadValues(name: string): WorkloadValues {
+    const workloadValues = find(this.teamConfig.workloadValues, { name })
     if (!workloadValues) {
-      throw new NotExistError(`WorkloadValues[${id}] does not exist.`)
+      throw new NotExistError(`WorkloadValues[${name}] does not exist.`)
     }
     return workloadValues
   }
 
-  public updateWorkloadValues(id: string, updates: Partial<WorkloadValues>): WorkloadValues {
-    const workloadValues = find(this.teamConfig.workloadValues, { id })
-    if (!workloadValues) throw new NotExistError(`WorkloadValues[${id}] does not exist.`)
+  public updateWorkloadValues(name: string, updates: Partial<WorkloadValues>): WorkloadValues {
+    const workloadValues = find(this.teamConfig.workloadValues, { name })
+    if (!workloadValues) throw new NotExistError(`WorkloadValues[${name}] does not exist.`)
     return merge(workloadValues, updates)
   }
 
-  public deleteWorkloadValues(id: string): void {
-    remove(this.teamConfig.workloadValues, { id })
+  public deleteWorkloadValues(name: string): void {
+    remove(this.teamConfig.workloadValues, { name })
   }
 
   // =====================================
@@ -190,10 +190,10 @@ export class TeamConfigService {
     return newService
   }
 
-  public getService(id: string): Service {
-    const service = find(this.teamConfig.services, { id })
+  public getService(name: string): Service {
+    const service = find(this.teamConfig.services, { name })
     if (!service) {
-      throw new NotExistError(`Service[${id}] does not exist.`)
+      throw new NotExistError(`Service[${name}] does not exist.`)
     }
     return service
   }
@@ -201,9 +201,9 @@ export class TeamConfigService {
   public getServices(): Service[] {
     return this.teamConfig.services ?? []
   }
-  public updateService(id: string, updates: Partial<Service>): Service {
-    const service = find(this.teamConfig.services, { id })
-    if (!service) throw new NotExistError(`Service[${id}] does not exist.`)
+  public updateService(name: string, updates: Partial<Service>): Service {
+    const service = find(this.teamConfig.services, { name })
+    if (!service) throw new NotExistError(`Service[${name}] does not exist.`)
     return merge(service, updates)
   }
 
@@ -225,10 +225,10 @@ export class TeamConfigService {
     return newSecret
   }
 
-  public getSealedSecret(id: string): SealedSecret {
-    const sealedSecrets = find(this.teamConfig.sealedSecrets, { id })
+  public getSealedSecret(name: string): SealedSecret {
+    const sealedSecrets = find(this.teamConfig.sealedSecrets, { name })
     if (!sealedSecrets) {
-      throw new NotExistError(`SealedSecret[${id}] does not exist.`)
+      throw new NotExistError(`SealedSecret[${name}] does not exist.`)
     }
     return sealedSecrets
   }
@@ -237,14 +237,14 @@ export class TeamConfigService {
     return this.teamConfig.sealedSecrets ?? []
   }
 
-  public updateSealedSecret(id: string, updates: Partial<SealedSecret>): SealedSecret {
-    const secret = find(this.teamConfig.sealedSecrets, { id })
-    if (!secret) throw new NotExistError(`SealedSecret[${id}] does not exist.`)
+  public updateSealedSecret(name: string, updates: Partial<SealedSecret>): SealedSecret {
+    const secret = find(this.teamConfig.sealedSecrets, { name })
+    if (!secret) throw new NotExistError(`SealedSecret[${name}] does not exist.`)
     return merge(secret, updates)
   }
 
-  public deleteSealedSecret(id: string): void {
-    remove(this.teamConfig.sealedSecrets, { id })
+  public deleteSealedSecret(name: string): void {
+    remove(this.teamConfig.sealedSecrets, { name })
   }
 
   // =====================================
@@ -261,10 +261,10 @@ export class TeamConfigService {
     return newBackup
   }
 
-  public getBackup(id: string): Backup {
-    const backup = find(this.teamConfig.backups, { id })
+  public getBackup(name: string): Backup {
+    const backup = find(this.teamConfig.backups, { name })
     if (!backup) {
-      throw new NotExistError(`Backup[${id}] does not exist.`)
+      throw new NotExistError(`Backup[${name}] does not exist.`)
     }
     return backup
   }
@@ -273,14 +273,14 @@ export class TeamConfigService {
     return this.teamConfig.backups ?? []
   }
 
-  public updateBackup(id: string, updates: Partial<Backup>): Backup {
-    const backup = find(this.teamConfig.backups, { id })
-    if (!backup) throw new NotExistError(`Backup[${id}] does not exist.`)
+  public updateBackup(name: string, updates: Partial<Backup>): Backup {
+    const backup = find(this.teamConfig.backups, { name })
+    if (!backup) throw new NotExistError(`Backup[${name}] does not exist.`)
     return merge(backup, updates)
   }
 
-  public deleteBackup(id: string): void {
-    remove(this.teamConfig.backups, { id })
+  public deleteBackup(name: string): void {
+    remove(this.teamConfig.backups, { name })
   }
 
   // =====================================
@@ -297,10 +297,10 @@ export class TeamConfigService {
     return newProject
   }
 
-  public getProject(id: string): Project {
-    const project = find(this.teamConfig.projects, { id })
+  public getProject(name: string): Project {
+    const project = find(this.teamConfig.projects, { name })
     if (!project) {
-      throw new NotExistError(`Project[${id}] does not exist.`)
+      throw new NotExistError(`Project[${name}] does not exist.`)
     }
     return project
   }
@@ -309,14 +309,14 @@ export class TeamConfigService {
     return this.teamConfig.projects ?? []
   }
 
-  public updateProject(id: string, updates: Partial<Project>): Project {
-    const project = find(this.teamConfig.projects, { id })
-    if (!project) throw new NotExistError(`Project[${id}] does not exist.`)
+  public updateProject(name: string, updates: Partial<Project>): Project {
+    const project = find(this.teamConfig.projects, { name })
+    if (!project) throw new NotExistError(`Project[${name}] does not exist.`)
     return merge(project, updates)
   }
 
-  public deleteProject(id: string): void {
-    remove(this.teamConfig.projects, { id })
+  public deleteProject(name: string): void {
+    remove(this.teamConfig.projects, { name })
   }
 
   // =====================================
@@ -333,10 +333,10 @@ export class TeamConfigService {
     return newNetpol
   }
 
-  public getNetpol(id: string): Netpol {
-    const netpol = find(this.teamConfig.netpols, { id })
+  public getNetpol(name: string): Netpol {
+    const netpol = find(this.teamConfig.netpols, { name })
     if (!netpol) {
-      throw new NotExistError(`Netpol[${id}] does not exist.`)
+      throw new NotExistError(`Netpol[${name}] does not exist.`)
     }
     return netpol
   }
@@ -345,16 +345,16 @@ export class TeamConfigService {
     return this.teamConfig.netpols ?? []
   }
 
-  public updateNetpol(id: string, updates: Partial<Netpol>): Netpol {
-    const netpol = find(this.teamConfig.netpols, { id })
+  public updateNetpol(name: string, updates: Partial<Netpol>): Netpol {
+    const netpol = find(this.teamConfig.netpols, { name })
     if (!netpol) {
-      throw new NotExistError(`Netpol[${id}] does not exist.`)
+      throw new NotExistError(`Netpol[${name}] does not exist.`)
     }
     return merge(netpol, updates)
   }
 
-  public deleteNetpol(id: string): void {
-    remove(this.teamConfig.netpols, { id })
+  public deleteNetpol(name: string): void {
+    remove(this.teamConfig.netpols, { name })
   }
 
   // =====================================

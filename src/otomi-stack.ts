@@ -596,20 +596,20 @@ export default class OtomiStack {
     }
   }
 
-  getBackup(teamId: string, id: string): Backup {
-    return this.repoService.getTeamConfigService(teamId).getBackup(id)
+  getBackup(teamId: string, name: string): Backup {
+    return this.repoService.getTeamConfigService(teamId).getBackup(name)
   }
 
-  async editBackup(teamId: string, id: string, data: Backup): Promise<Backup> {
+  async editBackup(teamId: string, name: string, data: Backup): Promise<Backup> {
     validateBackupFields(data.name, data.ttl)
-    const backup = this.repoService.getTeamConfigService(teamId).updateBackup(id, data)
+    const backup = this.repoService.getTeamConfigService(teamId).updateBackup(name, data)
     await this.saveTeamBackup(teamId, data)
     await this.doDeployment(['backups'], teamId)
     return backup
   }
 
-  async deleteBackup(teamId: string, id: string): Promise<void> {
-    await this.deleteTeamBackup(teamId, id)
+  async deleteBackup(teamId: string, name: string): Promise<void> {
+    await this.deleteTeamBackup(teamId, name)
     await this.doDeployment(['backups'], teamId)
   }
 
@@ -634,20 +634,20 @@ export default class OtomiStack {
     }
   }
 
-  getNetpol(teamId: string, id: string): Netpol {
-    return this.repoService.getTeamConfigService(teamId).getNetpol(id)
+  getNetpol(teamId: string, name: string): Netpol {
+    return this.repoService.getTeamConfigService(teamId).getNetpol(name)
   }
 
-  async editNetpol(teamId: string, id: string, data: Netpol): Promise<Netpol> {
+  async editNetpol(teamId: string, name: string, data: Netpol): Promise<Netpol> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const netpol = this.repoService.getTeamConfigService(teamId).updateNetpol(id, data)
+    const netpol = this.repoService.getTeamConfigService(teamId).updateNetpol(name, data)
     await this.saveTeamNetpols(teamId, data)
     await this.doDeployment(['netpols'], teamId)
     return netpol
   }
 
-  async deleteNetpol(teamId: string, id: string): Promise<void> {
-    const netpol = this.repoService.getTeamConfigService(teamId).getNetpol(id)
+  async deleteNetpol(teamId: string, name: string): Promise<void> {
+    const netpol = this.repoService.getTeamConfigService(teamId).getNetpol(name)
     await this.deleteTeamNetpol(teamId, netpol.name)
     await this.doDeployment(['netpols'], teamId)
   }
@@ -777,31 +777,31 @@ export default class OtomiStack {
     }
   }
 
-  getProject(teamId: string, id: string): Project {
-    const project = this.repoService.getTeamConfigService(teamId).getProject(id)
+  getProject(teamId: string, name: string): Project {
+    const project = this.repoService.getTeamConfigService(teamId).getProject(name)
     let build, workload, workloadValues, services
     try {
-      build = this.repoService.getTeamConfigService(teamId).getBuild(project.build!.id!)
+      build = this.repoService.getTeamConfigService(teamId).getBuild(project.build!.name)
     } catch (err) {
       build = {}
     }
     try {
-      workload = this.repoService.getTeamConfigService(teamId).getWorkload(project.workload!.id!)
+      workload = this.repoService.getTeamConfigService(teamId).getWorkload(project.workload!.name)
     } catch (err) {
       workload = {}
     }
     try {
-      workloadValues = this.repoService.getTeamConfigService(teamId).getWorkloadValues(project.workloadValues!.id!)
+      workloadValues = this.repoService.getTeamConfigService(teamId).getWorkloadValues(project.workloadValues!.name!)
     } catch (err) {
       workloadValues = {}
     }
     try {
-      services = this.repoService.getTeamConfigService(teamId).getService(project.service!.id!)
+      services = this.repoService.getTeamConfigService(teamId).getService(project.service!.name)
     } catch (err) {
       services = {}
     }
     return {
-      id,
+      id: name,
       teamId,
       ...project,
       name: project.name,
@@ -812,38 +812,38 @@ export default class OtomiStack {
     }
   }
 
-  async editProject(teamId: string, id: string, data: Project): Promise<Project> {
-    const { build, workload, workloadValues, service, name } = data
+  async editProject(teamId: string, name: string, data: Project): Promise<Project> {
+    const { build, workload, workloadValues, service } = data
 
     let b, w, wv, s
-    if (!build?.id && build?.mode) {
+    if (!build?.name && build?.mode) {
       b = this.repoService.getTeamConfigService(teamId).createBuild({ ...build, teamId })
-    } else if (build?.id) {
-      b = this.repoService.getTeamConfigService(teamId).updateBuild(build.id, build)
+    } else if (build?.name) {
+      b = this.repoService.getTeamConfigService(teamId).updateBuild(build.name, build)
     }
 
-    if (workload && !workload?.id) {
+    if (workload && !workload?.name) {
       w = this.repoService.getTeamConfigService(teamId).createWorkload(workload)
-    } else if (workload?.id) {
-      w = this.repoService.getTeamConfigService(teamId).updateWorkload(workload.id, workload)
+    } else if (workload?.name) {
+      w = this.repoService.getTeamConfigService(teamId).updateWorkload(workload.name, workload)
     }
 
-    if (workloadValues && !workloadValues?.id) {
+    if (workloadValues && !workloadValues?.name) {
       wv = this.repoService.getTeamConfigService(teamId).createWorkloadValues({ ...workloadValues, name })
-    } else if (workloadValues?.id) {
+    } else if (workloadValues?.name) {
       wv = this.repoService
         .getTeamConfigService(teamId)
-        .updateWorkloadValues(workloadValues.id, { ...workloadValues, name })
+        .updateWorkloadValues(workloadValues.name, { ...workloadValues, name })
     }
 
-    if (service && !service?.id) {
+    if (service && !service?.name) {
       s = this.repoService.getTeamConfigService(teamId).createService({ ...service, teamId })
-    } else if (service?.id) {
-      s = this.repoService.getTeamConfigService(teamId).updateService(service.id, service)
+    } else if (service?.name) {
+      s = this.repoService.getTeamConfigService(teamId).updateService(service.name, service)
     }
 
     const updatedData = {
-      id,
+      id: name,
       name,
       teamId,
       ...(b && { build: { id: b.id } }),
@@ -857,7 +857,7 @@ export default class OtomiStack {
       project = this.repoService.getTeamConfigService(teamId).createProject(updatedData)
     } catch (error) {
       if (error.code === 409) {
-        project = this.repoService.getTeamConfigService(teamId).updateProject(id, updatedData)
+        project = this.repoService.getTeamConfigService(teamId).updateProject(name, updatedData)
       } else {
         throw error
       }
@@ -872,21 +872,21 @@ export default class OtomiStack {
   }
 
   // Deletes a project and all its related resources
-  async deleteProject(teamId: string, id: string): Promise<void> {
-    const p = this.repoService.getTeamConfigService(teamId).getProject(id)
-    if (p.build?.id) {
-      await this.deleteTeamBuild(teamId, p.build.id)
+  async deleteProject(teamId: string, name: string): Promise<void> {
+    const p = this.repoService.getTeamConfigService(teamId).getProject(name)
+    if (p.build?.name) {
+      await this.deleteTeamBuild(teamId, p.build.name)
     }
-    if (p.workload?.id) {
-      await this.deleteTeamWorkload(teamId, p.workload.id)
+    if (p.workload?.name) {
+      await this.deleteTeamWorkload(teamId, p.workload.name)
     }
-    if (p.workloadValues?.id) {
-      await this.deleteTeamWorkloadValues(teamId, p.workloadValues.id)
+    if (p.workloadValues?.name) {
+      await this.deleteTeamWorkloadValues(teamId, p.workloadValues.name)
     }
-    if (p.service?.id) {
-      await this.deleteTeamService(teamId, p.service.id)
+    if (p.service?.name) {
+      await this.deleteTeamService(teamId, p.service.name)
     }
-    await this.deleteTeamProject(teamId, id)
+    await this.deleteTeamProject(teamId, name)
     await this.doDeployment(['projects', 'builds', 'workloads', 'workloadValues', 'services'], teamId)
   }
 
@@ -1012,27 +1012,27 @@ export default class OtomiStack {
     }
   }
 
-  getBuild(teamId: string, id: string): Build {
-    return this.repoService.getTeamConfigService(teamId).getBuild(id)
+  getBuild(teamId: string, name: string): Build {
+    return this.repoService.getTeamConfigService(teamId).getBuild(name)
   }
 
-  async editBuild(teamId: string, id: string, data: Build): Promise<Build> {
+  async editBuild(teamId: string, name: string, data: Build): Promise<Build> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const build = this.repoService.getTeamConfigService(teamId).updateBuild(id, data)
+    const build = this.repoService.getTeamConfigService(teamId).updateBuild(name, data)
     await this.saveTeamBuild(teamId, build)
     await this.doDeployment(['builds'], teamId)
     return build
   }
 
-  async deleteBuild(teamId: string, id: string): Promise<void> {
+  async deleteBuild(teamId: string, name: string): Promise<void> {
     const p = this.repoService.getTeamConfigService(teamId).getProjects()
     p.forEach((project: Project) => {
-      if (project?.build?.id === id) {
+      if (project?.build?.name === name) {
         const updatedData = { ...project, build: undefined }
-        this.repoService.getTeamConfigService(teamId).updateProject(project.id!, updatedData)
+        this.repoService.getTeamConfigService(teamId).updateProject(project.name, updatedData)
       }
     })
-    await this.deleteTeamBuild(teamId, id)
+    await this.deleteTeamBuild(teamId, name)
     await this.doDeployment(['builds'], teamId)
   }
 
@@ -1167,7 +1167,6 @@ export default class OtomiStack {
   async createWorkload(teamId: string, data: Workload): Promise<Workload> {
     try {
       const workload = this.repoService.getTeamConfigService(teamId).createWorkload({ ...data, teamId })
-      console.log('workload', workload.id)
       const workloadValues = this.repoService
         .getTeamConfigService(teamId)
         .createWorkloadValues({ teamId, values: {}, id: workload.id, name: workload.name })
@@ -1181,38 +1180,38 @@ export default class OtomiStack {
     }
   }
 
-  getWorkload(teamId: string, id: string): Workload {
-    return this.repoService.getTeamConfigService(teamId).getWorkload(id)
+  getWorkload(teamId: string, name: string): Workload {
+    return this.repoService.getTeamConfigService(teamId).getWorkload(name)
   }
 
-  async editWorkload(teamId: string, id: string, data: Workload): Promise<Workload> {
-    const workload = this.repoService.getTeamConfigService(teamId).updateWorkload(id, data)
+  async editWorkload(teamId: string, name: string, data: Workload): Promise<Workload> {
+    const workload = this.repoService.getTeamConfigService(teamId).updateWorkload(name, data)
     await this.saveTeamWorkload(teamId, workload)
     await this.doDeployment(['workloads'], teamId)
     return workload
   }
 
-  async deleteWorkload(teamId: string, id: string): Promise<void> {
+  async deleteWorkload(teamId: string, name: string): Promise<void> {
     const p = this.repoService.getTeamConfigService(teamId).getProjects()
     p.forEach((project: Project) => {
-      if (project?.workload?.id === id) {
+      if (project?.workload?.name === name) {
         const updatedData = { ...project, workload: undefined, workloadValues: undefined }
-        this.repoService.getTeamConfigService(teamId).updateProject(project.id!, updatedData)
+        this.repoService.getTeamConfigService(teamId).updateProject(project.name, updatedData)
       }
     })
-    await this.deleteTeamWorkloadValues(teamId, id)
-    await this.deleteTeamWorkload(teamId, id)
+    await this.deleteTeamWorkloadValues(teamId, name)
+    await this.deleteTeamWorkload(teamId, name)
     await this.doDeployment(['workloads', 'workloadValues'], teamId)
   }
 
-  async editWorkloadValues(teamId: string, id: string, data: WorkloadValues): Promise<WorkloadValues> {
+  async editWorkloadValues(teamId: string, name: string, data: WorkloadValues): Promise<WorkloadValues> {
     let workloadValues
     try {
-      workloadValues = this.repoService.getTeamConfigService(teamId).createWorkloadValues({ ...data, id })
+      workloadValues = this.repoService.getTeamConfigService(teamId).createWorkloadValues({ ...data, name })
     } catch (error) {
       if (error.code === 409) {
         debug('Workload values already exists, updating values')
-        workloadValues = this.repoService.getTeamConfigService(teamId).updateWorkloadValues(id, data)
+        workloadValues = this.repoService.getTeamConfigService(teamId).updateWorkloadValues(name, data)
       }
     }
     await this.saveTeamWorkloadValues(teamId, workloadValues)
@@ -1220,8 +1219,8 @@ export default class OtomiStack {
     return workloadValues
   }
 
-  getWorkloadValues(teamId: string, id: string): WorkloadValues {
-    return this.repoService.getTeamConfigService(teamId).getWorkloadValues(id)
+  getWorkloadValues(teamId: string, name: string): WorkloadValues {
+    return this.repoService.getTeamConfigService(teamId).getWorkloadValues(name)
   }
 
   getAllServices(): Array<Service> {
@@ -1241,28 +1240,28 @@ export default class OtomiStack {
     }
   }
 
-  getService(teamId: string, id: string): Service {
-    return this.repoService.getTeamConfigService(teamId).getService(id)
+  getService(teamId: string, name: string): Service {
+    return this.repoService.getTeamConfigService(teamId).getService(name)
   }
 
-  async editService(teamId: string, id: string, data: Service): Promise<Service> {
-    const service = this.repoService.getTeamConfigService(teamId).updateService(id, data)
+  async editService(teamId: string, name: string, data: Service): Promise<Service> {
+    const service = this.repoService.getTeamConfigService(teamId).updateService(name, data)
     await this.saveTeamService(teamId, service)
     await this.doDeployment(['services'], teamId)
     return service
   }
 
-  async deleteService(teamId: string, id: string, deleteProjectService = true): Promise<void> {
+  async deleteService(teamId: string, name: string, deleteProjectService = true): Promise<void> {
     if (deleteProjectService) {
       const p = this.repoService.getTeamConfigService(teamId).getProjects()
       p.forEach((project: Project) => {
-        if (project?.service?.id === id) {
+        if (project?.service?.name === name) {
           const updatedData = { ...project, service: undefined }
-          this.repoService.getTeamConfigService(teamId).updateProject(project.id!, updatedData)
+          this.repoService.getTeamConfigService(teamId).updateProject(project.name, updatedData)
         }
       })
     }
-    await this.deleteTeamService(teamId, id)
+    await this.deleteTeamService(teamId, name)
     await this.doDeployment(['services'], teamId)
   }
 
@@ -1489,7 +1488,7 @@ export default class OtomiStack {
         .getTeamConfigService(teamId)
         .createSealedSecret({ ...data, teamId, encryptedData, namespace })
       const sealedSecretChartValues = sealedSecretManifest(data, encryptedData, namespace)
-      await this.saveTeamSealedSecrets(teamId, sealedSecretChartValues, sealedSecret.id!)
+      await this.saveTeamSealedSecrets(teamId, sealedSecretChartValues, sealedSecret.name)
       await this.doDeployment(['sealedsecrets'], teamId)
       return sealedSecret
     } catch (err) {
@@ -1498,7 +1497,7 @@ export default class OtomiStack {
     }
   }
 
-  async editSealedSecret(id: string, data: SealedSecret): Promise<SealedSecret> {
+  async editSealedSecret(name: string, data: SealedSecret): Promise<SealedSecret> {
     const namespace = data.namespace ?? `team-${data?.teamId}`
     const certificate = await getSealedSecretsCertificate()
     if (!certificate) {
@@ -1516,21 +1515,21 @@ export default class OtomiStack {
       .getTeamConfigService(data.teamId!)
       .createSealedSecret({ ...data, encryptedData })
     const sealedSecretChartValues = sealedSecretManifest(data, encryptedData, namespace)
-    await this.saveTeamSealedSecrets(data.teamId!, sealedSecretChartValues, id)
+    await this.saveTeamSealedSecrets(data.teamId!, sealedSecretChartValues, name)
     await this.doDeployment(['sealedsecrets'], data.teamId)
     return sealedSecret
   }
 
-  async deleteSealedSecret(teamId: string, id: string): Promise<void> {
-    const sealedSecret = await this.getSealedSecret(teamId, id)
-    this.repoService.getTeamConfigService(teamId).deleteSealedSecret(id)
-    const relativePath = getTeamSealedSecretsValuesFilePath(sealedSecret.teamId!, `${id}.yaml`)
+  async deleteSealedSecret(teamId: string, name: string): Promise<void> {
+    const sealedSecret = await this.getSealedSecret(teamId, name)
+    this.repoService.getTeamConfigService(teamId).deleteSealedSecret(name)
+    const relativePath = getTeamSealedSecretsValuesFilePath(sealedSecret.teamId!, `${name}.yaml`)
     await this.git.removeFile(relativePath)
     await this.doDeployment(['sealedsecrets'], teamId)
   }
 
-  async getSealedSecret(teamId: string, id: string): Promise<SealedSecret> {
-    const sealedSecret = this.repoService.getTeamConfigService(teamId).getSealedSecret(id)
+  async getSealedSecret(teamId: string, name: string): Promise<SealedSecret> {
+    const sealedSecret = this.repoService.getTeamConfigService(teamId).getSealedSecret(name)
     const namespace = sealedSecret.namespace ?? `team-${sealedSecret.teamId}`
     const secretValues = (await getSecretValues(sealedSecret.name, namespace)) || {}
     const isDisabled = isEmpty(secretValues)
@@ -1621,8 +1620,8 @@ export default class OtomiStack {
     await this.git.removeDir(teamDir)
   }
 
-  async saveTeamSealedSecrets(teamId: string, data: any, id: string): Promise<void> {
-    const relativePath = getTeamSealedSecretsValuesFilePath(teamId, `${id}.yaml`)
+  async saveTeamSealedSecrets(teamId: string, data: any, name: string): Promise<void> {
+    const relativePath = getTeamSealedSecretsValuesFilePath(teamId, `${name}.yaml`)
     debug(`Saving sealed secrets of team: ${teamId}`)
     await this.git.writeFile(relativePath, data)
   }
@@ -1643,9 +1642,9 @@ export default class OtomiStack {
     await this.git.saveConfig(repo, fileMap)
   }
 
-  async deleteTeamBackup(teamId: string, id: string): Promise<void> {
-    const backup = this.repoService.getTeamConfigService(teamId).getBackup(id)
-    this.repoService.getTeamConfigService(teamId).deleteBackup(id)
+  async deleteTeamBackup(teamId: string, name: string): Promise<void> {
+    const backup = this.repoService.getTeamConfigService(teamId).getBackup(name)
+    this.repoService.getTeamConfigService(teamId).deleteBackup(name)
 
     const repo = this.createTeamConfigInRepo(teamId, 'backups', backup)
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamBackup')!
@@ -1659,9 +1658,9 @@ export default class OtomiStack {
     await this.git.saveConfig(repo, fileMap)
   }
 
-  async deleteTeamNetpol(teamId: string, id: string): Promise<void> {
-    const netpol = this.repoService.getTeamConfigService(teamId).getNetpol(id)
-    this.repoService.getTeamConfigService(teamId).deleteNetpol(id)
+  async deleteTeamNetpol(teamId: string, name: string): Promise<void> {
+    const netpol = this.repoService.getTeamConfigService(teamId).getNetpol(name)
+    this.repoService.getTeamConfigService(teamId).deleteNetpol(name)
 
     const repo = this.createTeamConfigInRepo(teamId, 'netpols', netpol)
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamNetworkControl')!
@@ -1675,9 +1674,9 @@ export default class OtomiStack {
     await this.git.saveConfig(repo, fileMap)
   }
 
-  async deleteTeamWorkload(teamId: string, id: string): Promise<void> {
-    const workload = this.repoService.getTeamConfigService(teamId).getWorkload(id)
-    this.repoService.getTeamConfigService(teamId).deleteWorkload(id)
+  async deleteTeamWorkload(teamId: string, name: string): Promise<void> {
+    const workload = this.repoService.getTeamConfigService(teamId).getWorkload(name)
+    this.repoService.getTeamConfigService(teamId).deleteWorkload(name)
 
     const repo = this.createTeamConfigInRepo(teamId, 'workloads', workload)
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkload')!
@@ -1691,9 +1690,9 @@ export default class OtomiStack {
     await this.git.saveConfig(repo, fileMap)
   }
 
-  async deleteTeamProject(teamId: string, id: string): Promise<void> {
-    const project = this.repoService.getTeamConfigService(teamId).getProject(id)
-    this.repoService.getTeamConfigService(teamId).deleteProject(id)
+  async deleteTeamProject(teamId: string, name: string): Promise<void> {
+    const project = this.repoService.getTeamConfigService(teamId).getProject(name)
+    this.repoService.getTeamConfigService(teamId).deleteProject(name)
 
     const repo = this.createTeamConfigInRepo(teamId, 'projects', project)
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamProject')!
@@ -1707,9 +1706,9 @@ export default class OtomiStack {
     await this.git.saveConfig(repo, fileMap)
   }
 
-  async deleteTeamBuild(teamId: string, id: string): Promise<void> {
-    const build = this.repoService.getTeamConfigService(teamId).getBuild(id)
-    this.repoService.getTeamConfigService(teamId).deleteBuild(id)
+  async deleteTeamBuild(teamId: string, name: string): Promise<void> {
+    const build = this.repoService.getTeamConfigService(teamId).getBuild(name)
+    this.repoService.getTeamConfigService(teamId).deleteBuild(name)
 
     const repo = this.createTeamConfigInRepo(teamId, 'builds', build)
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamBuild')!
@@ -1743,7 +1742,7 @@ export default class OtomiStack {
 
   async saveTeamWorkloadValues(teamId: string, workloadValues: WorkloadValues): Promise<void> {
     debug(`Saving workload values: ${workloadValues.id!} teamId: ${teamId} name: ${workloadValues.name}`)
-    const data = this.getWorkloadValues(teamId, workloadValues.id!)
+    const data = this.getWorkloadValues(teamId, workloadValues.name!)
     const updatedWorkloadValues = cloneDeep(data) as Record<string, any>
     updatedWorkloadValues.values = stringifyYaml(data.values, undefined, 4)
 
@@ -1752,9 +1751,9 @@ export default class OtomiStack {
     await this.git.saveConfig(repo, fileMap)
   }
 
-  async deleteTeamWorkloadValues(teamId: string, id: string): Promise<void> {
-    const workloadValues = this.repoService.getTeamConfigService(teamId).getWorkloadValues(id)
-    this.repoService.getTeamConfigService(teamId).deleteWorkloadValues(id)
+  async deleteTeamWorkloadValues(teamId: string, name: string): Promise<void> {
+    const workloadValues = this.repoService.getTeamConfigService(teamId).getWorkloadValues(name)
+    this.repoService.getTeamConfigService(teamId).deleteWorkloadValues(name)
 
     const repo = this.createTeamConfigInRepo(teamId, 'workloadValues', workloadValues)
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkloadValues')!
@@ -1768,9 +1767,9 @@ export default class OtomiStack {
     await this.git.saveConfig(repo, fileMap)
   }
 
-  async deleteTeamService(teamId: string, id: string): Promise<void> {
-    const service = this.repoService.getTeamConfigService(teamId).getService(id)
-    this.repoService.getTeamConfigService(teamId).deleteService(id)
+  async deleteTeamService(teamId: string, name: string): Promise<void> {
+    const service = this.repoService.getTeamConfigService(teamId).getService(name)
+    this.repoService.getTeamConfigService(teamId).deleteService(name)
 
     const repo = this.createTeamConfigInRepo(teamId, 'services', service)
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamService')!

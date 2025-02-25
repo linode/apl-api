@@ -58,7 +58,7 @@ describe('TeamConfigService', () => {
     test('should retrieve a build by id', () => {
       const createdBuild = service.createBuild(build)
 
-      expect(service.getBuild(createdBuild.id!)).toEqual(createdBuild)
+      expect(service.getBuild(createdBuild.name)).toEqual(createdBuild)
     })
 
     test('should throw an error when retrieving a non-existent build', () => {
@@ -68,14 +68,14 @@ describe('TeamConfigService', () => {
     test('should update a build', () => {
       const createdBuild = service.createBuild(build)
 
-      const updatedBuild = service.updateBuild(createdBuild.id!, { name: 'UpdatedBuild' })
+      const updatedBuild = service.updateBuild(createdBuild.name, { name: 'UpdatedBuild' })
       expect(updatedBuild.name).toBe('UpdatedBuild')
     })
 
     test('should delete a build', () => {
       const createdBuild = service.createBuild(build)
 
-      service.deleteBuild(createdBuild.id!)
+      service.deleteBuild(createdBuild.name)
       expect(service.getBuilds()).toHaveLength(0)
     })
   })
@@ -98,7 +98,7 @@ describe('TeamConfigService', () => {
     test('should retrieve a workload by id', () => {
       const createdWorkload = service.createWorkload(workload)
 
-      expect(service.getWorkload(createdWorkload.id!)).toEqual(createdWorkload)
+      expect(service.getWorkload(createdWorkload.name)).toEqual(createdWorkload)
     })
 
     test('should throw an error when retrieving a non-existent workload', () => {
@@ -108,7 +108,7 @@ describe('TeamConfigService', () => {
     test('should delete a workload', () => {
       const createdWorkload = service.createWorkload(workload)
 
-      service.deleteWorkload(createdWorkload.id!)
+      service.deleteWorkload(createdWorkload.name)
       expect(service.getWorkloads()).toHaveLength(0)
     })
   })
@@ -131,7 +131,7 @@ describe('TeamConfigService', () => {
     test('should retrieve a service by id', () => {
       const createdService = service.createService(serviceData)
 
-      expect(service.getService(createdService.id!)).toEqual(createdService)
+      expect(service.getService(createdService.name)).toEqual(createdService)
     })
 
     test('should throw an error when retrieving a non-existent service', () => {
@@ -173,7 +173,7 @@ describe('TeamConfigService', () => {
     test('should retrieve a sealed secret by id', () => {
       const createdSecret = service.createSealedSecret(secret)
 
-      expect(service.getSealedSecret(createdSecret.id!)).toEqual(createdSecret)
+      expect(service.getSealedSecret(createdSecret.name)).toEqual(createdSecret)
     })
 
     test('should throw an error when retrieving a non-existent sealed secret', () => {
@@ -183,7 +183,7 @@ describe('TeamConfigService', () => {
     test('should delete a sealed secret', () => {
       const createdSecret = service.createSealedSecret(secret)
 
-      service.deleteSealedSecret(createdSecret.id!)
+      service.deleteSealedSecret(createdSecret.name)
       expect(service.getSealedSecrets()).toHaveLength(0)
     })
   })
@@ -194,7 +194,7 @@ describe('TeamConfigService', () => {
     test('should create workload values', () => {
       const created = service.createWorkloadValues(workloadValues)
       expect(created).toEqual({ name: 'TestWorkloadValues', id: 'mocked-uuid', values: { test: 'values' } })
-      expect(service.getWorkloadValues(created.id!)).toEqual(created)
+      expect(service.getWorkloadValues(created.name!)).toEqual(created)
     })
 
     test('should throw an error when creating duplicate workload values', () => {
@@ -204,8 +204,8 @@ describe('TeamConfigService', () => {
 
     test('should delete workload values', () => {
       const created = service.createWorkloadValues(workloadValues)
-      service.deleteWorkloadValues(created.id!)
-      expect(() => service.getWorkloadValues(created.id!)).toThrow(NotExistError)
+      service.deleteWorkloadValues(created.name!)
+      expect(() => service.getWorkloadValues(created.name!)).toThrow(NotExistError)
     })
   })
 
@@ -215,7 +215,7 @@ describe('TeamConfigService', () => {
     test('should create a backup', () => {
       const created = service.createBackup(backup)
       expect(created).toEqual({ name: 'TestBackup', id: 'mocked-uuid', ttl: '1', schedule: '0 0 * * *' })
-      expect(service.getBackup(created.id!)).toEqual(created)
+      expect(service.getBackup(created.name)).toEqual(created)
     })
 
     test('should throw an error when creating duplicate backup', () => {
@@ -225,8 +225,8 @@ describe('TeamConfigService', () => {
 
     test('should delete a backup', () => {
       const created = service.createBackup(backup)
-      service.deleteBackup(created.id!)
-      expect(() => service.getBackup(created.id!)).toThrow(NotExistError)
+      service.deleteBackup(created.name)
+      expect(() => service.getBackup(created.name)).toThrow(NotExistError)
     })
   })
 
@@ -236,7 +236,7 @@ describe('TeamConfigService', () => {
     test('should create a project', () => {
       const created = service.createProject(project)
       expect(created).toEqual({ name: 'TestProject', id: 'mocked-uuid' })
-      expect(service.getProject(created.id!)).toEqual(created)
+      expect(service.getProject(created.name)).toEqual(created)
     })
 
     test('should throw an error when creating duplicate project', () => {
@@ -246,8 +246,8 @@ describe('TeamConfigService', () => {
 
     test('should delete a project', () => {
       const created = service.createProject(project)
-      service.deleteProject(created.id!)
-      expect(() => service.getProject(created.id!)).toThrow(NotExistError)
+      service.deleteProject(created.name)
+      expect(() => service.getProject(created.name)).toThrow(NotExistError)
     })
   })
 
@@ -257,7 +257,7 @@ describe('TeamConfigService', () => {
     test('should create a netpol', () => {
       const created = service.createNetpol(netpol)
       expect(created).toEqual({ name: 'TestNetpol', id: 'mocked-uuid' })
-      expect(service.getNetpol(created.id!)).toEqual(created)
+      expect(service.getNetpol(created.name)).toEqual(created)
     })
 
     test('should throw an error when creating duplicate netpol', () => {
@@ -267,8 +267,8 @@ describe('TeamConfigService', () => {
 
     test('should delete a netpol', () => {
       const created = service.createNetpol(netpol)
-      service.deleteNetpol(created.id!)
-      expect(() => service.getNetpol(created.id!)).toThrow(NotExistError)
+      service.deleteNetpol(created.name)
+      expect(() => service.getNetpol(created.name)).toThrow(NotExistError)
     })
   })
 
