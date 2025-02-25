@@ -225,7 +225,7 @@ export class RepoService {
   public getAllNetpols(): Netpol[] {
     return (
       Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.netpols.map((netpol) => ({ ...netpol, teamId })))
+        .flatMap(([teamId, config]) => config.netpols?.map((netpol) => ({ ...netpol, teamId })))
         .filter(Boolean) ?? []
     )
   }
@@ -233,7 +233,7 @@ export class RepoService {
   public getAllProjects(): Project[] {
     return (
       Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.projects.map((project) => ({ ...project, teamId })))
+        .flatMap(([teamId, config]) => config.projects?.map((project) => ({ ...project, teamId })))
         .filter(Boolean) ?? []
     )
   }
@@ -241,7 +241,7 @@ export class RepoService {
   public getAllBuilds(): Build[] {
     return (
       Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.builds.map((build) => ({ ...build, teamId })))
+        .flatMap(([teamId, config]) => config.builds?.map((build) => ({ ...build, teamId })))
         .filter(Boolean) ?? []
     )
   }
@@ -253,7 +253,7 @@ export class RepoService {
   public getAllWorkloads(): Workload[] {
     return (
       Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.workloads.map((workload) => ({ ...workload, teamId })))
+        .flatMap(([teamId, config]) => config.workloads?.map((workload) => ({ ...workload, teamId })))
         .filter(Boolean) ?? []
     )
   }
@@ -261,7 +261,7 @@ export class RepoService {
   public getAllServices(): Service[] {
     return (
       Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.services.map((service) => ({ ...service, teamId })))
+        .flatMap(([teamId, config]) => config.services?.map((service) => ({ ...service, teamId })))
         .filter(Boolean) ?? []
     )
   }
@@ -269,7 +269,7 @@ export class RepoService {
   public getAllSealedSecrets(): SealedSecret[] {
     return (
       Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.sealedSecrets.map((secret) => ({ ...secret, teamId })))
+        .flatMap(([teamId, config]) => config.sealedSecrets?.map((secret) => ({ ...secret, teamId })))
         .filter(Boolean) ?? []
     )
   }
@@ -277,7 +277,7 @@ export class RepoService {
   public getAllBackups(): Backup[] {
     return (
       Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.backups.map((backup) => ({ ...backup, teamId })))
+        .flatMap(([teamId, config]) => config.backups?.map((backup) => ({ ...backup, teamId })))
         .filter(Boolean) ?? []
     )
   }
@@ -285,7 +285,7 @@ export class RepoService {
   public getAllCoderepos(): Coderepo[] {
     return (
       Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.coderepos.map((repo) => ({ ...repo, teamId })))
+        .flatMap(([teamId, config]) => config.coderepos?.map((repo) => ({ ...repo, teamId })))
         .filter(Boolean) ?? []
     )
   }
