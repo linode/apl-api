@@ -75,6 +75,10 @@ const checkAgainstGitea = async () => {
 
 const resourceStatus = async (errorSet) => {
   const otomiStack = await getSessionStack()
+  if (!otomiStack.isLoaded) {
+    debug('Values are not loaded yet')
+    return
+  }
   const { cluster } = otomiStack.getSettings(['cluster'])
   const domainSuffix = cluster?.domainSuffix
   const resources = {
@@ -201,7 +205,11 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   const emitResourceStatusInterval = 10 * 1000
   const errorSet = new Set()
   setInterval(async function () {
-    await resourceStatus(errorSet)
+    try {
+      await resourceStatus(errorSet)
+    } catch (e) {
+      debug(e)
+    }
   }, emitResourceStatusInterval)
 
   // and register session middleware
