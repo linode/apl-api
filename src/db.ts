@@ -11,6 +11,7 @@ import {
   Build,
   Cloudtty,
   Cluster,
+  Coderepo,
   Netpol,
   Policies,
   Project,
@@ -43,6 +44,7 @@ export type DbType =
   | User
   | Project
   | Policies
+  | Coderepo
 export type Schema = {
   apps: App[]
   sealedsecrets: SealedSecret[]
@@ -58,6 +60,7 @@ export type Schema = {
   cloudttys: Cloudtty[]
   users: User[]
   projects: Project[]
+  coderepos: Coderepo[]
 }
 
 export default class Db {
@@ -81,6 +84,7 @@ export default class Db {
         netpols: [],
         users: [],
         projects: [],
+        coderepos: [],
         policies: {},
         sealedsecrets: [],
         secrets: [],

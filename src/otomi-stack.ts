@@ -7,7 +7,7 @@ import { ObjectStorageKeyRegions, getRegions } from '@linode/api-v4'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
-import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set } from 'lodash'
+import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
 import { AlreadyExists, GitPullError, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
@@ -17,6 +17,7 @@ import {
   Backup,
   Build,
   Cloudtty,
+  Coderepo,
   Core,
   K8sService,
   Netpol,
@@ -33,6 +34,7 @@ import {
   SettingsInfo,
   Team,
   TeamSelfService,
+  TestRepoConnect,
   User,
   Workload,
   WorkloadValues,
@@ -79,6 +81,12 @@ import {
   watchPodUntilRunning,
 } from './k8s_operations'
 import { validateBackupFields } from './utils/backupUtils'
+import {
+  getGiteaRepoUrls,
+  normalizeRepoUrl,
+  testPrivateRepoConnect,
+  testPublicRepoConnect,
+} from './utils/coderepoUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
@@ -140,6 +148,10 @@ export function getTeamProjectsFilePath(teamId: string): string {
   return `env/teams/projects.${teamId}.yaml`
 }
 
+export function getTeamCodereposFilePath(teamId: string): string {
+  return `env/teams/coderepos.${teamId}.yaml`
+}
+
 export function getTeamBuildsFilePath(teamId: string): string {
   return `env/teams/builds.${teamId}.yaml`
 }
@@ -154,6 +166,10 @@ export function getTeamWorkloadsJsonPath(teamId: string): string {
 
 export function getTeamProjectsJsonPath(teamId: string): string {
   return `teamConfig.${teamId}.projects`
+}
+
+export function getTeamCodereposJsonPath(teamId: string): string {
+  return `teamConfig.${teamId}.coderepos`
 }
 
 export function getTeamBuildsJsonPath(teamId: string): string {
@@ -359,7 +375,6 @@ export default class OtomiStack {
       }
     }
     await this.editSettings(settingsdata as Settings, 'obj')
-    await this.doDeployment(['settings'])
     debug('Object storage settings have been configured.')
     return {
       status: 'success',
@@ -933,6 +948,92 @@ export default class OtomiStack {
     await this.saveTeamWorkloads(p.teamId!)
     await this.saveTeamServices(p.teamId!)
     await this.doDeployment(['projects', 'builds', 'workloads', 'workloadValues', 'services'])
+  }
+
+  getTeamCoderepos(teamId: string): Array<Coderepo> {
+    const ids = { teamId }
+    return this.db.getCollection('coderepos', ids) as Array<Coderepo>
+  }
+
+  getAllCoderepos(): Array<Coderepo> {
+    const allCoderepos = this.db.getCollection('coderepos') as Array<Coderepo>
+    return allCoderepos
+  }
+
+  async createCoderepo(teamId: string, data: Coderepo): Promise<Coderepo> {
+    try {
+      const body = { ...data }
+      if (!body.private) unset(body, 'secret')
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      const coderepo = this.db.createItem('coderepos', { ...body, teamId }, { teamId, label: body.label }) as Coderepo
+      await this.saveTeamCoderepos(teamId)
+      await this.doDeployment(['coderepos'])
+      return coderepo
+    } catch (err) {
+      if (err.code === 409) err.publicMessage = 'Code repe label already exists'
+      throw err
+    }
+  }
+
+  getCoderepo(id: string): Coderepo {
+    return this.db.getItem('coderepos', { id }) as Coderepo
+  }
+
+  async editCoderepo(id: string, data: Coderepo): Promise<Coderepo> {
+    const body = { ...data }
+    if (!body.private) unset(body, 'secret')
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const coderepo = this.db.updateItem('coderepos', body, { id }) as Coderepo
+    await this.saveTeamCoderepos(coderepo.teamId as string)
+    await this.doDeployment(['coderepos'])
+    return coderepo
+  }
+
+  async deleteCoderepo(id: string): Promise<void> {
+    const coderepo = this.getCoderepo(id)
+    this.db.deleteItem('coderepos', { id })
+    await this.saveTeamCoderepos(coderepo.teamId as string)
+    await this.doDeployment(['coderepos'])
+  }
+
+  async getTestRepoConnect(url: string, teamId: string, secretName: string): Promise<TestRepoConnect> {
+    try {
+      let sshPrivateKey = '',
+        username = '',
+        accessToken = ''
+
+      if (secretName) {
+        const secret = await getSecretValues(secretName, `team-${teamId}`)
+        sshPrivateKey = secret?.['ssh-privatekey'] || ''
+        username = secret?.username || ''
+        accessToken = secret?.password || ''
+      }
+
+      const isPrivate = !!secretName
+      const isSSH = !!sshPrivateKey
+      const repoUrl = normalizeRepoUrl(url, isPrivate, isSSH)
+
+      if (!repoUrl) return { status: 'failed' }
+
+      if (isPrivate)
+        return (await testPrivateRepoConnect(repoUrl, sshPrivateKey, username, accessToken)) as TestRepoConnect
+
+      return (await testPublicRepoConnect(repoUrl)) as TestRepoConnect
+    } catch (error) {
+      return { status: 'failed' }
+    }
+  }
+
+  async getInternalRepoUrls(teamId: string): Promise<string[]> {
+    if (env.isDev || !teamId || teamId === 'admin') return []
+    const { cluster, otomi } = this.getSettings(['cluster', 'otomi'])
+    const gitea = this.getApp('admin', 'gitea')
+    const username = gitea?.values?.adminUsername as string
+    const password = (gitea?.values?.adminPassword as string) || (otomi?.adminPassword as string)
+    const orgName = `team-${teamId}`
+    const domainSuffix = cluster?.domainSuffix
+    const internalRepoUrls = (await getGiteaRepoUrls(username, password, orgName, domainSuffix)) || []
+    return internalRepoUrls
   }
 
   getDashboard(teamId: string): Array<any> {
@@ -1678,6 +1779,20 @@ export default class OtomiStack {
     })
   }
 
+  async loadTeamCoderepos(teamId: string): Promise<void> {
+    const relativePath = getTeamCodereposFilePath(teamId)
+    if (!(await this.repo.fileExists(relativePath))) {
+      debug(`Team ${teamId} has no coderepos yet`)
+      return
+    }
+    const data = await this.repo.readFile(relativePath)
+    const inData: Array<Project> = get(data, getTeamCodereposJsonPath(teamId), [])
+    inData.forEach((inCoderepo) => {
+      const res: any = this.db.populateItem('coderepos', { ...inCoderepo, teamId }, undefined, inCoderepo.id as string)
+      debug(`Loaded coderepo: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
+    })
+  }
+
   async loadTeamBuilds(teamId: string): Promise<void> {
     const relativePath = getTeamBuildsFilePath(teamId)
     if (!(await this.repo.fileExists(relativePath))) {
@@ -1761,6 +1876,7 @@ export default class OtomiStack {
         this.loadTeamWorkloads(team.id!)
         this.loadTeamBackups(team.id!)
         this.loadTeamProjects(team.id!)
+        this.loadTeamCoderepos(team.id!)
         this.loadTeamBuilds(team.id!)
         this.loadTeamPolicies(team.id!)
       }),
@@ -1910,6 +2026,17 @@ export default class OtomiStack {
     const relativePath = getTeamProjectsFilePath(teamId)
     const outData: Record<string, any> = set({}, getTeamProjectsJsonPath(teamId), cleaneProjects)
     debug(`Saving projects of team: ${teamId}`)
+    await this.repo.writeFile(relativePath, outData)
+  }
+
+  async saveTeamCoderepos(teamId: string): Promise<void> {
+    const coderepos = this.db.getCollection('coderepos', { teamId }) as Array<Coderepo>
+    const cleaneProjects: Array<Record<string, any>> = coderepos.map((obj) => {
+      return omit(obj, ['teamId'])
+    })
+    const relativePath = getTeamCodereposFilePath(teamId)
+    const outData: Record<string, any> = set({}, getTeamCodereposJsonPath(teamId), cleaneProjects)
+    debug(`Saving coderepos of team: ${teamId}`)
     await this.repo.writeFile(relativePath, outData)
   }
 

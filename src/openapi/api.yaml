@@ -1145,6 +1145,116 @@ paths:
               schema:
                 $ref: '#/components/schemas/Project'
 
+  /coderepos:
+    get:
+      operationId: getAllCoderepos
+      description: Get all code repositories
+      x-aclSchema: Coderepo
+      responses:
+        '200':
+          description: Successfully obtained all code repositories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Coderepo'
+        '400':
+          <<: *BadRequest
+
+  '/teams/{teamId}/coderepos':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamCoderepos
+      description: Get code repos from a given team
+      x-aclSchema: Coderepo
+      responses:
+        '200':
+          description: Successfully obtained code repositories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Coderepo'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenApiValidationError'
+    post:
+      operationId: createCoderepo
+      description: Create a team code repo
+      x-aclSchema: Coderepo
+      parameters:
+        - name: teamId
+          in: path
+          description: ID of team
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Coderepo'
+        description: Coderepo object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored code repo configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coderepo'
+
+  '/teams/{teamId}/coderepos/{coderepoId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/coderepoParams'
+    get:
+      operationId: getCoderepo
+      description: Get a code repo from a given team
+      x-aclSchema: Coderepo
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained code repo configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coderepo'
+    put:
+      operationId: editCoderepo
+      description: Edit a code repo from a given team
+      x-aclSchema: Coderepo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Coderepo'
+        description: Coderepo object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team code repo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coderepo'
+    delete:
+      operationId: deleteCoderepo
+      description: Delete a code repo from a given team
+      x-aclSchema: Coderepo
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a team code repo
+
   '/workloads':
     get:
       operationId: getAllWorkloads
@@ -1370,6 +1480,56 @@ paths:
               schema:
                 $ref: '#/components/schemas/SettingsInfo'
 
+  /testRepoConnect:
+    get:
+      operationId: getTestRepoConnect
+      description: Get settings information from the 'settings.yaml' file.
+      x-aclSchema: TestRepoConnect
+      parameters:
+        - name: url
+          in: query
+          description: URL of the repository
+          schema:
+            type: string
+        - name: teamId
+          in: query
+          description: Id of the team
+          schema:
+            type: string
+        - name: secret
+          in: query
+          description: Name of the secret for private repositories
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request is successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestRepoConnect'
+
+  /internalRepoUrls:
+    get:
+      operationId: getInternalRepoUrls
+      x-aclSchema: InternalRepoUrls
+      parameters:
+        - name: teamId
+          in: query
+          description: ID of the team
+          schema:
+            type: string
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained internal repo urls
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
   '/objwizard':
     post:
       operationId: createObjWizard
@@ -1558,6 +1718,13 @@ components:
       required: true
       schema:
         type: string
+    coderepoParams:
+      name: coderepoId
+      in: path
+      description: ID of the code repo
+      required: true
+      schema:
+        type: string
     teamParams:
       name: teamId
       in: path
@@ -1629,6 +1796,8 @@ components:
       $ref: cloudtty.yaml#/Cloudtty
     Cluster:
       $ref: cluster.yaml#/Cluster
+    Coderepo:
+      $ref: coderepo.yaml#/Coderepo
     Ingress:
       $ref: service.yaml#/Ingress
     IngressCluster:
@@ -1679,6 +1848,10 @@ components:
       $ref: settings.yaml#/Settings
     SettingsInfo:
       $ref: settingsinfo.yaml#/SettingsInfo
+    TestRepoConnect:
+      $ref: testrepoconnect.yaml#/TestRepoConnect
+    InternalRepoUrls:
+      $ref: internalRepoUrls.yaml#/InternalRepoUrls
     Team:
       $ref: team.yaml#/Team
     TeamAuthz:
