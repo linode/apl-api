@@ -161,12 +161,18 @@ export default class OtomiStack {
   transformApps(appsObj: Record<string, any>): App[] {
     if (!appsObj || typeof appsObj !== 'object') return []
 
-    return Object.entries(appsObj).map(([appId, appData]) => ({
-      id: appId,
-      enabled: appData.enabled ?? false,
-      values: omit(appData, ['enabled']), // Remove `enabled` from values
-      rawValues: {},
-    }))
+    return Object.entries(appsObj).map(([appId, appData]) => {
+      // Retrieve schema to check if the `enabled` flag should be considered
+      const appSchema = getAppSchema(appId)
+      const isEnabled = appSchema?.properties?.enabled ? !!appData.enabled : undefined
+
+      return {
+        id: appId,
+        enabled: isEnabled,
+        values: omit(appData, ['enabled']),
+        rawValues: {},
+      }
+    })
   }
 
   async initRepo(repoService?: RepoService): Promise<void> {
