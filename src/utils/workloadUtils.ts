@@ -9,10 +9,12 @@ export interface NewChartValues {
   chartIcon?: string
   chartPath: string
   revision: string
+  allowTeams: boolean
 }
 
 export interface NewChartPayload extends NewChartValues {
   teamId: string
+  userSub: string
 }
 
 function throwChartError(message: string) {
@@ -63,8 +65,11 @@ export async function updateChartIconInYaml(chartYamlPath: string, newIcon: stri
  *
  * @param sparsePath - The folder where rbac.yaml resides (e.g. "/tmp/otomi/charts/mock-sub-value")
  * @param chartKey - The key to add under the "rbac" section (e.g. "quickstart-cassandra")
+ * @param allowTeams - Boolean indicating if teams are allowed to use the chart.
+ *                     If false, the key is set to [].
+ *                     If true, the key is set to null.
  */
-export async function updateRbacForNewChart(sparsePath: string, chartKey: string): Promise<void> {
+export async function updateRbacForNewChart(sparsePath: string, chartKey: string, allowTeams: boolean): Promise<void> {
   const rbacFilePath = `${sparsePath}/rbac.yaml`
   let rbacData: any = {}
   console.log('update rbac reach rbacFilePath', rbacFilePath)
@@ -73,7 +78,7 @@ export async function updateRbacForNewChart(sparsePath: string, chartKey: string
     rbacData = YAML.parse(fileContent) || {}
   } catch (error) {
     console.error('Error reading rbac.yaml:', error)
-    // Optionally, create a default structure if the file doesn't exist.
+    // Create a default structure if the file doesn't exist.
     rbacData = { rbac: {}, betaCharts: [] }
   }
 
@@ -81,12 +86,14 @@ export async function updateRbacForNewChart(sparsePath: string, chartKey: string
   if (!rbacData.rbac) rbacData.rbac = {}
 
   // Add the new chart entry if it doesn't exist.
-  if (!(chartKey in rbacData.rbac)) rbacData.rbac[chartKey] = null
+  // If allowTeams is false, set the value to an empty array ([]),
+  // otherwise (if true) set it to null.
+  if (!(chartKey in rbacData.rbac)) rbacData.rbac[chartKey] = allowTeams ? null : []
 
   // Stringify the updated YAML content and write it back.
   const newContent = YAML.stringify(rbacData)
   await writeFile(rbacFilePath, newContent, 'utf-8')
-  console.log(`Updated rbac.yaml: added ${chartKey}: null`)
+  console.log(`Updated rbac.yaml: added ${chartKey}: ${allowTeams ? 'null' : '[]'}`)
 }
 
 /**
@@ -99,14 +106,18 @@ export async function updateRbacForNewChart(sparsePath: string, chartKey: string
  * @param sparsePath - The subdirectory to sparse checkout (e.g. "helm/charts/nats")
  * @param revision - The branch or commit to checkout (e.g. "main")
  * @param chartIcon - the icon path
+ * @param allowTeams - Boolean indicating if teams are allowed to use the chart.
+ *                     If false, the key is set to [].
+ *                     If true, the key is set to null.
  */
 export async function sparseCloneChart(
-  url: string, // e.g. "https://github.com/bitnami/charts.git"
-  chartName: string, // e.g. "cassandra"
-  chartPath: string, // e.g. "bitnami/cassandra"
+  url: string,
+  chartName: string,
+  chartPath: string,
   sparsePath: string, // e.g. "/tmp/otomi/charts/mock-sub-value"
-  revision: string, // e.g. "main"
+  revision: string,
   chartIcon?: string,
+  allowTeams?: boolean,
 ): Promise<void> {
   // The final folder where the chart will reside.
   const checkoutPath = `${sparsePath}/${chartName}`
@@ -152,7 +163,7 @@ export async function sparseCloneChart(
 
   const chartKey = `quickstart-${chartName}`
   // update rbac file
-  await updateRbacForNewChart(sparsePath, chartKey)
+  await updateRbacForNewChart(sparsePath, chartKey, allowTeams as boolean)
 }
 
 export async function fetchWorkloadCatalog(
@@ -164,6 +175,7 @@ export async function fetchWorkloadCatalog(
   newChartName?: string,
   newChartPath?: string,
   newChartIcon?: string,
+  allowTeams?: boolean,
 ): Promise<any> {
   const helmChartsDir = `/tmp/otomi/charts/${sub}`
   const helmChartsRootDir = `/tmp/otomi/charts/mock-sub-value`
@@ -196,8 +208,17 @@ export async function fetchWorkloadCatalog(
     shell.exec(`git clone --depth 1 ${gitUrl} ${helmChartsDir}`)
   }
 
-  if (newChart)
-    await sparseCloneChart(url, newChartName as string, newChartPath as string, helmChartsDir, version, newChartIcon)
+  if (newChart) {
+    await sparseCloneChart(
+      url,
+      newChartName as string,
+      newChartPath as string,
+      helmChartsDir,
+      version,
+      newChartIcon,
+      allowTeams,
+    )
+  }
 
   // Read the folder contents.
   const files = await readdir(helmChartsDir, 'utf-8')

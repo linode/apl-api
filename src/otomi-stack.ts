@@ -1132,9 +1132,9 @@ export default class OtomiStack {
   }
 
   async createWorkloadCatalog(body: NewChartPayload): Promise<any> {
-    const { url, chartName, chartPath, chartIcon, revision, teamId } = body
-    console.log('halo create workload payload', body)
-    await fetchWorkloadCatalog(url, 'mock-sub-value', teamId, revision, true, chartName, chartPath, chartIcon)
+    const { url, chartName, chartPath, chartIcon, revision, allowTeams, teamId, userSub } = body
+
+    await fetchWorkloadCatalog(url, userSub, teamId, revision, true, chartName, chartPath, chartIcon, allowTeams)
   }
 
   async createWorkload(teamId: string, data: Workload): Promise<Workload> {
