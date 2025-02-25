@@ -7,7 +7,7 @@ import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readdir, readFile, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
-import { cloneDeep, filter, get, isArray, isEmpty, map, mapValues, omit, pick, set, unset } from 'lodash'
+import { cloneDeep, filter, isEmpty, map, mapValues, omit, pick, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import { AlreadyExists, GitPullError, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
 import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
@@ -885,12 +885,11 @@ export default class OtomiStack {
   }
 
   getTeamCoderepos(teamId: string): Array<Coderepo> {
-    const ids = { teamId }
-    return this.db.getCollection('coderepos', ids) as Array<Coderepo>
+    return this.repoService.getTeamConfigService(teamId).getCoderepos()
   }
 
   getAllCoderepos(): Array<Coderepo> {
-    const allCoderepos = this.db.getCollection('coderepos') as Array<Coderepo>
+    const allCoderepos = this.repoService.getAllCoderepos()
     return allCoderepos
   }
 
@@ -899,35 +898,33 @@ export default class OtomiStack {
       const body = { ...data }
       if (!body.private) unset(body, 'secret')
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const coderepo = this.db.createItem('coderepos', { ...body, teamId }, { teamId, label: body.label }) as Coderepo
-      await this.saveTeamCoderepos(teamId)
-      await this.doDeployment(['coderepos'])
+      const coderepo = this.repoService.getTeamConfigService(teamId).createCoderepo({ ...data, teamId })
+      await this.saveTeamCoderepo(teamId, coderepo)
+      await this.doDeployment(['coderepos'], teamId)
       return coderepo
     } catch (err) {
-      if (err.code === 409) err.publicMessage = 'Code repe label already exists'
+      if (err.code === 409) err.publicMessage = 'Code repo label already exists'
       throw err
     }
   }
 
-  getCoderepo(id: string): Coderepo {
-    return this.db.getItem('coderepos', { id }) as Coderepo
+  getCoderepo(teamId: string, id: string): Coderepo {
+    return this.repoService.getTeamConfigService(teamId).getCoderepo(id)
   }
 
-  async editCoderepo(id: string, data: Coderepo): Promise<Coderepo> {
+  async editCoderepo(teamId: string, id: string, data: Coderepo): Promise<Coderepo> {
     const body = { ...data }
     if (!body.private) unset(body, 'secret')
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const coderepo = this.db.updateItem('coderepos', body, { id }) as Coderepo
-    await this.saveTeamCoderepos(coderepo.teamId as string)
-    await this.doDeployment(['coderepos'])
+    const coderepo = this.repoService.getTeamConfigService(teamId).updateCoderepo(id, body)
+    await this.saveTeamCoderepo(teamId, coderepo)
+    await this.doDeployment(['coderepos'], teamId)
     return coderepo
   }
 
-  async deleteCoderepo(id: string): Promise<void> {
-    const coderepo = this.getCoderepo(id)
-    this.db.deleteItem('coderepos', { id })
-    await this.saveTeamCoderepos(coderepo.teamId as string)
-    await this.doDeployment(['coderepos'])
+  async deleteCoderepo(teamId: string, id: string): Promise<void> {
+    await this.deleteTeamCoderepo(teamId, id)
+    await this.doDeployment(['coderepos'], teamId)
   }
 
   async getTestRepoConnect(url: string, teamId: string, secretName: string): Promise<TestRepoConnect> {
@@ -961,7 +958,7 @@ export default class OtomiStack {
   async getInternalRepoUrls(teamId: string): Promise<string[]> {
     if (env.isDev || !teamId || teamId === 'admin') return []
     const { cluster, otomi } = this.getSettings(['cluster', 'otomi'])
-    const gitea = this.getApp('admin', 'gitea')
+    const gitea = this.getApp('gitea')
     const username = gitea?.values?.adminUsername as string
     const password = (gitea?.values?.adminPassword as string) || (otomi?.adminPassword as string)
     const orgName = `team-${teamId}`
@@ -1704,23 +1701,28 @@ export default class OtomiStack {
     await this.git.saveConfig(repo, fileMap)
   }
 
-  async saveTeamCoderepos(teamId: string): Promise<void> {
-    const coderepos = this.db.getCollection('coderepos', { teamId }) as Array<Coderepo>
-    const cleaneProjects: Array<Record<string, any>> = coderepos.map((obj) => {
-      return omit(obj, ['teamId'])
-    })
-    const relativePath = getTeamCodereposFilePath(teamId)
-    const outData: Record<string, any> = set({}, getTeamCodereposJsonPath(teamId), cleaneProjects)
-    debug(`Saving coderepos of team: ${teamId}`)
-    await this.repo.writeFile(relativePath, outData)
-  }
-
   async deleteTeamBuild(teamId: string, id: string): Promise<void> {
     const build = this.repoService.getTeamConfigService(teamId).getBuild(id)
     this.repoService.getTeamConfigService(teamId).deleteBuild(id)
 
     const repo = this.createTeamConfigInRepo(teamId, 'builds', build)
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamBuild')!
+    await this.git.deleteConfig(repo, fileMap)
+  }
+
+  async saveTeamCoderepo(teamId: string, coderepo: Coderepo): Promise<void> {
+    debug(`Saving coderepo ${coderepo.label} for team ${teamId}`)
+    const repo = this.createTeamConfigInRepo(teamId, 'coderepos', coderepo)
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamCoderepo')!
+    await this.git.saveConfig(repo, fileMap)
+  }
+
+  async deleteTeamCoderepo(teamId: string, id: string): Promise<void> {
+    const coderepo = this.repoService.getTeamConfigService(teamId).getCoderepo(id)
+    this.repoService.getTeamConfigService(teamId).deleteCoderepo(id)
+
+    const repo = this.createTeamConfigInRepo(teamId, 'coderepos', coderepo)
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamCoderepo')!
     await this.git.deleteConfig(repo, fileMap)
   }
 

@@ -2,6 +2,7 @@ import {
   App,
   Backup,
   Build,
+  Coderepo,
   Netpol,
   Policies,
   Policy,
@@ -65,6 +66,42 @@ export class TeamConfigService {
 
   public deleteBuild(id: string): void {
     remove(this.teamConfig.builds, { id })
+  }
+
+  // =====================================
+  // == CODEREPOS CRUD ==
+  // =====================================
+
+  public createCoderepo(coderepo: Coderepo): Coderepo {
+    this.teamConfig.coderepos ??= []
+    const newCoderepo = { ...coderepo, id: coderepo.id ?? uuidv4() }
+    if (find(this.teamConfig.coderepos, { name: newCoderepo.id })) {
+      throw new AlreadyExists(`Coderepo[${newCoderepo.id}] already exists.`)
+    }
+    this.teamConfig.coderepos.push(newCoderepo)
+    return newCoderepo
+  }
+
+  public getCoderepo(id: string): Coderepo {
+    const coderepo = find(this.teamConfig.coderepos, { id })
+    if (!coderepo) {
+      throw new NotExistError(`Coderepo[${id}] does not exist.`)
+    }
+    return coderepo
+  }
+
+  public getCoderepos(): Coderepo[] {
+    return this.teamConfig.coderepos ?? []
+  }
+
+  public updateCoderepo(id: string, updates: Partial<Coderepo>): Coderepo {
+    const coderepo = find(this.teamConfig.coderepos, { id })
+    if (!coderepo) throw new NotExistError(`Coderepo[${id}] does not exist.`)
+    return merge(coderepo, updates)
+  }
+
+  public deleteCoderepo(id: string): void {
+    remove(this.teamConfig.coderepos, { id })
   }
 
   // =====================================

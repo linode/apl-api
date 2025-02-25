@@ -9,7 +9,6 @@ import request, { SuperAgentTest } from 'supertest'
 import { HttpError } from './error'
 import { getSessionStack } from './middleware'
 import { App, Coderepo, SealedSecret } from './otomi-models'
-import { mockDeep } from 'jest-mock-extended'
 import * as getValuesSchemaModule from './utils'
 import { Git } from './git'
 

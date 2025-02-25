@@ -6,25 +6,24 @@ const debug = Debug('otomi:api:teams:coderepos')
 
 export default function (): OperationHandlerArray {
   const del: Operation = [
-    async ({ otomi, params: { coderepoId } }: OpenApiRequestExt, res): Promise<void> => {
+    async ({ otomi, params: { teamId, coderepoId } }: OpenApiRequestExt, res): Promise<void> => {
       debug(`deleteCoderepo(${coderepoId})`)
-      await otomi.deleteCoderepo(decodeURIComponent(coderepoId))
+      await otomi.deleteCoderepo(decodeURIComponent(teamId), decodeURIComponent(coderepoId))
       res.json({})
     },
   ]
   const get: Operation = [
-    ({ otomi, params: { coderepoId } }: OpenApiRequestExt, res): void => {
+    ({ otomi, params: { teamId, coderepoId } }: OpenApiRequestExt, res): void => {
       debug(`getCoderepo(${coderepoId})`)
-      const data = otomi.getCoderepo(decodeURIComponent(coderepoId))
+      const data = otomi.getCoderepo(decodeURIComponent(teamId), decodeURIComponent(coderepoId))
       res.json(data)
     },
   ]
   const put: Operation = [
     async ({ otomi, params: { teamId, coderepoId }, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`editCoderepo(${coderepoId})`)
-      const data = await otomi.editCoderepo(decodeURIComponent(coderepoId), {
+      const data = await otomi.editCoderepo(decodeURIComponent(teamId), decodeURIComponent(coderepoId), {
         ...body,
-        teamId: decodeURIComponent(teamId),
       } as Coderepo)
       res.json(data)
     },

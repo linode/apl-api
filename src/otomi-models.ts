@@ -172,6 +172,7 @@ export interface TeamConfig {
   apps: App[]
   backups: Backup[]
   builds: Build[]
+  coderepos: Coderepo[]
   netpols: Netpol[]
   policies: Policies
   projects: Project[]

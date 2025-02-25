@@ -29,6 +29,7 @@ export interface FileMap {
     | 'AplSmtp'
     | 'AplBackupCollection'
     | 'AplUser'
+    | 'AplTeamCoderepo'
     | 'AplTeamBuild'
     | 'AplTeamPolicy'
     | 'AplTeamSettingSet'
@@ -231,6 +232,15 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
+    },
+    {
+      kind: 'AplTeamCoderepo',
+      envDir,
+      jsonPathExpression: '$.teamConfig.*.coderepos[*]',
+      pathGlob: `${envDir}/env/teams/*/coderepos/*.yaml`,
+      processAs: 'arrayItem',
+      resourceGroup: 'team',
+      resourceDir: 'coderepos',
     },
     {
       kind: 'AplTeamBuild',

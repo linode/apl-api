@@ -4,6 +4,7 @@ import {
   Backup,
   Build,
   Cluster,
+  Coderepo,
   Dns,
   Ingress,
   Kms,
@@ -127,6 +128,7 @@ export class RepoService {
   private getDefaultTeamConfig(): TeamConfig {
     return {
       builds: [],
+      coderepos: [],
       workloads: [],
       services: [],
       sealedSecrets: [],
@@ -250,6 +252,10 @@ export class RepoService {
 
   public getAllBackups(): Backup[] {
     return flatMap(this.repo.teamConfig, 'backups').filter(Boolean) ?? []
+  }
+
+  public getAllCoderepos(): Coderepo[] {
+    return flatMap(this.repo.teamConfig, 'coderepos').filter(Boolean) ?? []
   }
 
   /** Retrieve a collection dynamically from the Repo */

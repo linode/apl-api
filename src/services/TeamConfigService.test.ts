@@ -25,6 +25,7 @@ describe('TeamConfigService', () => {
   beforeEach(() => {
     teamConfig = {
       builds: [],
+      coderepos: [],
       workloads: [],
       workloadValues: [],
       services: [],
