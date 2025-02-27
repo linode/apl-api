@@ -477,7 +477,13 @@ export async function loadFileToSpec(
   const data = await deps.loadYaml(filePath)
   if (fileMap.processAs === 'arrayItem') {
     const ref: Record<string, any>[] = get(spec, jsonPath)
-    ref.push(data?.spec)
+    //TODO remove this custom workaround for workloadValues as it has no spec
+    if (fileMap.kind === 'AplTeamWorkloadValues') {
+      const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
+      ref.push({ ...data, name })
+    } else {
+      ref.push(data?.spec)
+    }
   } else {
     const ref: Record<string, any> = get(spec, jsonPath)
     // Decrypted secrets may need to be merged with plain text specs

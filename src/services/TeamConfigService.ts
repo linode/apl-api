@@ -55,7 +55,11 @@ export class TeamConfigService {
   }
 
   public getBuilds(): Build[] {
-    return this.teamConfig.builds ?? []
+    const teamId = this.teamConfig.settings?.id
+    return (this.teamConfig.builds ?? []).map((build) => ({
+      ...build,
+      teamId,
+    }))
   }
 
   public updateBuild(name: string, updates: Partial<Build>): Build {
@@ -91,7 +95,11 @@ export class TeamConfigService {
   }
 
   public getCodeRepos(): CodeRepo[] {
-    return this.teamConfig.codeRepos ?? []
+    const teamId = this.teamConfig.settings?.id
+    return (this.teamConfig.codeRepos ?? []).map((codeRepo) => ({
+      ...codeRepo,
+      teamId,
+    }))
   }
 
   public updateCodeRepo(id: string, updates: Partial<CodeRepo>): CodeRepo {
@@ -128,7 +136,11 @@ export class TeamConfigService {
   }
 
   public getWorkloads(): Workload[] {
-    return this.teamConfig.workloads ?? []
+    const teamId = this.teamConfig.settings?.id
+    return (this.teamConfig.workloads ?? []).map((workloadValues) => ({
+      ...workloadValues,
+      teamId,
+    }))
   }
 
   public updateWorkload(name: string, updates: Partial<Workload>): Workload {
@@ -199,8 +211,13 @@ export class TeamConfigService {
   }
 
   public getServices(): Service[] {
-    return this.teamConfig.services ?? []
+    const teamId = this.teamConfig.settings?.id
+    return (this.teamConfig.services ?? []).map((service) => ({
+      ...service,
+      teamId,
+    }))
   }
+
   public updateService(name: string, updates: Partial<Service>): Service {
     const service = find(this.teamConfig.services, { name })
     if (!service) throw new NotExistError(`Service[${name}] does not exist.`)
@@ -234,7 +251,11 @@ export class TeamConfigService {
   }
 
   public getSealedSecrets(): SealedSecret[] {
-    return this.teamConfig.sealedSecrets ?? []
+    const teamId = this.teamConfig.settings?.id
+    return (this.teamConfig.sealedSecrets ?? []).map((sealedSecret) => ({
+      ...sealedSecret,
+      teamId,
+    }))
   }
 
   public updateSealedSecret(name: string, updates: Partial<SealedSecret>): SealedSecret {
@@ -270,7 +291,11 @@ export class TeamConfigService {
   }
 
   public getBackups(): Backup[] {
-    return this.teamConfig.backups ?? []
+    const teamId = this.teamConfig.settings?.id
+    return (this.teamConfig.backups ?? []).map((backup) => ({
+      ...backup,
+      teamId,
+    }))
   }
 
   public updateBackup(name: string, updates: Partial<Backup>): Backup {
@@ -306,7 +331,11 @@ export class TeamConfigService {
   }
 
   public getProjects(): Project[] {
-    return this.teamConfig.projects ?? []
+    const teamId = this.teamConfig.settings?.id
+    return (this.teamConfig.projects ?? []).map((project) => ({
+      ...project,
+      teamId,
+    }))
   }
 
   public updateProject(name: string, updates: Partial<Project>): Project {
@@ -342,7 +371,11 @@ export class TeamConfigService {
   }
 
   public getNetpols(): Netpol[] {
-    return this.teamConfig.netpols ?? []
+    const teamId = this.teamConfig.settings?.id
+    return (this.teamConfig.netpols ?? []).map((netpol) => ({
+      ...netpol,
+      teamId,
+    }))
   }
 
   public updateNetpol(name: string, updates: Partial<Netpol>): Netpol {
@@ -395,7 +428,11 @@ export class TeamConfigService {
   }
 
   public getApps(): App[] {
-    return this.teamConfig.apps ?? []
+    const teamId = this.teamConfig.settings?.id
+    return (this.teamConfig.apps ?? []).map((app) => ({
+      ...app,
+      teamId,
+    }))
   }
 
   // =====================================
