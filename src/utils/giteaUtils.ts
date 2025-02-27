@@ -72,7 +72,7 @@ export async function createGiteaWebhook(teamId: string, data: Build): Promise<G
     })
     return response.data
   } catch (error) {
-    console.error(`Error creating webhook: ${error.message}`)
+    console.error(`Error creating webhook`)
     return { id: undefined }
   }
 }
@@ -98,7 +98,7 @@ export async function updateGiteaWebhook(
       console.error(`Webhook for Build '${data.name}' could not be found in team-${teamId}`)
       return await createGiteaWebhook(teamId, data)
     } else {
-      console.error(`Error updating webhook '${data.name}' in team-${teamId}: ${error.message}`)
+      console.error(`Error updating webhook '${data.name}' in team-${teamId}`)
       return { id: undefined }
     }
   }
@@ -119,6 +119,6 @@ export async function deleteGiteaWebhook(webhookId: number, teamId: string, data
   } catch (error) {
     if (error.response.status === 404)
       console.error(`Webhook for Build '${data.name}' could not be found in team-${teamId}`)
-    else console.error(`Error removing webhook '${data.name}' in team-${teamId}: ${error.message}`)
+    else console.error(`Error removing webhook '${data.name}' in team-${teamId}`)
   }
 }
