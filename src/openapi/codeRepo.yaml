@@ -20,7 +20,7 @@ CodeRepo:
       type: string
     teamId:
       $ref: definitions.yaml#/idName
-    label:
+    name:
       $ref: 'definitions.yaml#/idName'
     gitService:
       type: string
@@ -37,7 +37,7 @@ CodeRepo:
     secret:
       type: string
   required:
-    - label
+    - name
     - gitService
     - repositoryUrl
   type: object

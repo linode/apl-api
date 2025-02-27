@@ -176,7 +176,7 @@ export interface TeamConfig {
   netpols: Netpol[]
   policies: Policies
   projects: Project[]
-  sealedSecrets: SealedSecret[]
+  sealedsecrets: SealedSecret[]
   services: Service[]
   settings: Team
   workloads: Workload[]

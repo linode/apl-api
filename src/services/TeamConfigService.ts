@@ -1,3 +1,6 @@
+import { find, has, merge, remove, set } from 'lodash'
+import { v4 as uuidv4 } from 'uuid'
+import { AlreadyExists, NotExistError } from '../error'
 import {
   App,
   Backup,
@@ -14,9 +17,6 @@ import {
   Workload,
   WorkloadValues,
 } from '../otomi-models'
-import { find, has, merge, remove, set } from 'lodash'
-import { AlreadyExists, NotExistError } from '../error'
-import { v4 as uuidv4 } from 'uuid'
 
 export class TeamConfigService {
   constructor(private teamConfig: TeamConfig) {
@@ -24,7 +24,7 @@ export class TeamConfigService {
     this.teamConfig.workloads ??= []
     this.teamConfig.workloadValues ??= []
     this.teamConfig.services ??= []
-    this.teamConfig.sealedSecrets ??= []
+    this.teamConfig.sealedsecrets ??= []
     this.teamConfig.backups ??= []
     this.teamConfig.projects ??= []
     this.teamConfig.netpols ??= []
@@ -78,18 +78,17 @@ export class TeamConfigService {
 
   public createCodeRepo(codeRepo: CodeRepo): CodeRepo {
     this.teamConfig.codeRepos ??= []
-    const newCodeRepo = { ...codeRepo, id: codeRepo.id ?? uuidv4() }
-    if (find(this.teamConfig.codeRepos, { name: newCodeRepo.id })) {
-      throw new AlreadyExists(`CodeRepo[${newCodeRepo.id}] already exists.`)
+    if (find(this.teamConfig.codeRepos, { name: codeRepo.name })) {
+      throw new AlreadyExists(`CodeRepo[${codeRepo.name}] already exists.`)
     }
-    this.teamConfig.codeRepos.push(newCodeRepo)
-    return newCodeRepo
+    this.teamConfig.codeRepos.push(codeRepo)
+    return codeRepo
   }
 
-  public getCodeRepo(id: string): CodeRepo {
-    const codeRepo = find(this.teamConfig.codeRepos, { id })
+  public getCodeRepo(name: string): CodeRepo {
+    const codeRepo = find(this.teamConfig.codeRepos, { name })
     if (!codeRepo) {
-      throw new NotExistError(`CodeRepo[${id}] does not exist.`)
+      throw new NotExistError(`CodeRepo[${name}] does not exist.`)
     }
     return codeRepo
   }
@@ -102,14 +101,14 @@ export class TeamConfigService {
     }))
   }
 
-  public updateCodeRepo(id: string, updates: Partial<CodeRepo>): CodeRepo {
-    const codeRepo = find(this.teamConfig.codeRepos, { id })
-    if (!codeRepo) throw new NotExistError(`CodeRepo[${id}] does not exist.`)
+  public updateCodeRepo(name: string, updates: Partial<CodeRepo>): CodeRepo {
+    const codeRepo = find(this.teamConfig.codeRepos, { name })
+    if (!codeRepo) throw new NotExistError(`CodeRepo[${name}] does not exist.`)
     return merge(codeRepo, updates)
   }
 
-  public deleteCodeRepo(id: string): void {
-    remove(this.teamConfig.codeRepos, { id })
+  public deleteCodeRepo(name: string): void {
+    remove(this.teamConfig.codeRepos, { name })
   }
 
   // =====================================
@@ -233,17 +232,17 @@ export class TeamConfigService {
   // =====================================
 
   public createSealedSecret(secret: SealedSecret): SealedSecret {
-    this.teamConfig.sealedSecrets ??= []
+    this.teamConfig.sealedsecrets ??= []
     const newSecret = { ...secret, id: secret.id ?? uuidv4() }
-    if (find(this.teamConfig.sealedSecrets, { name: newSecret.name })) {
+    if (find(this.teamConfig.sealedsecrets, { name: newSecret.name })) {
       throw new AlreadyExists(`SealedSecret[${newSecret.name}] already exists.`)
     }
-    this.teamConfig.sealedSecrets.push(newSecret)
+    this.teamConfig.sealedsecrets.push(newSecret)
     return newSecret
   }
 
   public getSealedSecret(name: string): SealedSecret {
-    const sealedSecrets = find(this.teamConfig.sealedSecrets, { name })
+    const sealedSecrets = find(this.teamConfig.sealedsecrets, { name })
     if (!sealedSecrets) {
       throw new NotExistError(`SealedSecret[${name}] does not exist.`)
     }
@@ -252,20 +251,20 @@ export class TeamConfigService {
 
   public getSealedSecrets(): SealedSecret[] {
     const teamId = this.teamConfig.settings?.id
-    return (this.teamConfig.sealedSecrets ?? []).map((sealedSecret) => ({
+    return (this.teamConfig.sealedsecrets ?? []).map((sealedSecret) => ({
       ...sealedSecret,
       teamId,
     }))
   }
 
   public updateSealedSecret(name: string, updates: Partial<SealedSecret>): SealedSecret {
-    const secret = find(this.teamConfig.sealedSecrets, { name })
+    const secret = find(this.teamConfig.sealedsecrets, { name })
     if (!secret) throw new NotExistError(`SealedSecret[${name}] does not exist.`)
     return merge(secret, updates)
   }
 
   public deleteSealedSecret(name: string): void {
-    remove(this.teamConfig.sealedSecrets, { name })
+    remove(this.teamConfig.sealedsecrets, { name })
   }
 
   // =====================================

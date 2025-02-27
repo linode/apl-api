@@ -33,6 +33,10 @@ SettingsInfo:
         hasExternalIDP:
           type: boolean
           default: false
+    smtp:
+      properties:
+        smarthost:
+          type: string
     ingressClassNames:
       description: Ingress class names that are used by the cluster.
       items:

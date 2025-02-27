@@ -10,6 +10,7 @@ import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, isEmpty, map, mapValues, omit, pick, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import { AlreadyExists, GitPullError, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
+import getRepo, { Git } from 'src/git'
 import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
@@ -38,7 +39,6 @@ import {
   Workload,
   WorkloadValues,
 } from 'src/otomi-models'
-import getRepo, { Git } from 'src/git'
 import { arrayToObject, getValuesSchema, removeBlankAttributes } from 'src/utils'
 import {
   cleanEnv,
@@ -70,6 +70,8 @@ import {
   k8sdelete,
   watchPodUntilRunning,
 } from './k8s_operations'
+import { getFileMaps, loadValues } from './repo'
+import { RepoService } from './services/RepoService'
 import { validateBackupFields } from './utils/backupUtils'
 import {
   getGiteaRepoUrls,
@@ -82,8 +84,6 @@ import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
-import { getFileMaps, loadValues } from './repo'
-import { RepoService } from './services/RepoService'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -801,7 +801,6 @@ export default class OtomiStack {
       services = {}
     }
     return {
-      id: name,
       teamId,
       ...project,
       name: project.name,
@@ -814,42 +813,49 @@ export default class OtomiStack {
 
   async editProject(teamId: string, name: string, data: Project): Promise<Project> {
     const { build, workload, workloadValues, service } = data
-
     let b, w, wv, s
-    if (!build?.name && build?.mode) {
-      b = this.repoService.getTeamConfigService(teamId).createBuild({ ...build, teamId })
-    } else if (build?.name) {
-      b = this.repoService.getTeamConfigService(teamId).updateBuild(build.name, build)
+
+    if (build) {
+      try {
+        b = this.repoService.getTeamConfigService(teamId).createBuild({ ...build, teamId })
+      } catch (error) {
+        if (error.code == 409) b = this.repoService.getTeamConfigService(teamId).updateBuild(build.name, build)
+      }
     }
 
-    if (workload && !workload?.name) {
-      w = this.repoService.getTeamConfigService(teamId).createWorkload(workload)
-    } else if (workload?.name) {
-      w = this.repoService.getTeamConfigService(teamId).updateWorkload(workload.name, workload)
+    if (workload) {
+      try {
+        w = this.repoService.getTeamConfigService(teamId).createWorkload(workload)
+      } catch (error) {
+        if (error.code === 409)
+          w = this.repoService.getTeamConfigService(teamId).updateWorkload(workload.name, workload)
+      }
     }
 
-    if (workloadValues && !workloadValues?.name) {
-      wv = this.repoService.getTeamConfigService(teamId).createWorkloadValues({ ...workloadValues, name })
-    } else if (workloadValues?.name) {
-      wv = this.repoService
-        .getTeamConfigService(teamId)
-        .updateWorkloadValues(workloadValues.name, { ...workloadValues, name })
+    if (workload && workloadValues) {
+      try {
+        wv = this.repoService.getTeamConfigService(teamId).createWorkloadValues({ ...workloadValues, name })
+      } catch (error) {
+        if (error.code === 409)
+          wv = this.repoService.getTeamConfigService(teamId).updateWorkloadValues(name, { ...workloadValues, name })
+      }
     }
 
-    if (service && !service?.name) {
-      s = this.repoService.getTeamConfigService(teamId).createService({ ...service, teamId })
-    } else if (service?.name) {
-      s = this.repoService.getTeamConfigService(teamId).updateService(service.name, service)
+    if (service) {
+      try {
+        s = this.repoService.getTeamConfigService(teamId).createService({ ...service, teamId })
+      } catch (error) {
+        if (error.code === 409) s = this.repoService.getTeamConfigService(teamId).updateService(service.name, service)
+      }
     }
 
     const updatedData = {
-      id: name,
       name,
       teamId,
-      ...(b && { build: { id: b.id } }),
-      workload: { id: w.id },
-      workloadValues: { id: wv.id },
-      service: { id: s.id },
+      ...(b && { build: { name: b.name } }),
+      workload: { name: w.name },
+      workloadValues: { name: wv.name },
+      service: { name: s.name },
     }
 
     let project: Project
@@ -914,22 +920,22 @@ export default class OtomiStack {
     }
   }
 
-  getCodeRepo(teamId: string, id: string): CodeRepo {
-    return this.repoService.getTeamConfigService(teamId).getCodeRepo(id)
+  getCodeRepo(teamId: string, name: string): CodeRepo {
+    return this.repoService.getTeamConfigService(teamId).getCodeRepo(name)
   }
 
-  async editCodeRepo(teamId: string, id: string, data: CodeRepo): Promise<CodeRepo> {
+  async editCodeRepo(teamId: string, name: string, data: CodeRepo): Promise<CodeRepo> {
     const body = { ...data }
     if (!body.private) unset(body, 'secret')
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const codeRepo = this.repoService.getTeamConfigService(teamId).updateCodeRepo(id, body)
+    const codeRepo = this.repoService.getTeamConfigService(teamId).updateCodeRepo(name, body)
     await this.saveTeamCodeRepo(teamId, codeRepo)
     await this.doDeployment(['codeRepos'], teamId)
     return codeRepo
   }
 
-  async deleteCodeRepo(teamId: string, id: string): Promise<void> {
-    await this.deleteTeamCodeRepo(teamId, id)
+  async deleteCodeRepo(teamId: string, name: string): Promise<void> {
+    await this.deleteTeamCodeRepo(teamId, name)
     await this.doDeployment(['codeRepos'], teamId)
   }
 
@@ -1716,15 +1722,15 @@ export default class OtomiStack {
   }
 
   async saveTeamCodeRepo(teamId: string, codeRepo: CodeRepo): Promise<void> {
-    debug(`Saving codeRepo ${codeRepo.label} for team ${teamId}`)
+    debug(`Saving codeRepo ${codeRepo.name} for team ${teamId}`)
     const repo = this.createTeamConfigInRepo(teamId, 'codeRepos', codeRepo)
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamCodeRepo')!
     await this.git.saveConfig(repo, fileMap)
   }
 
-  async deleteTeamCodeRepo(teamId: string, id: string): Promise<void> {
-    const codeRepo = this.repoService.getTeamConfigService(teamId).getCodeRepo(id)
-    this.repoService.getTeamConfigService(teamId).deleteCodeRepo(id)
+  async deleteTeamCodeRepo(teamId: string, label: string): Promise<void> {
+    const codeRepo = this.repoService.getTeamConfigService(teamId).getCodeRepo(label)
+    this.repoService.getTeamConfigService(teamId).deleteCodeRepo(label)
 
     const repo = this.createTeamConfigInRepo(teamId, 'codeRepos', codeRepo)
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamCodeRepo')!
@@ -1760,9 +1766,31 @@ export default class OtomiStack {
     await this.git.deleteConfig(repo, fileMap)
   }
 
+  convertDbServiceToValues(svc: any): any {
+    const svcCloned = omit(svc, ['teamId', 'ingress', 'path'])
+    if (svc.ingress && svc.ingress.type !== 'cluster') {
+      const ing = svc.ingress
+      if (ing.useDefaultHost) svcCloned.ownHost = true
+      else svcCloned.domain = ing.subdomain ? `${ing.subdomain}.${ing.domain}` : ing.domain
+      if (ing.hasCert) svcCloned.hasCert = true
+      if (ing.certName) svcCloned.certName = ing.certName
+      if (ing.certArn) svcCloned.certArn = ing.certArn
+      if (ing.paths) svcCloned.paths = ing.paths
+      if (ing.forwardPath) svcCloned.forwardPath = true
+      if (ing.tlsPass) svcCloned.tlsPass = true
+      if (ing.ingressClassName) svcCloned.ingressClassName = ing.ingressClassName
+      if (ing.headers) svcCloned.headers = ing.headers
+      if (ing.useCname) svcCloned.useCname = ing.useCname
+      if (ing.cname) svcCloned.cname = ing.cname
+      svcCloned.type = svc.ingress.type
+    } else svcCloned.type = 'cluster'
+    return svcCloned
+  }
+
   async saveTeamService(teamId: string, service: Service): Promise<void> {
     debug(`Saving service: ${service.name} teamId: ${teamId}`)
-    const repo = this.createTeamConfigInRepo(teamId, 'services', service)
+    const newService = this.convertDbServiceToValues(service)
+    const repo = this.createTeamConfigInRepo(teamId, 'services', newService)
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamService')!
     await this.git.saveConfig(repo, fileMap)
   }

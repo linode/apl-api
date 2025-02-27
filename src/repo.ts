@@ -481,6 +481,9 @@ export async function loadFileToSpec(
     if (fileMap.kind === 'AplTeamWorkloadValues') {
       const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
       ref.push({ ...data, name })
+    } else if (fileMap.kind === 'AplTeamSecret') {
+      const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
+      ref.push({ ...data?.spec, name })
     } else {
       ref.push(data?.spec)
     }
