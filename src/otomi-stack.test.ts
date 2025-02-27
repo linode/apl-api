@@ -3,9 +3,9 @@ import { mockDeep } from 'jest-mock-extended'
 import { App, Build, Coderepo, User, Workload } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { Repo } from 'src/repo'
+import * as giteaUtils from 'src/utils/giteaUtils'
 import { loadSpec } from './app'
 import { PublicUrlExists } from './error'
-import * as utils from './utils'
 
 jest.mock('src/utils', () => {
   const originalModule = jest.requireActual('src/utils')
@@ -221,12 +221,12 @@ describe('Gitea webhook tests', () => {
   test('Should create a gitea wehbook when creating a build', async () => {
     buildData.trigger = true
     buildData.externalRepo = false
-    jest.spyOn(utils, 'createGiteaWebhook').mockResolvedValue(mockWebHookResponse)
+    jest.spyOn(giteaUtils, 'createGiteaWebhook').mockResolvedValue(mockWebHookResponse)
     jest.spyOn(otomiStack.db, 'createItem').mockReturnValue({})
 
     await otomiStack.createBuild(teamId, buildData)
 
-    expect(utils.createGiteaWebhook).toHaveBeenCalled()
+    expect(giteaUtils.createGiteaWebhook).toHaveBeenCalled()
   })
 
   // With "trigger = true" and "isExternal = false"
@@ -234,12 +234,12 @@ describe('Gitea webhook tests', () => {
     buildData.trigger = true
     buildData.externalRepo = false
     jest.spyOn(otomiStack, 'getBuild').mockReturnValue(buildResponse)
-    jest.spyOn(utils, 'updateGiteaWebhook').mockResolvedValue(mockWebHookResponse)
+    jest.spyOn(giteaUtils, 'updateGiteaWebhook').mockResolvedValue(mockWebHookResponse)
     jest.spyOn(otomiStack.db, 'updateItem').mockReturnValue({})
 
     await otomiStack.editBuild(teamId, buildData)
 
-    expect(utils.updateGiteaWebhook).toHaveBeenCalled()
+    expect(giteaUtils.updateGiteaWebhook).toHaveBeenCalled()
   })
 
   // With "trigger = true" and "isExternal = false"
@@ -247,35 +247,35 @@ describe('Gitea webhook tests', () => {
     buildData.trigger = true
     buildData.externalRepo = false
     jest.spyOn(otomiStack, 'getBuild').mockReturnValue(buildResponseWithoutWebhookId)
-    jest.spyOn(utils, 'createGiteaWebhook').mockResolvedValue(mockWebHookResponse)
+    jest.spyOn(giteaUtils, 'createGiteaWebhook').mockResolvedValue(mockWebHookResponse)
     jest.spyOn(otomiStack.db, 'updateItem').mockReturnValue({})
 
     await otomiStack.editBuild(teamId, buildData)
 
-    expect(utils.createGiteaWebhook).toHaveBeenCalled()
+    expect(giteaUtils.createGiteaWebhook).toHaveBeenCalled()
   })
 
   test('Should delete a gitea wehbook when updating a build that disables "trigger" and a gitea webhook does exists', async () => {
     buildData.trigger = false
     buildData.externalRepo = false
     jest.spyOn(otomiStack, 'getBuild').mockReturnValue(buildResponse)
-    jest.spyOn(utils, 'deleteGiteaWebhook').mockResolvedValue({})
+    jest.spyOn(giteaUtils, 'deleteGiteaWebhook').mockResolvedValue({})
     jest.spyOn(otomiStack.db, 'updateItem').mockReturnValue({})
 
     await otomiStack.editBuild(teamId, buildData)
 
-    expect(utils.deleteGiteaWebhook).toHaveBeenCalled()
+    expect(giteaUtils.deleteGiteaWebhook).toHaveBeenCalled()
   })
 
   test('Should delete a gitea wehbook when deleting a build', async () => {
     jest.spyOn(otomiStack, 'getBuild').mockReturnValue(buildResponse)
-    jest.spyOn(utils, 'deleteGiteaWebhook').mockResolvedValue({})
+    jest.spyOn(giteaUtils, 'deleteGiteaWebhook').mockResolvedValue({})
     jest.spyOn(otomiStack.db, 'getCollection').mockReturnValue([])
     jest.spyOn(otomiStack.db, 'updateItem').mockReturnValue({})
 
     await otomiStack.editBuild(teamId, buildData)
 
-    expect(utils.deleteGiteaWebhook).toHaveBeenCalled()
+    expect(giteaUtils.deleteGiteaWebhook).toHaveBeenCalled()
   })
 })
 

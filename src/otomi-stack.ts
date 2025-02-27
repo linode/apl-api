@@ -40,16 +40,7 @@ import {
   WorkloadValues,
 } from 'src/otomi-models'
 import getRepo, { Repo } from 'src/repo'
-import {
-  arrayToObject,
-  createGiteaWebhook,
-  deleteGiteaWebhook,
-  getServiceUrl,
-  getValuesSchema,
-  objectToArray,
-  removeBlankAttributes,
-  updateGiteaWebhook,
-} from 'src/utils'
+import { arrayToObject, getServiceUrl, getValuesSchema, objectToArray, removeBlankAttributes } from 'src/utils'
 import {
   CUSTOM_ROOT_CA,
   DEFAULT_PLATFORM_ADMIN_EMAIL,
@@ -87,6 +78,7 @@ import {
   testPrivateRepoConnect,
   testPublicRepoConnect,
 } from './utils/coderepoUtils'
+import { createGiteaWebhook, deleteGiteaWebhook, updateGiteaWebhook } from './utils/giteaUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
