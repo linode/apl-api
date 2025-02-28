@@ -74,7 +74,7 @@ import { getPolicies } from './utils/policiesUtils'
 import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
-import { NewChartPayload, fetchWorkloadCatalog } from './utils/workloadUtils'
+import { NewChartPayload, fetchWorkloadCatalog, sparseCloneChart } from './utils/workloadUtils'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -1133,8 +1133,22 @@ export default class OtomiStack {
 
   async createWorkloadCatalog(body: NewChartPayload): Promise<any> {
     const { url, chartName, chartPath, chartIcon, revision, allowTeams, teamId, userSub } = body
+    const helmChartsDir = `/tmp/otomi/charts/${userSub}`
+    const helmChartCatalogUrl = env.HELM_CHART_CATALOG
 
-    await fetchWorkloadCatalog(url, userSub, teamId, revision, true, chartName, chartPath, chartIcon, allowTeams)
+    await sparseCloneChart(
+      url,
+      helmChartCatalogUrl,
+      chartName,
+      chartPath,
+      helmChartsDir,
+      revision,
+      chartIcon,
+      allowTeams,
+    )
+
+    // await fetchWorkloadCatalog(url, userSub, teamId, revision, true, chartName, chartPath, chartIcon, allowTeams)
+    return { message: 'success' }
   }
 
   async createWorkload(teamId: string, data: Workload): Promise<Workload> {

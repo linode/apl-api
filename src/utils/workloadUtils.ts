@@ -1,6 +1,8 @@
-import { readFile } from 'fs-extra'
+import { existsSync, mkdirSync, readFile, renameSync, rmSync } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
+import path from 'path'
 import shell from 'shelljs'
+import simpleGit from 'simple-git'
 import YAML from 'yaml'
 
 export interface NewChartValues {
@@ -96,6 +98,34 @@ export async function updateRbacForNewChart(sparsePath: string, chartKey: string
   console.log(`Updated rbac.yaml: added ${chartKey}: ${allowTeams ? 'null' : '[]'}`)
 }
 
+async function commitAndPush(targetDir: string, helmChartCatalogUrl: string) {
+  const git = simpleGit(targetDir)
+
+  try {
+    if (!existsSync(path.join(targetDir, '.git'))) {
+      console.log('Initializing new Git repository')
+      await git.init()
+      await git.addRemote('origin', helmChartCatalogUrl)
+    }
+
+    console.log('Staging new changes')
+    await git.add('.')
+
+    console.log('Committing changes')
+    await git.commit('Added new Helm chart')
+
+    console.log('Pulling latest changes with rebase')
+    await git.pull('origin', 'main', { '--rebase': null })
+
+    console.log('Pushing changes to remote')
+    await git.push('origin', 'main')
+
+    console.log('Successfully pushed changes!')
+  } catch (error) {
+    console.error('Error during commit and push:', error)
+  }
+}
+
 /**
  * Clones a repository using sparse checkout, checks out a specific revision,
  * and moves the contents of the desired subdirectory (sparsePath) to the root of the target folder.
@@ -112,6 +142,7 @@ export async function updateRbacForNewChart(sparsePath: string, chartKey: string
  */
 export async function sparseCloneChart(
   url: string,
+  helmChartCatalogUrl: string,
   chartName: string,
   chartPath: string,
   sparsePath: string, // e.g. "/tmp/otomi/charts/mock-sub-value"
@@ -119,41 +150,41 @@ export async function sparseCloneChart(
   chartIcon?: string,
   allowTeams?: boolean,
 ): Promise<void> {
-  // The final folder where the chart will reside.
-  const checkoutPath = `${sparsePath}/${chartName}`
+  const temporaryCloneDir = `${sparsePath}-new` // Temporary clone directory
+  const checkoutPath = `${sparsePath}/${chartName}` // Final destination
+
+  if (!existsSync(temporaryCloneDir)) mkdirSync(temporaryCloneDir, { recursive: true })
+  else {
+    rmSync(temporaryCloneDir, { recursive: true, force: true })
+    mkdirSync(temporaryCloneDir, { recursive: true })
+  }
+
+  const git = simpleGit()
 
   // Clone the repository into the folder named checkoutPath.
-  const cloneCmd = `git clone --filter=blob:none --no-checkout ${url} ${checkoutPath}`
-  console.log(`Running clone cmd: ${cloneCmd}`)
-  shell.exec(cloneCmd)
+  console.log(`Cloning repository: ${url} into ${checkoutPath}`)
+  await git.clone(url, temporaryCloneDir, ['--filter=blob:none', '--no-checkout'])
 
   // Initialize sparse checkout in cone mode within checkoutPath.
-  const initCmd = `git sparse-checkout init --cone`
-  console.log(`Running init cmd: ${initCmd}`)
-  shell.exec(initCmd, { cwd: checkoutPath })
+  console.log(`Initializing sparse checkout in cone mode at ${checkoutPath}`)
+  await git.cwd(temporaryCloneDir)
+  await git.raw(['sparse-checkout', 'init', '--cone'])
 
   // Set the sparse checkout to only include the specified chartPath.
-  const setCmd = `git sparse-checkout set ${chartPath}`
-  console.log(`Running set cmd: ${setCmd}`)
-  shell.exec(setCmd, { cwd: checkoutPath })
+  console.log(`Setting sparse checkout path to ${chartPath}`)
+  await git.raw(['sparse-checkout', 'set', chartPath])
 
   // Checkout the desired revision (branch or commit) within checkoutPath.
-  const checkoutCmd = `git checkout ${revision}`
-  console.log(`Running checkout cmd: ${checkoutCmd}`)
-  shell.exec(checkoutCmd, { cwd: checkoutPath })
+  console.log(`Checking out revision: ${revision}`)
+  await git.checkout(revision)
 
   // Move the contents of the sparse folder (chartPath) to the repository root.
   // This moves files from "checkoutPath/chartPath/*" to "checkoutPath/"
-  const moveCmd = `mv ${chartPath}/* .`
-  console.log(`Running move cmd: ${moveCmd}`)
-  shell.exec(moveCmd, { cwd: checkoutPath })
+  renameSync(path.join(temporaryCloneDir, chartPath), checkoutPath)
 
-  // Remove the leftover top-level directory.
+  // Remove the leftover temporary clone directory.
   // For chartPath "bitnami/cassandra", the top-level folder is "bitnami".
-  const topLevelDir = chartPath.split('/')[0]
-  const removeCmd = `rm -rf ${topLevelDir}`
-  console.log(`Running remove cmd: ${removeCmd}`)
-  shell.exec(removeCmd, { cwd: checkoutPath })
+  rmSync(temporaryCloneDir, { recursive: true, force: true })
 
   // Update Chart.yaml with the new icon if one is provided.
   if (chartIcon && chartIcon.trim() !== '') {
@@ -161,27 +192,11 @@ export async function sparseCloneChart(
     await updateChartIconInYaml(chartYamlPath, chartIcon)
   }
 
-  const chartKey = `quickstart-${chartName}`
   // update rbac file
-  await updateRbacForNewChart(sparsePath, chartKey, allowTeams as boolean)
+  await updateRbacForNewChart(sparsePath, chartName, allowTeams as boolean)
 
-  // Now push the changes to the remote Gitea repository.
-  const remoteUrl = 'https://gitea.dennisvankekem-1.dev-akamai-apl.net/otomi/charts.git'
-  const addRemoteCmd = `git remote add target ${remoteUrl}`
-  console.log(`Running add remote cmd: ${addRemoteCmd}`)
-  shell.exec(addRemoteCmd, { cwd: checkoutPath })
-
-  const addCmd = `git add .`
-  console.log(`Running add cmd: ${addCmd}`)
-  shell.exec(addCmd, { cwd: checkoutPath })
-
-  const commitCmd = `git commit -m "Add chart ${chartName}"`
-  console.log(`Running commit cmd: ${commitCmd}`)
-  shell.exec(commitCmd, { cwd: checkoutPath })
-
-  const pushCmd = `git push target HEAD:main`
-  console.log(`Running push cmd: ${pushCmd}`)
-  shell.exec(pushCmd, { cwd: checkoutPath })
+  // pull&push new chart changes
+  await commitAndPush(sparsePath, helmChartCatalogUrl)
 }
 
 export async function fetchWorkloadCatalog(
@@ -189,57 +204,19 @@ export async function fetchWorkloadCatalog(
   sub: string,
   teamId: string,
   version: string,
-  newChart?: boolean,
-  newChartName?: string,
-  newChartPath?: string,
-  newChartIcon?: string,
-  allowTeams?: boolean,
-): Promise<any> {
+): Promise<Promise<any>> {
   const helmChartsDir = `/tmp/otomi/charts/${sub}`
-  const helmChartsRootDir = `/tmp/otomi/charts/mock-sub-value`
-
-  // Check if the directory exists and is non-empty.
-  let shouldClone = false
-  if (!shell.test('-d', helmChartsDir)) shouldClone = true
-  else {
-    try {
-      const files = await readdir(helmChartsDir, 'utf-8')
-      if (files.length === 0) shouldClone = true
-    } catch (error) {
-      console.error('Error reading directory, will re-clone:', error)
-      shouldClone = true
-    }
+  shell.rm('-rf', helmChartsDir)
+  shell.mkdir('-p', helmChartsDir)
+  let gitUrl = url
+  if (isGiteaURL(url)) {
+    const [protocol, bareUrl] = url.split('://')
+    const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
+    const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
+    gitUrl = `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
   }
-
-  // Only remove and re-clone if needed.
-  if (shouldClone) {
-    console.log('halo should be cloning')
-    shell.rm('-rf', helmChartsDir)
-    shell.mkdir('-p', helmChartsDir)
-    let gitUrl = url
-    if (isGiteaURL(url)) {
-      const [protocol, bareUrl] = url.split('://')
-      const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
-      const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
-      gitUrl = `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
-    }
-    shell.exec(`git clone --depth 1 ${gitUrl} ${helmChartsDir}`)
-  }
-
-  if (newChart) {
-    await sparseCloneChart(
-      url,
-      newChartName as string,
-      newChartPath as string,
-      helmChartsDir,
-      version,
-      newChartIcon,
-      allowTeams,
-    )
-  }
-
-  // Read the folder contents.
-  const files = await readdir(helmChartsDir, 'utf-8')
+  shell.exec(`git clone --depth 1 ${gitUrl} ${helmChartsDir}`)
+  const files = await readdir(`${helmChartsDir}`, 'utf-8')
   const filesToExclude = ['.git', '.gitignore', '.vscode', 'LICENSE', 'README.md']
   if (!version.startsWith('v1')) filesToExclude.push('deployment', 'ksvc')
   const folders = files.filter((f) => !filesToExclude.includes(f))
@@ -247,17 +224,12 @@ export async function fetchWorkloadCatalog(
   let rbac = {}
   let betaCharts: string[] = []
   try {
-    let r = ''
-    // When adding a new chart, read RBAC from a different folder.
-    if (newChart) r = await readFile(`${helmChartsRootDir}/rbac.yaml`, 'utf-8')
-    else r = await readFile(`${helmChartsDir}/rbac.yaml`, 'utf-8')
-    const parsed = YAML.parse(r)
-    rbac = parsed.rbac
-    if (parsed?.betaCharts) betaCharts = parsed.betaCharts
+    const r = await readFile(`${helmChartsDir}/rbac.yaml`, 'utf-8')
+    rbac = YAML.parse(r).rbac
+    if (YAML.parse(r)?.betaCharts) betaCharts = YAML.parse(r).betaCharts
   } catch (error) {
     console.error(`Error while parsing rbac.yaml file : ${error.message}`)
   }
-
   const catalog: any[] = []
   const helmCharts: string[] = []
   for (const folder of folders) {
