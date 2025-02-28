@@ -105,7 +105,7 @@ export async function updateRbacForNewChart(sparsePath: string, chartKey: string
  * @param chartPath - The path in github where the chart is located
  * @param sparsePath - The subdirectory to sparse checkout (e.g. "helm/charts/nats")
  * @param revision - The branch or commit to checkout (e.g. "main")
- * @param chartIcon - the icon path
+ * @param chartIcon - the icon URL path (e.g https://myimage.com/imageurl)
  * @param allowTeams - Boolean indicating if teams are allowed to use the chart.
  *                     If false, the key is set to [].
  *                     If true, the key is set to null.
@@ -164,6 +164,24 @@ export async function sparseCloneChart(
   const chartKey = `quickstart-${chartName}`
   // update rbac file
   await updateRbacForNewChart(sparsePath, chartKey, allowTeams as boolean)
+
+  // Now push the changes to the remote Gitea repository.
+  const remoteUrl = 'https://gitea.dennisvankekem-1.dev-akamai-apl.net/otomi/charts.git'
+  const addRemoteCmd = `git remote add target ${remoteUrl}`
+  console.log(`Running add remote cmd: ${addRemoteCmd}`)
+  shell.exec(addRemoteCmd, { cwd: checkoutPath })
+
+  const addCmd = `git add .`
+  console.log(`Running add cmd: ${addCmd}`)
+  shell.exec(addCmd, { cwd: checkoutPath })
+
+  const commitCmd = `git commit -m "Add chart ${chartName}"`
+  console.log(`Running commit cmd: ${commitCmd}`)
+  shell.exec(commitCmd, { cwd: checkoutPath })
+
+  const pushCmd = `git push target HEAD:main`
+  console.log(`Running push cmd: ${pushCmd}`)
+  shell.exec(pushCmd, { cwd: checkoutPath })
 }
 
 export async function fetchWorkloadCatalog(
