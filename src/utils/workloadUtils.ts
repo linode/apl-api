@@ -98,8 +98,10 @@ export async function updateRbacForNewChart(sparsePath: string, chartKey: string
   console.log(`Updated rbac.yaml: added ${chartKey}: ${allowTeams ? 'null' : '[]'}`)
 }
 
-async function commitAndPush(targetDir: string, helmChartCatalogUrl: string) {
+async function commitAndPush(targetDir: string, helmChartCatalogUrl: string, user: string, email: string) {
   const git = simpleGit(targetDir)
+  await git.addConfig('user.name', user)
+  await git.addConfig('user.email', email)
 
   try {
     if (!existsSync(path.join(targetDir, '.git'))) {
@@ -143,6 +145,8 @@ async function commitAndPush(targetDir: string, helmChartCatalogUrl: string) {
 export async function sparseCloneChart(
   url: string,
   helmChartCatalogUrl: string,
+  user: string,
+  email: string,
   chartName: string,
   chartPath: string,
   sparsePath: string, // e.g. "/tmp/otomi/charts/mock-sub-value"
@@ -196,7 +200,7 @@ export async function sparseCloneChart(
   await updateRbacForNewChart(sparsePath, chartName, allowTeams as boolean)
 
   // pull&push new chart changes
-  await commitAndPush(sparsePath, helmChartCatalogUrl)
+  await commitAndPush(sparsePath, helmChartCatalogUrl, user, email)
 }
 
 export async function fetchWorkloadCatalog(

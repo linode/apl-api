@@ -1135,10 +1135,13 @@ export default class OtomiStack {
     const { url, chartName, chartPath, chartIcon, revision, allowTeams, teamId, userSub } = body
     const helmChartsDir = `/tmp/otomi/charts/${userSub}`
     const helmChartCatalogUrl = env.HELM_CHART_CATALOG
+    const { user, email } = this.repo
 
     await sparseCloneChart(
       url,
       helmChartCatalogUrl,
+      user,
+      email,
       chartName,
       chartPath,
       helmChartsDir,
