@@ -1642,14 +1642,14 @@ components:
     backupParams:
       name: backupName
       in: path
-      description: ID of the backup
+      description: Name of the backup
       required: true
       schema:
         type: string
     buildParams:
       name: buildName
       in: path
-      description: ID of the build
+      description: Name of the build
       required: true
       schema:
         type: string
@@ -1670,7 +1670,7 @@ components:
     projectParams:
       name: projectName
       in: path
-      description: ID of the project
+      description: Name of the project
       required: true
       schema:
         type: string
@@ -1719,7 +1719,7 @@ components:
     workloadParams:
       name: workloadName
       in: path
-      description: ID of the workload
+      description: Name of the workload
       required: true
       schema:
         type: string

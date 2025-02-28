@@ -108,11 +108,9 @@ const env = cleanEnv({
 })
 
 export const rootPath = '/tmp/otomi/values'
-
-export function getTeamSealedSecretsValuesRootPath(teamId: string): string {
-  return `env/teams/${teamId}/sealedsecrets`
-}
-export function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: string): string {
+//TODO Move this to the repo.ts
+const getClusterSettingsFilePath = 'env/settings/cluster.yaml'
+function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: string): string {
   return `env/teams/${teamId}/sealedsecrets/${sealedSecretsName}`
 }
 
@@ -260,7 +258,7 @@ export default class OtomiStack {
         this.git = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, branch)
         await this.git.pull()
         //TODO fetch this url from the repo
-        if (await this.git.fileExists('env/settings/cluster.yaml')) break
+        if (await this.git.fileExists(getClusterSettingsFilePath)) break
         debug(`Values are not present at ${url}:${branch}`)
       } catch (e) {
         debug(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
@@ -270,7 +268,7 @@ export default class OtomiStack {
       debug(`Trying again in ${timeoutMs} ms`)
       await new Promise((resolve) => setTimeout(resolve, timeoutMs))
     }
-    // branches get a copy of the "main" branch db, so we don't need to inflate
+
     await this.loadValues()
     debug(`Values are loaded for ${this.editor} in ${this.sessionId}`)
   }
@@ -531,7 +529,7 @@ export default class OtomiStack {
     // Shallow merge, so only first level attributes can be replaced (values, rawValues, etc.)
     app = { ...app, ...data }
     app = this.repoService.updateApp(id, app)
-    await this.saveAdminApps(app)
+    await this.saveAdminApp(app)
     await this.doDeployment(['apps'])
     return this.repoService.getApp(id)
   }
@@ -547,7 +545,7 @@ export default class OtomiStack {
         const orig = this.repoService.getApp(id)
         if (orig && this.canToggleApp(id)) {
           const app = this.repoService.updateApp(id, { enabled })
-          await this.saveAdminApps(app)
+          await this.saveAdminApp(app)
         }
       }),
     )
@@ -606,7 +604,7 @@ export default class OtomiStack {
     }
     if (deploy) {
       await this.saveTeam(team)
-      //TODO do this better for the teamconfig
+      //TODO do this better for the teamConfig. Now it updates all the team configs of the rootstack
       await this.doDeployment(['teamConfig'])
     }
     return team
@@ -639,7 +637,6 @@ export default class OtomiStack {
   async createBackup(teamId: string, data: Backup): Promise<Backup> {
     validateBackupFields(data.name, data.ttl)
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const backup = this.repoService.getTeamConfigService(teamId).createBackup(data)
 
       await this.saveTeamBackup(teamId, data)
@@ -678,7 +675,6 @@ export default class OtomiStack {
 
   async createNetpol(teamId: string, data: Netpol): Promise<Netpol> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const netpol = this.repoService.getTeamConfigService(teamId).createNetpol(data)
       await this.saveTeamNetpols(teamId, data)
       await this.doDeployment(['netpols'], teamId)
@@ -747,7 +743,6 @@ export default class OtomiStack {
       if (existingUsersEmail.some((existingUser) => existingUser === user.email)) {
         throw new AlreadyExists('User email already exists')
       }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const createdUser = this.repoService.createUser(user)
       await this.saveUser(createdUser)
       await this.doDeployment(['users'])
@@ -811,7 +806,6 @@ export default class OtomiStack {
 
     try {
       if (projectNameTaken) throw new AlreadyExists(projectNameTakenPublicMessage)
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const project = this.repoService.getTeamConfigService(teamId).createProject({ ...data, teamId })
       if (data.build) {
         await this.createBuild(teamId, data.build)
@@ -964,7 +958,6 @@ export default class OtomiStack {
     try {
       const body = { ...data }
       if (!body.private) unset(body, 'secret')
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const codeRepo = this.repoService.getTeamConfigService(teamId).createCodeRepo({ ...data, teamId })
       await this.saveTeamCodeRepo(teamId, codeRepo)
       await this.doDeployment(['codeRepos'], teamId)
@@ -1062,7 +1055,6 @@ export default class OtomiStack {
 
   async createBuild(teamId: string, data: Build): Promise<Build> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const build = this.repoService.getTeamConfigService(teamId).createBuild({ ...data, teamId })
       await this.saveTeamBuild(teamId, data)
       await this.doDeployment(['builds'], teamId)
@@ -1621,7 +1613,7 @@ export default class OtomiStack {
     this.isLoaded = true
   }
 
-  async saveAdminApps(app: App, secretPaths?: string[]): Promise<void> {
+  async saveAdminApp(app: App, secretPaths?: string[]): Promise<void> {
     const { id, enabled, values, rawValues } = app
     const apps = {
       [id]: {
