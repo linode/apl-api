@@ -18,17 +18,8 @@ Netpol:
   type: object
   x-externalDocsPath: docs/for-devs/console/netpols
   properties:
-    id:
-      type: string
-    teamId:
-      $ref: 'definitions.yaml#/idName'
-    name:
-      title: Name
-      $ref: 'definitions.yaml#/idName'
     ruleType:
       $ref: '#/ruleType'
-  required:
-    - name
 
 ruleType:
   title: Rule type

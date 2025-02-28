@@ -63,4 +63,3 @@ App:
         teamAdmin: []
         teamMember: []
       type: object
-  required: [id]

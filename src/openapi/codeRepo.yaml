@@ -16,12 +16,6 @@ CodeRepo:
       - update
       - delete
   properties:
-    id:
-      type: string
-    teamId:
-      $ref: definitions.yaml#/idName
-    name:
-      $ref: 'definitions.yaml#/idName'
     gitService:
       type: string
       default: gitea
@@ -37,7 +31,6 @@ CodeRepo:
     secret:
       type: string
   required:
-    - name
     - gitService
     - repositoryUrl
   type: object

@@ -18,14 +18,6 @@ Build:
   type: object
   x-externalDocsPath: docs/for-devs/console/builds
   properties:
-    id:
-      type: string
-    teamId:
-      $ref: 'definitions.yaml#/idName'
-    name:
-      title: Name
-      $ref: 'definitions.yaml#/idName'
-      description: Results in image name harbor.<your-domain>/<team-name>/name.
     tag:
       $ref: 'definitions.yaml#/imageTag'
       default: latest
@@ -47,8 +39,6 @@ Build:
       type: boolean
       default: true
       description: Select to scan source code.
-  required:
-    - name
 
 buildMode:
   title: Mode

@@ -19,13 +19,6 @@ Backup:
   description: Create Velero backup schedules for Persistent Volumes.
   x-externalDocsPath: docs/for-devs/console/backups
   properties:
-    id:
-      type: string
-    teamId:
-      $ref: definitions.yaml#/idName
-    name:
-      title: Name
-      $ref: 'definitions.yaml#/idName'
     schedule:
       $ref: definitions.yaml#/backupSchedule
     snapshotVolumes:
@@ -40,6 +33,5 @@ Backup:
     ttl:
       $ref: definitions.yaml#/backupTtl
   required:
-    - name
     - schedule
     - ttl

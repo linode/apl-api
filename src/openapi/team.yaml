@@ -52,13 +52,6 @@ TeamSelfService:
 
 Team:
   properties:
-    id:
-      $ref: definitions.yaml#/idName
-      title: ID
-    name:
-      $ref: definitions.yaml#/idName
-      title: Name
-      description: A team name
     oidc:
       properties:
         groupMapping:
@@ -104,8 +97,6 @@ Team:
       type: object
     selfService:
       $ref: team.yaml#/TeamSelfService
-  required:
-    - name
   x-acl:
     platformAdmin:
       - delete-any
