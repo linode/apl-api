@@ -7,7 +7,7 @@ import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
 import { emptyDir, pathExists, unlink } from 'fs-extra'
 import { readdir, readFile, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
-import { cloneDeep, filter, isEmpty, map, mapValues, omit, pick, unset } from 'lodash'
+import { cloneDeep, filter, isArray, isEmpty, map, mapValues, omit, pick, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import { AlreadyExists, GitPullError, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
 import getRepo, { Git } from 'src/git'
@@ -39,7 +39,7 @@ import {
   Workload,
   WorkloadValues,
 } from 'src/otomi-models'
-import { arrayToObject, getValuesSchema, removeBlankAttributes } from 'src/utils'
+import { arrayToObject, getServiceUrl, getValuesSchema, removeBlankAttributes } from 'src/utils'
 import {
   cleanEnv,
   CUSTOM_ROOT_CA,
@@ -158,6 +158,56 @@ export default class OtomiStack {
     }
   }
 
+  transformServices(servicesArray: any[] = [], teamId: string): any[] {
+    return servicesArray.map((service) => {
+      const { cluster, dns } = this.getSettings(['cluster', 'dns'])
+      const url = getServiceUrl({ domain: service.domain, name: service.name, teamId, cluster, dns })
+
+      const headers = isArray(service.headers) ? undefined : service.headers
+
+      const inService = omit(service, [
+        'certArn',
+        'certName',
+        'domain',
+        'forwardPath',
+        'hasCert',
+        'paths',
+        'type',
+        'ownHost',
+        'tlsPass',
+        'ingressClassName',
+        'headers',
+        'useCname',
+        'cname',
+      ])
+      const svc = {
+        ...inService,
+        name: service.name,
+        teamId,
+        ingress:
+          service.type === 'cluster'
+            ? { type: 'cluster' }
+            : {
+                certArn: service.certArn || undefined,
+                certName: service.certName || undefined,
+                domain: url.domain,
+                headers,
+                forwardPath: 'forwardPath' in service,
+                hasCert: 'hasCert' in service,
+                paths: service.paths || [],
+                subdomain: url.subdomain,
+                tlsPass: 'tlsPass' in service,
+                type: service.type,
+                useDefaultHost: !service.domain && service.ownHost,
+                ingressClassName: service.ingressClassName || undefined,
+                useCname: service.useCname,
+                cname: service.cname,
+              },
+      }
+      return removeBlankAttributes(svc)
+    })
+  }
+
   transformApps(appsObj: Record<string, any>): App[] {
     if (!appsObj || typeof appsObj !== 'object') return []
 
@@ -191,6 +241,11 @@ export default class OtomiStack {
 
       const repo = rawRepo as Repo
       this.repoService = new RepoService(repo)
+      //TODO fix this transforming of the services
+      this.repoService.getRepo().teamConfig = mapValues(repo.teamConfig, (teamConfig) => ({
+        ...teamConfig,
+        services: this.transformServices(teamConfig.services, teamConfig.settings.name),
+      }))
     }
   }
 

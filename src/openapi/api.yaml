@@ -1698,7 +1698,7 @@ components:
     serviceParams:
       name: serviceName
       in: path
-      description: ID of the service
+      description: Name of the service
       required: true
       schema:
         type: string
