@@ -1670,7 +1670,11 @@ export default class OtomiStack {
 
   async saveTeam(team: Team, secretPaths?: string[]): Promise<void> {
     debug(`Saving team ${team.name}`)
-    const repo = this.createTeamConfigInRepo(team.name, 'settings', team)
+    debug('team', JSON.stringify(team))
+    const inTeam = team
+    //TODO fix this issue where resource quota needs to be saved as an object
+    inTeam.resourceQuota = arrayToObject((team.resourceQuota as []) ?? []) as any
+    const repo = this.createTeamConfigInRepo(team.name, 'settings', inTeam)
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamSettingSet')!
     await this.git.saveConfigWithSecrets(repo, secretPaths ?? this.getSecretPaths(), fileMap)
   }
@@ -1691,14 +1695,14 @@ export default class OtomiStack {
     const sealedSecret = this.repoService.getTeamConfigService(teamId).getSealedSecret(id)
     this.repoService.getTeamConfigService(teamId).deleteSealedSecret(id)
 
-    const repo = this.createTeamConfigInRepo(teamId, 'sealedSecrets', sealedSecret)
+    const repo = this.createTeamConfigInRepo(teamId, 'sealedSecrets', [sealedSecret])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamSecret')!
     await this.git.deleteConfig(repo, fileMap)
   }
 
   async saveTeamBackup(teamId: string, backup: Backup): Promise<void> {
     debug(`Saving backup ${backup.name} for team ${teamId}`)
-    const repo = this.createTeamConfigInRepo(teamId, 'backups', backup)
+    const repo = this.createTeamConfigInRepo(teamId, 'backups', [backup])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamBackup')!
     await this.git.saveConfig(repo, fileMap)
   }
@@ -1707,14 +1711,14 @@ export default class OtomiStack {
     const backup = this.repoService.getTeamConfigService(teamId).getBackup(name)
     this.repoService.getTeamConfigService(teamId).deleteBackup(name)
 
-    const repo = this.createTeamConfigInRepo(teamId, 'backups', backup)
+    const repo = this.createTeamConfigInRepo(teamId, 'backups', [backup])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamBackup')!
     await this.git.deleteConfig(repo, fileMap)
   }
 
   async saveTeamNetpols(teamId: string, netpol: Netpol): Promise<void> {
     debug(`Saving netpols ${netpol.name} for team ${teamId}`)
-    const repo = this.createTeamConfigInRepo(teamId, 'netpols', netpol)
+    const repo = this.createTeamConfigInRepo(teamId, 'netpols', [netpol])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamNetworkControl')!
     await this.git.saveConfig(repo, fileMap)
   }
@@ -1723,14 +1727,14 @@ export default class OtomiStack {
     const netpol = this.repoService.getTeamConfigService(teamId).getNetpol(name)
     this.repoService.getTeamConfigService(teamId).deleteNetpol(name)
 
-    const repo = this.createTeamConfigInRepo(teamId, 'netpols', netpol)
+    const repo = this.createTeamConfigInRepo(teamId, 'netpols', [netpol])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamNetworkControl')!
     await this.git.deleteConfig(repo, fileMap)
   }
 
   async saveTeamWorkload(teamId: string, workload: Workload): Promise<void> {
     debug(`Saving workload ${workload.name} for team ${teamId}`)
-    const repo = this.createTeamConfigInRepo(teamId, 'workloads', workload)
+    const repo = this.createTeamConfigInRepo(teamId, 'workloads', [workload])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkload')!
     await this.git.saveConfig(repo, fileMap)
   }
@@ -1739,14 +1743,14 @@ export default class OtomiStack {
     const workload = this.repoService.getTeamConfigService(teamId).getWorkload(name)
     this.repoService.getTeamConfigService(teamId).deleteWorkload(name)
 
-    const repo = this.createTeamConfigInRepo(teamId, 'workloads', workload)
+    const repo = this.createTeamConfigInRepo(teamId, 'workloads', [workload])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkload')!
     await this.git.deleteConfig(repo, fileMap)
   }
 
   async saveTeamProject(teamId: string, project: Project): Promise<void> {
     debug(`Saving project ${project.name} for team ${teamId}`)
-    const repo = this.createTeamConfigInRepo(teamId, 'projects', project)
+    const repo = this.createTeamConfigInRepo(teamId, 'projects', [project])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamProject')!
     await this.git.saveConfig(repo, fileMap)
   }
@@ -1755,14 +1759,14 @@ export default class OtomiStack {
     const project = this.repoService.getTeamConfigService(teamId).getProject(name)
     this.repoService.getTeamConfigService(teamId).deleteProject(name)
 
-    const repo = this.createTeamConfigInRepo(teamId, 'projects', project)
+    const repo = this.createTeamConfigInRepo(teamId, 'projects', [project])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamProject')!
     await this.git.deleteConfig(repo, fileMap)
   }
 
   async saveTeamBuild(teamId: string, build: Build): Promise<void> {
     debug(`Saving build ${build.name} for team ${teamId}`)
-    const repo = this.createTeamConfigInRepo(teamId, 'builds', build)
+    const repo = this.createTeamConfigInRepo(teamId, 'builds', [build])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamBuild')!
     await this.git.saveConfig(repo, fileMap)
   }
@@ -1771,14 +1775,14 @@ export default class OtomiStack {
     const build = this.repoService.getTeamConfigService(teamId).getBuild(name)
     this.repoService.getTeamConfigService(teamId).deleteBuild(name)
 
-    const repo = this.createTeamConfigInRepo(teamId, 'builds', build)
+    const repo = this.createTeamConfigInRepo(teamId, 'builds', [build])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamBuild')!
     await this.git.deleteConfig(repo, fileMap)
   }
 
   async saveTeamCodeRepo(teamId: string, codeRepo: CodeRepo): Promise<void> {
     debug(`Saving codeRepo ${codeRepo.name} for team ${teamId}`)
-    const repo = this.createTeamConfigInRepo(teamId, 'codeRepos', codeRepo)
+    const repo = this.createTeamConfigInRepo(teamId, 'codeRepos', [codeRepo])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamCodeRepo')!
     await this.git.saveConfig(repo, fileMap)
   }
@@ -1787,7 +1791,7 @@ export default class OtomiStack {
     const codeRepo = this.repoService.getTeamConfigService(teamId).getCodeRepo(label)
     this.repoService.getTeamConfigService(teamId).deleteCodeRepo(label)
 
-    const repo = this.createTeamConfigInRepo(teamId, 'codeRepos', codeRepo)
+    const repo = this.createTeamConfigInRepo(teamId, 'codeRepos', [codeRepo])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamCodeRepo')!
     await this.git.deleteConfig(repo, fileMap)
   }
@@ -1807,7 +1811,7 @@ export default class OtomiStack {
     const updatedWorkloadValues = cloneDeep(data) as Record<string, any>
     updatedWorkloadValues.values = stringifyYaml(data.values, undefined, 4)
 
-    const repo = this.createTeamConfigInRepo(teamId, 'workloadValues', updatedWorkloadValues)
+    const repo = this.createTeamConfigInRepo(teamId, 'workloadValues', [updatedWorkloadValues])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkloadValues')!
     await this.git.saveConfig(repo, fileMap)
   }
@@ -1816,7 +1820,7 @@ export default class OtomiStack {
     const workloadValues = this.repoService.getTeamConfigService(teamId).getWorkloadValues(name)
     this.repoService.getTeamConfigService(teamId).deleteWorkloadValues(name)
 
-    const repo = this.createTeamConfigInRepo(teamId, 'workloadValues', workloadValues)
+    const repo = this.createTeamConfigInRepo(teamId, 'workloadValues', [workloadValues])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkloadValues')!
     await this.git.deleteConfig(repo, fileMap)
   }
@@ -1845,7 +1849,7 @@ export default class OtomiStack {
   async saveTeamService(teamId: string, service: Service): Promise<void> {
     debug(`Saving service: ${service.name} teamId: ${teamId}`)
     const newService = this.convertDbServiceToValues(service)
-    const repo = this.createTeamConfigInRepo(teamId, 'services', newService)
+    const repo = this.createTeamConfigInRepo(teamId, 'services', [newService])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamService')!
     await this.git.saveConfig(repo, fileMap)
   }
@@ -1854,7 +1858,7 @@ export default class OtomiStack {
     const service = this.repoService.getTeamConfigService(teamId).getService(name)
     this.repoService.getTeamConfigService(teamId).deleteService(name)
 
-    const repo = this.createTeamConfigInRepo(teamId, 'services', service)
+    const repo = this.createTeamConfigInRepo(teamId, 'services', [service])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamService')!
     await this.git.deleteConfig(repo, fileMap)
   }
@@ -1863,7 +1867,7 @@ export default class OtomiStack {
     return {
       teamConfig: {
         [teamId]: {
-          [key]: Array.isArray(value) ? value : [value],
+          [key]: value,
         },
       },
     }
