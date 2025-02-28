@@ -638,7 +638,7 @@ describe('API authz tests', () => {
 
   describe('Code repository endpoints tests', () => {
     const data = {
-      label: 'demo',
+      name: 'demo',
       gitService: 'github' as 'gitea' | 'github' | 'gitlab',
       repositoryUrl: 'https://github.com/buildpacks/samples',
       private: true,

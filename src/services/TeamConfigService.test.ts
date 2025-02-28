@@ -29,7 +29,7 @@ describe('TeamConfigService', () => {
       workloads: [],
       workloadValues: [],
       services: [],
-      sealedSecrets: [],
+      sealedsecrets: [],
       backups: [],
       projects: [],
       netpols: [],

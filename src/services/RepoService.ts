@@ -131,7 +131,7 @@ export class RepoService {
       codeRepos: [],
       workloads: [],
       services: [],
-      sealedSecrets: [],
+      sealedsecrets: [],
       backups: [],
       projects: [],
       netpols: [],
@@ -269,7 +269,7 @@ export class RepoService {
   public getAllSealedSecrets(): SealedSecret[] {
     return (
       Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.sealedSecrets?.map((secret) => ({ ...secret, teamId })))
+        .flatMap(([teamId, config]) => config.sealedsecrets?.map((secret) => ({ ...secret, teamId })))
         .filter(Boolean) ?? []
     )
   }

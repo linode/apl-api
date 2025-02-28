@@ -100,7 +100,7 @@ describe('Data validation', () => {
       codeRepos: [],
       workloads: [],
       services: [],
-      sealedSecrets: [],
+      sealedsecrets: [],
       backups: [],
       projects: [],
       netpols: [],
@@ -120,7 +120,7 @@ describe('Data validation', () => {
       codeRepos: [],
       workloads: [],
       services: [],
-      sealedSecrets: [],
+      sealedsecrets: [],
       backups: [],
       projects: [],
       netpols: [],
@@ -314,7 +314,7 @@ describe('Code repositories tests', () => {
     const codeRepo = {
       id: '1',
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
     } as CodeRepo
@@ -330,7 +330,7 @@ describe('Code repositories tests', () => {
   test('should create an internal code repository', async () => {
     const createItemSpy = jest.spyOn(teamConfigService, 'createCodeRepo').mockReturnValue({
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
     } as CodeRepo)
@@ -339,20 +339,20 @@ describe('Code repositories tests', () => {
     const doDeploymentSpy = jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
 
     const codeRepo = await otomiStack.createCodeRepo('demo', {
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
     })
 
     expect(codeRepo).toEqual({
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
     })
     expect(createItemSpy).toHaveBeenCalledWith({
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
     })
@@ -368,7 +368,7 @@ describe('Code repositories tests', () => {
     const codeRepo = {
       id: '1',
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
     } as CodeRepo
@@ -383,7 +383,7 @@ describe('Code repositories tests', () => {
     const updateItemSpy = jest.spyOn(teamConfigService, 'updateCodeRepo').mockReturnValue({
       id: '1',
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
     } as CodeRepo)
@@ -393,7 +393,7 @@ describe('Code repositories tests', () => {
 
     const codeRepo = await otomiStack.editCodeRepo('demo', '1', {
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
     })
@@ -401,13 +401,13 @@ describe('Code repositories tests', () => {
     expect(codeRepo).toEqual({
       id: '1',
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
     })
     expect(updateItemSpy).toHaveBeenCalledWith('1', {
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
     })
@@ -423,7 +423,7 @@ describe('Code repositories tests', () => {
     const codeRepo = {
       id: '1',
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
     } as CodeRepo
@@ -444,7 +444,7 @@ describe('Code repositories tests', () => {
   test('should create an external public code repository', async () => {
     const createItemSpy = jest.spyOn(teamConfigService, 'createCodeRepo').mockReturnValue({
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
     } as CodeRepo)
@@ -453,20 +453,20 @@ describe('Code repositories tests', () => {
     const doDeploymentSpy = jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
 
     const codeRepo = await otomiStack.createCodeRepo('demo', {
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
     })
 
     expect(codeRepo).toEqual({
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
     })
     expect(createItemSpy).toHaveBeenCalledWith({
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
     })
@@ -482,7 +482,7 @@ describe('Code repositories tests', () => {
     const codeRepo = {
       id: '1',
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
     } as CodeRepo
@@ -497,7 +497,7 @@ describe('Code repositories tests', () => {
     const updateItemSpy = jest.spyOn(teamConfigService, 'updateCodeRepo').mockReturnValue({
       id: '1',
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
     } as CodeRepo)
@@ -507,7 +507,7 @@ describe('Code repositories tests', () => {
 
     const codeRepo = await otomiStack.editCodeRepo('demo', '1', {
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
     })
@@ -515,13 +515,13 @@ describe('Code repositories tests', () => {
     expect(codeRepo).toEqual({
       id: '1',
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
     })
     expect(updateItemSpy).toHaveBeenCalledWith('1', {
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
     })
@@ -537,7 +537,7 @@ describe('Code repositories tests', () => {
     const codeRepo = {
       id: '1',
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
     } as CodeRepo
@@ -558,7 +558,7 @@ describe('Code repositories tests', () => {
   test('should create an external private code repository', async () => {
     const createItemSpy = jest.spyOn(teamConfigService, 'createCodeRepo').mockReturnValue({
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
       private: true,
@@ -569,7 +569,7 @@ describe('Code repositories tests', () => {
     const doDeploymentSpy = jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
 
     const codeRepo = await otomiStack.createCodeRepo('demo', {
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
       private: true,
@@ -578,7 +578,7 @@ describe('Code repositories tests', () => {
 
     expect(codeRepo).toEqual({
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
       private: true,
@@ -586,7 +586,7 @@ describe('Code repositories tests', () => {
     })
     expect(createItemSpy).toHaveBeenCalledWith({
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
       private: true,
@@ -604,7 +604,7 @@ describe('Code repositories tests', () => {
     const updateItemSpy = jest.spyOn(teamConfigService, 'updateCodeRepo').mockReturnValue({
       id: '1',
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
       private: true,
@@ -616,7 +616,7 @@ describe('Code repositories tests', () => {
 
     const codeRepo = await otomiStack.editCodeRepo('demo', '1', {
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
       private: true,
@@ -626,7 +626,7 @@ describe('Code repositories tests', () => {
     expect(codeRepo).toEqual({
       id: '1',
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
       private: true,
@@ -634,7 +634,7 @@ describe('Code repositories tests', () => {
     })
     expect(updateItemSpy).toHaveBeenCalledWith('1', {
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
       private: true,
@@ -652,7 +652,7 @@ describe('Code repositories tests', () => {
     const codeRepo = {
       id: '1',
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
       private: true,
