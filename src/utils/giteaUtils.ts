@@ -36,10 +36,12 @@ function webhookData(
   const { type } = data.mode!
   const repoUrl: string = data.mode![type] ? data.mode!['docker'].repoUrl : data.mode!['buildpacks'].repoUrl
   const repoName: string = repoUrl.split('/').pop()!
-  const giteaUrl = env.GIT_REPO_URL.split('/')[0]
+  let gitUrl = env.GIT_REPO_URL
+  if (!gitUrl.includes('http')) gitUrl = gitUrl.startsWith('http') ? gitUrl : `https://${gitUrl}`
+  const parsedUrl = new URL(gitUrl)
   const serviceUrl = `http://el-gitea-webhook-${data.name}.${teamId}.svc.cluster.local:8080`
 
-  return { authHeader, repoUrl, repoName, giteaUrl, serviceUrl }
+  return { authHeader, repoUrl, repoName, giteaUrl: parsedUrl.hostname, serviceUrl }
 }
 
 export function webhookConfig(serviceUrl: string): {
