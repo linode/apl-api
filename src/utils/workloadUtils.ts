@@ -153,7 +153,7 @@ export async function sparseCloneChart(
   revision: string,
   chartIcon?: string,
   allowTeams?: boolean,
-): Promise<void> {
+): Promise<boolean> {
   const temporaryCloneDir = `${sparsePath}-new` // Temporary clone directory
   const checkoutPath = `${sparsePath}/${chartName}` // Final destination
 
@@ -201,6 +201,8 @@ export async function sparseCloneChart(
 
   // pull&push new chart changes
   await commitAndPush(sparsePath, helmChartCatalogUrl, user, email)
+
+  return true
 }
 
 export async function fetchWorkloadCatalog(

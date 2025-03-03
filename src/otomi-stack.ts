@@ -1131,27 +1131,30 @@ export default class OtomiStack {
     return { url, helmCharts, catalog }
   }
 
-  async createWorkloadCatalog(body: NewChartPayload): Promise<any> {
+  async createWorkloadCatalog(body: NewChartPayload): Promise<boolean> {
     const { url, chartName, chartPath, chartIcon, revision, allowTeams, teamId, userSub } = body
     const helmChartsDir = `/tmp/otomi/charts/${userSub}`
     const helmChartCatalogUrl = env.HELM_CHART_CATALOG
     const { user, email } = this.repo
 
-    await sparseCloneChart(
-      url,
-      helmChartCatalogUrl,
-      user,
-      email,
-      chartName,
-      chartPath,
-      helmChartsDir,
-      revision,
-      chartIcon,
-      allowTeams,
-    )
-
-    // await fetchWorkloadCatalog(url, userSub, teamId, revision, true, chartName, chartPath, chartIcon, allowTeams)
-    return { message: 'success' }
+    try {
+      await sparseCloneChart(
+        url,
+        helmChartCatalogUrl,
+        user,
+        email,
+        chartName,
+        chartPath,
+        helmChartsDir,
+        revision,
+        chartIcon,
+        allowTeams,
+      )
+      return true
+    } catch (err) {
+      debug(`error while parsing chart ${err.message}`)
+      return false
+    }
   }
 
   async createWorkload(teamId: string, data: Workload): Promise<Workload> {
