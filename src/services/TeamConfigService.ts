@@ -434,10 +434,6 @@ export class TeamConfigService {
     }))
   }
 
-  public setApps(apps: App[]) {
-    this.teamConfig.apps = apps
-  }
-
   // =====================================
   // == POLICIES CRUD ==
   // =====================================
