@@ -7,4 +7,3 @@ teamConfig:
               paths: []
               port: 80
               tlsPass: true
-              type: public

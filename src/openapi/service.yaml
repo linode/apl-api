@@ -172,9 +172,6 @@ Ingress:
                 required:
                   - name
                   - value
-  required:
-    - domain
-    - subdomain
   type: object
 
 IngressCluster:
