@@ -1,52 +1,53 @@
-// IMPORTANT DON'T CHANGE THIS FILE. It's a copy of the one in apl-core
 import { rmSync } from 'fs'
-import { pathExists } from 'fs-extra'
-import { rm, writeFile } from 'fs/promises'
+import { rm } from 'fs/promises'
 import { globSync } from 'glob'
 import jsonpath from 'jsonpath'
 import { cloneDeep, get, merge, omit, set } from 'lodash'
 import path from 'path'
-import { getDirNames, loadYaml, objectToYaml } from './utils'
+import { getDirNames, loadYaml } from './utils'
 
 export async function getTeamNames(envDir: string): Promise<Array<string>> {
   const teamsDir = path.join(envDir, 'env', 'teams')
   return await getDirNames(teamsDir, { skipHidden: true })
 }
 
+export type AplKind =
+  | 'AplApp'
+  | 'AplAlertSet'
+  | 'AplCluster'
+  | 'AplDatabase'
+  | 'AplDns'
+  | 'AplIngress'
+  | 'AplObjectStorage'
+  | 'AplKms'
+  | 'AplIdentityProvider'
+  | 'AplCapabilitySet'
+  | 'AplSmtp'
+  | 'AplBackupCollection'
+  | 'AplUser'
+  | 'AplTeamCodeRepo'
+  | 'AplTeamBuild'
+  | 'AplTeamPolicy'
+  | 'AplTeamSettingSet'
+  | 'AplTeamNetworkControl'
+  | 'AplTeamProject'
+  | 'AplTeamBackup'
+  | 'AplTeamSecret'
+  | 'AplTeamService'
+  | 'AplTeamWorkload'
+  | 'AplTeamWorkloadValues'
+  | 'AplTeamTool'
+  | 'AplVersion'
+
 export interface FileMap {
   envDir: string
-  kind:
-    | 'AplApp'
-    | 'AplAlertSet'
-    | 'AplCluster'
-    | 'AplDatabase'
-    | 'AplDns'
-    | 'AplIngress'
-    | 'AplObjectStorage'
-    | 'AplKms'
-    | 'AplIdentityProvider'
-    | 'AplCapabilitySet'
-    | 'AplSmtp'
-    | 'AplBackupCollection'
-    | 'AplUser'
-    | 'AplTeamCodeRepo'
-    | 'AplTeamBuild'
-    | 'AplTeamPolicy'
-    | 'AplTeamSettingSet'
-    | 'AplTeamNetworkControl'
-    | 'AplTeamProject'
-    | 'AplTeamBackup'
-    | 'AplTeamSecret'
-    | 'AplTeamService'
-    | 'AplTeamWorkload'
-    | 'AplTeamWorkloadValues'
-    | 'AplTeamTool'
-    | 'AplVersion'
+  kind: AplKind
   jsonPathExpression: string
   pathGlob: string
   processAs: 'arrayItem' | 'mapItem'
   resourceGroup: 'team' | 'platformSettings' | 'platformApps' | 'platformDatabases' | 'platformBackups' | 'users'
   resourceDir: string
+  loadToSpec: boolean
 }
 
 export function getResourceFileName(fileMap: FileMap, jsonPath: jsonpath.PathComponent[], data: Record<string, any>) {
@@ -105,8 +106,32 @@ export function getFilePath(
   return path.normalize(filePath)
 }
 
+export function extractTeamDirectory(filePath: string): string {
+  const match = filePath.match(/\/teams\/([^/]+)/)
+  if (match === null) throw new Error(`Cannot extract team name from ${filePath} string`)
+  return match[1]
+}
+
+export function getJsonPath(fileMap: FileMap, filePath: string): string {
+  let { jsonPathExpression: jsonPath } = fileMap
+
+  if (fileMap.resourceGroup === 'team') {
+    const teamName = extractTeamDirectory(filePath)
+    jsonPath = jsonPath.replace('teamConfig.*', `teamConfig.${teamName}`)
+  }
+
+  if (jsonPath.includes('.*')) {
+    const fileName = path.basename(filePath, path.extname(filePath))
+    const strippedFileName = fileName.replace(/^secrets\.|\.yaml|\.dec$/g, '')
+    jsonPath = jsonPath.replace('.*', `.${strippedFileName}`)
+  }
+  if (jsonPath.includes('[*]')) jsonPath = jsonPath.replace('[*]', '')
+  jsonPath = jsonPath.replace('$.', '')
+  return jsonPath
+}
+
 export function getFileMaps(envDir: string): Array<FileMap> {
-  return [
+  const maps: Array<FileMap> = [
     {
       kind: 'AplApp',
       envDir,
@@ -115,6 +140,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'platformApps',
       resourceDir: 'apps',
+      loadToSpec: true,
     },
     {
       envDir,
@@ -124,6 +150,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
+      loadToSpec: true,
     },
     {
       kind: 'AplCluster',
@@ -133,6 +160,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
+      loadToSpec: true,
     },
     {
       kind: 'AplDatabase',
@@ -142,6 +170,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'platformDatabases',
       resourceDir: 'databases',
+      loadToSpec: true,
     },
     {
       kind: 'AplDns',
@@ -151,6 +180,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
+      loadToSpec: true,
     },
     {
       kind: 'AplIngress',
@@ -160,6 +190,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
+      loadToSpec: true,
     },
     {
       kind: 'AplKms',
@@ -169,6 +200,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
+      loadToSpec: true,
     },
     {
       kind: 'AplObjectStorage',
@@ -178,6 +210,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
+      loadToSpec: true,
     },
     {
       kind: 'AplIdentityProvider',
@@ -187,6 +220,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
+      loadToSpec: true,
     },
     {
       kind: 'AplCapabilitySet',
@@ -196,6 +230,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
+      loadToSpec: true,
     },
     {
       kind: 'AplBackupCollection',
@@ -205,6 +240,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'platformBackups',
       resourceDir: 'settings',
+      loadToSpec: true,
     },
     {
       kind: 'AplSmtp',
@@ -214,6 +250,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
+      loadToSpec: true,
     },
     {
       kind: 'AplUser',
@@ -223,6 +260,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'arrayItem',
       resourceGroup: 'users',
       resourceDir: 'users',
+      loadToSpec: true,
     },
     {
       kind: 'AplVersion',
@@ -232,15 +270,17 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
+      loadToSpec: true,
     },
     {
       kind: 'AplTeamCodeRepo',
       envDir,
-      jsonPathExpression: '$.teamConfig.*.codeRepos[*]',
-      pathGlob: `${envDir}/env/teams/*/codeRepos/*.yaml`,
+      jsonPathExpression: '$.teamConfig.*.coderepos[*]',
+      pathGlob: `${envDir}/env/teams/*/coderepos/*.yaml`,
       processAs: 'arrayItem',
       resourceGroup: 'team',
-      resourceDir: 'codeRepos',
+      resourceDir: 'coderepos',
+      loadToSpec: false,
     },
     {
       kind: 'AplTeamBuild',
@@ -250,6 +290,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'arrayItem',
       resourceGroup: 'team',
       resourceDir: 'builds',
+      loadToSpec: true,
     },
     {
       kind: 'AplTeamWorkload',
@@ -259,6 +300,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'arrayItem',
       resourceGroup: 'team',
       resourceDir: 'workloads',
+      loadToSpec: true,
     },
     {
       kind: 'AplTeamWorkloadValues',
@@ -268,6 +310,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'arrayItem',
       resourceGroup: 'team',
       resourceDir: 'workloadValues',
+      loadToSpec: false,
     },
     {
       kind: 'AplTeamService',
@@ -277,6 +320,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'arrayItem',
       resourceGroup: 'team',
       resourceDir: 'services',
+      loadToSpec: true,
     },
     {
       kind: 'AplTeamSecret',
@@ -286,6 +330,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'arrayItem',
       resourceGroup: 'team',
       resourceDir: 'sealedsecrets',
+      loadToSpec: false,
     },
     {
       kind: 'AplTeamBackup',
@@ -295,6 +340,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'arrayItem',
       resourceGroup: 'team',
       resourceDir: 'backups',
+      loadToSpec: true,
     },
     {
       kind: 'AplTeamProject',
@@ -304,6 +350,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'arrayItem',
       resourceGroup: 'team',
       resourceDir: 'projects',
+      loadToSpec: true,
     },
     {
       kind: 'AplTeamNetworkControl',
@@ -313,6 +360,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'arrayItem',
       resourceGroup: 'team',
       resourceDir: 'netpols',
+      loadToSpec: true,
     },
     {
       kind: 'AplTeamSettingSet',
@@ -322,6 +370,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'team',
       resourceDir: '.',
+      loadToSpec: true,
     },
     {
       kind: 'AplTeamTool',
@@ -331,6 +380,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'team',
       resourceDir: '.',
+      loadToSpec: true,
     },
     {
       kind: 'AplTeamPolicy',
@@ -340,12 +390,20 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       processAs: 'mapItem',
       resourceGroup: 'team',
       resourceDir: '.',
+      loadToSpec: true,
     },
   ]
+  return maps
 }
 
 export function hasCorrespondingDecryptedFile(filePath: string, fileList: Array<string>): boolean {
   return fileList.includes(`${filePath}.dec`)
+}
+
+export function getFileMap(kind: AplKind, envDir: string): FileMap {
+  const fileMaps = getFileMaps(envDir)
+  const fileMapFiltered = fileMaps.find((fileMap) => fileMap.kind === kind)
+  return fileMapFiltered!
 }
 
 export function renderManifest(fileMap: FileMap, jsonPath: jsonpath.PathComponent[], data: Record<string, any>) {
@@ -375,62 +433,6 @@ export function renderManifestForSecrets(fileMap: FileMap, data: Record<string, 
   }
 }
 
-// INFO not used right now as we still write the files with the old method
-// export async function saveResourceGroupToFiles(
-//   fileMap: FileMap,
-//   valuesPublic: Record<string, any>,
-//   valuesSecrets: Record<string, any>,
-//   deps = { writeValuesToFile },
-// ): Promise<void> {
-//   const jsonPathsValuesPublic = jsonpath.nodes(valuesPublic, fileMap.jsonPathExpression)
-//   const jsonPathsvaluesSecrets = jsonpath.nodes(valuesSecrets, fileMap.jsonPathExpression)
-//
-//   await Promise.all(
-//     jsonPathsValuesPublic.map(async (node) => {
-//       const nodePath = node.path
-//       const nodeValue = node.value
-//       try {
-//         const filePath = getFilePath(fileMap, nodePath, nodeValue, '')
-//         const manifest = renderManifest(fileMap, nodePath, nodeValue)
-//         await deps.writeValuesToFile(filePath, manifest)
-//       } catch (e) {
-//         console.log(nodePath)
-//         console.log(fileMap)
-//         throw e
-//       }
-//     }),
-//   )
-//
-//   await Promise.all(
-//     jsonPathsvaluesSecrets.map(async (node) => {
-//       const nodePath = node.path
-//       const nodeValue = node.value
-//       try {
-//         const filePath = getFilePath(fileMap, nodePath, nodeValue, 'secrets.')
-//         const manifest = renderManifestForSecrets(fileMap, nodeValue)
-//         await deps.writeValuesToFile(filePath, manifest)
-//       } catch (e) {
-//         console.log(nodePath)
-//         console.log(fileMap)
-//         throw e
-//       }
-//     }),
-//   )
-// }
-// export async function saveValues(
-//   envDir: string,
-//   valuesPublic: Record<string, any>,
-//   valuesSecrets: Record<string, any>,
-//   deps = { saveResourceGroupToFiles },
-// ): Promise<void> {
-//   const fileMaps = getFileMaps(envDir)
-//   await Promise.all(
-//     fileMaps.map(async (fileMap) => {
-//       await deps.saveResourceGroupToFiles(fileMap, valuesPublic, valuesSecrets)
-//     }),
-//   )
-// }
-
 export async function unsetValuesFile(envDir: string): Promise<string> {
   const valuesPath = path.join(envDir, 'values-repo.yaml')
   await rm(valuesPath, { force: true })
@@ -443,30 +445,6 @@ export function unsetValuesFileSync(envDir: string): string {
   return valuesPath
 }
 
-export function extractTeamDirectory(filePath: string): string {
-  const match = filePath.match(/\/teams\/([^/]+)/)
-  if (match === null) throw new Error(`Cannot extract team name from ${filePath} string`)
-  return match[1]
-}
-
-export function getJsonPath(fileMap: FileMap, filePath: string): string {
-  let { jsonPathExpression: jsonPath } = fileMap
-
-  if (fileMap.resourceGroup === 'team') {
-    const teamName = extractTeamDirectory(filePath)
-    jsonPath = jsonPath.replace('teamConfig.*', `teamConfig.${teamName}`)
-  }
-
-  if (jsonPath.includes('.*')) {
-    const fileName = path.basename(filePath, path.extname(filePath))
-    const strippedFileName = fileName.replace(/^secrets\.|\.yaml|\.dec$/g, '')
-    jsonPath = jsonPath.replace('.*', `.${strippedFileName}`)
-  }
-  if (jsonPath.includes('[*]')) jsonPath = jsonPath.replace('[*]', '')
-  jsonPath = jsonPath.replace('$.', '')
-  return jsonPath
-}
-
 export async function loadFileToSpec(
   filePath: string,
   fileMap: FileMap,
@@ -477,16 +455,7 @@ export async function loadFileToSpec(
   const data = await deps.loadYaml(filePath)
   if (fileMap.processAs === 'arrayItem') {
     const ref: Record<string, any>[] = get(spec, jsonPath)
-    //TODO remove this custom workaround for workloadValues as it has no spec
-    if (fileMap.kind === 'AplTeamWorkloadValues') {
-      const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
-      ref.push({ ...data, name })
-    } else if (fileMap.kind === 'AplTeamSecret') {
-      const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
-      ref.push({ ...data?.spec, name })
-    } else {
-      ref.push(data?.spec)
-    }
+    ref.push(data?.spec)
   } else {
     const ref: Record<string, any> = get(spec, jsonPath)
     // Decrypted secrets may need to be merged with plain text specs
@@ -526,7 +495,7 @@ export async function loadToSpec(
 }
 
 export async function loadValues(envDir: string, deps = { loadToSpec }): Promise<Record<string, any>> {
-  const fileMaps = getFileMaps(envDir)
+  const fileMaps = getFileMaps(envDir).filter((map) => map.loadToSpec === true)
   const spec = {}
 
   await Promise.all(
@@ -538,17 +507,8 @@ export async function loadValues(envDir: string, deps = { loadToSpec }): Promise
 }
 
 export async function getKmsSettings(envDir: string, deps = { loadToSpec }): Promise<Record<string, any>> {
-  const fileMap = getFileMaps(envDir)
-  const kmsFiles = fileMap.find((item) => item.jsonPathExpression === '$.kms')
+  const kmsFiles = getFileMap('AplKms', envDir)
   const spec = {}
-  await deps.loadToSpec(spec, kmsFiles!)
+  await deps.loadToSpec(spec, kmsFiles)
   return spec
-}
-
-export async function setValuesFile(envDir: string, deps = { pathExists, loadValues, writeFile }): Promise<string> {
-  const valuesPath = path.join(envDir, 'values-repo.yaml')
-  if (await deps.pathExists(valuesPath)) return valuesPath
-  const allValues = await deps.loadValues(envDir)
-  await deps.writeFile(valuesPath, objectToYaml(allValues))
-  return valuesPath
 }
