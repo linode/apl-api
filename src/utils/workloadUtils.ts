@@ -1,9 +1,12 @@
+import Debug from 'debug'
 import { existsSync, mkdirSync, readFile, renameSync, rmSync } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
 import path from 'path'
 import shell from 'shelljs'
 import simpleGit from 'simple-git'
 import YAML from 'yaml'
+
+const debug = Debug('apl:workloadUtils')
 
 export interface NewChartValues {
   url: string
@@ -56,9 +59,8 @@ export async function updateChartIconInYaml(chartYamlPath: string, newIcon: stri
 
     const newContent = YAML.stringify(chartObject)
     await writeFile(chartYamlPath, newContent, 'utf-8')
-    console.log(`Updated icon in ${chartYamlPath} to ${newIcon}`)
   } catch (error) {
-    console.error(`Error updating chart icon in ${chartYamlPath}:`, error)
+    debug(`Error updating chart icon in ${chartYamlPath}:`, error)
   }
 }
 
@@ -74,12 +76,12 @@ export async function updateChartIconInYaml(chartYamlPath: string, newIcon: stri
 export async function updateRbacForNewChart(sparsePath: string, chartKey: string, allowTeams: boolean): Promise<void> {
   const rbacFilePath = `${sparsePath}/rbac.yaml`
   let rbacData: any = {}
-  console.log('update rbac reach rbacFilePath', rbacFilePath)
+  debug('update rbac reach rbacFilePath', rbacFilePath)
   try {
     const fileContent = await readFile(rbacFilePath, 'utf-8')
     rbacData = YAML.parse(fileContent) || {}
   } catch (error) {
-    console.error('Error reading rbac.yaml:', error)
+    debug('Error reading rbac.yaml:', error)
     // Create a default structure if the file doesn't exist.
     rbacData = { rbac: {}, betaCharts: [] }
   }
@@ -95,7 +97,7 @@ export async function updateRbacForNewChart(sparsePath: string, chartKey: string
   // Stringify the updated YAML content and write it back.
   const newContent = YAML.stringify(rbacData)
   await writeFile(rbacFilePath, newContent, 'utf-8')
-  console.log(`Updated rbac.yaml: added ${chartKey}: ${allowTeams ? 'null' : '[]'}`)
+  debug(`Updated rbac.yaml: added ${chartKey}: ${allowTeams ? 'null' : '[]'}`)
 }
 
 async function commitAndPush(targetDir: string, helmChartCatalogUrl: string, user: string, email: string) {
@@ -105,26 +107,26 @@ async function commitAndPush(targetDir: string, helmChartCatalogUrl: string, use
 
   try {
     if (!existsSync(path.join(targetDir, '.git'))) {
-      console.log('Initializing new Git repository')
+      debug('Initializing new Git repository')
       await git.init()
       await git.addRemote('origin', helmChartCatalogUrl)
     }
 
-    console.log('Staging new changes')
+    debug('Staging new changes')
     await git.add('.')
 
-    console.log('Committing changes')
+    debug('Committing changes')
     await git.commit('Added new Helm chart')
 
-    console.log('Pulling latest changes with rebase')
+    debug('Pulling latest changes with rebase')
     await git.pull('origin', 'main', { '--rebase': null })
 
-    console.log('Pushing changes to remote')
+    debug('Pushing changes to remote')
     await git.push('origin', 'main')
 
-    console.log('Successfully pushed changes!')
+    debug('Successfully pushed changes!')
   } catch (error) {
-    console.error('Error during commit and push:', error)
+    debug('Error during commit and push:', error)
   }
 }
 
@@ -166,20 +168,20 @@ export async function sparseCloneChart(
   const git = simpleGit()
 
   // Clone the repository into the folder named checkoutPath.
-  console.log(`Cloning repository: ${url} into ${checkoutPath}`)
+  debug(`Cloning repository: ${url} into ${checkoutPath}`)
   await git.clone(url, temporaryCloneDir, ['--filter=blob:none', '--no-checkout'])
 
   // Initialize sparse checkout in cone mode within checkoutPath.
-  console.log(`Initializing sparse checkout in cone mode at ${checkoutPath}`)
+  debug(`Initializing sparse checkout in cone mode at ${checkoutPath}`)
   await git.cwd(temporaryCloneDir)
   await git.raw(['sparse-checkout', 'init', '--cone'])
 
   // Set the sparse checkout to only include the specified chartPath.
-  console.log(`Setting sparse checkout path to ${chartPath}`)
+  debug(`Setting sparse checkout path to ${chartPath}`)
   await git.raw(['sparse-checkout', 'set', chartPath])
 
   // Checkout the desired revision (branch or commit) within checkoutPath.
-  console.log(`Checking out revision: ${revision}`)
+  debug(`Checking out revision: ${revision}`)
   await git.checkout(revision)
 
   // Move the contents of the sparse folder (chartPath) to the repository root.
@@ -234,7 +236,7 @@ export async function fetchWorkloadCatalog(
     rbac = YAML.parse(r).rbac
     if (YAML.parse(r)?.betaCharts) betaCharts = YAML.parse(r).betaCharts
   } catch (error) {
-    console.error(`Error while parsing rbac.yaml file : ${error.message}`)
+    debug(`Error while parsing rbac.yaml file : ${error.message}`)
   }
   const catalog: any[] = []
   const helmCharts: string[] = []
@@ -244,7 +246,7 @@ export async function fetchWorkloadCatalog(
       const chartReadme = await readFile(`${helmChartsDir}/${folder}/README.md`, 'utf-8')
       readme = chartReadme
     } catch (error) {
-      console.error(`Error while parsing chart README.md file : ${error.message}`)
+      debug(`Error while parsing chart README.md file : ${error.message}`)
       readme = 'There is no `README` for this chart.'
     }
     try {
@@ -265,7 +267,7 @@ export async function fetchWorkloadCatalog(
         helmCharts.push(folder)
       }
     } catch (error) {
-      console.error(`Error while parsing ${folder}/Chart.yaml and ${folder}/values.yaml files : ${error.message}`)
+      debug(`Error while parsing ${folder}/Chart.yaml and ${folder}/values.yaml files : ${error.message}`)
     }
   }
   if (!catalog.length) throwChartError(`There are no directories at '${url}'`)

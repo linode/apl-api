@@ -203,7 +203,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   const emitResourceStatusInterval = 10 * 1000
   const errorSet = new Set()
   setInterval(async function () {
-    // await resourceStatus(errorSet)
+    await resourceStatus(errorSet)
   }, emitResourceStatusInterval)
 
   // and register session middleware

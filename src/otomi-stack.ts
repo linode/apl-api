@@ -1122,11 +1122,7 @@ export default class OtomiStack {
       }
       throw err
     }
-    //todo add env local check
-
     const version = env.VERSIONS.core as string
-    console.log('halo url get workload catalog', url)
-    console.log('halo sub get workload catalog', sub)
     const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub, teamId, version)
     return { url, helmCharts, catalog }
   }
