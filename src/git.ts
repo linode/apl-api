@@ -1,9 +1,12 @@
 import axios, { AxiosResponse } from 'axios'
 import Debug from 'debug'
 import diff from 'deep-diff'
+import { rmSync } from 'fs'
 import { copy, ensureDir, pathExists, readFile, writeFile } from 'fs-extra'
 import { unlink } from 'fs/promises'
+import { glob } from 'glob'
 import stringifyJson from 'json-stable-stringify'
+import jsonpath from 'jsonpath'
 import { cloneDeep, get, isEmpty, merge, set, unset } from 'lodash'
 import { basename, dirname, join } from 'path'
 import simpleGit, { CheckRepoActions, CleanOptions, CommitResult, ResetMode, SimpleGit } from 'simple-git'
@@ -13,11 +16,8 @@ import { BASEURL } from './constants'
 import { GitPullError, HttpError, ValidationError } from './error'
 import { DbMessage, getIo } from './middleware'
 import { Core } from './otomi-models'
-import { removeBlankAttributes } from './utils'
 import { FileMap, getFilePath, renderManifest, renderManifestForSecrets } from './repo'
-import jsonpath from 'jsonpath'
-import { rmSync } from 'fs'
-import { glob } from 'glob'
+import { removeBlankAttributes } from './utils'
 
 const debug = Debug('otomi:repo')
 
@@ -415,10 +415,14 @@ export class Git {
     return this.git.revparse('HEAD')
   }
 
-  async save(editor: string): Promise<void> {
+  async save(editor: string, encryptSecrets = true): Promise<void> {
     // prepare values first
     try {
-      await this.requestPrepareValues()
+      if (encryptSecrets) {
+        await this.requestPrepareValues()
+      } else {
+        debug(`Data does not need to be encrypted`)
+      }
     } catch (e) {
       debug(`ERROR: ${JSON.stringify(e)}`)
       if (e.response) {

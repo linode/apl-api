@@ -357,7 +357,7 @@ describe('Code repositories tests', () => {
       repositoryUrl: 'https://gitea.test.com',
     })
     expect(saveTeamCodeReposSpy).toHaveBeenCalledWith('demo', codeRepo)
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo')
+    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo', false)
 
     createItemSpy.mockRestore()
     saveTeamCodeReposSpy.mockRestore()
@@ -412,7 +412,7 @@ describe('Code repositories tests', () => {
       repositoryUrl: 'https://gitea.test.com',
     })
     expect(saveTeamCodeReposSpy).toHaveBeenCalledWith('demo', codeRepo)
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo')
+    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo', false)
 
     updateItemSpy.mockRestore()
     saveTeamCodeReposSpy.mockRestore()
@@ -435,7 +435,7 @@ describe('Code repositories tests', () => {
     await otomiStack.deleteCodeRepo('demo', '1')
 
     expect(deleteItemSpy).toHaveBeenCalledWith('1')
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo')
+    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo', false)
 
     deleteItemSpy.mockRestore()
     doDeploymentSpy.mockRestore()
@@ -471,7 +471,7 @@ describe('Code repositories tests', () => {
       repositoryUrl: 'https://github.test.com',
     })
     expect(saveTeamCodeReposSpy).toHaveBeenCalledWith('demo', codeRepo)
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo')
+    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo', false)
 
     createItemSpy.mockRestore()
     saveTeamCodeReposSpy.mockRestore()
@@ -526,7 +526,7 @@ describe('Code repositories tests', () => {
       repositoryUrl: 'https://github.test.com',
     })
     expect(saveTeamCodeReposSpy).toHaveBeenCalledWith('demo', codeRepo)
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo')
+    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo', false)
 
     updateItemSpy.mockRestore()
     saveTeamCodeReposSpy.mockRestore()
@@ -549,7 +549,7 @@ describe('Code repositories tests', () => {
     await otomiStack.deleteCodeRepo('demo', '1')
 
     expect(deleteItemSpy).toHaveBeenCalledWith('1')
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo')
+    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo', false)
 
     deleteItemSpy.mockRestore()
     doDeploymentSpy.mockRestore()
@@ -593,7 +593,7 @@ describe('Code repositories tests', () => {
       secret: 'test',
     })
     expect(saveTeamCodeReposSpy).toHaveBeenCalledWith('demo', codeRepo)
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo')
+    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo', false)
 
     createItemSpy.mockRestore()
     saveTeamCodeReposSpy.mockRestore()
@@ -641,7 +641,7 @@ describe('Code repositories tests', () => {
       secret: 'test',
     })
     expect(saveTeamCodeReposSpy).toHaveBeenCalledWith('demo', codeRepo)
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo')
+    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo', false)
 
     updateItemSpy.mockRestore()
     saveTeamCodeReposSpy.mockRestore()
@@ -666,7 +666,7 @@ describe('Code repositories tests', () => {
     await otomiStack.deleteCodeRepo('demo', '1')
 
     expect(deleteItemSpy).toHaveBeenCalledWith('1')
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo')
+    expect(doDeploymentSpy).toHaveBeenCalledWith(['codeRepos'], 'demo', false)
 
     deleteItemSpy.mockRestore()
     doDeploymentSpy.mockRestore()
