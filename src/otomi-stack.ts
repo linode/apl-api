@@ -110,7 +110,7 @@ const env = cleanEnv({
 
 export const rootPath = '/tmp/otomi/values'
 //TODO Move this to the repo.ts
-const getClusterSettingsFilePath = 'env/settings/cluster.yaml'
+const clusterSettingsFilePath = 'env/settings/cluster.yaml'
 function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: string): string {
   return `env/teams/${teamId}/sealedsecrets/${sealedSecretsName}`
 }
@@ -259,7 +259,7 @@ export default class OtomiStack {
         this.git = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, branch)
         await this.git.pull()
         //TODO fetch this url from the repo
-        if (await this.git.fileExists(getClusterSettingsFilePath)) break
+        if (await this.git.fileExists(clusterSettingsFilePath)) break
         debug(`Values are not present at ${url}:${branch}`)
       } catch (e) {
         debug(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
