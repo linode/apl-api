@@ -241,9 +241,9 @@ export default class OtomiStack {
       const repo = rawRepo as Repo
       this.repoService = new RepoService(repo)
       //TODO fix this transforming of the services
-      this.repoService.getRepo().teamConfig = mapValues(repo.teamConfig, (teamConfig) => ({
+      this.repoService.getRepo().teamConfig = mapValues(repo.teamConfig, (teamConfig, teamName) => ({
         ...teamConfig,
-        services: this.transformServices(teamConfig.services, teamConfig.settings.name),
+        services: this.transformServices(teamConfig.services, teamName),
       }))
     }
   }

@@ -47,6 +47,8 @@ describe('API authz tests', () => {
 
     otomiStack.saveTeam = jest.fn().mockResolvedValue(undefined)
     otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
+    otomiStack.doRepoDeployment = jest.fn().mockImplementation(() => Promise.resolve())
+    otomiStack.doTeamDeployment = jest.fn().mockImplementation(() => Promise.resolve())
     await otomiStack.loadValues()
     await otomiStack.createTeam({ name: 'team1' })
     await otomiStack.createTeam({ name: 'team2' })
