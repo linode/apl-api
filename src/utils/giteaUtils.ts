@@ -35,7 +35,8 @@ function webhookData(
   const authHeader = `Basic ${Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')}`
   const { type } = data.mode!
   const repoUrl: string = data.mode![type] ? data.mode!['docker'].repoUrl : data.mode!['buildpacks'].repoUrl
-  const repoName: string = repoUrl.split('/').pop()!
+  let repoName: string = repoUrl.split('/').pop()!
+  if (repoName.includes('.')) repoName = repoName.split('.').shift()!
   let gitUrl = env.GIT_REPO_URL
   if (!gitUrl.includes('http')) gitUrl = gitUrl.startsWith('http') ? gitUrl : `https://${gitUrl}`
   const parsedUrl = new URL(gitUrl)
