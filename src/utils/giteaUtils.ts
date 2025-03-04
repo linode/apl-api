@@ -40,7 +40,7 @@ function webhookData(
   let gitUrl = env.GIT_REPO_URL
   if (!gitUrl.includes('http')) gitUrl = gitUrl.startsWith('http') ? gitUrl : `https://${gitUrl}`
   const parsedUrl = new URL(gitUrl)
-  const serviceUrl = `http://el-gitea-webhook-${data.name}.${teamId}.svc.cluster.local:8080`
+  const serviceUrl = `http://el-gitea-webhook-${data.name}.team-${teamId}.svc.cluster.local:8080`
 
   return { authHeader, repoUrl, repoName, giteaUrl: parsedUrl.hostname, serviceUrl }
 }
