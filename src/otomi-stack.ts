@@ -74,6 +74,8 @@ import {
 import { validateBackupFields } from './utils/backupUtils'
 import {
   getGiteaRepoUrls,
+  getPrivateRepoBranches,
+  getPublicRepoBranches,
   normalizeRepoUrl,
   testPrivateRepoConnect,
   testPublicRepoConnect,
@@ -987,6 +989,33 @@ export default class OtomiStack {
     await this.doDeployment(['coderepos'])
   }
 
+  async getRepoBranches(url: string, teamId: string, secretName: string): Promise<string[]> {
+    try {
+      let sshPrivateKey = '',
+        username = '',
+        accessToken = ''
+
+      if (secretName) {
+        const secret = await getSecretValues(secretName, `team-${teamId}`)
+        sshPrivateKey = secret?.['ssh-privatekey'] || ''
+        username = secret?.username || ''
+        accessToken = secret?.password || ''
+      }
+
+      const isPrivate = !!secretName
+      const isSSH = !!sshPrivateKey
+      const repoUrl = url.startsWith('https://gitea') ? url : normalizeRepoUrl(url, isPrivate, isSSH)
+
+      if (!repoUrl) return ['HEAD']
+
+      if (isPrivate) return await getPrivateRepoBranches(repoUrl, sshPrivateKey, username, accessToken)
+
+      return await getPublicRepoBranches(repoUrl)
+    } catch (error) {
+      return []
+    }
+  }
+
   async getTestRepoConnect(url: string, teamId: string, secretName: string): Promise<TestRepoConnect> {
     try {
       let sshPrivateKey = '',
@@ -1016,7 +1045,7 @@ export default class OtomiStack {
   }
 
   async getInternalRepoUrls(teamId: string): Promise<string[]> {
-    if (env.isDev || !teamId || teamId === 'admin') return []
+    // if (env.isDev || !teamId || teamId === 'admin') return []
     const { cluster, otomi } = this.getSettings(['cluster', 'otomi'])
     const gitea = this.getApp('admin', 'gitea')
     const username = gitea?.values?.adminUsername as string

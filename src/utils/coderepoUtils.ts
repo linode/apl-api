@@ -97,44 +97,32 @@ function normalizeSSHKey(sshPrivateKey) {
   return `-----BEGIN OPENSSH PRIVATE KEY-----\n${basePrivateKey}\n-----END OPENSSH PRIVATE KEY-----`
 }
 
-async function connectPrivateRepo(
+async function setupGitAuthentication(
   repoUrl: string,
-  sshKey?: string,
+  sshPrivateKey?: string,
   username?: string,
   accessToken?: string,
-): Promise<{ status: string }> {
-  const keyId = uuidv4() as string
-  const keyPath = `/tmp/otomi/sshKey-${keyId}`
-  try {
-    let git: SimpleGit
-    let url = repoUrl
+): Promise<{ git: SimpleGit; url: string; keyPath?: string }> {
+  let keyPath: string | undefined
+  const git: SimpleGit = simpleGit()
+  let url = repoUrl
 
-    if (url.startsWith('git@') && sshKey) {
-      await writeFile(keyPath, `${sshKey}\n`, { mode: 0o600 })
+  if (url.startsWith('git@')) {
+    const normalizedKey: string = sshPrivateKey ? normalizeSSHKey(sshPrivateKey) : ''
+    if (normalizedKey) {
+      const keyId = uuidv4() as string
+      keyPath = `/tmp/otomi/sshKey-${keyId}`
+      await writeFile(keyPath, `${normalizedKey}\n`, { mode: 0o600 })
       await chmod(keyPath, 0o600)
-
       const GIT_SSH_COMMAND = `ssh -i ${keyPath} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null`
-      git = simpleGit()
       git.env('GIT_SSH_COMMAND', GIT_SSH_COMMAND)
-    } else if (url.startsWith('https://')) {
-      if (!username || !accessToken) throw new Error('Username and access token are required for HTTPS authentication')
-      const urlWithAuth = repoUrl.replace(
-        'https://',
-        `https://${encodeURIComponent(username)}:${encodeURIComponent(accessToken)}@`,
-      )
+    }
+  } else if (url.startsWith('https://')) {
+    if (!username || !accessToken) throw new Error('Username and access token are required for HTTPS authentication')
+    url = repoUrl.replace('https://', `https://${encodeURIComponent(username)}:${encodeURIComponent(accessToken)}@`)
+  } else throw new Error('Invalid repository URL format. Must be SSH or HTTPS.')
 
-      git = simpleGit()
-      url = urlWithAuth
-    } else throw new Error('Invalid repository URL format. Must be SSH or HTTPS.')
-
-    await git.listRemote([url])
-    return { status: 'success' }
-  } catch (error) {
-    console.log('error', error)
-    return { status: 'failed' }
-  } finally {
-    if (repoUrl.startsWith('git@') && (await pathExists(keyPath))) await unlink(keyPath)
-  }
+  return { git, url, keyPath }
 }
 
 export async function testPrivateRepoConnect(
@@ -143,8 +131,17 @@ export async function testPrivateRepoConnect(
   username?: string,
   accessToken?: string,
 ) {
-  const normalizedKey: string = sshPrivateKey ? normalizeSSHKey(sshPrivateKey) : ''
-  return connectPrivateRepo(repoUrl, normalizedKey, username, accessToken)
+  let keyPath: string | undefined
+  try {
+    const authResult = await setupGitAuthentication(repoUrl, sshPrivateKey, username, accessToken)
+    keyPath = authResult.keyPath
+    await authResult.git.listRemote([authResult.url])
+    return { status: 'success' }
+  } catch (error) {
+    return { status: 'failed' }
+  } finally {
+    if (repoUrl.startsWith('git@') && keyPath && (await pathExists(keyPath))) await unlink(keyPath)
+  }
 }
 
 export async function testPublicRepoConnect(repoUrl: string) {
@@ -155,4 +152,46 @@ export async function testPublicRepoConnect(repoUrl: string) {
   } catch (error) {
     return { status: 'failed' }
   }
+}
+
+async function extractRepositoryRefs(repoUrl: string, git: SimpleGit = simpleGit()): Promise<string[]> {
+  try {
+    const rawData = await git.listRemote(['--refs', repoUrl])
+    const branches: string[] = []
+    const tags: string[] = []
+
+    rawData.split('\n').forEach((line) => {
+      const parts = line.split('\t')
+      if (parts.length !== 2) return
+      const ref = parts[1]
+      if (ref.startsWith('refs/heads/')) branches.push(ref.replace('refs/heads/', ''))
+      else if (ref.startsWith('refs/tags/')) tags.push(ref.replace('refs/tags/', ''))
+    })
+
+    return [...branches, ...tags]
+  } catch (error) {
+    return []
+  }
+}
+
+export async function getPrivateRepoBranches(
+  repoUrl: string,
+  sshPrivateKey?: string,
+  username?: string,
+  accessToken?: string,
+) {
+  let keyPath: string | undefined
+  try {
+    const authResult = await setupGitAuthentication(repoUrl, sshPrivateKey, username, accessToken)
+    keyPath = authResult.keyPath
+    return await extractRepositoryRefs(authResult.url, authResult.git)
+  } catch (error) {
+    return []
+  } finally {
+    if (repoUrl.startsWith('git@') && keyPath && (await pathExists(keyPath))) await unlink(keyPath)
+  }
+}
+
+export async function getPublicRepoBranches(repoUrl: string) {
+  return extractRepositoryRefs(repoUrl)
 }

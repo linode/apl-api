@@ -1480,10 +1480,41 @@ paths:
               schema:
                 $ref: '#/components/schemas/SettingsInfo'
 
+  /repoBranches:
+    get:
+      operationId: getRepoBranches
+      description: Get repo branches from the git providers.
+      x-aclSchema: RepoBranches
+      parameters:
+        - name: url
+          in: query
+          description: URL of the repository
+          schema:
+            type: string
+        - name: teamId
+          in: query
+          description: Id of the team
+          schema:
+            type: string
+        - name: secret
+          in: query
+          description: Name of the secret for private repositories
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request is successful.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
   /testRepoConnect:
     get:
       operationId: getTestRepoConnect
-      description: Get settings information from the 'settings.yaml' file.
+      description: Get test repo connect information from the git providers.
       x-aclSchema: TestRepoConnect
       parameters:
         - name: url
@@ -1848,6 +1879,8 @@ components:
       $ref: settings.yaml#/Settings
     SettingsInfo:
       $ref: settingsinfo.yaml#/SettingsInfo
+    RepoBranches:
+      $ref: repobranches.yaml#/RepoBranches
     TestRepoConnect:
       $ref: testrepoconnect.yaml#/TestRepoConnect
     InternalRepoUrls:
