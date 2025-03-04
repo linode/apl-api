@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 
 import { Express } from 'express'
-import request, { SuperAgentTest } from 'supertest'
-import getToken from 'src/fixtures/jwt'
-import { initApp, loadSpec } from 'src/app'
-import OtomiStack from 'src/otomi-stack'
-import { getSessionStack } from './middleware'
-import { App, SealedSecret } from './otomi-models'
-import { HttpError } from './error'
-import { Repo } from './repo'
 import { mockDeep } from 'jest-mock-extended'
+import { initApp, loadSpec } from 'src/app'
+import getToken from 'src/fixtures/jwt'
+import OtomiStack from 'src/otomi-stack'
+import request, { SuperAgentTest } from 'supertest'
+import { HttpError } from './error'
+import { getSessionStack } from './middleware'
+import { App, Coderepo, SealedSecret } from './otomi-models'
+import { Repo } from './repo'
 import * as getValuesSchemaModule from './utils'
 
 const platformAdminToken = getToken(['platform-admin'])
@@ -635,6 +635,102 @@ describe('API authz tests', () => {
         .send({ id: 'user1' })
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(403)
+    })
+  })
+
+  describe('Code repository endpoints tests', () => {
+    const data = {
+      label: 'demo',
+      gitService: 'github' as 'gitea' | 'github' | 'gitlab',
+      repositoryUrl: 'https://github.com/buildpacks/samples',
+      private: true,
+      secret: 'demo',
+    }
+    test('team member can create its own coderepo', async () => {
+      jest.spyOn(otomiStack, 'createCoderepo').mockResolvedValue({} as Coderepo)
+      await agent
+        .post(`/v1/teams/${teamId}/coderepos`)
+        .send(data)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+    })
+
+    test('team member can read its own coderepo', async () => {
+      jest.spyOn(otomiStack, 'getCoderepo').mockResolvedValue({} as never)
+      await agent
+        .get(`/v1/teams/${teamId}/coderepos/my-uuid`)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+    })
+
+    test('team member can update its own coderepo', async () => {
+      jest.spyOn(otomiStack, 'editCoderepo').mockResolvedValue({} as Coderepo)
+
+      await agent
+        .put(`/v1/teams/${teamId}/coderepos/my-uuid`)
+        .send(data)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+    })
+
+    test('team member can delete its own coderepo', async () => {
+      jest.spyOn(otomiStack, 'deleteCoderepo').mockResolvedValue()
+
+      await agent
+        .delete(`/v1/teams/${teamId}/coderepos/my-uuid`)
+        .set('Content-Type', 'application/json')
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member cannot create others coderepo', async () => {
+      await agent
+        .post(`/v1/teams/${otherTeamId}/coderepos`)
+        .send(data)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(403)
+    })
+
+    test('team member cannot read others coderepo', async () => {
+      await agent
+        .get(`/v1/teams/${otherTeamId}/coderepos/my-uuid`)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(403)
+    })
+
+    test('team member cannot update others coderepo', async () => {
+      await agent
+        .put(`/v1/teams/${otherTeamId}/coderepos/my-uuid`)
+        .send(data)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(403)
+    })
+
+    test('team member cannot delete others coderepo', async () => {
+      await agent
+        .delete(`/v1/teams/${otherTeamId}/coderepos/my-uuid`)
+        .set('Content-Type', 'application/json')
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(403)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can test code repository url', async () => {
+      await agent
+        .get(`/v1/testRepoConnect`)
+        .query({ url: data.repositoryUrl })
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+    })
+
+    test('team member can get internal repository urls', async () => {
+      jest.spyOn(otomiStack, 'getInternalRepoUrls').mockResolvedValue([])
+      await agent
+        .get(`/v1/internalRepoUrls`)
+        .query({ teamId })
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
     })
   })
 })

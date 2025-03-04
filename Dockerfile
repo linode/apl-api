@@ -27,7 +27,7 @@ ENV NODE_ENV=production
 ENV NODE_PATH='dist'
 
 # Install dependencies
-RUN apk --no-cache add python3 git jq
+RUN apk --no-cache add python3 git jq openssh
 
 # Install app
 RUN mkdir /app
@@ -35,6 +35,9 @@ WORKDIR /app
 COPY --from=clean /app/node_modules node_modules
 COPY --from=ci /app/dist dist
 COPY package.json .
+
+# Add nouser to /etc/passwd for ssh connection
+RUN echo 'nouser:x:999:999::/home/nouser:/bin/sh' >> /etc/passwd
 
 USER node
 EXPOSE 8080
