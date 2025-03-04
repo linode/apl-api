@@ -1061,10 +1061,10 @@ export default class OtomiStack {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const buildData = data
-      if (process.env.NODE_ENV !== 'development') {
+      if (!env.isDev) {
         if (buildData.trigger && !buildData.externalRepo) {
           const webhook = await createGiteaWebhook(teamId, buildData)
-          buildData.webHookId = webhook.id
+          buildData.giteaWebHookId = webhook.id
         }
       }
       const build = this.db.createItem('builds', { ...buildData, teamId }, { teamId, name: buildData.name }) as Build
@@ -1085,15 +1085,15 @@ export default class OtomiStack {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const buildData = data
     const oldBuild = this.getBuild(id)
-    if (buildData.trigger && !buildData.externalRepo && !oldBuild.webHookId) {
+    if (buildData.trigger && !buildData.externalRepo && !oldBuild.giteaWebHookId) {
       const webhook = await createGiteaWebhook(buildData.teamId!, buildData)
-      buildData.webHookId = webhook.id
-    } else if (buildData.trigger && !buildData.externalRepo && oldBuild.webHookId) {
-      const webhook = await updateGiteaWebhook(oldBuild.webHookId, buildData.teamId!, data)
-      buildData.webHookId = webhook.id
-    } else if (!buildData.trigger && oldBuild.webHookId) {
-      await deleteGiteaWebhook(oldBuild.webHookId, buildData.teamId!, buildData)
-      buildData.webHookId = undefined
+      buildData.giteaWebHookId = webhook.id
+    } else if (buildData.trigger && !buildData.externalRepo && oldBuild.giteaWebHookId) {
+      const webhook = await updateGiteaWebhook(oldBuild.giteaWebHookId, buildData.teamId!, data)
+      buildData.giteaWebHookId = webhook.id
+    } else if (!buildData.trigger && oldBuild.giteaWebHookId) {
+      await deleteGiteaWebhook(oldBuild.giteaWebHookId, buildData.teamId!, buildData)
+      buildData.giteaWebHookId = undefined
     }
     const build = this.db.updateItem('builds', buildData, { id }) as Build
     await this.saveTeamBuilds(build.teamId!)
@@ -1112,7 +1112,7 @@ export default class OtomiStack {
       }
     })
     this.db.deleteItem('builds', { id })
-    if (build.webHookId !== undefined) await deleteGiteaWebhook(build.webHookId, build.teamId!, build)
+    if (build.giteaWebHookId !== undefined) await deleteGiteaWebhook(build.giteaWebHookId, build.teamId!, build)
 
     await this.saveTeamBuilds(build.teamId!)
     await this.doDeployment(['builds'])

@@ -655,10 +655,6 @@ files:
       - path
       - content
     type: object
-giteaWebHookId:
-  description: Id that is used for gitea webhooks
-  title: Gitea Webhook ID
-  type: integer
 googleAccountJson:
   description: Enter GCP account JSON for authentication.
   title: Account JSON

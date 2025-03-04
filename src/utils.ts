@@ -7,13 +7,6 @@ import cloneDeep from 'lodash/cloneDeep'
 import { Cluster, Dns } from 'src/otomi-models'
 import { parse } from 'yaml'
 import { BASEURL } from './constants'
-import { cleanEnv, GIT_PASSWORD, GIT_REPO_URL, GIT_USER } from './validators'
-
-const env = cleanEnv({
-  GIT_PASSWORD,
-  GIT_REPO_URL,
-  GIT_USER,
-})
 
 export function arrayToObject(array: [] = [], keyName = 'name', keyValue = 'value'): Record<string, unknown> {
   const obj = {}

@@ -181,7 +181,7 @@ describe('Gitea webhook tests', () => {
       },
       type: 'docker',
     },
-    webHookId: 1,
+    giteaWebHookId: 1,
   }
   const buildResponseWithoutWebhookId: Build = {
     id: '1',

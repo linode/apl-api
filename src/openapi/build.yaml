@@ -43,10 +43,9 @@ Build:
       type: boolean
       default: false
       description: 'Trigger the build based on a Gitea webhook. When `trigger` is `checked` and `externalRepo` is `unchecked`, a webhook will automatically be created in the Gitea repository.'
-    webHookId:
+    giteaWebHookId:
       type: integer
-      description: Gitea WebhookId to trigger the build that is set for when a trigger is 'true' and the externalRepo is 'false'
-      $ref: 'definitions.yaml#/giteaWebHookId'
+      description: Id of the webhook which is used to trigger the build
     scanSource:
       type: boolean
       default: true
