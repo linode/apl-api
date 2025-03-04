@@ -84,6 +84,7 @@ import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
+import { TeamConfigService } from './services/TeamConfigService'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -447,19 +448,9 @@ export default class OtomiStack {
     settings[settingId] = removeBlankAttributes(updatedSettingsData[settingId] as Record<string, any>)
     this.repoService.updateSettings(settings)
     await this.saveSettings()
-    await this.doDeployment([
-      'alerts',
-      'cluster',
-      'dns',
-      'ingress',
-      'kms',
-      'obj',
-      'oidc',
-      'otomi',
-      'platformBackups',
-      'smtp',
-      'versions',
-    ])
+    await this.doRepoDeployment((repoService) => {
+      repoService.updateSettings(settings)
+    })
     return settings
   }
 
@@ -530,7 +521,9 @@ export default class OtomiStack {
     app = { ...app, ...data }
     app = this.repoService.updateApp(id, app)
     await this.saveAdminApp(app)
-    await this.doDeployment(['apps'])
+    await this.doRepoDeployment((repoService) => {
+      repoService.updateApp(id, app)
+    })
     return this.repoService.getApp(id)
   }
 
@@ -549,7 +542,15 @@ export default class OtomiStack {
         }
       }),
     )
-    await this.doDeployment(['apps'])
+
+    await this.doRepoDeployment((repoService) => {
+      ids.map((id) => {
+        const orig = repoService.getApp(id)
+        if (orig && this.canToggleApp(id)) {
+          repoService.updateApp(id, { enabled })
+        }
+      })
+    })
   }
 
   getTeams(): Array<Team> {
@@ -590,22 +591,26 @@ export default class OtomiStack {
     const team = teamConfig.settings
     const apps = getAppList()
     const core = this.getCore()
-    apps.forEach((appId) => {
+    const teamApps = apps.flatMap((appId) => {
       const isShared = !!core.adminApps.find((a) => a.name === appId)?.isShared
       const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
-      // Admin apps are loaded by loadApps function
-      if (teamName !== 'admin' && (isShared || inTeamApps))
-        this.repoService.getTeamConfigService(teamName).createApp({ id: appId })
+      return teamName !== 'admin' && (isShared || inTeamApps)
+        ? [this.repoService.getTeamConfigService(teamName).createApp({ id: appId })]
+        : [] // Empty array removes `undefined` entries
     })
 
+    const policies = getPolicies()
     if (!data.id) {
-      const policies = getPolicies()
       this.repoService.getTeamConfigService(teamName).updatePolicies(policies)
     }
     if (deploy) {
       await this.saveTeam(team)
-      //TODO do this better for the teamConfig. Now it updates all the team configs of the rootstack
-      await this.doDeployment(['teamConfig'])
+
+      await this.doRepoDeployment((repoService) => {
+        repoService.createTeamConfig(teamName, data)
+        repoService.getTeamConfigService(teamName).setApps(teamApps)
+        repoService.getTeamConfigService(teamName).updatePolicies(policies)
+      })
     }
     return team
   }
@@ -613,13 +618,17 @@ export default class OtomiStack {
   async editTeam(id: string, data: Team): Promise<Team> {
     const team = this.repoService.getTeamConfigService(id).updateSettings(data)
     await this.saveTeam(team)
-    await this.doDeployment(['settings'], id)
+    await this.doTeamDeployment(id, (teamService) => {
+      teamService.updateSettings(team)
+    })
     return team
   }
 
   async deleteTeam(id: string): Promise<void> {
     await this.deleteTeamConfig(id)
-    await this.doDeployment(['teamConfig'])
+    await this.doRepoDeployment((repoService) => {
+      repoService.deleteTeamConfig(id)
+    })
   }
 
   getTeamServices(teamId: string): Array<Service> {
@@ -640,7 +649,9 @@ export default class OtomiStack {
       const backup = this.repoService.getTeamConfigService(teamId).createBackup(data)
 
       await this.saveTeamBackup(teamId, data)
-      await this.doDeployment(['backups'], teamId)
+      await this.doTeamDeployment(teamId, (teamService) => {
+        teamService.createBackup(backup)
+      })
       return backup
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Backup name already exists'
@@ -656,13 +667,25 @@ export default class OtomiStack {
     validateBackupFields(data.name, data.ttl)
     const backup = this.repoService.getTeamConfigService(teamId).updateBackup(name, data)
     await this.saveTeamBackup(teamId, data)
-    await this.doDeployment(['backups'], teamId, false)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateBackup(name, backup)
+      },
+      false,
+    )
     return backup
   }
 
   async deleteBackup(teamId: string, name: string): Promise<void> {
     await this.deleteTeamBackup(teamId, name)
-    await this.doDeployment(['backups'], teamId, false)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteBackup(name)
+      },
+      false,
+    )
   }
 
   getTeamNetpols(teamId: string): Array<Netpol> {
@@ -677,7 +700,13 @@ export default class OtomiStack {
     try {
       const netpol = this.repoService.getTeamConfigService(teamId).createNetpol(data)
       await this.saveTeamNetpols(teamId, data)
-      await this.doDeployment(['netpols'], teamId, false)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createNetpol(netpol)
+        },
+        false,
+      )
       return netpol
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Network policy name already exists'
@@ -693,14 +722,26 @@ export default class OtomiStack {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const netpol = this.repoService.getTeamConfigService(teamId).updateNetpol(name, data)
     await this.saveTeamNetpols(teamId, data)
-    await this.doDeployment(['netpols'], teamId, false)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateNetpol(name, netpol)
+      },
+      false,
+    )
     return netpol
   }
 
   async deleteNetpol(teamId: string, name: string): Promise<void> {
     const netpol = this.repoService.getTeamConfigService(teamId).getNetpol(name)
     await this.deleteTeamNetpol(teamId, netpol.name)
-    await this.doDeployment(['netpols'], teamId, false)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteNetpol(name)
+      },
+      false,
+    )
   }
 
   getAllUsers(sessionUser: SessionUser): Array<User> {
@@ -745,7 +786,9 @@ export default class OtomiStack {
       }
       const createdUser = this.repoService.createUser(user)
       await this.saveUser(createdUser)
-      await this.doDeployment(['users'])
+      await this.doRepoDeployment((repoService) => {
+        repoService.createUser(user)
+      })
       return createdUser
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'User email already exists'
@@ -758,10 +801,11 @@ export default class OtomiStack {
   }
 
   async editUser(id: string, data: User): Promise<User> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const user = this.repoService.updateUser(id, data)
     await this.saveUser(user)
-    await this.doDeployment(['users'])
+    await this.doRepoDeployment((repoService) => {
+      repoService.updateUser(id, user)
+    })
     return user
   }
 
@@ -774,7 +818,9 @@ export default class OtomiStack {
       throw error
     }
     await this.deleteUserFile(user)
-    await this.doDeployment(['users'])
+    await this.doRepoDeployment((repoService) => {
+      repoService.deleteUser(user.id!)
+    })
   }
 
   async editTeamUsers(
@@ -786,7 +832,12 @@ export default class OtomiStack {
       await this.saveUser(updateUser)
     }
     const users = this.repoService.getUsers()
-    await this.doDeployment(['users'])
+    await this.doRepoDeployment((repoService) => {
+      for (const user of data) {
+        const existingUser = repoService.getUser(user.id!)
+        repoService.updateUser(user.id!, { ...existingUser, teams: user.teams })
+      }
+    })
     return users
   }
 
@@ -817,7 +868,13 @@ export default class OtomiStack {
         await this.createService(teamId, data.service)
       }
       await this.saveTeamProject(teamId, data)
-      await this.doDeployment(['projects'], teamId, false)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createProject(project)
+        },
+        false,
+      )
       return project
     } catch (err) {
       if (err.code === 409 && projectNameTaken) err.publicMessage = projectNameTakenPublicMessage
@@ -922,6 +979,7 @@ export default class OtomiStack {
     await this.saveTeamWorkload(teamId, w)
     await this.saveTeamWorkloadValues(teamId, wv)
     await this.saveTeamService(teamId, s)
+    //Leave this for now as we will replace projects
     await this.doDeployment(['projects', 'builds', 'workloads', 'workloadValues', 'services'], teamId, false)
     return project
   }
@@ -942,7 +1000,17 @@ export default class OtomiStack {
       await this.deleteTeamService(teamId, p.service.name)
     }
     await this.deleteTeamProject(teamId, name)
-    await this.doDeployment(['projects', 'builds', 'workloads', 'workloadValues', 'services'], teamId, false)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteBuild(name)
+        teamService.deleteWorkload(name)
+        teamService.deleteWorkloadValues(name)
+        teamService.deleteService(name)
+        teamService.deleteProject(name)
+      },
+      false,
+    )
   }
 
   getTeamCodeRepos(teamId: string): Array<CodeRepo> {
@@ -960,7 +1028,13 @@ export default class OtomiStack {
       if (!body.private) unset(body, 'secret')
       const codeRepo = this.repoService.getTeamConfigService(teamId).createCodeRepo({ ...data, teamId })
       await this.saveTeamCodeRepo(teamId, codeRepo)
-      await this.doDeployment(['codeRepos'], teamId, false)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createCodeRepo(codeRepo)
+        },
+        false,
+      )
       return codeRepo
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Code repo label already exists'
@@ -978,13 +1052,25 @@ export default class OtomiStack {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const codeRepo = this.repoService.getTeamConfigService(teamId).updateCodeRepo(name, body)
     await this.saveTeamCodeRepo(teamId, codeRepo)
-    await this.doDeployment(['codeRepos'], teamId, false)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateCodeRepo(name, codeRepo)
+      },
+      false,
+    )
     return codeRepo
   }
 
   async deleteCodeRepo(teamId: string, name: string): Promise<void> {
     await this.deleteTeamCodeRepo(teamId, name)
-    await this.doDeployment(['codeRepos'], teamId, false)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteCodeRepo(name)
+      },
+      false,
+    )
   }
 
   async getTestRepoConnect(url: string, teamId: string, secretName: string): Promise<TestRepoConnect> {
@@ -1057,7 +1143,13 @@ export default class OtomiStack {
     try {
       const build = this.repoService.getTeamConfigService(teamId).createBuild({ ...data, teamId })
       await this.saveTeamBuild(teamId, data)
-      await this.doDeployment(['builds'], teamId, false)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createBuild(build)
+        },
+        false,
+      )
       return build
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Build name already exists'
@@ -1073,7 +1165,13 @@ export default class OtomiStack {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const build = this.repoService.getTeamConfigService(teamId).updateBuild(name, data)
     await this.saveTeamBuild(teamId, build)
-    await this.doDeployment(['builds'], teamId, false)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateBuild(name, build)
+      },
+      false,
+    )
     return build
   }
 
@@ -1086,7 +1184,13 @@ export default class OtomiStack {
       }
     })
     await this.deleteTeamBuild(teamId, name)
-    await this.doDeployment(['builds'], teamId, false)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteBuild(name)
+      },
+      false,
+    )
   }
 
   getTeamPolicies(teamId: string): Policies {
@@ -1106,7 +1210,14 @@ export default class OtomiStack {
     teamPolicies[policyId] = removeBlankAttributes(data)
     const policy = this.getPolicy(teamId, policyId)
     await this.saveTeamPolicies(teamId)
-    await this.doDeployment(['policies'], teamId, false)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        const rootStackPolicies = teamService.getPolicies()
+        rootStackPolicies[policyId] = removeBlankAttributes(data)
+      },
+      false,
+    )
     return policy
   }
 
@@ -1225,7 +1336,14 @@ export default class OtomiStack {
         .createWorkloadValues({ teamId, values: {}, id: workload.id, name: workload.name })
       await this.saveTeamWorkload(teamId, data)
       await this.saveTeamWorkloadValues(teamId, workloadValues)
-      await this.doDeployment(['workloads', 'workloadValues'], teamId, false)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createWorkload(workload)
+          teamService.createWorkloadValues(workloadValues)
+        },
+        false,
+      )
       return workload
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Workload name already exists'
@@ -1240,7 +1358,13 @@ export default class OtomiStack {
   async editWorkload(teamId: string, name: string, data: Workload): Promise<Workload> {
     const workload = this.repoService.getTeamConfigService(teamId).updateWorkload(name, data)
     await this.saveTeamWorkload(teamId, workload)
-    await this.doDeployment(['workloads'], teamId, false)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateWorkload(name, workload)
+      },
+      false,
+    )
     return workload
   }
 
@@ -1254,7 +1378,14 @@ export default class OtomiStack {
     })
     await this.deleteTeamWorkloadValues(teamId, name)
     await this.deleteTeamWorkload(teamId, name)
-    await this.doDeployment(['workloads', 'workloadValues'], teamId, false)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteWorkloadValues(name)
+        teamService.deleteWorkload(name)
+      },
+      false,
+    )
   }
 
   async editWorkloadValues(teamId: string, name: string, data: WorkloadValues): Promise<WorkloadValues> {
@@ -1268,7 +1399,13 @@ export default class OtomiStack {
       }
     }
     await this.saveTeamWorkloadValues(teamId, workloadValues)
-    await this.doDeployment(['workloadValues'], teamId, false)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateWorkloadValues(name, workloadValues)
+      },
+      false,
+    )
     return workloadValues
   }
 
@@ -1285,7 +1422,13 @@ export default class OtomiStack {
     try {
       const service = this.repoService.getTeamConfigService(teamId).createService({ ...data, teamId })
       await this.saveTeamService(teamId, data)
-      await this.doDeployment(['services'], teamId, false)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createService(service)
+        },
+        false,
+      )
       return service
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Service name already exists'
@@ -1300,7 +1443,13 @@ export default class OtomiStack {
   async editService(teamId: string, name: string, data: Service): Promise<Service> {
     const service = this.repoService.getTeamConfigService(teamId).updateService(name, data)
     await this.saveTeamService(teamId, service)
-    await this.doDeployment(['services'], teamId, false)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateService(name, service)
+      },
+      false,
+    )
     return service
   }
 
@@ -1315,7 +1464,13 @@ export default class OtomiStack {
       })
     }
     await this.deleteTeamService(teamId, name)
-    await this.doDeployment(['services'], teamId, false)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteService(name)
+      },
+      false,
+    )
   }
 
   checkPublicUrlInUse(teamId: string, data: any): void {
@@ -1369,7 +1524,64 @@ export default class OtomiStack {
     }
   }
 
-  async doDeployment(collectionIds: string[], teamId?: string, encryptSecrets = true): Promise<void> {
+  async doTeamDeployment(
+    teamId: string,
+    action: (teamService: TeamConfigService) => void,
+    encryptSecrets = true,
+  ): Promise<void> {
+    const rootStack = await getSessionStack()
+
+    try {
+      // Commit and push Git changes
+      await this.git.save(this.editor!, encryptSecrets)
+
+      // Execute the provided action dynamically
+      action(rootStack.repoService.getTeamConfigService(teamId))
+
+      debug(`Updated root stack values with ${this.sessionId} changes`)
+
+      // Clean up the session
+      await cleanSession(this.sessionId!)
+
+      // Emit pipeline status
+      const sha = await rootStack.git.getCommitSha()
+      this.emitPipelineStatus(sha)
+    } catch (e) {
+      if (e instanceof GitPullError) await this.doRestore()
+      const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
+      getIo().emit('db', msg)
+      throw e
+    }
+  }
+
+  async doRepoDeployment(action: (repoService: RepoService) => void, encryptSecrets = true): Promise<void> {
+    const rootStack = await getSessionStack()
+
+    try {
+      // Commit and push Git changes
+      await this.git.save(this.editor!, encryptSecrets)
+
+      // Execute the provided action dynamically
+      action(rootStack.repoService)
+
+      debug(`Updated root stack values with ${this.sessionId} changes`)
+
+      // Clean up the session
+      await cleanSession(this.sessionId!)
+
+      // Emit pipeline status
+      const sha = await rootStack.git.getCommitSha()
+      this.emitPipelineStatus(sha)
+    } catch (e) {
+      if (e instanceof GitPullError) await this.doRestore()
+      const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
+      getIo().emit('db', msg)
+      throw e
+    }
+  }
+
+  //TODO remove this one when we remove projects
+  async doDeployment(collectionIds?: string[], teamId?: string, encryptSecrets = true): Promise<void> {
     const rootStack = await getSessionStack()
     try {
       // Commit and push Git changes
@@ -1542,7 +1754,13 @@ export default class OtomiStack {
         .createSealedSecret({ ...data, teamId, encryptedData, namespace })
       const sealedSecretChartValues = sealedSecretManifest(data, encryptedData, namespace)
       await this.saveTeamSealedSecrets(teamId, sealedSecretChartValues, sealedSecret.name)
-      await this.doDeployment(['sealedsecrets'], teamId, false)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createSealedSecret(sealedSecret)
+        },
+        false,
+      )
       return sealedSecret
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'SealedSecret name already exists'
@@ -1566,10 +1784,16 @@ export default class OtomiStack {
     const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises))) as EncryptedDataRecord[]
     const sealedSecret = this.repoService
       .getTeamConfigService(data.teamId!)
-      .createSealedSecret({ ...data, encryptedData })
+      .updateSealedSecret(name, { ...data, encryptedData })
     const sealedSecretChartValues = sealedSecretManifest(data, encryptedData, namespace)
     await this.saveTeamSealedSecrets(data.teamId!, sealedSecretChartValues, name)
-    await this.doDeployment(['sealedsecrets'], data.teamId, false)
+    await this.doTeamDeployment(
+      data.teamId!,
+      (teamService) => {
+        teamService.updateSealedSecret(name, sealedSecret)
+      },
+      false,
+    )
     return sealedSecret
   }
 
@@ -1578,7 +1802,13 @@ export default class OtomiStack {
     this.repoService.getTeamConfigService(teamId).deleteSealedSecret(name)
     const relativePath = getTeamSealedSecretsValuesFilePath(sealedSecret.teamId!, `${name}.yaml`)
     await this.git.removeFile(relativePath)
-    await this.doDeployment(['sealedsecrets'], teamId, false)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteSealedSecret(name)
+      },
+      false,
+    )
   }
 
   async getSealedSecret(teamId: string, name: string): Promise<SealedSecret> {
