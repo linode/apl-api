@@ -1,11 +1,10 @@
 // workloadUtils.test.ts
 import Debug from 'debug'
 import YAML from 'yaml'
-import { sparseCloneChart, updateChartIconInYaml, updateRbacForNewChart } from './workloadUtils'
+import { updateChartIconInYaml, updateRbacForNewChart } from './workloadUtils'
 
 import * as fsExtra from 'fs-extra'
 import * as fsPromises from 'fs/promises'
-import simpleGit from 'simple-git'
 const debug = Debug('otomi:api:workloadCatalog')
 
 jest.mock('fs/promises', () => ({
@@ -162,29 +161,29 @@ describe('updateRbacForNewChart', () => {
 //     expect(git.push).toHaveBeenCalled()
 //   })
 
-  // test('sparseCloneChart returns false when an error occurs', async () => {
-  //   // Arrange: simulate an error in the cloning process.
-  //   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  //    ;(git.clone as jest.Mock).mockImplementation(async () => {})
-  //   mockClone.mockRejectedValueOnce(new Error('Clone failed'))
+// test('sparseCloneChart returns false when an error occurs', async () => {
+//   // Arrange: simulate an error in the cloning process.
+//   // eslint-disable-next-line @typescript-eslint/no-empty-function
+//    ;(git.clone as jest.Mock).mockImplementation(async () => {})
+//   mockClone.mockRejectedValueOnce(new Error('Clone failed'))
 
-  //   let result: boolean | undefined
-  //   try {
-  //     result = await sparseCloneChart(
-  //       'https://github.com/bitnami/charts.git',
-  //       fakeHelmCatalogUrl,
-  //       fakeUser,
-  //       fakeEmail,
-  //       fakeChartName,
-  //       fakeChartPath,
-  //       fakeSparsePath,
-  //       fakeRevision,
-  //       fakeChartIcon,
-  //       true,
-  //     )
-  //   } catch (error) {
-  //     result = false
-  //   }
-  //   expect(result).toBe(false)
-  // })
-})
+//   let result: boolean | undefined
+//   try {
+//     result = await sparseCloneChart(
+//       'https://github.com/bitnami/charts.git',
+//       fakeHelmCatalogUrl,
+//       fakeUser,
+//       fakeEmail,
+//       fakeChartName,
+//       fakeChartPath,
+//       fakeSparsePath,
+//       fakeRevision,
+//       fakeChartIcon,
+//       true,
+//     )
+//   } catch (error) {
+//     result = false
+//   }
+//   expect(result).toBe(false)
+// })
+// })
