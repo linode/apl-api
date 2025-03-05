@@ -9,7 +9,6 @@ export type Backup = components['schemas']['Backup']
 export type Kubecfg = components['schemas']['Kubecfg']
 export type K8sService = components['schemas']['K8sService']
 export type Netpol = components['schemas']['Netpol']
-export type Secret = components['schemas']['Secret'] & { teamId?: string }
 export type SealedSecret = components['schemas']['SealedSecret'] & { teamId?: string }
 export type SealedSecretsKeys = components['schemas']['SealedSecretsKeys']
 export type K8sSecret = components['schemas']['K8sSecret']

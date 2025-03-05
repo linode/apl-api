@@ -76,23 +76,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/OtomiCliValues'
 
-  /secrets:
-    get:
-      operationId: getAllSecrets
-      description: Get all secrets
-      x-aclSchema: Secret
-      responses:
-        '200':
-          description: Successfully obtained all secrets
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Secret'
-        '400':
-          <<: *BadRequest
-
   /services:
     get:
       operationId: getAllServices
@@ -432,54 +415,6 @@ paths:
         <<: *DefaultGetResponses
         '200':
           description: Successfully deleted a team sealed secret
-  '/teams/{teamId}/secrets':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-    get:
-      operationId: getSecrets
-      description: Get secrets from a given team
-      x-aclSchema: Secret
-      responses:
-        '200':
-          description: Successfully obtained secrets
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Secret'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpenApiValidationError'
-    post:
-      operationId: createSecret
-      description: Create a team secret
-      x-aclSchema: Secret
-      parameters:
-        - name: teamId
-          in: path
-          description: ID of team
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Secret'
-        description: Service object
-        required: true
-      responses:
-        <<: *DefaultPostResponses
-        '200':
-          description: Successfully stored secret configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Secret'
 
   '/netpols':
     get:
@@ -1786,14 +1721,6 @@ components:
       $ref: sealedsecretskeys.yaml#/SealedSecretsKeys
     K8sSecret:
       $ref: k8sSecret.yaml#/K8sSecret
-    Secret:
-      $ref: secret.yaml#/Secret
-    SecretDockerRegistry:
-      $ref: secret.yaml#/SecretDockerRegistry
-    SecretGeneric:
-      $ref: secret.yaml#/SecretGeneric
-    SecretTLS:
-      $ref: secret.yaml#/SecretTLS
     Service:
       $ref: service.yaml#/Service
     Session:
