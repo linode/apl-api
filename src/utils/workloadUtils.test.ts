@@ -1,18 +1,19 @@
 // workloadUtils.test.ts
 import Debug from 'debug'
 import YAML from 'yaml'
-import { updateChartIconInYaml, updateRbacForNewChart } from './workloadUtils'
+import { sparseCloneChart, updateChartIconInYaml, updateRbacForNewChart } from './workloadUtils'
 
+import * as fsExtra from 'fs-extra'
 import * as fsPromises from 'fs/promises'
-
+import simpleGit from 'simple-git'
 const debug = Debug('otomi:api:workloadCatalog')
 
 jest.mock('fs/promises', () => ({
-  readFile: jest.fn(),
   writeFile: jest.fn(),
   readdir: jest.fn(),
 }))
 jest.mock('fs-extra', () => ({
+  readFile: jest.fn(),
   existsSync: jest.fn(),
   mkdirSync: jest.fn(),
   renameSync: jest.fn(),
@@ -68,15 +69,14 @@ describe('updateChartIconInYaml', () => {
   test('updates the icon field when newIcon is provided', async () => {
     const chartObject = { name: 'Test Chart', icon: '' }
     const fileContent = YAML.stringify(chartObject)
-    ;(fsPromises.readFile as jest.Mock).mockResolvedValue(fileContent)
+    ;(fsExtra.readFile as jest.Mock).mockResolvedValue(fileContent)
     const fakePath = '/tmp/test/Chart.yaml'
     const newIcon = 'https://example.com/new-icon.png'
     const expectedObject = { name: 'Test Chart', icon: newIcon }
     const expectedContent = YAML.stringify(expectedObject)
-    jest.spyOn(fsPromises, 'readFile').mockResolvedValue(fileContent)
     await updateChartIconInYaml(fakePath, newIcon)
 
-    expect(fsPromises.readFile).toHaveBeenCalledWith(fakePath, 'utf-8')
+    expect(fsExtra.readFile).toHaveBeenCalledWith(fakePath, 'utf-8')
     expect(fsPromises.writeFile).toHaveBeenCalledWith(fakePath, expectedContent, 'utf-8')
   })
 })
@@ -91,7 +91,7 @@ describe('updateRbacForNewChart', () => {
   test('updates rbac.yaml with new chart key when allowTeams is true', async () => {
     const rbacObject = { rbac: {}, betaCharts: [] }
     const fileContent = YAML.stringify(rbacObject)
-    ;(fsPromises.readFile as jest.Mock).mockResolvedValue(fileContent)
+    ;(fsExtra.readFile as jest.Mock).mockResolvedValue(fileContent)
     const fakeSparsePath = '/tmp/test'
     const chartKey = 'quickstart-cassandra'
 
@@ -104,7 +104,7 @@ describe('updateRbacForNewChart', () => {
   test('updates rbac.yaml with new chart key when allowTeams is false', async () => {
     const rbacObject = { rbac: {}, betaCharts: [] }
     const fileContent = YAML.stringify(rbacObject)
-    ;(fsPromises.readFile as jest.Mock).mockResolvedValue(fileContent)
+    ;(fsExtra.readFile as jest.Mock).mockResolvedValue(fileContent)
     const fakeSparsePath = '/tmp/test'
     const chartKey = 'quickstart-cassandra'
 
@@ -129,19 +129,16 @@ describe('updateRbacForNewChart', () => {
 
 //   beforeEach(() => {
 //     jest.clearAllMocks()
-//     ;(existsSync as jest.Mock)
-//       .mockReturnValue(true)(
-//         // Ensure mkdirSync, rmSync, renameSync are defined.
-//         mkdirSync as jest.Mock,
-//       )
-//       .mockImplementation(() => {})(rmSync as jest.Mock)
-//       .mockImplementation(() => {})(renameSync as jest.Mock)
-//       .mockImplementation(() => {})
+//     // jest.mock('simple-git', () => {
+//     //   return jest.fn(() => ({
+//     //     clone: jest.fn().mockResolvedValue(undefined),
+//     //   }))
+//     // })
 //   })
 
 //   test('sparseCloneChart returns true on successful clone and push', async () => {
 //     // Arrange: simulate a successful run
-//     // (Mocks for simpleGit methods are already set to resolved values.)
+//     const cloneSpy = jest.spyOn(simpleGit, '')
 //     const result = await sparseCloneChart(
 //       'https://github.com/bitnami/charts.git',
 //       fakeHelmCatalogUrl,
@@ -157,33 +154,37 @@ describe('updateRbacForNewChart', () => {
 
 //     expect(result).toBe(true)
 //     // Assert that renameSync was called to move the chart folder.
-//     expect(renameSync).toHaveBeenCalled()
+//     expect(fsExtra.renameSync).toHaveBeenCalled()
 //     // And that the simpleGit clone and push methods were called.
-//     expect(mockClone).toHaveBeenCalled()
-//     expect(mockPush).toHaveBeenCalled()
+//     // eslint-disable-next-line @typescript-eslint/unbound-method
+//     expect(cloneSpy).toHaveBeenCalled()
+//     // eslint-disable-next-line @typescript-eslint/unbound-method
+//     expect(git.push).toHaveBeenCalled()
 //   })
 
-//   test('sparseCloneChart returns false when an error occurs', async () => {
-//     // Arrange: simulate an error in the cloning process.
-//     mockClone.mockRejectedValueOnce(new Error('Clone failed'))
+  // test('sparseCloneChart returns false when an error occurs', async () => {
+  //   // Arrange: simulate an error in the cloning process.
+  //   // eslint-disable-next-line @typescript-eslint/no-empty-function
+  //    ;(git.clone as jest.Mock).mockImplementation(async () => {})
+  //   mockClone.mockRejectedValueOnce(new Error('Clone failed'))
 
-//     let result: boolean | undefined
-//     try {
-//       result = await sparseCloneChart(
-//         'https://github.com/bitnami/charts.git',
-//         fakeHelmCatalogUrl,
-//         fakeUser,
-//         fakeEmail,
-//         fakeChartName,
-//         fakeChartPath,
-//         fakeSparsePath,
-//         fakeRevision,
-//         fakeChartIcon,
-//         true,
-//       )
-//     } catch (error) {
-//       result = false
-//     }
-//     expect(result).toBe(false)
-//   })
-// })
+  //   let result: boolean | undefined
+  //   try {
+  //     result = await sparseCloneChart(
+  //       'https://github.com/bitnami/charts.git',
+  //       fakeHelmCatalogUrl,
+  //       fakeUser,
+  //       fakeEmail,
+  //       fakeChartName,
+  //       fakeChartPath,
+  //       fakeSparsePath,
+  //       fakeRevision,
+  //       fakeChartIcon,
+  //       true,
+  //     )
+  //   } catch (error) {
+  //     result = false
+  //   }
+  //   expect(result).toBe(false)
+  // })
+})
