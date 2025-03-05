@@ -74,14 +74,10 @@ Service:
       title: Exposure (ingress)
       description: Determines loadbalancer related configuration for handling the service ingress.
       # Note: the order matters first schema must be nullable empty object
-      oneOf:
-        - $ref: '#/IngressCluster'
-        - $ref: '#/IngressPublic'
 
   required:
     - name
     - ingress
-  type: object
 
 Ingress:
   properties:
@@ -172,7 +168,6 @@ Ingress:
                 required:
                   - name
                   - value
-  type: object
 
 IngressCluster:
   additionalProperties: false
