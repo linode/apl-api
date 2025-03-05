@@ -237,7 +237,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     routesIndexFileRegExp: /(?:index)?\.[tj]s$/,
   })
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
+  app.use('/api-docs/swagger', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
   return app
 }
 

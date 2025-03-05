@@ -78,9 +78,9 @@ Team:
           type: boolean
           default: false
     alerts:
-      $ref: definitions.yaml#/alerts
+      $ref: 'definitions.yaml#/alerts'
     resourceQuota:
-      $ref: definitions.yaml#/resourceQuota
+      $ref: 'definitions.yaml#/resourceQuota'
     networkPolicy:
       title: Network policies
       properties:
@@ -96,7 +96,7 @@ Team:
           default: true
       type: object
     selfService:
-      $ref: team.yaml#/TeamSelfService
+      $ref: 'team.yaml#/TeamSelfService'
   x-acl:
     platformAdmin:
       - delete-any

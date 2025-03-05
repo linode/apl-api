@@ -17,12 +17,3 @@ Project:
       - delete
   type: object
   x-externalDocsPath: docs/for-devs/console/projects
-  properties:
-    build:
-      $ref: 'build.yaml#/Build'
-    workload:
-      $ref: 'workload.yaml#/Workload'
-    workloadValues:
-      $ref: 'workload.yaml#/WorkloadValues'
-    service:
-      $ref: 'service.yaml#/Service'

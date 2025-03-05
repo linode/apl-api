@@ -4,7 +4,7 @@ security:
 info:
   title: The otomi API
   description: Holds the entire schema needed by console to autogenerate forms
-  version: 0.4.95-rc.21
+  version: 2.0.0b1
 
 externalDocs:
   description: 'This is the base url of the external documentation'
@@ -46,7 +46,7 @@ x-get-responses: &DefaultGetResponses
 
 # -------------------------------------------- Paths
 paths:
-  /otomi/values:
+  /v1/otomi/values:
     get:
       operationId: getValues
       description: Get otomi values
@@ -76,24 +76,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/OtomiCliValues'
 
-  /services:
-    get:
-      operationId: getAllServices
-      description: Get all services running on the cluster
-      x-aclSchema: Service
-      responses:
-        '200':
-          description: Successfully obtained all services
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Service'
-        '400':
-          <<: *BadRequest
-
-  /teams:
+  /v1/teams:
     get:
       operationId: getTeams
       description: Get teams collection
@@ -126,7 +109,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Team'
-  '/teams/{teamId}':
+  '/v1/teams/{teamId}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
@@ -169,7 +152,25 @@ paths:
         '200':
           description: Successfully deleted a team
 
-  '/teams/{teamId}/services':
+
+  /v1/services:
+    get:
+      operationId: getAllServices
+      description: Get all services running on the cluster
+      x-aclSchema: Service
+      responses:
+        '200':
+          description: Successfully obtained all services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
+        '400':
+          <<: *BadRequest
+
+  '/v1/teams/{teamId}/services':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
@@ -208,7 +209,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Service'
 
-  '/teams/{teamId}/kubernetes/services':
+  '/v1/teams/{teamId}/kubernetes/services':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
@@ -227,7 +228,7 @@ paths:
         '400':
           <<: *BadRequest
 
-  '/teams/{teamId}/services/{serviceName}':
+  '/v1/teams/{teamId}/services/{serviceName}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/serviceParams'
@@ -271,7 +272,7 @@ paths:
         '200':
           description: Successfully deleted a service
 
-  /sealedsecrets:
+  /v1/sealedsecrets:
     get:
       operationId: getAllSealedSecrets
       description: Get all sealed secrets
@@ -288,7 +289,7 @@ paths:
         '400':
           <<: *BadRequest
 
-  /sealedsecretskeys:
+  /v1/sealedsecretskeys:
     get:
       operationId: downloadSealedSecretKeys
       description: Download sealed secret keys
@@ -304,7 +305,7 @@ paths:
         '400':
           <<: *BadRequest
 
-  '/teams/{teamId}/k8sSecrets':
+  '/v1/teams/{teamId}/k8sSecrets':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
@@ -323,7 +324,7 @@ paths:
         '400':
           <<: *BadRequest
 
-  '/teams/{teamId}/sealedsecrets':
+  '/v1/teams/{teamId}/sealedsecrets':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
@@ -372,7 +373,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SealedSecret'
 
-  '/teams/{teamId}/sealedsecrets/{sealedSecretName}':
+  '/v1/teams/{teamId}/sealedsecrets/{sealedSecretName}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/sealedSecretParams'
@@ -416,7 +417,7 @@ paths:
         '200':
           description: Successfully deleted a team sealed secret
 
-  '/netpols':
+  '/v1/netpols':
     get:
       operationId: getAllNetpols
       x-aclSchema: Netpol
@@ -431,7 +432,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Netpol'
 
-  '/teams/{teamId}/netpols':
+  '/v1/teams/{teamId}/netpols':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
@@ -467,7 +468,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Netpol'
 
-  '/teams/{teamId}/netpols/{netpolName}':
+  '/v1/teams/{teamId}/netpols/{netpolName}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/netpolParams'
@@ -511,7 +512,7 @@ paths:
         '200':
           description: Successfully deleted a team network policy
 
-  '/backups':
+  '/v1/backups':
     get:
       operationId: getAllBackups
       x-aclSchema: Backup
@@ -526,7 +527,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Backup'
 
-  '/teams/{teamId}/backups':
+  '/v1/teams/{teamId}/backups':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
@@ -562,7 +563,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Backup'
 
-  '/teams/{teamId}/backups/{backupName}':
+  '/v1/teams/{teamId}/backups/{backupName}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/backupParams'
@@ -606,7 +607,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Backup'
 
-  '/teams/{teamId}/dashboard':
+  '/v1/teams/{teamId}/dashboard':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
@@ -620,7 +621,7 @@ paths:
               schema:
                 type: object
 
-  '/builds':
+  '/v1/builds':
     get:
       operationId: getAllBuilds
       x-aclSchema: Build
@@ -635,7 +636,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Build'
 
-  '/teams/{teamId}/builds':
+  '/v1/teams/{teamId}/builds':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
@@ -671,7 +672,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Build'
 
-  '/teams/{teamId}/builds/{buildName}':
+  '/v1/teams/{teamId}/builds/{buildName}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/buildParams'
@@ -715,7 +716,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Build'
 
-  '/policies':
+  '/v1/policies':
     get:
       operationId: getAllPolicies
       x-aclSchema: Policies
@@ -728,7 +729,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Policies'
 
-  '/teams/{teamId}/policies':
+  '/v1/teams/{teamId}/policies':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
@@ -743,7 +744,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Policies'
 
-  '/teams/{teamId}/policies/{policyId}':
+  '/v1/teams/{teamId}/policies/{policyId}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/policyParams'
@@ -779,7 +780,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Policy'
 
-  '/k8sVersion':
+  '/v1/k8sVersion':
     get:
       operationId: getK8sVersion
       description: Get cluster k8s version
@@ -792,7 +793,7 @@ paths:
               schema:
                 type: string
 
-  '/cloudtty':
+  '/v1/cloudtty':
     post:
       operationId: connectCloudtty
       description: Create a cloudtty url
@@ -827,7 +828,7 @@ paths:
         '200':
           description: Successfully removed cloudtty url
 
-  '/users':
+  '/v1/users':
     get:
       operationId: getAllUsers
       x-aclSchema: User
@@ -861,7 +862,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
 
-  '/users/{userId}':
+  '/v1/users/{userId}':
     parameters:
       - $ref: '#/components/parameters/userParams'
     get:
@@ -904,7 +905,7 @@ paths:
         '200':
           description: Successfully deleted a user
 
-  '/teams/{teamId}/users':
+  '/v1/teams/{teamId}/users':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     put:
@@ -941,7 +942,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/User'
 
-  '/projects':
+  '/v1/projects':
     get:
       operationId: getAllProjects
       x-aclSchema: Project
@@ -956,7 +957,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Project'
 
-  '/teams/{teamId}/projects':
+  '/v1/teams/{teamId}/projects':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
@@ -992,7 +993,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Project'
 
-  '/teams/{teamId}/projects/{projectName}':
+  '/v1/teams/{teamId}/projects/{projectName}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/projectParams'
@@ -1036,7 +1037,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Project'
 
-  /coderepos:
+  /v1/coderepos:
     get:
       operationId: getAllCodeRepos
       description: Get all code repositories
@@ -1053,7 +1054,7 @@ paths:
         '400':
           <<: *BadRequest
 
-  '/teams/{teamId}/coderepos':
+  '/v1/teams/{teamId}/coderepos':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
@@ -1102,7 +1103,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/CodeRepo'
 
-  '/teams/{teamId}/coderepos/{codeRepositoryName}':
+  '/v1/teams/{teamId}/coderepos/{codeRepositoryName}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/codeRepoParams'
@@ -1146,7 +1147,7 @@ paths:
         '200':
           description: Successfully deleted a team code repo
 
-  '/workloads':
+  '/v1/workloads':
     get:
       operationId: getAllWorkloads
       x-aclSchema: Workload
@@ -1161,7 +1162,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Workload'
 
-  '/workloadCatalog':
+  '/v1/workloadCatalog':
     post:
       operationId: workloadCatalog
       description: Get workload catalog from a repository
@@ -1180,7 +1181,8 @@ paths:
             application/json:
               schema:
                 type: object
-  '/helmChartContent':
+
+  '/v1/helmChartContent':
     get:
       operationId: getHelmChartContent
       parameters:
@@ -1202,7 +1204,7 @@ paths:
                     type: object
                   error:
                     type: string
-  '/createWorkloadCatalog':
+  '/v1/createWorkloadCatalog':
     post:
       operationId: createWorkloadCatalog
       description: Create workload catalog from a repository
@@ -1221,7 +1223,8 @@ paths:
             application/json:
               schema:
                 type: object
-  '/teams/{teamId}/workloads':
+
+  '/v1/teams/{teamId}/workloads':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
@@ -1257,7 +1260,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Workload'
 
-  '/teams/{teamId}/workloads/{workloadName}':
+  '/v1/teams/{teamId}/workloads/{workloadName}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/workloadParams'
@@ -1301,7 +1304,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Workload'
 
-  '/teams/{teamId}/workloads/{workloadName}/values':
+  '/v1/teams/{teamId}/workloads/{workloadName}/values':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/workloadParams'
@@ -1338,7 +1341,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/WorkloadValues'
 
-  '/kubecfg/{teamId}':
+  '/v1/kubecfg/{teamId}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
@@ -1354,7 +1357,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Kubecfg'
 
-  '/dockerconfig/{teamId}':
+  '/v1/dockerconfig/{teamId}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
@@ -1370,7 +1373,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DockerConfig'
 
-  /session:
+  /v1/session:
     get:
       operationId: getSession
       description: Get the session for the current user
@@ -1398,7 +1401,7 @@ paths:
         default:
           description: The requested apiDoc.
 
-  /settingsInfo:
+  /v1/settingsInfo:
     get:
       operationId: getSettingsInfo
       description: Get settings information from the 'settings.yaml' file.
@@ -1411,7 +1414,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SettingsInfo'
 
-  /testRepoConnect:
+  /v1/testRepoConnect:
     get:
       operationId: getTestRepoConnect
       description: Get settings information from the 'settings.yaml' file.
@@ -1440,7 +1443,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TestRepoConnect'
 
-  /internalRepoUrls:
+  /v1/internalRepoUrls:
     get:
       operationId: getInternalRepoUrls
       x-aclSchema: InternalRepoUrls
@@ -1461,7 +1464,7 @@ paths:
                 items:
                   type: string
 
-  '/objwizard':
+  '/v1/objwizard':
     post:
       operationId: createObjWizard
       description: Create a obj wizard configuration
@@ -1482,7 +1485,7 @@ paths:
               schema:
                 type: object
 
-  /settings:
+  /v1/settings:
     get:
       operationId: getSettings
       description: Get settings from the 'settings.yaml' or 'secret.settings.yaml' file.
@@ -1504,7 +1507,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Settings'
 
-  '/settings/{settingId}':
+  '/v1/settings/{settingId}':
     parameters:
       - $ref: '#/components/parameters/settingsParams'
     put:
@@ -1523,7 +1526,7 @@ paths:
         '200':
           description: Successfully edited settings.
 
-  /apps/{teamId}:
+  /v1/apps/{teamId}:
     parameters:
       - in: path
         name: teamId
@@ -1567,7 +1570,7 @@ paths:
         <<: *DefaultPostResponses
         '200':
           description: Successfully toggled apps
-  /apps/{teamId}/{appId}:
+  /v1/apps/{teamId}/{appId}:
     parameters:
       - in: path
         name: teamId
@@ -1606,10 +1609,10 @@ paths:
         '200':
           description: Successfully edited app values.
 
-# -------------------------------------------- Servers
-
-servers:
-  - url: '/v1'
+## -------------------------------------------- Servers
+#
+#servers:
+#  - url: '/'
 
 # -------------------------------------------- Components
 components:
@@ -1715,104 +1718,114 @@ components:
   # Please stick to: alphabetical sorting, all Uppercase first and then lowercase.
   # --------------------------------------------
   schemas:
+    appMetadata:
+      type: object
+      properties:
+        id:
+          type: string
+          x-acl:
+            platformAdmin: [read-any]
+            teamAdmin: [read-any]
+            teamMember: [read-any]
+      required:
+        - id
     resourceMetadata:
       type: object
       properties:
         id:
           type: string
-        teamId:
-          $ref: definitions.yaml#/idName
         name:
           title: Name
-          $ref: definitions.yaml#/idName
+          example: name
+          $ref: 'definitions.yaml#/idName'
+      required:
+        - name
     teamResourceMetadata:
       type: object
       properties:
         id:
           type: string
         teamId:
-          $ref: definitions.yaml#/idName
+          example: teamId
+          $ref: 'definitions.yaml#/idName'
         name:
           title: Name
-          $ref: definitions.yaml#/idName
+          example: name
+          $ref: 'definitions.yaml#/idName'
+      required:
+        - name
     App:
       allOf:
-        - $ref: '#/components/schemas/teamResourceMetadata'
+        - $ref: '#/components/schemas/appMetadata'
         - $ref: 'app.yaml#/App'
-      required:
-        - id
     AppList:
-      $ref: app.yaml#/AppList
+      $ref: 'app.yaml#/AppList'
     Backup:
       allOf:
         - $ref: '#/components/schemas/teamResourceMetadata'
-        - $ref: backup.yaml#/Backup
-      required:
-        - name
-        - schedule
-        - ttl
+        - $ref: 'backup.yaml#/Backup'
     Build:
       allOf:
         - $ref: '#/components/schemas/teamResourceMetadata'
-        - $ref: build.yaml#/Build
-      required:
-        - name
+        - $ref: 'build.yaml#/Build'
     Cloudtty:
-      $ref: cloudtty.yaml#/Cloudtty
+      $ref: 'cloudtty.yaml#/Cloudtty'
     Cluster:
-      $ref: cluster.yaml#/Cluster
+      $ref: 'cluster.yaml#/Cluster'
     CodeRepo:
       allOf:
         - $ref: '#/components/schemas/teamResourceMetadata'
-        - $ref: codeRepo.yaml#/CodeRepo
-      required:
-        - label
-        - gitService
-        - repositoryUrl
-    Ingress:
-      $ref: service.yaml#/Ingress
-    IngressCluster:
-      $ref: service.yaml#/IngressCluster
-    IngressPublic:
-      $ref: service.yaml#/IngressPublic
+        - $ref: 'codeRepo.yaml#/CodeRepo'
     K8sService:
-      $ref: k8s.yaml#/K8sService
+      $ref: 'k8s.yaml#/K8sService'
     Kubecfg:
-      $ref: kubecfg.yaml#/Kubecfg
+      $ref: 'kubecfg.yaml#/Kubecfg'
     Netpol:
       allOf:
         - $ref: '#/components/schemas/teamResourceMetadata'
-        - $ref: netpol.yaml#/Netpol
-      required:
-        - name
+        - $ref: 'netpol.yaml#/Netpol'
     DockerConfig:
-      $ref: dockerconfig.yaml#/DockerConfig
+      $ref: 'dockerconfig.yaml#/DockerConfig'
     OpenApiValidationError:
-      $ref: error.yaml#/OpenApiValidationError
+      $ref: 'error.yaml#/OpenApiValidationError'
     OtomiStackError:
-      $ref: error.yaml#/OtomiStackError
+      $ref: 'error.yaml#/OtomiStackError'
     OtomiCliValues:
-      $ref: otomi/cli.yaml#/OtomiCliValues
+      $ref: 'otomi/cli.yaml#/OtomiCliValues'
     Project:
       allOf:
         - $ref: '#/components/schemas/teamResourceMetadata'
-        - $ref: project.yaml#/Project
-      required:
-        - name
+        - $ref: 'project.yaml#/Project'
+        - type: object
+          properties:
+            build:
+              $ref: '#/components/schemas/Build'
+            workload:
+              $ref: '#/components/schemas/Workload'
+            workloadValues:
+              $ref: '#/components/schemas/WorkloadValues'
+            service:
+              $ref: '#/components/schemas/Service'
     Policy:
-      $ref: policies.yaml#/Policy
+      $ref: 'policies.yaml#/Policy'
     Policies:
-      $ref: policies.yaml#/Policies
+      $ref: 'policies.yaml#/Policies'
     SealedSecret:
       allOf:
         - $ref: '#/components/schemas/teamResourceMetadata'
-        - $ref: sealedsecret.yaml#/SealedSecret
-      required:
-        - name
+        - $ref: 'sealedsecret.yaml#/SealedSecret'
     SealedSecretsKeys:
-      $ref: sealedsecretskeys.yaml#/SealedSecretsKeys
+      $ref: 'sealedsecretskeys.yaml#/SealedSecretsKeys'
     K8sSecret:
-      $ref: k8sSecret.yaml#/K8sSecret
+      $ref: 'k8sSecret.yaml#/K8sSecret'
+    SecretDockerRegistry:
+      $ref: 'secret.yaml#/SecretDockerRegistry'
+    SecretGeneric:
+      $ref: 'secret.yaml#/SecretGeneric'
+    SecretTLS:
+      $ref: 'secret.yaml#/SecretTLS'
+    SessionUser:
+      $ref: 'user.yaml#/SessionUser'
     Service:
       allOf:
         - $ref: '#/components/schemas/teamResourceMetadata'
@@ -1824,144 +1837,33 @@ components:
               $ref: 'definitions.yaml#/idName'
               example: some-service
               x-formtype: SelectWidget
-      required:
-        - name
     Session:
-      $ref: session.yaml#/Session
+      $ref: 'session.yaml#/Session'
     ObjWizard:
-      $ref: objwizard.yaml#/ObjWizard
+      $ref: 'objwizard.yaml#/ObjWizard'
     Settings:
-      $ref: settings.yaml#/Settings
+      $ref: 'settings.yaml#/Settings'
     SettingsInfo:
-      $ref: settingsinfo.yaml#/SettingsInfo
+      $ref: 'settingsinfo.yaml#/SettingsInfo'
     TestRepoConnect:
-      $ref: testrepoconnect.yaml#/TestRepoConnect
+      $ref: 'testrepoconnect.yaml#/TestRepoConnect'
     InternalRepoUrls:
-      $ref: internalRepoUrls.yaml#/InternalRepoUrls
+      $ref: 'internalRepoUrls.yaml#/InternalRepoUrls'
     Team:
       allOf:
         - $ref: '#/components/schemas/resourceMetadata'
-        - $ref: team.yaml#/Team
-      required:
-        - name
+        - $ref: 'team.yaml#/Team'
     TeamAuthz:
-      $ref: user.yaml#/TeamAuthz
+      $ref: 'user.yaml#/TeamAuthz'
     TeamSelfService:
-      $ref: team.yaml#/TeamSelfService
+      $ref: 'team.yaml#/TeamSelfService'
     User:
-      $ref: user.yaml#/User
-    SessionUser:
-      $ref: user.yaml#/SessionUser
+      $ref: 'user.yaml#/User'
     Workload:
       allOf:
         - $ref: '#/components/schemas/teamResourceMetadata'
-        - $ref: workload.yaml#/Workload
-      required:
-        - name
-        - url
+        - $ref: 'workload.yaml#/Workload'
     WorkloadValues:
-      $ref: workload.yaml#/WorkloadValues
-      required:
-        - values
-    adminPassword:
-      $ref: definitions.yaml#/adminPassword
-    alerts:
-      $ref: definitions.yaml#/alerts
-    annotations:
-      $ref: definitions.yaml#/annotations
-    autoscaling:
-      $ref: definitions.yaml#/autoscaling
-    autoscalingEnabled:
-      $ref: definitions.yaml#/autoscalingEnabled
-    awsAccessKey:
-      $ref: definitions.yaml#/awsAccessKey
-    awsSecretKey:
-      $ref: definitions.yaml#/awsSecretKey
-    awsRegion:
-      $ref: definitions.yaml#/awsRegion
-    awsRole:
-      $ref: definitions.yaml#/awsRole
-    azureClientId:
-      $ref: definitions.yaml#/azureClientId
-    azureClientSecret:
-      $ref: definitions.yaml#/azureClientSecret
-    azureSubscriptionId:
-      $ref: definitions.yaml#/azureSubscriptionId
-    azureTenantId:
-      $ref: definitions.yaml#/azureTenantId
-    clusterName:
-      $ref: definitions.yaml#/clusterName
-    containerSpec:
-      $ref: definitions.yaml#/containerSpec
-    containerSpecNoSec:
-      $ref: definitions.yaml#/containerSpecNoSec
-    dns:
-      $ref: definitions.yaml#/dns
-    domain:
-      $ref: definitions.yaml#/domain
-    domainSuffix:
-      $ref: definitions.yaml#/domainSuffix
-    droneGit:
-      $ref: definitions.yaml#/droneGit
-    email:
-      $ref: definitions.yaml#/email
-    env:
-      $ref: definitions.yaml#/env
-    googleAccountJson:
-      $ref: definitions.yaml#/googleAccountJson
-    googleProject:
-      $ref: definitions.yaml#/googleProject
-    idName:
-      $ref: definitions.yaml#/idName
-    image:
-      $ref: definitions.yaml#/image
-    imageTag:
-      $ref: definitions.yaml#/imageTag
-    imagePullPolicy:
-      $ref: definitions.yaml#/imagePullPolicy
-    imageSimple:
-      $ref: definitions.yaml#/imageSimple
-    ingressClassParameters:
-      $ref: definitions.yaml#/ingressClassParameters
-    kms:
-      $ref: definitions.yaml#/kms
-    offChoice:
-      $ref: definitions.yaml#/offChoice
-    path:
-      $ref: definitions.yaml#/path
-    podSecurityContext:
-      $ref: definitions.yaml#/podSecurityContext
-    podSpec:
-      $ref: definitions.yaml#/podSpec
-    priority:
-      $ref: definitions.yaml#/priority
-    provider:
-      $ref: definitions.yaml#/provider
-    quantityCpu:
-      $ref: definitions.yaml#/quantityCpu
-    quantityMem:
-      $ref: definitions.yaml#/quantityMem
-    rawValues:
-      $ref: definitions.yaml#/rawValues
-    resource:
-      $ref: definitions.yaml#/resource
-    resources:
-      $ref: definitions.yaml#/resources
-    runAsGroup:
-      $ref: definitions.yaml#/runAsGroup
-    runAsNonRoot:
-      $ref: definitions.yaml#/runAsNonRoot
-    runAsUser:
-      $ref: definitions.yaml#/runAsUser
-    scaling:
-      $ref: definitions.yaml#/scaling
-    script:
-      $ref: definitions.yaml#/script
-    secrets:
-      $ref: definitions.yaml#/secrets
-    svcPredeployed:
-      $ref: definitions.yaml#/svcPredeployed
-    url:
-      $ref: definitions.yaml#/url
-    wordCharacterPattern:
-      $ref: definitions.yaml#/wordCharacterPattern
+      allOf:
+        - $ref: '#/components/schemas/teamResourceMetadata'
+        - $ref: 'workload.yaml#/WorkloadValues'

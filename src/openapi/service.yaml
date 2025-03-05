@@ -18,7 +18,7 @@ Service:
   x-externalDocsPath: docs/for-devs/console/services
   properties:
     namespace:
-      $ref: definitions.yaml#/idName
+      $ref: 'definitions.yaml#/idName'
       description: A Kubernetes namespace.
       x-acl:
         platformAdmin:
@@ -90,12 +90,12 @@ Ingress:
       type: boolean
       default: true
     subdomain:
-      $ref: definitions.yaml#/domain
+      $ref: 'definitions.yaml#/domain'
       description: A host that is used to set DNS 'A' records.
       title: Host
       type: string
     domain:
-      $ref: definitions.yaml#/domain
+      $ref: 'definitions.yaml#/domain'
       description: A managed DNS zone
       title: DNS Zone
       type: string
@@ -117,7 +117,7 @@ Ingress:
       title: URL paths
       type: array
       items:
-        $ref: definitions.yaml#/path
+        $ref: 'definitions.yaml#/path'
     forwardPath:
       description: Forward the URL path into the service (don't rewrite to /).
       title: Forward path
