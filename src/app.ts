@@ -101,7 +101,7 @@ const resourceStatus = async (errorSet) => {
       } catch (error) {
         const errorMessage = `${resourceType}-${resource.name}-${error.message}`
         if (!errorSet.has(errorMessage)) {
-          //console.log(`Could not collect status data for ${resourceType} ${resource.name} resource:`, error.message)
+          console.log(`Could not collect status data for ${resourceType} ${resource.name} resource:`, error.message)
           errorSet.add(errorMessage)
         }
       }
