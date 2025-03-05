@@ -17,17 +17,6 @@ Service:
       - delete
   x-externalDocsPath: docs/for-devs/console/services
   properties:
-    id:
-      # readOnly: true
-      type: string
-    teamId:
-      $ref: definitions.yaml#/idName
-      # readOnly: true
-    name:
-      title: Name
-      $ref: definitions.yaml#/idName
-      example: some-service
-      x-formtype: SelectWidget
     namespace:
       $ref: definitions.yaml#/idName
       description: A Kubernetes namespace.
