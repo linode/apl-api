@@ -72,6 +72,7 @@ import {
 } from './k8s_operations'
 import { getFileMaps, loadValues } from './repo'
 import { RepoService } from './services/RepoService'
+import { TeamConfigService } from './services/TeamConfigService'
 import { validateBackupFields } from './utils/backupUtils'
 import {
   getGiteaRepoUrls,
@@ -84,7 +85,6 @@ import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
-import { TeamConfigService } from './services/TeamConfigService'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -1813,7 +1813,7 @@ export default class OtomiStack {
 
   async getSealedSecret(teamId: string, name: string): Promise<SealedSecret> {
     const sealedSecret = this.repoService.getTeamConfigService(teamId).getSealedSecret(name)
-    const namespace = sealedSecret.namespace ?? `team-${sealedSecret.teamId}`
+    const namespace = sealedSecret.namespace ?? `team-${teamId}`
     const secretValues = (await getSecretValues(sealedSecret.name, namespace)) || {}
     const isDisabled = isEmpty(secretValues)
     const encryptedData = Object.entries(sealedSecret.encryptedData).map(([key, value]) => ({

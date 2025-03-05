@@ -99,7 +99,7 @@ const resourceStatus = async (errorSet) => {
     const promises = resources[resourceType].map(async (resource) => {
       try {
         const res = await statusFunctions[resourceType](resource, domainSuffix)
-        return { [resource.id]: res }
+        return { [resource.name]: res }
       } catch (error) {
         const errorMessage = `${resourceType}-${resource.name}-${error.message}`
         if (!errorSet.has(errorMessage)) {
