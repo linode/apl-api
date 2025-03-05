@@ -275,11 +275,11 @@ export function getFileMaps(envDir: string): Array<FileMap> {
     {
       kind: 'AplTeamCodeRepo',
       envDir,
-      jsonPathExpression: '$.teamConfig.*.coderepos[*]',
-      pathGlob: `${envDir}/env/teams/*/coderepos/*.yaml`,
+      jsonPathExpression: '$.teamConfig.*.codeRepos[*]',
+      pathGlob: `${envDir}/env/teams/*/codeRepos/*.yaml`,
       processAs: 'arrayItem',
       resourceGroup: 'team',
-      resourceDir: 'coderepos',
+      resourceDir: 'codeRepos',
       loadToSpec: false,
     },
     {
@@ -455,7 +455,16 @@ export async function loadFileToSpec(
   const data = await deps.loadYaml(filePath)
   if (fileMap.processAs === 'arrayItem') {
     const ref: Record<string, any>[] = get(spec, jsonPath)
-    ref.push(data?.spec)
+    //TODO remove this custom workaround for workloadValues as it has no spec
+    if (fileMap.kind === 'AplTeamWorkloadValues') {
+      const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
+      ref.push({ ...data, name })
+    } else if (fileMap.kind === 'AplTeamSecret') {
+      const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
+      ref.push({ ...data?.spec, name })
+    } else {
+      ref.push(data?.spec)
+    }
   } else {
     const ref: Record<string, any> = get(spec, jsonPath)
     // Decrypted secrets may need to be merged with plain text specs
