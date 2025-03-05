@@ -1,3 +1,6 @@
+import { find, has, map, mapValues, merge, remove, set } from 'lodash'
+import { v4 as uuidv4 } from 'uuid'
+import { AlreadyExists } from '../error'
 import {
   Alerts,
   App,
@@ -9,7 +12,6 @@ import {
   Ingress,
   Kms,
   Netpol,
-  Oidc,
   Otomi,
   Policies,
   Project,
@@ -25,9 +27,6 @@ import {
   Workload,
 } from '../otomi-models'
 import { TeamConfigService } from './TeamConfigService'
-import { find, has, map, mapValues, merge, remove, set } from 'lodash'
-import { v4 as uuidv4 } from 'uuid'
-import { AlreadyExists } from '../error'
 
 export class RepoService {
   // We can create an LRU cache if needed with a lot of teams.
@@ -42,10 +41,8 @@ export class RepoService {
     this.repo.ingress ??= {} as Ingress
     this.repo.kms ??= {} as Kms
     this.repo.obj ??= {}
-    this.repo.oidc ??= {} as Oidc
     this.repo.otomi ??= {} as Otomi
     this.repo.platformBackups ??= {}
-    this.repo.smtp ??= {} as Smtp
     this.repo.users ??= []
     this.repo.versions ??= {} as Versions
     this.repo.teamConfig ??= {}
@@ -192,18 +189,25 @@ export class RepoService {
   }
 
   public getSettings(): Settings {
-    return {
+    const settings: Settings = {
       alerts: this.repo.alerts,
       cluster: this.repo.cluster,
       dns: this.repo.dns,
       ingress: this.repo.ingress,
       kms: this.repo.kms,
       obj: this.repo.obj,
-      oidc: this.repo.oidc,
       otomi: this.repo.otomi,
       platformBackups: this.repo.platformBackups,
-      smtp: this.repo.smtp,
-    } as Settings
+    }
+
+    if (this.repo.smtp) {
+      settings.smtp = this.repo.smtp
+    }
+    if (this.repo.oidc) {
+      settings.oidc = this.repo.oidc
+    }
+
+    return settings
   }
 
   public updateSettings(updates: Partial<Settings>): void {
