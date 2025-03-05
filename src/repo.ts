@@ -504,7 +504,8 @@ export async function loadToSpec(
 }
 
 export async function loadValues(envDir: string, deps = { loadToSpec }): Promise<Record<string, any>> {
-  const fileMaps = getFileMaps(envDir).filter((map) => map.loadToSpec === true)
+  //We need everything to load to spec for the API
+  const fileMaps = getFileMaps(envDir)
   const spec = {}
 
   await Promise.all(
