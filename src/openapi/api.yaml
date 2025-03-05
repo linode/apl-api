@@ -1718,17 +1718,6 @@ components:
   # Please stick to: alphabetical sorting, all Uppercase first and then lowercase.
   # --------------------------------------------
   schemas:
-    appMetadata:
-      type: object
-      properties:
-        id:
-          type: string
-          x-acl:
-            platformAdmin: [read-any]
-            teamAdmin: [read-any]
-            teamMember: [read-any]
-      required:
-        - id
     resourceMetadata:
       type: object
       properties:
@@ -1756,7 +1745,16 @@ components:
         - name
     App:
       allOf:
-        - $ref: '#/components/schemas/appMetadata'
+        - type: object
+          properties:
+            id:
+              type: string
+              x-acl:
+                platformAdmin: [read-any]
+                teamAdmin: [read-any]
+                teamMember: [read-any]
+          required:
+            - id
         - $ref: 'app.yaml#/App'
     AppList:
       $ref: 'app.yaml#/AppList'
@@ -1865,5 +1863,12 @@ components:
         - $ref: 'workload.yaml#/Workload'
     WorkloadValues:
       allOf:
-        - $ref: '#/components/schemas/teamResourceMetadata'
+        - type: object
+          properties:
+            id:
+              $ref: 'definitions.yaml#/idName'
+            teamId:
+              $ref: 'definitions.yaml#/idName'
+            name:
+              $ref: 'definitions.yaml#/idName'
         - $ref: 'workload.yaml#/WorkloadValues'
