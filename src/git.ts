@@ -363,7 +363,7 @@ export class Git {
     if (!this.url) return
     debug('Pulling')
     try {
-      const summary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true' })
+      const summary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true', '--depth': '5' })
       const summJson = JSON.stringify(summary)
       debug(`Pull summary: ${summJson}`)
       this.commitSha = await this.getCommitSha()
