@@ -152,7 +152,6 @@ paths:
         '200':
           description: Successfully deleted a team
 
-
   /v1/services:
     get:
       operationId: getAllServices
@@ -263,6 +262,106 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Service'
+    delete:
+      operationId: deleteService
+      description: Delete a service from a given team
+      x-aclSchema: Service
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a service
+
+  /v2/services:
+    get:
+      operationId: getAllServices
+      description: Get all services running on the cluster
+      x-aclSchema: Service
+      responses:
+        '200':
+          description: Successfully obtained all services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplServiceResponse'
+        '400':
+          <<: *BadRequest
+
+  '/v2/teams/{teamId}/services':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamServices
+      description: Get services from a given team
+      x-aclSchema: Service
+      responses:
+        '200':
+          description: Successfully obtained services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplServiceResponse'
+        '400':
+          <<: *BadRequest
+
+    post:
+      operationId: createService
+      description: Create a service
+      x-aclSchema: Service
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplServiceRequest'
+        description: Service object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored service configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplServiceResponse'
+
+  '/v2/teams/{teamId}/services/{serviceId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/serviceParams'
+    get:
+      operationId: getService
+      description: Get a service from a given team
+      x-aclSchema: Service
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained service configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplServiceResponse'
+    put:
+      operationId: editService
+      description: Edit a service from a given team
+      x-aclSchema: Service
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplServiceRequest'
+        description: Service object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited service
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplServiceResponse'
     delete:
       operationId: deleteService
       description: Delete a service from a given team
@@ -417,6 +516,109 @@ paths:
         '200':
           description: Successfully deleted a team sealed secret
 
+  /v2/sealedsecrets:
+    get:
+      operationId: getAllSecrets
+      description: Get all secrets
+      x-aclSchema: Secret
+      responses:
+        '200':
+          description: Successfully obtained all secrets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplSecretResponse'
+        '400':
+          <<: *BadRequest
+
+  '/v2/teams/{teamId}/sealedsecrets':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getSealedSecrets
+      description: Get sealed secrets from a given team
+      x-aclSchema: SealedSecret
+      responses:
+        '200':
+          description: Successfully obtained sealed secrets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplSecretResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenApiValidationError'
+    post:
+      operationId: createSealedSecret
+      description: Create a team sealed secret
+      x-aclSchema: SealedSecret
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplSecretRequest'
+        description: SealedSecret object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored sealed secret configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplSecretResponse'
+
+  '/v2/teams/{teamId}/sealedsecrets/{secretId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/sealedSecretParams'
+    get:
+      operationId: getSealedSecret
+      description: Get a sealed secret from a given team
+      x-aclSchema: SealedSecret
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained sealed secret configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplSecretResponse'
+    put:
+      operationId: editSealedSecret
+      description: Edit a sealed secret from a given team
+      x-aclSchema: SealedSecret
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplSecretRequest'
+        description: SealedSecret object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team sealed secret
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplSecretResponse'
+    delete:
+      operationId: deleteSealedSecret
+      description: Delete a sealed secret from a given team
+      x-aclSchema: SealedSecret
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a team sealed secret
+
   '/v1/netpols':
     get:
       operationId: getAllNetpols
@@ -503,6 +705,101 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Netpol'
+    delete:
+      operationId: deleteNetpol
+      description: Delete a network policy from a given team
+      x-aclSchema: Netpol
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a team network policy
+
+  '/v2/netpols':
+    get:
+      operationId: getAllNetpols
+      x-aclSchema: Netpol
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all network policy configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplNetpolResponse'
+
+  '/v2/teams/{teamId}/netpols':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamNetpols
+      x-aclSchema: Netpol
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team network policy configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplNetpolResponse'
+    post:
+      operationId: createNetpol
+      description: Create a team network policy
+      x-aclSchema: Netpol
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplNetpolRequest'
+        description: Network policy object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored network policy configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplNetpolResponse'
+
+  '/v2/teams/{teamId}/netpols/{netpolId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/netpolParams'
+    get:
+      operationId: getNetpol
+      description: Get a network policy from a given team
+      x-aclSchema: Netpol
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained network policy configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplNetpolResponse'
+    put:
+      operationId: editNetpol
+      description: Edit a network policy from a given team
+      x-aclSchema: Netpol
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplNetpolRequest'
+        description: Netwok policy object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team network policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplNetpolResponse'
     delete:
       operationId: deleteNetpol
       description: Delete a network policy from a given team
@@ -606,6 +903,101 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Backup'
+
+  '/v2/backups':
+    get:
+      operationId: getAllBackups
+      x-aclSchema: Backup
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all backups configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplBackupResponse'
+
+  '/v2/teams/{teamId}/backups':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamBackups
+      x-aclSchema: Backup
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team backups configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplBackupResponse'
+    post:
+      operationId: createBackup
+      description: Create a team backup
+      x-aclSchema: Backup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplBackupRequest'
+        description: Backup object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored backup configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplBackupResponse'
+
+  '/v2/teams/{teamId}/backups/{backupId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/backupParams'
+    delete:
+      operationId: deleteBackup
+      description: Delete a backup from a given team
+      x-aclSchema: Backup
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a backup
+    get:
+      operationId: getBackup
+      description: Get a backup from a given team
+      x-aclSchema: Backup
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained backup configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplBackupResponse'
+    put:
+      operationId: editBackup
+      description: Edit a backup from a given team
+      x-aclSchema: Backup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplBackupRequest'
+        description: Backup object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team backup
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplBackupResponse'
 
   '/v1/teams/{teamId}/dashboard':
     parameters:
@@ -716,6 +1108,101 @@ paths:
               schema:
                 $ref: '#/components/schemas/Build'
 
+  '/v2/builds':
+    get:
+      operationId: getAllBuilds
+      x-aclSchema: Build
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all builds configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplBuildResponse'
+
+  '/v2/teams/{teamId}/builds':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamBuilds
+      x-aclSchema: Build
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team builds configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplBuildResponse'
+    post:
+      operationId: createBuild
+      description: Create a team build
+      x-aclSchema: Build
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplBuildRequest'
+        description: Build object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored build configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplBuildResponse'
+
+  '/v2/teams/{teamId}/builds/{buildId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/buildParams'
+    delete:
+      operationId: deleteBuild
+      description: Delete a build from a given team
+      x-aclSchema: Build
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a build
+    get:
+      operationId: getBuild
+      description: Get a build from a given team
+      x-aclSchema: Build
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained build configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplBuildResponse'
+    put:
+      operationId: editBuild
+      description: Edit a build from a given team
+      x-aclSchema: Build
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplBuildRequest'
+        description: Build object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team build
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplBuildResponse'
+
   '/v1/policies':
     get:
       operationId: getAllPolicies
@@ -779,6 +1266,74 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Policy'
+
+  '/v2/policies':
+    get:
+      operationId: getAllPolicies
+      x-aclSchema: Policies
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all policy configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  - $ref: '#/components/schemas/AplPolicyResponse'
+
+  '/v2/teams/{teamId}/policies':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamPolicies
+      x-aclSchema: Policies
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team policy configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  - $ref: '#/components/schemas/AplPolicyResponse'
+
+  '/v2/teams/{teamId}/policies/{policyId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/policyParams'
+    get:
+      operationId: getPolicy
+      description: Get a policy from a given team
+      x-aclSchema: Policy
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained policy configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplPolicyResponse'
+    put:
+      operationId: editPolicy
+      description: Edit a policy from a given team
+      x-aclSchema: Policy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplPolicyRequest'
+        description: Policy object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplPolicyResponse'
 
   '/v1/k8sVersion':
     get:
@@ -1037,6 +1592,101 @@ paths:
               schema:
                 $ref: '#/components/schemas/Project'
 
+  '/v2/projects':
+    get:
+      operationId: getAllProjects
+      x-aclSchema: Project
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all projects configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplProjectResponse'
+
+  '/v2/teams/{teamId}/projects':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamProjects
+      x-aclSchema: Project
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team projects configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplProjectResponse'
+    post:
+      operationId: createProject
+      description: Create a team project
+      x-aclSchema: Project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplProjectRequest'
+        description: Project object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored project configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplProjectResponse'
+
+  '/v2/teams/{teamId}/projects/{projectId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/projectParams'
+    delete:
+      operationId: deleteProject
+      description: Delete a project from a given team
+      x-aclSchema: Project
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a project
+    get:
+      operationId: getProject
+      description: Get a project from a given team
+      x-aclSchema: Project
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained project configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplProjectResponse'
+    put:
+      operationId: editProject
+      description: Edit a project from a given team
+      x-aclSchema: Project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplProjectRequest'
+        description: Project object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplProjectResponse'
+
   /v1/coderepos:
     get:
       operationId: getAllCodeRepos
@@ -1138,6 +1788,109 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodeRepo'
+    delete:
+      operationId: deleteCodeRepo
+      description: Delete a code repo from a given team
+      x-aclSchema: CodeRepo
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a team code repo
+
+  /v2/coderepos:
+    get:
+      operationId: getAllCodeRepos
+      description: Get all code repositories
+      x-aclSchema: CodeRepo
+      responses:
+        '200':
+          description: Successfully obtained all code repositories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplCodeRepoResponse'
+        '400':
+          <<: *BadRequest
+
+  '/v2/teams/{teamId}/coderepos':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamCodeRepos
+      description: Get code repos from a given team
+      x-aclSchema: CodeRepo
+      responses:
+        '200':
+          description: Successfully obtained code repositories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplCodeRepoResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenApiValidationError'
+    post:
+      operationId: createCodeRepo
+      description: Create a team code repo
+      x-aclSchema: CodeRepo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplCodeRepoRequest'
+        description: CodeRepo object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored code repo configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplCodeRepoResponse'
+
+  '/v2/teams/{teamId}/coderepos/{coderepoId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/codeRepoParams'
+    get:
+      operationId: getCodeRepo
+      description: Get a code repo from a given team
+      x-aclSchema: Coderepo
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained code repo configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplCodeRepoResponse'
+    put:
+      operationId: editCodeRepo
+      description: Edit a code repo from a given team
+      x-aclSchema: CodeRepo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplCodeRepoRequest'
+        description: CodeRepo object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team code repo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplCodeRepoResponse'
     delete:
       operationId: deleteCodeRepo
       description: Delete a code repo from a given team
@@ -1340,6 +2093,101 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorkloadValues'
+
+  '/v2/workloads':
+    get:
+      operationId: getAllWorkloads
+      x-aclSchema: Workload
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all workloads configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplWorkloadResponse'
+
+  '/v2/teams/{teamId}/workloads':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamWorkloads
+      x-aclSchema: Workload
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team workloads configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplWorkloadResponse'
+    post:
+      operationId: createWorkload
+      description: Create a team workload
+      x-aclSchema: Workload
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplWorkloadRequest'
+        description: Workload object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored workload configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplWorkloadResponse'
+
+  '/v2/teams/{teamId}/workloads/{workloadId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/workloadParams'
+    delete:
+      operationId: deleteWorkload
+      description: Delete a workload from a given team
+      x-aclSchema: Workload
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a workload
+    get:
+      operationId: getWorkload
+      description: Get a workload from a given team
+      x-aclSchema: Workload
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained workload configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplWorkloadResponse'
+    put:
+      operationId: editWorkload
+      description: Edit a workload from a given team
+      x-aclSchema: Workload
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplWorkloadRequest'
+        description: Workload object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team workload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplWorkloadResponse'
 
   '/v1/kubecfg/{teamId}':
     parameters:
@@ -1718,6 +2566,118 @@ components:
   # Please stick to: alphabetical sorting, all Uppercase first and then lowercase.
   # --------------------------------------------
   schemas:
+    aplResourceKind:
+      type: string
+      enum:
+        - 'AplApp'
+        - 'AplAlertSet'
+        - 'AplCluster'
+        - 'AplDatabase'
+        - 'AplDns'
+        - 'AplIngress'
+        - 'AplObjectStorage'
+        - 'AplKms'
+        - 'AplIdentityProvider'
+        - 'AplCapabilitySet'
+        - 'AplSmtp'
+        - 'AplBackupCollection'
+        - 'AplUser'
+        - 'AplTeamCodeRepo'
+        - 'AplTeamBuild'
+        - 'AplTeamPolicy'
+        - 'AplTeamSettingSet'
+        - 'AplTeamNetworkControl'
+        - 'AplTeamProject'
+        - 'AplTeamBackup'
+        - 'AplTeamSecret'
+        - 'AplTeamService'
+        - 'AplTeamWorkload'
+        - 'AplTeamWorkloadValues'
+        - 'AplTeamTool'
+        - 'AplVersion'
+    aplResourceLabels:
+      type: object
+      properties:
+        apl.io/id:
+          type: string
+    aplResourceTeamLabels:
+      type: object
+      properties:
+        apl.io/id:
+          type: string
+        apl.io/teamId:
+          $ref: 'definitions.yaml#/idName'
+    aplResourceRequestMetadata:
+      type: object
+      properties:
+        name:
+          $ref: 'definitions.yaml#/idName'
+      required:
+        - name
+    aplResourceMetadata:
+      type: object
+      properties:
+        name:
+          $ref: 'definitions.yaml#/idName'
+        labels:
+          $ref: '#/components/schemas/aplResourceLabels'
+      required:
+        - name
+        - labels
+    aplResourceTeamMetadata:
+      type: object
+      properties:
+        name:
+          type: string
+        labels:
+          $ref: '#/components/schemas/aplResourceTeamLabels'
+      required:
+        - name
+        - labels
+    aplResourceStatus:
+      type: object
+      properties:
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/aplResourceStatusCondition'
+        phase:
+          type: string
+    aplResourceStatusCondition:
+      type: object
+      properties:
+        lastTransitionTime:
+          type: string
+          format: date-time
+        message:
+          type: string
+        reason:
+          type: string
+        status:
+          type: boolean
+        type:
+          type: string
+    aplMetadataRequest:
+      type: object
+      properties:
+        metadata:
+          $ref: '#/components/schemas/aplResourceRequestMetadata'
+    aplMetadataResponse:
+      type: object
+      properties:
+        metadata:
+          $ref: '#/components/schemas/aplResourceMetadata'
+    aplTeamMetadataResponse:
+      type: object
+      properties:
+        metadata:
+          $ref: '#/components/schemas/aplResourceTeamMetadata'
+    aplStatusResponse:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/aplResourceStatus'
+
     resourceMetadata:
       type: object
       properties:
@@ -1743,6 +2703,362 @@ components:
           $ref: 'definitions.yaml#/idName'
       required:
         - name
+
+    AplApp:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AplCoreApp]
+        spec:
+          $ref: 'app.yaml#/App'
+    AplAppRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplApp'
+        - $ref: '#/components/schemas/aplMetadataRequest'
+      required:
+        - kind
+        - metadata
+        - spec
+    AplAppResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplApp'
+        - $ref: '#/components/schemas/aplMetadataResponse'
+        - $ref: '#/components/schemas/aplStatusResponse'
+      required:
+        - kind
+        - metadata
+        - spec
+        - status
+    AplBackup:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamBackup]
+        spec:
+          $ref: 'backup.yaml#/Backup'
+    AplBackupRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplBackup'
+        - $ref: '#/components/schemas/aplMetadataRequest'
+      required:
+        - kind
+        - metadata
+        - spec
+    AplBackupResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplBackup'
+        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplStatusResponse'
+      required:
+        - kind
+        - metadata
+        - spec
+        - status
+    AplBuild:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamBuild]
+        spec:
+          $ref: 'build.yaml#/Build'
+    AplBuildRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplBuild'
+        - $ref: '#/components/schemas/aplMetadataRequest'
+      required:
+        - kind
+        - metadata
+        - spec
+    AplBuildResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplBuild'
+        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplStatusResponse'
+      required:
+        - kind
+        - metadata
+        - spec
+        - status
+    AplCodeRepo:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamCodeRepo]
+        spec:
+          $ref: 'codeRepo.yaml#/CodeRepo'
+    AplCodeRepoRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplCodeRepo'
+        - $ref: '#/components/schemas/aplMetadataRequest'
+      required:
+        - kind
+        - metadata
+        - spec
+    AplCodeRepoResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplCodeRepo'
+        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplStatusResponse'
+      required:
+        - kind
+        - metadata
+        - spec
+        - status
+    AplNetpol:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamNetworkControl]
+        spec:
+          $ref: 'netpol.yaml#/Netpol'
+    AplNetpolRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplNetpol'
+        - $ref: '#/components/schemas/aplMetadataRequest'
+      required:
+        - kind
+        - metadata
+        - spec
+    AplNetpolResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplNetpol'
+        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplStatusResponse'
+      required:
+        - kind
+        - metadata
+        - spec
+        - status
+    AplPolicy:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamPolicy]
+        spec:
+          $ref: 'policies.yaml#/Policy'
+    AplPolicyRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplPolicy'
+        - $ref: '#/components/schemas/aplMetadataRequest'
+      required:
+        - kind
+        - metadata
+        - spec
+    AplPolicyResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplPolicy'
+        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplStatusResponse'
+      required:
+        - kind
+        - metadata
+        - spec
+        - status
+    AplProject:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamProject]
+        spec:
+          $ref: 'project.yaml#/Project'
+    AplProjectRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplProject'
+        - $ref: '#/components/schemas/aplMetadataRequest'
+        - type: object
+          properties:
+            build:
+              allOf:
+                - $ref: '#/components/schemas/aplMetadataRequest'
+                - $ref: '#/components/schemas/AplBuild'
+            workload:
+              allOf:
+                - $ref: '#/components/schemas/aplMetadataRequest'
+                - $ref: '#/components/schemas/AplWorkload'
+            service:
+              allOf:
+                - $ref: '#/components/schemas/aplMetadataRequest'
+                - $ref: '#/components/schemas/Service'
+      required:
+        - kind
+        - metadata
+        - spec
+    AplProjectResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplProject'
+        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplStatusResponse'
+        - type: object
+          properties:
+            build:
+              allOf:
+                - $ref: '#/components/schemas/aplTeamMetadataResponse'
+                - $ref: '#/components/schemas/AplBuild'
+            workload:
+              allOf:
+                - $ref: '#/components/schemas/aplTeamMetadataResponse'
+                - $ref: '#/components/schemas/AplWorkload'
+            service:
+              allOf:
+                - $ref: '#/components/schemas/aplTeamMetadataResponse'
+                - $ref: '#/components/schemas/Service'
+      required:
+        - kind
+        - metadata
+        - spec
+        - status
+    AplSecret:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamSecret]
+        spec:
+          $ref: 'sealedsecret.yaml#/SealedSecret'
+    AplSecretRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplSecret'
+        - $ref: '#/components/schemas/aplMetadataRequest'
+      required:
+        - kind
+        - metadata
+        - spec
+    AplSecretResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplSecret'
+        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplStatusResponse'
+      required:
+        - kind
+        - metadata
+        - spec
+        - status
+    AplService:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamService]
+        spec:
+          $ref: 'service.yaml#/Service'
+    AplServiceRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplService'
+        - $ref: '#/components/schemas/aplMetadataRequest'
+      required:
+        - kind
+        - metadata
+        - spec
+    AplServiceResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplService'
+        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplStatusResponse'
+      required:
+        - kind
+        - metadata
+        - spec
+        - status
+    AplTeamSettings:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamSettings]
+        spec:
+          $ref: 'team.yaml#/Team'
+    AplTeamSettingsRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplTeamSettings'
+        - $ref: '#/components/schemas/aplMetadataRequest'
+      required:
+        - kind
+        - metadata
+        - spec
+    AplTeamSettingsResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplTeamSettings'
+        - $ref: '#/components/schemas/aplMetadataResponse'
+        - $ref: '#/components/schemas/aplStatusResponse'
+      required:
+        - kind
+        - metadata
+        - spec
+        - status
+    AplUser:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AplUser]
+        spec:
+          $ref: 'user.yaml#/User'
+    AplUserRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplUser'
+        - $ref: '#/components/schemas/aplMetadataRequest'
+      required:
+        - kind
+        - metadata
+        - spec
+    AplUserResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplUser'
+        - $ref: '#/components/schemas/aplMetadataResponse'
+        - $ref: '#/components/schemas/aplStatusResponse'
+      required:
+        - kind
+        - metadata
+        - spec
+        - status
+    AplWorkload:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamWorkload]
+        spec:
+          allOf:
+            - $ref: 'workload.yaml#/Workload'
+            - $ref: 'workload.yaml#/WorkloadValues'
+    AplWorkloadRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplWorkload'
+        - $ref: '#/components/schemas/aplMetadataRequest'
+      required:
+        - kind
+        - metadata
+        - spec
+    AplWorkloadResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplWorkload'
+        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplStatusResponse'
+      required:
+        - kind
+        - metadata
+        - spec
+        - status
+
     App:
       allOf:
         - type: object
