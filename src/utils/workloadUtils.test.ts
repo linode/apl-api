@@ -1,10 +1,10 @@
 // workloadUtils.test.ts
 import Debug from 'debug'
-import YAML from 'yaml'
-import { updateChartIconInYaml, updateRbacForNewChart } from './workloadUtils'
-
 import * as fsExtra from 'fs-extra'
 import * as fsPromises from 'fs/promises'
+import simpleGit, { SimpleGit } from 'simple-git'
+import YAML from 'yaml'
+import { sparseCloneChart, updateChartIconInYaml, updateRbacForNewChart } from './workloadUtils'
 const debug = Debug('otomi:api:workloadCatalog')
 
 jest.mock('fs/promises', () => ({
@@ -114,76 +114,88 @@ describe('updateRbacForNewChart', () => {
   })
 })
 
-// // ----------------------------------------------------------------
-// // Tests for sparseCloneChart
-// describe('sparseCloneChart', () => {
-//   const fakeSparsePath = '/tmp/test'
-//   const fakeHelmCatalogUrl = 'https://gitea.example.com/otomi/charts.git'
-//   const fakeUser = 'TestUser'
-//   const fakeEmail = 'test@example.com'
-//   const fakeChartName = 'cassandra'
-//   const fakeChartPath = 'bitnami/cassandra'
-//   const fakeRevision = 'main'
-//   const fakeChartIcon = 'https://example.com/icon.png'
+// ----------------------------------------------------------------
+// Tests for sparseCloneChart
+describe('sparseCloneChart', () => {
+  const fakeSparsePath = '/tmp/test'
+  const fakeHelmCatalogUrl = 'https://gitea.example.com/otomi/charts.git'
+  const fakeUser = 'TestUser'
+  const fakeEmail = 'test@example.com'
+  const fakeChartName = 'cassandra'
+  const fakeChartPath = 'bitnami/cassandra'
+  const fakeRevision = 'main'
+  const fakeChartIcon = 'https://example.com/icon.png'
 
-//   beforeEach(() => {
-//     jest.clearAllMocks()
-//     // jest.mock('simple-git', () => {
-//     //   return jest.fn(() => ({
-//     //     clone: jest.fn().mockResolvedValue(undefined),
-//     //   }))
-//     // })
-//   })
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
 
-//   test('sparseCloneChart returns true on successful clone and push', async () => {
-//     // Arrange: simulate a successful run
-//     const cloneSpy = jest.spyOn(simpleGit, '')
-//     const result = await sparseCloneChart(
-//       'https://github.com/bitnami/charts.git',
-//       fakeHelmCatalogUrl,
-//       fakeUser,
-//       fakeEmail,
-//       fakeChartName,
-//       fakeChartPath,
-//       fakeSparsePath,
-//       fakeRevision,
-//       fakeChartIcon,
-//       true,
-//     )
+  test('sparseCloneChart returns true on successful clone and push', async () => {
+    // Arrange: simulate a successful run
+    const mockGit: Partial<SimpleGit> = {
+      env: jest.fn(),
+      clone: jest.fn().mockResolvedValueOnce('success'),
+      cwd: jest.fn().mockResolvedValueOnce('success'),
+      raw: jest.fn().mockResolvedValueOnce('success'),
+      checkout: jest.fn().mockResolvedValueOnce('success'),
+      push: jest.fn().mockResolvedValueOnce('success'),
+      addConfig: jest.fn().mockResolvedValueOnce('success'),
+      add: jest.fn().mockResolvedValueOnce('success'),
+      pull: jest.fn().mockResolvedValueOnce('success'),
+      init: jest.fn().mockResolvedValueOnce('success'),
+      addRemote: jest.fn().mockResolvedValueOnce('success'),
+      commit: jest.fn().mockResolvedValueOnce('success'),
+    }
 
-//     expect(result).toBe(true)
-//     // Assert that renameSync was called to move the chart folder.
-//     expect(fsExtra.renameSync).toHaveBeenCalled()
-//     // And that the simpleGit clone and push methods were called.
-//     // eslint-disable-next-line @typescript-eslint/unbound-method
-//     expect(cloneSpy).toHaveBeenCalled()
-//     // eslint-disable-next-line @typescript-eslint/unbound-method
-//     expect(git.push).toHaveBeenCalled()
-//   })
+    ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+    const result = await sparseCloneChart(
+      'https://github.com/bitnami/charts.git',
+      fakeHelmCatalogUrl,
+      fakeUser,
+      fakeEmail,
+      fakeChartName,
+      fakeChartPath,
+      fakeSparsePath,
+      fakeRevision,
+      fakeChartIcon,
+      true,
+    )
 
-// test('sparseCloneChart returns false when an error occurs', async () => {
-//   // Arrange: simulate an error in the cloning process.
-//   // eslint-disable-next-line @typescript-eslint/no-empty-function
-//    ;(git.clone as jest.Mock).mockImplementation(async () => {})
-//   mockClone.mockRejectedValueOnce(new Error('Clone failed'))
+    expect(result).toBe(true)
+    // Assert that renameSync was called to move the chart folder.
+    expect(fsExtra.renameSync).toHaveBeenCalled()
+    // And that the simpleGit clone and push methods were called.
+    expect(mockGit.clone).toHaveBeenCalled()
+    expect(mockGit.push).toHaveBeenCalled()
+  })
 
-//   let result: boolean | undefined
-//   try {
-//     result = await sparseCloneChart(
-//       'https://github.com/bitnami/charts.git',
-//       fakeHelmCatalogUrl,
-//       fakeUser,
-//       fakeEmail,
-//       fakeChartName,
-//       fakeChartPath,
-//       fakeSparsePath,
-//       fakeRevision,
-//       fakeChartIcon,
-//       true,
-//     )
-//   } catch (error) {
-//     result = false
-//   }
-//   expect(result).toBe(false)
-// })
-// })
+  test('sparseCloneChart returns false when an error occurs', async () => {
+    // Arrange: simulate an error in the cloning process.
+    const mockGit: Partial<SimpleGit> = {
+      env: jest.fn(),
+      clone: jest.fn().mockRejectedValueOnce(new Error('Clone failed')),
+      push: jest.fn().mockResolvedValueOnce('success'),
+    }
+
+    ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+
+    let result: boolean | undefined
+    try {
+      result = await sparseCloneChart(
+        'https://github.com/bitnami/charts.git',
+        fakeHelmCatalogUrl,
+        fakeUser,
+        fakeEmail,
+        fakeChartName,
+        fakeChartPath,
+        fakeSparsePath,
+        fakeRevision,
+        fakeChartIcon,
+        true,
+      )
+    } catch (error) {
+      result = false
+    }
+    expect(result).toBe(false)
+  })
+})

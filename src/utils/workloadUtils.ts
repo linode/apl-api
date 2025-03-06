@@ -100,7 +100,7 @@ export async function updateRbacForNewChart(sparsePath: string, chartKey: string
   debug(`Updated rbac.yaml: added ${chartKey}: ${allowTeams ? 'null' : '[]'}`)
 }
 
-async function commitAndPush(targetDir: string, helmChartCatalogUrl: string, user: string, email: string) {
+export async function commitAndPush(targetDir: string, helmChartCatalogUrl: string, user: string, email: string) {
   const git = simpleGit(targetDir)
   await git.addConfig('user.name', user)
   await git.addConfig('user.email', email)
