@@ -107,26 +107,18 @@ export async function commitAndPush(targetDir: string, helmChartCatalogUrl: stri
 
   try {
     if (!existsSync(path.join(targetDir, '.git'))) {
-      debug('Initializing new Git repository')
       await git.init()
       await git.addRemote('origin', helmChartCatalogUrl)
     }
 
-    debug('Staging new changes')
     await git.add('.')
-
-    debug('Committing changes')
     await git.commit('Added new Helm chart')
-
-    debug('Pulling latest changes with rebase')
     await git.pull('origin', 'main', { '--rebase': null })
-
-    debug('Pushing changes to remote')
     await git.push('origin', 'main')
 
     debug('Successfully pushed changes!')
   } catch (error) {
-    debug('Error during commit and push:', error)
+    debug('Error during commit and push:')
   }
 }
 

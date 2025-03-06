@@ -32,31 +32,6 @@ jest.mock('simple-git', () => ({
     push: jest.fn().mockResolvedValue(undefined),
   })),
 }))
-// // --- Mocks for simple-git ---
-// // We'll create our own mock implementation so that we can track calls.
-// const mockClone = jest.fn().mockResolvedValue(undefined)
-// const mockCwd = jest.fn().mockResolvedValue(undefined)
-// const mockRaw = jest.fn().mockResolvedValue(undefined)
-// const mockCheckout = jest.fn().mockResolvedValue(undefined)
-// const mockAddConfig = jest.fn().mockResolvedValue(undefined)
-// const mockAdd = jest.fn().mockResolvedValue(undefined)
-// const mockCommit = jest.fn().mockResolvedValue(undefined)
-// const mockPull = jest.fn().mockResolvedValue(undefined)
-// const mockPush = jest.fn().mockResolvedValue(undefined)
-
-// const mockSimpleGit = jest.fn(() => ({
-//   clone: mockClone,
-//   cwd: mockCwd,
-//   raw: mockRaw,
-//   checkout: mockCheckout,
-//   addConfig: mockAddConfig,
-//   add: mockAdd,
-//   commit: mockCommit,
-//   pull: mockPull,
-//   push: mockPush,
-// }))
-
-// jest.mock('simple-git', () => mockSimpleGit)
 
 // ----------------------------------------------------------------
 // Tests for updateChartIconInYaml
