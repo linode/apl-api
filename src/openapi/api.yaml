@@ -3132,12 +3132,6 @@ components:
       $ref: 'sealedsecretskeys.yaml#/SealedSecretsKeys'
     K8sSecret:
       $ref: 'k8sSecret.yaml#/K8sSecret'
-    SecretDockerRegistry:
-      $ref: 'secret.yaml#/SecretDockerRegistry'
-    SecretGeneric:
-      $ref: 'secret.yaml#/SecretGeneric'
-    SecretTLS:
-      $ref: 'secret.yaml#/SecretTLS'
     SessionUser:
       $ref: 'user.yaml#/SessionUser'
     Service:
