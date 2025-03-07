@@ -4,7 +4,7 @@ import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { ObjectStorageKeyRegions, getRegions } from '@linode/api-v4'
-import { emptyDir, pathExists, unlink } from 'fs-extra'
+import { emptyDir, existsSync, pathExists, rmSync, unlink } from 'fs-extra'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set, unset } from 'lodash'
@@ -58,6 +58,7 @@ import {
   VERSIONS,
   cleanEnv,
 } from 'src/validators'
+import { v4 as uuidv4 } from 'uuid'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import {
   apply,
@@ -82,7 +83,7 @@ import { getPolicies } from './utils/policiesUtils'
 import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
-import { fetchWorkloadCatalog } from './utils/workloadUtils'
+import { NewChartPayload, fetchWorkloadCatalog, sparseCloneChart } from './utils/workloadUtils'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -1226,6 +1227,37 @@ export default class OtomiStack {
     const version = env.VERSIONS.core as string
     const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub, teamId, version)
     return { url, helmCharts, catalog }
+  }
+
+  async createWorkloadCatalog(body: NewChartPayload): Promise<boolean> {
+    const { url, chartName, chartPath, chartIcon, revision, allowTeams } = body
+
+    const uuid = uuidv4()
+    const helmChartsDir = `/tmp/otomi/charts/${uuid}`
+    const helmChartCatalogUrl = env.HELM_CHART_CATALOG
+    const { user, email } = this.repo
+
+    try {
+      await sparseCloneChart(
+        url,
+        helmChartCatalogUrl,
+        user,
+        email,
+        chartName,
+        chartPath,
+        helmChartsDir,
+        revision,
+        chartIcon,
+        allowTeams,
+      )
+      return true
+    } catch (err) {
+      debug(`error while parsing chart ${err.message}`)
+      return false
+    } finally {
+      // Clean up: if the temporary directory exists, remove it.
+      if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
+    }
   }
 
   async createWorkload(teamId: string, data: Workload): Promise<Workload> {
