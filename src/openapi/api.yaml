@@ -1180,7 +1180,25 @@ paths:
             application/json:
               schema:
                 type: object
-
+  '/createWorkloadCatalog':
+    post:
+      operationId: createWorkloadCatalog
+      description: Create workload catalog from a repository
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        description: Project object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully updated a team project
+          content:
+            application/json:
+              schema:
+                type: object
   '/teams/{teamId}/workloads':
     parameters:
       - $ref: '#/components/parameters/teamParams'

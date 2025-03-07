@@ -59,6 +59,14 @@ Workload:
     namespace:
       description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'.
       $ref: 'definitions.yaml#/idName'
+    createNamespace:
+      title: Create a new namespace
+      type: boolean
+      default: false
+    sidecarInject:
+      title: Enable istio sidecar injection
+      type: boolean
+      default: false
     imageUpdateStrategy:
       description: Automatically update the image. Only supported when the image is stored in Harbor.
       title: Auto Image Updater
