@@ -1213,26 +1213,25 @@ export default class OtomiStack {
     return this.db.getCollection('workloads') as Array<Workload>
   }
 
-  async getWorkloadCatalog(data: { url: string; teamId: string }): Promise<any> {
+  async getWorkloadCatalog(data: {
+    url?: string
+    teamId: string
+  }): Promise<{ url: string; helmCharts: any; catalog: any }> {
     const { url: clientUrl, teamId } = data
-    const uuid = uuidv4() as string
+    const uuid = uuidv4()
     const helmChartsDir = `/tmp/otomi/charts/${uuid}`
+
+    const url = clientUrl || env?.HELM_CHART_CATALOG
+
+    if (!url) throw new OtomiError(400, 'Helm chart catalog URL is not set')
+
     try {
-      let url = clientUrl
-      if (env?.HELM_CHART_CATALOG && !clientUrl) url = env.HELM_CHART_CATALOG
-      if (!url) {
-        const err = {
-          code: 404,
-          message: 'No helm chart catalog found!',
-        }
-        throw new HttpError(404, 'No helm chart catalog found!')
-      }
       const { helmCharts, catalog } = await fetchWorkloadCatalog(url, helmChartsDir, teamId)
       return { url, helmCharts, catalog }
     } catch (error) {
-      return {}
+      debug('Error fetching workload catalog')
+      throw new OtomiError(404, 'No helm chart catalog found!')
     } finally {
-      // Clean up: if the temporary directory exists, remove it.
       if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
     }
   }
