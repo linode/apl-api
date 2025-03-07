@@ -2662,22 +2662,29 @@ components:
       properties:
         metadata:
           $ref: '#/components/schemas/aplResourceRequestMetadata'
+      required:
+        - metadata
     aplMetadataResponse:
       type: object
       properties:
         metadata:
           $ref: '#/components/schemas/aplResourceMetadata'
+      required:
+        - metadata
     aplTeamMetadataResponse:
       type: object
       properties:
         metadata:
           $ref: '#/components/schemas/aplResourceTeamMetadata'
+      required:
+        - metadata
     aplStatusResponse:
       type: object
       properties:
         status:
           $ref: '#/components/schemas/aplResourceStatus'
-
+      required:
+        - status
     resourceMetadata:
       type: object
       properties:
@@ -2703,7 +2710,6 @@ components:
           $ref: 'definitions.yaml#/idName'
       required:
         - name
-
     AplApp:
       type: object
       properties:
@@ -2712,25 +2718,19 @@ components:
           enum: [AplCoreApp]
         spec:
           $ref: 'app.yaml#/App'
+      required:
+        - kind
+        - spec
     AplAppRequest:
       allOf:
         - $ref: '#/components/schemas/AplApp'
         - $ref: '#/components/schemas/aplMetadataRequest'
-      required:
-        - kind
-        - metadata
-        - spec
     AplAppResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplApp'
         - $ref: '#/components/schemas/aplMetadataResponse'
         - $ref: '#/components/schemas/aplStatusResponse'
-      required:
-        - kind
-        - metadata
-        - spec
-        - status
     AplBackup:
       type: object
       properties:
@@ -2739,25 +2739,19 @@ components:
           enum: [AplTeamBackup]
         spec:
           $ref: 'backup.yaml#/Backup'
+      required:
+        - kind
+        - spec
     AplBackupRequest:
       allOf:
         - $ref: '#/components/schemas/AplBackup'
         - $ref: '#/components/schemas/aplMetadataRequest'
-      required:
-        - kind
-        - metadata
-        - spec
     AplBackupResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplBackup'
         - $ref: '#/components/schemas/aplTeamMetadataResponse'
         - $ref: '#/components/schemas/aplStatusResponse'
-      required:
-        - kind
-        - metadata
-        - spec
-        - status
     AplBuild:
       type: object
       properties:
@@ -2766,25 +2760,19 @@ components:
           enum: [AplTeamBuild]
         spec:
           $ref: 'build.yaml#/Build'
+      required:
+        - kind
+        - spec
     AplBuildRequest:
       allOf:
         - $ref: '#/components/schemas/AplBuild'
         - $ref: '#/components/schemas/aplMetadataRequest'
-      required:
-        - kind
-        - metadata
-        - spec
     AplBuildResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplBuild'
         - $ref: '#/components/schemas/aplTeamMetadataResponse'
         - $ref: '#/components/schemas/aplStatusResponse'
-      required:
-        - kind
-        - metadata
-        - spec
-        - status
     AplCodeRepo:
       type: object
       properties:
@@ -2793,25 +2781,19 @@ components:
           enum: [AplTeamCodeRepo]
         spec:
           $ref: 'codeRepo.yaml#/CodeRepo'
+      required:
+        - kind
+        - spec
     AplCodeRepoRequest:
       allOf:
         - $ref: '#/components/schemas/AplCodeRepo'
         - $ref: '#/components/schemas/aplMetadataRequest'
-      required:
-        - kind
-        - metadata
-        - spec
     AplCodeRepoResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplCodeRepo'
         - $ref: '#/components/schemas/aplTeamMetadataResponse'
         - $ref: '#/components/schemas/aplStatusResponse'
-      required:
-        - kind
-        - metadata
-        - spec
-        - status
     AplNetpol:
       type: object
       properties:
@@ -2820,25 +2802,19 @@ components:
           enum: [AplTeamNetworkControl]
         spec:
           $ref: 'netpol.yaml#/Netpol'
+      required:
+        - kind
+        - spec
     AplNetpolRequest:
       allOf:
         - $ref: '#/components/schemas/AplNetpol'
         - $ref: '#/components/schemas/aplMetadataRequest'
-      required:
-        - kind
-        - metadata
-        - spec
     AplNetpolResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplNetpol'
         - $ref: '#/components/schemas/aplTeamMetadataResponse'
         - $ref: '#/components/schemas/aplStatusResponse'
-      required:
-        - kind
-        - metadata
-        - spec
-        - status
     AplPolicy:
       type: object
       properties:
@@ -2847,25 +2823,19 @@ components:
           enum: [AplTeamPolicy]
         spec:
           $ref: 'policies.yaml#/Policy'
+      required:
+        - kind
+        - spec
     AplPolicyRequest:
       allOf:
         - $ref: '#/components/schemas/AplPolicy'
         - $ref: '#/components/schemas/aplMetadataRequest'
-      required:
-        - kind
-        - metadata
-        - spec
     AplPolicyResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplPolicy'
         - $ref: '#/components/schemas/aplTeamMetadataResponse'
         - $ref: '#/components/schemas/aplStatusResponse'
-      required:
-        - kind
-        - metadata
-        - spec
-        - status
     AplProject:
       type: object
       properties:
@@ -2874,28 +2844,30 @@ components:
           enum: [AplTeamProject]
         spec:
           $ref: 'project.yaml#/Project'
+      required:
+        - kind
+        - spec
     AplProjectRequest:
       allOf:
         - $ref: '#/components/schemas/AplProject'
         - $ref: '#/components/schemas/aplMetadataRequest'
         - type: object
           properties:
-            build:
-              allOf:
-                - $ref: '#/components/schemas/aplMetadataRequest'
-                - $ref: '#/components/schemas/AplBuild'
-            workload:
-              allOf:
-                - $ref: '#/components/schemas/aplMetadataRequest'
-                - $ref: '#/components/schemas/AplWorkload'
-            service:
-              allOf:
-                - $ref: '#/components/schemas/aplMetadataRequest'
-                - $ref: '#/components/schemas/Service'
-      required:
-        - kind
-        - metadata
-        - spec
+            spec:
+              type: object
+              properties:
+                build:
+                  allOf:
+                    - $ref: '#/components/schemas/aplMetadataRequest'
+                    - $ref: '#/components/schemas/AplBuild'
+                workload:
+                  allOf:
+                    - $ref: '#/components/schemas/aplMetadataRequest'
+                    - $ref: '#/components/schemas/AplWorkload'
+                service:
+                  allOf:
+                    - $ref: '#/components/schemas/aplMetadataRequest'
+                    - $ref: '#/components/schemas/Service'
     AplProjectResponse:
       type: object
       allOf:
@@ -2904,23 +2876,21 @@ components:
         - $ref: '#/components/schemas/aplStatusResponse'
         - type: object
           properties:
-            build:
-              allOf:
-                - $ref: '#/components/schemas/aplTeamMetadataResponse'
-                - $ref: '#/components/schemas/AplBuild'
-            workload:
-              allOf:
-                - $ref: '#/components/schemas/aplTeamMetadataResponse'
-                - $ref: '#/components/schemas/AplWorkload'
-            service:
-              allOf:
-                - $ref: '#/components/schemas/aplTeamMetadataResponse'
-                - $ref: '#/components/schemas/Service'
-      required:
-        - kind
-        - metadata
-        - spec
-        - status
+            spec:
+              type: object
+              properties:
+                build:
+                  allOf:
+                    - $ref: '#/components/schemas/aplTeamMetadataResponse'
+                    - $ref: '#/components/schemas/AplBuild'
+                workload:
+                  allOf:
+                    - $ref: '#/components/schemas/aplTeamMetadataResponse'
+                    - $ref: '#/components/schemas/AplWorkload'
+                service:
+                  allOf:
+                    - $ref: '#/components/schemas/aplTeamMetadataResponse'
+                    - $ref: '#/components/schemas/Service'
     AplSecret:
       type: object
       properties:
@@ -2929,25 +2899,19 @@ components:
           enum: [AplTeamSecret]
         spec:
           $ref: 'sealedsecret.yaml#/SealedSecret'
+      required:
+        - kind
+        - spec
     AplSecretRequest:
       allOf:
         - $ref: '#/components/schemas/AplSecret'
         - $ref: '#/components/schemas/aplMetadataRequest'
-      required:
-        - kind
-        - metadata
-        - spec
     AplSecretResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplSecret'
         - $ref: '#/components/schemas/aplTeamMetadataResponse'
         - $ref: '#/components/schemas/aplStatusResponse'
-      required:
-        - kind
-        - metadata
-        - spec
-        - status
     AplService:
       type: object
       properties:
@@ -2956,25 +2920,19 @@ components:
           enum: [AplTeamService]
         spec:
           $ref: 'service.yaml#/Service'
+      required:
+        - kind
+        - spec
     AplServiceRequest:
       allOf:
         - $ref: '#/components/schemas/AplService'
         - $ref: '#/components/schemas/aplMetadataRequest'
-      required:
-        - kind
-        - metadata
-        - spec
     AplServiceResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplService'
         - $ref: '#/components/schemas/aplTeamMetadataResponse'
         - $ref: '#/components/schemas/aplStatusResponse'
-      required:
-        - kind
-        - metadata
-        - spec
-        - status
     AplTeamSettings:
       type: object
       properties:
@@ -2983,25 +2941,19 @@ components:
           enum: [AplTeamSettings]
         spec:
           $ref: 'team.yaml#/Team'
+      required:
+        - kind
+        - spec
     AplTeamSettingsRequest:
       allOf:
         - $ref: '#/components/schemas/AplTeamSettings'
         - $ref: '#/components/schemas/aplMetadataRequest'
-      required:
-        - kind
-        - metadata
-        - spec
     AplTeamSettingsResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplTeamSettings'
         - $ref: '#/components/schemas/aplMetadataResponse'
         - $ref: '#/components/schemas/aplStatusResponse'
-      required:
-        - kind
-        - metadata
-        - spec
-        - status
     AplUser:
       type: object
       properties:
@@ -3010,25 +2962,19 @@ components:
           enum: [AplUser]
         spec:
           $ref: 'user.yaml#/User'
+      required:
+        - kind
+        - spec
     AplUserRequest:
       allOf:
         - $ref: '#/components/schemas/AplUser'
         - $ref: '#/components/schemas/aplMetadataRequest'
-      required:
-        - kind
-        - metadata
-        - spec
     AplUserResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplUser'
         - $ref: '#/components/schemas/aplMetadataResponse'
         - $ref: '#/components/schemas/aplStatusResponse'
-      required:
-        - kind
-        - metadata
-        - spec
-        - status
     AplWorkload:
       type: object
       properties:
@@ -3039,25 +2985,19 @@ components:
           allOf:
             - $ref: 'workload.yaml#/Workload'
             - $ref: 'workload.yaml#/WorkloadValues'
+      required:
+        - kind
+        - spec
     AplWorkloadRequest:
       allOf:
         - $ref: '#/components/schemas/AplWorkload'
         - $ref: '#/components/schemas/aplMetadataRequest'
-      required:
-        - kind
-        - metadata
-        - spec
     AplWorkloadResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplWorkload'
         - $ref: '#/components/schemas/aplTeamMetadataResponse'
         - $ref: '#/components/schemas/aplStatusResponse'
-      required:
-        - kind
-        - metadata
-        - spec
-        - status
 
     App:
       allOf:
