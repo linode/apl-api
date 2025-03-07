@@ -1225,7 +1225,7 @@ export default class OtomiStack {
           code: 404,
           message: 'No helm chart catalog found!',
         }
-        throw err
+        throw new HttpError(404, 'No helm chart catalog found!')
       }
       const { helmCharts, catalog } = await fetchWorkloadCatalog(url, helmChartsDir, teamId)
       return { url, helmCharts, catalog }
