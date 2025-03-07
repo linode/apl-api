@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file. See [standa
 * Save and deploy team secrets as SealedSecrets manifests ([#623](https://github.com/redkubes/otomi-api/issues/623)) ([79d61ce](https://github.com/redkubes/otomi-api/commit/79d61ceeb4eb8e4eb917acd23062913feb17ce9a))
 
 
+
 ### Bug Fixes
 
 * align name field titles in the resource forms ([#605](https://github.com/redkubes/otomi-api/issues/605)) ([2f0db13](https://github.com/redkubes/otomi-api/commit/2f0db133254e993a7807105efcf30cf2e2917265))
