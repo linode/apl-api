@@ -1,0 +1,176 @@
+// workloadUtils.test.ts
+import Debug from 'debug'
+import * as fsExtra from 'fs-extra'
+import * as fsPromises from 'fs/promises'
+import simpleGit, { SimpleGit } from 'simple-git'
+import YAML from 'yaml'
+import { sparseCloneChart, updateChartIconInYaml, updateRbacForNewChart } from './workloadUtils'
+const debug = Debug('otomi:api:workloadCatalog')
+
+jest.mock('fs/promises', () => ({
+  writeFile: jest.fn(),
+  readdir: jest.fn(),
+}))
+jest.mock('fs-extra', () => ({
+  readFile: jest.fn(),
+  existsSync: jest.fn(),
+  mkdirSync: jest.fn(),
+  renameSync: jest.fn(),
+  rmSync: jest.fn(),
+}))
+jest.mock('simple-git', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    clone: jest.fn().mockResolvedValue(undefined),
+    cwd: jest.fn().mockResolvedValue(undefined),
+    raw: jest.fn().mockResolvedValue(undefined),
+    checkout: jest.fn().mockResolvedValue(undefined),
+    addConfig: jest.fn().mockResolvedValue(undefined),
+    add: jest.fn().mockResolvedValue(undefined),
+    commit: jest.fn().mockResolvedValue(undefined),
+    pull: jest.fn().mockResolvedValue(undefined),
+    push: jest.fn().mockResolvedValue(undefined),
+  })),
+}))
+
+// ----------------------------------------------------------------
+// Tests for updateChartIconInYaml
+describe('updateChartIconInYaml', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  test('updates the icon field when newIcon is provided', async () => {
+    const chartObject = { name: 'Test Chart', icon: '' }
+    const fileContent = YAML.stringify(chartObject)
+    ;(fsExtra.readFile as jest.Mock).mockResolvedValue(fileContent)
+    const fakePath = '/tmp/test/Chart.yaml'
+    const newIcon = 'https://example.com/new-icon.png'
+    const expectedObject = { name: 'Test Chart', icon: newIcon }
+    const expectedContent = YAML.stringify(expectedObject)
+    await updateChartIconInYaml(fakePath, newIcon)
+
+    expect(fsExtra.readFile).toHaveBeenCalledWith(fakePath, 'utf-8')
+    expect(fsPromises.writeFile).toHaveBeenCalledWith(fakePath, expectedContent, 'utf-8')
+  })
+})
+
+// ----------------------------------------------------------------
+// Tests for updateRbacForNewChart
+describe('updateRbacForNewChart', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  test('updates rbac.yaml with new chart key when allowTeams is true', async () => {
+    const rbacObject = { rbac: {}, betaCharts: [] }
+    const fileContent = YAML.stringify(rbacObject)
+    ;(fsExtra.readFile as jest.Mock).mockResolvedValue(fileContent)
+    const fakeSparsePath = '/tmp/test'
+    const chartKey = 'quickstart-cassandra'
+
+    await updateRbacForNewChart(fakeSparsePath, chartKey, true)
+
+    const expected = { rbac: { [chartKey]: null }, betaCharts: [] }
+    expect(fsPromises.writeFile).toHaveBeenCalledWith(`${fakeSparsePath}/rbac.yaml`, YAML.stringify(expected), 'utf-8')
+  })
+
+  test('updates rbac.yaml with new chart key when allowTeams is false', async () => {
+    const rbacObject = { rbac: {}, betaCharts: [] }
+    const fileContent = YAML.stringify(rbacObject)
+    ;(fsExtra.readFile as jest.Mock).mockResolvedValue(fileContent)
+    const fakeSparsePath = '/tmp/test'
+    const chartKey = 'quickstart-cassandra'
+
+    await updateRbacForNewChart(fakeSparsePath, chartKey, false)
+
+    const expected = { rbac: { [chartKey]: [] }, betaCharts: [] }
+    expect(fsPromises.writeFile).toHaveBeenCalledWith(`${fakeSparsePath}/rbac.yaml`, YAML.stringify(expected), 'utf-8')
+  })
+})
+
+// ----------------------------------------------------------------
+// Tests for sparseCloneChart
+describe('sparseCloneChart', () => {
+  const fakeSparsePath = '/tmp/test'
+  const fakeHelmCatalogUrl = 'https://gitea.example.com/otomi/charts.git'
+  const fakeUser = 'TestUser'
+  const fakeEmail = 'test@example.com'
+  const fakeChartName = 'cassandra'
+  const fakeChartPath = 'bitnami/cassandra'
+  const fakeRevision = 'main'
+  const fakeChartIcon = 'https://example.com/icon.png'
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  test('sparseCloneChart returns true on successful clone and push', async () => {
+    // Arrange: simulate a successful run
+    const mockGit: Partial<SimpleGit> = {
+      env: jest.fn(),
+      clone: jest.fn().mockResolvedValueOnce('success'),
+      cwd: jest.fn().mockResolvedValueOnce('success'),
+      raw: jest.fn().mockResolvedValueOnce('success'),
+      checkout: jest.fn().mockResolvedValueOnce('success'),
+      push: jest.fn().mockResolvedValueOnce('success'),
+      addConfig: jest.fn().mockResolvedValueOnce('success'),
+      add: jest.fn().mockResolvedValueOnce('success'),
+      pull: jest.fn().mockResolvedValueOnce('success'),
+      init: jest.fn().mockResolvedValueOnce('success'),
+      addRemote: jest.fn().mockResolvedValueOnce('success'),
+      commit: jest.fn().mockResolvedValueOnce('success'),
+    }
+
+    ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+    const result = await sparseCloneChart(
+      'https://github.com/bitnami/charts.git',
+      fakeHelmCatalogUrl,
+      fakeUser,
+      fakeEmail,
+      fakeChartName,
+      fakeChartPath,
+      fakeSparsePath,
+      fakeRevision,
+      fakeChartIcon,
+      true,
+    )
+
+    expect(result).toBe(true)
+    // Assert that renameSync was called to move the chart folder.
+    expect(fsExtra.renameSync).toHaveBeenCalled()
+    // And that the simpleGit clone and push methods were called.
+    expect(mockGit.clone).toHaveBeenCalled()
+    expect(mockGit.push).toHaveBeenCalled()
+  })
+
+  test('sparseCloneChart returns false when an error occurs', async () => {
+    // Arrange: simulate an error in the cloning process.
+    const mockGit: Partial<SimpleGit> = {
+      env: jest.fn(),
+      clone: jest.fn().mockRejectedValueOnce(new Error('Clone failed')),
+      push: jest.fn().mockResolvedValueOnce('success'),
+    }
+
+    ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+
+    let result: boolean | undefined
+    try {
+      result = await sparseCloneChart(
+        'https://github.com/bitnami/charts.git',
+        fakeHelmCatalogUrl,
+        fakeUser,
+        fakeEmail,
+        fakeChartName,
+        fakeChartPath,
+        fakeSparsePath,
+        fakeRevision,
+        fakeChartIcon,
+        true,
+      )
+    } catch (error) {
+      result = false
+    }
+    expect(result).toBe(false)
+  })
+})
