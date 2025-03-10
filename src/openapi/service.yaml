@@ -73,6 +73,7 @@ Service:
     ingress:
       title: Exposure (ingress)
       description: Determines loadbalancer related configuration for handling the service ingress.
+      $ref: '#/Ingress'
       # Note: the order matters first schema must be nullable empty object
 
   required:
