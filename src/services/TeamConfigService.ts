@@ -9,6 +9,8 @@ import {
   AplRequestObject,
   AplResourceKind,
   AplResponseObject,
+  AplServiceRequest,
+  AplServiceResponse,
   AplWorkloadRequest,
   AplWorkloadResponse,
   App,
@@ -250,7 +252,7 @@ export class TeamConfigService {
   }
 
   public getWorkloads(): Workload[] {
-    return this.getAplWorkloads().map((workloads) => this.getV1Object(workloads) as Workload)
+    return this.getAplWorkloads().map((workload) => this.getV1Object(workload) as Workload)
   }
 
   public getAplWorkloads(): AplWorkloadResponse[] {
@@ -304,17 +306,28 @@ export class TeamConfigService {
   // =====================================
 
   public createService(service: Service): Service {
-    this.teamConfig.services ??= []
-    const newService = { ...service, id: service.id ?? uuidv4() }
-    if (find(this.teamConfig.services, { name: newService.name })) {
-      throw new AlreadyExists(`Service[${newService.name}] already exists.`)
+    const newService = this.createAplService(this.getAplObject('AplTeamService', service) as AplServiceRequest)
+    return this.getV1Object(newService) as Service
+  }
+
+  public createAplService(service: AplServiceRequest): AplServiceResponse {
+    const { name } = service.metadata
+    if (find(this.teamConfig.services, (item) => item.metadata.name === name)) {
+      throw new AlreadyExists(`Service[${name}] already exists.`)
     }
+
+    const newService = this.createAplObject(name, service) as AplServiceResponse
     this.teamConfig.services.push(newService)
     return newService
   }
 
   public getService(name: string): Service {
-    const service = find(this.teamConfig.services, { name })
+    const service = this.getAplService(name)
+    return this.getV1Object(service) as Service
+  }
+
+  public getAplService(name: string): AplServiceResponse {
+    const service = find(this.teamConfig.services, (item) => item.metadata.name === name)
     if (!service) {
       throw new NotExistError(`Service[${name}] does not exist.`)
     }
@@ -322,21 +335,27 @@ export class TeamConfigService {
   }
 
   public getServices(): Service[] {
-    const teamId = this.teamConfig.settings?.id
-    return (this.teamConfig.services ?? []).map((service) => ({
-      ...service,
-      teamId,
-    }))
+    return this.getAplServices().map((service) => this.getV1Object(service) as Service)
+  }
+
+  public getAplServices(): AplServiceResponse[] {
+    return this.teamConfig.services ?? []
   }
 
   public updateService(name: string, updates: Partial<Service>): Service {
-    const service = find(this.teamConfig.services, { name })
-    if (!service) throw new NotExistError(`Service[${name}] does not exist.`)
-    return merge(service, updates)
+    const mergeObj = this.getV1MergeObject(updates) as Partial<AplServiceRequest>
+    const mergedService = this.updateAplService(name, mergeObj)
+    return this.getV1Object(mergedService) as Service
+  }
+
+  public updateAplService(name: string, updates: Partial<AplServiceRequest>): AplServiceResponse {
+    const service = this.getAplService(name)
+    const mergeObj = this.getAplMergeObject(updates)
+    return merge(service, mergeObj)
   }
 
   public deleteService(name: string): void {
-    remove(this.teamConfig.services, { name })
+    remove(this.teamConfig.services, (item) => item.metadata.name === name)
   }
 
   // =====================================
@@ -573,7 +592,7 @@ export class TeamConfigService {
     return (
       (this.teamConfig.builds && this.teamConfig.builds.some((build) => build.metadata.name === name)) ||
       (this.teamConfig.workloads && this.teamConfig.workloads.some((workload) => workload.metadata.name === name)) ||
-      (this.teamConfig.services && this.teamConfig.services.some((service) => service.name === name))
+      (this.teamConfig.services && this.teamConfig.services.some((service) => service.metadata.name === name))
     )
   }
 

@@ -59,10 +59,10 @@ export type Oidc = Settings['oidc']
 export type Otomi = Settings['otomi']
 export type Versions = Settings['versions']
 
-export type AplRequestObject = AplBuildRequest | AplCodeRepoRequest | AplWorkloadRequest
-export type AplResponseObject = AplBuildResponse | AplCodeRepoResponse | AplWorkloadResponse
-export type AplResourceKind = 'AplTeamBuild' | 'AplTeamCodeRepo' | 'AplTeamWorkload'
-export type V1ApiObject = Build | CodeRepo | Workload
+export type AplRequestObject = AplBuildRequest | AplCodeRepoRequest | AplWorkloadRequest | AplServiceRequest
+export type AplResponseObject = AplBuildResponse | AplCodeRepoResponse | AplWorkloadResponse | AplServiceResponse
+export type AplResourceKind = 'AplTeamBuild' | 'AplTeamCodeRepo' | 'AplTeamWorkload' | 'AplTeamService'
+export type V1ApiObject = Build | CodeRepo | Workload | Service
 
 export interface OpenApiRequest extends Request {
   operationDoc: {
@@ -197,7 +197,7 @@ export interface TeamConfig {
   policies: Policies
   projects: Project[]
   sealedsecrets: SealedSecret[]
-  services: Service[]
+  services: AplServiceResponse[]
   settings: Team
   workloads: AplWorkloadResponse[]
 }
