@@ -135,7 +135,6 @@ export class RepoService {
       settings: {} as Team,
       apps: [],
       policies: {} as Policies,
-      workloadValues: [],
     }
   }
 
@@ -172,6 +171,7 @@ export class RepoService {
   public getIngress(): Ingress {
     return this.repo.ingress
   }
+
   public getOtomi(): Otomi {
     return this.repo.otomi
   }
@@ -227,27 +227,15 @@ export class RepoService {
   }
 
   public getAllNetpols(): Netpol[] {
-    return (
-      Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.netpols?.map((netpol) => ({ ...netpol, teamId })))
-        .filter(Boolean) ?? []
-    )
+    return Object.keys(this.repo.teamConfig).flatMap((teamId) => this.getTeamConfigService(teamId).getNetpols())
   }
 
   public getAllProjects(): Project[] {
-    return (
-      Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.projects?.map((project) => ({ ...project, teamId })))
-        .filter(Boolean) ?? []
-    )
+    return Object.keys(this.repo.teamConfig).flatMap((teamId) => this.getTeamConfigService(teamId).getProjects())
   }
 
   public getAllBuilds(): Build[] {
-    return (
-      Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.builds?.map((build) => ({ ...build, teamId })))
-        .filter(Boolean) ?? []
-    )
+    return Object.keys(this.repo.teamConfig).flatMap((teamId) => this.getTeamConfigService(teamId).getBuilds())
   }
 
   public getAllPolicies(): Record<string, Policies> {
@@ -255,43 +243,23 @@ export class RepoService {
   }
 
   public getAllWorkloads(): Workload[] {
-    return (
-      Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.workloads?.map((workload) => ({ ...workload, teamId })))
-        .filter(Boolean) ?? []
-    )
+    return Object.keys(this.repo.teamConfig).flatMap((teamId) => this.getTeamConfigService(teamId).getWorkloads())
   }
 
   public getAllServices(): Service[] {
-    return (
-      Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.services?.map((service) => ({ ...service, teamId })))
-        .filter(Boolean) ?? []
-    )
+    return Object.keys(this.repo.teamConfig).flatMap((teamId) => this.getTeamConfigService(teamId).getServices())
   }
 
   public getAllSealedSecrets(): SealedSecret[] {
-    return (
-      Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.sealedsecrets?.map((secret) => ({ ...secret, teamId })))
-        .filter(Boolean) ?? []
-    )
+    return Object.keys(this.repo.teamConfig).flatMap((teamId) => this.getTeamConfigService(teamId).getSealedSecrets())
   }
 
   public getAllBackups(): Backup[] {
-    return (
-      Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.backups?.map((backup) => ({ ...backup, teamId })))
-        .filter(Boolean) ?? []
-    )
+    return Object.keys(this.repo.teamConfig).flatMap((teamId) => this.getTeamConfigService(teamId).getBackups())
   }
 
   public getAllCodeRepos(): CodeRepo[] {
-    return (
-      Object.entries(this.repo.teamConfig)
-        .flatMap(([teamId, config]) => config.codeRepos?.map((repo) => ({ ...repo, teamId })))
-        .filter(Boolean) ?? []
-    )
+    return Object.keys(this.repo.teamConfig).flatMap((teamId) => this.getTeamConfigService(teamId).getCodeRepos())
   }
 
   /** Retrieve a collection dynamically from the Repo */

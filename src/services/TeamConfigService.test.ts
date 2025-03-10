@@ -345,8 +345,22 @@ describe('TeamConfigService', () => {
 
   describe('getCollection', () => {
     test('should retrieve an existing collection', () => {
+      service.getSettings().id = 'team-id'
       service.createBuild({ name: 'TestBuild' })
-      expect(service.getCollection('builds')).toEqual([{ name: 'TestBuild', id: expect.any(String) }])
+      expect(service.getCollection('builds')).toEqual([
+        {
+          kind: 'AplTeamBuild',
+          metadata: {
+            name: 'TestBuild',
+            labels: {
+              'apl.io/id': expect.any(String),
+              'apl.io/teamId': 'team-id',
+            },
+          },
+          spec: {},
+          status: {},
+        },
+      ])
     })
 
     test('should throw an error when trying to retrieve a non-existent collection', () => {

@@ -3,16 +3,23 @@ import { JSONSchema4 } from 'json-schema'
 import { components, external, operations, paths } from 'src/generated-schema'
 import OtomiStack from 'src/otomi-stack'
 
+export type ResourceTeamMetadata = components['schemas']['aplResourceTeamMetadata']
 export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
 export type Backup = components['schemas']['Backup']
 export type Kubecfg = components['schemas']['Kubecfg']
 export type K8sService = components['schemas']['K8sService']
 export type Netpol = components['schemas']['Netpol']
+export type AplNetpolRequest = components['schemas']['AplNetpolRequest']
+export type AplNetpolResponse = components['schemas']['AplNetpolResponse']
 export type SealedSecret = components['schemas']['SealedSecret'] & { teamId?: string }
+export type AplSecretRequest = components['schemas']['AplSecretRequest']
+export type AplSecretResponse = components['schemas']['AplSecretResponse']
 export type SealedSecretsKeys = components['schemas']['SealedSecretsKeys']
 export type K8sSecret = components['schemas']['K8sSecret']
 export type Service = components['schemas']['Service']
+export type AplServiceRequest = components['schemas']['AplServiceRequest']
+export type AplServiceResponse = components['schemas']['AplServiceResponse']
 export type Session = components['schemas']['Session']
 export type ObjWizard = components['schemas']['ObjWizard']
 export type Settings = components['schemas']['Settings']
@@ -25,10 +32,18 @@ export type SessionUser = components['schemas']['SessionUser']
 export type UserAuthz = components['schemas']['SessionUser']['authz']
 export type Workload = components['schemas']['Workload']
 export type WorkloadValues = components['schemas']['WorkloadValues']
+export type AplWorkloadRequest = components['schemas']['AplWorkloadRequest']
+export type AplWorkloadResponse = components['schemas']['AplWorkloadResponse']
 export type User = components['schemas']['User']
 export type Project = components['schemas']['Project']
+export type AplProjectRequest = components['schemas']['AplProjectRequest']
+export type AplProjectResponse = components['schemas']['AplProjectResponse']
 export type CodeRepo = components['schemas']['CodeRepo']
+export type AplCodeRepoRequest = components['schemas']['AplCodeRepoRequest']
+export type AplCodeRepoResponse = components['schemas']['AplCodeRepoResponse']
 export type Build = components['schemas']['Build']
+export type AplBuildRequest = components['schemas']['AplBuildRequest']
+export type AplBuildResponse = components['schemas']['AplBuildResponse']
 export type Policy = components['schemas']['Policy']
 export type Policies = components['schemas']['Policies']
 export type Cloudtty = components['schemas']['Cloudtty']
@@ -43,6 +58,11 @@ export type Kms = Settings['kms']
 export type Oidc = Settings['oidc']
 export type Otomi = Settings['otomi']
 export type Versions = Settings['versions']
+
+export type AplRequestObject = AplBuildRequest | AplCodeRepoRequest | AplWorkloadRequest
+export type AplResponseObject = AplBuildResponse | AplCodeRepoResponse | AplWorkloadResponse
+export type AplResourceKind = 'AplTeamBuild' | 'AplTeamCodeRepo' | 'AplTeamWorkload'
+export type V1ApiObject = Build | CodeRepo | Workload
 
 export interface OpenApiRequest extends Request {
   operationDoc: {
@@ -93,6 +113,7 @@ export interface PermissionSchema {
     }
   }
 }
+
 export interface Schema extends JSONSchema4 {
   'x-acl'?: Acl
   nullable?: boolean
@@ -170,14 +191,13 @@ export interface Repo {
 export interface TeamConfig {
   apps: App[]
   backups: Backup[]
-  builds: Build[]
-  codeRepos: CodeRepo[]
+  builds: AplBuildResponse[]
+  codeRepos: AplCodeRepoResponse[]
   netpols: Netpol[]
   policies: Policies
   projects: Project[]
   sealedsecrets: SealedSecret[]
   services: Service[]
   settings: Team
-  workloads: Workload[]
-  workloadValues: WorkloadValues[]
+  workloads: AplWorkloadResponse[]
 }
