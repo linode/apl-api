@@ -26,8 +26,8 @@ Service:
           - read-any
           - update-any
           - delete-any
-        teamAdmin: []
-        teamMember: []
+        teamAdmin: [ ]
+        teamMember: [ ]
     port:
       type: integer
       minimum: 1
