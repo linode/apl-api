@@ -125,7 +125,7 @@ Ingress:
       title: URL paths
       type: array
       items:
-        $ref: definitions.yaml#/path
+        $ref: definitions.yaml#/servicePath
     forwardPath:
       description: Forward the URL path into the service (don't rewrite to /).
       title: Forward path

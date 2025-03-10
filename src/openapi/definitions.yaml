@@ -913,6 +913,10 @@ path:
   description: An absolute path
   type: string
   pattern: '^[/].*$'
+servicePath:
+  description: An absolute path
+  type: string
+  pattern: '^(?![/]).*'
 podSecurityContext:
   properties:
     runAsUser:
