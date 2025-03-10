@@ -10,7 +10,16 @@ import jsonpath from 'jsonpath'
 import { cloneDeep, get, isEmpty, merge, set, unset } from 'lodash'
 import { basename, dirname, join } from 'path'
 import simpleGit, { CheckRepoActions, CleanOptions, CommitResult, ResetMode, SimpleGit } from 'simple-git'
-import { cleanEnv, GIT_BRANCH, GIT_LOCAL_PATH, GIT_PASSWORD, GIT_REPO_URL, GIT_USER, TOOLS_HOST } from 'src/validators'
+import {
+  cleanEnv,
+  GIT_BRANCH,
+  GIT_LOCAL_PATH,
+  GIT_PASSWORD,
+  GIT_PUSH_RETRIES,
+  GIT_REPO_URL,
+  GIT_USER,
+  TOOLS_HOST,
+} from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { BASEURL } from './constants'
 import { GitPullError, HttpError, ValidationError } from './error'
@@ -27,6 +36,7 @@ const env = cleanEnv({
   GIT_PASSWORD,
   GIT_REPO_URL,
   GIT_USER,
+  GIT_PUSH_RETRIES,
   TOOLS_HOST,
 })
 
@@ -438,17 +448,18 @@ export class Git {
       // we are in a unique developer branch, so we can pull, push, and merge
       // with the remote root, which might have been modified by another developer
       // since this is a child branch, we don't need to re-init
-      // retry up to 3 times to pull and push if there are conflicts
-      const skipInit = true
-      const retries = 3
+      // retry up to 10 times to pull and push if there are conflicts
+      const retries = env.GIT_PUSH_RETRIES
       for (let attempt = 1; attempt <= retries; attempt++) {
+        // await this.pull(skipInit)
+        await this.git.pull(this.remote, this.branch, { '--rebase': 'true', '--depth': '5' })
         try {
-          await this.pull(skipInit)
           await this.push()
           break
         } catch (error) {
           if (attempt === retries) throw error
           debug(`Attempt ${attempt} failed. Retrying...`)
+          await new Promise((resolve) => setTimeout(resolve, 50))
         }
       }
     } catch (e) {
