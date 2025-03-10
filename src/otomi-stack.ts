@@ -249,7 +249,7 @@ export default class OtomiStack {
     }
   }
 
-  async initGit(): Promise<void> {
+  async initGit(inflateValues = true): Promise<void> {
     await this.init()
     // every editor gets their own folder to detect conflicts upon deploy
     const path = this.getRepoPath()
@@ -271,7 +271,9 @@ export default class OtomiStack {
       await new Promise((resolve) => setTimeout(resolve, timeoutMs))
     }
 
-    await this.loadValues()
+    if (inflateValues) {
+      await this.loadValues()
+    }
     debug(`Values are loaded for ${this.editor} in ${this.sessionId}`)
   }
 
@@ -1434,7 +1436,14 @@ export default class OtomiStack {
     await this.doTeamDeployment(
       teamId,
       (teamService) => {
-        teamService.updateWorkloadValues(name, workloadValues)
+        try {
+          teamService.createWorkloadValues({ ...data, name })
+        } catch (error) {
+          if (error.code === 409) {
+            debug('Workload values already exists, updating values')
+            teamService.updateWorkloadValues(name, data)
+          }
+        }
       },
       false,
     )
@@ -2057,7 +2066,7 @@ export default class OtomiStack {
   }
 
   async saveTeamWorkloadValues(teamId: string, workloadValues: WorkloadValues): Promise<void> {
-    debug(`Saving workload values: ${workloadValues.id!} teamId: ${teamId} name: ${workloadValues.name}`)
+    debug(`Saving workload values teamId: ${teamId} name: ${workloadValues.name}`)
     const data = this.getWorkloadValues(teamId, workloadValues.name!)
     const updatedWorkloadValues = cloneDeep(data) as Record<string, any>
     updatedWorkloadValues.values = stringifyYaml(data.values, undefined, 4)
