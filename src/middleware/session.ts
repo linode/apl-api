@@ -4,6 +4,7 @@ import { RequestHandler } from 'express'
 import 'express-async-errors'
 import { remove } from 'fs-extra'
 import http from 'http'
+import { cloneDeep } from 'lodash'
 import { join } from 'path'
 import { Server } from 'socket.io'
 import { ApiNotReadyError } from 'src/error'
@@ -11,7 +12,6 @@ import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
 import { cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validators'
 import { v4 as uuidv4 } from 'uuid'
-import cloneDeep from 'lodash/cloneDeep'
 
 const debug = Debug('otomi:session')
 const env = cleanEnv({
