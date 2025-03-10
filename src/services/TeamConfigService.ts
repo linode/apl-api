@@ -2,13 +2,21 @@ import { find, has, merge, omit, pick, remove, set } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
 import { AlreadyExists, NotExistError } from '../error'
 import {
+  AplBackupRequest,
+  AplBackupResponse,
   AplBuildRequest,
   AplBuildResponse,
   AplCodeRepoRequest,
   AplCodeRepoResponse,
+  AplNetpolRequest,
+  AplNetpolResponse,
+  AplProjectRequest,
+  AplProjectResponse,
   AplRequestObject,
   AplResourceKind,
   AplResponseObject,
+  AplSecretRequest,
+  AplSecretResponse,
   AplServiceRequest,
   AplServiceResponse,
   AplWorkloadRequest,
@@ -297,8 +305,8 @@ export class TeamConfigService {
   }
 
   public deleteWorkloadValues(name: string): void {
-    // TODO: remove function
-    // remove(this.teamConfig.workloadValues, { name })
+    const workload = this.getAplWorkload(name)
+    workload.spec.values = {}
   }
 
   // =====================================
@@ -363,39 +371,56 @@ export class TeamConfigService {
   // =====================================
 
   public createSealedSecret(secret: SealedSecret): SealedSecret {
-    this.teamConfig.sealedsecrets ??= []
-    const newSecret = { ...secret, id: secret.id ?? uuidv4() }
-    if (find(this.teamConfig.sealedsecrets, { name: newSecret.name })) {
-      throw new AlreadyExists(`SealedSecret[${newSecret.name}] already exists.`)
+    const newSecret = this.createAplSecret(this.getAplObject('AplTeamSecret', secret) as AplSecretRequest)
+    return this.getV1Object(newSecret) as SealedSecret
+  }
+
+  public createAplSecret(secret: AplSecretRequest): AplSecretResponse {
+    const { name } = secret.metadata
+    if (find(this.teamConfig.sealedsecrets, (item) => item.metadata.name === name)) {
+      throw new AlreadyExists(`SealedSecret[${name}] already exists.`)
     }
+
+    const newSecret = this.createAplObject(name, secret) as AplSecretResponse
     this.teamConfig.sealedsecrets.push(newSecret)
     return newSecret
   }
 
   public getSealedSecret(name: string): SealedSecret {
-    const sealedSecrets = find(this.teamConfig.sealedsecrets, { name })
-    if (!sealedSecrets) {
+    const secret = this.getAplSecret(name)
+    return this.getV1Object(secret) as SealedSecret
+  }
+
+  public getAplSecret(name: string): AplSecretResponse {
+    const secret = find(this.teamConfig.sealedsecrets, (item) => item.metadata.name === name)
+    if (!secret) {
       throw new NotExistError(`SealedSecret[${name}] does not exist.`)
     }
-    return sealedSecrets
+    return secret
   }
 
   public getSealedSecrets(): SealedSecret[] {
-    const teamId = this.teamConfig.settings?.id
-    return (this.teamConfig.sealedsecrets ?? []).map((sealedSecret) => ({
-      ...sealedSecret,
-      teamId,
-    }))
+    return this.getAplSecrets().map((secret) => this.getV1Object(secret) as SealedSecret)
+  }
+
+  public getAplSecrets(): AplSecretResponse[] {
+    return this.teamConfig.sealedsecrets ?? []
   }
 
   public updateSealedSecret(name: string, updates: Partial<SealedSecret>): SealedSecret {
-    const secret = find(this.teamConfig.sealedsecrets, { name })
-    if (!secret) throw new NotExistError(`SealedSecret[${name}] does not exist.`)
-    return merge(secret, updates)
+    const mergeObj = this.getV1MergeObject(updates) as Partial<AplSecretRequest>
+    const mergedSecret = this.updateAplSecret(name, mergeObj)
+    return this.getV1Object(mergedSecret) as SealedSecret
+  }
+
+  public updateAplSecret(name: string, updates: Partial<AplSecretRequest>): AplSecretResponse {
+    const secret = this.getAplSecret(name)
+    const mergeObj = this.getAplMergeObject(updates)
+    return merge(secret, mergeObj)
   }
 
   public deleteSealedSecret(name: string): void {
-    remove(this.teamConfig.sealedsecrets, { name })
+    remove(this.teamConfig.sealedsecrets, (item) => item.metadata.name === name)
   }
 
   // =====================================
@@ -403,17 +428,28 @@ export class TeamConfigService {
   // =====================================
 
   public createBackup(backup: Backup): Backup {
-    this.teamConfig.backups ??= []
-    const newBackup = { ...backup, id: backup.id ?? uuidv4() }
-    if (find(this.teamConfig.backups, { name: newBackup.name })) {
-      throw new AlreadyExists(`Backup[${newBackup.name}] already exists.`)
+    const newBackup = this.createAplBackup(this.getAplObject('AplTeamBackup', backup) as AplBackupRequest)
+    return this.getV1Object(newBackup) as Backup
+  }
+
+  public createAplBackup(backup: AplBackupRequest): AplBackupResponse {
+    const { name } = backup.metadata
+    if (find(this.teamConfig.backups, (item) => item.metadata.name === name)) {
+      throw new AlreadyExists(`Backup[${name}] already exists.`)
     }
+
+    const newBackup = this.createAplObject(name, backup) as AplBackupResponse
     this.teamConfig.backups.push(newBackup)
     return newBackup
   }
 
   public getBackup(name: string): Backup {
-    const backup = find(this.teamConfig.backups, { name })
+    const backup = this.getAplBackup(name)
+    return this.getV1Object(backup) as Backup
+  }
+
+  public getAplBackup(name: string): AplBackupResponse {
+    const backup = find(this.teamConfig.backups, (item) => item.metadata.name === name)
     if (!backup) {
       throw new NotExistError(`Backup[${name}] does not exist.`)
     }
@@ -421,21 +457,27 @@ export class TeamConfigService {
   }
 
   public getBackups(): Backup[] {
-    const teamId = this.teamConfig.settings?.id
-    return (this.teamConfig.backups ?? []).map((backup) => ({
-      ...backup,
-      teamId,
-    }))
+    return this.getAplBackups().map((backup) => this.getV1Object(backup) as Backup)
+  }
+
+  public getAplBackups(): AplBackupResponse[] {
+    return this.teamConfig.backups ?? []
   }
 
   public updateBackup(name: string, updates: Partial<Backup>): Backup {
-    const backup = find(this.teamConfig.backups, { name })
-    if (!backup) throw new NotExistError(`Backup[${name}] does not exist.`)
-    return merge(backup, updates)
+    const mergeObj = this.getV1MergeObject(updates) as Partial<AplBackupRequest>
+    const mergedBackup = this.updateAplBackup(name, mergeObj)
+    return this.getV1Object(mergedBackup) as Backup
+  }
+
+  public updateAplBackup(name: string, updates: Partial<AplBackupRequest>): AplBackupResponse {
+    const backup = this.getAplBackup(name)
+    const mergeObj = this.getAplMergeObject(updates)
+    return merge(backup, mergeObj)
   }
 
   public deleteBackup(name: string): void {
-    remove(this.teamConfig.backups, { name })
+    remove(this.teamConfig.backups, (item) => item.metadata.name === name)
   }
 
   // =====================================
@@ -443,17 +485,28 @@ export class TeamConfigService {
   // =====================================
 
   public createProject(project: Project): Project {
-    this.teamConfig.projects ??= []
-    const newProject = { ...project, id: project.id ?? uuidv4() }
-    if (find(this.teamConfig.projects, { name: newProject.name })) {
-      throw new AlreadyExists(`Project[${newProject.name}] already exists.`)
+    const newProject = this.createAplProject(this.getAplObject('AplTeamProject', project) as AplProjectRequest)
+    return this.getV1Object(newProject) as Project
+  }
+
+  public createAplProject(project: AplProjectRequest): AplProjectResponse {
+    const { name } = project.metadata
+    if (find(this.teamConfig.projects, (item) => item.metadata.name === name)) {
+      throw new AlreadyExists(`Project[${name}] already exists.`)
     }
+
+    const newProject = this.createAplObject(name, project) as AplProjectResponse
     this.teamConfig.projects.push(newProject)
     return newProject
   }
 
   public getProject(name: string): Project {
-    const project = find(this.teamConfig.projects, { name })
+    const project = this.getAplProject(name)
+    return this.getV1Object(project) as Project
+  }
+
+  public getAplProject(name: string): AplProjectResponse {
+    const project = find(this.teamConfig.projects, (item) => item.metadata.name === name)
     if (!project) {
       throw new NotExistError(`Project[${name}] does not exist.`)
     }
@@ -461,21 +514,27 @@ export class TeamConfigService {
   }
 
   public getProjects(): Project[] {
-    const teamId = this.teamConfig.settings?.id
-    return (this.teamConfig.projects ?? []).map((project) => ({
-      ...project,
-      teamId,
-    }))
+    return this.getAplProjects().map((project) => this.getV1Object(project) as Project)
+  }
+
+  public getAplProjects(): AplProjectResponse[] {
+    return this.teamConfig.projects ?? []
   }
 
   public updateProject(name: string, updates: Partial<Project>): Project {
-    const project = find(this.teamConfig.projects, { name })
-    if (!project) throw new NotExistError(`Project[${name}] does not exist.`)
-    return merge(project, updates)
+    const mergeObj = this.getV1MergeObject(updates) as Partial<AplProjectRequest>
+    const mergedProject = this.updateAplProject(name, mergeObj)
+    return this.getV1Object(mergedProject) as Project
+  }
+
+  public updateAplProject(name: string, updates: Partial<AplProjectRequest>): AplProjectResponse {
+    const project = this.getAplProject(name)
+    const mergeObj = this.getAplMergeObject(updates)
+    return merge(project, mergeObj)
   }
 
   public deleteProject(name: string): void {
-    remove(this.teamConfig.projects, { name })
+    remove(this.teamConfig.projects, (item) => item.metadata.name === name)
   }
 
   // =====================================
@@ -483,17 +542,28 @@ export class TeamConfigService {
   // =====================================
 
   public createNetpol(netpol: Netpol): Netpol {
-    this.teamConfig.netpols ??= []
-    const newNetpol = { ...netpol, id: netpol.id ?? uuidv4() }
-    if (find(this.teamConfig.netpols, { name: newNetpol.name })) {
-      throw new AlreadyExists(`Netpol[${newNetpol.name}] already exists.`)
+    const newNetpol = this.createAplNetpol(this.getAplObject('AplTeamNetpol', netpol) as AplNetpolRequest)
+    return this.getV1Object(newNetpol) as Netpol
+  }
+
+  public createAplNetpol(netpol: AplNetpolRequest): AplNetpolResponse {
+    const { name } = netpol.metadata
+    if (find(this.teamConfig.netpols, (item) => item.metadata.name === name)) {
+      throw new AlreadyExists(`Netpol[${name}] already exists.`)
     }
+
+    const newNetpol = this.createAplObject(name, netpol) as AplNetpolResponse
     this.teamConfig.netpols.push(newNetpol)
     return newNetpol
   }
 
   public getNetpol(name: string): Netpol {
-    const netpol = find(this.teamConfig.netpols, { name })
+    const netpol = this.getAplNetpol(name)
+    return this.getV1Object(netpol) as Project
+  }
+
+  public getAplNetpol(name: string): AplNetpolResponse {
+    const netpol = find(this.teamConfig.netpols, (item) => item.metadata.name === name)
     if (!netpol) {
       throw new NotExistError(`Netpol[${name}] does not exist.`)
     }
@@ -501,23 +571,27 @@ export class TeamConfigService {
   }
 
   public getNetpols(): Netpol[] {
-    const teamId = this.teamConfig.settings?.id
-    return (this.teamConfig.netpols ?? []).map((netpol) => ({
-      ...netpol,
-      teamId,
-    }))
+    return this.getAplNetpols().map((netpol) => this.getV1Object(netpol) as Netpol)
+  }
+
+  public getAplNetpols(): AplNetpolResponse[] {
+    return this.teamConfig.netpols ?? []
   }
 
   public updateNetpol(name: string, updates: Partial<Netpol>): Netpol {
-    const netpol = find(this.teamConfig.netpols, { name })
-    if (!netpol) {
-      throw new NotExistError(`Netpol[${name}] does not exist.`)
-    }
-    return merge(netpol, updates)
+    const mergeObj = this.getV1MergeObject(updates) as Partial<AplNetpolRequest>
+    const mergedNetpol = this.updateAplNetpol(name, mergeObj)
+    return this.getV1Object(mergedNetpol) as Netpol
+  }
+
+  public updateAplNetpol(name: string, updates: Partial<AplNetpolRequest>): AplNetpolResponse {
+    const netpol = this.getAplNetpol(name)
+    const mergeObj = this.getAplMergeObject(updates)
+    return merge(netpol, mergeObj)
   }
 
   public deleteNetpol(name: string): void {
-    remove(this.teamConfig.netpols, { name })
+    remove(this.teamConfig.netpols, (item) => item.metadata.name === name)
   }
 
   // =====================================

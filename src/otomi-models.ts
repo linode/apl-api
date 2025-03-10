@@ -7,6 +7,8 @@ export type ResourceTeamMetadata = components['schemas']['aplResourceTeamMetadat
 export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
 export type Backup = components['schemas']['Backup']
+export type AplBackupRequest = components['schemas']['AplBackupRequest']
+export type AplBackupResponse = components['schemas']['AplBackupResponse']
 export type Kubecfg = components['schemas']['Kubecfg']
 export type K8sService = components['schemas']['K8sService']
 export type Netpol = components['schemas']['Netpol']
@@ -59,10 +61,34 @@ export type Oidc = Settings['oidc']
 export type Otomi = Settings['otomi']
 export type Versions = Settings['versions']
 
-export type AplRequestObject = AplBuildRequest | AplCodeRepoRequest | AplWorkloadRequest | AplServiceRequest
-export type AplResponseObject = AplBuildResponse | AplCodeRepoResponse | AplWorkloadResponse | AplServiceResponse
-export type AplResourceKind = 'AplTeamBuild' | 'AplTeamCodeRepo' | 'AplTeamWorkload' | 'AplTeamService'
-export type V1ApiObject = Build | CodeRepo | Workload | Service
+export type AplRequestObject =
+  | AplBackupRequest
+  | AplBuildRequest
+  | AplCodeRepoRequest
+  | AplNetpolRequest
+  | AplProjectRequest
+  | AplSecretRequest
+  | AplServiceRequest
+  | AplWorkloadRequest
+export type AplResponseObject =
+  | AplBackupResponse
+  | AplBuildResponse
+  | AplCodeRepoResponse
+  | AplNetpolResponse
+  | AplProjectResponse
+  | AplSecretResponse
+  | AplServiceResponse
+  | AplWorkloadResponse
+export type AplResourceKind =
+  | 'AplTeamBackup'
+  | 'AplTeamBuild'
+  | 'AplTeamCodeRepo'
+  | 'AplTeamNetpol'
+  | 'AplTeamProject'
+  | 'AplTeamSecret'
+  | 'AplTeamService'
+  | 'AplTeamWorkload'
+export type V1ApiObject = Build | CodeRepo | Netpol | Project | SealedSecret | Service | Workload
 
 export interface OpenApiRequest extends Request {
   operationDoc: {
@@ -190,13 +216,13 @@ export interface Repo {
 
 export interface TeamConfig {
   apps: App[]
-  backups: Backup[]
+  backups: AplBackupResponse[]
   builds: AplBuildResponse[]
   codeRepos: AplCodeRepoResponse[]
-  netpols: Netpol[]
+  netpols: AplNetpolResponse[]
   policies: Policies
-  projects: Project[]
-  sealedsecrets: SealedSecret[]
+  projects: AplProjectResponse[]
+  sealedsecrets: AplSecretResponse[]
   services: AplServiceResponse[]
   settings: Team
   workloads: AplWorkloadResponse[]
