@@ -3085,6 +3085,8 @@ components:
               $ref: 'definitions.yaml#/idName'
               example: some-service
               x-formtype: SelectWidget
+          required:
+            - name
     Session:
       $ref: 'session.yaml#/Session'
     ObjWizard:

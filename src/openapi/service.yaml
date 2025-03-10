@@ -68,7 +68,6 @@ Service:
         - $ref: '#/IngressPublic'
 
   required:
-    - name
     - ingress
   type: object
 
