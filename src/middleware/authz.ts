@@ -75,6 +75,7 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
     Secret: 'secrets',
     Service: 'services',
     Team: 'teams',
+    Policy: 'policies',
   }
 
   const selector = renameKeys(req.params)
