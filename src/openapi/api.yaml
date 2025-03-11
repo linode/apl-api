@@ -2984,7 +2984,12 @@ components:
         spec:
           allOf:
             - $ref: 'workload.yaml#/Workload'
-            - $ref: 'workload.yaml#/WorkloadValues'
+            - type: object
+              properties:
+                values:
+                  type: string
+              required:
+                - values
       required:
         - kind
         - spec

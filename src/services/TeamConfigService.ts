@@ -38,6 +38,8 @@ import {
   Workload,
   WorkloadValues,
 } from '../otomi-models'
+import { objectToYaml } from '../utils'
+import { parse } from 'yaml'
 
 export class TeamConfigService {
   constructor(private teamConfig: TeamConfig) {
@@ -232,7 +234,7 @@ export class TeamConfigService {
 
   public createWorkload(workload: Workload): Workload {
     const newWorkload = this.createAplWorkload(this.getAplObject('AplTeamWorkload', workload) as AplWorkloadRequest)
-    return this.getV1Object(newWorkload) as Workload
+    return omit(this.getV1Object(newWorkload), ['values']) as Workload
   }
 
   public createAplWorkload(workload: AplWorkloadRequest): AplWorkloadResponse {
@@ -248,7 +250,7 @@ export class TeamConfigService {
 
   public getWorkload(name: string): Workload {
     const workload = this.getAplWorkload(name)
-    return this.getV1Object(workload) as Workload
+    return omit(this.getV1Object(workload), ['values']) as Workload
   }
 
   public getAplWorkload(name: string): AplWorkloadResponse {
@@ -260,7 +262,7 @@ export class TeamConfigService {
   }
 
   public getWorkloads(): Workload[] {
-    return this.getAplWorkloads().map((workload) => this.getV1Object(workload) as Workload)
+    return this.getAplWorkloads().map((workload) => omit(this.getV1Object(workload), ['values']) as Workload)
   }
 
   public getAplWorkloads(): AplWorkloadResponse[] {
@@ -270,7 +272,7 @@ export class TeamConfigService {
   public updateWorkload(name: string, updates: Partial<Workload>): Workload {
     const mergeObj = this.getV1MergeObject(updates) as Partial<AplWorkloadRequest>
     const mergedWorkload = this.updateAplWorkload(name, mergeObj)
-    return this.getV1Object(mergedWorkload) as Workload
+    return omit(this.getV1Object(mergedWorkload), ['values']) as Workload
   }
 
   public updateAplWorkload(name: string, updates: Partial<AplWorkloadRequest>): AplWorkloadResponse {
@@ -289,24 +291,30 @@ export class TeamConfigService {
 
   public createWorkloadValues(workloadValues: WorkloadValues): WorkloadValues {
     const workload = this.getAplWorkload(workloadValues.name!)
-    workload.spec.values = workloadValues.values
-    return pick(this.getV1Object(workload), ['id', 'teamId', 'name', 'values']) as WorkloadValues
+    if (workload.spec.values) {
+      throw new AlreadyExists(`Workload[${workloadValues.name}] already exists.`)
+    }
+    return this.updateWorkloadValues(workloadValues.name!, workloadValues)
   }
 
   public getWorkloadValues(name: string): WorkloadValues {
     const workload = this.getAplWorkload(name)
-    return pick(this.getV1Object(workload), ['id', 'teamId', 'name', 'values']) as WorkloadValues
+    return merge(pick(this.getV1Object(workload), ['id', 'teamId', 'name']), {
+      values: parse(workload.spec.values) || {},
+    }) as WorkloadValues
   }
 
   public updateWorkloadValues(name: string, updates: Partial<WorkloadValues>): WorkloadValues {
     const workload = this.getAplWorkload(name)
-    merge(workload.spec.values, updates.values)
-    return pick(this.getV1Object(workload), ['id', 'teamId', 'name', 'values']) as WorkloadValues
+    workload.spec.values = objectToYaml(updates.values || {})
+    return merge(pick(this.getV1Object(workload), ['id', 'teamId', 'name']), {
+      values: updates.values || {},
+    }) as WorkloadValues
   }
 
   public deleteWorkloadValues(name: string): void {
     const workload = this.getAplWorkload(name)
-    workload.spec.values = {}
+    workload.spec.values = ''
   }
 
   // =====================================
@@ -559,7 +567,7 @@ export class TeamConfigService {
 
   public getNetpol(name: string): Netpol {
     const netpol = this.getAplNetpol(name)
-    return this.getV1Object(netpol) as Project
+    return this.getV1Object(netpol) as Netpol
   }
 
   public getAplNetpol(name: string): AplNetpolResponse {

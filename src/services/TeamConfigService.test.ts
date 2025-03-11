@@ -191,6 +191,10 @@ describe('TeamConfigService', () => {
   describe('WorkloadValues', () => {
     const workloadValues: WorkloadValues = { name: 'TestWorkloadValues', values: { test: 'values' } }
 
+    beforeEach(() => {
+      service.createWorkload({ url: '', name: 'TestWorkloadValues' })
+    })
+
     test('should create workload values', () => {
       const created = service.createWorkloadValues(workloadValues)
       expect(created).toEqual({ name: 'TestWorkloadValues', id: 'mocked-uuid', values: { test: 'values' } })
@@ -205,7 +209,12 @@ describe('TeamConfigService', () => {
     test('should delete workload values', () => {
       const created = service.createWorkloadValues(workloadValues)
       service.deleteWorkloadValues(created.name!)
-      expect(() => service.getWorkloadValues(created.name!)).toThrow(NotExistError)
+      expect(service.getWorkloadValues(created.name!)).toEqual({
+        id: 'mocked-uuid',
+        name: 'TestWorkloadValues',
+        teamId: undefined,
+        values: {},
+      })
     })
   })
 
@@ -294,12 +303,12 @@ describe('TeamConfigService', () => {
 
     test('should update policies', () => {
       service.updatePolicies({ 'require-limits': { action: 'Audit' } })
-      expect(service.getPolicies()).toEqual({ 'require-limits': { action: 'Audit' } })
+      expect(service.getPolicies()).toEqual({ 'require-limits': { action: 'Audit', severity: 'medium' } })
     })
 
     test('should retrieve a single policy', () => {
       service.updatePolicies({ 'require-limits': { action: 'Audit' } })
-      expect(service.getPolicy('require-limits')).toEqual({ action: 'Audit' })
+      expect(service.getPolicy('require-limits')).toEqual({ action: 'Audit', severity: 'medium' })
     })
   })
 
