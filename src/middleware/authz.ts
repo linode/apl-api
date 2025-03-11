@@ -88,9 +88,16 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
       {},
     )
 
-    console.log('collection', JSON.stringify(db.db, null, 2))
-
-    if (action === 'update') dataOrig = db.getItemReference(collection, selector, false) as Record<string, any>
+    if (action === 'update') {
+      if (collection === 'policies') {
+        const policies = db.db.get(['policies']).value()
+        console.log('policies', JSON.stringify(policies, null, 2))
+        const id = req.params.policyId
+        console.log('id', JSON.stringify(id, null, 2))
+        dataOrig = policies[teamId][id]
+        console.log('dataOrig', JSON.stringify(dataOrig, null, 2))
+      } else dataOrig = db.getItemReference(collection, selector, false) as Record<string, any>
+    }
     const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body, dataOrig)
     if (violatedAttributes.length > 0) {
       return res.status(403).send({
