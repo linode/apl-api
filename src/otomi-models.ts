@@ -48,6 +48,8 @@ export type AplBuildRequest = components['schemas']['AplBuildRequest']
 export type AplBuildResponse = components['schemas']['AplBuildResponse']
 export type Policy = components['schemas']['Policy']
 export type Policies = components['schemas']['Policies']
+export type AplPolicyRequest = components['schemas']['AplPolicyRequest']
+export type AplPolicyResponse = components['schemas']['AplPolicyResponse']
 export type Cloudtty = components['schemas']['Cloudtty']
 export type TeamAuthz = components['schemas']['TeamAuthz']
 // Derived setting models
@@ -66,6 +68,7 @@ export type AplRequestObject =
   | AplBuildRequest
   | AplCodeRepoRequest
   | AplNetpolRequest
+  | AplPolicyRequest
   | AplProjectRequest
   | AplSecretRequest
   | AplServiceRequest
@@ -75,6 +78,7 @@ export type AplResponseObject =
   | AplBuildResponse
   | AplCodeRepoResponse
   | AplNetpolResponse
+  | AplPolicyResponse
   | AplProjectResponse
   | AplSecretResponse
   | AplServiceResponse
@@ -84,6 +88,7 @@ export type AplResourceKind =
   | 'AplTeamBuild'
   | 'AplTeamCodeRepo'
   | 'AplTeamNetpol'
+  | 'AplTeamPolicy'
   | 'AplTeamProject'
   | 'AplTeamSecret'
   | 'AplTeamService'
@@ -220,7 +225,7 @@ export interface TeamConfig {
   builds: AplBuildResponse[]
   codeRepos: AplCodeRepoResponse[]
   netpols: AplNetpolResponse[]
-  policies: Policies
+  policies: AplPolicyResponse[]
   projects: AplProjectResponse[]
   sealedsecrets: AplSecretResponse[]
   services: AplServiceResponse[]

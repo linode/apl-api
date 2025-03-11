@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { App, CodeRepo, Policies, Team, TeamConfig, User } from 'src/otomi-models'
+import { App, CodeRepo, Team, TeamConfig, User } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { mockDeep } from 'jest-mock-extended'
 import { PublicUrlExists } from './error'
@@ -108,7 +108,7 @@ describe('Data validation', () => {
       netpols: [],
       settings: {} as Team,
       apps: [],
-      policies: {} as Policies,
+      policies: [],
       workloadValues: [],
     } as TeamConfig)
     await otomiStack.createTeam({ name: 'test' }, false)
@@ -128,7 +128,7 @@ describe('Data validation', () => {
       netpols: [],
       settings: {} as Team,
       apps: [],
-      policies: {} as Policies,
+      policies: [],
       workloadValues: [],
     } as TeamConfig)
     const myPassword = 'someAwesomePassword'

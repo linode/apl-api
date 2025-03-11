@@ -1,4 +1,4 @@
-import { find, has, map, mapValues, merge, remove, set } from 'lodash'
+import { find, has, map, merge, remove, set } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
 import { AlreadyExists } from '../error'
 import {
@@ -134,7 +134,7 @@ export class RepoService {
       netpols: [],
       settings: {} as Team,
       apps: [],
-      policies: {} as Policies,
+      policies: [],
     }
   }
 
@@ -239,7 +239,11 @@ export class RepoService {
   }
 
   public getAllPolicies(): Record<string, Policies> {
-    return mapValues(this.repo.teamConfig, 'policies')
+    const teamPolicies: Record<string, Policies> = {}
+    Object.keys(this.repo.teamConfig).forEach((teamId) => {
+      teamPolicies[teamId] = this.getTeamConfigService(teamId).getPolicies()
+    })
+    return teamPolicies
   }
 
   public getAllWorkloads(): Workload[] {

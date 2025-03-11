@@ -10,6 +10,8 @@ import {
   AplCodeRepoResponse,
   AplNetpolRequest,
   AplNetpolResponse,
+  AplPolicyRequest,
+  AplPolicyResponse,
   AplProjectRequest,
   AplProjectResponse,
   AplRequestObject,
@@ -51,7 +53,7 @@ export class TeamConfigService {
     this.teamConfig.projects ??= []
     this.teamConfig.netpols ??= []
     this.teamConfig.apps ??= []
-    this.teamConfig.policies ??= {}
+    this.teamConfig.policies ??= []
   }
 
   private createMetadata(name: string, id?: string): ResourceTeamMetadata {
@@ -655,19 +657,56 @@ export class TeamConfigService {
   // == POLICIES CRUD ==
   // =====================================
 
-  public getPolicies(): Policies {
-    return this.teamConfig.policies
+  public getPolicy(name: string): Policy {
+    const policy = this.getAplPolicy(name)
+    return policy.spec
   }
 
-  public getPolicy(key: string): Policy {
-    return this.teamConfig.policies[key]
-  }
-
-  public updatePolicies(updates: Partial<Policies>): void {
-    if (!this.teamConfig.policies) {
-      this.teamConfig.policies = {}
+  public getAplPolicy(name: string): AplPolicyResponse {
+    const policy = find(this.teamConfig.policies, (item) => item.metadata.name === name)
+    if (!policy) {
+      throw new NotExistError(`Policy[${name}] does not exist.`)
     }
-    merge(this.teamConfig.policies, updates)
+    return policy
+  }
+
+  public getPolicies(): Policies {
+    const policies = {}
+    this.getAplPolicies().forEach((policy) => {
+      policies[policy.metadata.name] = policy.spec
+    })
+    return policies
+  }
+
+  public getAplPolicies(): AplPolicyResponse[] {
+    return this.teamConfig.policies ?? []
+  }
+
+  public updatePolicies(updates: Partial<Policies>): Policies {
+    Object.entries(updates).forEach(([policyName, update]) => {
+      const mergeObj = this.getV1MergeObject(update) as Partial<AplPolicyRequest>
+      this.updateAplPolicy(policyName, mergeObj)
+    })
+    return this.getPolicies()
+  }
+
+  public updateAplPolicy(name: string, updates: Partial<AplPolicyRequest>): AplPolicyResponse {
+    const policy = find(this.teamConfig.policies, (item) => item.metadata.name === name)
+    if (!policy) {
+      const newPolicy = this.createAplObject(name, {
+        metadata: { name },
+        kind: 'AplTeamPolicy',
+        spec: {
+          action: updates.spec?.action || 'Audit',
+          severity: updates.spec?.severity || 'medium',
+        },
+      }) as AplPolicyResponse
+      this.teamConfig.policies.push(newPolicy)
+      return newPolicy
+    } else {
+      const mergeObj = this.getAplMergeObject(updates)
+      return merge(policy, mergeObj)
+    }
   }
 
   public doesProjectNameExist(name: string): boolean {
