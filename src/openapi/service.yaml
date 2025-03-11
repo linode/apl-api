@@ -73,12 +73,15 @@ Service:
     ingress:
       title: Exposure (ingress)
       description: Determines loadbalancer related configuration for handling the service ingress.
-      $ref: '#/Ingress'
       # Note: the order matters first schema must be nullable empty object
+      oneOf:
+        - $ref: '#/IngressCluster'
+        - $ref: '#/IngressPublic'
 
   required:
     - name
     - ingress
+  type: object
 
 Ingress:
   properties:
@@ -125,7 +128,7 @@ Ingress:
       title: URL paths
       type: array
       items:
-        $ref: definitions.yaml#/servicePath
+        $ref: definitions.yaml#/path
     forwardPath:
       description: Forward the URL path into the service (don't rewrite to /).
       title: Forward path
@@ -169,6 +172,10 @@ Ingress:
                 required:
                   - name
                   - value
+  required:
+    - domain
+    - subdomain
+  type: object
 
 IngressCluster:
   additionalProperties: false
