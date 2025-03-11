@@ -45,7 +45,7 @@ export const GIT_REPO_URL = str({
 export const GIT_USER = str({ desc: 'The git username' })
 export const HELM_CHART_CATALOG = str({
   desc: 'The helm chart catalog',
-  devDefault: 'https://github.com/ferruhcihan/apl-charts.git',
+  devDefault: 'https://github.com/linode/apl-charts.git',
 })
 export const OIDC_ENDPOINT = str()
 export const REGION = str({ desc: 'The cloud region' })

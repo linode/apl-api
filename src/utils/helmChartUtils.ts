@@ -8,15 +8,10 @@ export const detectGitProvider = (url) => {
   const normalizedUrl = url.replace(/\/*$/, '')
 
   const githubPattern = /github\.com\/([^\/]+)\/([^\/]+)(?:\/(?:blob|raw))?\/([^\/]+)\/(.+)/
-  const githubRawPattern = /raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)\/(.+)/
   const gitlabPattern = /gitlab\.com\/([^\/]+)\/([^\/]+)\/(?:\-\/(?:blob|raw))\/([^\/]+)\/(.+)/
   const bitbucketPattern = /bitbucket\.org\/([^\/]+)\/([^\/]+)\/(?:src|raw)\/([^\/]+)\/(.+)/
 
-  let match = normalizedUrl.match(githubRawPattern)
-  if (match)
-    return { provider: 'github', owner: match[1], repo: match[2], branch: match[3], filePath: match[4], isRaw: true }
-
-  match = normalizedUrl.match(githubPattern)
+  let match = normalizedUrl.match(githubPattern)
   if (match) return { provider: 'github', owner: match[1], repo: match[2], branch: match[3], filePath: match[4] }
 
   match = normalizedUrl.match(gitlabPattern)

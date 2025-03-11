@@ -4,21 +4,15 @@ import { readdir, writeFile } from 'fs/promises'
 import path from 'path'
 import simpleGit, { SimpleGit } from 'simple-git'
 import YAML from 'yaml'
+import { detectGitProvider, getGitCloneUrl } from './helmChartUtils'
 
 const debug = Debug('apl:workloadUtils')
 
-export interface NewChartValues {
-  url: string
-  chartName: string
-  chartTargetDir: string
+export interface NewHelmChartValues {
+  gitRepositoryUrl: string
+  chartTargetDirName: string
   chartIcon?: string
-  chartPath: string
-  revision: string
   allowTeams: boolean
-}
-
-export interface NewChartPayload extends NewChartValues {
-  teamId: string
 }
 
 function throwChartError(message: string) {
@@ -131,41 +125,43 @@ class chartRepo {
  * Clones a repository using sparse checkout, checks out a specific revision,
  * and moves the contents of the desired subdirectory (sparsePath) to the root of the target folder.
  *
- * @param url - The base Git repository URL (e.g. "https://github.com/nats-io/k8s.git")
- * @param chartName - The target folder name for the clone (will be the final chart folder, e.g. "nats")
- * @param chartPath - The path in github where the chart is located
- * @param sparsePath - The subdirectory to sparse checkout (e.g. "helm/charts/nats")
- * @param revision - The branch or commit to checkout (e.g. "main")
+ * @param gitRepositoryUrl - The base Git repository URL (e.g. "https://github.com/nats-io/k8s.git")
+ * @param localHelmChartsDir - The subdirectory to sparse checkout (e.g. "/tmp/otomi/charts/uuid")
+ * @param helmChartCatalogUrl - The URL of the (Gitea) Helm Chart Catalog (e.g. "https://gitea.<domainSuffix>/otomi/charts.git")
+ * @param user - The Git username (e.g. "otomi-admin")
+ * @param email - The Git email (e.g. "not@us.ed")
+ * @param chartTargetDirName - The target folder name for the clone (will be the final chart folder, e.g. "nats")
  * @param chartIcon - the icon URL path (e.g https://myimage.com/imageurl)
  * @param allowTeams - Boolean indicating if teams are allowed to use the chart.
  *                     If false, the key is set to [].
  *                     If true, the key is set to null.
  */
 export async function sparseCloneChart(
-  url: string,
+  gitRepositoryUrl: string,
+  localHelmChartsDir: string,
   helmChartCatalogUrl: string,
   user: string,
   email: string,
-  chartName: string,
-  chartTargetDir: string,
-  chartPath: string,
-  sparsePath: string, // e.g. "/tmp/otomi/charts/uuid"
-  revision: string,
+  chartTargetDirName: string,
   chartIcon?: string,
   allowTeams?: boolean,
 ): Promise<boolean> {
-  const temporaryCloneDir = `${sparsePath}-new` // Temporary clone directory
-  const checkoutPath = `${sparsePath}/${chartTargetDir}` // Final destination
+  const details = detectGitProvider(gitRepositoryUrl)
+  const gitCloneUrl = getGitCloneUrl(details) as string
+  const chartPath = details?.filePath.replace('/Chart.yaml', '') as string
+  const revision = details?.branch as string
+  const temporaryCloneDir = `${localHelmChartsDir}-newChart`
+  const finalDestinationPath = `${localHelmChartsDir}/${chartTargetDirName}`
 
-  if (!existsSync(sparsePath)) mkdirSync(sparsePath, { recursive: true })
+  if (!existsSync(localHelmChartsDir)) mkdirSync(localHelmChartsDir, { recursive: true })
   let gitUrl = helmChartCatalogUrl
-  if (isGiteaURL(url)) {
-    const [protocol, bareUrl] = url.split('://')
+  if (isGiteaURL(helmChartCatalogUrl)) {
+    const [protocol, bareUrl] = helmChartCatalogUrl.split('://')
     const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
     const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
     gitUrl = `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
   }
-  const gitRepo = new chartRepo(sparsePath, gitUrl, user, email)
+  const gitRepo = new chartRepo(localHelmChartsDir, gitUrl, user, email)
   await gitRepo.clone()
 
   if (!existsSync(temporaryCloneDir)) mkdirSync(temporaryCloneDir, { recursive: true })
@@ -176,43 +172,37 @@ export async function sparseCloneChart(
 
   const git = simpleGit()
 
-  // Clone the repository into the folder named checkoutPath.
-  debug(`Cloning repository: ${url} into ${checkoutPath}`)
-  await git.clone(url, temporaryCloneDir, ['--filter=blob:none', '--no-checkout'])
+  debug(`Cloning repository: ${gitCloneUrl} into ${temporaryCloneDir}`)
+  await git.clone(gitCloneUrl, temporaryCloneDir, ['--filter=blob:none', '--no-checkout'])
 
-  // Initialize sparse checkout in cone mode within checkoutPath.
-  debug(`Initializing sparse checkout in cone mode at ${checkoutPath}`)
+  debug(`Initializing sparse checkout in cone mode at ${temporaryCloneDir}`)
   await git.cwd(temporaryCloneDir)
   await git.raw(['sparse-checkout', 'init', '--cone'])
 
-  // Set the sparse checkout to only include the specified chartPath.
   debug(`Setting sparse checkout path to ${chartPath}`)
   await git.raw(['sparse-checkout', 'set', chartPath])
 
-  // Checkout the desired revision (branch or commit) within checkoutPath.
-  debug(`Checking out revision: ${revision}`)
+  debug(`Checking out the desired revision (branch or commit): ${revision}`)
   await git.checkout(revision)
 
-  // Move the contents of the sparse folder (chartPath) to the repository root.
-  // This moves files from "checkoutPath/chartPath/*" to "checkoutPath/"
-  renameSync(path.join(temporaryCloneDir, chartPath), checkoutPath)
+  // Move files from "temporaryCloneDir/chartPath/*" to "finalDestinationPath/"
+  renameSync(path.join(temporaryCloneDir, chartPath), finalDestinationPath)
 
   // Remove the leftover temporary clone directory.
-  // For chartPath "bitnami/cassandra", the top-level folder is "bitnami".
   rmSync(temporaryCloneDir, { recursive: true, force: true })
 
   // Update Chart.yaml with the new icon if one is provided.
   if (chartIcon && chartIcon.trim() !== '') {
-    const chartYamlPath = `${checkoutPath}/Chart.yaml`
+    const chartYamlPath = `${finalDestinationPath}/Chart.yaml`
     await updateChartIconInYaml(chartYamlPath, chartIcon)
   }
 
   // update rbac file
-  await updateRbacForNewChart(sparsePath, chartTargetDir, allowTeams as boolean)
+  await updateRbacForNewChart(localHelmChartsDir, chartTargetDirName, allowTeams as boolean)
 
   // pull&push new chart changes
   await gitRepo.addConfig()
-  await gitRepo.commitAndPush(chartTargetDir)
+  await gitRepo.commitAndPush(chartTargetDirName)
 
   return true
 }
