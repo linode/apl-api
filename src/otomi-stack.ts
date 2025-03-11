@@ -79,6 +79,7 @@ import {
   testPrivateRepoConnect,
   testPublicRepoConnect,
 } from './utils/coderepoUtils'
+import { detectGitProvider, fetchChartYaml, getGitCloneUrl } from './utils/helmChartUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
@@ -1236,8 +1237,18 @@ export default class OtomiStack {
     }
   }
 
+  async getHelmChartContent(url: string): Promise<any> {
+    // https://gitlab.com/charts/kubernetes-gitlab-demo/-/raw/master/Chart.yaml
+    return await fetchChartYaml(url)
+  }
+
   async createWorkloadCatalog(body: NewChartPayload): Promise<boolean> {
-    const { url, chartName, chartPath, chartIcon, revision, allowTeams } = body
+    const { url, chartName, chartTargetDir, chartIcon, allowTeams } = body
+
+    const details = detectGitProvider(url)
+    const gitCloneUrl = getGitCloneUrl(details) as string
+    const chartPath = details?.filePath.replace('/Chart.yaml', '') as string
+    const revision = details?.branch as string
 
     const uuid = uuidv4()
     const helmChartsDir = `/tmp/otomi/charts/${uuid}`
@@ -1246,11 +1257,12 @@ export default class OtomiStack {
 
     try {
       await sparseCloneChart(
-        url,
+        gitCloneUrl,
         helmChartCatalogUrl,
         user,
         email,
         chartName,
+        chartTargetDir,
         chartPath,
         helmChartsDir,
         revision,

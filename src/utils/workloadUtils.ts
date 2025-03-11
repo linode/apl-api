@@ -10,6 +10,7 @@ const debug = Debug('apl:workloadUtils')
 export interface NewChartValues {
   url: string
   chartName: string
+  chartTargetDir: string
   chartIcon?: string
   chartPath: string
   revision: string
@@ -146,6 +147,7 @@ export async function sparseCloneChart(
   user: string,
   email: string,
   chartName: string,
+  chartTargetDir: string,
   chartPath: string,
   sparsePath: string, // e.g. "/tmp/otomi/charts/uuid"
   revision: string,
@@ -153,7 +155,7 @@ export async function sparseCloneChart(
   allowTeams?: boolean,
 ): Promise<boolean> {
   const temporaryCloneDir = `${sparsePath}-new` // Temporary clone directory
-  const checkoutPath = `${sparsePath}/${chartName}` // Final destination
+  const checkoutPath = `${sparsePath}/${chartTargetDir}` // Final destination
 
   if (!existsSync(sparsePath)) mkdirSync(sparsePath, { recursive: true })
   let gitUrl = helmChartCatalogUrl
@@ -206,11 +208,11 @@ export async function sparseCloneChart(
   }
 
   // update rbac file
-  await updateRbacForNewChart(sparsePath, chartName, allowTeams as boolean)
+  await updateRbacForNewChart(sparsePath, chartTargetDir, allowTeams as boolean)
 
   // pull&push new chart changes
   await gitRepo.addConfig()
-  await gitRepo.commitAndPush(chartName)
+  await gitRepo.commitAndPush(chartTargetDir)
 
   return true
 }
