@@ -326,7 +326,7 @@ export async function fetchWorkloadCatalog(url: string, helmChartsDir: string, t
       if (!rbac[folder] || rbac[folder].includes(`team-${teamId}`) || teamId === 'admin') {
         const catalogItem = {
           name: folder,
-          values,
+          values: values || '{}',
           icon: chartMetadata?.icon,
           chartVersion: chartMetadata?.version,
           chartDescription: chartMetadata?.description,
