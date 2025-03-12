@@ -83,7 +83,7 @@ import { getPolicies } from './utils/policiesUtils'
 import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
-import { NewChartPayload, fetchWorkloadCatalog, sparseCloneChart } from './utils/workloadUtils'
+import { NewHelmChartValues, fetchChartYaml, fetchWorkloadCatalog, sparseCloneChart } from './utils/workloadUtils'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -1236,34 +1236,36 @@ export default class OtomiStack {
     }
   }
 
-  async createWorkloadCatalog(body: NewChartPayload): Promise<boolean> {
-    const { url, chartName, chartPath, chartIcon, revision, allowTeams } = body
+  async getHelmChartContent(url: string): Promise<any> {
+    return await fetchChartYaml(url)
+  }
+
+  async createWorkloadCatalog(body: NewHelmChartValues): Promise<boolean> {
+    const { gitRepositoryUrl, chartTargetDirName, chartIcon, allowTeams } = body
 
     const uuid = uuidv4()
-    const helmChartsDir = `/tmp/otomi/charts/${uuid}`
+    const localHelmChartsDir = `/tmp/otomi/charts/${uuid}`
     const helmChartCatalogUrl = env.HELM_CHART_CATALOG
     const { user, email } = this.repo
 
     try {
       await sparseCloneChart(
-        url,
+        gitRepositoryUrl,
+        localHelmChartsDir,
         helmChartCatalogUrl,
         user,
         email,
-        chartName,
-        chartPath,
-        helmChartsDir,
-        revision,
+        chartTargetDirName,
         chartIcon,
         allowTeams,
       )
       return true
-    } catch (err) {
-      debug(`error while parsing chart ${err.message}`)
+    } catch (error) {
+      debug('Error adding new Helm chart to catalog')
       return false
     } finally {
       // Clean up: if the temporary directory exists, remove it.
-      if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
+      if (existsSync(localHelmChartsDir)) rmSync(localHelmChartsDir, { recursive: true, force: true })
     }
   }
 

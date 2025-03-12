@@ -1,3 +1,5 @@
+/* eslint-disable no-useless-escape */
+import axios from 'axios'
 import Debug from 'debug'
 import { existsSync, mkdirSync, readFile, renameSync, rmSync } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
@@ -7,17 +9,71 @@ import YAML from 'yaml'
 
 const debug = Debug('apl:workloadUtils')
 
-export interface NewChartValues {
-  url: string
-  chartName: string
-  chartIcon?: string
-  chartPath: string
-  revision: string
-  allowTeams: boolean
+export const detectGitProvider = (url) => {
+  if (!url || typeof url !== 'string') return null
+
+  const normalizedUrl = url.replace(/\/*$/, '')
+
+  const githubPattern = /github\.com\/([^\/]+)\/([^\/]+)(?:\/(?:blob|raw))?\/([^\/]+)\/(.+)/
+  const gitlabPattern = /gitlab\.com\/([^\/]+)\/([^\/]+)\/(?:\-\/(?:blob|raw))\/([^\/]+)\/(.+)/
+  const bitbucketPattern = /bitbucket\.org\/([^\/]+)\/([^\/]+)\/(?:src|raw)\/([^\/]+)\/(.+)/
+
+  let match = normalizedUrl.match(githubPattern)
+  if (match) return { provider: 'github', owner: match[1], repo: match[2], branch: match[3], filePath: match[4] }
+
+  match = normalizedUrl.match(gitlabPattern)
+  if (match) return { provider: 'gitlab', owner: match[1], repo: match[2], branch: match[3], filePath: match[4] }
+
+  match = normalizedUrl.match(bitbucketPattern)
+  if (match) return { provider: 'bitbucket', owner: match[1], repo: match[2], branch: match[3], filePath: match[4] }
+
+  return null
 }
 
-export interface NewChartPayload extends NewChartValues {
-  teamId: string
+const getGitRawUrl = (details) => {
+  if (!details) return null
+
+  if (details.provider === 'github')
+    return `https://raw.githubusercontent.com/${details.owner}/${details.repo}/${details.branch}/${details.filePath}`
+  if (details.provider === 'gitlab')
+    return `https://gitlab.com/${details.owner}/${details.repo}/-/raw/${details.branch}/${details.filePath}`
+  if (details.provider === 'bitbucket')
+    return `https://bitbucket.org/${details.owner}/${details.repo}/raw/${details.branch}/${details.filePath}`
+
+  return null
+}
+
+export const getGitCloneUrl = (details) => {
+  if (!details) return null
+
+  if (details.provider === 'github') return `https://github.com/${details.owner}/${details.repo}.git`
+  if (details.provider === 'gitlab') return `https://gitlab.com/${details.owner}/${details.repo}.git`
+  if (details.provider === 'bitbucket') return `https://bitbucket.org/${details.owner}/${details.repo}.git`
+
+  return null
+}
+
+export const fetchChartYaml = async (url) => {
+  try {
+    const details = detectGitProvider(url)
+    if (!details) return { values: {}, error: 'Unsupported Git provider or invalid URL format.' }
+
+    const rawUrl = getGitRawUrl(details)
+    if (!rawUrl) return { values: {}, error: `Could not generate raw URL for provider: ${details.provider}` }
+
+    const response = await axios.get(rawUrl, { responseType: 'text' })
+    return { values: YAML.parse(response.data as string), error: '' }
+  } catch (error) {
+    console.error('Error fetching Chart.yaml:', error.message)
+    return { values: {}, error: 'Error fetching helm chart content.' }
+  }
+}
+
+export interface NewHelmChartValues {
+  gitRepositoryUrl: string
+  chartTargetDirName: string
+  chartIcon?: string
+  allowTeams: boolean
 }
 
 function throwChartError(message: string) {
@@ -27,7 +83,6 @@ function throwChartError(message: string) {
   }
   throw err
 }
-
 function isGiteaURL(url: string) {
   let hostname = ''
   if (url) {
@@ -41,7 +96,6 @@ function isGiteaURL(url: string) {
   const giteaPattern = /^gitea\..+/i
   return giteaPattern.test(hostname)
 }
-
 /**
  * Reads the Chart.yaml file at the given path, updates (or sets) its icon field,
  * and writes the updated content back to disk.
@@ -54,14 +108,12 @@ export async function updateChartIconInYaml(chartYamlPath: string, newIcon: stri
     const fileContent = await readFile(chartYamlPath, 'utf-8')
     const chartObject = YAML.parse(fileContent)
     if (newIcon && newIcon.trim() !== '') chartObject.icon = newIcon
-
     const newContent = YAML.stringify(chartObject)
     await writeFile(chartYamlPath, newContent, 'utf-8')
   } catch (error) {
     debug(`Error updating chart icon in ${chartYamlPath}:`, error)
   }
 }
-
 /**
  * Updates the rbac.yaml file in the specified folder by adding a new chart key.
  *
@@ -83,21 +135,17 @@ export async function updateRbacForNewChart(sparsePath: string, chartKey: string
     // Create a default structure if the file doesn't exist.
     rbacData = { rbac: {}, betaCharts: [] }
   }
-
   // Ensure the "rbac" section exists.
   if (!rbacData.rbac) rbacData.rbac = {}
-
   // Add the new chart entry if it doesn't exist.
   // If allowTeams is false, set the value to an empty array ([]),
   // otherwise (if true) set it to null.
   if (!(chartKey in rbacData.rbac)) rbacData.rbac[chartKey] = allowTeams ? null : []
-
   // Stringify the updated YAML content and write it back.
   const newContent = YAML.stringify(rbacData)
   await writeFile(rbacFilePath, newContent, 'utf-8')
   debug(`Updated rbac.yaml: added ${chartKey}: ${allowTeams ? 'null' : '[]'}`)
 }
-
 class chartRepo {
   localPath: string
   chartRepoUrl: string
@@ -125,45 +173,47 @@ class chartRepo {
     await this.git.push('origin', 'main')
   }
 }
-
 /**
  * Clones a repository using sparse checkout, checks out a specific revision,
  * and moves the contents of the desired subdirectory (sparsePath) to the root of the target folder.
  *
- * @param url - The base Git repository URL (e.g. "https://github.com/nats-io/k8s.git")
- * @param chartName - The target folder name for the clone (will be the final chart folder, e.g. "nats")
- * @param chartPath - The path in github where the chart is located
- * @param sparsePath - The subdirectory to sparse checkout (e.g. "helm/charts/nats")
- * @param revision - The branch or commit to checkout (e.g. "main")
+ * @param gitRepositoryUrl - The base Git repository URL (e.g. "https://github.com/nats-io/k8s.git")
+ * @param localHelmChartsDir - The subdirectory to sparse checkout (e.g. "/tmp/otomi/charts/uuid")
+ * @param helmChartCatalogUrl - The URL of the (Gitea) Helm Chart Catalog (e.g. "https://gitea.<domainSuffix>/otomi/charts.git")
+ * @param user - The Git username (e.g. "otomi-admin")
+ * @param email - The Git email (e.g. "not@us.ed")
+ * @param chartTargetDirName - The target folder name for the clone (will be the final chart folder, e.g. "nats")
  * @param chartIcon - the icon URL path (e.g https://myimage.com/imageurl)
  * @param allowTeams - Boolean indicating if teams are allowed to use the chart.
  *                     If false, the key is set to [].
  *                     If true, the key is set to null.
  */
 export async function sparseCloneChart(
-  url: string,
+  gitRepositoryUrl: string,
+  localHelmChartsDir: string,
   helmChartCatalogUrl: string,
   user: string,
   email: string,
-  chartName: string,
-  chartPath: string,
-  sparsePath: string, // e.g. "/tmp/otomi/charts/uuid"
-  revision: string,
+  chartTargetDirName: string,
   chartIcon?: string,
   allowTeams?: boolean,
 ): Promise<boolean> {
-  const temporaryCloneDir = `${sparsePath}-new` // Temporary clone directory
-  const checkoutPath = `${sparsePath}/${chartName}` // Final destination
+  const details = detectGitProvider(gitRepositoryUrl)
+  const gitCloneUrl = getGitCloneUrl(details) as string
+  const chartPath = details?.filePath.replace('/Chart.yaml', '') as string
+  const revision = details?.branch as string
+  const temporaryCloneDir = `${localHelmChartsDir}-newChart`
+  const finalDestinationPath = `${localHelmChartsDir}/${chartTargetDirName}`
 
-  if (!existsSync(sparsePath)) mkdirSync(sparsePath, { recursive: true })
+  if (!existsSync(localHelmChartsDir)) mkdirSync(localHelmChartsDir, { recursive: true })
   let gitUrl = helmChartCatalogUrl
-  if (isGiteaURL(url)) {
-    const [protocol, bareUrl] = url.split('://')
+  if (isGiteaURL(helmChartCatalogUrl)) {
+    const [protocol, bareUrl] = helmChartCatalogUrl.split('://')
     const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
     const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
     gitUrl = `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
   }
-  const gitRepo = new chartRepo(sparsePath, gitUrl, user, email)
+  const gitRepo = new chartRepo(localHelmChartsDir, gitUrl, user, email)
   await gitRepo.clone()
 
   if (!existsSync(temporaryCloneDir)) mkdirSync(temporaryCloneDir, { recursive: true })
@@ -174,43 +224,37 @@ export async function sparseCloneChart(
 
   const git = simpleGit()
 
-  // Clone the repository into the folder named checkoutPath.
-  debug(`Cloning repository: ${url} into ${checkoutPath}`)
-  await git.clone(url, temporaryCloneDir, ['--filter=blob:none', '--no-checkout'])
+  debug(`Cloning repository: ${gitCloneUrl} into ${temporaryCloneDir}`)
+  await git.clone(gitCloneUrl, temporaryCloneDir, ['--filter=blob:none', '--no-checkout'])
 
-  // Initialize sparse checkout in cone mode within checkoutPath.
-  debug(`Initializing sparse checkout in cone mode at ${checkoutPath}`)
+  debug(`Initializing sparse checkout in cone mode at ${temporaryCloneDir}`)
   await git.cwd(temporaryCloneDir)
   await git.raw(['sparse-checkout', 'init', '--cone'])
 
-  // Set the sparse checkout to only include the specified chartPath.
   debug(`Setting sparse checkout path to ${chartPath}`)
   await git.raw(['sparse-checkout', 'set', chartPath])
 
-  // Checkout the desired revision (branch or commit) within checkoutPath.
-  debug(`Checking out revision: ${revision}`)
+  debug(`Checking out the desired revision (branch or commit): ${revision}`)
   await git.checkout(revision)
 
-  // Move the contents of the sparse folder (chartPath) to the repository root.
-  // This moves files from "checkoutPath/chartPath/*" to "checkoutPath/"
-  renameSync(path.join(temporaryCloneDir, chartPath), checkoutPath)
+  // Move files from "temporaryCloneDir/chartPath/*" to "finalDestinationPath/"
+  renameSync(path.join(temporaryCloneDir, chartPath), finalDestinationPath)
 
   // Remove the leftover temporary clone directory.
-  // For chartPath "bitnami/cassandra", the top-level folder is "bitnami".
   rmSync(temporaryCloneDir, { recursive: true, force: true })
 
   // Update Chart.yaml with the new icon if one is provided.
   if (chartIcon && chartIcon.trim() !== '') {
-    const chartYamlPath = `${checkoutPath}/Chart.yaml`
+    const chartYamlPath = `${finalDestinationPath}/Chart.yaml`
     await updateChartIconInYaml(chartYamlPath, chartIcon)
   }
 
   // update rbac file
-  await updateRbacForNewChart(sparsePath, chartName, allowTeams as boolean)
+  await updateRbacForNewChart(localHelmChartsDir, chartTargetDirName, allowTeams as boolean)
 
   // pull&push new chart changes
   await gitRepo.addConfig()
-  await gitRepo.commitAndPush(chartName)
+  await gitRepo.commitAndPush(chartTargetDirName)
 
   return true
 }
