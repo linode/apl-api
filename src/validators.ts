@@ -1,4 +1,4 @@
-import { CleanOptions, CleanedEnvAccessors, ValidatorSpec, bool, cleanEnv as clean, json, num, str } from 'envalid'
+import { bool, CleanedEnvAccessors, cleanEnv as clean, CleanOptions, json, num, str, ValidatorSpec } from 'envalid'
 
 export const AUTHZ_MOCK_IS_PLATFORM_ADMIN = bool({
   desc: 'Indicate if a mocked user is a platform admin',
@@ -82,6 +82,10 @@ export const ROOT_KEYCLOAK_USER = str({
 export const EXPRESS_PAYLOAD_LIMIT = str({
   desc: 'The express payload limit',
   default: '500kb',
+})
+export const GIT_PUSH_RETRIES = num({
+  desc: 'Amount of retries we do to push and pull in the git save function',
+  default: 10,
 })
 const { env } = process
 export function cleanEnv<T>(
