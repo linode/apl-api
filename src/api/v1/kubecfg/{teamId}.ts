@@ -4,7 +4,7 @@ import { Operation, OperationHandlerArray } from 'express-openapi'
 import { OpenApiRequestExt } from 'src/otomi-models'
 import { stringify as stringifyYaml } from 'yaml'
 
-const debug = Debug('otomi:api:kubecfg')
+const debug = Debug('otomi:api:v1:kubecfg')
 
 export const parameters = []
 

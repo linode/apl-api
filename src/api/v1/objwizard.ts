@@ -2,7 +2,7 @@ import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
 import { ObjWizard, OpenApiRequestExt } from 'src/otomi-models'
 
-const debug = Debug('otomi:api:objwizard')
+const debug = Debug('otomi:api:v1:objwizard')
 
 export default function (): OperationHandlerArray {
   const post: Operation = [

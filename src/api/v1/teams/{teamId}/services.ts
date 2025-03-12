@@ -2,7 +2,7 @@ import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
 import { OpenApiRequestExt, Service } from 'src/otomi-models'
 
-const debug = Debug('otomi:api:teams:services')
+const debug = Debug('otomi:api:v1:teams:services')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [

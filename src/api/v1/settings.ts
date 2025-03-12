@@ -2,7 +2,7 @@ import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
-const debug = Debug('otomi:api:settings')
+const debug = Debug('otomi:api:v1:settings')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [
@@ -14,7 +14,9 @@ export default function (): OperationHandlerArray {
         // Remove the otomi.adminPassword from otomi settings response
         const { adminPassword, ...restOtomiSettings } = otomiSettings
         res.json({ ...restSettings, otomi: restOtomiSettings })
-      } else res.json(v)
+      } else {
+        res.json(v)
+      }
     },
   ]
   const api = {

@@ -2,7 +2,7 @@ import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
 import { OpenApiRequestExt, SealedSecret } from 'src/otomi-models'
 
-const debug = Debug('otomi:api:teams:sealedsecrets')
+const debug = Debug('otomi:api:v1:teams:sealedsecrets')
 
 export default function (): OperationHandlerArray {
   const del: Operation = [

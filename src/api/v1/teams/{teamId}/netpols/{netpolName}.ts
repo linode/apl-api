@@ -2,7 +2,7 @@ import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
 import { Netpol, OpenApiRequestExt } from 'src/otomi-models'
 
-const debug = Debug('otomi:api:teams:netpols')
+const debug = Debug('otomi:api:v1:teams:netpols')
 
 export default function (): OperationHandlerArray {
   const del: Operation = [

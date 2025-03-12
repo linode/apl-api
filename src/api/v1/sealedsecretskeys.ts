@@ -3,7 +3,7 @@ import { Operation, OperationHandlerArray } from 'express-openapi'
 import { getSealedSecretsKeys } from 'src/k8s_operations'
 import YAML from 'yaml'
 
-const debug = Debug('otomi:api:sealedsecrets')
+const debug = Debug('otomi:api:v1:sealedsecrets')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [
