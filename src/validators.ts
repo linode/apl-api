@@ -47,6 +47,14 @@ export const HELM_CHART_CATALOG = str({
   desc: 'The helm chart catalog',
   devDefault: 'https://github.com/linode/apl-charts.git',
 })
+export const GIT_PROVIDER_URL_PATTERNS = json({
+  desc: 'Regular expressions to match and extract information from URLs of supported git providers (GitHub, GitLab, Bitbucket) for cloning Helm charts.',
+  default: {
+    github: 'github\\.com\\/([^\\/]+)\\/([^\\/]+)\\/(?:blob|raw)\\/([^\\/]+)\\/(.+)',
+    gitlab: 'gitlab\\.com\\/([^\\/]+)\\/([^\\/]+)(?:\\/([^\\/]+))?\\/(?:\\-\\/(?:blob|raw))\\/([^\\/]+)\\/(.+)',
+    bitbucket: 'bitbucket\\.org\\/([^\\/]+)\\/([^\\/]+)\\/(?:src|raw)\\/([^\\/]+)\\/(.+)',
+  },
+})
 export const OIDC_ENDPOINT = str()
 export const REGION = str({ desc: 'The cloud region' })
 export const ROARR_LOG = bool({ desc: 'To enable Lightship logs', default: false })
