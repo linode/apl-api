@@ -3,15 +3,15 @@ import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
-import { ObjectStorageKeyRegions, getRegions } from '@linode/api-v4'
-import { emptyDir, pathExists, unlink } from 'fs-extra'
-import { readFile, readdir, writeFile } from 'fs/promises'
+import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
+import { emptyDir, existsSync, pathExists, rmSync, unlink } from 'fs-extra'
+import { readdir, readFile, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import Db from 'src/db'
-import { AlreadyExists, GitPullError, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
-import { DbMessage, cleanAllSessions, cleanSession, getIo, getSessionStack } from 'src/middleware'
+import { AlreadyExists, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
+import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
   Backup,
@@ -42,6 +42,7 @@ import {
 import getRepo, { Repo } from 'src/repo'
 import { arrayToObject, getServiceUrl, getValuesSchema, objectToArray, removeBlankAttributes } from 'src/utils'
 import {
+  cleanEnv,
   CUSTOM_ROOT_CA,
   DEFAULT_PLATFORM_ADMIN_EMAIL,
   EDITOR_INACTIVITY_TIMEOUT,
@@ -56,8 +57,8 @@ import {
   PREINSTALLED_EXCLUDED_APPS,
   TOOLS_HOST,
   VERSIONS,
-  cleanEnv,
 } from 'src/validators'
+import { v4 as uuidv4 } from 'uuid'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import {
   apply,
@@ -82,7 +83,7 @@ import { getPolicies } from './utils/policiesUtils'
 import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
-import { fetchWorkloadCatalog } from './utils/workloadUtils'
+import { fetchWorkloadCatalog, NewChartPayload, sparseCloneChart } from './utils/workloadUtils'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -1212,20 +1213,58 @@ export default class OtomiStack {
     return this.db.getCollection('workloads') as Array<Workload>
   }
 
-  async getWorkloadCatalog(data: { url: string; sub: string; teamId: string }): Promise<any> {
-    const { url: clientUrl, sub, teamId } = data
-    let url = clientUrl
-    if (env?.HELM_CHART_CATALOG && !clientUrl) url = env.HELM_CHART_CATALOG
-    if (!url) {
-      const err = {
-        code: 404,
-        message: 'No helm chart catalog found!',
-      }
-      throw err
+  async getWorkloadCatalog(data: {
+    url?: string
+    teamId: string
+  }): Promise<{ url: string; helmCharts: any; catalog: any }> {
+    const { url: clientUrl, teamId } = data
+    const uuid = uuidv4()
+    const helmChartsDir = `/tmp/otomi/charts/${uuid}`
+
+    const url = clientUrl || env?.HELM_CHART_CATALOG
+
+    if (!url) throw new OtomiError(400, 'Helm chart catalog URL is not set')
+
+    try {
+      const { helmCharts, catalog } = await fetchWorkloadCatalog(url, helmChartsDir, teamId)
+      return { url, helmCharts, catalog }
+    } catch (error) {
+      debug('Error fetching workload catalog')
+      throw new OtomiError(404, 'No helm chart catalog found!')
+    } finally {
+      if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
     }
-    const version = env.VERSIONS.core as string
-    const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub, teamId, version)
-    return { url, helmCharts, catalog }
+  }
+
+  async createWorkloadCatalog(body: NewChartPayload): Promise<boolean> {
+    const { url, chartName, chartPath, chartIcon, revision, allowTeams } = body
+
+    const uuid = uuidv4()
+    const helmChartsDir = `/tmp/otomi/charts/${uuid}`
+    const helmChartCatalogUrl = env.HELM_CHART_CATALOG
+    const { user, email } = this.repo
+
+    try {
+      await sparseCloneChart(
+        url,
+        helmChartCatalogUrl,
+        user,
+        email,
+        chartName,
+        chartPath,
+        helmChartsDir,
+        revision,
+        chartIcon,
+        allowTeams,
+      )
+      return true
+    } catch (err) {
+      debug(`error while parsing chart ${err.message}`)
+      return false
+    } finally {
+      // Clean up: if the temporary directory exists, remove it.
+      if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
+    }
   }
 
   async createWorkload(teamId: string, data: Workload): Promise<Workload> {
@@ -1398,16 +1437,15 @@ export default class OtomiStack {
         })
       }
       debug(`Updated root stack values with ${this.sessionId} changes`)
-      // and remove editor from the session
-      await cleanSession(this.sessionId!)
       const sha = await rootStack.repo.getCommitSha()
       this.emitPipelineStatus(sha)
     } catch (e) {
-      // git conflict with upstream changes, clean up and restore the DB
-      if (e instanceof GitPullError) await this.doRestore()
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)
       throw e
+    } finally {
+      // Clean up the session
+      await cleanSession(this.sessionId!)
     }
   }
 
