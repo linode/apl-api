@@ -1,22 +1,35 @@
-/* eslint-disable no-useless-escape */
 import axios from 'axios'
 import Debug from 'debug'
 import { existsSync, mkdirSync, readFile, renameSync, rmSync } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
 import path from 'path'
 import simpleGit, { SimpleGit } from 'simple-git'
+import { GIT_PROVIDER_URL_PATTERNS, cleanEnv } from 'src/validators'
 import YAML from 'yaml'
 
 const debug = Debug('apl:workloadUtils')
+
+const env = cleanEnv({
+  GIT_PROVIDER_URL_PATTERNS,
+})
 
 export function detectGitProvider(url) {
   if (!url || typeof url !== 'string') return null
 
   const normalizedUrl = new URL(url).origin + new URL(url).pathname.replace(/\/*$/, '')
 
-  const githubPattern = /github\.com\/([^\/]+)\/([^\/]+)\/(?:blob|raw)\/([^\/]+)\/(.+)/
-  const gitlabPattern = /gitlab\.com\/([^\/]+)\/([^\/]+)(?:\/([^\/]+))?\/(?:\-\/(?:blob|raw))\/([^\/]+)\/(.+)/
-  const bitbucketPattern = /bitbucket\.org\/([^\/]+)\/([^\/]+)\/(?:src|raw)\/([^\/]+)\/(.+)/
+  const { github, gitlab, bitbucket } = env.GIT_PROVIDER_URL_PATTERNS as {
+    github: string
+    gitlab: string
+    bitbucket: string
+  }
+  const githubPattern = new RegExp(github || 'github\\.com\\/([^\\/]+)\\/([^\\/]+)\\/(?:blob|raw)\\/([^\\/]+)\\/(.+)')
+  const gitlabPattern = new RegExp(
+    gitlab || 'gitlab\\.com\\/([^\\/]+)\\/([^\\/]+)(?:\\/([^\\/]+))?\\/(?:\\-\\/(?:blob|raw))\\/([^\\/]+)\\/(.+)',
+  )
+  const bitbucketPattern = new RegExp(
+    bitbucket || 'bitbucket\\.org\\/([^\\/]+)\\/([^\\/]+)\\/(?:src|raw)\\/([^\\/]+)\\/(.+)',
+  )
 
   let match = normalizedUrl.match(githubPattern)
   if (match) return { provider: 'github', owner: match[1], repo: match[2], branch: match[3], filePath: match[4] }
