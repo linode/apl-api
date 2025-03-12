@@ -58,8 +58,9 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
     valid = authz.hasSelfService(teamId, 'access', 'downloadKubeConfig')
   else if (action === 'read' && schemaName === 'DockerConfig')
     valid = authz.hasSelfService(teamId, 'access', 'downloadDockerConfig')
-  else if (action === 'create' && schemaName === 'Cloudtty')
-    valid = authz.hasSelfService(body.teamId, 'access', 'shell')
+  else if (action === 'create' && schemaName === 'Cloudtty') valid = authz.hasSelfService(teamId, 'access', 'shell')
+  else if (action === 'update' && schemaName === 'Policy')
+    valid = authz.hasSelfService(teamId, 'policies', 'edit policies')
   else valid = authz.validateWithCasl(action, schemaName, teamId)
   const env = cleanEnv({})
   // TODO: Debug purpose only for removal of license
@@ -75,6 +76,7 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
     Secret: 'secrets',
     Service: 'services',
     Team: 'teams',
+    Policy: 'policies',
   }
 
   const selector = renameKeys(req.params)
@@ -87,7 +89,13 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
       {},
     )
 
-    if (action === 'update') dataOrig = db.getItemReference(collection, selector, false) as Record<string, any>
+    if (action === 'update') {
+      if (collection === 'policies') {
+        const policies = db.db.get(['policies']).value()
+        const id = req.params.policyId
+        dataOrig = policies[teamId][id]
+      } else dataOrig = db.getItemReference(collection, selector, false) as Record<string, any>
+    }
     const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body, dataOrig)
     if (violatedAttributes.length > 0) {
       return res.status(403).send({
