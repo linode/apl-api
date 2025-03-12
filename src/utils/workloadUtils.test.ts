@@ -66,12 +66,12 @@ describe('detectGitProvider', () => {
   })
 
   test('detects GitLab URLs correctly', () => {
-    const url = 'https://gitlab.com/owner/repo/-/blob/main/path/to/file.yaml'
+    const url = 'https://gitlab.com/owner/charts/repo/-/blob/main/path/to/file.yaml'
     const result = detectGitProvider(url)
     expect(result).toEqual({
       provider: 'gitlab',
       owner: 'owner',
-      repo: 'repo',
+      repo: 'charts/repo',
       branch: 'main',
       filePath: 'path/to/file.yaml',
     })
@@ -388,7 +388,7 @@ describe('sparseCloneChart', () => {
     expect(fsExtra.mkdirSync).toHaveBeenCalledWith(`${localHelmChartsDir}-newChart`, { recursive: true })
     expect(mockGit.clone).toHaveBeenCalledTimes(2) // Once for catalog repo, once for chart repo
     expect(mockGit.raw).toHaveBeenCalledWith(['sparse-checkout', 'init', '--cone'])
-    expect(mockGit.raw).toHaveBeenCalledWith(['sparse-checkout', 'set', 'bitnami/cassandra'])
+    expect(mockGit.raw).toHaveBeenCalledWith(['sparse-checkout', 'set', 'bitnami/cassandra/'])
     expect(mockGit.checkout).toHaveBeenCalledWith('main')
     expect(fsExtra.renameSync).toHaveBeenCalled()
     expect(fsExtra.rmSync).toHaveBeenCalled()

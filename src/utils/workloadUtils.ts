@@ -15,14 +15,22 @@ export const detectGitProvider = (url) => {
   const normalizedUrl = url.replace(/\/*$/, '')
 
   const githubPattern = /github\.com\/([^\/]+)\/([^\/]+)(?:\/(?:blob|raw))?\/([^\/]+)\/(.+)/
-  const gitlabPattern = /gitlab\.com\/([^\/]+)\/([^\/]+)\/(?:\-\/(?:blob|raw))\/([^\/]+)\/(.+)/
+  const gitlabPattern = /gitlab\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)\/(?:\-\/(?:blob|raw))\/([^\/]+)\/(.+)/
   const bitbucketPattern = /bitbucket\.org\/([^\/]+)\/([^\/]+)\/(?:src|raw)\/([^\/]+)\/(.+)/
 
   let match = normalizedUrl.match(githubPattern)
   if (match) return { provider: 'github', owner: match[1], repo: match[2], branch: match[3], filePath: match[4] }
 
   match = normalizedUrl.match(gitlabPattern)
-  if (match) return { provider: 'gitlab', owner: match[1], repo: match[2], branch: match[3], filePath: match[4] }
+  if (match) {
+    return {
+      provider: 'gitlab',
+      owner: match[1],
+      repo: `${match[2]}/${match[3]}`,
+      branch: match[4],
+      filePath: match[5],
+    }
+  }
 
   match = normalizedUrl.match(bitbucketPattern)
   if (match) return { provider: 'bitbucket', owner: match[1], repo: match[2], branch: match[3], filePath: match[4] }
@@ -200,7 +208,7 @@ export async function sparseCloneChart(
 ): Promise<boolean> {
   const details = detectGitProvider(gitRepositoryUrl)
   const gitCloneUrl = getGitCloneUrl(details) as string
-  const chartPath = details?.filePath.replace('/Chart.yaml', '') as string
+  const chartPath = details?.filePath.replace('Chart.yaml', '') as string
   const revision = details?.branch as string
   const temporaryCloneDir = `${localHelmChartsDir}-newChart`
   const finalDestinationPath = `${localHelmChartsDir}/${chartTargetDirName}`
@@ -239,6 +247,9 @@ export async function sparseCloneChart(
 
   // Move files from "temporaryCloneDir/chartPath/*" to "finalDestinationPath/"
   renameSync(path.join(temporaryCloneDir, chartPath), finalDestinationPath)
+
+  // Remove the .git directory from the final destination.
+  rmSync(`${finalDestinationPath}/.git`, { recursive: true, force: true })
 
   // Remove the leftover temporary clone directory.
   rmSync(temporaryCloneDir, { recursive: true, force: true })
