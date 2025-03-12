@@ -9,10 +9,10 @@ import YAML from 'yaml'
 
 const debug = Debug('apl:workloadUtils')
 
-export const detectGitProvider = (url) => {
+export function detectGitProvider(url) {
   if (!url || typeof url !== 'string') return null
 
-  const normalizedUrl = url.replace(/\/*$/, '')
+  const normalizedUrl = new URL(url).origin + new URL(url).pathname.replace(/\/*$/, '')
 
   const githubPattern = /github\.com\/([^\/]+)\/([^\/]+)(?:\/(?:blob|raw))?\/([^\/]+)\/(.+)/
   const gitlabPattern = /gitlab\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)\/(?:\-\/(?:blob|raw))\/([^\/]+)\/(.+)/
@@ -38,7 +38,7 @@ export const detectGitProvider = (url) => {
   return null
 }
 
-const getGitRawUrl = (details) => {
+function getGitRawUrl(details) {
   if (!details) return null
 
   if (details.provider === 'github')
@@ -51,7 +51,7 @@ const getGitRawUrl = (details) => {
   return null
 }
 
-export const getGitCloneUrl = (details) => {
+export function getGitCloneUrl(details) {
   if (!details) return null
 
   if (details.provider === 'github') return `https://github.com/${details.owner}/${details.repo}.git`
@@ -61,7 +61,7 @@ export const getGitCloneUrl = (details) => {
   return null
 }
 
-export const fetchChartYaml = async (url) => {
+export async function fetchChartYaml(url) {
   try {
     const details = detectGitProvider(url)
     if (!details) return { values: {}, error: 'Unsupported Git provider or invalid URL format.' }
