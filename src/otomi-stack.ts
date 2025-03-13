@@ -1316,19 +1316,27 @@ export default class OtomiStack {
     return this.repoService.getAllWorkloads()
   }
 
-  async getWorkloadCatalog(data: { url: string; sub: string; teamId: string }): Promise<any> {
-    const { url: clientUrl, sub, teamId } = data
-    let url = clientUrl
-    if (env?.HELM_CHART_CATALOG && !clientUrl) url = env.HELM_CHART_CATALOG
-    if (!url) {
-      throw {
-        code: 404,
-        message: 'No helm chart catalog found!',
-      }
+  async getWorkloadCatalog(data: {
+    url?: string
+    teamId: string
+  }): Promise<{ url: string; helmCharts: any; catalog: any }> {
+    const { url: clientUrl, teamId } = data
+    const uuid = uuidv4()
+    const helmChartsDir = `/tmp/otomi/charts/${uuid}`
+
+    const url = clientUrl || env?.HELM_CHART_CATALOG
+
+    if (!url) throw new OtomiError(400, 'Helm chart catalog URL is not set')
+
+    try {
+      const { helmCharts, catalog } = await fetchWorkloadCatalog(url, helmChartsDir, teamId)
+      return { url, helmCharts, catalog }
+    } catch (error) {
+      debug('Error fetching workload catalog')
+      throw new OtomiError(404, 'No helm chart catalog found!')
+    } finally {
+      if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
     }
-    const version = env.VERSIONS.core as string
-    const { helmCharts, catalog } = await fetchWorkloadCatalog(url, sub, teamId, version)
-    return { url, helmCharts, catalog }
   }
 
   async createWorkloadCatalog(body: NewChartPayload): Promise<boolean> {

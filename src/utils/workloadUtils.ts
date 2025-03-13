@@ -2,8 +2,7 @@ import Debug from 'debug'
 import { existsSync, mkdirSync, readFile, renameSync, rmSync } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
 import path from 'path'
-import shell from 'shelljs'
-import simpleGit from 'simple-git'
+import simpleGit, { SimpleGit } from 'simple-git'
 import YAML from 'yaml'
 
 const debug = Debug('apl:workloadUtils')
@@ -19,7 +18,6 @@ export interface NewChartValues {
 
 export interface NewChartPayload extends NewChartValues {
   teamId: string
-  userSub: string
 }
 
 function throwChartError(message: string) {
@@ -48,7 +46,7 @@ function isGiteaURL(url: string) {
  * Reads the Chart.yaml file at the given path, updates (or sets) its icon field,
  * and writes the updated content back to disk.
  *
- * @param chartYamlPath - Path to Chart.yaml (e.g. "/tmp/otomi/charts/mock-sub-value/cassandra/Chart.yaml")
+ * @param chartYamlPath - Path to Chart.yaml (e.g. "/tmp/otomi/charts/uuid/cassandra/Chart.yaml")
  * @param newIcon - The user-selected icon URL.
  */
 export async function updateChartIconInYaml(chartYamlPath: string, newIcon: string): Promise<void> {
@@ -67,7 +65,7 @@ export async function updateChartIconInYaml(chartYamlPath: string, newIcon: stri
 /**
  * Updates the rbac.yaml file in the specified folder by adding a new chart key.
  *
- * @param sparsePath - The folder where rbac.yaml resides (e.g. "/tmp/otomi/charts/mock-sub-value")
+ * @param sparsePath - The folder where rbac.yaml resides (e.g. "/tmp/otomi/charts/uuid")
  * @param chartKey - The key to add under the "rbac" section (e.g. "quickstart-cassandra")
  * @param allowTeams - Boolean indicating if teams are allowed to use the chart.
  *                     If false, the key is set to [].
@@ -100,25 +98,31 @@ export async function updateRbacForNewChart(sparsePath: string, chartKey: string
   debug(`Updated rbac.yaml: added ${chartKey}: ${allowTeams ? 'null' : '[]'}`)
 }
 
-export async function commitAndPush(targetDir: string, helmChartCatalogUrl: string, user: string, email: string) {
-  const git = simpleGit(targetDir)
-  await git.addConfig('user.name', user)
-  await git.addConfig('user.email', email)
-
-  try {
-    if (!existsSync(path.join(targetDir, '.git'))) {
-      await git.init()
-      await git.addRemote('origin', helmChartCatalogUrl)
-    }
-
-    await git.add('.')
-    await git.commit('Added new Helm chart')
-    await git.pull('origin', 'main', { '--rebase': null })
-    await git.push('origin', 'main')
-
-    debug('Successfully pushed changes!')
-  } catch (error) {
-    debug('Error during commit and push:')
+class chartRepo {
+  localPath: string
+  chartRepoUrl: string
+  gitUser?: string
+  gitEmail?: string
+  git: SimpleGit
+  constructor(localPath: string, chartRepoUrl: string, gitUser: string | undefined, gitEmail: string | undefined) {
+    this.localPath = localPath
+    this.chartRepoUrl = chartRepoUrl
+    this.gitUser = gitUser
+    this.gitEmail = gitEmail
+    this.git = simpleGit(this.localPath)
+  }
+  async clone() {
+    await this.git.clone(this.chartRepoUrl, this.localPath)
+  }
+  async addConfig() {
+    await this.git.addConfig('user.name', this.gitUser!)
+    await this.git.addConfig('user.email', this.gitEmail!)
+  }
+  async commitAndPush(chartName: string) {
+    await this.git.add('.')
+    await this.git.commit(`Add ${chartName} helm chart`)
+    await this.git.pull('origin', 'main', { '--rebase': null })
+    await this.git.push('origin', 'main')
   }
 }
 
@@ -143,13 +147,24 @@ export async function sparseCloneChart(
   email: string,
   chartName: string,
   chartPath: string,
-  sparsePath: string, // e.g. "/tmp/otomi/charts/mock-sub-value"
+  sparsePath: string, // e.g. "/tmp/otomi/charts/uuid"
   revision: string,
   chartIcon?: string,
   allowTeams?: boolean,
 ): Promise<boolean> {
   const temporaryCloneDir = `${sparsePath}-new` // Temporary clone directory
   const checkoutPath = `${sparsePath}/${chartName}` // Final destination
+
+  if (!existsSync(sparsePath)) mkdirSync(sparsePath, { recursive: true })
+  let gitUrl = helmChartCatalogUrl
+  if (isGiteaURL(url)) {
+    const [protocol, bareUrl] = url.split('://')
+    const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
+    const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
+    gitUrl = `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
+  }
+  const gitRepo = new chartRepo(sparsePath, gitUrl, user, email)
+  await gitRepo.clone()
 
   if (!existsSync(temporaryCloneDir)) mkdirSync(temporaryCloneDir, { recursive: true })
   else {
@@ -194,20 +209,14 @@ export async function sparseCloneChart(
   await updateRbacForNewChart(sparsePath, chartName, allowTeams as boolean)
 
   // pull&push new chart changes
-  await commitAndPush(sparsePath, helmChartCatalogUrl, user, email)
+  await gitRepo.addConfig()
+  await gitRepo.commitAndPush(chartName)
 
   return true
 }
 
-export async function fetchWorkloadCatalog(
-  url: string,
-  sub: string,
-  teamId: string,
-  version: string,
-): Promise<Promise<any>> {
-  const helmChartsDir = `/tmp/otomi/charts/${sub}`
-  shell.rm('-rf', helmChartsDir)
-  shell.mkdir('-p', helmChartsDir)
+export async function fetchWorkloadCatalog(url: string, helmChartsDir: string, teamId: string): Promise<Promise<any>> {
+  if (!existsSync(helmChartsDir)) mkdirSync(helmChartsDir, { recursive: true })
   let gitUrl = url
   if (isGiteaURL(url)) {
     const [protocol, bareUrl] = url.split('://')
@@ -215,10 +224,11 @@ export async function fetchWorkloadCatalog(
     const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
     gitUrl = `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
   }
-  shell.exec(`git clone --depth 1 ${gitUrl} ${helmChartsDir}`)
-  const files = await readdir(`${helmChartsDir}`, 'utf-8')
+  const gitRepo = new chartRepo(helmChartsDir, gitUrl, undefined, undefined)
+  await gitRepo.clone()
+
+  const files = await readdir(helmChartsDir, 'utf-8')
   const filesToExclude = ['.git', '.gitignore', '.vscode', 'LICENSE', 'README.md']
-  if (!version.startsWith('v1')) filesToExclude.push('deployment', 'ksvc')
   const folders = files.filter((f) => !filesToExclude.includes(f))
 
   let rbac = {}
@@ -248,7 +258,7 @@ export async function fetchWorkloadCatalog(
       if (!rbac[folder] || rbac[folder].includes(`team-${teamId}`) || teamId === 'admin') {
         const catalogItem = {
           name: folder,
-          values,
+          values: values || '{}',
           icon: chartMetadata?.icon,
           chartVersion: chartMetadata?.version,
           chartDescription: chartMetadata?.description,

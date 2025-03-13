@@ -733,4 +733,42 @@ describe('API authz tests', () => {
         .expect(200)
     })
   })
+
+  describe('Policy endpoint tests', () => {
+    const data = { action: 'Enforce', severity: 'high' }
+
+    test('platform admin can get policies', async () => {
+      await agent
+        .get('/v1/teams/team1/policies')
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('platform admin can update policies', async () => {
+      await agent
+        .put('/v1/teams/team1/policies/disallow-selinux')
+        .send(data)
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can get policies', async () => {
+      await agent
+        .get('/v1/teams/team1/policies')
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can not update policies', async () => {
+      await agent
+        .put('/v1/teams/team1/policies/disallow-selinux')
+        .send(data)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(403)
+        .expect('Content-Type', /json/)
+    })
+  })
 })

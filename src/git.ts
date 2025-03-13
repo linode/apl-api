@@ -451,7 +451,6 @@ export class Git {
       // retry up to 10 times to pull and push if there are conflicts
       const retries = env.GIT_PUSH_RETRIES
       for (let attempt = 1; attempt <= retries; attempt++) {
-        // await this.pull(skipInit)
         await this.git.pull(this.remote, this.branch, { '--rebase': 'true', '--depth': '5' })
         try {
           await this.push()
