@@ -199,5 +199,6 @@ IngressPublic:
             - public
           default: public
   nullable: true
+  type: object
   description: Will only accept traffic coming from an external loadbalancer.
   title: External
