@@ -69,7 +69,7 @@ describe('RepoService', () => {
 
     test('should delete a user', () => {
       const createdUser = service.createUser(user)
-      service.deleteUser(createdUser.id!)
+      service.deleteUser(createdUser.email)
       expect(service.getUsers()).toHaveLength(0)
     })
   })
