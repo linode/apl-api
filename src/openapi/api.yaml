@@ -1180,6 +1180,28 @@ paths:
             application/json:
               schema:
                 type: object
+  '/helmChartContent':
+    get:
+      operationId: getHelmChartContent
+      parameters:
+        - name: url
+          in: query
+          description: URL of the helm chart
+          schema:
+            type: string
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained helm chart content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  values:
+                    type: object
+                  error:
+                    type: string
   '/createWorkloadCatalog':
     post:
       operationId: createWorkloadCatalog
