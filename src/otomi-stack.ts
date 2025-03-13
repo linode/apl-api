@@ -620,12 +620,12 @@ export default class OtomiStack {
       if (id !== 'admin' && (isShared || inTeamApps)) this.db.createItem('apps', {}, { teamId: id, id: appId }, appId)
     })
 
-    if (!data.id) {
-      const policies = getPolicies()
-      this.db.db.set(`policies[${data.name}]`, policies).write()
-      await this.saveTeamPolicies(data.name)
-    }
     if (deploy) {
+      if (!data.id) {
+        const policies = getPolicies()
+        this.db.db.set(`policies[${data.name}]`, policies).write()
+        await this.saveTeamPolicies(data.name)
+      }
       const secretPaths = this.getSecretPaths()
       await this.saveTeams(secretPaths)
       await this.doDeployment(['teams', 'policies'])
