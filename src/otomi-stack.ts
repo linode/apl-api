@@ -623,11 +623,12 @@ export default class OtomiStack {
     if (!data.id) {
       const policies = getPolicies()
       this.db.db.set(`policies[${data.name}]`, policies).write()
+      await this.saveTeamPolicies(data.name)
     }
     if (deploy) {
       const secretPaths = this.getSecretPaths()
       await this.saveTeams(secretPaths)
-      await this.doDeployment(['teams'])
+      await this.doDeployment(['teams', 'policies'])
     }
     return team
   }
