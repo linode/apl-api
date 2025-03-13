@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.7.1](https://github.com/redkubes/otomi-api/compare/v3.5.0...v3.7.1) (2025-03-13)
+
+
+### Features
+
+* add code repository schema & endpoints ([#628](https://github.com/redkubes/otomi-api/issues/628)) ([a8cb958](https://github.com/redkubes/otomi-api/commit/a8cb9581951b598b5d7e4a6ae5673e8f5d7815bc))
+* add username blacklist and validation ([#619](https://github.com/redkubes/otomi-api/issues/619)) ([34142f9](https://github.com/redkubes/otomi-api/commit/34142f91dfb0c25187c9f9c4a7b9daebaeb4da7e))
+* add self-service option for admins to add external helm charts to the catalog ([#642](https://github.com/redkubes/otomi-api/issues/642)) ([eb2e268](https://github.com/redkubes/otomi-api/commit/eb2e268a69bd6aaa910f1e8ee1203ce376c91665))
+* change all tests to Jest ([#625](https://github.com/redkubes/otomi-api/issues/625)) ([4cfaab9](https://github.com/redkubes/otomi-api/commit/4cfaab9a3202ac29ca95d70c413ab586795548bb))
+* execute initSops before we loadValues to prevent data being shown as encrypted ([#610](https://github.com/redkubes/otomi-api/issues/610)) ([9a61589](https://github.com/redkubes/otomi-api/commit/9a61589df24919debd9d57ee159dd95aa13f0a1b))
+* remove deploy changes button ([#608](https://github.com/redkubes/otomi-api/issues/608)) ([6e045c9](https://github.com/redkubes/otomi-api/commit/6e045c984689df81c5b7e8dfad0e3a958856940d))
+* remove locking mechanism & update api flow ([#611](https://github.com/redkubes/otomi-api/issues/611)) ([7829668](https://github.com/redkubes/otomi-api/commit/782966887068cc6a10aeb53e3adca4b960a390e7))
+* Save and deploy team secrets as SealedSecrets manifests ([#623](https://github.com/redkubes/otomi-api/issues/623)) ([79d61ce](https://github.com/redkubes/otomi-api/commit/79d61ceeb4eb8e4eb917acd23062913feb17ce9a))
+* update add new helm chart ([#653](https://github.com/redkubes/otomi-api/issues/653)) ([1e523ae](https://github.com/redkubes/otomi-api/commit/1e523ae71f8b45cc8b1211b96cfe21d6217ca35a))
+* update fetch workload catalog ([#655](https://github.com/redkubes/otomi-api/issues/655)) ([8dd5f05](https://github.com/redkubes/otomi-api/commit/8dd5f05020764565c5a3e5d5739d7e59767b258e))
+
+
+### Bug Fixes
+
+* add policies to api check ([#652](https://github.com/redkubes/otomi-api/issues/652)) ([ab6d57c](https://github.com/redkubes/otomi-api/commit/ab6d57cf328bf1a0bec6a40c1a81c0e15be6e51a))
+* align name field titles in the resource forms ([#605](https://github.com/redkubes/otomi-api/issues/605)) ([2f0db13](https://github.com/redkubes/otomi-api/commit/2f0db133254e993a7807105efcf30cf2e2917265))
+* create project ([#624](https://github.com/redkubes/otomi-api/issues/624)) ([794689a](https://github.com/redkubes/otomi-api/commit/794689a3d147430d1d5ca923eeaa3366ea622c9c))
+* create service & form validation nullable error ([#656](https://github.com/redkubes/otomi-api/issues/656)) ([ae7509e](https://github.com/redkubes/otomi-api/commit/ae7509ebcc3470c3c0342fe5a137f0ea637c58a0))
+* createObjWizard 500 errors ([#636](https://github.com/redkubes/otomi-api/issues/636)) ([c2ca7f7](https://github.com/redkubes/otomi-api/commit/c2ca7f7466da03a975138c4f4768b978e3655211))
+* enable trivy for isPreInstalled=true ([#603](https://github.com/redkubes/otomi-api/issues/603)) ([810e6f4](https://github.com/redkubes/otomi-api/commit/810e6f40b76c954412f7109d0ae97dc1a4933d85))
+* generate special password ([#632](https://github.com/redkubes/otomi-api/issues/632)) ([72e68ba](https://github.com/redkubes/otomi-api/commit/72e68bacd0e95719c53e8456f8cde10aa916e491))
+* **git save:** increase git pull retries and remove doRestore ([#651](https://github.com/redkubes/otomi-api/issues/651)) ([ab98d05](https://github.com/redkubes/otomi-api/commit/ab98d05d545b0d0ef403df05f97c40a9c3277e59))
+* main module to be placed in dist/src ([#633](https://github.com/redkubes/otomi-api/issues/633)) ([ef9b438](https://github.com/redkubes/otomi-api/commit/ef9b4380c85bfc57edb59d679c66feefadfd8d58))
+* update fetchWorkloadCatalog and align with the new feature ([#643](https://github.com/redkubes/otomi-api/issues/643)) ([a52ab12](https://github.com/redkubes/otomi-api/commit/a52ab12d5fae5a85cbc4a7fc8ed46eccca58eed0))
+
 ## [3.7.0](https://github.com/redkubes/otomi-api/compare/v3.5.0...v3.7.0) (2025-03-07)
 
 
