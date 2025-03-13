@@ -118,8 +118,8 @@ export class RepoService {
     return merge(user, updates)
   }
 
-  public deleteUser(id: string): void {
-    remove(this.repo.users, { id })
+  public deleteUser(email: string): void {
+    remove(this.repo.users, { email })
   }
 
   private getDefaultTeamConfig(): TeamConfig {

@@ -822,7 +822,7 @@ export default class OtomiStack {
     }
     await this.deleteUserFile(user)
     await this.doRepoDeployment((repoService) => {
-      repoService.deleteUser(user.id!)
+      repoService.deleteUser(user.email)
     })
   }
 
@@ -1921,7 +1921,7 @@ export default class OtomiStack {
 
   async deleteUserFile(user: User): Promise<void> {
     debug(`Deleting user ${user.email}`)
-    this.repoService.deleteUser(user.id!)
+    this.repoService.deleteUser(user.email)
     const users: User[] = []
     users.push(user)
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplUser')!
