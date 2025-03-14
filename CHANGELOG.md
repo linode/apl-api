@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.7.2](https://github.com/redkubes/otomi-api/compare/v3.7.1...v3.7.2) (2025-03-14)
+
+
+### Bug Fixes
+
+* create policies with the new team creation ([#657](https://github.com/redkubes/otomi-api/issues/657)) ([5723fb7](https://github.com/redkubes/otomi-api/commit/5723fb7b2be2c0e07adf707e49a8972e75f22a97))
+
 ### [3.7.1](https://github.com/redkubes/otomi-api/compare/v3.5.0...v3.7.1) (2025-03-13)
 
 
