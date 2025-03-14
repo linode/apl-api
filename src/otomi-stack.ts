@@ -248,7 +248,9 @@ export default class OtomiStack {
         if (await this.repo.fileExists('env/cluster.yaml')) break
         debug(`Values are not present at ${url}:${branch}`)
       } catch (e) {
-        debug(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
+        // Remove password from error message
+        const safeCommand = JSON.stringify(e.task?.commands).replace(env.GIT_PASSWORD, '****')
+        debug(`${e.message.trim()} for command ${JSON.stringify(safeCommand)}`)
         debug(`Git repository is not ready: ${url}:${branch}`)
       }
       const timeoutMs = 10000
