@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.0.0](https://github.com/redkubes/otomi-api/compare/v3.7.0...v4.0.0) (2025-03-17)
+
+
+### Features
+
+* update add new helm chart ([#653](https://github.com/redkubes/otomi-api/issues/653)) ([f7d6e3e](https://github.com/redkubes/otomi-api/commit/f7d6e3e63296ff2b922951c5f1748e42f99351ed))
+* update fetch workload catalog ([#655](https://github.com/redkubes/otomi-api/issues/655)) ([b5db0b4](https://github.com/redkubes/otomi-api/commit/b5db0b441b0767862cf2d7aa8ee0bfd18453ab7a))
+* use new file structure ([#634](https://github.com/redkubes/otomi-api/issues/634)) ([0f71482](https://github.com/redkubes/otomi-api/commit/0f7148204e2e37993aed1546b424096a8e7bc27b))
+
+
+### Bug Fixes
+
+* add policies to api check ([#652](https://github.com/redkubes/otomi-api/issues/652)) ([4d384f2](https://github.com/redkubes/otomi-api/commit/4d384f2044d172f9398d9acde51ff757714ffa38))
+* create policies with the new team creation ([#657](https://github.com/redkubes/otomi-api/issues/657)) ([f4e556e](https://github.com/redkubes/otomi-api/commit/f4e556e92dfe48798f89d6d5980f2a06791f1559))
+* create service & form validation nullable error ([#656](https://github.com/redkubes/otomi-api/issues/656)) ([b52712d](https://github.com/redkubes/otomi-api/commit/b52712d39d029bbcbeae39d7e7a478270374f2cb))
+* **git save:** increase git pull retries and remove doRestore ([#651](https://github.com/redkubes/otomi-api/issues/651)) ([a8ae5ef](https://github.com/redkubes/otomi-api/commit/a8ae5ef815ca8494f5c0228677949cf90f450a2a))
+* remove password from error log ([#658](https://github.com/redkubes/otomi-api/issues/658)) ([754e672](https://github.com/redkubes/otomi-api/commit/754e6727d0f5558abc58e6e64a9b194151317871))
+
+
+### Others
+
+* update main branch ([#659](https://github.com/redkubes/otomi-api/issues/659)) ([165199d](https://github.com/redkubes/otomi-api/commit/165199dbee2f59317efaf4a24e708c2296aef5c7)), closes [#651](https://github.com/redkubes/otomi-api/issues/651) [#652](https://github.com/redkubes/otomi-api/issues/652) [#655](https://github.com/redkubes/otomi-api/issues/655) [#653](https://github.com/redkubes/otomi-api/issues/653)
+
 ### [3.7.2](https://github.com/redkubes/otomi-api/compare/v3.7.1...v3.7.2) (2025-03-14)
 
 
