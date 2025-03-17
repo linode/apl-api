@@ -20,9 +20,9 @@ export default function (): OperationHandlerArray {
     },
   ]
   const put: Operation = [
-    async ({ otomi, params: { teamId, projectName }, body }: OpenApiRequestExt, res): Promise<void> => {
+    ({ otomi, params: { teamId, projectName }, body }: OpenApiRequestExt, res): void => {
       debug(`editProject(${projectName})`)
-      const data = await otomi.editProject(decodeURIComponent(teamId), decodeURIComponent(projectName), {
+      const data = otomi.editProject(decodeURIComponent(teamId), decodeURIComponent(projectName), {
         ...body,
         teamId: decodeURIComponent(teamId),
       } as Project)
