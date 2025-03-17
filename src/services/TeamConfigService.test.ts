@@ -1,15 +1,14 @@
 // Mock UUID to generate predictable values
 import {
+  AplBackupRequest,
+  AplBuildRequest,
+  AplNetpolRequest,
+  AplProjectRequest,
+  AplSecretRequest,
+  AplServiceRequest,
+  AplWorkloadRequest,
   App,
-  Backup,
-  Build,
-  Netpol,
-  Project,
-  SealedSecret,
-  Service,
   TeamConfig,
-  Workload,
-  WorkloadValues,
 } from '../otomi-models'
 import { TeamConfigService } from './TeamConfigService'
 import { AlreadyExists, NotExistError } from '../error'
@@ -41,11 +40,26 @@ describe('TeamConfigService', () => {
   })
 
   describe('Builds', () => {
-    const build: Build = { name: 'TestBuild' }
+    const build: AplBuildRequest = {
+      kind: 'AplTeamBuild',
+      metadata: { name: 'TestBuild' },
+      spec: {},
+    }
     test('should create a build', () => {
       const createdBuild = service.createBuild(build)
 
-      expect(createdBuild).toEqual({ name: 'TestBuild', id: 'mocked-uuid' })
+      expect(createdBuild).toEqual({
+        kind: 'AplTeamBuild',
+        metadata: {
+          name: 'TestBuild',
+          labels: {
+            'apl.io/id': 'mocked-uuid',
+            'apl.io/teamId': 'team1',
+          },
+        },
+        spec: {},
+        status: {},
+      })
       expect(service.getBuilds()).toHaveLength(1)
     })
 
@@ -58,7 +72,7 @@ describe('TeamConfigService', () => {
     test('should retrieve a build by id', () => {
       const createdBuild = service.createBuild(build)
 
-      expect(service.getBuild(createdBuild.name)).toEqual(createdBuild)
+      expect(service.getBuild(createdBuild.metadata.name)).toEqual(createdBuild)
     })
 
     test('should throw an error when retrieving a non-existent build', () => {
@@ -68,24 +82,47 @@ describe('TeamConfigService', () => {
     test('should update a build', () => {
       const createdBuild = service.createBuild(build)
 
-      const updatedBuild = service.updateBuild(createdBuild.name, { name: 'UpdatedBuild' })
-      expect(updatedBuild.name).toBe('UpdatedBuild')
+      const updatedBuild = service.updateBuild(createdBuild.metadata.name, { metadata: { name: 'UpdatedBuild' } })
+      expect(updatedBuild.metadata.name).toBe('UpdatedBuild')
     })
 
     test('should delete a build', () => {
       const createdBuild = service.createBuild(build)
 
-      service.deleteBuild(createdBuild.name)
+      service.deleteBuild(createdBuild.metadata.name)
       expect(service.getBuilds()).toHaveLength(0)
     })
   })
 
   describe('Workloads', () => {
-    const workload: Workload = { name: 'TestWorkload', url: 'http://test.com' }
+    const workload: AplWorkloadRequest = {
+      kind: 'AplTeamWorkload',
+      metadata: {
+        name: 'TestWorkload',
+      },
+      spec: {
+        url: 'http://test.com',
+        values: '',
+      },
+    }
     test('should create a workload', () => {
       const createdWorkload = service.createWorkload(workload)
 
-      expect(createdWorkload).toEqual({ name: 'TestWorkload', id: 'mocked-uuid', url: 'http://test.com' })
+      expect(createdWorkload).toEqual({
+        kind: 'AplTeamWorkload',
+        metadata: {
+          name: 'TestWorkload',
+          labels: {
+            'apl.io/id': 'mocked-uuid',
+            'apl.io/teamId': 'team1',
+          },
+        },
+        spec: {
+          url: 'http://test.com',
+          values: '',
+        },
+        status: {},
+      })
       expect(service.getWorkloads()).toHaveLength(1)
     })
 
@@ -98,7 +135,7 @@ describe('TeamConfigService', () => {
     test('should retrieve a workload by id', () => {
       const createdWorkload = service.createWorkload(workload)
 
-      expect(service.getWorkload(createdWorkload.name)).toEqual(createdWorkload)
+      expect(service.getWorkload(createdWorkload.metadata.name)).toEqual(createdWorkload)
     })
 
     test('should throw an error when retrieving a non-existent workload', () => {
@@ -108,17 +145,32 @@ describe('TeamConfigService', () => {
     test('should delete a workload', () => {
       const createdWorkload = service.createWorkload(workload)
 
-      service.deleteWorkload(createdWorkload.name)
+      service.deleteWorkload(createdWorkload.metadata.name)
       expect(service.getWorkloads()).toHaveLength(0)
     })
   })
 
   describe('Services', () => {
-    const serviceData: Service = { name: 'TestService', ingress: {} }
+    const serviceData: AplServiceRequest = {
+      kind: 'AplTeamService',
+      metadata: { name: 'TestService' },
+      spec: { type: 'public' },
+    }
     test('should create a service', () => {
       const createdService = service.createService(serviceData)
 
-      expect(createdService).toEqual({ name: 'TestService', id: 'mocked-uuid', ingress: {} })
+      expect(createdService).toEqual({
+        kind: 'AplTeamService',
+        metadata: {
+          name: 'TestService',
+          labels: {
+            'apl.io/id': 'mocked-uuid',
+            'apl.io/teamId': 'team1',
+          },
+        },
+        spec: { type: 'public' },
+        status: {},
+      })
       expect(service.getServices()).toHaveLength(1)
     })
 
@@ -131,7 +183,7 @@ describe('TeamConfigService', () => {
     test('should retrieve a service by id', () => {
       const createdService = service.createService(serviceData)
 
-      expect(service.getService(createdService.name)).toEqual(createdService)
+      expect(service.getService(createdService.metadata.name)).toEqual(createdService)
     })
 
     test('should throw an error when retrieving a non-existent service', () => {
@@ -141,25 +193,37 @@ describe('TeamConfigService', () => {
     test('should delete a service', () => {
       const createdService = service.createService(serviceData)
 
-      service.deleteService(createdService.name)
+      service.deleteService(createdService.metadata.name)
       expect(service.getServices()).toHaveLength(0)
     })
   })
 
   describe('SealedSecrets', () => {
-    const secret: SealedSecret = {
-      name: 'TestSecret',
-      type: 'kubernetes.io/opaque',
-      encryptedData: [{ key: 'key', value: 'value' }],
+    const secret: AplSecretRequest = {
+      kind: 'AplTeamSecret',
+      metadata: { name: 'TestSecret' },
+      spec: {
+        type: 'kubernetes.io/opaque',
+        encryptedData: [{ key: 'key', value: 'value' }],
+      },
     }
     test('should create a sealed secret', () => {
       const createdSecret = service.createSealedSecret(secret)
 
       expect(createdSecret).toEqual({
-        name: 'TestSecret',
-        id: 'mocked-uuid',
-        type: 'kubernetes.io/opaque',
-        encryptedData: [{ key: 'key', value: 'value' }],
+        kind: 'AplTeamSecret',
+        metadata: {
+          name: 'TestSecret',
+          labels: {
+            'apl.io/id': 'mocked-uuid',
+            'apl.io/teamId': 'team1',
+          },
+        },
+        spec: {
+          type: 'kubernetes.io/opaque',
+          encryptedData: [{ key: 'key', value: 'value' }],
+        },
+        status: {},
       })
       expect(service.getSealedSecrets()).toHaveLength(1)
     })
@@ -173,7 +237,7 @@ describe('TeamConfigService', () => {
     test('should retrieve a sealed secret by id', () => {
       const createdSecret = service.createSealedSecret(secret)
 
-      expect(service.getSealedSecret(createdSecret.name)).toEqual(createdSecret)
+      expect(service.getSealedSecret(createdSecret.metadata.name)).toEqual(createdSecret)
     })
 
     test('should throw an error when retrieving a non-existent sealed secret', () => {
@@ -183,48 +247,33 @@ describe('TeamConfigService', () => {
     test('should delete a sealed secret', () => {
       const createdSecret = service.createSealedSecret(secret)
 
-      service.deleteSealedSecret(createdSecret.name)
+      service.deleteSealedSecret(createdSecret.metadata.name)
       expect(service.getSealedSecrets()).toHaveLength(0)
     })
   })
 
-  describe('WorkloadValues', () => {
-    const workloadValues: WorkloadValues = { name: 'TestWorkloadValues', values: { test: 'values' } }
-
-    beforeEach(() => {
-      service.createWorkload({ url: '', name: 'TestWorkloadValues' })
-    })
-
-    test('should create workload values', () => {
-      const created = service.createWorkloadValues(workloadValues)
-      expect(created).toEqual({ name: 'TestWorkloadValues', id: 'mocked-uuid', values: { test: 'values' } })
-      expect(service.getWorkloadValues(created.name!)).toEqual(created)
-    })
-
-    test('should throw an error when creating duplicate workload values', () => {
-      service.createWorkloadValues(workloadValues)
-      expect(() => service.createWorkloadValues(workloadValues)).toThrow(AlreadyExists)
-    })
-
-    test('should delete workload values', () => {
-      const created = service.createWorkloadValues(workloadValues)
-      service.deleteWorkloadValues(created.name!)
-      expect(service.getWorkloadValues(created.name!)).toEqual({
-        id: 'mocked-uuid',
-        name: 'TestWorkloadValues',
-        teamId: undefined,
-        values: {},
-      })
-    })
-  })
-
   describe('Backups', () => {
-    const backup: Backup = { name: 'TestBackup', ttl: '1', schedule: '0 0 * * *' }
+    const backup: AplBackupRequest = {
+      kind: 'AplTeamBackup',
+      metadata: { name: 'TestBackup' },
+      spec: { ttl: '1', schedule: '0 0 * * *' },
+    }
 
     test('should create a backup', () => {
       const created = service.createBackup(backup)
-      expect(created).toEqual({ name: 'TestBackup', id: 'mocked-uuid', ttl: '1', schedule: '0 0 * * *' })
-      expect(service.getBackup(created.name)).toEqual(created)
+      expect(created).toEqual({
+        kind: 'AplTeamBackup',
+        metadata: {
+          name: 'TestBackup',
+          labels: {
+            'apl.io/id': 'mocked-uuid',
+            'apl.io/teamId': 'team1',
+          },
+        },
+        spec: { ttl: '1', schedule: '0 0 * * *' },
+        status: {},
+      })
+      expect(service.getBackup(created.metadata.name)).toEqual(created)
     })
 
     test('should throw an error when creating duplicate backup', () => {
@@ -234,18 +283,33 @@ describe('TeamConfigService', () => {
 
     test('should delete a backup', () => {
       const created = service.createBackup(backup)
-      service.deleteBackup(created.name)
-      expect(() => service.getBackup(created.name)).toThrow(NotExistError)
+      service.deleteBackup(created.metadata.name)
+      expect(() => service.getBackup(created.metadata.name)).toThrow(NotExistError)
     })
   })
 
   describe('Projects', () => {
-    const project: Project = { name: 'TestProject' }
+    const project: AplProjectRequest = {
+      kind: 'AplTeamProject',
+      metadata: { name: 'TestProject' },
+      spec: {},
+    }
 
     test('should create a project', () => {
       const created = service.createProject(project)
-      expect(created).toEqual({ name: 'TestProject', id: 'mocked-uuid' })
-      expect(service.getProject(created.name)).toEqual(created)
+      expect(created).toEqual({
+        kind: 'AplTeamProject',
+        metadata: {
+          name: 'TestProject',
+          labels: {
+            'apl.io/id': 'mocked-uuid',
+            'apl.io/teamId': 'team1',
+          },
+        },
+        spec: {},
+        status: {},
+      })
+      expect(service.getProject(created.metadata.name)).toEqual(created)
     })
 
     test('should throw an error when creating duplicate project', () => {
@@ -255,18 +319,33 @@ describe('TeamConfigService', () => {
 
     test('should delete a project', () => {
       const created = service.createProject(project)
-      service.deleteProject(created.name)
-      expect(() => service.getProject(created.name)).toThrow(NotExistError)
+      service.deleteProject(created.metadata.name)
+      expect(() => service.getProject(created.metadata.name)).toThrow(NotExistError)
     })
   })
 
   describe('Netpols', () => {
-    const netpol: Netpol = { name: 'TestNetpol' }
+    const netpol: AplNetpolRequest = {
+      kind: 'AplTeamNetworkControl',
+      metadata: { name: 'TestNetpol' },
+      spec: {},
+    }
 
     test('should create a netpol', () => {
       const created = service.createNetpol(netpol)
-      expect(created).toEqual({ name: 'TestNetpol', id: 'mocked-uuid' })
-      expect(service.getNetpol(created.name)).toEqual(created)
+      expect(created).toEqual({
+        kind: 'AplTeamNetworkControl',
+        metadata: {
+          name: 'TestNetpol',
+          labels: {
+            'apl.io/id': 'mocked-uuid',
+            'apl.io/teamId': 'team1',
+          },
+        },
+        spec: {},
+        status: {},
+      })
+      expect(service.getNetpol(created.metadata.name)).toEqual(created)
     })
 
     test('should throw an error when creating duplicate netpol', () => {
@@ -276,8 +355,8 @@ describe('TeamConfigService', () => {
 
     test('should delete a netpol', () => {
       const created = service.createNetpol(netpol)
-      service.deleteNetpol(created.name)
-      expect(() => service.getNetpol(created.name)).toThrow(NotExistError)
+      service.deleteNetpol(created.metadata.name)
+      expect(() => service.getNetpol(created.metadata.name)).toThrow(NotExistError)
     })
   })
 
@@ -298,17 +377,50 @@ describe('TeamConfigService', () => {
 
   describe('Policies', () => {
     test('should retrieve policies', () => {
-      expect(service.getPolicies()).toEqual({})
+      expect(service.getPolicies()).toEqual([])
     })
 
     test('should update policies', () => {
-      service.updatePolicies({ 'require-limits': { action: 'Audit' } })
-      expect(service.getPolicies()).toEqual({ 'require-limits': { action: 'Audit', severity: 'medium' } })
+      service.updatePolicies('require-limits', {
+        kind: 'AplTeamPolicy',
+        spec: { action: 'Audit', severity: 'medium' },
+      })
+      expect(service.getPolicies()).toEqual([
+        {
+          kind: 'AplTeamPolicy',
+          metadata: {
+            name: 'require-limits',
+            labels: {
+              'apl.io/id': 'team1-require-limits',
+              'apl.io/teamId': 'team1',
+            },
+          },
+          spec: {
+            action: 'Audit',
+            severity: 'medium',
+          },
+          status: {},
+        },
+      ])
     })
 
     test('should retrieve a single policy', () => {
-      service.updatePolicies({ 'require-limits': { action: 'Audit' } })
-      expect(service.getPolicy('require-limits')).toEqual({ action: 'Audit', severity: 'medium' })
+      service.updatePolicies('require-limits', {
+        kind: 'AplTeamPolicy',
+        spec: { action: 'Audit', severity: 'medium' },
+      })
+      expect(service.getPolicy('require-limits')).toEqual({
+        kind: 'AplTeamPolicy',
+        metadata: {
+          name: 'require-limits',
+          labels: {
+            'apl.io/id': 'team1-require-limits',
+            'apl.io/teamId': 'team1',
+          },
+        },
+        spec: { action: 'Audit', severity: 'medium' },
+        status: {},
+      })
     })
   })
 
@@ -330,24 +442,51 @@ describe('TeamConfigService', () => {
     })
 
     test('should return true when a build with the given name exists', () => {
-      service.createBuild({ name: 'ExistingBuild' })
+      service.createBuild({
+        kind: 'AplTeamBuild',
+        metadata: { name: 'ExistingBuild' },
+        spec: {},
+      })
       expect(service.doesProjectNameExist('ExistingBuild')).toBe(true)
     })
 
     test('should return true when a workload with the given name exists', () => {
-      service.createWorkload({ name: 'ExistingWorkload', url: 'http://example.com' })
+      service.createWorkload({
+        kind: 'AplTeamWorkload',
+        metadata: { name: 'ExistingWorkload' },
+        spec: {
+          url: 'http://example.com',
+          values: '',
+        },
+      })
       expect(service.doesProjectNameExist('ExistingWorkload')).toBe(true)
     })
 
     test('should return true when a service with the given name exists', () => {
-      service.createService({ name: 'ExistingService', ingress: {} })
+      service.createService({
+        kind: 'AplTeamService',
+        metadata: { name: 'ExistingService' },
+        spec: { type: 'public' },
+      })
       expect(service.doesProjectNameExist('ExistingService')).toBe(true)
     })
 
     test('should return false when the name does not match any existing project', () => {
-      service.createBuild({ name: 'SomeBuild' })
-      service.createWorkload({ name: 'SomeWorkload', url: 'http://example.com' })
-      service.createService({ name: 'SomeService', ingress: {} })
+      service.createBuild({
+        kind: 'AplTeamBuild',
+        metadata: { name: 'SomeBuild' },
+        spec: {},
+      })
+      service.createWorkload({
+        kind: 'AplTeamWorkload',
+        metadata: { name: 'SomeWorkload' },
+        spec: { url: 'http://example.com', values: '' },
+      })
+      service.createService({
+        kind: 'AplTeamService',
+        metadata: { name: 'SomeService' },
+        spec: { type: 'public' },
+      })
       expect(service.doesProjectNameExist('NonExistentProject')).toBe(false)
     })
   })
@@ -355,7 +494,7 @@ describe('TeamConfigService', () => {
   describe('getCollection', () => {
     test('should retrieve an existing collection', () => {
       service.getSettings().id = 'team-id'
-      service.createBuild({ name: 'TestBuild' })
+      service.createBuild({ kind: 'AplTeamBuild', metadata: { name: 'TestBuild' }, spec: {} })
       expect(service.getCollection('builds')).toEqual([
         {
           kind: 'AplTeamBuild',
@@ -363,7 +502,7 @@ describe('TeamConfigService', () => {
             name: 'TestBuild',
             labels: {
               'apl.io/id': expect.any(String),
-              'apl.io/teamId': 'team-id',
+              'apl.io/teamId': 'team1',
             },
           },
           spec: {},
@@ -381,20 +520,14 @@ describe('TeamConfigService', () => {
 
   describe('updateCollection', () => {
     test('should update an existing collection', () => {
-      service.createBuild({ name: 'Build1' })
-      service.updateCollection('builds', [{ name: 'UpdatedBuild' }])
-      expect(service.getCollection('builds')).toEqual([{ name: 'UpdatedBuild' }])
+      service.createBuild({ kind: 'AplTeamBuild', metadata: { name: 'Build1' }, spec: {} })
+      service.updateCollection('builds', [{ kind: 'AplTeamBuild', metadata: { name: 'UpdatedBuild' } }])
+      expect(service.getCollection('builds')).toEqual([{ kind: 'AplTeamBuild', metadata: { name: 'UpdatedBuild' } }])
     })
 
     test('should create a new collection if it does not exist', () => {
       service.updateCollection('customCollection', [{ key: 'value' }])
       expect(service.getCollection('customCollection')).toEqual([{ key: 'value' }])
-    })
-
-    test('should replace the collection with the new value', () => {
-      service.createBuild({ name: 'OldBuild' })
-      service.updateCollection('builds', [{ name: 'NewBuild' }])
-      expect(service.getCollection('builds')).toEqual([{ name: 'NewBuild' }])
     })
   })
 })

@@ -174,14 +174,22 @@ describe('RepoService', () => {
     test('should return all builds', () => {
       service.createTeamConfig('team1', { name: 'Team 1' })
 
-      service.getTeamConfigService('team1').createBuild({ name: 'Build1' })
+      service.getTeamConfigService('team1').createBuild({
+        kind: 'AplTeamBuild',
+        metadata: { name: 'Build1' },
+        spec: {},
+      })
       expect(service.getAllBuilds()).toHaveLength(1)
     })
 
     test('should return all projects', () => {
       service.createTeamConfig('team1', { name: 'Team 1' })
 
-      service.getTeamConfigService('team1').createProject({ name: 'Project1' })
+      service.getTeamConfigService('team1').createProject({
+        kind: 'AplTeamProject',
+        metadata: { name: 'Project1' },
+        spec: {},
+      })
       expect(service.getAllProjects()).toHaveLength(1)
     })
   })

@@ -1,5 +1,5 @@
 import crypto, { X509Certificate } from 'crypto'
-import { SealedSecret } from 'src/otomi-models'
+import { AplSecretResponse } from 'src/otomi-models'
 
 function hybridEncrypt(pubKey, plaintext, label) {
   const sessionKey = crypto.randomBytes(32)
@@ -71,47 +71,44 @@ export interface SealedSecretManifestType {
       metadata: {
         name: string
         namespace: string
+        annotations?: Record<string, string>
+        finalizers?: string[]
+        labels?: Record<string, string>
       }
     }
   }
 }
 
-export function sealedSecretManifest(
-  data: SealedSecret,
-  encryptedData: EncryptedDataRecord[],
-  namespace: string,
-): SealedSecretManifestType {
-  const annotations = data.metadata?.annotations?.reduce((acc, item) => {
+export function sealedSecretManifest(data: AplSecretResponse): SealedSecretManifestType {
+  const annotations = data.spec.metadata?.annotations?.reduce((acc, item) => {
     return { ...acc, [item.key]: item.value }
   }, {})
-  const labels = data.metadata?.labels?.reduce((acc, item) => {
+  const labels = data.spec.metadata?.labels?.reduce((acc, item) => {
     return { ...acc, [item.key]: item.value }
   }, {})
-  const SealedSecretSchema = {
+  const namespace = data.spec.namespace!
+  return {
     apiVersion: 'bitnami.com/v1alpha1',
     kind: 'SealedSecret',
     metadata: {
       ...data.metadata,
       annotations: {
-        ...annotations,
         'sealedsecrets.bitnami.com/namespace-wide': 'true',
       },
-      labels,
-      name: data.name,
       namespace,
     },
     spec: {
-      encryptedData,
+      encryptedData: data.spec.encryptedData,
       template: {
-        type: data.type || 'kubernetes.io/opaque',
-        immutable: data.immutable || false,
+        type: data.spec.type || 'kubernetes.io/opaque',
+        immutable: data.spec.immutable || false,
         metadata: {
-          name: data.name,
+          name: data.metadata.name,
           namespace,
+          annotations,
+          labels,
         },
       },
     },
   }
-
-  return SealedSecretSchema
 }

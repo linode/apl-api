@@ -87,12 +87,13 @@ export type AplResourceKind =
   | 'AplTeamBackup'
   | 'AplTeamBuild'
   | 'AplTeamCodeRepo'
-  | 'AplTeamNetpol'
+  | 'AplTeamNetworkControl'
   | 'AplTeamPolicy'
   | 'AplTeamProject'
   | 'AplTeamSecret'
   | 'AplTeamService'
   | 'AplTeamWorkload'
+  | 'AplTeamWorkloadValues'
 export type V1ApiObject = Build | CodeRepo | Netpol | Project | SealedSecret | Service | Workload
 
 export interface OpenApiRequest extends Request {

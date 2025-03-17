@@ -48,19 +48,20 @@ export interface FileMap {
   resourceGroup: 'team' | 'platformSettings' | 'platformApps' | 'platformDatabases' | 'platformBackups' | 'users'
   resourceDir: string
   loadToSpec: boolean
+  v2: boolean
 }
 
 export function getResourceFileName(fileMap: FileMap, jsonPath: jsonpath.PathComponent[], data: Record<string, any>) {
   let fileName = 'unknown'
   if (fileMap.resourceGroup === 'team') {
     if (fileMap.processAs === 'arrayItem') {
-      fileName = data.name || data.id || fileName
+      fileName = (fileMap.v2 ? data.metadata.name || data.metadata.id : data.name || data.id) || fileName
     } else {
       fileName = jsonPath[jsonPath.length - 1].toString()
     }
   } else {
     if (fileMap.processAs === 'arrayItem') {
-      fileName = data.name || data.id || fileName
+      fileName = (fileMap.v2 ? data.metadata.name || data.metadata.id : data.name || data.id) || fileName
     } else {
       fileName = jsonPath[jsonPath.length - 1].toString()
     }
@@ -75,7 +76,7 @@ export function getTeamNameFromJsonPath(jsonPath: jsonpath.PathComponent[]): str
 export function getResourceName(fileMap: FileMap, jsonPath: jsonpath.PathComponent[], data: Record<string, any>) {
   let resourceName = 'unknown'
   if (fileMap.processAs === 'arrayItem') {
-    resourceName = data.name || data.id || resourceName
+    resourceName = (fileMap.v2 ? data.metadata.name || data.metadata.id : data.name || data.id) || resourceName
     return resourceName
   }
 
@@ -141,6 +142,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'platformApps',
       resourceDir: 'apps',
       loadToSpec: true,
+      v2: false,
     },
     {
       envDir,
@@ -151,6 +153,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
       loadToSpec: true,
+      v2: false,
     },
     {
       kind: 'AplCluster',
@@ -161,6 +164,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
       loadToSpec: true,
+      v2: false,
     },
     {
       kind: 'AplDatabase',
@@ -171,6 +175,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'platformDatabases',
       resourceDir: 'databases',
       loadToSpec: true,
+      v2: false,
     },
     {
       kind: 'AplDns',
@@ -181,6 +186,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
       loadToSpec: true,
+      v2: false,
     },
     {
       kind: 'AplIngress',
@@ -191,6 +197,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
       loadToSpec: true,
+      v2: false,
     },
     {
       kind: 'AplKms',
@@ -201,6 +208,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
       loadToSpec: true,
+      v2: false,
     },
     {
       kind: 'AplObjectStorage',
@@ -211,6 +219,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
       loadToSpec: true,
+      v2: false,
     },
     {
       kind: 'AplIdentityProvider',
@@ -221,6 +230,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
       loadToSpec: true,
+      v2: false,
     },
     {
       kind: 'AplCapabilitySet',
@@ -231,6 +241,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
       loadToSpec: true,
+      v2: false,
     },
     {
       kind: 'AplBackupCollection',
@@ -241,6 +252,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'platformBackups',
       resourceDir: 'settings',
       loadToSpec: true,
+      v2: false,
     },
     {
       kind: 'AplSmtp',
@@ -251,6 +263,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
       loadToSpec: true,
+      v2: false,
     },
     {
       kind: 'AplUser',
@@ -261,6 +274,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'users',
       resourceDir: 'users',
       loadToSpec: true,
+      v2: false,
     },
     {
       kind: 'AplVersion',
@@ -271,6 +285,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'platformSettings',
       resourceDir: 'settings',
       loadToSpec: true,
+      v2: false,
     },
     {
       kind: 'AplTeamCodeRepo',
@@ -281,6 +296,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'team',
       resourceDir: 'codeRepos',
       loadToSpec: false,
+      v2: true,
     },
     {
       kind: 'AplTeamBuild',
@@ -291,6 +307,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'team',
       resourceDir: 'builds',
       loadToSpec: true,
+      v2: true,
     },
     {
       kind: 'AplTeamWorkload',
@@ -301,6 +318,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'team',
       resourceDir: 'workloads',
       loadToSpec: true,
+      v2: true,
     },
     {
       kind: 'AplTeamWorkloadValues',
@@ -311,6 +329,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'team',
       resourceDir: 'workloadValues',
       loadToSpec: false,
+      v2: true,
     },
     {
       kind: 'AplTeamService',
@@ -321,6 +340,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'team',
       resourceDir: 'services',
       loadToSpec: true,
+      v2: true,
     },
     {
       kind: 'AplTeamSecret',
@@ -331,6 +351,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'team',
       resourceDir: 'sealedsecrets',
       loadToSpec: false,
+      v2: true,
     },
     {
       kind: 'AplTeamBackup',
@@ -341,6 +362,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'team',
       resourceDir: 'backups',
       loadToSpec: true,
+      v2: true,
     },
     {
       kind: 'AplTeamProject',
@@ -351,6 +373,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'team',
       resourceDir: 'projects',
       loadToSpec: true,
+      v2: true,
     },
     {
       kind: 'AplTeamNetworkControl',
@@ -361,6 +384,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'team',
       resourceDir: 'netpols',
       loadToSpec: true,
+      v2: true,
     },
     {
       kind: 'AplTeamSettingSet',
@@ -371,6 +395,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'team',
       resourceDir: '.',
       loadToSpec: true,
+      v2: false,
     },
     {
       kind: 'AplTeamTool',
@@ -381,6 +406,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'team',
       resourceDir: '.',
       loadToSpec: true,
+      v2: false,
     },
     {
       kind: 'AplTeamPolicy',
@@ -391,6 +417,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'team',
       resourceDir: '.',
       loadToSpec: true,
+      v2: true,
     },
   ]
   return maps

@@ -59,6 +59,7 @@ function getUrlAuth(url, user, password): string | undefined {
 }
 
 const secretFileRegex = new RegExp(`^(.*/)?secrets.*.yaml(.dec)?$`)
+
 export class Git {
   branch: string
   commitSha: string
@@ -114,6 +115,7 @@ export class Git {
     const res = await axios.get(valuesUrl, { params: { envDir: this.path, ...params } })
     return res
   }
+
   async addConfig(): Promise<void> {
     debug(`Adding git config`)
     await this.git.addConfig('user.name', this.user)
@@ -241,7 +243,7 @@ export class Git {
         const nodeValue = node.value
         try {
           const filePath = getFilePath(fileMap, nodePath, nodeValue, '')
-          const manifest = renderManifest(fileMap, nodePath, nodeValue)
+          const manifest = fileMap.v2 ? nodeValue : renderManifest(fileMap, nodePath, nodeValue)
           await this.writeFile(filePath, manifest, unsetBlankAttributes)
         } catch (e) {
           console.log(nodePath)
@@ -337,8 +339,9 @@ export class Git {
     this.url = getUrl(`${env.GIT_REPO_URL}`)
     if (!isRepo) {
       debug(`Initializing repo...`)
-      if (!this.hasRemote() && this.isRootClone()) return await this.initFromTestFolder()
-      else if (!this.isRootClone()) {
+      if (!this.hasRemote() && this.isRootClone()) {
+        return await this.initFromTestFolder()
+      } else if (!this.isRootClone()) {
         // child clone, point to remote root
         this.urlAuth = getUrlAuth(this.url, env.GIT_USER, env.GIT_PASSWORD)
       }

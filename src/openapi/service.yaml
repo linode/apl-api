@@ -59,16 +59,6 @@ Service:
           default: 10
           title: Weight v2
           description: 'Percentage of traffic to version 2.'
-    ingress:
-      title: Exposure (ingress)
-      description: Determines loadbalancer related configuration for handling the service ingress.
-      # Note: the order matters first schema must be nullable empty object
-      oneOf:
-        - $ref: '#/IngressCluster'
-        - $ref: '#/IngressPublic'
-
-  required:
-    - ingress
   type: object
 
 Ingress:
@@ -83,16 +73,6 @@ Ingress:
       title: TLS passthrough
       type: boolean
       default: false
-    useDefaultHost:
-      description: Use the team domain so that the URL reveals the owner.
-      title: Use default host
-      type: boolean
-      default: true
-    subdomain:
-      $ref: 'definitions.yaml#/domain'
-      description: A host that is used to set DNS 'A' records.
-      title: Host
-      type: string
     domain:
       $ref: 'definitions.yaml#/domain'
       description: A managed DNS zone
@@ -127,11 +107,6 @@ Ingress:
       title: Already has a certificate
       type: boolean
       default: false
-    certSelect:
-      description: Select a TLS SealedSecret.
-      title: Select team secret
-      type: boolean
-      default: true
     certName:
       description: The name of a TLS secret known to exist in the Team namespace.
       example: example-com
@@ -160,9 +135,6 @@ Ingress:
                 required:
                   - name
                   - value
-  required:
-    - domain
-    - subdomain
   type: object
 
 IngressCluster:
@@ -176,6 +148,8 @@ IngressCluster:
       enum:
         - cluster
       default: cluster
+  required:
+    - type
 
 IngressPublic:
   allOf:
@@ -186,6 +160,8 @@ IngressPublic:
           enum:
             - public
           default: public
+      required:
+        - type
   nullable: true
   type: object
   description: Will only accept traffic coming from an external loadbalancer.

@@ -2847,6 +2847,10 @@ components:
       required:
         - kind
         - spec
+    AplProjectRef:
+      allOf:
+        - $ref: '#/components/schemas/AplProject'
+        - $ref: '#/components/schemas/aplMetadataRequest'
     AplProjectRequest:
       allOf:
         - $ref: '#/components/schemas/AplProject'
@@ -2857,17 +2861,18 @@ components:
               type: object
               properties:
                 build:
-                  allOf:
-                    - $ref: '#/components/schemas/aplMetadataRequest'
-                    - $ref: '#/components/schemas/AplBuild'
+                  $ref: '#/components/schemas/Build'
                 workload:
                   allOf:
-                    - $ref: '#/components/schemas/aplMetadataRequest'
-                    - $ref: '#/components/schemas/AplWorkload'
+                    - $ref: '#/components/schemas/Workload'
+                    - type: object
+                      properties:
+                        values:
+                          type: string
+                      required:
+                        - values
                 service:
-                  allOf:
-                    - $ref: '#/components/schemas/aplMetadataRequest'
-                    - $ref: '#/components/schemas/Service'
+                  $ref: '#/components/schemas/Service'
     AplProjectResponse:
       type: object
       allOf:
@@ -2880,17 +2885,18 @@ components:
               type: object
               properties:
                 build:
-                  allOf:
-                    - $ref: '#/components/schemas/aplTeamMetadataResponse'
-                    - $ref: '#/components/schemas/AplBuild'
+                  $ref: '#/components/schemas/Build'
                 workload:
                   allOf:
-                    - $ref: '#/components/schemas/aplTeamMetadataResponse'
-                    - $ref: '#/components/schemas/AplWorkload'
+                    - $ref: '#/components/schemas/Workload'
+                    - type: object
+                      properties:
+                        values:
+                          type: string
+                      required:
+                        - values
                 service:
-                  allOf:
-                    - $ref: '#/components/schemas/aplTeamMetadataResponse'
-                    - $ref: '#/components/schemas/Service'
+                  $ref: '#/components/schemas/Service'
     AplSecret:
       type: object
       properties:
@@ -2919,7 +2925,19 @@ components:
           type: string
           enum: [ AplTeamService ]
         spec:
-          $ref: 'service.yaml#/Service'
+          allOf:
+            - $ref: 'service.yaml#/Service'
+            - oneOf:
+                - $ref: 'service.yaml#/IngressCluster'
+                - allOf:
+                    - $ref: 'service.yaml#/IngressPublic'
+                    - type: object
+                      properties:
+                        ownHost:
+                          description: Use the team domain so that the URL reveals the owner.
+                          title: Use default host
+                          type: boolean
+                          default: true
       required:
         - kind
         - spec
@@ -3073,6 +3091,10 @@ components:
       allOf:
         - $ref: '#/components/schemas/teamResourceMetadata'
         - $ref: 'sealedsecret.yaml#/SealedSecret'
+        - type: object
+          properties:
+            isDisabled:
+              type: boolean
     SealedSecretsKeys:
       $ref: 'sealedsecretskeys.yaml#/SealedSecretsKeys'
     K8sSecret:
@@ -3092,6 +3114,35 @@ components:
               x-formtype: SelectWidget
           required:
             - name
+        - type: object
+          properties:
+            ingress:
+              title: Exposure (ingress)
+              description: Determines loadbalancer related configuration for handling the service ingress.
+              # Note: the order matters first schema must be nullable empty object
+              oneOf:
+                - $ref: 'service.yaml#/IngressCluster'
+                - allOf:
+                    - $ref: 'service.yaml#/IngressPublic'
+                    - type: object
+                      properties:
+                        useDefaultHost:
+                          description: Use the team domain so that the URL reveals the owner.
+                          title: Use default host
+                          type: boolean
+                          default: true
+                        certSelect:
+                          description: Select a TLS SealedSecret.
+                          title: Select team secret
+                          type: boolean
+                          default: true
+                        subdomain:
+                          $ref: 'definitions.yaml#/domain'
+                          description: A host that is used to set DNS 'A' records.
+                          title: Host
+                          type: string
+          required:
+            - ingress
     Session:
       $ref: 'session.yaml#/Session'
     ObjWizard:

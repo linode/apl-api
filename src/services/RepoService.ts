@@ -3,28 +3,28 @@ import { v4 as uuidv4 } from 'uuid'
 import { AlreadyExists } from '../error'
 import {
   Alerts,
+  AplBackupResponse,
+  AplBuildResponse,
+  AplCodeRepoResponse,
+  AplNetpolResponse,
+  AplPolicyResponse,
+  AplProjectResponse,
+  AplSecretResponse,
+  AplServiceResponse,
+  AplWorkloadResponse,
   App,
-  Backup,
-  Build,
   Cluster,
-  CodeRepo,
   Dns,
   Ingress,
   Kms,
-  Netpol,
   Otomi,
-  Policies,
-  Project,
   Repo,
-  SealedSecret,
-  Service,
   Settings,
   Smtp,
   Team,
   TeamConfig,
   User,
   Versions,
-  Workload,
 } from '../otomi-models'
 import { TeamConfigService } from './TeamConfigService'
 
@@ -226,44 +226,44 @@ export class RepoService {
     return map(this.repo.teamConfig, 'settings').filter(Boolean) ?? []
   }
 
-  public getAllNetpols(): Netpol[] {
-    return Object.keys(this.repo.teamConfig).flatMap((teamId) => this.getTeamConfigService(teamId).getNetpols())
+  public getTeamIds(): string[] {
+    return Object.keys(this.repo.teamConfig)
   }
 
-  public getAllProjects(): Project[] {
-    return Object.keys(this.repo.teamConfig).flatMap((teamId) => this.getTeamConfigService(teamId).getProjects())
+  public getAllNetpols(): AplNetpolResponse[] {
+    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getNetpols())
   }
 
-  public getAllBuilds(): Build[] {
-    return Object.keys(this.repo.teamConfig).flatMap((teamId) => this.getTeamConfigService(teamId).getBuilds())
+  public getAllProjects(): AplProjectResponse[] {
+    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getProjects())
   }
 
-  public getAllPolicies(): Record<string, Policies> {
-    const teamPolicies: Record<string, Policies> = {}
-    Object.keys(this.repo.teamConfig).forEach((teamId) => {
-      teamPolicies[teamId] = this.getTeamConfigService(teamId).getPolicies()
-    })
-    return teamPolicies
+  public getAllBuilds(): AplBuildResponse[] {
+    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getBuilds())
   }
 
-  public getAllWorkloads(): Workload[] {
-    return Object.keys(this.repo.teamConfig).flatMap((teamId) => this.getTeamConfigService(teamId).getWorkloads())
+  public getAllPolicies(): AplPolicyResponse[] {
+    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getPolicies())
   }
 
-  public getAllServices(): Service[] {
-    return Object.keys(this.repo.teamConfig).flatMap((teamId) => this.getTeamConfigService(teamId).getServices())
+  public getAllWorkloads(): AplWorkloadResponse[] {
+    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getWorkloads())
   }
 
-  public getAllSealedSecrets(): SealedSecret[] {
-    return Object.keys(this.repo.teamConfig).flatMap((teamId) => this.getTeamConfigService(teamId).getSealedSecrets())
+  public getAllServices(): AplServiceResponse[] {
+    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getServices())
   }
 
-  public getAllBackups(): Backup[] {
-    return Object.keys(this.repo.teamConfig).flatMap((teamId) => this.getTeamConfigService(teamId).getBackups())
+  public getAllSealedSecrets(): AplSecretResponse[] {
+    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getSealedSecrets())
   }
 
-  public getAllCodeRepos(): CodeRepo[] {
-    return Object.keys(this.repo.teamConfig).flatMap((teamId) => this.getTeamConfigService(teamId).getCodeRepos())
+  public getAllBackups(): AplBackupResponse[] {
+    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getBackups())
+  }
+
+  public getAllCodeRepos(): AplCodeRepoResponse[] {
+    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getCodeRepos())
   }
 
   /** Retrieve a collection dynamically from the Repo */
