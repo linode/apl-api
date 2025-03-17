@@ -246,7 +246,7 @@ describe('API authz tests', () => {
       .send({
         name: 'service1',
         serviceType: 'ksvcPredeployed',
-        ingress: {},
+        ingress: { type: 'cluster' },
       })
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
