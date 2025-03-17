@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.0.0](https://github.com/redkubes/otomi-api/compare/v3.7.0...v4.0.0) (2025-03-17)
+
+
+### Features
+
+* use new file structure ([#634](https://github.com/redkubes/otomi-api/issues/634)) ([0f71482](https://github.com/redkubes/otomi-api/commit/0f7148204e2e37993aed1546b424096a8e7bc27b))
+
+
+### Bug Fixes
+
+* remove password from error log ([#658](https://github.com/redkubes/otomi-api/issues/658)) ([754e672](https://github.com/redkubes/otomi-api/commit/754e6727d0f5558abc58e6e64a9b194151317871))
+
+
 ### [3.7.2](https://github.com/redkubes/otomi-api/compare/v3.7.1...v3.7.2) (2025-03-14)
 
 
