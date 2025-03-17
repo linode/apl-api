@@ -391,7 +391,9 @@ export async function getSecretValues(name: string, namespace: string): Promise<
     }
     return decodedData
   } catch (error) {
-    if (process.env.NODE_ENV !== 'development') debug(`Failed to get secret values for ${name} in ${namespace}.`)
+    if (process.env.NODE_ENV !== 'development') {
+      debug(`Failed to get secret values for ${name} in ${namespace}.`)
+    }
   }
 }
 
@@ -417,9 +419,9 @@ export async function getSealedSecretSyncedStatus(name: string, namespace: strin
     }
     return 'NotFound'
   } catch (error) {
-    if (process.env.NODE_ENV !== 'development')
+    if (process.env.NODE_ENV !== 'development') {
       debug(`Failed to get SealedSecret synced status for ${name} in ${namespace}.`)
-
+    }
     return 'NotFound'
   }
 }

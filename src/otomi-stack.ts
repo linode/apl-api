@@ -7,17 +7,17 @@ import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
 import { emptyDir, existsSync, pathExists, rmSync, unlink } from 'fs-extra'
 import { readdir, readFile, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
-import { cloneDeep, filter, get, isArray, isEmpty, map, omit, pick, set, unset } from 'lodash'
+import { cloneDeep, filter, isArray, isEmpty, map, mapValues, omit, pick, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
-import Db from 'src/db'
 import { AlreadyExists, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
+import getRepo, { Git } from 'src/git'
 import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
   Backup,
   Build,
   Cloudtty,
-  Coderepo,
+  CodeRepo,
   Core,
   K8sService,
   Netpol,
@@ -25,8 +25,8 @@ import {
   Policies,
   Policy,
   Project,
+  Repo,
   SealedSecret,
-  Secret,
   Service,
   Session,
   SessionUser,
@@ -39,8 +39,7 @@ import {
   Workload,
   WorkloadValues,
 } from 'src/otomi-models'
-import getRepo, { Repo } from 'src/repo'
-import { arrayToObject, getServiceUrl, getValuesSchema, objectToArray, removeBlankAttributes } from 'src/utils'
+import { arrayToObject, getServiceUrl, getValuesSchema, removeBlankAttributes } from 'src/utils'
 import {
   cleanEnv,
   CUSTOM_ROOT_CA,
@@ -72,13 +71,16 @@ import {
   k8sdelete,
   watchPodUntilRunning,
 } from './k8s_operations'
+import { getFileMaps, loadValues } from './repo'
+import { RepoService } from './services/RepoService'
+import { TeamConfigService } from './services/TeamConfigService'
 import { validateBackupFields } from './utils/backupUtils'
 import {
   getGiteaRepoUrls,
   normalizeRepoUrl,
   testPrivateRepoConnect,
   testPublicRepoConnect,
-} from './utils/coderepoUtils'
+} from './utils/codeRepoUtils'
 import { getPolicies } from './utils/policiesUtils'
 import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
@@ -89,8 +91,6 @@ interface ExcludedApp extends App {
   managed: boolean
 }
 const debug = Debug('otomi:otomi-stack')
-
-const secretTransferProps = ['type', 'ca', 'crt', 'key', 'entries', 'dockerconfig']
 
 const env = cleanEnv({
   CUSTOM_ROOT_CA,
@@ -109,100 +109,24 @@ const env = cleanEnv({
   OBJ_STORAGE_APPS,
 })
 
-export function getTeamBackupsFilePath(teamId: string): string {
-  return `env/teams/backups.${teamId}.yaml`
-}
-export function getTeamBackupsJsonPath(teamId: string): string {
-  return `teamConfig.${teamId}.backups`
-}
-
-export function getTeamNetpolsFilePath(teamId: string): string {
-  return `env/teams/netpols.${teamId}.yaml`
-}
-export function getTeamNetpolsJsonPath(teamId: string): string {
-  return `teamConfig.${teamId}.netpols`
-}
-
-export function getTeamSealedSecretsValuesRootPath(teamId: string): string {
-  return `env/teams/${teamId}/sealedsecrets`
-}
-export function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: string): string {
+export const rootPath = '/tmp/otomi/values'
+//TODO Move this to the repo.ts
+const clusterSettingsFilePath = 'env/settings/cluster.yaml'
+function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: string): string {
   return `env/teams/${teamId}/sealedsecrets/${sealedSecretsName}`
 }
-export function getTeamWorkloadsFilePath(teamId: string): string {
-  return `env/teams/workloads.${teamId}.yaml`
-}
-export function getTeamWorkloadValuesFilePath(teamId: string, workloadName): string {
-  return `env/teams/workloads/${teamId}/${workloadName}.yaml`
-}
-
-export function getTeamProjectsFilePath(teamId: string): string {
-  return `env/teams/projects.${teamId}.yaml`
-}
-
-export function getTeamCodereposFilePath(teamId: string): string {
-  return `env/teams/coderepos.${teamId}.yaml`
-}
-
-export function getTeamBuildsFilePath(teamId: string): string {
-  return `env/teams/builds.${teamId}.yaml`
-}
-
-export function getTeamPoliciesFilePath(teamId: string): string {
-  return `env/teams/policies.${teamId}.yaml`
-}
-
-export function getTeamWorkloadsJsonPath(teamId: string): string {
-  return `teamConfig.${teamId}.workloads`
-}
-
-export function getTeamProjectsJsonPath(teamId: string): string {
-  return `teamConfig.${teamId}.projects`
-}
-
-export function getTeamCodereposJsonPath(teamId: string): string {
-  return `teamConfig.${teamId}.coderepos`
-}
-
-export function getTeamBuildsJsonPath(teamId: string): string {
-  return `teamConfig.${teamId}.builds`
-}
-
-export function getTeamPoliciesJsonPath(teamId: string): string {
-  return `teamConfig.${teamId}.policies`
-}
-
-export function getTeamSealedSecretsJsonPath(teamId: string): string {
-  return `teamConfig.${teamId}.sealedsecrets`
-}
-
-export function getTeamSecretsJsonPath(teamId: string): string {
-  return `teamConfig.${teamId}.secrets`
-}
-
-export function getTeamServicesFilePath(teamId: string): string {
-  return `env/teams/services.${teamId}.yaml`
-}
-
-export function getTeamServicesJsonPath(teamId: string): string {
-  return `teamConfig.${teamId}.services`
-}
-
-export const rootPath = '/tmp/otomi/values'
 
 export default class OtomiStack {
   private coreValues: Core
-
-  db: Db
   editor?: string
   sessionId?: string
   isLoaded = false
-  repo: Repo
+  git: Git
+  repoService: RepoService
 
-  constructor(editor?: string, sessionId?: string, inDb?: Db) {
+  constructor(editor?: string, sessionId?: string) {
     this.editor = editor
     this.sessionId = sessionId ?? 'main'
-    this.db = inDb ?? new Db()
   }
 
   getAppList() {
@@ -215,12 +139,11 @@ export default class OtomiStack {
   }
 
   async getValues(query): Promise<Record<string, any>> {
-    return (await this.repo.requestValues(query)).data
+    return (await this.git.requestValues(query)).data
   }
   getRepoPath() {
     if (env.isTest || this.sessionId === undefined) return env.GIT_LOCAL_PATH
-    const folder = `${rootPath}/${this.sessionId}`
-    return folder
+    return `${rootPath}/${this.sessionId}`
   }
 
   async init(): Promise<void> {
@@ -235,7 +158,98 @@ export default class OtomiStack {
     }
   }
 
-  async initRepo(skipDbInflation = false): Promise<void> {
+  transformServices(servicesArray: any[] = [], teamId: string): any[] {
+    return servicesArray.map((service) => {
+      const { cluster, dns } = this.getSettings(['cluster', 'dns'])
+      const url = getServiceUrl({ domain: service.domain, name: service.name, teamId, cluster, dns })
+
+      const headers = isArray(service.headers) ? undefined : service.headers
+
+      const inService = omit(service, [
+        'certArn',
+        'certName',
+        'domain',
+        'forwardPath',
+        'hasCert',
+        'paths',
+        'type',
+        'ownHost',
+        'tlsPass',
+        'ingressClassName',
+        'headers',
+        'useCname',
+        'cname',
+      ])
+      const svc = {
+        ...inService,
+        name: service.name,
+        teamId,
+        ingress:
+          service.type === 'cluster'
+            ? { type: 'cluster' }
+            : {
+                certArn: service.certArn || undefined,
+                certName: service.certName || undefined,
+                domain: url.domain,
+                headers,
+                forwardPath: 'forwardPath' in service,
+                hasCert: 'hasCert' in service,
+                paths: service.paths || [],
+                subdomain: url.subdomain,
+                tlsPass: 'tlsPass' in service,
+                type: service.type,
+                useDefaultHost: !service.domain && service.ownHost,
+                ingressClassName: service.ingressClassName || undefined,
+                useCname: service.useCname,
+                cname: service.cname,
+              },
+      }
+      return removeBlankAttributes(svc)
+    })
+  }
+
+  transformApps(appsObj: Record<string, any>): App[] {
+    if (!appsObj || typeof appsObj !== 'object') return []
+
+    return Object.entries(appsObj).map(([appId, appData]) => {
+      // Retrieve schema to check if the `enabled` flag should be considered
+      const appSchema = getAppSchema(appId)
+      const isEnabled = appSchema?.properties?.enabled ? !!appData.enabled : undefined
+
+      return {
+        id: appId,
+        enabled: isEnabled,
+        values: omit(appData, ['enabled']),
+        rawValues: {},
+      }
+    })
+  }
+
+  async initRepo(repoService?: RepoService): Promise<void> {
+    if (repoService) {
+      this.repoService = repoService
+      return
+    } else {
+      // We need to map the app values, so it adheres the App interface
+      const rawRepo = await loadValues(this.getRepoPath())
+
+      rawRepo.apps = this.transformApps(rawRepo.apps)
+      rawRepo.teamConfig = mapValues(rawRepo.teamConfig, (teamConfig) => ({
+        ...teamConfig,
+        apps: this.transformApps(teamConfig.apps),
+      }))
+
+      const repo = rawRepo as Repo
+      this.repoService = new RepoService(repo)
+      //TODO fix this transforming of the services
+      this.repoService.getRepo().teamConfig = mapValues(repo.teamConfig, (teamConfig, teamName) => ({
+        ...teamConfig,
+        services: this.transformServices(teamConfig.services, teamName),
+      }))
+    }
+  }
+
+  async initGit(inflateValues = true): Promise<void> {
     await this.init()
     // every editor gets their own folder to detect conflicts upon deploy
     const path = this.getRepoPath()
@@ -243,9 +257,10 @@ export default class OtomiStack {
     const url = env.GIT_REPO_URL
     for (;;) {
       try {
-        this.repo = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, branch)
-        await this.repo.pull()
-        if (await this.repo.fileExists('env/cluster.yaml')) break
+        this.git = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, branch)
+        await this.git.pull()
+        //TODO fetch this url from the repo
+        if (await this.git.fileExists(clusterSettingsFilePath)) break
         debug(`Values are not present at ${url}:${branch}`)
       } catch (e) {
         // Remove password from error message
@@ -257,8 +272,10 @@ export default class OtomiStack {
       debug(`Trying again in ${timeoutMs} ms`)
       await new Promise((resolve) => setTimeout(resolve, timeoutMs))
     }
-    // branches get a copy of the "main" branch db, so we don't need to inflate
-    if (!skipDbInflation) await this.loadValues()
+
+    if (inflateValues) {
+      await this.loadValues()
+    }
     debug(`Values are loaded for ${this.editor} in ${this.sessionId}`)
   }
 
@@ -281,24 +298,14 @@ export default class OtomiStack {
   }
 
   getSettingsInfo(): SettingsInfo {
-    const settings = this.db.db.get(['settings']).value() as Settings
-    const { cluster, dns, obj, otomi, ingress, smtp } = pick(settings, [
-      'cluster',
-      'dns',
-      'obj',
-      'otomi',
-      'ingress',
-      'smtp',
-    ]) as Settings
-    const settingsInfo = {
-      cluster: pick(cluster, ['name', 'domainSuffix', 'provider']),
-      dns: pick(dns, ['zones']),
-      obj: pick(obj, ['provider']),
-      otomi: pick(otomi, ['hasExternalDNS', 'hasExternalIDP', 'isPreInstalled']),
-      smtp: pick(smtp, ['smarthost']),
-      ingressClassNames: map(ingress?.classes, 'className') ?? [],
+    return {
+      cluster: pick(this.repoService.getCluster(), ['name', 'domainSuffix', 'provider']),
+      dns: pick(this.repoService.getDns(), ['zones']),
+      obj: pick(this.repoService.getObj(), ['provider']),
+      otomi: pick(this.repoService.getOtomi(), ['hasExternalDNS', 'hasExternalIDP', 'isPreInstalled']),
+      smtp: pick(this.repoService.getSmtp(), ['smarthost']),
+      ingressClassNames: map(this.repoService.getIngress()?.classes, 'className') ?? [],
     } as SettingsInfo
-    return settingsInfo
   }
 
   async createObjWizard(data: ObjWizard): Promise<ObjWizard> {
@@ -378,7 +385,7 @@ export default class OtomiStack {
   }
 
   getSettings(keys?: string[]): Settings {
-    const settings = this.db.db.get(['settings']).value()
+    const settings = this.repoService.getSettings()
     if (!keys) return settings
     return pick(settings, keys) as Settings
   }
@@ -386,10 +393,10 @@ export default class OtomiStack {
   async loadIngressApps(id: string): Promise<void> {
     try {
       debug(`Loading ingress apps for ${id}`)
-      const content = await this.repo.loadConfig('env/apps/ingress-nginx.yaml', 'env/apps/secrets.ingress-nginx.yaml')
+      const content = await this.git.loadConfig('env/apps/ingress-nginx.yaml', 'env/apps/secrets.ingress-nginx.yaml')
       const values = content?.apps?.['ingress-nginx'] ?? {}
       const teamId = 'admin'
-      this.db.createItem('apps', { enabled: true, values, rawValues: {}, teamId }, { teamId, id }, id)
+      this.repoService.getTeamConfigService(teamId).createApp({ enabled: true, values, rawValues: {}, id })
       debug(`Ingress app loaded for ${id}`)
     } catch (error) {
       debug(`Failed to load ingress apps for ${id}:`)
@@ -401,9 +408,9 @@ export default class OtomiStack {
       debug(`Removing ingress apps for ${id}`)
       const path = `env/apps/${id}.yaml`
       const secretsPath = `env/apps/secrets.${id}.yaml`
-      this.db.deleteItem('apps', { teamId: 'admin', id })
-      await this.repo.removeFile(path)
-      await this.repo.removeFile(secretsPath)
+      this.repoService.deleteApp(id)
+      await this.git.removeFile(path)
+      await this.git.removeFile(secretsPath)
       debug(`Ingress app removed for ${id}`)
     } catch (error) {
       debug(`Failed to remove ingress app for ${id}:`)
@@ -433,7 +440,7 @@ export default class OtomiStack {
   }
 
   async editSettings(data: Settings, settingId: string): Promise<Settings> {
-    const settings = this.db.db.get('settings').value() as Settings
+    const settings = this.repoService.getSettings()
     await this.editIngressApps(settings, data, settingId)
     const updatedSettingsData: any = { ...data }
     // Preserve the otomi.adminPassword when editing otomi settings
@@ -444,18 +451,12 @@ export default class OtomiStack {
       }
     }
     settings[settingId] = removeBlankAttributes(updatedSettingsData[settingId] as Record<string, any>)
-    this.db.db.set('settings', settings).write()
-    const secretPaths = this.getSecretPaths()
-    await this.saveSettings(secretPaths)
-    await this.doDeployment(['settings'])
-    return settings
-  }
-
-  // Check if the collection name already exists in any collection
-  isCollectionNameTaken(collectionName: string, teamId: string, name: string): boolean {
-    return this.db.getCollection(collectionName).some((e: any) => {
-      return e.teamId === teamId && e.name === name
+    this.repoService.updateSettings(settings)
+    await this.saveSettings()
+    await this.doRepoDeployment((repoService) => {
+      repoService.updateSettings(settings)
     })
+    return settings
   }
 
   filterExcludedApp(apps: App | App[]) {
@@ -475,31 +476,40 @@ export default class OtomiStack {
     return apps
   }
 
-  getApp(teamId: string, id: string): App | ExcludedApp {
-    // @ts-ignore
-    const app = this.db.getItem('apps', { teamId, id }) as App
+  getTeamApp(teamId: string, id: string): App | ExcludedApp {
+    const app = this.getApp(id)
     this.filterExcludedApp(app)
 
     if (teamId === 'admin') return app
-    const adminApp = this.db.getItem('apps', { teamId: 'admin', id: app.id }) as App
+    const adminApp = this.repoService.getTeamConfigService(teamId).getApp(id)
     return { ...cloneDeep(app), enabled: adminApp.enabled }
   }
 
+  getApp(name: string): App {
+    return this.repoService.getApp(name)
+  }
+
   getApps(teamId: string, picks?: string[]): Array<App> {
-    const apps = this.db.getCollection('apps', { teamId }) as Array<App>
+    const appList = this.getAppList()
+    const apps = this.repoService.getApps().filter((app) => appList.includes(app.id))
     const providerSpecificApps = this.filterExcludedApp(apps) as App[]
 
     if (teamId === 'admin') return providerSpecificApps
 
-    let teamApps = providerSpecificApps.map((app: App) => {
-      const adminApp = this.db.getItem('apps', { teamId: 'admin', id: app.id }) as App
-      return { ...cloneDeep(app), enabled: adminApp.enabled }
-    })
+    // If not team admin load available teamApps
+    const core = this.getCore()
+    let teamApps = providerSpecificApps
+      .map((app: App) => {
+        const isShared = !!core.adminApps.find((a) => a.name === app.id)?.isShared
+        const inTeamApps = !!core.teamApps.find((a) => a.name === app.id)
+        if (isShared || inTeamApps) return app
+      })
+      .filter((app): app is App => app !== undefined) // Ensures no `undefined` elements
 
     if (!picks) return teamApps
 
     if (picks.includes('enabled')) {
-      const adminApps = this.db.getCollection('apps', { teamId: 'admin' }) as Array<App>
+      const adminApps = this.repoService.getApps()
 
       teamApps = adminApps.map((adminApp) => {
         const teamApp = teamApps.find((app) => app.id === adminApp.id)
@@ -510,17 +520,16 @@ export default class OtomiStack {
     return teamApps.map((app) => pick(app, picks)) as Array<App>
   }
 
-  async editApp(teamId, id, data: App): Promise<App> {
-    // @ts-ignore
-    let app: App = this.db.getItem('apps', { teamId, id })
+  async editApp(teamId: string, id: string, data: App): Promise<App> {
+    let app: App = this.repoService.getApp(id)
     // Shallow merge, so only first level attributes can be replaced (values, rawValues, etc.)
     app = { ...app, ...data }
-    const updatedApp = this.db.updateItem('apps', app as Record<string, any>, { teamId, id }) as App
-    const secretPaths = this.getSecretPaths()
-    // also save admin apps
-    await this.saveAdminApps(secretPaths)
-    await this.doDeployment(['apps'])
-    return updatedApp
+    app = this.repoService.updateApp(id, app)
+    await this.saveAdminApp(app)
+    await this.doRepoDeployment((repoService) => {
+      repoService.updateApp(id, app)
+    })
+    return this.repoService.getApp(id)
   }
 
   canToggleApp(id: string): boolean {
@@ -529,58 +538,28 @@ export default class OtomiStack {
   }
 
   async toggleApps(teamId: string, ids: string[], enabled: boolean): Promise<void> {
-    ids.map((id) => {
-      // we might be given a dep that is only relevant to core, or
-      // which is essential, so skip it
-      const orig = this.db.getItemReference('apps', { teamId, id }, false) as App
-      if (orig && this.canToggleApp(id)) this.db.updateItem('apps', { enabled }, { teamId, id }, true)
-    })
-    const secretPaths = this.getSecretPaths()
-    // also save admin apps
-    await this.saveAdminApps(secretPaths)
-    await this.doDeployment(['apps'])
-  }
-
-  async loadApp(appInstanceId: string): Promise<void> {
-    const isIngressApp = appInstanceId.startsWith('ingress-nginx-')
-    const appId = isIngressApp ? 'ingress-nginx' : appInstanceId
-    const path = `env/apps/${appInstanceId}.yaml`
-    const secretsPath = `env/apps/secrets.${appInstanceId}.yaml`
-    const content = await this.repo.loadConfig(path, secretsPath)
-    let values = content?.apps?.[appInstanceId] ?? {}
-    if (appInstanceId === 'ingress-nginx-platform') {
-      const isIngressNginxPlatformAppExists = await this.repo.fileExists(`env/apps/ingress-nginx-platform.yaml`)
-      if (!isIngressNginxPlatformAppExists) {
-        const defaultIngressNginxContent = await this.repo.loadConfig(
-          `env/apps/ingress-nginx.yaml`,
-          `env/apps/secrets.ingress-nginx.yaml`,
-        )
-        values = defaultIngressNginxContent?.apps?.['ingress-nginx'] ?? {}
-      }
-    }
-    const rawValues = {}
-
-    let enabled
-    const app = getAppSchema(appId)
-    if (app?.properties?.enabled) enabled = !!values.enabled
-
-    // we do not want to send enabled flag to the input forms
-    delete values.enabled
-    const teamId = 'admin'
-    this.db.createItem('apps', { enabled, values, rawValues, teamId }, { teamId, id: appInstanceId }, appInstanceId)
-  }
-
-  async loadApps(): Promise<void> {
-    const apps = this.getAppList()
     await Promise.all(
-      apps.map(async (appId) => {
-        await this.loadApp(appId)
+      ids.map(async (id) => {
+        const orig = this.repoService.getApp(id)
+        if (orig && this.canToggleApp(id)) {
+          const app = this.repoService.updateApp(id, { enabled })
+          await this.saveAdminApp(app)
+        }
       }),
     )
+
+    await this.doRepoDeployment((repoService) => {
+      ids.map((id) => {
+        const orig = repoService.getApp(id)
+        if (orig && this.canToggleApp(id)) {
+          repoService.updateApp(id, { enabled })
+        }
+      })
+    })
   }
 
   getTeams(): Array<Team> {
-    return this.db.getCollection('teams') as Array<Team>
+    return this.repoService.getAllTeamSettings()
   }
 
   getTeamSelfServiceFlags(id: string): TeamSelfService {
@@ -593,11 +572,12 @@ export default class OtomiStack {
   }
 
   getTeam(id: string): Team {
-    return this.db.getItem('teams', { id }) as Team
+    const team = this.repoService.getTeamConfigService(id).getSettings()
+    return { ...team, name: id }
   }
 
   async createTeam(data: Team, deploy = true): Promise<Team> {
-    const id = data.id || data.name
+    const teamName = data.name
 
     if (isEmpty(data.password)) {
       debug(`creating password for team '${data.name}'`)
@@ -612,70 +592,71 @@ export default class OtomiStack {
       })
     }
 
-    const team = this.db.createItem('teams', data, { id }, id) as Team
+    const teamConfig = this.repoService.createTeamConfig(teamName, data)
+    const team = teamConfig.settings
     const apps = getAppList()
     const core = this.getCore()
-    apps.forEach((appId) => {
+    const teamApps = apps.flatMap((appId) => {
       const isShared = !!core.adminApps.find((a) => a.name === appId)?.isShared
       const inTeamApps = !!core.teamApps.find((a) => a.name === appId)
-      // Admin apps are loaded by loadApps function
-      if (id !== 'admin' && (isShared || inTeamApps)) this.db.createItem('apps', {}, { teamId: id, id: appId }, appId)
+      return teamName !== 'admin' && (isShared || inTeamApps)
+        ? [this.repoService.getTeamConfigService(teamName).createApp({ id: appId })]
+        : [] // Empty array removes `undefined` entries
     })
 
+    const policies = getPolicies()
+    if (!data.id) {
+      this.repoService.getTeamConfigService(teamName).updatePolicies(policies)
+      await this.saveTeamPolicies(teamName)
+    }
     if (deploy) {
-      if (!data.id) {
-        const policies = getPolicies()
-        this.db.db.set(`policies[${data.name}]`, policies).write()
-        await this.saveTeamPolicies(data.name)
-      }
-      const secretPaths = this.getSecretPaths()
-      await this.saveTeams(secretPaths)
-      await this.doDeployment(['teams', 'policies'])
+      await this.saveTeam(team)
+      await this.doRepoDeployment((repoService) => {
+        repoService.createTeamConfig(teamName, data)
+        repoService.getTeamConfigService(teamName).setApps(teamApps)
+        repoService.getTeamConfigService(teamName).updatePolicies(policies)
+      })
     }
     return team
   }
 
   async editTeam(id: string, data: Team): Promise<Team> {
-    const team = this.db.updateItem('teams', data, { id }) as Team
-    const secretPaths = this.getSecretPaths()
-    await this.saveTeams(secretPaths)
-    await this.doDeployment(['teams'])
+    const team = this.repoService.getTeamConfigService(id).updateSettings(data)
+    await this.saveTeam(team)
+    await this.doTeamDeployment(id, (teamService) => {
+      teamService.updateSettings(team)
+    })
     return team
   }
 
   async deleteTeam(id: string): Promise<void> {
-    try {
-      this.db.deleteItem('services', { id })
-    } catch (e) {
-      // no services found
-    }
-    this.db.deleteItem('teams', { id })
-    const secretPaths = this.getSecretPaths()
-    await this.saveTeams(secretPaths)
-    await this.doDeployment(['teams'])
+    await this.deleteTeamConfig(id)
+    await this.doRepoDeployment((repoService) => {
+      repoService.deleteTeamConfig(id)
+    })
   }
 
   getTeamServices(teamId: string): Array<Service> {
-    const ids = { teamId }
-    return this.db.getCollection('services', ids) as Array<Service>
+    return this.repoService.getTeamConfigService(teamId).getServices()
   }
 
   getTeamBackups(teamId: string): Array<Backup> {
-    const ids = { teamId }
-    return this.db.getCollection('backups', ids) as Array<Backup>
+    return this.repoService.getTeamConfigService(teamId).getBackups()
   }
 
   getAllBackups(): Array<Backup> {
-    return this.db.getCollection('backups') as Array<Backup>
+    return this.repoService.getAllBackups()
   }
 
   async createBackup(teamId: string, data: Backup): Promise<Backup> {
     validateBackupFields(data.name, data.ttl)
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const backup = this.db.createItem('backups', { ...data, teamId }, { teamId, name: data.name }) as Backup
-      await this.saveTeamBackups(teamId)
-      await this.doDeployment(['backups'])
+      const backup = this.repoService.getTeamConfigService(teamId).createBackup(data)
+
+      await this.saveTeamBackup(teamId, data)
+      await this.doTeamDeployment(teamId, (teamService) => {
+        teamService.createBackup(backup)
+      })
       return backup
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Backup name already exists'
@@ -683,40 +664,54 @@ export default class OtomiStack {
     }
   }
 
-  getBackup(id: string): Backup {
-    return this.db.getItem('backups', { id }) as Backup
+  getBackup(teamId: string, name: string): Backup {
+    return this.repoService.getTeamConfigService(teamId).getBackup(name)
   }
 
-  async editBackup(id: string, data: Backup): Promise<Backup> {
+  async editBackup(teamId: string, name: string, data: Backup): Promise<Backup> {
     validateBackupFields(data.name, data.ttl)
-    const backup = this.db.updateItem('backups', data, { id }) as Backup
-    await this.saveTeamBackups(data.teamId!)
-    await this.doDeployment(['backups'])
+    const backup = this.repoService.getTeamConfigService(teamId).updateBackup(name, data)
+    await this.saveTeamBackup(teamId, data)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateBackup(name, backup)
+      },
+      false,
+    )
     return backup
   }
 
-  async deleteBackup(id: string): Promise<void> {
-    const backup = this.getBackup(id)
-    this.db.deleteItem('backups', { id })
-    await this.saveTeamBackups(backup.teamId!)
-    await this.doDeployment(['backups'])
+  async deleteBackup(teamId: string, name: string): Promise<void> {
+    await this.deleteTeamBackup(teamId, name)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteBackup(name)
+      },
+      false,
+    )
   }
 
   getTeamNetpols(teamId: string): Array<Netpol> {
-    const ids = { teamId }
-    return this.db.getCollection('netpols', ids) as Array<Netpol>
+    return this.repoService.getTeamConfigService(teamId).getNetpols()
   }
 
   getAllNetpols(): Array<Netpol> {
-    return this.db.getCollection('netpols') as Array<Netpol>
+    return this.repoService.getAllNetpols()
   }
 
   async createNetpol(teamId: string, data: Netpol): Promise<Netpol> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const netpol = this.db.createItem('netpols', { ...data, teamId }, { teamId, name: data.name }) as Netpol
-      await this.saveTeamNetpols(teamId)
-      await this.doDeployment(['netpols'])
+      const netpol = this.repoService.getTeamConfigService(teamId).createNetpol(data)
+      await this.saveTeamNetpols(teamId, data)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createNetpol(netpol)
+        },
+        false,
+      )
       return netpol
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Network policy name already exists'
@@ -724,27 +719,38 @@ export default class OtomiStack {
     }
   }
 
-  getNetpol(id: string): Netpol {
-    return this.db.getItem('netpols', { id }) as Netpol
+  getNetpol(teamId: string, name: string): Netpol {
+    return this.repoService.getTeamConfigService(teamId).getNetpol(name)
   }
 
-  async editNetpol(id: string, data: Netpol): Promise<Netpol> {
+  async editNetpol(teamId: string, name: string, data: Netpol): Promise<Netpol> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const netpol = this.db.updateItem('netpols', data, { id }) as Netpol
-    await this.saveTeamNetpols(netpol.teamId!)
-    await this.doDeployment(['netpols'])
+    const netpol = this.repoService.getTeamConfigService(teamId).updateNetpol(name, data)
+    await this.saveTeamNetpols(teamId, data)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateNetpol(name, netpol)
+      },
+      false,
+    )
     return netpol
   }
 
-  async deleteNetpol(id: string): Promise<void> {
-    const netpol = this.getNetpol(id)
-    this.db.deleteItem('netpols', { id })
-    await this.saveTeamNetpols(netpol.teamId!)
-    await this.doDeployment(['netpols'])
+  async deleteNetpol(teamId: string, name: string): Promise<void> {
+    const netpol = this.repoService.getTeamConfigService(teamId).getNetpol(name)
+    await this.deleteTeamNetpol(teamId, netpol.name)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteNetpol(name)
+      },
+      false,
+    )
   }
 
   getAllUsers(sessionUser: SessionUser): Array<User> {
-    const users = this.db.getCollection('users') as Array<User>
+    const users = this.repoService.getUsers()
     if (sessionUser.isPlatformAdmin) return users
     else if (sessionUser.isTeamAdmin) {
       const usersWithBasicInfo = users.map((user) => {
@@ -758,8 +764,7 @@ export default class OtomiStack {
   async createUser(data: User): Promise<User> {
     const { valid, error } = isValidUsername(data.email.split('@')[0])
     if (!valid) {
-      const err = new HttpError(400, error as string)
-      throw err
+      throw new HttpError(400, error as string)
     }
     const initialPassword = generatePassword({
       length: 16,
@@ -770,23 +775,25 @@ export default class OtomiStack {
       strict: true,
     })
     const user = { ...data, initialPassword }
-    let existingUsers = this.db.getCollection('users') as any
+    let existingUsersEmail = this.repoService.getUsersEmail()
     if (!env.isDev) {
       const { otomi, cluster } = this.getSettings(['otomi', 'cluster'])
-      const keycloak = this.getApp('admin', 'keycloak')
+      const keycloak = this.getApp('keycloak')
       const keycloakBaseUrl = `https://keycloak.${cluster?.domainSuffix}`
       const realm = 'otomi'
       const username = keycloak?.values?.adminUsername as string
       const password = otomi?.adminPassword as string
-      existingUsers = await getKeycloakUsers(keycloakBaseUrl, realm, username, password)
+      existingUsersEmail = await getKeycloakUsers(keycloakBaseUrl, realm, username, password)
     }
     try {
-      if (existingUsers.some((existingUser) => existingUser.email === user.email))
+      if (existingUsersEmail.some((existingUser) => existingUser === user.email)) {
         throw new AlreadyExists('User email already exists')
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const createdUser = this.db.createItem('users', user, { name: user.email }) as User
-      await this.saveUsers()
-      await this.doDeployment(['users'])
+      }
+      const createdUser = this.repoService.createUser(user)
+      await this.saveUser(createdUser)
+      await this.doRepoDeployment((repoService) => {
+        repoService.createUser(user)
+      })
       return createdUser
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'User email already exists'
@@ -795,69 +802,84 @@ export default class OtomiStack {
   }
 
   getUser(id: string): User {
-    return this.db.getItem('users', { id }) as User
+    return this.repoService.getUser(id)
   }
 
   async editUser(id: string, data: User): Promise<User> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const user = this.db.updateItem('users', data, { id }) as User
-    await this.saveUsers()
-    await this.doDeployment(['users'])
+    const user = this.repoService.updateUser(id, data)
+    await this.saveUser(user)
+    await this.doRepoDeployment((repoService) => {
+      repoService.updateUser(id, user)
+    })
     return user
   }
 
   async deleteUser(id: string): Promise<void> {
-    const user = this.db.getItem('users', { id }) as User
+    const user = this.repoService.getUser(id)
     if (user.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
       const error = new OtomiError('Forbidden')
       error.code = 403
       error.publicMessage = 'Cannot delete the default platform admin user'
       throw error
     }
-    this.db.deleteItem('users', { id })
-    await this.saveUsers()
-    await this.doDeployment(['users'])
+    await this.deleteUserFile(user)
+    await this.doRepoDeployment((repoService) => {
+      repoService.deleteUser(user.email)
+    })
   }
 
   async editTeamUsers(
     data: Pick<User, 'id' | 'email' | 'isPlatformAdmin' | 'isTeamAdmin' | 'teams'>[],
   ): Promise<Array<User>> {
-    data.forEach((user) => {
-      const existingUser = this.db.getItem('users', { id: user.id }) as User
-      this.db.updateItem('users', { ...existingUser, teams: user.teams }, { id: user.id }) as User
+    for (const user of data) {
+      const existingUser = this.repoService.getUser(user.id!)
+      const updateUser = this.repoService.updateUser(user.id!, { ...existingUser, teams: user.teams })
+      await this.saveUser(updateUser)
+    }
+    const users = this.repoService.getUsers()
+    await this.doRepoDeployment((repoService) => {
+      for (const user of data) {
+        const existingUser = repoService.getUser(user.id!)
+        repoService.updateUser(user.id!, { ...existingUser, teams: user.teams })
+      }
     })
-    const users = this.db.getCollection('users') as Array<User>
-    await this.saveUsers()
-    await this.doDeployment(['users'])
     return users
   }
 
   getTeamProjects(teamId: string): Array<Project> {
-    const ids = { teamId }
-    return this.db.getCollection('projects', ids) as Array<Project>
+    return this.repoService.getTeamConfigService(teamId).getProjects()
   }
 
   getAllProjects(): Array<Project> {
-    return this.db.getCollection('projects') as Array<Project>
+    return this.repoService.getAllProjects()
   }
 
   // Creates a new project and reserves a given name for 'builds', 'workloads' and 'services' resources
   async createProject(teamId: string, data: Project): Promise<Project> {
     // Check if the project name already exists in any collection
-    const projectNameTaken = ['builds', 'workloads', 'services'].some((collectionName) =>
-      this.isCollectionNameTaken(collectionName, teamId, data.name),
-    )
+    const projectNameTaken = this.repoService.getTeamConfigService(teamId).doesProjectNameExist(data.name)
     const projectNameTakenPublicMessage = `In the team '${teamId}' there is already a resource that match the project name '${data.name}'`
 
     try {
       if (projectNameTaken) throw new AlreadyExists(projectNameTakenPublicMessage)
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const project = this.db.createItem('projects', { ...data, teamId }, { teamId, name: data.name }) as Project
-      await this.saveTeamProjects(teamId)
-      await this.saveTeamBuilds(teamId)
-      await this.saveTeamWorkloads(teamId)
-      await this.saveTeamServices(teamId)
-      await this.doDeployment(['projects', 'builds', 'workloads', 'workloadValues', 'services'])
+      const project = this.repoService.getTeamConfigService(teamId).createProject({ ...data, teamId })
+      if (data.build) {
+        await this.createBuild(teamId, data.build)
+      }
+      if (data.workload) {
+        await this.createWorkload(teamId, data.workload)
+      }
+      if (data.service) {
+        await this.createService(teamId, data.service)
+      }
+      await this.saveTeamProject(teamId, data)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createProject(project)
+        },
+        false,
+      )
       return project
     } catch (err) {
       if (err.code === 409 && projectNameTaken) err.publicMessage = projectNameTakenPublicMessage
@@ -866,129 +888,194 @@ export default class OtomiStack {
     }
   }
 
-  getProject(id: string): Project {
-    const p = this.db.getItem('projects', { id }) as Project
-    let b, w, wv, s
+  getProject(teamId: string, name: string): Project {
+    const project = this.repoService.getTeamConfigService(teamId).getProject(name)
+    let build, workload, workloadValues, services
     try {
-      b = this.db.getItem('builds', { id: p.build?.id }) as Build
+      build = this.repoService.getTeamConfigService(teamId).getBuild(project.build!.name)
     } catch (err) {
-      b = {}
+      build = {}
     }
     try {
-      w = this.db.getItem('workloads', { id: p.workload?.id }) as Workload
+      workload = this.repoService.getTeamConfigService(teamId).getWorkload(project.workload!.name)
     } catch (err) {
-      w = {}
+      workload = {}
     }
     try {
-      wv = this.db.getItem('workloadValues', { id: p.workloadValues?.id }) as WorkloadValues
+      workloadValues = this.repoService.getTeamConfigService(teamId).getWorkloadValues(project.workloadValues!.name!)
     } catch (err) {
-      wv = {}
+      workloadValues = {}
     }
     try {
-      s = this.db.getItem('services', { id: p.service?.id }) as Service
+      services = this.repoService.getTeamConfigService(teamId).getService(project.service!.name)
     } catch (err) {
-      s = {}
+      services = {}
     }
-    return { ...p, build: b, workload: w, workloadValues: wv, service: s }
+    return {
+      teamId,
+      ...project,
+      name: project.name,
+      build,
+      workload,
+      workloadValues,
+      service: services,
+    }
   }
 
-  async editProject(id: string, data: Project): Promise<Project> {
-    const { build, workload, workloadValues, service, teamId, name } = data
-    const { values } = workloadValues as WorkloadValues
-
+  async editProject(teamId: string, name: string, data: Project): Promise<Project> {
+    const { build, workload, workloadValues, service } = data
     let b, w, wv, s
-    if (!build?.id && build?.mode) b = this.db.createItem('builds', { ...build, teamId }, { teamId, name }) as Build
-    else if (build?.id) b = this.db.updateItem('builds', build, { id: build.id }) as Build
 
-    if (!workload?.id) w = this.db.createItem('workloads', { ...workload, teamId }, { teamId, name }) as Workload
-    else w = this.db.updateItem('workloads', workload, { id: workload.id }) as Workload
-
-    if (!data.workloadValues?.id)
-      wv = this.db.createItem('workloadValues', { teamId, values }, { teamId, name }, w.id) as WorkloadValues
-    else wv = this.db.updateItem('workloadValues', { teamId, values }, { id: workloadValues?.id }) as WorkloadValues
-
-    if (!service?.id) s = this.db.createItem('services', { ...service, teamId }, { teamId, name }) as Service
-    else s = this.db.updateItem('services', service, { id: service.id }) as Service
-
-    const updatedData = {
-      id,
-      name,
-      teamId,
-      ...(b && { build: { id: b.id } }),
-      workload: { id: w.id },
-      workloadValues: { id: wv.id },
-      service: { id: s.id },
+    if (build) {
+      try {
+        b = this.repoService.getTeamConfigService(teamId).createBuild({ ...build, teamId })
+      } catch (error) {
+        if (error.code == 409) b = this.repoService.getTeamConfigService(teamId).updateBuild(build.name, build)
+      }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const project = this.db.updateItem('projects', updatedData, { id }) as Project
-    await this.saveTeamProjects(project.teamId!)
-    await this.saveTeamBuilds(project.teamId!)
-    await this.saveTeamWorkloads(project.teamId!)
-    await this.saveTeamServices(project.teamId!)
-    await this.doDeployment(['projects', 'builds', 'workloads', 'workloadValues', 'services'])
+    if (workload) {
+      try {
+        w = this.repoService.getTeamConfigService(teamId).createWorkload(workload)
+      } catch (error) {
+        if (error.code === 409)
+          w = this.repoService.getTeamConfigService(teamId).updateWorkload(workload.name, workload)
+      }
+    }
+
+    if (workload && workloadValues) {
+      try {
+        wv = this.repoService.getTeamConfigService(teamId).createWorkloadValues({ ...workloadValues, name })
+      } catch (error) {
+        if (error.code === 409)
+          wv = this.repoService.getTeamConfigService(teamId).updateWorkloadValues(name, { ...workloadValues, name })
+      }
+    }
+
+    if (service) {
+      try {
+        s = this.repoService.getTeamConfigService(teamId).createService({ ...service, teamId })
+      } catch (error) {
+        if (error.code === 409) s = this.repoService.getTeamConfigService(teamId).updateService(service.name, service)
+      }
+    }
+
+    const updatedData = {
+      name,
+      teamId,
+      ...(b && { build: { name: b.name } }),
+      workload: { name: w.name },
+      workloadValues: { name: wv.name },
+      service: { name: s.name },
+    }
+
+    let project: Project
+    try {
+      project = this.repoService.getTeamConfigService(teamId).createProject(updatedData)
+    } catch (error) {
+      if (error.code === 409) {
+        project = this.repoService.getTeamConfigService(teamId).updateProject(name, updatedData)
+      } else {
+        throw error
+      }
+    }
+    await this.saveTeamProject(teamId, data)
+    await this.saveTeamBuild(teamId, b)
+    await this.saveTeamWorkload(teamId, w)
+    await this.saveTeamWorkloadValues(teamId, wv)
+    await this.saveTeamService(teamId, s)
+    //Leave this for now as we will replace projects
+    await this.doDeployment(['projects', 'builds', 'workloads', 'workloadValues', 'services'], teamId, false)
     return project
   }
 
   // Deletes a project and all its related resources
-  async deleteProject(id: string): Promise<void> {
-    const p = this.db.getItem('projects', { id }) as Project
-    if (p.build?.id) this.db.deleteItem('builds', { id: p.build.id })
-    if (p.workload?.id) this.db.deleteItem('workloads', { id: p.workload.id })
-    if (p.workloadValues?.id) this.db.deleteItem('workloadValues', { id: p.workloadValues.id })
-    if (p.service?.id) this.db.deleteItem('services', { id: p.service.id })
-    this.db.deleteItem('projects', { id })
-    await this.saveTeamProjects(p.teamId!)
-    await this.saveTeamBuilds(p.teamId!)
-    await this.saveTeamWorkloads(p.teamId!)
-    await this.saveTeamServices(p.teamId!)
-    await this.doDeployment(['projects', 'builds', 'workloads', 'workloadValues', 'services'])
+  async deleteProject(teamId: string, name: string): Promise<void> {
+    const p = this.repoService.getTeamConfigService(teamId).getProject(name)
+    if (p.build?.name) {
+      await this.deleteTeamBuild(teamId, p.build.name)
+    }
+    if (p.workload?.name) {
+      await this.deleteTeamWorkload(teamId, p.workload.name)
+    }
+    if (p.workloadValues?.name) {
+      await this.deleteTeamWorkloadValues(teamId, p.workloadValues.name)
+    }
+    if (p.service?.name) {
+      await this.deleteTeamService(teamId, p.service.name)
+    }
+    await this.deleteTeamProject(teamId, name)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteBuild(name)
+        teamService.deleteWorkload(name)
+        teamService.deleteWorkloadValues(name)
+        teamService.deleteService(name)
+        teamService.deleteProject(name)
+      },
+      false,
+    )
   }
 
-  getTeamCoderepos(teamId: string): Array<Coderepo> {
-    const ids = { teamId }
-    return this.db.getCollection('coderepos', ids) as Array<Coderepo>
+  getTeamCodeRepos(teamId: string): Array<CodeRepo> {
+    return this.repoService.getTeamConfigService(teamId).getCodeRepos()
   }
 
-  getAllCoderepos(): Array<Coderepo> {
-    const allCoderepos = this.db.getCollection('coderepos') as Array<Coderepo>
-    return allCoderepos
+  getAllCodeRepos(): Array<CodeRepo> {
+    const allCodeRepos = this.repoService.getAllCodeRepos()
+    return allCodeRepos
   }
 
-  async createCoderepo(teamId: string, data: Coderepo): Promise<Coderepo> {
+  async createCodeRepo(teamId: string, data: CodeRepo): Promise<CodeRepo> {
     try {
       const body = { ...data }
       if (!body.private) unset(body, 'secret')
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const coderepo = this.db.createItem('coderepos', { ...body, teamId }, { teamId, label: body.label }) as Coderepo
-      await this.saveTeamCoderepos(teamId)
-      await this.doDeployment(['coderepos'])
-      return coderepo
+      const codeRepo = this.repoService.getTeamConfigService(teamId).createCodeRepo({ ...data, teamId })
+      await this.saveTeamCodeRepo(teamId, codeRepo)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createCodeRepo(codeRepo)
+        },
+        false,
+      )
+      return codeRepo
     } catch (err) {
-      if (err.code === 409) err.publicMessage = 'Code repe label already exists'
+      if (err.code === 409) err.publicMessage = 'Code repo label already exists'
       throw err
     }
   }
 
-  getCoderepo(id: string): Coderepo {
-    return this.db.getItem('coderepos', { id }) as Coderepo
+  getCodeRepo(teamId: string, name: string): CodeRepo {
+    return this.repoService.getTeamConfigService(teamId).getCodeRepo(name)
   }
 
-  async editCoderepo(id: string, data: Coderepo): Promise<Coderepo> {
+  async editCodeRepo(teamId: string, name: string, data: CodeRepo): Promise<CodeRepo> {
     const body = { ...data }
     if (!body.private) unset(body, 'secret')
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const coderepo = this.db.updateItem('coderepos', body, { id }) as Coderepo
-    await this.saveTeamCoderepos(coderepo.teamId as string)
-    await this.doDeployment(['coderepos'])
-    return coderepo
+    const codeRepo = this.repoService.getTeamConfigService(teamId).updateCodeRepo(name, body)
+    await this.saveTeamCodeRepo(teamId, codeRepo)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateCodeRepo(name, codeRepo)
+      },
+      false,
+    )
+    return codeRepo
   }
 
-  async deleteCoderepo(id: string): Promise<void> {
-    const coderepo = this.getCoderepo(id)
-    this.db.deleteItem('coderepos', { id })
-    await this.saveTeamCoderepos(coderepo.teamId as string)
-    await this.doDeployment(['coderepos'])
+  async deleteCodeRepo(teamId: string, name: string): Promise<void> {
+    await this.deleteTeamCodeRepo(teamId, name)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteCodeRepo(name)
+      },
+      false,
+    )
   }
 
   async getTestRepoConnect(url: string, teamId: string, secretName: string): Promise<TestRepoConnect> {
@@ -1022,7 +1109,7 @@ export default class OtomiStack {
   async getInternalRepoUrls(teamId: string): Promise<string[]> {
     if (env.isDev || !teamId || teamId === 'admin') return []
     const { cluster, otomi } = this.getSettings(['cluster', 'otomi'])
-    const gitea = this.getApp('admin', 'gitea')
+    const gitea = this.getApp('gitea')
     const username = gitea?.values?.adminUsername as string
     const password = (gitea?.values?.adminPassword as string) || (otomi?.adminPassword as string)
     const orgName = `team-${teamId}`
@@ -1032,15 +1119,14 @@ export default class OtomiStack {
   }
 
   getDashboard(teamId: string): Array<any> {
-    const ids = teamId !== 'admin' ? { teamId } : undefined
-    const projects = this.db.getCollection('projects', ids) as Array<Project>
-    const builds = this.db.getCollection('builds', ids) as Array<Build>
-    const workloads = this.db.getCollection('workloads', ids) as Array<Workload>
-    const services = this.db.getCollection('services', ids) as Array<Service>
-    const secrets = this.db.getCollection('sealed-secrets', ids) as Array<SealedSecret>
-    const netpols = this.db.getCollection('netpols', ids) as Array<Netpol>
+    const projects = this.repoService.getTeamConfigService(teamId).getProjects()
+    const builds = this.repoService.getTeamConfigService(teamId).getBuilds()
+    const workloads = this.repoService.getTeamConfigService(teamId).getWorkloads()
+    const services = this.repoService.getTeamConfigService(teamId).getServices()
+    const secrets = this.repoService.getTeamConfigService(teamId).getSealedSecrets()
+    const netpols = this.repoService.getTeamConfigService(teamId).getNetpols()
 
-    const inventory = [
+    return [
       { name: 'projects', count: projects?.length },
       { name: 'builds', count: builds?.length },
       { name: 'workloads', count: workloads?.length },
@@ -1048,24 +1134,27 @@ export default class OtomiStack {
       { name: 'sealed secrets', count: secrets?.length },
       { name: 'network policies', count: netpols?.length },
     ]
-    return inventory
   }
 
   getTeamBuilds(teamId: string): Array<Build> {
-    const ids = { teamId }
-    return this.db.getCollection('builds', ids) as Array<Build>
+    return this.repoService.getTeamConfigService(teamId).getBuilds()
   }
 
   getAllBuilds(): Array<Build> {
-    return this.db.getCollection('builds') as Array<Build>
+    return this.repoService.getAllBuilds()
   }
 
   async createBuild(teamId: string, data: Build): Promise<Build> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const build = this.db.createItem('builds', { ...data, teamId }, { teamId, name: data.name }) as Build
-      await this.saveTeamBuilds(teamId)
-      await this.doDeployment(['builds'])
+      const build = this.repoService.getTeamConfigService(teamId).createBuild({ ...data, teamId })
+      await this.saveTeamBuild(teamId, data)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createBuild(build)
+        },
+        false,
+      )
       return build
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Build name already exists'
@@ -1073,44 +1162,52 @@ export default class OtomiStack {
     }
   }
 
-  getBuild(id: string): Build {
-    return this.db.getItem('builds', { id }) as Build
+  getBuild(teamId: string, name: string): Build {
+    return this.repoService.getTeamConfigService(teamId).getBuild(name)
   }
 
-  async editBuild(id: string, data: Build): Promise<Build> {
+  async editBuild(teamId: string, name: string, data: Build): Promise<Build> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const build = this.db.updateItem('builds', data, { id }) as Build
-    await this.saveTeamBuilds(build.teamId!)
-    await this.doDeployment(['builds'])
+    const build = this.repoService.getTeamConfigService(teamId).updateBuild(name, data)
+    await this.saveTeamBuild(teamId, build)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateBuild(name, build)
+      },
+      false,
+    )
     return build
   }
 
-  async deleteBuild(id: string): Promise<void> {
-    const build = this.getBuild(id)
-    const p = this.db.getCollection('projects') as Array<Project>
+  async deleteBuild(teamId: string, name: string): Promise<void> {
+    const p = this.repoService.getTeamConfigService(teamId).getProjects()
     p.forEach((project: Project) => {
-      if (project?.build?.id === id) {
-        const updatedData = { ...project, build: null }
-        this.db.updateItem('projects', updatedData, { id: project.id }) as Project
+      if (project?.build?.name === name) {
+        const updatedData = { ...project, build: undefined }
+        this.repoService.getTeamConfigService(teamId).updateProject(project.name, updatedData)
       }
     })
-    this.db.deleteItem('builds', { id })
-    await this.saveTeamBuilds(build.teamId!)
-    await this.doDeployment(['builds'])
+    await this.deleteTeamBuild(teamId, name)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteBuild(name)
+      },
+      false,
+    )
   }
 
   getTeamPolicies(teamId: string): Policies {
-    const policies = this.db.db.get(['policies']).value()
-    return policies[teamId]
+    return this.repoService.getTeamConfigService(teamId).getPolicies()
   }
 
   getAllPolicies(): Record<string, Policies> {
-    return this.db.db.get(['policies']).value()
+    return this.repoService.getAllPolicies()
   }
 
   getPolicy(teamId: string, id: string): Policy {
-    const policies = this.db.db.get(['policies']).value()
-    return policies[teamId][id]
+    return this.repoService.getTeamConfigService(teamId).getPolicy(id)
   }
 
   async editPolicy(teamId: string, policyId: string, data: Policy): Promise<Policy> {
@@ -1118,13 +1215,19 @@ export default class OtomiStack {
     teamPolicies[policyId] = removeBlankAttributes(data)
     const policy = this.getPolicy(teamId, policyId)
     await this.saveTeamPolicies(teamId)
-    await this.doDeployment(['policies'])
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        const rootStackPolicies = teamService.getPolicies()
+        rootStackPolicies[policyId] = removeBlankAttributes(data)
+      },
+      false,
+    )
     return policy
   }
 
   async getK8sVersion(): Promise<string> {
-    const version = (await getKubernetesVersion()) as string
-    return version
+    return (await getKubernetesVersion()) as string
   }
 
   async connectCloudtty(data: Cloudtty): Promise<Cloudtty | any> {
@@ -1208,12 +1311,11 @@ export default class OtomiStack {
   }
 
   getTeamWorkloads(teamId: string): Array<Workload> {
-    const ids = { teamId }
-    return this.db.getCollection('workloads', ids) as Array<Workload>
+    return this.repoService.getTeamConfigService(teamId).getWorkloads()
   }
 
   getAllWorkloads(): Array<Workload> {
-    return this.db.getCollection('workloads') as Array<Workload>
+    return this.repoService.getAllWorkloads()
   }
 
   async getWorkloadCatalog(data: {
@@ -1249,7 +1351,7 @@ export default class OtomiStack {
     const uuid = uuidv4()
     const localHelmChartsDir = `/tmp/otomi/charts/${uuid}`
     const helmChartCatalogUrl = env.HELM_CHART_CATALOG
-    const { user, email } = this.repo
+    const { user, email } = this.git
 
     try {
       await sparseCloneChart(
@@ -1274,15 +1376,20 @@ export default class OtomiStack {
 
   async createWorkload(teamId: string, data: Workload): Promise<Workload> {
     try {
-      const workload = this.db.createItem('workloads', { ...data, teamId }, { teamId, name: data.name }) as Workload
-      this.db.createItem(
-        'workloadValues',
-        { teamId, values: {} },
-        { teamId, name: workload.name },
-        workload.id,
-      ) as WorkloadValues
-      await this.saveTeamWorkloads(teamId)
-      await this.doDeployment(['workloads', 'workloadValues'])
+      const workload = this.repoService.getTeamConfigService(teamId).createWorkload({ ...data, teamId })
+      const workloadValues = this.repoService
+        .getTeamConfigService(teamId)
+        .createWorkloadValues({ teamId, values: {}, id: workload.id, name: workload.name })
+      await this.saveTeamWorkload(teamId, data)
+      await this.saveTeamWorkloadValues(teamId, workloadValues)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createWorkload(workload)
+          teamService.createWorkloadValues(workloadValues)
+        },
+        false,
+      )
       return workload
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Workload name already exists'
@@ -1290,60 +1397,91 @@ export default class OtomiStack {
     }
   }
 
-  getWorkload(id: string): Workload {
-    return this.db.getItem('workloads', { id }) as Workload
+  getWorkload(teamId: string, name: string): Workload {
+    return this.repoService.getTeamConfigService(teamId).getWorkload(name)
   }
 
-  async editWorkload(id: string, data: Workload): Promise<Workload> {
-    const workload = this.db.updateItem('workloads', data, { id }) as Workload
-    await this.saveTeamWorkloads(workload.teamId!)
-    await this.doDeployment(['workloads', 'workloadValues'])
+  async editWorkload(teamId: string, name: string, data: Workload): Promise<Workload> {
+    const workload = this.repoService.getTeamConfigService(teamId).updateWorkload(name, data)
+    await this.saveTeamWorkload(teamId, workload)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateWorkload(name, workload)
+      },
+      false,
+    )
     return workload
   }
 
-  async deleteWorkload(id: string): Promise<void> {
-    const p = this.db.getCollection('projects') as Array<Project>
+  async deleteWorkload(teamId: string, name: string): Promise<void> {
+    const p = this.repoService.getTeamConfigService(teamId).getProjects()
     p.forEach((project: Project) => {
-      if (project?.workload?.id === id) {
-        const updatedData = { ...project, workload: null, workloadValues: null }
-        this.db.updateItem('projects', updatedData, { id: project.id }) as Project
+      if (project?.workload?.name === name) {
+        const updatedData = { ...project, workload: undefined, workloadValues: undefined }
+        this.repoService.getTeamConfigService(teamId).updateProject(project.name, updatedData)
       }
     })
-    const workloadValues = this.db.getItem('workloadValues', { id }) as WorkloadValues
-    const path = getTeamWorkloadValuesFilePath(workloadValues.teamId!, workloadValues.name)
-    await this.repo.removeFile(path)
-    this.db.deleteItem('workloadValues', { id })
-    this.db.deleteItem('workloads', { id })
-    await this.saveTeamWorkloads(workloadValues.teamId!)
-    await this.doDeployment(['workloads', 'workloadValues'])
+    await this.deleteTeamWorkloadValues(teamId, name)
+    await this.deleteTeamWorkload(teamId, name)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteWorkloadValues(name)
+        teamService.deleteWorkload(name)
+      },
+      false,
+    )
   }
 
-  async editWorkloadValues(id: string, data: WorkloadValues): Promise<WorkloadValues> {
-    const workloadValues = this.db.updateItem('workloadValues', data, { id }) as WorkloadValues
-    await this.saveTeamWorkloads(workloadValues.teamId!)
-    await this.doDeployment(['workloadValues'])
+  async editWorkloadValues(teamId: string, name: string, data: WorkloadValues): Promise<WorkloadValues> {
+    let workloadValues
+    try {
+      workloadValues = this.repoService.getTeamConfigService(teamId).createWorkloadValues({ ...data, name })
+    } catch (error) {
+      if (error.code === 409) {
+        debug('Workload values already exists, updating values')
+        workloadValues = this.repoService.getTeamConfigService(teamId).updateWorkloadValues(name, data)
+      }
+    }
+    await this.saveTeamWorkloadValues(teamId, workloadValues)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        try {
+          teamService.createWorkloadValues({ ...data, name })
+        } catch (error) {
+          if (error.code === 409) {
+            debug('Workload values already exists, updating values')
+            teamService.updateWorkloadValues(name, data)
+          }
+        }
+      },
+      false,
+    )
     return workloadValues
   }
 
-  getWorkloadValues(id: string): WorkloadValues {
-    return this.db.getItem('workloadValues', { id }) as WorkloadValues
+  getWorkloadValues(teamId: string, name: string): WorkloadValues {
+    return this.repoService.getTeamConfigService(teamId).getWorkloadValues(name)
   }
 
   getAllServices(): Array<Service> {
-    return this.db.getCollection('services') as Array<Service>
+    return this.repoService.getAllServices()
   }
 
   async createService(teamId: string, data: Service): Promise<Service> {
-    this.checkPublicUrlInUse(data)
+    this.checkPublicUrlInUse(teamId, data)
     try {
-      const service = this.db.createItem(
-        'services',
-        { ...data, teamId },
-        { teamId, name: data.name },
-        data?.id,
-      ) as Service
-      await this.saveTeamServices(teamId)
-      await this.doDeployment(['services'])
+      const service = this.repoService.getTeamConfigService(teamId).createService({ ...data, teamId })
+      await this.saveTeamService(teamId, data)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createService(service)
+        },
+        false,
+      )
       return service
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Service name already exists'
@@ -1351,38 +1489,48 @@ export default class OtomiStack {
     }
   }
 
-  getService(id: string): Service {
-    return this.db.getItem('services', { id }) as Service
+  getService(teamId: string, name: string): Service {
+    return this.repoService.getTeamConfigService(teamId).getService(name)
   }
 
-  async editService(id: string, data: Service): Promise<Service> {
-    const service = this.db.updateItem('services', data, { id }) as Service
-    await this.saveTeamServices(service.teamId!)
-    await this.doDeployment(['services'])
+  async editService(teamId: string, name: string, data: Service): Promise<Service> {
+    const service = this.repoService.getTeamConfigService(teamId).updateService(name, data)
+    await this.saveTeamService(teamId, service)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateService(name, service)
+      },
+      false,
+    )
     return service
   }
 
-  async deleteService(id: string, deleteProjectService = true): Promise<void> {
-    const service = this.getService(id)
+  async deleteService(teamId: string, name: string, deleteProjectService = true): Promise<void> {
     if (deleteProjectService) {
-      const p = this.db.getCollection('projects') as Array<Project>
+      const p = this.repoService.getTeamConfigService(teamId).getProjects()
       p.forEach((project: Project) => {
-        if (project?.service?.id === id) {
-          const updatedData = { ...project, service: null }
-          this.db.updateItem('projects', updatedData, { id: project.id }) as Project
+        if (project?.service?.name === name) {
+          const updatedData = { ...project, service: undefined }
+          this.repoService.getTeamConfigService(teamId).updateProject(project.name, updatedData)
         }
       })
     }
-    this.db.deleteItem('services', { id })
-    await this.saveTeamServices(service.teamId!)
-    await this.doDeployment(['services'])
+    await this.deleteTeamService(teamId, name)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteService(name)
+      },
+      false,
+    )
   }
 
-  checkPublicUrlInUse(data: any): void {
+  checkPublicUrlInUse(teamId: string, data: any): void {
     // skip when editing or when svc is of type "cluster" as it has no url
     if (data.id || data?.ingress?.type === 'cluster') return
     const newSvc = data.ingress
-    const services = this.db.getCollection('services')
+    const services = this.repoService.getTeamConfigService(teamId).getServices()
 
     const servicesFiltered = filter(services, (svc: any) => {
       if (svc.ingress?.type !== 'cluster') {
@@ -1429,20 +1577,88 @@ export default class OtomiStack {
     }
   }
 
-  async doDeployment(collectionIds?: string[]): Promise<void> {
+  async doTeamDeployment(
+    teamId: string,
+    action: (teamService: TeamConfigService) => void,
+    encryptSecrets = true,
+  ): Promise<void> {
+    const rootStack = await getSessionStack()
+
+    try {
+      // Commit and push Git changes
+      await this.git.save(this.editor!, encryptSecrets)
+
+      // Execute the provided action dynamically
+      action(rootStack.repoService.getTeamConfigService(teamId))
+
+      debug(`Updated root stack values with ${this.sessionId} changes`)
+
+      // Emit pipeline status
+      const sha = await rootStack.git.getCommitSha()
+      this.emitPipelineStatus(sha)
+    } catch (e) {
+      const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
+      getIo().emit('db', msg)
+      throw e
+    } finally {
+      // Clean up the session
+      await cleanSession(this.sessionId!)
+    }
+  }
+
+  async doRepoDeployment(action: (repoService: RepoService) => void, encryptSecrets = true): Promise<void> {
+    const rootStack = await getSessionStack()
+
+    try {
+      // Commit and push Git changes
+      await this.git.save(this.editor!, encryptSecrets)
+
+      // Execute the provided action dynamically
+      action(rootStack.repoService)
+
+      debug(`Updated root stack values with ${this.sessionId} changes`)
+
+      // Emit pipeline status
+      const sha = await rootStack.git.getCommitSha()
+      this.emitPipelineStatus(sha)
+    } catch (e) {
+      const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
+      getIo().emit('db', msg)
+      throw e
+    } finally {
+      // Clean up the session
+      await cleanSession(this.sessionId!)
+    }
+  }
+
+  //TODO remove this one when we remove projects
+  async doDeployment(collectionIds?: string[], teamId?: string, encryptSecrets = true): Promise<void> {
     const rootStack = await getSessionStack()
     try {
-      // commit and pull-push remote root
-      await this.repo.save(this.editor!)
-      // update db with the new values
+      // Commit and push Git changes
+      await this.git.save(this.editor!, encryptSecrets)
+
       if (collectionIds) {
         collectionIds.forEach((collectionId) => {
-          const collection = this.db.db.get(collectionId).value()
-          rootStack.db.db.set(collectionId, collection).write()
+          if (teamId && collectionId in this.repoService.getRepo().teamConfig[teamId]) {
+            // If a teamId is provided and collection is inside teamConfig, update the specific team
+            const collection = this.repoService.getTeamConfigService(teamId).getCollection(collectionId)
+            rootStack.repoService.getTeamConfigService(teamId).updateCollection(collectionId, collection)
+          } else {
+            // Otherwise, update the root repo collection
+            console.log('collectionId', collectionId)
+            const collection = this.repoService.getCollection(collectionId)
+            if (collection) {
+              rootStack.repoService.updateCollection(collectionId, collection)
+            }
+          }
         })
       }
+
       debug(`Updated root stack values with ${this.sessionId} changes`)
-      const sha = await rootStack.repo.getCommitSha()
+
+      // Emit pipeline status
+      const sha = await rootStack.git.getCommitSha()
       this.emitPipelineStatus(sha)
     } catch (e) {
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
@@ -1459,7 +1675,7 @@ export default class OtomiStack {
     await emptyDir(rootPath)
     // and re-init root
     const rootStack = await getSessionStack()
-    await rootStack.initRepo()
+    await rootStack.initGit()
   }
 
   apiClient?: k8s.CoreV1Api
@@ -1566,32 +1782,7 @@ export default class OtomiStack {
     const secretName = 'harbor-pushsecret'
     const secretRes = await client.readNamespacedSecret(secretName, namespace)
     const { body: secret }: { body: k8s.V1Secret } = secretRes
-    const token = Buffer.from(secret.data!['.dockerconfigjson'], 'base64').toString('ascii')
-    return token
-  }
-
-  createSecret(teamId: string, data: Record<string, any>): Secret {
-    return this.db.createItem('secrets', { ...data, teamId }, { teamId, name: data.name }) as Secret
-  }
-
-  editSecret(id: string, data: Secret): Secret {
-    return this.db.updateItem('secrets', data, { id }) as Secret
-  }
-
-  deleteSecret(id: string): void {
-    this.db.deleteItem('secrets', { id })
-  }
-
-  getSecret(id: string): Secret {
-    return this.db.getItem('secrets', { id }) as Secret
-  }
-
-  getAllSecrets(): Array<Secret> {
-    return this.db.getCollection('secrets', {}) as Array<Secret>
-  }
-
-  getSecrets(teamId: string): Array<Secret> {
-    return this.db.getCollection('secrets', { teamId }) as Array<Secret>
+    return Buffer.from(secret.data!['.dockerconfigjson'], 'base64').toString('ascii')
   }
 
   async createSealedSecret(teamId: string, data: SealedSecret): Promise<SealedSecret> {
@@ -1607,15 +1798,19 @@ export default class OtomiStack {
         const encryptedItem = encryptSecretItem(certificate, data.name, namespace, obj.value, 'namespace-wide')
         return { [obj.key]: encryptedItem }
       })
-      const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises))) as EncryptedDataRecord
-      const sealedSecret = this.db.createItem(
-        'sealedsecrets',
-        { ...data, teamId, encryptedData, namespace },
-        { teamId, name: data.name },
-      ) as SealedSecret
+      const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises))) as EncryptedDataRecord[]
+      const sealedSecret = this.repoService
+        .getTeamConfigService(teamId)
+        .createSealedSecret({ ...data, teamId, encryptedData, namespace })
       const sealedSecretChartValues = sealedSecretManifest(data, encryptedData, namespace)
-      await this.saveTeamSealedSecrets(teamId, sealedSecretChartValues, sealedSecret.id!)
-      await this.doDeployment(['sealedsecrets'])
+      await this.saveTeamSealedSecrets(teamId, sealedSecretChartValues, sealedSecret.name)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createSealedSecret(sealedSecret)
+        },
+        false,
+      )
       return sealedSecret
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'SealedSecret name already exists'
@@ -1623,7 +1818,7 @@ export default class OtomiStack {
     }
   }
 
-  async editSealedSecret(id: string, data: SealedSecret): Promise<SealedSecret> {
+  async editSealedSecret(name: string, data: SealedSecret): Promise<SealedSecret> {
     const namespace = data.namespace ?? `team-${data?.teamId}`
     const certificate = await getSealedSecretsCertificate()
     if (!certificate) {
@@ -1636,541 +1831,272 @@ export default class OtomiStack {
       const encryptedItem = encryptSecretItem(certificate, data.name, namespace, obj.value, 'namespace-wide')
       return { [obj.key]: encryptedItem }
     })
-    const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises))) as EncryptedDataRecord
-    const sealedSecret = this.db.updateItem('sealedsecrets', { ...data, encryptedData }, { id }) as SealedSecret
+    const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises))) as EncryptedDataRecord[]
+    const sealedSecret = this.repoService
+      .getTeamConfigService(data.teamId!)
+      .updateSealedSecret(name, { ...data, encryptedData })
     const sealedSecretChartValues = sealedSecretManifest(data, encryptedData, namespace)
-    await this.saveTeamSealedSecrets(data.teamId!, sealedSecretChartValues, id)
-    await this.doDeployment(['sealedsecrets'])
+    await this.saveTeamSealedSecrets(data.teamId!, sealedSecretChartValues, name)
+    await this.doTeamDeployment(
+      data.teamId!,
+      (teamService) => {
+        teamService.updateSealedSecret(name, sealedSecret)
+      },
+      false,
+    )
     return sealedSecret
   }
 
-  async deleteSealedSecret(id: string): Promise<void> {
-    const sealedSecret = await this.getSealedSecret(id)
-    this.db.deleteItem('sealedsecrets', { id })
-    const relativePath = getTeamSealedSecretsValuesFilePath(sealedSecret.teamId!, `${id}.yaml`)
-    await this.repo.removeFile(relativePath)
-    await this.doDeployment(['sealedsecrets'])
+  async deleteSealedSecret(teamId: string, name: string): Promise<void> {
+    const sealedSecret = await this.getSealedSecret(teamId, name)
+    this.repoService.getTeamConfigService(teamId).deleteSealedSecret(name)
+    const relativePath = getTeamSealedSecretsValuesFilePath(sealedSecret.teamId!, `${name}.yaml`)
+    await this.git.removeFile(relativePath)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteSealedSecret(name)
+      },
+      false,
+    )
   }
 
-  async getSealedSecret(id: string): Promise<SealedSecret> {
-    const sealedSecret = this.db.getItem('sealedsecrets', { id }) as SealedSecret
-    const namespace = sealedSecret.namespace ?? `team-${sealedSecret.teamId}`
+  async getSealedSecret(teamId: string, name: string): Promise<SealedSecret> {
+    const sealedSecret = this.repoService.getTeamConfigService(teamId).getSealedSecret(name)
+    const namespace = sealedSecret.namespace ?? `team-${teamId}`
     const secretValues = (await getSecretValues(sealedSecret.name, namespace)) || {}
     const isDisabled = isEmpty(secretValues)
     const encryptedData = Object.entries(sealedSecret.encryptedData).map(([key, value]) => ({
       key,
       value: secretValues?.[key] || value,
     }))
-    const res = { ...sealedSecret, encryptedData, isDisabled } as any
-    return res
+    return { ...sealedSecret, encryptedData, isDisabled } as any
   }
 
   getAllSealedSecrets(): Array<SealedSecret> {
-    return this.db.getCollection('sealedsecrets', {}) as Array<SealedSecret>
+    return this.repoService.getAllSealedSecrets()
   }
 
   getSealedSecrets(teamId: string): Array<SealedSecret> {
-    return this.db.getCollection('sealedsecrets', { teamId }) as Array<SealedSecret>
+    return this.repoService.getTeamConfigService(teamId).getSealedSecrets()
   }
 
   async getSecretsFromK8s(teamId: string): Promise<Array<string>> {
     if (env.isDev) return []
-    const secrets = await getTeamSecretsFromK8s(`team-${teamId}`)
-    return secrets
+    return await getTeamSecretsFromK8s(`team-${teamId}`)
   }
 
   async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {
     debug('Loading values')
-    await this.repo.initSops()
-    await this.loadCluster()
-    await this.loadSettings()
-    await this.loadUsers()
-    await this.loadTeams()
-    await this.loadApps()
+    await this.git.initSops()
+    await this.initRepo()
     this.isLoaded = true
   }
 
-  async loadCluster(): Promise<void> {
-    const data = await this.repo.loadConfig('env/cluster.yaml', 'env/secrets.cluster.yaml')
-    // @ts-ignore
-    this.db.db.get('settings').assign(data).write()
-  }
-
-  async loadSettings(): Promise<void> {
-    const data: Record<string, any> = await this.repo.loadConfig('env/settings.yaml', `env/secrets.settings.yaml`)
-    data.otomi!.nodeSelector = objectToArray((data.otomi!.nodeSelector ?? {}) as Record<string, any>)
-    // @ts-ignore
-    this.db.db.get('settings').assign(data).write()
-  }
-
-  async loadUsers(): Promise<void> {
-    const { secretFilePostfix } = this.repo
-    const relativePath = `env/secrets.users.yaml`
-    const secretRelativePath = `${relativePath}${secretFilePostfix}`
-    if (!(await this.repo.fileExists(relativePath)) || !(await this.repo.fileExists(secretRelativePath))) {
-      debug(`No users found`)
-      return
+  async saveAdminApp(app: App, secretPaths?: string[]): Promise<void> {
+    const { id, enabled, values, rawValues } = app
+    const apps = {
+      [id]: {
+        ...(values || {}),
+      },
     }
-    const data = await this.repo.readFile(secretRelativePath)
-    const inData: Array<User> = get(data, `users`, [])
-    inData.forEach((inUser) => {
-      const res: any = this.db.populateItem('users', { ...inUser }, undefined, inUser.id as string)
-      debug(`Loaded user: email: ${res.name}, id: ${res.id}`)
-    })
-  }
-
-  async loadTeamSealedSecrets(teamId: string): Promise<void> {
-    const sealedSecretsValuesRootPath = getTeamSealedSecretsValuesRootPath(teamId)
-    const sealedSecretsFileNames = await this.repo.readDir(sealedSecretsValuesRootPath)
-    if (sealedSecretsFileNames.length === 0) return
-
-    await Promise.all(
-      sealedSecretsFileNames.map(async (id: string) => {
-        const relativePath = getTeamSealedSecretsValuesFilePath(teamId, id)
-        if (!(await this.repo.fileExists(relativePath))) {
-          debug(`Team ${teamId} has no sealed secrets yet`)
-          return
-        }
-        const data = await this.repo.readFile(relativePath)
-        const res: any = this.db.populateItem(
-          'sealedsecrets',
-          {
-            encryptedData: data.spec.encryptedData,
-            metadata: data.spec.template.metadata,
-            type: data.spec.template.type,
-            name: data.metadata.name,
-            teamId,
-          },
-          undefined,
-          id.replace('.yaml', ''),
-        )
-        debug(`Loaded sealed secret: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
-      }),
-    )
-  }
-
-  async loadTeamBackups(teamId: string): Promise<void> {
-    const relativePath = getTeamBackupsFilePath(teamId)
-    if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no backups yet`)
-      return
-    }
-    const data = await this.repo.readFile(relativePath)
-    const inData: Array<Backup> = get(data, getTeamBackupsJsonPath(teamId), [])
-    inData.forEach((inBackup) => {
-      const res: any = this.db.populateItem('backups', { ...inBackup, teamId }, undefined, inBackup.id as string)
-      debug(`Loaded backup: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
-    })
-  }
-
-  async loadTeamNetpols(teamId: string): Promise<void> {
-    const relativePath = getTeamNetpolsFilePath(teamId)
-    if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no network policies yet`)
-      return
-    }
-    const data = await this.repo.readFile(relativePath)
-    const inData: Array<Netpol> = get(data, getTeamNetpolsJsonPath(teamId), [])
-    inData.forEach((inNetpol) => {
-      const res: any = this.db.populateItem('netpols', { ...inNetpol, teamId }, undefined, inNetpol.id as string)
-      debug(`Loaded network policy: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
-    })
-  }
-
-  async loadTeamProjects(teamId: string): Promise<void> {
-    const relativePath = getTeamProjectsFilePath(teamId)
-    if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no projects yet`)
-      return
-    }
-    const data = await this.repo.readFile(relativePath)
-    const inData: Array<Project> = get(data, getTeamProjectsJsonPath(teamId), [])
-    inData.forEach((inProject) => {
-      const res: any = this.db.populateItem('projects', { ...inProject, teamId }, undefined, inProject.id as string)
-      debug(`Loaded project: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
-    })
-  }
-
-  async loadTeamCoderepos(teamId: string): Promise<void> {
-    const relativePath = getTeamCodereposFilePath(teamId)
-    if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no coderepos yet`)
-      return
-    }
-    const data = await this.repo.readFile(relativePath)
-    const inData: Array<Project> = get(data, getTeamCodereposJsonPath(teamId), [])
-    inData.forEach((inCoderepo) => {
-      const res: any = this.db.populateItem('coderepos', { ...inCoderepo, teamId }, undefined, inCoderepo.id as string)
-      debug(`Loaded coderepo: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
-    })
-  }
-
-  async loadTeamBuilds(teamId: string): Promise<void> {
-    const relativePath = getTeamBuildsFilePath(teamId)
-    if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no builds yet`)
-      return
-    }
-    const data = await this.repo.readFile(relativePath)
-    const inData: Array<Build> = get(data, getTeamBuildsJsonPath(teamId), [])
-    inData.forEach((inBuild) => {
-      const res: any = this.db.populateItem('builds', { ...inBuild, teamId }, undefined, inBuild.id as string)
-      debug(`Loaded build: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
-    })
-  }
-
-  async loadTeamPolicies(teamId: string): Promise<void> {
-    const relativePath = getTeamPoliciesFilePath(teamId)
-    if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no policies yet`)
-      return
-    }
-    const data = await this.repo.readFile(relativePath)
-    const inData: any = get(data, getTeamPoliciesJsonPath(teamId), {})
-    this.db.db.set(`policies[${teamId}]`, inData).write()
-    debug(`Loaded policies of team: ${teamId}`)
-  }
-
-  async loadTeamWorkloads(teamId: string): Promise<void> {
-    const relativePath = getTeamWorkloadsFilePath(teamId)
-    if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no workloads yet`)
-      return
-    }
-    const data = await this.repo.readFile(relativePath)
-    const inData: Array<Workload> = get(data, getTeamWorkloadsJsonPath(teamId), [])
-    inData.forEach((inWorkload) => {
-      const res: any = this.db.populateItem('workloads', { ...inWorkload, teamId }, undefined, inWorkload.id as string)
-      debug(`Loaded workload: name: ${res.name}, id: ${res.id}, teamId: ${res.teamId}`)
-    })
-    const workloads = this.getTeamWorkloads(teamId)
-    await Promise.all(
-      workloads.map((workload) => {
-        this.loadWorkloadValues(workload)
-      }),
-    )
-  }
-
-  async loadWorkloadValues(workload: Workload): Promise<WorkloadValues> {
-    const relativePath = getTeamWorkloadValuesFilePath(workload.teamId!, workload.name)
-    let data = { values: {} } as Record<string, any>
-    if (!(await this.repo.fileExists(relativePath)))
-      debug(`The workload values file does not exists at ${relativePath}`)
-    else data = await this.repo.readFile(relativePath)
-
-    data.id = workload.id!
-    data.teamId = workload.teamId!
-    data.name = workload.name!
-    try {
-      data.values = parseYaml(data.values as string) || {}
-    } catch (error) {
-      debug(
-        `The values property does not seem to be a YAML formated string at ${relativePath}. Falling back to empty map.`,
-      )
-      data.values = {}
+    if (!isEmpty(rawValues)) {
+      apps[id]._rawValues = rawValues
     }
 
-    const res = this.db.populateItem('workloadValues', data, undefined, workload.id as string) as WorkloadValues
-    debug(`Loaded workload values: name: ${res.name} id: ${res.id}, teamId: ${workload.teamId!}`)
-    return res
-  }
-
-  async loadTeams(): Promise<void> {
-    const mergedData: Core = await this.repo.loadConfig('env/teams.yaml', `env/secrets.teams.yaml`)
-    const tc = mergedData?.teamConfig || {}
-    if (!tc.admin) tc.admin = { id: 'admin' }
-    await Promise.all(
-      Object.values(tc).map(async (team: Team) => {
-        await this.loadTeam(team)
-        this.loadTeamNetpols(team.id!)
-        this.loadTeamServices(team.id!)
-        this.loadTeamSealedSecrets(team.id!)
-        this.loadTeamWorkloads(team.id!)
-        this.loadTeamBackups(team.id!)
-        this.loadTeamProjects(team.id!)
-        this.loadTeamCoderepos(team.id!)
-        this.loadTeamBuilds(team.id!)
-        this.loadTeamPolicies(team.id!)
-      }),
-    )
-  }
-
-  async loadTeamServices(teamId: string): Promise<void> {
-    const relativePath = getTeamServicesFilePath(teamId)
-    if (!(await this.repo.fileExists(relativePath))) {
-      debug(`Team ${teamId} has no services yet`)
-      return
+    if (this.canToggleApp(id)) {
+      apps[id].enabled = !!enabled
+    } else {
+      delete apps[id].enabled
     }
-    const data = await this.repo.readFile(relativePath)
-    const services = get(data, getTeamServicesJsonPath(teamId), [])
-    services.forEach((svc) => {
-      this.loadService(svc, teamId)
-    })
-  }
 
-  async saveCluster(secretPaths?: string[]): Promise<void> {
-    await this.repo.saveConfig(
-      'env/cluster.yaml',
-      'env/secrets.cluster.yaml',
-      this.getSettings(['cluster']),
-      secretPaths ?? this.getSecretPaths(),
-    )
-  }
-
-  async saveAdminApps(secretPaths?: string[]): Promise<void> {
-    await Promise.all(
-      this.getApps('admin').map(async (app) => {
-        const apps = {}
-        const { id, enabled, values, rawValues } = app
-        apps[id] = {
-          ...(values || {}),
-        }
-        if (!isEmpty(rawValues)) apps[id]._rawValues = rawValues
-
-        if (this.canToggleApp(id)) apps[id].enabled = !!enabled
-        else delete apps[id].enabled
-
-        await this.repo.saveConfig(
-          `env/apps/${id}.yaml`,
-          `env/apps/secrets.${id}.yaml`,
-          { apps },
-          secretPaths ?? this.getSecretPaths(),
-        )
-      }),
-    )
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplApp')!
+    await this.git.saveConfigWithSecrets({ apps }, secretPaths ?? this.getSecretPaths(), fileMap)
   }
 
   async saveSettings(secretPaths?: string[]): Promise<void> {
     const settings = cloneDeep(this.getSettings()) as Record<string, Record<string, any>>
     settings.otomi.nodeSelector = arrayToObject(settings.otomi.nodeSelector as [])
-    await this.repo.saveConfig(
-      'env/settings.yaml',
-      `env/secrets.settings.yaml`,
-      omit(settings, ['cluster']),
-      secretPaths ?? this.getSecretPaths(),
-    )
-  }
-
-  async saveUsers(): Promise<void> {
-    const users = this.db.getCollection('users') as Array<User>
-    const relativePath = `env/secrets.users.yaml`
-    const { secretFilePostfix } = this.repo
-    let secretRelativePath = `${relativePath}${secretFilePostfix}`
-    if (secretFilePostfix) {
-      const secretExists = await this.repo.fileExists(relativePath)
-      if (!secretExists) secretRelativePath = relativePath
-    }
-    const outData: Record<string, any> = set({}, `users`, users)
-    debug(`Saving users`)
-    await this.repo.writeFile(secretRelativePath, outData, false)
-    if (users.length === 0) {
-      await this.repo.removeFile(relativePath)
-      await this.repo.removeFile(secretRelativePath)
+    const fileMaps = getFileMaps('').filter((fm) => fm.resourceDir === 'settings')!
+    for (const fileMap of fileMaps) {
+      await this.git.saveConfigWithSecrets(settings, secretPaths ?? this.getSecretPaths(), fileMap)
     }
   }
 
-  async saveTeams(secretPaths?: string[]): Promise<void> {
-    const filePath = 'env/teams.yaml'
-    const secretFilePath = `env/secrets.teams.yaml`
-    const teamValues = {}
-    const teams = this.getTeams()
-    await Promise.all(
-      teams.map((inTeam) => {
-        const team: Record<string, any> = omit(inTeam, 'name')
-        const teamId = team.id as string
-        team.resourceQuota = arrayToObject((team.resourceQuota as []) ?? [])
-        teamValues[teamId] = team
-      }),
-    )
-    const values = set({}, 'teamConfig', teamValues)
-    await this.repo.saveConfig(filePath, secretFilePath, values, secretPaths ?? this.getSecretPaths())
+  async saveUser(user: User): Promise<void> {
+    debug(`Saving user ${user.email}`)
+    const users: User[] = []
+    users.push(user)
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplUser')!
+    await this.git.saveSecretConfig({ users }, fileMap, false)
   }
 
-  async saveTeamSealedSecrets(teamId: string, data: any, id: string): Promise<void> {
-    const relativePath = getTeamSealedSecretsValuesFilePath(teamId, `${id}.yaml`)
+  async deleteUserFile(user: User): Promise<void> {
+    debug(`Deleting user ${user.email}`)
+    this.repoService.deleteUser(user.email)
+    const users: User[] = []
+    users.push(user)
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplUser')!
+    await this.git.deleteConfig({ users }, fileMap, 'secrets.')
+  }
+
+  async saveTeam(team: Team, secretPaths?: string[]): Promise<void> {
+    debug(`Saving team ${team.name}`)
+    debug('team', JSON.stringify(team))
+    const inTeam = team
+    //TODO fix this issue where resource quota needs to be saved as an object
+    inTeam.resourceQuota = arrayToObject((team.resourceQuota as []) ?? []) as any
+    const repo = this.createTeamConfigInRepo(team.name, 'settings', inTeam)
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamSettingSet')!
+    await this.git.saveConfigWithSecrets(repo, secretPaths ?? this.getSecretPaths(), fileMap)
+  }
+
+  async deleteTeamConfig(name: string): Promise<void> {
+    this.repoService.deleteTeamConfig(name)
+    const teamDir = `env/teams/${name}`
+    await this.git.removeDir(teamDir)
+  }
+
+  async saveTeamSealedSecrets(teamId: string, data: any, name: string): Promise<void> {
+    const relativePath = getTeamSealedSecretsValuesFilePath(teamId, `${name}.yaml`)
     debug(`Saving sealed secrets of team: ${teamId}`)
-    await this.repo.writeFile(relativePath, data)
+    await this.git.writeFile(relativePath, data)
   }
 
-  async saveTeamBackups(teamId: string): Promise<void> {
-    const backups = this.db.getCollection('backups', { teamId }) as Array<Backup>
-    const cleaneBackups: Array<Record<string, any>> = backups.map((obj) => {
-      return omit(obj, ['teamId'])
-    })
-    const relativePath = getTeamBackupsFilePath(teamId)
-    const outData: Record<string, any> = set({}, getTeamBackupsJsonPath(teamId), cleaneBackups)
-    debug(`Saving backups of team: ${teamId}`)
-    await this.repo.writeFile(relativePath, outData)
+  async deleteTeamSealedSecrets(teamId: string, id: string): Promise<void> {
+    const sealedSecret = this.repoService.getTeamConfigService(teamId).getSealedSecret(id)
+    this.repoService.getTeamConfigService(teamId).deleteSealedSecret(id)
+
+    const repo = this.createTeamConfigInRepo(teamId, 'sealedSecrets', [sealedSecret])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamSecret')!
+    await this.git.deleteConfig(repo, fileMap)
   }
 
-  async saveTeamNetpols(teamId: string): Promise<void> {
-    const netpols = this.db.getCollection('netpols', { teamId }) as Array<Netpol>
-    const cleaneNetpols: Array<Record<string, any>> = netpols.map((obj) => {
-      return omit(obj, ['teamId'])
-    })
-    const relativePath = getTeamNetpolsFilePath(teamId)
-    const outData: Record<string, any> = set({}, getTeamNetpolsJsonPath(teamId), cleaneNetpols)
-    debug(`Saving network policies of team: ${teamId}`)
-    await this.repo.writeFile(relativePath, outData)
+  async saveTeamBackup(teamId: string, backup: Backup): Promise<void> {
+    debug(`Saving backup ${backup.name} for team ${teamId}`)
+    const repo = this.createTeamConfigInRepo(teamId, 'backups', [backup])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamBackup')!
+    await this.git.saveConfig(repo, fileMap)
   }
 
-  async saveTeamWorkloads(teamId: string): Promise<void> {
-    const workloads = this.db.getCollection('workloads', { teamId }) as Array<Workload>
-    const cleaneWorkloads: Array<Record<string, any>> = workloads.map((obj) => {
-      return omit(obj, ['teamId'])
-    })
-    const relativePath = getTeamWorkloadsFilePath(teamId)
-    const outData: Record<string, any> = set({}, getTeamWorkloadsJsonPath(teamId), cleaneWorkloads)
-    debug(`Saving workloads of team: ${teamId}`)
-    await this.repo.writeFile(relativePath, outData)
-    await Promise.all(
-      workloads.map((workload) => {
-        this.saveWorkloadValues(workload)
-      }),
-    )
+  async deleteTeamBackup(teamId: string, name: string): Promise<void> {
+    const backup = this.repoService.getTeamConfigService(teamId).getBackup(name)
+    this.repoService.getTeamConfigService(teamId).deleteBackup(name)
+
+    const repo = this.createTeamConfigInRepo(teamId, 'backups', [backup])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamBackup')!
+    await this.git.deleteConfig(repo, fileMap)
   }
 
-  async saveTeamProjects(teamId: string): Promise<void> {
-    const projects = this.db.getCollection('projects', { teamId }) as Array<Project>
-    const cleaneProjects: Array<Record<string, any>> = projects.map((obj) => {
-      return omit(obj, ['teamId'])
-    })
-    const relativePath = getTeamProjectsFilePath(teamId)
-    const outData: Record<string, any> = set({}, getTeamProjectsJsonPath(teamId), cleaneProjects)
-    debug(`Saving projects of team: ${teamId}`)
-    await this.repo.writeFile(relativePath, outData)
+  async saveTeamNetpols(teamId: string, netpol: Netpol): Promise<void> {
+    debug(`Saving netpols ${netpol.name} for team ${teamId}`)
+    const repo = this.createTeamConfigInRepo(teamId, 'netpols', [netpol])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamNetworkControl')!
+    await this.git.saveConfig(repo, fileMap)
   }
 
-  async saveTeamCoderepos(teamId: string): Promise<void> {
-    const coderepos = this.db.getCollection('coderepos', { teamId }) as Array<Coderepo>
-    const cleaneProjects: Array<Record<string, any>> = coderepos.map((obj) => {
-      return omit(obj, ['teamId'])
-    })
-    const relativePath = getTeamCodereposFilePath(teamId)
-    const outData: Record<string, any> = set({}, getTeamCodereposJsonPath(teamId), cleaneProjects)
-    debug(`Saving coderepos of team: ${teamId}`)
-    await this.repo.writeFile(relativePath, outData)
+  async deleteTeamNetpol(teamId: string, name: string): Promise<void> {
+    const netpol = this.repoService.getTeamConfigService(teamId).getNetpol(name)
+    this.repoService.getTeamConfigService(teamId).deleteNetpol(name)
+
+    const repo = this.createTeamConfigInRepo(teamId, 'netpols', [netpol])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamNetworkControl')!
+    await this.git.deleteConfig(repo, fileMap)
   }
 
-  async saveTeamBuilds(teamId: string): Promise<void> {
-    const builds = this.db.getCollection('builds', { teamId }) as Array<Build>
-    const cleaneBuilds: Array<Record<string, any>> = builds.map((obj) => {
-      return omit(obj, ['teamId'])
-    })
-    const relativePath = getTeamBuildsFilePath(teamId)
-    const outData: Record<string, any> = set({}, getTeamBuildsJsonPath(teamId), cleaneBuilds)
-    debug(`Saving builds of team: ${teamId}`)
-    await this.repo.writeFile(relativePath, outData)
+  async saveTeamWorkload(teamId: string, workload: Workload): Promise<void> {
+    debug(`Saving workload ${workload.name} for team ${teamId}`)
+    const repo = this.createTeamConfigInRepo(teamId, 'workloads', [workload])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkload')!
+    await this.git.saveConfig(repo, fileMap)
+  }
+
+  async deleteTeamWorkload(teamId: string, name: string): Promise<void> {
+    const workload = this.repoService.getTeamConfigService(teamId).getWorkload(name)
+    this.repoService.getTeamConfigService(teamId).deleteWorkload(name)
+
+    const repo = this.createTeamConfigInRepo(teamId, 'workloads', [workload])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkload')!
+    await this.git.deleteConfig(repo, fileMap)
+  }
+
+  async saveTeamProject(teamId: string, project: Project): Promise<void> {
+    debug(`Saving project ${project.name} for team ${teamId}`)
+    const repo = this.createTeamConfigInRepo(teamId, 'projects', [project])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamProject')!
+    await this.git.saveConfig(repo, fileMap)
+  }
+
+  async deleteTeamProject(teamId: string, name: string): Promise<void> {
+    const project = this.repoService.getTeamConfigService(teamId).getProject(name)
+    this.repoService.getTeamConfigService(teamId).deleteProject(name)
+
+    const repo = this.createTeamConfigInRepo(teamId, 'projects', [project])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamProject')!
+    await this.git.deleteConfig(repo, fileMap)
+  }
+
+  async saveTeamBuild(teamId: string, build: Build): Promise<void> {
+    debug(`Saving build ${build.name} for team ${teamId}`)
+    const repo = this.createTeamConfigInRepo(teamId, 'builds', [build])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamBuild')!
+    await this.git.saveConfig(repo, fileMap)
+  }
+
+  async deleteTeamBuild(teamId: string, name: string): Promise<void> {
+    const build = this.repoService.getTeamConfigService(teamId).getBuild(name)
+    this.repoService.getTeamConfigService(teamId).deleteBuild(name)
+
+    const repo = this.createTeamConfigInRepo(teamId, 'builds', [build])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamBuild')!
+    await this.git.deleteConfig(repo, fileMap)
+  }
+
+  async saveTeamCodeRepo(teamId: string, codeRepo: CodeRepo): Promise<void> {
+    debug(`Saving codeRepo ${codeRepo.name} for team ${teamId}`)
+    const repo = this.createTeamConfigInRepo(teamId, 'codeRepos', [codeRepo])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamCodeRepo')!
+    await this.git.saveConfig(repo, fileMap)
+  }
+
+  async deleteTeamCodeRepo(teamId: string, label: string): Promise<void> {
+    const codeRepo = this.repoService.getTeamConfigService(teamId).getCodeRepo(label)
+    this.repoService.getTeamConfigService(teamId).deleteCodeRepo(label)
+
+    const repo = this.createTeamConfigInRepo(teamId, 'codeRepos', [codeRepo])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamCodeRepo')!
+    await this.git.deleteConfig(repo, fileMap)
   }
 
   async saveTeamPolicies(teamId: string): Promise<void> {
+    debug(`Saving team policies ${teamId}`)
     const policies = this.getTeamPolicies(teamId)
-    const relativePath = getTeamPoliciesFilePath(teamId)
-    const outData: Record<string, Policies> = set({}, getTeamPoliciesJsonPath(teamId), policies)
-    debug(`Saving policies of team: ${teamId}`)
-    await this.repo.writeFile(relativePath, outData)
+
+    const repo = this.createTeamConfigInRepo(teamId, 'policies', policies)
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamPolicy')!
+    await this.git.saveConfig(repo, fileMap)
   }
 
-  async saveWorkloadValues(workload: Workload): Promise<void> {
-    debug(`Saving workload values: id: ${workload.id!} teamId: ${workload.teamId!} name: ${workload.name}`)
-    const data = this.getWorkloadValues(workload.id!)
-    const outData = omit(data, ['id', 'teamId', 'name']) as Record<string, any>
-    outData.values = stringifyYaml(data.values, undefined, 4)
-    const path = getTeamWorkloadValuesFilePath(workload.teamId!, workload.name)
+  async saveTeamWorkloadValues(teamId: string, workloadValues: WorkloadValues): Promise<void> {
+    debug(`Saving workload values teamId: ${teamId} name: ${workloadValues.name}`)
+    const data = this.getWorkloadValues(teamId, workloadValues.name!)
+    const updatedWorkloadValues = cloneDeep(data) as Record<string, any>
+    updatedWorkloadValues.values = stringifyYaml(data.values, undefined, 4)
 
-    await this.repo.writeFile(path, outData, false)
+    const repo = this.createTeamConfigInRepo(teamId, 'workloadValues', [updatedWorkloadValues])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkloadValues')!
+    await this.git.saveConfig(repo, fileMap)
   }
 
-  async saveTeamServices(teamId: string): Promise<void> {
-    const services = this.db.getCollection('services', { teamId })
-    const data = {}
-    const values: any[] = []
-    services.forEach((service) => {
-      const value = this.convertDbServiceToValues(service)
-      values.push(value)
-    })
+  async deleteTeamWorkloadValues(teamId: string, name: string): Promise<void> {
+    const workloadValues = this.repoService.getTeamConfigService(teamId).getWorkloadValues(name)
+    this.repoService.getTeamConfigService(teamId).deleteWorkloadValues(name)
 
-    set(data, getTeamServicesJsonPath(teamId), values)
-    const filePath = getTeamServicesFilePath(teamId)
-    await this.repo.writeFile(filePath, data)
+    const repo = this.createTeamConfigInRepo(teamId, 'workloadValues', [workloadValues])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkloadValues')!
+    await this.git.deleteConfig(repo, fileMap)
   }
 
-  async loadTeam(inTeam: Team): Promise<void> {
-    const team = { ...inTeam, name: inTeam.id } as Record<string, any>
-    team.resourceQuota = objectToArray(inTeam.resourceQuota as Record<string, any>)
-    const res = await this.createTeam(team as Team, false)
-    // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id as string)
-    debug(`Loaded team: ${res.id!}`)
-  }
-
-  loadSecret(inSecret, teamId): void {
-    const secret: Record<string, any> = omit(inSecret, ...secretTransferProps)
-    secret.teamId = teamId
-    secret.secret = secretTransferProps.reduce((memo: any, prop) => {
-      if (inSecret[prop] !== undefined) memo[prop] = inSecret[prop]
-      return memo
-    }, {})
-    const res: any = this.db.populateItem('secrets', secret, { teamId, name: secret.name }, secret.id as string)
-    debug(`Loaded secret: name: ${res.name}, id: ${res.id}, teamId: ${teamId}`)
-  }
-
-  convertDbSecretToValues(inSecret: any): any {
-    const secret: any = omit(inSecret, 'secret')
-    secretTransferProps.forEach((prop) => {
-      if (inSecret.secret[prop] !== undefined) secret[prop] = inSecret.secret[prop]
-    })
-    return secret
-  }
-
-  loadService(svcRaw, teamId): void {
-    // Create service
-    const svc = omit(
-      svcRaw,
-      'certArn',
-      'certName',
-      'domain',
-      'forwardPath',
-      'hasCert',
-      'paths',
-      'type',
-      'ownHost',
-      'tlsPass',
-      'ingressClassName',
-      'headers',
-      'useCname',
-      'cname',
-    )
-    svc.teamId = teamId
-    if (!('name' in svcRaw)) debug('Unknown service structure')
-    if (svcRaw.type === 'cluster') svc.ingress = { type: 'cluster' }
-    else {
-      const { cluster, dns } = this.getSettings(['cluster', 'dns'])
-      const url = getServiceUrl({ domain: svcRaw.domain, name: svcRaw.name, teamId, cluster, dns })
-      // TODO remove the isArray check in 0.5.24
-      const headers = isArray(svcRaw.headers) ? undefined : svcRaw.headers
-      svc.ingress = {
-        certArn: svcRaw.certArn || undefined,
-        certName: svcRaw.certName || undefined,
-        domain: url.domain,
-        headers,
-        forwardPath: 'forwardPath' in svcRaw,
-        hasCert: 'hasCert' in svcRaw,
-        paths: svcRaw.paths ? svcRaw.paths : [],
-        subdomain: url.subdomain,
-        tlsPass: 'tlsPass' in svcRaw,
-        type: svcRaw.type,
-        useDefaultHost: !svcRaw.domain && svcRaw.ownHost,
-        ingressClassName: svcRaw.ingressClassName || undefined,
-        useCname: svcRaw.useCname,
-        cname: svcRaw.cname,
-      }
-    }
-
-    const res: any = this.db.populateItem('services', removeBlankAttributes(svc), undefined, svc.id as string)
-    debug(`Loaded service: name: ${res.name}, id: ${res.id}`)
-  }
-
-  // eslint-disable-next-line class-methods-use-this
   convertDbServiceToValues(svc: any): any {
     const svcCloned = omit(svc, ['teamId', 'ingress', 'path'])
     if (svc.ingress && svc.ingress.type !== 'cluster') {
@@ -2192,10 +2118,37 @@ export default class OtomiStack {
     return svcCloned
   }
 
+  async saveTeamService(teamId: string, service: Service): Promise<void> {
+    debug(`Saving service: ${service.name} teamId: ${teamId}`)
+    const newService = this.convertDbServiceToValues(service)
+    const repo = this.createTeamConfigInRepo(teamId, 'services', [newService])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamService')!
+    await this.git.saveConfig(repo, fileMap)
+  }
+
+  async deleteTeamService(teamId: string, name: string): Promise<void> {
+    const service = this.repoService.getTeamConfigService(teamId).getService(name)
+    this.repoService.getTeamConfigService(teamId).deleteService(name)
+
+    const repo = this.createTeamConfigInRepo(teamId, 'services', [service])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamService')!
+    await this.git.deleteConfig(repo, fileMap)
+  }
+
+  private createTeamConfigInRepo<T>(teamId: string, key: string, value: T): Record<string, any> {
+    return {
+      teamConfig: {
+        [teamId]: {
+          [key]: value,
+        },
+      },
+    }
+  }
+
   async getSession(user: k8s.User): Promise<Session> {
     const rootStack = await getSessionStack()
     const valuesSchema = await getValuesSchema()
-    const currentSha = rootStack.repo.commitSha
+    const currentSha = rootStack.git.commitSha
     const { obj } = this.getSettings(['obj'])
     const regions = await getRegions()
     const objStorageRegions =
@@ -2206,7 +2159,7 @@ export default class OtomiStack {
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
-      corrupt: rootStack.repo.corrupt,
+      corrupt: rootStack.git.corrupt,
       editor: this.editor,
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
       user: user as SessionUser,

@@ -10,7 +10,7 @@ import { Server } from 'socket.io'
 import { ApiNotReadyError } from 'src/error'
 import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
-import { EDITOR_INACTIVITY_TIMEOUT, cleanEnv } from 'src/validators'
+import { cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validators'
 import { v4 as uuidv4 } from 'uuid'
 
 const debug = Debug('otomi:session')
@@ -41,10 +41,10 @@ export const setSessionStack = async (editor: string, sessionId: string): Promis
   if (env.isTest) return readOnlyStack
   if (!sessions[sessionId]) {
     debug(`Creating session ${sessionId} for user ${editor}`)
-    sessions[sessionId] = new OtomiStack(editor, sessionId, readOnlyStack.db)
-    // init repo without inflating db from files as its slow and we just need a copy of the db
-    await sessions[sessionId].initRepo(true)
-    sessions[sessionId].db = cloneDeep(readOnlyStack.db)
+    sessions[sessionId] = new OtomiStack(editor, sessionId)
+    // init repo without inflating values from files as its faster to copy the values
+    await sessions[sessionId].initGit(false)
+    sessions[sessionId].repoService = cloneDeep(readOnlyStack.repoService)
   } else sessions[sessionId].sessionId = sessionId
   return sessions[sessionId]
 }

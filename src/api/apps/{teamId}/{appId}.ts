@@ -4,7 +4,7 @@ import { App, OpenApiRequestExt } from 'src/otomi-models'
 export default function (): OperationHandlerArray {
   const get: Operation = [
     ({ otomi, params: { teamId, appId } }: OpenApiRequestExt, res): void => {
-      res.json(otomi.getApp(teamId, appId))
+      res.json(otomi.getTeamApp(teamId, appId))
     },
   ]
   const put: Operation = [

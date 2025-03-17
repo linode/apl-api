@@ -2,11 +2,13 @@
 import { RequestHandler } from 'express'
 import get from 'lodash/get'
 import Authz, { getTeamSelfServiceAuthz } from 'src/authz'
-import Db from 'src/db'
 import { OpenApiRequestExt, PermissionSchema, TeamSelfService } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { cleanEnv } from 'src/validators'
 import { getSessionStack } from './session'
+import { RepoService } from '../services/RepoService'
+import { debug } from 'console'
+import { find } from 'lodash'
 
 const HttpMethodMapping: Record<string, string> = {
   DELETE: 'delete',
@@ -38,7 +40,7 @@ function renameKeys(obj: Record<string, any>) {
 //   }
 // }
 
-export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: Db): RequestHandler {
+export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoService: RepoService): RequestHandler {
   const {
     params: { teamId },
     body,
@@ -72,17 +74,31 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
     }
   }
 
-  const schemaToDbMap: Record<string, string> = {
-    Secret: 'secrets',
+  const schemaToRepoMap: Record<string, string> = {
     Service: 'services',
-    Team: 'teams',
+    Team: 'teamConfig',
+    App: 'apps',
+    Build: 'builds',
+    Workload: 'workloads',
+    Settings: 'otomi',
+    Project: 'projects',
+    Netpol: 'netpols',
     Policy: 'policies',
+    SealedSecret: 'sealedSecrets',
   }
+  const teamSpecificCollections = [
+    'builds',
+    'services',
+    'workloads',
+    'netpols',
+    'projects',
+    'policies',
+    'sealedSecrets',
+  ] // <-- These are fetched per team
 
   const selector = renameKeys(req.params)
-
-  if (['create', 'update'].includes(action)) {
-    const collection = schemaToDbMap[schemaName]
+  const collectionId = schemaToRepoMap[schemaName]
+  if (collectionId && ['create', 'update'].includes(action)) {
     let dataOrig = get(
       req,
       `apiDoc.components.schemas.TeamSelfService.properties.${schemaName.toLowerCase()}.x-allow-values`,
@@ -90,12 +106,19 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, db: D
     )
 
     if (action === 'update') {
-      if (collection === 'policies') {
-        const policies = db.db.get(['policies']).value()
-        const id = req.params.policyId
-        dataOrig = policies[teamId][id]
-      } else dataOrig = db.getItemReference(collection, selector, false) as Record<string, any>
+      try {
+        let collection
+        if (teamSpecificCollections.includes(collectionId)) {
+          collection = repoService.getTeamConfigService(teamId).getCollection(collectionId)
+        } else {
+          collection = repoService.getCollection(collectionId)
+        }
+        dataOrig = find(collection, selector) || {}
+      } catch (error) {
+        debug('Error in authzMiddleware', error)
+      }
     }
+
     const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body, dataOrig)
     if (violatedAttributes.length > 0) {
       return res.status(403).send({
@@ -125,6 +148,6 @@ export function authzMiddleware(authz: Authz): RequestHandler {
       req.apiDoc.components.schemas.TeamSelfService as TeamSelfService as PermissionSchema,
       otomi,
     )
-    return authorize(req, res, next, authz, otomi.db)
+    return authorize(req, res, next, authz, otomi.repoService)
   }
 }
