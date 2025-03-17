@@ -22,7 +22,7 @@ export default function (): OperationHandlerArray {
   const put: Operation = [
     async ({ otomi, params: { teamId, sealedSecretName }, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`editSealedSecret(${sealedSecretName})`)
-      const data = await otomi.editSealedSecret(decodeURIComponent(sealedSecretName), {
+      const data = await otomi.editSealedSecret(teamId, decodeURIComponent(sealedSecretName), {
         ...body,
         teamId: decodeURIComponent(teamId),
       } as SealedSecret)
