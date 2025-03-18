@@ -1431,7 +1431,7 @@ export default class OtomiStack {
     const rootStack = await getSessionStack()
     try {
       // commit and pull-push remote root
-      await this.repo.save(this.editor!)
+      const commitResult = await this.repo.save(this.editor!)
       // update db with the new values
       if (collectionIds) {
         collectionIds.forEach((collectionId) => {
@@ -1440,8 +1440,7 @@ export default class OtomiStack {
         })
       }
       debug(`Updated root stack values with ${this.sessionId} changes`)
-      const sha = await rootStack.repo.getCommitSha()
-      this.emitPipelineStatus(sha)
+      this.emitPipelineStatus(commitResult.commit)
     } catch (e) {
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)

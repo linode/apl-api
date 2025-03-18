@@ -362,7 +362,7 @@ export class Repo {
     return this.git.revparse('HEAD')
   }
 
-  async save(editor: string): Promise<void> {
+  async save(editor: string): Promise<CommitResult> {
     // prepare values first
     try {
       await this.requestPrepareValues()
@@ -376,7 +376,8 @@ export class Repo {
       throw new HttpError(500, `${e}`)
     }
     // all good? commit
-    await this.commit(editor)
+    const commitResult = await this.commit(editor)
+
     try {
       // we are in a unique developer branch, so we can pull, push, and merge
       // with the remote root, which might have been modified by another developer
@@ -399,6 +400,7 @@ export class Repo {
       debug(`Merge error: ${JSON.stringify(e)}`)
       throw new GitPullError()
     }
+    return commitResult
   }
 }
 
