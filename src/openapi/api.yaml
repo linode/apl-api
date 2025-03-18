@@ -1818,10 +1818,6 @@ components:
       $ref: coderepo.yaml#/Coderepo
     Ingress:
       $ref: service.yaml#/Ingress
-    IngressCluster:
-      $ref: service.yaml#/IngressCluster
-    IngressPublic:
-      $ref: service.yaml#/IngressPublic
     K8sService:
       $ref: k8s.yaml#/K8sService
     Kubecfg:

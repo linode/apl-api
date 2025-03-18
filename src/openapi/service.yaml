@@ -73,10 +73,7 @@ Service:
     ingress:
       title: Exposure (ingress)
       description: Determines loadbalancer related configuration for handling the service ingress.
-      # Note: the order matters first schema must be nullable empty object
-      oneOf:
-        - $ref: '#/IngressCluster'
-        - $ref: '#/IngressPublic'
+      $ref: '#/Ingress'
 
   required:
     - name
@@ -176,28 +173,3 @@ Ingress:
     - domain
     - subdomain
   type: object
-
-IngressCluster:
-  additionalProperties: false
-  title: No Exposure
-  type: object
-  nullable: true
-  properties:
-    type:
-      type: string
-      enum:
-        - cluster
-      default: cluster
-
-IngressPublic:
-  allOf:
-    - $ref: '#/Ingress'
-    - properties:
-        type:
-          type: string
-          enum:
-            - public
-          default: public
-  nullable: true
-  description: Will only accept traffic coming from an external loadbalancer.
-  title: External
