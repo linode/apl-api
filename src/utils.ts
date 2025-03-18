@@ -1,15 +1,16 @@
 import axios from 'axios'
 import cleanDeep, { CleanOptions } from 'clean-deep'
 import { pathExists } from 'fs-extra'
-import { readFile } from 'fs/promises'
-import { isArray, memoize, mergeWith, omit } from 'lodash'
+import { readdir, readFile } from 'fs/promises'
+import { isArray, isEmpty, memoize, mergeWith, omit } from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
 import { Cluster, Dns } from 'src/otomi-models'
-import { parse } from 'yaml'
+import { parse, stringify } from 'yaml'
 import { BASEURL } from './constants'
 
 export function arrayToObject(array: [] = [], keyName = 'name', keyValue = 'value'): Record<string, unknown> {
   const obj = {}
+  if (!Array.isArray(array)) return array
   array.forEach((item) => {
     const cloneItem = cloneDeep(item)
     obj[cloneItem[keyName]] = cloneItem[keyValue]
@@ -165,3 +166,17 @@ export const argQuoteStrip = (s: string) => {
 
 // use lodash mergeWith to avoid merging arrays
 export const mergeData = (orig, extra) => mergeWith(orig, extra, (a, b) => (isArray(b) ? b : undefined))
+
+export const getDirNames = async (dir: string, opts?: { skipHidden: boolean }): Promise<string[]> => {
+  const dirs = await readdir(dir, { withFileTypes: true })
+  const dirNames: Array<string> = []
+  dirs.map((dirOrFile) => {
+    if (opts?.skipHidden && dirOrFile.name.startsWith('.')) return
+    if (dirOrFile.isDirectory()) dirNames.push(dirOrFile.name)
+  })
+  return dirNames
+}
+
+export const objectToYaml = (obj: Record<string, any>, indent = 4, lineWidth = 200): string => {
+  return isEmpty(obj) ? '' : stringify(obj, { indent, lineWidth })
+}

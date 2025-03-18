@@ -3,6 +3,8 @@ import OtomiStack from 'src/otomi-stack'
 import { getUser } from './jwt'
 import * as getValuesSchemaModule from '../utils'
 import { loadSpec } from '../app'
+import { mockDeep } from 'jest-mock-extended'
+import { Git } from '../git'
 
 const email = 'test@user.net'
 const platformAdminGroups = ['platform-admin', 'all-teams-admin']
@@ -31,7 +33,11 @@ describe('JWT claims mapping', () => {
 
   beforeEach(async () => {
     otomiStack = new OtomiStack()
+    otomiStack.git = mockDeep<Git>()
+    jest.spyOn(otomiStack, 'transformApps').mockReturnValue([])
+
     await otomiStack.init()
+    await otomiStack.loadValues()
   })
 
   test('A user in either platform-admin or all-teams-admin group should get platformAdmin role and have isPlatformAdmin', () => {
