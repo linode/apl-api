@@ -5,6 +5,9 @@ import jsonpath from 'jsonpath'
 import { cloneDeep, get, merge, omit, set } from 'lodash'
 import path from 'path'
 import { getDirNames, loadYaml } from './utils'
+import Debug from 'debug'
+
+const debug = Debug('otomi:repo')
 
 export async function getTeamNames(envDir: string): Promise<Array<string>> {
   const teamsDir = path.join(envDir, 'env', 'teams')
@@ -25,6 +28,7 @@ export type AplKind =
   | 'AplSmtp'
   | 'AplBackupCollection'
   | 'AplUser'
+  | 'AplPlatformSettingSet'
   | 'AplTeamCodeRepo'
   | 'AplTeamBuild'
   | 'AplTeamPolicy'
@@ -486,6 +490,12 @@ export async function loadFileToSpec(
     if (fileMap.kind === 'AplTeamWorkloadValues') {
       const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
       ref.push({ ...data, name })
+    } else if (fileMap.v2) {
+      if (data?.kind === fileMap.kind) {
+        ref.push(data)
+      } else {
+        debug(`Unexpected manifest kind in ${filePath}: ${data?.kind}`)
+      }
     } else if (fileMap.kind === 'AplTeamSecret') {
       const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
       ref.push({ ...data?.spec, name })

@@ -219,11 +219,11 @@ export default class OtomiStack {
 
   transformSecrets(teamId: string, secrets: SealedSecretManifestType[]): AplSecretResponse[] {
     return secrets.map((secret) => {
-      const id = secret.metadata.labels ? secret.metadata.labels['apl.io/id'] : uuidv4()
-      const annotations = Object.entries(secret.spec.template.metadata.annotations || {}).map(([key, value]) => {
+      const id = secret.metadata.labels?.['apl.io/id'] || uuidv4()
+      const annotations = Object.entries(secret.spec.template?.metadata?.annotations || {}).map(([key, value]) => {
         return { key, value }
       })
-      const labels = Object.entries(secret.spec.template.metadata.labels || {}).map(([key, value]) => {
+      const labels = Object.entries(secret.spec.template?.metadata?.labels || {}).map(([key, value]) => {
         return { key, value }
       })
       return {
@@ -237,9 +237,9 @@ export default class OtomiStack {
         },
         spec: {
           encryptedData: secret.spec.encryptedData,
-          type: secret.spec.template.type,
-          immutable: secret.spec.template.immutable,
-          namespace: secret.spec.template.metadata.namespace,
+          type: secret.spec.template?.type || 'kubernetes.io/opaque',
+          immutable: secret.spec.template?.immutable ?? false,
+          namespace: secret.spec.template?.metadata?.namespace,
           metadata: {
             annotations,
             labels,
@@ -247,6 +247,19 @@ export default class OtomiStack {
         },
         status: {},
       }
+    })
+  }
+
+  transformWorkloads(workloads: AplWorkloadResponse[], workloadValues: Record<string, any>[]): AplWorkloadResponse[] {
+    const values = {}
+    workloadValues.forEach((value) => {
+      const workloadName = value.name
+      if (workloadName) {
+        values[workloadName] = value.values
+      }
+    })
+    return workloads.map((workload) => {
+      return merge(workload, { spec: { values: values[workload.metadata.name] } })
     })
   }
 
@@ -260,10 +273,11 @@ export default class OtomiStack {
 
       rawRepo.apps = this.transformApps(rawRepo.apps)
       rawRepo.teamConfig = mapValues(rawRepo.teamConfig, (teamConfig) => ({
-        ...teamConfig,
+        ...omit(teamConfig, 'workloadValues'),
         apps: this.transformApps(teamConfig.apps),
-        policies: this.transformPolicies(teamConfig.settings.name, teamConfig.policies),
-        sealedsecrets: this.transformSecrets(teamConfig.settings.name, teamConfig.sealedsecrets),
+        policies: this.transformPolicies(teamConfig.settings.name, teamConfig.policies || {}),
+        sealedsecrets: this.transformSecrets(teamConfig.settings.name, teamConfig.sealedsecrets || []),
+        workloads: this.transformWorkloads(teamConfig.workloads || [], teamConfig.workloadValues || []),
       }))
 
       const repo = rawRepo as Repo
