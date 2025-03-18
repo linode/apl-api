@@ -326,6 +326,25 @@ Settings:
         nodeSelector:
           $ref: definitions.yaml#/labels
           description: 'One or more label/value pairs of one or more nodes. This will enforce scheduling of all platform services on these nodes.'
+        #TODO move this one out of otomi and in to versions
+        version:
+          title: Version
+          default: latest
+          description: |
+            Set the version to a valid release found in the linode/apl-core Github repository.
+          type: string
+      required:
+        - version
+      x-externalDocsPath: docs/for-ops/console/settings/platform
+      x-acl:
+        platformAdmin: [read-any, update-any]
+        teamAdmin: [read]
+        teamMember: [read]
+    versions:
+      title: Platform
+      type: object
+      additionalProperties: false
+      properties:
         version:
           title: Version
           default: latest

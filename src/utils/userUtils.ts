@@ -34,7 +34,7 @@ export async function getKeycloakUsers(
   realm: string,
   username: string,
   password: string,
-): Promise<{ email: string }[]> {
+): Promise<string[]> {
   try {
     const token = await getKeycloakToken(keycloakBaseUrl, realm, username, password)
     const url = `${keycloakBaseUrl}/admin/realms/${realm}/users`
@@ -45,12 +45,10 @@ export async function getKeycloakUsers(
       },
     })
 
-    const users = [] as { email: string }[]
+    const users = [] as string[]
     for (const user of response.data) {
       if (user.username === env.ROOT_KEYCLOAK_USER) continue
-      users.push({
-        email: user.email,
-      })
+      users.push(user.email)
     }
     return users
   } catch (error) {

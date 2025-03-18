@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { mockDeep } from 'jest-mock-extended'
-import { App, Coderepo, User, Workload } from 'src/otomi-models'
+import { App, CodeRepo, Policies, Team, TeamConfig, User } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
-import { Repo } from 'src/repo'
-import { loadSpec } from './app'
+import { mockDeep } from 'jest-mock-extended'
 import { PublicUrlExists } from './error'
+import { loadSpec } from './app'
+import { Git } from './git'
+import { RepoService } from './services/RepoService'
+import { TeamConfigService } from './services/TeamConfigService'
 
 jest.mock('src/utils', () => {
   const originalModule = jest.requireActual('src/utils')
@@ -14,6 +16,16 @@ jest.mock('src/utils', () => {
     ...originalModule,
     getServiceUrl: jest.fn().mockResolvedValue({ subdomain: '', domain: 'test' }),
     getValuesSchema: jest.fn().mockResolvedValue({}),
+  }
+})
+
+jest.mock('src/utils/userUtils', () => {
+  const originalModule = jest.requireActual('src/utils/userUtils')
+
+  return {
+    __esModule: true,
+    ...originalModule,
+    getKeycloakUsers: jest.fn().mockResolvedValue([]),
   }
 })
 
@@ -28,61 +40,99 @@ beforeAll(async () => {
 
 describe('Data validation', () => {
   let otomiStack: OtomiStack
+  const teamId = 'aa'
+  let mockRepoService: jest.Mocked<RepoService>
+  let mockTeamConfigService: jest.Mocked<TeamConfigService>
 
   beforeEach(async () => {
     otomiStack = new OtomiStack()
     await otomiStack.init()
-    otomiStack.repo = mockDeep<Repo>()
+    otomiStack.git = mockDeep<Git>()
+    mockRepoService = mockDeep<RepoService>()
+    otomiStack.repoService = mockRepoService
+
+    // Mock TeamConfigService
+    mockTeamConfigService = mockDeep<TeamConfigService>()
+
+    // Mocking getServices() to return a list of services
+    mockTeamConfigService.getServices.mockReturnValue([
+      {
+        name: 'svc',
+        ingress: { domain: 'a.com', subdomain: 'b' },
+      },
+      { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b', paths: ['/test/'] } },
+    ])
+
+    // Ensure getTeamConfigService() returns our mocked TeamConfigService
+    mockRepoService.getTeamConfigService.mockReturnValue(mockTeamConfigService)
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
+    jest.spyOn(otomiStack, 'doRepoDeployment').mockResolvedValue()
+    jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
   })
 
-  test('should throw exception on duplicated domain', async () => {
+  test('should throw exception on duplicated domain', () => {
     const svc = { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b' } }
-    const svc1 = { ...svc }
-    await otomiStack.createService('aa', svc)
-    expect(() => otomiStack.checkPublicUrlInUse(svc1)).toThrow(new PublicUrlExists())
+    expect(() => otomiStack.checkPublicUrlInUse(teamId, svc)).toThrow(new PublicUrlExists())
   })
 
-  test('should throw exception on duplicated url with path', async () => {
+  test('should throw exception on duplicated url with path', () => {
     const svc = { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b', paths: ['/test/'] } }
-    await otomiStack.createService('aa', svc)
-    expect(() => otomiStack.checkPublicUrlInUse(svc)).toThrow(new PublicUrlExists())
+    expect(() => otomiStack.checkPublicUrlInUse(teamId, svc)).toThrow(new PublicUrlExists())
   })
 
-  test('should not throw exception on unique url', async () => {
-    const svc1 = { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b', paths: ['/test/'] } }
-    await otomiStack.createService('aa', svc1)
-    const svc2 = { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b' } }
+  test('should not throw exception on unique url', () => {
     const svc3 = { name: 'svc', ingress: { domain: 'a.com', subdomain: 'b', paths: ['/bla'] } }
-    expect(() => otomiStack.checkPublicUrlInUse(svc2)).not.toThrow()
-    expect(() => otomiStack.checkPublicUrlInUse(svc3)).not.toThrow()
+    expect(() => otomiStack.checkPublicUrlInUse(teamId, svc3)).not.toThrow()
   })
 
-  test('should not throw exception when of type cluster', async () => {
+  test('should not throw exception when of type cluster', () => {
     const svc = { name: 'svc', ingress: { type: 'cluster' } }
-    // @ts-ignore
-    await otomiStack.createService('aa', svc)
-    expect(() => otomiStack.checkPublicUrlInUse(svc)).not.toThrow()
+    expect(() => otomiStack.checkPublicUrlInUse(teamId, svc)).not.toThrow()
   })
 
-  test('should not throw exception when editing', async () => {
+  test('should not throw exception when editing', () => {
     const svc = { id: 'x1', name: 'svc', ingress: { domain: 'a.com', subdomain: 'b', paths: ['/test/'] } }
-    await otomiStack.createService('aa', svc)
     const svc1 = { id: 'x1', name: 'svc', ingress: { domain: 'a.com', subdomain: 'c' } }
-    expect(() => otomiStack.checkPublicUrlInUse(svc1)).not.toThrow()
+    expect(() => otomiStack.checkPublicUrlInUse(teamId, svc1)).not.toThrow()
   })
 
   test('should create a password when password is not specified', async () => {
-    const createItemSpy = jest.spyOn(otomiStack.db, 'createItem')
-    await otomiStack.createTeam({ name: 'test' })
+    const createItemSpy = jest.spyOn(otomiStack.repoService, 'createTeamConfig').mockReturnValue({
+      builds: [],
+      codeRepos: [],
+      workloads: [],
+      services: [],
+      sealedsecrets: [],
+      backups: [],
+      projects: [],
+      netpols: [],
+      settings: {} as Team,
+      apps: [],
+      policies: {} as Policies,
+      workloadValues: [],
+    } as TeamConfig)
+    await otomiStack.createTeam({ name: 'test' }, false)
     expect(createItemSpy.mock.calls[0][1].password).not.toEqual('')
     createItemSpy.mockRestore()
   })
 
   test('should not create a password when password is specified', async () => {
-    const createItemSpy = jest.spyOn(otomiStack.db, 'createItem')
+    const createItemSpy = jest.spyOn(otomiStack.repoService, 'createTeamConfig').mockReturnValue({
+      builds: [],
+      codeRepos: [],
+      workloads: [],
+      services: [],
+      sealedsecrets: [],
+      backups: [],
+      projects: [],
+      netpols: [],
+      settings: {} as Team,
+      apps: [],
+      policies: {} as Policies,
+      workloadValues: [],
+    } as TeamConfig)
     const myPassword = 'someAwesomePassword'
-    await otomiStack.createTeam({ name: 'test', password: myPassword })
+    await otomiStack.createTeam({ name: 'test', password: myPassword }, false)
     expect(createItemSpy.mock.calls[0][1].password).toEqual(myPassword)
     createItemSpy.mockRestore()
   })
@@ -92,10 +142,13 @@ describe('Work with values', () => {
   let otomiStack: OtomiStack
   beforeEach(async () => {
     otomiStack = new OtomiStack()
+    jest.spyOn(otomiStack, 'transformApps').mockReturnValue([])
+
     await otomiStack.init()
-    otomiStack.repo = new Repo('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
+    otomiStack.git = new Git('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
-    jest.spyOn(otomiStack, 'loadApp').mockResolvedValue()
+    jest.spyOn(otomiStack, 'doRepoDeployment').mockResolvedValue()
+    jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
   })
 
   test('can load from configuration to database and back', async () => {
@@ -108,35 +161,10 @@ describe('Workload values', () => {
   beforeEach(async () => {
     otomiStack = new OtomiStack()
     await otomiStack.init()
-    otomiStack.repo = new Repo('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
+    otomiStack.git = new Git('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
-  })
-
-  test('can load workload values (empty dict)', async () => {
-    const w: Workload = { id: '1', teamId: '2', name: 'name', url: 'https://test.local' }
-
-    otomiStack.repo.fileExists = jest.fn().mockReturnValue(true)
-    otomiStack.repo.readFile = jest.fn().mockReturnValue({})
-    const res = await otomiStack.loadWorkloadValues(w)
-    expect(res).toEqual({ id: '1', teamId: '2', name: 'name', values: {} })
-  })
-
-  test('can load workload values (dict)', async () => {
-    const w: Workload = { id: '1', teamId: '2', name: 'name', url: 'https://test.local' }
-
-    otomiStack.repo.fileExists = jest.fn().mockReturnValue(true)
-    otomiStack.repo.readFile = jest.fn().mockReturnValue({ values: 'test: 1' })
-    const res = await otomiStack.loadWorkloadValues(w)
-    expect(res).toEqual({ id: '1', teamId: '2', name: 'name', values: { test: 1 } })
-  })
-
-  test('can load workload values (empty string)', async () => {
-    const w: Workload = { id: '1', teamId: '2', name: 'name', url: 'https://test.local' }
-
-    otomiStack.repo.fileExists = jest.fn().mockReturnValue(true)
-    otomiStack.repo.readFile = jest.fn().mockReturnValue({ values: '' })
-    const res = await otomiStack.loadWorkloadValues(w)
-    expect(res).toEqual({ id: '1', teamId: '2', name: 'name', values: {} })
+    jest.spyOn(otomiStack, 'doRepoDeployment').mockResolvedValue()
+    jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
   })
 
   test('returns filtered apps if App array is submitted isPreinstalled flag is true', () => {
@@ -181,21 +209,20 @@ describe('Users tests', () => {
   beforeEach(async () => {
     otomiStack = new OtomiStack()
     await otomiStack.init()
-    otomiStack.repo = mockDeep<Repo>()
-    otomiStack.loadApps = jest.fn().mockResolvedValue([])
-    const dbMock = mockDeep<OtomiStack['db']>()
-    dbMock.getItem.mockImplementation((collection, query) => {
-      return [defaultPlatformAdmin, anyPlatformAdmin].find((user) => user.id === query.id)
-    })
-    dbMock.deleteItem.mockReturnValue()
-
-    otomiStack.db = dbMock
+    otomiStack.git = mockDeep<Git>()
 
     jest.spyOn(otomiStack, 'getSettings').mockReturnValue({
       cluster: { domainSuffix },
     })
-    jest.spyOn(otomiStack, 'saveUsers').mockResolvedValue()
+    jest.spyOn(otomiStack, 'saveUser').mockResolvedValue()
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
+    jest.spyOn(otomiStack, 'doRepoDeployment').mockResolvedValue()
+    jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
+    jest.spyOn(otomiStack, 'transformApps').mockReturnValue([])
+    jest.spyOn(otomiStack, 'getApp').mockReturnValue({ id: 'keycloak' })
+    await otomiStack.initRepo()
+    await otomiStack.createUser(defaultPlatformAdmin)
+    await otomiStack.createUser(anyPlatformAdmin)
   })
 
   afterEach(() => {
@@ -277,13 +304,31 @@ describe('Users tests', () => {
 
 describe('Code repositories tests', () => {
   let otomiStack: OtomiStack
+  let teamConfigService: TeamConfigService
 
   beforeEach(async () => {
     otomiStack = new OtomiStack()
+    jest.spyOn(otomiStack, 'transformApps').mockReturnValue([])
     await otomiStack.init()
-    const dbMock = mockDeep<OtomiStack['db']>()
-    dbMock.deleteItem.mockReturnValue()
-    otomiStack.db = dbMock
+    await otomiStack.initRepo()
+    otomiStack.git = mockDeep<Git>()
+
+    try {
+      otomiStack.repoService.createTeamConfig('demo', { name: 'demo' })
+    } catch {
+      // ignore
+    }
+    teamConfigService = otomiStack.repoService.getTeamConfigService('demo')
+    const codeRepo = {
+      id: '1',
+      teamId: 'demo',
+      name: 'code-1',
+      gitService: 'gitea',
+      repositoryUrl: 'https://gitea.test.com',
+    } as CodeRepo
+
+    jest.spyOn(teamConfigService, 'getCodeRepo').mockReturnValue(codeRepo)
+    jest.spyOn(otomiStack.git, 'deleteConfig').mockResolvedValue()
   })
 
   afterEach(() => {
@@ -291,397 +336,347 @@ describe('Code repositories tests', () => {
   })
 
   test('should create an internal code repository', async () => {
-    const createItemSpy = jest.spyOn(otomiStack.db, 'createItem').mockReturnValue({
+    const createItemSpy = jest.spyOn(teamConfigService, 'createCodeRepo').mockReturnValue({
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
-    } as Coderepo)
+    } as CodeRepo)
 
-    const saveTeamCodereposSpy = jest.spyOn(otomiStack, 'saveTeamCoderepos').mockResolvedValue()
-    const doDeploymentSpy = jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
+    const saveTeamCodeReposSpy = jest.spyOn(otomiStack, 'saveTeamCodeRepo').mockResolvedValue()
+    const doDeploymentSpy = jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
 
-    const coderepo = await otomiStack.createCoderepo('demo', {
-      label: 'code-1',
+    const codeRepo = await otomiStack.createCodeRepo('demo', {
+      name: 'code-1',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
     })
 
-    expect(coderepo).toEqual({
+    expect(codeRepo).toEqual({
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
     })
-    expect(createItemSpy).toHaveBeenCalledWith(
-      'coderepos',
-      {
-        teamId: 'demo',
-        label: 'code-1',
-        gitService: 'gitea',
-        repositoryUrl: 'https://gitea.test.com',
-      },
-      { teamId: 'demo', label: 'code-1' },
-    )
-    expect(saveTeamCodereposSpy).toHaveBeenCalledWith('demo')
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['coderepos'])
+    expect(createItemSpy).toHaveBeenCalledWith({
+      teamId: 'demo',
+      name: 'code-1',
+      gitService: 'gitea',
+      repositoryUrl: 'https://gitea.test.com',
+    })
+    expect(saveTeamCodeReposSpy).toHaveBeenCalledWith('demo', codeRepo)
+    expect(doDeploymentSpy).toHaveBeenCalledWith('demo', expect.any(Function), false)
 
     createItemSpy.mockRestore()
-    saveTeamCodereposSpy.mockRestore()
+    saveTeamCodeReposSpy.mockRestore()
     doDeploymentSpy.mockRestore()
   })
 
   test('should get an existing internal code repository', () => {
-    const coderepo = {
+    const codeRepo = {
       id: '1',
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
-    } as Coderepo
+    } as CodeRepo
 
-    jest.spyOn(otomiStack.db, 'getItem').mockReturnValue(coderepo)
+    jest.spyOn(teamConfigService, 'getCodeRepo').mockReturnValue(codeRepo)
 
-    const result = otomiStack.getCoderepo('1')
-    expect(result).toEqual(coderepo)
+    const result = otomiStack.getCodeRepo('demo', '1')
+    expect(result).toEqual(codeRepo)
   })
 
   test('should edit an existing internal code repository', async () => {
-    const updateItemSpy = jest.spyOn(otomiStack.db, 'updateItem').mockReturnValue({
+    const updateItemSpy = jest.spyOn(teamConfigService, 'updateCodeRepo').mockReturnValue({
       id: '1',
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
-    } as Coderepo)
+    } as CodeRepo)
 
-    const saveTeamCodereposSpy = jest.spyOn(otomiStack, 'saveTeamCoderepos').mockResolvedValue()
-    const doDeploymentSpy = jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
+    const saveTeamCodeReposSpy = jest.spyOn(otomiStack, 'saveTeamCodeRepo').mockResolvedValue()
+    const doDeploymentSpy = jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
 
-    const coderepo = await otomiStack.editCoderepo('1', {
+    const codeRepo = await otomiStack.editCodeRepo('demo', '1', {
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
     })
 
-    expect(coderepo).toEqual({
+    expect(codeRepo).toEqual({
       id: '1',
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
     })
-    expect(updateItemSpy).toHaveBeenCalledWith(
-      'coderepos',
-      {
-        teamId: 'demo',
-        label: 'code-1-updated',
-        gitService: 'gitea',
-        repositoryUrl: 'https://gitea.test.com',
-      },
-      { id: '1' },
-    )
-    expect(saveTeamCodereposSpy).toHaveBeenCalledWith('demo')
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['coderepos'])
+    expect(updateItemSpy).toHaveBeenCalledWith('1', {
+      teamId: 'demo',
+      name: 'code-1-updated',
+      gitService: 'gitea',
+      repositoryUrl: 'https://gitea.test.com',
+    })
+    expect(saveTeamCodeReposSpy).toHaveBeenCalledWith('demo', codeRepo)
+    expect(doDeploymentSpy).toHaveBeenCalledWith('demo', expect.any(Function), false)
 
     updateItemSpy.mockRestore()
-    saveTeamCodereposSpy.mockRestore()
+    saveTeamCodeReposSpy.mockRestore()
     doDeploymentSpy.mockRestore()
   })
 
   test('should delete an existing internal code repository', async () => {
-    const coderepo = {
+    const codeRepo = {
       id: '1',
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea.test.com',
-    } as Coderepo
+    } as CodeRepo
 
-    jest.spyOn(otomiStack, 'getCoderepo').mockReturnValue(coderepo)
-    const deleteItemSpy = jest.spyOn(otomiStack.db, 'deleteItem').mockResolvedValue({} as never)
-    const saveTeamCodereposSpy = jest.spyOn(otomiStack, 'saveTeamCoderepos').mockResolvedValue()
-    const doDeploymentSpy = jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
+    jest.spyOn(otomiStack, 'getCodeRepo').mockReturnValue(codeRepo)
+    const deleteItemSpy = jest.spyOn(teamConfigService, 'deleteCodeRepo').mockResolvedValue({} as never)
+    const doDeploymentSpy = jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
 
-    await otomiStack.deleteCoderepo('1')
+    await otomiStack.deleteCodeRepo('demo', '1')
 
-    expect(deleteItemSpy).toHaveBeenCalledWith('coderepos', { id: '1' })
-    expect(saveTeamCodereposSpy).toHaveBeenCalledWith('demo')
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['coderepos'])
+    expect(deleteItemSpy).toHaveBeenCalledWith('1')
+    expect(doDeploymentSpy).toHaveBeenCalledWith('demo', expect.any(Function), false)
 
     deleteItemSpy.mockRestore()
-    saveTeamCodereposSpy.mockRestore()
     doDeploymentSpy.mockRestore()
   })
 
   test('should create an external public code repository', async () => {
-    const createItemSpy = jest.spyOn(otomiStack.db, 'createItem').mockReturnValue({
+    const createItemSpy = jest.spyOn(teamConfigService, 'createCodeRepo').mockReturnValue({
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
-    } as Coderepo)
+    } as CodeRepo)
 
-    const saveTeamCodereposSpy = jest.spyOn(otomiStack, 'saveTeamCoderepos').mockResolvedValue()
-    const doDeploymentSpy = jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
+    const saveTeamCodeReposSpy = jest.spyOn(otomiStack, 'saveTeamCodeRepo').mockResolvedValue()
+    const doDeploymentSpy = jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
 
-    const coderepo = await otomiStack.createCoderepo('demo', {
-      label: 'code-1',
+    const codeRepo = await otomiStack.createCodeRepo('demo', {
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
     })
 
-    expect(coderepo).toEqual({
+    expect(codeRepo).toEqual({
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
     })
-    expect(createItemSpy).toHaveBeenCalledWith(
-      'coderepos',
-      {
-        teamId: 'demo',
-        label: 'code-1',
-        gitService: 'github',
-        repositoryUrl: 'https://github.test.com',
-      },
-      { teamId: 'demo', label: 'code-1' },
-    )
-    expect(saveTeamCodereposSpy).toHaveBeenCalledWith('demo')
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['coderepos'])
+    expect(createItemSpy).toHaveBeenCalledWith({
+      teamId: 'demo',
+      name: 'code-1',
+      gitService: 'github',
+      repositoryUrl: 'https://github.test.com',
+    })
+    expect(saveTeamCodeReposSpy).toHaveBeenCalledWith('demo', codeRepo)
+    expect(doDeploymentSpy).toHaveBeenCalledWith('demo', expect.any(Function), false)
 
     createItemSpy.mockRestore()
-    saveTeamCodereposSpy.mockRestore()
+    saveTeamCodeReposSpy.mockRestore()
     doDeploymentSpy.mockRestore()
   })
 
   test('should get an existing external public code repository', () => {
-    const coderepo = {
+    const codeRepo = {
       id: '1',
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
-    } as Coderepo
+    } as CodeRepo
 
-    jest.spyOn(otomiStack.db, 'getItem').mockReturnValue(coderepo)
+    jest.spyOn(teamConfigService, 'getCodeRepo').mockReturnValue(codeRepo)
 
-    const result = otomiStack.getCoderepo('1')
-    expect(result).toEqual(coderepo)
+    const result = otomiStack.getCodeRepo('demo', '1')
+    expect(result).toEqual(codeRepo)
   })
 
   test('should edit an existing external public code repository', async () => {
-    const updateItemSpy = jest.spyOn(otomiStack.db, 'updateItem').mockReturnValue({
+    const updateItemSpy = jest.spyOn(teamConfigService, 'updateCodeRepo').mockReturnValue({
       id: '1',
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
-    } as Coderepo)
+    } as CodeRepo)
 
-    const saveTeamCodereposSpy = jest.spyOn(otomiStack, 'saveTeamCoderepos').mockResolvedValue()
-    const doDeploymentSpy = jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
+    const saveTeamCodeReposSpy = jest.spyOn(otomiStack, 'saveTeamCodeRepo').mockResolvedValue()
+    const doDeploymentSpy = jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
 
-    const coderepo = await otomiStack.editCoderepo('1', {
+    const codeRepo = await otomiStack.editCodeRepo('demo', '1', {
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
     })
 
-    expect(coderepo).toEqual({
+    expect(codeRepo).toEqual({
       id: '1',
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
     })
-    expect(updateItemSpy).toHaveBeenCalledWith(
-      'coderepos',
-      {
-        teamId: 'demo',
-        label: 'code-1-updated',
-        gitService: 'github',
-        repositoryUrl: 'https://github.test.com',
-      },
-      { id: '1' },
-    )
-    expect(saveTeamCodereposSpy).toHaveBeenCalledWith('demo')
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['coderepos'])
+    expect(updateItemSpy).toHaveBeenCalledWith('1', {
+      teamId: 'demo',
+      name: 'code-1-updated',
+      gitService: 'github',
+      repositoryUrl: 'https://github.test.com',
+    })
+    expect(saveTeamCodeReposSpy).toHaveBeenCalledWith('demo', codeRepo)
+    expect(doDeploymentSpy).toHaveBeenCalledWith('demo', expect.any(Function), false)
 
     updateItemSpy.mockRestore()
-    saveTeamCodereposSpy.mockRestore()
+    saveTeamCodeReposSpy.mockRestore()
     doDeploymentSpy.mockRestore()
   })
 
   test('should delete an existing external public code repository', async () => {
-    const coderepo = {
+    const codeRepo = {
       id: '1',
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
-    } as Coderepo
+    } as CodeRepo
 
-    jest.spyOn(otomiStack, 'getCoderepo').mockReturnValue(coderepo)
-    const deleteItemSpy = jest.spyOn(otomiStack.db, 'deleteItem').mockResolvedValue({} as never)
-    const saveTeamCodereposSpy = jest.spyOn(otomiStack, 'saveTeamCoderepos').mockResolvedValue()
-    const doDeploymentSpy = jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
+    jest.spyOn(otomiStack, 'getCodeRepo').mockReturnValue(codeRepo)
+    const deleteItemSpy = jest.spyOn(teamConfigService, 'deleteCodeRepo').mockResolvedValue({} as never)
+    const doDeploymentSpy = jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
 
-    await otomiStack.deleteCoderepo('1')
+    await otomiStack.deleteCodeRepo('demo', '1')
 
-    expect(deleteItemSpy).toHaveBeenCalledWith('coderepos', { id: '1' })
-    expect(saveTeamCodereposSpy).toHaveBeenCalledWith('demo')
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['coderepos'])
+    expect(deleteItemSpy).toHaveBeenCalledWith('1')
+    expect(doDeploymentSpy).toHaveBeenCalledWith('demo', expect.any(Function), false)
 
     deleteItemSpy.mockRestore()
-    saveTeamCodereposSpy.mockRestore()
     doDeploymentSpy.mockRestore()
   })
 
   test('should create an external private code repository', async () => {
-    const createItemSpy = jest.spyOn(otomiStack.db, 'createItem').mockReturnValue({
+    const createItemSpy = jest.spyOn(teamConfigService, 'createCodeRepo').mockReturnValue({
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
       private: true,
       secret: 'test',
-    } as Coderepo)
+    } as CodeRepo)
 
-    const saveTeamCodereposSpy = jest.spyOn(otomiStack, 'saveTeamCoderepos').mockResolvedValue()
-    const doDeploymentSpy = jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
+    const saveTeamCodeReposSpy = jest.spyOn(otomiStack, 'saveTeamCodeRepo').mockResolvedValue()
+    const doDeploymentSpy = jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
 
-    const coderepo = await otomiStack.createCoderepo('demo', {
-      label: 'code-1',
+    const codeRepo = await otomiStack.createCodeRepo('demo', {
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
       private: true,
       secret: 'test',
     })
 
-    expect(coderepo).toEqual({
+    expect(codeRepo).toEqual({
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
       private: true,
       secret: 'test',
     })
-    expect(createItemSpy).toHaveBeenCalledWith(
-      'coderepos',
-      {
-        teamId: 'demo',
-        label: 'code-1',
-        gitService: 'github',
-        repositoryUrl: 'https://github.test.com',
-        private: true,
-        secret: 'test',
-      },
-      { teamId: 'demo', label: 'code-1' },
-    )
-    expect(saveTeamCodereposSpy).toHaveBeenCalledWith('demo')
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['coderepos'])
+    expect(createItemSpy).toHaveBeenCalledWith({
+      teamId: 'demo',
+      name: 'code-1',
+      gitService: 'github',
+      repositoryUrl: 'https://github.test.com',
+      private: true,
+      secret: 'test',
+    })
+    expect(saveTeamCodeReposSpy).toHaveBeenCalledWith('demo', codeRepo)
+    expect(doDeploymentSpy).toHaveBeenCalledWith('demo', expect.any(Function), false)
 
     createItemSpy.mockRestore()
-    saveTeamCodereposSpy.mockRestore()
+    saveTeamCodeReposSpy.mockRestore()
     doDeploymentSpy.mockRestore()
   })
 
-  test('should get an existing external private code repository', () => {
-    const coderepo = {
-      id: '1',
-      teamId: 'demo',
-      label: 'code-1',
-      gitService: 'github',
-      repositoryUrl: 'https://github.test.com',
-      private: true,
-      secret: 'test',
-    } as Coderepo
-
-    jest.spyOn(otomiStack.db, 'getItem').mockReturnValue(coderepo)
-
-    const result = otomiStack.getCoderepo('1')
-    expect(result).toEqual(coderepo)
-  })
-
   test('should edit an existing external private code repository', async () => {
-    const updateItemSpy = jest.spyOn(otomiStack.db, 'updateItem').mockReturnValue({
+    const updateItemSpy = jest.spyOn(teamConfigService, 'updateCodeRepo').mockReturnValue({
       id: '1',
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
       private: true,
       secret: 'test',
-    } as Coderepo)
+    } as CodeRepo)
 
-    const saveTeamCodereposSpy = jest.spyOn(otomiStack, 'saveTeamCoderepos').mockResolvedValue()
-    const doDeploymentSpy = jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
+    const saveTeamCodeReposSpy = jest.spyOn(otomiStack, 'saveTeamCodeRepo').mockResolvedValue()
+    const doDeploymentSpy = jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
 
-    const coderepo = await otomiStack.editCoderepo('1', {
+    const codeRepo = await otomiStack.editCodeRepo('demo', '1', {
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
       private: true,
       secret: 'test',
     })
 
-    expect(coderepo).toEqual({
+    expect(codeRepo).toEqual({
       id: '1',
       teamId: 'demo',
-      label: 'code-1-updated',
+      name: 'code-1-updated',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
       private: true,
       secret: 'test',
     })
-    expect(updateItemSpy).toHaveBeenCalledWith(
-      'coderepos',
-      {
-        teamId: 'demo',
-        label: 'code-1-updated',
-        gitService: 'github',
-        repositoryUrl: 'https://github.test.com',
-        private: true,
-        secret: 'test',
-      },
-      { id: '1' },
-    )
-    expect(saveTeamCodereposSpy).toHaveBeenCalledWith('demo')
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['coderepos'])
+    expect(updateItemSpy).toHaveBeenCalledWith('1', {
+      teamId: 'demo',
+      name: 'code-1-updated',
+      gitService: 'github',
+      repositoryUrl: 'https://github.test.com',
+      private: true,
+      secret: 'test',
+    })
+    expect(saveTeamCodeReposSpy).toHaveBeenCalledWith('demo', codeRepo)
+    expect(doDeploymentSpy).toHaveBeenCalledWith('demo', expect.any(Function), false)
 
     updateItemSpy.mockRestore()
-    saveTeamCodereposSpy.mockRestore()
+    saveTeamCodeReposSpy.mockRestore()
     doDeploymentSpy.mockRestore()
   })
 
   test('should delete an existing external private code repository', async () => {
-    const coderepo = {
+    const codeRepo = {
       id: '1',
       teamId: 'demo',
-      label: 'code-1',
+      name: 'code-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
       private: true,
       secret: 'test',
-    } as Coderepo
+    } as CodeRepo
 
-    jest.spyOn(otomiStack, 'getCoderepo').mockReturnValue(coderepo)
-    const deleteItemSpy = jest.spyOn(otomiStack.db, 'deleteItem').mockResolvedValue({} as never)
-    const saveTeamCodereposSpy = jest.spyOn(otomiStack, 'saveTeamCoderepos').mockResolvedValue()
-    const doDeploymentSpy = jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
+    jest.spyOn(otomiStack, 'getCodeRepo').mockReturnValue(codeRepo)
+    const deleteItemSpy = jest.spyOn(teamConfigService, 'deleteCodeRepo').mockResolvedValue({} as never)
+    const doDeploymentSpy = jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
 
-    await otomiStack.deleteCoderepo('1')
+    await otomiStack.deleteCodeRepo('demo', '1')
 
-    expect(deleteItemSpy).toHaveBeenCalledWith('coderepos', { id: '1' })
-    expect(saveTeamCodereposSpy).toHaveBeenCalledWith('demo')
-    expect(doDeploymentSpy).toHaveBeenCalledWith(['coderepos'])
+    expect(deleteItemSpy).toHaveBeenCalledWith('1')
+    expect(doDeploymentSpy).toHaveBeenCalledWith('demo', expect.any(Function), false)
 
     deleteItemSpy.mockRestore()
-    saveTeamCodereposSpy.mockRestore()
     doDeploymentSpy.mockRestore()
   })
 })

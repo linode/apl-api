@@ -41,7 +41,10 @@ export function encryptSecretItem(certificate, secretName, ns, data, scope) {
   return out
 }
 
-export type EncryptedDataRecord = Record<string, string>
+export interface EncryptedDataRecord {
+  key: string
+  value: string
+}
 
 export interface SealedSecretManifestType {
   apiVersion: string
@@ -54,7 +57,7 @@ export interface SealedSecretManifestType {
     labels?: Record<string, string>
   }
   spec: {
-    encryptedData: EncryptedDataRecord
+    encryptedData: EncryptedDataRecord[]
     template: {
       type:
         | 'kubernetes.io/opaque'
@@ -75,7 +78,7 @@ export interface SealedSecretManifestType {
 
 export function sealedSecretManifest(
   data: SealedSecret,
-  encryptedData: EncryptedDataRecord,
+  encryptedData: EncryptedDataRecord[],
   namespace: string,
 ): SealedSecretManifestType {
   const annotations = data.metadata?.annotations?.reduce((acc, item) => {

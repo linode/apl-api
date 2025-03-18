@@ -8,9 +8,9 @@ import OtomiStack from 'src/otomi-stack'
 import request, { SuperAgentTest } from 'supertest'
 import { HttpError } from './error'
 import { getSessionStack } from './middleware'
-import { App, Coderepo, SealedSecret } from './otomi-models'
-import { Repo } from './repo'
+import { App, CodeRepo, SealedSecret } from './otomi-models'
 import * as getValuesSchemaModule from './utils'
+import { Git } from './git'
 
 const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
@@ -39,15 +39,19 @@ describe('API authz tests', () => {
 
   beforeAll(async () => {
     const _otomiStack = await getSessionStack()
-    _otomiStack.repo = mockDeep<Repo>()
+    _otomiStack.git = mockDeep<Git>()
     _otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
-    await _otomiStack.createTeam({ name: 'team1' })
+    _otomiStack.transformApps = jest.fn().mockReturnValue([])
+    await _otomiStack.initRepo()
     otomiStack = _otomiStack as jest.Mocked<OtomiStack>
 
-    otomiStack.createTeam = jest.fn().mockResolvedValue(undefined)
-    otomiStack.saveTeams = jest.fn().mockResolvedValue(undefined)
+    otomiStack.saveTeam = jest.fn().mockResolvedValue(undefined)
     otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
-    await otomiStack.init()
+    otomiStack.doRepoDeployment = jest.fn().mockImplementation(() => Promise.resolve())
+    otomiStack.doTeamDeployment = jest.fn().mockImplementation(() => Promise.resolve())
+    await otomiStack.loadValues()
+    await otomiStack.createTeam({ name: 'team1' })
+    await otomiStack.createTeam({ name: 'team2' })
     app = await initApp(otomiStack)
     agent = request.agent(app)
     agent.set('Accept', 'application/json')
@@ -482,10 +486,6 @@ describe('API authz tests', () => {
       .expect(403)
   })
 
-  test('team member cannot get all secrets', async () => {
-    await agent.get('/v1/secrets').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
-  })
-
   test('team member cannot get all sealedsecrets', async () => {
     await agent.get('/v1/sealedsecrets').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
   })
@@ -640,14 +640,14 @@ describe('API authz tests', () => {
 
   describe('Code repository endpoints tests', () => {
     const data = {
-      label: 'demo',
+      name: 'demo',
       gitService: 'github' as 'gitea' | 'github' | 'gitlab',
       repositoryUrl: 'https://github.com/buildpacks/samples',
       private: true,
       secret: 'demo',
     }
-    test('team member can create its own coderepo', async () => {
-      jest.spyOn(otomiStack, 'createCoderepo').mockResolvedValue({} as Coderepo)
+    test('team member can create its own codeRepo', async () => {
+      jest.spyOn(otomiStack, 'createCodeRepo').mockResolvedValue({} as CodeRepo)
       await agent
         .post(`/v1/teams/${teamId}/coderepos`)
         .send(data)
@@ -655,16 +655,16 @@ describe('API authz tests', () => {
         .expect(200)
     })
 
-    test('team member can read its own coderepo', async () => {
-      jest.spyOn(otomiStack, 'getCoderepo').mockResolvedValue({} as never)
+    test('team member can read its own codeRepo', async () => {
+      jest.spyOn(otomiStack, 'getCodeRepo').mockResolvedValue({} as never)
       await agent
         .get(`/v1/teams/${teamId}/coderepos/my-uuid`)
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(200)
     })
 
-    test('team member can update its own coderepo', async () => {
-      jest.spyOn(otomiStack, 'editCoderepo').mockResolvedValue({} as Coderepo)
+    test('team member can update its own codeRepo', async () => {
+      jest.spyOn(otomiStack, 'editCodeRepo').mockResolvedValue({} as CodeRepo)
 
       await agent
         .put(`/v1/teams/${teamId}/coderepos/my-uuid`)
@@ -673,8 +673,8 @@ describe('API authz tests', () => {
         .expect(200)
     })
 
-    test('team member can delete its own coderepo', async () => {
-      jest.spyOn(otomiStack, 'deleteCoderepo').mockResolvedValue()
+    test('team member can delete its own codeRepo', async () => {
+      jest.spyOn(otomiStack, 'deleteCodeRepo').mockResolvedValue()
 
       await agent
         .delete(`/v1/teams/${teamId}/coderepos/my-uuid`)
@@ -684,7 +684,7 @@ describe('API authz tests', () => {
         .expect('Content-Type', /json/)
     })
 
-    test('team member cannot create others coderepo', async () => {
+    test('team member cannot create others codeRepo', async () => {
       await agent
         .post(`/v1/teams/${otherTeamId}/coderepos`)
         .send(data)
@@ -692,14 +692,14 @@ describe('API authz tests', () => {
         .expect(403)
     })
 
-    test('team member cannot read others coderepo', async () => {
+    test('team member cannot read others codeRepo', async () => {
       await agent
         .get(`/v1/teams/${otherTeamId}/coderepos/my-uuid`)
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(403)
     })
 
-    test('team member cannot update others coderepo', async () => {
+    test('team member cannot update others codeRepo', async () => {
       await agent
         .put(`/v1/teams/${otherTeamId}/coderepos/my-uuid`)
         .send(data)
@@ -707,7 +707,7 @@ describe('API authz tests', () => {
         .expect(403)
     })
 
-    test('team member cannot delete others coderepo', async () => {
+    test('team member cannot delete others codeRepo', async () => {
       await agent
         .delete(`/v1/teams/${otherTeamId}/coderepos/my-uuid`)
         .set('Content-Type', 'application/json')
@@ -731,6 +731,44 @@ describe('API authz tests', () => {
         .query({ teamId })
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(200)
+    })
+  })
+
+  describe('Policy endpoint tests', () => {
+    const data = { action: 'Enforce', severity: 'high' }
+
+    test('platform admin can get policies', async () => {
+      await agent
+        .get('/v1/teams/team1/policies')
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('platform admin can update policies', async () => {
+      await agent
+        .put('/v1/teams/team1/policies/disallow-selinux')
+        .send(data)
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can get policies', async () => {
+      await agent
+        .get('/v1/teams/team1/policies')
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can not update policies', async () => {
+      await agent
+        .put('/v1/teams/team1/policies/disallow-selinux')
+        .send(data)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(403)
+        .expect('Content-Type', /json/)
     })
   })
 })
