@@ -1,4 +1,5 @@
 // Mock UUID to generate predictable values
+import { AlreadyExists, NotExistError } from '../error'
 import {
   App,
   Backup,
@@ -12,7 +13,6 @@ import {
   WorkloadValues,
 } from '../otomi-models'
 import { TeamConfigService } from './TeamConfigService'
-import { AlreadyExists, NotExistError } from '../error'
 
 jest.mock('uuid', () => ({
   v4: jest.fn(() => 'mocked-uuid'),
@@ -114,11 +114,15 @@ describe('TeamConfigService', () => {
   })
 
   describe('Services', () => {
-    const serviceData: Service = { name: 'TestService', ingress: {} }
+    const serviceData: Service = { name: 'TestService', ingress: { domain: 'test.apl.com', subdomain: 'demo-a' } }
     test('should create a service', () => {
       const createdService = service.createService(serviceData)
 
-      expect(createdService).toEqual({ name: 'TestService', id: 'mocked-uuid', ingress: {} })
+      expect(createdService).toEqual({
+        name: 'TestService',
+        id: 'mocked-uuid',
+        ingress: { domain: 'test.apl.com', subdomain: 'demo-a' },
+      })
       expect(service.getServices()).toHaveLength(1)
     })
 
@@ -331,14 +335,14 @@ describe('TeamConfigService', () => {
     })
 
     test('should return true when a service with the given name exists', () => {
-      service.createService({ name: 'ExistingService', ingress: {} })
+      service.createService({ name: 'ExistingService', ingress: { domain: 'test.apl.com', subdomain: 'demo-a' } })
       expect(service.doesProjectNameExist('ExistingService')).toBe(true)
     })
 
     test('should return false when the name does not match any existing project', () => {
       service.createBuild({ name: 'SomeBuild' })
       service.createWorkload({ name: 'SomeWorkload', url: 'http://example.com' })
-      service.createService({ name: 'SomeService', ingress: {} })
+      service.createService({ name: 'SomeService', ingress: { domain: 'test.apl.com', subdomain: 'demo-a' } })
       expect(service.doesProjectNameExist('NonExistentProject')).toBe(false)
     })
   })
