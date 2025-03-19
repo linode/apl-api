@@ -13,6 +13,34 @@ const env = cleanEnv({
   GIT_PROVIDER_URL_PATTERNS,
 })
 
+export interface NewHelmChartValues {
+  gitRepositoryUrl: string
+  chartTargetDirName: string
+  chartIcon?: string
+  allowTeams: boolean
+}
+
+function throwChartError(message: string) {
+  const err = {
+    code: 404,
+    message,
+  }
+  throw err
+}
+export function isGiteaURL(url: string) {
+  let hostname = ''
+  if (url) {
+    try {
+      hostname = new URL(url).hostname
+    } catch (e) {
+      // ignore
+      return false
+    }
+  }
+  const giteaPattern = /^gitea\..+/i
+  return giteaPattern.test(hostname)
+}
+
 export function detectGitProvider(url) {
   if (!url || typeof url !== 'string') return null
 
@@ -90,33 +118,30 @@ export async function fetchChartYaml(url) {
   }
 }
 
-export interface NewHelmChartValues {
-  gitRepositoryUrl: string
-  chartTargetDirName: string
-  chartIcon?: string
-  allowTeams: boolean
+export function getBranchesAndTags(remoteResult: string) {
+  const lines = remoteResult.split('\n')
+  const branches: string[] = []
+  const tags: string[] = []
+
+  lines.forEach((line) => {
+    const parts = line.split('\t')
+    if (parts.length === 2) {
+      const ref = parts[1]
+      if (ref.startsWith('refs/heads/')) branches.push(ref.replace('refs/heads/', ''))
+      else if (ref.startsWith('refs/tags/')) tags.push(ref.replace('refs/tags/', ''))
+    }
+  })
+
+  return { branches, tags }
 }
 
-function throwChartError(message: string) {
-  const err = {
-    code: 404,
-    message,
-  }
-  throw err
+export function findRevision(branches, tags, refAndPath) {
+  const parts = refAndPath.split('/')
+  const candidates = [parts[0], parts.slice(0, 2).join('/'), parts.slice(0, 3).join('/')]
+  for (const candidate of candidates) if (branches.includes(candidate) || tags.includes(candidate)) return candidate
+  return null
 }
-function isGiteaURL(url: string) {
-  let hostname = ''
-  if (url) {
-    try {
-      hostname = new URL(url).hostname
-    } catch (e) {
-      // ignore
-      return false
-    }
-  }
-  const giteaPattern = /^gitea\..+/i
-  return giteaPattern.test(hostname)
-}
+
 /**
  * Reads the Chart.yaml file at the given path, updates (or sets) its icon field,
  * and writes the updated content back to disk.
@@ -167,13 +192,14 @@ export async function updateRbacForNewChart(sparsePath: string, chartKey: string
   await writeFile(rbacFilePath, newContent, 'utf-8')
   debug(`Updated rbac.yaml: added ${chartKey}: ${allowTeams ? 'null' : '[]'}`)
 }
-class chartRepo {
+
+export class chartRepo {
   localPath: string
   chartRepoUrl: string
   gitUser?: string
   gitEmail?: string
   git: SimpleGit
-  constructor(localPath: string, chartRepoUrl: string, gitUser: string | undefined, gitEmail: string | undefined) {
+  constructor(localPath: string, chartRepoUrl: string, gitUser?: string, gitEmail?: string) {
     this.localPath = localPath
     this.chartRepoUrl = chartRepoUrl
     this.gitUser = gitUser
@@ -182,6 +208,28 @@ class chartRepo {
   }
   async clone() {
     await this.git.clone(this.chartRepoUrl, this.localPath)
+  }
+  async cloneSingleChart(refAndPath: string, finalDestinationPath: string) {
+    const remoteResult = await this.git.listRemote([this.chartRepoUrl])
+    const { branches, tags } = getBranchesAndTags(remoteResult)
+    const finalRevision = findRevision(branches, tags, refAndPath) as string
+    const finalFilePath = refAndPath.slice(finalRevision?.length + 1)
+
+    debug(`Cloning repository: ${this.chartRepoUrl} into ${this.localPath}`)
+    await this.git.clone(this.chartRepoUrl, this.localPath, ['--filter=blob:none', '--no-checkout'])
+
+    debug(`Initializing sparse checkout in cone mode at ${this.localPath}`)
+    await this.git.cwd(this.localPath)
+    await this.git.raw(['sparse-checkout', 'init', '--cone'])
+
+    debug(`Setting sparse checkout path to ${finalFilePath}`)
+    await this.git.raw(['sparse-checkout', 'set', finalFilePath])
+
+    debug(`Checking out the desired revision (branch or commit): ${finalRevision}`)
+    await this.git.checkout(finalRevision)
+
+    // Move files from "temporaryCloneDir/chartPath/*" to "finalDestinationPath/"
+    renameSync(path.join(this.localPath, finalFilePath), finalDestinationPath)
   }
   async addConfig() {
     await this.git.addConfig('user.name', this.gitUser!)
@@ -192,54 +240,6 @@ class chartRepo {
     await this.git.commit(`Add ${chartName} helm chart`)
     await this.git.pull('origin', 'main', { '--rebase': null })
     await this.git.push('origin', 'main')
-  }
-}
-
-const findRevision = (branches, tags, linkRest) => {
-  const parts = linkRest.split('/') // Split path parts
-
-  // Try different possible revision lengths
-  const candidates = [
-    parts[0], // Try first part (e.g., "wordpress")
-    parts.slice(0, 2).join('/'), // Try first two parts (e.g., "wordpress/24.1.18")
-    parts.slice(0, 3).join('/'), // Try first three parts (e.g., "wordpress/24.1.18/bitnami")
-  ]
-
-  for (const candidate of candidates) if (branches.includes(candidate) || tags.includes(candidate)) return candidate // Return the first match
-
-  return null // No match found
-}
-
-class myGit {
-  url: string
-  dirpath: string
-  git: SimpleGit
-  constructor(url: string, dirpath: string) {
-    this.url = url
-    this.dirpath = dirpath
-    this.git = simpleGit(this.dirpath)
-  }
-  async getTag(link) {
-    const res = await this.git.listRemote([this.url])
-    // console.log('res', res)
-
-    const lines = res.split('\n')
-    const branches: string[] = []
-    const tags: string[] = []
-
-    lines.forEach((line) => {
-      const parts = line.split('\t')
-      if (parts.length === 2) {
-        const ref = parts[1]
-        if (ref.startsWith('refs/heads/')) branches.push(ref.replace('refs/heads/', ''))
-        else if (ref.startsWith('refs/tags/')) tags.push(ref.replace('refs/tags/', ''))
-      }
-    })
-
-    const finalRevision = findRevision(branches, tags, link) as string
-    const finalFilePath = link.slice(finalRevision.length + 1)
-    console.log({ finalRevision, finalFilePath })
-    return { finalRevision, finalFilePath }
   }
 }
 
@@ -269,9 +269,9 @@ export async function sparseCloneChart(
   allowTeams?: boolean,
 ): Promise<boolean> {
   const details = detectGitProvider(gitRepositoryUrl)
+  if (!details) return false
   const gitCloneUrl = getGitCloneUrl(details) as string
-  let chartPath = details?.filePath.replace('Chart.yaml', '') as string
-  let revision = details?.branch as string
+  const refAndPath = `${details.branch}/${details.filePath.replace('Chart.yaml', '')}`
   const temporaryCloneDir = `${localHelmChartsDir}-newChart`
   const finalDestinationPath = `${localHelmChartsDir}/${chartTargetDirName}`
 
@@ -286,41 +286,14 @@ export async function sparseCloneChart(
   const gitRepo = new chartRepo(localHelmChartsDir, gitUrl, user, email)
   await gitRepo.clone()
 
-  if (!existsSync(`${temporaryCloneDir}-2`)) mkdirSync(`${temporaryCloneDir}-2`, { recursive: true })
-  else {
-    rmSync(`${temporaryCloneDir}-2`, { recursive: true, force: true })
-    mkdirSync(`${temporaryCloneDir}-2`, { recursive: true })
-  }
-  const mygit = new myGit(gitCloneUrl, `${temporaryCloneDir}-2`)
-  const { finalRevision, finalFilePath } = (await mygit.getTag(`${revision}/${chartPath}`)) as any
-  if (finalRevision !== revision) {
-    revision = finalRevision
-    chartPath = finalFilePath
-  }
-
   if (!existsSync(temporaryCloneDir)) mkdirSync(temporaryCloneDir, { recursive: true })
   else {
     rmSync(temporaryCloneDir, { recursive: true, force: true })
     mkdirSync(temporaryCloneDir, { recursive: true })
   }
 
-  const git = simpleGit()
-
-  debug(`Cloning repository: ${gitCloneUrl} into ${temporaryCloneDir}`)
-  await git.clone(gitCloneUrl, temporaryCloneDir, ['--filter=blob:none', '--no-checkout'])
-
-  debug(`Initializing sparse checkout in cone mode at ${temporaryCloneDir}`)
-  await git.cwd(temporaryCloneDir)
-  await git.raw(['sparse-checkout', 'init', '--cone'])
-
-  debug(`Setting sparse checkout path to ${chartPath}`)
-  await git.raw(['sparse-checkout', 'set', chartPath])
-
-  debug(`Checking out the desired revision (branch or commit): ${revision}`)
-  await git.checkout(revision)
-
-  // Move files from "temporaryCloneDir/chartPath/*" to "finalDestinationPath/"
-  renameSync(path.join(temporaryCloneDir, chartPath), finalDestinationPath)
+  const gitSingleChart = new chartRepo(temporaryCloneDir, gitCloneUrl)
+  await gitSingleChart.cloneSingleChart(refAndPath, finalDestinationPath)
 
   // Remove the .git directory from the final destination.
   rmSync(`${finalDestinationPath}/.git`, { recursive: true, force: true })
@@ -353,7 +326,7 @@ export async function fetchWorkloadCatalog(url: string, helmChartsDir: string, t
     const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
     gitUrl = `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
   }
-  const gitRepo = new chartRepo(helmChartsDir, gitUrl, undefined, undefined)
+  const gitRepo = new chartRepo(helmChartsDir, gitUrl)
   await gitRepo.clone()
 
   const files = await readdir(helmChartsDir, 'utf-8')
