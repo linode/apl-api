@@ -194,6 +194,55 @@ class chartRepo {
     await this.git.push('origin', 'main')
   }
 }
+
+const findRevision = (branches, tags, linkRest) => {
+  const parts = linkRest.split('/') // Split path parts
+
+  // Try different possible revision lengths
+  const candidates = [
+    parts[0], // Try first part (e.g., "wordpress")
+    parts.slice(0, 2).join('/'), // Try first two parts (e.g., "wordpress/24.1.18")
+    parts.slice(0, 3).join('/'), // Try first three parts (e.g., "wordpress/24.1.18/bitnami")
+  ]
+
+  for (const candidate of candidates) if (branches.includes(candidate) || tags.includes(candidate)) return candidate // Return the first match
+
+  return null // No match found
+}
+
+class myGit {
+  url: string
+  dirpath: string
+  git: SimpleGit
+  constructor(url: string, dirpath: string) {
+    this.url = url
+    this.dirpath = dirpath
+    this.git = simpleGit(this.dirpath)
+  }
+  async getTag(link) {
+    const res = await this.git.listRemote([this.url])
+    // console.log('res', res)
+
+    const lines = res.split('\n')
+    const branches: string[] = []
+    const tags: string[] = []
+
+    lines.forEach((line) => {
+      const parts = line.split('\t')
+      if (parts.length === 2) {
+        const ref = parts[1]
+        if (ref.startsWith('refs/heads/')) branches.push(ref.replace('refs/heads/', ''))
+        else if (ref.startsWith('refs/tags/')) tags.push(ref.replace('refs/tags/', ''))
+      }
+    })
+
+    const finalRevision = findRevision(branches, tags, link) as string
+    const finalFilePath = link.slice(finalRevision.length + 1)
+    console.log({ finalRevision, finalFilePath })
+    return { finalRevision, finalFilePath }
+  }
+}
+
 /**
  * Clones a repository using sparse checkout, checks out a specific revision,
  * and moves the contents of the desired subdirectory (sparsePath) to the root of the target folder.
@@ -221,8 +270,8 @@ export async function sparseCloneChart(
 ): Promise<boolean> {
   const details = detectGitProvider(gitRepositoryUrl)
   const gitCloneUrl = getGitCloneUrl(details) as string
-  const chartPath = details?.filePath.replace('Chart.yaml', '') as string
-  const revision = details?.branch as string
+  let chartPath = details?.filePath.replace('Chart.yaml', '') as string
+  let revision = details?.branch as string
   const temporaryCloneDir = `${localHelmChartsDir}-newChart`
   const finalDestinationPath = `${localHelmChartsDir}/${chartTargetDirName}`
 
@@ -236,6 +285,18 @@ export async function sparseCloneChart(
   }
   const gitRepo = new chartRepo(localHelmChartsDir, gitUrl, user, email)
   await gitRepo.clone()
+
+  if (!existsSync(`${temporaryCloneDir}-2`)) mkdirSync(`${temporaryCloneDir}-2`, { recursive: true })
+  else {
+    rmSync(`${temporaryCloneDir}-2`, { recursive: true, force: true })
+    mkdirSync(`${temporaryCloneDir}-2`, { recursive: true })
+  }
+  const mygit = new myGit(gitCloneUrl, `${temporaryCloneDir}-2`)
+  const { finalRevision, finalFilePath } = (await mygit.getTag(`${revision}/${chartPath}`)) as any
+  if (finalRevision !== revision) {
+    revision = finalRevision
+    chartPath = finalFilePath
+  }
 
   if (!existsSync(temporaryCloneDir)) mkdirSync(temporaryCloneDir, { recursive: true })
   else {
