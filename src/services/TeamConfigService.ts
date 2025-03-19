@@ -1,4 +1,4 @@
-import { find, has, merge, remove, set } from 'lodash'
+import { find, has, mergeWith, remove, set } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
 import { AlreadyExists, NotExistError } from '../error'
 import {
@@ -17,6 +17,10 @@ import {
   Workload,
   WorkloadValues,
 } from '../otomi-models'
+
+function mergeCustomizer(prev, next) {
+  return next
+}
 
 export class TeamConfigService {
   constructor(private teamConfig: TeamConfig) {
@@ -65,7 +69,7 @@ export class TeamConfigService {
   public updateBuild(name: string, updates: Partial<Build>): Build {
     const build = find(this.teamConfig.builds, { name })
     if (!build) throw new NotExistError(`Build[${name}] does not exist.`)
-    return merge(build, updates)
+    return mergeWith(build, updates, mergeCustomizer)
   }
 
   public deleteBuild(name: string): void {
@@ -104,7 +108,7 @@ export class TeamConfigService {
   public updateCodeRepo(name: string, updates: Partial<CodeRepo>): CodeRepo {
     const codeRepo = find(this.teamConfig.codeRepos, { name })
     if (!codeRepo) throw new NotExistError(`CodeRepo[${name}] does not exist.`)
-    return merge(codeRepo, updates)
+    return mergeWith(codeRepo, updates, mergeCustomizer)
   }
 
   public deleteCodeRepo(name: string): void {
@@ -145,7 +149,7 @@ export class TeamConfigService {
   public updateWorkload(name: string, updates: Partial<Workload>): Workload {
     const workload = find(this.teamConfig.workloads, { name })
     if (!workload) throw new NotExistError(`Workload[${name}] does not exist.`)
-    return merge(workload, updates)
+    return mergeWith(workload, updates, mergeCustomizer)
   }
 
   public deleteWorkload(name: string): void {
@@ -180,7 +184,7 @@ export class TeamConfigService {
   public updateWorkloadValues(name: string, updates: Partial<WorkloadValues>): WorkloadValues {
     const workloadValues = find(this.teamConfig.workloadValues, { name })
     if (!workloadValues) throw new NotExistError(`WorkloadValues[${name}] does not exist.`)
-    return merge(workloadValues, updates)
+    return mergeWith(workloadValues, updates, mergeCustomizer)
   }
 
   public deleteWorkloadValues(name: string): void {
@@ -220,7 +224,7 @@ export class TeamConfigService {
   public updateService(name: string, updates: Partial<Service>): Service {
     const service = find(this.teamConfig.services, { name })
     if (!service) throw new NotExistError(`Service[${name}] does not exist.`)
-    return merge(service, updates)
+    return mergeWith(service, updates, mergeCustomizer)
   }
 
   public deleteService(name: string): void {
@@ -260,7 +264,7 @@ export class TeamConfigService {
   public updateSealedSecret(name: string, updates: Partial<SealedSecret>): SealedSecret {
     const secret = find(this.teamConfig.sealedsecrets, { name })
     if (!secret) throw new NotExistError(`SealedSecret[${name}] does not exist.`)
-    return merge(secret, updates)
+    return mergeWith(secret, updates, mergeCustomizer)
   }
 
   public deleteSealedSecret(name: string): void {
@@ -300,7 +304,7 @@ export class TeamConfigService {
   public updateBackup(name: string, updates: Partial<Backup>): Backup {
     const backup = find(this.teamConfig.backups, { name })
     if (!backup) throw new NotExistError(`Backup[${name}] does not exist.`)
-    return merge(backup, updates)
+    return mergeWith(backup, updates, mergeCustomizer)
   }
 
   public deleteBackup(name: string): void {
@@ -340,7 +344,7 @@ export class TeamConfigService {
   public updateProject(name: string, updates: Partial<Project>): Project {
     const project = find(this.teamConfig.projects, { name })
     if (!project) throw new NotExistError(`Project[${name}] does not exist.`)
-    return merge(project, updates)
+    return mergeWith(project, updates, mergeCustomizer)
   }
 
   public deleteProject(name: string): void {
@@ -382,7 +386,7 @@ export class TeamConfigService {
     if (!netpol) {
       throw new NotExistError(`Netpol[${name}] does not exist.`)
     }
-    return merge(netpol, updates)
+    return mergeWith(netpol, updates, mergeCustomizer)
   }
 
   public deleteNetpol(name: string): void {
@@ -401,7 +405,7 @@ export class TeamConfigService {
     if (!this.teamConfig.settings) {
       this.teamConfig.settings = { name: updates.name || '' }
     }
-    return merge(this.teamConfig.settings, updates)
+    return mergeWith(this.teamConfig.settings, updates, mergeCustomizer)
   }
 
   // =====================================
@@ -454,7 +458,7 @@ export class TeamConfigService {
     if (!this.teamConfig.policies) {
       this.teamConfig.policies = {}
     }
-    merge(this.teamConfig.policies, updates)
+    mergeWith(this.teamConfig.policies, updates, mergeCustomizer)
   }
 
   public doesProjectNameExist(name: string): boolean {
