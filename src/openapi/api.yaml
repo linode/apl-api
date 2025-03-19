@@ -2249,6 +2249,21 @@ paths:
         default:
           description: The requested apiDoc.
 
+  /v1/apiDocs:
+    get:
+      operationId: 'apiDocs'
+      security: [ ]
+      description: Get OpenAPIDoc document
+      responses:
+        '200':
+          description: The requested apiDoc.
+          content:
+            application/json:
+              schema:
+                type: object
+        default:
+          description: The requested apiDoc.
+
   /v1/settingsInfo:
     get:
       operationId: getSettingsInfo
