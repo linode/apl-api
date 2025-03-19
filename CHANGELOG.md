@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.7.3](https://github.com/redkubes/otomi-api/compare/v3.7.2...v3.7.3) (2025-03-19)
+
+
+### Bug Fixes
+
+* get commit sha from session stack ([#664](https://github.com/redkubes/otomi-api/issues/664)) ([4cf4ecd](https://github.com/redkubes/otomi-api/commit/4cf4ecdf8082c2f1e94447fee9636cb6f94d0045))
+
 ### [3.7.2](https://github.com/redkubes/otomi-api/compare/v3.7.1...v3.7.2) (2025-03-14)
 
 
