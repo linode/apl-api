@@ -39,6 +39,7 @@ import {
   Cloudtty,
   CodeRepo,
   Core,
+  DeepPartial,
   K8sService,
   Netpol,
   ObjWizard,
@@ -816,14 +817,21 @@ export default class OtomiStack {
   }
 
   async editBackup(teamId: string, name: string, data: Backup): Promise<Backup> {
-    const mergeObj = getV1MergeObject(data) as Partial<AplBackupRequest>
+    const mergeObj = getV1MergeObject(data) as DeepPartial<AplBackupRequest>
     const mergedBackup = await this.editAplBackup(teamId, name, mergeObj)
     return getV1Object(mergedBackup) as Backup
   }
 
-  async editAplBackup(teamId: string, name: string, data: Partial<AplBackupRequest>): Promise<AplBackupResponse> {
+  async editAplBackup(
+    teamId: string,
+    name: string,
+    data: AplBackupRequest | DeepPartial<AplBackupRequest>,
+    patch = false,
+  ): Promise<AplBackupResponse> {
     validateBackupFields(data.metadata?.name, data.spec?.ttl)
-    const backup = this.repoService.getTeamConfigService(teamId).updateBackup(name, data)
+    const backup = patch
+      ? this.repoService.getTeamConfigService(teamId).patchBackup(name, data)
+      : this.repoService.getTeamConfigService(teamId).updateBackup(name, data as AplBackupRequest)
     await this.saveTeamConfigItem(backup)
     await this.doTeamDeployment(
       teamId,
@@ -900,13 +908,20 @@ export default class OtomiStack {
   }
 
   async editNetpol(teamId: string, name: string, data: Netpol): Promise<Netpol> {
-    const mergeObj = getV1MergeObject(data) as Partial<AplNetpolRequest>
+    const mergeObj = getV1MergeObject(data) as DeepPartial<AplNetpolRequest>
     const mergedNetpol = await this.editAplNetpol(teamId, name, mergeObj)
     return getV1Object(mergedNetpol) as Netpol
   }
 
-  async editAplNetpol(teamId: string, name: string, data: Partial<AplNetpolRequest>): Promise<AplNetpolResponse> {
-    const netpol = this.repoService.getTeamConfigService(teamId).updateNetpol(name, data)
+  async editAplNetpol(
+    teamId: string,
+    name: string,
+    data: AplNetpolRequest | DeepPartial<AplNetpolRequest>,
+    patch = false,
+  ): Promise<AplNetpolResponse> {
+    const netpol = patch
+      ? this.repoService.getTeamConfigService(teamId).patchNetpol(name, data)
+      : this.repoService.getTeamConfigService(teamId).updateNetpol(name, data as AplNetpolRequest)
     await this.saveTeamConfigItem(netpol)
     await this.doTeamDeployment(
       teamId,
@@ -1225,14 +1240,21 @@ export default class OtomiStack {
   }
 
   async editCodeRepo(teamId: string, name: string, data: CodeRepo): Promise<CodeRepo> {
-    const mergeObj = getV1MergeObject(data) as Partial<AplCodeRepoRequest>
+    const mergeObj = getV1MergeObject(data) as DeepPartial<AplCodeRepoRequest>
     const mergedCodeRepo = await this.editAplCodeRepo(teamId, name, mergeObj)
     return getV1Object(mergedCodeRepo) as CodeRepo
   }
 
-  async editAplCodeRepo(teamId: string, name: string, data: Partial<AplCodeRepoRequest>): Promise<AplCodeRepoResponse> {
+  async editAplCodeRepo(
+    teamId: string,
+    name: string,
+    data: DeepPartial<AplCodeRepoRequest>,
+    patch = false,
+  ): Promise<AplCodeRepoResponse> {
     if (!data.spec?.private) unset(data.spec, 'secret')
-    const codeRepo = this.repoService.getTeamConfigService(teamId).updateCodeRepo(name, data)
+    const codeRepo = patch
+      ? this.repoService.getTeamConfigService(teamId).patchCodeRepo(name, data)
+      : this.repoService.getTeamConfigService(teamId).updateCodeRepo(name, data as AplCodeRepoRequest)
     await this.saveTeamConfigItem(codeRepo)
     await this.doTeamDeployment(
       teamId,
@@ -1364,13 +1386,20 @@ export default class OtomiStack {
   }
 
   async editBuild(teamId: string, name: string, data: Build): Promise<Build> {
-    const mergeObj = getV1MergeObject(data) as Partial<AplBuildRequest>
+    const mergeObj = getV1MergeObject(data) as DeepPartial<AplBuildRequest>
     const mergedBuild = await this.editAplBuild(teamId, name, mergeObj)
     return getV1Object(mergedBuild) as Build
   }
 
-  async editAplBuild(teamId: string, name: string, data: Partial<AplBuildRequest>): Promise<AplBuildResponse> {
-    const build = this.repoService.getTeamConfigService(teamId).updateBuild(name, data)
+  async editAplBuild(
+    teamId: string,
+    name: string,
+    data: AplBuildRequest | DeepPartial<AplBuildRequest>,
+    patch = false,
+  ): Promise<AplBuildResponse> {
+    const build = patch
+      ? this.repoService.getTeamConfigService(teamId).patchBuild(name, data)
+      : this.repoService.getTeamConfigService(teamId).updateBuild(name, data as AplBuildRequest)
     await this.saveTeamConfigItem(build)
     await this.doTeamDeployment(
       teamId,
@@ -1428,20 +1457,26 @@ export default class OtomiStack {
   }
 
   async editPolicy(teamId: string, policyId: string, data: Policy): Promise<Policy> {
-    const mergeObj = getV1MergeObject(data) as Partial<AplPolicyRequest>
+    const mergeObj = getV1MergeObject(data) as DeepPartial<AplPolicyRequest>
     const mergedPolicy = await this.editAplPolicy(teamId, policyId, mergeObj)
     return mergedPolicy.spec
   }
 
-  async editAplPolicy(teamId: string, policyId: string, data: Partial<AplPolicyRequest>): Promise<AplPolicyResponse> {
-    const policy = this.repoService.getTeamConfigService(teamId).updatePolicies(policyId, data)
+  async editAplPolicy(
+    teamId: string,
+    policyId: string,
+    data: AplPolicyRequest | DeepPartial<AplPolicyRequest>,
+    patch = false,
+  ): Promise<AplPolicyResponse> {
+    const policy = patch
+      ? this.repoService.getTeamConfigService(teamId).patchPolicies(policyId, data)
+      : this.repoService.getTeamConfigService(teamId).updatePolicies(policyId, data as AplPolicyRequest)
     const teamPolicies = this.getTeamAplPolicies(teamId)
     await this.saveTeamPolicies(teamId, teamPolicies)
     await this.doTeamDeployment(
       teamId,
       (teamService) => {
-        const rootStackPolicies = teamService.getPolicies()
-        rootStackPolicies[policyId] = removeBlankAttributes(data)
+        teamService.updatePolicies(policyId, policy)
       },
       false,
     )
@@ -1641,13 +1676,20 @@ export default class OtomiStack {
   }
 
   async editWorkload(teamId: string, name: string, data: Workload): Promise<Workload> {
-    const mergeObj = getV1MergeObject(data) as Partial<AplWorkloadRequest>
+    const mergeObj = getV1MergeObject(data) as DeepPartial<AplWorkloadRequest>
     const mergedWorkload = await this.editAplWorkload(teamId, name, mergeObj)
     return omit(getV1Object(mergedWorkload), ['values']) as Workload
   }
 
-  async editAplWorkload(teamId: string, name: string, data: Partial<AplWorkloadRequest>): Promise<AplWorkloadResponse> {
-    const workload = this.repoService.getTeamConfigService(teamId).updateWorkload(name, data)
+  async editAplWorkload(
+    teamId: string,
+    name: string,
+    data: AplWorkloadRequest | DeepPartial<AplWorkloadRequest>,
+    patch = false,
+  ): Promise<AplWorkloadResponse> {
+    const workload = patch
+      ? this.repoService.getTeamConfigService(teamId).patchWorkload(name, data)
+      : this.repoService.getTeamConfigService(teamId).updateWorkload(name, data as AplWorkloadRequest)
     await this.saveTeamWorkload(workload)
     await this.doTeamDeployment(
       teamId,
@@ -1745,13 +1787,20 @@ export default class OtomiStack {
   }
 
   async editService(teamId: string, name: string, data: Service): Promise<Service> {
-    const mergeObj = getV1MergeObject(this.convertDbServiceToValues(data)) as Partial<AplServiceRequest>
+    const mergeObj = getV1MergeObject(this.convertDbServiceToValues(data)) as DeepPartial<AplServiceRequest>
     const mergedService = await this.editAplService(teamId, name, mergeObj)
     return getV1Object(mergedService) as Service
   }
 
-  async editAplService(teamId: string, name: string, data: Partial<AplServiceRequest>): Promise<AplServiceResponse> {
-    const service = this.repoService.getTeamConfigService(teamId).updateService(name, data)
+  async editAplService(
+    teamId: string,
+    name: string,
+    data: DeepPartial<AplServiceRequest>,
+    patch = false,
+  ): Promise<AplServiceResponse> {
+    const service = patch
+      ? this.repoService.getTeamConfigService(teamId).patchService(name, data)
+      : this.repoService.getTeamConfigService(teamId).updateService(name, data as AplServiceRequest)
     await this.saveTeamConfigItem(service)
     await this.doTeamDeployment(
       teamId,
@@ -2078,7 +2127,7 @@ export default class OtomiStack {
   }
 
   async editSealedSecret(teamId: string, name: string, data: SealedSecret): Promise<SealedSecret> {
-    const mergeObj = getV1MergeObject(data) as Partial<AplSecretRequest>
+    const mergeObj = getV1MergeObject(data) as DeepPartial<AplSecretRequest>
     if (mergeObj.spec?.encryptedData) {
       mergeObj.spec.decryptedData = mergeObj.spec.encryptedData
     }
@@ -2086,7 +2135,12 @@ export default class OtomiStack {
     return getV1Object(mergedSecret) as SealedSecret
   }
 
-  async editAplSealedSecret(teamId: string, name: string, data: Partial<AplSecretRequest>): Promise<AplSecretResponse> {
+  async editAplSealedSecret(
+    teamId: string,
+    name: string,
+    data: DeepPartial<AplSecretRequest>,
+    patch = false,
+  ): Promise<AplSecretResponse> {
     const existingSecret = this.repoService.getTeamConfigService(teamId).getSealedSecret(name)
     const namespace = data.spec?.namespace ?? existingSecret.spec.namespace ?? `team-${teamId}`
     let encryptedData
@@ -2099,21 +2153,34 @@ export default class OtomiStack {
       }
 
       const encryptedDataPromises = data.spec.decryptedData.map((obj) => {
-        const encryptedItem = encryptSecretItem(certificate, name, namespace, obj.value, 'namespace-wide')
-        return { [obj.key]: encryptedItem }
+        if (obj && obj.key && obj.value !== undefined) {
+          const encryptedItem = encryptSecretItem(certificate, name, namespace, obj.value, 'namespace-wide')
+          return { [obj.key]: encryptedItem }
+        } else {
+          return {}
+        }
       })
       encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises))) as EncryptedDataRecord[]
     }
-    const sealedSecret = this.repoService.getTeamConfigService(teamId).updateSealedSecret(name, {
-      kind: 'AplTeamSecret',
-      metadata: data.metadata,
-      spec: {
-        ...existingSecret.spec,
-        ...omit(data.spec, 'decryptedData'),
-        encryptedData,
-        namespace,
-      },
-    })
+    const sealedSecret = patch
+      ? this.repoService.getTeamConfigService(teamId).patchSealedSecret(name, {
+          metadata: data.metadata,
+          spec: {
+            ...omit(data.spec, 'decryptedData'),
+            encryptedData,
+            namespace,
+          },
+        })
+      : this.repoService.getTeamConfigService(teamId).updateSealedSecret(name, {
+          kind: 'AplTeamSecret',
+          metadata: data.metadata,
+          spec: {
+            ...existingSecret.spec,
+            ...omit(data.spec, 'decryptedData'),
+            encryptedData,
+            namespace,
+          },
+        } as AplSecretRequest)
     await this.saveTeamSealedSecret(sealedSecret)
     await this.doTeamDeployment(
       teamId,

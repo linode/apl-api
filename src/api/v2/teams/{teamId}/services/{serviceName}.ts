@@ -1,6 +1,6 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { AplServiceRequest, OpenApiRequestExt } from 'src/otomi-models'
+import { AplServiceRequest, DeepPartial, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:services')
 
@@ -30,10 +30,23 @@ export default function (): OperationHandlerArray {
       res.json(data)
     },
   ]
+  const patch: Operation = [
+    async ({ otomi, params: { teamId, serviceName }, body }: OpenApiRequestExt, res): Promise<void> => {
+      debug(`editService(${serviceName}, patch)`)
+      const data = await otomi.editAplService(
+        decodeURIComponent(teamId),
+        decodeURIComponent(serviceName),
+        body as DeepPartial<AplServiceRequest>,
+        true,
+      )
+      res.json(data)
+    },
+  ]
   const api = {
     delete: del,
     get,
     put,
+    patch,
   }
   return api
 }

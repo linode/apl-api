@@ -1,6 +1,6 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { AplWorkloadRequest, OpenApiRequestExt } from 'src/otomi-models'
+import { AplWorkloadRequest, DeepPartial, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:workloads')
 
@@ -30,10 +30,23 @@ export default function (): OperationHandlerArray {
       res.json(data)
     },
   ]
+  const patch: Operation = [
+    async ({ otomi, params: { teamId, workloadName }, body }: OpenApiRequestExt, res): Promise<void> => {
+      debug(`editWorkload(${workloadName}, patch)`)
+      const data = await otomi.editAplWorkload(
+        decodeURIComponent(teamId),
+        decodeURIComponent(workloadName),
+        body as DeepPartial<AplWorkloadRequest>,
+        true,
+      )
+      res.json(data)
+    },
+  ]
   const api = {
     delete: del,
     get,
     put,
+    patch,
   }
   return api
 }

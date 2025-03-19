@@ -1,6 +1,6 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { AplBuildRequest, OpenApiRequestExt } from 'src/otomi-models'
+import { AplBuildRequest, DeepPartial, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:builds')
 
@@ -30,10 +30,23 @@ export default function (): OperationHandlerArray {
       res.json(data)
     },
   ]
+  const patch: Operation = [
+    ({ otomi, params: { teamId, buildName }, body }: OpenApiRequestExt, res): void => {
+      debug(`editBuild(${buildName}, patch)`)
+      const data = otomi.editAplBuild(
+        decodeURIComponent(teamId),
+        decodeURIComponent(buildName),
+        body as DeepPartial<AplBuildRequest>,
+        true,
+      )
+      res.json(data)
+    },
+  ]
   const api = {
     delete: del,
     get,
     put,
+    patch,
   }
   return api
 }

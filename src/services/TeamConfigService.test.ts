@@ -82,7 +82,9 @@ describe('TeamConfigService', () => {
     test('should update a build', () => {
       const createdBuild = service.createBuild(build)
 
-      const updatedBuild = service.updateBuild(createdBuild.metadata.name, { metadata: { name: 'UpdatedBuild' } })
+      const updatedBuild = service.patchBuild(createdBuild.metadata.name, {
+        metadata: { name: 'UpdatedBuild' },
+      })
       expect(updatedBuild.metadata.name).toBe('UpdatedBuild')
     })
 
@@ -381,8 +383,7 @@ describe('TeamConfigService', () => {
     })
 
     test('should update policies', () => {
-      service.updatePolicies('require-limits', {
-        kind: 'AplTeamPolicy',
+      service.patchPolicies('require-limits', {
         spec: { action: 'Audit', severity: 'medium' },
       })
       expect(service.getPolicies()).toEqual([
@@ -407,6 +408,7 @@ describe('TeamConfigService', () => {
     test('should retrieve a single policy', () => {
       service.updatePolicies('require-limits', {
         kind: 'AplTeamPolicy',
+        metadata: { name: 'require-limits' },
         spec: { action: 'Audit', severity: 'medium' },
       })
       expect(service.getPolicy('require-limits')).toEqual({

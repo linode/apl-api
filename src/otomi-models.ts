@@ -96,6 +96,8 @@ export type AplResourceKind =
   | 'AplTeamWorkloadValues'
 export type V1ApiObject = Build | CodeRepo | Netpol | Project | SealedSecret | Service | Workload
 
+export type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T
+
 export interface OpenApiRequest extends Request {
   operationDoc: {
     responses: { '200'?: { content: { 'application/json': { schema: { $ref: string } } } } }

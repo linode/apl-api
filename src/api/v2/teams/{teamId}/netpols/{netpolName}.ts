@@ -1,6 +1,6 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { AplNetpolRequest, OpenApiRequestExt } from 'src/otomi-models'
+import { AplNetpolRequest, DeepPartial, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:netpols')
 
@@ -26,6 +26,17 @@ export default function (): OperationHandlerArray {
         decodeURIComponent(teamId),
         decodeURIComponent(netpolName),
         body as AplNetpolRequest,
+      )
+      res.json(data)
+    },
+  ]
+  const patch: Operation = [
+    async ({ otomi, params: { teamId, netpolName }, body }: OpenApiRequestExt, res): Promise<void> => {
+      debug(`editNetpol(${netpolName}, patch)`)
+      const data = await otomi.editAplNetpol(
+        decodeURIComponent(teamId),
+        decodeURIComponent(netpolName),
+        body as DeepPartial<AplNetpolRequest>,
       )
       res.json(data)
     },

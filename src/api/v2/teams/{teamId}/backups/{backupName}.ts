@@ -1,6 +1,6 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { AplBackupRequest, OpenApiRequestExt } from 'src/otomi-models'
+import { AplBackupRequest, DeepPartial, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:backups')
 
@@ -30,10 +30,23 @@ export default function (): OperationHandlerArray {
       res.json(data)
     },
   ]
+  const patch: Operation = [
+    async ({ otomi, params: { teamId, backupName }, body }: OpenApiRequestExt, res): Promise<void> => {
+      debug(`editBackup(${backupName}, patch)`)
+      const data = await otomi.editAplBackup(
+        decodeURIComponent(teamId),
+        decodeURIComponent(backupName),
+        body as DeepPartial<AplBackupRequest>,
+        true,
+      )
+      res.json(data)
+    },
+  ]
   const api = {
     delete: del,
     get,
     put,
+    patch,
   }
   return api
 }

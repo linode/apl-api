@@ -1,6 +1,6 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { AplSecretRequest, OpenApiRequestExt } from 'src/otomi-models'
+import { AplSecretRequest, DeepPartial, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:sealedsecrets')
 
@@ -30,10 +30,23 @@ export default function (): OperationHandlerArray {
       res.json(data)
     },
   ]
+  const patch: Operation = [
+    async ({ otomi, params: { teamId, sealedSecretName }, body }: OpenApiRequestExt, res): Promise<void> => {
+      debug(`editSealedSecret(${sealedSecretName}, patch)`)
+      const data = await otomi.editAplSealedSecret(
+        decodeURIComponent(teamId),
+        decodeURIComponent(sealedSecretName),
+        body as DeepPartial<AplSecretRequest>,
+        true,
+      )
+      res.json(data)
+    },
+  ]
   const api = {
     delete: del,
     get,
     put,
+    patch,
   }
   return api
 }
