@@ -31,7 +31,7 @@ import {
   V1ApiObject,
 } from '../otomi-models'
 
-export function getAplObject(kind: AplResourceKind, spec: V1ApiObject): AplRequestObject {
+export function getAplObject(kind: AplResourceKind, spec: V1ApiObject | Record<string, unknown>): AplRequestObject {
   return {
     kind,
     metadata: {
@@ -50,7 +50,9 @@ export function getV1Object(aplObject: AplResponseObject): V1ApiObject {
   }
 }
 
-export function getV1MergeObject(updates: DeepPartial<V1ApiObject>): DeepPartial<AplRequestObject> {
+export function getV1MergeObject(
+  updates: DeepPartial<V1ApiObject> | Record<string, unknown>,
+): DeepPartial<AplRequestObject> {
   return {
     metadata: updates.name
       ? {
@@ -94,7 +96,7 @@ export class TeamConfigService {
   }
 
   private updateAplObject(config: AplResponseObject, updates: AplRequestObject): AplResponseObject {
-    merge(config.metadata, { name: updates.metadata.name })
+    merge(config.metadata, { name: updates.metadata?.name })
     Object.assign(config.spec, updates.spec)
     return config
   }

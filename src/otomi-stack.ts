@@ -1764,7 +1764,10 @@ export default class OtomiStack {
   }
 
   async createService(teamId: string, data: Service): Promise<Service> {
-    const newService = await this.createAplService(teamId, this.convertDbServiceToValues(data))
+    const newService = await this.createAplService(
+      teamId,
+      getAplObject('AplTeamService', this.convertDbServiceToValues(data)) as AplServiceRequest,
+    )
     return this.transformService(newService) as Service
   }
 
@@ -2376,37 +2379,32 @@ export default class OtomiStack {
     }
   }
 
-  convertDbServiceToValues(svc: Service): AplServiceRequest {
-    const svcCommon = omit(svc, ['id', 'name', 'teamId', 'ingress', 'path'])
+  convertDbServiceToValues(svc: Service): Record<string, unknown> {
+    const svcCommon = omit(svc, ['ingress', 'path'])
     if (svc.ingress?.type === 'public') {
       const ing = svc.ingress
       const domain = ing.subdomain ? `${ing.subdomain}.${ing.domain}` : ing.domain
       return {
-        kind: 'AplTeamService',
-        metadata: { name: svc.name },
-        spec: {
-          ...svcCommon,
-          type: 'public',
-          ownHost: ing.useDefaultHost,
-          domain: ing.useDefaultHost ? undefined : domain,
-          ...pick(ing, [
-            'hasCert',
-            'certName',
-            'paths',
-            'forwardPath',
-            'tlsPass',
-            'ingressClassName',
-            'headers',
-            'useCname',
-            'cname',
-          ]),
-        },
+        ...svcCommon,
+        ...pick(ing, [
+          'hasCert',
+          'certName',
+          'paths',
+          'forwardPath',
+          'tlsPass',
+          'ingressClassName',
+          'headers',
+          'useCname',
+          'cname',
+        ]),
+        type: 'public',
+        ownHost: ing.useDefaultHost,
+        domain: ing.useDefaultHost ? undefined : domain,
       }
     } else {
       return {
-        kind: 'AplTeamService',
-        metadata: { name: svc.name },
-        spec: { ...svcCommon, type: svc.ingress?.type || 'cluster' },
+        ...svcCommon,
+        type: svc.ingress?.type || 'cluster',
       }
     }
   }
