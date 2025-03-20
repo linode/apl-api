@@ -261,8 +261,10 @@ export default class OtomiStack {
         await this.git.pull()
         //TODO fetch this url from the repo
         if (await this.git.fileExists(clusterSettingsFilePath)) break
+        debug(`path: ${clusterSettingsFilePath}`)
         debug(`Values are not present at ${url}:${branch}`)
       } catch (e) {
+        console.log('ERROR getting VALUES: ', e)
         // Remove password from error message
         const safeCommand = JSON.stringify(e.task?.commands).replace(env.GIT_PASSWORD, '****')
         debug(`${e.message.trim()} for command ${JSON.stringify(safeCommand)}`)

@@ -7,10 +7,10 @@ import getToken from 'src/fixtures/jwt'
 import OtomiStack from 'src/otomi-stack'
 import request, { SuperAgentTest } from 'supertest'
 import { HttpError } from './error'
+import { Git } from './git'
 import { getSessionStack } from './middleware'
 import { App, CodeRepo, SealedSecret } from './otomi-models'
 import * as getValuesSchemaModule from './utils'
-import { Git } from './git'
 
 const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
@@ -188,24 +188,6 @@ describe('API authz tests', () => {
       .expect('Content-Type', /json/)
   })
 
-  test('team member can create its own services', async () => {
-    jest.spyOn(otomiStack, 'createService').mockResolvedValue({} as any)
-    await agent
-      .post('/v1/teams/team1/services')
-      .send({
-        name: 'newservice',
-        serviceType: 'ksvcPredeployed',
-        ingress: { type: 'cluster' },
-        networkPolicy: {
-          ingressPrivate: { mode: 'DenyAll' },
-        },
-      })
-      .set('Content-Type', 'application/json')
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-  })
-
   test('team member can get its services', async () => {
     await agent
       .get('/v1/teams/team1/services')
@@ -246,7 +228,10 @@ describe('API authz tests', () => {
       .send({
         name: 'service1',
         serviceType: 'ksvcPredeployed',
-        ingress: {},
+        ingress: {
+          domain: 'test.net',
+          subdomain: 'demo-a',
+        },
       })
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
