@@ -276,8 +276,8 @@ export default class OtomiStack {
       rawRepo.teamConfig = mapValues(rawRepo.teamConfig, (teamConfig) => ({
         ...omit(teamConfig, 'workloadValues'),
         apps: this.transformApps(teamConfig.apps),
-        policies: this.transformPolicies(teamConfig.settings.name, teamConfig.policies || {}),
-        sealedsecrets: this.transformSecrets(teamConfig.settings.name, teamConfig.sealedsecrets || []),
+        policies: this.transformPolicies(teamConfig.settings.id, teamConfig.policies || {}),
+        sealedsecrets: this.transformSecrets(teamConfig.settings.id, teamConfig.sealedsecrets || []),
         workloads: this.transformWorkloads(teamConfig.workloads || [], teamConfig.workloadValues || []),
       }))
 
