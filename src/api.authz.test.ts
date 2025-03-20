@@ -270,7 +270,7 @@ describe('API authz tests', () => {
   test('team member cannot update workload values from other team', async () => {
     await agent
       .put('/v1/teams/team2/workloads/my-uuid/values')
-      .send(JSON.stringify({ values: { a: 'b' } }))
+      .send({ values: JSON.stringify({ a: 'b' }) })
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
   })
