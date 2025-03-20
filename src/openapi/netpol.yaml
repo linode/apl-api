@@ -18,6 +18,21 @@ Netpol:
   type: object
   x-externalDocsPath: docs/for-devs/console/netpols
   properties:
+    id:
+      type: string
+    teamId:
+      $ref: 'definitions.yaml#/idName'
+    name:
+      title: Name
+      $ref: 'definitions.yaml#/idName'
+    ruleType:
+      $ref: '#/ruleType'
+  required:
+    - name
+
+AplNetpol:
+  type: object
+  properties:
     ruleType:
       $ref: '#/ruleType'
 
@@ -79,7 +94,7 @@ ruleType:
       properties:
         domain:
           title: FQDN or IP address
-          $ref: definitions.yaml#/domain
+          $ref: 'definitions.yaml#/domain'
         ports:
           type: array
           items:
@@ -93,7 +108,7 @@ ruleType:
               protocol:
                 title: Protocol
                 type: string
-                enum: [HTTPS, HTTP, TCP]
+                enum: [ HTTPS, HTTP, TCP ]
                 default: HTTPS
             required:
               - number

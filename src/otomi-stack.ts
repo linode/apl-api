@@ -2217,14 +2217,13 @@ export default class OtomiStack {
 
   async getSealedSecret(teamId: string, name: string): Promise<SealedSecret> {
     const aplSecret = await this.getAplSealedSecret(teamId, name)
-    const secret = getV1Object(aplSecret) as SealedSecret
-    const { decryptedData } = secret
+    const secret = omit(getV1Object(aplSecret), 'decryptedData') as SealedSecret
+    const { decryptedData } = aplSecret.spec
     secret.isDisabled = isEmpty(decryptedData)
     secret.encryptedData = Object.entries(secret.encryptedData).map(([key, value]) => ({
       key,
       value: decryptedData?.[key] || value,
     }))
-    delete secret.decryptedData
     return secret
   }
 

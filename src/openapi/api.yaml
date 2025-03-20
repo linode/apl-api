@@ -2753,7 +2753,7 @@ components:
           type: string
           enum: [ AplTeamBackup ]
         spec:
-          $ref: 'backup.yaml#/Backup'
+          $ref: 'backup.yaml#/AplBackup'
       required:
         - kind
         - spec
@@ -2816,7 +2816,7 @@ components:
           type: string
           enum: [ AplTeamNetworkControl ]
         spec:
-          $ref: 'netpol.yaml#/Netpol'
+          $ref: 'netpol.yaml#/AplNetpol'
       required:
         - kind
         - spec
@@ -2919,7 +2919,7 @@ components:
           type: string
           enum: [ AplTeamSecret ]
         spec:
-          $ref: 'sealedsecret.yaml#/SealedSecret'
+          $ref: 'sealedsecret.yaml#/AplSealedSecret'
       required:
         - kind
         - spec
@@ -2940,19 +2940,7 @@ components:
           type: string
           enum: [ AplTeamService ]
         spec:
-          allOf:
-            - $ref: 'service.yaml#/Service'
-            - oneOf:
-                - $ref: 'service.yaml#/IngressCluster'
-                - allOf:
-                    - $ref: 'service.yaml#/IngressPublic'
-                    - type: object
-                      properties:
-                        ownHost:
-                          description: Use the team domain so that the URL reveals the owner.
-                          title: Use default host
-                          type: boolean
-                          default: true
+          $ref: 'service.yaml#/AplService'
       required:
         - kind
         - spec
@@ -3073,9 +3061,7 @@ components:
     Kubecfg:
       $ref: 'kubecfg.yaml#/Kubecfg'
     Netpol:
-      allOf:
-        - $ref: '#/components/schemas/teamResourceMetadata'
-        - $ref: 'netpol.yaml#/Netpol'
+      $ref: 'netpol.yaml#/Netpol'
     DockerConfig:
       $ref: 'dockerconfig.yaml#/DockerConfig'
     OpenApiValidationError:
@@ -3103,13 +3089,7 @@ components:
     Policies:
       $ref: 'policies.yaml#/Policies'
     SealedSecret:
-      allOf:
-        - $ref: '#/components/schemas/teamResourceMetadata'
-        - $ref: 'sealedsecret.yaml#/SealedSecret'
-        - type: object
-          properties:
-            isDisabled:
-              type: boolean
+      $ref: 'sealedsecret.yaml#/SealedSecret'
     SealedSecretsKeys:
       $ref: 'sealedsecretskeys.yaml#/SealedSecretsKeys'
     K8sSecret:
@@ -3117,47 +3097,7 @@ components:
     SessionUser:
       $ref: 'user.yaml#/SessionUser'
     Service:
-      allOf:
-        - $ref: '#/components/schemas/teamResourceMetadata'
-        - $ref: 'service.yaml#/Service'
-        - type: object
-          properties:
-            name:
-              title: Name
-              $ref: 'definitions.yaml#/idName'
-              example: some-service
-              x-formtype: SelectWidget
-          required:
-            - name
-        - type: object
-          properties:
-            ingress:
-              title: Exposure (ingress)
-              description: Determines loadbalancer related configuration for handling the service ingress.
-              # Note: the order matters first schema must be nullable empty object
-              oneOf:
-                - $ref: 'service.yaml#/IngressCluster'
-                - allOf:
-                    - $ref: 'service.yaml#/IngressPublic'
-                    - type: object
-                      properties:
-                        useDefaultHost:
-                          description: Use the team domain so that the URL reveals the owner.
-                          title: Use default host
-                          type: boolean
-                          default: true
-                        certSelect:
-                          description: Select a TLS SealedSecret.
-                          title: Select team secret
-                          type: boolean
-                          default: true
-                        subdomain:
-                          $ref: 'definitions.yaml#/domain'
-                          description: A host that is used to set DNS 'A' records.
-                          title: Host
-                          type: string
-          required:
-            - ingress
+      $ref: 'service.yaml#/Service'
     Session:
       $ref: 'session.yaml#/Session'
     ObjWizard:
