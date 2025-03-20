@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.7.4](https://github.com/redkubes/otomi-api/compare/v3.7.3...v3.7.4) (2025-03-20)
+
+
+### Bug Fixes
+
+* create helm chart with branches or tags ([#667](https://github.com/redkubes/otomi-api/issues/667)) ([1a55142](https://github.com/redkubes/otomi-api/commit/1a551420b64c1c28975e9b591a9b561e22a6a856))
+
 ### [3.7.3](https://github.com/redkubes/otomi-api/compare/v3.7.2...v3.7.3) (2025-03-19)
 
 
