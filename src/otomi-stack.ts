@@ -2109,11 +2109,14 @@ export default class OtomiStack {
       throw err
     }
     try {
-      const encryptedDataPromises = data.spec.encryptedData.map((obj) => {
+      const encryptedDataPromises = data.spec.decryptedData?.map((obj) => {
         const encryptedItem = encryptSecretItem(certificate, data.metadata.name, namespace, obj.value, 'namespace-wide')
         return { [obj.key]: encryptedItem }
       })
-      const encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises))) as EncryptedDataRecord[]
+      const encryptedData = Object.assign(
+        {},
+        ...(await Promise.all(encryptedDataPromises || [])),
+      ) as EncryptedDataRecord[]
       const sealedSecret = this.repoService.getTeamConfigService(teamId).createSealedSecret({
         kind: 'AplTeamSecret',
         metadata: data.metadata,
