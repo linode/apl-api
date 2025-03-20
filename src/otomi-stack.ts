@@ -60,7 +60,7 @@ import {
   Workload,
   WorkloadValues,
 } from 'src/otomi-models'
-import { arrayToObject, getServiceUrl, getValuesSchema, objectToYaml, removeBlankAttributes } from 'src/utils'
+import { arrayToObject, getServiceUrl, getValuesSchema, removeBlankAttributes } from 'src/utils'
 import {
   cleanEnv,
   CUSTOM_ROOT_CA,
@@ -79,7 +79,7 @@ import {
   VERSIONS,
 } from 'src/validators'
 import { v4 as uuidv4 } from 'uuid'
-import { parse, parse as parseYaml } from 'yaml'
+import { parse as parseYaml } from 'yaml'
 import {
   apply,
   checkPodExists,
@@ -702,19 +702,24 @@ export default class OtomiStack {
       metadata: data.metadata,
       spec: omit(data.spec, 'values'),
     }
-    const workloadValues = {
-      kind: 'AplWorkloadValues',
-      metadata: data.metadata,
-      spec: { values: data.spec.values },
+    const configKey = this.getConfigKey('AplTeamWorkload')
+    const repo = this.createTeamConfigInRepo(teamId, configKey, [workload])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkload')!
+    await this.git.saveConfig(repo, fileMap)
+  }
+
+  async saveTeamWorkloadValues(data: AplWorkloadResponse) {
+    const { metadata } = data
+    const teamId = metadata.labels['apl.io/teamId']!
+    debug(`Saving AplTeamWorkloadValues ${metadata.name} for team ${teamId}`)
+    const values = {
+      name: metadata.name,
+      values: data.spec.values,
     }
-    const workloadKey = this.getConfigKey('AplTeamWorkload')
-    const repoWorkload = this.createTeamConfigInRepo(teamId, workloadKey, workload)
-    const fileMapWorkload = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkload')!
-    const valuesKey = this.getConfigKey('AplTeamWorkloadValues')
-    const repoValues = this.createTeamConfigInRepo(teamId, valuesKey, workloadValues)
-    const fileMapValues = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkloadValues')!
-    await this.git.saveConfig(repoWorkload, fileMapWorkload)
-    await this.git.saveConfig(repoValues, fileMapValues)
+    const configKey = this.getConfigKey('AplTeamWorkloadValues')
+    const repo = this.createTeamConfigInRepo(teamId, configKey, [values])
+    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkloadValues')!
+    await this.git.saveConfig(repo, fileMap)
   }
 
   async saveTeamPolicies(teamId: string, data: AplPolicyResponse[]): Promise<void> {
@@ -1652,6 +1657,7 @@ export default class OtomiStack {
     try {
       const workload = this.repoService.getTeamConfigService(teamId).createWorkload(data)
       await this.saveTeamWorkload(workload)
+      await this.saveTeamWorkloadValues(workload)
       await this.doTeamDeployment(
         teamId,
         (teamService) => {
@@ -1691,6 +1697,9 @@ export default class OtomiStack {
       ? this.repoService.getTeamConfigService(teamId).patchWorkload(name, data)
       : this.repoService.getTeamConfigService(teamId).updateWorkload(name, data as AplWorkloadRequest)
     await this.saveTeamWorkload(workload)
+    if (data.spec && 'values' in data.spec) {
+      await this.saveTeamWorkloadValues(workload)
+    }
     await this.doTeamDeployment(
       teamId,
       (teamService) => {
@@ -1715,10 +1724,10 @@ export default class OtomiStack {
   }
 
   async editWorkloadValues(teamId: string, name: string, data: WorkloadValues): Promise<WorkloadValues> {
-    const workload = this.getAplWorkload(teamId, name)
-    workload.spec.values = objectToYaml(data.values || {})
-    this.repoService.getTeamConfigService(teamId).updateWorkload(name, workload)
-    await this.saveTeamWorkload(workload)
+    const workload = this.repoService
+      .getTeamConfigService(teamId)
+      .patchWorkload(name, { spec: { values: data.values } })
+    await this.saveTeamWorkloadValues(workload)
     await this.doTeamDeployment(
       teamId,
       (teamService) => {
@@ -1727,14 +1736,14 @@ export default class OtomiStack {
       false,
     )
     return merge(pick(getV1Object(workload), ['id', 'teamId', 'name']), {
-      values: data.values || {},
+      values: data.values || '',
     }) as WorkloadValues
   }
 
   getWorkloadValues(teamId: string, name: string): WorkloadValues {
     const workload = this.getAplWorkload(teamId, name)
     return merge(pick(getV1Object(workload), ['id', 'teamId', 'name']), {
-      values: parse(workload.spec.values) || {},
+      values: workload.spec.values || '',
     }) as WorkloadValues
   }
 

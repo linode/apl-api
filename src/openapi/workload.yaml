@@ -26,7 +26,7 @@ Workload:
     chartProvider:
       type: string
       title: Chart provider
-      enum: ['helm', 'git']
+      enum: [ 'helm', 'git' ]
       default: git
     path:
       description: A relative directory path within the Git repository. Absolute paths cause errors. (only valid for applications sourced from Git).
@@ -145,12 +145,12 @@ Workload:
 
 WorkloadValues:
   x-acl:
-    platformAdmin: [read-any, update-any]
-    teamAdmin: [read, update]
-    teamMember: [read, update]
+    platformAdmin: [ read-any, update-any ]
+    teamAdmin: [ read, update ]
+    teamMember: [ read, update ]
   type: object
   properties:
     values:
-      type: object
+      type: string
   required:
     - values

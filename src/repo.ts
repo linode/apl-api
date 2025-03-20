@@ -2,7 +2,7 @@ import { rmSync } from 'fs'
 import { rm } from 'fs/promises'
 import { globSync } from 'glob'
 import jsonpath from 'jsonpath'
-import { cloneDeep, get, merge, omit, set } from 'lodash'
+import { cloneDeep, get, merge, set } from 'lodash'
 import path from 'path'
 import { getDirNames, loadYaml } from './utils'
 import Debug from 'debug'
@@ -333,7 +333,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'team',
       resourceDir: 'workloadValues',
       loadToSpec: false,
-      v2: true,
+      v2: false,
     },
     {
       kind: 'AplTeamService',
@@ -439,18 +439,18 @@ export function getFileMap(kind: AplKind, envDir: string): FileMap {
 
 export function renderManifest(fileMap: FileMap, jsonPath: jsonpath.PathComponent[], data: Record<string, any>) {
   //TODO remove this custom workaround for workloadValues
-  const manifest =
-    fileMap.kind === 'AplTeamWorkloadValues'
-      ? omit(data, ['id', 'name', 'teamId'])
-      : {
-          kind: fileMap.kind,
-          metadata: {
-            name: getResourceName(fileMap, jsonPath, data),
-            labels: {},
-          },
-          spec: data,
-        }
-  if (fileMap.resourceGroup === 'team' && fileMap.kind !== 'AplTeamWorkloadValues') {
+  if (fileMap.kind === 'AplTeamWorkloadValues') {
+    return { values: data.values }
+  }
+  const manifest = {
+    kind: fileMap.kind,
+    metadata: {
+      name: getResourceName(fileMap, jsonPath, data),
+      labels: {},
+    },
+    spec: data,
+  }
+  if (fileMap.resourceGroup === 'team') {
     manifest.metadata.labels['apl.io/teamId'] = getTeamNameFromJsonPath(jsonPath)
   }
 
