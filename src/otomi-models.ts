@@ -20,6 +20,11 @@ export type AplSecretResponse = components['schemas']['AplSecretResponse']
 export type SealedSecretsKeys = components['schemas']['SealedSecretsKeys']
 export type K8sSecret = components['schemas']['K8sSecret']
 export type Service = components['schemas']['Service']
+export type ServiceSpec = components['schemas']['AplService']['spec'] & {
+  id?: string
+  teamId?: string
+  name: string
+}
 export type AplServiceRequest = components['schemas']['AplServiceRequest']
 export type AplServiceResponse = components['schemas']['AplServiceResponse']
 export type Session = components['schemas']['Session']

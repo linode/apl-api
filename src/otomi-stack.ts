@@ -49,6 +49,7 @@ import {
   Repo,
   SealedSecret,
   Service,
+  ServiceSpec,
   Session,
   SessionUser,
   Settings,
@@ -2382,12 +2383,14 @@ export default class OtomiStack {
     }
   }
 
-  convertDbServiceToValues(svc: Service): Record<string, unknown> {
-    const svcCommon = omit(svc, ['ingress', 'path'])
+  convertDbServiceToValues(svc: Service): ServiceSpec {
+    const { name } = svc
+    const svcCommon = omit(svc, ['name', 'ingress', 'path'])
     if (svc.ingress?.type === 'public') {
       const ing = svc.ingress
       const domain = ing.subdomain ? `${ing.subdomain}.${ing.domain}` : ing.domain
       return {
+        name,
         ...svcCommon,
         ...pick(ing, [
           'hasCert',
@@ -2406,6 +2409,7 @@ export default class OtomiStack {
       }
     } else {
       return {
+        name,
         ...svcCommon,
         type: svc.ingress?.type || 'cluster',
       }

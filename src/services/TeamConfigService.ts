@@ -26,12 +26,13 @@ import {
   App,
   DeepPartial,
   ResourceTeamMetadata,
+  ServiceSpec,
   Team,
   TeamConfig,
   V1ApiObject,
 } from '../otomi-models'
 
-export function getAplObject(kind: AplResourceKind, spec: V1ApiObject | Record<string, unknown>): AplRequestObject {
+export function getAplObject(kind: AplResourceKind, spec: V1ApiObject | ServiceSpec): AplRequestObject {
   return {
     kind,
     metadata: {
@@ -50,9 +51,7 @@ export function getV1Object(aplObject: AplResponseObject): V1ApiObject {
   }
 }
 
-export function getV1MergeObject(
-  updates: DeepPartial<V1ApiObject> | Record<string, unknown>,
-): DeepPartial<AplRequestObject> {
+export function getV1MergeObject(updates: DeepPartial<V1ApiObject | ServiceSpec>): DeepPartial<AplRequestObject> {
   return {
     metadata: updates.name
       ? {
