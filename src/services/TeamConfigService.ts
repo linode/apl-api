@@ -80,7 +80,7 @@ export class TeamConfigService {
       name,
       labels: {
         'apl.io/id': id ?? uuidv4(),
-        'apl.io/teamId': this.teamConfig.settings.name,
+        'apl.io/teamId': this.teamConfig.settings.id || this.teamConfig.settings.name,
       },
     }
   }
