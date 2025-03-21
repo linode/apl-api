@@ -145,6 +145,7 @@ export class RepoService {
     const newTeam = this.getDefaultTeamConfig()
     newTeam.settings = team
     newTeam.settings.id = teamName
+    newTeam.settings.name = teamName
     this.repo.teamConfig[teamName] = newTeam
     return this.repo.teamConfig[teamName]
   }

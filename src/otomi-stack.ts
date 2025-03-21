@@ -274,11 +274,11 @@ export default class OtomiStack {
       const rawRepo = await loadValues(this.getRepoPath())
 
       rawRepo.apps = this.transformApps(rawRepo.apps)
-      rawRepo.teamConfig = mapValues(rawRepo.teamConfig, (teamConfig) => ({
+      rawRepo.teamConfig = mapValues(rawRepo.teamConfig, (teamConfig, teamName) => ({
         ...omit(teamConfig, 'workloadValues'),
         apps: this.transformApps(teamConfig.apps),
-        policies: this.transformPolicies(teamConfig.settings.id, teamConfig.policies || {}),
-        sealedsecrets: this.transformSecrets(teamConfig.settings.id, teamConfig.sealedsecrets || []),
+        policies: this.transformPolicies(teamName, teamConfig.policies || {}),
+        sealedsecrets: this.transformSecrets(teamName, teamConfig.sealedsecrets || []),
         workloads: this.transformWorkloads(teamConfig.workloads || [], teamConfig.workloadValues || []),
       }))
 
