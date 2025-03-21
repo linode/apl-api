@@ -80,7 +80,7 @@ import {
   VERSIONS,
 } from 'src/validators'
 import { v4 as uuidv4 } from 'uuid'
-import { parse as parseYaml } from 'yaml'
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import {
   apply,
   checkPodExists,
@@ -1730,7 +1730,7 @@ export default class OtomiStack {
   async editWorkloadValues(teamId: string, name: string, data: WorkloadValues): Promise<WorkloadValues> {
     const workload = this.repoService
       .getTeamConfigService(teamId)
-      .patchWorkload(name, { spec: { values: data.values } })
+      .patchWorkload(name, { spec: { values: stringifyYaml(data.values) } })
     await this.saveTeamWorkloadValues(workload)
     await this.doTeamDeployment(
       teamId,
@@ -1740,14 +1740,14 @@ export default class OtomiStack {
       false,
     )
     return merge(pick(getV1Object(workload), ['id', 'teamId', 'name']), {
-      values: data.values || '',
+      values: data.values || undefined,
     }) as WorkloadValues
   }
 
   getWorkloadValues(teamId: string, name: string): WorkloadValues {
     const workload = this.getAplWorkload(teamId, name)
     return merge(pick(getV1Object(workload), ['id', 'teamId', 'name']), {
-      values: workload.spec.values || '',
+      values: workload.spec.values ? parseYaml(workload.spec.values) : undefined,
     }) as WorkloadValues
   }
 
