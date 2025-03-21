@@ -201,7 +201,7 @@ IngressPublic:
   description: Will only accept traffic coming from an external loadbalancer.
   title: External
 
-AplService:
+AplServiceSpec:
   type: object
   allOf:
     - type: object

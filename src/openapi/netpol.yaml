@@ -30,7 +30,7 @@ Netpol:
   required:
     - name
 
-AplNetpol:
+AplNetpolSpec:
   type: object
   properties:
     ruleType:

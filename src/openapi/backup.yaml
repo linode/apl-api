@@ -44,7 +44,7 @@ Backup:
     - schedule
     - ttl
 
-AplBackup:
+AplBackupSpec:
   type: object
   properties:
     schedule:

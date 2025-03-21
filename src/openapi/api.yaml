@@ -2753,7 +2753,7 @@ components:
           type: string
           enum: [ AplTeamBackup ]
         spec:
-          $ref: 'backup.yaml#/AplBackup'
+          $ref: 'backup.yaml#/AplBackupSpec'
       required:
         - kind
         - spec
@@ -2816,7 +2816,7 @@ components:
           type: string
           enum: [ AplTeamNetworkControl ]
         spec:
-          $ref: 'netpol.yaml#/AplNetpol'
+          $ref: 'netpol.yaml#/AplNetpolSpec'
       required:
         - kind
         - spec
@@ -2919,7 +2919,7 @@ components:
           type: string
           enum: [ AplTeamSecret ]
         spec:
-          $ref: 'sealedsecret.yaml#/AplSealedSecret'
+          $ref: 'sealedsecret.yaml#/AplSealedSecretSpec'
       required:
         - kind
         - spec
@@ -2940,7 +2940,7 @@ components:
           type: string
           enum: [ AplTeamService ]
         spec:
-          $ref: 'service.yaml#/AplService'
+          $ref: 'service.yaml#/AplServiceSpec'
       required:
         - kind
         - spec
@@ -2961,7 +2961,7 @@ components:
           type: string
           enum: [ AplTeamSettings ]
         spec:
-          $ref: 'team.yaml#/Team'
+          $ref: 'team.yaml#/AplTeamSpec'
       required:
         - kind
         - spec
@@ -3111,9 +3111,7 @@ components:
     InternalRepoUrls:
       $ref: 'internalRepoUrls.yaml#/InternalRepoUrls'
     Team:
-      allOf:
-        - $ref: '#/components/schemas/resourceMetadata'
-        - $ref: 'team.yaml#/Team'
+      $ref: 'team.yaml#/Team'
     TeamAuthz:
       $ref: 'user.yaml#/TeamAuthz'
     TeamSelfService:
