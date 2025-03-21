@@ -2100,7 +2100,11 @@ export default class OtomiStack {
   }
 
   async createSealedSecret(teamId: string, data: SealedSecret): Promise<SealedSecret> {
-    const newSecret = await this.createAplSealedSecret(teamId, getAplObject('AplTeamSecret', data) as AplSecretRequest)
+    const spec = {
+      ...omit(data, 'encryptedData'),
+      decryptedData: data.encryptedData,
+    }
+    const newSecret = await this.createAplSealedSecret(teamId, getAplObject('AplTeamSecret', spec) as AplSecretRequest)
     return getV1Object(newSecret) as SealedSecret
   }
 
