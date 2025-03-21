@@ -270,7 +270,7 @@ describe('API authz tests', () => {
   test('team member cannot update workload values from other team', async () => {
     await agent
       .put('/v1/teams/team2/workloads/my-uuid/values')
-      .send({ values: JSON.stringify({ a: 'b' }) })
+      .send({ values: { a: 'b' } })
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
   })
@@ -278,7 +278,7 @@ describe('API authz tests', () => {
   test('team member can update workload values with payload lower than limit', async () => {
     jest.spyOn(otomiStack, 'editWorkloadValues').mockResolvedValue({} as any)
 
-    const largePayload = JSON.stringify({ data: 'A'.repeat(400000) }) // 400KB
+    const largePayload = { data: 'A'.repeat(400000) } // 400KB
     await agent
       .put('/v1/teams/team1/workloads/my-uuid/values')
       .send({ values: largePayload })
