@@ -504,7 +504,7 @@ describe('TeamConfigService', () => {
             name: 'TestBuild',
             labels: {
               'apl.io/id': expect.any(String),
-              'apl.io/teamId': 'team1',
+              'apl.io/teamId': 'team-id',
             },
           },
           spec: {},
