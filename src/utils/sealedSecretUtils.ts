@@ -98,7 +98,7 @@ export function sealedSecretManifest(data: AplSecretResponse): SealedSecretManif
       namespace,
     },
     spec: {
-      encryptedData: data.spec.encryptedData,
+      encryptedData: data.spec.encryptedData || [],
       template: {
         type: data.spec.type || 'kubernetes.io/opaque',
         immutable: data.spec.immutable || false,
