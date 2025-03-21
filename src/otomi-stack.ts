@@ -740,8 +740,8 @@ export default class OtomiStack {
       },
       spec: teamPolicies,
     }
-    const configKey = this.getConfigKey('AplTeamPolicy')
-    const repo = this.createTeamConfigInRepo(teamId, configKey, [manifest])
+    const configKey = 'policies'
+    const repo = this.createTeamConfigInRepo(teamId, configKey, manifest)
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamPolicy')!
     await this.git.saveConfig(repo, fileMap)
   }

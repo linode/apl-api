@@ -520,7 +520,7 @@ export class TeamConfigService {
       this.teamConfig.policies.push(newPolicy)
       return newPolicy
     } else {
-      Object.assign(policy.spec, updates)
+      Object.assign(policy.spec, updates.spec)
       return policy
     }
   }
