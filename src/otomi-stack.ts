@@ -2381,7 +2381,7 @@ export default class OtomiStack {
       return removeBlankAttributes({
         ...serviceMeta,
         ...inService,
-        ingress: { type: 'public' },
+        ingress: { type: 'cluster' },
       })
     }
   }
