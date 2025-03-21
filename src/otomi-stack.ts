@@ -1747,7 +1747,7 @@ export default class OtomiStack {
   getWorkloadValues(teamId: string, name: string): WorkloadValues {
     const workload = this.getAplWorkload(teamId, name)
     return merge(pick(getV1Object(workload), ['id', 'teamId', 'name']), {
-      values: workload.spec.values ? parseYaml(workload.spec.values) : undefined,
+      values: workload.spec.values || undefined,
     }) as WorkloadValues
   }
 

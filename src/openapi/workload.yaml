@@ -165,7 +165,9 @@ WorkloadValues:
     name:
       $ref: 'definitions.yaml#/idName'
     values:
-      type: object
+      oneOf:
+        - type: object
+        - type: string
   required:
     - values
 
