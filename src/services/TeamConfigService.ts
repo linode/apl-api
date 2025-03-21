@@ -515,7 +515,7 @@ export class TeamConfigService {
           kind: 'AplTeamPolicy',
           spec: updates.spec,
         },
-        `${this.teamConfig.settings.name}-${name}`,
+        `${this.teamConfig.settings.id || this.teamConfig.settings.name}-${name}`,
       ) as AplPolicyResponse
       this.teamConfig.policies.push(newPolicy)
       return newPolicy
@@ -538,7 +538,7 @@ export class TeamConfigService {
             severity: updates.spec?.severity || 'medium',
           },
         },
-        `${this.teamConfig.settings.name}-${name}`,
+        `${this.teamConfig.settings.id || this.teamConfig.settings.name}-${name}`,
       ) as AplPolicyResponse
       this.teamConfig.policies.push(newPolicy)
       return newPolicy
