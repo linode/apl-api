@@ -1463,7 +1463,10 @@ export default class OtomiStack {
   }
 
   async editPolicy(teamId: string, policyId: string, data: Policy): Promise<Policy> {
-    const mergeObj = getV1MergeObject(data) as DeepPartial<AplPolicyRequest>
+    const mergeObj = {
+      metadata: { name: policyId },
+      spec: data,
+    } as DeepPartial<AplPolicyRequest>
     const mergedPolicy = await this.editAplPolicy(teamId, policyId, mergeObj)
     return mergedPolicy.spec
   }

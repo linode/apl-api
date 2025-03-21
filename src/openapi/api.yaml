@@ -2774,7 +2774,7 @@ components:
           type: string
           enum: [ AplTeamBuild ]
         spec:
-          $ref: 'build.yaml#/Build'
+          $ref: 'build.yaml#/AplBuildSpec'
       required:
         - kind
         - spec
@@ -2795,7 +2795,7 @@ components:
           type: string
           enum: [ AplTeamCodeRepo ]
         spec:
-          $ref: 'codeRepo.yaml#/CodeRepo'
+          $ref: 'codeRepo.yaml#/AplCodeRepoSpec'
       required:
         - kind
         - spec
@@ -2858,7 +2858,7 @@ components:
           type: string
           enum: [ AplTeamProject ]
         spec:
-          $ref: 'project.yaml#/Project'
+          $ref: 'project.yaml#/AplProjectSpec'
       required:
         - kind
         - spec
@@ -3003,14 +3003,7 @@ components:
           type: string
           enum: [ AplTeamWorkload ]
         spec:
-          allOf:
-            - $ref: 'workload.yaml#/Workload'
-            - type: object
-              properties:
-                values:
-                  type: string
-              required:
-                - values
+          $ref: 'workload.yaml#/AplWorkloadSpec'
       required:
         - kind
         - spec
@@ -3071,19 +3064,7 @@ components:
     OtomiCliValues:
       $ref: 'otomi/cli.yaml#/OtomiCliValues'
     Project:
-      allOf:
-        - $ref: '#/components/schemas/teamResourceMetadata'
-        - $ref: 'project.yaml#/Project'
-        - type: object
-          properties:
-            build:
-              $ref: '#/components/schemas/Build'
-            workload:
-              $ref: '#/components/schemas/Workload'
-            workloadValues:
-              $ref: '#/components/schemas/WorkloadValues'
-            service:
-              $ref: '#/components/schemas/Service'
+      $ref: 'project.yaml#/Project'
     Policy:
       $ref: 'policies.yaml#/Policy'
     Policies:
@@ -3119,17 +3100,6 @@ components:
     User:
       $ref: 'user.yaml#/User'
     Workload:
-      allOf:
-        - $ref: '#/components/schemas/teamResourceMetadata'
-        - $ref: 'workload.yaml#/Workload'
+      $ref: 'workload.yaml#/Workload'
     WorkloadValues:
-      allOf:
-        - type: object
-          properties:
-            id:
-              $ref: 'definitions.yaml#/idName'
-            teamId:
-              $ref: 'definitions.yaml#/idName'
-            name:
-              $ref: 'definitions.yaml#/idName'
-        - $ref: 'workload.yaml#/WorkloadValues'
+      $ref: 'workload.yaml#/WorkloadValues'

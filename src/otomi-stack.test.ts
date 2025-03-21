@@ -409,7 +409,7 @@ describe('Code repositories tests', () => {
       metadata: {
         name: 'code-1',
       },
-      spec: { gitService: 'gitea', repositoryUrl: 'https://gitea.test.com' },
+      spec: { name: 'code-1', gitService: 'gitea', repositoryUrl: 'https://gitea.test.com' },
     })
     expect(saveTeamCodeReposSpy).toHaveBeenCalledWith({
       kind: 'AplTeamCodeRepo',
@@ -492,7 +492,7 @@ describe('Code repositories tests', () => {
     })
     expect(updateItemSpy).toHaveBeenCalledWith('1', {
       metadata: { name: 'code-1-updated' },
-      spec: { gitService: 'gitea', repositoryUrl: 'https://gitea.test.com' },
+      spec: { name: 'code-1-updated', gitService: 'gitea', repositoryUrl: 'https://gitea.test.com' },
     })
     expect(saveTeamCodeReposSpy).toHaveBeenCalledWith({
       kind: 'AplTeamCodeRepo',
@@ -546,6 +546,7 @@ describe('Code repositories tests', () => {
         },
       },
       spec: {
+        name: 'code-1',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
       },
@@ -572,6 +573,7 @@ describe('Code repositories tests', () => {
       kind: 'AplTeamCodeRepo',
       metadata: { name: 'code-1' },
       spec: {
+        name: 'code-1',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
       },
@@ -586,6 +588,7 @@ describe('Code repositories tests', () => {
         },
       },
       spec: {
+        name: 'code-1',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
       },
@@ -638,6 +641,7 @@ describe('Code repositories tests', () => {
         },
       },
       spec: {
+        name: 'code-1-updated',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
       },
@@ -664,6 +668,7 @@ describe('Code repositories tests', () => {
     expect(updateItemSpy).toHaveBeenCalledWith('1', {
       metadata: { name: 'code-1-updated' },
       spec: {
+        name: 'code-1-updated',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
       },
@@ -672,6 +677,7 @@ describe('Code repositories tests', () => {
       kind: 'AplTeamCodeRepo',
       metadata: { name: 'code-1-updated', labels: { 'apl.io/id': '1', 'apl.io/teamId': 'demo' } },
       spec: {
+        name: 'code-1-updated',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
       },
@@ -749,6 +755,7 @@ describe('Code repositories tests', () => {
       kind: 'AplTeamCodeRepo',
       metadata: { name: 'code-1' },
       spec: {
+        name: 'code-1',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
         private: true,
@@ -784,6 +791,7 @@ describe('Code repositories tests', () => {
         },
       },
       spec: {
+        name: 'code-1-updated',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
         private: true,
@@ -818,6 +826,7 @@ describe('Code repositories tests', () => {
         name: 'code-1-updated',
       },
       spec: {
+        name: 'code-1-updated',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
         private: true,
@@ -834,6 +843,7 @@ describe('Code repositories tests', () => {
         },
       },
       spec: {
+        name: 'code-1-updated',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
         private: true,

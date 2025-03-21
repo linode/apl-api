@@ -18,6 +18,49 @@ Build:
   type: object
   x-externalDocsPath: docs/for-devs/console/builds
   properties:
+    id:
+      type: string
+    teamId:
+      $ref: 'definitions.yaml#/idName'
+    name:
+      title: Name
+      $ref: 'definitions.yaml#/idName'
+      description: Results in image name harbor.<your-domain>/<team-name>/name.
+    tag:
+      $ref: 'definitions.yaml#/imageTag'
+      default: latest
+      description: Image tag
+    mode:
+      $ref: '#/buildMode'
+    externalRepo:
+      type: boolean
+      description: Select when using an external private Git repository.
+      default: false
+    secretName:
+      description: The name of the secret with the credentials of the external private Git repository.
+      $ref: 'definitions.yaml#/idName'
+    trigger:
+      type: boolean
+      default: false
+      description: 'Trigger the build based on a Gitea webhook. Use this URL for the webhook: http://el-gitea-webhook-<build-name>.team-<team-name>.svc.cluster.local:8080.'
+    scanSource:
+      type: boolean
+      default: true
+      description: Select to scan source code.
+  required:
+    - name
+
+AplBuildSpec:
+  type: object
+  properties:
+    id:
+      type: string
+    teamId:
+      $ref: 'definitions.yaml#/idName'
+    name:
+      title: Name
+      $ref: 'definitions.yaml#/idName'
+      description: Results in image name harbor.<your-domain>/<team-name>/name.
     tag:
       $ref: 'definitions.yaml#/imageTag'
       default: latest

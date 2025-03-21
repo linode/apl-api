@@ -16,6 +16,41 @@ CodeRepo:
       - update
       - delete
   properties:
+    id:
+      type: string
+    teamId:
+      $ref: 'definitions.yaml#/idName'
+    name:
+      $ref: 'definitions.yaml#/idName'
+    gitService:
+      type: string
+      default: gitea
+      enum:
+        - gitea
+        - github
+        - gitlab
+    repositoryUrl:
+      $ref: 'definitions.yaml#/repoUrl'
+    private:
+      type: boolean
+      default: false
+    secret:
+      type: string
+  required:
+    - name
+    - gitService
+    - repositoryUrl
+  type: object
+
+AplCodeRepoSpec:
+  type: object
+  properties:
+    id:
+      type: string
+    teamId:
+      $ref: 'definitions.yaml#/idName'
+    name:
+      $ref: 'definitions.yaml#/idName'
     gitService:
       type: string
       default: gitea
@@ -33,4 +68,3 @@ CodeRepo:
   required:
     - gitService
     - repositoryUrl
-  type: object

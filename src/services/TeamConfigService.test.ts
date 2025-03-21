@@ -308,7 +308,7 @@ describe('TeamConfigService', () => {
             'apl.io/teamId': 'team1',
           },
         },
-        spec: {},
+        spec: { name: 'TestProject' },
         status: {},
       })
       expect(service.getProject(created.metadata.name)).toEqual(created)

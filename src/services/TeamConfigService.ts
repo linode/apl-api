@@ -38,7 +38,7 @@ export function getAplObject(kind: AplResourceKind, spec: V1ApiObject | ServiceS
     metadata: {
       name: spec.name,
     },
-    spec: omit(spec, ['id', 'teamId', 'name']),
+    spec,
   } as AplRequestObject
 }
 
@@ -58,7 +58,7 @@ export function getV1MergeObject(updates: DeepPartial<V1ApiObject | ServiceSpec>
           name: updates.name,
         }
       : undefined,
-    spec: omit(updates, ['id', 'teamId', 'name']),
+    spec: omit(updates, ['id', 'teamId']),
   }
 }
 
@@ -376,7 +376,7 @@ export class TeamConfigService {
     const newProject = this.createAplObject(name, {
       kind: project.kind,
       metadata: project.metadata,
-      spec: {},
+      spec: { name },
     }) as AplProjectResponse
     this.teamConfig.projects.push(newProject)
     return newProject
