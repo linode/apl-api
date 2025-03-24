@@ -2725,27 +2725,6 @@ components:
           $ref: 'definitions.yaml#/idName'
       required:
         - name
-    AplApp:
-      type: object
-      properties:
-        kind:
-          type: string
-          enum: [ AplCoreApp ]
-        spec:
-          $ref: 'app.yaml#/App'
-      required:
-        - kind
-        - spec
-    AplAppRequest:
-      allOf:
-        - $ref: '#/components/schemas/AplApp'
-        - $ref: '#/components/schemas/aplMetadataRequest'
-    AplAppResponse:
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/AplApp'
-        - $ref: '#/components/schemas/aplMetadataResponse'
-        - $ref: '#/components/schemas/aplStatusResponse'
     AplBackup:
       type: object
       properties:
@@ -2975,27 +2954,6 @@ components:
         - $ref: '#/components/schemas/AplTeamSettings'
         - $ref: '#/components/schemas/aplMetadataResponse'
         - $ref: '#/components/schemas/aplStatusResponse'
-    AplUser:
-      type: object
-      properties:
-        kind:
-          type: string
-          enum: [ AplUser ]
-        spec:
-          $ref: 'user.yaml#/User'
-      required:
-        - kind
-        - spec
-    AplUserRequest:
-      allOf:
-        - $ref: '#/components/schemas/AplUser'
-        - $ref: '#/components/schemas/aplMetadataRequest'
-    AplUserResponse:
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/AplUser'
-        - $ref: '#/components/schemas/aplMetadataResponse'
-        - $ref: '#/components/schemas/aplStatusResponse'
     AplWorkload:
       type: object
       properties:
@@ -3019,36 +2977,19 @@ components:
         - $ref: '#/components/schemas/aplStatusResponse'
 
     App:
-      allOf:
-        - type: object
-          properties:
-            id:
-              type: string
-              x-acl:
-                platformAdmin: [ read-any ]
-                teamAdmin: [ read-any ]
-                teamMember: [ read-any ]
-          required:
-            - id
-        - $ref: 'app.yaml#/App'
+      $ref: 'app.yaml#/App'
     AppList:
       $ref: 'app.yaml#/AppList'
     Backup:
-      allOf:
-        - $ref: '#/components/schemas/teamResourceMetadata'
-        - $ref: 'backup.yaml#/Backup'
+      $ref: 'backup.yaml#/Backup'
     Build:
-      allOf:
-        - $ref: '#/components/schemas/teamResourceMetadata'
-        - $ref: 'build.yaml#/Build'
+      $ref: 'build.yaml#/Build'
     Cloudtty:
       $ref: 'cloudtty.yaml#/Cloudtty'
     Cluster:
       $ref: 'cluster.yaml#/Cluster'
     CodeRepo:
-      allOf:
-        - $ref: '#/components/schemas/teamResourceMetadata'
-        - $ref: 'codeRepo.yaml#/CodeRepo'
+      $ref: 'codeRepo.yaml#/CodeRepo'
     K8sService:
       $ref: 'k8s.yaml#/K8sService'
     Kubecfg:
