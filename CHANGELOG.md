@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.7.5](https://github.com/redkubes/otomi-api/compare/v3.7.4...v3.7.5) (2025-03-24)
+
+
+### Bug Fixes
+
+* don't create a session for createWorkloadCatalog ([#669](https://github.com/redkubes/otomi-api/issues/669)) ([bcd3e8a](https://github.com/redkubes/otomi-api/commit/bcd3e8ab6715a9dc0efd0874557202a26520606b))
+
 ### [3.7.4](https://github.com/redkubes/otomi-api/compare/v3.7.3...v3.7.4) (2025-03-20)
 
 
