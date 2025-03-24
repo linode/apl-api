@@ -5,43 +5,12 @@ import jsonpath from 'jsonpath'
 import { cloneDeep, get, merge, set } from 'lodash'
 import path from 'path'
 import { getDirNames, loadYaml } from './utils'
-import Debug from 'debug'
-
-const debug = Debug('otomi:repo')
+import { AplKind } from './otomi-models'
 
 export async function getTeamNames(envDir: string): Promise<Array<string>> {
   const teamsDir = path.join(envDir, 'env', 'teams')
   return await getDirNames(teamsDir, { skipHidden: true })
 }
-
-export type AplKind =
-  | 'AplApp'
-  | 'AplAlertSet'
-  | 'AplCluster'
-  | 'AplDatabase'
-  | 'AplDns'
-  | 'AplIngress'
-  | 'AplObjectStorage'
-  | 'AplKms'
-  | 'AplIdentityProvider'
-  | 'AplCapabilitySet'
-  | 'AplSmtp'
-  | 'AplBackupCollection'
-  | 'AplUser'
-  | 'AplPlatformSettingSet'
-  | 'AplTeamCodeRepo'
-  | 'AplTeamBuild'
-  | 'AplTeamPolicy'
-  | 'AplTeamSettingSet'
-  | 'AplTeamNetworkControl'
-  | 'AplTeamProject'
-  | 'AplTeamBackup'
-  | 'AplTeamSecret'
-  | 'AplTeamService'
-  | 'AplTeamWorkload'
-  | 'AplTeamWorkloadValues'
-  | 'AplTeamTool'
-  | 'AplVersion'
 
 export interface FileMap {
   envDir: string

@@ -1,4 +1,4 @@
-import { find, has, merge, omit, remove, set } from 'lodash'
+import { find, has, merge, remove, set } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
 import { AlreadyExists, NotExistError } from '../error'
 import {
@@ -15,7 +15,6 @@ import {
   AplProjectRequest,
   AplProjectResponse,
   AplRequestObject,
-  AplResourceKind,
   AplResponseObject,
   AplSecretRequest,
   AplSecretResponse,
@@ -25,42 +24,10 @@ import {
   AplWorkloadResponse,
   App,
   DeepPartial,
-  ResourceTeamMetadata,
-  ServiceSpec,
   Team,
   TeamConfig,
-  V1ApiObject,
 } from '../otomi-models'
-
-export function getAplObject(kind: AplResourceKind, spec: V1ApiObject | ServiceSpec): AplRequestObject {
-  return {
-    kind,
-    metadata: {
-      name: spec.name,
-    },
-    spec,
-  } as AplRequestObject
-}
-
-export function getV1Object(aplObject: AplResponseObject): V1ApiObject {
-  return {
-    id: aplObject.metadata.labels['apl.io/id'],
-    teamId: aplObject.metadata.labels['apl.io/teamId'],
-    name: aplObject.metadata.name,
-    ...aplObject.spec,
-  }
-}
-
-export function getV1MergeObject(updates: DeepPartial<V1ApiObject | ServiceSpec>): DeepPartial<AplRequestObject> {
-  return {
-    metadata: updates.name
-      ? {
-          name: updates.name,
-        }
-      : undefined,
-    spec: omit(updates, ['id', 'teamId']),
-  }
-}
+import { createAplObject, getAplMergeObject, updateAplObject } from '../utils/manifests'
 
 export class TeamConfigService {
   constructor(private teamConfig: TeamConfig) {
@@ -75,40 +42,8 @@ export class TeamConfigService {
     this.teamConfig.policies ??= []
   }
 
-  private createMetadata(name: string, id?: string): ResourceTeamMetadata {
-    return {
-      name,
-      labels: {
-        'apl.io/id': id ?? uuidv4(),
-        'apl.io/teamId': this.teamConfig.settings.id || this.teamConfig.settings.name,
-      },
-    }
-  }
-
   private createAplObject(name: string, request: AplRequestObject, id?: string): AplResponseObject {
-    return {
-      kind: request.kind,
-      metadata: this.createMetadata(name, id),
-      spec: request.spec,
-      status: {},
-    } as AplResponseObject
-  }
-
-  private updateAplObject(config: AplResponseObject, updates: AplRequestObject): AplResponseObject {
-    merge(config.metadata, { name: updates.metadata?.name })
-    Object.assign(config.spec, updates.spec)
-    return config
-  }
-
-  private getAplMergeObject(updates: DeepPartial<AplRequestObject>): DeepPartial<AplRequestObject> {
-    return {
-      metadata: updates.metadata?.name
-        ? {
-            name: updates.metadata?.name,
-          }
-        : undefined,
-      spec: updates.spec || undefined,
-    } as Partial<AplRequestObject>
+    return createAplObject(name, request, id, this.teamConfig.settings.id || this.teamConfig.settings.name)
   }
 
   // =====================================
@@ -140,12 +75,12 @@ export class TeamConfigService {
 
   public updateBuild(name: string, updates: AplBuildRequest): AplBuildResponse {
     const build = this.getBuild(name)
-    return this.updateAplObject(build, updates) as AplBuildResponse
+    return updateAplObject(build, updates) as AplBuildResponse
   }
 
   public patchBuild(name: string, updates: DeepPartial<AplBuildRequest>): AplBuildResponse {
     const build = this.getBuild(name)
-    const mergeObj = this.getAplMergeObject(updates)
+    const mergeObj = getAplMergeObject(updates)
     return merge(build, mergeObj)
   }
 
@@ -182,12 +117,12 @@ export class TeamConfigService {
 
   public updateCodeRepo(name: string, updates: AplCodeRepoRequest): AplCodeRepoResponse {
     const codeRepo = this.getCodeRepo(name)
-    return this.updateAplObject(codeRepo, updates) as AplCodeRepoResponse
+    return updateAplObject(codeRepo, updates) as AplCodeRepoResponse
   }
 
   public patchCodeRepo(name: string, updates: DeepPartial<AplCodeRepoRequest>): AplCodeRepoResponse {
     const codeRepo = this.getCodeRepo(name)
-    const mergeObj = this.getAplMergeObject(updates)
+    const mergeObj = getAplMergeObject(updates)
     return merge(codeRepo, mergeObj)
   }
 
@@ -224,12 +159,12 @@ export class TeamConfigService {
 
   public updateWorkload(name: string, updates: AplWorkloadRequest): AplWorkloadResponse {
     const workload = this.getWorkload(name)
-    return this.updateAplObject(workload, updates) as AplWorkloadResponse
+    return updateAplObject(workload, updates) as AplWorkloadResponse
   }
 
   public patchWorkload(name: string, updates: DeepPartial<AplWorkloadRequest>): AplWorkloadResponse {
     const workload = this.getWorkload(name)
-    const mergeObj = this.getAplMergeObject(updates)
+    const mergeObj = getAplMergeObject(updates)
     return merge(workload, mergeObj)
   }
 
@@ -266,12 +201,12 @@ export class TeamConfigService {
 
   public updateService(name: string, updates: AplServiceRequest): AplServiceResponse {
     const service = this.getService(name)
-    return this.updateAplObject(service, updates) as AplServiceResponse
+    return updateAplObject(service, updates) as AplServiceResponse
   }
 
   public patchService(name: string, updates: DeepPartial<AplServiceRequest>): AplServiceResponse {
     const service = this.getService(name)
-    const mergeObj = this.getAplMergeObject(updates)
+    const mergeObj = getAplMergeObject(updates)
     return merge(service, mergeObj)
   }
 
@@ -308,12 +243,12 @@ export class TeamConfigService {
 
   public updateSealedSecret(name: string, updates: AplSecretRequest): AplSecretResponse {
     const secret = this.getSealedSecret(name)
-    return this.updateAplObject(secret, updates) as AplSecretResponse
+    return updateAplObject(secret, updates) as AplSecretResponse
   }
 
   public patchSealedSecret(name: string, updates: DeepPartial<AplSecretRequest>): AplSecretResponse {
     const secret = this.getSealedSecret(name)
-    const mergeObj = this.getAplMergeObject(updates)
+    const mergeObj = getAplMergeObject(updates)
     return merge(secret, mergeObj)
   }
 
@@ -350,12 +285,12 @@ export class TeamConfigService {
 
   public updateBackup(name: string, updates: AplBackupRequest): AplBackupResponse {
     const backup = this.getBackup(name)
-    return this.updateAplObject(backup, updates) as AplBackupResponse
+    return updateAplObject(backup, updates) as AplBackupResponse
   }
 
   public patchBackup(name: string, updates: DeepPartial<AplBackupRequest>): AplBackupResponse {
     const backup = this.getBackup(name)
-    const mergeObj = this.getAplMergeObject(updates)
+    const mergeObj = getAplMergeObject(updates)
     return merge(backup, mergeObj)
   }
 
@@ -427,12 +362,12 @@ export class TeamConfigService {
 
   public updateNetpol(name: string, updates: AplNetpolRequest): AplNetpolResponse {
     const netpol = this.getNetpol(name)
-    return this.updateAplObject(netpol, updates) as AplNetpolResponse
+    return updateAplObject(netpol, updates) as AplNetpolResponse
   }
 
   public patchNetpol(name: string, updates: DeepPartial<AplNetpolRequest>): AplNetpolResponse {
     const netpol = this.getNetpol(name)
-    const mergeObj = this.getAplMergeObject(updates)
+    const mergeObj = getAplMergeObject(updates)
     return merge(netpol, mergeObj)
   }
 
@@ -543,7 +478,7 @@ export class TeamConfigService {
       this.teamConfig.policies.push(newPolicy)
       return newPolicy
     } else {
-      const mergeObj = this.getAplMergeObject(updates)
+      const mergeObj = getAplMergeObject(updates)
       return merge(policy, mergeObj)
     }
   }

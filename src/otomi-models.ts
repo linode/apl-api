@@ -3,6 +3,7 @@ import { JSONSchema4 } from 'json-schema'
 import { components, external, operations, paths } from 'src/generated-schema'
 import OtomiStack from 'src/otomi-stack'
 
+export type ResourceMetadata = components['schemas']['aplResourceMetadata']
 export type ResourceTeamMetadata = components['schemas']['aplResourceTeamMetadata']
 export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
@@ -88,17 +89,34 @@ export type AplResponseObject =
   | AplSecretResponse
   | AplServiceResponse
   | AplWorkloadResponse
-export type AplResourceKind =
-  | 'AplTeamBackup'
-  | 'AplTeamBuild'
+export type AplKind =
+  | 'AplApp'
+  | 'AplAlertSet'
+  | 'AplCluster'
+  | 'AplDatabase'
+  | 'AplDns'
+  | 'AplIngress'
+  | 'AplObjectStorage'
+  | 'AplKms'
+  | 'AplIdentityProvider'
+  | 'AplCapabilitySet'
+  | 'AplSmtp'
+  | 'AplBackupCollection'
+  | 'AplUser'
+  | 'AplPlatformSettingSet'
   | 'AplTeamCodeRepo'
-  | 'AplTeamNetworkControl'
+  | 'AplTeamBuild'
   | 'AplTeamPolicy'
+  | 'AplTeamSettingSet'
+  | 'AplTeamNetworkControl'
   | 'AplTeamProject'
+  | 'AplTeamBackup'
   | 'AplTeamSecret'
   | 'AplTeamService'
   | 'AplTeamWorkload'
   | 'AplTeamWorkloadValues'
+  | 'AplTeamTool'
+  | 'AplVersion'
 export type V1ApiObject = Build | CodeRepo | Netpol | Project | SealedSecret | Service | Workload
 
 export type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T

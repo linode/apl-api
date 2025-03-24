@@ -19,13 +19,13 @@ import {
   AplBuildResponse,
   AplCodeRepoRequest,
   AplCodeRepoResponse,
+  AplKind,
   AplNetpolRequest,
   AplNetpolResponse,
   AplPolicyRequest,
   AplPolicyResponse,
   AplProjectRequest,
   AplProjectResponse,
-  AplResourceKind,
   AplResponseObject,
   AplSecretRequest,
   AplSecretResponse,
@@ -95,7 +95,7 @@ import {
 } from './k8s_operations'
 import { getFileMaps, loadValues } from './repo'
 import { RepoService } from './services/RepoService'
-import { getAplObject, getV1MergeObject, getV1Object, TeamConfigService } from './services/TeamConfigService'
+import { TeamConfigService } from './services/TeamConfigService'
 import { validateBackupFields } from './utils/backupUtils'
 import {
   getGiteaRepoUrls,
@@ -112,6 +112,7 @@ import {
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchChartYaml, fetchWorkloadCatalog, NewHelmChartValues, sparseCloneChart } from './utils/workloadUtils'
+import { getAplObjectFromV1, getV1MergeObject, getV1ObjectFromApl } from './utils/manifests'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -674,7 +675,7 @@ export default class OtomiStack {
     })
   }
 
-  private getConfigKey(kind: AplResourceKind): string {
+  private getConfigKey(kind: AplKind): string {
     return getFileMaps('').find((fm) => fm.kind === kind)!.resourceDir
   }
 
@@ -773,7 +774,7 @@ export default class OtomiStack {
   }
 
   getTeamBackups(teamId: string): Backup[] {
-    return this.getTeamAplBackups(teamId).map((backup) => getV1Object(backup) as Backup)
+    return this.getTeamAplBackups(teamId).map((backup) => getV1ObjectFromApl(backup) as Backup)
   }
 
   getTeamAplBackups(teamId: string): AplBackupResponse[] {
@@ -781,7 +782,7 @@ export default class OtomiStack {
   }
 
   getAllBackups(): Backup[] {
-    return this.getAllAplBackups().map((backup) => getV1Object(backup) as Backup)
+    return this.getAllAplBackups().map((backup) => getV1ObjectFromApl(backup) as Backup)
   }
 
   getAllAplBackups(): AplBackupResponse[] {
@@ -789,8 +790,8 @@ export default class OtomiStack {
   }
 
   async createBackup(teamId: string, data: Backup): Promise<Backup> {
-    const newBackup = await this.createAplBackup(teamId, getAplObject('AplTeamBackup', data) as AplBackupRequest)
-    return getV1Object(newBackup) as Backup
+    const newBackup = await this.createAplBackup(teamId, getAplObjectFromV1('AplTeamBackup', data) as AplBackupRequest)
+    return getV1ObjectFromApl(newBackup) as Backup
   }
 
   async createAplBackup(teamId: string, data: AplBackupRequest): Promise<AplBackupResponse> {
@@ -809,7 +810,7 @@ export default class OtomiStack {
   }
 
   getBackup(teamId: string, name: string): Backup {
-    return getV1Object(this.getAplBackup(teamId, name)) as Backup
+    return getV1ObjectFromApl(this.getAplBackup(teamId, name)) as Backup
   }
 
   getAplBackup(teamId: string, name: string): AplBackupResponse {
@@ -819,7 +820,7 @@ export default class OtomiStack {
   async editBackup(teamId: string, name: string, data: Backup): Promise<Backup> {
     const mergeObj = getV1MergeObject(data) as DeepPartial<AplBackupRequest>
     const mergedBackup = await this.editAplBackup(teamId, name, mergeObj)
-    return getV1Object(mergedBackup) as Backup
+    return getV1ObjectFromApl(mergedBackup) as Backup
   }
 
   async editAplBackup(
@@ -857,7 +858,7 @@ export default class OtomiStack {
   }
 
   getTeamNetpols(teamId: string): Netpol[] {
-    return this.getTeamAplNetpols(teamId).map((netpol) => getV1Object(netpol) as Netpol)
+    return this.getTeamAplNetpols(teamId).map((netpol) => getV1ObjectFromApl(netpol) as Netpol)
   }
 
   getTeamAplNetpols(teamId: string): AplNetpolResponse[] {
@@ -865,7 +866,7 @@ export default class OtomiStack {
   }
 
   getAllNetpols(): Netpol[] {
-    return this.getAllAplNetpols().map((netpol) => getV1Object(netpol) as Netpol)
+    return this.getAllAplNetpols().map((netpol) => getV1ObjectFromApl(netpol) as Netpol)
   }
 
   getAllAplNetpols(): AplNetpolResponse[] {
@@ -875,9 +876,9 @@ export default class OtomiStack {
   async createNetpol(teamId: string, data: Netpol): Promise<Netpol> {
     const newNetpol = await this.createAplNetpol(
       teamId,
-      getAplObject('AplTeamNetworkControl', data) as AplNetpolRequest,
+      getAplObjectFromV1('AplTeamNetworkControl', data) as AplNetpolRequest,
     )
-    return getV1Object(newNetpol) as Netpol
+    return getV1ObjectFromApl(newNetpol) as Netpol
   }
 
   async createAplNetpol(teamId: string, data: AplNetpolRequest): Promise<AplNetpolResponse> {
@@ -900,7 +901,7 @@ export default class OtomiStack {
 
   getNetpol(teamId: string, name: string): Netpol {
     const netpol = this.getAplNetpol(teamId, name)
-    return getV1Object(netpol) as Netpol
+    return getV1ObjectFromApl(netpol) as Netpol
   }
 
   getAplNetpol(teamId: string, name: string): AplNetpolResponse {
@@ -910,7 +911,7 @@ export default class OtomiStack {
   async editNetpol(teamId: string, name: string, data: Netpol): Promise<Netpol> {
     const mergeObj = getV1MergeObject(data) as DeepPartial<AplNetpolRequest>
     const mergedNetpol = await this.editAplNetpol(teamId, name, mergeObj)
-    return getV1Object(mergedNetpol) as Netpol
+    return getV1ObjectFromApl(mergedNetpol) as Netpol
   }
 
   async editAplNetpol(
@@ -1047,7 +1048,7 @@ export default class OtomiStack {
   }
 
   getTeamProjects(teamId: string): Project[] {
-    return this.getTeamAplProjects(teamId).map((project) => getV1Object(project) as Project)
+    return this.getTeamAplProjects(teamId).map((project) => getV1ObjectFromApl(project) as Project)
   }
 
   getTeamAplProjects(teamId: string): AplProjectResponse[] {
@@ -1055,7 +1056,7 @@ export default class OtomiStack {
   }
 
   getAllProjects(): Project[] {
-    return this.getAllAplProjects().map((project) => getV1Object(project) as Project)
+    return this.getAllAplProjects().map((project) => getV1ObjectFromApl(project) as Project)
   }
 
   getAllAplProjects(): AplProjectResponse[] {
@@ -1063,8 +1064,11 @@ export default class OtomiStack {
   }
 
   async createProject(teamId: string, data: Project): Promise<Project> {
-    const newProject = await this.createAplProject(teamId, getAplObject('AplTeamProject', data) as AplProjectRequest)
-    return getV1Object(newProject) as Project
+    const newProject = await this.createAplProject(
+      teamId,
+      getAplObjectFromV1('AplTeamProject', data) as AplProjectRequest,
+    )
+    return getV1ObjectFromApl(newProject) as Project
   }
 
   // Creates a new project and reserves a given name for 'builds', 'workloads' and 'services' resources
@@ -1193,7 +1197,7 @@ export default class OtomiStack {
   }
 
   getTeamCodeRepos(teamId: string): CodeRepo[] {
-    return this.getTeamAplCodeRepos(teamId).map((codeRepo) => getV1Object(codeRepo) as CodeRepo)
+    return this.getTeamAplCodeRepos(teamId).map((codeRepo) => getV1ObjectFromApl(codeRepo) as CodeRepo)
   }
 
   getTeamAplCodeRepos(teamId: string): AplCodeRepoResponse[] {
@@ -1201,15 +1205,15 @@ export default class OtomiStack {
   }
 
   getAllCodeRepos(): Array<CodeRepo> {
-    return this.repoService.getAllCodeRepos().map((codeRepo) => getV1Object(codeRepo) as CodeRepo)
+    return this.repoService.getAllCodeRepos().map((codeRepo) => getV1ObjectFromApl(codeRepo) as CodeRepo)
   }
 
   async createCodeRepo(teamId: string, data: CodeRepo): Promise<CodeRepo> {
     const newCodeRepo = await this.createAplCodeRepo(
       teamId,
-      getAplObject('AplTeamCodeRepo', data) as AplCodeRepoRequest,
+      getAplObjectFromV1('AplTeamCodeRepo', data) as AplCodeRepoRequest,
     )
-    return getV1Object(newCodeRepo) as CodeRepo
+    return getV1ObjectFromApl(newCodeRepo) as CodeRepo
   }
 
   async createAplCodeRepo(teamId: string, data: AplCodeRepoRequest): Promise<AplCodeRepoResponse> {
@@ -1232,7 +1236,7 @@ export default class OtomiStack {
   }
 
   getCodeRepo(teamId: string, name: string): CodeRepo {
-    return getV1Object(this.getAplCodeRepo(teamId, name)) as CodeRepo
+    return getV1ObjectFromApl(this.getAplCodeRepo(teamId, name)) as CodeRepo
   }
 
   getAplCodeRepo(teamId: string, name: string): AplCodeRepoResponse {
@@ -1242,7 +1246,7 @@ export default class OtomiStack {
   async editCodeRepo(teamId: string, name: string, data: CodeRepo): Promise<CodeRepo> {
     const mergeObj = getV1MergeObject(data) as DeepPartial<AplCodeRepoRequest>
     const mergedCodeRepo = await this.editAplCodeRepo(teamId, name, mergeObj)
-    return getV1Object(mergedCodeRepo) as CodeRepo
+    return getV1ObjectFromApl(mergedCodeRepo) as CodeRepo
   }
 
   async editAplCodeRepo(
@@ -1339,7 +1343,7 @@ export default class OtomiStack {
   }
 
   getTeamBuilds(teamId: string): Build[] {
-    return this.getTeamAplBuilds(teamId).map((build) => getV1Object(build) as Build)
+    return this.getTeamAplBuilds(teamId).map((build) => getV1ObjectFromApl(build) as Build)
   }
 
   getTeamAplBuilds(teamId: string): AplBuildResponse[] {
@@ -1347,7 +1351,7 @@ export default class OtomiStack {
   }
 
   getAllBuilds(): Build[] {
-    return this.getAllAplBuilds().map((build) => getV1Object(build) as Build)
+    return this.getAllAplBuilds().map((build) => getV1ObjectFromApl(build) as Build)
   }
 
   getAllAplBuilds(): AplBuildResponse[] {
@@ -1355,8 +1359,8 @@ export default class OtomiStack {
   }
 
   async createBuild(teamId: string, data: Build): Promise<Build> {
-    const newBuild = await this.createAplBuild(teamId, getAplObject('AplTeamBuild', data) as AplBuildRequest)
-    return getV1Object(newBuild) as Build
+    const newBuild = await this.createAplBuild(teamId, getAplObjectFromV1('AplTeamBuild', data) as AplBuildRequest)
+    return getV1ObjectFromApl(newBuild) as Build
   }
 
   async createAplBuild(teamId: string, data: AplBuildRequest): Promise<AplBuildResponse> {
@@ -1378,7 +1382,7 @@ export default class OtomiStack {
   }
 
   getBuild(teamId: string, name: string): Build {
-    return getV1Object(this.getAplBuild(teamId, name)) as Build
+    return getV1ObjectFromApl(this.getAplBuild(teamId, name)) as Build
   }
 
   getAplBuild(teamId: string, name: string): AplBuildResponse {
@@ -1388,7 +1392,7 @@ export default class OtomiStack {
   async editBuild(teamId: string, name: string, data: Build): Promise<Build> {
     const mergeObj = getV1MergeObject(data) as DeepPartial<AplBuildRequest>
     const mergedBuild = await this.editAplBuild(teamId, name, mergeObj)
-    return getV1Object(mergedBuild) as Build
+    return getV1ObjectFromApl(mergedBuild) as Build
   }
 
   async editAplBuild(
@@ -1628,7 +1632,9 @@ export default class OtomiStack {
   }
 
   getTeamWorkloads(teamId: string): Workload[] {
-    return this.getTeamAplWorkloads(teamId).map((workload) => omit(getV1Object(workload), ['values']) as Workload)
+    return this.getTeamAplWorkloads(teamId).map(
+      (workload) => omit(getV1ObjectFromApl(workload), ['values']) as Workload,
+    )
   }
 
   getTeamAplWorkloads(teamId: string): AplWorkloadResponse[] {
@@ -1636,7 +1642,7 @@ export default class OtomiStack {
   }
 
   getAllWorkloads(): Workload[] {
-    return this.getAllAplWorkloads().map((workload) => omit(getV1Object(workload), ['values']) as Workload)
+    return this.getAllAplWorkloads().map((workload) => omit(getV1ObjectFromApl(workload), ['values']) as Workload)
   }
 
   getAllAplWorkloads(): AplWorkloadResponse[] {
@@ -1646,9 +1652,9 @@ export default class OtomiStack {
   async createWorkload(teamId: string, data: Workload): Promise<Workload> {
     const newWorkload = await this.createAplWorkload(
       teamId,
-      getAplObject('AplTeamWorkload', data) as AplWorkloadRequest,
+      getAplObjectFromV1('AplTeamWorkload', data) as AplWorkloadRequest,
     )
-    return omit(getV1Object(newWorkload), ['values']) as Workload
+    return omit(getV1ObjectFromApl(newWorkload), ['values']) as Workload
   }
 
   async createAplWorkload(teamId: string, data: AplWorkloadRequest): Promise<AplWorkloadResponse> {
@@ -1672,7 +1678,7 @@ export default class OtomiStack {
 
   getWorkload(teamId: string, name: string): Workload {
     const workload = this.getAplWorkload(teamId, name)
-    return omit(getV1Object(workload), ['values']) as Workload
+    return omit(getV1ObjectFromApl(workload), ['values']) as Workload
   }
 
   getAplWorkload(teamId: string, name: string): AplWorkloadResponse {
@@ -1682,7 +1688,7 @@ export default class OtomiStack {
   async editWorkload(teamId: string, name: string, data: Workload): Promise<Workload> {
     const mergeObj = getV1MergeObject(data) as DeepPartial<AplWorkloadRequest>
     const mergedWorkload = await this.editAplWorkload(teamId, name, mergeObj)
-    return omit(getV1Object(mergedWorkload), ['values']) as Workload
+    return omit(getV1ObjectFromApl(mergedWorkload), ['values']) as Workload
   }
 
   async editAplWorkload(
@@ -1733,14 +1739,14 @@ export default class OtomiStack {
       },
       false,
     )
-    return merge(pick(getV1Object(workload), ['id', 'teamId', 'name']), {
+    return merge(pick(getV1ObjectFromApl(workload), ['id', 'teamId', 'name']), {
       values: data.values || undefined,
     }) as WorkloadValues
   }
 
   getWorkloadValues(teamId: string, name: string): WorkloadValues {
     const workload = this.getAplWorkload(teamId, name)
-    return merge(pick(getV1Object(workload), ['id', 'teamId', 'name']), {
+    return merge(pick(getV1ObjectFromApl(workload), ['id', 'teamId', 'name']), {
       values: workload.spec.values || undefined,
     }) as WorkloadValues
   }
@@ -1764,7 +1770,7 @@ export default class OtomiStack {
   async createService(teamId: string, data: Service): Promise<Service> {
     const newService = await this.createAplService(
       teamId,
-      getAplObject('AplTeamService', this.convertDbServiceToValues(data)) as AplServiceRequest,
+      getAplObjectFromV1('AplTeamService', this.convertDbServiceToValues(data)) as AplServiceRequest,
     )
     return this.transformService(newService) as Service
   }
@@ -1799,7 +1805,7 @@ export default class OtomiStack {
   async editService(teamId: string, name: string, data: Service): Promise<Service> {
     const mergeObj = getV1MergeObject(this.convertDbServiceToValues(data)) as DeepPartial<AplServiceRequest>
     const mergedService = await this.editAplService(teamId, name, mergeObj)
-    return getV1Object(mergedService) as Service
+    return getV1ObjectFromApl(mergedService) as Service
   }
 
   async editAplService(
@@ -2098,8 +2104,11 @@ export default class OtomiStack {
       ...omit(data, 'encryptedData'),
       decryptedData: data.encryptedData,
     }
-    const newSecret = await this.createAplSealedSecret(teamId, getAplObject('AplTeamSecret', spec) as AplSecretRequest)
-    return getV1Object(newSecret) as SealedSecret
+    const newSecret = await this.createAplSealedSecret(
+      teamId,
+      getAplObjectFromV1('AplTeamSecret', spec) as AplSecretRequest,
+    )
+    return getV1ObjectFromApl(newSecret) as SealedSecret
   }
 
   async createAplSealedSecret(teamId: string, data: AplSecretRequest): Promise<AplSecretResponse> {
@@ -2149,7 +2158,7 @@ export default class OtomiStack {
       mergeObj.spec.decryptedData = mergeObj.spec.encryptedData
     }
     const mergedSecret = await this.editAplSealedSecret(teamId, name, mergeObj)
-    return getV1Object(mergedSecret) as SealedSecret
+    return getV1ObjectFromApl(mergedSecret) as SealedSecret
   }
 
   async editAplSealedSecret(
@@ -2225,7 +2234,7 @@ export default class OtomiStack {
 
   async getSealedSecret(teamId: string, name: string): Promise<SealedSecret> {
     const aplSecret = await this.getAplSealedSecret(teamId, name)
-    const secret = omit(getV1Object(aplSecret), 'decryptedData') as SealedSecret
+    const secret = omit(getV1ObjectFromApl(aplSecret), 'decryptedData') as SealedSecret
     const { decryptedData } = aplSecret.spec
     secret.isDisabled = isEmpty(decryptedData)
     secret.encryptedData = Object.entries(secret.encryptedData).map(([key, value]) => ({
@@ -2243,7 +2252,7 @@ export default class OtomiStack {
   }
 
   getAllSealedSecrets(): SealedSecret[] {
-    return this.getAllAplSealedSecrets().map((secret) => getV1Object(secret) as SealedSecret)
+    return this.getAllAplSealedSecrets().map((secret) => getV1ObjectFromApl(secret) as SealedSecret)
   }
 
   getAllAplSealedSecrets(): AplSecretResponse[] {
@@ -2251,7 +2260,7 @@ export default class OtomiStack {
   }
 
   getSealedSecrets(teamId: string): SealedSecret[] {
-    return this.getSealedAplSecrets(teamId).map((secret) => getV1Object(secret) as SealedSecret)
+    return this.getSealedAplSecrets(teamId).map((secret) => getV1ObjectFromApl(secret) as SealedSecret)
   }
 
   getSealedAplSecrets(teamId: string): AplSecretResponse[] {
