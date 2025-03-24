@@ -287,7 +287,7 @@ describe('API authz tests', () => {
   })
 
   test('team member cannot update workload values with payload higher than limit', async () => {
-    const largePayload = JSON.stringify({ data: 'A'.repeat(600000) }) // 600KB
+    const largePayload = { data: 'A'.repeat(600000) } // 600KB
     await agent
       .put('/v1/teams/team1/workloads/my-uuid/values')
       .send({ values: largePayload })
