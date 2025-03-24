@@ -486,19 +486,20 @@ export async function loadFileToSpec(
   const data = await deps.loadYaml(filePath)
   if (fileMap.processAs === 'arrayItem') {
     const ref: Record<string, any>[] = get(spec, jsonPath)
-    //TODO remove this custom workaround for workloadValues as it has no spec
+    const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
     if (fileMap.kind === 'AplTeamWorkloadValues') {
-      const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
+      //TODO remove this custom workaround for workloadValues as it has no spec
       ref.push({ ...data, name })
     } else if (fileMap.v2) {
-      if (data?.kind === fileMap.kind) {
-        ref.push(data)
-      } else {
-        debug(`Unexpected manifest kind in ${filePath}: ${data?.kind}`)
+      if (data?.kind !== fileMap.kind || (data?.kind === 'SealedSecret' && fileMap.kind === 'AplTeamSecret')) {
+        console.error(`Unexpected manifest kind in ${filePath}: ${data?.kind}`)
+        return
       }
-    } else if (fileMap.kind === 'AplTeamSecret') {
-      const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
-      ref.push({ ...data?.spec, name })
+      if (data.metadata.name !== name) {
+        console.error(`Unexpected name in ${filePath}: ${data.metadata.name}`)
+        return
+      }
+      ref.push(data)
     } else {
       ref.push(data?.spec)
     }
