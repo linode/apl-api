@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readFile, renameSync, rmSync } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
 import path from 'path'
 import simpleGit, { SimpleGit } from 'simple-git'
+import { OtomiError } from 'src/error'
 import { GIT_PROVIDER_URL_PATTERNS, cleanEnv } from 'src/validators'
 import YAML from 'yaml'
 
@@ -20,13 +21,6 @@ export interface NewHelmChartValues {
   allowTeams: boolean
 }
 
-function throwChartError(message: string) {
-  const err = {
-    code: 404,
-    message,
-  }
-  throw err
-}
 export function isGiteaURL(url: string) {
   let hostname = ''
   if (url) {
@@ -374,6 +368,6 @@ export async function fetchWorkloadCatalog(url: string, helmChartsDir: string, t
       debug(`Error while parsing ${folder}/Chart.yaml and ${folder}/values.yaml files : ${error.message}`)
     }
   }
-  if (!catalog.length) throwChartError(`There are no directories at '${url}'`)
+  if (!catalog.length) throw new OtomiError(404, `There are no directories at '${url}'`)
   return { helmCharts, catalog }
 }
