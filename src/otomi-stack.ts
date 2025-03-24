@@ -648,17 +648,11 @@ export default class OtomiStack {
         : [] // Empty array removes `undefined` entries
     })
 
-    // const policies = getPolicies()
-    // if (!data.id) {
-    //   this.repoService.getTeamConfigService(teamName).updatePolicies(policies)
-    //   await this.saveTeamPolicies(teamName)
-    // }
     if (deploy) {
       await this.saveTeam(team)
       await this.doRepoDeployment((repoService) => {
         repoService.createTeamConfig(teamName, data)
         repoService.getTeamConfigService(teamName).setApps(teamApps)
-        // repoService.getTeamConfigService(teamName).updatePolicies(policies)
       })
     }
     return team
