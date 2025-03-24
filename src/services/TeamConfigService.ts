@@ -1,4 +1,4 @@
-import { find, has, merge, remove, set } from 'lodash'
+import { find, has, merge, omit, remove, set } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
 import { AlreadyExists, NotExistError } from '../error'
 import {
@@ -154,7 +154,7 @@ export class TeamConfigService {
   }
 
   public getWorkloads(): AplWorkloadResponse[] {
-    return this.teamConfig.workloads ?? []
+    return (this.teamConfig.workloads ?? []).map((workload) => omit(workload, 'spec.values'))
   }
 
   public updateWorkload(name: string, updates: AplWorkloadRequest): AplWorkloadResponse {
