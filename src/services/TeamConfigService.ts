@@ -1,4 +1,4 @@
-import { find, has, merge, omit, remove, set } from 'lodash'
+import { find, has, merge, mergeWith, omit, remove, set } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
 import { AlreadyExists, NotExistError } from '../error'
 import {
@@ -28,6 +28,10 @@ import {
   TeamConfig,
 } from '../otomi-models'
 import { createAplObject, getAplMergeObject, updateAplObject } from '../utils/manifests'
+
+function mergeCustomizer(prev, next) {
+  return next
+}
 
 export class TeamConfigService {
   constructor(private teamConfig: TeamConfig) {
@@ -387,7 +391,7 @@ export class TeamConfigService {
     if (!this.teamConfig.settings) {
       this.teamConfig.settings = { name: updates.name || '' }
     }
-    return merge(this.teamConfig.settings, updates)
+    return mergeWith(this.teamConfig.settings, updates, mergeCustomizer)
   }
 
   // =====================================
