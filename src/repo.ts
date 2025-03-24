@@ -491,7 +491,7 @@ export async function loadFileToSpec(
       //TODO remove this custom workaround for workloadValues as it has no spec
       ref.push({ ...data, name })
     } else if (fileMap.v2) {
-      if (data?.kind !== fileMap.kind || (data?.kind === 'SealedSecret' && fileMap.kind === 'AplTeamSecret')) {
+      if (data?.kind !== fileMap.kind && !(data?.kind === 'SealedSecret' && fileMap.kind === 'AplTeamSecret')) {
         console.error(`Unexpected manifest kind in ${filePath}: ${data?.kind}`)
         return
       }
