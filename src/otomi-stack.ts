@@ -7,7 +7,7 @@ import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
 import { emptyDir, existsSync, pathExists, rmSync, unlink } from 'fs-extra'
 import { readdir, readFile, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
-import { cloneDeep, filter, isArray, isEmpty, map, mapValues, omit, pick, unset } from 'lodash'
+import { cloneDeep, filter, isArray, isEmpty, map, mapValues, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import { AlreadyExists, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
 import getRepo, { Git } from 'src/git'
@@ -388,6 +388,19 @@ export default class OtomiStack {
 
   getSettings(keys?: string[]): Settings {
     const settings = this.repoService.getSettings()
+
+    if (keys?.includes('otomi')) {
+      const nodeSelector = settings.otomi?.nodeSelector
+      // convert otomi.nodeSelector to array of objects
+      if (!Array.isArray(nodeSelector)) {
+        const nodeSelectorArray = Object.entries(nodeSelector || {}).map(([name, value]) => ({
+          name,
+          value,
+        }))
+        set(settings, 'otomi.nodeSelector', nodeSelectorArray)
+      }
+    }
+
     if (!keys) return settings
     return pick(settings, keys) as Settings
   }
@@ -451,7 +464,16 @@ export default class OtomiStack {
         ...updatedSettingsData.otomi,
         adminPassword: settings.otomi?.adminPassword,
       }
+      // convert otomi.nodeSelector to object
+      if (Array.isArray(updatedSettingsData.otomi.nodeSelector)) {
+        const nodeSelectorArray = updatedSettingsData.otomi.nodeSelector
+        const nodeSelectorObject = nodeSelectorArray.reduce((acc, { name, value }) => {
+          return { ...acc, [name]: value }
+        }, {})
+        updatedSettingsData.otomi.nodeSelector = nodeSelectorObject
+      }
     }
+
     settings[settingId] = removeBlankAttributes(updatedSettingsData[settingId] as Record<string, any>)
     this.repoService.updateSettings(settings)
     await this.saveSettings()

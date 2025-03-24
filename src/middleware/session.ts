@@ -98,7 +98,8 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
 
     if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
       // in the cloudtty or workloadCatalog endpoint(s), don't need to create a session
-      if (req.path === '/v1/cloudtty' || req.path === '/v1/workloadCatalog') return next()
+      if (req.path === '/v1/cloudtty' || req.path === '/v1/workloadCatalog' || req.path === '/v1/createWorkloadCatalog')
+        return next()
       // bootstrap session stack with unique sessionId to manipulate data
       const sessionId = uuidv4() as string
       // eslint-disable-next-line no-param-reassign
