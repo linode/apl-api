@@ -520,7 +520,7 @@ paths:
     get:
       operationId: getAllSecrets
       description: Get all secrets
-      x-aclSchema: Secret
+      x-aclSchema: SealedSecret
       responses:
         '200':
           description: Successfully obtained all secrets
