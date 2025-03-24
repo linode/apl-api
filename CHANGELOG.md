@@ -20,6 +20,19 @@ All notable changes to this project will be documented in this file. See [standa
 * **git save:** increase git pull retries and remove doRestore ([#651](https://github.com/redkubes/otomi-api/issues/651)) ([a8ae5ef](https://github.com/redkubes/otomi-api/commit/a8ae5ef815ca8494f5c0228677949cf90f450a2a))
 * remove password from error log ([#658](https://github.com/redkubes/otomi-api/issues/658)) ([754e672](https://github.com/redkubes/otomi-api/commit/754e6727d0f5558abc58e6e64a9b194151317871))
 
+### [3.7.4](https://github.com/redkubes/otomi-api/compare/v3.7.3...v3.7.4) (2025-03-20)
+
+
+### Bug Fixes
+
+* create helm chart with branches or tags ([#667](https://github.com/redkubes/otomi-api/issues/667)) ([1a55142](https://github.com/redkubes/otomi-api/commit/1a551420b64c1c28975e9b591a9b561e22a6a856))
+
+### [3.7.3](https://github.com/redkubes/otomi-api/compare/v3.7.2...v3.7.3) (2025-03-19)
+
+
+### Bug Fixes
+
+* get commit sha from session stack ([#664](https://github.com/redkubes/otomi-api/issues/664)) ([4cf4ecd](https://github.com/redkubes/otomi-api/commit/4cf4ecdf8082c2f1e94447fee9636cb6f94d0045))
 
 ### Others
 
