@@ -1208,7 +1208,7 @@ export default class OtomiStack {
       )
       return build
     } catch (err) {
-      if (err.code === 409) err.publicMessage = 'Build name already exists'
+      if (err.code === 409) err.publicMessage = 'Container image name (the combined image name and tag) already exists'
       throw err
     }
   }

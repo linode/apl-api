@@ -81,7 +81,7 @@ export function normalizeRepoUrl(inputUrl: string, isPrivate: boolean, isSSH: bo
   }
 }
 
-function normalizeSSHKey(sshPrivateKey) {
+export function normalizeSSHKey(sshPrivateKey) {
   if (
     !sshPrivateKey.includes('-----BEGIN OPENSSH PRIVATE KEY-----') ||
     !sshPrivateKey.includes('-----END OPENSSH PRIVATE KEY-----')
@@ -97,7 +97,7 @@ function normalizeSSHKey(sshPrivateKey) {
   return `-----BEGIN OPENSSH PRIVATE KEY-----\n${basePrivateKey}\n-----END OPENSSH PRIVATE KEY-----`
 }
 
-async function setupGitAuthentication(
+export async function setupGitAuthentication(
   repoUrl: string,
   sshPrivateKey?: string,
   username?: string,
@@ -154,7 +154,7 @@ export async function testPublicRepoConnect(repoUrl: string) {
   }
 }
 
-async function extractRepositoryRefs(repoUrl: string, git: SimpleGit = simpleGit()): Promise<string[]> {
+export async function extractRepositoryRefs(repoUrl: string, git: SimpleGit = simpleGit()): Promise<string[]> {
   try {
     const rawData = await git.listRemote(['--refs', repoUrl])
     const branches: string[] = []
