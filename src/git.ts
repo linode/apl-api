@@ -90,7 +90,10 @@ export class Git {
     this.urlAuth = urlAuth
     this.user = user
     this.url = url
-    this.git = simpleGit(this.path)
+
+    this.git = simpleGit(this.path, {
+      config: ['http.sslVerify=false'],
+    })
   }
 
   getProtocol() {
