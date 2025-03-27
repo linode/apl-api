@@ -51,7 +51,8 @@ const getUrl = (url): string => (!url || url.includes('://') ? url : `${getProto
 
 function getUrlAuth(url, user, password): string | undefined {
   if (!url) return
-  const protocol = getProtocol(url)
+  let protocol = getProtocol(url)
+  if (protocol === 'https') protocol = 'http'
   const [_, bareUrl] = url.split('://')
   const encodedUser = encodeURIComponent(user as string)
   const encodedPassword = encodeURIComponent(password as string)
