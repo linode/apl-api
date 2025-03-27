@@ -29,8 +29,7 @@ alerts:
         enum:
           - slack
           - msteams
-          - opsgenie
-          - email
+          # - email
           - none
         type: string
       uniqueItems: true
@@ -50,7 +49,7 @@ alerts:
           title: Critical
           type: string
         url:
-          $ref: '#/url'
+          type: string
           description: A Slack webhook URL.
           x-acl:
             platformAdmin: [read-any, update-any]
@@ -87,76 +86,25 @@ alerts:
       #   - lowPrio
       title: Microsoft Teams
       type: object
-    opsgenie:
-      title: OpsGenie
-      description: Configure OpsGenie endpoints for alerts. Criticals will get level P1, and non-crits P2.
-      additionalProperties: false
-      properties:
-        apiKey:
-          description: The api key to use for authn.
-          title: Api key
-          type: string
-          x-secret: true
-        url:
-          $ref: '#/url'
-          description: An opsgenie URL without the '?apiKey' part.
-        responders:
-          description: Configure one or multiple alert responders.
-          type: array
-          items:
-            type: object
-            allOf:
-              - properties:
-                  type:
-                    type: string
-                    enum:
-                      - team
-                      - user
-                      - escalation
-                      - schedule
-                    default: team
-                required: [type]
-              - title: Responder
-                description: An OpsGenie responder identity.
-                oneOf:
-                  - title: ID
-                    required: [id]
-                    properties:
-                      id:
-                        $ref: '#/wordCharacterPattern'
-                  - title: Name
-                    required: [name]
-                    properties:
-                      name:
-                        $ref: '#/idName'
-                  - title: Username
-                    required: [username]
-                    properties:
-                      username:
-                        $ref: '#/wordCharacterPattern'
-      # TODO: Enable again when form rework is done
-      # required:
-      #   - apiKey
-      #   - url
-      type: object
-    email:
-      title: Email
-      description: Configure email endpoints for alerts.
-      additionalProperties: false
-      properties:
-        critical:
-          title: Critical Events
-          $ref: '#/email'
-          description: One or more email addresses (comma separated) for critical events.
-        nonCritical:
-          title: Non-critical Events
-          $ref: '#/email'
-          description: One or more email addresses (comma separated) for non-critical events.
-      # TODO: Enable again when form rework is done
-      # required:
-      #   - critical
-      #   - nonCritical
-      type: object
+    # NOTE: keep this in case email alertReceiver gets re-enabled again
+    # email:
+    #   title: Email
+    #   description: Configure email endpoints for alerts.
+    #   additionalProperties: false
+    #   properties:
+    #     critical:
+    #       title: Critical Events
+    #       $ref: '#/email'
+    #       description: One or more email addresses (comma separated) for critical events.
+    #     nonCritical:
+    #       title: Non-critical Events
+    #       $ref: '#/email'
+    #       description: One or more email addresses (comma separated) for non-critical events.
+    #   # TODO: Enable again when form rework is done
+    #   # required:
+    #   #   - critical
+    #   #   - nonCritical
+    #   type: object
 annotation:
   type: string
   pattern: ^((.){1,253}\/)?(.){1,63}$
@@ -1027,24 +975,110 @@ resources:
     - requests
   type: object
 resourceQuota:
-  description: 'Kubernetes resource quota. Should adhere to format as described here: https://kubernetes.io/docs/concepts/policy/resource-quotas/.'
-  title: Resource quota
-  type: array
-  items:
-    type: object
-    properties:
-      name:
-        type: string
-      value:
-        type: string
-    required:
-      - name
-      - value
-  default:
-    - name: pods
-      value: '50'
-    - name: services.loadbalancers
-      value: '0'
+  title: Resource Quota
+  description: >
+    Kubernetes resource quota. Should adhere to the format described at:
+    https://kubernetes.io/docs/concepts/policy/resource-quotas/.
+  type: object
+  properties:
+    enabled:
+      type: boolean
+      title: Enabled
+      default: true
+      description: Whether resource quotas are enabled.
+    countQuota:
+      type: array
+      title: Count Quota
+      items:
+        type: object
+        properties:
+          key:
+            type: string
+            title: Key
+          value:
+            type: number
+            title: Value
+          mutable:
+            type: boolean
+            title: Mutable
+          decorator:
+            type: string
+            title: Decorator
+        required:
+          - key
+          - value
+          - mutable
+          - decorator
+      default:
+        - key: 'loadbalancers'
+          value: 0
+          mutable: false
+          decorator: 'lbs'
+        - key: 'nodeports'
+          value: 0
+          mutable: false
+          decorator: 'nprts'
+        - key: 'count'
+          value: 5
+          mutable: true
+          decorator: 'pods'
+    computeResourceQuota:
+      type: array
+      title: Compute Resource Quota
+      items:
+        type: object
+        properties:
+          key:
+            type: string
+            title: Key
+          value:
+            type: number
+            title: Value
+          decorator:
+            type: string
+            title: Decorator
+        required:
+          - key
+          - value
+          - decorator
+      default:
+        - key: 'limits.cpu'
+          value: 500
+          decorator: 'mCPUs'
+        - key: 'requests.cpu'
+          value: 250
+          decorator: 'mCPUs'
+        - key: 'limits.memory'
+          value: 500
+          decorator: 'Mi'
+        - key: 'requests.memory'
+          value: 500
+          decorator: 'Mi'
+    customQuota:
+      type: array
+      title: Custom Quota
+      items:
+        type: object
+        properties:
+          key:
+            type: string
+            title: Key
+          value:
+            type: number
+            title: Value
+          decorator:
+            type: string
+            title: Decorator
+        required:
+          - key
+          - value
+          - decorator
+      default: []
+  required:
+    - enabled
+    - countQuota
+    - computeResourceQuota
+
 runAsNonRoot:
   description: Will prevent the container from starting with UID 0.
   title: Run as non-root

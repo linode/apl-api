@@ -2,16 +2,7 @@
 import { Ability, Subject, subject } from '@casl/ability'
 import Debug from 'debug'
 import { each, forIn, get, isEmpty, isEqual, omit, set } from 'lodash'
-import {
-  Acl,
-  AclAction,
-  OpenAPIDoc,
-  PermissionSchema,
-  Schema,
-  SessionUser,
-  TeamAuthz,
-  UserAuthz,
-} from 'src/otomi-models'
+import { Acl, AclAction, OpenAPIDoc, Schema, SessionUser, TeamAuthz, UserAuthz } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { extract, flattenObject } from 'src/utils'
 
@@ -267,25 +258,40 @@ export default class Authz {
   }
 }
 
-export const getTeamSelfServiceAuthz = (
-  teams: Array<string>,
-  schema: PermissionSchema,
-  otomi: OtomiStack,
-): UserAuthz => {
+export const getTeamSelfServiceAuthz = (teams: Array<string>, otomi: OtomiStack): UserAuthz => {
   const permissionMap: UserAuthz = {}
 
   teams.forEach((teamId) => {
-    const authz: TeamAuthz = {} as TeamAuthz
-    Object.keys(schema.properties).forEach((propName) => {
-      const possiblePermissions = schema.properties[propName].items.enum
-      set(authz, `deniedAttributes.${propName}`, [])
-      authz.deniedAttributes[propName] = possiblePermissions.filter((name) => {
-        const flags = get(otomi.getTeamSelfServiceFlags(teamId), propName, [])
-        return !flags.includes(name)
+    // Initialize the team authorization object.
+    const authz: TeamAuthz = { deniedAttributes: {} }
+
+    // Retrieve the selfService flags for the team.
+    // Expected shape: { teamMembers: { createServices: boolean, editSecurityPolicies: boolean, ... } }
+    const selfServiceFlags = otomi.getTeamSelfServiceFlags(teamId)?.teamMembers
+
+    // Initialize deniedAttributes for teamMembers as an empty array.
+    authz.deniedAttributes.teamMembers = []
+
+    if (selfServiceFlags) {
+      // For each permission, if its flag is false then add it to the denied list.
+      Object.entries(selfServiceFlags).forEach(([permissionName, allowed]) => {
+        if (!allowed) {
+          authz.deniedAttributes.teamMembers.push(permissionName)
+        }
       })
-      if (propName === 'team') authz.deniedAttributes.team.push('selfService')
-    })
+    } else {
+      // Fallback: if no selfService data is found, deny all permissions.
+      authz.deniedAttributes.teamMembers = [
+        'createServices',
+        'editSecurityPolicies',
+        'useCloudShell',
+        'downloadKubeconfig',
+        'downloadDockerLogin',
+      ]
+    }
+
     permissionMap[teamId] = authz
   })
+
   return permissionMap
 }

@@ -1,50 +1,43 @@
 TeamSelfService:
-  title: Team permissions
+  title: Team Permissions
   description: Grant team permissions to modify certain configuration parameters.
   type: object
   properties:
-    service:
-      title: Service
-      type: array
-      items:
-        type: string
-        enum: [ingress]
-      x-allow-values:
-        ingress:
-          type: 'cluster'
-      default: [ingress]
-      uniqueItems: true
-    policies:
-      title: Security policies
-      type: array
-      items:
-        type: string
-        enum: ['edit policies']
-      default: ['edit policies']
-      uniqueItems: true
-    team:
-      title: Team settings
-      type: array
-      items:
-        type: string
-        # downloadKubeConfig - is an action that a user can perform, not an attribute of the input form
-        enum: [oidc, managedMonitoring, alerts, resourceQuota, networkPolicy]
-      uniqueItems: true
-    apps:
-      title: Apps
-      type: array
-      items:
-        type: string
-        enum: [argocd, gitea]
-      default: []
-      uniqueItems: true
-    access:
-      title: Access
-      type: array
-      items:
-        type: string
-        enum: [shell, downloadKubeConfig, downloadDockerConfig, downloadCertificateAuthority]
-      uniqueItems: true
+    teamMembers:
+      title: Team Members Permissions
+      type: object
+      properties:
+        createServices:
+          title: Create Services
+          type: boolean
+          default: false
+          description: Permission to create services.
+        editSecurityPolicies:
+          title: Edit Security Policies
+          type: boolean
+          default: false
+          description: Permission to edit security policies.
+        useCloudShell:
+          title: Use Cloud Shell
+          type: boolean
+          default: false
+          description: Permission to use the cloud shell.
+        downloadKubeconfig:
+          title: Download Kubeconfig
+          type: boolean
+          default: false
+          description: Permission to download the kubeconfig.
+        downloadDockerLogin:
+          title: Download Docker Login
+          type: boolean
+          default: false
+          description: Permission to download the docker login configuration.
+      required:
+        - createServices
+        - editSecurityPolicies
+        - useCloudShell
+        - downloadKubeconfig
+        - downloadDockerLogin
   x-acl:
     platformAdmin: [read-any, update-any]
     teamAdmin: [read]
@@ -53,7 +46,7 @@ TeamSelfService:
 Team:
   properties:
     id:
-      $ref: definitions.yaml#/idName
+      type: string
       title: ID
     name:
       $ref: definitions.yaml#/idName

@@ -1,14 +1,14 @@
 /* eslint-disable no-param-reassign */
+import { debug } from 'console'
 import { RequestHandler } from 'express'
+import { find } from 'lodash'
 import get from 'lodash/get'
 import Authz, { getTeamSelfServiceAuthz } from 'src/authz'
-import { OpenApiRequestExt, PermissionSchema, TeamSelfService } from 'src/otomi-models'
+import { OpenApiRequestExt } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { cleanEnv } from 'src/validators'
-import { getSessionStack } from './session'
 import { RepoService } from '../services/RepoService'
-import { debug } from 'console'
-import { find } from 'lodash'
+import { getSessionStack } from './session'
 
 const HttpMethodMapping: Record<string, string> = {
   DELETE: 'delete',
@@ -136,18 +136,17 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
 
   return next()
 }
-
 export function authzMiddleware(authz: Authz): RequestHandler {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
-    if (req.user) req.isSecurityHandler = true
-    else return next()
+    if (req.user) {
+      req.isSecurityHandler = true
+    } else {
+      return next()
+    }
     const otomi: OtomiStack = await getSessionStack(req.user.email)
-    req.user.authz = getTeamSelfServiceAuthz(
-      req.user.teams,
-      req.apiDoc.components.schemas.TeamSelfService as TeamSelfService as PermissionSchema,
-      otomi,
-    )
+    // Now we call the new helper which derives authz based on the new selfService.teamMembers flags.
+    req.user.authz = getTeamSelfServiceAuthz(req.user.teams, otomi)
     return authorize(req, res, next, authz, otomi.repoService)
   }
 }
