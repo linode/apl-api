@@ -245,35 +245,42 @@ export class TeamConfigService {
     return newSecret
   }
 
+  private mapObjectToKeyValueArray(obj?: Record<string, string>): { key: string; value: string }[] | undefined {
+    if (!obj || isEmpty(obj)) {
+      return undefined
+    }
+    return Object.entries(obj).map(([key, value]) => ({ key, value }))
+  }
+
   public getSealedSecret(name: string): SealedSecret {
-    const sealedSecrets = find(this.teamConfig.sealedsecrets, { name })
-    if (!sealedSecrets) {
+    const sealedSecret = find(this.teamConfig.sealedsecrets, { name })
+    if (!sealedSecret) {
       throw new NotExistError(`SealedSecret[${name}] does not exist.`)
     }
-    const { template } = sealedSecrets as any
-    if (template) {
-      sealedSecrets.type = template.type
-      sealedSecrets.immutable = template.immutable
-      sealedSecrets.metadata = template.metadata
-      if (sealedSecrets.metadata) {
-        if (!isEmpty(template.metadata.annotations))
-          sealedSecrets.metadata.annotations = Object.entries(
-            template.metadata.annotations as Record<string, string>,
-          ).map(([key, value]) => ({
-            key,
-            value,
-          }))
-        if (!isEmpty(template.metadata.labels))
-          sealedSecrets.metadata.labels = Object.entries(template.metadata.labels as Record<string, string>).map(
-            ([key, value]) => ({
-              key,
-              value,
-            }),
-          )
+    type SealedSecretTemplate = {
+      type: SealedSecret['type']
+      immutable?: SealedSecret['immutable']
+      metadata?: {
+        annotations?: Record<string, string>
+        labels?: Record<string, string>
+        finalizers?: string[]
       }
-      unset(sealedSecrets, 'template')
     }
-    return sealedSecrets
+    const { template } = sealedSecret as { template?: SealedSecretTemplate }
+    if (template) {
+      const { type, immutable, metadata } = template
+      sealedSecret.type = type
+      sealedSecret.immutable = immutable
+      if (metadata) {
+        sealedSecret.metadata = {
+          ...metadata,
+          annotations: this.mapObjectToKeyValueArray(metadata.annotations),
+          labels: this.mapObjectToKeyValueArray(metadata.labels),
+        }
+      }
+      unset(sealedSecret, 'template')
+    }
+    return sealedSecret
   }
 
   public getSealedSecrets(): SealedSecret[] {
