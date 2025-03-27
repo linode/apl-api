@@ -1,4 +1,4 @@
-import { find, has, mergeWith, remove, set } from 'lodash'
+import { find, has, isEmpty, mergeWith, remove, set, unset } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
 import { AlreadyExists, NotExistError } from '../error'
 import {
@@ -249,6 +249,29 @@ export class TeamConfigService {
     const sealedSecrets = find(this.teamConfig.sealedsecrets, { name })
     if (!sealedSecrets) {
       throw new NotExistError(`SealedSecret[${name}] does not exist.`)
+    }
+    const { template } = sealedSecrets as any
+    if (template) {
+      sealedSecrets.type = template.type
+      sealedSecrets.immutable = template.immutable
+      sealedSecrets.metadata = template.metadata
+      if (sealedSecrets.metadata) {
+        if (!isEmpty(template.metadata.annotations))
+          sealedSecrets.metadata.annotations = Object.entries(
+            template.metadata.annotations as Record<string, string>,
+          ).map(([key, value]) => ({
+            key,
+            value,
+          }))
+        if (!isEmpty(template.metadata.labels))
+          sealedSecrets.metadata.labels = Object.entries(template.metadata.labels as Record<string, string>).map(
+            ([key, value]) => ({
+              key,
+              value,
+            }),
+          )
+      }
+      unset(sealedSecrets, 'template')
     }
     return sealedSecrets
   }
