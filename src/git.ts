@@ -93,7 +93,7 @@ export class Git {
 
     this.git = simpleGit(this.path, {
       config: ['http.sslVerify=false'],
-    })
+    }).env('GIT_SSL_NO_VERIFY', 'true')
   }
 
   getProtocol() {
