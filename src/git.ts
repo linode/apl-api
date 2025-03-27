@@ -45,14 +45,13 @@ const prepareUrl = `${baseUrl}/prepare`
 const initUrl = `${baseUrl}/init`
 const valuesUrl = `${baseUrl}/otomi/values`
 
-const getProtocol = (url): string => (url && url.includes('://') ? url.split('://')[0] : 'https')
+const getProtocol = (url): string => (url && url.includes('://') ? url.split('://')[0] : 'http')
 
 const getUrl = (url): string => (!url || url.includes('://') ? url : `${getProtocol(url)}://${url}`)
 
 function getUrlAuth(url, user, password): string | undefined {
   if (!url) return
-  let protocol = getProtocol(url)
-  if (protocol === 'https') protocol = 'http'
+  const protocol = getProtocol(url)
   const [_, bareUrl] = url.split('://')
   const encodedUser = encodeURIComponent(user as string)
   const encodedPassword = encodeURIComponent(password as string)
@@ -92,9 +91,7 @@ export class Git {
     this.user = user
     this.url = url
 
-    this.git = simpleGit(this.path, {
-      config: ['http.sslVerify=false'],
-    }).env('GIT_SSL_NO_VERIFY', 'true')
+    this.git = simpleGit(this.path).env('GIT_SSL_NO_VERIFY', 'true')
   }
 
   getProtocol() {
@@ -347,7 +344,7 @@ export class Git {
         this.urlAuth = getUrlAuth(this.url, env.GIT_USER, env.GIT_PASSWORD)
       }
       debug(`Cloning from '${this.url}' to '${this.path}'`)
-      await this.git.clone(this.urlAuth!, this.path, ['-c', 'http.sslVerify=false', '--verbose'])
+      await this.git.clone(this.urlAuth!, this.path)
       await this.addConfig()
       await this.git.checkout(this.branch)
     } else if (this.url) {
