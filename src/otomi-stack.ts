@@ -282,7 +282,6 @@ export default class OtomiStack {
 
       const repo = rawRepo as Repo
       this.repoService = new RepoService(repo)
-      this.repoService.getRepo().teamConfig = repo.teamConfig
     }
   }
 
