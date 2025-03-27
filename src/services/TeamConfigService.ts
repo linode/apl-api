@@ -1,4 +1,4 @@
-import { find, has, mergeWith, remove, set } from 'lodash'
+import { find, has, isEmpty, mergeWith, remove, set, unset } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
 import { AlreadyExists, NotExistError } from '../error'
 import {
@@ -245,12 +245,42 @@ export class TeamConfigService {
     return newSecret
   }
 
+  private mapObjectToKeyValueArray(obj?: Record<string, string>): { key: string; value: string }[] | undefined {
+    if (!obj || isEmpty(obj)) {
+      return undefined
+    }
+    return Object.entries(obj).map(([key, value]) => ({ key, value }))
+  }
+
   public getSealedSecret(name: string): SealedSecret {
-    const sealedSecrets = find(this.teamConfig.sealedsecrets, { name })
-    if (!sealedSecrets) {
+    const sealedSecret = find(this.teamConfig.sealedsecrets, { name })
+    if (!sealedSecret) {
       throw new NotExistError(`SealedSecret[${name}] does not exist.`)
     }
-    return sealedSecrets
+    type SealedSecretTemplate = {
+      type: SealedSecret['type']
+      immutable?: SealedSecret['immutable']
+      metadata?: {
+        annotations?: Record<string, string>
+        labels?: Record<string, string>
+        finalizers?: string[]
+      }
+    }
+    const { template } = sealedSecret as { template?: SealedSecretTemplate }
+    if (template) {
+      const { type, immutable, metadata } = template
+      sealedSecret.type = type
+      sealedSecret.immutable = immutable
+      if (metadata) {
+        sealedSecret.metadata = {
+          ...metadata,
+          annotations: this.mapObjectToKeyValueArray(metadata.annotations),
+          labels: this.mapObjectToKeyValueArray(metadata.labels),
+        }
+      }
+      unset(sealedSecret, 'template')
+    }
+    return sealedSecret
   }
 
   public getSealedSecrets(): SealedSecret[] {
