@@ -2581,83 +2581,6 @@ components:
   # Please stick to: alphabetical sorting, all Uppercase first and then lowercase.
   # --------------------------------------------
   schemas:
-    aplResourceKind:
-      type: string
-      enum:
-        - 'AplApp'
-        - 'AplAlertSet'
-        - 'AplCluster'
-        - 'AplDatabase'
-        - 'AplDns'
-        - 'AplIngress'
-        - 'AplObjectStorage'
-        - 'AplKms'
-        - 'AplIdentityProvider'
-        - 'AplCapabilitySet'
-        - 'AplSmtp'
-        - 'AplBackupCollection'
-        - 'AplUser'
-        - 'AplTeamCodeRepo'
-        - 'AplTeamBuild'
-        - 'AplTeamPolicy'
-        - 'AplTeamSettingSet'
-        - 'AplTeamNetworkControl'
-        - 'AplTeamProject'
-        - 'AplTeamBackup'
-        - 'AplTeamSecret'
-        - 'AplTeamService'
-        - 'AplTeamWorkload'
-        - 'AplTeamWorkloadValues'
-        - 'AplTeamTool'
-        - 'AplVersion'
-    aplResourceLabels:
-      type: object
-      properties:
-        apl.io/id:
-          type: string
-    aplResourceTeamLabels:
-      type: object
-      properties:
-        apl.io/id:
-          type: string
-        apl.io/teamId:
-          $ref: 'definitions.yaml#/idName'
-    aplResourceRequestMetadata:
-      type: object
-      properties:
-        name:
-          $ref: 'definitions.yaml#/idName'
-      required:
-        - name
-    aplResourceMetadata:
-      type: object
-      properties:
-        name:
-          $ref: 'definitions.yaml#/idName'
-        labels:
-          $ref: '#/components/schemas/aplResourceLabels'
-      required:
-        - name
-        - labels
-    aplResourceTeamMetadata:
-      type: object
-      properties:
-        name:
-          type: string
-        labels:
-          $ref: '#/components/schemas/aplResourceTeamLabels'
-      required:
-        - name
-        - labels
-    aplResourceStatus:
-      type: object
-      properties:
-        conditions:
-          type: array
-          items:
-            $ref: '#/components/schemas/aplResourceStatusCondition'
-        phase:
-          type: string
     aplResourceStatusCondition:
       type: object
       properties:
@@ -2672,59 +2595,54 @@ components:
           type: boolean
         type:
           type: string
-    aplMetadataRequest:
+    aplMetadata:
       type: object
       properties:
         metadata:
-          $ref: '#/components/schemas/aplResourceRequestMetadata'
+          type: object
+          properties:
+            name:
+              example: name
+              $ref: 'definitions.yaml#/idName'
+          required:
+            - name
       required:
         - metadata
-    aplMetadataResponse:
+    aplTeamMetadata:
       type: object
       properties:
         metadata:
-          $ref: '#/components/schemas/aplResourceMetadata'
-      required:
-        - metadata
-    aplTeamMetadataResponse:
-      type: object
-      properties:
-        metadata:
-          $ref: '#/components/schemas/aplResourceTeamMetadata'
+          type: object
+          properties:
+            name:
+              type: string
+            labels:
+              type: object
+              properties:
+                apl.io/teamId:
+                  example: team-name
+                  $ref: 'definitions.yaml#/idName'
+              required:
+                - apl.io/teamId
+          required:
+            - name
+            - labels
       required:
         - metadata
     aplStatusResponse:
       type: object
       properties:
         status:
-          $ref: '#/components/schemas/aplResourceStatus'
+          type: object
+          properties:
+            conditions:
+              type: array
+              items:
+                $ref: '#/components/schemas/aplResourceStatusCondition'
+            phase:
+              type: string
       required:
         - status
-    resourceMetadata:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          title: Name
-          example: name
-          $ref: 'definitions.yaml#/idName'
-      required:
-        - name
-    teamResourceMetadata:
-      type: object
-      properties:
-        id:
-          type: string
-        teamId:
-          example: teamId
-          $ref: 'definitions.yaml#/idName'
-        name:
-          title: Name
-          example: name
-          $ref: 'definitions.yaml#/idName'
-      required:
-        - name
     AplBackup:
       type: object
       properties:
@@ -2739,12 +2657,12 @@ components:
     AplBackupRequest:
       allOf:
         - $ref: '#/components/schemas/AplBackup'
-        - $ref: '#/components/schemas/aplMetadataRequest'
+        - $ref: '#/components/schemas/aplMetadata'
     AplBackupResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplBackup'
-        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
     AplBuild:
       type: object
@@ -2760,12 +2678,12 @@ components:
     AplBuildRequest:
       allOf:
         - $ref: '#/components/schemas/AplBuild'
-        - $ref: '#/components/schemas/aplMetadataRequest'
+        - $ref: '#/components/schemas/aplMetadata'
     AplBuildResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplBuild'
-        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
     AplCodeRepo:
       type: object
@@ -2781,12 +2699,12 @@ components:
     AplCodeRepoRequest:
       allOf:
         - $ref: '#/components/schemas/AplCodeRepo'
-        - $ref: '#/components/schemas/aplMetadataRequest'
+        - $ref: '#/components/schemas/aplMetadata'
     AplCodeRepoResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplCodeRepo'
-        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
     AplNetpol:
       type: object
@@ -2802,12 +2720,12 @@ components:
     AplNetpolRequest:
       allOf:
         - $ref: '#/components/schemas/AplNetpol'
-        - $ref: '#/components/schemas/aplMetadataRequest'
+        - $ref: '#/components/schemas/aplMetadata'
     AplNetpolResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplNetpol'
-        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
     AplPolicy:
       type: object
@@ -2823,12 +2741,12 @@ components:
     AplPolicyRequest:
       allOf:
         - $ref: '#/components/schemas/AplPolicy'
-        - $ref: '#/components/schemas/aplMetadataRequest'
+        - $ref: '#/components/schemas/aplMetadata'
     AplPolicyResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplPolicy'
-        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
     AplProject:
       type: object
@@ -2841,14 +2759,10 @@ components:
       required:
         - kind
         - spec
-    AplProjectRef:
-      allOf:
-        - $ref: '#/components/schemas/AplProject'
-        - $ref: '#/components/schemas/aplMetadataRequest'
     AplProjectRequest:
       allOf:
         - $ref: '#/components/schemas/AplProject'
-        - $ref: '#/components/schemas/aplMetadataRequest'
+        - $ref: '#/components/schemas/aplMetadata'
         - type: object
           properties:
             spec:
@@ -2871,7 +2785,7 @@ components:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplProject'
-        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
         - type: object
           properties:
@@ -2905,12 +2819,12 @@ components:
     AplSecretRequest:
       allOf:
         - $ref: '#/components/schemas/AplSecret'
-        - $ref: '#/components/schemas/aplMetadataRequest'
+        - $ref: '#/components/schemas/aplMetadata'
     AplSecretResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplSecret'
-        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
     AplService:
       type: object
@@ -2926,12 +2840,12 @@ components:
     AplServiceRequest:
       allOf:
         - $ref: '#/components/schemas/AplService'
-        - $ref: '#/components/schemas/aplMetadataRequest'
+        - $ref: '#/components/schemas/aplMetadata'
     AplServiceResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplService'
-        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
     AplTeamSettings:
       type: object
@@ -2947,12 +2861,12 @@ components:
     AplTeamSettingsRequest:
       allOf:
         - $ref: '#/components/schemas/AplTeamSettings'
-        - $ref: '#/components/schemas/aplMetadataRequest'
+        - $ref: '#/components/schemas/aplMetadata'
     AplTeamSettingsResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplTeamSettings'
-        - $ref: '#/components/schemas/aplMetadataResponse'
+        - $ref: '#/components/schemas/aplMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
     AplWorkload:
       type: object
@@ -2968,12 +2882,12 @@ components:
     AplWorkloadRequest:
       allOf:
         - $ref: '#/components/schemas/AplWorkload'
-        - $ref: '#/components/schemas/aplMetadataRequest'
+        - $ref: '#/components/schemas/aplMetadata'
     AplWorkloadResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplWorkload'
-        - $ref: '#/components/schemas/aplTeamMetadataResponse'
+        - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
 
     App:
