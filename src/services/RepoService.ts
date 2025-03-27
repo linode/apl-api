@@ -142,13 +142,13 @@ export class RepoService {
     }
   }
 
-  public createTeamConfig(teamName: string, team: Team): TeamConfig {
+  public createTeamConfig(team: Team): TeamConfig {
+    const teamName = team.name
     if (has(this.repo.teamConfig, teamName)) {
       throw new AlreadyExists(`TeamConfig[${teamName}] already exists.`)
     }
     const newTeam = this.getDefaultTeamConfig()
     newTeam.settings = team
-    newTeam.settings.id = teamName
     this.repo.teamConfig[teamName] = newTeam
     return this.repo.teamConfig[teamName]
   }

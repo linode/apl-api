@@ -156,7 +156,7 @@ describe('Data validation', () => {
       workloadValues: [],
     } as TeamConfig)
     await otomiStack.createTeam({ name: 'test' }, false)
-    expect(createItemSpy.mock.calls[0][1].password).not.toEqual('')
+    expect(createItemSpy.mock.calls[0][0].password).not.toEqual('')
     createItemSpy.mockRestore()
   })
 
@@ -177,7 +177,7 @@ describe('Data validation', () => {
     } as TeamConfig)
     const myPassword = 'someAwesomePassword'
     await otomiStack.createTeam({ name: 'test', password: myPassword }, false)
-    expect(createItemSpy.mock.calls[0][1].password).toEqual(myPassword)
+    expect(createItemSpy.mock.calls[0][0].password).toEqual(myPassword)
     createItemSpy.mockRestore()
   })
 })
@@ -358,7 +358,7 @@ describe('Code repositories tests', () => {
     otomiStack.git = mockDeep<Git>()
 
     try {
-      otomiStack.repoService.createTeamConfig('demo', { name: 'demo' })
+      otomiStack.repoService.createTeamConfig({ name: 'demo' })
     } catch {
       // ignore
     }

@@ -655,7 +655,7 @@ export default class OtomiStack {
       })
     }
 
-    const teamConfig = this.repoService.createTeamConfig(teamName, data)
+    const teamConfig = this.repoService.createTeamConfig(data)
     const team = teamConfig.settings
     const apps = getAppList()
     const core = this.getCore()
@@ -670,7 +670,7 @@ export default class OtomiStack {
     if (deploy) {
       await this.saveTeam(team)
       await this.doRepoDeployment((repoService) => {
-        repoService.createTeamConfig(teamName, data)
+        repoService.createTeamConfig(data)
         repoService.getTeamConfigService(teamName).setApps(teamApps)
       })
     }

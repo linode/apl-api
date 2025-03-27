@@ -494,7 +494,7 @@ describe('TeamConfigService', () => {
           metadata: {
             name: 'TestBuild',
             labels: {
-              'apl.io/teamId': 'team-id',
+              'apl.io/teamId': 'team1',
             },
           },
           spec: {},

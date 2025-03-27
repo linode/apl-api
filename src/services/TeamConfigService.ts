@@ -47,7 +47,7 @@ export class TeamConfigService {
   }
 
   private createAplObject(name: string, request: AplRequestObject): AplResponseObject {
-    return createAplObject(name, request, this.teamConfig.settings.id || this.teamConfig.settings.name)
+    return createAplObject(name, request, this.teamConfig.settings.name)
   }
 
   // =====================================
