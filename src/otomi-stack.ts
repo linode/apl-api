@@ -211,7 +211,6 @@ export default class OtomiStack {
       metadata: {
         name,
         labels: {
-          'apl.io/id': `${teamId}-${name}`,
           'apl.io/teamId': teamId,
         },
       },
@@ -222,7 +221,6 @@ export default class OtomiStack {
 
   transformSecrets(teamId: string, secrets: SealedSecretManifestType[]): AplSecretResponse[] {
     return secrets.map((secret) => {
-      const id = secret.metadata.labels?.['apl.io/id'] || uuidv4()
       const annotations = Object.entries(secret.spec.template?.metadata?.annotations || {}).map(([key, value]) => {
         return { key, value }
       })
@@ -234,7 +232,6 @@ export default class OtomiStack {
         metadata: {
           name: secret.metadata.name,
           labels: {
-            'apl.io/id': id,
             'apl.io/teamId': teamId,
           },
         },
@@ -751,7 +748,6 @@ export default class OtomiStack {
       metadata: {
         name: teamId,
         labels: {
-          'apl.io/id': teamId,
           'apl.io/teamId': teamId,
         },
       },
@@ -1149,7 +1145,6 @@ export default class OtomiStack {
   getProject(teamId: string, name: string): Record<string, any> {
     const project = this.getAplProject(teamId, name)
     return {
-      id: project.metadata.labels['apl.io/id'],
       teamId: project.metadata.labels['apl.io/teamId'],
       name: project.metadata.name,
       spec: {
@@ -2369,7 +2364,6 @@ export default class OtomiStack {
     const serviceSpec = service.spec
     const serviceMeta = {
       name: service.metadata.name,
-      id: service.metadata.labels['apl.io/id'],
       teamId: service.metadata.labels['apl.io/teamId'],
     }
     const publicIngressFields = [

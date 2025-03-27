@@ -53,7 +53,6 @@ describe('TeamConfigService', () => {
         metadata: {
           name: 'TestBuild',
           labels: {
-            'apl.io/id': 'mocked-uuid',
             'apl.io/teamId': 'team1',
           },
         },
@@ -115,7 +114,6 @@ describe('TeamConfigService', () => {
         metadata: {
           name: 'TestWorkload',
           labels: {
-            'apl.io/id': 'mocked-uuid',
             'apl.io/teamId': 'team1',
           },
         },
@@ -166,7 +164,6 @@ describe('TeamConfigService', () => {
         metadata: {
           name: 'TestService',
           labels: {
-            'apl.io/id': 'mocked-uuid',
             'apl.io/teamId': 'team1',
           },
         },
@@ -217,7 +214,6 @@ describe('TeamConfigService', () => {
         metadata: {
           name: 'TestSecret',
           labels: {
-            'apl.io/id': 'mocked-uuid',
             'apl.io/teamId': 'team1',
           },
         },
@@ -268,7 +264,6 @@ describe('TeamConfigService', () => {
         metadata: {
           name: 'TestBackup',
           labels: {
-            'apl.io/id': 'mocked-uuid',
             'apl.io/teamId': 'team1',
           },
         },
@@ -304,7 +299,6 @@ describe('TeamConfigService', () => {
         metadata: {
           name: 'TestProject',
           labels: {
-            'apl.io/id': 'mocked-uuid',
             'apl.io/teamId': 'team1',
           },
         },
@@ -340,7 +334,6 @@ describe('TeamConfigService', () => {
         metadata: {
           name: 'TestNetpol',
           labels: {
-            'apl.io/id': 'mocked-uuid',
             'apl.io/teamId': 'team1',
           },
         },
@@ -392,7 +385,6 @@ describe('TeamConfigService', () => {
           metadata: {
             name: 'require-limits',
             labels: {
-              'apl.io/id': 'team1-require-limits',
               'apl.io/teamId': 'team1',
             },
           },
@@ -416,7 +408,6 @@ describe('TeamConfigService', () => {
         metadata: {
           name: 'require-limits',
           labels: {
-            'apl.io/id': 'team1-require-limits',
             'apl.io/teamId': 'team1',
           },
         },
@@ -503,7 +494,6 @@ describe('TeamConfigService', () => {
           metadata: {
             name: 'TestBuild',
             labels: {
-              'apl.io/id': expect.any(String),
               'apl.io/teamId': 'team-id',
             },
           },

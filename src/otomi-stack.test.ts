@@ -58,7 +58,12 @@ describe('Data validation', () => {
     mockTeamConfigService.getServices.mockReturnValue([
       {
         kind: 'AplTeamService',
-        metadata: { name: 'svc', labels: {} },
+        metadata: {
+          name: 'svc',
+          labels: {
+            'apl.io/teamId': 'team-1',
+          },
+        },
         spec: {
           type: 'public',
           domain: 'b.a.com',
@@ -67,7 +72,12 @@ describe('Data validation', () => {
       },
       {
         kind: 'AplTeamService',
-        metadata: { name: 'svc', labels: {} },
+        metadata: {
+          name: 'svc',
+          labels: {
+            'apl.io/teamId': 'team-1',
+          },
+        },
         spec: {
           type: 'public',
           domain: 'b.a.com',
@@ -357,7 +367,6 @@ describe('Code repositories tests', () => {
       kind: 'AplTeamCodeRepo',
       metadata: {
         labels: {
-          'apl.io/id': '1',
           'apl.io/teamId': 'demo',
         },
         name: 'code-1',
@@ -379,7 +388,6 @@ describe('Code repositories tests', () => {
       kind: 'AplTeamCodeRepo',
       metadata: {
         labels: {
-          'apl.io/id': '2',
           'apl.io/teamId': 'demo',
         },
         name: 'code-1',
@@ -398,7 +406,6 @@ describe('Code repositories tests', () => {
     })
 
     expect(codeRepo).toEqual({
-      id: '2',
       teamId: 'demo',
       name: 'code-1',
       gitService: 'gitea',
@@ -416,7 +423,6 @@ describe('Code repositories tests', () => {
       metadata: {
         name: 'code-1',
         labels: {
-          'apl.io/id': '2',
           'apl.io/teamId': 'demo',
         },
       },
@@ -436,7 +442,6 @@ describe('Code repositories tests', () => {
       metadata: {
         name: 'code-1',
         labels: {
-          'apl.io/id': '1',
           'apl.io/teamId': 'demo',
         },
       },
@@ -448,7 +453,6 @@ describe('Code repositories tests', () => {
 
     const result = otomiStack.getCodeRepo('demo', '1')
     expect(result).toEqual({
-      id: '1',
       teamId: 'demo',
       name: 'code-1',
       gitService: 'gitea',
@@ -462,7 +466,6 @@ describe('Code repositories tests', () => {
       metadata: {
         name: 'code-1-updated',
         labels: {
-          'apl.io/id': '1',
           'apl.io/teamId': 'demo',
         },
       },
@@ -484,7 +487,6 @@ describe('Code repositories tests', () => {
     })
 
     expect(codeRepo).toEqual({
-      id: '1',
       teamId: 'demo',
       name: 'code-1-updated',
       gitService: 'gitea',
@@ -499,7 +501,6 @@ describe('Code repositories tests', () => {
       metadata: {
         name: 'code-1-updated',
         labels: {
-          'apl.io/id': '1',
           'apl.io/teamId': 'demo',
         },
       },
@@ -515,7 +516,6 @@ describe('Code repositories tests', () => {
 
   test('should delete an existing internal code repository', async () => {
     const codeRepo = {
-      id: '1',
       teamId: 'demo',
       name: 'code-1',
       gitService: 'gitea',
@@ -541,7 +541,6 @@ describe('Code repositories tests', () => {
       metadata: {
         name: 'code-1',
         labels: {
-          'apl.io/id': '1',
           'apl.io/teamId': 'demo',
         },
       },
@@ -563,7 +562,6 @@ describe('Code repositories tests', () => {
     })
 
     expect(codeRepo).toEqual({
-      id: '1',
       teamId: 'demo',
       name: 'code-1',
       gitService: 'github',
@@ -583,7 +581,6 @@ describe('Code repositories tests', () => {
       metadata: {
         name: 'code-1',
         labels: {
-          'apl.io/id': '1',
           'apl.io/teamId': 'demo',
         },
       },
@@ -607,7 +604,6 @@ describe('Code repositories tests', () => {
       metadata: {
         name: 'code-1',
         labels: {
-          'apl.io/id': '1',
           'apl.io/teamId': 'demo',
         },
       },
@@ -622,7 +618,6 @@ describe('Code repositories tests', () => {
 
     const result = otomiStack.getCodeRepo('demo', '1')
     expect(result).toEqual({
-      id: '1',
       teamId: 'demo',
       name: 'code-1',
       gitService: 'github',
@@ -636,7 +631,6 @@ describe('Code repositories tests', () => {
       metadata: {
         name: 'code-1-updated',
         labels: {
-          'apl.io/id': '1',
           'apl.io/teamId': 'demo',
         },
       },
@@ -659,7 +653,6 @@ describe('Code repositories tests', () => {
     })
 
     expect(codeRepo).toEqual({
-      id: '1',
       teamId: 'demo',
       name: 'code-1-updated',
       gitService: 'github',
@@ -675,7 +668,7 @@ describe('Code repositories tests', () => {
     })
     expect(saveTeamCodeReposSpy).toHaveBeenCalledWith({
       kind: 'AplTeamCodeRepo',
-      metadata: { name: 'code-1-updated', labels: { 'apl.io/id': '1', 'apl.io/teamId': 'demo' } },
+      metadata: { name: 'code-1-updated', labels: { 'apl.io/teamId': 'demo' } },
       spec: {
         name: 'code-1-updated',
         gitService: 'github',
@@ -692,7 +685,6 @@ describe('Code repositories tests', () => {
 
   test('should delete an existing external public code repository', async () => {
     const codeRepo = {
-      id: '1',
       teamId: 'demo',
       name: 'code-1',
       gitService: 'github',
@@ -718,7 +710,6 @@ describe('Code repositories tests', () => {
       metadata: {
         name: 'code-1',
         labels: {
-          'apl.io/id': '1',
           'apl.io/teamId': 'demo',
         },
       },
@@ -743,7 +734,6 @@ describe('Code repositories tests', () => {
     })
 
     expect(codeRepo).toEqual({
-      id: '1',
       teamId: 'demo',
       name: 'code-1',
       gitService: 'github',
@@ -764,7 +754,7 @@ describe('Code repositories tests', () => {
     })
     expect(saveTeamCodeReposSpy).toHaveBeenCalledWith({
       kind: 'AplTeamCodeRepo',
-      metadata: { name: 'code-1', labels: { 'apl.io/id': '1', 'apl.io/teamId': 'demo' } },
+      metadata: { name: 'code-1', labels: { 'apl.io/teamId': 'demo' } },
       spec: {
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
@@ -786,7 +776,6 @@ describe('Code repositories tests', () => {
       metadata: {
         name: 'code-1-updated',
         labels: {
-          'apl.io/id': '1',
           'apl.io/teamId': 'demo',
         },
       },
@@ -813,7 +802,6 @@ describe('Code repositories tests', () => {
     })
 
     expect(codeRepo).toEqual({
-      id: '1',
       teamId: 'demo',
       name: 'code-1-updated',
       gitService: 'github',
@@ -838,7 +826,6 @@ describe('Code repositories tests', () => {
       metadata: {
         name: 'code-1-updated',
         labels: {
-          'apl.io/id': '1',
           'apl.io/teamId': 'demo',
         },
       },
@@ -860,7 +847,6 @@ describe('Code repositories tests', () => {
 
   test('should delete an existing external private code repository', async () => {
     const codeRepo = {
-      id: '1',
       teamId: 'demo',
       name: 'code-1',
       gitService: 'github',

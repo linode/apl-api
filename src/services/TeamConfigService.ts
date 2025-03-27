@@ -46,8 +46,8 @@ export class TeamConfigService {
     this.teamConfig.policies ??= []
   }
 
-  private createAplObject(name: string, request: AplRequestObject, id?: string): AplResponseObject {
-    return createAplObject(name, request, id, this.teamConfig.settings.id || this.teamConfig.settings.name)
+  private createAplObject(name: string, request: AplRequestObject): AplResponseObject {
+    return createAplObject(name, request, this.teamConfig.settings.id || this.teamConfig.settings.name)
   }
 
   // =====================================
@@ -447,15 +447,11 @@ export class TeamConfigService {
   public updatePolicies(name: string, updates: AplPolicyRequest): AplPolicyResponse {
     const policy = find(this.teamConfig.policies, (item) => item.metadata.name === name)
     if (!policy) {
-      const newPolicy = this.createAplObject(
-        name,
-        {
-          metadata: { name },
-          kind: 'AplTeamPolicy',
-          spec: updates.spec,
-        },
-        `${this.teamConfig.settings.id || this.teamConfig.settings.name}-${name}`,
-      ) as AplPolicyResponse
+      const newPolicy = this.createAplObject(name, {
+        metadata: { name },
+        kind: 'AplTeamPolicy',
+        spec: updates.spec,
+      }) as AplPolicyResponse
       this.teamConfig.policies.push(newPolicy)
       return newPolicy
     } else {
@@ -467,18 +463,14 @@ export class TeamConfigService {
   public patchPolicies(name: string, updates: DeepPartial<AplPolicyRequest>): AplPolicyResponse {
     const policy = find(this.teamConfig.policies, (item) => item.metadata.name === name)
     if (!policy) {
-      const newPolicy = this.createAplObject(
-        name,
-        {
-          metadata: { name },
-          kind: 'AplTeamPolicy',
-          spec: {
-            action: updates.spec?.action || 'Audit',
-            severity: updates.spec?.severity || 'medium',
-          },
+      const newPolicy = this.createAplObject(name, {
+        metadata: { name },
+        kind: 'AplTeamPolicy',
+        spec: {
+          action: updates.spec?.action || 'Audit',
+          severity: updates.spec?.severity || 'medium',
         },
-        `${this.teamConfig.settings.id || this.teamConfig.settings.name}-${name}`,
-      ) as AplPolicyResponse
+      }) as AplPolicyResponse
       this.teamConfig.policies.push(newPolicy)
       return newPolicy
     } else {

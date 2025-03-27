@@ -1,14 +1,4 @@
-import {
-  AplKind,
-  AplRequestObject,
-  AplResponseObject,
-  DeepPartial,
-  ResourceMetadata,
-  ResourceTeamMetadata,
-  ServiceSpec,
-  V1ApiObject,
-} from '../otomi-models'
-import { v4 as uuidv4 } from 'uuid'
+import { AplKind, AplRequestObject, AplResponseObject, DeepPartial, ServiceSpec, V1ApiObject } from '../otomi-models'
 import { merge, omit } from 'lodash'
 
 export function getAplObjectFromV1(kind: AplKind, spec: V1ApiObject | ServiceSpec): AplRequestObject {
@@ -23,7 +13,6 @@ export function getAplObjectFromV1(kind: AplKind, spec: V1ApiObject | ServiceSpe
 
 export function getV1ObjectFromApl(aplObject: AplResponseObject): V1ApiObject {
   return {
-    id: aplObject.metadata.labels['apl.io/id'],
     teamId: aplObject.metadata.labels['apl.io/teamId'],
     name: aplObject.metadata.name,
     ...aplObject.spec,
@@ -41,34 +30,21 @@ export function getV1MergeObject(updates: DeepPartial<V1ApiObject | ServiceSpec>
   }
 }
 
-export function createObjectMetadata(
-  name: string,
-  id?: string,
-  teamId?: string,
-): ResourceMetadata | ResourceTeamMetadata {
-  const labels = teamId
+export function createAplObject(name: string, request: AplRequestObject, teamId?: string): AplResponseObject {
+  const metaLabels = teamId
     ? {
-        'apl.io/id': id ?? uuidv4(),
-        'apl.io/teamId': teamId,
+        labels: {
+          'apl.io/teamId': teamId,
+        },
       }
-    : {
-        'apl.io/id': id ?? uuidv4(),
-      }
-  return {
-    name,
-    labels,
-  }
-}
-
-export function createAplObject(
-  name: string,
-  request: AplRequestObject,
-  id?: string,
-  teamId?: string,
-): AplResponseObject {
+    : {}
   return {
     kind: request.kind,
-    metadata: createObjectMetadata(name, id, teamId),
+    metadata: {
+      ...request.metadata,
+      ...metaLabels,
+      name,
+    },
     spec: request.spec,
     status: {},
   } as AplResponseObject

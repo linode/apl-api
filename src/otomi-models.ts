@@ -3,8 +3,8 @@ import { JSONSchema4 } from 'json-schema'
 import { components, external, operations, paths } from 'src/generated-schema'
 import OtomiStack from 'src/otomi-stack'
 
-export type ResourceMetadata = components['schemas']['aplResourceMetadata']
-export type ResourceTeamMetadata = components['schemas']['aplResourceTeamMetadata']
+export type ResourceMetadata = components['schemas']['aplMetadata']['metadata']
+export type ResourceTeamMetadata = components['schemas']['aplTeamMetadata']['metadata']
 export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
 export type Backup = components['schemas']['Backup']
