@@ -346,7 +346,7 @@ export class Git {
         this.urlAuth = getUrlAuth(this.url, env.GIT_USER, env.GIT_PASSWORD)
       }
       debug(`Cloning from '${this.url}' to '${this.path}'`)
-      await this.git.clone(this.urlAuth!, this.path)
+      await this.git.clone(this.urlAuth!, this.path, ['-c', 'http.sslVerify=false', '--verbose'])
       await this.addConfig()
       await this.git.checkout(this.branch)
     } else if (this.url) {
