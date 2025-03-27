@@ -37,6 +37,7 @@ export default function (): OperationHandlerArray {
         decodeURIComponent(teamId),
         decodeURIComponent(netpolName),
         body as DeepPartial<AplNetpolRequest>,
+        true,
       )
       res.json(data)
     },
@@ -45,6 +46,7 @@ export default function (): OperationHandlerArray {
     delete: del,
     get,
     put,
+    patch,
   }
   return api
 }
