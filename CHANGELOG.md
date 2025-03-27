@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.0.1](https://github.com/redkubes/otomi-api/compare/v3.7.0...v4.0.1) (2025-03-27)
+
+### Bug Fixes
+
+* create helm chart with branches or tags ([#668](https://github.com/redkubes/otomi-api/issues/668)) ([6df818f](https://github.com/redkubes/otomi-api/commit/6df818f64a55d28837042e8aa5dbeec055a1775a)), closes [#667](https://github.com/redkubes/otomi-api/issues/667)
+* form validation error & update services files to handle deep merge operations ([#665](https://github.com/redkubes/otomi-api/issues/665)) ([d96facd](https://github.com/redkubes/otomi-api/commit/d96facdbe3d1e1de28e96ae097af6a09ee16fe21))
+* sealed secrets metadata ([#670](https://github.com/redkubes/otomi-api/issues/670)) ([0e73ef7](https://github.com/redkubes/otomi-api/commit/0e73ef7e85e2b50c7a2083c89c9e7d57e5289ac3))
+
 ## [4.0.0](https://github.com/redkubes/otomi-api/compare/v3.7.0...v4.0.0) (2025-03-17)
 
 
