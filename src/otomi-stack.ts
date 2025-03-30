@@ -1052,7 +1052,9 @@ export default class OtomiStack {
   }
 
   async createCodeRepo(teamId: string, data: CodeRepo): Promise<CodeRepo> {
+    const allRepoUrls = this.getAllCodeRepos().map((repo) => repo.repositoryUrl) || []
     try {
+      if (allRepoUrls.includes(data.repositoryUrl)) throw new AlreadyExists()
       const body = { ...data }
       if (!body.private) unset(body, 'secret')
       const codeRepo = this.repoService.getTeamConfigService(teamId).createCodeRepo({ ...data, teamId })
@@ -1066,7 +1068,10 @@ export default class OtomiStack {
       )
       return codeRepo
     } catch (err) {
-      if (err.code === 409) err.publicMessage = 'Code repo label already exists'
+      if (err.code === 409) {
+        if (allRepoUrls.includes(data.repositoryUrl)) err.publicMessage = 'Code repository URL already exists'
+        else err.publicMessage = 'Code repo label already exists'
+      }
       throw err
     }
   }
@@ -1158,7 +1163,7 @@ export default class OtomiStack {
   }
 
   async getInternalRepoUrls(teamId: string): Promise<string[]> {
-    // if (env.isDev || !teamId || teamId === 'admin') return []
+    if (env.isDev || !teamId || teamId === 'admin') return []
     const { cluster, otomi } = this.getSettings(['cluster', 'otomi'])
     const gitea = this.getApp('gitea')
     const username = gitea?.values?.adminUsername as string
