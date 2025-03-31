@@ -61,7 +61,13 @@ import {
   Workload,
   WorkloadValues,
 } from 'src/otomi-models'
-import { arrayToObject, getServiceUrl, getValuesSchema, removeBlankAttributes } from 'src/utils'
+import {
+  arrayToObject,
+  getServiceUrl,
+  getValuesSchema,
+  mapObjectToKeyValueArray,
+  removeBlankAttributes,
+} from 'src/utils'
 import {
   cleanEnv,
   CUSTOM_ROOT_CA,
@@ -221,12 +227,10 @@ export default class OtomiStack {
 
   transformSecrets(teamId: string, secrets: SealedSecretManifestType[]): AplSecretResponse[] {
     return secrets.map((secret) => {
-      const annotations = Object.entries(secret.spec.template?.metadata?.annotations || {}).map(([key, value]) => {
-        return { key, value }
-      })
-      const labels = Object.entries(secret.spec.template?.metadata?.labels || {}).map(([key, value]) => {
-        return { key, value }
-      })
+      const templateMetadata = secret.spec.template?.metadata
+      const annotations = mapObjectToKeyValueArray(templateMetadata?.annotations)
+      const labels = mapObjectToKeyValueArray(templateMetadata?.labels)
+      const finalizers = templateMetadata?.finalizers
       return {
         kind: 'AplTeamSecret',
         metadata: {
@@ -241,8 +245,9 @@ export default class OtomiStack {
           immutable: secret.spec.template?.immutable ?? false,
           namespace: secret.spec.template?.metadata?.namespace,
           metadata: {
-            annotations,
-            labels,
+            ...(!isEmpty(annotations) && { annotations }),
+            ...(!isEmpty(labels) && { labels }),
+            ...(!isEmpty(finalizers) && { finalizers }),
           },
         },
         status: {},
