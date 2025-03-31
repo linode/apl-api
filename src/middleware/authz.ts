@@ -56,13 +56,11 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
   authz.init(user)
 
   let valid
-  if (action === 'read' && schemaName === 'Kubecfg')
-    valid = authz.hasSelfService(teamId, 'access', 'downloadKubeConfig')
+  if (action === 'read' && schemaName === 'Kubecfg') valid = authz.hasSelfService(teamId, 'downloadKubeconfig')
   else if (action === 'read' && schemaName === 'DockerConfig')
-    valid = authz.hasSelfService(teamId, 'access', 'downloadDockerConfig')
-  else if (action === 'create' && schemaName === 'Cloudtty') valid = authz.hasSelfService(teamId, 'access', 'shell')
-  else if (action === 'update' && schemaName === 'Policy')
-    valid = authz.hasSelfService(teamId, 'policies', 'edit policies')
+    valid = authz.hasSelfService(teamId, 'downloadDockerLogin')
+  else if (action === 'create' && schemaName === 'Cloudtty') valid = authz.hasSelfService(teamId, 'useCloudShell')
+  else if (action === 'update' && schemaName === 'Policy') valid = authz.hasSelfService(teamId, 'editSecurityPolicies')
   else valid = authz.validateWithCasl(action, schemaName, teamId)
   const env = cleanEnv({})
   // TODO: Debug purpose only for removal of license

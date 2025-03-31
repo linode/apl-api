@@ -123,14 +123,14 @@ describe('Schema collection wise permissions', () => {
   test('A team can doSomething', () => {
     const authz = new Authz(spec).init(sessionTeam)
     sessionTeam.authz = { teamA: { deniedAttributes: { Team: ['a', 'b'] } } }
-    expect(() => authz.hasSelfService('teamA', 'Team', 'doSomething')).not.toThrow()
+    expect(() => authz.hasSelfService('teamA', 'doSomething')).not.toThrow()
     sessionTeam.authz = {}
   })
 
   test('A team cannot doSomething', () => {
     const authz = new Authz(spec).init(sessionTeam)
     sessionTeam.authz = { teamA: { deniedAttributes: { Team: ['a', 'b', 'doSomething'] } } }
-    expect(() => authz.hasSelfService('teamA', 'Team', 'doSomething')).not.toThrow()
+    expect(() => authz.hasSelfService('teamA', 'doSomething')).not.toThrow()
     sessionTeam.authz = {}
   })
 })
