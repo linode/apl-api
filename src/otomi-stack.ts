@@ -1699,16 +1699,16 @@ export default class OtomiStack {
     const client = this.getApiClient()
     const collection: K8sService[] = []
 
-    // if (user.isAdmin) {
-    //   const svcList = await client.listServiceForAllNamespaces()
-    //   svcList.body.items.map((item) => {
-    //     collection.push({
-    //       name: item.metadata!.name ?? 'unknown',
-    //       ports: item.spec?.ports?.map((portItem) => portItem.port) ?? [],
-    //     })
-    //   })
-    //   return collection
-    // }
+    if (teamId === 'team-admin') {
+      const svcList = await client.listServiceForAllNamespaces()
+      svcList.body.items.map((item) => {
+        collection.push({
+          name: item.metadata!.name ?? 'unknown',
+          ports: item.spec?.ports?.map((portItem) => portItem.port) ?? [],
+        })
+      })
+      return collection
+    }
 
     const svcList = await client.listNamespacedService(`team-${teamId}`)
     svcList.body.items.map((item) => {
