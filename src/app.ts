@@ -36,6 +36,7 @@ import {
 import swaggerUi from 'swagger-ui-express'
 import giteaCheckLatest from './gitea/connect'
 import { getBuildStatus, getSealedSecretStatus, getServiceStatus, getWorkloadStatus } from './k8s_operations'
+import { CleanOptions } from 'simple-git'
 
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
@@ -64,6 +65,8 @@ const checkAgainstGitea = async () => {
   // if the latest online is newer it will be pulled locally
   if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== otomiStack.git.commitSha) {
     debug('Local values differentiate from Git repository, retrieving latest values')
+    // Remove all .dec files
+    await otomiStack.git.git.clean([CleanOptions.FORCE, CleanOptions.IGNORED_ONLY, CleanOptions.RECURSIVE])
     await otomiStack.git.pull()
     // inflate new db
     await otomiStack.loadValues()
