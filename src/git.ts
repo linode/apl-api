@@ -452,7 +452,12 @@ export class Git {
       const retries = env.GIT_PUSH_RETRIES
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
-          await this.pull(true, true)
+          // Do advanced pull every third attempt
+          if (attempt % 3 === 0) {
+            await this.pull(true, true)
+          } else {
+            await this.git.pull(this.remote, this.branch, { '--rebase': 'true', '--depth': '5' })
+          }
           await this.push()
           break
         } catch (error) {
