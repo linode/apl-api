@@ -29,9 +29,6 @@ Build:
     imageName:
       title: Image name
       $ref: 'definitions.yaml#/idName'
-    codeRepoName:
-      title: Code repository name
-      $ref: 'definitions.yaml#/idName'
     tag:
       $ref: 'definitions.yaml#/imageTag'
       default: latest
