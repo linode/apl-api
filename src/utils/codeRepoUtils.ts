@@ -193,5 +193,6 @@ export async function getPrivateRepoBranches(
 }
 
 export async function getPublicRepoBranches(repoUrl: string) {
-  return extractRepositoryRefs(repoUrl)
+  const branches = await extractRepositoryRefs(repoUrl)
+  return branches
 }
