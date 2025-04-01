@@ -596,7 +596,7 @@ export default class OtomiStack {
   getTeam(id: string): Team {
     const team = this.repoService.getTeamConfigService(id).getSettings()
     // Always allow Alertmanager and Grafana for team Admin
-    if (team.name === 'admin' && team.managedMonitoring) {
+    if (id === 'admin' && team.managedMonitoring) {
       team.managedMonitoring.alertmanager = true
       team.managedMonitoring.grafana = true
     }
