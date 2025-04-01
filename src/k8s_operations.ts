@@ -282,7 +282,7 @@ async function listNamespacedCustomObject(
 }
 
 export async function getBuildStatus(build: Build): Promise<string> {
-  const labelSelector = `tekton.dev/pipeline=${build.mode?.type}-build-${build.name}`
+  const labelSelector = `tekton.dev/pipeline=${build.mode?.type}-build-${build.imageName}`
   const resPipelineruns = await listNamespacedCustomObject(
     'tekton.dev',
     `team-${build.teamId}`,
