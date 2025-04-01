@@ -72,7 +72,7 @@ const checkAgainstGitea = async () => {
     const retries = env.GIT_PUSH_RETRIES
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        await otomiStack.git.pull()
+        await otomiStack.git.pull(false, true)
         break
       } catch (error) {
         if (attempt === retries) throw error
