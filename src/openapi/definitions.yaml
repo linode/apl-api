@@ -1066,13 +1066,9 @@ resourceQuota:
           value:
             type: number
             title: Value
-          decorator:
-            type: string
-            title: Decorator
         required:
           - key
           - value
-          - decorator
       default: []
   required:
     - enabled
