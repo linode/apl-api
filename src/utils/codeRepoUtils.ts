@@ -156,7 +156,22 @@ export async function testPublicRepoConnect(repoUrl: string) {
 
 export async function extractRepositoryRefs(repoUrl: string, git: SimpleGit = simpleGit()): Promise<string[]> {
   try {
-    const rawData = await git.listRemote(['--refs', repoUrl])
+    let formattedRepoUrl = repoUrl
+    if (repoUrl.startsWith('https://gitea')) {
+      git.env({
+        GIT_ASKPASS: 'echo',
+        GIT_TERMINAL_PROMPT: '0',
+        GIT_SSL_NO_VERIFY: 'true',
+      })
+      const username = process.env.GIT_USER as string
+      const accessToken = process.env.GIT_PASSWORD as string
+      formattedRepoUrl = repoUrl.replace(
+        'https://',
+        `https://${encodeURIComponent(username)}:${encodeURIComponent(accessToken)}@`,
+      )
+    }
+
+    const rawData = await git.listRemote(['--refs', formattedRepoUrl])
     const branches: string[] = []
     const tags: string[] = []
 
