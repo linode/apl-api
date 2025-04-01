@@ -268,6 +268,14 @@ export default class OtomiStack {
     })
   }
 
+  transformTeamSettings(teamSettings: Team) {
+    if (teamSettings.id && !teamSettings.name) {
+      // eslint-disable-next-line no-param-reassign
+      teamSettings.name = teamSettings.id
+    }
+    return teamSettings
+  }
+
   async initRepo(repoService?: RepoService): Promise<void> {
     if (repoService) {
       this.repoService = repoService
@@ -283,6 +291,7 @@ export default class OtomiStack {
         policies: this.transformPolicies(teamName, teamConfig.policies || {}),
         sealedsecrets: this.transformSecrets(teamName, teamConfig.sealedsecrets || []),
         workloads: this.transformWorkloads(teamConfig.workloads || [], teamConfig.workloadValues || []),
+        settings: this.transformTeamSettings(teamConfig.settings),
       }))
 
       const repo = rawRepo as Repo
@@ -640,8 +649,7 @@ export default class OtomiStack {
   }
 
   getTeam(id: string): Team {
-    const team = this.repoService.getTeamConfigService(id).getSettings()
-    return { ...team, name: id }
+    return this.repoService.getTeamConfigService(id).getSettings()
   }
 
   async createTeam(data: Team, deploy = true): Promise<Team> {
