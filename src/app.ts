@@ -31,6 +31,7 @@ import {
   DRONE_WEBHOOK_SECRET,
   EXPRESS_PAYLOAD_LIMIT,
   GIT_PASSWORD,
+  GIT_PUSH_RETRIES,
   GIT_USER,
 } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
@@ -44,6 +45,7 @@ const env = cleanEnv({
   GIT_USER,
   GIT_PASSWORD,
   EXPRESS_PAYLOAD_LIMIT,
+  GIT_PUSH_RETRIES,
 })
 
 const debug = Debug('otomi:app')
@@ -67,7 +69,17 @@ const checkAgainstGitea = async () => {
     debug('Local values differentiate from Git repository, retrieving latest values')
     // Remove all .dec files
     await otomiStack.git.git.clean([CleanOptions.FORCE, CleanOptions.IGNORED_ONLY, CleanOptions.RECURSIVE])
-    await otomiStack.git.pull()
+    const retries = env.GIT_PUSH_RETRIES
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        await otomiStack.git.pull()
+        break
+      } catch (error) {
+        if (attempt === retries) throw error
+        debug(`Attempt ${attempt} of ${retries} failed. Retrying...`)
+        await new Promise((resolve) => setTimeout(resolve, 50))
+      }
+    }
     // inflate new db
     await otomiStack.loadValues()
     const sha = await otomiStack.git.getCommitSha()
