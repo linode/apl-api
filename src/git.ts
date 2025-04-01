@@ -45,7 +45,7 @@ const prepareUrl = `${baseUrl}/prepare`
 const initUrl = `${baseUrl}/init`
 const valuesUrl = `${baseUrl}/otomi/values`
 
-const getProtocol = (url): string => (url && url.includes('://') ? url.split('://')[0] : 'https')
+const getProtocol = (url): string => (url && url.includes('://') ? url.split('://')[0] : 'http')
 
 const getUrl = (url): string => (!url || url.includes('://') ? url : `${getProtocol(url)}://${url}`)
 
@@ -90,7 +90,9 @@ export class Git {
     this.urlAuth = urlAuth
     this.user = user
     this.url = url
-    this.git = simpleGit(this.path)
+
+    const gitSSLNoVerify = getProtocol(url) === 'http'
+    this.git = simpleGit(this.path).env('GIT_SSL_NO_VERIFY', String(gitSSLNoVerify))
   }
 
   getProtocol() {
