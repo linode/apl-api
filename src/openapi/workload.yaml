@@ -46,7 +46,7 @@ Workload:
       $ref: 'definitions.yaml#/wordCharacterPattern'
       default: HEAD
     chartMetadata:
-      title: ''
+      title: Chart metadata
       properties:
         helmChartVersion:
           type: string
