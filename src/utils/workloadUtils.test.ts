@@ -2,12 +2,17 @@
 import axios from 'axios'
 import * as fsExtra from 'fs-extra'
 import * as fsPromises from 'fs/promises'
+import path from 'path'
 import simpleGit from 'simple-git'
 import YAML from 'yaml'
+import * as workloadUtils from './workloadUtils'
 import {
+  chartRepo,
   detectGitProvider,
   fetchChartYaml,
   fetchWorkloadCatalog,
+  findRevision,
+  getBranchesAndTags,
   getGitCloneUrl,
   sparseCloneChart,
   updateChartIconInYaml,
@@ -369,6 +374,7 @@ describe('sparseCloneChart', () => {
       commit: jest.fn().mockResolvedValue(undefined),
       pull: jest.fn().mockResolvedValue(undefined),
       push: jest.fn().mockResolvedValue(undefined),
+      listRemote: jest.fn().mockResolvedValue(''),
     }
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
 
@@ -387,11 +393,16 @@ describe('sparseCloneChart', () => {
     expect(fsExtra.mkdirSync).toHaveBeenCalledWith(localHelmChartsDir, { recursive: true })
     expect(fsExtra.mkdirSync).toHaveBeenCalledWith(`${localHelmChartsDir}-newChart`, { recursive: true })
     expect(mockGit.clone).toHaveBeenCalledTimes(2) // Once for catalog repo, once for chart repo
+    expect(mockGit.listRemote).toHaveBeenCalled()
     expect(mockGit.raw).toHaveBeenCalledWith(['sparse-checkout', 'init', '--cone'])
-    expect(mockGit.raw).toHaveBeenCalledWith(['sparse-checkout', 'set', 'bitnami/cassandra/'])
-    expect(mockGit.checkout).toHaveBeenCalledWith('main')
+    expect(mockGit.raw).toHaveBeenCalledWith(['sparse-checkout', 'set', 'main/bitnami/cassandra/'])
+    expect(mockGit.checkout).toHaveBeenCalled()
     expect(fsExtra.renameSync).toHaveBeenCalled()
-    expect(fsExtra.rmSync).toHaveBeenCalled()
+    expect(fsExtra.rmSync).toHaveBeenCalledWith(`${localHelmChartsDir}-newChart`, { recursive: true, force: true })
+    expect(fsExtra.rmSync).toHaveBeenCalledWith(`${localHelmChartsDir}/${chartTargetDirName}/.git`, {
+      recursive: true,
+      force: true,
+    })
     // Verify addConfig was called with correct user/email
     expect(mockGit.addConfig).toHaveBeenCalledWith('user.name', user)
     expect(mockGit.addConfig).toHaveBeenCalledWith('user.email', email)
@@ -413,8 +424,10 @@ describe('sparseCloneChart', () => {
       commit: jest.fn().mockResolvedValue(undefined),
       pull: jest.fn().mockResolvedValue(undefined),
       push: jest.fn().mockResolvedValue(undefined),
+      listRemote: jest.fn().mockResolvedValue(''),
     }
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+    jest.spyOn(workloadUtils, 'isGiteaURL').mockImplementation(() => true)
 
     await sparseCloneChart(
       gitRepositoryUrl,
@@ -443,6 +456,7 @@ describe('sparseCloneChart', () => {
       commit: jest.fn().mockResolvedValue(undefined),
       pull: jest.fn().mockResolvedValue(undefined),
       push: jest.fn().mockResolvedValue(undefined),
+      listRemote: jest.fn().mockResolvedValue(''),
     }
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
 
@@ -474,6 +488,7 @@ describe('sparseCloneChart', () => {
       commit: jest.fn().mockResolvedValue(undefined),
       pull: jest.fn().mockResolvedValue(undefined),
       push: jest.fn().mockResolvedValue(undefined),
+      listRemote: jest.fn().mockResolvedValue(''),
     }
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
     ;(fsExtra.existsSync as jest.Mock).mockReturnValueOnce(false)
@@ -490,6 +505,24 @@ describe('sparseCloneChart', () => {
     )
 
     expect(fsExtra.mkdirSync).toHaveBeenCalledWith(localHelmChartsDir, { recursive: true })
+  })
+
+  test('returns false if git provider detection fails', async () => {
+    // Mock the detectGitProvider to return null
+    jest.spyOn(workloadUtils, 'detectGitProvider').mockImplementation(() => null)
+
+    const result = await sparseCloneChart(
+      'https://invalid-url.com',
+      localHelmChartsDir,
+      helmChartCatalogUrl,
+      user,
+      email,
+      chartTargetDirName,
+      chartIcon,
+      allowTeams,
+    )
+
+    expect(result).toBe(false)
   })
 })
 
@@ -516,14 +549,14 @@ describe('fetchWorkloadCatalog', () => {
       },
       betaCharts: ['chart2'],
     })
-    ;(fsExtra.readFile as jest.Mock).mockImplementation((path) => {
-      if (path.endsWith('rbac.yaml')) return Promise.resolve(rbacContent)
+    ;(fsExtra.readFile as jest.Mock).mockImplementation((filePath) => {
+      if (filePath.endsWith('rbac.yaml')) return Promise.resolve(rbacContent)
 
-      if (path.endsWith('chart1/README.md')) return Promise.resolve('# Chart 1 README')
+      if (filePath.endsWith('chart1/README.md')) return Promise.resolve('# Chart 1 README')
 
-      if (path.endsWith('chart1/values.yaml')) return Promise.resolve('key: value')
+      if (filePath.endsWith('chart1/values.yaml')) return Promise.resolve('key: value')
 
-      if (path.endsWith('chart1/Chart.yaml')) {
+      if (filePath.endsWith('chart1/Chart.yaml')) {
         return Promise.resolve(
           YAML.stringify({
             name: 'chart1',
@@ -533,11 +566,11 @@ describe('fetchWorkloadCatalog', () => {
           }),
         )
       }
-      if (path.endsWith('chart2/README.md')) return Promise.resolve('# Chart 2 README')
+      if (filePath.endsWith('chart2/README.md')) return Promise.resolve('# Chart 2 README')
 
-      if (path.endsWith('chart2/values.yaml')) return Promise.resolve('key: value')
+      if (filePath.endsWith('chart2/values.yaml')) return Promise.resolve('key: value')
 
-      if (path.endsWith('chart2/Chart.yaml')) {
+      if (filePath.endsWith('chart2/Chart.yaml')) {
         return Promise.resolve(
           YAML.stringify({
             name: 'chart2',
@@ -547,7 +580,7 @@ describe('fetchWorkloadCatalog', () => {
           }),
         )
       }
-      return Promise.reject(new Error(`File not found: ${path}`))
+      return Promise.reject(new Error(`File not found: ${filePath}`))
     })
   })
 
@@ -627,12 +660,12 @@ describe('fetchWorkloadCatalog', () => {
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
 
     // Make the README.md file read fail
-    ;(fsExtra.readFile as jest.Mock).mockImplementation((path) => {
-      if (path.endsWith('chart1/README.md')) return Promise.reject(new Error('File not found'))
+    ;(fsExtra.readFile as jest.Mock).mockImplementation((filePath) => {
+      if (filePath.endsWith('chart1/README.md')) return Promise.reject(new Error('File not found'))
 
-      if (path.endsWith('chart1/values.yaml')) return Promise.resolve('key: value')
+      if (filePath.endsWith('chart1/values.yaml')) return Promise.resolve('key: value')
 
-      if (path.endsWith('chart1/Chart.yaml')) {
+      if (filePath.endsWith('chart1/Chart.yaml')) {
         return Promise.resolve(
           YAML.stringify({
             name: 'chart1',
@@ -642,7 +675,7 @@ describe('fetchWorkloadCatalog', () => {
           }),
         )
       }
-      if (path.endsWith('rbac.yaml')) {
+      if (filePath.endsWith('rbac.yaml')) {
         return Promise.resolve(
           YAML.stringify({
             rbac: { chart1: null },
@@ -650,7 +683,7 @@ describe('fetchWorkloadCatalog', () => {
           }),
         )
       }
-      return Promise.reject(new Error(`File not found: ${path}`))
+      return Promise.reject(new Error(`File not found: ${filePath}`))
     })
 
     const result = await fetchWorkloadCatalog(url, helmChartsDir, 'admin')
@@ -666,14 +699,14 @@ describe('fetchWorkloadCatalog', () => {
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
 
     // Make the rbac.yaml file read fail
-    ;(fsExtra.readFile as jest.Mock).mockImplementation((path) => {
-      if (path.endsWith('rbac.yaml')) return Promise.reject(new Error('File not found'))
+    ;(fsExtra.readFile as jest.Mock).mockImplementation((filePath) => {
+      if (filePath.endsWith('rbac.yaml')) return Promise.reject(new Error('File not found'))
 
-      if (path.endsWith('chart1/README.md')) return Promise.resolve('# Chart 1 README')
+      if (filePath.endsWith('chart1/README.md')) return Promise.resolve('# Chart 1 README')
 
-      if (path.endsWith('chart1/values.yaml')) return Promise.resolve('key: value')
+      if (filePath.endsWith('chart1/values.yaml')) return Promise.resolve('key: value')
 
-      if (path.endsWith('chart1/Chart.yaml')) {
+      if (filePath.endsWith('chart1/Chart.yaml')) {
         return Promise.resolve(
           YAML.stringify({
             name: 'chart1',
@@ -683,7 +716,7 @@ describe('fetchWorkloadCatalog', () => {
           }),
         )
       }
-      return Promise.reject(new Error(`File not found: ${path}`))
+      return Promise.reject(new Error(`File not found: ${filePath}`))
     })
 
     const result = await fetchWorkloadCatalog(url, helmChartsDir, 'admin')
@@ -691,5 +724,214 @@ describe('fetchWorkloadCatalog', () => {
     // Should include charts in the catalog
     expect(result.helmCharts).toEqual(['chart1'])
     expect(result.catalog).toHaveLength(1)
+  })
+})
+
+// ----------------------------------------------------------------
+// Tests for chartRepo class
+describe('chartRepo', () => {
+  const localPath = '/tmp/repo'
+  const chartRepoUrl = 'https://github.com/example/repo.git'
+  const gitUser = 'test-user'
+  const gitEmail = 'test@example.com'
+
+  let mockGit
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockGit = {
+      clone: jest.fn().mockResolvedValue(undefined),
+      cwd: jest.fn().mockResolvedValue(undefined),
+      raw: jest.fn().mockResolvedValue(undefined),
+      checkout: jest.fn().mockResolvedValue(undefined),
+      addConfig: jest.fn().mockResolvedValue(undefined),
+      add: jest.fn().mockResolvedValue(undefined),
+      commit: jest.fn().mockResolvedValue(undefined),
+      pull: jest.fn().mockResolvedValue(undefined),
+      push: jest.fn().mockResolvedValue(undefined),
+      listRemote: jest.fn().mockResolvedValue(''),
+    }
+    ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+  })
+
+  test('clone method clones the repository', async () => {
+    const repo = new chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
+    await repo.clone()
+
+    expect(mockGit.clone).toHaveBeenCalledWith(chartRepoUrl, localPath)
+  })
+
+  test('cloneSingleChart method performs sparse checkout', async () => {
+    const repo = new chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
+    const refAndPath = 'main/charts/my-chart'
+    const finalDestinationPath = '/tmp/final/my-chart'
+
+    // Mock getBranchesAndTags to return 'main' as a branch
+    mockGit.listRemote.mockResolvedValue(
+      '1234567890abcdef1234567890abcdef12345678\trefs/heads/main\n' +
+        'abcdef1234567890abcdef1234567890abcdef12\trefs/tags/v1.0.0',
+    )
+
+    await repo.cloneSingleChart(refAndPath, finalDestinationPath)
+
+    expect(mockGit.listRemote).toHaveBeenCalledWith([chartRepoUrl])
+    expect(mockGit.clone).toHaveBeenCalledWith(chartRepoUrl, localPath, ['--filter=blob:none', '--no-checkout'])
+    expect(mockGit.cwd).toHaveBeenCalledWith(localPath)
+    expect(mockGit.raw).toHaveBeenCalledWith(['sparse-checkout', 'init', '--cone'])
+    expect(mockGit.raw).toHaveBeenCalledWith(['sparse-checkout', 'set', 'charts/my-chart'])
+    expect(mockGit.checkout).toHaveBeenCalledWith('main')
+    expect(fsExtra.renameSync).toHaveBeenCalledWith(path.join(localPath, 'charts/my-chart'), finalDestinationPath)
+  })
+
+  test('addConfig method sets git config', async () => {
+    const repo = new chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
+    await repo.addConfig()
+
+    expect(mockGit.addConfig).toHaveBeenCalledWith('user.name', gitUser)
+    expect(mockGit.addConfig).toHaveBeenCalledWith('user.email', gitEmail)
+  })
+
+  test('commitAndPush method commits and pushes changes', async () => {
+    const repo = new chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
+    const chartName = 'my-chart'
+
+    await repo.commitAndPush(chartName)
+
+    expect(mockGit.add).toHaveBeenCalledWith('.')
+    expect(mockGit.commit).toHaveBeenCalledWith(`Add ${chartName} helm chart`)
+    expect(mockGit.pull).toHaveBeenCalledWith('origin', 'main', { '--rebase': null })
+    expect(mockGit.push).toHaveBeenCalledWith('origin', 'main')
+  })
+})
+
+// ----------------------------------------------------------------
+// Tests for findRevision
+describe('findRevision', () => {
+  test('finds branch in simple case', () => {
+    const branches = ['main', 'develop', 'feature/x']
+    const tags = ['v1.0.0', 'v1.1.0']
+    const refAndPath = 'main/charts/my-chart'
+
+    const result = findRevision(branches, tags, refAndPath)
+
+    expect(result).toBe('main')
+  })
+
+  test('finds tag in simple case', () => {
+    const branches = ['main']
+    const tags = ['v1.0.0', 'v1.1.0']
+    const refAndPath = 'v1.0.0/charts/my-chart'
+
+    const result = findRevision(branches, tags, refAndPath)
+
+    expect(result).toBe('v1.0.0')
+  })
+
+  test('finds branch with multiple segments', () => {
+    const branches = ['main', 'feature/x']
+    const tags = []
+    const refAndPath = 'feature/x/charts/my-chart'
+
+    const result = findRevision(branches, tags, refAndPath)
+
+    expect(result).toBe('feature/x')
+  })
+
+  test('handles complex paths correctly', () => {
+    const branches = ['main', 'feature/x/y']
+    const tags = []
+    const refAndPath = 'feature/x/y/charts/my-chart'
+
+    const result = findRevision(branches, tags, refAndPath)
+
+    expect(result).toBe('feature/x/y')
+  })
+
+  test('returns null if no match is found', () => {
+    const branches = ['main']
+    const tags = ['v1.0.0']
+    const refAndPath = 'develop/charts/my-chart'
+
+    const result = findRevision(branches, tags, refAndPath)
+
+    expect(result).toBeNull()
+  })
+})
+
+// ----------------------------------------------------------------
+// Tests for getBranchesAndTags
+describe('getBranchesAndTags', () => {
+  test('parses branches and tags from git remote output', () => {
+    const remoteResult =
+      '1234567890abcdef1234567890abcdef12345678\trefs/heads/main\n' +
+      'abcdef1234567890abcdef1234567890abcdef12\trefs/heads/develop\n' +
+      '7890abcdef1234567890abcdef1234567890abcd\trefs/tags/v1.0.0\n' +
+      '4567890abcdef1234567890abcdef1234567890a\trefs/tags/v1.1.0'
+
+    const result = getBranchesAndTags(remoteResult)
+
+    expect(result).toEqual({
+      branches: ['main', 'develop'],
+      tags: ['v1.0.0', 'v1.1.0'],
+    })
+  })
+
+  test('handles empty input', () => {
+    const result = getBranchesAndTags('')
+
+    expect(result).toEqual({
+      branches: [],
+      tags: [],
+    })
+  })
+
+  test('handles input with no branches or tags', () => {
+    const remoteResult =
+      '1234567890abcdef1234567890abcdef12345678\trefs/other/main\n' +
+      'abcdef1234567890abcdef1234567890abcdef12\trefs/something/develop'
+
+    const result = getBranchesAndTags(remoteResult)
+
+    expect(result).toEqual({
+      branches: [],
+      tags: [],
+    })
+  })
+
+  test('handles input with only branches', () => {
+    const remoteResult =
+      '1234567890abcdef1234567890abcdef12345678\trefs/heads/main\n' +
+      'abcdef1234567890abcdef1234567890abcdef12\trefs/heads/develop'
+
+    const result = getBranchesAndTags(remoteResult)
+
+    expect(result).toEqual({
+      branches: ['main', 'develop'],
+      tags: [],
+    })
+  })
+
+  test('handles input with only tags', () => {
+    const remoteResult =
+      '7890abcdef1234567890abcdef1234567890abcd\trefs/tags/v1.0.0\n' +
+      '4567890abcdef1234567890abcdef1234567890a\trefs/tags/v1.1.0'
+
+    const result = getBranchesAndTags(remoteResult)
+
+    expect(result).toEqual({
+      branches: [],
+      tags: ['v1.0.0', 'v1.1.0'],
+    })
+  })
+
+  test('handles invalid input', () => {
+    const remoteResult = 'This is not a valid git remote output'
+
+    const result = getBranchesAndTags(remoteResult)
+
+    expect(result).toEqual({
+      branches: [],
+      tags: [],
+    })
   })
 })
