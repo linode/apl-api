@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.7.6](https://github.com/redkubes/otomi-api/compare/v3.7.5...v3.7.6) (2025-04-02)
+
+
+### Bug Fixes
+
+* create/read sealed secrets ([#677](https://github.com/redkubes/otomi-api/issues/677)) ([ff819ed](https://github.com/redkubes/otomi-api/commit/ff819edb0435b9cfeaf44f676c0c5ca90cdfc709))
+
 ### [3.7.5](https://github.com/redkubes/otomi-api/compare/v3.7.4...v3.7.5) (2025-03-24)
 
 

@@ -162,7 +162,7 @@
       "tag": true
     }
   },
-  "version": "3.7.5",
+  "version": "3.7.6",
   "watch": {
     "build:models": {
       "patterns": [
