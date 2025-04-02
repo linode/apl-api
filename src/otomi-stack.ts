@@ -80,7 +80,12 @@ import {
   testPublicRepoConnect,
 } from './utils/coderepoUtils'
 import { getPolicies } from './utils/policiesUtils'
-import { EncryptedDataRecord, encryptSecretItem, sealedSecretManifest } from './utils/sealedSecretUtils'
+import {
+  EncryptedDataRecord,
+  encryptSecretItem,
+  mapObjectToKeyValueArray,
+  sealedSecretManifest,
+} from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchChartYaml, fetchWorkloadCatalog, NewHelmChartValues, sparseCloneChart } from './utils/workloadUtils'
@@ -1658,6 +1663,19 @@ export default class OtomiStack {
       key,
       value: secretValues?.[key] || value,
     }))
+    type SealedSecretMetadata = {
+      annotations?: Record<string, string>
+      labels?: Record<string, string>
+      finalizers?: string[]
+    }
+    const metadata = sealedSecret?.metadata as SealedSecretMetadata
+    if (metadata) {
+      sealedSecret.metadata = {
+        ...metadata,
+        annotations: mapObjectToKeyValueArray(metadata.annotations),
+        labels: mapObjectToKeyValueArray(metadata.labels),
+      }
+    }
     const res = { ...sealedSecret, encryptedData, isDisabled } as any
     return res
   }

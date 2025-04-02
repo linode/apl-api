@@ -1,4 +1,5 @@
 import crypto, { X509Certificate } from 'crypto'
+import { isEmpty } from 'lodash'
 import { SealedSecret } from 'src/otomi-models'
 
 function hybridEncrypt(pubKey, plaintext, label) {
@@ -88,12 +89,9 @@ export function sealedSecretManifest(
     apiVersion: 'bitnami.com/v1alpha1',
     kind: 'SealedSecret',
     metadata: {
-      ...data.metadata,
       annotations: {
-        ...annotations,
         'sealedsecrets.bitnami.com/namespace-wide': 'true',
       },
-      labels,
       name: data.name,
       namespace,
     },
@@ -105,10 +103,19 @@ export function sealedSecretManifest(
         metadata: {
           name: data.name,
           namespace,
+          ...(!isEmpty(annotations) && { annotations }),
+          ...(!isEmpty(labels) && { labels }),
+          ...(!isEmpty(data.metadata?.finalizers) && { finalizers: data.metadata?.finalizers }),
         },
       },
     },
   }
 
   return SealedSecretSchema
+}
+
+export function mapObjectToKeyValueArray(obj?: Record<string, string>): { key: string; value: string }[] | undefined {
+  if (Array.isArray(obj)) return obj
+  if (!obj || isEmpty(obj) || typeof obj !== 'object') return undefined
+  return Object.entries(obj).map(([key, value]) => ({ key, value }))
 }
