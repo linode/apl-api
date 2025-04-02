@@ -273,6 +273,13 @@ export default class OtomiStack {
       // eslint-disable-next-line no-param-reassign
       teamSettings.name = teamSettings.id
     }
+    // Always allow Alertmanager and Grafana for team Admin
+    if (teamSettings.name === 'admin' && teamSettings.managedMonitoring) {
+      // eslint-disable-next-line no-param-reassign
+      teamSettings.managedMonitoring.alertmanager = true
+      // eslint-disable-next-line no-param-reassign
+      teamSettings.managedMonitoring.grafana = true
+    }
     return teamSettings
   }
 
@@ -682,10 +689,14 @@ export default class OtomiStack {
 
     if (deploy) {
       await this.saveTeam(team)
-      await this.doRepoDeployment((repoService) => {
-        repoService.createTeamConfig(data)
-        repoService.getTeamConfigService(teamName).setApps(teamApps)
-      })
+      await this.doRepoDeployment(
+        (repoService) => {
+          repoService.createTeamConfig(data)
+          repoService.getTeamConfigService(teamName).setApps(teamApps)
+        },
+        true,
+        [`${this.getRepoPath()}/env/teams/${teamName}/secrets.settings.yaml`],
+      )
     }
     return team
   }
@@ -693,9 +704,14 @@ export default class OtomiStack {
   async editTeam(id: string, data: Team): Promise<Team> {
     const team = this.repoService.getTeamConfigService(id).updateSettings(data)
     await this.saveTeam(team)
-    await this.doTeamDeployment(id, (teamService) => {
-      teamService.updateSettings(team)
-    })
+    await this.doTeamDeployment(
+      id,
+      (teamService) => {
+        teamService.updateSettings(team)
+      },
+      true,
+      [`${this.getRepoPath()}/env/teams/${team.name}/secrets.settings.yaml`],
+    )
     return team
   }
 
@@ -703,7 +719,7 @@ export default class OtomiStack {
     await this.deleteTeamConfig(id)
     await this.doRepoDeployment((repoService) => {
       repoService.deleteTeamConfig(id)
-    })
+    }, false)
   }
 
   private getConfigKey(kind: AplKind): string {
@@ -829,9 +845,13 @@ export default class OtomiStack {
     try {
       const backup = this.repoService.getTeamConfigService(teamId).createBackup(data)
       await this.saveTeamConfigItem(backup)
-      await this.doTeamDeployment(teamId, (teamService) => {
-        teamService.createBackup(backup)
-      })
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createBackup(backup)
+        },
+        false,
+      )
       return backup
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'Backup name already exists'
@@ -1022,9 +1042,13 @@ export default class OtomiStack {
       }
       const createdUser = this.repoService.createUser(user)
       await this.saveUser(createdUser)
-      await this.doRepoDeployment((repoService) => {
-        repoService.createUser(user)
-      })
+      await this.doRepoDeployment(
+        (repoService) => {
+          repoService.createUser(user)
+        },
+        true,
+        [`${this.getRepoPath()}/env/users/secrets.${createdUser.id}.yaml`],
+      )
       return createdUser
     } catch (err) {
       if (err.code === 409) err.publicMessage = 'User email already exists'
@@ -1039,9 +1063,13 @@ export default class OtomiStack {
   async editUser(id: string, data: User): Promise<User> {
     const user = this.repoService.updateUser(id, data)
     await this.saveUser(user)
-    await this.doRepoDeployment((repoService) => {
-      repoService.updateUser(id, user)
-    })
+    await this.doRepoDeployment(
+      (repoService) => {
+        repoService.updateUser(id, user)
+      },
+      true,
+      [`${this.getRepoPath()}/env/users/secrets.${user.id}.yaml`],
+    )
     return user
   }
 
@@ -1056,7 +1084,7 @@ export default class OtomiStack {
     await this.deleteUserFile(user)
     await this.doRepoDeployment((repoService) => {
       repoService.deleteUser(user.email)
-    })
+    }, false)
   }
 
   async editTeamUsers(
@@ -1068,12 +1096,17 @@ export default class OtomiStack {
       await this.saveUser(updateUser)
     }
     const users = this.repoService.getUsers()
-    await this.doRepoDeployment((repoService) => {
-      for (const user of data) {
-        const existingUser = repoService.getUser(user.id!)
-        repoService.updateUser(user.id!, { ...existingUser, teams: user.teams })
-      }
-    })
+    const files = users.map((user) => `${this.getRepoPath()}/env/users/secrets.${user.id}.yaml`)
+    await this.doRepoDeployment(
+      (repoService) => {
+        for (const user of data) {
+          const existingUser = repoService.getUser(user.id!)
+          repoService.updateUser(user.id!, { ...existingUser, teams: user.teams })
+        }
+      },
+      true,
+      files,
+    )
     return users
   }
 
@@ -1924,12 +1957,13 @@ export default class OtomiStack {
     teamId: string,
     action: (teamService: TeamConfigService) => void,
     encryptSecrets = true,
+    files?: string[],
   ): Promise<void> {
     const rootStack = await getSessionStack()
 
     try {
       // Commit and push Git changes
-      await this.git.save(this.editor!, encryptSecrets)
+      await this.git.save(this.editor!, encryptSecrets, files)
 
       // Execute the provided action dynamically
       action(rootStack.repoService.getTeamConfigService(teamId))
@@ -1949,12 +1983,16 @@ export default class OtomiStack {
     }
   }
 
-  async doRepoDeployment(action: (repoService: RepoService) => void, encryptSecrets = true): Promise<void> {
+  async doRepoDeployment(
+    action: (repoService: RepoService) => void,
+    encryptSecrets = true,
+    files?: string[],
+  ): Promise<void> {
     const rootStack = await getSessionStack()
 
     try {
       // Commit and push Git changes
-      await this.git.save(this.editor!, encryptSecrets)
+      await this.git.save(this.editor!, encryptSecrets, files)
 
       // Execute the provided action dynamically
       action(rootStack.repoService)

@@ -31,11 +31,13 @@ import {
   DRONE_WEBHOOK_SECRET,
   EXPRESS_PAYLOAD_LIMIT,
   GIT_PASSWORD,
+  GIT_PUSH_RETRIES,
   GIT_USER,
 } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
 import giteaCheckLatest from './gitea/connect'
 import { getBuildStatus, getSealedSecretStatus, getServiceStatus, getWorkloadStatus } from './k8s_operations'
+import { CleanOptions } from 'simple-git'
 
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
@@ -43,6 +45,7 @@ const env = cleanEnv({
   GIT_USER,
   GIT_PASSWORD,
   EXPRESS_PAYLOAD_LIMIT,
+  GIT_PUSH_RETRIES,
 })
 
 const debug = Debug('otomi:app')
@@ -64,7 +67,19 @@ const checkAgainstGitea = async () => {
   // if the latest online is newer it will be pulled locally
   if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== otomiStack.git.commitSha) {
     debug('Local values differentiate from Git repository, retrieving latest values')
-    await otomiStack.git.pull()
+    // Remove all .dec files
+    await otomiStack.git.git.clean([CleanOptions.FORCE, CleanOptions.IGNORED_ONLY, CleanOptions.RECURSIVE])
+    const retries = env.GIT_PUSH_RETRIES
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        await otomiStack.git.pull(false, true)
+        break
+      } catch (error) {
+        if (attempt === retries) throw error
+        debug(`Attempt ${attempt} of ${retries} failed. Retrying...`)
+        await new Promise((resolve) => setTimeout(resolve, 50))
+      }
+    }
     // inflate new db
     await otomiStack.loadValues()
     const sha = await otomiStack.git.getCommitSha()
