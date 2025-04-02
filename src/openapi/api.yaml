@@ -76,23 +76,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/OtomiCliValues'
 
-  /secrets:
-    get:
-      operationId: getAllSecrets
-      description: Get all secrets
-      x-aclSchema: Secret
-      responses:
-        '200':
-          description: Successfully obtained all secrets
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Secret'
-        '400':
-          <<: *BadRequest
-
   /services:
     get:
       operationId: getAllServices
@@ -244,7 +227,7 @@ paths:
         '400':
           <<: *BadRequest
 
-  '/teams/{teamId}/services/{serviceId}':
+  '/teams/{teamId}/services/{serviceName}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/serviceParams'
@@ -389,10 +372,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/SealedSecret'
 
-  '/teams/{teamId}/sealedsecrets/{secretId}':
+  '/teams/{teamId}/sealedsecrets/{sealedSecretName}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/secretParams'
+      - $ref: '#/components/parameters/sealedSecretParams'
     get:
       operationId: getSealedSecret
       description: Get a sealed secret from a given team
@@ -432,98 +415,6 @@ paths:
         <<: *DefaultGetResponses
         '200':
           description: Successfully deleted a team sealed secret
-  '/teams/{teamId}/secrets':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-    get:
-      operationId: getSecrets
-      description: Get secrets from a given team
-      x-aclSchema: Secret
-      responses:
-        '200':
-          description: Successfully obtained secrets
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Secret'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpenApiValidationError'
-    post:
-      operationId: createSecret
-      description: Create a team secret
-      x-aclSchema: Secret
-      parameters:
-        - name: teamId
-          in: path
-          description: ID of team
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Secret'
-        description: Service object
-        required: true
-      responses:
-        <<: *DefaultPostResponses
-        '200':
-          description: Successfully stored secret configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Secret'
-
-  '/teams/{teamId}/secrets/{secretId}':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/secretParams'
-    get:
-      operationId: getSecret
-      description: Get a secret from a given team
-      x-aclSchema: Secret
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully obtained secret configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Secret'
-    put:
-      operationId: editSecret
-      description: Edit a secret from a given team
-      x-aclSchema: Secret
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Secret'
-        description: Secret object that contains updated values
-        required: true
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully edited a team secret
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Secret'
-    delete:
-      operationId: deleteSecret
-      description: Delete a secret from a given team
-      x-aclSchema: Secret
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully deleted a team secret
 
   '/netpols':
     get:
@@ -576,7 +467,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Netpol'
 
-  '/teams/{teamId}/netpols/{netpolId}':
+  '/teams/{teamId}/netpols/{netpolName}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/netpolParams'
@@ -671,7 +562,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Backup'
 
-  '/teams/{teamId}/backups/{backupId}':
+  '/teams/{teamId}/backups/{backupName}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/backupParams'
@@ -780,7 +671,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Build'
 
-  '/teams/{teamId}/builds/{buildId}':
+  '/teams/{teamId}/builds/{buildName}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/buildParams'
@@ -1101,7 +992,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Project'
 
-  '/teams/{teamId}/projects/{projectId}':
+  '/teams/{teamId}/projects/{projectName}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/projectParams'
@@ -1145,6 +1036,116 @@ paths:
               schema:
                 $ref: '#/components/schemas/Project'
 
+  /coderepos:
+    get:
+      operationId: getAllCodeRepos
+      description: Get all code repositories
+      x-aclSchema: CodeRepo
+      responses:
+        '200':
+          description: Successfully obtained all code repositories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CodeRepo'
+        '400':
+          <<: *BadRequest
+
+  '/teams/{teamId}/coderepos':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTeamCodeRepos
+      description: Get code repos from a given team
+      x-aclSchema: CodeRepo
+      responses:
+        '200':
+          description: Successfully obtained code repositories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CodeRepo'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenApiValidationError'
+    post:
+      operationId: createCodeRepo
+      description: Create a team code repo
+      x-aclSchema: CodeRepo
+      parameters:
+        - name: teamId
+          in: path
+          description: ID of team
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CodeRepo'
+        description: CodeRepo object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored code repo configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeRepo'
+
+  '/teams/{teamId}/coderepos/{codeRepositoryName}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/codeRepoParams'
+    get:
+      operationId: getCodeRepo
+      description: Get a code repo from a given team
+      x-aclSchema: CodeRepo
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained code repo configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeRepo'
+    put:
+      operationId: editCodeRepo
+      description: Edit a code repo from a given team
+      x-aclSchema: CodeRepo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CodeRepo'
+        description: CodeRepo object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team code repo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeRepo'
+    delete:
+      operationId: deleteCodeRepo
+      description: Delete a code repo from a given team
+      x-aclSchema: CodeRepo
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a team code repo
+
   '/workloads':
     get:
       operationId: getAllWorkloads
@@ -1179,7 +1180,47 @@ paths:
             application/json:
               schema:
                 type: object
-
+  '/helmChartContent':
+    get:
+      operationId: getHelmChartContent
+      parameters:
+        - name: url
+          in: query
+          description: URL of the helm chart
+          schema:
+            type: string
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained helm chart content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  values:
+                    type: object
+                  error:
+                    type: string
+  '/createWorkloadCatalog':
+    post:
+      operationId: createWorkloadCatalog
+      description: Create workload catalog from a repository
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        description: Project object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully updated a team project
+          content:
+            application/json:
+              schema:
+                type: object
   '/teams/{teamId}/workloads':
     parameters:
       - $ref: '#/components/parameters/teamParams'
@@ -1216,7 +1257,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Workload'
 
-  '/teams/{teamId}/workloads/{workloadId}':
+  '/teams/{teamId}/workloads/{workloadName}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/workloadParams'
@@ -1260,7 +1301,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Workload'
 
-  '/teams/{teamId}/workloads/{workloadId}/values':
+  '/teams/{teamId}/workloads/{workloadName}/values':
     parameters:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/workloadParams'
@@ -1369,6 +1410,56 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SettingsInfo'
+
+  /testRepoConnect:
+    get:
+      operationId: getTestRepoConnect
+      description: Get settings information from the 'settings.yaml' file.
+      x-aclSchema: TestRepoConnect
+      parameters:
+        - name: url
+          in: query
+          description: URL of the repository
+          schema:
+            type: string
+        - name: teamId
+          in: query
+          description: Id of the team
+          schema:
+            type: string
+        - name: secret
+          in: query
+          description: Name of the secret for private repositories
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request is successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestRepoConnect'
+
+  /internalRepoUrls:
+    get:
+      operationId: getInternalRepoUrls
+      x-aclSchema: InternalRepoUrls
+      parameters:
+        - name: teamId
+          in: query
+          description: ID of the team
+          schema:
+            type: string
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained internal repo urls
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
 
   '/objwizard':
     post:
@@ -1524,16 +1615,16 @@ servers:
 components:
   parameters:
     backupParams:
-      name: backupId
+      name: backupName
       in: path
-      description: ID of the backup
+      description: Name of the backup
       required: true
       schema:
         type: string
     buildParams:
-      name: buildId
+      name: buildName
       in: path
-      description: ID of the build
+      description: Name of the build
       required: true
       schema:
         type: string
@@ -1552,9 +1643,16 @@ components:
       schema:
         type: string
     projectParams:
-      name: projectId
+      name: projectName
       in: path
-      description: ID of the project
+      description: Name of the project
+      required: true
+      schema:
+        type: string
+    codeRepoParams:
+      name: codeRepositoryName
+      in: path
+      description: Name of the code repository
       required: true
       schema:
         type: string
@@ -1566,23 +1664,23 @@ components:
       schema:
         type: string
     netpolParams:
-      name: netpolId
+      name: netpolName
       in: path
-      description: ID of the network policy
+      description: Name of the network policy
       required: true
       schema:
         type: string
     serviceParams:
-      name: serviceId
+      name: serviceName
       in: path
-      description: ID of the service
+      description: Name of the service
       required: true
       schema:
         type: string
-    secretParams:
-      name: secretId
+    sealedSecretParams:
+      name: sealedSecretName
       in: path
-      description: ID of the secret
+      description: Name of the sealed secret
       required: true
       schema:
         type: string
@@ -1594,9 +1692,9 @@ components:
       schema:
         type: string
     workloadParams:
-      name: workloadId
+      name: workloadName
       in: path
-      description: ID of the workload
+      description: Name of the workload
       required: true
       schema:
         type: string
@@ -1629,6 +1727,8 @@ components:
       $ref: cloudtty.yaml#/Cloudtty
     Cluster:
       $ref: cluster.yaml#/Cluster
+    CodeRepo:
+      $ref: codeRepo.yaml#/CodeRepo
     Ingress:
       $ref: service.yaml#/Ingress
     IngressCluster:
@@ -1661,14 +1761,6 @@ components:
       $ref: sealedsecretskeys.yaml#/SealedSecretsKeys
     K8sSecret:
       $ref: k8sSecret.yaml#/K8sSecret
-    Secret:
-      $ref: secret.yaml#/Secret
-    SecretDockerRegistry:
-      $ref: secret.yaml#/SecretDockerRegistry
-    SecretGeneric:
-      $ref: secret.yaml#/SecretGeneric
-    SecretTLS:
-      $ref: secret.yaml#/SecretTLS
     Service:
       $ref: service.yaml#/Service
     Session:
@@ -1679,6 +1771,10 @@ components:
       $ref: settings.yaml#/Settings
     SettingsInfo:
       $ref: settingsinfo.yaml#/SettingsInfo
+    TestRepoConnect:
+      $ref: testrepoconnect.yaml#/TestRepoConnect
+    InternalRepoUrls:
+      $ref: internalRepoUrls.yaml#/InternalRepoUrls
     Team:
       $ref: team.yaml#/Team
     TeamAuthz:

@@ -16,7 +16,6 @@ extends:
   - plugin:import/warnings
   - plugin:import/typescript
   - plugin:prettier/recommended
-  - plugin:chai-friendly/recommended
   - prettier
 
 plugins:
@@ -33,7 +32,6 @@ settings:
 
 env:
   es6: true
-  mocha: true
   node: true
 
 rules:
@@ -59,8 +57,10 @@ rules:
   '@typescript-eslint/no-unused-vars': [warn, { argsIgnorePattern: ^(_|next), varsIgnorePattern: ^_ }]
   '@typescript-eslint/no-use-before-define': ['error']
   '@typescript-eslint/restrict-template-expressions': off
+  '@typescript-eslint/naming-convention':
+    ['error', { 'selector': 'function', 'format': ['camelCase'], 'leadingUnderscore': 'allow' }]
   comma-dangle: [error, only-multiline]
-  curly: [error, multi-or-nest]
+#  curly: [error, multi-or-nest]
   eol-last: ['error', 'always']
   func-names: off
   import/extensions: off

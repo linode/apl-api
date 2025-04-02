@@ -33,7 +33,7 @@ Workload:
     chartProvider:
       type: string
       title: Chart provider
-      enum: ['helm', 'git']
+      enum: [ 'helm', 'git' ]
       default: git
     path:
       description: A relative directory path within the Git repository. Absolute paths cause errors. (only valid for applications sourced from Git).
@@ -46,7 +46,7 @@ Workload:
       $ref: 'definitions.yaml#/wordCharacterPattern'
       default: HEAD
     chartMetadata:
-      title: ''
+      title: Chart metadata
       properties:
         helmChartVersion:
           type: string
@@ -59,6 +59,14 @@ Workload:
     namespace:
       description: Workload namespace. Applicable only for team-admin. Default value is 'team-<team_id>'.
       $ref: 'definitions.yaml#/idName'
+    createNamespace:
+      title: Create a new namespace
+      type: boolean
+      default: false
+    sidecarInject:
+      title: Enable istio sidecar injection
+      type: boolean
+      default: false
     imageUpdateStrategy:
       description: Automatically update the image. Only supported when the image is stored in Harbor.
       title: Auto Image Updater
@@ -145,9 +153,9 @@ Workload:
 
 WorkloadValues:
   x-acl:
-    platformAdmin: [read-any, update-any]
-    teamAdmin: [read, update]
-    teamMember: [read, update]
+    platformAdmin: [ read-any, update-any ]
+    teamAdmin: [ read, update ]
+    teamMember: [ read, update ]
   type: object
   properties:
     id:

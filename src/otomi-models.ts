@@ -2,13 +2,13 @@ import { Request } from 'express'
 import { JSONSchema4 } from 'json-schema'
 import { components, external, operations, paths } from 'src/generated-schema'
 import OtomiStack from 'src/otomi-stack'
+
 export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
 export type Backup = components['schemas']['Backup']
 export type Kubecfg = components['schemas']['Kubecfg']
 export type K8sService = components['schemas']['K8sService']
 export type Netpol = components['schemas']['Netpol']
-export type Secret = components['schemas']['Secret'] & { teamId?: string }
 export type SealedSecret = components['schemas']['SealedSecret'] & { teamId?: string }
 export type SealedSecretsKeys = components['schemas']['SealedSecretsKeys']
 export type K8sSecret = components['schemas']['K8sSecret']
@@ -17,6 +17,8 @@ export type Session = components['schemas']['Session']
 export type ObjWizard = components['schemas']['ObjWizard']
 export type Settings = components['schemas']['Settings']
 export type SettingsInfo = components['schemas']['SettingsInfo']
+export type TestRepoConnect = components['schemas']['TestRepoConnect']
+export type InternalRepoUrls = components['schemas']['InternalRepoUrls']
 export type Team = components['schemas']['Team']
 export type TeamSelfService = components['schemas']['Team']['selfService']
 export type SessionUser = components['schemas']['SessionUser']
@@ -25,6 +27,7 @@ export type Workload = components['schemas']['Workload']
 export type WorkloadValues = components['schemas']['WorkloadValues']
 export type User = components['schemas']['User']
 export type Project = components['schemas']['Project']
+export type CodeRepo = components['schemas']['CodeRepo']
 export type Build = components['schemas']['Build']
 export type Policy = components['schemas']['Policy']
 export type Policies = components['schemas']['Policies']
@@ -34,9 +37,12 @@ export type TeamAuthz = components['schemas']['TeamAuthz']
 export type Alerts = Settings['alerts']
 export type Cluster = Settings['cluster']
 export type Dns = Settings['dns']
+export type Ingress = Settings['ingress']
+export type Smtp = Settings['smtp']
 export type Kms = Settings['kms']
 export type Oidc = Settings['oidc']
 export type Otomi = Settings['otomi']
+export type Versions = Settings['versions']
 
 export interface OpenApiRequest extends Request {
   operationDoc: {
@@ -141,4 +147,37 @@ export interface Core {
   teamApps: Record<string, any>[]
   teamConfig: Record<string, any>
   version: number
+}
+
+export interface Repo {
+  apps: App[]
+  alerts: Alerts
+  cluster: Cluster
+  databases: Record<string, any>
+  dns: Dns
+  ingress: Ingress
+  kms: Kms
+  obj: Record<string, any>
+  oidc: Oidc
+  otomi: Otomi
+  platformBackups: Record<string, any>
+  smtp: Smtp
+  users: User[]
+  versions: Versions
+  teamConfig: Record<string, TeamConfig>
+}
+
+export interface TeamConfig {
+  apps: App[]
+  backups: Backup[]
+  builds: Build[]
+  codeRepos: CodeRepo[]
+  netpols: Netpol[]
+  policies: Policies
+  projects: Project[]
+  sealedsecrets: SealedSecret[]
+  services: Service[]
+  settings: Team
+  workloads: Workload[]
+  workloadValues: WorkloadValues[]
 }

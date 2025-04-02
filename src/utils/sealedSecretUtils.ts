@@ -1,4 +1,6 @@
 import crypto, { X509Certificate } from 'crypto'
+import { isEmpty } from 'lodash'
+import { SealedSecret } from 'src/otomi-models'
 
 function hybridEncrypt(pubKey, plaintext, label) {
   const sessionKey = crypto.randomBytes(32)
@@ -38,4 +40,78 @@ export function encryptSecretItem(certificate, secretName, ns, data, scope) {
   const label = encryptionLabel(ns, secretName, scope)
   const out = hybridEncrypt(pubKey, data, label)
   return out
+}
+
+export interface EncryptedDataRecord {
+  key: string
+  value: string
+}
+
+export interface SealedSecretManifestType {
+  apiVersion: string
+  kind: string
+  metadata: {
+    name: string
+    namespace: string
+    annotations?: Record<string, string>
+    finalizers?: string[]
+    labels?: Record<string, string>
+  }
+  spec: {
+    encryptedData: EncryptedDataRecord[]
+    template: {
+      type:
+        | 'kubernetes.io/opaque'
+        | 'kubernetes.io/service-account-token'
+        | 'kubernetes.io/dockercfg'
+        | 'kubernetes.io/dockerconfigjson'
+        | 'kubernetes.io/basic-auth'
+        | 'kubernetes.io/ssh-auth'
+        | 'kubernetes.io/tls'
+      immutable: boolean
+      metadata: {
+        name: string
+        namespace: string
+      }
+    }
+  }
+}
+
+export function sealedSecretManifest(
+  data: SealedSecret,
+  encryptedData: EncryptedDataRecord[],
+  namespace: string,
+): SealedSecretManifestType {
+  const annotations = data.metadata?.annotations?.reduce((acc, item) => {
+    return { ...acc, [item.key]: item.value }
+  }, {})
+  const labels = data.metadata?.labels?.reduce((acc, item) => {
+    return { ...acc, [item.key]: item.value }
+  }, {})
+  const SealedSecretSchema = {
+    apiVersion: 'bitnami.com/v1alpha1',
+    kind: 'SealedSecret',
+    metadata: {
+      annotations: {
+        'sealedsecrets.bitnami.com/namespace-wide': 'true',
+      },
+      name: data.name,
+      namespace,
+    },
+    spec: {
+      encryptedData,
+      template: {
+        type: data.type || 'kubernetes.io/opaque',
+        immutable: data.immutable || false,
+        metadata: {
+          name: data.name,
+          namespace,
+          ...(!isEmpty(annotations) && { annotations }),
+          ...(!isEmpty(labels) && { labels }),
+          ...(!isEmpty(data.metadata?.finalizers) && { finalizers: data.metadata?.finalizers }),
+        },
+      },
+    },
+  }
+  return SealedSecretSchema
 }

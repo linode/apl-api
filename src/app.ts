@@ -13,8 +13,8 @@ import logger from 'morgan'
 import path from 'path'
 import { default as Authz } from 'src/authz'
 import {
-  DbMessage,
   authzMiddleware,
+  DbMessage,
   errorMiddleware,
   getIo,
   getSessionStack,
@@ -22,21 +22,22 @@ import {
   sessionMiddleware,
 } from 'src/middleware'
 import { setMockIdx } from 'src/mocks'
-import { Build, OpenAPIDoc, OpenApiRequestExt, Schema, SealedSecret, Service, Workload } from 'src/otomi-models'
+import { OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
 import {
   CHECK_LATEST_COMMIT_INTERVAL,
+  cleanEnv,
   DRONE_WEBHOOK_SECRET,
   EXPRESS_PAYLOAD_LIMIT,
   GIT_PASSWORD,
+  GIT_PUSH_RETRIES,
   GIT_USER,
-  cleanEnv,
 } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
-import Db from './db'
 import giteaCheckLatest from './gitea/connect'
 import { getBuildStatus, getSealedSecretStatus, getServiceStatus, getWorkloadStatus } from './k8s_operations'
+import { CleanOptions } from 'simple-git'
 
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
@@ -44,6 +45,7 @@ const env = cleanEnv({
   GIT_USER,
   GIT_PASSWORD,
   EXPRESS_PAYLOAD_LIMIT,
+  GIT_PUSH_RETRIES,
 })
 
 const debug = Debug('otomi:app')
@@ -63,13 +65,24 @@ const checkAgainstGitea = async () => {
   const latestOtomiVersion = await giteaCheckLatest(encodedToken, clusterInfo)
   // check the local version against the latest online version
   // if the latest online is newer it will be pulled locally
-  if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== otomiStack.repo.commitSha) {
+  if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== otomiStack.git.commitSha) {
     debug('Local values differentiate from Git repository, retrieving latest values')
-    await otomiStack.repo.pull()
+    // Remove all .dec files
+    await otomiStack.git.git.clean([CleanOptions.FORCE, CleanOptions.IGNORED_ONLY, CleanOptions.RECURSIVE])
+    const retries = env.GIT_PUSH_RETRIES
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        await otomiStack.git.pull(false, true)
+        break
+      } catch (error) {
+        if (attempt === retries) throw error
+        debug(`Attempt ${attempt} of ${retries} failed. Retrying...`)
+        await new Promise((resolve) => setTimeout(resolve, 50))
+      }
+    }
     // inflate new db
-    otomiStack.db = new Db()
     await otomiStack.loadValues()
-    const sha = await otomiStack.repo.getCommitSha()
+    const sha = await otomiStack.git.getCommitSha()
     const msg: DbMessage = { state: 'clean', editor: 'system', sha, reason: 'conflict' }
     getIo().emit('db', msg)
   }
@@ -77,13 +90,17 @@ const checkAgainstGitea = async () => {
 
 const resourceStatus = async (errorSet) => {
   const otomiStack = await getSessionStack()
+  if (!otomiStack.isLoaded) {
+    debug('Values are not loaded yet')
+    return
+  }
   const { cluster } = otomiStack.getSettings(['cluster'])
   const domainSuffix = cluster?.domainSuffix
   const resources = {
-    workloads: otomiStack.db.getCollection('workloads') as Array<Workload>,
-    builds: otomiStack.db.getCollection('builds') as Array<Build>,
-    services: otomiStack.db.getCollection('services') as Array<Service>,
-    sealedSecrets: otomiStack.db.getCollection('sealedsecrets') as Array<SealedSecret>,
+    workloads: otomiStack.repoService.getAllWorkloads(),
+    builds: otomiStack.repoService.getAllBuilds(),
+    services: otomiStack.repoService.getAllServices(),
+    sealedSecrets: otomiStack.repoService.getAllSealedSecrets(),
   }
   const statusFunctions = {
     workloads: getWorkloadStatus,
@@ -97,7 +114,7 @@ const resourceStatus = async (errorSet) => {
     const promises = resources[resourceType].map(async (resource) => {
       try {
         const res = await statusFunctions[resourceType](resource, domainSuffix)
-        return { [resource.id]: res }
+        return { [resource.name]: res }
       } catch (error) {
         const errorMessage = `${resourceType}-${resource.name}-${error.message}`
         if (!errorSet.has(errorMessage)) {
@@ -176,7 +193,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     if (status === 'success') {
       const stack = await getSessionStack()
       debug('Drone deployed, root pull')
-      await stack.repo.pull()
+      await stack.git.pull()
     }
   })
   let server: Server | undefined
@@ -188,7 +205,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
         debug(`Listening on :::${PORT}`)
         lightship.signalReady()
         // Clone repo after the application is ready to avoid Pod NotReady phenomenon, and thus infinite Pod crash loopback
-        ;(await getSessionStack()).initRepo()
+        ;(await getSessionStack()).initGit()
       })
       .on('error', (e) => {
         console.error(e)
@@ -203,7 +220,11 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   const emitResourceStatusInterval = 10 * 1000
   const errorSet = new Set()
   setInterval(async function () {
-    await resourceStatus(errorSet)
+    try {
+      await resourceStatus(errorSet)
+    } catch (e) {
+      debug(e)
+    }
   }, emitResourceStatusInterval)
 
   // and register session middleware

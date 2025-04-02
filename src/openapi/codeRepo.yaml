@@ -1,0 +1,43 @@
+CodeRepo:
+  x-acl:
+    platformAdmin:
+      - create-any
+      - read-any
+      - update-any
+      - delete-any
+    teamAdmin:
+      - create
+      - read
+      - update
+      - delete
+    teamMember:
+      - create
+      - read
+      - update
+      - delete
+  properties:
+    id:
+      type: string
+    teamId:
+      $ref: definitions.yaml#/idName
+    name:
+      $ref: 'definitions.yaml#/idName'
+    gitService:
+      type: string
+      default: gitea
+      enum:
+        - gitea
+        - github
+        - gitlab
+    repositoryUrl:
+      $ref: 'definitions.yaml#/repoUrl'
+    private:
+      type: boolean
+      default: false
+    secret:
+      type: string
+  required:
+    - name
+    - gitService
+    - repositoryUrl
+  type: object

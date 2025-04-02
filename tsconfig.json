@@ -9,17 +9,18 @@
     "lib": ["es2021", "esnext", "dom", "dom.iterable"],
     "module": "commonjs",
     "moduleResolution": "node",
-    "outDir": "dist/src",
+    "outDir": "dist/",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": false,
     "strictNullChecks": true,
-    "target": "esnext"
+    "target": "esnext",
+    "types": ["node", "jest"],
   },
   "exclude": ["node_modules", "dist"],
   "extends": "ts-node/node16/tsconfig.json",
-  "include": ["src"],
+  "include": ["src", "jest.config.ts"],
   "parserOptions": {
     "ecmaVersion": 2021,
     "sourceType": "module"
