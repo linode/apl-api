@@ -339,7 +339,7 @@ export default class OtomiStack {
   getSecretPaths(): string[] {
     // we split secrets from plain data, but have to overcome teams using patternproperties
     const teamProp = 'teamConfig.patternProperties.^[a-z0-9]([-a-z0-9]*[a-z0-9])+$'
-    const teams = this.getTeams().map(({ id }) => id)
+    const teams = this.getTeams().map(({ name }) => name)
     const cleanSecretPaths: string[] = []
     const { secretPaths } = getSpec()
     secretPaths.map((p) => {
