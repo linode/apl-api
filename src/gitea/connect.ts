@@ -13,8 +13,6 @@ export default async function giteaCheckLatest(token: string): Promise<any> {
   // Extracts "http://gitea-http.gitea.svc.cluster.local:3000" or "https://gitea.<domainSuffix>"
   const baseDomain = new URL(env.GIT_REPO_URL).origin
   const giteaUrl = `${baseDomain}/api/v1/repos/otomi/values/commits`
-  debug('giteaUrl: ', giteaUrl)
-  debug('token: ', token)
   if (baseDomain) {
     const response = await axios({
       url: giteaUrl,
@@ -25,9 +23,7 @@ export default async function giteaCheckLatest(token: string): Promise<any> {
       },
     }).catch((error) => {
       debug('Gitea error: ', error.message)
-      debug('Gitea error full: ', error)
     })
-    debug('response sha:', response?.data?.[0]?.sha)
     return response
   }
 }

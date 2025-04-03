@@ -52,6 +52,7 @@ export function jwtMiddleware(): RequestHandler {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
     const token = req.header('Authorization')
+    console.log('token', token)
     const otomi = await getSessionStack() // we can use the readonly version
     if (env.isDev) {
       req.user = getUser(
@@ -70,6 +71,7 @@ export function jwtMiddleware(): RequestHandler {
       debug('anonymous request')
       return next()
     }
+    console.log('jwtDecode(token)', jwtDecode(token))
     const { name, email, roles, groups, sub } = jwtDecode(token)
     req.user = getUser({ name, email, roles, groups, sub }, otomi)
     return next()
