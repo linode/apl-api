@@ -163,6 +163,7 @@ export class RepoService {
       throw new Error(`TeamConfig[${teamId}] does not exist.`)
     }
     delete this.repo.teamConfig[teamId]
+    this.teamConfigServiceCache.delete(teamId)
   }
 
   public getCluster(): Cluster {
