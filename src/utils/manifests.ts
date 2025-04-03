@@ -1,5 +1,5 @@
 import { AplKind, AplRequestObject, AplResponseObject, DeepPartial, ServiceSpec, V1ApiObject } from '../otomi-models'
-import { merge, omit } from 'lodash'
+import { cloneDeep, merge, omit } from 'lodash'
 
 export function getAplObjectFromV1(kind: AplKind, spec: V1ApiObject | ServiceSpec): AplRequestObject {
   return {
@@ -52,7 +52,7 @@ export function createAplObject(name: string, request: AplRequestObject, teamId?
 
 export function updateAplObject(config: AplResponseObject, updates: AplRequestObject): AplResponseObject {
   merge(config.metadata, { name: updates.metadata?.name })
-  Object.assign(config.spec, updates.spec)
+  Object.assign(config.spec, cloneDeep(updates.spec))
   return config
 }
 
