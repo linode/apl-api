@@ -6,8 +6,8 @@ const debug = Debug('otomi:api:settingsinfo')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [
-    ({ otomi }: OpenApiRequestExt, res): void => {
-      debug(`getSettingsInfo`)
+    ({ otomi, user }: OpenApiRequestExt, res): void => {
+      debug(`getSettingsInfo`, user)
       res.json(otomi.getSettingsInfo())
     },
   ]

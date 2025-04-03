@@ -6,8 +6,8 @@ const debug = Debug('otomi:api')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [
-    ({ apiDoc }: OpenApiRequest, res): void => {
-      debug('apiDocs')
+    ({ apiDoc, user }: OpenApiRequest, res): void => {
+      debug('apiDocs', user)
       res.json(apiDoc)
     },
   ]

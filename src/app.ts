@@ -3,11 +3,10 @@
 import $parser from '@apidevtools/json-schema-ref-parser'
 import cors from 'cors'
 import Debug from 'debug'
-import express, { request } from 'express'
+import express from 'express'
 import 'express-async-errors'
 import { initialize } from 'express-openapi'
 import { Server } from 'http'
-import httpSignature from 'http-signature'
 import { createLightship } from 'lightship'
 import logger from 'morgan'
 import path from 'path'
@@ -174,27 +173,6 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   setInterval(async function () {
     await checkAgainstGitea()
   }, gitCheckVersionInterval)
-  app.all('/drone', async (req, res, next) => {
-    const parsed = httpSignature.parseRequest(req, {
-      algorithm: 'hmac-sha256',
-    })
-    if (!httpSignature.verifyHMAC(parsed, env.DRONE_WEBHOOK_SECRET)) return res.status(401).send()
-    const event = req.headers['x-drone-event']
-    res.send('ok')
-    if (event !== 'build') return
-    const io = getIo()
-    // emit now to let others know, before doing anything else
-    if (io) io.emit('drone', req.body)
-    // deployment might have changed data, so reload
-    const { build } = request.body || {}
-    if (!build) return
-    const { status } = build
-    if (status === 'success') {
-      const stack = await getSessionStack()
-      debug('Drone deployed, root pull')
-      await stack.git.pull()
-    }
-  })
   let server: Server | undefined
   if (!inOtomiStack) {
     // initialize full server
