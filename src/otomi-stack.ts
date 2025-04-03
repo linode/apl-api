@@ -2223,7 +2223,7 @@ export default class OtomiStack {
     const namespace = data.spec?.namespace ?? existingSecret.spec.namespace ?? `team-${teamId}`
     let encryptedData
     if (data.spec?.decryptedData) {
-      encryptedData = getEncryptedData(data.spec.decryptedData, data.metadata?.name || name, namespace)
+      encryptedData = await getEncryptedData(data.spec.decryptedData, data.metadata?.name || name, namespace)
     }
     const sealedSecret = patch
       ? this.repoService.getTeamConfigService(teamId).patchSealedSecret(name, {
