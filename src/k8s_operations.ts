@@ -3,7 +3,7 @@ import Debug from 'debug'
 import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
-import { Build, Cloudtty, SealedSecret, Service, Workload } from './otomi-models'
+import { AplBuildResponse, AplSecretResponse, AplServiceResponse, AplWorkloadResponse, Cloudtty } from './otomi-models'
 
 const debug = Debug('otomi:api:k8sOperations')
 
@@ -119,9 +119,12 @@ export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty
     await k8sApi.deleteNamespacedServiceAccount(`tty-${resourceName}`, namespace)
     await k8sApi.deleteNamespacedPod(`tty-${resourceName}`, namespace)
     if (!isAdmin) {
-      for (const team of userTeams!)
+      for (const team of userTeams!) {
         await rbacAuthorizationV1Api.deleteNamespacedRoleBinding(`tty-${team}-${resourceName}-rolebinding`, team)
-    } else await rbacAuthorizationV1Api.deleteClusterRoleBinding('tty-admin-clusterrolebinding')
+      }
+    } else {
+      await rbacAuthorizationV1Api.deleteClusterRoleBinding('tty-admin-clusterrolebinding')
+    }
     await k8sApi.deleteNamespacedService(`tty-${resourceName}`, namespace)
 
     await customObjectsApi.deleteNamespacedCustomObject(
@@ -231,13 +234,21 @@ export async function getLastTektonMessage(sha: string): Promise<any> {
   }
 }
 
-export async function getWorkloadStatus(workload: Workload): Promise<string> {
+export async function getWorkloadStatus(workload: AplWorkloadResponse): Promise<string> {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
-  const name = `team-${workload.teamId}-${workload.name}`
+  const { name, labels } = workload.metadata
+  const teamName = labels['apl.io/teamId']
+  const appName = `team-${teamName}-${name}`
   try {
-    const res: any = await k8sApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', 'argocd', 'applications', name)
+    const res: any = await k8sApi.getNamespacedCustomObject(
+      'argoproj.io',
+      'v1alpha1',
+      'argocd',
+      'applications',
+      appName,
+    )
     const { status } = res.body.status.sync
     switch (status) {
       case 'Synced':
@@ -281,11 +292,13 @@ async function listNamespacedCustomObject(
   }
 }
 
-export async function getBuildStatus(build: Build): Promise<string> {
-  const labelSelector = `tekton.dev/pipeline=${build.mode?.type}-build-${build.name}`
+export async function getBuildStatus(build: AplBuildResponse): Promise<string> {
+  const { name, labels } = build.metadata
+  const teamName = labels['apl.io/teamId']
+  const labelSelector = `tekton.dev/pipeline=${build.spec.mode?.type}-build-${name}`
   const resPipelineruns = await listNamespacedCustomObject(
     'tekton.dev',
-    `team-${build.teamId}`,
+    `team-${teamName}`,
     'pipelineruns',
     labelSelector,
   )
@@ -311,15 +324,16 @@ export async function getBuildStatus(build: Build): Promise<string> {
     } else {
       const resEventlisteners = await listNamespacedCustomObject(
         'triggers.tekton.dev',
-        `team-${build.teamId}`,
+        `team-${teamName}`,
         'eventlisteners',
         labelSelector,
       )
       const [eventlistener] = resEventlisteners.body.items
       if (eventlistener) {
         const { conditions } = eventlistener.status
-        if (conditions && conditions.length > 0) return 'Pending'
-        else {
+        if (conditions && conditions.length > 0) {
+          return 'Pending'
+        } else {
           // No conditions found for the EventListener.
           return 'Unknown'
         }
@@ -353,31 +367,35 @@ async function getNamespacedCustomObject(namespace: string, name: string) {
 }
 
 async function checkHostStatus(namespace: string, name: string, host: string) {
-  const hosts = await getNamespacedCustomObject(namespace, `${name}`)
+  const hosts = await getNamespacedCustomObject(namespace, name)
   return hosts.includes(host) ? 'Succeeded' : 'Unknown'
 }
 
-export async function getServiceStatus(service: Service, domainSuffix: string): Promise<string> {
-  const isKsvc = service?.ksvc?.predeployed
-  const namespace = `team-${service.teamId}`
-  const name = `team-${service.teamId}-public`
-  const host = `team-${service.teamId}/${service.name}-${service.teamId}.${domainSuffix}`
+export async function getServiceStatus(service: AplServiceResponse, domainSuffix: string): Promise<string> {
+  const isKsvc = service.spec.ksvc?.predeployed
+  const { name, labels } = service.metadata
+  const teamName = labels['apl.io/teamId']
+  const namespace = `team-${teamName}`
+  const host = `team-${teamName}/${name}-${teamName}.${domainSuffix}`
 
   if (isKsvc) {
     const res = await listNamespacedCustomObject('networking.istio.io', namespace, 'virtualservices', undefined)
     const virtualservices = res?.body?.items?.map((item) => item.metadata.name) || []
-    if (virtualservices.includes(`${service.name}-ingress`)) return 'Succeeded'
-    else return 'NotFound'
+    if (virtualservices.includes(`${name}-ingress`)) {
+      return 'Succeeded'
+    } else {
+      return 'NotFound'
+    }
   }
 
-  const tlstermStatus = await checkHostStatus(namespace, `${name}-tlsterm`, host)
+  const tlstermStatus = await checkHostStatus(namespace, `team-${teamName}-public-tlsterm`, host)
   if (tlstermStatus === 'Succeeded') return 'Succeeded'
 
-  const tlspassStatus = await checkHostStatus(namespace, `${name}-tlspass`, host)
+  const tlspassStatus = await checkHostStatus(namespace, `team-${teamName}-public-tlspass`, host)
   return tlspassStatus
 }
 
-export async function getSecretValues(name: string, namespace: string): Promise<any> {
+export async function getSecretValues(name: string, namespace: string): Promise<Record<string, string> | undefined> {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
@@ -425,9 +443,10 @@ export async function getSealedSecretSyncedStatus(name: string, namespace: strin
   }
 }
 
-export async function getSealedSecretStatus(sealedsecret: SealedSecret): Promise<string> {
-  const { name } = sealedsecret
-  const namespace = sealedsecret?.namespace ?? `team-${sealedsecret.teamId}`
+export async function getSealedSecretStatus(sealedsecret: AplSecretResponse): Promise<string> {
+  const { name, labels } = sealedsecret.metadata
+  const teamName = labels['apl.io/teamId']
+  const namespace = sealedsecret.spec.namespace ?? `team-${teamName}`
   const value = await getSecretValues(name, namespace)
   const syncedStatus = await getSealedSecretSyncedStatus(name, namespace)
 
@@ -459,8 +478,9 @@ export async function getSealedSecretsCertificate(): Promise<string> {
       return currentTimestamp > maxTimestamp ? currentItem : maxItem
     }, items[0])
 
-    if (newestItem.data['tls.crt']) return Buffer.from(newestItem.data['tls.crt'], 'base64').toString('utf-8')
-    else {
+    if (newestItem.data['tls.crt']) {
+      return Buffer.from(newestItem.data['tls.crt'], 'base64').toString('utf-8')
+    } else {
       debug('Sealed secrets certificate not found!')
       return ''
     }
