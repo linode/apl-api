@@ -203,7 +203,7 @@ describe('TeamConfigService', () => {
       metadata: { name: 'TestSecret' },
       spec: {
         type: 'kubernetes.io/opaque',
-        encryptedData: [{ key: 'key', value: 'value' }],
+        encryptedData: { key: 'value' },
       },
     }
     test('should create a sealed secret', () => {
@@ -219,7 +219,7 @@ describe('TeamConfigService', () => {
         },
         spec: {
           type: 'kubernetes.io/opaque',
-          encryptedData: [{ key: 'key', value: 'value' }],
+          encryptedData: { key: 'value' },
         },
         status: {},
       })

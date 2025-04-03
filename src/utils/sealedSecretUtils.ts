@@ -1,6 +1,8 @@
 import crypto, { X509Certificate } from 'crypto'
 import { isEmpty } from 'lodash'
 import { AplSecretResponse } from 'src/otomi-models'
+import { getSealedSecretsCertificate } from '../k8s_operations'
+import { ValidationError } from '../error'
 
 function hybridEncrypt(pubKey, plaintext, label) {
   const sessionKey = crypto.randomBytes(32)
@@ -42,6 +44,27 @@ export function encryptSecretItem(certificate, secretName, ns, data, scope) {
   return out
 }
 
+export async function getEncryptedData(
+  decryptedData: Record<string, string | undefined> | undefined,
+  name: string,
+  namespace: string,
+): Promise<Record<string, string>> {
+  const certificate = await getSealedSecretsCertificate()
+  if (!certificate) {
+    const err = new ValidationError()
+    err.publicMessage = 'SealedSecrets certificate not found'
+    throw err
+  }
+  const encryptedDataPromises = Object.entries(decryptedData || {}).map(([key, value]) => {
+    if (value === undefined) {
+      return { [key]: value }
+    }
+    const encryptedItem = encryptSecretItem(certificate, name, namespace, value, 'namespace-wide')
+    return { [key]: encryptedItem }
+  })
+  return Object.assign({}, ...(await Promise.all(encryptedDataPromises || [])))
+}
+
 export interface EncryptedDataRecord {
   key: string
   value: string
@@ -58,7 +81,7 @@ export interface SealedSecretManifestType {
     labels?: Record<string, string>
   }
   spec: {
-    encryptedData: EncryptedDataRecord[]
+    encryptedData: Record<string, string>
     template: {
       type:
         | 'kubernetes.io/opaque'
@@ -100,7 +123,7 @@ export function sealedSecretManifest(data: AplSecretResponse): SealedSecretManif
       namespace,
     },
     spec: {
-      encryptedData: data.spec.encryptedData || [],
+      encryptedData: data.spec.encryptedData || {},
       template: {
         type: data.spec.type || 'kubernetes.io/opaque',
         immutable: data.spec.immutable || false,

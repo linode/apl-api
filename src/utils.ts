@@ -18,6 +18,24 @@ export function arrayToObject(array: [] = [], keyName = 'name', keyValue = 'valu
   return obj
 }
 
+export function valueArrayToKeyValue(
+  array?:
+    | {
+        key: string
+        value: string
+      }[]
+    | undefined,
+): Record<string, string> | undefined {
+  if (!array || isEmpty(array)) {
+    return undefined
+  }
+  const obj = {}
+  array.forEach((item) => {
+    obj[item.key] = item.value
+  })
+  return obj
+}
+
 export function mapObjectToKeyValueArray(obj?: Record<string, string>): { key: string; value: string }[] | undefined {
   if (!obj || isEmpty(obj)) {
     return undefined

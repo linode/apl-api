@@ -67,6 +67,7 @@ import {
   getValuesSchema,
   mapObjectToKeyValueArray,
   removeBlankAttributes,
+  valueArrayToKeyValue,
 } from 'src/utils'
 import {
   cleanEnv,
@@ -93,7 +94,6 @@ import {
   getCloudttyActiveTime,
   getKubernetesVersion,
   getLastTektonMessage,
-  getSealedSecretsCertificate,
   getSecretValues,
   getTeamSecretsFromK8s,
   k8sdelete,
@@ -109,12 +109,7 @@ import {
   testPrivateRepoConnect,
   testPublicRepoConnect,
 } from './utils/codeRepoUtils'
-import {
-  EncryptedDataRecord,
-  encryptSecretItem,
-  sealedSecretManifest,
-  SealedSecretManifestType,
-} from './utils/sealedSecretUtils'
+import { getEncryptedData, sealedSecretManifest, SealedSecretManifestType } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchChartYaml, fetchWorkloadCatalog, NewHelmChartValues, sparseCloneChart } from './utils/workloadUtils'
@@ -2169,7 +2164,7 @@ export default class OtomiStack {
   async createSealedSecret(teamId: string, data: SealedSecret): Promise<SealedSecret> {
     const spec = {
       ...omit(data, 'encryptedData'),
-      decryptedData: data.encryptedData,
+      decryptedData: valueArrayToKeyValue(data.encryptedData),
     }
     const newSecret = await this.createAplSealedSecret(
       teamId,
@@ -2180,21 +2175,8 @@ export default class OtomiStack {
 
   async createAplSealedSecret(teamId: string, data: AplSecretRequest): Promise<AplSecretResponse> {
     const namespace = data.spec.namespace ?? `team-${teamId}`
-    const certificate = await getSealedSecretsCertificate()
-    if (!certificate) {
-      const err = new ValidationError()
-      err.publicMessage = 'SealedSecrets certificate not found'
-      throw err
-    }
     try {
-      const encryptedDataPromises = data.spec.decryptedData?.map((obj) => {
-        const encryptedItem = encryptSecretItem(certificate, data.metadata.name, namespace, obj.value, 'namespace-wide')
-        return { [obj.key]: encryptedItem }
-      })
-      const encryptedData = Object.assign(
-        {},
-        ...(await Promise.all(encryptedDataPromises || [])),
-      ) as EncryptedDataRecord[]
+      const encryptedData = await getEncryptedData(data.spec.decryptedData, data.metadata.name, namespace)
       const sealedSecret = this.repoService.getTeamConfigService(teamId).createSealedSecret({
         kind: 'AplTeamSecret',
         metadata: data.metadata,
@@ -2220,9 +2202,12 @@ export default class OtomiStack {
   }
 
   async editSealedSecret(teamId: string, name: string, data: SealedSecret): Promise<SealedSecret> {
-    const mergeObj = getV1MergeObject(data) as DeepPartial<AplSecretRequest>
-    if (mergeObj.spec?.encryptedData) {
-      mergeObj.spec.decryptedData = mergeObj.spec.encryptedData
+    const mergeObj = getV1MergeObject(omit(data, 'encryptedData')) as DeepPartial<AplSecretRequest>
+    if (data.encryptedData) {
+      if (!mergeObj.spec) {
+        mergeObj.spec = {}
+      }
+      mergeObj.spec.decryptedData = valueArrayToKeyValue(data.encryptedData)
     }
     const mergedSecret = await this.editAplSealedSecret(teamId, name, mergeObj)
     return getV1ObjectFromApl(mergedSecret) as SealedSecret
@@ -2238,22 +2223,7 @@ export default class OtomiStack {
     const namespace = data.spec?.namespace ?? existingSecret.spec.namespace ?? `team-${teamId}`
     let encryptedData
     if (data.spec?.decryptedData) {
-      const certificate = await getSealedSecretsCertificate()
-      if (!certificate) {
-        const err = new ValidationError()
-        err.publicMessage = 'SealedSecrets certificate not found'
-        throw err
-      }
-
-      const encryptedDataPromises = data.spec.decryptedData.map((obj) => {
-        if (obj && obj.key && obj.value !== undefined) {
-          const encryptedItem = encryptSecretItem(certificate, name, namespace, obj.value, 'namespace-wide')
-          return { [obj.key]: encryptedItem }
-        } else {
-          return {}
-        }
-      })
-      encryptedData = Object.assign({}, ...(await Promise.all(encryptedDataPromises))) as EncryptedDataRecord[]
+      encryptedData = getEncryptedData(data.spec.decryptedData, data.metadata?.name || name, namespace)
     }
     const sealedSecret = patch
       ? this.repoService.getTeamConfigService(teamId).patchSealedSecret(name, {
@@ -2301,10 +2271,10 @@ export default class OtomiStack {
 
   async getSealedSecret(teamId: string, name: string): Promise<SealedSecret> {
     const aplSecret = await this.getAplSealedSecret(teamId, name)
-    const secret = omit(getV1ObjectFromApl(aplSecret), 'decryptedData') as SealedSecret
-    const { decryptedData } = aplSecret.spec
+    const secret = omit(getV1ObjectFromApl(aplSecret), ['encryptedData', 'decryptedData']) as SealedSecret
+    const { encryptedData, decryptedData } = aplSecret.spec
     secret.isDisabled = isEmpty(decryptedData)
-    secret.encryptedData = Object.entries(secret.encryptedData).map(([key, value]) => ({
+    secret.encryptedData = Object.entries(encryptedData || {}).map(([key, value]) => ({
       key,
       value: decryptedData?.[key] || value,
     }))

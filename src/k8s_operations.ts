@@ -385,10 +385,9 @@ export async function getSecretValues(name: string, namespace: string): Promise<
     const res = await k8sApi.readNamespacedSecret(name, namespace)
     const { data } = res.body
     const decodedData = {}
-    for (const key in data) {
-      if (Object.prototype.hasOwnProperty.call(data, key))
-        decodedData[key] = Buffer.from(data[key], 'base64').toString('utf-8')
-    }
+    Object.entries(data || {}).forEach(([key, value]) => {
+      decodedData[key] = Buffer.from(value, 'base64').toString('utf-8')
+    })
     return decodedData
   } catch (error) {
     if (process.env.NODE_ENV !== 'development') {
