@@ -1,14 +1,16 @@
 /* eslint-disable no-param-reassign */
 import { debug } from 'console'
 import { RequestHandler } from 'express'
-import jwtDecode from 'jwt-decode'
+import { jwtDecode } from 'jwt-decode'
 import { getMockEmail, getMockGroups, getMockName } from 'src/mocks'
 import { JWT, OpenApiRequestExt, SessionUser } from 'src/otomi-models'
-import OtomiStack from 'src/otomi-stack'
-import { cleanEnv } from 'src/validators'
+import { default as OtomiStack } from 'src/otomi-stack'
+import { cleanEnv, GIT_PUSH_RETRIES } from 'src/validators'
 import { getSessionStack } from './session'
 
-const env = cleanEnv({})
+const env = cleanEnv({
+  GIT_PUSH_RETRIES,
+})
 
 export function getUser(user: JWT, otomi: OtomiStack): SessionUser {
   const sessionUser: SessionUser = {
@@ -71,9 +73,22 @@ export function jwtMiddleware(): RequestHandler {
       debug('anonymous request')
       return next()
     }
-    console.log('jwtDecode(token)', jwtDecode(token))
-    const { name, email, roles, groups, sub } = jwtDecode(token)
-    req.user = getUser({ name, email, roles, groups, sub }, otomi)
-    return next()
+    const retries = env.GIT_PUSH_RETRIES
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        console.log('jwtDecode(token)', jwtDecode(token))
+        const { name, email, roles, groups, sub } = jwtDecode<JWT>(token)
+        req.user = getUser({ name, email, roles, groups, sub }, otomi)
+        return next()
+      } catch (error) {
+        console.log(`Error decoding JWT (attempt ${attempt}):`, error.message)
+        if (attempt === retries) {
+          return res.status(401).send({
+            message: 'Unauthorized',
+            error: 'Failed to decode JWT after multiple attempts',
+          })
+        }
+      }
+    }
   }
 }
