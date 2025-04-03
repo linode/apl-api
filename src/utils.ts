@@ -18,7 +18,7 @@ export function arrayToObject(array: [] = [], keyName = 'name', keyValue = 'valu
   return obj
 }
 
-export function valueArrayToKeyValue(
+export function valueArrayToObject(
   array?:
     | {
         key: string

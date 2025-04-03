@@ -65,11 +65,6 @@ export async function getEncryptedData(
   return Object.assign({}, ...(await Promise.all(encryptedDataPromises || [])))
 }
 
-export interface EncryptedDataRecord {
-  key: string
-  value: string
-}
-
 export interface SealedSecretManifestType {
   apiVersion: string
   kind: string
@@ -104,13 +99,7 @@ export interface SealedSecretManifestType {
 }
 
 export function sealedSecretManifest(data: AplSecretResponse): SealedSecretManifestType {
-  const annotations = data.spec.metadata?.annotations?.reduce((acc, item) => {
-    return { ...acc, [item.key]: item.value }
-  }, {})
-  const labels = data.spec.metadata?.labels?.reduce((acc, item) => {
-    return { ...acc, [item.key]: item.value }
-  }, {})
-  const finalizers = data.spec.metadata?.finalizers
+  const { annotations, labels, finalizers } = data.spec.metadata || {}
   const namespace = data.spec.namespace!
   return {
     apiVersion: 'bitnami.com/v1alpha1',

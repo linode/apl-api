@@ -61,14 +61,7 @@ import {
   Workload,
   WorkloadValues,
 } from 'src/otomi-models'
-import {
-  arrayToObject,
-  getServiceUrl,
-  getValuesSchema,
-  mapObjectToKeyValueArray,
-  removeBlankAttributes,
-  valueArrayToKeyValue,
-} from 'src/utils'
+import { arrayToObject, getServiceUrl, getValuesSchema, removeBlankAttributes, valueArrayToObject } from 'src/utils'
 import {
   cleanEnv,
   CUSTOM_ROOT_CA,
@@ -113,7 +106,7 @@ import { getEncryptedData, sealedSecretManifest, SealedSecretManifestType } from
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchChartYaml, fetchWorkloadCatalog, NewHelmChartValues, sparseCloneChart } from './utils/workloadUtils'
-import { getAplObjectFromV1, getV1MergeObject, getV1ObjectFromApl } from './utils/manifests'
+import { getAplObjectFromV1, getV1MergeObject, getV1ObjectFromApl, getV1SealedSecretFromApl } from './utils/manifests'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -222,10 +215,7 @@ export default class OtomiStack {
 
   transformSecrets(teamId: string, secrets: SealedSecretManifestType[]): AplSecretResponse[] {
     return secrets.map((secret) => {
-      const templateMetadata = secret.spec.template?.metadata
-      const annotations = mapObjectToKeyValueArray(templateMetadata?.annotations)
-      const labels = mapObjectToKeyValueArray(templateMetadata?.labels)
-      const finalizers = templateMetadata?.finalizers
+      const { annotations, labels, finalizers } = secret.spec.template?.metadata || {}
       return {
         kind: 'AplTeamSecret',
         metadata: {
@@ -2164,13 +2154,18 @@ export default class OtomiStack {
   async createSealedSecret(teamId: string, data: SealedSecret): Promise<SealedSecret> {
     const spec = {
       ...omit(data, 'encryptedData'),
-      decryptedData: valueArrayToKeyValue(data.encryptedData),
+      decryptedData: valueArrayToObject(data.encryptedData),
+      metadata: {
+        annotations: valueArrayToObject(data.metadata?.annotations),
+        labels: valueArrayToObject(data.metadata?.labels),
+        finalizers: data.metadata?.finalizers,
+      },
     }
     const newSecret = await this.createAplSealedSecret(
       teamId,
       getAplObjectFromV1('AplTeamSecret', spec) as AplSecretRequest,
     )
-    return getV1ObjectFromApl(newSecret) as SealedSecret
+    return getV1SealedSecretFromApl(newSecret)
   }
 
   async createAplSealedSecret(teamId: string, data: AplSecretRequest): Promise<AplSecretResponse> {
@@ -2202,15 +2197,22 @@ export default class OtomiStack {
   }
 
   async editSealedSecret(teamId: string, name: string, data: SealedSecret): Promise<SealedSecret> {
-    const mergeObj = getV1MergeObject(omit(data, 'encryptedData')) as DeepPartial<AplSecretRequest>
+    const mergeObj = getV1MergeObject(omit(data, ['encryptedData', 'metadata'])) as DeepPartial<AplSecretRequest>
+    if (!mergeObj.spec) {
+      mergeObj.spec = {}
+    }
     if (data.encryptedData) {
-      if (!mergeObj.spec) {
-        mergeObj.spec = {}
+      mergeObj.spec.decryptedData = valueArrayToObject(data.encryptedData)
+    }
+    if (data.metadata) {
+      mergeObj.spec.metadata = {
+        annotations: valueArrayToObject(data.metadata.annotations),
+        labels: valueArrayToObject(data.metadata.labels),
+        finalizers: data.metadata.finalizers,
       }
-      mergeObj.spec.decryptedData = valueArrayToKeyValue(data.encryptedData)
     }
     const mergedSecret = await this.editAplSealedSecret(teamId, name, mergeObj)
-    return getV1ObjectFromApl(mergedSecret) as SealedSecret
+    return getV1SealedSecretFromApl(mergedSecret)
   }
 
   async editAplSealedSecret(
@@ -2271,14 +2273,7 @@ export default class OtomiStack {
 
   async getSealedSecret(teamId: string, name: string): Promise<SealedSecret> {
     const aplSecret = await this.getAplSealedSecret(teamId, name)
-    const secret = omit(getV1ObjectFromApl(aplSecret), ['encryptedData', 'decryptedData']) as SealedSecret
-    const { encryptedData, decryptedData } = aplSecret.spec
-    secret.isDisabled = isEmpty(decryptedData)
-    secret.encryptedData = Object.entries(encryptedData || {}).map(([key, value]) => ({
-      key,
-      value: decryptedData?.[key] || value,
-    }))
-    return secret
+    return getV1SealedSecretFromApl(aplSecret)
   }
 
   async getAplSealedSecret(teamId: string, name: string): Promise<AplSecretResponse> {
@@ -2289,7 +2284,7 @@ export default class OtomiStack {
   }
 
   getAllSealedSecrets(): SealedSecret[] {
-    return this.getAllAplSealedSecrets().map((secret) => getV1ObjectFromApl(secret) as SealedSecret)
+    return this.getAllAplSealedSecrets().map(getV1SealedSecretFromApl)
   }
 
   getAllAplSealedSecrets(): AplSecretResponse[] {
@@ -2297,7 +2292,7 @@ export default class OtomiStack {
   }
 
   getSealedSecrets(teamId: string): SealedSecret[] {
-    return this.getAplSealedSecrets(teamId).map((secret) => getV1ObjectFromApl(secret) as SealedSecret)
+    return this.getAplSealedSecrets(teamId).map(getV1SealedSecretFromApl)
   }
 
   getAplSealedSecrets(teamId: string): AplSecretResponse[] {
