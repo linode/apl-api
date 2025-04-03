@@ -1280,7 +1280,7 @@ paths:
               schema:
                 type: array
                 items:
-                  - $ref: '#/components/schemas/AplPolicyResponse'
+                  $ref: '#/components/schemas/AplPolicyResponse'
 
   '/v2/teams/{teamId}/policies':
     parameters:
@@ -1297,7 +1297,7 @@ paths:
               schema:
                 type: array
                 items:
-                  - $ref: '#/components/schemas/AplPolicyResponse'
+                  $ref: '#/components/schemas/AplPolicyResponse'
 
   '/v2/teams/{teamId}/policies/{policyName}':
     parameters:
