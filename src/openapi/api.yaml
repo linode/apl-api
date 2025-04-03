@@ -906,7 +906,7 @@ paths:
 
   '/v2/backups':
     get:
-      operationId: getAllBackups
+      operationId: getAllAplBackups
       x-aclSchema: Backup
       responses:
         <<: *DefaultGetResponses
@@ -923,7 +923,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: getTeamBackups
+      operationId: getTeamAplBackups
       x-aclSchema: Backup
       responses:
         <<: *DefaultGetResponses
@@ -960,7 +960,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/backupParams'
     delete:
-      operationId: deleteBackup
+      operationId: deleteAplBackup
       description: Delete a backup from a given team
       x-aclSchema: Backup
       responses:
@@ -1110,7 +1110,7 @@ paths:
 
   '/v2/builds':
     get:
-      operationId: getAllBuilds
+      operationId: getAllAplBuilds
       x-aclSchema: Build
       responses:
         <<: *DefaultGetResponses
@@ -1127,7 +1127,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: getTeamBuilds
+      operationId: getTeamAplBuilds
       x-aclSchema: Build
       responses:
         <<: *DefaultGetResponses
@@ -1164,7 +1164,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/buildParams'
     delete:
-      operationId: deleteBuild
+      operationId: deleteAplBuild
       description: Delete a build from a given team
       x-aclSchema: Build
       responses:
@@ -1269,7 +1269,7 @@ paths:
 
   '/v2/policies':
     get:
-      operationId: getAllPolicies
+      operationId: getAllAplPolicies
       x-aclSchema: Policies
       responses:
         <<: *DefaultGetResponses
@@ -1286,7 +1286,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: getTeamPolicies
+      operationId: getTeamAplPolicies
       x-aclSchema: Policies
       responses:
         <<: *DefaultGetResponses
@@ -1304,7 +1304,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/policyParams'
     get:
-      operationId: getPolicy
+      operationId: getAplPolicy
       description: Get a policy from a given team
       x-aclSchema: Policy
       responses:
@@ -1594,7 +1594,7 @@ paths:
 
   '/v2/projects':
     get:
-      operationId: getAllProjects
+      operationId: getAllAplProjects
       x-aclSchema: Project
       responses:
         <<: *DefaultGetResponses
@@ -1611,7 +1611,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: getTeamProjects
+      operationId: getTeamAplProjects
       x-aclSchema: Project
       responses:
         <<: *DefaultGetResponses
@@ -1648,7 +1648,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/projectParams'
     delete:
-      operationId: deleteProject
+      operationId: deleteAplProject
       description: Delete a project from a given team
       x-aclSchema: Project
       responses:
@@ -1799,7 +1799,7 @@ paths:
 
   /v2/coderepos:
     get:
-      operationId: getAllCodeRepos
+      operationId: getAllAplCodeRepos
       description: Get all code repositories
       x-aclSchema: CodeRepo
       responses:
@@ -1818,7 +1818,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: getTeamCodeRepos
+      operationId: getTeamAplCodeRepos
       description: Get code repos from a given team
       x-aclSchema: CodeRepo
       responses:
@@ -1861,7 +1861,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/codeRepoParams'
     get:
-      operationId: getCodeRepo
+      operationId: getAplCodeRepo
       description: Get a code repo from a given team
       x-aclSchema: Coderepo
       responses:
@@ -2096,7 +2096,7 @@ paths:
 
   '/v2/workloads':
     get:
-      operationId: getAllWorkloads
+      operationId: getAllAplWorkloads
       x-aclSchema: Workload
       responses:
         <<: *DefaultGetResponses
@@ -2113,7 +2113,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: getTeamWorkloads
+      operationId: getTeamAplWorkloads
       x-aclSchema: Workload
       responses:
         <<: *DefaultGetResponses
@@ -2150,7 +2150,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
       - $ref: '#/components/parameters/workloadParams'
     delete:
-      operationId: deleteWorkload
+      operationId: deleteAplWorkload
       description: Delete a workload from a given team
       x-aclSchema: Workload
       responses:
