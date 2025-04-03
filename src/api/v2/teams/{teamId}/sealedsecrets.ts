@@ -8,7 +8,7 @@ export default function (): OperationHandlerArray {
   const get: Operation = [
     ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
       debug(`getSealedSecrets(${teamId})`)
-      const v = otomi.getSealedSecrets(decodeURIComponent(teamId))
+      const v = otomi.getAplSealedSecrets(decodeURIComponent(teamId))
       res.json(v)
     },
   ]

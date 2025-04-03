@@ -2297,10 +2297,10 @@ export default class OtomiStack {
   }
 
   getSealedSecrets(teamId: string): SealedSecret[] {
-    return this.getSealedAplSecrets(teamId).map((secret) => getV1ObjectFromApl(secret) as SealedSecret)
+    return this.getAplSealedSecrets(teamId).map((secret) => getV1ObjectFromApl(secret) as SealedSecret)
   }
 
-  getSealedAplSecrets(teamId: string): AplSecretResponse[] {
+  getAplSealedSecrets(teamId: string): AplSecretResponse[] {
     return this.repoService.getTeamConfigService(teamId).getSealedSecrets()
   }
 
