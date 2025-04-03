@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.1.1](https://github.com/redkubes/otomi-api/compare/v4.1.0...v4.1.1) (2025-04-03)
+
+
+### Bug Fixes
+
+* deleting team correctly from cache ([#680](https://github.com/redkubes/otomi-api/issues/680)) ([808c16e](https://github.com/redkubes/otomi-api/commit/808c16ec6723089e9ccc92b590a51054572b1a48))
+
 ## [4.1.0](https://github.com/redkubes/otomi-api/compare/v4.0.0...v4.1.0) (2025-04-02)
 
 
