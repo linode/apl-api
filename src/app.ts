@@ -11,6 +11,7 @@ import httpSignature from 'http-signature'
 import { createLightship } from 'lightship'
 import logger from 'morgan'
 import path from 'path'
+import { CleanOptions } from 'simple-git'
 import { default as Authz } from 'src/authz'
 import {
   authzMiddleware,
@@ -37,7 +38,6 @@ import {
 import swaggerUi from 'swagger-ui-express'
 import giteaCheckLatest from './gitea/connect'
 import { getBuildStatus, getSealedSecretStatus, getServiceStatus, getWorkloadStatus } from './k8s_operations'
-import { CleanOptions } from 'simple-git'
 
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
@@ -61,8 +61,7 @@ type OtomiSpec = {
 const checkAgainstGitea = async () => {
   const encodedToken = Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')
   const otomiStack = await getSessionStack()
-  const clusterInfo = otomiStack?.getSettings(['cluster'])
-  const latestOtomiVersion = await giteaCheckLatest(encodedToken, clusterInfo)
+  const latestOtomiVersion = await giteaCheckLatest(encodedToken)
   // check the local version against the latest online version
   // if the latest online is newer it will be pulled locally
   if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== otomiStack.git.commitSha) {
