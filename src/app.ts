@@ -22,7 +22,7 @@ import {
   sessionMiddleware,
 } from 'src/middleware'
 import { setMockIdx } from 'src/mocks'
-import { OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
+import { AplResponseObject, OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
 import {
@@ -94,7 +94,7 @@ const resourceStatus = async (errorSet) => {
   }
   const { cluster } = otomiStack.getSettings(['cluster'])
   const domainSuffix = cluster?.domainSuffix
-  const resources = {
+  const resources: Record<string, AplResponseObject[]> = {
     workloads: otomiStack.repoService.getAllWorkloads(),
     builds: otomiStack.repoService.getAllBuilds(),
     services: otomiStack.repoService.getAllServices(),
@@ -110,13 +110,14 @@ const resourceStatus = async (errorSet) => {
 
   for (const resourceType in resources) {
     const promises = resources[resourceType].map(async (resource) => {
+      const { name } = resource.metadata
       try {
         const res = await statusFunctions[resourceType](resource, domainSuffix)
-        return { [resource.name]: res }
+        return { [name]: res }
       } catch (error) {
-        const errorMessage = `${resourceType}-${resource.name}-${error.message}`
+        const errorMessage = `${resourceType}-${name}-${error.message}`
         if (!errorSet.has(errorMessage)) {
-          console.log(`Could not collect status data for ${resourceType} ${resource.name} resource:`, error.message)
+          console.log(`Could not collect status data for ${resourceType} ${name} resource:`, error.message)
           errorSet.add(errorMessage)
         }
       }
@@ -229,7 +230,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     routesIndexFileRegExp: /(?:index)?\.[tj]s$/,
   })
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
+  app.use('/api-docs/swagger', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
   return app
 }
 

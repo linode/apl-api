@@ -53,10 +53,10 @@ TeamSelfService:
 Team:
   properties:
     id:
-      $ref: definitions.yaml#/idName
+      $ref: 'definitions.yaml#/idName'
       title: ID
     name:
-      $ref: definitions.yaml#/idName
+      $ref: 'definitions.yaml#/idName'
       title: Name
       description: A team name
     oidc:
@@ -85,9 +85,9 @@ Team:
           type: boolean
           default: false
     alerts:
-      $ref: definitions.yaml#/alerts
+      $ref: 'definitions.yaml#/alerts'
     resourceQuota:
-      $ref: definitions.yaml#/resourceQuota
+      $ref: 'definitions.yaml#/resourceQuota'
     networkPolicy:
       title: Network policies
       properties:
@@ -103,7 +103,7 @@ Team:
           default: true
       type: object
     selfService:
-      $ref: team.yaml#/TeamSelfService
+      $ref: 'team.yaml#/TeamSelfService'
   required:
     - name
   x-acl:
@@ -120,3 +120,52 @@ Team:
       - update
   type: object
   x-externalDocsPath: docs/for-ops/console/teams
+
+AplTeamSpec:
+  type: object
+  properties:
+    oidc:
+      properties:
+        groupMapping:
+          description: An OIDC group (name/id) granting access to this Team.
+          title: Group mapping
+          type: string
+      title: OIDC
+      type: object
+    password:
+      type: string
+      writeOnly: true
+      x-acl:
+        platformAdmin: [read-any, update-any]
+        teamAdmin: []
+        teamMember: []
+    managedMonitoring:
+      title: Managed monitoring
+      description: 'Activate a platform managed Grafana or Alertmanager instance.'
+      properties:
+        grafana:
+          type: boolean
+          default: false
+        alertmanager:
+          type: boolean
+          default: false
+    alerts:
+      $ref: 'definitions.yaml#/alerts'
+    resourceQuota:
+      $ref: 'definitions.yaml#/resourceQuota'
+    networkPolicy:
+      title: Network policies
+      properties:
+        ingressPrivate:
+          title: Ingress control
+          description: When enabled Team Workloads will be bound by ingress network policies. Turning this off introduces a security risk!
+          type: boolean
+          default: true
+        egressPublic:
+          title: Egress control
+          description: When enabled all egress traffic will be limited to pre-defined endpoints. Turning this off introduces a security risk!
+          type: boolean
+          default: true
+      type: object
+    selfService:
+      $ref: 'team.yaml#/TeamSelfService'

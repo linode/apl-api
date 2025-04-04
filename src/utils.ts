@@ -18,18 +18,29 @@ export function arrayToObject(array: [] = [], keyName = 'name', keyValue = 'valu
   return obj
 }
 
-export function objectToArray(
-  obj: Record<string, unknown> = {},
-  keyName = 'name',
-  keyValue = 'value',
-): Array<Record<string, unknown>> {
-  const arr = Object.keys(obj).map((key) => {
-    const tmp = {}
-    tmp[keyName] = key
-    tmp[keyValue] = obj[key]
-    return tmp
+export function valueArrayToObject(
+  array?:
+    | {
+        key: string
+        value: string
+      }[]
+    | undefined,
+): Record<string, string> | undefined {
+  if (!array || isEmpty(array)) {
+    return undefined
+  }
+  const obj = {}
+  array.forEach((item) => {
+    obj[item.key] = item.value
   })
-  return arr
+  return obj
+}
+
+export function mapObjectToKeyValueArray(obj?: Record<string, string>): { key: string; value: string }[] | undefined {
+  if (!obj || isEmpty(obj)) {
+    return undefined
+  }
+  return Object.entries(obj).map(([key, value]) => ({ key, value }))
 }
 
 export const flattenObject = (
@@ -39,8 +50,9 @@ export const flattenObject = (
   return Object.entries(obj)
     .flatMap(([key, value]) => {
       const subPath = path ? `${path}.${key}` : key
-      if (typeof value === 'object' && !Array.isArray(value) && value !== null)
+      if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
         return flattenObject(value as Record<string, any>, subPath)
+      }
       return { [subPath]: value }
     })
     .reduce((acc, base) => {

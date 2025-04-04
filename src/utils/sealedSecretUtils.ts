@@ -1,6 +1,8 @@
 import crypto, { X509Certificate } from 'crypto'
 import { isEmpty } from 'lodash'
-import { SealedSecret } from 'src/otomi-models'
+import { AplSecretResponse } from 'src/otomi-models'
+import { getSealedSecretsCertificate } from '../k8s_operations'
+import { ValidationError } from '../error'
 
 function hybridEncrypt(pubKey, plaintext, label) {
   const sessionKey = crypto.randomBytes(32)
@@ -42,9 +44,25 @@ export function encryptSecretItem(certificate, secretName, ns, data, scope) {
   return out
 }
 
-export interface EncryptedDataRecord {
-  key: string
-  value: string
+export async function getEncryptedData(
+  decryptedData: Record<string, string | undefined> | undefined,
+  name: string,
+  namespace: string,
+): Promise<Record<string, string>> {
+  const certificate = await getSealedSecretsCertificate()
+  if (!certificate) {
+    const err = new ValidationError()
+    err.publicMessage = 'SealedSecrets certificate not found'
+    throw err
+  }
+  const encryptedDataPromises = Object.entries(decryptedData || {}).map(([key, value]) => {
+    if (value === undefined) {
+      return { [key]: value }
+    }
+    const encryptedItem = encryptSecretItem(certificate, name, namespace, value, 'namespace-wide')
+    return { [key]: encryptedItem }
+  })
+  return Object.assign({}, ...(await Promise.all(encryptedDataPromises || [])))
 }
 
 export interface SealedSecretManifestType {
@@ -58,7 +76,7 @@ export interface SealedSecretManifestType {
     labels?: Record<string, string>
   }
   spec: {
-    encryptedData: EncryptedDataRecord[]
+    encryptedData: Record<string, string>
     template: {
       type:
         | 'kubernetes.io/opaque'
@@ -72,46 +90,40 @@ export interface SealedSecretManifestType {
       metadata: {
         name: string
         namespace: string
+        annotations?: Record<string, string>
+        finalizers?: string[]
+        labels?: Record<string, string>
       }
     }
   }
 }
 
-export function sealedSecretManifest(
-  data: SealedSecret,
-  encryptedData: EncryptedDataRecord[],
-  namespace: string,
-): SealedSecretManifestType {
-  const annotations = data.metadata?.annotations?.reduce((acc, item) => {
-    return { ...acc, [item.key]: item.value }
-  }, {})
-  const labels = data.metadata?.labels?.reduce((acc, item) => {
-    return { ...acc, [item.key]: item.value }
-  }, {})
-  const SealedSecretSchema = {
+export function sealedSecretManifest(data: AplSecretResponse): SealedSecretManifestType {
+  const { annotations, labels, finalizers } = data.spec.metadata || {}
+  const namespace = data.spec.namespace!
+  return {
     apiVersion: 'bitnami.com/v1alpha1',
     kind: 'SealedSecret',
     metadata: {
+      ...data.metadata,
       annotations: {
         'sealedsecrets.bitnami.com/namespace-wide': 'true',
       },
-      name: data.name,
       namespace,
     },
     spec: {
-      encryptedData,
+      encryptedData: data.spec.encryptedData || {},
       template: {
-        type: data.type || 'kubernetes.io/opaque',
-        immutable: data.immutable || false,
+        type: data.spec.type || 'kubernetes.io/opaque',
+        immutable: data.spec.immutable || false,
         metadata: {
-          name: data.name,
+          name: data.metadata.name,
           namespace,
           ...(!isEmpty(annotations) && { annotations }),
           ...(!isEmpty(labels) && { labels }),
-          ...(!isEmpty(data.metadata?.finalizers) && { finalizers: data.metadata?.finalizers }),
+          ...(!isEmpty(finalizers) && { finalizers }),
         },
       },
     },
   }
-  return SealedSecretSchema
 }

@@ -14,15 +14,15 @@ Cluster:
   properties:
     name:
       title: Name
-      $ref: definitions.yaml#/idName
+      $ref: 'definitions.yaml#/idName'
     domainSuffix:
-      $ref: definitions.yaml#/domainSuffix
+      $ref: 'definitions.yaml#/domainSuffix'
     apiServer:
-      $ref: definitions.yaml#/url
+      $ref: 'definitions.yaml#/url'
       title: API server
       description: URL to the Kubernetes API. Used to generate the KUBECONFIG for download, for direct access to the cluster.
     k8sContext:
       type: string
       x-hidden: true
     provider:
-      $ref: definitions.yaml#/provider
+      $ref: 'definitions.yaml#/provider'

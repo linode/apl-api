@@ -246,7 +246,7 @@ describe('API authz tests', () => {
       .send({
         name: 'service1',
         serviceType: 'ksvcPredeployed',
-        ingress: {},
+        ingress: { type: 'cluster' },
       })
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
@@ -297,7 +297,7 @@ describe('API authz tests', () => {
 
   test('authenticated user should get api spec', async () => {
     await agent
-      .get('/v1/apiDocs')
+      .get('/apiDocs')
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(200)
       .expect('Content-Type', /json/)
@@ -318,7 +318,7 @@ describe('API authz tests', () => {
   })
 
   test('anonymous user should get api spec', async () => {
-    await agent.get('/v1/apiDocs').expect(200).expect('Content-Type', /json/)
+    await agent.get('/apiDocs').expect(200).expect('Content-Type', /json/)
   })
 
   test('anonymous user cannot get a specific team', async () => {
