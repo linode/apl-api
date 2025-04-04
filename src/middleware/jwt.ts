@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
 import { debug } from 'console'
 import { RequestHandler } from 'express'
-import jwtDecode from 'jwt-decode'
+import { jwtDecode } from 'jwt-decode'
 import { getMockEmail, getMockGroups, getMockName } from 'src/mocks'
 import { JWT, OpenApiRequestExt, SessionUser } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
@@ -21,7 +21,7 @@ export function getUser(user: JWT, otomi: OtomiStack): SessionUser {
   }
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
-  user.groups.forEach((group) => {
+  user?.groups?.forEach((group) => {
     if (['platform-admin', 'all-teams-admin'].includes(group)) {
       if (!sessionUser.roles.includes('platformAdmin')) {
         sessionUser.isPlatformAdmin = true
@@ -70,8 +70,16 @@ export function jwtMiddleware(): RequestHandler {
       debug('anonymous request')
       return next()
     }
-    const { name, email, roles, groups, sub } = jwtDecode(token)
-    req.user = getUser({ name, email, roles, groups, sub }, otomi)
-    return next()
+    try {
+      const { name, email, roles, groups, sub } = jwtDecode<JWT>(token)
+      req.user = getUser({ name, email, roles, groups, sub }, otomi)
+      return next()
+    } catch (error) {
+      debug('JWT decode fails:', error.message)
+      return res.status(401).send({
+        message: 'Unauthorized',
+        error: 'JWT decode fails',
+      })
+    }
   }
 }
