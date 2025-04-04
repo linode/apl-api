@@ -19,7 +19,7 @@ CodeRepo:
     id:
       type: string
     teamId:
-      $ref: definitions.yaml#/idName
+      $ref: 'definitions.yaml#/idName'
     name:
       $ref: 'definitions.yaml#/idName'
     gitService:
@@ -41,3 +41,30 @@ CodeRepo:
     - gitService
     - repositoryUrl
   type: object
+
+AplCodeRepoSpec:
+  type: object
+  properties:
+    id:
+      type: string
+    teamId:
+      $ref: 'definitions.yaml#/idName'
+    name:
+      $ref: 'definitions.yaml#/idName'
+    gitService:
+      type: string
+      default: gitea
+      enum:
+        - gitea
+        - github
+        - gitlab
+    repositoryUrl:
+      $ref: 'definitions.yaml#/repoUrl'
+    private:
+      type: boolean
+      default: false
+    secret:
+      type: string
+  required:
+    - gitService
+    - repositoryUrl
