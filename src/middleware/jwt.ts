@@ -70,21 +70,16 @@ export function jwtMiddleware(): RequestHandler {
       debug('anonymous request')
       return next()
     }
-    const retries = 3
-    for (let attempt = 1; attempt <= retries; attempt++) {
-      try {
-        const { name, email, roles, groups, sub } = jwtDecode<JWT>(token)
-        req.user = getUser({ name, email, roles, groups, sub }, otomi)
-        return next()
-      } catch (error) {
-        debug(`Error decoding JWT (attempt ${attempt}):`, error.message)
-        if (attempt === retries) {
-          return res.status(401).send({
-            message: 'Unauthorized',
-            error: `Failed to decode JWT after ${retries} attempts`,
-          })
-        }
-      }
+    try {
+      const { name, email, roles, groups, sub } = jwtDecode<JWT>(token)
+      req.user = getUser({ name, email, roles, groups, sub }, otomi)
+      return next()
+    } catch (error) {
+      debug('JWT decode fails:', error.message)
+      return res.status(401).send({
+        message: 'Unauthorized',
+        error: 'JWT decode fails',
+      })
     }
   }
 }

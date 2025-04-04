@@ -12,8 +12,8 @@ const env = cleanEnv({
 export default async function giteaCheckLatest(token: string): Promise<any> {
   // Extracts "http://gitea-http.gitea.svc.cluster.local:3000" or "https://gitea.<domainSuffix>"
   const baseDomain = new URL(env.GIT_REPO_URL).origin
-  const giteaUrl = `${baseDomain}/api/v1/repos/otomi/values/commits`
   if (baseDomain) {
+    const giteaUrl = `${baseDomain}/api/v1/repos/otomi/values/commits`
     const response = await axios({
       url: giteaUrl,
       method: 'GET',
