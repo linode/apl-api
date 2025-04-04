@@ -23,7 +23,7 @@ export function getUser(user: JWT, otomi: OtomiStack): SessionUser {
   }
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
-  user.groups.forEach((group) => {
+  user?.groups?.forEach((group) => {
     if (['platform-admin', 'all-teams-admin'].includes(group)) {
       if (!sessionUser.roles.includes('platformAdmin')) {
         sessionUser.isPlatformAdmin = true
@@ -73,7 +73,7 @@ export function jwtMiddleware(): RequestHandler {
       debug('anonymous request')
       return next()
     }
-    const retries = env.GIT_PUSH_RETRIES
+    const retries = 3
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
         console.log('jwtDecode(token)', jwtDecode(token))
@@ -85,7 +85,7 @@ export function jwtMiddleware(): RequestHandler {
         if (attempt === retries) {
           return res.status(401).send({
             message: 'Unauthorized',
-            error: 'Failed to decode JWT after multiple attempts',
+            error: `Failed to decode JWT after ${retries} attempts`,
           })
         }
       }
