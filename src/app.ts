@@ -3,14 +3,14 @@
 import $parser from '@apidevtools/json-schema-ref-parser'
 import cors from 'cors'
 import Debug from 'debug'
-import express, { request } from 'express'
+import express from 'express'
 import 'express-async-errors'
 import { initialize } from 'express-openapi'
 import { Server } from 'http'
-import httpSignature from 'http-signature'
 import { createLightship } from 'lightship'
 import logger from 'morgan'
 import path from 'path'
+import { CleanOptions } from 'simple-git'
 import { default as Authz } from 'src/authz'
 import {
   authzMiddleware,
@@ -22,7 +22,7 @@ import {
   sessionMiddleware,
 } from 'src/middleware'
 import { setMockIdx } from 'src/mocks'
-import { OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
+import { AplResponseObject, OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
 import {
@@ -37,7 +37,6 @@ import {
 import swaggerUi from 'swagger-ui-express'
 import giteaCheckLatest from './gitea/connect'
 import { getBuildStatus, getSealedSecretStatus, getServiceStatus, getWorkloadStatus } from './k8s_operations'
-import { CleanOptions } from 'simple-git'
 
 const env = cleanEnv({
   DRONE_WEBHOOK_SECRET,
@@ -61,8 +60,7 @@ type OtomiSpec = {
 const checkAgainstGitea = async () => {
   const encodedToken = Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')
   const otomiStack = await getSessionStack()
-  const clusterInfo = otomiStack?.getSettings(['cluster'])
-  const latestOtomiVersion = await giteaCheckLatest(encodedToken, clusterInfo)
+  const latestOtomiVersion = await giteaCheckLatest(encodedToken)
   // check the local version against the latest online version
   // if the latest online is newer it will be pulled locally
   if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== otomiStack.git.commitSha) {
@@ -96,7 +94,7 @@ const resourceStatus = async (errorSet) => {
   }
   const { cluster } = otomiStack.getSettings(['cluster'])
   const domainSuffix = cluster?.domainSuffix
-  const resources = {
+  const resources: Record<string, AplResponseObject[]> = {
     workloads: otomiStack.repoService.getAllWorkloads(),
     builds: otomiStack.repoService.getAllBuilds(),
     services: otomiStack.repoService.getAllServices(),
@@ -112,13 +110,14 @@ const resourceStatus = async (errorSet) => {
 
   for (const resourceType in resources) {
     const promises = resources[resourceType].map(async (resource) => {
+      const { name } = resource.metadata
       try {
         const res = await statusFunctions[resourceType](resource, domainSuffix)
-        return { [resource.name]: res }
+        return { [name]: res }
       } catch (error) {
-        const errorMessage = `${resourceType}-${resource.name}-${error.message}`
+        const errorMessage = `${resourceType}-${name}-${error.message}`
         if (!errorSet.has(errorMessage)) {
-          console.log(`Could not collect status data for ${resourceType} ${resource.name} resource:`, error.message)
+          console.log(`Could not collect status data for ${resourceType} ${name} resource:`, error.message)
           errorSet.add(errorMessage)
         }
       }
@@ -175,27 +174,6 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
   setInterval(async function () {
     await checkAgainstGitea()
   }, gitCheckVersionInterval)
-  app.all('/drone', async (req, res, next) => {
-    const parsed = httpSignature.parseRequest(req, {
-      algorithm: 'hmac-sha256',
-    })
-    if (!httpSignature.verifyHMAC(parsed, env.DRONE_WEBHOOK_SECRET)) return res.status(401).send()
-    const event = req.headers['x-drone-event']
-    res.send('ok')
-    if (event !== 'build') return
-    const io = getIo()
-    // emit now to let others know, before doing anything else
-    if (io) io.emit('drone', req.body)
-    // deployment might have changed data, so reload
-    const { build } = request.body || {}
-    if (!build) return
-    const { status } = build
-    if (status === 'success') {
-      const stack = await getSessionStack()
-      debug('Drone deployed, root pull')
-      await stack.git.pull()
-    }
-  })
   let server: Server | undefined
   if (!inOtomiStack) {
     // initialize full server
@@ -252,7 +230,7 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     routesIndexFileRegExp: /(?:index)?\.[tj]s$/,
   })
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
+  app.use('/api-docs/swagger', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
   return app
 }
 
