@@ -85,7 +85,7 @@ export const EXPRESS_PAYLOAD_LIMIT = str({
 })
 export const GIT_PUSH_RETRIES = num({
   desc: 'Amount of retries we do to push and pull in the git save function',
-  default: 10,
+  default: 12,
 })
 const { env } = process
 export function cleanEnv<T>(

@@ -105,9 +105,9 @@ export class Git {
     return res
   }
 
-  async requestPrepareValues(): Promise<AxiosResponse | void> {
+  async requestPrepareValues(files?: string[]): Promise<AxiosResponse | void> {
     debug(`Tools: requesting "prepare" on values repo path ${this.path}`)
-    const res = await axios.get(prepareUrl, { params: { envDir: this.path } })
+    const res = await axios.get(prepareUrl, { params: { envDir: this.path, files } })
     return res
   }
 
@@ -427,11 +427,11 @@ export class Git {
     return this.git.revparse('HEAD')
   }
 
-  async save(editor: string, encryptSecrets = true): Promise<void> {
+  async save(editor: string, encryptSecrets = true, files?: string[]): Promise<void> {
     // prepare values first
     try {
       if (encryptSecrets) {
-        await this.requestPrepareValues()
+        await this.requestPrepareValues(files)
       } else {
         debug(`Data does not need to be encrypted`)
       }
@@ -453,13 +453,18 @@ export class Git {
       // retry up to 10 times to pull and push if there are conflicts
       const retries = env.GIT_PUSH_RETRIES
       for (let attempt = 1; attempt <= retries; attempt++) {
-        await this.git.pull(this.remote, this.branch, { '--rebase': 'true', '--depth': '5' })
         try {
+          // Do advanced pull every third attempt
+          if (attempt % 3 === 0) {
+            await this.pull(true, true)
+          } else {
+            await this.git.pull(this.remote, this.branch, { '--rebase': 'true', '--depth': '5' })
+          }
           await this.push()
           break
         } catch (error) {
           if (attempt === retries) throw error
-          debug(`Attempt ${attempt} failed. Retrying...`)
+          debug(`Attempt ${attempt} of ${retries} failed. Retrying...`)
           await new Promise((resolve) => setTimeout(resolve, 50))
         }
       }
