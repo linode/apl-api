@@ -1450,6 +1450,8 @@ export default class OtomiStack {
 
   async createAplBuild(teamId: string, data: AplBuildRequest): Promise<AplBuildResponse> {
     try {
+      if (data?.spec?.name && data?.spec?.name.length > 128)
+        throw new HttpError(400, 'Container image name is too long')
       const build = this.repoService.getTeamConfigService(teamId).createBuild(data)
       await this.saveTeamConfigItem(build)
       await this.doTeamDeployment(
@@ -1461,7 +1463,11 @@ export default class OtomiStack {
       )
       return build
     } catch (err) {
-      if (err.code === 409) err.publicMessage = 'Container image name (the combined image name and tag) already exists'
+      if (err.code === 400)
+        err.publicMessage =
+          'Invalid container image name, the combined image name and tag must not exceed 128 characters.'
+      if (err.code === 409)
+        err.publicMessage = 'Container image name already exists, the combined image name and tag must be unique.'
       throw err
     }
   }
