@@ -1,4 +1,4 @@
-import { find, has, map, mapValues, merge, remove, set } from 'lodash'
+import { find, has, map, mapValues, mergeWith, remove, set } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
 import { AlreadyExists } from '../error'
 import {
@@ -27,6 +27,10 @@ import {
   Workload,
 } from '../otomi-models'
 import { TeamConfigService } from './TeamConfigService'
+
+function mergeCustomizer(prev, next) {
+  return next
+}
 
 export class RepoService {
   // We can create an LRU cache if needed with a lot of teams.
@@ -80,7 +84,7 @@ export class RepoService {
     if (!app) {
       throw new Error(`App[${id}] does not exist.`)
     }
-    return merge(app, updates)
+    return mergeWith(app, updates, mergeCustomizer)
   }
 
   public deleteApp(id: string): void {
@@ -115,7 +119,7 @@ export class RepoService {
   public updateUser(id: string, updates: Partial<User>): User {
     const user = find(this.repo.users, { id })
     if (!user) throw new Error(`User[${id}] does not exist.`)
-    return merge(user, updates)
+    return mergeWith(user, updates, mergeCustomizer)
   }
 
   public deleteUser(email: string): void {
@@ -159,6 +163,7 @@ export class RepoService {
       throw new Error(`TeamConfig[${teamId}] does not exist.`)
     }
     delete this.repo.teamConfig[teamId]
+    this.teamConfigServiceCache.delete(teamId)
   }
 
   public getCluster(): Cluster {
@@ -211,7 +216,7 @@ export class RepoService {
   }
 
   public updateSettings(updates: Partial<Settings>): void {
-    merge(this.repo, updates)
+    mergeWith(this.repo, updates, mergeCustomizer)
   }
 
   public getRepo(): Repo {

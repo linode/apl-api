@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.1.0](https://github.com/redkubes/otomi-api/compare/v4.0.0...v4.1.0) (2025-04-02)
+
+
+### Bug Fixes
+
+* 5xx errors ([#674](https://github.com/redkubes/otomi-api/issues/674)) ([c411a92](https://github.com/redkubes/otomi-api/commit/c411a9292e2de48bbb2f56fd9f1fb7e2600ec70f))
+* create helm chart with branches or tags ([#668](https://github.com/redkubes/otomi-api/issues/668)) ([bffd129](https://github.com/redkubes/otomi-api/commit/bffd12959b4d201340bb945c790f70f73ba40975)), closes [#667](https://github.com/redkubes/otomi-api/issues/667)
+* form validation error & update services files to handle deep merge operations ([#665](https://github.com/redkubes/otomi-api/issues/665)) ([d173112](https://github.com/redkubes/otomi-api/commit/d173112cb9af4a6aa3fac40c7256b52282be9c5f))
+* sealed secrets metadata ([#670](https://github.com/redkubes/otomi-api/issues/670)) ([c2fedd3](https://github.com/redkubes/otomi-api/commit/c2fedd3030f4c72e2c0536e7ae46b107da2773ce))
+* set titles to non-empty for API generator ([#663](https://github.com/redkubes/otomi-api/issues/663)) ([3eeefb7](https://github.com/redkubes/otomi-api/commit/3eeefb740eae19657d2250df33c641869128234b))
+* use local cluster svc for Gitea over http ([#671](https://github.com/redkubes/otomi-api/issues/671)) ([253fc9d](https://github.com/redkubes/otomi-api/commit/253fc9d8f8a7b548e92e46538202def415139a76))
+
 ## [4.0.0](https://github.com/redkubes/otomi-api/compare/v3.7.0...v4.0.0) (2025-03-17)
 
 
@@ -14,6 +26,19 @@ All notable changes to this project will be documented in this file. See [standa
 
 * remove password from error log ([#658](https://github.com/redkubes/otomi-api/issues/658)) ([754e672](https://github.com/redkubes/otomi-api/commit/754e6727d0f5558abc58e6e64a9b194151317871))
 
+### [3.7.4](https://github.com/redkubes/otomi-api/compare/v3.7.3...v3.7.4) (2025-03-20)
+
+
+### Bug Fixes
+
+* create helm chart with branches or tags ([#667](https://github.com/redkubes/otomi-api/issues/667)) ([1a55142](https://github.com/redkubes/otomi-api/commit/1a551420b64c1c28975e9b591a9b561e22a6a856))
+
+### [3.7.3](https://github.com/redkubes/otomi-api/compare/v3.7.2...v3.7.3) (2025-03-19)
+
+
+### Bug Fixes
+
+* get commit sha from session stack ([#664](https://github.com/redkubes/otomi-api/issues/664)) ([4cf4ecd](https://github.com/redkubes/otomi-api/commit/4cf4ecdf8082c2f1e94447fee9636cb6f94d0045))
 
 ### [3.7.2](https://github.com/redkubes/otomi-api/compare/v3.7.1...v3.7.2) (2025-03-14)
 
