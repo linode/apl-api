@@ -2,11 +2,13 @@
 import { debug } from 'console'
 import { RequestHandler } from 'express'
 import { jwtDecode } from 'jwt-decode'
-import { env } from 'process'
 import { getMockEmail, getMockGroups, getMockName } from 'src/mocks'
 import { JWT, OpenApiRequestExt, SessionUser } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
+import { cleanEnv } from 'src/validators'
 import { getSessionStack } from './session'
+
+const env = cleanEnv({})
 
 export function getUser(user: JWT, otomi: OtomiStack): SessionUser {
   const sessionUser: SessionUser = {
