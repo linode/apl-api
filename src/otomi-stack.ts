@@ -1251,8 +1251,12 @@ export default class OtomiStack {
     return this.repoService.getTeamConfigService(teamId).getCodeRepos()
   }
 
-  getAllCodeRepos(): Array<CodeRepo> {
-    return this.repoService.getAllCodeRepos().map((codeRepo) => getV1ObjectFromApl(codeRepo) as CodeRepo)
+  getAllCodeRepos(): CodeRepo[] {
+    return this.getAllAplCodeRepos().map((codeRepo) => getV1ObjectFromApl(codeRepo) as CodeRepo)
+  }
+
+  getAllAplCodeRepos(): AplCodeRepoResponse[] {
+    return this.repoService.getAllCodeRepos()
   }
 
   async createCodeRepo(teamId: string, data: CodeRepo): Promise<CodeRepo> {
