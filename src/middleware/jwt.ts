@@ -4,7 +4,7 @@ import { RequestHandler } from 'express'
 import { jwtDecode } from 'jwt-decode'
 import { getMockEmail, getMockGroups, getMockName } from 'src/mocks'
 import { JWT, OpenApiRequestExt, SessionUser } from 'src/otomi-models'
-import { default as OtomiStack } from 'src/otomi-stack'
+import OtomiStack from 'src/otomi-stack'
 import { cleanEnv } from 'src/validators'
 import { getSessionStack } from './session'
 
