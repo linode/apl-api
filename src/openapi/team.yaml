@@ -8,19 +8,19 @@ TeamSelfService:
       type: array
       items:
         type: string
-        enum: [ ingress ]
+        enum: [ingress]
       x-allow-values:
         ingress:
           type: 'cluster'
-      default: [ ingress ]
+      default: [ingress]
       uniqueItems: true
     policies:
       title: Security policies
       type: array
       items:
         type: string
-        enum: [ 'edit policies' ]
-      default: [ 'edit policies' ]
+        enum: ['edit policies']
+      default: ['edit policies']
       uniqueItems: true
     team:
       title: Team settings
@@ -28,27 +28,27 @@ TeamSelfService:
       items:
         type: string
         # downloadKubeConfig - is an action that a user can perform, not an attribute of the input form
-        enum: [ oidc, managedMonitoring, alerts, resourceQuota, networkPolicy ]
+        enum: [oidc, managedMonitoring, alerts, resourceQuota, networkPolicy]
       uniqueItems: true
     apps:
       title: Apps
       type: array
       items:
         type: string
-        enum: [ argocd, gitea ]
-      default: [ ]
+        enum: [argocd, gitea]
+      default: []
       uniqueItems: true
     access:
       title: Access
       type: array
       items:
         type: string
-        enum: [ shell, downloadKubeConfig, downloadDockerConfig, downloadCertificateAuthority ]
+        enum: [shell, downloadKubeConfig, downloadDockerConfig, downloadCertificateAuthority]
       uniqueItems: true
   x-acl:
-    platformAdmin: [ read-any, update-any ]
-    teamAdmin: [ read ]
-    teamMember: [ read ]
+    platformAdmin: [read-any, update-any]
+    teamAdmin: [read]
+    teamMember: [read]
 
 Team:
   properties:
@@ -71,9 +71,9 @@ Team:
       type: string
       writeOnly: true
       x-acl:
-        platformAdmin: [ read-any, update-any ]
-        teamAdmin: [ ]
-        teamMember: [ ]
+        platformAdmin: [read-any, update-any]
+        teamAdmin: []
+        teamMember: []
     managedMonitoring:
       title: Managed monitoring
       description: 'Activate a platform managed Grafana or Alertmanager instance.'
@@ -136,9 +136,9 @@ AplTeamSpec:
       type: string
       writeOnly: true
       x-acl:
-        platformAdmin: [ read-any, update-any ]
-        teamAdmin: [ ]
-        teamMember: [ ]
+        platformAdmin: [read-any, update-any]
+        teamAdmin: []
+        teamMember: []
     managedMonitoring:
       title: Managed monitoring
       description: 'Activate a platform managed Grafana or Alertmanager instance.'
