@@ -6,8 +6,8 @@ const debug = Debug('otomi:api:teams')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [
-    ({ otomi, user }: OpenApiRequestExt, res): void => {
-      debug('getTeams', user)
+    ({ otomi }: OpenApiRequestExt, res): void => {
+      debug('getTeams')
       // we filter admin team here as it is not for console
       const teams = (otomi.getTeams() || [])
         .filter((t) => t.id !== 'admin')

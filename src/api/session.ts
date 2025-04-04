@@ -7,7 +7,7 @@ const debug = Debug('otomi:api:session')
 export default function (): OperationHandlerArray {
   const get: Operation = [
     async ({ otomi, user }: OpenApiRequestExt, res): Promise<void> => {
-      debug('getSession', user)
+      debug('getSession')
       const data = await otomi.getSession(user)
       res.json(data)
     },

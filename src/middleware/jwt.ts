@@ -2,15 +2,11 @@
 import { debug } from 'console'
 import { RequestHandler } from 'express'
 import { jwtDecode } from 'jwt-decode'
+import { env } from 'process'
 import { getMockEmail, getMockGroups, getMockName } from 'src/mocks'
 import { JWT, OpenApiRequestExt, SessionUser } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
-import { cleanEnv, GIT_PUSH_RETRIES } from 'src/validators'
 import { getSessionStack } from './session'
-
-const env = cleanEnv({
-  GIT_PUSH_RETRIES,
-})
 
 export function getUser(user: JWT, otomi: OtomiStack): SessionUser {
   const sessionUser: SessionUser = {
@@ -54,7 +50,6 @@ export function jwtMiddleware(): RequestHandler {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
     const token = req.header('Authorization')
-    console.log('token', token)
     const otomi = await getSessionStack() // we can use the readonly version
     if (env.isDev) {
       req.user = getUser(
@@ -76,12 +71,11 @@ export function jwtMiddleware(): RequestHandler {
     const retries = 3
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        console.log('jwtDecode(token)', jwtDecode(token))
         const { name, email, roles, groups, sub } = jwtDecode<JWT>(token)
         req.user = getUser({ name, email, roles, groups, sub }, otomi)
         return next()
       } catch (error) {
-        console.log(`Error decoding JWT (attempt ${attempt}):`, error.message)
+        debug(`Error decoding JWT (attempt ${attempt}):`, error.message)
         if (attempt === retries) {
           return res.status(401).send({
             message: 'Unauthorized',
