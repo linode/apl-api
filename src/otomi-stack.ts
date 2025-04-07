@@ -1287,7 +1287,7 @@ export default class OtomiStack {
     } catch (err) {
       if (err.code === 409) {
         if (allRepoUrls.includes(data.spec.repositoryUrl)) err.publicMessage = 'Code repository URL already exists'
-        else err.publicMessage = 'Code repo label already exists'
+        else err.publicMessage = 'Code repo name already exists'
       }
       throw err
     }
