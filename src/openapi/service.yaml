@@ -247,109 +247,80 @@ AplServiceSpec:
               default: 10
               title: Weight v2
               description: 'Percentage of traffic to version 2.'
-    - oneOf:
-        - $ref: '#/AplIngressCluster'
-        - $ref: '#/AplIngressPublic'
-
-AplIngressCluster:
-  additionalProperties: false
-  title: No Exposure
-  type: object
-  properties:
-    type:
-      type: string
-      enum:
-        - cluster
-      default: cluster
-  required:
-    - type
-
-AplIngressPublic:
-  type: object
-  properties:
-    type:
-      type: string
-      enum:
-        - public
-      default: public
-    ingressClassName:
-      description: Assign service to a paricular Load Balancer by selecting ingress class name.
-      title: Ingress Class Name
-      $ref: 'definitions.yaml#/idName'
-      default: 'platform'
-    tlsPass:
-      description: Pass through the request as is to the backing service. Only available for pre-deployed regular (non-Knative) services.
-      title: TLS passthrough
-      type: boolean
-      default: false
-    ownHost:
-      description: Use the team domain so that the URL reveals the owner.
-      title: Use default host
-      type: boolean
-      default: true
-    domain:
-      $ref: 'definitions.yaml#/domain'
-      description: A managed DNS zone
-      title: DNS Zone
-      type: string
-    useCname:
-      title: Use CNAME
-      description: Define a CNAME for the service.
-      type: boolean
-      default: false
-    cname:
-      properties:
+        ingressClassName:
+              description: Assign service to a paricular Load Balancer by selecting ingress class name.
+              title: Ingress Class Name
+              $ref: 'definitions.yaml#/idName'
+              default: 'platform'
+        tlsPass:
+          description: Pass through the request as is to the backing service. Only available for pre-deployed regular (non-Knative) services.
+          title: TLS passthrough
+          type: boolean
+          default: false
+        ownHost:
+          description: Use the team domain so that the URL reveals the owner.
+          title: Use default host
+          type: boolean
+          default: true
         domain:
-          description: A domain name (an alias).
+          $ref: 'definitions.yaml#/domain'
+          description: A managed DNS zone
+          title: DNS Zone
           type: string
-        tlsSecretName:
-          description: Name of a Kubernetes secret of type TLS.
-          $ref: 'definitions.yaml#/idName'
-    paths:
-      description: The paths in the URL that the service should be mapped to (e.g. for microservices on one app/domain).
-      title: URL paths
-      type: array
-      items:
-        $ref: 'definitions.yaml#/path'
-    forwardPath:
-      description: Forward the URL path into the service (don't rewrite to /).
-      title: Forward path
-      type: boolean
-      default: false
-    hasCert:
-      description: Select when a certificate exists and should not be generated.
-      title: Already has a certificate
-      type: boolean
-      default: false
-    certName:
-      description: The name of a TLS secret known to exist in the Team namespace.
-      example: example-com
-      title: Secret name
-      type: string
-    headers:
-      additionalProperties: false
-      type: object
-      properties:
-        response:
-          type: object
-          title: HTTP Response Headers
-          description: The following HTTP response headers will be set. Adjust, remove or add more if needed.
+        useCname:
+          title: Use CNAME
+          description: Define a CNAME for the service.
+          type: boolean
+          default: false
+        cname:
           properties:
-            set:
-              type: array
-              items:
-                type: object
-                properties:
-                  name:
-                    title: Name
-                    type: string
-                  value:
-                    title: Value
-                    type: string
-                required:
-                  - name
-                  - value
-  required:
-    - type
-  description: Will only accept traffic coming from an external loadbalancer.
-  title: External
+            domain:
+              description: A domain name (an alias).
+              type: string
+            tlsSecretName:
+              description: Name of a Kubernetes secret of type TLS.
+              $ref: 'definitions.yaml#/idName'
+        paths:
+          description: The paths in the URL that the service should be mapped to (e.g. for microservices on one app/domain).
+          title: URL paths
+          type: array
+          items:
+            $ref: 'definitions.yaml#/path'
+        forwardPath:
+          description: Forward the URL path into the service (don't rewrite to /).
+          title: Forward path
+          type: boolean
+          default: false
+        hasCert:
+          description: Select when a certificate exists and should not be generated.
+          title: Already has a certificate
+          type: boolean
+          default: false
+        certName:
+          description: The name of a TLS secret known to exist in the Team namespace.
+          example: example-com
+          title: Secret name
+          type: string
+        headers:
+          additionalProperties: false
+          type: object
+          properties:
+            response:
+              type: object
+              title: HTTP Response Headers
+              description: The following HTTP response headers will be set. Adjust, remove or add more if needed.
+              properties:
+                set:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        title: Name
+                        type: string
+                      value:
+                        title: Value
+                        type: string
+                    required:
+                      - name
+                      - value
