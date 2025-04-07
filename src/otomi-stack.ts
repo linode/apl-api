@@ -4,14 +4,14 @@ import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
-import { emptyDir, existsSync, pathExists, rmSync, unlink } from 'fs-extra'
+import { existsSync, pathExists, rmSync, unlink } from 'fs-extra'
 import { readdir, readFile, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, isArray, isEmpty, map, mapValues, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import { AlreadyExists, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
 import getRepo, { Git } from 'src/git'
-import { cleanAllSessions, cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
+import { cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
 import {
   App,
   Backup,
@@ -1653,6 +1653,7 @@ export default class OtomiStack {
     } catch (e) {
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)
+      e.message = e.message.replace(env.GIT_PASSWORD, '****')
       throw e
     } finally {
       // Clean up the session
@@ -1682,6 +1683,7 @@ export default class OtomiStack {
     } catch (e) {
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)
+      e.message = e.message.replace(env.GIT_PASSWORD, '****')
       throw e
     } finally {
       // Clean up the session
@@ -1721,19 +1723,12 @@ export default class OtomiStack {
     } catch (e) {
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)
+      e.message = e.message.replace(env.GIT_PASSWORD, '****')
       throw e
     } finally {
       // Clean up the session
       await cleanSession(this.sessionId!)
     }
-  }
-
-  async doRestore(): Promise<void> {
-    cleanAllSessions()
-    await emptyDir(rootPath)
-    // and re-init root
-    const rootStack = await getSessionStack()
-    await rootStack.initGit()
   }
 
   apiClient?: k8s.CoreV1Api
