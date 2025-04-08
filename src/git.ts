@@ -385,7 +385,8 @@ export class Git {
       if (!skipRequest) await this.requestInitValues()
       await this.initSops()
     } catch (e) {
-      debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', e.replace(env.GIT_PASSWORD, '****'))
+      const eMessage = typeof e?.message === 'string' ? e.message.replace(env.GIT_PASSWORD, '****') : ''
+      debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', eMessage)
       this.corrupt = true
       if (!skipMsg) {
         const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'conflict' }
@@ -408,7 +409,8 @@ export class Git {
         debug('Trying to remove upstream commits: ', this.remote)
         await this.git.push([this.remote, this.branch, '--force'])
       } catch (error) {
-        debug('Failed to remove upstream commits: ', error.replace(env.GIT_PASSWORD, '****'))
+        const errorMessage = typeof e?.message === 'string' ? e.message.replace(env.GIT_PASSWORD, '****') : ''
+        debug('Failed to remove upstream commits: ', errorMessage)
         throw new GitPullError('Failed to remove upstream commits!')
       }
       debug('Removed upstream commits!')
@@ -478,7 +480,7 @@ export class Git {
           '****',
         )}`,
       )
-      debug(`Merge error: ${JSON.stringify(e).replace(env.GIT_PASSWORD, '****')}`)
+      debug('Git save error')
       throw new GitPullError()
     }
   }
