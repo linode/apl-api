@@ -22,10 +22,11 @@ export function getAplObjectFromV1(kind: AplKind, spec: V1ApiObject | ServiceSpe
 }
 
 export function getV1ObjectFromApl(aplObject: AplResponseObject): V1ApiObject {
+  const teamId = aplObject.metadata.labels['apl.io/teamId']
   return {
-    teamId: aplObject.metadata.labels['apl.io/teamId'],
     name: aplObject.metadata.name,
-    ...aplObject.spec,
+    ...(teamId && { teamId }),
+    ...omit(aplObject.spec, ['id', 'name', 'teamId']),
   }
 }
 
