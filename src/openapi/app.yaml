@@ -45,14 +45,14 @@ App:
     enabled:
       type: boolean
     id:
-      $ref: definitions.yaml#/idName
+      $ref: 'definitions.yaml#/idName'
       x-acl:
         platformAdmin: [read-any]
         teamAdmin: [read-any]
         teamMember: [read-any]
       # readOnly: true
     rawValues:
-      $ref: definitions.yaml#/rawValues
+      $ref: 'definitions.yaml#/rawValues'
       x-acl:
         platformAdmin: [read-any, update-any]
         teamAdmin: []

@@ -16,7 +16,7 @@ Session:
       type: integer
       default: 10
     user:
-      $ref: user.yaml#/SessionUser
+      $ref: 'user.yaml#/SessionUser'
       # readOnly: true
     defaultPlatformAdminEmail:
       type: string

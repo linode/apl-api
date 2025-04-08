@@ -7,13 +7,13 @@ Settings:
   properties:
     alerts:
       additionalProperties: false
-      $ref: definitions.yaml#/alerts
+      $ref: 'definitions.yaml#/alerts'
       title: Alerts
       description: Configure alerting endpoints to receive notifications from Alertmanager.
       x-externalDocsPath: docs/for-ops/console/settings/alerts
     cluster:
       additionalProperties: false
-      $ref: cluster.yaml#/Cluster
+      $ref: 'cluster.yaml#/Cluster'
       title: Cluster
     platformBackups:
       additionalProperties: false
@@ -27,9 +27,9 @@ Settings:
               type: boolean
               default: false
             retentionPolicy:
-              $ref: definitions.yaml#/backupRetentionPolicy
+              $ref: 'definitions.yaml#/backupRetentionPolicy'
             schedule:
-              $ref: definitions.yaml#/backupSchedule
+              $ref: 'definitions.yaml#/backupSchedule'
         database:
           type: object
           title: Database backups
@@ -41,9 +41,9 @@ Settings:
                   type: boolean
                   default: false
                 retentionPolicy:
-                  $ref: definitions.yaml#/backupRetentionPolicy
+                  $ref: 'definitions.yaml#/backupRetentionPolicy'
                 schedule:
-                  $ref: definitions.yaml#/backupSchedule
+                  $ref: 'definitions.yaml#/backupSchedule'
             gitea:
               title: Gitea
               properties:
@@ -51,9 +51,9 @@ Settings:
                   type: boolean
                   default: false
                 retentionPolicy:
-                  $ref: definitions.yaml#/backupRetentionPolicy
+                  $ref: 'definitions.yaml#/backupRetentionPolicy'
                 schedule:
-                  $ref: definitions.yaml#/backupSchedule
+                  $ref: 'definitions.yaml#/backupSchedule'
             keycloak:
               title: Keycloak
               properties:
@@ -61,16 +61,16 @@ Settings:
                   type: boolean
                   default: false
                 retentionPolicy:
-                  $ref: definitions.yaml#/backupRetentionPolicy
+                  $ref: 'definitions.yaml#/backupRetentionPolicy'
                 schedule:
-                  $ref: definitions.yaml#/backupSchedule
+                  $ref: 'definitions.yaml#/backupSchedule'
         persistentVolumes:
           title: Backup Persistent Volumes
           description: 'Add a Linode API token and enable the Velero App to create backups of PVs.'
           properties:
             linodeApiToken:
               type: string
-              $ref: definitions.yaml#/wordCharacterPattern
+              $ref: 'definitions.yaml#/wordCharacterPattern'
               x-secret: true
     obj:
       type: object
@@ -114,46 +114,46 @@ Settings:
                     region:
                       type: string
                       description: The name of the Linode region.
-                      $ref: definitions.yaml#/wordCharacterPattern
+                      $ref: 'definitions.yaml#/wordCharacterPattern'
                     accessKeyId:
                       type: string
                       description: The ID of the access key.
-                      $ref: definitions.yaml#/wordCharacterPattern
+                      $ref: 'definitions.yaml#/wordCharacterPattern'
                     secretAccessKey:
                       type: string
                       description: The Secret of the access key.
-                      $ref: definitions.yaml#/wordCharacterPattern
+                      $ref: 'definitions.yaml#/wordCharacterPattern'
                       x-secret: true
                     buckets:
                       description: Add the preferred bucket names for each app.
                       properties:
                         loki:
                           type: string
-                          $ref: definitions.yaml#/wordCharacterPattern
+                          $ref: 'definitions.yaml#/wordCharacterPattern'
                           default: loki
                         cnpg:
                           type: string
-                          $ref: definitions.yaml#/wordCharacterPattern
+                          $ref: 'definitions.yaml#/wordCharacterPattern'
                           default: cnpg
                         velero:
                           type: string
-                          $ref: definitions.yaml#/wordCharacterPattern
+                          $ref: 'definitions.yaml#/wordCharacterPattern'
                           default: velero
                         harbor:
                           type: string
-                          $ref: definitions.yaml#/wordCharacterPattern
+                          $ref: 'definitions.yaml#/wordCharacterPattern'
                           default: harbor
                         tempo:
                           type: string
-                          $ref: definitions.yaml#/wordCharacterPattern
+                          $ref: 'definitions.yaml#/wordCharacterPattern'
                           default: tempo
                         gitea:
                           type: string
-                          $ref: definitions.yaml#/wordCharacterPattern
+                          $ref: 'definitions.yaml#/wordCharacterPattern'
                           default: gitea
                         thanos:
                           type: string
-                          $ref: definitions.yaml#/wordCharacterPattern
+                          $ref: 'definitions.yaml#/wordCharacterPattern'
                           default: thanos
                   required:
                     - region
@@ -168,7 +168,7 @@ Settings:
                 - linode
                 - type
     dns:
-      $ref: definitions.yaml#/dns
+      $ref: 'definitions.yaml#/dns'
       x-externalDocsPath: docs/for-ops/console/settings/dns
       x-acl:
         platformAdmin: [read-any, update-any]
@@ -187,7 +187,7 @@ Settings:
                   type: string
                   default: platform
                   # readOnly: true
-            - $ref: definitions.yaml#/ingressClassParameters
+            - $ref: 'definitions.yaml#/ingressClassParameters'
         classes:
           title: Additional classes
           type: array
@@ -198,11 +198,11 @@ Settings:
                   className:
                     description: An arbitrary name that will be used to assign an ingress class to a team service.
                     type: string
-              - $ref: definitions.yaml#/ingressClassParameters
+              - $ref: 'definitions.yaml#/ingressClassParameters'
             required:
               - className
     kms:
-      $ref: definitions.yaml#/kms
+      $ref: 'definitions.yaml#/kms'
       x-externalDocsPath: docs/for-ops/console/settings/key-management
       x-acl:
         platformAdmin: [read-any, update-any]
@@ -214,7 +214,7 @@ Settings:
       properties:
         issuer:
           type: string
-          $ref: definitions.yaml#/url
+          $ref: 'definitions.yaml#/url'
         clientID:
           title: Client ID
           type: string
@@ -256,7 +256,7 @@ Settings:
       properties:
         adminPassword:
           description: Master admin password that will be used for all apps that are not configured to use their own password.
-          $ref: definitions.yaml#/adminPassword
+          $ref: 'definitions.yaml#/adminPassword'
           x-acl:
             platformAdmin: [read-any]
             teamAdmin: []
@@ -324,7 +324,7 @@ Settings:
           type: boolean
           default: true
         nodeSelector:
-          $ref: definitions.yaml#/labels
+          $ref: 'definitions.yaml#/labels'
           description: 'One or more label/value pairs of one or more nodes. This will enforce scheduling of all platform services on these nodes.'
         #TODO move this one out of otomi and in to versions
         version:
@@ -376,7 +376,7 @@ Settings:
           title: Authentication username
           type: string
         from:
-          $ref: definitions.yaml#/email
+          $ref: 'definitions.yaml#/email'
           description: The from address. Defaults to alerts@$clusterDomain.
           title: From address
         hello:

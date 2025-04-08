@@ -40,7 +40,7 @@ describe('RepoService', () => {
     })
 
     test('should return an instance of TeamConfigService when team config exists', () => {
-      service.createTeamConfig('team1', { name: 'Team 1' })
+      service.createTeamConfig({ name: 'team1' })
       const teamConfigService = service.getTeamConfigService('team1')
 
       expect(teamConfigService).toBeInstanceOf(TeamConfigService)
@@ -106,18 +106,18 @@ describe('RepoService', () => {
 
   describe('Team Config', () => {
     test('should create a team config', () => {
-      const teamConfig = service.createTeamConfig('team1', { name: 'Team 1' })
-      expect(teamConfig.settings).toEqual({ name: 'Team 1', id: 'team1' })
+      const teamConfig = service.createTeamConfig({ name: 'team1' })
+      expect(teamConfig.settings).toEqual({ name: 'team1' })
       expect(service.getTeamConfig('team1')).toBeDefined()
     })
 
     test('should throw an error if team config already exists', () => {
-      service.createTeamConfig('team1', { name: 'Team 1' })
-      expect(() => service.createTeamConfig('team1', { name: 'Duplicate Team' })).toThrow(AlreadyExists)
+      service.createTeamConfig({ name: 'team1' })
+      expect(() => service.createTeamConfig({ name: 'team1' })).toThrow(AlreadyExists)
     })
 
     test('should delete a team config', () => {
-      service.createTeamConfig('team1', { name: 'Team 1' })
+      service.createTeamConfig({ name: 'team1' })
       service.deleteTeamConfig('team1')
       expect(service.getTeamConfig('team1')).toBeUndefined()
     })
@@ -172,16 +172,24 @@ describe('RepoService', () => {
     })
 
     test('should return all builds', () => {
-      service.createTeamConfig('team1', { name: 'Team 1' })
+      service.createTeamConfig({ name: 'team1' })
 
-      service.getTeamConfigService('team1').createBuild({ name: 'Build1' })
+      service.getTeamConfigService('team1').createBuild({
+        kind: 'AplTeamBuild',
+        metadata: { name: 'Build1' },
+        spec: {},
+      })
       expect(service.getAllBuilds()).toHaveLength(1)
     })
 
     test('should return all projects', () => {
-      service.createTeamConfig('team1', { name: 'Team 1' })
+      service.createTeamConfig({ name: 'team1' })
 
-      service.getTeamConfigService('team1').createProject({ name: 'Project1' })
+      service.getTeamConfigService('team1').createProject({
+        kind: 'AplTeamProject',
+        metadata: { name: 'Project1' },
+        spec: {},
+      })
       expect(service.getAllProjects()).toHaveLength(1)
     })
   })
