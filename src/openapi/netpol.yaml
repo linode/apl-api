@@ -30,6 +30,19 @@ Netpol:
   required:
     - name
 
+AplNetpolSpec:
+  type: object
+  properties:
+    id:
+      type: string
+    teamId:
+      $ref: 'definitions.yaml#/idName'
+    name:
+      title: Name
+      $ref: 'definitions.yaml#/idName'
+    ruleType:
+      $ref: '#/ruleType'
+
 ruleType:
   title: Rule type
   description: Choose between Ingress or Egress.
@@ -88,7 +101,7 @@ ruleType:
       properties:
         domain:
           title: FQDN or IP address
-          $ref: definitions.yaml#/domain
+          $ref: 'definitions.yaml#/domain'
         ports:
           type: array
           items:
@@ -102,7 +115,7 @@ ruleType:
               protocol:
                 title: Protocol
                 type: string
-                enum: [HTTPS, HTTP, TCP]
+                enum: [ HTTPS, HTTP, TCP ]
                 default: HTTPS
             required:
               - number
