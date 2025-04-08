@@ -175,13 +175,6 @@ AplWorkloadSpec:
   type: object
   description: Define the location of the Workloads's manifests or Helm chart.
   properties:
-    id:
-      type: string
-    teamId:
-      $ref: 'definitions.yaml#/idName'
-    name:
-      title: Name
-      $ref: 'definitions.yaml#/idName'
     icon:
       $ref: 'definitions.yaml#/wordCharacterPattern'
     url:

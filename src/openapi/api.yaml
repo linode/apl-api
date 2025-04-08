@@ -2736,7 +2736,7 @@ components:
           type: string
           enum: [AplTeamProject]
         spec:
-          $ref: 'project.yaml#/AplProjectSpec'
+          type: object
       required:
         - kind
         - spec
