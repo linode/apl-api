@@ -2001,10 +2001,7 @@ export default class OtomiStack {
   async saveTeam(team: Team, secretPaths?: string[]): Promise<void> {
     debug(`Saving team ${team.name}`)
     debug('team', JSON.stringify(team))
-    const inTeam = team
-    //TODO fix this issue where resource quota needs to be saved as an object
-    inTeam.resourceQuota = arrayToObject((team.resourceQuota as any) ?? []) as any
-    const repo = this.createTeamConfigInRepo(team.name, 'settings', inTeam)
+    const repo = this.createTeamConfigInRepo(team.name, 'settings', team)
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamSettingSet')!
     await this.git.saveConfigWithSecrets(repo, secretPaths ?? this.getSecretPaths(), fileMap)
   }
