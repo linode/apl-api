@@ -448,6 +448,20 @@ export function unsetValuesFileSync(envDir: string): string {
   return valuesPath
 }
 
+function isKindValid(kind: string | undefined, fileMap: FileMap): boolean {
+  return (
+    kind === fileMap.kind ||
+    (kind === 'SealedSecret' && fileMap.kind === 'AplTeamSecret') ||
+    fileMap.kind === 'AplTeamWorkloadValues'
+  )
+}
+
+function isNameValid(data: Record<string, any>, fileMap: FileMap, fileName: string | undefined): boolean {
+  return (
+    fileMap.resourceGroup === 'users' || fileMap.kind === 'AplTeamWorkloadValues' || data.metadata?.name === fileName
+  )
+}
+
 export async function loadFileToSpec(
   filePath: string,
   fileMap: FileMap,
@@ -460,18 +474,18 @@ export async function loadFileToSpec(
     if (fileMap.processAs === 'arrayItem') {
       const ref: Record<string, any>[] = get(spec, jsonPath)
       const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
+      if (!isKindValid(data?.kind, fileMap)) {
+        console.error(`Unexpected manifest kind in ${filePath}: ${data?.kind}`)
+        return
+      }
+      if (!isNameValid(data, fileMap, name)) {
+        console.error(`Unexpected name in ${filePath}: ${data.metadata?.name}`)
+        return
+      }
       if (fileMap.kind === 'AplTeamWorkloadValues') {
         //TODO remove this custom workaround for workloadValues as it has no spec
         ref.push({ ...data, name })
       } else if (fileMap.v2) {
-        if (data?.kind !== fileMap.kind && !(data?.kind === 'SealedSecret' && fileMap.kind === 'AplTeamSecret')) {
-          console.error(`Unexpected manifest kind in ${filePath}: ${data?.kind}`)
-          return
-        }
-        if (data.metadata.name !== name) {
-          console.error(`Unexpected name in ${filePath}: ${data.metadata.name}`)
-          return
-        }
         ref.push(data)
       } else {
         ref.push(data?.spec)
