@@ -8,8 +8,8 @@ export default function (): OperationHandlerArray {
   const get: Operation = [
     async ({ otomi, query }: OpenApiRequestExt, res): Promise<void> => {
       debug(`getRepoBranches`, query)
-      const { url, teamId, secret }: { url: string; teamId: string; secret: string } = query as any
-      res.json(await otomi.getRepoBranches(url, teamId, secret))
+      const { codeRepoName, teamId }: { codeRepoName: string; teamId: string } = query as any
+      res.json(await otomi.getRepoBranches(codeRepoName, teamId))
     },
   ]
   const api = {

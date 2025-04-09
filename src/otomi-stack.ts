@@ -1341,7 +1341,10 @@ export default class OtomiStack {
     )
   }
 
-  async getRepoBranches(url: string, teamId: string, secretName: string): Promise<string[]> {
+  async getRepoBranches(codeRepoName: string, teamId: string): Promise<string[]> {
+    if (!codeRepoName) return ['HEAD']
+    const coderepo = this.getCodeRepo(teamId, codeRepoName)
+    const { repositoryUrl, secret: secretName } = coderepo
     try {
       let sshPrivateKey = '',
         username = '',
@@ -1356,7 +1359,9 @@ export default class OtomiStack {
 
       const isPrivate = !!secretName
       const isSSH = !!sshPrivateKey
-      const repoUrl = url.startsWith('https://gitea') ? url : normalizeRepoUrl(url, isPrivate, isSSH)
+      const repoUrl = repositoryUrl.startsWith('https://gitea')
+        ? repositoryUrl
+        : normalizeRepoUrl(repositoryUrl, isPrivate, isSSH)
 
       if (!repoUrl) return ['HEAD']
 

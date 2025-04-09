@@ -2264,19 +2264,14 @@ paths:
       description: Get repo branches from the git providers.
       x-aclSchema: RepoBranches
       parameters:
-        - name: url
+        - name: codeRepoName
           in: query
-          description: URL of the repository
+          description: Name of the code repository
           schema:
             type: string
         - name: teamId
           in: query
           description: Id of the team
-          schema:
-            type: string
-        - name: secret
-          in: query
-          description: Name of the secret for private repositories
           schema:
             type: string
       responses:

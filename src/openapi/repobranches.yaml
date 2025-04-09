@@ -2,6 +2,6 @@ RepoBranches:
   x-acl:
     platformAdmin: [read-any]
     teamAdmin: [read-any]
-    teamMember: [read-any]
+    teamMember: [read]
   properties: {}
   type: object
