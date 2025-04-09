@@ -61,7 +61,14 @@ import {
   Workload,
   WorkloadValues,
 } from 'src/otomi-models'
-import { arrayToObject, getServiceUrl, getValuesSchema, removeBlankAttributes, valueArrayToObject } from 'src/utils'
+import {
+  arrayToObject,
+  getSanitizedErrorMessage,
+  getServiceUrl,
+  getValuesSchema,
+  removeBlankAttributes,
+  valueArrayToObject,
+} from 'src/utils'
 import {
   cleanEnv,
   CUSTOM_ROOT_CA,
@@ -1965,7 +1972,7 @@ export default class OtomiStack {
     } catch (e) {
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)
-      e.message = e.message.replace(env.GIT_PASSWORD, '****')
+      e.message = getSanitizedErrorMessage(e)
       throw e
     } finally {
       // Clean up the session
@@ -1995,7 +2002,7 @@ export default class OtomiStack {
     } catch (e) {
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)
-      e.message = e.message.replace(env.GIT_PASSWORD, '****')
+      e.message = getSanitizedErrorMessage(e)
       throw e
     } finally {
       // Clean up the session
@@ -2035,7 +2042,7 @@ export default class OtomiStack {
     } catch (e) {
       const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
       getIo().emit('db', msg)
-      e.message = e.message.replace(env.GIT_PASSWORD, '****')
+      e.message = getSanitizedErrorMessage(e)
       throw e
     } finally {
       // Clean up the session
