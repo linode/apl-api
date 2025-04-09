@@ -1036,7 +1036,7 @@ export default class OtomiStack {
       await this.saveUser(createdUser)
       await this.doRepoDeployment(
         (repoService) => {
-          repoService.createUser(user)
+          repoService.createUser(createdUser)
         },
         true,
         [`${this.getRepoPath()}/env/users/secrets.${createdUser.id}.yaml`],
