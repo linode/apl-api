@@ -457,9 +457,14 @@ function isKindValid(kind: string | undefined, fileMap: FileMap): boolean {
 }
 
 function isNameValid(data: Record<string, any>, fileMap: FileMap, fileName: string | undefined): boolean {
+  //TODO Remove users exception once name has been set in metadata consistently
   return (
     fileMap.resourceGroup === 'users' || fileMap.kind === 'AplTeamWorkloadValues' || data.metadata?.name === fileName
   )
+}
+
+function isTeamValid(data: Record<string, any>, fileMap: FileMap, teamName: string | undefined): boolean {
+  return ['AplTeamWorkloadValues', 'AplTeamSecret'].includes(fileMap.kind) || data?.metadata?.labels?.['apl.io/teamId']
 }
 
 export async function loadFileToSpec(
@@ -481,6 +486,13 @@ export async function loadFileToSpec(
       if (!isNameValid(data, fileMap, name)) {
         console.error(`Unexpected name in ${filePath}: ${data.metadata?.name}`)
         return
+      }
+      if (fileMap.kind !== 'AplTeamWorkloadValues' && fileMap.resourceGroup === 'team') {
+        const teamName = filePath.match(/\/env\/teams\/([^/]+)\//)?.[1]
+        if (!isTeamValid(data, fileMap, teamName)) {
+          console.error(`Unexpected team in ${filePath}: ${data?.metadata?.labels?.['apl.io/teamId']}`)
+          return
+        }
       }
       if (fileMap.kind === 'AplTeamWorkloadValues') {
         //TODO remove this custom workaround for workloadValues as it has no spec
