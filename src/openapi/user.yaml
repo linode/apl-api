@@ -27,7 +27,7 @@ SessionUser:
       description: A user name
       # readOnly: true
     email:
-      $ref: definitions.yaml#/email
+      $ref: 'definitions.yaml#/email'
     isPlatformAdmin:
       type: boolean
       default: false
@@ -87,7 +87,7 @@ User:
     id:
       type: string
     email:
-      $ref: definitions.yaml#/email
+      $ref: 'definitions.yaml#/email'
       title: Email
       description: A unique email address.
     firstName:

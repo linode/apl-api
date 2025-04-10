@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.2.0](https://github.com/redkubes/otomi-api/compare/v4.0.0...v4.2.0) (2025-04-07)
+
+
+### Features
+
+* implement team endpoints with v2 schema ([#666](https://github.com/redkubes/otomi-api/issues/666)) ([ec63c1b](https://github.com/redkubes/otomi-api/commit/ec63c1ba4aa46f28b44a9262ad83bb08ebd82b8d))
+
+
+### Bug Fixes
+
+* 5xx errors ([#674](https://github.com/redkubes/otomi-api/issues/674)) ([c411a92](https://github.com/redkubes/otomi-api/commit/c411a9292e2de48bbb2f56fd9f1fb7e2600ec70f))
+* create helm chart with branches or tags ([#668](https://github.com/redkubes/otomi-api/issues/668)) ([bffd129](https://github.com/redkubes/otomi-api/commit/bffd12959b4d201340bb945c790f70f73ba40975)), closes [#667](https://github.com/redkubes/otomi-api/issues/667)
+* deleting team correctly from cache ([#680](https://github.com/redkubes/otomi-api/issues/680)) ([4eae783](https://github.com/redkubes/otomi-api/commit/4eae783a614bcea6143902a8c3e027456cb149aa))
+* form validation error & update services files to handle deep merge operations ([#665](https://github.com/redkubes/otomi-api/issues/665)) ([d173112](https://github.com/redkubes/otomi-api/commit/d173112cb9af4a6aa3fac40c7256b52282be9c5f))
+* gitea connect error & jwt decode ([#681](https://github.com/redkubes/otomi-api/issues/681)) ([128ea68](https://github.com/redkubes/otomi-api/commit/128ea68cffae7cf3c5edc8452cf5d0a83363416a))
+* sealed secrets metadata ([#670](https://github.com/redkubes/otomi-api/issues/670)) ([c2fedd3](https://github.com/redkubes/otomi-api/commit/c2fedd3030f4c72e2c0536e7ae46b107da2773ce))
+* set titles to non-empty for API generator ([#663](https://github.com/redkubes/otomi-api/issues/663)) ([3eeefb7](https://github.com/redkubes/otomi-api/commit/3eeefb740eae19657d2250df33c641869128234b))
+* use local cluster svc for Gitea over http ([#671](https://github.com/redkubes/otomi-api/issues/671)) ([253fc9d](https://github.com/redkubes/otomi-api/commit/253fc9d8f8a7b548e92e46538202def415139a76))
+
+
+### Others
+
+* **release:** 4.1.0  ([#679](https://github.com/redkubes/otomi-api/issues/679)) ([4e36189](https://github.com/redkubes/otomi-api/commit/4e3618978f1dc3188baf584640651014194b8545))
+
+## [4.1.0](https://github.com/redkubes/otomi-api/compare/v4.0.0...v4.1.0) (2025-04-02)
+
+
+### Bug Fixes
+
+* 5xx errors ([#674](https://github.com/redkubes/otomi-api/issues/674)) ([c411a92](https://github.com/redkubes/otomi-api/commit/c411a9292e2de48bbb2f56fd9f1fb7e2600ec70f))
+* create helm chart with branches or tags ([#668](https://github.com/redkubes/otomi-api/issues/668)) ([bffd129](https://github.com/redkubes/otomi-api/commit/bffd12959b4d201340bb945c790f70f73ba40975)), closes [#667](https://github.com/redkubes/otomi-api/issues/667)
+* form validation error & update services files to handle deep merge operations ([#665](https://github.com/redkubes/otomi-api/issues/665)) ([d173112](https://github.com/redkubes/otomi-api/commit/d173112cb9af4a6aa3fac40c7256b52282be9c5f))
+* sealed secrets metadata ([#670](https://github.com/redkubes/otomi-api/issues/670)) ([c2fedd3](https://github.com/redkubes/otomi-api/commit/c2fedd3030f4c72e2c0536e7ae46b107da2773ce))
+* set titles to non-empty for API generator ([#663](https://github.com/redkubes/otomi-api/issues/663)) ([3eeefb7](https://github.com/redkubes/otomi-api/commit/3eeefb740eae19657d2250df33c641869128234b))
+* use local cluster svc for Gitea over http ([#671](https://github.com/redkubes/otomi-api/issues/671)) ([253fc9d](https://github.com/redkubes/otomi-api/commit/253fc9d8f8a7b548e92e46538202def415139a76))
+
 ## [4.0.0](https://github.com/redkubes/otomi-api/compare/v3.7.0...v4.0.0) (2025-03-17)
 
 

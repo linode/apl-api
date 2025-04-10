@@ -7,10 +7,10 @@ import getToken from 'src/fixtures/jwt'
 import OtomiStack from 'src/otomi-stack'
 import request, { SuperAgentTest } from 'supertest'
 import { HttpError } from './error'
+import { Git } from './git'
 import { getSessionStack } from './middleware'
 import { App, CodeRepo, SealedSecret } from './otomi-models'
 import * as getValuesSchemaModule from './utils'
-import { Git } from './git'
 
 const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
@@ -246,7 +246,7 @@ describe('API authz tests', () => {
       .send({
         name: 'service1',
         serviceType: 'ksvcPredeployed',
-        ingress: {},
+        ingress: { type: 'cluster' },
       })
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
@@ -318,7 +318,7 @@ describe('API authz tests', () => {
   })
 
   test('anonymous user should get api spec', async () => {
-    await agent.get('/v1/apiDocs').expect(200).expect('Content-Type', /json/)
+    await agent.get('/apiDocs').expect(200).expect('Content-Type', /json/)
   })
 
   test('anonymous user cannot get a specific team', async () => {

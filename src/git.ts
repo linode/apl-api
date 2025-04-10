@@ -26,7 +26,7 @@ import { GitPullError, HttpError, ValidationError } from './error'
 import { DbMessage, getIo } from './middleware'
 import { Core } from './otomi-models'
 import { FileMap, getFilePath, renderManifest, renderManifestForSecrets } from './repo'
-import { removeBlankAttributes } from './utils'
+import { getSanitizedErrorMessage, removeBlankAttributes } from './utils'
 
 const debug = Debug('otomi:repo')
 
@@ -59,6 +59,7 @@ function getUrlAuth(url, user, password): string | undefined {
 }
 
 const secretFileRegex = new RegExp(`^(.*/)?secrets.*.yaml(.dec)?$`)
+
 export class Git {
   branch: string
   commitSha: string
@@ -116,6 +117,7 @@ export class Git {
     const res = await axios.get(valuesUrl, { params: { envDir: this.path, ...params } })
     return res
   }
+
   async addConfig(): Promise<void> {
     debug(`Adding git config`)
     await this.git.addConfig('user.name', this.user)
@@ -243,7 +245,7 @@ export class Git {
         const nodeValue = node.value
         try {
           const filePath = getFilePath(fileMap, nodePath, nodeValue, '')
-          const manifest = renderManifest(fileMap, nodePath, nodeValue)
+          const manifest = fileMap.v2 ? nodeValue : renderManifest(fileMap, nodePath, nodeValue)
           await this.writeFile(filePath, manifest, unsetBlankAttributes)
         } catch (e) {
           console.log(nodePath)
@@ -339,8 +341,9 @@ export class Git {
     this.url = getUrl(`${env.GIT_REPO_URL}`)
     if (!isRepo) {
       debug(`Initializing repo...`)
-      if (!this.hasRemote() && this.isRootClone()) return await this.initFromTestFolder()
-      else if (!this.isRootClone()) {
+      if (!this.hasRemote() && this.isRootClone()) {
+        return await this.initFromTestFolder()
+      } else if (!this.isRootClone()) {
         // child clone, point to remote root
         this.urlAuth = getUrlAuth(this.url, env.GIT_USER, env.GIT_PASSWORD)
       }
@@ -382,7 +385,8 @@ export class Git {
       if (!skipRequest) await this.requestInitValues()
       await this.initSops()
     } catch (e) {
-      debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', e)
+      const eMessage = getSanitizedErrorMessage(e)
+      debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', eMessage)
       this.corrupt = true
       if (!skipMsg) {
         const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'conflict' }
@@ -405,7 +409,8 @@ export class Git {
         debug('Trying to remove upstream commits: ', this.remote)
         await this.git.push([this.remote, this.branch, '--force'])
       } catch (error) {
-        debug('Failed to remove upstream commits: ', error)
+        const errorMessage = getSanitizedErrorMessage(error)
+        debug('Failed to remove upstream commits: ', errorMessage)
         throw new GitPullError('Failed to remove upstream commits!')
       }
       debug('Removed upstream commits!')
@@ -469,8 +474,9 @@ export class Git {
         }
       }
     } catch (e) {
-      debug(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
-      debug(`Merge error: ${JSON.stringify(e)}`)
+      const sanitizedMessage = getSanitizedErrorMessage(e)
+      debug(`${sanitizedMessage} for command ${JSON.stringify(e.task?.commands).replace(env.GIT_PASSWORD, '****')}`)
+      debug('Git save error')
       throw new GitPullError()
     }
   }

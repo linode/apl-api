@@ -7,11 +7,11 @@ SettingsInfo:
     cluster:
       properties:
         name:
-          $ref: definitions.yaml#/clusterName
+          $ref: 'definitions.yaml#/clusterName'
         domainSuffix:
-          $ref: definitions.yaml#/domainSuffix
+          $ref: 'definitions.yaml#/domainSuffix'
         provider:
-          $ref: definitions.yaml#/provider
+          $ref: 'definitions.yaml#/provider'
     dns:
       properties:
         zones:
