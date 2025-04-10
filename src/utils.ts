@@ -7,6 +7,11 @@ import cloneDeep from 'lodash/cloneDeep'
 import { Cluster, Dns } from 'src/otomi-models'
 import { parse, stringify } from 'yaml'
 import { BASEURL } from './constants'
+import { cleanEnv, GIT_PASSWORD } from './validators'
+
+const env = cleanEnv({
+  GIT_PASSWORD,
+})
 
 export function arrayToObject(array: [] = [], keyName = 'name', keyValue = 'value'): Record<string, unknown> {
   const obj = {}
@@ -191,4 +196,9 @@ export const getDirNames = async (dir: string, opts?: { skipHidden: boolean }): 
 
 export const objectToYaml = (obj: Record<string, any>, indent = 4, lineWidth = 200): string => {
   return isEmpty(obj) ? '' : stringify(obj, { indent, lineWidth })
+}
+
+export function getSanitizedErrorMessage(error) {
+  const errorMessage = typeof error?.message === 'string' ? error.message.replace(env.GIT_PASSWORD, '****') : ''
+  return errorMessage
 }

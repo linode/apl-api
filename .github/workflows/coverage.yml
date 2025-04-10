@@ -1,0 +1,34 @@
+name: 'coverage'
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  coverage:
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set npm token
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "@linode:registry=https://npm.pkg.github.com/linode" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+          echo '::set-output name=diff::1'
+
+      - name: Install Node
+        run: |
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm install
+          nvm use
+          node -v
+          npm install
+
+      - uses: ArtiomTr/jest-coverage-report-action@v2
+        with:
+          test-script: npm run test
+          annotations: none

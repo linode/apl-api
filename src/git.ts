@@ -26,7 +26,7 @@ import { GitPullError, HttpError, ValidationError } from './error'
 import { DbMessage, getIo } from './middleware'
 import { Core } from './otomi-models'
 import { FileMap, getFilePath, renderManifest, renderManifestForSecrets } from './repo'
-import { removeBlankAttributes } from './utils'
+import { getSanitizedErrorMessage, removeBlankAttributes } from './utils'
 
 const debug = Debug('otomi:repo')
 
@@ -385,7 +385,8 @@ export class Git {
       if (!skipRequest) await this.requestInitValues()
       await this.initSops()
     } catch (e) {
-      debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', e)
+      const eMessage = getSanitizedErrorMessage(e)
+      debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', eMessage)
       this.corrupt = true
       if (!skipMsg) {
         const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'conflict' }
@@ -408,7 +409,8 @@ export class Git {
         debug('Trying to remove upstream commits: ', this.remote)
         await this.git.push([this.remote, this.branch, '--force'])
       } catch (error) {
-        debug('Failed to remove upstream commits: ', error)
+        const errorMessage = getSanitizedErrorMessage(error)
+        debug('Failed to remove upstream commits: ', errorMessage)
         throw new GitPullError('Failed to remove upstream commits!')
       }
       debug('Removed upstream commits!')
@@ -472,8 +474,9 @@ export class Git {
         }
       }
     } catch (e) {
-      debug(`${e.message.trim()} for command ${JSON.stringify(e.task?.commands)}`)
-      debug(`Merge error: ${JSON.stringify(e)}`)
+      const sanitizedMessage = getSanitizedErrorMessage(e)
+      debug(`${sanitizedMessage} for command ${JSON.stringify(e.task?.commands).replace(env.GIT_PASSWORD, '****')}`)
+      debug('Git save error')
       throw new GitPullError()
     }
   }
