@@ -1274,6 +1274,7 @@ export default class OtomiStack {
     try {
       if (allRepoUrls.includes(data.spec.repositoryUrl)) throw new AlreadyExists()
       if (!data.spec.private) unset(data.spec, 'secret')
+      if (data.spec.gitService === 'gitea') unset(data.spec, 'private')
       const codeRepo = this.repoService.getTeamConfigService(teamId).createCodeRepo(data)
       await this.saveTeamConfigItem(codeRepo)
       await this.doTeamDeployment(
@@ -1314,6 +1315,7 @@ export default class OtomiStack {
     patch = false,
   ): Promise<AplCodeRepoResponse> {
     if (!data.spec?.private) unset(data.spec, 'secret')
+    if (data.spec?.gitService === 'gitea') unset(data.spec, 'private')
     const codeRepo = patch
       ? this.repoService.getTeamConfigService(teamId).patchCodeRepo(name, data)
       : this.repoService.getTeamConfigService(teamId).updateCodeRepo(name, data as AplCodeRepoRequest)
