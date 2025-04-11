@@ -2458,8 +2458,8 @@ export default class OtomiStack {
         dns,
       })
       return removeBlankAttributes({
-        ...serviceMeta,
         ...inService,
+        ...serviceMeta,
         ingress: {
           ...pick(serviceSpec, publicIngressFields),
           domain: url.domain,

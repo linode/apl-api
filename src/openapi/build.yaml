@@ -56,14 +56,6 @@ Build:
 AplBuildSpec:
   type: object
   properties:
-    id:
-      type: string
-    teamId:
-      $ref: 'definitions.yaml#/idName'
-    name:
-      title: Name
-      $ref: 'definitions.yaml#/idName'
-      description: Results in image name harbor.<your-domain>/<team-name>/name.
     imageName:
       title: Image name
       $ref: 'definitions.yaml#/idName'
