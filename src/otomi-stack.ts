@@ -1993,7 +1993,6 @@ export default class OtomiStack {
       teams.map((inTeam) => {
         const team: Record<string, any> = omit(inTeam, 'name')
         const teamId = team.id as string
-        team.resourceQuota = arrayToObject((team.resourceQuota as []) ?? [])
         teamValues[teamId] = team
       }),
     )
@@ -2112,7 +2111,6 @@ export default class OtomiStack {
 
   async loadTeam(inTeam: Team): Promise<void> {
     const team = { ...inTeam, name: inTeam.id } as Record<string, any>
-    team.resourceQuota = objectToArray(inTeam.resourceQuota as Record<string, any>)
     const res = await this.createTeam(team as Team, false)
     // const res: any = this.db.populateItem('teams', { ...team, name: team.id! }, undefined, team.id as string)
     debug(`Loaded team: ${res.id!}`)
