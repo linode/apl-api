@@ -432,7 +432,7 @@ export function renderManifestForSecrets(fileMap: FileMap, resourceName: string,
     metadata: {
       name: resourceName,
     },
-    spec: data,
+    spec: omit(data, ['id', 'teamId', 'name']),
   }
 }
 
