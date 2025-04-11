@@ -4,8 +4,8 @@ import { globSync } from 'glob'
 import jsonpath from 'jsonpath'
 import { cloneDeep, get, merge, omit, set } from 'lodash'
 import path from 'path'
-import { getDirNames, loadYaml } from './utils'
 import { AplKind } from './otomi-models'
+import { getDirNames, loadYaml } from './utils'
 
 export async function getTeamNames(envDir: string): Promise<Array<string>> {
   const teamsDir = path.join(envDir, 'env', 'teams')
@@ -493,6 +493,9 @@ export async function loadFileToSpec(
           console.error(`Unexpected team in ${filePath}: ${data?.metadata?.labels?.['apl.io/teamId']}`)
           return
         }
+      }
+      if (fileMap.kind === 'AplUser') {
+        data.spec.id = data.metadata?.name
       }
       if (fileMap.kind === 'AplTeamWorkloadValues') {
         //TODO remove this custom workaround for workloadValues as it has no spec
