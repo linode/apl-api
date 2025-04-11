@@ -26,6 +26,9 @@ Build:
       title: Name
       $ref: 'definitions.yaml#/idName'
       description: Results in image name harbor.<your-domain>/<team-name>/name.
+    imageName:
+      title: Image name
+      $ref: 'definitions.yaml#/idName'
     tag:
       $ref: 'definitions.yaml#/imageTag'
       default: latest
@@ -53,6 +56,9 @@ Build:
 AplBuildSpec:
   type: object
   properties:
+    imageName:
+      title: Image name
+      $ref: 'definitions.yaml#/idName'
     tag:
       $ref: 'definitions.yaml#/imageTag'
       default: latest
