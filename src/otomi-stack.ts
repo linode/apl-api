@@ -1278,10 +1278,10 @@ export default class OtomiStack {
 
   async createAplCodeRepo(teamId: string, data: AplCodeRepoRequest): Promise<AplCodeRepoResponse> {
     const allRepoUrls = this.getAllAplCodeRepos().map((repo) => repo.spec.repositoryUrl) || []
+    if (allRepoUrls.includes(data.spec.repositoryUrl)) throw new AlreadyExists('Code repository URL already exists')
+    if (!data.spec.private) unset(data.spec, 'secret')
+    if (data.spec.gitService === 'gitea') unset(data.spec, 'private')
     try {
-      if (allRepoUrls.includes(data.spec.repositoryUrl)) throw new AlreadyExists()
-      if (!data.spec.private) unset(data.spec, 'secret')
-      if (data.spec.gitService === 'gitea') unset(data.spec, 'private')
       const codeRepo = this.repoService.getTeamConfigService(teamId).createCodeRepo(data)
       await this.saveTeamConfigItem(codeRepo)
       await this.doTeamDeployment(
@@ -1294,8 +1294,7 @@ export default class OtomiStack {
       return codeRepo
     } catch (err) {
       if (err.code === 409) {
-        if (allRepoUrls.includes(data.spec.repositoryUrl)) err.publicMessage = 'Code repository URL already exists'
-        else err.publicMessage = 'Code repo name already exists'
+        err.publicMessage = 'Code repo name already exists'
       }
       throw err
     }
@@ -1378,6 +1377,8 @@ export default class OtomiStack {
 
       return await getPublicRepoBranches(repoUrl)
     } catch (error) {
+      const errorMessage = error.response?.data?.message || error?.message || 'Failed to get repo branches'
+      debug('Error getting branches:', errorMessage)
       return []
     }
   }
@@ -1388,14 +1389,15 @@ export default class OtomiStack {
         username = '',
         accessToken = ''
 
-      if (secretName) {
+      const isPrivate = !!secretName
+
+      if (isPrivate) {
         const secret = await getSecretValues(secretName, `team-${teamId}`)
         sshPrivateKey = secret?.['ssh-privatekey'] || ''
         username = secret?.username || ''
         accessToken = secret?.password || ''
       }
 
-      const isPrivate = !!secretName
       const isSSH = !!sshPrivateKey
       const repoUrl = normalizeRepoUrl(url, isPrivate, isSSH)
 
