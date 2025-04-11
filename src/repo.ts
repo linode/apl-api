@@ -510,7 +510,7 @@ export async function loadFileToSpec(
       const ref: Record<string, any> = get(spec, jsonPath)
       // TODO: Remove workaround for Team settings currently relying on id in console
       if (fileMap.kind === 'AplTeamSettingSet') {
-        data.spec.id = data.metadata?.name
+        data.spec.name = data.metadata?.name
       }
       // Decrypted secrets may need to be merged with plain text specs
       const newRef = merge(cloneDeep(ref), data?.spec)
