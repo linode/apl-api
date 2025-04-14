@@ -495,6 +495,7 @@ export async function loadFileToSpec(
           return
         }
       }
+      // TODO: Remove workaround for User currently relying on id in console
       if (fileMap.kind === 'AplUser') {
         data.spec.id = data.metadata?.name
       }
@@ -515,6 +516,10 @@ export async function loadFileToSpec(
       set(spec, jsonPath, newRef)
     } else {
       const ref: Record<string, any> = get(spec, jsonPath)
+      // TODO: Remove workaround for Team settings currently relying on id in console
+      if (fileMap.kind === 'AplTeamSettingSet') {
+        data.spec.name = data.metadata?.name
+      }
       // Decrypted secrets may need to be merged with plain text specs
       const newRef = merge(cloneDeep(ref), data?.spec)
       set(spec, jsonPath, newRef)
