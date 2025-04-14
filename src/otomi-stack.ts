@@ -757,24 +757,10 @@ export default class OtomiStack {
     await this.git.saveConfig(repo, fileMap)
   }
 
-  async saveTeamPolicies(teamId: string, data: AplPolicyResponse[]): Promise<void> {
+  async saveTeamPolicy(teamId: string, data: AplPolicyResponse): Promise<void> {
     debug(`Saving AplTeamPolicy for team ${teamId}`)
-    const teamPolicies = {}
-    data.forEach((policy) => {
-      teamPolicies[policy.metadata.name] = policy.spec
-    })
-    const manifest = {
-      kind: 'AplTeamPolicy',
-      metadata: {
-        name: teamId,
-        labels: {
-          'apl.io/teamId': teamId,
-        },
-      },
-      spec: teamPolicies,
-    }
-    const configKey = 'policies'
-    const repo = this.createTeamConfigInRepo(teamId, configKey, manifest)
+    const configKey = data.metadata.name
+    const repo = this.createTeamConfigInRepo(teamId, configKey, data)
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamPolicy')!
     await this.git.saveConfig(repo, fileMap)
   }
@@ -1536,8 +1522,7 @@ export default class OtomiStack {
     const policy = patch
       ? this.repoService.getTeamConfigService(teamId).patchPolicies(policyId, data)
       : this.repoService.getTeamConfigService(teamId).updatePolicies(policyId, data as AplPolicyRequest)
-    const teamPolicies = this.getTeamAplPolicies(teamId)
-    await this.saveTeamPolicies(teamId, teamPolicies)
+    await this.saveTeamPolicy(teamId, policy)
     await this.doTeamDeployment(
       teamId,
       (teamService) => {
