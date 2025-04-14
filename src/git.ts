@@ -25,7 +25,7 @@ import { BASEURL } from './constants'
 import { GitPullError, HttpError, ValidationError } from './error'
 import { DbMessage, getIo } from './middleware'
 import { Core } from './otomi-models'
-import { FileMap, getFilePath, renderManifest, renderManifestForSecrets } from './repo'
+import { FileMap, getFilePath, getResourceName, renderManifest, renderManifestForSecrets } from './repo'
 import { getSanitizedErrorMessage, removeBlankAttributes } from './utils'
 
 const debug = Debug('otomi:repo')
@@ -288,7 +288,8 @@ export class Git {
         const nodeValue = node.value
         try {
           const filePath = getFilePath(fileMap, nodePath, nodeValue, 'secrets.')
-          const manifest = renderManifestForSecrets(fileMap, nodeValue)
+          const resourceName = getResourceName(fileMap, nodePath, nodeValue)
+          const manifest = renderManifestForSecrets(fileMap, resourceName, nodeValue)
           await this.writeFile(filePath, manifest, unsetBlankAttributes)
         } catch (e) {
           console.log(nodePath)

@@ -2,10 +2,10 @@ import { rmSync } from 'fs'
 import { rm } from 'fs/promises'
 import { globSync } from 'glob'
 import jsonpath from 'jsonpath'
-import { cloneDeep, get, merge, set } from 'lodash'
+import { cloneDeep, get, merge, omit, set } from 'lodash'
 import path from 'path'
-import { getDirNames, loadYaml } from './utils'
 import { AplKind } from './otomi-models'
+import { getDirNames, loadYaml } from './utils'
 
 export async function getTeamNames(envDir: string): Promise<Array<string>> {
   const teamsDir = path.join(envDir, 'env', 'teams')
@@ -418,7 +418,7 @@ export function renderManifest(fileMap: FileMap, jsonPath: jsonpath.PathComponen
       name: getResourceName(fileMap, jsonPath, data),
       labels: {},
     },
-    spec: data,
+    spec: omit(data, ['id', 'teamId', 'name']),
   }
   if (fileMap.resourceGroup === 'team') {
     manifest.metadata.labels['apl.io/teamId'] = getTeamNameFromJsonPath(jsonPath)
@@ -427,10 +427,13 @@ export function renderManifest(fileMap: FileMap, jsonPath: jsonpath.PathComponen
   return manifest
 }
 
-export function renderManifestForSecrets(fileMap: FileMap, data: Record<string, any>) {
+export function renderManifestForSecrets(fileMap: FileMap, resourceName: string, data: Record<string, any>) {
   return {
     kind: fileMap.kind,
-    spec: data,
+    metadata: {
+      name: resourceName,
+    },
+    spec: omit(data, ['id', 'teamId', 'name']),
   }
 }
 
@@ -446,6 +449,25 @@ export function unsetValuesFileSync(envDir: string): string {
   return valuesPath
 }
 
+function isKindValid(kind: string | undefined, fileMap: FileMap): boolean {
+  return (
+    kind === fileMap.kind ||
+    (kind === 'SealedSecret' && fileMap.kind === 'AplTeamSecret') ||
+    fileMap.kind === 'AplTeamWorkloadValues'
+  )
+}
+
+function isNameValid(data: Record<string, any>, fileMap: FileMap, fileName: string | undefined): boolean {
+  //TODO Remove users exception once name has been set in metadata consistently
+  return (
+    fileMap.resourceGroup === 'users' || fileMap.kind === 'AplTeamWorkloadValues' || data.metadata?.name === fileName
+  )
+}
+
+function isTeamValid(data: Record<string, any>, fileMap: FileMap, teamName: string | undefined): boolean {
+  return ['AplTeamWorkloadValues', 'AplTeamSecret'].includes(fileMap.kind) || data?.metadata?.labels?.['apl.io/teamId']
+}
+
 export async function loadFileToSpec(
   filePath: string,
   fileMap: FileMap,
@@ -453,38 +475,54 @@ export async function loadFileToSpec(
   deps = { loadYaml },
 ): Promise<void> {
   const jsonPath = getJsonPath(fileMap, filePath)
-  const data = await deps.loadYaml(filePath)
-  if (fileMap.processAs === 'arrayItem') {
-    const ref: Record<string, any>[] = get(spec, jsonPath)
-    const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
-    if (fileMap.kind === 'AplTeamWorkloadValues') {
-      //TODO remove this custom workaround for workloadValues as it has no spec
-      ref.push({ ...data, name })
-    } else if (fileMap.v2) {
-      if (data?.kind !== fileMap.kind && !(data?.kind === 'SealedSecret' && fileMap.kind === 'AplTeamSecret')) {
+  try {
+    const data = (await deps.loadYaml(filePath)) || {}
+    if (fileMap.processAs === 'arrayItem') {
+      const ref: Record<string, any>[] = get(spec, jsonPath)
+      const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
+      if (!isKindValid(data?.kind, fileMap)) {
         console.error(`Unexpected manifest kind in ${filePath}: ${data?.kind}`)
         return
       }
-      if (data.metadata.name !== name) {
-        console.error(`Unexpected name in ${filePath}: ${data.metadata.name}`)
+      if (!isNameValid(data, fileMap, name)) {
+        console.error(`Unexpected name in ${filePath}: ${data.metadata?.name}`)
         return
       }
-      ref.push(data)
+      if (fileMap.kind !== 'AplTeamWorkloadValues' && fileMap.resourceGroup === 'team') {
+        const teamName = filePath.match(/\/env\/teams\/([^/]+)\//)?.[1]
+        if (!isTeamValid(data, fileMap, teamName)) {
+          console.error(`Unexpected team in ${filePath}: ${data?.metadata?.labels?.['apl.io/teamId']}`)
+          return
+        }
+      }
+      if (fileMap.kind === 'AplUser') {
+        data.spec.id = data.metadata?.name
+      }
+      if (fileMap.kind === 'AplTeamWorkloadValues') {
+        //TODO remove this custom workaround for workloadValues as it has no spec
+        ref.push({ ...data, name })
+      } else if (fileMap.v2) {
+        ref.push(data)
+      } else {
+        ref.push(data?.spec)
+      }
+    } else if (fileMap.kind === 'AplTeamPolicy') {
+      const ref: Record<string, any> = get(spec, jsonPath)
+      const policy = {
+        [data?.metadata?.name]: data?.spec,
+      }
+      const newRef = merge(cloneDeep(ref), policy)
+      set(spec, jsonPath, newRef)
     } else {
-      ref.push(data?.spec)
+      const ref: Record<string, any> = get(spec, jsonPath)
+      // Decrypted secrets may need to be merged with plain text specs
+      const newRef = merge(cloneDeep(ref), data?.spec)
+      set(spec, jsonPath, newRef)
     }
-  } else if (fileMap.kind === 'AplTeamPolicy') {
-    const ref: Record<string, any> = get(spec, jsonPath)
-    const policy = {
-      [data?.metadata?.name]: data?.spec,
-    }
-    const newRef = merge(cloneDeep(ref), policy)
-    set(spec, jsonPath, newRef)
-  } else {
-    const ref: Record<string, any> = get(spec, jsonPath)
-    // Decrypted secrets may need to be merged with plain text specs
-    const newRef = merge(cloneDeep(ref), data?.spec)
-    set(spec, jsonPath, newRef)
+  } catch (e) {
+    console.log(filePath)
+    console.log(fileMap)
+    throw e
   }
 }
 

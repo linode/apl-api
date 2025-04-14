@@ -33,13 +33,6 @@ Netpol:
 AplNetpolSpec:
   type: object
   properties:
-    id:
-      type: string
-    teamId:
-      $ref: 'definitions.yaml#/idName'
-    name:
-      title: Name
-      $ref: 'definitions.yaml#/idName'
     ruleType:
       $ref: '#/ruleType'
 
@@ -115,7 +108,7 @@ ruleType:
               protocol:
                 title: Protocol
                 type: string
-                enum: [ HTTPS, HTTP, TCP ]
+                enum: [HTTPS, HTTP, TCP]
                 default: HTTPS
             required:
               - number

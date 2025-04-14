@@ -35,6 +35,7 @@ function mergeCustomizer(prev, next) {
 
 export class TeamConfigService {
   constructor(private teamConfig: TeamConfig) {
+    this.teamConfig.codeRepos ??= []
     this.teamConfig.builds ??= []
     this.teamConfig.workloads ??= []
     this.teamConfig.services ??= []
