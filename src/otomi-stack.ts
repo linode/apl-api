@@ -2444,7 +2444,6 @@ export default class OtomiStack {
       'cname',
     ]
     const inService = omit(serviceSpec, publicIngressFields)
-<<<<<<< HEAD
 
     const { cluster, dns } = this.getSettings(['cluster', 'dns'])
     const url = getServiceUrl({
@@ -2464,61 +2463,6 @@ export default class OtomiStack {
         useDefaultHost: !serviceSpec.domain && serviceSpec.ownHost,
       },
     })
-||||||| 8badf5c
-    if (serviceSpec.type === 'public') {
-      const { cluster, dns } = this.getSettings(['cluster', 'dns'])
-      const url = getServiceUrl({
-        domain: serviceSpec.domain,
-        name: service.metadata.name,
-        teamId: service.metadata.labels['apl.io/teamId'],
-        cluster,
-        dns,
-      })
-      return removeBlankAttributes({
-        ...serviceMeta,
-        ...inService,
-        ingress: {
-          ...pick(serviceSpec, publicIngressFields),
-          domain: url.domain,
-          subdomain: url.subdomain,
-          useDefaultHost: !serviceSpec.domain && serviceSpec.ownHost,
-        },
-      })
-    } else {
-      return removeBlankAttributes({
-        ...serviceMeta,
-        ...inService,
-        ingress: { type: 'cluster' },
-      })
-    }
-=======
-    if (serviceSpec.type === 'public') {
-      const { cluster, dns } = this.getSettings(['cluster', 'dns'])
-      const url = getServiceUrl({
-        domain: serviceSpec.domain,
-        name: service.metadata.name,
-        teamId: service.metadata.labels['apl.io/teamId'],
-        cluster,
-        dns,
-      })
-      return removeBlankAttributes({
-        ...inService,
-        ...serviceMeta,
-        ingress: {
-          ...pick(serviceSpec, publicIngressFields),
-          domain: url.domain,
-          subdomain: url.subdomain,
-          useDefaultHost: !serviceSpec.domain && serviceSpec.ownHost,
-        },
-      })
-    } else {
-      return removeBlankAttributes({
-        ...serviceMeta,
-        ...inService,
-        ingress: { type: 'cluster' },
-      })
-    }
->>>>>>> main
   }
 
   convertDbServiceToValues(svc: Service): ServiceSpec {
