@@ -105,6 +105,8 @@ import { TeamConfigService } from './services/TeamConfigService'
 import { validateBackupFields } from './utils/backupUtils'
 import {
   getGiteaRepoUrls,
+  getPrivateRepoBranches,
+  getPublicRepoBranches,
   normalizeRepoUrl,
   testPrivateRepoConnect,
   testPublicRepoConnect,
@@ -1275,8 +1277,11 @@ export default class OtomiStack {
   }
 
   async createAplCodeRepo(teamId: string, data: AplCodeRepoRequest): Promise<AplCodeRepoResponse> {
+    const allRepoUrls = this.getAllAplCodeRepos().map((repo) => repo.spec.repositoryUrl) || []
+    if (allRepoUrls.includes(data.spec.repositoryUrl)) throw new AlreadyExists('Code repository URL already exists')
+    if (!data.spec.private) unset(data.spec, 'secret')
+    if (data.spec.gitService === 'gitea') unset(data.spec, 'private')
     try {
-      if (!data.spec.private) unset(data.spec, 'secret')
       const codeRepo = this.repoService.getTeamConfigService(teamId).createCodeRepo(data)
       await this.saveTeamConfigItem(codeRepo)
       await this.doTeamDeployment(
@@ -1288,7 +1293,9 @@ export default class OtomiStack {
       )
       return codeRepo
     } catch (err) {
-      if (err.code === 409) err.publicMessage = 'Code repo label already exists'
+      if (err.code === 409) {
+        err.publicMessage = 'Code repo name already exists'
+      }
       throw err
     }
   }
@@ -1314,6 +1321,7 @@ export default class OtomiStack {
     patch = false,
   ): Promise<AplCodeRepoResponse> {
     if (!data.spec?.private) unset(data.spec, 'secret')
+    if (data.spec?.gitService === 'gitea') unset(data.spec, 'private')
     const codeRepo = patch
       ? this.repoService.getTeamConfigService(teamId).patchCodeRepo(name, data)
       : this.repoService.getTeamConfigService(teamId).updateCodeRepo(name, data as AplCodeRepoRequest)
@@ -1341,7 +1349,10 @@ export default class OtomiStack {
     )
   }
 
-  async getTestRepoConnect(url: string, teamId: string, secretName: string): Promise<TestRepoConnect> {
+  async getRepoBranches(codeRepoName: string, teamId: string): Promise<string[]> {
+    if (!codeRepoName) return ['HEAD']
+    const coderepo = this.getCodeRepo(teamId, codeRepoName)
+    const { repositoryUrl, secret: secretName } = coderepo
     try {
       let sshPrivateKey = '',
         username = '',
@@ -1355,6 +1366,38 @@ export default class OtomiStack {
       }
 
       const isPrivate = !!secretName
+      const isSSH = !!sshPrivateKey
+      const repoUrl = repositoryUrl.startsWith('https://gitea')
+        ? repositoryUrl
+        : normalizeRepoUrl(repositoryUrl, isPrivate, isSSH)
+
+      if (!repoUrl) return ['HEAD']
+
+      if (isPrivate) return await getPrivateRepoBranches(repoUrl, sshPrivateKey, username, accessToken)
+
+      return await getPublicRepoBranches(repoUrl)
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error?.message || 'Failed to get repo branches'
+      debug('Error getting branches:', errorMessage)
+      return []
+    }
+  }
+
+  async getTestRepoConnect(url: string, teamId: string, secretName: string): Promise<TestRepoConnect> {
+    try {
+      let sshPrivateKey = '',
+        username = '',
+        accessToken = ''
+
+      const isPrivate = !!secretName
+
+      if (isPrivate) {
+        const secret = await getSecretValues(secretName, `team-${teamId}`)
+        sshPrivateKey = secret?.['ssh-privatekey'] || ''
+        username = secret?.username || ''
+        accessToken = secret?.password || ''
+      }
+
       const isSSH = !!sshPrivateKey
       const repoUrl = normalizeRepoUrl(url, isPrivate, isSSH)
 
@@ -1422,6 +1465,12 @@ export default class OtomiStack {
   }
 
   async createAplBuild(teamId: string, data: AplBuildRequest): Promise<AplBuildResponse> {
+    const buildName = `${data?.spec?.imageName}-${data?.spec?.tag}`
+    if (buildName.length > 128)
+      throw new HttpError(
+        400,
+        'Invalid container image name, the combined image name and tag must not exceed 128 characters.',
+      )
     try {
       const build = this.repoService.getTeamConfigService(teamId).createBuild(data)
       await this.saveTeamConfigItem(build)
@@ -1434,7 +1483,8 @@ export default class OtomiStack {
       )
       return build
     } catch (err) {
-      if (err.code === 409) err.publicMessage = 'Build name already exists'
+      if (err.code === 409)
+        err.publicMessage = 'Container image name already exists, the combined image name and tag must be unique.'
       throw err
     }
   }
@@ -2394,6 +2444,7 @@ export default class OtomiStack {
       'cname',
     ]
     const inService = omit(serviceSpec, publicIngressFields)
+<<<<<<< HEAD
 
     const { cluster, dns } = this.getSettings(['cluster', 'dns'])
     const url = getServiceUrl({
@@ -2413,6 +2464,61 @@ export default class OtomiStack {
         useDefaultHost: !serviceSpec.domain && serviceSpec.ownHost,
       },
     })
+||||||| 8badf5c
+    if (serviceSpec.type === 'public') {
+      const { cluster, dns } = this.getSettings(['cluster', 'dns'])
+      const url = getServiceUrl({
+        domain: serviceSpec.domain,
+        name: service.metadata.name,
+        teamId: service.metadata.labels['apl.io/teamId'],
+        cluster,
+        dns,
+      })
+      return removeBlankAttributes({
+        ...serviceMeta,
+        ...inService,
+        ingress: {
+          ...pick(serviceSpec, publicIngressFields),
+          domain: url.domain,
+          subdomain: url.subdomain,
+          useDefaultHost: !serviceSpec.domain && serviceSpec.ownHost,
+        },
+      })
+    } else {
+      return removeBlankAttributes({
+        ...serviceMeta,
+        ...inService,
+        ingress: { type: 'cluster' },
+      })
+    }
+=======
+    if (serviceSpec.type === 'public') {
+      const { cluster, dns } = this.getSettings(['cluster', 'dns'])
+      const url = getServiceUrl({
+        domain: serviceSpec.domain,
+        name: service.metadata.name,
+        teamId: service.metadata.labels['apl.io/teamId'],
+        cluster,
+        dns,
+      })
+      return removeBlankAttributes({
+        ...inService,
+        ...serviceMeta,
+        ingress: {
+          ...pick(serviceSpec, publicIngressFields),
+          domain: url.domain,
+          subdomain: url.subdomain,
+          useDefaultHost: !serviceSpec.domain && serviceSpec.ownHost,
+        },
+      })
+    } else {
+      return removeBlankAttributes({
+        ...serviceMeta,
+        ...inService,
+        ingress: { type: 'cluster' },
+      })
+    }
+>>>>>>> main
   }
 
   convertDbServiceToValues(svc: Service): ServiceSpec {

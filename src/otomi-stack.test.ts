@@ -543,7 +543,6 @@ describe('Code repositories tests', () => {
         },
       },
       spec: {
-        name: 'code-1',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
       },
@@ -583,7 +582,6 @@ describe('Code repositories tests', () => {
         },
       },
       spec: {
-        name: 'code-1',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
       },
@@ -633,7 +631,6 @@ describe('Code repositories tests', () => {
         },
       },
       spec: {
-        name: 'code-1-updated',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
       },
@@ -668,7 +665,6 @@ describe('Code repositories tests', () => {
       kind: 'AplTeamCodeRepo',
       metadata: { name: 'code-1-updated', labels: { 'apl.io/teamId': 'demo' } },
       spec: {
-        name: 'code-1-updated',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
       },
@@ -778,7 +774,6 @@ describe('Code repositories tests', () => {
         },
       },
       spec: {
-        name: 'code-1-updated',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
         private: true,
@@ -828,7 +823,6 @@ describe('Code repositories tests', () => {
         },
       },
       spec: {
-        name: 'code-1-updated',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
         private: true,
