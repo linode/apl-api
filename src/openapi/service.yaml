@@ -206,14 +206,6 @@ AplServiceSpec:
   allOf:
     - type: object
       properties:
-        id:
-          type: string
-        teamId:
-          $ref: 'definitions.yaml#/idName'
-        name:
-          title: Name
-          $ref: 'definitions.yaml#/idName'
-          example: some-service
         namespace:
           $ref: 'definitions.yaml#/idName'
           description: A Kubernetes namespace.

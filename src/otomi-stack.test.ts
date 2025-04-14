@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
+import { mockDeep } from 'jest-mock-extended'
 import { AplCodeRepoResponse, AplServiceRequest, App, CodeRepo, Team, TeamConfig, User } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
-import { mockDeep } from 'jest-mock-extended'
-import { PublicUrlExists } from './error'
 import { loadSpec } from './app'
+import { PublicUrlExists } from './error'
 import { Git } from './git'
 import { RepoService } from './services/RepoService'
 import { TeamConfigService } from './services/TeamConfigService'
@@ -256,7 +256,7 @@ describe('Users tests', () => {
     otomiStack.git = mockDeep<Git>()
 
     jest.spyOn(otomiStack, 'getSettings').mockReturnValue({
-      cluster: { domainSuffix },
+      cluster: { name: 'default-cluster', domainSuffix, provider: 'linode' },
     })
     jest.spyOn(otomiStack, 'saveUser').mockResolvedValue()
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
@@ -545,7 +545,6 @@ describe('Code repositories tests', () => {
         },
       },
       spec: {
-        name: 'code-1',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
       },
@@ -585,7 +584,6 @@ describe('Code repositories tests', () => {
         },
       },
       spec: {
-        name: 'code-1',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
       },
@@ -635,7 +633,6 @@ describe('Code repositories tests', () => {
         },
       },
       spec: {
-        name: 'code-1-updated',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
       },
@@ -670,7 +667,6 @@ describe('Code repositories tests', () => {
       kind: 'AplTeamCodeRepo',
       metadata: { name: 'code-1-updated', labels: { 'apl.io/teamId': 'demo' } },
       spec: {
-        name: 'code-1-updated',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
       },
@@ -780,7 +776,6 @@ describe('Code repositories tests', () => {
         },
       },
       spec: {
-        name: 'code-1-updated',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
         private: true,
@@ -830,7 +825,6 @@ describe('Code repositories tests', () => {
         },
       },
       spec: {
-        name: 'code-1-updated',
         gitService: 'github',
         repositoryUrl: 'https://github.test.com',
         private: true,
