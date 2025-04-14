@@ -167,7 +167,7 @@ describe('TeamConfigService', () => {
             'apl.io/teamId': 'team1',
           },
         },
-        spec: { type: 'public' },
+        spec: {},
         status: {},
       })
       expect(service.getServices()).toHaveLength(1)
