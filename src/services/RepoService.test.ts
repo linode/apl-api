@@ -1,7 +1,7 @@
+import { AlreadyExists } from '../error'
 import { App, Repo, User } from '../otomi-models'
 import { RepoService } from './RepoService'
 import { TeamConfigService } from './TeamConfigService'
-import { AlreadyExists } from '../error'
 
 jest.mock('uuid', () => ({
   v4: jest.fn(() => 'mocked-uuid'),
@@ -16,7 +16,7 @@ describe('RepoService', () => {
       apps: [],
       users: [],
       teamConfig: {},
-      cluster: {},
+      cluster: { name: 'Test Cluster', provider: 'linode' },
       dns: {},
       ingress: {},
       otomi: { version: '1.0.0' },
@@ -125,8 +125,8 @@ describe('RepoService', () => {
 
   describe('Collection Functions', () => {
     test('should retrieve a collection', () => {
-      service.getRepo().cluster = { name: 'Test Cluster' }
-      expect(service.getCollection('cluster')).toEqual({ name: 'Test Cluster' })
+      service.getRepo().cluster = { name: 'Test Cluster', provider: 'linode' }
+      expect(service.getCollection('cluster')).toEqual({ name: 'Test Cluster', provider: 'linode' })
     })
 
     test('should throw an error for non-existent collection', () => {
@@ -136,7 +136,7 @@ describe('RepoService', () => {
     })
 
     test('should update an existing collection', () => {
-      service.getRepo().cluster = { name: 'Old Cluster' }
+      service.getRepo().cluster = { name: 'Old Cluster', provider: 'linode' }
       service.updateCollection('cluster', { name: 'Updated Cluster' })
       expect(service.getCollection('cluster')).toEqual({ name: 'Updated Cluster' })
     })
@@ -150,17 +150,17 @@ describe('RepoService', () => {
 
   describe('Settings', () => {
     test('should retrieve settings', () => {
-      service.getRepo().cluster = { name: 'Cluster A' }
+      service.getRepo().cluster = { name: 'Cluster A', provider: 'linode' }
       service.getRepo().dns = { provider: { linode: { apiToken: 'test' } } }
       const settings = service.getSettings()
 
-      expect(settings.cluster).toEqual({ name: 'Cluster A' })
+      expect(settings.cluster).toEqual({ name: 'Cluster A', provider: 'linode' })
       expect(settings.dns).toEqual({ provider: { linode: { apiToken: 'test' } } })
     })
 
     test('should update settings', () => {
-      service.updateSettings({ cluster: { name: 'Updated Cluster' } })
-      expect(service.getSettings().cluster).toEqual({ name: 'Updated Cluster' })
+      service.updateSettings({ cluster: { name: 'Updated Cluster', provider: 'linode' } })
+      expect(service.getSettings().cluster).toEqual({ name: 'Updated Cluster', provider: 'linode' })
     })
   })
 
