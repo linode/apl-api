@@ -238,7 +238,12 @@ export class Git {
     fileMap: FileMap,
     unsetBlankAttributes?: boolean,
   ): Promise<Promise<void>> {
-    const jsonPathsValuesPublic = jsonpath.nodes(config, fileMap.jsonPathExpression)
+    let jsonPathsValuesPublic
+    if (fileMap.kind === 'AplTeamPolicy') {
+      jsonPathsValuesPublic = jsonpath.nodes(config, '$.teamConfig.*.*')
+    } else {
+      jsonPathsValuesPublic = jsonpath.nodes(config, fileMap.jsonPathExpression)
+    }
     await Promise.all(
       jsonPathsValuesPublic.map(async (node) => {
         const nodePath = node.path

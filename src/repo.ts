@@ -53,7 +53,8 @@ export function getResourceName(fileMap: FileMap, jsonPath: jsonpath.PathCompone
     return resourceName
   }
 
-  if (fileMap.resourceGroup === 'team') {
+  // Custom workaround for teamPolicy because it is a mapItem
+  if (fileMap.resourceGroup === 'team' && fileMap.kind !== 'AplTeamPolicy') {
     resourceName = getTeamNameFromJsonPath(jsonPath)
     return resourceName
   } else {
@@ -384,11 +385,11 @@ export function getFileMaps(envDir: string): Array<FileMap> {
     {
       kind: 'AplTeamPolicy',
       envDir,
-      jsonPathExpression: '$.teamConfig.*.policies',
-      pathGlob: `${envDir}/env/teams/*/policies.yaml`,
+      jsonPathExpression: '$.teamConfig.*.policies[*]',
+      pathGlob: `${envDir}/env/teams/*/policies/*.yaml`,
       processAs: 'mapItem',
       resourceGroup: 'team',
-      resourceDir: '.',
+      resourceDir: 'policies',
       loadToSpec: true,
       v2: true,
     },
@@ -506,6 +507,13 @@ export async function loadFileToSpec(
       } else {
         ref.push(data?.spec)
       }
+    } else if (fileMap.kind === 'AplTeamPolicy') {
+      const ref: Record<string, any> = get(spec, jsonPath)
+      const policy = {
+        [data?.metadata?.name]: data?.spec,
+      }
+      const newRef = merge(cloneDeep(ref), policy)
+      set(spec, jsonPath, newRef)
     } else {
       const ref: Record<string, any> = get(spec, jsonPath)
       // TODO: Remove workaround for Team settings currently relying on id in console
@@ -563,6 +571,7 @@ export async function loadValues(envDir: string, deps = { loadToSpec }): Promise
       await deps.loadToSpec(spec, fileMap)
     }),
   )
+
   return spec
 }
 
