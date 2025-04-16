@@ -254,7 +254,7 @@ describe('Users tests', () => {
     otomiStack.git = mockDeep<Git>()
 
     jest.spyOn(otomiStack, 'getSettings').mockReturnValue({
-      cluster: { domainSuffix },
+      cluster: { name: 'default-cluster', domainSuffix, provider: 'linode' },
     })
     jest.spyOn(otomiStack, 'saveUser').mockResolvedValue()
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
