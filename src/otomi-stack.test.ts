@@ -389,9 +389,9 @@ describe('Code repositories tests', () => {
     const teamSettings = {
       kind: 'AplTeamSettingSet',
       metadata: {
-        name: 'team1',
+        name: 'demo',
         labels: {
-          'apl.io/teamId': 'team1',
+          'apl.io/teamId': 'demo',
         },
       },
       spec: {},
