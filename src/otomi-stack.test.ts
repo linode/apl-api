@@ -1,6 +1,14 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { mockDeep } from 'jest-mock-extended'
-import { AplCodeRepoResponse, AplServiceRequest, App, CodeRepo, Team, TeamConfig, User } from 'src/otomi-models'
+import {
+  AplCodeRepoResponse,
+  AplServiceRequest,
+  AplTeamSettingsRequest,
+  App,
+  CodeRepo,
+  TeamConfig,
+  User,
+} from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { loadSpec } from './app'
 import { PublicUrlExists } from './error'
@@ -141,6 +149,17 @@ describe('Data validation', () => {
   })
 
   test('should create a password when password is not specified', async () => {
+    const teamSettings = {
+      kind: 'AplTeamSettingSet',
+      metadata: {
+        name: 'team1',
+        labels: {
+          'apl.io/teamId': 'team1',
+        },
+      },
+      spec: {},
+      status: {},
+    }
     const createItemSpy = jest.spyOn(otomiStack.repoService, 'createTeamConfig').mockReturnValue({
       builds: [],
       codeRepos: [],
@@ -150,17 +169,28 @@ describe('Data validation', () => {
       backups: [],
       projects: [],
       netpols: [],
-      settings: {} as Team,
+      settings: teamSettings,
       apps: [],
       policies: [],
       workloadValues: [],
     } as TeamConfig)
     await otomiStack.createTeam({ name: 'test' }, false)
-    expect(createItemSpy.mock.calls[0][0].password).not.toEqual('')
+    expect(createItemSpy.mock.calls[0][0].spec.password).not.toEqual('')
     createItemSpy.mockRestore()
   })
 
   test('should not create a password when password is specified', async () => {
+    const teamSettings = {
+      kind: 'AplTeamSettingSet',
+      metadata: {
+        name: 'team1',
+        labels: {
+          'apl.io/teamId': 'team1',
+        },
+      },
+      spec: {},
+      status: {},
+    }
     const createItemSpy = jest.spyOn(otomiStack.repoService, 'createTeamConfig').mockReturnValue({
       builds: [],
       codeRepos: [],
@@ -170,14 +200,14 @@ describe('Data validation', () => {
       backups: [],
       projects: [],
       netpols: [],
-      settings: {} as Team,
+      settings: teamSettings,
       apps: [],
       policies: [],
       workloadValues: [],
     } as TeamConfig)
     const myPassword = 'someAwesomePassword'
     await otomiStack.createTeam({ name: 'test', password: myPassword }, false)
-    expect(createItemSpy.mock.calls[0][0].password).toEqual(myPassword)
+    expect(createItemSpy.mock.calls[0][0].spec.password).toEqual(myPassword)
     createItemSpy.mockRestore()
   })
 })
@@ -356,9 +386,19 @@ describe('Code repositories tests', () => {
     await otomiStack.init()
     await otomiStack.initRepo()
     otomiStack.git = mockDeep<Git>()
-
+    const teamSettings = {
+      kind: 'AplTeamSettingSet',
+      metadata: {
+        name: 'team1',
+        labels: {
+          'apl.io/teamId': 'team1',
+        },
+      },
+      spec: {},
+      status: {},
+    } as AplTeamSettingsRequest
     try {
-      otomiStack.repoService.createTeamConfig({ name: 'demo' })
+      otomiStack.repoService.createTeamConfig(teamSettings)
     } catch {
       // ignore
     }

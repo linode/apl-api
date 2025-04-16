@@ -2848,7 +2848,7 @@ components:
       properties:
         kind:
           type: string
-          enum: [AplTeamSettings]
+          enum: [AplTeamSettingSet]
         spec:
           $ref: 'team.yaml#/AplTeamSpec'
       required:
@@ -2857,12 +2857,12 @@ components:
     AplTeamSettingsRequest:
       allOf:
         - $ref: '#/components/schemas/AplTeamSettings'
-        - $ref: '#/components/schemas/aplMetadata'
+        - $ref: '#/components/schemas/aplTeamMetadata'
     AplTeamSettingsResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplTeamSettings'
-        - $ref: '#/components/schemas/aplMetadata'
+        - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
     AplWorkload:
       type: object
