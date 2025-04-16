@@ -1,14 +1,14 @@
 /* eslint-disable no-param-reassign */
+import { debug } from 'console'
 import { RequestHandler } from 'express'
+import { find } from 'lodash'
 import get from 'lodash/get'
 import Authz, { getTeamSelfServiceAuthz } from 'src/authz'
 import { OpenApiRequestExt, PermissionSchema, TeamSelfService } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { cleanEnv } from 'src/validators'
-import { getSessionStack } from './session'
 import { RepoService } from '../services/RepoService'
-import { debug } from 'console'
-import { find } from 'lodash'
+import { getSessionStack } from './session'
 
 const HttpMethodMapping: Record<string, string> = {
   DELETE: 'delete',
@@ -41,11 +41,8 @@ function renameKeys(obj: Record<string, any>) {
 // }
 
 export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoService: RepoService): RequestHandler {
-  const {
-    params: { teamId },
-    body,
-    user,
-  } = req
+  const { params, query, body, user } = req
+  const teamId = params?.teamId ?? query?.teamId
   const action = HttpMethodMapping[req.method]
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
   const schemaName = schema.split('/').pop() || null
