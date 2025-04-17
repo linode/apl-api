@@ -152,7 +152,7 @@ export const getAppList = (): string[] => {
   return appsSchema.enum as string[]
 }
 
-export async function initApp(inOtomiStack?: OtomiStack | undefined) {
+export async function initApp(inOtomiStack?: OtomiStack) {
   const lightship = createLightship()
   const app = express()
   const apiRoutesPath = path.resolve(__dirname, 'api')
@@ -170,12 +170,14 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     })
   }
   // Transforms the interval to minutes
-  const gitCheckVersionInterval = env.CHECK_LATEST_COMMIT_INTERVAL * 60 * 1000
-  setInterval(async function () {
-    await checkAgainstGitea()
-  }, gitCheckVersionInterval)
+  if (!env.isTest) {
+    const gitCheckVersionInterval = env.CHECK_LATEST_COMMIT_INTERVAL * 60 * 1000
+    setInterval(async function () {
+      await checkAgainstGitea()
+    }, gitCheckVersionInterval)
+  }
   let server: Server | undefined
-  if (!inOtomiStack) {
+  if (!inOtomiStack && !env.isTest) {
     // initialize full server
     const { PORT = 8080 } = process.env
     server = app
@@ -194,19 +196,20 @@ export async function initApp(inOtomiStack?: OtomiStack | undefined) {
     })
   }
 
-  // emit resource status every 10 seconds
-  const emitResourceStatusInterval = 10 * 1000
-  const errorSet = new Set()
-  setInterval(async function () {
-    try {
-      await resourceStatus(errorSet)
-    } catch (e) {
-      debug(e)
-    }
-  }, emitResourceStatusInterval)
-
-  // and register session middleware
+  if (!env.isTest) {
+    // emit resource status every 10 seconds
+    const emitResourceStatusInterval = 10 * 1000
+    const errorSet = new Set()
+    setInterval(async function () {
+      try {
+        await resourceStatus(errorSet)
+      } catch (e) {
+        debug(e)
+      }
+    }, emitResourceStatusInterval)
+  }
   app.use(sessionMiddleware(server as Server))
+  // and register session middleware
   // now we can initialize the more specific routes
   initialize({
     // @ts-ignore
