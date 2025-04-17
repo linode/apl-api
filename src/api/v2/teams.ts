@@ -1,7 +1,6 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
 import { AplTeamSettingsRequest, OpenApiRequestExt } from 'src/otomi-models'
-import { unset } from 'lodash'
 
 const debug = Debug('otomi:api:v2:teams')
 
@@ -12,7 +11,10 @@ export default function (): OperationHandlerArray {
       // we filter admin team here as it is not for console
       const teams = (otomi.getAplTeams() || [])
         .filter((t) => t.metadata.name !== 'admin')
-        .map((team) => unset(team, 'team.spec.password'))
+        .map(({ spec, ...rest }) => ({
+          ...rest,
+          spec: { ...spec, password: undefined },
+        }))
 
       res.json(teams)
     },
