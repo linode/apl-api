@@ -4,9 +4,9 @@ adminPassword:
   description: Uses `otomi.adminPassword` when left empty.
   x-secret: true
   x-acl:
-    platformAdmin: [ read-any, update-any ]
-    teamAdmin: [ ]
-    teamMember: [ ]
+    platformAdmin: [read-any, update-any]
+    teamAdmin: []
+    teamMember: []
 alerts:
   additionalProperties: false
   type: object
@@ -29,8 +29,7 @@ alerts:
         enum:
           - slack
           - msteams
-          - opsgenie
-          - email
+          # - email
           - none
         type: string
       uniqueItems: true
@@ -50,12 +49,12 @@ alerts:
           title: Critical
           type: string
         url:
-          $ref: '#/url'
+          type: string
           description: A Slack webhook URL.
           x-acl:
-            platformAdmin: [ read-any, update-any ]
-            teamAdmin: [ ]
-            teamMember: [ ]
+            platformAdmin: [read-any, update-any]
+            teamAdmin: []
+            teamMember: []
           x-secret: true
       # TODO: Enable again when form rework is done
       # required:
@@ -69,17 +68,17 @@ alerts:
           title: High prio web hook
           type: string
           x-acl:
-            platformAdmin: [ read-any, update-any ]
-            teamAdmin: [ ]
-            teamMember: [ ]
+            platformAdmin: [read-any, update-any]
+            teamAdmin: []
+            teamMember: []
           x-secret: true
         lowPrio:
           title: Low prio web hook
           type: string
           x-acl:
-            platformAdmin: [ read-any, update-any ]
-            teamAdmin: [ ]
-            teamMember: [ ]
+            platformAdmin: [read-any, update-any]
+            teamAdmin: []
+            teamMember: []
           x-secret: true
       # TODO: Enable again when form rework is done
       # required:
@@ -87,76 +86,25 @@ alerts:
       #   - lowPrio
       title: Microsoft Teams
       type: object
-    opsgenie:
-      title: OpsGenie
-      description: Configure OpsGenie endpoints for alerts. Criticals will get level P1, and non-crits P2.
-      additionalProperties: false
-      properties:
-        apiKey:
-          description: The api key to use for authn.
-          title: Api key
-          type: string
-          x-secret: true
-        url:
-          $ref: '#/url'
-          description: An opsgenie URL without the '?apiKey' part.
-        responders:
-          description: Configure one or multiple alert responders.
-          type: array
-          items:
-            type: object
-            allOf:
-              - properties:
-                  type:
-                    type: string
-                    enum:
-                      - team
-                      - user
-                      - escalation
-                      - schedule
-                    default: team
-                required: [ type ]
-              - title: Responder
-                description: An OpsGenie responder identity.
-                oneOf:
-                  - title: ID
-                    required: [ id ]
-                    properties:
-                      id:
-                        $ref: '#/wordCharacterPattern'
-                  - title: Name
-                    required: [ name ]
-                    properties:
-                      name:
-                        $ref: '#/idName'
-                  - title: Username
-                    required: [ username ]
-                    properties:
-                      username:
-                        $ref: '#/wordCharacterPattern'
-      # TODO: Enable again when form rework is done
-      # required:
-      #   - apiKey
-      #   - url
-      type: object
-    email:
-      title: Email
-      description: Configure email endpoints for alerts.
-      additionalProperties: false
-      properties:
-        critical:
-          title: Critical Events
-          $ref: '#/email'
-          description: One or more email addresses (comma separated) for critical events.
-        nonCritical:
-          title: Non-critical Events
-          $ref: '#/email'
-          description: One or more email addresses (comma separated) for non-critical events.
-      # TODO: Enable again when form rework is done
-      # required:
-      #   - critical
-      #   - nonCritical
-      type: object
+    # NOTE: keep this in case email alertReceiver gets re-enabled again
+    # email:
+    #   title: Email
+    #   description: Configure email endpoints for alerts.
+    #   additionalProperties: false
+    #   properties:
+    #     critical:
+    #       title: Critical Events
+    #       $ref: '#/email'
+    #       description: One or more email addresses (comma separated) for critical events.
+    #     nonCritical:
+    #       title: Non-critical Events
+    #       $ref: '#/email'
+    #       description: One or more email addresses (comma separated) for non-critical events.
+    #   # TODO: Enable again when form rework is done
+    #   # required:
+    #   #   - critical
+    #   #   - nonCritical
+    #   type: object
 annotation:
   type: string
   pattern: ^((.){1,253}\/)?(.){1,63}$
@@ -248,9 +196,9 @@ azureClientSecret:
   type: string
   x-secret: true
   x-acl:
-    platformAdmin: [ read-any, update-any ]
-    teamAdmin: [ ]
-    teamMember: [ ]
+    platformAdmin: [read-any, update-any]
+    teamAdmin: []
+    teamMember: []
 azureDns:
   x-hideTitle: true
   properties:
@@ -272,9 +220,9 @@ azureDns:
       type: string
       description: Azure Application Client Secret
       x-acl:
-        platformAdmin: [ read-any, update-any ]
-        teamAdmin: [ ]
-        teamMember: [ ]
+        platformAdmin: [read-any, update-any]
+        teamAdmin: []
+        teamMember: []
       x-secret: true
   required:
     - tenantId
@@ -385,35 +333,35 @@ dns:
                   description: Akamai Edgegrid API server
                   type: string
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                 accessToken:
                   title: Akamai access token
                   description: Akamai Edgegrid API access token
                   type: string
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                   x-secret: true
                 clientToken:
                   title: Akamai client token
                   description: Akamai Edgegrid API client token
                   type: string
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                   x-secret: true
                 clientSecret:
                   title: Akamai client secret
                   description: Akamai Edgegrid API client secret
                   type: string
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                   x-secret: true
               required:
                 - host
@@ -433,15 +381,15 @@ dns:
                     accessKey:
                       $ref: '#/awsAccessKey'
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                   type: object
                 region:
                   $ref: '#/awsRegion'
                 role:
                   $ref: '#/awsRole'
-              required: [ region ]
+              required: [region]
               type: object
           required:
             - aws
@@ -468,17 +416,17 @@ dns:
                 apiToken:
                   type: string
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                   x-secret: true
                 apiSecret:
                   type: string
                   description: Required when Email is set.
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                   x-secret: true
                 email:
                   $ref: '#/email'
@@ -498,9 +446,9 @@ dns:
                 apiToken:
                   type: string
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                   x-secret: true
               type: object
           required:
@@ -514,9 +462,9 @@ dns:
                 apiToken:
                   type: string
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                   x-secret: true
               type: object
           required:
@@ -531,13 +479,13 @@ dns:
                   $ref: '#/googleAccountJson'
                   description: A service account key in json format for managing a DNS zone.
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                     x-secret: true
                 project:
                   $ref: '#/googleProject'
-              required: [ project ]
+              required: [project]
               type: object
           required:
             - google
@@ -556,18 +504,18 @@ dns:
                   type: object
                   description: 'The provider config'
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                   x-secret: true
                 cert-manager:
                   title: YAML for cert-manager.
                   type: object
                   description: 'The dns01 config as provided here: https://cert-manager.io/docs/configuration/acme/dns01/'
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                   x-secret: true
               required:
                 - name
@@ -590,12 +538,12 @@ droneGit:
     clientSecretValue:
       type: string
       x-acl:
-        platformAdmin: [ read-any, update-any ]
-        teamAdmin: [ ]
-        teamMember: [ ]
+        platformAdmin: [read-any, update-any]
+        teamAdmin: []
+        teamMember: []
       x-secret: true
   type: object
-  required: [ clientID, clientSecretValue ]
+  required: [clientID, clientSecretValue]
 duration:
   description: 'Prometheus duration (See: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#configuration-file)'
   pattern: '((([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?|0)'
@@ -775,9 +723,9 @@ kms:
                 privateKey:
                   $ref: '#/agePrivateKey'
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
               required:
                 - publicKey
                 - privateKey
@@ -802,15 +750,15 @@ kms:
                 accessKey:
                   $ref: '#/awsAccessKey'
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                 secretKey:
                   $ref: '#/awsSecretKey'
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                 region:
                   $ref: '#/awsRegion'
               required:
@@ -838,15 +786,15 @@ kms:
                 clientId:
                   $ref: '#/azureClientId'
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                 clientSecret:
                   $ref: '#/azureClientSecret'
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                 tenantId:
                   $ref: '#/azureTenantId'
               required:
@@ -874,9 +822,9 @@ kms:
                 accountJson:
                   $ref: '#/googleAccountJson'
                   x-acl:
-                    platformAdmin: [ read-any, update-any ]
-                    teamAdmin: [ ]
-                    teamMember: [ ]
+                    platformAdmin: [read-any, update-any]
+                    teamAdmin: []
+                    teamMember: []
                 project:
                   $ref: '#/googleProject'
               required:
@@ -991,9 +939,9 @@ rawValues:
   description: 'May define value overrides for a chart. WARNING: these values currently have no schema and will not be validated.'
   type: object
   x-acl:
-    platformAdmin: [ read-any, update-any ]
-    teamAdmin: [ ]
-    teamMember: [ ]
+    platformAdmin: [read-any, update-any]
+    teamAdmin: []
+    teamMember: []
 replicas:
   type: integer
   title: Number of replicas
@@ -1045,6 +993,7 @@ resourceQuota:
       value: '50'
     - name: services.loadbalancers
       value: '0'
+
 runAsNonRoot:
   description: Will prevent the container from starting with UID 0.
   title: Run as non-root
@@ -1136,7 +1085,7 @@ secretMounts:
       path:
         $ref: '#/path'
     type: object
-    required: [ name, path ]
+    required: [name, path]
 s3Url:
   type: string
   description: An url to an AWS S3 bucket.
