@@ -369,7 +369,7 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       resourceGroup: 'team',
       resourceDir: '.',
       loadToSpec: true,
-      v2: false,
+      v2: true,
     },
     {
       kind: 'AplTeamTool',
@@ -517,11 +517,16 @@ export async function loadFileToSpec(
     } else {
       const ref: Record<string, any> = get(spec, jsonPath)
       // TODO: Remove workaround for Team settings currently relying on id in console
+      let newRef
       if (fileMap.kind === 'AplTeamSettingSet') {
         data.spec.name = data.metadata?.name
       }
+      if (fileMap.v2) {
+        newRef = merge(cloneDeep(ref), data)
+      } else {
+        newRef = merge(cloneDeep(ref), data?.spec)
+      }
       // Decrypted secrets may need to be merged with plain text specs
-      const newRef = merge(cloneDeep(ref), data?.spec)
       set(spec, jsonPath, newRef)
     }
   } catch (e) {

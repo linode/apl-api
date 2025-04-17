@@ -2432,8 +2432,7 @@ export default class OtomiStack {
   async saveTeam(team: AplTeamSettingsResponse, secretPaths?: string[]): Promise<void> {
     const { kind, metadata } = team
     debug(`Saving team ${metadata.name}`)
-    const configKey = this.getConfigKey(kind)
-    const repo = this.createTeamConfigInRepo(team.metadata.name, configKey, team)
+    const repo = this.createTeamConfigInRepo(team.metadata.name, 'settings', team)
     const fileMap = getFileMaps('').find((fm) => fm.kind === kind)!
     await this.git.saveConfigWithSecrets(repo, secretPaths ?? this.getSecretPaths(), fileMap)
   }
