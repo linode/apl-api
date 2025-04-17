@@ -2,16 +2,7 @@
 import { Ability, Subject, subject } from '@casl/ability'
 import Debug from 'debug'
 import { each, forIn, get, isEmpty, isEqual, omit, set } from 'lodash'
-import {
-  Acl,
-  AclAction,
-  OpenAPIDoc,
-  PermissionSchema,
-  Schema,
-  SessionUser,
-  TeamAuthz,
-  UserAuthz,
-} from 'src/otomi-models'
+import { Acl, AclAction, OpenAPIDoc, Schema, SessionUser, TeamAuthz, UserAuthz } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { extract, flattenObject } from 'src/utils'
 
@@ -72,9 +63,6 @@ export function isValidAuthzSpec(apiDoc: OpenAPIDoc): boolean {
   const { schemas } = apiDoc.components
   forIn(schemas, (schema: Schema, schemaName: string) => {
     debug(`loading rules for ${schemaName} schema`)
-    // @ts-ignore
-    // eslint-disable-next-line no-param-reassign
-
     if (schema.type === 'array') {
       if (schema['x-acl']) {
         err.concat(
@@ -128,7 +116,6 @@ export const loadSpecRules = (apiDoc: OpenAPIDoc): any => {
   const { schemas } = apiDoc.components
 
   Object.keys(schemas).forEach((schemaName: string) => {
-    // debug(`loading rules for ${schemaName} schema`)
     const schema: Schema = schemas[schemaName]
 
     if (schema.type === 'array') return
@@ -146,9 +133,8 @@ export const loadSpecRules = (apiDoc: OpenAPIDoc): any => {
 
 export default class Authz {
   user: SessionUser
-
   specRules: Record<string, Schema>
-
+  // TODO: replace Ability as it's deprecated
   rbac: Ability
 
   constructor(apiDoc: OpenAPIDoc) {
@@ -189,10 +175,7 @@ export default class Authz {
           // actions like *-any imply that * is also allowed, so exclude those from inversion
           const normalized = _actions.map((a) => (a.includes('-any') ? a.slice(0, -4) : a))
           allowedAttributeCrudActions
-            .filter((a) => {
-              const cond = !(normalized.includes(a) || _actions.includes(`${a}-any`))
-              return cond
-            })
+            .filter((a) => !(normalized.includes(a) || _actions.includes(`${a}-any`)))
             .forEach(createRule(schemaName, prop, true))
           if (obj.properties) createRules(`${schemaName}.${prop}`, obj)
         })
@@ -226,19 +209,18 @@ export default class Authz {
     // also check if we are denied by lack of self service
     const deniedSelfServiceAttributes = get(
       this.user.authz,
-      `${teamId}.deniedAttributes.${schemaName.toLowerCase()}`,
+      `${teamId}.deniedAttributes.teamMembers`,
       [],
     ) as Array<string>
-    // the two above denied lists should be mutually exclusive, because a schema design should not
-    // have have both self service as well as acl set for the same property, so we can merge the result
+    // merge denied attributes from both role-based and self-service restrictions
     const deniedAttributes = [...deniedRoleAttributes, ...deniedSelfServiceAttributes]
 
     deniedAttributes.forEach((path) => {
       const val = get(body, path)
       const origVal = get(dataOrig, path)
-      // undefined value expected for forbidden props, just put back before save
+      // undefined value expected for forbidden props, so put back original before save
       if (val === undefined) set(body, path, origVal)
-      // value provided which shouldn't happen
+      // if a value is provided which is not allowed, mark it as violated
       else if (!isEqual(val, origVal)) violatedAttributes.push(path)
     })
     return violatedAttributes
@@ -260,32 +242,46 @@ export default class Authz {
     return body.length !== undefined ? ret : ret[0]
   }
 
-  hasSelfService = (teamId: string, schema, attribute: string) => {
-    const deniedAttributes = get(this.user.authz, `${teamId}.deniedAttributes.${schema}`, []) as Array<string>
-    if (deniedAttributes.includes(attribute)) return false
-    return true
+  hasSelfService = (teamId: string, attribute: string): boolean => {
+    const deniedAttributes = get(this.user.authz, `${teamId}.deniedAttributes.teamMembers`, []) as Array<string>
+    return !deniedAttributes.includes(attribute)
   }
 }
 
-export const getTeamSelfServiceAuthz = (
-  teams: Array<string>,
-  schema: PermissionSchema,
-  otomi: OtomiStack,
-): UserAuthz => {
+export const getTeamSelfServiceAuthz = (teams: Array<string>, otomi: OtomiStack): UserAuthz => {
   const permissionMap: UserAuthz = {}
 
   teams.forEach((teamId) => {
-    const authz: TeamAuthz = {} as TeamAuthz
-    Object.keys(schema.properties).forEach((propName) => {
-      const possiblePermissions = schema.properties[propName].items.enum
-      set(authz, `deniedAttributes.${propName}`, [])
-      authz.deniedAttributes[propName] = possiblePermissions.filter((name) => {
-        const flags = get(otomi.getTeamSelfServiceFlags(teamId), propName, [])
-        return !flags.includes(name)
+    // Initialize the team authorization object.
+    const authz: TeamAuthz = { deniedAttributes: {} }
+
+    // Retrieve the selfService flags for the team.
+    // Expected shape: { teamMembers: { createServices: boolean, editSecurityPolicies: boolean, ... } }
+    const selfServiceFlags = otomi.getTeamSelfServiceFlags(teamId)?.teamMembers
+
+    // Initialize deniedAttributes for teamMembers as an empty array.
+    authz.deniedAttributes.teamMembers = []
+
+    if (selfServiceFlags) {
+      // For each permission, if its flag is false then add it to the denied list.
+      Object.entries(selfServiceFlags).forEach(([permissionName, allowed]) => {
+        if (!allowed) {
+          authz.deniedAttributes.teamMembers.push(permissionName)
+        }
       })
-      if (propName === 'team') authz.deniedAttributes.team.push('selfService')
-    })
+    } else {
+      // Fallback: if no selfService data is found, deny all permissions.
+      authz.deniedAttributes.teamMembers = [
+        'createServices',
+        'editSecurityPolicies',
+        'useCloudShell',
+        'downloadKubeconfig',
+        'downloadDockerLogin',
+      ]
+    }
+
     permissionMap[teamId] = authz
   })
+
   return permissionMap
 }
