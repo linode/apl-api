@@ -1411,21 +1411,23 @@ export default class OtomiStack {
     return internalRepoUrls
   }
 
-  getDashboard(teamId: string): Array<any> {
-    const projects = this.repoService.getTeamConfigService(teamId).getProjects()
-    const builds = this.repoService.getTeamConfigService(teamId).getBuilds()
-    const workloads = this.repoService.getTeamConfigService(teamId).getWorkloads()
-    const services = this.repoService.getTeamConfigService(teamId).getServices()
-    const secrets = this.repoService.getTeamConfigService(teamId).getSealedSecrets()
-    const netpols = this.repoService.getTeamConfigService(teamId).getNetpols()
+  getDashboard(teamName: string): Array<any> {
+    const projects = teamName ? this.repoService.getTeamConfigService(teamName).getProjects() : this.getAllProjects()
+    const builds = teamName ? this.repoService.getTeamConfigService(teamName).getBuilds() : this.getAllBuilds()
+    const workloads = teamName ? this.repoService.getTeamConfigService(teamName).getWorkloads() : this.getAllWorkloads()
+    const services = teamName ? this.repoService.getTeamConfigService(teamName).getServices() : this.getAllServices()
+    const secrets = teamName
+      ? this.repoService.getTeamConfigService(teamName).getSealedSecrets()
+      : this.getAllSealedSecrets()
+    const netpols = teamName ? this.repoService.getTeamConfigService(teamName).getNetpols() : this.getAllNetpols()
 
     return [
       { name: 'projects', count: projects?.length },
-      { name: 'builds', count: builds?.length },
+      { name: 'container-images', count: builds?.length },
       { name: 'workloads', count: workloads?.length },
       { name: 'services', count: services?.length },
-      { name: 'sealed secrets', count: secrets?.length },
-      { name: 'network policies', count: netpols?.length },
+      { name: 'sealed-secrets', count: secrets?.length },
+      { name: 'network-policies', count: netpols?.length },
     ]
   }
 
