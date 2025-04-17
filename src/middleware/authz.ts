@@ -41,11 +41,8 @@ function renameKeys(obj: Record<string, any>) {
 // }
 
 export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoService: RepoService): RequestHandler {
-  const {
-    params: { teamId },
-    body,
-    user,
-  } = req
+  const { params, query, body, user } = req
+  const teamId = params?.teamId ?? query?.teamId
   const action = HttpMethodMapping[req.method]
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
   const schemaName = schema.split('/').pop() || null
