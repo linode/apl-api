@@ -643,7 +643,13 @@ export default class OtomiStack {
   }
 
   getAplTeams(): AplTeamSettingsResponse[] {
-    return this.repoService.getAllTeamSettings()
+    return this.repoService
+      .getAllTeamSettings()
+      .filter((t) => t.metadata.name !== 'admin')
+      .map(({ spec, ...rest }) => ({
+        ...rest,
+        spec: { ...spec, password: undefined },
+      }))
   }
 
   getTeamSelfServiceFlags(id: string): TeamSelfService {

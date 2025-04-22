@@ -516,11 +516,7 @@ export async function loadFileToSpec(
       set(spec, jsonPath, newRef)
     } else {
       const ref: Record<string, any> = get(spec, jsonPath)
-      // TODO: Remove workaround for Team settings currently relying on id in console
       let newRef
-      if (fileMap.kind === 'AplTeamSettingSet') {
-        data.spec.name = data.metadata?.name
-      }
       if (fileMap.v2) {
         newRef = merge(cloneDeep(ref), data)
       } else {

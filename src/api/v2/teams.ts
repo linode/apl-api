@@ -9,12 +9,7 @@ export default function (): OperationHandlerArray {
     ({ otomi }: OpenApiRequestExt, res): void => {
       debug('getTeams')
       // we filter admin team here as it is not for console
-      const teams = (otomi.getAplTeams() || [])
-        .filter((t) => t.metadata.name !== 'admin')
-        .map(({ spec, ...rest }) => ({
-          ...rest,
-          spec: { ...spec, password: undefined },
-        }))
+      const teams = otomi.getAplTeams() || []
 
       res.json(teams)
     },

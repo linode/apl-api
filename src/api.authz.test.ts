@@ -23,10 +23,10 @@ const otherTeamId = 'team2'
 jest.mock('./k8s_operations')
 jest.mock('./utils/sealedSecretUtils')
 beforeAll(async () => {
-  // jest.spyOn(console, 'log').mockImplementation(() => {})
-  // jest.spyOn(console, 'debug').mockImplementation(() => {})
-  // jest.spyOn(console, 'info').mockImplementation(() => {})
-  // jest.spyOn(console, 'warn').mockImplementation(() => {})
+  jest.spyOn(console, 'log').mockImplementation(() => {})
+  jest.spyOn(console, 'debug').mockImplementation(() => {})
+  jest.spyOn(console, 'info').mockImplementation(() => {})
+  jest.spyOn(console, 'warn').mockImplementation(() => {})
 
   jest.spyOn(getValuesSchemaModule, 'getValuesSchema').mockResolvedValue({})
 
