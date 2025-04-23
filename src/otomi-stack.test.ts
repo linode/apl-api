@@ -65,7 +65,6 @@ describe('Data validation', () => {
           },
         },
         spec: {
-          type: 'public',
           domain: 'b.a.com',
         },
         status: {},
@@ -79,7 +78,6 @@ describe('Data validation', () => {
           },
         },
         spec: {
-          type: 'public',
           domain: 'b.a.com',
           paths: ['/test/'],
         },
@@ -98,7 +96,7 @@ describe('Data validation', () => {
     const svc: AplServiceRequest = {
       kind: 'AplTeamService',
       metadata: { name: 'svc' },
-      spec: { type: 'public', domain: 'b.a.com' },
+      spec: { domain: 'b.a.com' },
     }
     expect(() => otomiStack.checkPublicUrlInUse(teamId, svc)).toThrow(new PublicUrlExists())
   })
@@ -107,7 +105,7 @@ describe('Data validation', () => {
     const svc: AplServiceRequest = {
       kind: 'AplTeamService',
       metadata: { name: 'svc' },
-      spec: { type: 'public', domain: 'b.a.com', paths: ['/test/'] },
+      spec: { domain: 'b.a.com', paths: ['/test/'] },
     }
     expect(() => otomiStack.checkPublicUrlInUse(teamId, svc)).toThrow(new PublicUrlExists())
   })
@@ -116,7 +114,7 @@ describe('Data validation', () => {
     const svc: AplServiceRequest = {
       kind: 'AplTeamService',
       metadata: { name: 'svc' },
-      spec: { type: 'public', domain: 'b.a.com', paths: ['/bla'] },
+      spec: { domain: 'b.a.com', paths: ['/bla'] },
     }
     expect(() => otomiStack.checkPublicUrlInUse(teamId, svc)).not.toThrow()
   })
@@ -125,7 +123,7 @@ describe('Data validation', () => {
     const svc: AplServiceRequest = {
       kind: 'AplTeamService',
       metadata: { name: 'svc' },
-      spec: { type: 'cluster' },
+      spec: {},
     }
     expect(() => otomiStack.checkPublicUrlInUse(teamId, svc)).not.toThrow()
   })
@@ -134,7 +132,7 @@ describe('Data validation', () => {
     const svc: AplServiceRequest = {
       kind: 'AplTeamService',
       metadata: { name: 'svc' },
-      spec: { type: 'public', domain: 'c.a.com' },
+      spec: { domain: 'c.a.com' },
     }
 
     expect(() => otomiStack.checkPublicUrlInUse(teamId, svc)).not.toThrow()
