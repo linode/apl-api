@@ -34,7 +34,8 @@ jobs:
         run: |
           cd apl-core
           npm install
-          npm run server
+          npm run server > /dev/null 2>&1 &
       - name: start api
         run: |
+          ls
           npm run dev
