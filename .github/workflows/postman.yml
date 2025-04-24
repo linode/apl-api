@@ -33,7 +33,7 @@ jobs:
       - name: Create Git repo
         run: |
           readonly env_dir="$HOME/workspace/linode/values-ofld1"
-          readonly apl_core_test_fixtures="$HOME/work/apl-api/apl-api/apl-core"
+          readonly apl_core_test_fixtures="$HOME/work/apl-api/apl-api/apl-core/tests/fixtures"
           mkdir -p "$(dirname $env_dir)"
           cp -R $apl_core_test_fixtures $env_dir
           cd $env_dir
