@@ -38,7 +38,7 @@ jobs:
           cp -R $apl_core_test_fixtures $env_dir
           cd $env_dir
           git init
-          git checkout -b main
+          git checkout main
           git add .
           git commit -a -m 'init'
           # Mark this repo as bare so the local_env_dir can push to env_dir repo
