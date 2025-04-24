@@ -32,9 +32,9 @@ jobs:
           path: apl-core
       - name: start core
         run: |
-          ls
           cd apl-core
-          npm run server > /dev/null 2>&1 &
+          npm install
+          npm run server
       - name: start api
         run: |
           npm run dev
