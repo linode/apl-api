@@ -38,5 +38,5 @@ jobs:
       - name: start api
         run: |
           npm install
-          mv .env.sample .env
+          cp .env.sample .env
           npm run dev
