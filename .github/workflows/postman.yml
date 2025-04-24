@@ -37,5 +37,5 @@ jobs:
           npm run server > /dev/null 2>&1 &
       - name: start api
         run: |
-          ls
+          npm install
           npm run dev
