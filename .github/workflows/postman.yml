@@ -44,6 +44,7 @@ jobs:
           # Mark this repo as bare so the local_env_dir can push to env_dir repo
           git config --bool core.bare true
           echo "The values bare repo has been successfully set up"
+          ls
       - name: Start core server
         run: |
           cd apl-core
