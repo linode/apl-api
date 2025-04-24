@@ -30,12 +30,26 @@ jobs:
         with:
           repository: linode/apl-core
           path: apl-core
-      - name: start core
+      - name: Create Git repo
+        run: |
+          readonly env_dir="$HOME/workspace/linode/values-ofld1"
+          readonly apl_core_test_fixtures="$HOME/apl-core/tests/fixtures"
+          mkdir -p "$(dirname $env_dir)"
+          cp -R $apl_core_test_fixtures $env_dir
+          cd $env_dir
+          git init
+          git checkout -b main
+          git add .
+          git commit -a -m 'init'
+          # Mark this repo as bare so the local_env_dir can push to env_dir repo
+          git config --bool core.bare true
+          echo "The values bare repo has been successfully set up"
+      - name: Start core server
         run: |
           cd apl-core
           npm install
           npm run server > /dev/null 2>&1 &
-      - name: start api
+      - name: Start api
         run: |
           npm install
           cp .env.sample .env
