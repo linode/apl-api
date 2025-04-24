@@ -34,7 +34,8 @@ jobs:
 
       - name: start core
         run: |
-          cd apl-core
+          ls
+          cd linode/apl-core
           npm run server > /dev/null 2>&1 &
       - name: start api
         run: |
