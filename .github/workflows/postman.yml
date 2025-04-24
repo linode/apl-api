@@ -51,9 +51,25 @@ jobs:
         run: |
           cd apl-core
           npm install
-          npm run server > /dev/null 2>&1 &
+          npm run server > $GITHUB_WORKSPACE/core.log 2>&1 &
       - name: Start api
         run: |
           npm install
           cp .env.sample .env
-          npm run dev
+          npm run dev > $GITHUB_WORKSPACE/api.log 2>&1 &
+      - name: Wait for api
+        run: |
+          echo "Waiting for API to be ready..."
+          while ! curl -s -f -o /dev/null http://localhost:8080/v2/builds; do
+            sleep 10
+          done
+          echo "API is ready!"
+      - name: Show logs
+        run: |
+          echo "::group::Core Server Logs"
+          cat $GITHUB_WORKSPACE/core.log || echo "No core log found"
+          echo "::endgroup::"
+          
+          echo "::group::API Logs"
+          cat $GITHUB_WORKSPACE/api.log || echo "No api log found"
+          echo "::endgroup::"
