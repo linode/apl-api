@@ -1,4 +1,5 @@
 // Mock UUID to generate predictable values
+import { AlreadyExists, NotExistError } from '../error'
 import {
   AplBackupRequest,
   AplBuildRequest,
@@ -11,7 +12,6 @@ import {
   TeamConfig,
 } from '../otomi-models'
 import { TeamConfigService } from './TeamConfigService'
-import { AlreadyExists, NotExistError } from '../error'
 
 jest.mock('uuid', () => ({
   v4: jest.fn(() => 'mocked-uuid'),
@@ -154,7 +154,7 @@ describe('TeamConfigService', () => {
     const serviceData: AplServiceRequest = {
       kind: 'AplTeamService',
       metadata: { name: 'TestService' },
-      spec: { type: 'public' },
+      spec: {},
     }
     test('should create a service', () => {
       const createdService = service.createService(serviceData)
@@ -167,7 +167,7 @@ describe('TeamConfigService', () => {
             'apl.io/teamId': 'team1',
           },
         },
-        spec: { type: 'public' },
+        spec: {},
         status: {},
       })
       expect(service.getServices()).toHaveLength(1)
@@ -459,7 +459,7 @@ describe('TeamConfigService', () => {
       service.createService({
         kind: 'AplTeamService',
         metadata: { name: 'ExistingService' },
-        spec: { type: 'public' },
+        spec: {},
       })
       expect(service.doesProjectNameExist('ExistingService')).toBe(true)
     })
@@ -478,7 +478,7 @@ describe('TeamConfigService', () => {
       service.createService({
         kind: 'AplTeamService',
         metadata: { name: 'SomeService' },
-        spec: { type: 'public' },
+        spec: {},
       })
       expect(service.doesProjectNameExist('NonExistentProject')).toBe(false)
     })
