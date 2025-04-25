@@ -52,11 +52,11 @@ jobs:
           cd apl-core
           npm install
           npm run server > $GITHUB_WORKSPACE/core.log 2>&1 &
-      - name: Start api
-        run: |
-          npm install
-          cp .env.sample .env
-          RUNNER_TRACKING_ID="" && npm run dev > $GITHUB_WORKSPACE/api.log 2>&1 &
+#      - name: Start api
+#        run: |
+#          npm install
+#          cp .env.sample .env
+#          RUNNER_TRACKING_ID="" && npm run dev > $GITHUB_WORKSPACE/api.log 2>&1 &
       - uses: JarvusInnovations/background-action@v1
         name: Bootstrap System Under Test (SUT)
         with:
