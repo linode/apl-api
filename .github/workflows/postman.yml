@@ -73,13 +73,11 @@ jobs:
       - name: Run API tests
         run: |
           postman collection run "44183872-d3b3cdc9-ba1f-4a71-bcba-6a3cb3dc9643" -e "43715313-d380e919-5142-44e6-b52c-02f8b04da8fa"
-      - name: Show logs
+      - name: Upload logs
         if: always()
-        run: |
-          echo "::group::Core Server Logs"
-          cat $GITHUB_WORKSPACE/core.log || echo "No core log found"
-          echo "::endgroup::"
-          
-          echo "::group::API Logs"
-          cat $GITHUB_WORKSPACE/api.log || echo "No api log found"
-          echo "::endgroup::"
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-logs
+          path: |
+            core.log
+            api.log
