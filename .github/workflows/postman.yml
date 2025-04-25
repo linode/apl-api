@@ -57,13 +57,35 @@ jobs:
           npm install
           cp .env.sample .env
           RUNNER_TRACKING_ID="" && npm run dev > $GITHUB_WORKSPACE/api.log 2>&1 &
-      - name: Wait for api
-        run: |
-          echo "Waiting for API to be ready..."
-          while ! curl -s -f -o /dev/null http://localhost:8080/v2/builds; do
-            sleep 10
-          done
-          echo "API is ready!"
+      - uses: JarvusInnovations/background-action@v1
+        name: Bootstrap System Under Test (SUT)
+        with:
+          run: |
+            npm run dev
+          # your step-level and job-level environment variables are available to your commands as-is
+          # npm install will count towards the wait-for timeout
+          # whenever possible, move unrelated scripts to a different step
+          # to background multiple processes: add & to the end of the command
+
+          wait-on: |
+            http://localhost:8080/v2/builds
+          # IMPORTANT: to use environment variables in wait-on, you must use this form: ${{ env.VAR }}
+          # See wait-on section below for all resource types and prefixes
+
+          tail: true # true = stderr,stdout
+          # This will allow you to monitor the progress live
+
+          wait-for: 5m
+
+          log-output-if: failure
+          # failure = exit-early or timeout
+#      - name: Wait for api
+#        run: |
+#          echo "Waiting for API to be ready..."
+#          while ! curl -s -f -o /dev/null http://localhost:8080/v2/builds; do
+#            sleep 10
+#          done
+#          echo "API is ready!"
       - name: Install Postman CLI
         run: |
           curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
