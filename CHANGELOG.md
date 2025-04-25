@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.3.0](https://github.com/redkubes/otomi-api/compare/v4.2.0...v4.3.0) (2025-04-25)
+
+
+### Features
+
+* add coverage report ([#688](https://github.com/redkubes/otomi-api/issues/688)) ([e39a4ee](https://github.com/redkubes/otomi-api/commit/e39a4ee2eb78dd13997fd2a8432c21cc2c0b694f))
+* new build page ([#678](https://github.com/redkubes/otomi-api/issues/678)) ([a075c4f](https://github.com/redkubes/otomi-api/commit/a075c4f22e1180c1aaa2fcc77d300f41849743a9))
+* remove id, teamId, and name from resource spec ([#689](https://github.com/redkubes/otomi-api/issues/689)) ([0add432](https://github.com/redkubes/otomi-api/commit/0add43211b3ac9ac525c02c56eac7edbfe6de668))
+* service page using form components ([#697](https://github.com/redkubes/otomi-api/issues/697)) ([a94061e](https://github.com/redkubes/otomi-api/commit/a94061ece618fff5b871f845349ff74ea9bb41be))
+* static team settings page  ([#672](https://github.com/redkubes/otomi-api/issues/672)) ([e4b1756](https://github.com/redkubes/otomi-api/commit/e4b175689487c57874d05a647fa17d1d3260a4ee))
+* update repo to work with single policy file ([#693](https://github.com/redkubes/otomi-api/issues/693)) ([670450f](https://github.com/redkubes/otomi-api/commit/670450f11ffc223cb2ce842329d41f09ce5267df))
+
+
+### Bug Fixes
+
+* cluster schema ([#694](https://github.com/redkubes/otomi-api/issues/694)) ([ce30a4c](https://github.com/redkubes/otomi-api/commit/ce30a4c5937b504a437b7848a3a98f1634d16226))
+* do not drop name field from platform manifests ([#705](https://github.com/redkubes/otomi-api/issues/705)) ([c6dc108](https://github.com/redkubes/otomi-api/commit/c6dc10859a67a23edc01d9810b82097dce7719bf))
+* get the teamId from the query in the auth middleware ([#698](https://github.com/redkubes/otomi-api/issues/698)) ([925fbcc](https://github.com/redkubes/otomi-api/commit/925fbccb0a6ea0d5e6c34e905d399cef8e049348))
+* keep resourceQuota in expected format ([#691](https://github.com/redkubes/otomi-api/issues/691)) ([8badf5c](https://github.com/redkubes/otomi-api/commit/8badf5c838b0136f95a3b847fd210686dad88828))
+* pass down createdUser down to rootstack ([#686](https://github.com/redkubes/otomi-api/issues/686)) ([bbc2821](https://github.com/redkubes/otomi-api/commit/bbc28212ce22f736fba45e2cba62a1c6d32af42e))
+* redux store generation ([#687](https://github.com/redkubes/otomi-api/issues/687)) ([72ad046](https://github.com/redkubes/otomi-api/commit/72ad04603f5d9083be5c37f904653de884df1c8c))
+* replace git passwords from errors and logs ([#683](https://github.com/redkubes/otomi-api/issues/683)) ([3676f5e](https://github.com/redkubes/otomi-api/commit/3676f5edc9be89877640bff98949975653b64aa2))
+* workaround for team id needed in console ([#692](https://github.com/redkubes/otomi-api/issues/692)) ([2328665](https://github.com/redkubes/otomi-api/commit/2328665434cc6f6ad85cf4d667a29104b6907bd3))
+
+
+### Others
+
+* bump express-openapi from 9.3.1 to 11.1.0 ([#609](https://github.com/redkubes/otomi-api/issues/609)) ([48a3cef](https://github.com/redkubes/otomi-api/commit/48a3cef50bb9c7f9e53076d5d1dab98a1d7c974f))
+
 ## [4.2.0](https://github.com/redkubes/otomi-api/compare/v4.0.0...v4.2.0) (2025-04-07)
 
 
