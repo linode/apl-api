@@ -69,8 +69,8 @@ jobs:
           # whenever possible, move unrelated scripts to a different step
           # to background multiple processes: add & to the end of the command
 
-          wait-on: |
-            http://localhost:8080/v2/builds
+#          wait-on: |
+#            http://localhost:8080/v2/builds
           # IMPORTANT: to use environment variables in wait-on, you must use this form: ${{ env.VAR }}
           # See wait-on section below for all resource types and prefixes
 
