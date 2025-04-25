@@ -72,7 +72,7 @@ jobs:
 
       - name: Run API tests
         run: |
-          postman collection run "44183872-d3b3cdc9-ba1f-4a71-bcba-6a3cb3dc9643" -e "43715313-d380e919-5142-44e6-b52c-02f8b04da8fa"
+          postman collection run "44183872-d3b3cdc9-ba1f-4a71-bcba-6a3cb3dc9643" -e "43715313-d380e919-5142-44e6-b52c-02f8b04da8fa"  -i "44183872-cb769d53-ad67-4f87-9d74-eabf11adec74"
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
