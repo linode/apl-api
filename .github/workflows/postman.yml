@@ -47,12 +47,6 @@ jobs:
           git config --bool core.bare true
           echo "The values bare repo has been successfully set up"
           ls
-      - name: Install Postman CLI
-        run: |
-          curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
-      - name: Login to Postman CLI
-        run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
-
       - name: Start core server
         run: |
           cd apl-core
@@ -62,14 +56,22 @@ jobs:
         run: |
           npm install
           cp .env.sample .env
-          npm run dev > $GITHUB_WORKSPACE/api.log 2>&1 &
-
+          RUNNER_TRACKING_ID="" && (nohup npm dev&)
+      - name: Wait for api
+        run: |
           echo "Waiting for API to be ready..."
           while ! curl -s -f -o /dev/null http://localhost:8080/v2/builds; do
             sleep 10
           done
           echo "API is ready!"
+      - name: Install Postman CLI
+        run: |
+          curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
+      - name: Login to Postman CLI
+        run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
 
+      - name: Run API tests
+        run: |
           postman collection run "44183872-d3b3cdc9-ba1f-4a71-bcba-6a3cb3dc9643" -e "43715313-d380e919-5142-44e6-b52c-02f8b04da8fa"  -i "44183872-cb769d53-ad67-4f87-9d74-eabf11adec74"
       - name: Upload logs
         if: always()
