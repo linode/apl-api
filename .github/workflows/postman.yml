@@ -52,51 +52,27 @@ jobs:
           cd apl-core
           npm install
           npm run server > $GITHUB_WORKSPACE/core.log 2>&1 &
-#      - name: Start api
-#        run: |
-#          npm install
-#          cp .env.sample .env
-#          RUNNER_TRACKING_ID="" && npm run dev > $GITHUB_WORKSPACE/api.log 2>&1 &
-      - uses: JarvusInnovations/background-action@v1
-        name: Bootstrap System Under Test (SUT)
-        with:
-          run: |
-            npm install
-            cp .env.sample .env
-            npm run dev
-          # your step-level and job-level environment variables are available to your commands as-is
-          # npm install will count towards the wait-for timeout
-          # whenever possible, move unrelated scripts to a different step
-          # to background multiple processes: add & to the end of the command
-
-          wait-on: |
-            http://localhost:8080
-          # IMPORTANT: to use environment variables in wait-on, you must use this form: ${{ env.VAR }}
-          # See wait-on section below for all resource types and prefixes
-
-          tail: true # true = stderr,stdout
-          # This will allow you to monitor the progress live
-
-          wait-for: 5m
-
-          log-output-if: failure
-          # failure = exit-early or timeout
-#      - name: Wait for api
-#        run: |
-#          echo "Waiting for API to be ready..."
-#          while ! curl -s -f -o /dev/null http://localhost:8080/v2/builds; do
-#            sleep 10
-#          done
-#          echo "API is ready!"
+      - name: Start api
+        run: |
+          npm install
+          cp .env.sample .env
+          npm run dev > $GITHUB_WORKSPACE/api.log 2>&1 &
+      - name: Wait for api
+        run: |
+          echo "Waiting for API to be ready..."
+          while ! curl -s -f -o /dev/null http://localhost:8080/v2/builds; do
+            sleep 10
+          done
+          echo "API is ready!"
       - name: Install Postman CLI
         run: |
           curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
       - name: Login to Postman CLI
         run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
 
-      - name: Run API tests
-        run: |
-          postman collection run "44183872-d3b3cdc9-ba1f-4a71-bcba-6a3cb3dc9643" -e "43715313-d380e919-5142-44e6-b52c-02f8b04da8fa"  -i "44183872-cb769d53-ad67-4f87-9d74-eabf11adec74"
+#      - name: Run API tests
+#        run: |
+#          postman collection run "44183872-d3b3cdc9-ba1f-4a71-bcba-6a3cb3dc9643" -e "43715313-d380e919-5142-44e6-b52c-02f8b04da8fa"  -i "44183872-cb769d53-ad67-4f87-9d74-eabf11adec74"
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
