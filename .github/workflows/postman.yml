@@ -56,7 +56,7 @@ jobs:
         run: |
           npm install
           cp .env.sample .env
-          RUNNER_TRACKING_ID="" && (nohup npm dev&)
+          RUNNER_TRACKING_ID="" && (nohup npm run dev&)
       - name: Wait for api
         run: |
           echo "Waiting for API to be ready..."
