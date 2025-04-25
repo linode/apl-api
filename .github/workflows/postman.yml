@@ -59,11 +59,20 @@ jobs:
           npm run dev > $GITHUB_WORKSPACE/api.log 2>&1 &
       - name: Wait for api
         run: |
-          echo "Waiting for API to be ready..."
-          while ! curl -s -f -o /dev/null http://localhost:8080/v2/builds; do
+          echo "Pinging API 30 times every 10 seconds..."
+          for i in {1..30}; do
+            echo "Ping $i:"
+            curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/v2/builds || echo "Request failed"
             sleep 10
           done
-          echo "API is ready!"
+          echo "Done pinging API."
+#      - name: Wait for api
+#        run: |
+#          echo "Waiting for API to be ready..."
+#          while ! curl -s -f -o /dev/null http://localhost:8080/v2/builds; do
+#            sleep 10
+#          done
+#          echo "API is ready!"
       - name: Install Postman CLI
         run: |
           curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
