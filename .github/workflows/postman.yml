@@ -2,10 +2,8 @@ name: 'postman'
 on:
   pull_request:
     branches:
-      - main
-  push:
-    branches: [ '*' ]  # All branches for direct commits
-  workflow_dispatch:  # Manual trigger
+      - '*'
+  workflow_dispatch:
 jobs:
   postman:
     runs-on: ubuntu-latest
