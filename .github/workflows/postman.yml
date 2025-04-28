@@ -59,29 +59,20 @@ jobs:
           npm run dev > $GITHUB_WORKSPACE/api.log 2>&1 &
       - name: Wait for api
         run: |
-          echo "Pinging API 30 times every 10 seconds..."
-          for i in {1..30}; do
-            echo "Ping $i:"
-            curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/v2/builds || echo "Request failed"
+          echo "Waiting for API to be ready..."
+          while ! curl -s -f -o /dev/null http://localhost:8080/v2/builds; do
             sleep 10
           done
-          echo "Done pinging API."
-#      - name: Wait for api
-#        run: |
-#          echo "Waiting for API to be ready..."
-#          while ! curl -s -f -o /dev/null http://localhost:8080/v2/builds; do
-#            sleep 10
-#          done
-#          echo "API is ready!"
+          echo "API is ready!"
       - name: Install Postman CLI
         run: |
           curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
       - name: Login to Postman CLI
         run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
 
-#      - name: Run API tests
-#        run: |
-#          postman collection run "44183872-d3b3cdc9-ba1f-4a71-bcba-6a3cb3dc9643" -e "43715313-d380e919-5142-44e6-b52c-02f8b04da8fa"  -i "44183872-cb769d53-ad67-4f87-9d74-eabf11adec74"
+      - name: Run API tests
+        run: |
+          postman collection run 44183872-1d1f2dba-6c47-4764-a847-a6bca216ecea -e 43715313-d380e919-5142-44e6-b52c-02f8b04da8fa -i 44183872-be57d2e3-650d-4494-ba65-6486b68082b0 -i 44183872-f50a0c10-89ef-4352-8a56-3093811b3311 -i 44183872-0a01d698-5d93-4ebf-bd52-6cd7b1af9735 -i 44183872-6229c491-250d-49a4-8388-7a2353129925 -i 44183872-07ac4c2a-037a-4002-a5d1-2e990cfcb1b0 -i 44183872-297df31a-4560-4f27-aa06-31437d59dd7c -i 44183872-47db1e8a-9245-49a6-a6ff-7044b95d8ad3 -i 44183872-beeb6115-2e7b-4a7b-bcd8-eb605a5cd3fc -i 44183872-eff09537-0ab0-4914-a15d-a08270360574 -i 44183872-5003d09d-439f-456a-8864-e6e1f62db807 -i 44183872-a25b9ea2-1c64-4bf1-a5e4-dc905f1a9a6a -i 44183872-7082300f-e721-43f3-9828-1f3bbd25ab0a -i 44183872-6631ed83-0ff4-4515-8fa6-2d57c2959e77 -i 44183872-0a483150-4d00-49f1-8f9a-31ab467f79ec -i 44183872-15ce6497-700f-49f9-949a-ec22bf169c3f -i 44183872-c4097a49-9f17-4d6e-8ff2-a1a1fcec2dff -i 44183872-e357451a-9526-4b57-bb5b-1190e0d6788f -i 44183872-9abfae13-8983-453e-85c5-a3951dddd8e6 -i 44183872-3db33396-563e-4f0a-b074-fc74680c72bd -i 44183872-61b903cb-d623-4b6d-85a3-ab2f7b0575d8 -i 44183872-34fb39a5-5bc2-4528-886a-49e4caf2d9b5 -i 44183872-e34ef3b6-f979-4407-8e69-b972be4d5184 -i 44183872-da7d9d0c-3ab1-457a-a56f-2fa49b151f1d -i 44183872-d7d08dac-364f-4f94-9c48-64dbd77fcadd -i 44183872-a6fad9da-3fae-4c7c-9e15-ec6d67a79b78 -i 44183872-79ff962a-4117-4b91-8cb6-2653b6d5a687 -i 44183872-225a21ca-9106-484c-83b5-1257bc6433e7 -i 44183872-7ac118a2-7f55-4996-a2e6-0b34eb7058ae -i 44183872-4d49d6c6-6367-4ec4-8b4c-6c6154118a3a -i 44183872-dd1b76be-26ee-4b5b-913b-8ce465778229 -i 44183872-ee200410-27ac-4c28-a469-21f487dfbaec -i 44183872-c7676daa-2257-47d6-88ca-178d433a5f28 -i 44183872-f162b5b5-1428-4f9e-8ea5-6bb3b7980b48 -i 44183872-048cddb0-5671-4abb-ac9f-8985c8e4ed6d -i 44183872-a9b4f64a-60be-43e5-bb55-6e16c85c9215 -i 44183872-a26a7e26-0df8-4ad9-95ce-ce168010f631 -i 44183872-9feaad53-dac9-475d-bd71-192d0c844e59 -i 44183872-d09732cd-0395-4b25-85c9-01b9c6a7d43c -i 44183872-1c7dca5b-58aa-4bb6-9224-d703e88b17cd -i 44183872-d183edcc-b144-4e80-9e10-72bf49f535d0 -i 44183872-7451bc15-e0cc-44a8-946b-f09bf024c9eb -i 44183872-3d6e845b-8a82-43b4-a6be-e30effc16d46 -i 44183872-d81fa269-56a3-4eef-934e-39a30e9e5dfd -i 44183872-0ed3bf3e-d78b-4818-bb47-ded64e22525f -i 44183872-fe220b54-58ce-427f-bd19-2f2716cfaa65
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
