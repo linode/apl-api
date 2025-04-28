@@ -1,14 +1,14 @@
 /* eslint-disable no-param-reassign */
+import { debug } from 'console'
 import { RequestHandler } from 'express'
+import { find } from 'lodash'
 import get from 'lodash/get'
 import Authz, { getTeamSelfServiceAuthz } from 'src/authz'
-import { OpenApiRequestExt, PermissionSchema, TeamSelfService } from 'src/otomi-models'
+import { OpenApiRequestExt } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { cleanEnv } from 'src/validators'
-import { getSessionStack } from './session'
 import { RepoService } from '../services/RepoService'
-import { debug } from 'console'
-import { find } from 'lodash'
+import { getSessionStack } from './session'
 
 const HttpMethodMapping: Record<string, string> = {
   DELETE: 'delete',
@@ -41,11 +41,8 @@ function renameKeys(obj: Record<string, any>) {
 // }
 
 export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoService: RepoService): RequestHandler {
-  const {
-    params: { teamId },
-    body,
-    user,
-  } = req
+  const { params, query, body, user } = req
+  const teamId = params?.teamId ?? query?.teamId
   const action = HttpMethodMapping[req.method]
   const schema: string = get(req, 'operationDoc.x-aclSchema', '')
   const schemaName = schema.split('/').pop() || null
@@ -56,13 +53,11 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
   authz.init(user)
 
   let valid
-  if (action === 'read' && schemaName === 'Kubecfg')
-    valid = authz.hasSelfService(teamId, 'access', 'downloadKubeConfig')
+  if (action === 'read' && schemaName === 'Kubecfg') valid = authz.hasSelfService(teamId, 'downloadKubeconfig')
   else if (action === 'read' && schemaName === 'DockerConfig')
-    valid = authz.hasSelfService(teamId, 'access', 'downloadDockerConfig')
-  else if (action === 'create' && schemaName === 'Cloudtty') valid = authz.hasSelfService(teamId, 'access', 'shell')
-  else if (action === 'update' && schemaName === 'Policy')
-    valid = authz.hasSelfService(teamId, 'policies', 'edit policies')
+    valid = authz.hasSelfService(teamId, 'downloadDockerLogin')
+  else if (action === 'create' && schemaName === 'Cloudtty') valid = authz.hasSelfService(teamId, 'useCloudShell')
+  else if (action === 'update' && schemaName === 'Policy') valid = authz.hasSelfService(teamId, 'editSecurityPolicies')
   else valid = authz.validateWithCasl(action, schemaName, teamId)
   const env = cleanEnv({})
   // TODO: Debug purpose only for removal of license
@@ -136,18 +131,17 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
 
   return next()
 }
-
 export function authzMiddleware(authz: Authz): RequestHandler {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
-    if (req.user) req.isSecurityHandler = true
-    else return next()
+    if (req.user) {
+      req.isSecurityHandler = true
+    } else {
+      return next()
+    }
     const otomi: OtomiStack = await getSessionStack(req.user.email)
-    req.user.authz = getTeamSelfServiceAuthz(
-      req.user.teams,
-      req.apiDoc.components.schemas.TeamSelfService as TeamSelfService as PermissionSchema,
-      otomi,
-    )
+    // Now we call the new helper which derives authz based on the new selfService.teamMembers flags.
+    req.user.authz = getTeamSelfServiceAuthz(req.user.teams, otomi)
     return authorize(req, res, next, authz, otomi.repoService)
   }
 }

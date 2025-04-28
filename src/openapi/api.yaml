@@ -1079,11 +1079,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/AplBackupResponse'
 
-  '/v1/teams/{teamId}/dashboard':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
+  '/v1/dashboard':
     get:
       operationId: getDashboard
+      parameters:
+        - name: teamName
+          in: query
+          description: Name of the team
+          schema:
+            type: string
       responses:
         <<: *DefaultGetResponses
         '200':

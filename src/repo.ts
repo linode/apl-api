@@ -412,19 +412,20 @@ export function renderManifest(fileMap: FileMap, jsonPath: jsonpath.PathComponen
   if (fileMap.kind === 'AplTeamWorkloadValues') {
     return { values: data.values }
   }
-  const manifest = {
+  let spec = data
+  const labels = {}
+  if (fileMap.resourceGroup === 'team') {
+    spec = omit(data, ['id', 'name', 'teamId'])
+    labels['apl.io/teamId'] = getTeamNameFromJsonPath(jsonPath)
+  }
+  return {
     kind: fileMap.kind,
     metadata: {
       name: getResourceName(fileMap, jsonPath, data),
-      labels: {},
+      labels,
     },
-    spec: omit(data, ['id', 'teamId', 'name']),
+    spec,
   }
-  if (fileMap.resourceGroup === 'team') {
-    manifest.metadata.labels['apl.io/teamId'] = getTeamNameFromJsonPath(jsonPath)
-  }
-
-  return manifest
 }
 
 export function renderManifestForSecrets(fileMap: FileMap, resourceName: string, data: Record<string, any>) {

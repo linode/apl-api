@@ -1185,7 +1185,7 @@ export default class OtomiStack {
         await this.createAplService(teamId, {
           kind: 'AplTeamService',
           metadata: { name: projectName },
-          spec: { type: 'cluster', ...data.spec.service },
+          spec: { ...data.spec.service },
         })
       }
       await this.saveTeamConfigItem(project)
@@ -1447,21 +1447,23 @@ export default class OtomiStack {
     return internalRepoUrls
   }
 
-  getDashboard(teamId: string): Array<any> {
-    const projects = this.repoService.getTeamConfigService(teamId).getProjects()
-    const builds = this.repoService.getTeamConfigService(teamId).getBuilds()
-    const workloads = this.repoService.getTeamConfigService(teamId).getWorkloads()
-    const services = this.repoService.getTeamConfigService(teamId).getServices()
-    const secrets = this.repoService.getTeamConfigService(teamId).getSealedSecrets()
-    const netpols = this.repoService.getTeamConfigService(teamId).getNetpols()
+  getDashboard(teamName: string): Array<any> {
+    const projects = teamName ? this.repoService.getTeamConfigService(teamName).getProjects() : this.getAllProjects()
+    const builds = teamName ? this.repoService.getTeamConfigService(teamName).getBuilds() : this.getAllBuilds()
+    const workloads = teamName ? this.repoService.getTeamConfigService(teamName).getWorkloads() : this.getAllWorkloads()
+    const services = teamName ? this.repoService.getTeamConfigService(teamName).getServices() : this.getAllServices()
+    const secrets = teamName
+      ? this.repoService.getTeamConfigService(teamName).getSealedSecrets()
+      : this.getAllSealedSecrets()
+    const netpols = teamName ? this.repoService.getTeamConfigService(teamName).getNetpols() : this.getAllNetpols()
 
     return [
       { name: 'projects', count: projects?.length },
-      { name: 'builds', count: builds?.length },
+      { name: 'container-images', count: builds?.length },
       { name: 'workloads', count: workloads?.length },
       { name: 'services', count: services?.length },
-      { name: 'sealed secrets', count: secrets?.length },
-      { name: 'network policies', count: netpols?.length },
+      { name: 'sealed-secrets', count: secrets?.length },
+      { name: 'network-policies', count: netpols?.length },
     ]
   }
 
@@ -1972,28 +1974,23 @@ export default class OtomiStack {
   checkPublicUrlInUse(teamId: string, service: AplServiceRequest): void {
     // skip when editing or when svc is of type "cluster" as it has no url
     const newSvc = service.spec
-    if (newSvc?.type === 'public') {
-      const services = this.repoService.getTeamConfigService(teamId).getServices()
+    const services = this.repoService.getTeamConfigService(teamId).getServices()
 
-      const servicesFiltered = filter(services, (svc) => {
-        if (svc.spec.type === 'public') {
-          const { domain, paths } = svc.spec
+    const servicesFiltered = filter(services, (svc) => {
+      const { domain, paths } = svc.spec
 
-          // no paths for existing or new service? then just check base url
-          if (!newSvc.paths?.length && !paths?.length) return domain === newSvc.domain
-          // one has paths but other doesn't? no problem
-          if ((newSvc.paths?.length && !paths?.length) || (!newSvc.paths?.length && paths?.length)) return false
-          // both have paths, so check full
-          return paths?.some((p) => {
-            const existingUrl = `${domain}${p}`
-            const newUrls: string[] = newSvc.paths?.map((_p: string) => `${domain}${_p}`) || []
-            return newUrls.includes(existingUrl)
-          })
-        }
-        return false
+      // no paths for existing or new service? then just check base url
+      if (!newSvc.paths?.length && !paths?.length) return domain === newSvc.domain
+      // one has paths but other doesn't? no problem
+      if ((newSvc.paths?.length && !paths?.length) || (!newSvc.paths?.length && paths?.length)) return false
+      // both have paths, so check full
+      return paths?.some((p) => {
+        const existingUrl = `${domain}${p}`
+        const newUrls: string[] = newSvc.paths?.map((_p: string) => `${domain}${_p}`) || []
+        return newUrls.includes(existingUrl)
       })
-      if (servicesFiltered.length > 0) throw new PublicUrlExists()
-    }
+    })
+    if (servicesFiltered.length > 0) throw new PublicUrlExists()
   }
 
   emitPipelineStatus(sha: string): void {
@@ -2470,44 +2467,37 @@ export default class OtomiStack {
       'cname',
     ]
     const inService = omit(serviceSpec, publicIngressFields)
-    if (serviceSpec.type === 'public') {
-      const { cluster, dns } = this.getSettings(['cluster', 'dns'])
-      const url = getServiceUrl({
-        domain: serviceSpec.domain,
-        name: service.metadata.name,
-        teamId: service.metadata.labels['apl.io/teamId'],
-        cluster,
-        dns,
-      })
-      return removeBlankAttributes({
-        ...inService,
-        ...serviceMeta,
-        ingress: {
-          ...pick(serviceSpec, publicIngressFields),
-          domain: url.domain,
-          subdomain: url.subdomain,
-          useDefaultHost: !serviceSpec.domain && serviceSpec.ownHost,
-        },
-      })
-    } else {
-      return removeBlankAttributes({
-        ...serviceMeta,
-        ...inService,
-        ingress: { type: 'cluster' },
-      })
-    }
+
+    const { cluster, dns } = this.getSettings(['cluster', 'dns'])
+    const url = getServiceUrl({
+      domain: serviceSpec.domain,
+      name: service.metadata.name,
+      teamId: service.metadata.labels['apl.io/teamId'],
+      cluster,
+      dns,
+    })
+    return removeBlankAttributes({
+      ...serviceMeta,
+      ...inService,
+      ingress: {
+        ...pick(serviceSpec, publicIngressFields),
+        domain: url.domain,
+        subdomain: url.subdomain,
+        useDefaultHost: !serviceSpec.domain && serviceSpec.ownHost,
+      },
+    })
   }
 
   convertDbServiceToValues(svc: Service): ServiceSpec {
     const { name } = svc
     const svcCommon = omit(svc, ['name', 'ingress', 'path'])
     if (svc.ingress?.type === 'public') {
-      const ing = svc.ingress
-      const domain = ing.subdomain ? `${ing.subdomain}.${ing.domain}` : ing.domain
+      const { ingress } = svc
+      const domain = ingress.subdomain ? `${ingress.subdomain}.${ingress.domain}` : ingress.domain
       return {
         name,
         ...svcCommon,
-        ...pick(ing, [
+        ...pick(ingress, [
           'hasCert',
           'certName',
           'paths',
@@ -2518,15 +2508,13 @@ export default class OtomiStack {
           'useCname',
           'cname',
         ]),
-        type: 'public',
-        ownHost: ing.useDefaultHost,
-        domain: ing.useDefaultHost ? undefined : domain,
+        ownHost: ingress.useDefaultHost,
+        domain: ingress.useDefaultHost ? undefined : domain,
       }
     } else {
       return {
         name,
         ...svcCommon,
-        type: svc.ingress?.type || 'cluster',
       }
     }
   }
