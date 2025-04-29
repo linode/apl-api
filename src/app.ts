@@ -14,7 +14,6 @@ import { CleanOptions } from 'simple-git'
 import { default as Authz } from 'src/authz'
 import {
   authzMiddleware,
-  DbMessage,
   errorMiddleware,
   getIo,
   getSessionStack,
@@ -80,9 +79,6 @@ const checkAgainstGitea = async () => {
     }
     // inflate new db
     await otomiStack.loadValues()
-    const sha = await otomiStack.git.getCommitSha()
-    const msg: DbMessage = { state: 'clean', editor: 'system', sha, reason: 'conflict' }
-    getIo().emit('db', msg)
   }
 }
 

@@ -23,7 +23,6 @@ import {
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { BASEURL } from './constants'
 import { GitPullError, HttpError, ValidationError } from './error'
-import { DbMessage, getIo } from './middleware'
 import { Core } from './otomi-models'
 import { FileMap, getFilePath, getResourceName, renderManifest, renderManifestForSecrets } from './repo'
 import { getSanitizedErrorMessage, removeBlankAttributes } from './utils'
@@ -394,10 +393,6 @@ export class Git {
       const eMessage = getSanitizedErrorMessage(e)
       debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', eMessage)
       this.corrupt = true
-      if (!skipMsg) {
-        const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'conflict' }
-        getIo().emit('db', msg)
-      }
       try {
         // Remove local changes so that no conflict can happen
         debug('Removing local changes.')
@@ -420,8 +415,6 @@ export class Git {
         throw new GitPullError('Failed to remove upstream commits!')
       }
       debug('Removed upstream commits!')
-      const cleanMsg: DbMessage = { editor: 'system', state: 'clean', reason: 'restored' }
-      getIo().emit('db', cleanMsg)
       this.corrupt = false
     }
   }
