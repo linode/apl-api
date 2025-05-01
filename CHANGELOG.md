@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.3.2](https://github.com/redkubes/otomi-api/compare/v4.3.1...v4.3.2) (2025-05-01)
+
+
+### Bug Fixes
+
+* allow creating coderepos with same url in different teams ([#713](https://github.com/redkubes/otomi-api/issues/713)) ([6d47eec](https://github.com/redkubes/otomi-api/commit/6d47eec1a525f3874cf17827f6619eb3e2aac680))
+
 ### [4.3.1](https://github.com/redkubes/otomi-api/compare/v4.2.0...v4.3.1) (2025-04-29)
 
 
