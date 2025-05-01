@@ -48,3 +48,5 @@ secrets.*.yaml.dec
 
 #intelij
 .idea/
+
+.DS_Store
