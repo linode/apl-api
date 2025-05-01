@@ -1263,7 +1263,11 @@ export default class OtomiStack {
   }
 
   async createAplCodeRepo(teamId: string, data: AplCodeRepoRequest): Promise<AplCodeRepoResponse> {
-    const allRepoUrls = this.getAllAplCodeRepos().map((repo) => repo.spec.repositoryUrl) || []
+    const allRepoUrls =
+      this.repoService
+        .getTeamConfigService(teamId)
+        .getCodeRepos()
+        .map((repo) => repo.spec.repositoryUrl) || []
     if (allRepoUrls.includes(data.spec.repositoryUrl)) throw new AlreadyExists('Code repository URL already exists')
     if (!data.spec.private) unset(data.spec, 'secret')
     if (data.spec.gitService === 'gitea') unset(data.spec, 'private')
