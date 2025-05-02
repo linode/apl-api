@@ -21,15 +21,15 @@ export const getMockEmail = () =>
   env.AUTHZ_MOCK_IS_PLATFORM_ADMIN
     ? platformAdminEmails[mockIdx]
     : env.AUTHZ_MOCK_IS_TEAM_ADMIN
-    ? teamAdminEmails[mockIdx]
-    : teamMemberEmails[mockIdx]
+      ? teamAdminEmails[mockIdx]
+      : teamMemberEmails[mockIdx]
 
 export const getMockName = () =>
   env.AUTHZ_MOCK_IS_PLATFORM_ADMIN
     ? platformAdminNames[mockIdx]
     : env.AUTHZ_MOCK_IS_TEAM_ADMIN
-    ? teamAdminNames[mockIdx]
-    : teamMemberNames[mockIdx]
+      ? teamAdminNames[mockIdx]
+      : teamMemberNames[mockIdx]
 
 export const getMockGroups = () => {
   const groups: Array<string> = []
