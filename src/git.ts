@@ -329,7 +329,6 @@ export class Git {
     // we inflate GIT_LOCAL_PATH from the ./test folder
     debug(`DEV mode: using local folder values`)
     await copy(join(process.cwd(), 'test'), env.GIT_LOCAL_PATH, {
-      recursive: true,
       overwrite: false,
     })
     await this.init(false)
