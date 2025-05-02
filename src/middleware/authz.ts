@@ -4,6 +4,7 @@ import { RequestHandler } from 'express'
 import { find } from 'lodash'
 import get from 'lodash/get'
 import Authz, { getTeamSelfServiceAuthz } from 'src/authz'
+import { HttpError } from 'src/error'
 import { OpenApiRequestExt } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { cleanEnv } from 'src/validators'
@@ -63,9 +64,7 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
   // TODO: Debug purpose only for removal of license
   if (!env.isDev) {
     if (!valid) {
-      return res
-        .status(403)
-        .send({ authz: false, message: `User not allowed to perform "${action}" on "${schemaName}" resource` })
+      throw new HttpError(403, `User not allowed to perform "${action}" on "${schemaName}" resource`)
     }
   }
 
