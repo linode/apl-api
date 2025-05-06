@@ -662,7 +662,7 @@ export default class OtomiStack {
       data.password = generatePassword({
         length: 16,
         numbers: true,
-        symbols: '!@#$%&*',
+        symbols: false,
         lowercase: true,
         uppercase: true,
         strict: true,
