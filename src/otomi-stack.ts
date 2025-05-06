@@ -11,7 +11,7 @@ import { cloneDeep, filter, isEmpty, map, mapValues, merge, omit, pick, set, uns
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import { AlreadyExists, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
 import getRepo, { Git } from 'src/git'
-import { cleanSession, DbMessage, getIo, getSessionStack } from 'src/middleware'
+import { cleanSession, getIo, getSessionStack } from 'src/middleware'
 import {
   AplBackupRequest,
   AplBackupResponse,
@@ -1263,7 +1263,11 @@ export default class OtomiStack {
   }
 
   async createAplCodeRepo(teamId: string, data: AplCodeRepoRequest): Promise<AplCodeRepoResponse> {
-    const allRepoUrls = this.getAllAplCodeRepos().map((repo) => repo.spec.repositoryUrl) || []
+    const allRepoUrls =
+      this.repoService
+        .getTeamConfigService(teamId)
+        .getCodeRepos()
+        .map((repo) => repo.spec.repositoryUrl) || []
     if (allRepoUrls.includes(data.spec.repositoryUrl)) throw new AlreadyExists('Code repository URL already exists')
     if (!data.spec.private) unset(data.spec, 'secret')
     if (data.spec.gitService === 'gitea') unset(data.spec, 'private')
@@ -2002,8 +2006,6 @@ export default class OtomiStack {
       const sha = await rootStack.git.getCommitSha()
       this.emitPipelineStatus(sha)
     } catch (e) {
-      const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
-      getIo().emit('db', msg)
       e.message = getSanitizedErrorMessage(e)
       throw e
     } finally {
@@ -2032,8 +2034,6 @@ export default class OtomiStack {
       const sha = await rootStack.git.getCommitSha()
       this.emitPipelineStatus(sha)
     } catch (e) {
-      const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
-      getIo().emit('db', msg)
       e.message = getSanitizedErrorMessage(e)
       throw e
     } finally {
@@ -2072,8 +2072,6 @@ export default class OtomiStack {
       const sha = await rootStack.git.getCommitSha()
       this.emitPipelineStatus(sha)
     } catch (e) {
-      const msg: DbMessage = { editor: 'system', state: 'corrupt', reason: 'deploy' }
-      getIo().emit('db', msg)
       e.message = getSanitizedErrorMessage(e)
       throw e
     } finally {
