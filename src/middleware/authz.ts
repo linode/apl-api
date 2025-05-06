@@ -62,10 +62,8 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
   else valid = authz.validateWithCasl(action, schemaName, teamId)
   const env = cleanEnv({})
   // TODO: Debug purpose only for removal of license
-  if (!env.isDev) {
-    if (!valid) {
-      throw new HttpError(403, `User not allowed to perform "${action}" on "${schemaName}" resource`)
-    }
+  if (!env.isDev && !valid) {
+    throw new HttpError(403, `User not allowed to perform "${action}" on "${schemaName}" resource`)
   }
 
   const schemaToRepoMap: Record<string, string> = {
