@@ -50,3 +50,5 @@ secrets.*.yaml.dec
 .idea/
 
 .DS_Store
+
+src/.DS_Store

@@ -308,9 +308,11 @@ AplServiceSpec:
                   name:
                     title: Name
                     type: string
+                    example: my-header
                   value:
                     title: Value
                     type: string
+                    example: my-value
                 required:
                   - name
                   - value

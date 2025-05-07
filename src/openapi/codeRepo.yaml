@@ -59,6 +59,7 @@ AplCodeRepoSpec:
       default: false
     secret:
       type: string
+      example: my-secret
   required:
     - gitService
     - repositoryUrl

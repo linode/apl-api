@@ -118,9 +118,11 @@ buildMode:
                   name:
                     title: Name
                     type: string
+                    example: MY_ENV_VAR
                   value:
                     title: Value
                     type: string
+                    example: my-value
                 required:
                   - name
                   - value
