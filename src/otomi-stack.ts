@@ -680,19 +680,6 @@ export default class OtomiStack {
   async createAplTeam(data: AplTeamSettingsRequest, deploy = true): Promise<AplTeamSettingsResponse> {
     const teamName = data.metadata.name
 
-    if (isEmpty(data.spec.password)) {
-      debug(`creating password for team '${teamName}'`)
-      // eslint-disable-next-line no-param-reassign
-      data.spec.password = generatePassword({
-        length: 16,
-        numbers: true,
-        symbols: '!@#$%&*',
-        lowercase: true,
-        uppercase: true,
-        strict: true,
-      })
-    }
-
     const teamConfig = this.repoService.createTeamConfig(data)
     const team = teamConfig.settings
     const apps = getAppList()
