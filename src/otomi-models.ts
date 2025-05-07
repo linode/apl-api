@@ -34,6 +34,8 @@ export type RepoBranches = components['schemas']['RepoBranches']
 export type TestRepoConnect = components['schemas']['TestRepoConnect']
 export type InternalRepoUrls = components['schemas']['InternalRepoUrls']
 export type Team = components['schemas']['Team']
+export type AplTeamSettingsRequest = components['schemas']['AplTeamSettingsRequest']
+export type AplTeamSettingsResponse = components['schemas']['AplTeamSettingsResponse']
 export type TeamSelfService = components['schemas']['Team']['selfService']
 export type SessionUser = components['schemas']['SessionUser']
 export type UserAuthz = components['schemas']['SessionUser']['authz']
@@ -78,6 +80,7 @@ export type AplRequestObject =
   | AplSecretRequest
   | AplServiceRequest
   | AplWorkloadRequest
+  | AplTeamSettingsRequest
 export type AplResponseObject =
   | AplBackupResponse
   | AplBuildResponse
@@ -88,6 +91,7 @@ export type AplResponseObject =
   | AplSecretResponse
   | AplServiceResponse
   | AplWorkloadResponse
+  | AplTeamSettingsResponse
 export type AplKind =
   | 'AplApp'
   | 'AplAlertSet'
@@ -254,6 +258,6 @@ export interface TeamConfig {
   projects: AplProjectResponse[]
   sealedsecrets: AplSecretResponse[]
   services: AplServiceResponse[]
-  settings: Team
+  settings: AplTeamSettingsResponse
   workloads: AplWorkloadResponse[]
 }

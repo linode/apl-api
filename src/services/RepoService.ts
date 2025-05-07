@@ -11,6 +11,8 @@ import {
   AplProjectResponse,
   AplSecretResponse,
   AplServiceResponse,
+  AplTeamSettingsRequest,
+  AplTeamSettingsResponse,
   AplWorkloadResponse,
   App,
   Cluster,
@@ -21,12 +23,12 @@ import {
   Repo,
   Settings,
   Smtp,
-  Team,
   TeamConfig,
   User,
   Versions,
 } from '../otomi-models'
 import { TeamConfigService } from './TeamConfigService'
+import { createAplObject } from '../utils/manifests'
 
 function mergeCustomizer(prev, next) {
   return next
@@ -52,19 +54,19 @@ export class RepoService {
     this.repo.teamConfig ??= {}
   }
 
-  public getTeamConfigService(teamId: string): TeamConfigService {
-    if (!this.repo.teamConfig[teamId]) {
-      throw new Error(`TeamConfig for ${teamId} does not exist.`)
+  public getTeamConfigService(teamName: string): TeamConfigService {
+    if (!this.repo.teamConfig[teamName]) {
+      throw new Error(`TeamConfig for ${teamName} does not exist.`)
     }
 
     // Check if we already have an instance cached
-    if (!this.teamConfigServiceCache.has(teamId)) {
+    if (!this.teamConfigServiceCache.has(teamName)) {
       // If not, create a new one and store it in the cache
-      this.teamConfigServiceCache.set(teamId, new TeamConfigService(this.repo.teamConfig[teamId]))
+      this.teamConfigServiceCache.set(teamName, new TeamConfigService(this.repo.teamConfig[teamName]))
     }
 
     // Return the cached instance
-    return this.teamConfigServiceCache.get(teamId)!
+    return this.teamConfigServiceCache.get(teamName)!
   }
 
   public getApp(id: string): App {
@@ -136,33 +138,33 @@ export class RepoService {
       backups: [],
       projects: [],
       netpols: [],
-      settings: {} as Team,
+      settings: {} as AplTeamSettingsResponse,
       apps: [],
       policies: [],
     }
   }
 
-  public createTeamConfig(team: Team): TeamConfig {
-    const teamName = team.name
+  public createTeamConfig(team: AplTeamSettingsRequest): TeamConfig {
+    const teamName = team.metadata.name
     if (has(this.repo.teamConfig, teamName)) {
       throw new AlreadyExists(`TeamConfig[${teamName}] already exists.`)
     }
     const newTeam = this.getDefaultTeamConfig()
-    newTeam.settings = team
+    newTeam.settings = createAplObject(teamName, team, teamName) as AplTeamSettingsResponse
     this.repo.teamConfig[teamName] = newTeam
     return this.repo.teamConfig[teamName]
   }
 
-  public getTeamConfig(teamId: string): TeamConfig | undefined {
-    return this.repo.teamConfig[teamId]
+  public getTeamConfig(teamName: string): TeamConfig | undefined {
+    return this.repo.teamConfig[teamName]
   }
 
-  public deleteTeamConfig(teamId: string): void {
-    if (!has(this.repo.teamConfig, teamId)) {
-      throw new Error(`TeamConfig[${teamId}] does not exist.`)
+  public deleteTeamConfig(teamName: string): void {
+    if (!has(this.repo.teamConfig, teamName)) {
+      throw new Error(`TeamConfig[${teamName}] does not exist.`)
     }
-    delete this.repo.teamConfig[teamId]
-    this.teamConfigServiceCache.delete(teamId)
+    delete this.repo.teamConfig[teamName]
+    this.teamConfigServiceCache.delete(teamName)
   }
 
   public getCluster(): Cluster {
@@ -227,8 +229,8 @@ export class RepoService {
     this.repo = repo
   }
 
-  public getAllTeamSettings(): Team[] {
-    return map(this.repo.teamConfig, 'settings').filter(Boolean) ?? []
+  public getAllTeamSettings(): AplTeamSettingsResponse[] {
+    return this.getTeamIds().flatMap((teamName) => this.getTeamConfigService(teamName).getSettings())
   }
 
   public getTeamIds(): string[] {
@@ -236,39 +238,39 @@ export class RepoService {
   }
 
   public getAllNetpols(): AplNetpolResponse[] {
-    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getNetpols())
+    return this.getTeamIds().flatMap((teamName) => this.getTeamConfigService(teamName).getNetpols())
   }
 
   public getAllProjects(): AplProjectResponse[] {
-    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getProjects())
+    return this.getTeamIds().flatMap((teamName) => this.getTeamConfigService(teamName).getProjects())
   }
 
   public getAllBuilds(): AplBuildResponse[] {
-    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getBuilds())
+    return this.getTeamIds().flatMap((teamName) => this.getTeamConfigService(teamName).getBuilds())
   }
 
   public getAllPolicies(): AplPolicyResponse[] {
-    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getPolicies())
+    return this.getTeamIds().flatMap((teamName) => this.getTeamConfigService(teamName).getPolicies())
   }
 
   public getAllWorkloads(): AplWorkloadResponse[] {
-    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getWorkloads())
+    return this.getTeamIds().flatMap((teamName) => this.getTeamConfigService(teamName).getWorkloads())
   }
 
   public getAllServices(): AplServiceResponse[] {
-    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getServices())
+    return this.getTeamIds().flatMap((teamName) => this.getTeamConfigService(teamName).getServices())
   }
 
   public getAllSealedSecrets(): AplSecretResponse[] {
-    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getSealedSecrets())
+    return this.getTeamIds().flatMap((teamName) => this.getTeamConfigService(teamName).getSealedSecrets())
   }
 
   public getAllBackups(): AplBackupResponse[] {
-    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getBackups())
+    return this.getTeamIds().flatMap((teamName) => this.getTeamConfigService(teamName).getBackups())
   }
 
   public getAllCodeRepos(): AplCodeRepoResponse[] {
-    return this.getTeamIds().flatMap((teamId) => this.getTeamConfigService(teamId).getCodeRepos())
+    return this.getTeamIds().flatMap((teamName) => this.getTeamConfigService(teamName).getCodeRepos())
   }
 
   /** Retrieve a collection dynamically from the Repo */
