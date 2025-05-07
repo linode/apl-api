@@ -108,6 +108,7 @@ alerts:
 annotation:
   type: string
   pattern: ^((.){1,253}\/)?(.){1,63}$
+  example: apl.io/annotation
 annotations:
   description: Kubernetes annotations with arbitrary metadata
   type: array
@@ -119,6 +120,7 @@ annotations:
       value:
         type: string
         maxLength: 32767
+        example: apl-value
 autoscaling:
   type: object
   properties:
@@ -625,6 +627,7 @@ idName:
   pattern: ^[a-z]([-a-z0-9]*[a-z0-9])+$
   type: string
   x-message: a valid name that consists of lowercase letters, dashes
+  example: team-name
 image:
   allOf:
     - properties:
@@ -654,6 +657,7 @@ imageTag:
   pattern: '[\w][\w.-]{0,127}'
   type: string
   x-message: a valid container registry image tag
+  example: latest
 imageSimple:
   properties:
     tag:
@@ -951,6 +955,7 @@ repoUrl:
   pattern: ^(.+@)*([\w\d\.]+)(:[\d]+){0,1}/*(.*)$
   type: string
   x-message: a valid git repo URL
+  example: github.com/example/repo
 resource:
   properties:
     cpu:
@@ -1106,6 +1111,7 @@ svcPredeployed:
 url:
   pattern: ^https?:\/\/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&\/=]*)
   type: string
+  example: https://gituhb.com/example
 vaultToken:
   title: Token
   type: string

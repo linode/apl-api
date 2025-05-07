@@ -2602,7 +2602,6 @@ components:
           type: object
           properties:
             name:
-              example: name
               $ref: 'definitions.yaml#/idName'
           required:
             - name
@@ -2615,12 +2614,11 @@ components:
           type: object
           properties:
             name:
-              type: string
+              $ref: 'definitions.yaml#/idName'
             labels:
               type: object
               properties:
                 apl.io/teamId:
-                  example: team-name
                   $ref: 'definitions.yaml#/idName'
               required:
                 - apl.io/teamId
