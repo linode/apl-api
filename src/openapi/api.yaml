@@ -111,6 +111,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Team'
+
   '/v1/teams/{teamId}':
     parameters:
       - $ref: '#/components/parameters/teamParams'
@@ -147,6 +148,83 @@ paths:
                 $ref: '#/components/schemas/Team'
     delete:
       operationId: deleteTeam
+      description: Delete team
+      x-aclSchema: Team
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a team
+
+  /v2/teams:
+    get:
+      operationId: getAplTeams
+      description: Get teams collection
+      x-aclSchema: Team
+      responses:
+        '200':
+          description: Successfully obtained teams collection
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplTeamSettingsResponse'
+    post:
+      operationId: createAplTeam
+      description: Create a team
+      x-aclSchema: Team
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplTeamSettingsRequest'
+        description: Team object that needs to be added to the collection
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully obtained teams collection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplTeamSettingsResponse'
+
+  '/v2/teams/{teamId}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getAplTeam
+      description: Get a specific team
+      x-aclSchema: Team
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained team
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplTeamSettingsResponse'
+    put:
+      operationId: editAplTeam
+      description: Edit a team
+      x-aclSchema: Team
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplTeamSettingsRequest'
+        description: Team object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited team
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplTeamSettingsResponse'
+    delete:
+      operationId: deleteAplTeam
       description: Delete team
       x-aclSchema: Team
       responses:
@@ -2602,7 +2680,6 @@ components:
           type: object
           properties:
             name:
-              example: name
               $ref: 'definitions.yaml#/idName'
           required:
             - name
@@ -2615,12 +2692,11 @@ components:
           type: object
           properties:
             name:
-              type: string
+              $ref: 'definitions.yaml#/idName'
             labels:
               type: object
               properties:
                 apl.io/teamId:
-                  example: team-name
                   $ref: 'definitions.yaml#/idName'
               required:
                 - apl.io/teamId
@@ -2852,7 +2928,7 @@ components:
       properties:
         kind:
           type: string
-          enum: [AplTeamSettings]
+          enum: [AplTeamSettingSet]
         spec:
           $ref: 'team.yaml#/AplTeamSpec'
       required:
@@ -2861,12 +2937,12 @@ components:
     AplTeamSettingsRequest:
       allOf:
         - $ref: '#/components/schemas/AplTeamSettings'
-        - $ref: '#/components/schemas/aplMetadata'
+        - $ref: '#/components/schemas/aplTeamMetadata'
     AplTeamSettingsResponse:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplTeamSettings'
-        - $ref: '#/components/schemas/aplMetadata'
+        - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
     AplWorkload:
       type: object

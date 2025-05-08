@@ -30,6 +30,8 @@ import {
   AplSecretResponse,
   AplServiceRequest,
   AplServiceResponse,
+  AplTeamSettingsRequest,
+  AplTeamSettingsResponse,
   AplWorkloadRequest,
   AplWorkloadResponse,
   App,
@@ -636,7 +638,17 @@ export default class OtomiStack {
   }
 
   getTeams(): Array<Team> {
-    return this.repoService.getAllTeamSettings()
+    return this.repoService.getAllTeamSettings().map((team) => getV1ObjectFromApl(team) as Team)
+  }
+
+  getAplTeams(): AplTeamSettingsResponse[] {
+    return this.repoService
+      .getAllTeamSettings()
+      .filter((t) => t.metadata.name !== 'admin')
+      .map(({ spec, ...rest }) => ({
+        ...rest,
+        spec: { ...spec, password: undefined },
+      }))
   }
 
   getTeamSelfServiceFlags(id: string): TeamSelfService {
@@ -648,25 +660,24 @@ export default class OtomiStack {
     return this.coreValues
   }
 
-  getTeam(id: string): Team {
-    return this.repoService.getTeamConfigService(id).getSettings()
+  getTeam(name: string): Team {
+    return getV1ObjectFromApl(this.repoService.getTeamConfigService(name).getSettings()) as Team
+  }
+
+  getAplTeam(name: string): AplTeamSettingsResponse {
+    return this.repoService.getTeamConfigService(name).getSettings()
   }
 
   async createTeam(data: Team, deploy = true): Promise<Team> {
-    const teamName = data.name
+    const newTeam = await this.createAplTeam(
+      getAplObjectFromV1('AplTeamSettingSet', data) as AplTeamSettingsRequest,
+      deploy,
+    )
+    return getV1ObjectFromApl(newTeam) as Team
+  }
 
-    if (isEmpty(data.password)) {
-      debug(`creating password for team '${data.name}'`)
-      // eslint-disable-next-line no-param-reassign
-      data.password = generatePassword({
-        length: 16,
-        numbers: true,
-        symbols: '!@#$%&*',
-        lowercase: true,
-        uppercase: true,
-        strict: true,
-      })
-    }
+  async createAplTeam(data: AplTeamSettingsRequest, deploy = true): Promise<AplTeamSettingsResponse> {
+    const teamName = data.metadata.name
 
     const teamConfig = this.repoService.createTeamConfig(data)
     const team = teamConfig.settings
@@ -694,16 +705,28 @@ export default class OtomiStack {
     return team
   }
 
-  async editTeam(id: string, data: Team): Promise<Team> {
-    const team = this.repoService.getTeamConfigService(id).updateSettings(data)
+  async editTeam(name: string, data: Team): Promise<Team> {
+    const mergeObj = getV1MergeObject(data) as DeepPartial<AplTeamSettingsRequest>
+    const mergedTeam = await this.editAplTeam(name, mergeObj)
+    return getV1ObjectFromApl(mergedTeam) as Team
+  }
+
+  async editAplTeam(
+    name: string,
+    data: AplTeamSettingsRequest | DeepPartial<AplTeamSettingsRequest>,
+    patch = false,
+  ): Promise<AplTeamSettingsResponse> {
+    const team = patch
+      ? this.repoService.getTeamConfigService(name).patchSettings(data)
+      : this.repoService.getTeamConfigService(name).updateSettings(data)
     await this.saveTeam(team)
     await this.doTeamDeployment(
-      id,
+      name,
       (teamService) => {
         teamService.updateSettings(team)
       },
       true,
-      [`${this.getRepoPath()}/env/teams/${team.name}/secrets.settings.yaml`],
+      [`${this.getRepoPath()}/env/teams/${name}/secrets.settings.yaml`],
     )
     return team
   }
@@ -2395,11 +2418,11 @@ export default class OtomiStack {
     await this.git.deleteConfig({ users }, fileMap, 'secrets.')
   }
 
-  async saveTeam(team: Team, secretPaths?: string[]): Promise<void> {
-    debug(`Saving team ${team.name}`)
-    debug('team', JSON.stringify(team))
-    const repo = this.createTeamConfigInRepo(team.name, 'settings', team)
-    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamSettingSet')!
+  async saveTeam(team: AplTeamSettingsResponse, secretPaths?: string[]): Promise<void> {
+    const { kind, metadata } = team
+    debug(`Saving team ${metadata.name}`)
+    const repo = this.createTeamConfigInRepo(team.metadata.name, 'settings', team)
+    const fileMap = getFileMaps('').find((fm) => fm.kind === kind)!
     await this.git.saveConfigWithSecrets(repo, secretPaths ?? this.getSecretPaths(), fileMap)
   }
 

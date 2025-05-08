@@ -1,0 +1,82 @@
+name: 'postman'
+on:
+  pull_request:
+    branches:
+      - '*'
+  workflow_dispatch:
+jobs:
+  postman:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set npm token
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "@linode:registry=https://npm.pkg.github.com/linode" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+          echo '::set-output name=diff::1'
+      - name: Install Node
+        run: |
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm install
+          nvm use
+          node -v
+          npm install
+      - uses: actions/checkout@v4
+        with:
+          repository: linode/apl-core
+          path: apl-core
+      - name: Create Git repo
+        run: |
+          readonly env_dir="$HOME/workspace/linode/values-ofld1"
+          readonly apl_core_test_fixtures="$HOME/work/apl-api/apl-api/apl-core/tests/fixtures"
+          mkdir -p "$(dirname $env_dir)"
+          cp -R $apl_core_test_fixtures $env_dir
+          cd $env_dir
+          git init
+          git checkout -b main
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -a -m 'init'
+          # Mark this repo as bare so the local_env_dir can push to env_dir repo
+          git config --bool core.bare true
+          echo "The values bare repo has been successfully set up"
+          ls
+      - name: Start core server
+        run: |
+          cd apl-core
+          npm install
+          npm run server > $GITHUB_WORKSPACE/core.log 2>&1 &
+      - name: Start api
+        run: |
+          npm install
+          cp .env.sample .env
+          npm run dev > $GITHUB_WORKSPACE/api.log 2>&1 &
+      - name: Wait for api
+        run: |
+          echo "Waiting for API to be ready..."
+          while ! curl -s -f -o /dev/null http://localhost:8080/v2/builds; do
+            sleep 10
+          done
+          echo "API is ready!"
+      - name: Install Postman CLI
+        run: |
+          curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
+      - name: Login to Postman CLI
+        run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
+
+      - name: Run API tests
+        #The UUID's are the order the requests are executed in. So that the POST are executed first
+        run: |
+          postman collection run 44183872-1d1f2dba-6c47-4764-a847-a6bca216ecea -e 43715313-d380e919-5142-44e6-b52c-02f8b04da8fa -i 44183872-16af2563-f99c-41c6-81c5-6d68d8aaef42
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-logs
+          path: |
+            core.log
+            api.log

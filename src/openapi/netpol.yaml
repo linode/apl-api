@@ -55,10 +55,12 @@ ruleType:
           type: string
           title: Selector label name
           description: 'The name of the Pod selector label.'
+          example: app
         toLabelValue:
           type: string
           title: Selector label value
           description: 'The value of the Pod selector label.'
+          example: my-app
         mode:
           type: string
           default: AllowAll
@@ -80,10 +82,12 @@ ruleType:
                 type: string
                 title: Selector label name
                 description: 'The name of the Pod selector label.'
+                example: app
               fromLabelValue:
                 type: string
                 title: Selector label value
                 description: 'The value of the Pod selector label.'
+                example: my-app
             required:
               - fromNamespace
       required:
