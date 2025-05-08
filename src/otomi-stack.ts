@@ -343,7 +343,13 @@ export default class OtomiStack {
         cleanSecretPaths.push(p)
       } else {
         teams.forEach((teamId: string) => {
-          if (p.indexOf(teamProp) === 0) cleanSecretPaths.push(p.replace(teamProp, `teamConfig.${teamId}`))
+          if (p.indexOf(teamProp) === 0)
+            cleanSecretPaths.push(
+              p
+                .replace(teamProp, `teamConfig.${teamId}`)
+                // add spec to the path for v2 endpoints
+                .replace(`teamConfig.${teamId}.settings`, `teamConfig.${teamId}.settings.spec`),
+            )
         })
       }
     })

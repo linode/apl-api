@@ -270,7 +270,7 @@ export class Git {
     secretJsonPaths.forEach((objectPath) => {
       const val = get(config, objectPath)
       if (val) {
-        set(secretData, objectPath, val)
+        set(secretData, fileMap.v2 ? objectPath.replace('.spec', '') : objectPath, val)
         unset(plainData, objectPath)
       }
     })
