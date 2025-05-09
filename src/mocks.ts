@@ -17,19 +17,25 @@ let mockIdx = 0
 export const setMockIdx = (idx) => {
   mockIdx = idx
 }
-export const getMockEmail = () =>
-  env.AUTHZ_MOCK_IS_PLATFORM_ADMIN
-    ? platformAdminEmails[mockIdx]
-    : env.AUTHZ_MOCK_IS_TEAM_ADMIN
-      ? teamAdminEmails[mockIdx]
-      : teamMemberEmails[mockIdx]
+export const getMockEmail = () => {
+  if (env.AUTHZ_MOCK_IS_PLATFORM_ADMIN) {
+    return platformAdminEmails[mockIdx]
+  } else if (env.AUTHZ_MOCK_IS_TEAM_ADMIN) {
+    return teamAdminEmails[mockIdx]
+  } else {
+    return teamMemberEmails[mockIdx]
+  }
+}
 
-export const getMockName = () =>
-  env.AUTHZ_MOCK_IS_PLATFORM_ADMIN
-    ? platformAdminNames[mockIdx]
-    : env.AUTHZ_MOCK_IS_TEAM_ADMIN
-      ? teamAdminNames[mockIdx]
-      : teamMemberNames[mockIdx]
+export const getMockName = () => {
+  if (env.AUTHZ_MOCK_IS_PLATFORM_ADMIN) {
+    return platformAdminNames[mockIdx]
+  } else if (env.AUTHZ_MOCK_IS_TEAM_ADMIN) {
+    return teamAdminNames[mockIdx]
+  } else {
+    return teamMemberNames[mockIdx]
+  }
+}
 
 export const getMockGroups = () => {
   const groups: Array<string> = []
