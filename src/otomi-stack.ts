@@ -342,7 +342,13 @@ export default class OtomiStack {
         cleanSecretPaths.push(p)
       } else {
         teams.forEach((teamId: string) => {
-          if (p.indexOf(teamProp) === 0) cleanSecretPaths.push(p.replace(teamProp, `teamConfig.${teamId}`))
+          if (p.indexOf(teamProp) === 0)
+            cleanSecretPaths.push(
+              p
+                .replace(teamProp, `teamConfig.${teamId}`)
+                // add spec to the path for v2 endpoints
+                .replace(`teamConfig.${teamId}.settings`, `teamConfig.${teamId}.settings.spec`),
+            )
         })
       }
     })
@@ -678,6 +684,19 @@ export default class OtomiStack {
 
   async createAplTeam(data: AplTeamSettingsRequest, deploy = true): Promise<AplTeamSettingsResponse> {
     const teamName = data.metadata.name
+
+    if (isEmpty(data.spec.password)) {
+      debug(`creating password for team '${teamName}'`)
+      // eslint-disable-next-line no-param-reassign
+      data.spec.password = generatePassword({
+        length: 16,
+        numbers: true,
+        symbols: false,
+        lowercase: true,
+        uppercase: true,
+        strict: true,
+      })
+    }
 
     const teamConfig = this.repoService.createTeamConfig(data)
     const team = teamConfig.settings
