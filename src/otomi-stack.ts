@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this */
 import * as k8s from '@kubernetes/client-node'
 import { V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
@@ -2019,9 +2018,12 @@ export default class OtomiStack {
       }, 5 * 1000)
 
       // fallback to clear interval after 10 minutes
-      setTimeout(() => {
-        clearInterval(intervalId)
-      }, 10 * 60 * 1000)
+      setTimeout(
+        () => {
+          clearInterval(intervalId)
+        },
+        10 * 60 * 1000,
+      )
     } catch (error) {
       debug('Error emitting pipeline status:', error)
     }
@@ -2175,7 +2177,6 @@ export default class OtomiStack {
     return collection
   }
 
-  // eslint-disable-next-line class-methods-use-this
   async getKubecfg(teamId: string): Promise<k8s.KubeConfig> {
     this.getTeam(teamId) // will throw if not existing
     const {

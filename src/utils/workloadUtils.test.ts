@@ -219,7 +219,7 @@ describe('updateChartIconInYaml', () => {
   test('updates the icon field when newIcon is provided', async () => {
     const chartObject = { name: 'Test Chart', version: '1.0.0' }
     const fileContent = YAML.stringify(chartObject)
-    ;(fsExtra.readFile as jest.Mock).mockResolvedValue(fileContent)
+    ;(fsExtra.readFile as unknown as jest.Mock).mockResolvedValue(fileContent)
     const fakePath = '/tmp/test/Chart.yaml'
     const newIcon = 'https://example.com/new-icon.png'
     const expectedObject = { name: 'Test Chart', version: '1.0.0', icon: newIcon }
@@ -234,7 +234,7 @@ describe('updateChartIconInYaml', () => {
   test('replaces existing icon when newIcon is provided', async () => {
     const chartObject = { name: 'Test Chart', version: '1.0.0', icon: 'https://example.com/old-icon.png' }
     const fileContent = YAML.stringify(chartObject)
-    ;(fsExtra.readFile as jest.Mock).mockResolvedValue(fileContent)
+    ;(fsExtra.readFile as unknown as jest.Mock).mockResolvedValue(fileContent)
     const fakePath = '/tmp/test/Chart.yaml'
     const newIcon = 'https://example.com/new-icon.png'
     const expectedObject = { name: 'Test Chart', version: '1.0.0', icon: newIcon }
@@ -248,7 +248,7 @@ describe('updateChartIconInYaml', () => {
   test('does not change icon when newIcon is empty', async () => {
     const chartObject = { name: 'Test Chart', version: '1.0.0', icon: 'https://example.com/old-icon.png' }
     const fileContent = YAML.stringify(chartObject)
-    ;(fsExtra.readFile as jest.Mock).mockResolvedValue(fileContent)
+    ;(fsExtra.readFile as unknown as jest.Mock).mockResolvedValue(fileContent)
     const fakePath = '/tmp/test/Chart.yaml'
     const newIcon = ''
 
@@ -263,7 +263,7 @@ describe('updateChartIconInYaml', () => {
   })
 
   test('handles errors gracefully', async () => {
-    ;(fsExtra.readFile as jest.Mock).mockRejectedValue(new Error('File not found'))
+    ;(fsExtra.readFile as unknown as jest.Mock).mockRejectedValue(new Error('File not found'))
     const fakePath = '/tmp/test/Chart.yaml'
     const newIcon = 'https://example.com/new-icon.png'
 
@@ -283,7 +283,7 @@ describe('updateRbacForNewChart', () => {
   test('updates rbac.yaml with new chart key when allowTeams is true', async () => {
     const rbacObject = { rbac: {}, betaCharts: [] }
     const fileContent = YAML.stringify(rbacObject)
-    ;(fsExtra.readFile as jest.Mock).mockResolvedValue(fileContent)
+    ;(fsExtra.readFile as unknown as jest.Mock).mockResolvedValue(fileContent)
     const fakeSparsePath = '/tmp/test'
     const chartKey = 'quickstart-cassandra'
 
@@ -296,7 +296,7 @@ describe('updateRbacForNewChart', () => {
   test('updates rbac.yaml with new chart key when allowTeams is false', async () => {
     const rbacObject = { rbac: {}, betaCharts: [] }
     const fileContent = YAML.stringify(rbacObject)
-    ;(fsExtra.readFile as jest.Mock).mockResolvedValue(fileContent)
+    ;(fsExtra.readFile as unknown as jest.Mock).mockResolvedValue(fileContent)
     const fakeSparsePath = '/tmp/test'
     const chartKey = 'quickstart-cassandra'
 
@@ -307,7 +307,7 @@ describe('updateRbacForNewChart', () => {
   })
 
   test('creates rbac.yaml when it does not exist', async () => {
-    ;(fsExtra.readFile as jest.Mock).mockRejectedValue(new Error('File not found'))
+    ;(fsExtra.readFile as unknown as jest.Mock).mockRejectedValue(new Error('File not found'))
     const fakeSparsePath = '/tmp/test'
     const chartKey = 'quickstart-cassandra'
 
@@ -320,7 +320,7 @@ describe('updateRbacForNewChart', () => {
   test('preserves existing rbac entries when adding new chart', async () => {
     const rbacObject = { rbac: { 'existing-chart': ['team-1'] }, betaCharts: ['existing-chart'] }
     const fileContent = YAML.stringify(rbacObject)
-    ;(fsExtra.readFile as jest.Mock).mockResolvedValue(fileContent)
+    ;(fsExtra.readFile as unknown as jest.Mock).mockResolvedValue(fileContent)
     const fakeSparsePath = '/tmp/test'
     const chartKey = 'quickstart-cassandra'
 
@@ -549,7 +549,7 @@ describe('fetchWorkloadCatalog', () => {
       },
       betaCharts: ['chart2'],
     })
-    ;(fsExtra.readFile as jest.Mock).mockImplementation((filePath) => {
+    ;(fsExtra.readFile as unknown as jest.Mock).mockImplementation((filePath) => {
       if (filePath.endsWith('rbac.yaml')) return Promise.resolve(rbacContent)
 
       if (filePath.endsWith('chart1/README.md')) return Promise.resolve('# Chart 1 README')
@@ -660,7 +660,7 @@ describe('fetchWorkloadCatalog', () => {
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
 
     // Make the README.md file read fail
-    ;(fsExtra.readFile as jest.Mock).mockImplementation((filePath) => {
+    ;(fsExtra.readFile as unknown as jest.Mock).mockImplementation((filePath) => {
       if (filePath.endsWith('chart1/README.md')) return Promise.reject(new Error('File not found'))
 
       if (filePath.endsWith('chart1/values.yaml')) return Promise.resolve('key: value')
@@ -699,7 +699,7 @@ describe('fetchWorkloadCatalog', () => {
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
 
     // Make the rbac.yaml file read fail
-    ;(fsExtra.readFile as jest.Mock).mockImplementation((filePath) => {
+    ;(fsExtra.readFile as unknown as jest.Mock).mockImplementation((filePath) => {
       if (filePath.endsWith('rbac.yaml')) return Promise.reject(new Error('File not found'))
 
       if (filePath.endsWith('chart1/README.md')) return Promise.resolve('# Chart 1 README')
