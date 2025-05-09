@@ -90,7 +90,10 @@ export class HttpError extends OtomiError {
     511: 'Network Authentication Required', // RFC 6585
   }
 
-  public constructor(public code: number, message?: string) {
+  public constructor(
+    public code: number,
+    message?: string,
+  ) {
     super(message)
     // this.code = code
   }

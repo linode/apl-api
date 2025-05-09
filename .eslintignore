@@ -1,8 +1,0 @@
-.history/
-.vscode/
-/build
-/dist
-/coverage
-/node_modules
-/vendors
-/src/generated-schema.ts
