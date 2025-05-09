@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 
-import { Express } from 'express'
 import { mockDeep } from 'jest-mock-extended'
 import { initApp, loadSpec } from 'src/app'
 import getToken from 'src/fixtures/jwt'
@@ -9,8 +8,10 @@ import request, { SuperAgentTest } from 'supertest'
 import { HttpError } from './error'
 import { Git } from './git'
 import { getSessionStack } from './middleware'
-import { App, CodeRepo, SealedSecret } from './otomi-models'
+import { App, CodeRepo, Repo, SealedSecret } from './otomi-models'
 import * as getValuesSchemaModule from './utils'
+import { RepoService } from './services/RepoService'
+import { Express } from 'express'
 
 const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
@@ -42,14 +43,14 @@ describe('API authz tests', () => {
     _otomiStack.git = mockDeep<Git>()
     _otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
     _otomiStack.transformApps = jest.fn().mockReturnValue([])
-    await _otomiStack.initRepo()
+    _otomiStack.repoService = new RepoService({} as Repo)
     otomiStack = _otomiStack as jest.Mocked<OtomiStack>
 
     otomiStack.saveTeam = jest.fn().mockResolvedValue(undefined)
     otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
     otomiStack.doRepoDeployment = jest.fn().mockImplementation(() => Promise.resolve())
     otomiStack.doTeamDeployment = jest.fn().mockImplementation(() => Promise.resolve())
-    await otomiStack.loadValues()
+    otomiStack.isLoaded = true
     await otomiStack.createTeam({ name: 'team1' })
     await otomiStack.createTeam({ name: 'team2' })
     app = await initApp(otomiStack)
@@ -717,6 +718,7 @@ describe('API authz tests', () => {
     })
 
     test('team member can test code repository url', async () => {
+      jest.spyOn(otomiStack, 'getTestRepoConnect').mockResolvedValue({})
       await agent
         .get(`/v1/testRepoConnect`)
         .query({ url: data.repositoryUrl })

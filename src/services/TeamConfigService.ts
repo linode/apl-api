@@ -1,4 +1,4 @@
-import { find, has, merge, mergeWith, omit, remove, set } from 'lodash'
+import { cloneDeep, find, has, merge, omit, remove, set } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
 import { AlreadyExists, NotExistError } from '../error'
 import {
@@ -20,11 +20,12 @@ import {
   AplSecretResponse,
   AplServiceRequest,
   AplServiceResponse,
+  AplTeamSettingsRequest,
+  AplTeamSettingsResponse,
   AplWorkloadRequest,
   AplWorkloadResponse,
   App,
   DeepPartial,
-  Team,
   TeamConfig,
 } from '../otomi-models'
 import { createAplObject, getAplMergeObject, updateAplObject } from '../utils/manifests'
@@ -48,7 +49,7 @@ export class TeamConfigService {
   }
 
   private createAplObject(name: string, request: AplRequestObject): AplResponseObject {
-    return createAplObject(name, request, this.teamConfig.settings.name)
+    return createAplObject(name, request, this.teamConfig.settings.metadata.name)
   }
 
   // =====================================
@@ -384,15 +385,18 @@ export class TeamConfigService {
   // == SETTINGS CRUD ==
   // =====================================
 
-  public getSettings(): Team {
+  public getSettings(): AplTeamSettingsResponse {
     return this.teamConfig.settings
   }
 
-  public updateSettings(updates: Partial<Team>): Team {
-    if (!this.teamConfig.settings) {
-      this.teamConfig.settings = { name: updates.name || '' }
-    }
-    return mergeWith(this.teamConfig.settings, updates, mergeCustomizer)
+  public updateSettings(updates: DeepPartial<AplTeamSettingsRequest>): AplTeamSettingsResponse {
+    Object.assign(this.teamConfig.settings.spec, cloneDeep(updates.spec))
+    return this.teamConfig.settings
+  }
+
+  public patchSettings(updates: DeepPartial<AplTeamSettingsRequest>): AplTeamSettingsResponse {
+    const mergeObj = getAplMergeObject(updates)
+    return merge(this.teamConfig.settings, mergeObj)
   }
 
   // =====================================
@@ -418,7 +422,7 @@ export class TeamConfigService {
   }
 
   public getApps(): App[] {
-    const teamId = this.teamConfig.settings?.id
+    const teamId = this.teamConfig.settings?.metadata?.name
     return (this.teamConfig.apps ?? []).map((app) => ({
       ...app,
       teamId,

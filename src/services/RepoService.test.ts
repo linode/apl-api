@@ -1,5 +1,5 @@
 import { AlreadyExists } from '../error'
-import { App, Repo, User } from '../otomi-models'
+import { AplTeamSettingsRequest, App, Repo, User } from '../otomi-models'
 import { RepoService } from './RepoService'
 import { TeamConfigService } from './TeamConfigService'
 
@@ -10,6 +10,17 @@ jest.mock('uuid', () => ({
 describe('RepoService', () => {
   let service: RepoService
   let repo: Repo
+  const teamSettings = {
+    kind: 'AplTeamSettingSet',
+    metadata: {
+      name: 'team1',
+      labels: {
+        'apl.io/teamId': 'team1',
+      },
+    },
+    spec: {},
+    status: {},
+  } as AplTeamSettingsRequest
 
   beforeEach(() => {
     repo = {
@@ -30,6 +41,7 @@ describe('RepoService', () => {
       versions: { version: '1.0.0' },
     } as Repo
     service = new RepoService(repo)
+    service.createTeamConfig(teamSettings)
   })
 
   describe('getTeamConfigService', () => {
@@ -40,7 +52,6 @@ describe('RepoService', () => {
     })
 
     test('should return an instance of TeamConfigService when team config exists', () => {
-      service.createTeamConfig({ name: 'team1' })
       const teamConfigService = service.getTeamConfigService('team1')
 
       expect(teamConfigService).toBeInstanceOf(TeamConfigService)
@@ -106,18 +117,26 @@ describe('RepoService', () => {
 
   describe('Team Config', () => {
     test('should create a team config', () => {
-      const teamConfig = service.createTeamConfig({ name: 'team1' })
-      expect(teamConfig.settings).toEqual({ name: 'team1' })
+      const teamConfig = service.getTeamConfig('team1')
+      expect(teamConfig?.settings).toEqual({
+        kind: 'AplTeamSettingSet',
+        metadata: {
+          labels: {
+            'apl.io/teamId': 'team1',
+          },
+          name: 'team1',
+        },
+        spec: {},
+        status: {},
+      })
       expect(service.getTeamConfig('team1')).toBeDefined()
     })
 
     test('should throw an error if team config already exists', () => {
-      service.createTeamConfig({ name: 'team1' })
-      expect(() => service.createTeamConfig({ name: 'team1' })).toThrow(AlreadyExists)
+      expect(() => service.createTeamConfig(teamSettings)).toThrow(AlreadyExists)
     })
 
     test('should delete a team config', () => {
-      service.createTeamConfig({ name: 'team1' })
       service.deleteTeamConfig('team1')
       expect(service.getTeamConfig('team1')).toBeUndefined()
     })
@@ -172,8 +191,6 @@ describe('RepoService', () => {
     })
 
     test('should return all builds', () => {
-      service.createTeamConfig({ name: 'team1' })
-
       service.getTeamConfigService('team1').createBuild({
         kind: 'AplTeamBuild',
         metadata: { name: 'Build1' },
@@ -183,8 +200,6 @@ describe('RepoService', () => {
     })
 
     test('should return all projects', () => {
-      service.createTeamConfig({ name: 'team1' })
-
       service.getTeamConfigService('team1').createProject({
         kind: 'AplTeamProject',
         metadata: { name: 'Project1' },

@@ -22,6 +22,17 @@ describe('TeamConfigService', () => {
   let teamConfig: TeamConfig
 
   beforeEach(() => {
+    const teamSettings = {
+      kind: 'AplTeamSettingSet',
+      metadata: {
+        name: 'team1',
+        labels: {
+          'apl.io/teamId': 'team1',
+        },
+      },
+      spec: {},
+      status: {},
+    }
     teamConfig = {
       builds: [],
       codeRepos: [],
@@ -34,7 +45,7 @@ describe('TeamConfigService', () => {
       netpols: [],
       apps: [],
       policies: [],
-      settings: { name: 'team1' },
+      settings: teamSettings,
     } as TeamConfig
     service = new TeamConfigService(teamConfig)
   })
@@ -419,13 +430,41 @@ describe('TeamConfigService', () => {
 
   describe('Settings', () => {
     test('should retrieve settings', () => {
-      expect(service.getSettings()).toEqual({ name: 'team1' })
+      expect(service.getSettings()).toEqual({
+        kind: 'AplTeamSettingSet',
+        metadata: {
+          labels: {
+            'apl.io/teamId': 'team1',
+          },
+          name: 'team1',
+        },
+        spec: {},
+        status: {},
+      })
     })
 
     test('should update settings', () => {
-      const updated = service.updateSettings({ name: 'UpdatedTeam' })
-      expect(updated).toEqual({ name: 'UpdatedTeam' })
-      expect(service.getSettings().name).toBe('UpdatedTeam')
+      const updated = service.updateSettings({
+        kind: 'AplTeamSettingSet',
+        metadata: { name: 'team1' },
+        spec: { networkPolicy: { egressPublic: true } },
+      })
+      expect(updated).toEqual({
+        kind: 'AplTeamSettingSet',
+        metadata: {
+          labels: {
+            'apl.io/teamId': 'team1',
+          },
+          name: 'team1',
+        },
+        spec: {
+          networkPolicy: {
+            egressPublic: true,
+          },
+        },
+        status: {},
+      })
+      expect(service.getSettings().spec.networkPolicy!.egressPublic).toBe(true)
     })
   })
 
@@ -486,7 +525,7 @@ describe('TeamConfigService', () => {
 
   describe('getCollection', () => {
     test('should retrieve an existing collection', () => {
-      service.getSettings().id = 'team-id'
+      service.getSettings().metadata.name = 'team1'
       service.createBuild({ kind: 'AplTeamBuild', metadata: { name: 'TestBuild' }, spec: {} })
       expect(service.getCollection('builds')).toEqual([
         {
