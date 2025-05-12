@@ -2236,8 +2236,12 @@ export default class OtomiStack {
       decryptedData: valueArrayToObject(data.encryptedData),
       metadata: {
         annotations: valueArrayToObject(data.metadata?.annotations),
-        labels: valueArrayToObject(data.metadata?.labels),
-        finalizers: data.metadata?.finalizers,
+        ...((data.metadata?.labels?.length ?? 0) > 0 && {
+          labels: valueArrayToObject(data.metadata?.labels),
+        }),
+        ...((data.metadata?.finalizers?.length ?? 0) > 0 && {
+          finalizers: data.metadata?.finalizers,
+        }),
       },
     }
     const newSecret = await this.createAplSealedSecret(
@@ -2286,8 +2290,12 @@ export default class OtomiStack {
     if (data.metadata) {
       mergeObj.spec.metadata = {
         annotations: valueArrayToObject(data.metadata.annotations),
-        labels: valueArrayToObject(data.metadata.labels),
-        finalizers: data.metadata.finalizers,
+        ...((data.metadata?.labels?.length ?? 0) > 0 && {
+          labels: valueArrayToObject(data.metadata.labels),
+        }),
+        ...((data.metadata?.finalizers?.length ?? 0) > 0 && {
+          finalizers: data.metadata.finalizers,
+        }),
       }
     }
     const mergedSecret = await this.editAplSealedSecret(teamId, name, mergeObj)
