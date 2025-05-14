@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.4.0](https://github.com/redkubes/otomi-api/compare/v4.3.0...v4.4.0) (2025-05-14)
+
+
+### Features
+
+* add postman tests for api v2 ([#707](https://github.com/redkubes/otomi-api/issues/707)) ([4a91887](https://github.com/redkubes/otomi-api/commit/4a9188729895c1e039e21da66772cee0f059f44a))
+* migrate teamsettings to v2 endpoint ([#699](https://github.com/redkubes/otomi-api/issues/699)) ([507170f](https://github.com/redkubes/otomi-api/commit/507170f7db6402ec382138769f8d47c2456266b0))
+* update logout parameters as required by Keycloak ([#701](https://github.com/redkubes/otomi-api/issues/701)) ([fc3c2ac](https://github.com/redkubes/otomi-api/commit/fc3c2ac6694248992773d89d14922cee679426a7))
+
+
+### Bug Fixes
+
+* allow creating coderepos with same url in different teams ([#713](https://github.com/redkubes/otomi-api/issues/713)) ([1c418ef](https://github.com/redkubes/otomi-api/commit/1c418efea6a951978cbe455b0e60f33bf48c87dd))
+* authorize teamId ([#721](https://github.com/redkubes/otomi-api/issues/721)) ([68542c0](https://github.com/redkubes/otomi-api/commit/68542c0d4bbd3233307c23c9e2c50c6bc4e70c0b))
+* change error thrown when authorize is not valid ([#715](https://github.com/redkubes/otomi-api/issues/715)) ([9250908](https://github.com/redkubes/otomi-api/commit/925090857441f92778495b2e84c699880e55da89))
+* remove all the db messages on the websocket ([#712](https://github.com/redkubes/otomi-api/issues/712)) ([1749940](https://github.com/redkubes/otomi-api/commit/174994074d2479b3f338c962c22e2da7b215e7c7))
+* remove team password generation ([#719](https://github.com/redkubes/otomi-api/issues/719)) ([92965a8](https://github.com/redkubes/otomi-api/commit/92965a84bc0019ce95b2d3aebc08d2e124763525))
+* revert remove team password generation ([#720](https://github.com/redkubes/otomi-api/issues/720)) ([b0410f8](https://github.com/redkubes/otomi-api/commit/b0410f89131218c7cafe3c5dbc55a4dc5c796cf4))
+
+
+### Others
+
+* **deps:** update dependencies and fix eslint errors ([#714](https://github.com/redkubes/otomi-api/issues/714)) ([d5a7e49](https://github.com/redkubes/otomi-api/commit/d5a7e49dcd649e6233db90b7effbe20eba3d5373))
+
 ## [4.3.0](https://github.com/redkubes/otomi-api/compare/v4.2.0...v4.3.0) (2025-04-25)
 
 
