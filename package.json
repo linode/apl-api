@@ -38,7 +38,7 @@
     "lodash": "^4.17.21",
     "lowdb": "^1.0.0",
     "morgan": "^1.10.0",
-    "shelljs": "^0.8.5",
+    "shelljs": "^0.10.0",
     "simple-git": "^3.16.0",
     "socket.io": "^4.5.2",
     "socket.io-client": "^4.5.2",
