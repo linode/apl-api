@@ -7,7 +7,6 @@ import Authz, { getTeamSelfServiceAuthz } from 'src/authz'
 import { HttpError } from 'src/error'
 import { OpenApiRequestExt } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
-import { cleanEnv } from 'src/validators'
 import { RepoService } from '../services/RepoService'
 import { getSessionStack } from './session'
 
@@ -54,18 +53,20 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
   authz.init(user)
 
   let valid
-  if (!user.isPlatformAdmin && user.teams.includes(teamId) && action === 'read' && schemaName === 'Kubecfg')
-    valid = authz.hasSelfService(teamId, 'downloadKubeconfig')
-  else if (!user.isPlatformAdmin && user.teams.includes(teamId) && action === 'read' && schemaName === 'DockerConfig')
-    valid = authz.hasSelfService(teamId, 'downloadDockerLogin')
-  else if (!user.isPlatformAdmin && user.teams.includes(teamId) && action === 'create' && schemaName === 'Cloudtty')
-    valid = authz.hasSelfService(teamId, 'useCloudShell')
-  else if (!user.isPlatformAdmin && user.teams.includes(teamId) && action === 'update' && schemaName === 'Policy')
-    valid = authz.hasSelfService(teamId, 'editSecurityPolicies')
-  else valid = authz.validateWithCasl(action, schemaName, teamId)
-  const env = cleanEnv({})
-  // TODO: Debug purpose only for removal of license
-  if (!env.isDev && !valid) {
+  const isTeamMember = !user.isPlatformAdmin && user.teams.includes(teamId)
+  if (isTeamMember) {
+    const permissionMap: Record<string, string> = {
+      'read:Kubecfg': 'downloadKubeconfig',
+      'read:DockerConfig': 'downloadDockerLogin',
+      'create:Cloudtty': 'useCloudShell',
+      'update:Policy': 'editSecurityPolicies',
+    }
+    const key = `${action}:${schemaName}`
+    const permission = permissionMap[key]
+    valid = permission ? authz.hasSelfService(teamId, permission) : authz.validateWithCasl(action, schemaName, teamId)
+  } else valid = authz.validateWithCasl(action, schemaName, teamId)
+
+  if (!valid) {
     throw new HttpError(403, `User not allowed to perform "${action}" on "${schemaName}" resource`)
   }
 
