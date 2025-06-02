@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
-
+import { Express } from 'express'
 import { mockDeep } from 'jest-mock-extended'
 import { initApp, loadSpec } from 'src/app'
 import getToken from 'src/fixtures/jwt'
@@ -9,9 +8,8 @@ import { HttpError } from './error'
 import { Git } from './git'
 import { getSessionStack } from './middleware'
 import { App, CodeRepo, Repo, SealedSecret } from './otomi-models'
-import * as getValuesSchemaModule from './utils'
 import { RepoService } from './services/RepoService'
-import { Express } from 'express'
+import * as getValuesSchemaModule from './utils'
 
 const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
@@ -152,11 +150,11 @@ describe('API authz tests', () => {
     expect(response.body.values).toEqual(values)
   })
 
-  test('team member can get all teams', async () => {
+  test('team member cannot get all teams', async () => {
     await agent
       .get('/v1/teams')
       .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
+      .expect(403)
       .expect('Content-Type', /json/)
   })
 
@@ -172,12 +170,12 @@ describe('API authz tests', () => {
       .expect(403)
   })
 
-  test('team member can get other teams', async () => {
+  test('team member cannot get other teams', async () => {
     jest.spyOn(otomiStack, 'getTeam').mockResolvedValue({} as never)
     await agent
       .get('/v1/teams/team2')
       .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
+      .expect(403)
       .expect('Content-Type', /json/)
   })
 
