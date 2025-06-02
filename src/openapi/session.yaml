@@ -18,6 +18,9 @@ Session:
     user:
       $ref: 'user.yaml#/SessionUser'
       # readOnly: true
+    sealedSecretsPEM:
+      type: string
+      readOnly: true
     defaultPlatformAdminEmail:
       type: string
     objectStorage:
