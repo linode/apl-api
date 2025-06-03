@@ -155,6 +155,10 @@ Settings:
                           type: string
                           $ref: 'definitions.yaml#/wordCharacterPattern'
                           default: thanos
+                        kfp:
+                          type: string
+                          $ref: 'definitions.yaml#/wordCharacterPattern'
+                          default: kfp
                   required:
                     - region
                     - accessKeyId

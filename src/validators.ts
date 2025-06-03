@@ -73,6 +73,7 @@ export const OBJ_STORAGE_APPS = json({
     { appId: 'tempo', required: true },
     { appId: 'velero', required: true },
     { appId: 'thanos', required: true },
+    { appId: 'kubeflow-pipelines', required: true },
   ],
 })
 export const ROOT_KEYCLOAK_USER = str({
