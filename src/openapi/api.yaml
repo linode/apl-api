@@ -1929,7 +1929,7 @@ paths:
     get:
       operationId: getAplCodeRepo
       description: Get a code repo from a given team
-      x-aclSchema: Coderepo
+      x-aclSchema: CodeRepo
       responses:
         <<: *DefaultGetResponses
         '200':
