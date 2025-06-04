@@ -666,11 +666,15 @@ export default class OtomiStack {
   }
 
   getTeam(name: string): Team {
-    return getV1ObjectFromApl(this.repoService.getTeamConfigService(name).getSettings()) as Team
+    const team = getV1ObjectFromApl(this.repoService.getTeamConfigService(name).getSettings()) as Team
+    unset(team, 'password') // Remove password from the response
+    return team
   }
 
   getAplTeam(name: string): AplTeamSettingsResponse {
-    return this.repoService.getTeamConfigService(name).getSettings()
+    const team = this.repoService.getTeamConfigService(name).getSettings()
+    unset(team, 'spec.password') // Remove password from the response
+    return team
   }
 
   async createTeam(data: Team, deploy = true): Promise<Team> {

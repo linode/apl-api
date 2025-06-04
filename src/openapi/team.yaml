@@ -106,10 +106,10 @@ Team:
       - create-any
       - update-any
     teamAdmin:
-      - read-any
+      - read
       - update
     teamMember:
-      - read-any
+      - read
       - update
   type: object
   x-externalDocsPath: docs/for-ops/console/teams
