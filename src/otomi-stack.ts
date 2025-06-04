@@ -2288,6 +2288,7 @@ export default class OtomiStack {
             encryptedData: data.spec?.encryptedData,
             namespace,
             immutable: data.spec?.immutable ?? existingSecret.spec.immutable,
+            metadata: data.spec?.metadata ?? existingSecret.spec.metadata,
           },
         } as AplSecretRequest)
     await this.saveTeamSealedSecret(sealedSecret)
