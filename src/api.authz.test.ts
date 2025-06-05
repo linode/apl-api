@@ -383,7 +383,7 @@ describe('API authz tests', () => {
 
     const data = {
       name: 'demo',
-      encryptedData: [{ key: 'foo', value: 'bar' }],
+      encryptedData: { foo: 'encrypted-text-BAR' },
       type: 'kubernetes.io/opaque',
     }
     await agent
@@ -407,7 +407,7 @@ describe('API authz tests', () => {
 
     const data = {
       name: 'demo',
-      encryptedData: [{ key: 'foo', value: 'baz' }],
+      encryptedData: { foo: 'encrypted-text-BAZ' },
       type: 'kubernetes.io/opaque',
     }
     await agent
@@ -431,7 +431,7 @@ describe('API authz tests', () => {
   test('team member cannot create others sealedsecret', async () => {
     const data = {
       name: 'demo',
-      encryptedData: [{ key: 'foo', value: 'bar' }],
+      encryptedData: { foo: 'encrypted-text-BAR' },
       type: 'kubernetes.io/opaque',
     }
     await agent
@@ -451,7 +451,7 @@ describe('API authz tests', () => {
   test('team member cannot update others sealedsecret', async () => {
     const data = {
       name: 'demo',
-      encryptedData: [{ key: 'foo', value: 'baz' }],
+      encryptedData: { foo: 'encrypted-text-BAZ' },
       type: 'kubernetes.io/opaque',
     }
     await agent

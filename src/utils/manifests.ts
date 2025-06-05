@@ -1,15 +1,5 @@
-import {
-  AplKind,
-  AplRequestObject,
-  AplResponseObject,
-  AplSecretResponse,
-  DeepPartial,
-  SealedSecret,
-  ServiceSpec,
-  V1ApiObject,
-} from '../otomi-models'
-import { cloneDeep, isEmpty, merge, omit } from 'lodash'
-import { mapObjectToKeyValueArray } from '../utils'
+import { cloneDeep, merge, omit } from 'lodash'
+import { AplKind, AplRequestObject, AplResponseObject, DeepPartial, ServiceSpec, V1ApiObject } from '../otomi-models'
 
 export function getAplObjectFromV1(kind: AplKind, spec: V1ApiObject | ServiceSpec): AplRequestObject {
   return {
@@ -28,22 +18,6 @@ export function getV1ObjectFromApl(aplObject: AplResponseObject): V1ApiObject {
     ...(teamId && { teamId }),
     ...omit(aplObject.spec, ['id', 'name', 'teamId']),
   }
-}
-
-export function getV1SealedSecretFromApl(aplSecret: AplSecretResponse): SealedSecret {
-  const secret = omit(getV1ObjectFromApl(aplSecret), ['encryptedData', 'decryptedData', 'metadata']) as SealedSecret
-  const { encryptedData, decryptedData, metadata } = aplSecret.spec
-  secret.isDisabled = isEmpty(decryptedData)
-  secret.encryptedData = Object.entries(encryptedData || {}).map(([key, value]) => ({
-    key,
-    value: decryptedData?.[key] || value,
-  }))
-  secret.metadata = {
-    annotations: mapObjectToKeyValueArray(metadata?.annotations),
-    labels: mapObjectToKeyValueArray(metadata?.labels),
-    finalizers: metadata?.finalizers,
-  }
-  return secret
 }
 
 export function getV1MergeObject(updates: DeepPartial<V1ApiObject | ServiceSpec>): DeepPartial<AplRequestObject> {
