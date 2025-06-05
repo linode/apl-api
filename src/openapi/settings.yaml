@@ -155,10 +155,10 @@ Settings:
                           type: string
                           $ref: 'definitions.yaml#/wordCharacterPattern'
                           default: thanos
-                        kfp:
+                        kubeflow-pipelines:
                           type: string
                           $ref: 'definitions.yaml#/wordCharacterPattern'
-                          default: kfp
+                          default: kubeflow-pipelines
                   required:
                     - region
                     - accessKeyId
