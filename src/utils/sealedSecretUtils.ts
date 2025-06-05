@@ -82,16 +82,12 @@ export async function getSealedSecretsPEM(): Promise<string> {
     const certificate = await getSealedSecretsCertificate()
     if (!certificate) {
       if (process.env.NODE_ENV === 'development') return ''
-      const err = new ValidationError()
-      err.publicMessage = 'SealedSecrets certificate not found'
-      throw err
+      throw new ValidationError('SealedSecrets certificate not found')
     }
     return getPEM(certificate)
   } catch (error) {
     console.error('Error fetching SealedSecrets certificate:', error)
     if (process.env.NODE_ENV === 'development') return ''
-    const err = new ValidationError()
-    err.publicMessage = 'SealedSecrets certificate not found'
-    throw err
+    throw new ValidationError('SealedSecrets certificate not found')
   }
 }
