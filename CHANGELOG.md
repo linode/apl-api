@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.5.0](https://github.com/redkubes/otomi-api/compare/v4.4.0...v4.5.0) (2025-06-03)
+
+
+### Bug Fixes
+
+* remove unused obj property from settingsInfo ([#730](https://github.com/redkubes/otomi-api/issues/730)) ([48c6437](https://github.com/redkubes/otomi-api/commit/48c643713da7fde7365ff186006d05f539a82560))
+* security policies & self service permissions ([#732](https://github.com/redkubes/otomi-api/issues/732)) ([96ad35e](https://github.com/redkubes/otomi-api/commit/96ad35e91f0b0e94ea26455e1c3a185136ad937b))
+* team(s) endpoints ([#733](https://github.com/redkubes/otomi-api/issues/733)) ([85be61c](https://github.com/redkubes/otomi-api/commit/85be61caa8c16563e3e48cd01188beaa3eea1f52))
+
+
+### Others
+
+* add code owners ([#727](https://github.com/redkubes/otomi-api/issues/727)) ([8c9689c](https://github.com/redkubes/otomi-api/commit/8c9689c4093f814e3cc0eb76a0b4bd653c1cc15e))
+* do not run postman for dependabot and update some deps ([#731](https://github.com/redkubes/otomi-api/issues/731)) ([afd648b](https://github.com/redkubes/otomi-api/commit/afd648bf93444001c881ba825203de11d8967a1f))
+
 ## [4.4.0](https://github.com/redkubes/otomi-api/compare/v4.3.0...v4.4.0) (2025-05-14)
 
 
