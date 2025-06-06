@@ -119,20 +119,23 @@ export function getServiceUrl({
   teamId,
   cluster,
   dns,
+  managedByKnative,
 }: {
   domain?: string
   name?: string
   teamId?: string
   cluster: Cluster
   dns: Dns
+  managedByKnative: boolean
 }): {
   subdomain: string
   domain: string
 } {
+  const subdomain = managedByKnative ? `${name}-team-${teamId}` : `${name}-${teamId}`
   if (!domain) {
     // Fallback mechanism for exposed service that does not have its public url specified in values
     return {
-      subdomain: `${name}-${teamId}`,
+      subdomain,
       domain: cluster!.domainSuffix || '',
     }
   }
