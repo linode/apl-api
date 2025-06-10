@@ -109,7 +109,7 @@
     "watch": "1.0.2"
   },
   "engines": {
-    "node": ">=22 <23"
+    "node": ">=20 <21"
   },
   "engineStrict": true,
   "homepage": "https://github.com/redkubes/otomi-api#readme",

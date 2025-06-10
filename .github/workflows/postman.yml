@@ -48,7 +48,11 @@ jobs:
           ls
       - name: Start core server
         run: |
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           cd apl-core
+          nvm install
+          nvm use
           node -v
           npm install
           npm run server > $GITHUB_WORKSPACE/core.log 2>&1 &
