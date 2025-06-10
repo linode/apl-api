@@ -32,6 +32,7 @@ jobs:
           nvm use
           node -v
           npm install
+
       - uses: ArtiomTr/jest-coverage-report-action@v2
         with:
           test-script: npm run test
