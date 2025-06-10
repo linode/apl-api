@@ -9,7 +9,7 @@ roleRef:
   name: cluster-admin
 subjects:
   - kind: ServiceAccount
-    name: tty-$EMAIL
+    name: tty-$SUB
     namespace: team-admin
 ---
 

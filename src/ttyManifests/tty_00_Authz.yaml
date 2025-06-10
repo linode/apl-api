@@ -1,15 +1,16 @@
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: tty-$EMAIL
+  name: tty-$SUB
   namespace: team-admin
 spec:
   selector:
     matchLabels:
-      app: tty-$EMAIL
+      app: tty-$SUB
   action: ALLOW
   rules:
     - when:
         - key: request.auth.claims[sub]
           values: ['$SUB']
 ---
+
