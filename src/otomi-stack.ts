@@ -564,8 +564,7 @@ export default class OtomiStack {
     this.filterExcludedApp(app)
 
     if (teamId === 'admin') return app
-    const adminApp = this.repoService.getTeamConfigService(teamId).getApp(id)
-    return { ...cloneDeep(app), enabled: adminApp.enabled }
+    return { id: app.id, enabled: app.enabled }
   }
 
   getApp(name: string): App {
