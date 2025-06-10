@@ -49,7 +49,7 @@ jobs:
       - name: Start core server
         run: |
           cd apl-core
-          nvm use
+          node -v
           npm install
           npm run server > $GITHUB_WORKSPACE/core.log 2>&1 &
       - name: Start api
