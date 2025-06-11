@@ -564,8 +564,7 @@ export default class OtomiStack {
     this.filterExcludedApp(app)
 
     if (teamId === 'admin') return app
-    const adminApp = this.repoService.getTeamConfigService(teamId).getApp(id)
-    return { ...cloneDeep(app), enabled: adminApp.enabled }
+    return { id: app.id, enabled: app.enabled }
   }
 
   getApp(name: string): App {
@@ -2454,12 +2453,14 @@ export default class OtomiStack {
     const inService = omit(serviceSpec, publicIngressFields)
 
     const { cluster, dns } = this.getSettings(['cluster', 'dns'])
+    const managedByKnative = service.spec.ksvc?.predeployed ? true : false
     const url = getServiceUrl({
       domain: serviceSpec.domain,
       name: service.metadata.name,
       teamId: service.metadata.labels['apl.io/teamId'],
       cluster,
       dns,
+      managedByKnative,
     })
     return removeBlankAttributes({
       ...serviceMeta,
