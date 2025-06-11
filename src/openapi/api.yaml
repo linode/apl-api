@@ -1432,6 +1432,33 @@ paths:
               schema:
                 type: string
 
+  '/v2/cloudtty':
+    get:
+      operationId: connectAplCloudtty
+      description: Get a cloudtty iFrameUrl
+      x-aclSchema: Cloudtty
+      parameters:
+        - name: teamId
+          in: query
+          description: Id of the team
+          schema:
+            type: string
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored cloudtty configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cloudtty'
+    delete:
+      operationId: deleteAplCloudtty
+      description: Delete cloudtty url
+      x-aclSchema: Cloudtty
+      responses:
+        '200':
+          description: Successfully removed cloudtty url
+
   '/v1/cloudtty':
     get:
       operationId: connectCloudtty

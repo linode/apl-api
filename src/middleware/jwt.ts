@@ -51,7 +51,6 @@ export function getUser(user: JWT, otomi: OtomiStack): SessionUser {
 export function jwtMiddleware(): RequestHandler {
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
     const token = req.header('Authorization')
-    console.log('token: ', token)
     const otomi = await getSessionStack() // we can use the readonly version
     if (env.isDev) {
       req.user = getUser(
