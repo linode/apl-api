@@ -2437,12 +2437,14 @@ export default class OtomiStack {
     const inService = omit(serviceSpec, publicIngressFields)
 
     const { cluster, dns } = this.getSettings(['cluster', 'dns'])
+    const managedByKnative = service.spec.ksvc?.predeployed ? true : false
     const url = getServiceUrl({
       domain: serviceSpec.domain,
       name: service.metadata.name,
       teamId: service.metadata.labels['apl.io/teamId'],
       cluster,
       dns,
+      managedByKnative,
     })
     return removeBlankAttributes({
       ...serviceMeta,
