@@ -13,31 +13,48 @@ describe('Utils', () => {
   }
 
   test('should retrieve host part from service domain', () => {
-    const x = getServiceUrl({ domain: 'aa.bb.cc.dd.ee', cluster, dns: { ...dns, zones: ['dd.ee'] } })
-    expect(x.subdomain).toEqual('aa.bb.cc')
+    const service = getServiceUrl({
+      domain: 'aa.bb.cc.dd.ee',
+      cluster,
+      dns: { ...dns, zones: ['dd.ee'] },
+      managedByKnative: false,
+    })
+    expect(service.subdomain).toEqual('aa.bb.cc')
   })
 
   test('should retrieve only domain', () => {
-    const x = getServiceUrl({ domain: 'my.custom.domain', cluster, dns: { ...dns, zones: ['dd.ee'] } })
-    expect(x.subdomain).toEqual('')
-    expect(x.domain).toEqual('my.custom.domain')
+    const service = getServiceUrl({
+      domain: 'my.custom.domain',
+      cluster,
+      dns: { ...dns, zones: ['dd.ee'] },
+      managedByKnative: false,
+    })
+    expect(service.subdomain).toEqual('')
+    expect(service.domain).toEqual('my.custom.domain')
   })
 
   test('should retrieve default host if service domain not defined', () => {
-    const x = getServiceUrl({ name: 'aa', teamId: 'bb', cluster, dns: { ...dns, zones: ['dd.ee'] } })
-    expect(x.subdomain).toEqual('aa-bb')
-    expect(x.domain).toEqual('dev.otomi.cloud')
+    const service = getServiceUrl({
+      name: 'aa',
+      teamId: 'bb',
+      cluster,
+      dns: { ...dns, zones: ['dd.ee'] },
+      managedByKnative: false,
+    })
+    expect(service.subdomain).toEqual('aa-bb')
+    expect(service.domain).toEqual('dev.otomi.cloud')
   })
 
   test('should retrieve host and domain part from service domain (many zones)', () => {
-    const x = getServiceUrl({
+    const service = getServiceUrl({
       domain: 'aa.bb.cc.dd.ee',
       name: 'aa',
       teamId: 'bb',
       cluster,
       dns: { ...dns, zones: ['cc.dd.ee', 'dd.ee', 'bb.cc.dd.ee'] },
+      managedByKnative: false,
     })
-    expect(x.subdomain).toEqual('aa')
-    expect(x.domain).toEqual('bb.cc.dd.ee')
+    expect(service.subdomain).toEqual('aa')
+    expect(service.domain).toEqual('bb.cc.dd.ee')
   })
 })
