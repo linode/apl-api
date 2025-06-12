@@ -3,7 +3,7 @@ import Debug from 'debug'
 import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
-import { AplBuildResponse, AplSecretResponse, AplServiceResponse, AplWorkloadResponse, Cloudtty } from './otomi-models'
+import { AplBuildResponse, AplSecretResponse, AplServiceResponse, AplWorkloadResponse } from './otomi-models'
 
 const debug = Debug('otomi:api:k8sOperations')
 
@@ -93,13 +93,21 @@ export async function checkPodExists(namespace: string, podName: string): Promis
   }
 }
 
-export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty) {
+export async function k8sdelete({
+  sub,
+  isPlatformAdmin,
+  userTeams,
+}: {
+  sub: string
+  isPlatformAdmin: boolean
+  userTeams: string[]
+}): Promise<void> {
   const kc = new k8s.KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
   const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
   const rbacAuthorizationV1Api = kc.makeApiClient(k8s.RbacAuthorizationV1Api)
-  const resourceName = emailNoSymbols
+  const resourceName = sub
   const namespace = 'team-admin'
   try {
     const apiVersion = 'v1beta1'
@@ -118,7 +126,7 @@ export async function k8sdelete({ emailNoSymbols, isAdmin, userTeams }: Cloudtty
 
     await k8sApi.deleteNamespacedServiceAccount(`tty-${resourceName}`, namespace)
     await k8sApi.deleteNamespacedPod(`tty-${resourceName}`, namespace)
-    if (!isAdmin) {
+    if (!isPlatformAdmin) {
       for (const team of userTeams!) {
         await rbacAuthorizationV1Api.deleteNamespacedRoleBinding(`tty-${team}-${resourceName}-rolebinding`, team)
       }

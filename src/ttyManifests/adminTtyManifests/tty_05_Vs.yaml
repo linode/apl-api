@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: tty-$EMAIL
+  name: tty-$SUB
   namespace: team-admin
 spec:
   gateways:
@@ -18,12 +18,12 @@ spec:
         redirectCode: 302
     - match:
         - uri:
-            prefix: /$EMAIL
+            prefix: /$SUB
       rewrite:
         uri: /
       route:
         - destination:
-            host: tty-$EMAIL.team-admin.svc.cluster.local
+            host: tty-$SUB.team-admin.svc.cluster.local
             port:
               number: 8080
           headers:

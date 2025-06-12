@@ -2,12 +2,12 @@ apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    app: tty-$EMAIL
+    app: tty-$SUB
     otomi: tty
-  name: tty-$EMAIL
+  name: tty-$SUB
   namespace: team-admin
 spec:
-  serviceAccountName: tty-$EMAIL
+  serviceAccountName: tty-$SUB
   securityContext:
     runAsUser: 1000
     runAsGroup: 1000
