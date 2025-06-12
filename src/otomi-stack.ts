@@ -357,7 +357,7 @@ export default class OtomiStack {
 
   getSettingsInfo(): SettingsInfo {
     return {
-      cluster: pick(this.repoService.getCluster(), ['name', 'domainSuffix', 'provider']),
+      cluster: pick(this.repoService.getCluster(), ['name', 'domainSuffix', 'apiServer', 'provider']),
       dns: pick(this.repoService.getDns(), ['zones']),
       otomi: pick(this.repoService.getOtomi(), ['hasExternalDNS', 'hasExternalIDP', 'isPreInstalled']),
       smtp: pick(this.repoService.getSmtp(), ['smarthost']),
@@ -565,8 +565,7 @@ export default class OtomiStack {
     this.filterExcludedApp(app)
 
     if (teamId === 'admin') return app
-    const adminApp = this.repoService.getTeamConfigService(teamId).getApp(id)
-    return { ...cloneDeep(app), enabled: adminApp.enabled }
+    return { id: app.id, enabled: app.enabled }
   }
 
   getApp(name: string): App {
@@ -1460,7 +1459,7 @@ export default class OtomiStack {
   }
 
   getDashboard(teamName: string): Array<any> {
-    const projects = teamName ? this.repoService.getTeamConfigService(teamName).getProjects() : this.getAllProjects()
+    const codeRepos = teamName ? this.repoService.getTeamConfigService(teamName).getCodeRepos() : this.getAllCodeRepos()
     const builds = teamName ? this.repoService.getTeamConfigService(teamName).getBuilds() : this.getAllBuilds()
     const workloads = teamName ? this.repoService.getTeamConfigService(teamName).getWorkloads() : this.getAllWorkloads()
     const services = teamName ? this.repoService.getTeamConfigService(teamName).getServices() : this.getAllServices()
@@ -1470,11 +1469,11 @@ export default class OtomiStack {
     const netpols = teamName ? this.repoService.getTeamConfigService(teamName).getNetpols() : this.getAllNetpols()
 
     return [
-      { name: 'projects', count: projects?.length },
+      { name: 'code-repositories', count: codeRepos?.length },
       { name: 'container-images', count: builds?.length },
       { name: 'workloads', count: workloads?.length },
       { name: 'services', count: services?.length },
-      { name: 'sealed-secrets', count: secrets?.length },
+      { name: 'secrets', count: secrets?.length },
       { name: 'network-policies', count: netpols?.length },
     ]
   }
@@ -2439,12 +2438,14 @@ export default class OtomiStack {
     const inService = omit(serviceSpec, publicIngressFields)
 
     const { cluster, dns } = this.getSettings(['cluster', 'dns'])
+    const managedByKnative = service.spec.ksvc?.predeployed ? true : false
     const url = getServiceUrl({
       domain: serviceSpec.domain,
       name: service.metadata.name,
       teamId: service.metadata.labels['apl.io/teamId'],
       cluster,
       dns,
+      managedByKnative,
     })
     return removeBlankAttributes({
       ...serviceMeta,
