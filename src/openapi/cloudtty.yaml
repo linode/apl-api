@@ -16,7 +16,7 @@ Cloudtty:
       - update-any
       - delete-any
   type: object
-  x-externalDocsPath: docs/for-devs/console/cloudtty
+  x-externalDocsPath: shell-tty
   properties:
     iFrameUrl:
       $ref: 'definitions.yaml#/wordCharacterPattern'
