@@ -1580,12 +1580,6 @@ paths:
                 properties:
                   id:
                     $ref: '#/components/schemas/User/properties/id'
-                  email:
-                    $ref: '#/components/schemas/User/properties/email'
-                  isPlatformAdmin:
-                    $ref: '#/components/schemas/User/properties/isPlatformAdmin'
-                  isTeamAdmin:
-                    $ref: '#/components/schemas/User/properties/isTeamAdmin'
                   teams:
                     $ref: '#/components/schemas/User/properties/teams'
         description: User object that contains updated values
@@ -1599,7 +1593,12 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/User'
+                  type: object
+                  properties:
+                    id:
+                      $ref: '#/components/schemas/User/properties/id'
+                    teams:
+                      $ref: '#/components/schemas/User/properties/teams'
 
   '/v1/projects':
     get:

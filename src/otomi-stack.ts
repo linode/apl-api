@@ -1143,9 +1143,9 @@ export default class OtomiStack {
   }
 
   async editTeamUsers(
-    data: Pick<User, 'id' | 'email' | 'isPlatformAdmin' | 'isTeamAdmin' | 'teams'>[],
+    data: Pick<User, 'id' | 'teams'>[],
     sessionUser: SessionUser,
-  ): Promise<Array<User>> {
+  ): Promise<Pick<User, 'id' | 'teams'>[]> {
     if (!sessionUser.isPlatformAdmin && !sessionUser.isTeamAdmin) {
       const error = new OtomiError("Only platform admins or team admins can modify a user's team memberships.")
       error.code = 403
@@ -1166,8 +1166,8 @@ export default class OtomiStack {
       const updateUser = this.repoService.updateUser(user.id!, { ...existingUser, teams: user.teams })
       await this.saveUser(updateUser)
     }
-    const users = this.repoService.getUsers()
-    const files = users.map((user) => `${this.getRepoPath()}/env/users/secrets.${user.id}.yaml`)
+    const repoUsers = this.repoService.getUsers()
+    const files = repoUsers.map((user) => `${this.getRepoPath()}/env/users/secrets.${user.id}.yaml`)
     await this.doRepoDeployment(
       (repoService) => {
         for (const user of data) {
@@ -1178,6 +1178,7 @@ export default class OtomiStack {
       true,
       files,
     )
+    const users = repoUsers.map((user) => ({ id: user.id, teams: user.teams || [] }))
     return users
   }
 
