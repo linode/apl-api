@@ -15,7 +15,7 @@ Service:
       - read
       - update
       - delete
-  x-externalDocsPath: docs/for-devs/console/services
+  x-externalDocsPath: team-services
   properties:
     id:
       type: string
@@ -238,10 +238,10 @@ AplServiceSpec:
           title: Weight v2
           description: 'Percentage of traffic to version 2.'
     ingressClassName:
-          description: Assign service to a paricular Load Balancer by selecting ingress class name.
-          title: Ingress Class Name
-          $ref: 'definitions.yaml#/idName'
-          default: 'platform'
+      description: Assign service to a paricular Load Balancer by selecting ingress class name.
+      title: Ingress Class Name
+      $ref: 'definitions.yaml#/idName'
+      default: 'platform'
     tlsPass:
       description: Pass through the request as is to the backing service. Only available for pre-deployed regular (non-Knative) services.
       title: TLS passthrough

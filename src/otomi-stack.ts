@@ -10,7 +10,7 @@ import { cloneDeep, filter, isEmpty, map, mapValues, merge, omit, pick, set, uns
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import { AlreadyExists, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
 import getRepo, { Git } from 'src/git'
-import { cleanSession, getIo, getSessionStack } from 'src/middleware'
+import { cleanSession, getSessionStack } from 'src/middleware'
 import {
   AplBackupRequest,
   AplBackupResponse,
@@ -93,7 +93,6 @@ import {
   checkPodExists,
   getCloudttyActiveTime,
   getKubernetesVersion,
-  getLastTektonMessage,
   getSecretValues,
   getTeamSecretsFromK8s,
   k8sdelete,
@@ -2069,33 +2068,6 @@ export default class OtomiStack {
     if (servicesFiltered.length > 0) throw new PublicUrlExists()
   }
 
-  emitPipelineStatus(sha: string): void {
-    if (env.isDev) return
-    try {
-      // check pipeline status every 5 seconds and emit the status when it's completed
-      const intervalId = setInterval(() => {
-        getLastTektonMessage(sha).then((res: any) => {
-          const { order, name, completionTime, status } = res
-          if (completionTime) {
-            getIo().emit('tekton', { order, name, completionTime, sha, status })
-            clearInterval(intervalId)
-            debug(`Tekton pipeline ${order} completed with status ${status}`)
-          }
-        })
-      }, 5 * 1000)
-
-      // fallback to clear interval after 10 minutes
-      setTimeout(
-        () => {
-          clearInterval(intervalId)
-        },
-        10 * 60 * 1000,
-      )
-    } catch (error) {
-      debug('Error emitting pipeline status:', error)
-    }
-  }
-
   async doTeamDeployment(
     teamId: string,
     action: (teamService: TeamConfigService) => void,
@@ -2112,10 +2084,6 @@ export default class OtomiStack {
       action(rootStack.repoService.getTeamConfigService(teamId))
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
-
-      // Emit pipeline status
-      const sha = await rootStack.git.getCommitSha()
-      this.emitPipelineStatus(sha)
     } catch (e) {
       e.message = getSanitizedErrorMessage(e)
       throw e
@@ -2140,10 +2108,6 @@ export default class OtomiStack {
       action(rootStack.repoService)
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
-
-      // Emit pipeline status
-      const sha = await rootStack.git.getCommitSha()
-      this.emitPipelineStatus(sha)
     } catch (e) {
       e.message = getSanitizedErrorMessage(e)
       throw e
@@ -2178,10 +2142,6 @@ export default class OtomiStack {
       }
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
-
-      // Emit pipeline status
-      const sha = await rootStack.git.getCommitSha()
-      this.emitPipelineStatus(sha)
     } catch (e) {
       e.message = getSanitizedErrorMessage(e)
       throw e

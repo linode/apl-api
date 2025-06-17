@@ -10,7 +10,7 @@ servers:
 
 externalDocs:
   description: 'This is the base url of the external documentation'
-  url: https://apl-docs.net/ #Using this URL a final docUrl can be made using this+info.version+ the component's x-externalDocsPath
+  url: https://techdocs.akamai.com/app-platform/docs/ #Using this URL a final docUrl can be made using this+info.version+ the component's x-externalDocsPath
 
 x-responses:
   BadRequest: &BadRequest
