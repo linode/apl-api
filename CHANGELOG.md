@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.6.0](https://github.com/redkubes/otomi-api/compare/v4.5.0...v4.6.0) (2025-06-17)
+
+
+### Features
+
+* adjust dashboard endpoint ([#744](https://github.com/redkubes/otomi-api/issues/744)) ([bcb7b40](https://github.com/redkubes/otomi-api/commit/bcb7b409208091ca55d5c7c26691696a7644e7e6))
+* new sealed secret form ([#739](https://github.com/redkubes/otomi-api/issues/739)) ([145b580](https://github.com/redkubes/otomi-api/commit/145b58035e21dac66300e5381a249bcd7621d92b))
+* simplify the connect cloudtty flow ([#747](https://github.com/redkubes/otomi-api/issues/747)) ([45b3cb7](https://github.com/redkubes/otomi-api/commit/45b3cb7554f42d08e0aace87a780ad984186611a))
+
+
+### Bug Fixes
+
+* add apiServer to settingsInfo ([#748](https://github.com/redkubes/otomi-api/issues/748)) ([dc2a0b2](https://github.com/redkubes/otomi-api/commit/dc2a0b243510eb3846127be8162523e3cd1fcc89))
+* add team prefix to services overview page ([#743](https://github.com/redkubes/otomi-api/issues/743)) ([de81f55](https://github.com/redkubes/otomi-api/commit/de81f55dec8ffd168b0fe7b2f02adca53e4826ea))
+* only return app id and enabled for teams ([#745](https://github.com/redkubes/otomi-api/issues/745)) ([0bffae9](https://github.com/redkubes/otomi-api/commit/0bffae98f0bd5519651b7be04145fda3e58b1b8b))
+* only run coverage report on changes in src ([#741](https://github.com/redkubes/otomi-api/issues/741)) ([b2b43f2](https://github.com/redkubes/otomi-api/commit/b2b43f2c9b6764a1f8a4062a2f01a711773177aa))
+* postman github workflow ([#746](https://github.com/redkubes/otomi-api/issues/746)) ([698f92f](https://github.com/redkubes/otomi-api/commit/698f92fc6e007894ae68c90603637c762e390216))
+* replace apl-docs with techdocs ([#750](https://github.com/redkubes/otomi-api/issues/750)) ([fe4867e](https://github.com/redkubes/otomi-api/commit/fe4867ebb812206ae4235c801977605461cfb489))
+
+
+### Code Refactoring
+
+* remove unused socket.io-client dependency and clean up code ([#749](https://github.com/redkubes/otomi-api/issues/749)) ([a04a74a](https://github.com/redkubes/otomi-api/commit/a04a74ab5667ec4829a9a35a35aec6ff4874a771))
+
 ## [4.5.0](https://github.com/redkubes/otomi-api/compare/v4.4.0...v4.5.0) (2025-06-03)
 
 
