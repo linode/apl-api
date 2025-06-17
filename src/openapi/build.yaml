@@ -16,7 +16,7 @@ Build:
       - update
       - delete
   type: object
-  x-externalDocsPath: docs/for-devs/console/builds
+  x-externalDocsPath: team-container-images
   properties:
     id:
       type: string
