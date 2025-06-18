@@ -1081,7 +1081,12 @@ export default class OtomiStack {
     return this.repoService.getUser(id)
   }
 
-  async editUser(id: string, data: User): Promise<User> {
+  async editUser(id: string, data: User, sessionUser: SessionUser): Promise<User> {
+    if (!sessionUser.isPlatformAdmin) {
+      const error = new OtomiError('Only platform admins can modify user details.')
+      error.code = 403
+      throw error
+    }
     const user = this.repoService.updateUser(id, data)
     await this.saveUser(user)
     await this.doRepoDeployment(
@@ -1108,16 +1113,60 @@ export default class OtomiStack {
     }, false)
   }
 
+  private canTeamAdminUpdateUserTeams(sessionUser: SessionUser, existingUser: User, updatedUserTeams: string[]) {
+    if (!sessionUser.isTeamAdmin) return false
+
+    const sessionUserTeams = new Set(sessionUser.teams)
+    const oldTeams = new Set(existingUser.teams)
+    const newTeams = new Set(updatedUserTeams)
+
+    const addedTeams = [...newTeams].filter((team) => !oldTeams.has(team))
+    const removedTeams = [...oldTeams].filter((team) => !newTeams.has(team))
+
+    // Team admin can only add or remove users from their own teams
+    const allChangedTeams = [...addedTeams, ...removedTeams]
+    let isValid = allChangedTeams.every((team) => sessionUserTeams.has(team))
+
+    // Prevent team admin from removing themselves or other team admins from teams they manage
+    if (isValid && removedTeams.length > 0) {
+      // If the user being updated is themselves or another team admin
+      if (existingUser.email === sessionUser.email || existingUser.isTeamAdmin) {
+        // Check if any of the removed teams are managed by the session user
+        if (removedTeams.some((team) => sessionUserTeams.has(team))) {
+          isValid = false
+        }
+      }
+    }
+
+    return isValid
+  }
+
   async editTeamUsers(
-    data: Pick<User, 'id' | 'email' | 'isPlatformAdmin' | 'isTeamAdmin' | 'teams'>[],
-  ): Promise<Array<User>> {
+    data: Pick<User, 'id' | 'teams'>[],
+    sessionUser: SessionUser,
+  ): Promise<Pick<User, 'id' | 'teams'>[]> {
+    if (!sessionUser.isPlatformAdmin && !sessionUser.isTeamAdmin) {
+      const error = new OtomiError("Only platform admins or team admins can modify a user's team memberships.")
+      error.code = 403
+      throw error
+    }
     for (const user of data) {
       const existingUser = this.repoService.getUser(user.id!)
+      if (
+        !sessionUser.isPlatformAdmin &&
+        !this.canTeamAdminUpdateUserTeams(sessionUser, existingUser, user.teams as string[])
+      ) {
+        const error = new OtomiError(
+          'Team admins are permitted to add or remove users only within the teams they manage. However, they cannot remove themselves or other team admins from those teams.',
+        )
+        error.code = 403
+        throw error
+      }
       const updateUser = this.repoService.updateUser(user.id!, { ...existingUser, teams: user.teams })
       await this.saveUser(updateUser)
     }
-    const users = this.repoService.getUsers()
-    const files = users.map((user) => `${this.getRepoPath()}/env/users/secrets.${user.id}.yaml`)
+    const repoUsers = this.repoService.getUsers()
+    const files = repoUsers.map((user) => `${this.getRepoPath()}/env/users/secrets.${user.id}.yaml`)
     await this.doRepoDeployment(
       (repoService) => {
         for (const user of data) {
@@ -1128,6 +1177,7 @@ export default class OtomiStack {
       true,
       files,
     )
+    const users = repoUsers.map((user) => ({ id: user.id, teams: user.teams || [] }))
     return users
   }
 
@@ -2480,12 +2530,17 @@ export default class OtomiStack {
     const valuesSchema = await getValuesSchema()
     const currentSha = rootStack.git.commitSha
     const { obj } = this.getSettings(['obj'])
-    const regions = await getRegions()
+    let regions
+    try {
+      regions = await getRegions()
+    } catch (error) {
+      debug('Error fetching object storage regions:', error.message)
+    }
     const objStorageRegions =
-      regions.data
-        .filter((region) => region.capabilities.includes('Object Storage'))
-        .map(({ id, label }) => ({ id, label }))
-        .sort((a, b) => a.label.localeCompare(b.label)) || []
+      regions?.data
+        ?.filter((region) => region.capabilities.includes('Object Storage'))
+        ?.map(({ id, label }) => ({ id, label }))
+        ?.sort((a, b) => a.label.localeCompare(b.label)) || []
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
