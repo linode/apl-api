@@ -17,7 +17,7 @@ Backup:
       - delete
   type: object
   description: Create Velero backup schedules for Persistent Volumes.
-  x-externalDocsPath: docs/for-devs/console/backups
+  x-externalDocsPath: disaster-recovery
   properties:
     id:
       type: string

@@ -10,7 +10,7 @@ servers:
 
 externalDocs:
   description: 'This is the base url of the external documentation'
-  url: https://apl-docs.net/ #Using this URL a final docUrl can be made using this+info.version+ the component's x-externalDocsPath
+  url: https://techdocs.akamai.com/app-platform/docs/ #Using this URL a final docUrl can be made using this+info.version+ the component's x-externalDocsPath
 
 x-responses:
   BadRequest: &BadRequest
@@ -1432,18 +1432,44 @@ paths:
               schema:
                 type: string
 
-  '/v1/cloudtty':
-    post:
-      operationId: connectCloudtty
-      description: Create a cloudtty url
+  '/v2/cloudtty':
+    get:
+      operationId: connectAplCloudtty
+      description: Get a cloudtty iFrameUrl
       x-aclSchema: Cloudtty
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Cloudtty'
-        description: Cloudtty object
-        required: true
+      parameters:
+        - name: teamId
+          in: query
+          description: Id of the team
+          schema:
+            type: string
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored cloudtty configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cloudtty'
+    delete:
+      operationId: deleteAplCloudtty
+      description: Delete cloudtty url
+      x-aclSchema: Cloudtty
+      responses:
+        '200':
+          description: Successfully removed cloudtty url
+
+  '/v1/cloudtty':
+    get:
+      operationId: connectCloudtty
+      description: Get a cloudtty iFrameUrl
+      x-aclSchema: Cloudtty
+      parameters:
+        - name: teamId
+          in: query
+          description: Id of the team
+          schema:
+            type: string
       responses:
         <<: *DefaultPostResponses
         '200':
@@ -1456,13 +1482,6 @@ paths:
       operationId: deleteCloudtty
       description: Delete cloudtty url
       x-aclSchema: Cloudtty
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Cloudtty'
-        description: Cloudtty object
-        required: true
       responses:
         '200':
           description: Successfully removed cloudtty url
@@ -1561,12 +1580,6 @@ paths:
                 properties:
                   id:
                     $ref: '#/components/schemas/User/properties/id'
-                  email:
-                    $ref: '#/components/schemas/User/properties/email'
-                  isPlatformAdmin:
-                    $ref: '#/components/schemas/User/properties/isPlatformAdmin'
-                  isTeamAdmin:
-                    $ref: '#/components/schemas/User/properties/isTeamAdmin'
                   teams:
                     $ref: '#/components/schemas/User/properties/teams'
         description: User object that contains updated values
@@ -1580,7 +1593,12 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/User'
+                  type: object
+                  properties:
+                    id:
+                      $ref: '#/components/schemas/User/properties/id'
+                    teams:
+                      $ref: '#/components/schemas/User/properties/teams'
 
   '/v1/projects':
     get:

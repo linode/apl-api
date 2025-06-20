@@ -1,6 +1,6 @@
 import Debug from 'debug'
 import { Operation, OperationHandlerArray } from 'express-openapi'
-import { OpenApiRequestExt, User } from 'src/otomi-models'
+import { OpenApiRequestExt, SessionUser, User } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:users')
 
@@ -13,9 +13,9 @@ export default function (): OperationHandlerArray {
     },
   ]
   const put: Operation = [
-    async ({ otomi, params: { userId }, body }: OpenApiRequestExt, res): Promise<void> => {
+    async ({ otomi, params: { userId }, user, body }: OpenApiRequestExt, res): Promise<void> => {
       debug(`editUser(${userId})`)
-      const data = await otomi.editUser(decodeURIComponent(userId), body as User)
+      const data = await otomi.editUser(decodeURIComponent(userId), body as User, user as SessionUser)
       res.json(data)
     },
   ]

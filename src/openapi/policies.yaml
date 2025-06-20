@@ -155,7 +155,7 @@ Policy:
       - update
       - delete
   type: object
-  x-externalDocsPath: docs/for-devs/console/policies
+  x-externalDocsPath: team-security-policies
   properties:
     action:
       type: string

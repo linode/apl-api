@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 import { mockDeep } from 'jest-mock-extended'
 import {
   AplCodeRepoResponse,
@@ -6,6 +5,7 @@ import {
   AplTeamSettingsRequest,
   App,
   CodeRepo,
+  SessionUser,
   TeamConfig,
   User,
 } from 'src/otomi-models'
@@ -259,6 +259,17 @@ describe('Users tests', () => {
 
   const domainSuffix = 'dev.linode-apl.net'
 
+  const sessionUser: SessionUser = {
+    name: 'Session User',
+    email: `session@${domainSuffix}`,
+    isPlatformAdmin: false,
+    isTeamAdmin: false,
+    authz: {},
+    teams: [],
+    roles: [],
+    sub: 'session-user',
+  }
+
   const defaultPlatformAdmin: User = {
     id: '1',
     email: `platform-admin@${domainSuffix}`,
@@ -274,6 +285,33 @@ describe('Users tests', () => {
     firstName: 'any',
     lastName: 'admin',
     isPlatformAdmin: true,
+    isTeamAdmin: false,
+    teams: [],
+  }
+  const teamAdmin: User = {
+    id: '3',
+    email: `team-admin@${domainSuffix}`,
+    firstName: 'team',
+    lastName: 'admin',
+    isPlatformAdmin: false,
+    isTeamAdmin: true,
+    teams: [],
+  }
+  const teamMember1: User = {
+    id: '4',
+    email: `team-member1@${domainSuffix}`,
+    firstName: 'team1',
+    lastName: 'member1',
+    isPlatformAdmin: false,
+    isTeamAdmin: false,
+    teams: [],
+  }
+  const teamMember2: User = {
+    id: '5',
+    email: `team-member2@${domainSuffix}`,
+    firstName: 'team2',
+    lastName: 'member2',
+    isPlatformAdmin: false,
     isTeamAdmin: false,
     teams: [],
   }
@@ -312,64 +350,228 @@ describe('Users tests', () => {
     expect(await otomiStack.deleteUser('2')).toBeUndefined()
   })
 
-  it('should not create a user with less than 3 characters', async () => {
-    await expect(otomiStack.createUser({ email: 'a@b.c', firstName: 'a', lastName: 'b' })).rejects.toMatchObject({
-      code: 400,
-      publicMessage: 'Username (the part of the email before "@") must be between 3 and 30 characters.',
+  describe('User Creation Validation', () => {
+    describe('Username Length Validation', () => {
+      it('should not create a user with less than 3 characters', async () => {
+        await expect(otomiStack.createUser({ email: 'a@b.c', firstName: 'a', lastName: 'b' })).rejects.toMatchObject({
+          code: 400,
+          publicMessage: 'Username (the part of the email before "@") must be between 3 and 30 characters.',
+        })
+      })
+
+      it('should not create a user with more than 30 characters', async () => {
+        await expect(
+          otomiStack.createUser({ email: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@b.c', firstName: 'a', lastName: 'b' }),
+        ).rejects.toMatchObject({
+          code: 400,
+          publicMessage: 'Username (the part of the email before "@") must be between 3 and 30 characters.',
+        })
+      })
+    })
+
+    describe('Username Format Validation', () => {
+      it('should not create a user if the username starts with non-alphanumeric characters', async () => {
+        await expect(otomiStack.createUser({ email: '-abc@b.c', firstName: 'a', lastName: 'b' })).rejects.toMatchObject(
+          {
+            code: 400,
+            publicMessage: 'Invalid username (the part of the email before "@") format.',
+          },
+        )
+      })
+
+      it('should not create a user if the username ends with non-alphanumeric characters', async () => {
+        await expect(otomiStack.createUser({ email: 'abc-@b.c', firstName: 'a', lastName: 'b' })).rejects.toMatchObject(
+          {
+            code: 400,
+            publicMessage: 'Invalid username (the part of the email before "@") format.',
+          },
+        )
+      })
+
+      it('should not create a user if the username includes consecutive non-alphanumeric characters', async () => {
+        await expect(
+          otomiStack.createUser({ email: 'ab--c@b.c', firstName: 'a', lastName: 'b' }),
+        ).rejects.toMatchObject({
+          code: 400,
+          publicMessage: 'Invalid username (the part of the email before "@") format.',
+        })
+      })
+    })
+
+    describe('Reserved Username Validation', () => {
+      it('should not create a user with gitea reserved usernames', async () => {
+        await expect(otomiStack.createUser({ email: 'user@b.c', firstName: 'a', lastName: 'b' })).rejects.toMatchObject(
+          {
+            code: 400,
+            publicMessage: 'This username (the part of the email before "@") is reserved.',
+          },
+        )
+      })
+
+      it('should not create a user with keycloak root user username', async () => {
+        await expect(
+          otomiStack.createUser({ email: 'otomi-admin@b.c', firstName: 'a', lastName: 'b' }),
+        ).rejects.toMatchObject({
+          code: 400,
+          publicMessage: 'This username (the part of the email before "@") is reserved.',
+        })
+      })
+
+      it('should not create a user with gitea reserved user patterns', async () => {
+        await expect(
+          otomiStack.createUser({ email: 'a.keys@b.c', firstName: 'a', lastName: 'b' }),
+        ).rejects.toMatchObject({
+          code: 400,
+          publicMessage:
+            'Usernames (the part of the email before "@") ending with .keys, .gpg, .rss, or .atom are not allowed.',
+        })
+      })
     })
   })
 
-  it('should not create a user with more than 30 characters', async () => {
-    await expect(
-      otomiStack.createUser({ email: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@b.c', firstName: 'a', lastName: 'b' }),
-    ).rejects.toMatchObject({
-      code: 400,
-      publicMessage: 'Username (the part of the email before "@") must be between 3 and 30 characters.',
-    })
-  })
+  describe('User Editing Endpoints/Functions', () => {
+    describe('editUser', () => {
+      it('should allow platform admin to edit a user', async () => {
+        const user = { ...defaultPlatformAdmin, id: '3', email: 'edit@dev.linode-apl.net' }
+        await otomiStack.createUser(user)
+        const updated = { ...user, firstName: 'edited' }
+        jest.spyOn(otomiStack.repoService, 'updateUser').mockReturnValue(updated)
+        // Use a platform admin session user
+        const platformAdminSession = { ...sessionUser, isPlatformAdmin: true }
+        const result = await otomiStack.editUser(user.id, updated, platformAdminSession)
+        expect(result.firstName).toBe('edited')
+      })
 
-  it('should not create a user if the username starts with non-alphanumeric characters', async () => {
-    await expect(otomiStack.createUser({ email: '-abc@b.c', firstName: 'a', lastName: 'b' })).rejects.toMatchObject({
-      code: 400,
-      publicMessage: 'Invalid username (the part of the email before "@") format.',
+      it('should not allow non-platform admin to edit a user', async () => {
+        const user = { ...defaultPlatformAdmin, id: '4', email: 'edit2@dev.linode-apl.net' }
+        await otomiStack.createUser(user)
+        await expect(
+          otomiStack.editUser(user.id, user, { ...sessionUser, isPlatformAdmin: false }),
+        ).rejects.toMatchObject({
+          code: 403,
+        })
+      })
     })
-  })
 
-  it('should not create a user if the username ends with non-alphanumeric characters', async () => {
-    await expect(otomiStack.createUser({ email: 'abc-@b.c', firstName: 'a', lastName: 'b' })).rejects.toMatchObject({
-      code: 400,
-      publicMessage: 'Invalid username (the part of the email before "@") format.',
+    describe('canTeamAdminUpdateUserTeams', () => {
+      // set session user as team admin
+      sessionUser.isPlatformAdmin = false
+      sessionUser.isTeamAdmin = true
+      sessionUser.teams = ['team1', 'team2']
+
+      // set team admin teams
+      teamAdmin.teams = ['team1', 'team2']
+
+      // set team member teams
+      teamMember1.teams = ['team1']
+
+      it('should allow team admin to add user to their own team', () => {
+        const result = otomiStack['canTeamAdminUpdateUserTeams'](sessionUser, teamMember1, ['team1', 'team2'])
+        expect(result).toBe(true)
+      })
+
+      it('should allow team admin to remove user from their own team', () => {
+        const result = otomiStack['canTeamAdminUpdateUserTeams'](sessionUser, teamMember1, [])
+        expect(result).toBe(true)
+      })
+
+      it('should not allow team admin to add user to a team they do not manage', () => {
+        const result = otomiStack['canTeamAdminUpdateUserTeams'](sessionUser, teamMember1, ['team3'])
+        expect(result).toBe(false)
+      })
+
+      it('should not allow team admin to remove themselves from their own team', () => {
+        const selfUser = { ...teamAdmin, email: sessionUser.email }
+        const result = otomiStack['canTeamAdminUpdateUserTeams'](sessionUser, selfUser, [])
+        expect(result).toBe(false)
+      })
+
+      it('should not allow team admin to remove another team admin from their managed team', () => {
+        const anotherAdmin = { ...teamAdmin }
+        const result = otomiStack['canTeamAdminUpdateUserTeams'](sessionUser, anotherAdmin, [])
+        expect(result).toBe(false)
+      })
+
+      it('should allow team admin to make no changes', () => {
+        const result = otomiStack['canTeamAdminUpdateUserTeams'](sessionUser, teamMember1, ['team1'])
+        expect(result).toBe(true)
+      })
     })
-  })
 
-  it('should not create a user if the username includes consecutive non-alphanumeric characters', async () => {
-    await expect(otomiStack.createUser({ email: 'ab--c@b.c', firstName: 'a', lastName: 'b' })).rejects.toMatchObject({
-      code: 400,
-      publicMessage: 'Invalid username (the part of the email before "@") format.',
-    })
-  })
+    describe('editTeamUsers', () => {
+      beforeEach(async () => {
+        sessionUser.teams = ['team1']
+        teamAdmin.teams = ['team1']
+        teamMember1.teams = ['team1']
+        teamMember2.teams = ['team2']
 
-  it('should not create a user with gitea reserved usernames', async () => {
-    await expect(otomiStack.createUser({ email: 'user@b.c', firstName: 'a', lastName: 'b' })).rejects.toMatchObject({
-      code: 400,
-      publicMessage: 'This username (the part of the email before "@") is reserved.',
-    })
-  })
+        otomiStack.repoService.createUser({ ...sessionUser, firstName: 'Session', lastName: 'User' })
+        otomiStack.repoService.createUser(teamAdmin)
+        otomiStack.repoService.createUser(teamMember1)
+        otomiStack.repoService.createUser(teamMember2)
+        jest.spyOn(otomiStack, 'saveUser').mockResolvedValue()
+        jest.spyOn(otomiStack, 'doRepoDeployment').mockResolvedValue()
+      })
 
-  it('should not create a user with keycloak root user username', async () => {
-    await expect(
-      otomiStack.createUser({ email: 'otomi-admin@b.c', firstName: 'a', lastName: 'b' }),
-    ).rejects.toMatchObject({
-      code: 400,
-      publicMessage: 'This username (the part of the email before "@") is reserved.',
-    })
-  })
+      it('should allow platform admin to update any user teams', async () => {
+        const platformAdmin = { ...sessionUser, isPlatformAdmin: true, isTeamAdmin: false }
+        const data = [{ ...teamMember1, teams: ['team1', 'team2'] }]
+        const result = await otomiStack.editTeamUsers(data, platformAdmin)
+        expect(result.find((u) => u.id === teamMember1.id)?.teams).toContain('team2')
+      })
 
-  it('should not create a user with gitea reserved user patterns', async () => {
-    await expect(otomiStack.createUser({ email: 'a.keys@b.c', firstName: 'a', lastName: 'b' })).rejects.toMatchObject({
-      code: 400,
-      publicMessage:
-        'Usernames (the part of the email before "@") ending with .keys, .gpg, .rss, or .atom are not allowed.',
+      it('should allow team admin to add user to their own team', async () => {
+        const data = [{ ...teamMember2, teams: ['team2', 'team1'] }]
+        const result = await otomiStack.editTeamUsers(data, sessionUser)
+        expect(result.find((u) => u.id === teamMember2.id)?.teams).toContain('team1')
+      })
+
+      it('should allow team admin to remove user from their own team', async () => {
+        const data = [{ ...teamMember1, teams: [] }]
+        const result = await otomiStack.editTeamUsers(data, sessionUser)
+        expect(result.find((u) => u.id === teamMember1.id)?.teams).not.toContain('team1')
+      })
+
+      it('should not allow team admin to add user to a team they do not manage', async () => {
+        const data = [{ ...teamMember2, teams: ['team3'] }]
+        await expect(otomiStack.editTeamUsers(data, sessionUser)).rejects.toMatchObject({
+          code: 403,
+          publicMessage:
+            'Team admins are permitted to add or remove users only within the teams they manage. However, they cannot remove themselves or other team admins from those teams.',
+        })
+      })
+
+      it('should not allow team admin to remove themselves from their own team', async () => {
+        sessionUser.teams = ['team1']
+        const data = [
+          {
+            name: 'Session User',
+            email: `session@${domainSuffix}`,
+            isPlatformAdmin: false,
+            isTeamAdmin: true,
+            teams: [],
+            roles: [],
+          },
+        ]
+        await expect(otomiStack.editTeamUsers(data, sessionUser)).rejects.toThrow()
+      })
+
+      it('should not allow regular user to update teams', async () => {
+        const regularUser = {
+          name: 'Regular User',
+          email: 'regular@mail.com',
+          isPlatformAdmin: false,
+          isTeamAdmin: false,
+          authz: {},
+          teams: ['team1'],
+          roles: [],
+        }
+        const data = [{ ...teamMember2, teams: ['team1'] }]
+        await expect(otomiStack.editTeamUsers(data, regularUser)).rejects.toMatchObject({
+          code: 403,
+          publicMessage: "Only platform admins or team admins can modify a user's team memberships.",
+        })
+      })
     })
   })
 })

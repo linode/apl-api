@@ -16,29 +16,7 @@ Cloudtty:
       - update-any
       - delete-any
   type: object
-  x-externalDocsPath: docs/for-devs/console/cloudtty
+  x-externalDocsPath: shell-tty
   properties:
-    id:
-      type: string
-    teamId:
-      $ref: 'definitions.yaml#/idName'
-    domain:
-      $ref: 'definitions.yaml#/wordCharacterPattern'
-    emailNoSymbols:
-      $ref: 'definitions.yaml#/wordCharacterPattern'
     iFrameUrl:
       $ref: 'definitions.yaml#/wordCharacterPattern'
-    isAdmin:
-      type: boolean
-      default: false
-    userTeams:
-      type: array
-      items:
-        type: string
-    sub:
-      $ref: 'definitions.yaml#/wordCharacterPattern'
-  required:
-    - teamId
-    - domain
-    - emailNoSymbols
-    - isAdmin

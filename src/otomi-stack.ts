@@ -10,7 +10,7 @@ import { cloneDeep, filter, isEmpty, map, mapValues, merge, omit, pick, set, uns
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import { AlreadyExists, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
 import getRepo, { Git } from 'src/git'
-import { cleanSession, getIo, getSessionStack } from 'src/middleware'
+import { cleanSession, getSessionStack } from 'src/middleware'
 import {
   AplBackupRequest,
   AplBackupResponse,
@@ -93,7 +93,6 @@ import {
   checkPodExists,
   getCloudttyActiveTime,
   getKubernetesVersion,
-  getLastTektonMessage,
   getSecretValues,
   getTeamSecretsFromK8s,
   k8sdelete,
@@ -1083,7 +1082,12 @@ export default class OtomiStack {
     return this.repoService.getUser(id)
   }
 
-  async editUser(id: string, data: User): Promise<User> {
+  async editUser(id: string, data: User, sessionUser: SessionUser): Promise<User> {
+    if (!sessionUser.isPlatformAdmin) {
+      const error = new OtomiError('Only platform admins can modify user details.')
+      error.code = 403
+      throw error
+    }
     const user = this.repoService.updateUser(id, data)
     await this.saveUser(user)
     await this.doRepoDeployment(
@@ -1110,16 +1114,60 @@ export default class OtomiStack {
     }, false)
   }
 
+  private canTeamAdminUpdateUserTeams(sessionUser: SessionUser, existingUser: User, updatedUserTeams: string[]) {
+    if (!sessionUser.isTeamAdmin) return false
+
+    const sessionUserTeams = new Set(sessionUser.teams)
+    const oldTeams = new Set(existingUser.teams)
+    const newTeams = new Set(updatedUserTeams)
+
+    const addedTeams = [...newTeams].filter((team) => !oldTeams.has(team))
+    const removedTeams = [...oldTeams].filter((team) => !newTeams.has(team))
+
+    // Team admin can only add or remove users from their own teams
+    const allChangedTeams = [...addedTeams, ...removedTeams]
+    let isValid = allChangedTeams.every((team) => sessionUserTeams.has(team))
+
+    // Prevent team admin from removing themselves or other team admins from teams they manage
+    if (isValid && removedTeams.length > 0) {
+      // If the user being updated is themselves or another team admin
+      if (existingUser.email === sessionUser.email || existingUser.isTeamAdmin) {
+        // Check if any of the removed teams are managed by the session user
+        if (removedTeams.some((team) => sessionUserTeams.has(team))) {
+          isValid = false
+        }
+      }
+    }
+
+    return isValid
+  }
+
   async editTeamUsers(
-    data: Pick<User, 'id' | 'email' | 'isPlatformAdmin' | 'isTeamAdmin' | 'teams'>[],
-  ): Promise<Array<User>> {
+    data: Pick<User, 'id' | 'teams'>[],
+    sessionUser: SessionUser,
+  ): Promise<Pick<User, 'id' | 'teams'>[]> {
+    if (!sessionUser.isPlatformAdmin && !sessionUser.isTeamAdmin) {
+      const error = new OtomiError("Only platform admins or team admins can modify a user's team memberships.")
+      error.code = 403
+      throw error
+    }
     for (const user of data) {
       const existingUser = this.repoService.getUser(user.id!)
+      if (
+        !sessionUser.isPlatformAdmin &&
+        !this.canTeamAdminUpdateUserTeams(sessionUser, existingUser, user.teams as string[])
+      ) {
+        const error = new OtomiError(
+          'Team admins are permitted to add or remove users only within the teams they manage. However, they cannot remove themselves or other team admins from those teams.',
+        )
+        error.code = 403
+        throw error
+      }
       const updateUser = this.repoService.updateUser(user.id!, { ...existingUser, teams: user.teams })
       await this.saveUser(updateUser)
     }
-    const users = this.repoService.getUsers()
-    const files = users.map((user) => `${this.getRepoPath()}/env/users/secrets.${user.id}.yaml`)
+    const repoUsers = this.repoService.getUsers()
+    const files = repoUsers.map((user) => `${this.getRepoPath()}/env/users/secrets.${user.id}.yaml`)
     await this.doRepoDeployment(
       (repoService) => {
         for (const user of data) {
@@ -1130,6 +1178,7 @@ export default class OtomiStack {
       true,
       files,
     )
+    const users = repoUsers.map((user) => ({ id: user.id, teams: user.teams || [] }))
     return users
   }
 
@@ -1636,24 +1685,36 @@ export default class OtomiStack {
     return (await getKubernetesVersion()) as string
   }
 
-  async connectCloudtty(data: Cloudtty): Promise<Cloudtty | any> {
+  async connectCloudtty(teamId: string, sessionUser: SessionUser): Promise<Cloudtty> {
+    if (!sessionUser.sub) {
+      debug('No user sub found, cannot connect to shell.')
+      throw new OtomiError(500, 'No user sub found, cannot connect to shell.')
+    }
+    const userTeams = sessionUser.teams.map((teamName) => `team-${teamName}`)
     const variables = {
-      FQDN: data.domain,
-      EMAIL: data.emailNoSymbols,
-      SUB: data.sub,
+      FQDN: '',
+      SUB: sessionUser.sub,
+    }
+    try {
+      const { cluster } = this.getSettings(['cluster'])
+      variables.FQDN = cluster?.domainSuffix || ''
+    } catch (error) {
+      debug('Error getting cluster settings for cloudtty:', error.message)
+    }
+    if (!variables.FQDN) {
+      debug('No cluster domain suffix found, cannot connect to shell.')
+      throw new OtomiError(500, 'No cluster domain suffix found, cannot connect to shell.')
     }
 
-    const { userTeams } = data
-
-    // if cloudtty does not exists then check if the pod is running and return it
-    if (await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`)) {
-      return { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}` }
+    // if cloudtty shell does not exists then check if the pod is running and return it
+    if (await checkPodExists('team-admin', `tty-${sessionUser.sub}`)) {
+      return { iFrameUrl: `https://tty.${variables.FQDN}/${sessionUser.sub}` }
     }
 
     if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
 
     //if user is admin then read the manifests from ./dist/src/ttyManifests/adminTtyManifests
-    const files = data.isAdmin
+    const files = sessionUser.isPlatformAdmin
       ? await readdir('./dist/src/ttyManifests/adminTtyManifests', 'utf-8')
       : await readdir('./dist/src/ttyManifests', 'utf-8')
     const filteredFiles = files.filter((file) => file.startsWith('tty'))
@@ -1661,7 +1722,7 @@ export default class OtomiStack {
 
     const podContentAddTargetTeam = (fileContent) => {
       const regex = new RegExp(`\\$TARGET_TEAM`, 'g')
-      return fileContent.replace(regex, data.teamId)
+      return fileContent.replace(regex, teamId)
     }
 
     // iterates over the rolebinding file and replace the $TARGET_TEAM with the team name for teams
@@ -1677,41 +1738,45 @@ export default class OtomiStack {
 
     const fileContents = await Promise.all(
       filteredFiles.map(async (file) => {
-        let fileContent = data.isAdmin
+        let fileContent = sessionUser.isPlatformAdmin
           ? await readFile(`./dist/src/ttyManifests/adminTtyManifests/${file}`, 'utf-8')
           : await readFile(`./dist/src/ttyManifests/${file}`, 'utf-8')
         variableKeys.forEach((key) => {
           const regex = new RegExp(`\\$${key}`, 'g')
-          fileContent = fileContent.replace(regex, variables[key])
+          fileContent = fileContent.replace(regex, variables[key] as string)
         })
         if (file === 'tty_02_Pod.yaml') fileContent = podContentAddTargetTeam(fileContent)
-        if (!data.isAdmin && file === 'tty_03_Rolebinding.yaml') fileContent = rolebindingContentsForUsers(fileContent)
+        if (!sessionUser.isPlatformAdmin && file === 'tty_03_Rolebinding.yaml')
+          fileContent = rolebindingContentsForUsers(fileContent)
         return fileContent
       }),
     )
     await writeFile('/tmp/ttyd.yaml', fileContents, 'utf-8')
     await apply('/tmp/ttyd.yaml')
-    await watchPodUntilRunning('team-admin', `tty-${data.emailNoSymbols}`)
+    await watchPodUntilRunning('team-admin', `tty-${sessionUser.sub}`)
 
     // check the pod every 30 minutes and terminate it after 2 hours of inactivity
     const ISACTIVE_INTERVAL = 30 * 60 * 1000
     const TERMINATE_TIMEOUT = 2 * 60 * 60 * 1000
     const intervalId = setInterval(() => {
-      getCloudttyActiveTime('team-admin', `tty-${data.emailNoSymbols}`).then((activeTime: number) => {
+      getCloudttyActiveTime('team-admin', `tty-${sessionUser.sub}`).then((activeTime: number) => {
         if (activeTime > TERMINATE_TIMEOUT) {
-          this.deleteCloudtty(data)
+          this.deleteCloudtty(sessionUser)
           clearInterval(intervalId)
           debug(`Cloudtty terminated after ${TERMINATE_TIMEOUT / (60 * 60 * 1000)} hours of inactivity`)
         }
       })
     }, ISACTIVE_INTERVAL)
 
-    return { ...data, iFrameUrl: `https://tty.${data.domain}/${data.emailNoSymbols}` }
+    return { iFrameUrl: `https://tty.${variables.FQDN}/${sessionUser.sub}` }
   }
 
-  async deleteCloudtty(data: Cloudtty) {
+  async deleteCloudtty(sessionUser: SessionUser): Promise<void> {
+    const { sub, isPlatformAdmin, teams } = sessionUser as { sub: string; isPlatformAdmin: boolean; teams: string[] }
+    const userTeams = teams.map((teamName) => `team-${teamName}`)
     try {
-      if (await checkPodExists('team-admin', `tty-${data.emailNoSymbols}`)) await k8sdelete(data)
+      if (await checkPodExists('team-admin', `tty-${sessionUser.sub}`))
+        await k8sdelete({ sub, isPlatformAdmin, userTeams })
     } catch (error) {
       debug('Failed to delete cloudtty')
     }
@@ -2004,33 +2069,6 @@ export default class OtomiStack {
     if (servicesFiltered.length > 0) throw new PublicUrlExists()
   }
 
-  emitPipelineStatus(sha: string): void {
-    if (env.isDev) return
-    try {
-      // check pipeline status every 5 seconds and emit the status when it's completed
-      const intervalId = setInterval(() => {
-        getLastTektonMessage(sha).then((res: any) => {
-          const { order, name, completionTime, status } = res
-          if (completionTime) {
-            getIo().emit('tekton', { order, name, completionTime, sha, status })
-            clearInterval(intervalId)
-            debug(`Tekton pipeline ${order} completed with status ${status}`)
-          }
-        })
-      }, 5 * 1000)
-
-      // fallback to clear interval after 10 minutes
-      setTimeout(
-        () => {
-          clearInterval(intervalId)
-        },
-        10 * 60 * 1000,
-      )
-    } catch (error) {
-      debug('Error emitting pipeline status:', error)
-    }
-  }
-
   async doTeamDeployment(
     teamId: string,
     action: (teamService: TeamConfigService) => void,
@@ -2047,10 +2085,6 @@ export default class OtomiStack {
       action(rootStack.repoService.getTeamConfigService(teamId))
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
-
-      // Emit pipeline status
-      const sha = await rootStack.git.getCommitSha()
-      this.emitPipelineStatus(sha)
     } catch (e) {
       e.message = getSanitizedErrorMessage(e)
       throw e
@@ -2075,10 +2109,6 @@ export default class OtomiStack {
       action(rootStack.repoService)
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
-
-      // Emit pipeline status
-      const sha = await rootStack.git.getCommitSha()
-      this.emitPipelineStatus(sha)
     } catch (e) {
       e.message = getSanitizedErrorMessage(e)
       throw e
@@ -2113,10 +2143,6 @@ export default class OtomiStack {
       }
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
-
-      // Emit pipeline status
-      const sha = await rootStack.git.getCommitSha()
-      this.emitPipelineStatus(sha)
     } catch (e) {
       e.message = getSanitizedErrorMessage(e)
       throw e
@@ -2505,12 +2531,17 @@ export default class OtomiStack {
     const valuesSchema = await getValuesSchema()
     const currentSha = rootStack.git.commitSha
     const { obj } = this.getSettings(['obj'])
-    const regions = await getRegions()
+    let regions
+    try {
+      regions = await getRegions()
+    } catch (error) {
+      debug('Error fetching object storage regions:', error.message)
+    }
     const objStorageRegions =
-      regions.data
-        .filter((region) => region.capabilities.includes('Object Storage'))
-        .map(({ id, label }) => ({ id, label }))
-        .sort((a, b) => a.label.localeCompare(b.label)) || []
+      regions?.data
+        ?.filter((region) => region.capabilities.includes('Object Storage'))
+        ?.map(({ id, label }) => ({ id, label }))
+        ?.sort((a, b) => a.label.localeCompare(b.label)) || []
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,

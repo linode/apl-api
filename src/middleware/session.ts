@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-use-before-define */
 import Debug from 'debug'
 import { RequestHandler } from 'express'
 import 'express-async-errors'
@@ -88,7 +87,7 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
       email: socket.email,
     })
   })
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
     if (!env.isTest && (!readOnlyStack || !readOnlyStack.isLoaded)) throw new ApiNotReadyError()
     const { email } = req.user || {}
@@ -97,9 +96,8 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
     req.otomi = roStack
 
     if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
-      // in the cloudtty or workloadCatalog endpoint(s), don't need to create a session
-      if (req.path === '/v1/cloudtty' || req.path === '/v1/workloadCatalog' || req.path === '/v1/createWorkloadCatalog')
-        return next()
+      // in the workloadCatalog endpoint(s), don't need to create a session
+      if (req.path === '/v1/workloadCatalog' || req.path === '/v1/createWorkloadCatalog') return next()
       // bootstrap session stack with unique sessionId to manipulate data
       const sessionId = uuidv4() as string
       // eslint-disable-next-line no-param-reassign

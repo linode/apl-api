@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
-/* eslint-disable @typescript-eslint/no-use-before-define */
 import $parser from '@apidevtools/json-schema-ref-parser'
 import cors from 'cors'
 import Debug from 'debug'
@@ -94,13 +92,13 @@ const resourceStatus = async (errorSet) => {
     workloads: otomiStack.repoService.getAllWorkloads(),
     builds: otomiStack.repoService.getAllBuilds(),
     services: otomiStack.repoService.getAllServices(),
-    sealedSecrets: otomiStack.repoService.getAllSealedSecrets(),
+    secrets: otomiStack.repoService.getAllSealedSecrets(),
   }
   const statusFunctions = {
     workloads: getWorkloadStatus,
     builds: getBuildStatus,
     services: getServiceStatus,
-    sealedSecrets: getSealedSecretStatus,
+    secrets: getSealedSecretStatus,
   }
   const resourcesStatus = {}
 
