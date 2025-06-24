@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: tty-$EMAIL
+  name: tty-$SUB
   namespace: team-admin
 ---
 

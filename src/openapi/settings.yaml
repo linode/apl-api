@@ -333,6 +333,9 @@ Settings:
           description: |
             Set the version to a valid release found in the linode/apl-core Github repository.
           type: string
+        useORCS:
+          type: boolean
+          description: Defines if the OCI Registry Cache Service (ORCS) is used to cache images from the public registry.
       required:
         - version
       x-externalDocsPath: docs/for-ops/console/settings/platform

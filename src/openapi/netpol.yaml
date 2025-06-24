@@ -16,7 +16,7 @@ Netpol:
       - update
       - delete
   type: object
-  x-externalDocsPath: docs/for-devs/console/netpols
+  x-externalDocsPath: team-network-policies
   properties:
     id:
       type: string
