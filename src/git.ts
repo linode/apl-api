@@ -188,9 +188,14 @@ export class Git {
   async writeFile(file: string, data: Record<string, unknown>, unsetBlankAttributes = true): Promise<void> {
     let cleanedData = data
     if (unsetBlankAttributes) cleanedData = removeBlankAttributes(data, { emptyArrays: true })
-    if (isEmpty(cleanedData) && file.match(secretFileRegex)) {
-      // remove empty secrets file which sops can't handle
-      return this.removeFile(file)
+    if (isEmpty(cleanedData)) {
+      if (file.match(secretFileRegex)) {
+        // remove empty secrets file which sops can't handle
+        return this.removeFile(file)
+      } else {
+        // Other cases of empty content will not generate valid YAML
+        throw new ValidationError('Empty payload')
+      }
     }
     // we also bail when no changes found
     const hasDiff = await this.diffFile(file, data)
@@ -199,7 +204,7 @@ export class Git {
     const absolutePath = join(this.path, file)
     debug(`Writing to file: ${absolutePath}`)
     const sortedData = JSON.parse(stringifyJson(data) as string)
-    const content = isEmpty(sortedData) ? '' : stringifyYaml(sortedData, undefined, 4)
+    const content = stringifyYaml(sortedData, undefined, 4)
     const dir = dirname(absolutePath)
     await ensureDir(dir)
     await writeFile(absolutePath, content, 'utf8')
