@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.7.0](https://github.com/redkubes/otomi-api/compare/v4.6.0...v4.7.0) (2025-06-24)
+
+
+### Bug Fixes
+
+* form validation error for useORCS ([#753](https://github.com/redkubes/otomi-api/issues/753)) ([f9d6994](https://github.com/redkubes/otomi-api/commit/f9d69941b78920fa5e186eeea92c63725d01f243))
+* user management for team admins ([#752](https://github.com/redkubes/otomi-api/issues/752)) ([5213557](https://github.com/redkubes/otomi-api/commit/52135570a5da0b0b55e2c97ab559e2c415637dea))
+
+
+### CI
+
+* added pr auto updater ([#754](https://github.com/redkubes/otomi-api/issues/754)) ([903f4fd](https://github.com/redkubes/otomi-api/commit/903f4fdc2e5d19ec7644fe19120c804c90c4ac1a))
+
+
+### Others
+
+* **deps:** bump dotenv from 16.0.1 to 16.5.0 ([#734](https://github.com/redkubes/otomi-api/issues/734)) ([975a4b8](https://github.com/redkubes/otomi-api/commit/975a4b8162f400d43927c190afea7a432ce6edb1))
+* **deps:** bump globals from 16.1.0 to 16.2.0 ([#738](https://github.com/redkubes/otomi-api/issues/738)) ([2733bc0](https://github.com/redkubes/otomi-api/commit/2733bc0c2ad9688a942745a61f6efd559a82b2c6))
+* **deps:** bump supertest from 7.1.0 to 7.1.1 ([#736](https://github.com/redkubes/otomi-api/issues/736)) ([aab702c](https://github.com/redkubes/otomi-api/commit/aab702cfed5644a52633be63736336d28ed0162b))
+* maintenance & remove unused package ([#757](https://github.com/redkubes/otomi-api/issues/757)) ([9be8979](https://github.com/redkubes/otomi-api/commit/9be89792ac61e6edc1dac7403da5e0561a4cea8e))
+
 ## [4.6.0](https://github.com/redkubes/otomi-api/compare/v4.5.0...v4.6.0) (2025-06-17)
 
 
