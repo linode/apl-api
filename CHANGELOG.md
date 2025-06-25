@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.8.0](https://github.com/redkubes/otomi-api/compare/v4.7.0...v4.8.0) (2025-06-25)
+
+
+### Features
+
+* enhance dependabot configuration for auto-approval and grouping of dependencies ([#756](https://github.com/redkubes/otomi-api/issues/756)) ([bd258ed](https://github.com/redkubes/otomi-api/commit/bd258ed609834d8753be722d78d597d03cce1adb))
+* hide falco app ([#765](https://github.com/redkubes/otomi-api/issues/765)) ([1acd71f](https://github.com/redkubes/otomi-api/commit/1acd71f6a17e41db3a5fc8b50ba5ad759cf6148d))
+
+
+### Bug Fixes
+
+* add type checking to message sanitation ([#755](https://github.com/redkubes/otomi-api/issues/755)) ([242b743](https://github.com/redkubes/otomi-api/commit/242b743731b9066a988a83cd01f96d886513ac2f))
+* fail before writing empty yaml files ([#758](https://github.com/redkubes/otomi-api/issues/758)) ([5f64fc3](https://github.com/redkubes/otomi-api/commit/5f64fc3aad13bfef587fefd62d2f75b69f91e9b3))
+
 ## [4.7.0](https://github.com/redkubes/otomi-api/compare/v4.6.0...v4.7.0) (2025-06-24)
 
 
