@@ -340,13 +340,14 @@ export default class OtomiStack {
         cleanSecretPaths.push(p)
       } else {
         teams.forEach((teamId: string) => {
-          if (p.indexOf(teamProp) === 0)
+          if (p.indexOf(teamProp) === 0) {
             cleanSecretPaths.push(
               p
                 .replace(teamProp, `teamConfig.${teamId}`)
                 // add spec to the path for v2 endpoints
                 .replace(`teamConfig.${teamId}.settings`, `teamConfig.${teamId}.settings.spec`),
             )
+          }
         })
       }
     })
@@ -797,7 +798,7 @@ export default class OtomiStack {
     const configKey = this.getConfigKey('AplTeamWorkloadValues')
     const repo = this.createTeamConfigInRepo(teamId, configKey, [values])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkloadValues')!
-    await this.git.saveConfig(repo, fileMap)
+    await this.git.saveConfig(repo, fileMap, false)
   }
 
   async saveTeamPolicy(teamId: string, data: AplPolicyResponse): Promise<void> {
@@ -1549,11 +1550,12 @@ export default class OtomiStack {
 
   async createAplBuild(teamId: string, data: AplBuildRequest): Promise<AplBuildResponse> {
     const buildName = `${data?.spec?.imageName}-${data?.spec?.tag}`
-    if (buildName.length > 128)
+    if (buildName.length > 128) {
       throw new HttpError(
         400,
         'Invalid container image name, the combined image name and tag must not exceed 128 characters.',
       )
+    }
     try {
       const build = this.repoService.getTeamConfigService(teamId).createBuild(data)
       await this.saveTeamConfigItem(build)
@@ -1566,8 +1568,9 @@ export default class OtomiStack {
       )
       return build
     } catch (err) {
-      if (err.code === 409)
+      if (err.code === 409) {
         err.publicMessage = 'Container image name already exists, the combined image name and tag must be unique.'
+      }
       throw err
     }
   }
@@ -1745,8 +1748,9 @@ export default class OtomiStack {
           fileContent = fileContent.replace(regex, variables[key] as string)
         })
         if (file === 'tty_02_Pod.yaml') fileContent = podContentAddTargetTeam(fileContent)
-        if (!sessionUser.isPlatformAdmin && file === 'tty_03_Rolebinding.yaml')
+        if (!sessionUser.isPlatformAdmin && file === 'tty_03_Rolebinding.yaml') {
           fileContent = rolebindingContentsForUsers(fileContent)
+        }
         return fileContent
       }),
     )
@@ -1774,8 +1778,9 @@ export default class OtomiStack {
     const { sub, isPlatformAdmin, teams } = sessionUser as { sub: string; isPlatformAdmin: boolean; teams: string[] }
     const userTeams = teams.map((teamName) => `team-${teamName}`)
     try {
-      if (await checkPodExists('team-admin', `tty-${sessionUser.sub}`))
+      if (await checkPodExists('team-admin', `tty-${sessionUser.sub}`)) {
         await k8sdelete({ sub, isPlatformAdmin, userTeams })
+      }
     } catch (error) {
       debug('Failed to delete cloudtty')
     }
