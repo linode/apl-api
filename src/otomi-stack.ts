@@ -797,7 +797,7 @@ export default class OtomiStack {
     const configKey = this.getConfigKey('AplTeamWorkloadValues')
     const repo = this.createTeamConfigInRepo(teamId, configKey, [values])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkloadValues')!
-    await this.git.saveConfig(repo, fileMap)
+    await this.git.saveConfig(repo, fileMap, false)
   }
 
   async saveTeamPolicy(teamId: string, data: AplPolicyResponse): Promise<void> {
