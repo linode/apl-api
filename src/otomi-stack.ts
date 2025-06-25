@@ -81,6 +81,7 @@ import {
   GIT_REPO_URL,
   GIT_USER,
   HELM_CHART_CATALOG,
+  HIDDEN_APPS,
   OBJ_STORAGE_APPS,
   PREINSTALLED_EXCLUDED_APPS,
   TOOLS_HOST,
@@ -136,6 +137,7 @@ const env = cleanEnv({
   TOOLS_HOST,
   VERSIONS,
   PREINSTALLED_EXCLUDED_APPS,
+  HIDDEN_APPS,
   OBJ_STORAGE_APPS,
 })
 
@@ -541,7 +543,9 @@ export default class OtomiStack {
   }
 
   filterExcludedApp(apps: App | App[]) {
-    const excludedApps = PREINSTALLED_EXCLUDED_APPS.default.apps
+    const preInstalledExcludedApps = PREINSTALLED_EXCLUDED_APPS.default.apps
+    const hiddenApps = HIDDEN_APPS.default.apps
+    const excludedApps = preInstalledExcludedApps.concat(hiddenApps)
     const settingsInfo = this.getSettingsInfo()
     if (!Array.isArray(apps)) {
       if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled && excludedApps.includes(apps.id)) {
