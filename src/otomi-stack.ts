@@ -545,7 +545,6 @@ export default class OtomiStack {
     const preInstalledExcludedApps = PREINSTALLED_EXCLUDED_APPS.default.apps
     const hiddenApps = HIDDEN_APPS.default.apps
     const excludedApps = preInstalledExcludedApps.concat(hiddenApps)
-    console.log('excluded apps: ', excludedApps)
     const settingsInfo = this.getSettingsInfo()
     if (!Array.isArray(apps)) {
       if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled && excludedApps.includes(apps.id)) {
