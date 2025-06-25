@@ -1,4 +1,4 @@
-import { bool, CleanedEnvAccessors, cleanEnv as clean, CleanOptions, json, num, str, ValidatorSpec } from 'envalid'
+import { bool, cleanEnv as clean, CleanedEnvAccessors, CleanOptions, json, num, str, ValidatorSpec } from 'envalid'
 
 export const AUTHZ_MOCK_IS_PLATFORM_ADMIN = bool({
   desc: 'Indicate if a mocked user is a platform admin',
@@ -63,6 +63,12 @@ export const PREINSTALLED_EXCLUDED_APPS = json({
   desc: 'Applications that are managed by Linode, so they should be excluded from the apps page',
   default: {
     apps: ['cert-manager', 'minio', 'kured', 'velero', 'drone', 'external-dns'],
+  },
+})
+export const HIDDEN_APPS = json({
+  desc: 'Applications that are hidden from the apps page',
+  default: {
+    apps: ['falco'],
   },
 })
 export const OBJ_STORAGE_APPS = json({
