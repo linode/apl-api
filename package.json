@@ -43,7 +43,7 @@
     "swagger-client": "^3.32.1",
     "swagger-ui-express": "^4.1.6",
     "ts-custom-error": "^3.2.0",
-    "uuid": "^8.3.2",
+    "uuid": "^11.1.0",
     "yaml": "2.2.2"
   },
   "description": "The brain of the Otomi Container Platform. Handling console input and talking to core, it knows what to do.",
