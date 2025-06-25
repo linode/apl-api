@@ -201,8 +201,8 @@ export const objectToYaml = (obj: Record<string, any>, indent = 4, lineWidth = 2
   return isEmpty(obj) ? '' : stringify(obj, { indent, lineWidth })
 }
 
-export function sanitizeString(str?: string) {
-  return str ? str.replace(env.GIT_PASSWORD, '****') : ''
+export function sanitizeGitPassword(str?: string) {
+  return str ? str.replaceAll(env.GIT_PASSWORD, '****') : ''
 }
 
 export function getSanitizedErrorMessage(error) {
@@ -210,5 +210,5 @@ export function getSanitizedErrorMessage(error) {
   if (!message) {
     return ''
   }
-  return typeof message === 'string' ? sanitizeString(message) : `[unprocessable message type ${typeof message}]`
+  return typeof message === 'string' ? sanitizeGitPassword(message) : `[unprocessable message type ${typeof message}]`
 }

@@ -25,7 +25,7 @@ import { BASEURL } from './constants'
 import { GitPullError, HttpError, ValidationError } from './error'
 import { Core } from './otomi-models'
 import { FileMap, getFilePath, getResourceName, renderManifest, renderManifestForSecrets } from './repo'
-import { getSanitizedErrorMessage, removeBlankAttributes, sanitizeString } from './utils'
+import { getSanitizedErrorMessage, removeBlankAttributes, sanitizeGitPassword } from './utils'
 
 const debug = Debug('otomi:repo')
 
@@ -473,7 +473,7 @@ export class Git {
       }
     } catch (e) {
       const sanitizedMessage = getSanitizedErrorMessage(e)
-      const sanitizedCommands = sanitizeString(JSON.stringify(e.task?.commands))
+      const sanitizedCommands = sanitizeGitPassword(JSON.stringify(e.task?.commands))
       debug(`${sanitizedMessage} for command ${sanitizedCommands}`)
       debug('Git save error')
       throw new GitPullError()

@@ -1,5 +1,5 @@
 import { Cluster } from 'src/otomi-models'
-import { getSanitizedErrorMessage, getServiceUrl, sanitizeString } from 'src/utils'
+import { getSanitizedErrorMessage, getServiceUrl, sanitizeGitPassword } from 'src/utils'
 import { cleanEnv, GIT_PASSWORD } from './validators'
 
 describe('Utils', () => {
@@ -59,23 +59,23 @@ describe('Utils', () => {
     expect(service.domain).toEqual('bb.cc.dd.ee')
   })
 
-  describe('should remove git credentials', () => {
+  describe('sanitizeGitPassword should remove git credentials', () => {
     const env = cleanEnv({
       GIT_PASSWORD,
     })
     test('from strings', () => {
-      expect(sanitizeString('test string')).toBe('test string')
-      expect(sanitizeString(`test string ${env.GIT_PASSWORD}`)).toBe('test string ****')
+      expect(sanitizeGitPassword('test string')).toBe('test string')
+      expect(sanitizeGitPassword(`${env.GIT_PASSWORD} test string ${env.GIT_PASSWORD}`)).toBe('**** test string ****')
     })
     test('from objects', () => {
-      expect(sanitizeString(JSON.stringify({ test: 'some string' }))).toEqual('{"test":"some string"}')
-      expect(sanitizeString(JSON.stringify({ test: `some string ${env.GIT_PASSWORD}` }))).toEqual(
+      expect(sanitizeGitPassword(JSON.stringify({ test: 'some string' }))).toEqual('{"test":"some string"}')
+      expect(sanitizeGitPassword(JSON.stringify({ test: `some string ${env.GIT_PASSWORD}` }))).toEqual(
         '{"test":"some string ****"}',
       )
     })
     test('return empty string on empty or undefined input', () => {
-      expect(sanitizeString('')).toEqual('')
-      expect(sanitizeString(undefined)).toEqual('')
+      expect(sanitizeGitPassword('')).toEqual('')
+      expect(sanitizeGitPassword(undefined)).toEqual('')
     })
     test('extract message from exception', () => {
       expect(getSanitizedErrorMessage(new Error('test error'))).toEqual('test error')
