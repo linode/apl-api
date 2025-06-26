@@ -1,5 +1,4 @@
-import * as k8s from '@kubernetes/client-node'
-import { V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -81,7 +80,6 @@ import {
   GIT_REPO_URL,
   GIT_USER,
   HELM_CHART_CATALOG,
-  HIDDEN_APPS,
   OBJ_STORAGE_APPS,
   PREINSTALLED_EXCLUDED_APPS,
   TOOLS_HOST,
@@ -137,7 +135,6 @@ const env = cleanEnv({
   TOOLS_HOST,
   VERSIONS,
   PREINSTALLED_EXCLUDED_APPS,
-  HIDDEN_APPS,
   OBJ_STORAGE_APPS,
 })
 
@@ -342,14 +339,13 @@ export default class OtomiStack {
         cleanSecretPaths.push(p)
       } else {
         teams.forEach((teamId: string) => {
-          if (p.indexOf(teamProp) === 0) {
+          if (p.indexOf(teamProp) === 0)
             cleanSecretPaths.push(
               p
                 .replace(teamProp, `teamConfig.${teamId}`)
                 // add spec to the path for v2 endpoints
                 .replace(`teamConfig.${teamId}.settings`, `teamConfig.${teamId}.settings.spec`),
             )
-          }
         })
       }
     })
@@ -543,9 +539,7 @@ export default class OtomiStack {
   }
 
   filterExcludedApp(apps: App | App[]) {
-    const preInstalledExcludedApps = PREINSTALLED_EXCLUDED_APPS.default.apps
-    const hiddenApps = HIDDEN_APPS.default.apps
-    const excludedApps = preInstalledExcludedApps.concat(hiddenApps)
+    const excludedApps = PREINSTALLED_EXCLUDED_APPS.default.apps
     const settingsInfo = this.getSettingsInfo()
     if (!Array.isArray(apps)) {
       if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled && excludedApps.includes(apps.id)) {
@@ -802,7 +796,7 @@ export default class OtomiStack {
     const configKey = this.getConfigKey('AplTeamWorkloadValues')
     const repo = this.createTeamConfigInRepo(teamId, configKey, [values])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkloadValues')!
-    await this.git.saveConfig(repo, fileMap, false)
+    await this.git.saveConfig(repo, fileMap)
   }
 
   async saveTeamPolicy(teamId: string, data: AplPolicyResponse): Promise<void> {
@@ -1554,12 +1548,11 @@ export default class OtomiStack {
 
   async createAplBuild(teamId: string, data: AplBuildRequest): Promise<AplBuildResponse> {
     const buildName = `${data?.spec?.imageName}-${data?.spec?.tag}`
-    if (buildName.length > 128) {
+    if (buildName.length > 128)
       throw new HttpError(
         400,
         'Invalid container image name, the combined image name and tag must not exceed 128 characters.',
       )
-    }
     try {
       const build = this.repoService.getTeamConfigService(teamId).createBuild(data)
       await this.saveTeamConfigItem(build)
@@ -1572,9 +1565,8 @@ export default class OtomiStack {
       )
       return build
     } catch (err) {
-      if (err.code === 409) {
+      if (err.code === 409)
         err.publicMessage = 'Container image name already exists, the combined image name and tag must be unique.'
-      }
       throw err
     }
   }
@@ -1752,9 +1744,8 @@ export default class OtomiStack {
           fileContent = fileContent.replace(regex, variables[key] as string)
         })
         if (file === 'tty_02_Pod.yaml') fileContent = podContentAddTargetTeam(fileContent)
-        if (!sessionUser.isPlatformAdmin && file === 'tty_03_Rolebinding.yaml') {
+        if (!sessionUser.isPlatformAdmin && file === 'tty_03_Rolebinding.yaml')
           fileContent = rolebindingContentsForUsers(fileContent)
-        }
         return fileContent
       }),
     )
@@ -1782,9 +1773,8 @@ export default class OtomiStack {
     const { sub, isPlatformAdmin, teams } = sessionUser as { sub: string; isPlatformAdmin: boolean; teams: string[] }
     const userTeams = teams.map((teamName) => `team-${teamName}`)
     try {
-      if (await checkPodExists('team-admin', `tty-${sessionUser.sub}`)) {
+      if (await checkPodExists('team-admin', `tty-${sessionUser.sub}`))
         await k8sdelete({ sub, isPlatformAdmin, userTeams })
-      }
     } catch (error) {
       debug('Failed to delete cloudtty')
     }
@@ -2160,13 +2150,13 @@ export default class OtomiStack {
     }
   }
 
-  apiClient?: k8s.CoreV1Api
+  apiClient?: CoreV1Api
 
-  getApiClient(): k8s.CoreV1Api {
+  getApiClient(): CoreV1Api {
     if (this.apiClient) return this.apiClient
-    const kc = new k8s.KubeConfig()
+    const kc = new KubeConfig()
     kc.loadFromDefault()
-    this.apiClient = kc.makeApiClient(k8s.CoreV1Api)
+    this.apiClient = kc.makeApiClient(CoreV1Api)
     return this.apiClient
   }
 
@@ -2190,8 +2180,8 @@ export default class OtomiStack {
     //   return collection
     // }
 
-    const svcList = await client.listNamespacedService(`team-${teamId}`)
-    svcList.body.items.map((item) => {
+    const svcList = await client.listNamespacedService({ namespace: `team-${teamId}` })
+    svcList.items.map((item) => {
       let name = item.metadata!.name ?? 'unknown'
       let managedByKnative = false
       // Filter out knative private services
@@ -2213,7 +2203,7 @@ export default class OtomiStack {
     return collection
   }
 
-  async getKubecfg(teamId: string): Promise<k8s.KubeConfig> {
+  async getKubecfg(teamId: string): Promise<KubeConfig> {
     this.getTeam(teamId) // will throw if not existing
     const {
       cluster: { name, apiName = `otomi-${name}`, apiServer },
@@ -2221,12 +2211,10 @@ export default class OtomiStack {
     if (!apiServer) throw new ValidationError('Missing configuration value: cluster.apiServer')
     const client = this.getApiClient()
     const namespace = `team-${teamId}`
-    const saRes = await client.readNamespacedServiceAccount(`kubectl`, namespace)
-    const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
+    const sa = await client.readNamespacedServiceAccount({ name: `kubectl`, namespace })
     const { secrets }: { secrets?: Array<V1ObjectReference> } = sa
     const secretName = secrets?.length ? secrets[0].name : ''
-    const secretRes = await client.readNamespacedSecret(secretName || '', namespace)
-    const { body: secret }: { body: k8s.V1Secret } = secretRes
+    const secret = await client.readNamespacedSecret({ name: secretName || '', namespace })
     const token = Buffer.from(secret.data?.token || '', 'base64').toString('ascii')
     const cluster = {
       name: apiName,
@@ -2251,7 +2239,7 @@ export default class OtomiStack {
       contexts: [context],
       currentContext: context.name,
     }
-    const config = new k8s.KubeConfig()
+    const config = new KubeConfig()
     config.loadFromOptions(options)
     return config
   }
@@ -2261,8 +2249,7 @@ export default class OtomiStack {
     const client = this.getApiClient()
     const namespace = `team-${teamId}`
     const secretName = 'harbor-pushsecret'
-    const secretRes = await client.readNamespacedSecret(secretName, namespace)
-    const { body: secret }: { body: k8s.V1Secret } = secretRes
+    const secret = await client.readNamespacedSecret({ name: secretName, namespace })
     return Buffer.from(secret.data!['.dockerconfigjson'], 'base64').toString('ascii')
   }
 
@@ -2534,7 +2521,7 @@ export default class OtomiStack {
     }
   }
 
-  async getSession(user: k8s.User): Promise<Session> {
+  async getSession(user: k8sUser): Promise<Session> {
     const rootStack = await getSessionStack()
     const valuesSchema = await getValuesSchema()
     const currentSha = rootStack.git.commitSha

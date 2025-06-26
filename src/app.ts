@@ -1,6 +1,7 @@
 import $parser from '@apidevtools/json-schema-ref-parser'
 import cors from 'cors'
 import Debug from 'debug'
+import 'dotenv/config'
 import express from 'express'
 import 'express-async-errors'
 import { initialize } from 'express-openapi'
