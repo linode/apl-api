@@ -23,10 +23,5 @@
   "parserOptions": {
     "ecmaVersion": 2021,
     "sourceType": "module"
-  },
-  "ts-node": {
-    "transpileOnly": true,
-    "files": true,
-    "require": ["tsconfig-paths/register"]
   }
 }
