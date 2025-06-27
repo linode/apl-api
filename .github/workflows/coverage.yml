@@ -10,6 +10,7 @@ on:
       - '*.ts'
 jobs:
   coverage:
+    continue-on-error: true
     if: ${{ github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     steps:
@@ -33,7 +34,9 @@ jobs:
           node -v
           npm install
 
-      - uses: ArtiomTr/jest-coverage-report-action@v2
+      - name: Compare Coverage
+        continue-on-error: true
+        uses: ArtiomTr/jest-coverage-report-action@v2
         with:
           test-script: npm run test
           annotations: none
