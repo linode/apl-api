@@ -2365,6 +2365,8 @@ export default class OtomiStack {
   }
 
   getSealedSecrets(teamId: string): SealedSecret[] {
+    const test = true
+    if (test) throw new Error('APL-938 test error. Please update the apl-api version in the pod.')
     return this.getAplSealedSecrets(teamId).map(getV1ObjectFromApl) as SealedSecret[]
   }
 
