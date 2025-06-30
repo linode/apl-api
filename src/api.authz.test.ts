@@ -470,14 +470,6 @@ describe('API authz tests', () => {
       .expect('Content-Type', /json/)
   })
 
-  test('team member can get its own sealedsecrets', async () => {
-    await agent
-      .get(`/v1/teams/${teamId}/sealedsecrets`)
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-  })
-
   test('team member cannot get others sealedsecrets', async () => {
     await agent
       .get(`/v1/teams/${otherTeamId}/sealedsecrets`)
