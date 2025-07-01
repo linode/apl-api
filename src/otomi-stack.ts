@@ -1032,9 +1032,10 @@ export default class OtomiStack {
         return { id, email, isPlatformAdmin, isTeamAdmin, teams }
       })
       return usersWithBasicInfo as Array<User>
-    } else {
-      return []
     }
+    const error = new OtomiError('Forbidden')
+    error.code = 403
+    throw error
   }
 
   async createUser(data: User): Promise<User> {
@@ -1081,8 +1082,18 @@ export default class OtomiStack {
     }
   }
 
-  getUser(id: string): User {
-    return this.repoService.getUser(id)
+  getUser(id: string, sessionUser: SessionUser): User {
+    const user = this.repoService.getUser(id)
+    if (sessionUser.isPlatformAdmin) {
+      return user
+    }
+    if (sessionUser.isTeamAdmin) {
+      const { id: userId, email, isPlatformAdmin, isTeamAdmin, teams } = user
+      return { id: userId, email, isPlatformAdmin, isTeamAdmin, teams } as User
+    }
+    const error = new OtomiError('Forbidden')
+    error.code = 403
+    throw error
   }
 
   async editUser(id: string, data: User, sessionUser: SessionUser): Promise<User> {
