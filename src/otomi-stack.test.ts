@@ -361,7 +361,7 @@ describe('Users tests', () => {
   test('should not allow deleting the default platform admin user', async () => {
     await expect(otomiStack.deleteUser('1')).rejects.toMatchObject({
       code: 403,
-      publicMessage: 'Cannot delete the default platform admin user',
+      publicMessage: 'Forbidden',
     })
   })
 
@@ -614,8 +614,7 @@ describe('Users tests', () => {
         const data = [{ ...teamMember2, teams: ['team3'] }]
         await expect(otomiStack.editTeamUsers(data, sessionUser)).rejects.toMatchObject({
           code: 403,
-          publicMessage:
-            'Team admins are permitted to add or remove users only within the teams they manage. However, they cannot remove themselves or other team admins from those teams.',
+          publicMessage: 'Forbidden',
         })
       })
 
@@ -647,7 +646,7 @@ describe('Users tests', () => {
         const data = [{ ...teamMember2, teams: ['team1'] }]
         await expect(otomiStack.editTeamUsers(data, regularUser)).rejects.toMatchObject({
           code: 403,
-          publicMessage: "Only platform admins or team admins can modify a user's team memberships.",
+          publicMessage: 'Forbidden',
         })
       })
     })

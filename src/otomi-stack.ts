@@ -7,7 +7,7 @@ import { readdir, readFile, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, isEmpty, map, mapValues, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
-import { AlreadyExists, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
+import { AlreadyExists, ForbiddenError, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
 import getRepo, { Git } from 'src/git'
 import { cleanSession, getSessionStack } from 'src/middleware'
 import {
@@ -1033,9 +1033,7 @@ export default class OtomiStack {
       })
       return usersWithBasicInfo as Array<User>
     }
-    const error = new OtomiError('Forbidden')
-    error.code = 403
-    throw error
+    throw new ForbiddenError()
   }
 
   async createUser(data: User): Promise<User> {
@@ -1091,16 +1089,12 @@ export default class OtomiStack {
       const { id: userId, email, isPlatformAdmin, isTeamAdmin, teams } = user
       return { id: userId, email, isPlatformAdmin, isTeamAdmin, teams } as User
     }
-    const error = new OtomiError('Forbidden')
-    error.code = 403
-    throw error
+    throw new ForbiddenError()
   }
 
   async editUser(id: string, data: User, sessionUser: SessionUser): Promise<User> {
     if (!sessionUser.isPlatformAdmin) {
-      const error = new OtomiError('Only platform admins can modify user details.')
-      error.code = 403
-      throw error
+      throw new ForbiddenError('Only platform admins can modify user details.')
     }
     const user = this.repoService.updateUser(id, data)
     await this.saveUser(user)
@@ -1117,10 +1111,7 @@ export default class OtomiStack {
   async deleteUser(id: string): Promise<void> {
     const user = this.repoService.getUser(id)
     if (user.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
-      const error = new OtomiError('Forbidden')
-      error.code = 403
-      error.publicMessage = 'Cannot delete the default platform admin user'
-      throw error
+      throw new ForbiddenError('Cannot delete the default platform admin user')
     }
     await this.deleteUserFile(user)
     await this.doRepoDeployment((repoService) => {
@@ -1161,9 +1152,7 @@ export default class OtomiStack {
     sessionUser: SessionUser,
   ): Promise<Pick<User, 'id' | 'teams'>[]> {
     if (!sessionUser.isPlatformAdmin && !sessionUser.isTeamAdmin) {
-      const error = new OtomiError("Only platform admins or team admins can modify a user's team memberships.")
-      error.code = 403
-      throw error
+      throw new ForbiddenError("Only platform admins or team admins can modify a user's team memberships.")
     }
     for (const user of data) {
       const existingUser = this.repoService.getUser(user.id!)
@@ -1171,11 +1160,9 @@ export default class OtomiStack {
         !sessionUser.isPlatformAdmin &&
         !this.canTeamAdminUpdateUserTeams(sessionUser, existingUser, user.teams as string[])
       ) {
-        const error = new OtomiError(
+        throw new ForbiddenError(
           'Team admins are permitted to add or remove users only within the teams they manage. However, they cannot remove themselves or other team admins from those teams.',
         )
-        error.code = 403
-        throw error
       }
       const updateUser = this.repoService.updateUser(user.id!, { ...existingUser, teams: user.teams })
       await this.saveUser(updateUser)

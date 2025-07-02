@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 import { debug } from 'console'
 import { CustomError } from 'ts-custom-error'
 
@@ -11,6 +10,12 @@ export class OtomiError extends CustomError {
     if (err) debug(err)
     super(err)
     this.publicMessage = msg
+  }
+}
+export class ForbiddenError extends OtomiError {
+  public constructor(err?: string) {
+    super('Forbidden', err)
+    this.code = 403
   }
 }
 export class NotExistError extends OtomiError {
