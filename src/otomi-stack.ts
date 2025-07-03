@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -313,8 +313,8 @@ export default class OtomiStack {
         debug(`Values are not present at ${url}:${branch}`)
       } catch (e) {
         // Remove password from error message
-        const safeCommand = JSON.stringify(e.task?.commands).replace(env.GIT_PASSWORD, '****')
-        debug(`${e.message.trim()} for command ${JSON.stringify(safeCommand)}`)
+        const errorMessage = getSanitizedErrorMessage(e)
+        debug(`Error while initializing git repository: ${errorMessage}`)
         debug(`Git repository is not ready: ${url}:${branch}`)
       }
       const timeoutMs = 10000
