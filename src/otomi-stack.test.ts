@@ -259,6 +259,26 @@ describe('Users tests', () => {
 
   const domainSuffix = 'dev.linode-apl.net'
 
+  const platformAdminSession: SessionUser = {
+    name: 'Platform Admin',
+    email: `platform-admin@${domainSuffix}`,
+    isPlatformAdmin: true,
+    isTeamAdmin: false,
+    authz: {},
+    teams: [],
+    roles: [],
+    sub: 'platform-admin',
+  }
+  const teamAdminSession: SessionUser = {
+    name: 'Team Admin',
+    email: `team-admin@${domainSuffix}`,
+    isPlatformAdmin: false,
+    isTeamAdmin: true,
+    authz: {},
+    teams: ['team1'],
+    roles: [],
+    sub: 'team-admin',
+  }
   const sessionUser: SessionUser = {
     name: 'Session User',
     email: `session@${domainSuffix}`,
@@ -269,7 +289,6 @@ describe('Users tests', () => {
     roles: [],
     sub: 'session-user',
   }
-
   const defaultPlatformAdmin: User = {
     id: '1',
     email: `platform-admin@${domainSuffix}`,
@@ -342,12 +361,73 @@ describe('Users tests', () => {
   test('should not allow deleting the default platform admin user', async () => {
     await expect(otomiStack.deleteUser('1')).rejects.toMatchObject({
       code: 403,
-      publicMessage: 'Cannot delete the default platform admin user',
+      publicMessage: 'Forbidden',
     })
   })
 
   test('should allow deleting any other platform admin user', async () => {
     expect(await otomiStack.deleteUser('2')).toBeUndefined()
+  })
+
+  describe('User Retrieve Validation', () => {
+    beforeEach(async () => {
+      otomiStack = new OtomiStack()
+      await otomiStack.init()
+      otomiStack.git = mockDeep<Git>()
+      await otomiStack.initRepo()
+      otomiStack.repoService.createUser(teamMember1)
+    })
+
+    it('should return full user for platform admin', () => {
+      const result = otomiStack.getUser(teamMember1.id!, platformAdminSession)
+      expect(result).toMatchObject(teamMember1)
+    })
+
+    it('should return limited user info for team admin', () => {
+      const result = otomiStack.getUser(teamMember1.id!, teamAdminSession)
+      expect(result).toEqual({
+        id: teamMember1.id,
+        email: teamMember1.email,
+        isPlatformAdmin: teamMember1.isPlatformAdmin,
+        isTeamAdmin: teamMember1.isTeamAdmin,
+        teams: teamMember1.teams,
+      })
+    })
+
+    it('should throw 403 for regular user', () => {
+      try {
+        otomiStack.getUser(teamMember1.id!, { ...sessionUser, isPlatformAdmin: false, isTeamAdmin: false })
+        fail('Expected error was not thrown')
+      } catch (err: any) {
+        expect(err).toHaveProperty('code', 403)
+      }
+    })
+
+    it('should return all users for platform admin in getAllUsers', () => {
+      const users = otomiStack.getAllUsers(platformAdminSession)
+      expect(users.some((u) => u.id === teamMember1.id)).toBe(true)
+    })
+
+    it('should return limited info for team admin in getAllUsers', () => {
+      const users = otomiStack.getAllUsers(teamAdminSession)
+      expect(users[0]).toHaveProperty('id')
+      expect(users[0]).toHaveProperty('email')
+      expect(users[0]).toHaveProperty('isPlatformAdmin')
+      expect(users[0]).toHaveProperty('isTeamAdmin')
+      expect(users[0]).toHaveProperty('teams')
+      // Should not have firstName/lastName
+      expect(users[0]).not.toHaveProperty('firstName')
+      expect(users[0]).not.toHaveProperty('lastName')
+    })
+
+    it('should throw 403 for regular user in getAllUsers', () => {
+      try {
+        otomiStack.getAllUsers({ ...sessionUser, isPlatformAdmin: false, isTeamAdmin: false })
+        fail('Expected error was not thrown')
+      } catch (err: any) {
+        expect(err).toHaveProperty('code', 403)
+      }
+    })
   })
 
   describe('User Creation Validation', () => {
@@ -436,8 +516,6 @@ describe('Users tests', () => {
         await otomiStack.createUser(user)
         const updated = { ...user, firstName: 'edited' }
         jest.spyOn(otomiStack.repoService, 'updateUser').mockReturnValue(updated)
-        // Use a platform admin session user
-        const platformAdminSession = { ...sessionUser, isPlatformAdmin: true }
         const result = await otomiStack.editUser(user.id, updated, platformAdminSession)
         expect(result.firstName).toBe('edited')
       })
@@ -536,8 +614,7 @@ describe('Users tests', () => {
         const data = [{ ...teamMember2, teams: ['team3'] }]
         await expect(otomiStack.editTeamUsers(data, sessionUser)).rejects.toMatchObject({
           code: 403,
-          publicMessage:
-            'Team admins are permitted to add or remove users only within the teams they manage. However, they cannot remove themselves or other team admins from those teams.',
+          publicMessage: 'Forbidden',
         })
       })
 
@@ -569,7 +646,7 @@ describe('Users tests', () => {
         const data = [{ ...teamMember2, teams: ['team1'] }]
         await expect(otomiStack.editTeamUsers(data, regularUser)).rejects.toMatchObject({
           code: 403,
-          publicMessage: "Only platform admins or team admins can modify a user's team memberships.",
+          publicMessage: 'Forbidden',
         })
       })
     })
