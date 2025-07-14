@@ -180,7 +180,6 @@ describe('fetchChartYaml', () => {
 
     const result = await fetchChartYaml(url)
 
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(axios.get).toHaveBeenCalledWith(
       'https://raw.githubusercontent.com/owner/repo/main/charts/mychart/Chart.yaml',
       { responseType: 'text' },
@@ -194,7 +193,7 @@ describe('fetchChartYaml', () => {
     const result = await fetchChartYaml(url)
 
     expect(result).toEqual({ values: {}, error: 'Unsupported Git provider or invalid URL format.' })
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+
     expect(axios.get).not.toHaveBeenCalled()
   })
 

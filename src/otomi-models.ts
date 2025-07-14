@@ -127,7 +127,7 @@ export type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T
 export interface OpenApiRequest extends Request {
   operationDoc: {
     responses: { '200'?: { content: { 'application/json': { schema: { $ref: string } } } } }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     security: any[]
     operationId: string
   }

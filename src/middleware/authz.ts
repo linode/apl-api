@@ -133,7 +133,6 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
   return next()
 }
 export function authzMiddleware(authz: Authz): RequestHandler {
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
     if (req.user) {
       req.isSecurityHandler = true

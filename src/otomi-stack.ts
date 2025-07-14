@@ -8,7 +8,7 @@ import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, isEmpty, map, mapValues, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import { AlreadyExists, ForbiddenError, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
-import getRepo, { Git } from 'src/git'
+import getRepo, { getWorktreeRepo, Git } from 'src/git'
 import { cleanSession, getSessionStack } from 'src/middleware'
 import {
   AplBackupRequest,
@@ -328,6 +328,24 @@ export default class OtomiStack {
       await this.loadValues()
     }
     debug(`Values are loaded for ${this.editor} in ${this.sessionId}`)
+  }
+
+  async initGitWorktree(mainRepo: Git): Promise<void> {
+    await this.init()
+    debug(`Creating worktree for session ${this.sessionId}`)
+
+    // Verify main repo has the branch we want to use
+    try {
+      await mainRepo.git.revparse(`--verify refs/heads/${env.GIT_BRANCH}`)
+    } catch (error) {
+      throw new Error(`Main repository does not have branch '${env.GIT_BRANCH}'. Cannot create worktree.`)
+    }
+
+    const worktreePath = this.getRepoPath()
+    this.git = await getWorktreeRepo(mainRepo, worktreePath, env.GIT_BRANCH)
+
+    // No need to pull as worktree is already in sync with main repo
+    debug(`Worktree created for ${this.editor} in ${this.sessionId}`)
   }
 
   getSecretPaths(): string[] {

@@ -75,6 +75,8 @@ const checkAgainstGitea = async () => {
         await new Promise((resolve) => setTimeout(resolve, 50))
       }
     }
+    // Clean up any deletions from deleting worktrees
+    await otomiStack.git.git.checkout(['HEAD', '--', '.'])
     // inflate new db
     await otomiStack.loadValues()
   }
