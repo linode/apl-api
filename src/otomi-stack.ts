@@ -2161,8 +2161,90 @@ export default class OtomiStack {
     return this.apiClient
   }
 
+  async getK8sPodLabelsForWorkload(workloadName: string, namespace?: string): Promise<Record<string, string>> {
+    console.log('Fetching pod labels for workload', workloadName, namespace)
+    const api = this.getApiClient()
+    const istioKey = 'service.istio.io/canonical-name'
+    const otomiKey = 'otomi.io/app'
+    const instanceKey = 'app.kubernetes.io/instance'
+    const nameKey = 'app.kubernetes.io/name'
+
+    // Helper to list pods by label selector
+    const listPods = async (selector: string) =>
+      namespace
+        ? await api.listNamespacedPod(namespace, undefined, undefined, undefined, undefined, selector)
+        : await api.listPodForAllNamespaces(undefined, undefined, undefined, selector)
+
+    // 1. Primary selector: Istio canonical name
+    let selector = `${istioKey}=${workloadName}`
+    let res = await listPods(selector)
+    let pods = res.body.items
+
+    // 2. RabbitMQ fallback: workloadName-rabbitmq-cluster
+    if (pods.length === 0) {
+      selector = `${istioKey}=${workloadName}-rabbitmq-cluster`
+      res = await listPods(selector)
+      pods = res.body.items
+    }
+
+    // 3. Otomi app label
+    if (pods.length === 0) {
+      selector = `${otomiKey}=${workloadName}`
+      res = await listPods(selector)
+      pods = res.body.items
+    }
+
+    // 4. app.kubernetes.io/instance
+    if (pods.length === 0) {
+      selector = `${instanceKey}=${workloadName}`
+      res = await listPods(selector)
+      pods = res.body.items
+    }
+
+    // 5. app.kubernetes.io/name
+    if (pods.length === 0) {
+      selector = `${nameKey}=${workloadName}`
+      res = await listPods(selector)
+      pods = res.body.items
+    }
+
+    // Return labels of the first matching pod, or empty object
+    return pods.length > 0 ? (pods[0].metadata?.labels ?? {}) : {}
+  }
+
+  async listUniquePodNamesByLabel(labelSelector: string, namespace?: string): Promise<string[]> {
+    console.log('fetching pods with selector', labelSelector, namespace ? `in ns ${namespace}` : 'in all namespaces')
+
+    const api = this.getApiClient()
+
+    // fetch pods, either namespaced or all
+    const res = namespace
+      ? await api.listNamespacedPod(namespace, undefined, undefined, undefined, undefined, labelSelector)
+      : await api.listPodForAllNamespaces(undefined, undefined, undefined, labelSelector)
+
+    console.log('res?', res)
+    const allPods = res.body.items
+    if (allPods.length === 0) return []
+
+    const seenBases = new Set<string>()
+    const names: string[] = []
+
+    for (const pod of allPods) {
+      const fullName = pod.metadata?.name || ''
+      // derive “base” by stripping off the last dash-segment
+      const base = fullName.includes('-') ? fullName.substring(0, fullName.lastIndexOf('-')) : fullName
+
+      if (!seenBases.has(base)) {
+        seenBases.add(base)
+        names.push(fullName)
+      }
+    }
+
+    return names
+  }
+
   async getK8sServices(teamId: string): Promise<Array<K8sService>> {
-    if (env.isDev) return []
+    // if (env.isDev) return []
     // const teams = user.teams.map((name) => {
     //   return `team-${name}`
     // })
