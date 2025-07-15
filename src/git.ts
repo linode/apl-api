@@ -440,37 +440,16 @@ export class Git {
       debug(`Worktree removed successfully: ${worktreePath}`)
     } catch (error) {
       debug(`Error removing worktree: ${error.message}`)
-      // If worktree removal fails, try to force remove it
       try {
         await this.git.raw(['worktree', 'remove', '--force', worktreePath])
         debug(`Worktree force removed: ${worktreePath}`)
       } catch (forceError) {
         debug(`Failed to force remove worktree: ${forceError.message}`)
-        // As a last resort, manually remove the directory
         if (await pathExists(worktreePath)) {
           rmSync(worktreePath, { recursive: true, force: true })
           debug(`Manually removed worktree directory: ${worktreePath}`)
         }
       }
-    }
-  }
-
-  async listWorktrees(): Promise<string[]> {
-    try {
-      const result = await this.git.raw(['worktree', 'list', '--porcelain'])
-      const lines = result.split('\n')
-      const worktrees: string[] = []
-
-      for (const line of lines) {
-        if (line.startsWith('worktree ')) {
-          worktrees.push(line.substring('worktree '.length))
-        }
-      }
-
-      return worktrees
-    } catch (error) {
-      debug(`Error listing worktrees: ${error.message}`)
-      return []
     }
   }
 
