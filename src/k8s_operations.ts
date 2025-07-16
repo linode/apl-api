@@ -1,4 +1,12 @@
-import * as k8s from '@kubernetes/client-node'
+import {
+  CoreV1Api,
+  CustomObjectsApi,
+  KubeConfig,
+  KubernetesObject,
+  KubernetesObjectApi,
+  RbacAuthorizationV1Api,
+  VersionApi,
+} from '@kubernetes/client-node'
 import Debug from 'debug'
 import * as fs from 'fs'
 import * as yaml from 'js-yaml'
@@ -14,15 +22,15 @@ const debug = Debug('otomi:api:k8sOperations')
  * @param specPath File system path to a YAML Kubernetes spec.
  * @return Array of resources created
  */
-export async function apply(specPath: string): Promise<k8s.KubernetesObject[]> {
-  const kc = new k8s.KubeConfig()
+export async function apply(specPath: string): Promise<KubernetesObject[]> {
+  const kc = new KubeConfig()
   kc.loadFromDefault()
-  const client = k8s.KubernetesObjectApi.makeApiClient(kc) as any
+  const client = KubernetesObjectApi.makeApiClient(kc) as any
   const fsReadFileP = promisify(fs.readFile)
   const specString = await fsReadFileP(specPath, 'utf8')
   const specs: any = yaml.loadAll(specString)
   const validSpecs = specs.filter((s) => s && s.kind && s.metadata)
-  const created: k8s.KubernetesObject[] = []
+  const created: KubernetesObject[] = []
   for (const spec of validSpecs) {
     // this is to convince the old version of TypeScript that metadata exists even though we already filtered specs
     // without metadata out
@@ -54,14 +62,14 @@ export async function apply(specPath: string): Promise<k8s.KubernetesObject[]> {
 
 export async function watchPodUntilRunning(namespace: string, podName: string) {
   let isRunning = false
-  const kc = new k8s.KubeConfig()
+  const kc = new KubeConfig()
   kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  const k8sApi = kc.makeApiClient(CoreV1Api)
 
   while (!isRunning) {
     try {
-      const res = await k8sApi.readNamespacedPodStatus(podName, namespace)
-      isRunning = res.body.status?.phase === 'Running'
+      const res = await k8sApi.readNamespacedPodStatus({ name: podName, namespace })
+      isRunning = res.status?.phase === 'Running'
     } catch (err) {
       const errorMessage = err.response?.body?.message ?? err.response?.body?.reason ?? 'Error checking if pod running'
       debug(`Failed to check pod status for ${podName} in namespace ${namespace}: ${errorMessage}`)
@@ -79,13 +87,13 @@ export async function watchPodUntilRunning(namespace: string, podName: string) {
 }
 
 export async function checkPodExists(namespace: string, podName: string): Promise<boolean> {
-  const kc = new k8s.KubeConfig()
+  const kc = new KubeConfig()
   kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  const k8sApi = kc.makeApiClient(CoreV1Api)
 
   try {
-    const res = await k8sApi.readNamespacedPodStatus(podName, namespace)
-    return res.body.status?.phase === 'Running'
+    const res = await k8sApi.readNamespacedPodStatus({ name: podName, namespace })
+    return res.status?.phase === 'Running'
   } catch (err) {
     const errorMessage = err.response?.body?.message ?? err.response?.body?.reason ?? 'Error checking if pod exists'
     debug(`Failed to check pod status for ${podName} in namespace ${namespace}: ${errorMessage}`)
@@ -102,11 +110,11 @@ export async function k8sdelete({
   isPlatformAdmin: boolean
   userTeams: string[]
 }): Promise<void> {
-  const kc = new k8s.KubeConfig()
+  const kc = new KubeConfig()
   kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
-  const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
-  const rbacAuthorizationV1Api = kc.makeApiClient(k8s.RbacAuthorizationV1Api)
+  const k8sApi = kc.makeApiClient(CoreV1Api)
+  const customObjectsApi = kc.makeApiClient(CustomObjectsApi)
+  const rbacAuthorizationV1Api = kc.makeApiClient(RbacAuthorizationV1Api)
   const resourceName = sub
   const namespace = 'team-admin'
   try {
@@ -116,32 +124,35 @@ export async function k8sdelete({
     const pluralAuth = 'authorizationpolicies'
     const pluralVS = 'virtualservices'
 
-    await customObjectsApi.deleteNamespacedCustomObject(
-      apiGroupAuthz,
-      apiVersion,
+    await customObjectsApi.deleteNamespacedCustomObject({
+      group: apiGroupAuthz,
+      version: apiVersion,
       namespace,
-      pluralAuth,
-      `tty-${resourceName}`,
-    )
+      plural: pluralAuth,
+      name: `tty-${resourceName}`,
+    })
 
-    await k8sApi.deleteNamespacedServiceAccount(`tty-${resourceName}`, namespace)
-    await k8sApi.deleteNamespacedPod(`tty-${resourceName}`, namespace)
+    await k8sApi.deleteNamespacedServiceAccount({ name: `tty-${resourceName}`, namespace })
+    await k8sApi.deleteNamespacedPod({ name: `tty-${resourceName}`, namespace })
     if (!isPlatformAdmin) {
       for (const team of userTeams!) {
-        await rbacAuthorizationV1Api.deleteNamespacedRoleBinding(`tty-${team}-${resourceName}-rolebinding`, team)
+        await rbacAuthorizationV1Api.deleteNamespacedRoleBinding({
+          name: `tty-${team}-${resourceName}-rolebinding`,
+          namespace: team,
+        })
       }
     } else {
-      await rbacAuthorizationV1Api.deleteClusterRoleBinding('tty-admin-clusterrolebinding')
+      await rbacAuthorizationV1Api.deleteClusterRoleBinding({ name: 'tty-admin-clusterrolebinding' })
     }
-    await k8sApi.deleteNamespacedService(`tty-${resourceName}`, namespace)
+    await k8sApi.deleteNamespacedService({ name: `tty-${resourceName}`, namespace })
 
-    await customObjectsApi.deleteNamespacedCustomObject(
-      apiGroupVS,
-      apiVersion,
+    await customObjectsApi.deleteNamespacedCustomObject({
+      group: apiGroupVS,
+      version: apiVersion,
       namespace,
-      pluralVS,
-      `tty-${resourceName}`,
-    )
+      plural: pluralVS,
+      name: `tty-${resourceName}`,
+    })
   } catch (error) {
     debug(`Failed to delete resources for ${resourceName} in namespace ${namespace}.`)
   }
@@ -150,15 +161,15 @@ export async function k8sdelete({
 export async function getKubernetesVersion() {
   if (process.env.NODE_ENV === 'development') return 'x.x.x'
 
-  const kc = new k8s.KubeConfig()
+  const kc = new KubeConfig()
   kc.loadFromDefault()
 
-  const k8sApi = kc.makeApiClient(k8s.VersionApi)
+  const k8sApi = kc.makeApiClient(VersionApi)
 
   try {
     const response = await k8sApi.getCode()
-    console.log('Kubernetes Server Version:', response.body.gitVersion)
-    return response.body.gitVersion
+    console.log('Kubernetes Server Version:', response.gitVersion)
+    return response.gitVersion
   } catch (error) {
     debug(`Failed to get Kubernetes version.`)
   }
@@ -182,23 +193,17 @@ export function getLogTime(timestampMatch): number {
 }
 
 export async function getCloudttyActiveTime(namespace: string, podName: string): Promise<number | undefined> {
-  const kc = new k8s.KubeConfig()
+  const kc = new KubeConfig()
   kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  const k8sApi = kc.makeApiClient(CoreV1Api)
   try {
-    const res = await k8sApi.readNamespacedPodLog(
-      podName,
+    const res = await k8sApi.readNamespacedPodLog({
+      name: podName,
       namespace,
-      'po',
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      3, // get the updated clients count from the last 3 lines
-    )
-    const lines = res.body.split('\n')
+      container: 'po',
+      tailLines: 3, // get the updated clients count from the last 3 lines
+    })
+    const lines = res.split('\n')
     const filteredLine = lines.find((line) => line.includes('clients:')) || ''
     const clientsRegex = /clients: (\d+)/
     const clientsMatch = clientsRegex.exec(filteredLine)
@@ -217,47 +222,22 @@ export async function getCloudttyActiveTime(namespace: string, podName: string):
   }
 }
 
-export async function getLastTektonMessage(sha: string): Promise<any> {
-  const kc = new k8s.KubeConfig()
-  kc.loadFromDefault()
-  const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi)
-  try {
-    const res: any = await customObjectsApi.listNamespacedCustomObject(
-      'tekton.dev',
-      'v1',
-      'otomi-pipelines',
-      'pipelineruns',
-    )
-    const lastPipelineRun = res.body.items.find((item: any) => item.metadata.name.includes(sha))
-    if (!lastPipelineRun) return {}
-    const order = res.body.items.length
-    const { name } = lastPipelineRun.metadata
-    const { completionTime, conditions } = lastPipelineRun.status
-    let status = 'pending'
-    if (['True', 'False', 'Unknown'].includes(conditions[0].status)) status = conditions[0].reason.toLowerCase()
-    return { order, name, completionTime, status }
-  } catch (error) {
-    debug(`Failed to get last Tekton message for ${sha}.`)
-    return {}
-  }
-}
-
 export async function getWorkloadStatus(workload: AplWorkloadResponse): Promise<string> {
-  const kc = new k8s.KubeConfig()
+  const kc = new KubeConfig()
   kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
+  const k8sApi = kc.makeApiClient(CustomObjectsApi)
   const { name, labels } = workload.metadata
   const teamName = labels['apl.io/teamId']
   const appName = `team-${teamName}-${name}`
   try {
-    const res: any = await k8sApi.getNamespacedCustomObject(
-      'argoproj.io',
-      'v1alpha1',
-      'argocd',
-      'applications',
-      appName,
-    )
-    const { status } = res.body.status.sync
+    const res: any = await k8sApi.getNamespacedCustomObject({
+      group: 'argoproj.io',
+      version: 'v1alpha1',
+      namespace: 'argocd',
+      plural: 'applications',
+      name: appName,
+    })
+    const { status } = res.status.sync
     switch (status) {
       case 'Synced':
         return 'Succeeded'
@@ -279,21 +259,17 @@ async function listNamespacedCustomObject(
   plural: string,
   labelSelector: string | undefined,
 ) {
-  const kc = new k8s.KubeConfig()
+  const kc = new KubeConfig()
   kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
+  const k8sApi = kc.makeApiClient(CustomObjectsApi)
   try {
-    const res: any = await k8sApi.listNamespacedCustomObject(
+    const res: any = await k8sApi.listNamespacedCustomObject({
       group,
-      'v1beta1',
+      version: 'v1beta1',
       namespace,
       plural,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
       labelSelector,
-    )
+    })
     return res
   } catch (error) {
     return 'NotFound'
@@ -311,7 +287,7 @@ export async function getBuildStatus(build: AplBuildResponse): Promise<string> {
     labelSelector,
   )
   try {
-    const [pipelineRun] = resPipelineruns.body.items
+    const [pipelineRun] = resPipelineruns.items
     if (pipelineRun) {
       const { conditions } = pipelineRun.status
       if (conditions && conditions.length > 0 && conditions[0].type === 'Succeeded') {
@@ -336,7 +312,7 @@ export async function getBuildStatus(build: AplBuildResponse): Promise<string> {
         'eventlisteners',
         labelSelector,
       )
-      const [eventlistener] = resEventlisteners.body.items
+      const [eventlistener] = resEventlisteners.items
       if (eventlistener) {
         const { conditions } = eventlistener.status
         if (conditions && conditions.length > 0) {
@@ -356,18 +332,18 @@ export async function getBuildStatus(build: AplBuildResponse): Promise<string> {
 }
 
 async function getNamespacedCustomObject(namespace: string, name: string) {
-  const kc = new k8s.KubeConfig()
+  const kc = new KubeConfig()
   kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
+  const k8sApi = kc.makeApiClient(CustomObjectsApi)
   try {
-    const res: any = await k8sApi.getNamespacedCustomObject(
-      'networking.istio.io',
-      'v1beta1',
+    const res: any = await k8sApi.getNamespacedCustomObject({
+      group: 'networking.istio.io',
+      version: 'v1beta1',
       namespace,
-      'gateways',
+      plural: 'gateways',
       name,
-    )
-    const { hosts } = res.body.spec.servers[0]
+    })
+    const { hosts } = res.spec.servers[0]
     return hosts
   } catch (error) {
     return 'NotFound'
@@ -388,7 +364,7 @@ export async function getServiceStatus(service: AplServiceResponse, domainSuffix
 
   if (isKsvc) {
     const res = await listNamespacedCustomObject('networking.istio.io', namespace, 'virtualservices', undefined)
-    const virtualservices = res?.body?.items?.map((item) => item.metadata.name) || []
+    const virtualservices = res?.items?.map((item) => item.metadata.name) || []
     if (virtualservices.includes(`${name}-ingress`)) {
       return 'Succeeded'
     } else {
@@ -404,12 +380,12 @@ export async function getServiceStatus(service: AplServiceResponse, domainSuffix
 }
 
 export async function getSecretValues(name: string, namespace: string): Promise<Record<string, string> | undefined> {
-  const kc = new k8s.KubeConfig()
+  const kc = new KubeConfig()
   kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  const k8sApi = kc.makeApiClient(CoreV1Api)
   try {
-    const res = await k8sApi.readNamespacedSecret(name, namespace)
-    const { data } = res.body
+    const res = await k8sApi.readNamespacedSecret({ name, namespace })
+    const { data } = res
     const decodedData = {}
     Object.entries(data || {}).forEach(([key, value]) => {
       decodedData[key] = Buffer.from(value, 'base64').toString('utf-8')
@@ -423,13 +399,19 @@ export async function getSecretValues(name: string, namespace: string): Promise<
 }
 
 export async function getSealedSecretSyncedStatus(name: string, namespace: string): Promise<string> {
-  const kc = new k8s.KubeConfig()
+  const kc = new KubeConfig()
   kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi)
+  const k8sApi = kc.makeApiClient(CustomObjectsApi)
 
   try {
-    const res: any = await k8sApi.getNamespacedCustomObject('bitnami.com', 'v1alpha1', namespace, 'sealedsecrets', name)
-    const { conditions } = res.body.status
+    const res: any = await k8sApi.getNamespacedCustomObject({
+      group: 'bitnami.com',
+      version: 'v1alpha1',
+      namespace,
+      plural: 'sealedsecrets',
+      name,
+    })
+    const { conditions } = res.status
     if (conditions && conditions.length > 0 && conditions[0].type === 'Synced') {
       switch (conditions[0].status) {
         case 'True':
@@ -463,22 +445,15 @@ export async function getSealedSecretStatus(sealedsecret: AplSecretResponse): Pr
 }
 
 export async function getSealedSecretsCertificate(): Promise<string> {
-  const kc = new k8s.KubeConfig()
+  const kc = new KubeConfig()
   kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  const k8sApi = kc.makeApiClient(CoreV1Api)
   const namespace = 'sealed-secrets'
   const labelSelector = 'sealedsecrets.bitnami.com/sealed-secrets-key'
 
   try {
-    const response = await k8sApi.listNamespacedSecret(
-      namespace,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      labelSelector,
-    )
-    const { items } = response.body as any
+    const response = await k8sApi.listNamespacedSecret({ namespace, labelSelector })
+    const { items } = response as any
 
     const newestItem = items.reduce((maxItem, currentItem) => {
       const maxTimestamp = new Date(maxItem.creationTimestamp as Date).getTime()
@@ -499,22 +474,15 @@ export async function getSealedSecretsCertificate(): Promise<string> {
 }
 
 export async function getSealedSecretsKeys(): Promise<any> {
-  const kc = new k8s.KubeConfig()
+  const kc = new KubeConfig()
   kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  const k8sApi = kc.makeApiClient(CoreV1Api)
   const namespace = 'sealed-secrets'
   const labelSelector = 'sealedsecrets.bitnami.com/sealed-secrets-key'
 
   try {
-    const response = await k8sApi.listNamespacedSecret(
-      namespace,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      labelSelector,
-    )
-    const { items } = response.body as any
+    const response = await k8sApi.listNamespacedSecret({ namespace, labelSelector })
+    const { items } = response as any
 
     const sealedSecretsKeysJson: any = {
       apiVersion: 'v1',
@@ -548,12 +516,12 @@ export async function getSealedSecretsKeys(): Promise<any> {
 }
 
 export async function getTeamSecretsFromK8s(namespace: string) {
-  const kc = new k8s.KubeConfig()
+  const kc = new KubeConfig()
   kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+  const k8sApi = kc.makeApiClient(CoreV1Api)
   try {
-    const res: any = await k8sApi.listNamespacedSecret(namespace)
-    const secrets = res.body.items.map((item) => item.metadata.name)
+    const res: any = await k8sApi.listNamespacedSecret({ namespace })
+    const secrets = res.items.map((item) => item.metadata.name)
     return secrets
   } catch (error) {
     debug(`Failed to get team secrets from k8s for ${namespace}.`)

@@ -1,4 +1,4 @@
-import * as k8s from '@kubernetes/client-node'
+import { CoreV1Api } from '@kubernetes/client-node'
 import { getCloudttyActiveTime, getLogTime } from './k8s_operations'
 describe('getCloudttyLogTime', () => {
   test('should return the timestamp for a valid log timestamp', () => {
@@ -24,7 +24,7 @@ describe('getCloudttyActiveTime', () => {
     const namespace = 'test-namespace'
     const podName = 'test-pod'
     const log = '[2023/10/10 00:00:00:0000] [INFO] clients: 0'
-    jest.spyOn(k8s.CoreV1Api.prototype, 'readNamespacedPodLog').mockResolvedValue({ body: log } as any)
+    jest.spyOn(CoreV1Api.prototype, 'readNamespacedPodLog').mockResolvedValue(log)
 
     const result = await getCloudttyActiveTime(namespace, podName)
     expect(result).toBeGreaterThan(0)
@@ -34,7 +34,7 @@ describe('getCloudttyActiveTime', () => {
     const namespace = 'test-namespace'
     const podName = 'test-pod'
     const log = '[2023/10/10 00:00:00:0000] [INFO] clients: 1'
-    jest.spyOn(k8s.CoreV1Api.prototype, 'readNamespacedPodLog').mockResolvedValue({ body: log } as any)
+    jest.spyOn(CoreV1Api.prototype, 'readNamespacedPodLog').mockResolvedValue(log)
 
     const result = await getCloudttyActiveTime(namespace, podName)
     expect(result).toBe(0)
@@ -44,7 +44,7 @@ describe('getCloudttyActiveTime', () => {
     const namespace = 'test-namespace'
     const podName = 'test-pod'
     const log = '[2023/10/10 00:00:00:0000] [INFO] some other log message'
-    jest.spyOn(k8s.CoreV1Api.prototype, 'readNamespacedPodLog').mockResolvedValue({ body: log } as any)
+    jest.spyOn(CoreV1Api.prototype, 'readNamespacedPodLog').mockResolvedValue(log)
 
     const result = await getCloudttyActiveTime(namespace, podName)
     expect(result).toBeUndefined()
@@ -54,7 +54,7 @@ describe('getCloudttyActiveTime', () => {
     const namespace = 'test-namespace'
     const podName = 'test-pod'
     const log = ''
-    jest.spyOn(k8s.CoreV1Api.prototype, 'readNamespacedPodLog').mockResolvedValue({ body: log } as any)
+    jest.spyOn(CoreV1Api.prototype, 'readNamespacedPodLog').mockResolvedValue(log)
 
     const result = await getCloudttyActiveTime(namespace, podName)
     expect(result).toBeUndefined()
@@ -63,7 +63,7 @@ describe('getCloudttyActiveTime', () => {
   test('should return undefined if an error occurs', async () => {
     const namespace = 'test-namespace'
     const podName = 'test-pod'
-    jest.spyOn(k8s.CoreV1Api.prototype, 'readNamespacedPodLog').mockRejectedValue(new Error('test error'))
+    jest.spyOn(CoreV1Api.prototype, 'readNamespacedPodLog').mockRejectedValue(new Error('test error'))
 
     const result = await getCloudttyActiveTime(namespace, podName)
     expect(result).toBeUndefined()

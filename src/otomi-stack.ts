@@ -1,5 +1,4 @@
-import * as k8s from '@kubernetes/client-node'
-import { V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -8,7 +7,7 @@ import { readdir, readFile, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, isEmpty, map, mapValues, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
-import { AlreadyExists, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
+import { AlreadyExists, ForbiddenError, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
 import getRepo, { Git } from 'src/git'
 import { cleanSession, getSessionStack } from 'src/middleware'
 import {
@@ -81,6 +80,7 @@ import {
   GIT_REPO_URL,
   GIT_USER,
   HELM_CHART_CATALOG,
+  HIDDEN_APPS,
   OBJ_STORAGE_APPS,
   PREINSTALLED_EXCLUDED_APPS,
   TOOLS_HOST,
@@ -136,6 +136,7 @@ const env = cleanEnv({
   TOOLS_HOST,
   VERSIONS,
   PREINSTALLED_EXCLUDED_APPS,
+  HIDDEN_APPS,
   OBJ_STORAGE_APPS,
 })
 
@@ -314,8 +315,8 @@ export default class OtomiStack {
         debug(`Values are not present at ${url}:${branch}`)
       } catch (e) {
         // Remove password from error message
-        const safeCommand = JSON.stringify(e.task?.commands).replace(env.GIT_PASSWORD, '****')
-        debug(`${e.message.trim()} for command ${JSON.stringify(safeCommand)}`)
+        const errorMessage = getSanitizedErrorMessage(e)
+        debug(`Error while initializing git repository: ${errorMessage}`)
         debug(`Git repository is not ready: ${url}:${branch}`)
       }
       const timeoutMs = 10000
@@ -340,13 +341,14 @@ export default class OtomiStack {
         cleanSecretPaths.push(p)
       } else {
         teams.forEach((teamId: string) => {
-          if (p.indexOf(teamProp) === 0)
+          if (p.indexOf(teamProp) === 0) {
             cleanSecretPaths.push(
               p
                 .replace(teamProp, `teamConfig.${teamId}`)
                 // add spec to the path for v2 endpoints
                 .replace(`teamConfig.${teamId}.settings`, `teamConfig.${teamId}.settings.spec`),
             )
+          }
         })
       }
     })
@@ -540,7 +542,9 @@ export default class OtomiStack {
   }
 
   filterExcludedApp(apps: App | App[]) {
-    const excludedApps = PREINSTALLED_EXCLUDED_APPS.default.apps
+    const preInstalledExcludedApps = PREINSTALLED_EXCLUDED_APPS.default.apps
+    const hiddenApps = HIDDEN_APPS.default.apps
+    const excludedApps = preInstalledExcludedApps.concat(hiddenApps)
     const settingsInfo = this.getSettingsInfo()
     if (!Array.isArray(apps)) {
       if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled && excludedApps.includes(apps.id)) {
@@ -797,7 +801,7 @@ export default class OtomiStack {
     const configKey = this.getConfigKey('AplTeamWorkloadValues')
     const repo = this.createTeamConfigInRepo(teamId, configKey, [values])
     const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkloadValues')!
-    await this.git.saveConfig(repo, fileMap)
+    await this.git.saveConfig(repo, fileMap, false)
   }
 
   async saveTeamPolicy(teamId: string, data: AplPolicyResponse): Promise<void> {
@@ -1028,9 +1032,8 @@ export default class OtomiStack {
         return { id, email, isPlatformAdmin, isTeamAdmin, teams }
       })
       return usersWithBasicInfo as Array<User>
-    } else {
-      return []
     }
+    throw new ForbiddenError()
   }
 
   async createUser(data: User): Promise<User> {
@@ -1077,15 +1080,21 @@ export default class OtomiStack {
     }
   }
 
-  getUser(id: string): User {
-    return this.repoService.getUser(id)
+  getUser(id: string, sessionUser: SessionUser): User {
+    const user = this.repoService.getUser(id)
+    if (sessionUser.isPlatformAdmin) {
+      return user
+    }
+    if (sessionUser.isTeamAdmin) {
+      const { id: userId, email, isPlatformAdmin, isTeamAdmin, teams } = user
+      return { id: userId, email, isPlatformAdmin, isTeamAdmin, teams } as User
+    }
+    throw new ForbiddenError()
   }
 
   async editUser(id: string, data: User, sessionUser: SessionUser): Promise<User> {
     if (!sessionUser.isPlatformAdmin) {
-      const error = new OtomiError('Only platform admins can modify user details.')
-      error.code = 403
-      throw error
+      throw new ForbiddenError('Only platform admins can modify user details.')
     }
     const user = this.repoService.updateUser(id, data)
     await this.saveUser(user)
@@ -1102,10 +1111,7 @@ export default class OtomiStack {
   async deleteUser(id: string): Promise<void> {
     const user = this.repoService.getUser(id)
     if (user.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
-      const error = new OtomiError('Forbidden')
-      error.code = 403
-      error.publicMessage = 'Cannot delete the default platform admin user'
-      throw error
+      throw new ForbiddenError('Cannot delete the default platform admin user')
     }
     await this.deleteUserFile(user)
     await this.doRepoDeployment((repoService) => {
@@ -1146,9 +1152,7 @@ export default class OtomiStack {
     sessionUser: SessionUser,
   ): Promise<Pick<User, 'id' | 'teams'>[]> {
     if (!sessionUser.isPlatformAdmin && !sessionUser.isTeamAdmin) {
-      const error = new OtomiError("Only platform admins or team admins can modify a user's team memberships.")
-      error.code = 403
-      throw error
+      throw new ForbiddenError("Only platform admins or team admins can modify a user's team memberships.")
     }
     for (const user of data) {
       const existingUser = this.repoService.getUser(user.id!)
@@ -1156,11 +1160,9 @@ export default class OtomiStack {
         !sessionUser.isPlatformAdmin &&
         !this.canTeamAdminUpdateUserTeams(sessionUser, existingUser, user.teams as string[])
       ) {
-        const error = new OtomiError(
+        throw new ForbiddenError(
           'Team admins are permitted to add or remove users only within the teams they manage. However, they cannot remove themselves or other team admins from those teams.',
         )
-        error.code = 403
-        throw error
       }
       const updateUser = this.repoService.updateUser(user.id!, { ...existingUser, teams: user.teams })
       await this.saveUser(updateUser)
@@ -1549,11 +1551,12 @@ export default class OtomiStack {
 
   async createAplBuild(teamId: string, data: AplBuildRequest): Promise<AplBuildResponse> {
     const buildName = `${data?.spec?.imageName}-${data?.spec?.tag}`
-    if (buildName.length > 128)
+    if (buildName.length > 128) {
       throw new HttpError(
         400,
         'Invalid container image name, the combined image name and tag must not exceed 128 characters.',
       )
+    }
     try {
       const build = this.repoService.getTeamConfigService(teamId).createBuild(data)
       await this.saveTeamConfigItem(build)
@@ -1566,8 +1569,9 @@ export default class OtomiStack {
       )
       return build
     } catch (err) {
-      if (err.code === 409)
+      if (err.code === 409) {
         err.publicMessage = 'Container image name already exists, the combined image name and tag must be unique.'
+      }
       throw err
     }
   }
@@ -1745,8 +1749,9 @@ export default class OtomiStack {
           fileContent = fileContent.replace(regex, variables[key] as string)
         })
         if (file === 'tty_02_Pod.yaml') fileContent = podContentAddTargetTeam(fileContent)
-        if (!sessionUser.isPlatformAdmin && file === 'tty_03_Rolebinding.yaml')
+        if (!sessionUser.isPlatformAdmin && file === 'tty_03_Rolebinding.yaml') {
           fileContent = rolebindingContentsForUsers(fileContent)
+        }
         return fileContent
       }),
     )
@@ -1774,8 +1779,9 @@ export default class OtomiStack {
     const { sub, isPlatformAdmin, teams } = sessionUser as { sub: string; isPlatformAdmin: boolean; teams: string[] }
     const userTeams = teams.map((teamName) => `team-${teamName}`)
     try {
-      if (await checkPodExists('team-admin', `tty-${sessionUser.sub}`))
+      if (await checkPodExists('team-admin', `tty-${sessionUser.sub}`)) {
         await k8sdelete({ sub, isPlatformAdmin, userTeams })
+      }
     } catch (error) {
       debug('Failed to delete cloudtty')
     }
@@ -2151,13 +2157,13 @@ export default class OtomiStack {
     }
   }
 
-  apiClient?: k8s.CoreV1Api
+  apiClient?: CoreV1Api
 
-  getApiClient(): k8s.CoreV1Api {
+  getApiClient(): CoreV1Api {
     if (this.apiClient) return this.apiClient
-    const kc = new k8s.KubeConfig()
+    const kc = new KubeConfig()
     kc.loadFromDefault()
-    this.apiClient = kc.makeApiClient(k8s.CoreV1Api)
+    this.apiClient = kc.makeApiClient(CoreV1Api)
     return this.apiClient
   }
 
@@ -2263,8 +2269,8 @@ export default class OtomiStack {
     //   return collection
     // }
 
-    const svcList = await client.listNamespacedService(`team-${teamId}`)
-    svcList.body.items.map((item) => {
+    const svcList = await client.listNamespacedService({ namespace: `team-${teamId}` })
+    svcList.items.map((item) => {
       let name = item.metadata!.name ?? 'unknown'
       let managedByKnative = false
       // Filter out knative private services
@@ -2286,7 +2292,7 @@ export default class OtomiStack {
     return collection
   }
 
-  async getKubecfg(teamId: string): Promise<k8s.KubeConfig> {
+  async getKubecfg(teamId: string): Promise<KubeConfig> {
     this.getTeam(teamId) // will throw if not existing
     const {
       cluster: { name, apiName = `otomi-${name}`, apiServer },
@@ -2294,12 +2300,10 @@ export default class OtomiStack {
     if (!apiServer) throw new ValidationError('Missing configuration value: cluster.apiServer')
     const client = this.getApiClient()
     const namespace = `team-${teamId}`
-    const saRes = await client.readNamespacedServiceAccount(`kubectl`, namespace)
-    const { body: sa }: { body: k8s.V1ServiceAccount } = saRes
+    const sa = await client.readNamespacedServiceAccount({ name: `kubectl`, namespace })
     const { secrets }: { secrets?: Array<V1ObjectReference> } = sa
     const secretName = secrets?.length ? secrets[0].name : ''
-    const secretRes = await client.readNamespacedSecret(secretName || '', namespace)
-    const { body: secret }: { body: k8s.V1Secret } = secretRes
+    const secret = await client.readNamespacedSecret({ name: secretName || '', namespace })
     const token = Buffer.from(secret.data?.token || '', 'base64').toString('ascii')
     const cluster = {
       name: apiName,
@@ -2324,7 +2328,7 @@ export default class OtomiStack {
       contexts: [context],
       currentContext: context.name,
     }
-    const config = new k8s.KubeConfig()
+    const config = new KubeConfig()
     config.loadFromOptions(options)
     return config
   }
@@ -2334,8 +2338,7 @@ export default class OtomiStack {
     const client = this.getApiClient()
     const namespace = `team-${teamId}`
     const secretName = 'harbor-pushsecret'
-    const secretRes = await client.readNamespacedSecret(secretName, namespace)
-    const { body: secret }: { body: k8s.V1Secret } = secretRes
+    const secret = await client.readNamespacedSecret({ name: secretName, namespace })
     return Buffer.from(secret.data!['.dockerconfigjson'], 'base64').toString('ascii')
   }
 
@@ -2607,7 +2610,7 @@ export default class OtomiStack {
     }
   }
 
-  async getSession(user: k8s.User): Promise<Session> {
+  async getSession(user: k8sUser): Promise<Session> {
     const rootStack = await getSessionStack()
     const valuesSchema = await getValuesSchema()
     const currentSha = rootStack.git.commitSha

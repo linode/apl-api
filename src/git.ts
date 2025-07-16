@@ -5,7 +5,6 @@ import { rmSync } from 'fs'
 import { copy, ensureDir, pathExists, readFile, writeFile } from 'fs-extra'
 import { unlink } from 'fs/promises'
 import { glob } from 'glob'
-import stringifyJson from 'json-stable-stringify'
 import jsonpath from 'jsonpath'
 import { cloneDeep, get, isEmpty, merge, set, unset } from 'lodash'
 import { basename, dirname, join } from 'path'
@@ -25,7 +24,7 @@ import { BASEURL } from './constants'
 import { GitPullError, HttpError, ValidationError } from './error'
 import { Core } from './otomi-models'
 import { FileMap, getFilePath, getResourceName, renderManifest, renderManifestForSecrets } from './repo'
-import { getSanitizedErrorMessage, removeBlankAttributes } from './utils'
+import { getSanitizedErrorMessage, removeBlankAttributes, sanitizeGitPassword } from './utils'
 
 const debug = Debug('otomi:repo')
 
@@ -198,8 +197,7 @@ export class Git {
     // ok, write new content
     const absolutePath = join(this.path, file)
     debug(`Writing to file: ${absolutePath}`)
-    const sortedData = JSON.parse(stringifyJson(data) as string)
-    const content = isEmpty(sortedData) ? '' : stringifyYaml(sortedData, undefined, 4)
+    const content = stringifyYaml(data, undefined, { indent: 4, sortMapEntries: true })
     const dir = dirname(absolutePath)
     await ensureDir(dir)
     await writeFile(absolutePath, content, 'utf8')
@@ -473,7 +471,8 @@ export class Git {
       }
     } catch (e) {
       const sanitizedMessage = getSanitizedErrorMessage(e)
-      debug(`${sanitizedMessage} for command ${JSON.stringify(e.task?.commands).replace(env.GIT_PASSWORD, '****')}`)
+      const sanitizedCommands = sanitizeGitPassword(JSON.stringify(e.task?.commands))
+      debug(`${sanitizedMessage} for command ${sanitizedCommands}`)
       debug('Git save error')
       throw new GitPullError()
     }
