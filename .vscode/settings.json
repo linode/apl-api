@@ -26,7 +26,7 @@
     "CODEOWNERS": "plaintext"
   },
   "prettier.enable": true,
-  "cSpell.words": ["minio"],
+  "cSpell.words": ["kubeflow", "minio"],
   "[properties]": {
     "editor.defaultFormatter": "foxundermoon.shell-format"
   },
