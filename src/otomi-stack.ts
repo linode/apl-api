@@ -386,6 +386,7 @@ export default class OtomiStack {
         velero: `lke${lkeClusterId}-velero`,
         gitea: `lke${lkeClusterId}-gitea`,
         thanos: `lke${lkeClusterId}-thanos`,
+        'kubeflow-pipelines': `lke${lkeClusterId}-kubeflow-pipelines`,
       }
       const objectStorageClient = new ObjectStorageClient(data.apiToken)
       // Create object storage buckets
