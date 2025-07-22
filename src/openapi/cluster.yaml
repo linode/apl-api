@@ -31,6 +31,14 @@ Cluster:
       default: otomi
     provider:
       $ref: 'definitions.yaml#/provider'
+    defaultPlatformStorageClass:
+      title: Default platform storage class
+      type: string
+      description: Default storage class policy for APL platform components. Controls data retention behavior.
+      enum:
+        - Delete
+        - Retain
+      default: Delete
   required:
     - name
     - provider
