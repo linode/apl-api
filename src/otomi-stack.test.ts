@@ -11,7 +11,7 @@ import {
 } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { loadSpec } from './app'
-import { PublicUrlExists } from './error'
+import { PublicUrlExists, ValidationError } from './error'
 import { Git } from './git'
 import { RepoService } from './services/RepoService'
 import { TeamConfigService } from './services/TeamConfigService'
@@ -206,6 +206,109 @@ describe('Data validation', () => {
     const myPassword = 'someAwesomePassword'
     await otomiStack.createTeam({ name: 'test', password: myPassword }, false)
     expect(createItemSpy.mock.calls[0][0].spec.password).toEqual(myPassword)
+    createItemSpy.mockRestore()
+  })
+
+  test('should throw ValidationError when team name exceeds 9 characters', async () => {
+    const teamData: AplTeamSettingsRequest = {
+      kind: 'AplTeamSettingSet',
+      metadata: {
+        name: 'verylongteamname',
+        labels: {
+          'apl.io/teamId': 'verylongteamname',
+        },
+      },
+      spec: {},
+    }
+
+    await expect(otomiStack.createAplTeam(teamData, false)).rejects.toThrow(
+      new ValidationError('Team name must not exceed 9 characters'),
+    )
+  })
+
+  test('should not throw ValidationError when team name is exactly 9 characters', async () => {
+    const teamSettings = {
+      kind: 'AplTeamSettingSet',
+      metadata: {
+        name: 'ninechars',
+        labels: {
+          'apl.io/teamId': 'ninechars',
+        },
+      },
+      spec: {},
+      status: {},
+    }
+
+    const createItemSpy = jest.spyOn(otomiStack.repoService, 'createTeamConfig').mockReturnValue({
+      builds: [],
+      codeRepos: [],
+      workloads: [],
+      services: [],
+      sealedsecrets: [],
+      backups: [],
+      projects: [],
+      netpols: [],
+      settings: teamSettings,
+      apps: [],
+      policies: [],
+      workloadValues: [],
+    } as TeamConfig)
+
+    const teamData: AplTeamSettingsRequest = {
+      kind: 'AplTeamSettingSet',
+      metadata: {
+        name: 'ninechars',
+        labels: {
+          'apl.io/teamId': 'ninechars',
+        },
+      },
+      spec: {},
+    }
+
+    await expect(otomiStack.createAplTeam(teamData, false)).resolves.not.toThrow()
+    createItemSpy.mockRestore()
+  })
+
+  test('should not throw ValidationError when team name is less than 9 characters', async () => {
+    const teamSettings = {
+      kind: 'AplTeamSettingSet',
+      metadata: {
+        name: 'short',
+        labels: {
+          'apl.io/teamId': 'short',
+        },
+      },
+      spec: {},
+      status: {},
+    }
+
+    const createItemSpy = jest.spyOn(otomiStack.repoService, 'createTeamConfig').mockReturnValue({
+      builds: [],
+      codeRepos: [],
+      workloads: [],
+      services: [],
+      sealedsecrets: [],
+      backups: [],
+      projects: [],
+      netpols: [],
+      settings: teamSettings,
+      apps: [],
+      policies: [],
+      workloadValues: [],
+    } as TeamConfig)
+
+    const teamData: AplTeamSettingsRequest = {
+      kind: 'AplTeamSettingSet',
+      metadata: {
+        name: 'short',
+        labels: {
+          'apl.io/teamId': 'short',
+        },
+      },
+      spec: {},
+    }
+
+    await expect(otomiStack.createAplTeam(teamData, false)).resolves.not.toThrow()
     createItemSpy.mockRestore()
   })
 })
