@@ -32,6 +32,7 @@ Cluster:
     provider:
       $ref: 'definitions.yaml#/provider'
     defaultPlatformStorageClass:
+      title: Default platform storage class
       type: string
       description: Default storage class for platform components. Use linode-block-storage for Delete policy or linode-block-storage-retain for Retain policy.
       enum:
