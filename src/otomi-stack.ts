@@ -2248,7 +2248,7 @@ export default class OtomiStack {
   }
 
   async getK8sServices(teamId: string): Promise<Array<K8sService>> {
-    // if (env.isDev) return []
+    if (env.isDev) return []
     // const teams = user.teams.map((name) => {
     //   return `team-${name}`
     // })
