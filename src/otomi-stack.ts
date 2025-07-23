@@ -1,4 +1,4 @@
-import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -688,6 +688,7 @@ export default class OtomiStack {
 
   async createAplTeam(data: AplTeamSettingsRequest, deploy = true): Promise<AplTeamSettingsResponse> {
     const teamName = data.metadata.name
+    if (teamName.length > 9) throw new ValidationError('Team name must not exceed 9 characters')
 
     if (isEmpty(data.spec.password)) {
       debug(`creating password for team '${teamName}'`)
