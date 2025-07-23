@@ -1,10 +1,10 @@
+import { mockDeep } from 'jest-mock-extended'
 import { JWT } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
-import { getUser } from './jwt'
-import * as getValuesSchemaModule from '../utils'
 import { loadSpec } from '../app'
-import { mockDeep } from 'jest-mock-extended'
 import { Git } from '../git'
+import * as getValuesSchemaModule from '../utils'
+import { getUser } from './jwt'
 
 const email = 'test@user.net'
 const platformAdminGroups = ['platform-admin', 'all-teams-admin']
@@ -64,7 +64,7 @@ describe('JWT claims mapping', () => {
   })
 
   test("Non existing team groups should not be added to the user's list of teams", async () => {
-    const extraneousTeamsList = [...multiTeamUser, 'nonexisting']
+    const extraneousTeamsList = [...multiTeamUser, 'nonexist']
     await Promise.all(extraneousTeamsList.map(async (teamId) => otomiStack.createTeam({ name: teamId }, false)))
     const user = getUser(multiTeamJWT, otomiStack)
     expect(user.teams).toEqual(multiTeamUser)
