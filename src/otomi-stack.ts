@@ -1,4 +1,4 @@
-import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -2177,42 +2177,42 @@ export default class OtomiStack {
     const nameKey = 'app.kubernetes.io/name'
 
     // Helper to list pods by label selector
-    const listPods = async (selector: string) =>
+    const listPods = async (labelSelector: string) =>
       namespace
-        ? await api.listNamespacedPod(namespace, undefined, undefined, undefined, undefined, selector)
-        : await api.listPodForAllNamespaces(undefined, undefined, undefined, selector)
+        ? await api.listNamespacedPod({ namespace, labelSelector })
+        : await api.listPodForAllNamespaces({ labelSelector })
 
     // 1. Primary selector: Istio canonical name
     let selector = `${istioKey}=${workloadName}`
     let res = await listPods(selector)
-    let pods = res.body.items
+    let pods = res.items
 
     // 2. RabbitMQ fallback: workloadName-rabbitmq-cluster
     if (pods.length === 0) {
       selector = `${istioKey}=${workloadName}-rabbitmq-cluster`
       res = await listPods(selector)
-      pods = res.body.items
+      pods = res.items
     }
 
     // 3. Otomi app label
     if (pods.length === 0) {
       selector = `${otomiKey}=${workloadName}`
       res = await listPods(selector)
-      pods = res.body.items
+      pods = res.items
     }
 
     // 4. app.kubernetes.io/instance
     if (pods.length === 0) {
       selector = `${instanceKey}=${workloadName}`
       res = await listPods(selector)
-      pods = res.body.items
+      pods = res.items
     }
 
     // 5. app.kubernetes.io/name
     if (pods.length === 0) {
       selector = `${nameKey}=${workloadName}`
       res = await listPods(selector)
-      pods = res.body.items
+      pods = res.items
     }
 
     // Return labels of the first matching pod, or empty object
@@ -2220,17 +2220,14 @@ export default class OtomiStack {
   }
 
   async listUniquePodNamesByLabel(labelSelector: string, namespace?: string): Promise<string[]> {
-    console.log('fetching pods with selector', labelSelector, namespace ? `in ns ${namespace}` : 'in all namespaces')
-
     const api = this.getApiClient()
 
     // fetch pods, either namespaced or all
     const res = namespace
-      ? await api.listNamespacedPod(namespace, undefined, undefined, undefined, undefined, labelSelector)
-      : await api.listPodForAllNamespaces(undefined, undefined, undefined, labelSelector)
+      ? await api.listNamespacedPod({ namespace, labelSelector })
+      : await api.listPodForAllNamespaces({ labelSelector })
 
-    console.log('res?', res)
-    const allPods = res.body.items
+    const allPods = res.items
     if (allPods.length === 0) return []
 
     const seenBases = new Set<string>()
