@@ -689,6 +689,7 @@ export default class OtomiStack {
 
   async createAplTeam(data: AplTeamSettingsRequest, deploy = true): Promise<AplTeamSettingsResponse> {
     const teamName = data.metadata.name
+    if (teamName.length > 9) throw new ValidationError('Team name must not exceed 9 characters')
 
     if (isEmpty(data.spec.password)) {
       debug(`creating password for team '${teamName}'`)
