@@ -31,14 +31,11 @@ Cluster:
       default: otomi
     provider:
       $ref: 'definitions.yaml#/provider'
-    defaultPlatformStorageClass:
-      title: Default platform storage class
+    defaultStorageClass:
+      title: Default storage class
       type: string
-      description: Default storage class for platform components. Use linode-block-storage for Delete policy or linode-block-storage-retain for Retain policy.
-      enum:
-        - linode-block-storage
-        - linode-block-storage-retain
-      default: linode-block-storage
+      description: Default storage class for platform components. Use '' for relying on the cluster's default storage class.
+      default: ''
   required:
     - name
     - provider
