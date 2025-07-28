@@ -756,6 +756,126 @@ describe('Users tests', () => {
   })
 })
 
+describe('PodService', () => {
+  let otomiStack: OtomiStack
+  let clientMock: {
+    listNamespacedPod: jest.Mock
+    listPodForAllNamespaces: jest.Mock
+  }
+
+  beforeEach(() => {
+    otomiStack = new OtomiStack()
+    clientMock = {
+      listNamespacedPod: jest.fn(),
+      listPodForAllNamespaces: jest.fn(),
+    }
+    // Override the API client
+    ;(otomiStack as any).getApiClient = jest.fn(() => clientMock)
+  })
+
+  describe('getK8sPodLabelsForWorkload', () => {
+    const baseLabels = { 'app.kubernetes.io/name': 'test', custom: 'label' }
+
+    it('should return labels on primary Istio selector (namespaced)', async () => {
+      clientMock.listNamespacedPod.mockResolvedValue({ items: [{ metadata: { labels: baseLabels } }] })
+
+      const labels = await otomiStack.getK8sPodLabelsForWorkload('test', 'default')
+
+      expect(clientMock.listNamespacedPod).toHaveBeenCalledWith({
+        namespace: 'default',
+        labelSelector: 'service.istio.io/canonical-name=test',
+      })
+      expect(labels).toEqual(baseLabels)
+    })
+
+    it('should fallback to RabbitMQ selector when primary returns none', async () => {
+      clientMock.listNamespacedPod
+        .mockResolvedValueOnce({ items: [] })
+        .mockResolvedValueOnce({ items: [{ metadata: { labels: { rabbit: 'yes' } } }] })
+
+      const labels = await otomiStack.getK8sPodLabelsForWorkload('test', 'default')
+
+      expect(clientMock.listNamespacedPod).toHaveBeenCalledTimes(2)
+      expect(clientMock.listNamespacedPod).toHaveBeenCalledWith({
+        namespace: 'default',
+        labelSelector: 'service.istio.io/canonical-name=test',
+      })
+      expect(clientMock.listNamespacedPod).toHaveBeenCalledWith({
+        namespace: 'default',
+        labelSelector: 'service.istio.io/canonical-name=test-rabbitmq-cluster',
+      })
+      expect(labels).toEqual({ rabbit: 'yes' })
+    })
+
+    it('should go through all fallback selectors and return empty object if none found', async () => {
+      clientMock.listNamespacedPod.mockResolvedValue({ items: [] })
+
+      const labels = await otomiStack.getK8sPodLabelsForWorkload('foo', 'bar')
+
+      expect(clientMock.listNamespacedPod).toHaveBeenCalledTimes(5)
+      expect(labels).toEqual({})
+    })
+
+    it('should search across all namespaces when no namespace provided', async () => {
+      clientMock.listPodForAllNamespaces.mockResolvedValue({ items: [{ metadata: { labels: { global: 'yes' } } }] })
+
+      const labels = await otomiStack.getK8sPodLabelsForWorkload('global', undefined)
+
+      expect(clientMock.listPodForAllNamespaces).toHaveBeenCalledWith({
+        labelSelector: 'service.istio.io/canonical-name=global',
+      })
+      expect(labels).toEqual({ global: 'yes' })
+    })
+  })
+
+  describe('listUniquePodNamesByLabel', () => {
+    it('should return empty array when no pods found (namespaced)', async () => {
+      clientMock.listNamespacedPod.mockResolvedValue({ items: [] })
+
+      const names = await otomiStack.listUniquePodNamesByLabel('app=test', 'default')
+
+      expect(names).toEqual([])
+      expect(clientMock.listNamespacedPod).toHaveBeenCalledWith({ namespace: 'default', labelSelector: 'app=test' })
+    })
+
+    it('should return full names for unique bases', async () => {
+      const pods = [
+        { metadata: { name: 'frontend-abc123' } },
+        { metadata: { name: 'backend-def456' } },
+        { metadata: { name: 'db-gh789' } },
+      ]
+      clientMock.listPodForAllNamespaces.mockResolvedValue({ items: pods })
+
+      const names = await otomiStack.listUniquePodNamesByLabel('app=all')
+
+      expect(names).toEqual(['frontend-abc123', 'backend-def456', 'db-gh789'])
+    })
+
+    it('should filter out duplicate base names, keeping first occurrence', async () => {
+      const pods = [
+        { metadata: { name: 'app-1-a1' } },
+        { metadata: { name: 'app-1-b2' } },
+        { metadata: { name: 'app-2-c3' } },
+        { metadata: { name: 'app-2-d4' } },
+      ]
+      clientMock.listPodForAllNamespaces.mockResolvedValue({ items: pods })
+
+      const names = await otomiStack.listUniquePodNamesByLabel('app=dup')
+
+      expect(names).toEqual(['app-1-a1', 'app-2-c3'])
+    })
+
+    it('should handle pod names without dashes', async () => {
+      const pods = [{ metadata: { name: 'singlename' } }]
+      clientMock.listPodForAllNamespaces.mockResolvedValue({ items: pods })
+
+      const names = await otomiStack.listUniquePodNamesByLabel('app=uniq')
+
+      expect(names).toEqual(['singlename'])
+    })
+  })
+})
+
 describe('Code repositories tests', () => {
   let otomiStack: OtomiStack
   let teamConfigService: TeamConfigService
