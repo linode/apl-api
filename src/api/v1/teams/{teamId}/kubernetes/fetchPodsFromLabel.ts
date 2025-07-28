@@ -6,8 +6,7 @@ const debug = Debug('otomi:api:v1:teams:kubernetes:fetchPodsFromLabel')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [
-    async ({ otomi, query, params }: OpenApiRequestExt, res): Promise<void> => {
-      console.log('req.params', query)
+    async ({ otomi, query }: OpenApiRequestExt, res): Promise<void> => {
       debug('fetchPodsFromLabel')
       try {
         const { labelSelector, namespace }: { labelSelector: string; namespace: string } = query as any
