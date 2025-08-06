@@ -74,7 +74,7 @@ jobs:
           echo "npm install completed, checking dependencies:"
           npm ls lodash tsx || true
           echo "Starting server..."
-          npm run server > $GITHUB_WORKSPACE/core.log 2>&1 &
+          NODE_OPTIONS="--loader=tsx/cjs" npm run server > $GITHUB_WORKSPACE/core.log 2>&1 &
       - name: Start api
         run: |
           npm install
