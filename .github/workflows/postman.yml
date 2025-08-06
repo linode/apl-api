@@ -69,7 +69,11 @@ jobs:
           grep '"type"' package.json || echo "No type field found"
           echo "===================="
           npm cache clean --force
-          npm install
+          echo "Running npm install..."
+          npm install --verbose
+          echo "npm install completed, checking dependencies:"
+          npm ls lodash tsx || true
+          echo "Starting server..."
           npm run server > $GITHUB_WORKSPACE/core.log 2>&1 &
       - name: Start api
         run: |
