@@ -29,7 +29,6 @@ jobs:
         with:
           repository: linode/apl-core
           path: apl-core
-          ref: add-fs-extra
       - name: Create Git repo
         run: |
           readonly env_dir="$HOME/workspace/linode/values-ofld1"
