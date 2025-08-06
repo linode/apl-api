@@ -54,27 +54,8 @@ jobs:
           cd apl-core
           nvm install
           nvm use
-          echo "=== DEBUGGING INFO ==="
           node -v
-          npm -v
-          echo "Current directory: $(pwd)"
-          echo "Node modules lodash version:"
-          npm ls lodash || true
-          echo "Node modules tsx version:"  
-          npm ls tsx || true
-          echo "Checking lodash exports:"
-          node -e "try { const lodash = require('lodash'); console.log('CommonJS lodash exports omit:', typeof lodash.omit); } catch(e) { console.log('CommonJS lodash error:', e.message); }" || true
-          node -e "try { import('lodash').then(m => console.log('ESM lodash default export omit:', typeof m.default?.omit, 'named export omit:', typeof m.omit)); } catch(e) { console.log('ESM lodash error:', e.message); }" || true
-          echo "Package.json type field:"
-          grep '"type"' package.json || echo "No type field found"
-          echo "===================="
-          npm cache clean --force
-          echo "Running npm install..."
           npm install
-          echo "npm install completed, checking dependencies:"
-          npm ls lodash tsx || true
-          echo "Starting server..."
-          echo "Compiling TypeScript to avoid ESM issues..."
           npm run compile
           NODE_PATH="/usr/local/lib/node_modules" npm run server > $GITHUB_WORKSPACE/core.log 2>&1 &
       - name: Start api
