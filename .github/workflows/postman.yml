@@ -70,11 +70,13 @@ jobs:
           echo "===================="
           npm cache clean --force
           echo "Running npm install..."
-          npm install --verbose
+          npm install
           echo "npm install completed, checking dependencies:"
           npm ls lodash tsx || true
           echo "Starting server..."
-          NODE_OPTIONS="--loader=tsx/cjs" npm run server > $GITHUB_WORKSPACE/core.log 2>&1 &
+          echo "Compiling TypeScript to avoid ESM issues..."
+          npm run compile
+          NODE_PATH="/usr/local/lib/node_modules" npm run server > $GITHUB_WORKSPACE/core.log 2>&1 &
       - name: Start api
         run: |
           npm install
