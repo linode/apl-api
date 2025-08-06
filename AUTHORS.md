@@ -14,12 +14,10 @@ Akamai Technologies, Inc.
 
 Ferruh Cihanoglu <fcihanog@akamai.com>
 Dennis van Kekem <dvankeke@akamai.com>
-
-## Contributors
-
 Ani Argjiri <aargjiri@akamai.com>
 Matthew Elderhorst <melderho@akamai.com>
 Matthias Erll <merll@akamai.com>
 Cas Lubbers <clubbers@akamai.com>
 Sander Rodenhuis <srodenhu@akamai.com>
 Jehoszafat Zimnowoda <jzimnowo@akamai.com>
+
