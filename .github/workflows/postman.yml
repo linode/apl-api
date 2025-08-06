@@ -55,6 +55,7 @@ jobs:
           nvm install
           nvm use
           node -v
+          npm cache clean --force  # Clear any cache conflicts
           npm install
           npm run server > $GITHUB_WORKSPACE/core.log 2>&1 &
       - name: Start api
