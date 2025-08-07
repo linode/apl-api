@@ -2,7 +2,8 @@ import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kube
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
-import { existsSync, pathExists, rmSync, unlink } from 'fs-extra'
+import { existsSync, rmSync } from 'fs'
+import { pathExists, unlink } from 'fs-extra'
 import { readdir, readFile, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, isEmpty, map, mapValues, merge, omit, pick, set, unset } from 'lodash'
