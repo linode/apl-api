@@ -1,5 +1,6 @@
 // workloadUtils.test.ts
 import axios from 'axios'
+import * as fs from 'fs'
 import * as fsExtra from 'fs-extra'
 import * as fsPromises from 'fs/promises'
 import path from 'path'
@@ -24,12 +25,14 @@ jest.mock('fs/promises', () => ({
   writeFile: jest.fn(),
   readdir: jest.fn(),
 }))
-jest.mock('fs-extra', () => ({
-  readFile: jest.fn(),
+jest.mock('fs', () => ({
   existsSync: jest.fn(),
   mkdirSync: jest.fn(),
   renameSync: jest.fn(),
   rmSync: jest.fn(),
+}))
+jest.mock('fs-extra', () => ({
+  readFile: jest.fn(),
 }))
 jest.mock('simple-git', () => ({
   __esModule: true,
@@ -353,7 +356,7 @@ describe('sparseCloneChart', () => {
     // Set up environment variables for tests
     process.env = { ...originalEnv, GIT_USER: 'git-user', GIT_PASSWORD: 'git-password' }
     // Mock necessary function responses
-    ;(fsExtra.existsSync as jest.Mock).mockReturnValue(false)
+    ;(fs.existsSync as jest.Mock).mockReturnValue(false)
   })
 
   afterEach(() => {
@@ -389,16 +392,16 @@ describe('sparseCloneChart', () => {
     )
 
     expect(result).toBe(true)
-    expect(fsExtra.mkdirSync).toHaveBeenCalledWith(localHelmChartsDir, { recursive: true })
-    expect(fsExtra.mkdirSync).toHaveBeenCalledWith(`${localHelmChartsDir}-newChart`, { recursive: true })
+    expect(fs.mkdirSync).toHaveBeenCalledWith(localHelmChartsDir, { recursive: true })
+    expect(fs.mkdirSync).toHaveBeenCalledWith(`${localHelmChartsDir}-newChart`, { recursive: true })
     expect(mockGit.clone).toHaveBeenCalledTimes(2) // Once for catalog repo, once for chart repo
     expect(mockGit.listRemote).toHaveBeenCalled()
     expect(mockGit.raw).toHaveBeenCalledWith(['sparse-checkout', 'init', '--cone'])
     expect(mockGit.raw).toHaveBeenCalledWith(['sparse-checkout', 'set', 'main/bitnami/cassandra/'])
     expect(mockGit.checkout).toHaveBeenCalled()
-    expect(fsExtra.renameSync).toHaveBeenCalled()
-    expect(fsExtra.rmSync).toHaveBeenCalledWith(`${localHelmChartsDir}-newChart`, { recursive: true, force: true })
-    expect(fsExtra.rmSync).toHaveBeenCalledWith(`${localHelmChartsDir}/${chartTargetDirName}/.git`, {
+    expect(fs.renameSync).toHaveBeenCalled()
+    expect(fs.rmSync).toHaveBeenCalledWith(`${localHelmChartsDir}-newChart`, { recursive: true, force: true })
+    expect(fs.rmSync).toHaveBeenCalledWith(`${localHelmChartsDir}/${chartTargetDirName}/.git`, {
       recursive: true,
       force: true,
     })
@@ -490,7 +493,7 @@ describe('sparseCloneChart', () => {
       listRemote: jest.fn().mockResolvedValue(''),
     }
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-    ;(fsExtra.existsSync as jest.Mock).mockReturnValueOnce(false)
+    ;(fs.existsSync as jest.Mock).mockReturnValueOnce(false)
 
     await sparseCloneChart(
       gitRepositoryUrl,
@@ -503,7 +506,7 @@ describe('sparseCloneChart', () => {
       allowTeams,
     )
 
-    expect(fsExtra.mkdirSync).toHaveBeenCalledWith(localHelmChartsDir, { recursive: true })
+    expect(fs.mkdirSync).toHaveBeenCalledWith(localHelmChartsDir, { recursive: true })
   })
 
   test('returns false if git provider detection fails', async () => {
@@ -534,7 +537,7 @@ describe('fetchWorkloadCatalog', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     process.env = { ...originalEnv, GIT_USER: 'git-user', GIT_PASSWORD: 'git-password' }
-    ;(fsExtra.existsSync as jest.Mock).mockReturnValue(false)
+    ;(fs.existsSync as jest.Mock).mockReturnValue(false)
 
     // Mock directory structure
     const files = ['.git', 'chart1', 'chart2', 'README.md', 'rbac.yaml']
@@ -596,7 +599,7 @@ describe('fetchWorkloadCatalog', () => {
 
     const result = await fetchWorkloadCatalog(url, helmChartsDir, 'admin')
 
-    expect(fsExtra.mkdirSync).toHaveBeenCalledWith(helmChartsDir, { recursive: true })
+    expect(fs.mkdirSync).toHaveBeenCalledWith(helmChartsDir, { recursive: true })
     expect(mockGit.clone).toHaveBeenCalledWith(
       'https://git-user:git-password@gitea.example.com/otomi/charts.git',
       helmChartsDir,
@@ -779,7 +782,7 @@ describe('chartRepo', () => {
     expect(mockGit.raw).toHaveBeenCalledWith(['sparse-checkout', 'init', '--cone'])
     expect(mockGit.raw).toHaveBeenCalledWith(['sparse-checkout', 'set', 'charts/my-chart'])
     expect(mockGit.checkout).toHaveBeenCalledWith('main')
-    expect(fsExtra.renameSync).toHaveBeenCalledWith(path.join(localPath, 'charts/my-chart'), finalDestinationPath)
+    expect(fs.renameSync).toHaveBeenCalledWith(path.join(localPath, 'charts/my-chart'), finalDestinationPath)
   })
 
   test('addConfig method sets git config', async () => {

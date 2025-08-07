@@ -1,6 +1,7 @@
 import axios from 'axios'
 import Debug from 'debug'
-import { existsSync, mkdirSync, readFile, renameSync, rmSync } from 'fs-extra'
+import { existsSync, mkdirSync, renameSync, rmSync } from 'fs'
+import { readFile } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
 import path from 'path'
 import simpleGit, { SimpleGit } from 'simple-git'
