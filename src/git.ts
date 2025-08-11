@@ -515,13 +515,10 @@ export async function getWorktreeRepo(
 ): Promise<Git> {
   debug(`Creating worktree repo at: ${worktreePath}`)
 
-  // Create worktree from main repo
   await mainRepo.createWorktree(worktreePath, branch)
 
-  // Create new Git instance for the worktree
   const worktreeRepo = new Git(worktreePath, mainRepo.url, mainRepo.user, mainRepo.email, mainRepo.urlAuth, branch)
 
-  // Set up git config for the worktree
   await worktreeRepo.addConfig()
   await worktreeRepo.initSops()
 

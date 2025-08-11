@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -335,17 +335,18 @@ export default class OtomiStack {
     await this.init()
     debug(`Creating worktree for session ${this.sessionId}`)
 
-    // Verify main repo has the branch we want to use
     try {
       await mainRepo.git.revparse(`--verify refs/heads/${env.GIT_BRANCH}`)
     } catch (error) {
-      throw new Error(`Main repository does not have branch '${env.GIT_BRANCH}'. Cannot create worktree.`)
+      const errorMessage = getSanitizedErrorMessage(error)
+      throw new Error(
+        `Main repository does not have branch '${env.GIT_BRANCH}'. Cannot create worktree. ${errorMessage}`,
+      )
     }
 
     const worktreePath = this.getRepoPath()
     this.git = await getWorktreeRepo(mainRepo, worktreePath, env.GIT_BRANCH)
 
-    // No need to pull as worktree is already in sync with main repo
     debug(`Worktree created for ${this.editor} in ${this.sessionId}`)
   }
 
