@@ -95,7 +95,6 @@ describe('Data validation', () => {
 
     // Ensure getTeamConfigService() returns our mocked TeamConfigService
     mockRepoService.getTeamConfigService.mockReturnValue(mockTeamConfigService)
-    jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
     jest.spyOn(otomiStack, 'doRepoDeployment').mockResolvedValue()
     jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
   })
@@ -321,7 +320,6 @@ describe('Work with values', () => {
 
     await otomiStack.init()
     otomiStack.git = new Git('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
-    jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
     jest.spyOn(otomiStack, 'doRepoDeployment').mockResolvedValue()
     jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
   })
@@ -337,7 +335,6 @@ describe('Workload values', () => {
     otomiStack = new OtomiStack()
     await otomiStack.init()
     otomiStack.git = new Git('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
-    jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
     jest.spyOn(otomiStack, 'doRepoDeployment').mockResolvedValue()
     jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
   })
@@ -447,7 +444,6 @@ describe('Users tests', () => {
       cluster: { name: 'default-cluster', domainSuffix, provider: 'linode' },
     })
     jest.spyOn(otomiStack, 'saveUser').mockResolvedValue()
-    jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
     jest.spyOn(otomiStack, 'doRepoDeployment').mockResolvedValue()
     jest.spyOn(otomiStack, 'doTeamDeployment').mockResolvedValue()
     jest.spyOn(otomiStack, 'transformApps').mockReturnValue([])
