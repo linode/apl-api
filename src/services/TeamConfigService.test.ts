@@ -4,7 +4,6 @@ import {
   AplBackupRequest,
   AplBuildRequest,
   AplNetpolRequest,
-  AplProjectRequest,
   AplSecretRequest,
   AplServiceRequest,
   AplWorkloadRequest,
@@ -41,7 +40,6 @@ describe('TeamConfigService', () => {
       services: [],
       sealedsecrets: [],
       backups: [],
-      projects: [],
       netpols: [],
       apps: [],
       policies: [],
@@ -296,41 +294,6 @@ describe('TeamConfigService', () => {
     })
   })
 
-  describe('Projects', () => {
-    const project: AplProjectRequest = {
-      kind: 'AplTeamProject',
-      metadata: { name: 'TestProject' },
-      spec: {},
-    }
-
-    test('should create a project', () => {
-      const created = service.createProject(project)
-      expect(created).toEqual({
-        kind: 'AplTeamProject',
-        metadata: {
-          name: 'TestProject',
-          labels: {
-            'apl.io/teamId': 'team1',
-          },
-        },
-        spec: { name: 'TestProject' },
-        status: {},
-      })
-      expect(service.getProject(created.metadata.name)).toEqual(created)
-    })
-
-    test('should throw an error when creating duplicate project', () => {
-      service.createProject(project)
-      expect(() => service.createProject(project)).toThrow(AlreadyExists)
-    })
-
-    test('should delete a project', () => {
-      const created = service.createProject(project)
-      service.deleteProject(created.metadata.name)
-      expect(() => service.getProject(created.metadata.name)).toThrow(NotExistError)
-    })
-  })
-
   describe('Netpols', () => {
     const netpol: AplNetpolRequest = {
       kind: 'AplTeamNetworkControl',
@@ -465,61 +428,6 @@ describe('TeamConfigService', () => {
         status: {},
       })
       expect(service.getSettings().spec.networkPolicy!.egressPublic).toBe(true)
-    })
-  })
-
-  describe('doesProjectNameExist', () => {
-    test('should return false when no projects exist', () => {
-      expect(service.doesProjectNameExist('NonExistentProject')).toBe(false)
-    })
-
-    test('should return true when a build with the given name exists', () => {
-      service.createBuild({
-        kind: 'AplTeamBuild',
-        metadata: { name: 'ExistingBuild' },
-        spec: {},
-      })
-      expect(service.doesProjectNameExist('ExistingBuild')).toBe(true)
-    })
-
-    test('should return true when a workload with the given name exists', () => {
-      service.createWorkload({
-        kind: 'AplTeamWorkload',
-        metadata: { name: 'ExistingWorkload' },
-        spec: {
-          url: 'http://example.com',
-          values: '',
-        },
-      })
-      expect(service.doesProjectNameExist('ExistingWorkload')).toBe(true)
-    })
-
-    test('should return true when a service with the given name exists', () => {
-      service.createService({
-        kind: 'AplTeamService',
-        metadata: { name: 'ExistingService' },
-        spec: {},
-      })
-      expect(service.doesProjectNameExist('ExistingService')).toBe(true)
-    })
-
-    test('should return false when the name does not match any existing project', () => {
-      service.createBuild({
-        kind: 'AplTeamBuild',
-        metadata: { name: 'SomeBuild' },
-        spec: {},
-      })
-      service.createWorkload({
-        kind: 'AplTeamWorkload',
-        metadata: { name: 'SomeWorkload' },
-        spec: { url: 'http://example.com', values: '' },
-      })
-      service.createService({
-        kind: 'AplTeamService',
-        metadata: { name: 'SomeService' },
-        spec: {},
-      })
-      expect(service.doesProjectNameExist('NonExistentProject')).toBe(false)
     })
   })
 

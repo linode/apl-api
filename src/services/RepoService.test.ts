@@ -198,14 +198,5 @@ describe('RepoService', () => {
       })
       expect(service.getAllBuilds()).toHaveLength(1)
     })
-
-    test('should return all projects', () => {
-      service.getTeamConfigService('team1').createProject({
-        kind: 'AplTeamProject',
-        metadata: { name: 'Project1' },
-        spec: {},
-      })
-      expect(service.getAllProjects()).toHaveLength(1)
-    })
   })
 })

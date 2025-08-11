@@ -77,20 +77,11 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
     Build: 'builds',
     Workload: 'workloads',
     Settings: 'otomi',
-    Project: 'projects',
     Netpol: 'netpols',
     Policy: 'policies',
     SealedSecret: 'sealedSecrets',
   }
-  const teamSpecificCollections = [
-    'builds',
-    'services',
-    'workloads',
-    'netpols',
-    'projects',
-    'policies',
-    'sealedSecrets',
-  ] // <-- These are fetched per team
+  const teamSpecificCollections = ['builds', 'services', 'workloads', 'netpols', 'policies', 'sealedSecrets'] // <-- These are fetched per team
 
   const selector = renameKeys(req.params)
   const collectionId = schemaToRepoMap[schemaName]
@@ -133,7 +124,6 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
   return next()
 }
 export function authzMiddleware(authz: Authz): RequestHandler {
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
     if (req.user) {
       req.isSecurityHandler = true
