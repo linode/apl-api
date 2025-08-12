@@ -1659,177 +1659,6 @@ paths:
                     teams:
                       $ref: '#/components/schemas/User/properties/teams'
 
-  '/v1/projects':
-    get:
-      operationId: getAllProjects
-      x-aclSchema: Project
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully obtained all projects configuration
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Project'
-
-  '/v1/teams/{teamId}/projects':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-    get:
-      operationId: getTeamProjects
-      x-aclSchema: Project
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully obtained team projects configuration
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Project'
-    post:
-      operationId: createProject
-      description: Create a team project
-      x-aclSchema: Project
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Project'
-        description: Project object
-        required: true
-      responses:
-        <<: *DefaultPostResponses
-        '200':
-          description: Successfully stored project configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Project'
-
-  '/v1/teams/{teamId}/projects/{projectName}':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/projectParams'
-    delete:
-      operationId: deleteProject
-      description: Delete a project from a given team
-      x-aclSchema: Project
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully deleted a project
-    get:
-      operationId: getProject
-      description: Get a project from a given team
-      x-aclSchema: Project
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully obtained project configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Project'
-    put:
-      operationId: editProject
-      description: Edit a project from a given team
-      x-aclSchema: Project
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-        description: Project object that contains updated values
-        required: true
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully edited a team project
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Project'
-
-  '/v2/projects':
-    get:
-      operationId: getAllAplProjects
-      x-aclSchema: Project
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully obtained all projects configuration
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AplProjectResponse'
-
-  '/v2/teams/{teamId}/projects':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-    get:
-      operationId: getTeamAplProjects
-      x-aclSchema: Project
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully obtained team projects configuration
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AplProjectResponse'
-    post:
-      operationId: createAplProject
-      description: Create a team project
-      x-aclSchema: Project
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AplProjectRequest'
-        description: Project object
-        required: true
-      responses:
-        <<: *DefaultPostResponses
-        '200':
-          description: Successfully stored project configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AplProjectResponse'
-
-  '/v2/teams/{teamId}/projects/{projectName}':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/projectParams'
-    delete:
-      operationId: deleteAplProject
-      description: Delete a project from a given team
-      x-aclSchema: Project
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully deleted a project
-    get:
-      operationId: getAplProject
-      description: Get a project from a given team
-      x-aclSchema: Project
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully obtained project configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AplProjectResponse'
-
   /v1/coderepos:
     get:
       operationId: getAllCodeRepos
@@ -2067,12 +1896,12 @@ paths:
           application/json:
             schema:
               type: object
-        description: Project object that contains updated values
+        description: Workload catalog object that contains updated values
         required: true
       responses:
         <<: *DefaultGetResponses
         '200':
-          description: Successfully updated a team project
+          description: Successfully updated a team workload catalog
           content:
             application/json:
               schema:
@@ -2109,12 +1938,12 @@ paths:
           application/json:
             schema:
               type: object
-        description: Project object that contains updated values
+        description: Workload catalog object that contains updated values
         required: true
       responses:
         <<: *DefaultGetResponses
         '200':
-          description: Successfully updated a team project
+          description: Successfully updated a team workload catalog
           content:
             application/json:
               schema:
@@ -2678,13 +2507,6 @@ components:
       required: true
       schema:
         type: string
-    projectParams:
-      name: projectName
-      in: path
-      description: Name of the project
-      required: true
-      schema:
-        type: string
     codeRepoParams:
       name: codeRepositoryName
       in: path
@@ -2916,63 +2738,6 @@ components:
         - $ref: '#/components/schemas/AplPolicy'
         - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
-    AplProject:
-      type: object
-      properties:
-        kind:
-          type: string
-          enum: [AplTeamProject]
-        spec:
-          type: object
-      required:
-        - kind
-        - spec
-    AplProjectRequest:
-      allOf:
-        - $ref: '#/components/schemas/AplProject'
-        - $ref: '#/components/schemas/aplMetadata'
-        - type: object
-          properties:
-            spec:
-              type: object
-              properties:
-                build:
-                  $ref: '#/components/schemas/Build'
-                workload:
-                  allOf:
-                    - $ref: '#/components/schemas/Workload'
-                    - type: object
-                      properties:
-                        values:
-                          type: string
-                      required:
-                        - values
-                service:
-                  $ref: '#/components/schemas/Service'
-    AplProjectResponse:
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/AplProject'
-        - $ref: '#/components/schemas/aplTeamMetadata'
-        - $ref: '#/components/schemas/aplStatusResponse'
-        - type: object
-          properties:
-            spec:
-              type: object
-              properties:
-                build:
-                  $ref: '#/components/schemas/Build'
-                workload:
-                  allOf:
-                    - $ref: '#/components/schemas/Workload'
-                    - type: object
-                      properties:
-                        values:
-                          type: string
-                      required:
-                        - values
-                service:
-                  $ref: '#/components/schemas/Service'
     AplSecret:
       type: object
       properties:
@@ -3086,8 +2851,6 @@ components:
       $ref: 'error.yaml#/OtomiStackError'
     OtomiCliValues:
       $ref: 'otomi/cli.yaml#/OtomiCliValues'
-    Project:
-      $ref: 'project.yaml#/Project'
     Policy:
       $ref: 'policies.yaml#/Policy'
     Policies:
