@@ -28,7 +28,7 @@ export function getV1MergeObject(updates: DeepPartial<V1ApiObject | ServiceSpec>
         }
       : undefined,
     spec: omit(updates, ['id', 'teamId']),
-  }
+  } as DeepPartial<AplRequestObject>
 }
 
 export function createAplObject(name: string, request: AplRequestObject, teamId?: string): AplResponseObject {
