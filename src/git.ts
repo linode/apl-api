@@ -419,8 +419,18 @@ export class Git {
   async push(): Promise<any> {
     if (!this.url && this.isRootClone()) return
     debug('Pushing')
-    const summary = await this.git.push(this.remote, this.branch)
-    debug('Pushed. Summary: ', summary)
+
+    // For worktrees, push current branch (session branch) to main branch
+    // For main repo, push normally
+    if (!this.isRootClone()) {
+      const currentBranch = await this.git.revparse(['--abbrev-ref', 'HEAD'])
+      const summary = await this.git.push([this.remote, `${currentBranch}:${this.branch}`])
+      debug('Pushed session branch to main. Summary: ', summary)
+    } else {
+      // Original push logic for main repo
+      const summary = await this.git.push(this.remote, this.branch)
+      debug('Pushed. Summary: ', summary)
+    }
     return
   }
 
@@ -428,9 +438,13 @@ export class Git {
     debug(`Creating worktree at: ${worktreePath} from branch: ${branch}`)
     await ensureDir(dirname(worktreePath), { mode: 0o744 })
 
-    // Use -f flag to force checkout even if branch is already used by another worktree
-    await this.git.raw(['worktree', 'add', '-f', worktreePath, branch])
-    debug(`Worktree created successfully at: ${worktreePath}`)
+    // Use sessionId as branch name (from worktree path)
+    const sessionId = basename(worktreePath)
+    const sessionBranch = sessionId
+
+    // Create worktree with session branch
+    await this.git.raw(['worktree', 'add', '-b', sessionBranch, worktreePath, branch])
+    debug(`Worktree created successfully at: ${worktreePath} on branch: ${sessionBranch}`)
   }
 
   async removeWorktree(worktreePath: string): Promise<void> {
