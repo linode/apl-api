@@ -2252,6 +2252,21 @@ paths:
                 items:
                   $ref: '#/components/schemas/AplWorkloadResponse'
 
+  '/v2/workloadNames':
+    get:
+      operationId: getAllAplWorkloadNames
+      x-aclSchema: WorkloadName
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained all workload names
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkloadName'
+
   '/v2/teams/{teamId}/workloads':
     parameters:
       - $ref: '#/components/parameters/teamParams'
@@ -3111,5 +3126,7 @@ components:
       $ref: 'user.yaml#/User'
     Workload:
       $ref: 'workload.yaml#/Workload'
+    WorkloadName:
+      $ref: 'workloadname.yaml#/WorkloadName'
     WorkloadValues:
       $ref: 'workload.yaml#/WorkloadValues'
