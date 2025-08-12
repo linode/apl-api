@@ -64,6 +64,11 @@ Settings:
                   $ref: 'definitions.yaml#/backupRetentionPolicy'
                 schedule:
                   $ref: 'definitions.yaml#/backupSchedule'
+        useCnpgPlugin:
+          type: boolean
+          title: CNPG backup plugin
+          description: Use CNPG plugin for platform database backups.
+          default: false
         persistentVolumes:
           title: Backup Persistent Volumes
           description: 'Add a Linode API token and enable the Velero App to create backups of PVs.'
