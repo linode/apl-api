@@ -12,8 +12,6 @@ import {
   AplNetpolResponse,
   AplPolicyRequest,
   AplPolicyResponse,
-  AplProjectRequest,
-  AplProjectResponse,
   AplRequestObject,
   AplResponseObject,
   AplSecretRequest,
@@ -42,7 +40,6 @@ export class TeamConfigService {
     this.teamConfig.services ??= []
     this.teamConfig.sealedsecrets ??= []
     this.teamConfig.backups ??= []
-    this.teamConfig.projects ??= []
     this.teamConfig.netpols ??= []
     this.teamConfig.apps ??= []
     this.teamConfig.policies ??= []
@@ -305,41 +302,6 @@ export class TeamConfigService {
   }
 
   // =====================================
-  // == PROJECTS CRUD ==
-  // =====================================
-
-  public createProject(project: AplProjectRequest): AplProjectResponse {
-    const { name } = project.metadata
-    if (find(this.teamConfig.projects, (item) => item.metadata.name === name)) {
-      throw new AlreadyExists(`Project[${name}] already exists.`)
-    }
-
-    const newProject = this.createAplObject(name, {
-      kind: project.kind,
-      metadata: project.metadata,
-      spec: { name },
-    }) as AplProjectResponse
-    this.teamConfig.projects.push(newProject)
-    return newProject
-  }
-
-  public getProject(name: string): AplProjectResponse {
-    const project = find(this.teamConfig.projects, (item) => item.metadata.name === name)
-    if (!project) {
-      throw new NotExistError(`Project[${name}] does not exist.`)
-    }
-    return project
-  }
-
-  public getProjects(): AplProjectResponse[] {
-    return this.teamConfig.projects ?? []
-  }
-
-  public deleteProject(name: string): void {
-    remove(this.teamConfig.projects, (item) => item.metadata.name === name)
-  }
-
-  // =====================================
   // == NETPOLS CRUD ==
   // =====================================
 
@@ -482,14 +444,6 @@ export class TeamConfigService {
       const mergeObj = getAplMergeObject(updates)
       return merge(policy, mergeObj)
     }
-  }
-
-  public doesProjectNameExist(name: string): boolean {
-    return (
-      (this.teamConfig.builds && this.teamConfig.builds.some((build) => build.metadata.name === name)) ||
-      (this.teamConfig.workloads && this.teamConfig.workloads.some((workload) => workload.metadata.name === name)) ||
-      (this.teamConfig.services && this.teamConfig.services.some((service) => service.metadata.name === name))
-    )
   }
 
   /** Retrieve a collection dynamically from the Teamconfig */

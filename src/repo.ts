@@ -339,17 +339,6 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       v2: true,
     },
     {
-      kind: 'AplTeamProject',
-      envDir,
-      jsonPathExpression: '$.teamConfig.*.projects[*]',
-      pathGlob: `${envDir}/env/teams/*/projects/*.yaml`,
-      processAs: 'arrayItem',
-      resourceGroup: 'team',
-      resourceDir: 'projects',
-      loadToSpec: true,
-      v2: true,
-    },
-    {
       kind: 'AplTeamNetworkControl',
       envDir,
       jsonPathExpression: '$.teamConfig.*.netpols[*]',

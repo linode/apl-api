@@ -39,13 +39,11 @@ describe('API authz tests', () => {
   beforeAll(async () => {
     const _otomiStack = await getSessionStack()
     _otomiStack.git = mockDeep<Git>()
-    _otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
     _otomiStack.transformApps = jest.fn().mockReturnValue([])
     _otomiStack.repoService = new RepoService({} as Repo)
     otomiStack = _otomiStack as jest.Mocked<OtomiStack>
 
     otomiStack.saveTeam = jest.fn().mockResolvedValue(undefined)
-    otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
     otomiStack.doRepoDeployment = jest.fn().mockImplementation(() => Promise.resolve())
     otomiStack.doTeamDeployment = jest.fn().mockImplementation(() => Promise.resolve())
     otomiStack.isLoaded = true
