@@ -45,9 +45,6 @@ export type WorkloadValues = components['schemas']['WorkloadValues']
 export type AplWorkloadRequest = components['schemas']['AplWorkloadRequest']
 export type AplWorkloadResponse = components['schemas']['AplWorkloadResponse']
 export type User = components['schemas']['User']
-export type Project = components['schemas']['Project']
-export type AplProjectRequest = components['schemas']['AplProjectRequest']
-export type AplProjectResponse = components['schemas']['AplProjectResponse']
 export type CodeRepo = components['schemas']['CodeRepo']
 export type AplCodeRepoRequest = components['schemas']['AplCodeRepoRequest']
 export type AplCodeRepoResponse = components['schemas']['AplCodeRepoResponse']
@@ -77,7 +74,6 @@ export type AplRequestObject =
   | AplCodeRepoRequest
   | AplNetpolRequest
   | AplPolicyRequest
-  | AplProjectRequest
   | AplSecretRequest
   | AplServiceRequest
   | AplWorkloadRequest
@@ -88,7 +84,6 @@ export type AplResponseObject =
   | AplCodeRepoResponse
   | AplNetpolResponse
   | AplPolicyResponse
-  | AplProjectResponse
   | AplSecretResponse
   | AplServiceResponse
   | AplWorkloadResponse
@@ -113,7 +108,6 @@ export type AplKind =
   | 'AplTeamPolicy'
   | 'AplTeamSettingSet'
   | 'AplTeamNetworkControl'
-  | 'AplTeamProject'
   | 'AplTeamBackup'
   | 'AplTeamSecret'
   | 'AplTeamService'
@@ -121,7 +115,7 @@ export type AplKind =
   | 'AplTeamWorkloadValues'
   | 'AplTeamTool'
   | 'AplVersion'
-export type V1ApiObject = Build | CodeRepo | Netpol | Project | SealedSecret | Service | Workload
+export type V1ApiObject = Build | CodeRepo | Netpol | SealedSecret | Service | Workload
 
 export type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T
 
@@ -256,7 +250,6 @@ export interface TeamConfig {
   codeRepos: AplCodeRepoResponse[]
   netpols: AplNetpolResponse[]
   policies: AplPolicyResponse[]
-  projects: AplProjectResponse[]
   sealedsecrets: AplSecretResponse[]
   services: AplServiceResponse[]
   settings: AplTeamSettingsResponse

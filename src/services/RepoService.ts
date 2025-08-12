@@ -8,7 +8,6 @@ import {
   AplCodeRepoResponse,
   AplNetpolResponse,
   AplPolicyResponse,
-  AplProjectResponse,
   AplSecretResponse,
   AplServiceResponse,
   AplTeamSettingsRequest,
@@ -27,8 +26,8 @@ import {
   User,
   Versions,
 } from '../otomi-models'
-import { TeamConfigService } from './TeamConfigService'
 import { createAplObject } from '../utils/manifests'
+import { TeamConfigService } from './TeamConfigService'
 
 function mergeCustomizer(prev, next) {
   return next
@@ -136,7 +135,6 @@ export class RepoService {
       services: [],
       sealedsecrets: [],
       backups: [],
-      projects: [],
       netpols: [],
       settings: {} as AplTeamSettingsResponse,
       apps: [],
@@ -239,10 +237,6 @@ export class RepoService {
 
   public getAllNetpols(): AplNetpolResponse[] {
     return this.getTeamIds().flatMap((teamName) => this.getTeamConfigService(teamName).getNetpols())
-  }
-
-  public getAllProjects(): AplProjectResponse[] {
-    return this.getTeamIds().flatMap((teamName) => this.getTeamConfigService(teamName).getProjects())
   }
 
   public getAllBuilds(): AplBuildResponse[] {
