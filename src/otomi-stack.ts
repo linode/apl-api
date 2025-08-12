@@ -23,8 +23,6 @@ import {
   AplNetpolResponse,
   AplPolicyRequest,
   AplPolicyResponse,
-  AplProjectRequest,
-  AplProjectResponse,
   AplResponseObject,
   AplSecretRequest,
   AplSecretResponse,
@@ -46,7 +44,6 @@ import {
   ObjWizard,
   Policies,
   Policy,
-  Project,
   Repo,
   SealedSecret,
   Service,
@@ -1206,154 +1203,6 @@ export default class OtomiStack {
     return users
   }
 
-  getTeamProjects(teamId: string): Project[] {
-    return this.getTeamAplProjects(teamId).map((project) => getV1ObjectFromApl(project) as Project)
-  }
-
-  getTeamAplProjects(teamId: string): AplProjectResponse[] {
-    return this.repoService.getTeamConfigService(teamId).getProjects()
-  }
-
-  getAllProjects(): Project[] {
-    return this.getAllAplProjects().map((project) => getV1ObjectFromApl(project) as Project)
-  }
-
-  getAllAplProjects(): AplProjectResponse[] {
-    return this.repoService.getAllProjects()
-  }
-
-  async createProject(teamId: string, data: Project): Promise<Project> {
-    const newProject = await this.createAplProject(
-      teamId,
-      getAplObjectFromV1('AplTeamProject', data) as AplProjectRequest,
-    )
-    return getV1ObjectFromApl(newProject) as Project
-  }
-
-  // Creates a new project and reserves a given name for 'builds', 'workloads' and 'services' resources
-  async createAplProject(teamId: string, data: AplProjectRequest): Promise<AplProjectResponse> {
-    // Check if the project name already exists in any collection
-    const projectName = data.metadata.name
-    const projectNameTaken = this.repoService.getTeamConfigService(teamId).doesProjectNameExist(projectName)
-    if (projectNameTaken) {
-      throw new AlreadyExists(
-        `In the team '${teamId}' there is already a resource that match the project name '${projectName}'`,
-      )
-    }
-
-    try {
-      const project = this.repoService.getTeamConfigService(teamId).createProject(data)
-      if (data.spec.build) {
-        await this.createAplBuild(teamId, {
-          kind: 'AplTeamBuild',
-          metadata: {
-            name: projectName,
-          },
-          spec: data.spec.build,
-        })
-      }
-      if (data.spec.workload) {
-        await this.createAplWorkload(teamId, {
-          kind: 'AplTeamWorkload',
-          metadata: {
-            name: projectName,
-          },
-          spec: data.spec.workload,
-        })
-      }
-      if (data.spec.service) {
-        await this.createAplService(teamId, {
-          kind: 'AplTeamService',
-          metadata: { name: projectName },
-          spec: { ...data.spec.service },
-        })
-      }
-      await this.saveTeamConfigItem(project)
-      await this.doTeamDeployment(
-        teamId,
-        (teamService) => {
-          teamService.createProject(project)
-        },
-        false,
-      )
-      return project
-    } catch (err) {
-      if (err.code === 409) err.publicMessage = 'Project name already exists'
-      throw err
-    }
-  }
-
-  getProject(teamId: string, name: string): Record<string, any> {
-    const project = this.getAplProject(teamId, name)
-    return {
-      teamId: project.metadata.labels['apl.io/teamId'],
-      name: project.metadata.name,
-      spec: {
-        build: project.spec.build,
-        workload: omit(project.spec.workload, 'workload'),
-        workloadValues: project.spec.workload?.values,
-        service: project.spec.service,
-      },
-    }
-  }
-
-  getAplProject(teamId: string, name: string): AplProjectResponse {
-    const project = this.repoService.getTeamConfigService(teamId).getProject(name)
-    let build, workload, service
-    try {
-      build = this.repoService.getTeamConfigService(teamId).getBuild(name)
-    } catch (err) {
-      build = {}
-    }
-    try {
-      workload = this.repoService.getTeamConfigService(teamId).getWorkload(name)
-    } catch (err) {
-      workload = {}
-    }
-    try {
-      service = this.repoService.getTeamConfigService(teamId).getService(name)
-    } catch (err) {
-      service = {}
-    }
-    return {
-      ...project,
-      spec: {
-        build,
-        workload,
-        service,
-      },
-    }
-  }
-
-  editProject(teamId: string, name: string, data: Project): Record<string, any> {
-    return this.getProject(teamId, name)
-  }
-
-  // Deletes a project and all its related resources
-  async deleteProject(teamId: string, name: string): Promise<void> {
-    const p = this.repoService.getTeamConfigService(teamId).getProject(name)
-    if (!isEmpty(p.spec.build)) {
-      await this.deleteBuild(teamId, name)
-    }
-    if (!isEmpty(p.spec.workload)) {
-      await this.deleteWorkload(teamId, name)
-    }
-    if (!isEmpty(p.spec.service)) {
-      await this.deleteService(teamId, name)
-    }
-    await this.deleteTeamConfigItem(p)
-    await this.doTeamDeployment(
-      teamId,
-      (teamService) => {
-        teamService.deleteBuild(name)
-        teamService.deleteWorkload(name)
-        teamService.deleteService(name)
-        teamService.deleteProject(name)
-      },
-      false,
-    )
-  }
-
   getTeamCodeRepos(teamId: string): CodeRepo[] {
     return this.getTeamAplCodeRepos(teamId).map((codeRepo) => getV1ObjectFromApl(codeRepo) as CodeRepo)
   }
@@ -2147,40 +1996,6 @@ export default class OtomiStack {
 
       // Execute the provided action dynamically
       action(rootStack.repoService)
-
-      debug(`Updated root stack values with ${this.sessionId} changes`)
-    } catch (e) {
-      e.message = getSanitizedErrorMessage(e)
-      throw e
-    } finally {
-      // Clean up the session
-      await cleanSession(this.sessionId!)
-    }
-  }
-
-  //TODO remove this one when we remove projects
-  async doDeployment(collectionIds?: string[], teamId?: string, encryptSecrets = true): Promise<void> {
-    const rootStack = await getSessionStack()
-    try {
-      // Commit and push Git changes
-      await this.git.save(this.editor!, encryptSecrets)
-
-      if (collectionIds) {
-        collectionIds.forEach((collectionId) => {
-          if (teamId && collectionId in this.repoService.getRepo().teamConfig[teamId]) {
-            // If a teamId is provided and collection is inside teamConfig, update the specific team
-            const collection = this.repoService.getTeamConfigService(teamId).getCollection(collectionId)
-            rootStack.repoService.getTeamConfigService(teamId).updateCollection(collectionId, collection)
-          } else {
-            // Otherwise, update the root repo collection
-            console.log('collectionId', collectionId)
-            const collection = this.repoService.getCollection(collectionId)
-            if (collection) {
-              rootStack.repoService.updateCollection(collectionId, collection)
-            }
-          }
-        })
-      }
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
     } catch (e) {
