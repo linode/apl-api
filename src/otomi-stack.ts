@@ -60,6 +60,7 @@ import {
   TestRepoConnect,
   User,
   Workload,
+  WorkloadName,
   WorkloadValues,
 } from 'src/otomi-models'
 import {
@@ -1877,6 +1878,18 @@ export default class OtomiStack {
 
   getAllWorkloads(): Workload[] {
     return this.getAllAplWorkloads().map((workload) => omit(getV1ObjectFromApl(workload), ['values']) as Workload)
+  }
+
+  getAllWorkloadNames(): WorkloadName[] {
+    const workloads = this.getAllAplWorkloads().map((workload) => ({
+      metadata: {
+        name: workload.metadata.name,
+        labels: {
+          'apl.io/teamId': workload.metadata.labels['apl.io/teamId'],
+        },
+      },
+    }))
+    return workloads
   }
 
   getAllAplWorkloads(): AplWorkloadResponse[] {
