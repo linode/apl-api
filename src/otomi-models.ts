@@ -40,6 +40,7 @@ export type TeamSelfService = components['schemas']['Team']['selfService']
 export type SessionUser = components['schemas']['SessionUser']
 export type UserAuthz = components['schemas']['SessionUser']['authz']
 export type Workload = components['schemas']['Workload']
+export type WorkloadName = components['schemas']['WorkloadName']
 export type WorkloadValues = components['schemas']['WorkloadValues']
 export type AplWorkloadRequest = components['schemas']['AplWorkloadRequest']
 export type AplWorkloadResponse = components['schemas']['AplWorkloadResponse']
@@ -127,7 +128,7 @@ export type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T
 export interface OpenApiRequest extends Request {
   operationDoc: {
     responses: { '200'?: { content: { 'application/json': { schema: { $ref: string } } } } }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     security: any[]
     operationId: string
   }
