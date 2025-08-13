@@ -11,6 +11,7 @@ import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
 import { cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validators'
 import { v4 as uuidv4 } from 'uuid'
+import { getSanitizedErrorMessage } from '../utils'
 
 const debug = Debug('otomi:session')
 const env = cleanEnv({
@@ -64,7 +65,8 @@ export const cleanSession = async (sessionId: string): Promise<void> => {
     try {
       await readOnlyStack.git.removeWorktree(worktreePath)
     } catch (error) {
-      debug(`Error removing worktree for session ${sessionId}: ${error.message}`)
+      const errorMessage = getSanitizedErrorMessage(error)
+      debug(`Error removing worktree for session ${sessionId}: ${errorMessage}`)
       await remove(worktreePath)
     }
   } else {

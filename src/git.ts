@@ -453,12 +453,14 @@ export class Git {
       await this.git.raw(['worktree', 'remove', worktreePath])
       debug(`Worktree removed successfully: ${worktreePath}`)
     } catch (error) {
-      debug(`Error removing worktree: ${error.message}`)
+      const errorMessage = getSanitizedErrorMessage(error)
+      debug(`Error removing worktree: ${errorMessage}`)
       try {
         await this.git.raw(['worktree', 'remove', '--force', worktreePath])
         debug(`Worktree force removed: ${worktreePath}`)
-      } catch (forceError) {
-        debug(`Failed to force remove worktree: ${forceError.message}`)
+      } catch (err) {
+        const errMessage = getSanitizedErrorMessage(err)
+        debug(`Failed to force remove worktree: ${errMessage}`)
         if (await pathExists(worktreePath)) {
           rmSync(worktreePath, { recursive: true, force: true })
           debug(`Manually removed worktree directory: ${worktreePath}`)
