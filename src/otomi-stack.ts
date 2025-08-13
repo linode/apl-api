@@ -1969,8 +1969,10 @@ export default class OtomiStack {
     try {
       // Commit and push Git changes
       await this.git.save(this.editor!, encryptSecrets, files)
+      // Pull the latest changes to ensure we have the most recent state
+      await rootStack.git.git.pull()
 
-      // Execute the provided action dynamically
+      // Update the team configuration of the root stack
       action(rootStack.repoService.getTeamConfigService(teamId))
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
@@ -1993,8 +1995,9 @@ export default class OtomiStack {
     try {
       // Commit and push Git changes
       await this.git.save(this.editor!, encryptSecrets, files)
-
-      // Execute the provided action dynamically
+      // Pull the latest changes to ensure we have the most recent state
+      await rootStack.git.git.pull()
+      // update the repo configuration of the root stack
       action(rootStack.repoService)
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
