@@ -7,7 +7,7 @@
 - **Node.js**: v22.x (see `.nvmrc`)
 - **npm**: v10.x+
 - **Git**: For version control and values repository
-- **Akamai App Platform Core** [Akamai App Platform Core](https://github.com/linode/apl-core) (see #Development Setup)
+- **Running Akamai App Platform Core Server** [Akamai App Platform Core](https://github.com/linode/apl-core)
 
 ### 1. Setup Environment
 
@@ -25,7 +25,7 @@ npm run dev
 
 The API will be available at `http://localhost:8080`
 
-## 📋 Essential Commands
+## Essential Commands
 
 ### Development
 
@@ -51,7 +51,7 @@ npm run build:models # Generate TypeScript models from OpenAPI
 npm run build:spec   # Build OpenAPI specification
 ```
 
-## 🏗️ Architecture
+## Architecture
 
 ### Core Concept
 
@@ -71,7 +71,7 @@ npm run build:spec   # Build OpenAPI specification
 | `src/openapi/`       | OpenAPI specifications              |
 | `src/middleware/`    | JWT, session, authz middleware      |
 
-## 🔐 Authentication & Authorization
+## Authentication & Authorization
 
 ### Authentication
 
@@ -94,7 +94,7 @@ GET http://localhost:8080/api/mock/0  # Mock user 0
 GET http://localhost:8080/api/mock/1  # Mock user 1
 ```
 
-## 🛠️ Development Guide
+## Development Guide
 
 ### Adding New Endpoints
 
@@ -132,6 +132,19 @@ components:
         teamMember: [read]
 ```
 
+4. **Generate Schema**
+
+```
+npm run build:models
+```
+
+5. **(Optional) Regenerate Schema in Console**
+
+```
+// in the console termininal:
+npm run gen:store
+```
+
 ### Working with Git Storage
 
 All data operations go through `OtomiStack` class:
@@ -141,6 +154,8 @@ const stack = new OtomiStack()
 await stack.getTeamConfigService('team-id')
 await stack.createService('team-id', serviceData)
 ```
+
+Every api deployment will result in a commit to the values repo with the author's email in the title.
 
 ### Testing
 
