@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.10.1](https://github.com/redkubes/otomi-api/compare/v4.8.0...v4.10.1) (2025-08-18)
+
+
+### Reverts
+
+* Revert "chore: hide kubeflow-pipelines (#779)" (#780) ([c098216](https://github.com/redkubes/otomi-api/commit/c09821668ea06243aecae6ab274ab33565691f24)), closes [#779](https://github.com/redkubes/otomi-api/issues/779) [#780](https://github.com/redkubes/otomi-api/issues/780)
+
+
 ## [4.10.0](https://github.com/redkubes/otomi-api/compare/v4.8.0...v4.10.0) (2025-08-04)
 
 
