@@ -5,10 +5,65 @@ All notable changes to this project will be documented in this file. See [standa
 ### [4.10.1](https://github.com/redkubes/otomi-api/compare/v4.8.0...v4.10.1) (2025-08-18)
 
 
+### Features
+
+* Add Kubeflow pipelines ([#742](https://github.com/redkubes/otomi-api/issues/742)) ([8f50219](https://github.com/redkubes/otomi-api/commit/8f5021991123672e25ef3387d88df5698fa1a4a9))
+* update cluster.yaml file ([#778](https://github.com/redkubes/otomi-api/issues/778)) ([406100e](https://github.com/redkubes/otomi-api/commit/406100ea348327bf46129e39f87d08e0c03bd448))
+* upgrade node version & replace ts-node with tsx ([#767](https://github.com/redkubes/otomi-api/issues/767)) ([1b94c75](https://github.com/redkubes/otomi-api/commit/1b94c759f3b8d0f42cdb44172d766d42ed69aec7))
+
+
+### Bug Fixes
+
+* limit team name length to a maximum of 9 characters ([#775](https://github.com/redkubes/otomi-api/issues/775)) ([f45fe84](https://github.com/redkubes/otomi-api/commit/f45fe848a326500307f1f3a0f6e66be441e9fe84))
+* restrict getUser data for team admins ([#769](https://github.com/redkubes/otomi-api/issues/769)) ([252d1f5](https://github.com/redkubes/otomi-api/commit/252d1f5e9ee22fdbac08eb8750164d36a6294570))
+* sanitize error message in git repository initialization ([#770](https://github.com/redkubes/otomi-api/issues/770)) ([4a4aeb4](https://github.com/redkubes/otomi-api/commit/4a4aeb4fc902f52957fc2eda29d7e3987af4a904))
+
+
 ### Reverts
 
 * Revert "chore: hide kubeflow-pipelines (#779)" (#780) ([c098216](https://github.com/redkubes/otomi-api/commit/c09821668ea06243aecae6ab274ab33565691f24)), closes [#779](https://github.com/redkubes/otomi-api/issues/779) [#780](https://github.com/redkubes/otomi-api/issues/780)
 
+
+### Others
+
+* **deps:** update apl-tty version ([#776](https://github.com/redkubes/otomi-api/issues/776)) ([58d2f1f](https://github.com/redkubes/otomi-api/commit/58d2f1f92812374092ba942c6c5967786fa96b36))
+* hide kubeflow-pipelines ([#779](https://github.com/redkubes/otomi-api/issues/779)) ([5e8f30f](https://github.com/redkubes/otomi-api/commit/5e8f30ff51e22ed869efaf2b2f7ddf2d72c8f8f8))
+* release branch [ci skip] ([a844b9d](https://github.com/redkubes/otomi-api/commit/a844b9de2fb151366e17d5910eefa643886c2a85))
+* release branch [ci skip] ([cf386b7](https://github.com/redkubes/otomi-api/commit/cf386b75987e39fb4bcd954725ca947fa2353e6b))
+* release branch [ci skip] ([3819d4b](https://github.com/redkubes/otomi-api/commit/3819d4b02a5e7a748b7b22b6213571ee75bb4b85))
+* **release:** 4.10.1 ([48e05ff](https://github.com/redkubes/otomi-api/commit/48e05ff2ae6273a45ded9cf162a6bede61f82244))
+* update release files ([#781](https://github.com/redkubes/otomi-api/issues/781)) ([9fad33a](https://github.com/redkubes/otomi-api/commit/9fad33a683db7a0d8cae6363ccab701a485b94de))
+
+### [4.10.1](https://github.com/redkubes/otomi-api/compare/v4.8.0...v4.10.1) (2025-08-18)
+
+
+### Features
+
+* Add Kubeflow pipelines ([#742](https://github.com/redkubes/otomi-api/issues/742)) ([8f50219](https://github.com/redkubes/otomi-api/commit/8f5021991123672e25ef3387d88df5698fa1a4a9))
+* update cluster.yaml file ([#778](https://github.com/redkubes/otomi-api/issues/778)) ([406100e](https://github.com/redkubes/otomi-api/commit/406100ea348327bf46129e39f87d08e0c03bd448))
+* upgrade node version & replace ts-node with tsx ([#767](https://github.com/redkubes/otomi-api/issues/767)) ([1b94c75](https://github.com/redkubes/otomi-api/commit/1b94c759f3b8d0f42cdb44172d766d42ed69aec7))
+
+
+### Bug Fixes
+
+* limit team name length to a maximum of 9 characters ([#775](https://github.com/redkubes/otomi-api/issues/775)) ([f45fe84](https://github.com/redkubes/otomi-api/commit/f45fe848a326500307f1f3a0f6e66be441e9fe84))
+* restrict getUser data for team admins ([#769](https://github.com/redkubes/otomi-api/issues/769)) ([252d1f5](https://github.com/redkubes/otomi-api/commit/252d1f5e9ee22fdbac08eb8750164d36a6294570))
+* sanitize error message in git repository initialization ([#770](https://github.com/redkubes/otomi-api/issues/770)) ([4a4aeb4](https://github.com/redkubes/otomi-api/commit/4a4aeb4fc902f52957fc2eda29d7e3987af4a904))
+
+
+### Reverts
+
+* Revert "chore: hide kubeflow-pipelines (#779)" (#780) ([c098216](https://github.com/redkubes/otomi-api/commit/c09821668ea06243aecae6ab274ab33565691f24)), closes [#779](https://github.com/redkubes/otomi-api/issues/779) [#780](https://github.com/redkubes/otomi-api/issues/780)
+
+
+### Others
+
+* **deps:** update apl-tty version ([#776](https://github.com/redkubes/otomi-api/issues/776)) ([58d2f1f](https://github.com/redkubes/otomi-api/commit/58d2f1f92812374092ba942c6c5967786fa96b36))
+* hide kubeflow-pipelines ([#779](https://github.com/redkubes/otomi-api/issues/779)) ([5e8f30f](https://github.com/redkubes/otomi-api/commit/5e8f30ff51e22ed869efaf2b2f7ddf2d72c8f8f8))
+* release branch [ci skip] ([a844b9d](https://github.com/redkubes/otomi-api/commit/a844b9de2fb151366e17d5910eefa643886c2a85))
+* release branch [ci skip] ([cf386b7](https://github.com/redkubes/otomi-api/commit/cf386b75987e39fb4bcd954725ca947fa2353e6b))
+* release branch [ci skip] ([3819d4b](https://github.com/redkubes/otomi-api/commit/3819d4b02a5e7a748b7b22b6213571ee75bb4b85))
+* update release files ([#781](https://github.com/redkubes/otomi-api/issues/781)) ([9fad33a](https://github.com/redkubes/otomi-api/commit/9fad33a683db7a0d8cae6363ccab701a485b94de))
 
 ## [4.10.0](https://github.com/redkubes/otomi-api/compare/v4.8.0...v4.10.0) (2025-08-04)
 
