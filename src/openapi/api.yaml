@@ -297,72 +297,13 @@ paths:
       x-aclSchema: Service
       responses:
         '200':
-          description: Successfully obtained kubernetes services
+          description: Successfully obtained kuberntes services
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/K8sService'
-        '400':
-          <<: *BadRequest
-
-  '/v1/teams/{teamId}/kubernetes/networkpolicies':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-    get:
-      operationId: getK8SWorkloadPodLabels
-      description: Get Podlabels from given workload
-      x-aclSchema: NetworkPolicies
-      parameters:
-        - name: workloadName
-          in: query
-          description: name of the workload to get Podlabels from
-          schema:
-            type: string
-        - name: namespace
-          in: query
-          description: namespace of the workload to get Podlabels from
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successfully obtained Podlabels from given workload
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties:
-                  type: string
-        '400':
-          <<: *BadRequest
-
-  '/v1/teams/{teamId}/kubernetes/fetchPodsFromLabel':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-    get:
-      operationId: listUniquePodNamesByLabel
-      description: Get pods name from label
-      parameters:
-        - name: labelSelector
-          in: query
-          description: name of the label to get pods name from
-          schema:
-            type: string
-        - name: namespace
-          in: query
-          description: namespace of the workload to get Podlabels from
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successfully obtained pods from given label
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
         '400':
           <<: *BadRequest
 
