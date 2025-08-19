@@ -530,6 +530,10 @@ export default class OtomiStack {
         }, {})
         updatedSettingsData.otomi.nodeSelector = nodeSelectorObject
       }
+      // Update environment VERSIONS.core when otomi version changes
+      if (updatedSettingsData.otomi?.version && updatedSettingsData.otomi?.version !== env.VERSIONS.core) {
+        env.VERSIONS.core = updatedSettingsData.otomi.version
+      }
     }
 
     settings[settingId] = removeBlankAttributes(updatedSettingsData[settingId] as Record<string, any>)
