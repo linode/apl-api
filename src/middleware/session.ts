@@ -11,6 +11,7 @@ import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
 import { cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validators'
 import { v4 as uuidv4 } from 'uuid'
+import { getSanitizedErrorMessage } from '../utils'
 
 const debug = Debug('otomi:session')
 const env = cleanEnv({
@@ -41,8 +42,7 @@ export const setSessionStack = async (editor: string, sessionId: string): Promis
   if (!sessions[sessionId]) {
     debug(`Creating session ${sessionId} for user ${editor}`)
     sessions[sessionId] = new OtomiStack(editor, sessionId)
-    // init repo without inflating values from files as its faster to copy the values
-    await sessions[sessionId].initGit(false)
+    await sessions[sessionId].initGitWorktree(readOnlyStack.git)
     sessions[sessionId].repoService = cloneDeep(readOnlyStack.repoService)
   } else sessions[sessionId].sessionId = sessionId
   return sessions[sessionId]
@@ -59,8 +59,20 @@ export const cleanAllSessions = (): void => {
 
 export const cleanSession = async (sessionId: string): Promise<void> => {
   debug(`Cleaning session ${sessionId}`)
+  const session = sessions[sessionId]
+  const worktreePath = join(rootPath, sessionId)
+  if (session?.git) {
+    try {
+      await readOnlyStack.git.removeWorktree(worktreePath)
+    } catch (error) {
+      const errorMessage = getSanitizedErrorMessage(error)
+      debug(`Error removing worktree for session ${sessionId}: ${errorMessage}`)
+      await remove(worktreePath)
+    }
+  } else {
+    await remove(worktreePath)
+  }
   delete sessions[sessionId]
-  await remove(join(rootPath, sessionId))
 }
 
 let io: Server
@@ -98,6 +110,7 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
     if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
       // in the workloadCatalog endpoint(s), don't need to create a session
       if (req.path === '/v1/workloadCatalog' || req.path === '/v1/createWorkloadCatalog') return next()
+
       // bootstrap session stack with unique sessionId to manipulate data
       const sessionId = uuidv4() as string
       // eslint-disable-next-line no-param-reassign

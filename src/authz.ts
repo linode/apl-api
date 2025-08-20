@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Ability, Subject, subject } from '@casl/ability'
 import Debug from 'debug'
 import { each, forIn, get, isEmpty, isEqual, omit, set } from 'lodash'

@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -9,7 +9,7 @@ import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, isEmpty, map, mapValues, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import { AlreadyExists, ForbiddenError, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
-import getRepo, { Git } from 'src/git'
+import getRepo, { getWorktreeRepo, Git } from 'src/git'
 import { cleanSession, getSessionStack } from 'src/middleware'
 import {
   AplBackupRequest,
@@ -327,6 +327,25 @@ export default class OtomiStack {
       await this.loadValues()
     }
     debug(`Values are loaded for ${this.editor} in ${this.sessionId}`)
+  }
+
+  async initGitWorktree(mainRepo: Git): Promise<void> {
+    await this.init()
+    debug(`Creating worktree for session ${this.sessionId}`)
+
+    try {
+      await mainRepo.git.revparse(`--verify refs/heads/${env.GIT_BRANCH}`)
+    } catch (error) {
+      const errorMessage = getSanitizedErrorMessage(error)
+      throw new Error(
+        `Main repository does not have branch '${env.GIT_BRANCH}'. Cannot create worktree. ${errorMessage}`,
+      )
+    }
+
+    const worktreePath = this.getRepoPath()
+    this.git = await getWorktreeRepo(mainRepo, worktreePath, env.GIT_BRANCH)
+
+    debug(`Worktree created for ${this.editor} in ${this.sessionId}`)
   }
 
   getSecretPaths(): string[] {
@@ -1951,8 +1970,10 @@ export default class OtomiStack {
     try {
       // Commit and push Git changes
       await this.git.save(this.editor!, encryptSecrets, files)
+      // Pull the latest changes to ensure we have the most recent state
+      await rootStack.git.git.pull()
 
-      // Execute the provided action dynamically
+      // Update the team configuration of the root stack
       action(rootStack.repoService.getTeamConfigService(teamId))
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
@@ -1975,8 +1996,9 @@ export default class OtomiStack {
     try {
       // Commit and push Git changes
       await this.git.save(this.editor!, encryptSecrets, files)
-
-      // Execute the provided action dynamically
+      // Pull the latest changes to ensure we have the most recent state
+      await rootStack.git.git.pull()
+      // update the repo configuration of the root stack
       action(rootStack.repoService)
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
