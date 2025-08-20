@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 import * as getValuesSchemaModule from './utils'
 import OpenAPISchemaValidator from 'openapi-schema-validator'
 import { getSpec } from 'src/app'
