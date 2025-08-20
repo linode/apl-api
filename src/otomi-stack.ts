@@ -1730,14 +1730,15 @@ export default class OtomiStack {
   }
 
   getAllWorkloadNames(): WorkloadName[] {
-    const workloads = this.getAllAplWorkloads().map((workload) => ({
-      metadata: {
-        name: workload.metadata.name,
-        labels: {
-          'apl.io/teamId': workload.metadata.labels['apl.io/teamId'],
+    const workloads = this.getAllAplWorkloads().map((workload) => {
+      const teamId = workload.metadata.labels['apl.io/teamId']
+      return {
+        metadata: {
+          name: workload.metadata.name,
+          namespace: teamId ? `team-${teamId}` : undefined,
         },
-      },
-    }))
+      }
+    })
     return workloads
   }
 
@@ -2067,8 +2068,12 @@ export default class OtomiStack {
       pods = res.items
     }
 
+    const excludedLabels = ['helm.sh/chart', 'app.kubernetes.io/managed-by']
+    const filteredLabels = Object.fromEntries(
+      Object.entries(pods[0]?.metadata?.labels ?? {}).filter(([key]) => !excludedLabels.includes(key)),
+    )
     // Return labels of the first matching pod, or empty object
-    return pods.length > 0 ? (pods[0].metadata?.labels ?? {}) : {}
+    return pods.length > 0 ? filteredLabels : {}
   }
 
   async listUniquePodNamesByLabel(labelSelector: string, namespace?: string): Promise<string[]> {
