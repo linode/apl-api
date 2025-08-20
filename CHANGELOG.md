@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.10.2](https://github.com/redkubes/otomi-api/compare/v4.10.1...v4.10.2) (2025-08-20)
+
+### Features
+
+- [APL-898] - Network Policies Page ([#772](https://github.com/redkubes/otomi-api/issues/772))
+- Add workloadNames endpoint ([#788](https://github.com/redkubes/otomi-api/issues/788))
+
+### Bug Fixes
+
+- Network policies filter and field names ([#795](https://github.com/redkubes/otomi-api/issues/795))
+
+### Miscellaneous Tasks
+
+- Hide kubeflow-pipelines ([#779](https://github.com/redkubes/otomi-api/issues/779))
+- Update release files ([#781](https://github.com/redkubes/otomi-api/issues/781))
+
+
+### [4.10.1](https://github.com/redkubes/otomi-api/compare/v4.10.0...v4.10.1) (2025-08-18)
+
+
+### Reverts
+
+* Network Policies Page ([#772](https://github.com/redkubes/otomi-api/issues/772)) ([19f4481](https://github.com/redkubes/otomi-api/commit/19f448126e094ce804510699b2aee08b345fce7e))
+
+
+## [4.10.0](https://github.com/redkubes/otomi-api/compare/v4.9.0...v4.10.0) (2025-08-04)
+
+
+### Features
+
+* Network Policies Page ([#772](https://github.com/redkubes/otomi-api/issues/772)) ([19f4481](https://github.com/redkubes/otomi-api/commit/19f448126e094ce804510699b2aee08b345fce7e))
+* Add Kubeflow pipelines ([#742](https://github.com/redkubes/otomi-api/issues/742)) ([8f50219](https://github.com/redkubes/otomi-api/commit/8f5021991123672e25ef3387d88df5698fa1a4a9))
+
+
+### Reverts
+
+* Revert "chore: hide kubeflow-pipelines (#779)" (#780) ([c098216](https://github.com/redkubes/otomi-api/commit/c09821668ea06243aecae6ab274ab33565691f24)), closes [#779](https://github.com/redkubes/otomi-api/issues/779) [#780](https://github.com/redkubes/otomi-api/issues/780)
+
+
 ## [4.9.0](https://github.com/redkubes/otomi-api/compare/v4.8.0...v4.9.0) (2025-07-31)
 
 
