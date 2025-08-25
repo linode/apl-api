@@ -2465,6 +2465,16 @@ export default class OtomiStack {
     }
   }
 
+  private getVersions(currentSha: string): Record<string, string> {
+    const { otomi } = this.getSettings(['otomi'])
+    return {
+      core: otomi?.version ?? env.VERSIONS.core,
+      api: env.VERSIONS.api ?? process.env.npm_package_version,
+      console: env.VERSIONS.console,
+      values: currentSha,
+    }
+  }
+
   async getSession(user: k8sUser): Promise<Session> {
     const rootStack = await getSessionStack()
     const valuesSchema = await getValuesSchema()
@@ -2495,12 +2505,7 @@ export default class OtomiStack {
         objStorageApps: env.OBJ_STORAGE_APPS,
         objStorageRegions,
       },
-      versions: {
-        core: env.VERSIONS.core,
-        api: env.VERSIONS.api ?? process.env.npm_package_version,
-        console: env.VERSIONS.console,
-        values: currentSha,
-      },
+      versions: this.getVersions(currentSha),
       valuesSchema,
     }
     return data
