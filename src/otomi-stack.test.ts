@@ -211,20 +211,20 @@ describe('Data validation', () => {
     createItemSpy.mockRestore()
   })
 
-  test('should throw ValidationError when team name is under 4 characters', async () => {
+  test('should throw ValidationError when team name is under 3 characters', async () => {
     const teamData: AplTeamSettingsRequest = {
       kind: 'AplTeamSettingSet',
       metadata: {
-        name: 'abc',
+        name: 'ab',
         labels: {
-          'apl.io/teamId': 'abc',
+          'apl.io/teamId': 'ab',
         },
       },
       spec: {},
     }
 
     await expect(otomiStack.createAplTeam(teamData, false)).rejects.toThrow(
-      new ValidationError('Team name must be at least 4 characters long'),
+      new ValidationError('Team name must be at least 3 characters long'),
     )
   })
 
