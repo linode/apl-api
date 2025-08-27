@@ -978,6 +978,8 @@ export default class OtomiStack {
   }
 
   async createAplNetpol(teamId: string, data: AplNetpolRequest): Promise<AplNetpolResponse> {
+    if (data.metadata.name.length < 2)
+      throw new ValidationError('Network policy name must be at least 2 characters long')
     try {
       const netpol = this.repoService.getTeamConfigService(teamId).createNetpol(data)
       await this.saveTeamConfigItem(netpol)
@@ -1424,6 +1426,8 @@ export default class OtomiStack {
 
   async createAplBuild(teamId: string, data: AplBuildRequest): Promise<AplBuildResponse> {
     const buildName = `${data?.spec?.imageName}-${data?.spec?.tag}`
+    if (data.spec.secretName)
+      if (data.spec.secretName.length < 2) throw new ValidationError('Secret name must be at least 2 characters long')
     if (buildName.length > 128) {
       throw new HttpError(
         400,
@@ -1874,6 +1878,10 @@ export default class OtomiStack {
   }
 
   async createAplService(teamId: string, data: AplServiceRequest): Promise<AplServiceResponse> {
+    if (data.metadata.name.length < 2) throw new ValidationError('Service name must be at least 3 characters long')
+    if (data.spec.cname?.tlsSecretName)
+      if (data.spec.cname?.tlsSecretName.length < 2)
+        throw new ValidationError('Secret name must be at least 2 characters long')
     try {
       const service = this.repoService.getTeamConfigService(teamId).createService(data)
       await this.saveTeamConfigItem(service)
@@ -2207,6 +2215,7 @@ export default class OtomiStack {
   }
 
   async createAplSealedSecret(teamId: string, data: AplSecretRequest): Promise<AplSecretResponse> {
+    if (data.metadata.name.length < 2) throw new ValidationError('Secret name must be at least 2 characters long')
     try {
       const sealedSecret = this.repoService.getTeamConfigService(teamId).createSealedSecret(data)
       await this.saveTeamSealedSecret(sealedSecret)
