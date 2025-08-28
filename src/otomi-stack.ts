@@ -1878,7 +1878,7 @@ export default class OtomiStack {
   }
 
   async createAplService(teamId: string, data: AplServiceRequest): Promise<AplServiceResponse> {
-    if (data.metadata.name.length < 2) throw new ValidationError('Service name must be at least 3 characters long')
+    if (data.metadata.name.length < 2) throw new ValidationError('Service name must be at least 2 characters long')
     if (data.spec.cname?.tlsSecretName)
       if (data.spec.cname?.tlsSecretName.length < 2)
         throw new ValidationError('Secret name must be at least 2 characters long')
