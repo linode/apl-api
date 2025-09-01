@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.11.0](https://github.com/redkubes/otomi-api/compare/v4.10.0...v4.11.0) (2025-09-01)
+
+
+### Features
+
+* add deprecated labels for Jaeger, Falco, Httpbin and Kiali apps ([#785](https://github.com/redkubes/otomi-api/issues/785)) ([5e5706f](https://github.com/redkubes/otomi-api/commit/5e5706f20245b6dbef1db55d87a604e48d08b44b))
+* add workloadNames endpoint ([#788](https://github.com/redkubes/otomi-api/issues/788)) ([49a9c4e](https://github.com/redkubes/otomi-api/commit/49a9c4e9d14140b05d2053f6d5945a1257247e02))
+* OSS files ([#783](https://github.com/redkubes/otomi-api/issues/783)) ([41f8382](https://github.com/redkubes/otomi-api/commit/41f8382c2df95df1b3d9380cb583b31c6eafefdc))
+* use git worktrees instead of cloning on every submit ([#773](https://github.com/redkubes/otomi-api/issues/773)) ([62c684a](https://github.com/redkubes/otomi-api/commit/62c684ab6a3e3d52714e36d534417d9b8ebcab6c))
+
+
+### Bug Fixes
+
+* network policies filter and field names ([#795](https://github.com/redkubes/otomi-api/issues/795)) ([91b8e22](https://github.com/redkubes/otomi-api/commit/91b8e22fc075d48d52e8e9594491da955c5311a9))
+* postman by force using compiled js instead of tsx ([#786](https://github.com/redkubes/otomi-api/issues/786)) ([2fcb326](https://github.com/redkubes/otomi-api/commit/2fcb3267a1b3ea744162d3de58f24b9a537c241c))
+* retrieve correct versions in session ([#796](https://github.com/redkubes/otomi-api/issues/796)) ([f3c208a](https://github.com/redkubes/otomi-api/commit/f3c208ab40681a27ee54cd40f599ab32ad003a39))
+
+
+### Others
+
+* **deps:** bump actions/checkout from 4 to 5 ([#793](https://github.com/redkubes/otomi-api/issues/793)) ([91170f3](https://github.com/redkubes/otomi-api/commit/91170f37b618bbc91925a26cbee4e19d77192023))
+* **deps:** bump amannn/action-semantic-pull-request from 5 to 6 ([#794](https://github.com/redkubes/otomi-api/issues/794)) ([f5ea098](https://github.com/redkubes/otomi-api/commit/f5ea098b3b7d73cf2a35277bd5cf7ae290a86052))
+* **deps:** bump swagger-ui-express from 4.3.0 to 5.0.1 ([#762](https://github.com/redkubes/otomi-api/issues/762)) ([a9ab90a](https://github.com/redkubes/otomi-api/commit/a9ab90adb173795b63686253f49897b4bd923210))
+* readme ([#791](https://github.com/redkubes/otomi-api/issues/791)) ([b0a4304](https://github.com/redkubes/otomi-api/commit/b0a4304490d6c799c1243f399f5d60106dab4706))
+* remove project schema & endpoints ([#787](https://github.com/redkubes/otomi-api/issues/787)) ([5a1cde3](https://github.com/redkubes/otomi-api/commit/5a1cde38d658b83d80b0699fd510a70e168a7854))
+
 ## [4.10.0](https://github.com/redkubes/otomi-api/compare/v4.8.0...v4.10.0) (2025-08-04)
 
 
