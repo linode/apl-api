@@ -1426,8 +1426,8 @@ export default class OtomiStack {
 
   async createAplBuild(teamId: string, data: AplBuildRequest): Promise<AplBuildResponse> {
     const buildName = `${data?.spec?.imageName}-${data?.spec?.tag}`
-    if (data.spec.secretName)
-      if (data.spec.secretName.length < 2) throw new ValidationError('Secret name must be at least 2 characters long')
+    if (data.spec.secretName && data.spec.secretName.length < 2)
+      throw new ValidationError('Secret name must be at least 2 characters long')
     if (buildName.length > 128) {
       throw new HttpError(
         400,
@@ -1879,9 +1879,8 @@ export default class OtomiStack {
 
   async createAplService(teamId: string, data: AplServiceRequest): Promise<AplServiceResponse> {
     if (data.metadata.name.length < 2) throw new ValidationError('Service name must be at least 2 characters long')
-    if (data.spec.cname?.tlsSecretName)
-      if (data.spec.cname?.tlsSecretName.length < 2)
-        throw new ValidationError('Secret name must be at least 2 characters long')
+    if (data.spec.cname?.tlsSecretName && data.spec.cname?.tlsSecretName.length < 2)
+      throw new ValidationError('Secret name must be at least 2 characters long')
     try {
       const service = this.repoService.getTeamConfigService(teamId).createService(data)
       await this.saveTeamConfigItem(service)
