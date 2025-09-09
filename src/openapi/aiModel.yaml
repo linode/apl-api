@@ -1,0 +1,31 @@
+AplAIModel:
+  x-acl:
+    platformAdmin:
+      - read-any
+    teamAdmin:
+      - read
+    teamMember:
+      - read
+
+AplAIModelSpec:
+  x-acl:
+    platformAdmin:
+      - read-any
+    teamAdmin:
+      - read
+    teamMember:
+      - read
+  properties:
+    modelEndpoint:
+      type: string
+      format: uri
+    modelDimension:
+      type: integer
+      minimum: 1
+      maximum: 16384
+      description: Embedding dimension, must be compatible with model and database
+      example: 4096
+  required:
+    - modelEndpoint
+    - modelDimension
+  type: object
