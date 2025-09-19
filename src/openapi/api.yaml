@@ -2471,10 +2471,10 @@ paths:
         '200':
           description: Successfully edited app values.
 
-  '/alpha/ai/llm':
+  '/alpha/ai/models':
     get:
       operationId: getAIModels
-      description: Get available LLMs
+      description: Get available shared AI models (foundation or embedding)
       x-aclSchema: AplAIModel
       responses:
         '200':
@@ -2566,6 +2566,86 @@ paths:
         '200':
           description: Successfully deleted a team knowledge base
 
+  '/alpha/teams/{teamId}/agents':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getAplAgents
+      description: Get agents from a given team
+      x-aclSchema: AplAgent
+      responses:
+        '200':
+          description: Successfully obtained agents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplAgentResponse'
+    post:
+      operationId: createAplAgent
+      description: Create a team agent
+      x-aclSchema: AplAgent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplAgentRequest'
+        description: Agent object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored agent configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplAgentResponse'
+
+  '/alpha/teams/{teamId}/agents/{agentName}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/agentParams'
+    get:
+      operationId: getAplAgent
+      description: Get an agent from a given team
+      x-aclSchema: AplAgent
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained agent configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplAgentResponse'
+    put:
+      operationId: editAplAgent
+      description: Edit an agent from a given team
+      x-aclSchema: AplAgent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplAgentRequest'
+        description: Agent object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplAgentResponse'
+    delete:
+      operationId: deleteAplAgent
+      description: Delete an agent from a given team
+      x-aclSchema: AplAgent
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a team agent
+
 ## -------------------------------------------- Servers
 #
 #servers:
@@ -2655,6 +2735,13 @@ components:
       name: knowledgeBaseName
       in: path
       description: Name of the knowledge base
+      required: true
+      schema:
+        type: string
+    agentParams:
+      name: agentName
+      in: path
+      description: Name of the agent
       required: true
       schema:
         type: string
@@ -2751,6 +2838,27 @@ components:
       allOf:
         - $ref: '#/components/schemas/AplAIModel'
         - $ref: '#/components/schemas/aplMetadata'
+        - $ref: '#/components/schemas/aplStatusResponse'
+    AplAgent:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AplAgent]
+        spec:
+          $ref: 'agent.yaml#/AplAgentSpec'
+      required:
+        - kind
+        - spec
+    AplAgentRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplAgent'
+        - $ref: '#/components/schemas/aplMetadata'
+    AplAgentResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplAgent'
+        - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
     AplBackup:
       type: object

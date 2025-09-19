@@ -16,9 +16,20 @@ AplAIModelSpec:
     teamMember:
       - read
   properties:
+    displayName:
+        type: string
+        description: User-friendly model display name
+        example: Meta-llama-3
     modelEndpoint:
       type: string
       format: uri
+    modelType:
+      type: string
+      enum:
+        - foundation
+        - embedding
+      description: Model type, foundation for text generation, embedding for vector search
+      example: foundation
     modelDimension:
       type: integer
       minimum: 1
@@ -27,5 +38,4 @@ AplAIModelSpec:
       example: 4096
   required:
     - modelEndpoint
-    - modelDimension
   type: object
