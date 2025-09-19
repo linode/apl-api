@@ -2827,7 +2827,7 @@ components:
       properties:
         kind:
           type: string
-          enum: [AplKnowledgeBase]
+          enum: [AplAIModel]
         spec:
           $ref: 'aiModel.yaml#/AplAIModelSpec'
       required:
