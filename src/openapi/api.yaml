@@ -2475,7 +2475,7 @@ paths:
     get:
       operationId: getAIModels
       description: Get available shared AI models (foundation or embedding)
-      x-aclSchema: AplAIModel
+      x-aclSchema: AIModel
       responses:
         '200':
           description: Successfully obtained shared AI models
@@ -3127,6 +3127,8 @@ components:
       $ref: 'testrepoconnect.yaml#/TestRepoConnect'
     InternalRepoUrls:
       $ref: 'internalRepoUrls.yaml#/InternalRepoUrls'
+    AIModel:
+      $ref: 'aiModel.yaml#/AIModel'
     Team:
       $ref: 'team.yaml#/Team'
     TeamAuthz:
