@@ -1,4 +1,4 @@
-AplAgent:
+Agent:
   x-acl:
     platformAdmin:
       - create-any

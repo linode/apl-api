@@ -20,6 +20,8 @@ import {
   AplCodeRepoRequest,
   AplCodeRepoResponse,
   AplKind,
+  AplKnowledgeBaseRequest,
+  AplKnowledgeBaseResponse,
   AplNetpolRequest,
   AplNetpolResponse,
   AplPolicyRequest,
@@ -81,6 +83,7 @@ import {
   GIT_USER,
   HELM_CHART_CATALOG,
   HIDDEN_APPS,
+  KNOWLEDGE_BASE_KIND,
   OBJ_STORAGE_APPS,
   PREINSTALLED_EXCLUDED_APPS,
   TOOLS_HOST,
@@ -116,6 +119,8 @@ import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchChartYaml, fetchWorkloadCatalog, NewHelmChartValues, sparseCloneChart } from './utils/workloadUtils'
 import { getAIModels } from './ai/aiModelHandler'
+import { transformKnowledgeBaseData } from './ai/knowledgeBaseHandler'
+import { AkamaiKnowledgeBaseCR, DatabaseCR } from './ai/types'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -139,6 +144,7 @@ const env = cleanEnv({
   PREINSTALLED_EXCLUDED_APPS,
   HIDDEN_APPS,
   OBJ_STORAGE_APPS,
+  KNOWLEDGE_BASE_KIND,
 })
 
 export const rootPath = '/tmp/otomi/values'
@@ -147,6 +153,14 @@ const clusterSettingsFilePath = 'env/settings/cluster.yaml'
 
 function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: string): string {
   return `env/teams/${teamId}/sealedsecrets/${sealedSecretsName}`
+}
+
+function getTeamKnowledgeBaseValuesFilePath(teamId: string, knowledgeBaseName: string): string {
+  return `env/teams/${teamId}/knowledgebase/${knowledgeBaseName}`
+}
+
+function getTeamDatabaseValuesFilePath(teamId: string, databaseName: string): string {
+  return `env/teams/${teamId}/databases/${databaseName}`
 }
 
 export default class OtomiStack {
@@ -2325,6 +2339,110 @@ export default class OtomiStack {
   async getSecretsFromK8s(teamId: string): Promise<Array<string>> {
     if (env.isDev) return []
     return await getTeamSecretsFromK8s(`team-${teamId}`)
+  }
+
+  async createAplKnowledgeBase(teamId: string, data: AplKnowledgeBaseRequest): Promise<AplKnowledgeBaseResponse> {
+    if (data.metadata.name.length < 2)
+      throw new ValidationError('Knowledge base name must be at least 2 characters long')
+    try {
+      const knowledgeBase = this.repoService.getTeamConfigService(teamId).createKnowledgeBase(data)
+      await this.saveTeamKnowledgeBase(teamId, knowledgeBase)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createKnowledgeBase(knowledgeBase)
+        },
+        false,
+      )
+      return knowledgeBase
+    } catch (err) {
+      if (err.code === 409) err.publicMessage = 'Knowledge base name already exists'
+      throw err
+    }
+  }
+
+  async editAplKnowledgeBase(
+    teamId: string,
+    name: string,
+    data: DeepPartial<AplKnowledgeBaseRequest>,
+    patch = false,
+  ): Promise<AplKnowledgeBaseResponse> {
+    const existingKB = this.repoService.getTeamConfigService(teamId).getKnowledgeBase(name)
+    const knowledgeBase = patch
+      ? this.repoService.getTeamConfigService(teamId).patchKnowledgeBase(name, {
+          metadata: data.metadata,
+          spec: data.spec,
+        })
+      : this.repoService.getTeamConfigService(teamId).updateKnowledgeBase(name, {
+          kind: 'AkamaiKnowledgeBase',
+          metadata: {
+            name: data.metadata?.name ?? existingKB.metadata.name,
+          },
+          spec: {
+            modelName: data.spec?.modelName ?? existingKB.spec.modelName,
+            sourceUrl: data.spec?.sourceUrl ?? existingKB.spec.sourceUrl,
+          },
+        })
+
+    await this.saveTeamKnowledgeBase(teamId, knowledgeBase)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateKnowledgeBase(name, knowledgeBase)
+      },
+      false,
+    )
+    return knowledgeBase
+  }
+
+  async deleteAplKnowledgeBase(teamId: string, name: string): Promise<void> {
+    const knowledgeBase = await this.getAplKnowledgeBase(teamId, name)
+    this.repoService.getTeamConfigService(teamId).deleteKnowledgeBase(knowledgeBase.metadata.name)
+    const relativePath = getTeamKnowledgeBaseValuesFilePath(teamId, `${name}.yaml`)
+    const databasePath = getTeamKnowledgeBaseValuesFilePath(teamId, `${name}-database.yaml`)
+    await this.git.removeFile(relativePath)
+    await this.git.removeFile(databasePath)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteKnowledgeBase(name)
+      },
+      false,
+    )
+  }
+
+  async getAplKnowledgeBase(teamId: string, name: string): Promise<AplKnowledgeBaseResponse> {
+    const knowledgeBase = this.repoService.getTeamConfigService(teamId).getKnowledgeBase(name)
+    return knowledgeBase
+  }
+
+  getAplKnowledgeBases(teamId: string): AplKnowledgeBaseResponse[] {
+    return this.repoService.getTeamConfigService(teamId).getKnowledgeBases()
+  }
+
+  getAllAplKnowledgeBases(): AplKnowledgeBaseResponse[] {
+    return this.repoService.getAllKnowledgeBases()
+  }
+
+  private async saveTeamKnowledgeBase(teamId: string, knowledgeBase: AplKnowledgeBaseResponse): Promise<void> {
+    const { knowledgeBaseCR, databaseCR } = await transformKnowledgeBaseData(teamId, knowledgeBase.metadata.name, {
+      kind: 'AkamaiKnowledgeBase',
+      metadata: knowledgeBase.metadata,
+      spec: knowledgeBase.spec,
+    })
+
+    await this.saveKnowledgeBaseCR(teamId, knowledgeBaseCR)
+    await this.saveDatabaseCR(teamId, databaseCR)
+  }
+
+  private async saveDatabaseCR(teamId: string, databaseCR: DatabaseCR) {
+    const dbPath = getTeamDatabaseValuesFilePath(teamId, `${databaseCR.metadata.name}.yaml`)
+    await this.git.writeFile(dbPath, databaseCR)
+  }
+
+  private async saveKnowledgeBaseCR(teamId: string, knowledgeBaseCR: AkamaiKnowledgeBaseCR) {
+    const kbPath = getTeamKnowledgeBaseValuesFilePath(teamId, `${knowledgeBaseCR.metadata.name}.yaml`)
+    await this.git.writeFile(kbPath, knowledgeBaseCR)
   }
 
   async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {

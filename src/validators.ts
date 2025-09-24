@@ -1,4 +1,4 @@
-import { bool, cleanEnv as clean, CleanedEnvAccessors, CleanOptions, json, num, str, ValidatorSpec } from 'envalid'
+import { bool, CleanedEnvAccessors, cleanEnv as clean, CleanOptions, json, num, str, ValidatorSpec } from 'envalid'
 
 export const AUTHZ_MOCK_IS_PLATFORM_ADMIN = bool({
   desc: 'Indicate if a mocked user is a platform admin',
@@ -93,6 +93,30 @@ export const EXPRESS_PAYLOAD_LIMIT = str({
 export const GIT_PUSH_RETRIES = num({
   desc: 'Amount of retries we do to push and pull in the git save function',
   default: 12,
+})
+export const PIPELINE_NAME = str({
+  desc: 'The name of the current pipeline',
+  default: 'doc-ingestion-pipeline',
+})
+export const KNOWLEDGE_BASE_API_VERSION = str({
+  desc: 'The API version for AkamaiKnowledgeBase custom resources',
+  default: 'akamai.io/v1alpha1',
+})
+export const KNOWLEDGE_BASE_KIND = str({
+  desc: 'The kind for AkamaiKnowledgeBase custom resources',
+  default: 'AkamaiKnowledgeBase',
+})
+export const DATABASE_API_VERSION = str({
+  desc: 'The API version for PostgreSQL Database custom resources',
+  default: 'postgresql.cnpg.io/v1',
+})
+export const DATABASE_KIND = str({
+  desc: 'The kind for PostgreSQL Database custom resources',
+  default: 'Database',
+})
+export const DB_OWNER = str({
+  desc: 'The owner for PostgreSQL Database custom resources',
+  default: 'app',
 })
 const { env } = process
 export function cleanEnv<T>(

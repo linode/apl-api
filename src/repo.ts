@@ -328,6 +328,17 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       v2: true,
     },
     {
+      kind: 'AkamaiKnowledgeBase',
+      envDir,
+      jsonPathExpression: '$.teamConfig.*.knowledgeBases[*]',
+      pathGlob: `${envDir}/env/teams/*/knowledgebase/*.yaml`,
+      processAs: 'arrayItem',
+      resourceGroup: 'team',
+      resourceDir: 'knowledgebase',
+      loadToSpec: false,
+      v2: true,
+    },
+    {
       kind: 'AplTeamBackup',
       envDir,
       jsonPathExpression: '$.teamConfig.*.backups[*]',

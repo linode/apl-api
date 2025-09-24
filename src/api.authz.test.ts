@@ -802,4 +802,165 @@ describe('API authz tests', () => {
       await agent.get('/alpha/ai/models').expect(401)
     })
   })
+
+  describe('Knowledge Base endpoint tests', () => {
+    const kbData = {
+      kind: 'AkamaiKnowledgeBase',
+      metadata: { name: 'test-kb' },
+      spec: { modelName: 'e5-mistral-7b', sourceUrl: 'https://example.com/data.zip' },
+    }
+
+    test('platform admin can create knowledge base', async () => {
+      jest.spyOn(otomiStack, 'createAplKnowledgeBase').mockResolvedValue({} as any)
+      await agent
+        .post('/alpha/teams/team1/kb')
+        .send(kbData)
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team admin can create knowledge base', async () => {
+      jest.spyOn(otomiStack, 'createAplKnowledgeBase').mockResolvedValue({} as any)
+      await agent
+        .post('/alpha/teams/team1/kb')
+        .send(kbData)
+        .set('Authorization', `Bearer ${teamAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can create knowledge base', async () => {
+      jest.spyOn(otomiStack, 'createAplKnowledgeBase').mockResolvedValue({} as any)
+      await agent
+        .post('/alpha/teams/team1/kb')
+        .send(kbData)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('platform admin can get knowledge bases', async () => {
+      jest.spyOn(otomiStack, 'getAplKnowledgeBases').mockReturnValue([])
+      await agent
+        .get('/alpha/teams/team1/kb')
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team admin can get knowledge bases', async () => {
+      jest.spyOn(otomiStack, 'getAplKnowledgeBases').mockReturnValue([])
+      await agent
+        .get('/alpha/teams/team1/kb')
+        .set('Authorization', `Bearer ${teamAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can get knowledge bases', async () => {
+      jest.spyOn(otomiStack, 'getAplKnowledgeBases').mockReturnValue([])
+      await agent
+        .get('/alpha/teams/team1/kb')
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('platform admin can get specific knowledge base', async () => {
+      jest.spyOn(otomiStack, 'getAplKnowledgeBase').mockResolvedValue({} as any)
+      await agent
+        .get('/alpha/teams/team1/kb/test-kb')
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team admin can get specific knowledge base', async () => {
+      jest.spyOn(otomiStack, 'getAplKnowledgeBase').mockResolvedValue({} as any)
+      await agent
+        .get('/alpha/teams/team1/kb/test-kb')
+        .set('Authorization', `Bearer ${teamAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can get specific knowledge base', async () => {
+      jest.spyOn(otomiStack, 'getAplKnowledgeBase').mockResolvedValue({} as any)
+      await agent
+        .get('/alpha/teams/team1/kb/test-kb')
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('platform admin can update knowledge base', async () => {
+      jest.spyOn(otomiStack, 'editAplKnowledgeBase').mockResolvedValue({} as any)
+      await agent
+        .put('/alpha/teams/team1/kb/test-kb')
+        .send(kbData)
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team admin can update knowledge base', async () => {
+      jest.spyOn(otomiStack, 'editAplKnowledgeBase').mockResolvedValue({} as any)
+      await agent
+        .put('/alpha/teams/team1/kb/test-kb')
+        .send(kbData)
+        .set('Authorization', `Bearer ${teamAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can update knowledge base', async () => {
+      jest.spyOn(otomiStack, 'editAplKnowledgeBase').mockResolvedValue({} as any)
+      await agent
+        .put('/alpha/teams/team1/kb/test-kb')
+        .send(kbData)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('platform admin can delete knowledge base', async () => {
+      jest.spyOn(otomiStack, 'deleteAplKnowledgeBase').mockResolvedValue()
+      await agent
+        .delete('/alpha/teams/team1/kb/test-kb')
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team admin can delete knowledge base', async () => {
+      jest.spyOn(otomiStack, 'deleteAplKnowledgeBase').mockResolvedValue()
+      await agent
+        .delete('/alpha/teams/team1/kb/test-kb')
+        .set('Authorization', `Bearer ${teamAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can delete knowledge base', async () => {
+      jest.spyOn(otomiStack, 'deleteAplKnowledgeBase').mockResolvedValue()
+      await agent
+        .delete('/alpha/teams/team1/kb/test-kb')
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member cannot access other team knowledge bases', async () => {
+      await agent.get('/alpha/teams/team2/kb').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
+    })
+
+    test('anonymous user cannot access knowledge bases', async () => {
+      await agent.get('/alpha/teams/team1/kb').expect(401)
+    })
+
+    test('anonymous user cannot create knowledge bases', async () => {
+      await agent.post('/alpha/teams/team1/kb').send(kbData).expect(401)
+    })
+  })
 })

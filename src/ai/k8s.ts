@@ -1,9 +1,11 @@
-import { AppsV1Api, KubeConfig, V1Deployment } from '@kubernetes/client-node'
+import { AppsV1Api, CustomObjectsApi, KubeConfig, KubernetesObject, V1Deployment } from '@kubernetes/client-node'
 import Debug from 'debug'
+import { KubernetesListObject } from '@kubernetes/client-node/dist/types'
 
 const debug = Debug('otomi:ai:k8s')
 
 let appsApiClient: AppsV1Api | undefined
+let customObjectsApiClient: CustomObjectsApi | undefined
 
 function getAppsApiClient(): AppsV1Api {
   if (appsApiClient) return appsApiClient
@@ -11,6 +13,14 @@ function getAppsApiClient(): AppsV1Api {
   kc.loadFromDefault()
   appsApiClient = kc.makeApiClient(AppsV1Api)
   return appsApiClient
+}
+
+function getCustomObjectsApiClient(): CustomObjectsApi {
+  if (customObjectsApiClient) return customObjectsApiClient
+  const kc = new KubeConfig()
+  kc.loadFromDefault()
+  customObjectsApiClient = kc.makeApiClient(CustomObjectsApi)
+  return customObjectsApiClient
 }
 
 export async function getDeploymentsWithAIModelLabels(): Promise<V1Deployment[]> {
@@ -24,6 +34,33 @@ export async function getDeploymentsWithAIModelLabels(): Promise<V1Deployment[]>
     return result.items
   } catch (e) {
     debug('Error fetching deployments from Kubernetes:', e)
+    return []
+  }
+}
+
+export type KubernetesObjectWithSpec = KubernetesObject & {
+  spec: {
+    [key: string]: any
+  }
+}
+
+export async function getKnowledgeBaseCNPGClusters(): Promise<KubernetesObjectWithSpec[]> {
+  const customObjectsApi = getCustomObjectsApiClient()
+
+  try {
+    const labelSelector = 'apl.akamai.com/purpose=knowledge-base'
+    const result = (await customObjectsApi.listClusterCustomObject({
+      group: 'postgresql.cnpg.io',
+      version: 'v1',
+      plural: 'clusters',
+      labelSelector,
+    })) as KubernetesListObject<KubernetesObjectWithSpec>
+
+    const clusters = result.items
+    debug(`Found ${clusters.length} CNPG clusters for knowledge base`)
+    return clusters
+  } catch (e) {
+    debug('Error fetching CNPG clusters from Kubernetes:', e)
     return []
   }
 }

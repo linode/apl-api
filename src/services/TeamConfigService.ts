@@ -1,5 +1,6 @@
 import { cloneDeep, find, has, merge, omit, remove, set } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
+import { transformKnowledgeBaseCRToResponse } from '../ai/knowledgeBaseHandler'
 import { AlreadyExists, NotExistError } from '../error'
 import {
   AplBackupRequest,
@@ -8,6 +9,8 @@ import {
   AplBuildResponse,
   AplCodeRepoRequest,
   AplCodeRepoResponse,
+  AplKnowledgeBaseRequest,
+  AplKnowledgeBaseResponse,
   AplNetpolRequest,
   AplNetpolResponse,
   AplPolicyRequest,
@@ -39,6 +42,7 @@ export class TeamConfigService {
     this.teamConfig.workloads ??= []
     this.teamConfig.services ??= []
     this.teamConfig.sealedsecrets ??= []
+    this.teamConfig.knowledgeBases ??= []
     this.teamConfig.backups ??= []
     this.teamConfig.netpols ??= []
     this.teamConfig.apps ??= []
@@ -257,6 +261,59 @@ export class TeamConfigService {
 
   public deleteSealedSecret(name: string): void {
     remove(this.teamConfig.sealedsecrets, (item) => item.metadata.name === name)
+  }
+
+  // =====================================
+  // == KNOWLEDGE BASE CRUD ==
+  // =====================================
+
+  public createKnowledgeBase(knowledgeBase: AplKnowledgeBaseRequest): AplKnowledgeBaseResponse {
+    const { name } = knowledgeBase.metadata
+    if (find(this.teamConfig.knowledgeBases, (item) => item.metadata.name === name)) {
+      throw new AlreadyExists(`KnowledgeBase[${name}] already exists.`)
+    }
+
+    const newKnowledgeBase = this.createAplObject(name, knowledgeBase) as AplKnowledgeBaseResponse
+    this.teamConfig.knowledgeBases.push(newKnowledgeBase)
+    return newKnowledgeBase
+  }
+
+  public getKnowledgeBase(name: string): AplKnowledgeBaseResponse {
+    const knowledgeBase = find(this.teamConfig.knowledgeBases, (item) => item.metadata.name === name)
+    if (!knowledgeBase) {
+      throw new NotExistError(`KnowledgeBase[${name}] does not exist.`)
+    }
+    // If the knowledge base has pipeline parameters, it's a full CR that needs transformation
+    if (knowledgeBase.spec && 'pipelineParameters' in knowledgeBase.spec) {
+      return transformKnowledgeBaseCRToResponse(knowledgeBase as any, this.teamConfig.settings.metadata.name)
+    }
+    return knowledgeBase
+  }
+
+  public getKnowledgeBases(): AplKnowledgeBaseResponse[] {
+    const knowledgeBases = this.teamConfig.knowledgeBases ?? []
+    return knowledgeBases.map((kb) => {
+      // If the knowledge base has pipeline parameters, it's a full CR that needs transformation
+      if (kb.spec && 'pipelineParameters' in kb.spec) {
+        return transformKnowledgeBaseCRToResponse(kb as any, this.teamConfig.settings.metadata.name)
+      }
+      return kb
+    })
+  }
+
+  public updateKnowledgeBase(name: string, updates: AplKnowledgeBaseRequest): AplKnowledgeBaseResponse {
+    const knowledgeBase = this.getKnowledgeBase(name)
+    return updateAplObject(knowledgeBase, updates) as AplKnowledgeBaseResponse
+  }
+
+  public patchKnowledgeBase(name: string, updates: DeepPartial<AplKnowledgeBaseRequest>): AplKnowledgeBaseResponse {
+    const knowledgeBase = this.getKnowledgeBase(name)
+    const mergeObj = getAplMergeObject(updates)
+    return merge(knowledgeBase, mergeObj)
+  }
+
+  public deleteKnowledgeBase(name: string): void {
+    remove(this.teamConfig.knowledgeBases, (item) => item.metadata.name === name)
   }
 
   // =====================================

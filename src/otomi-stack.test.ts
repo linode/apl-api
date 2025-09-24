@@ -174,6 +174,7 @@ describe('Data validation', () => {
       apps: [],
       policies: [],
       workloadValues: [],
+      knowledgeBases: [],
     } as TeamConfig)
     await otomiStack.createTeam({ name: 'test' }, false)
     expect(createItemSpy.mock.calls[0][0].spec.password).not.toEqual('')
@@ -204,6 +205,7 @@ describe('Data validation', () => {
       apps: [],
       policies: [],
       workloadValues: [],
+      knowledgeBases: [],
     } as TeamConfig)
     const myPassword = 'someAwesomePassword'
     await otomiStack.createTeam({ name: 'test', password: myPassword }, false)
@@ -270,6 +272,7 @@ describe('Data validation', () => {
       apps: [],
       policies: [],
       workloadValues: [],
+      knowledgeBases: [],
     } as TeamConfig)
 
     const teamData: AplTeamSettingsRequest = {
@@ -312,6 +315,7 @@ describe('Data validation', () => {
       apps: [],
       policies: [],
       workloadValues: [],
+      knowledgeBases: [],
     } as TeamConfig)
 
     const teamData: AplTeamSettingsRequest = {
