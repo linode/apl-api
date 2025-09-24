@@ -23,6 +23,12 @@ function getCustomObjectsApiClient(): CustomObjectsApi {
   return customObjectsApiClient
 }
 
+export type KubernetesObjectWithSpec = KubernetesObject & {
+  spec: {
+    [key: string]: any
+  }
+}
+
 export async function getDeploymentsWithAIModelLabels(): Promise<V1Deployment[]> {
   const appsApi = getAppsApiClient()
 
@@ -35,12 +41,6 @@ export async function getDeploymentsWithAIModelLabels(): Promise<V1Deployment[]>
   } catch (e) {
     debug('Error fetching deployments from Kubernetes:', e)
     return []
-  }
-}
-
-export type KubernetesObjectWithSpec = KubernetesObject & {
-  spec: {
-    [key: string]: any
   }
 }
 

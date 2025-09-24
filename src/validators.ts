@@ -118,6 +118,14 @@ export const DB_OWNER = str({
   desc: 'The owner for PostgreSQL Database custom resources',
   default: 'app',
 })
+export const EMBED_DIM_DEFAULT = num({
+  desc: 'Default embedding dimension if not specified by the model',
+  default: 1536,
+})
+export const EMBED_BATCH_SIZE = num({
+  desc: 'Batch size for embedding processing',
+  default: 10,
+})
 const { env } = process
 export function cleanEnv<T>(
   validators: { [K in keyof T]: ValidatorSpec<T[K]> },

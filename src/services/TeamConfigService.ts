@@ -1,6 +1,6 @@
 import { cloneDeep, find, has, merge, omit, remove, set } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
-import { transformKnowledgeBaseCRToResponse } from '../ai/knowledgeBaseHandler'
+import { AkamaiKnowledgeBaseCR } from '../ai/AkamaiKnowledgeBaseCR'
 import { AlreadyExists, NotExistError } from '../error'
 import {
   AplBackupRequest,
@@ -285,7 +285,7 @@ export class TeamConfigService {
     }
     // If the knowledge base has pipeline parameters, it's a full CR that needs transformation
     if (knowledgeBase.spec && 'pipelineParameters' in knowledgeBase.spec) {
-      return transformKnowledgeBaseCRToResponse(knowledgeBase as any, this.teamConfig.settings.metadata.name)
+      return AkamaiKnowledgeBaseCR.fromCR(knowledgeBase as any).toApiResponse(this.teamConfig.settings.metadata.name)
     }
     return knowledgeBase
   }
@@ -295,7 +295,7 @@ export class TeamConfigService {
     return knowledgeBases.map((kb) => {
       // If the knowledge base has pipeline parameters, it's a full CR that needs transformation
       if (kb.spec && 'pipelineParameters' in kb.spec) {
-        return transformKnowledgeBaseCRToResponse(kb as any, this.teamConfig.settings.metadata.name)
+        return AkamaiKnowledgeBaseCR.fromCR(kb as any).toApiResponse(this.teamConfig.settings.metadata.name)
       }
       return kb
     })

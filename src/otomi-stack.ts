@@ -119,8 +119,8 @@ import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchChartYaml, fetchWorkloadCatalog, NewHelmChartValues, sparseCloneChart } from './utils/workloadUtils'
 import { getAIModels } from './ai/aiModelHandler'
-import { transformKnowledgeBaseData } from './ai/knowledgeBaseHandler'
-import { AkamaiKnowledgeBaseCR, DatabaseCR } from './ai/types'
+import { AkamaiKnowledgeBaseCR } from './ai/AkamaiKnowledgeBaseCR'
+import { DatabaseCR } from './ai/DatabaseCR'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -2399,7 +2399,7 @@ export default class OtomiStack {
     const knowledgeBase = await this.getAplKnowledgeBase(teamId, name)
     this.repoService.getTeamConfigService(teamId).deleteKnowledgeBase(knowledgeBase.metadata.name)
     const relativePath = getTeamKnowledgeBaseValuesFilePath(teamId, `${name}.yaml`)
-    const databasePath = getTeamKnowledgeBaseValuesFilePath(teamId, `${name}-database.yaml`)
+    const databasePath = getTeamDatabaseValuesFilePath(teamId, `${name}.yaml`)
     await this.git.removeFile(relativePath)
     await this.git.removeFile(databasePath)
     await this.doTeamDeployment(
@@ -2425,11 +2425,17 @@ export default class OtomiStack {
   }
 
   private async saveTeamKnowledgeBase(teamId: string, knowledgeBase: AplKnowledgeBaseResponse): Promise<void> {
-    const { knowledgeBaseCR, databaseCR } = await transformKnowledgeBaseData(teamId, knowledgeBase.metadata.name, {
-      kind: 'AkamaiKnowledgeBase',
-      metadata: knowledgeBase.metadata,
-      spec: knowledgeBase.spec,
-    })
+    const databaseCR = await DatabaseCR.create(teamId, knowledgeBase.metadata.name)
+    const knowledgeBaseCR = await AkamaiKnowledgeBaseCR.create(
+      teamId,
+      knowledgeBase.metadata.name,
+      databaseCR.spec.cluster.name,
+      {
+        kind: 'AkamaiKnowledgeBase',
+        metadata: knowledgeBase.metadata,
+        spec: knowledgeBase.spec,
+      },
+    )
 
     await this.saveKnowledgeBaseCR(teamId, knowledgeBaseCR)
     await this.saveDatabaseCR(teamId, databaseCR)
@@ -2437,12 +2443,12 @@ export default class OtomiStack {
 
   private async saveDatabaseCR(teamId: string, databaseCR: DatabaseCR) {
     const dbPath = getTeamDatabaseValuesFilePath(teamId, `${databaseCR.metadata.name}.yaml`)
-    await this.git.writeFile(dbPath, databaseCR)
+    await this.git.writeFile(dbPath, databaseCR.toRecord())
   }
 
   private async saveKnowledgeBaseCR(teamId: string, knowledgeBaseCR: AkamaiKnowledgeBaseCR) {
     const kbPath = getTeamKnowledgeBaseValuesFilePath(teamId, `${knowledgeBaseCR.metadata.name}.yaml`)
-    await this.git.writeFile(kbPath, knowledgeBaseCR)
+    await this.git.writeFile(kbPath, knowledgeBaseCR.toRecord())
   }
 
   async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {
