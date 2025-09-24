@@ -156,7 +156,7 @@ function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: s
 }
 
 function getTeamKnowledgeBaseValuesFilePath(teamId: string, knowledgeBaseName: string): string {
-  return `env/teams/${teamId}/knowledgebase/${knowledgeBaseName}`
+  return `env/teams/${teamId}/knowledgebases/${knowledgeBaseName}`
 }
 
 function getTeamDatabaseValuesFilePath(teamId: string, databaseName: string): string {
