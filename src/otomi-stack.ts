@@ -22,6 +22,8 @@ import {
   AplKind,
   AplKnowledgeBaseRequest,
   AplKnowledgeBaseResponse,
+  AplAgentRequest,
+  AplAgentResponse,
   AplNetpolRequest,
   AplNetpolResponse,
   AplPolicyRequest,
@@ -120,6 +122,7 @@ import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchChartYaml, fetchWorkloadCatalog, NewHelmChartValues, sparseCloneChart } from './utils/workloadUtils'
 import { getAIModels } from './ai/aiModelHandler'
 import { AkamaiKnowledgeBaseCR } from './ai/AkamaiKnowledgeBaseCR'
+import { AkamaiAgentCR } from './ai/AkamaiAgentCR'
 import { DatabaseCR } from './ai/DatabaseCR'
 
 interface ExcludedApp extends App {
@@ -157,6 +160,10 @@ function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: s
 
 function getTeamKnowledgeBaseValuesFilePath(teamId: string, knowledgeBaseName: string): string {
   return `env/teams/${teamId}/knowledgebases/${knowledgeBaseName}`
+}
+
+function getTeamAgentValuesFilePath(teamId: string, agentName: string): string {
+  return `env/teams/${teamId}/agents/${agentName}`
 }
 
 function getTeamDatabaseValuesFilePath(teamId: string, databaseName: string): string {
@@ -2441,6 +2448,99 @@ export default class OtomiStack {
     await this.saveDatabaseCR(teamId, databaseCR)
   }
 
+  // Agent methods - following the same patterns as knowledge base methods
+  async createAplAgent(teamId: string, data: AplAgentRequest): Promise<AplAgentResponse> {
+    if (data.metadata.name.length < 2)
+      throw new ValidationError('Agent name must be at least 2 characters long')
+    try {
+      const agent = this.repoService.getTeamConfigService(teamId).createAgent(data)
+      await this.saveTeamAgent(teamId, agent)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createAgent(agent)
+        },
+        false,
+      )
+      return agent
+    } catch (err) {
+      if (err.code === 409) err.publicMessage = 'Agent name already exists'
+      throw err
+    }
+  }
+
+  async editAplAgent(
+    teamId: string,
+    name: string,
+    data: DeepPartial<AplAgentRequest>,
+    patch = false,
+  ): Promise<AplAgentResponse> {
+    const existingAgent = this.repoService.getTeamConfigService(teamId).getAgent(name)
+    const agent = patch
+      ? this.repoService.getTeamConfigService(teamId).patchAgent(name, {
+          metadata: data.metadata,
+          spec: data.spec,
+        })
+      : this.repoService.getTeamConfigService(teamId).updateAgent(name, {
+          kind: 'AkamaiAgent',
+          metadata: {
+            name: data.metadata?.name ?? existingAgent.metadata.name,
+          },
+          spec: {
+            foundationModel: data.spec?.foundationModel ?? existingAgent.spec.foundationModel,
+            agentInstructions: data.spec?.agentInstructions ?? existingAgent.spec.agentInstructions,
+            knowledgeBase: data.spec?.knowledgeBase ?? existingAgent.spec.knowledgeBase,
+          },
+        })
+
+    await this.saveTeamAgent(teamId, agent)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateAgent(name, agent)
+      },
+      false,
+    )
+    return agent
+  }
+
+  async deleteAplAgent(teamId: string, name: string): Promise<void> {
+    const agent = await this.getAplAgent(teamId, name)
+    this.repoService.getTeamConfigService(teamId).deleteAgent(agent.metadata.name)
+    const relativePath = getTeamAgentValuesFilePath(teamId, `${name}.yaml`)
+    await this.git.removeFile(relativePath)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteAgent(name)
+      },
+      false,
+    )
+  }
+
+  async getAplAgent(teamId: string, name: string): Promise<AplAgentResponse> {
+    const agent = this.repoService.getTeamConfigService(teamId).getAgent(name)
+    return agent
+  }
+
+  getAplAgents(teamId: string): AplAgentResponse[] {
+    return this.repoService.getTeamConfigService(teamId).getAgents()
+  }
+
+  private async saveTeamAgent(teamId: string, agent: AplAgentResponse): Promise<void> {
+    const agentCR = await AkamaiAgentCR.create(
+      teamId,
+      agent.metadata.name,
+      {
+        kind: 'AkamaiAgent',
+        metadata: agent.metadata,
+        spec: agent.spec,
+      },
+    )
+
+    await this.saveAgentCR(teamId, agentCR)
+  }
+
   private async saveDatabaseCR(teamId: string, databaseCR: DatabaseCR) {
     const dbPath = getTeamDatabaseValuesFilePath(teamId, `${databaseCR.metadata.name}.yaml`)
     await this.git.writeFile(dbPath, databaseCR.toRecord())
@@ -2449,6 +2549,11 @@ export default class OtomiStack {
   private async saveKnowledgeBaseCR(teamId: string, knowledgeBaseCR: AkamaiKnowledgeBaseCR) {
     const kbPath = getTeamKnowledgeBaseValuesFilePath(teamId, `${knowledgeBaseCR.metadata.name}.yaml`)
     await this.git.writeFile(kbPath, knowledgeBaseCR.toRecord())
+  }
+
+  private async saveAgentCR(teamId: string, agentCR: AkamaiAgentCR) {
+    const agentPath = getTeamAgentValuesFilePath(teamId, `${agentCR.metadata.name}.yaml`)
+    await this.git.writeFile(agentPath, agentCR.toRecord())
   }
 
   async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {

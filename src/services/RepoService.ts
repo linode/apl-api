@@ -137,6 +137,7 @@ export class RepoService {
       sealedsecrets: [],
       backups: [],
       knowledgeBases: [],
+      agents: [],
       netpols: [],
       settings: {} as AplTeamSettingsResponse,
       apps: [],

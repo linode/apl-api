@@ -2844,7 +2844,7 @@ components:
       properties:
         kind:
           type: string
-          enum: [AplAgent]
+          enum: [AkamaiAgent]
         spec:
           $ref: 'agent.yaml#/AplAgentSpec'
       required:

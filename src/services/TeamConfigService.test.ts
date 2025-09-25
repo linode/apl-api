@@ -44,6 +44,7 @@ describe('TeamConfigService', () => {
       apps: [],
       policies: [],
       knowledgeBases: [],
+      agents: [],
       settings: teamSettings,
     } as TeamConfig
     service = new TeamConfigService(teamConfig)

@@ -1,8 +1,11 @@
 import { cloneDeep, find, has, merge, omit, remove, set } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
 import { AkamaiKnowledgeBaseCR } from '../ai/AkamaiKnowledgeBaseCR'
+import { AkamaiAgentCR } from '../ai/AkamaiAgentCR'
 import { AlreadyExists, NotExistError } from '../error'
 import {
+  AplAgentRequest,
+  AplAgentResponse,
   AplBackupRequest,
   AplBackupResponse,
   AplBuildRequest,
@@ -43,6 +46,7 @@ export class TeamConfigService {
     this.teamConfig.services ??= []
     this.teamConfig.sealedsecrets ??= []
     this.teamConfig.knowledgeBases ??= []
+    this.teamConfig.agents ??= []
     this.teamConfig.backups ??= []
     this.teamConfig.netpols ??= []
     this.teamConfig.apps ??= []
@@ -314,6 +318,56 @@ export class TeamConfigService {
 
   public deleteKnowledgeBase(name: string): void {
     remove(this.teamConfig.knowledgeBases, (item) => item.metadata.name === name)
+  }
+
+  // =====================================
+  // == AGENT CRUD ==
+  // =====================================
+
+  public createAgent(agent: AplAgentRequest): AplAgentResponse {
+    const { name } = agent.metadata
+    if (find(this.teamConfig.agents, (item) => item.metadata.name === name)) {
+      throw new AlreadyExists(`Agent[${name}] already exists.`)
+    }
+
+    const newAgent = this.createAplObject(name, agent) as AplAgentResponse
+    this.teamConfig.agents.push(newAgent)
+    return newAgent
+  }
+
+  public getAgent(name: string): AplAgentResponse {
+    const agent = find(this.teamConfig.agents, (item) => item.metadata.name === name)
+    if (!agent) {
+      throw new NotExistError(`Agent[${name}] does not exist.`)
+    }
+    if (agent.spec && 'foundationModel' in agent.spec) {
+      return AkamaiAgentCR.fromCR(agent as any).toApiResponse(this.teamConfig.settings.metadata.name)
+    }
+    return agent
+  }
+
+  public getAgents(): AplAgentResponse[] {
+    return this.teamConfig.agents.map((agent) => {
+      if (agent.spec && 'foundationModel' in agent.spec) {
+        return AkamaiAgentCR.fromCR(agent as any).toApiResponse(this.teamConfig.settings.metadata.name)
+      }
+      return agent
+    })
+  }
+
+  public updateAgent(name: string, updates: AplAgentRequest): AplAgentResponse {
+    const agent = this.getAgent(name)
+    return updateAplObject(agent, updates) as AplAgentResponse
+  }
+
+  public patchAgent(name: string, updates: DeepPartial<AplAgentRequest>): AplAgentResponse {
+    const agent = this.getAgent(name)
+    const mergeObj = getAplMergeObject(updates)
+    return merge(agent, mergeObj)
+  }
+
+  public deleteAgent(name: string): void {
+    remove(this.teamConfig.agents, (item) => item.metadata.name === name)
   }
 
   // =====================================

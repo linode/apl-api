@@ -126,6 +126,14 @@ export const EMBED_BATCH_SIZE = num({
   desc: 'Batch size for embedding processing',
   default: 10,
 })
+export const AGENT_API_VERSION = str({
+  desc: 'The API version for AkamaiAgent custom resources',
+  default: 'akamai.io/v1alpha1',
+})
+export const AGENT_KIND = str({
+  desc: 'The kind for AkamaiAgent custom resources',
+  default: 'AkamaiAgent',
+})
 const { env } = process
 export function cleanEnv<T>(
   validators: { [K in keyof T]: ValidatorSpec<T[K]> },

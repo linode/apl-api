@@ -10,6 +10,8 @@ export type AplBackupRequest = components['schemas']['AplBackupRequest']
 export type AplBackupResponse = components['schemas']['AplBackupResponse']
 export type AplKnowledgeBaseRequest = components['schemas']['AplKnowledgeBaseRequest']
 export type AplKnowledgeBaseResponse = components['schemas']['AplKnowledgeBaseResponse']
+export type AplAgentRequest = components['schemas']['AplAgentRequest']
+export type AplAgentResponse = components['schemas']['AplAgentResponse']
 export type AplAIModelResponse = components['schemas']['AplAIModelResponse']
 export type Kubecfg = components['schemas']['Kubecfg']
 export type K8sService = components['schemas']['K8sService']
@@ -76,6 +78,7 @@ export type AplRequestObject =
   | AplBuildRequest
   | AplCodeRepoRequest
   | AplKnowledgeBaseRequest
+  | AplAgentRequest
   | AplNetpolRequest
   | AplPolicyRequest
   | AplSecretRequest
@@ -87,6 +90,7 @@ export type AplResponseObject =
   | AplBuildResponse
   | AplCodeRepoResponse
   | AplKnowledgeBaseResponse
+  | AplAgentResponse
   | AplNetpolResponse
   | AplPolicyResponse
   | AplSecretResponse
@@ -109,6 +113,7 @@ export type AplKind =
   | 'AplUser'
   | 'AplPlatformSettingSet'
   | 'AkamaiKnowledgeBase'
+  | 'AkamaiAgent'
   | 'AplTeamCodeRepo'
   | 'AplTeamBuild'
   | 'AplTeamPolicy'
@@ -255,6 +260,7 @@ export interface TeamConfig {
   builds: AplBuildResponse[]
   codeRepos: AplCodeRepoResponse[]
   knowledgeBases: AplKnowledgeBaseResponse[]
+  agents: AplAgentResponse[]
   netpols: AplNetpolResponse[]
   policies: AplPolicyResponse[]
   sealedsecrets: AplSecretResponse[]

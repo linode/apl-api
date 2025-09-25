@@ -32,6 +32,5 @@ AplAgentSpec:
       description: Custom instructions for the agent
       example: "You are a helpful assistant that provides concise answers."
   required:
-    - knowledgeBase
     - foundationModel
     - agentInstructions

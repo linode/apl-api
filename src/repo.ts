@@ -339,6 +339,17 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       v2: true,
     },
     {
+      kind: 'AkamaiAgent',
+      envDir,
+      jsonPathExpression: '$.teamConfig.*.agents[*]',
+      pathGlob: `${envDir}/env/teams/*/agents/*.yaml`,
+      processAs: 'arrayItem',
+      resourceGroup: 'team',
+      resourceDir: 'agents',
+      loadToSpec: false,
+      v2: true,
+    },
+    {
       kind: 'AplTeamBackup',
       envDir,
       jsonPathExpression: '$.teamConfig.*.backups[*]',
