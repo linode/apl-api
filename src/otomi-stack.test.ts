@@ -163,6 +163,7 @@ describe('Data validation', () => {
       status: {},
     }
     const createItemSpy = jest.spyOn(otomiStack.repoService, 'createTeamConfig').mockReturnValue({
+      agents: [],
       builds: [],
       codeRepos: [],
       workloads: [],
@@ -194,6 +195,7 @@ describe('Data validation', () => {
       status: {},
     }
     const createItemSpy = jest.spyOn(otomiStack.repoService, 'createTeamConfig').mockReturnValue({
+      agents: [],
       builds: [],
       codeRepos: [],
       workloads: [],
@@ -261,6 +263,7 @@ describe('Data validation', () => {
     }
 
     const createItemSpy = jest.spyOn(otomiStack.repoService, 'createTeamConfig').mockReturnValue({
+      agents: [],
       builds: [],
       codeRepos: [],
       workloads: [],
@@ -304,6 +307,7 @@ describe('Data validation', () => {
     }
 
     const createItemSpy = jest.spyOn(otomiStack.repoService, 'createTeamConfig').mockReturnValue({
+      agents: [],
       builds: [],
       codeRepos: [],
       workloads: [],

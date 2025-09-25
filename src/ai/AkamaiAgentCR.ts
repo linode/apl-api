@@ -1,9 +1,5 @@
 import { AplAgentRequest, AplAgentResponse } from 'src/otomi-models'
-import {
-  cleanEnv,
-  AGENT_API_VERSION,
-  AGENT_KIND,
-} from '../validators'
+import { AGENT_API_VERSION, AGENT_KIND, cleanEnv } from '../validators'
 
 const env = cleanEnv({
   AGENT_API_VERSION,
@@ -24,11 +20,7 @@ export class AkamaiAgentCR {
     knowledgeBase?: string
   }
 
-  constructor(
-    teamId: string,
-    agentName: string,
-    request: AplAgentRequest,
-  ) {
+  constructor(teamId: string, agentName: string, request: AplAgentRequest) {
     const namespace = `team-${teamId}`
 
     this.apiVersion = env.AGENT_API_VERSION
@@ -39,7 +31,6 @@ export class AkamaiAgentCR {
       namespace,
       labels: {
         'apl.io/teamId': teamId,
-        ...(request.metadata?.labels || {}),
       },
     }
     this.spec = {
@@ -89,11 +80,7 @@ export class AkamaiAgentCR {
   }
 
   // Static factory method
-  static async create(
-    teamId: string,
-    agentName: string,
-    request: AplAgentRequest,
-  ): Promise<AkamaiAgentCR> {
+  static async create(teamId: string, agentName: string, request: AplAgentRequest): Promise<AkamaiAgentCR> {
     return new AkamaiAgentCR(teamId, agentName, request)
   }
 

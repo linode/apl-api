@@ -12,6 +12,8 @@ import { AlreadyExists, ForbiddenError, HttpError, OtomiError, PublicUrlExists, 
 import getRepo, { getWorktreeRepo, Git } from 'src/git'
 import { cleanSession, getSessionStack } from 'src/middleware'
 import {
+  AplAgentRequest,
+  AplAgentResponse,
   AplAIModelResponse,
   AplBackupRequest,
   AplBackupResponse,
@@ -22,8 +24,6 @@ import {
   AplKind,
   AplKnowledgeBaseRequest,
   AplKnowledgeBaseResponse,
-  AplAgentRequest,
-  AplAgentResponse,
   AplNetpolRequest,
   AplNetpolResponse,
   AplPolicyRequest,
@@ -2450,8 +2450,7 @@ export default class OtomiStack {
 
   // Agent methods - following the same patterns as knowledge base methods
   async createAplAgent(teamId: string, data: AplAgentRequest): Promise<AplAgentResponse> {
-    if (data.metadata.name.length < 2)
-      throw new ValidationError('Agent name must be at least 2 characters long')
+    if (data.metadata.name.length < 2) throw new ValidationError('Agent name must be at least 2 characters long')
     try {
       const agent = this.repoService.getTeamConfigService(teamId).createAgent(data)
       await this.saveTeamAgent(teamId, agent)
@@ -2528,15 +2527,11 @@ export default class OtomiStack {
   }
 
   private async saveTeamAgent(teamId: string, agent: AplAgentResponse): Promise<void> {
-    const agentCR = await AkamaiAgentCR.create(
-      teamId,
-      agent.metadata.name,
-      {
-        kind: 'AkamaiAgent',
-        metadata: agent.metadata,
-        spec: agent.spec,
-      },
-    )
+    const agentCR = await AkamaiAgentCR.create(teamId, agent.metadata.name, {
+      kind: 'AkamaiAgent',
+      metadata: agent.metadata,
+      spec: agent.spec,
+    })
 
     await this.saveAgentCR(teamId, agentCR)
   }
