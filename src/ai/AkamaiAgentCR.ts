@@ -1,5 +1,7 @@
 import { AplAgentRequest, AplAgentResponse } from 'src/otomi-models'
 import { AGENT_API_VERSION, AGENT_KIND, cleanEnv } from '../validators'
+import { K8sResourceNotFound } from '../error'
+import { getAIModels } from './aiModelHandler'
 
 const env = cleanEnv({
   AGENT_API_VERSION,
@@ -81,6 +83,15 @@ export class AkamaiAgentCR {
 
   // Static factory method
   static async create(teamId: string, agentName: string, request: AplAgentRequest): Promise<AkamaiAgentCR> {
+    const aiModels = await getAIModels()
+    const embeddingModel = aiModels.find(
+      (model) => model.metadata.name === request.spec.foundationModel && model.spec.modelType === 'foundation',
+    )
+
+    if (!embeddingModel) {
+      throw new K8sResourceNotFound('Foundation model', `Foundation model '${request.spec.foundationModel}' not found`)
+    }
+
     return new AkamaiAgentCR(teamId, agentName, request)
   }
 

@@ -2,7 +2,7 @@ import { cloneDeep, find, has, merge, omit, remove, set } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
 import { AkamaiKnowledgeBaseCR } from '../ai/AkamaiKnowledgeBaseCR'
 import { AkamaiAgentCR } from '../ai/AkamaiAgentCR'
-import { AlreadyExists, NotExistError } from '../error'
+import { AlreadyExists, NotExistError, ValidationError } from '../error'
 import {
   AplAgentRequest,
   AplAgentResponse,
@@ -320,6 +320,11 @@ export class TeamConfigService {
     remove(this.teamConfig.knowledgeBases, (item) => item.metadata.name === name)
   }
 
+  public validateKnowledgeBaseExists(knowledgeBaseName: string): boolean {
+    const knowledgeBases = this.teamConfig.knowledgeBases ?? []
+    return knowledgeBases.some((kb) => kb.metadata.name === knowledgeBaseName)
+  }
+
   // =====================================
   // == AGENT CRUD ==
   // =====================================
@@ -328,6 +333,11 @@ export class TeamConfigService {
     const { name } = agent.metadata
     if (find(this.teamConfig.agents, (item) => item.metadata.name === name)) {
       throw new AlreadyExists(`Agent[${name}] already exists.`)
+    }
+
+    // Validate that knowledgeBase exists if specified
+    if (agent.spec.knowledgeBase && !this.validateKnowledgeBaseExists(agent.spec.knowledgeBase)) {
+      throw new ValidationError(`KnowledgeBase[${agent.spec.knowledgeBase}] does not exist.`)
     }
 
     const newAgent = this.createAplObject(name, agent) as AplAgentResponse
@@ -357,11 +367,19 @@ export class TeamConfigService {
 
   public updateAgent(name: string, updates: AplAgentRequest): AplAgentResponse {
     const agent = this.getAgent(name)
+    // Validate that knowledgeBase exists if specified
+    if (updates.spec.knowledgeBase && !this.validateKnowledgeBaseExists(updates.spec.knowledgeBase)) {
+      throw new ValidationError(`KnowledgeBase[${agent.spec.knowledgeBase}] does not exist.`)
+    }
     return updateAplObject(agent, updates) as AplAgentResponse
   }
 
   public patchAgent(name: string, updates: DeepPartial<AplAgentRequest>): AplAgentResponse {
     const agent = this.getAgent(name)
+    // Validate that knowledgeBase exists if specified
+    if (updates.spec && updates.spec.knowledgeBase && !this.validateKnowledgeBaseExists(updates.spec.knowledgeBase)) {
+      throw new ValidationError(`KnowledgeBase[${agent.spec.knowledgeBase}] does not exist.`)
+    }
     const mergeObj = getAplMergeObject(updates)
     return merge(agent, mergeObj)
   }

@@ -7,6 +7,12 @@ const debug = Debug('otomi:ai:k8s')
 let appsApiClient: AppsV1Api | undefined
 let customObjectsApiClient: CustomObjectsApi | undefined
 
+// Export function to reset api clients for testing
+export function resetApiClients(): void {
+  appsApiClient = undefined
+  customObjectsApiClient = undefined
+}
+
 function getAppsApiClient(): AppsV1Api {
   if (appsApiClient) return appsApiClient
   const kc = new KubeConfig()
