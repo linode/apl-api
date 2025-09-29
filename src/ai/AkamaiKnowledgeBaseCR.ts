@@ -32,13 +32,13 @@ export class AkamaiKnowledgeBaseCR {
     pipelineName: string
     pipelineParameters: {
       url: string
-      tableName: string
-      embeddingModel: string
-      embeddingApiBase: string
-      embedDim: number
-      embedBatchSize: number
-      secretName: string
-      secretNamespace: string
+      table_name: string
+      embedding_model: string
+      embedding_api_base: string
+      embed_dim: number
+      embed_batch_size: number
+      secret_name: string
+      secret_namespace: string
     }
   }
 
@@ -62,13 +62,13 @@ export class AkamaiKnowledgeBaseCR {
       pipelineName: env.PIPELINE_NAME,
       pipelineParameters: {
         url: request.spec.sourceUrl,
-        tableName: knowledgeBaseName,
-        embeddingModel: embeddingModel.metadata.name,
-        embeddingApiBase: embeddingModel.spec.modelEndpoint,
-        embedDim: embeddingModel.spec.modelDimension || env.EMBED_DIM_DEFAULT,
-        embedBatchSize: env.EMBED_BATCH_SIZE,
-        secretName: `${clusterName}-${env.DB_OWNER}`,
-        secretNamespace: namespace,
+        table_name: knowledgeBaseName,
+        embedding_model: embeddingModel.metadata.name,
+        embedding_api_base: embeddingModel.spec.modelEndpoint,
+        embed_dim: embeddingModel.spec.modelDimension || env.EMBED_DIM_DEFAULT,
+        embed_batch_size: env.EMBED_BATCH_SIZE,
+        secret_name: `${clusterName}-${env.DB_OWNER}`,
+        secret_namespace: namespace,
       },
     }
   }
@@ -94,7 +94,7 @@ export class AkamaiKnowledgeBaseCR {
         },
       },
       spec: {
-        modelName: this.spec.pipelineParameters.embeddingModel,
+        modelName: this.spec.pipelineParameters.embedding_model,
         sourceUrl: this.spec.pipelineParameters.url,
       },
       status: {},

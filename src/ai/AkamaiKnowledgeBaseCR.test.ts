@@ -67,13 +67,13 @@ describe('AkamaiKnowledgeBaseCR', () => {
 
       expect(kbCR.spec.pipelineParameters).toEqual({
         url: 'https://docs.example.com',
-        tableName: 'test-kb',
-        embeddingModel: 'text-embedding-ada-002',
-        embeddingApiBase: 'http://embedding-model.ai.svc.cluster.local',
-        embedDim: 1536,
-        embedBatchSize: expect.any(Number),
-        secretName: expect.stringContaining('cluster-name'),
-        secretNamespace: 'team-team-123',
+        table_name: 'test-kb',
+        embedding_model: 'text-embedding-ada-002',
+        embedding_api_base: 'http://embedding-model.ai.svc.cluster.local',
+        embed_dim: 1536,
+        embed_batch_size: expect.any(Number),
+        secret_name: expect.stringContaining('cluster-name'),
+        secret_namespace: 'team-team-123',
       })
     })
 
@@ -94,8 +94,8 @@ describe('AkamaiKnowledgeBaseCR', () => {
         modelWithoutDimension,
       )
 
-      expect(kbCR.spec.pipelineParameters.embedDim).toBeDefined()
-      expect(typeof kbCR.spec.pipelineParameters.embedDim).toBe('number')
+      expect(kbCR.spec.pipelineParameters.embed_dim).toBeDefined()
+      expect(typeof kbCR.spec.pipelineParameters.embed_dim).toBe('number')
     })
   })
 
@@ -216,7 +216,7 @@ describe('AkamaiKnowledgeBaseCR', () => {
       const result = await AkamaiKnowledgeBaseCR.create('team-123', 'test-kb', 'cluster-name', mockKnowledgeBaseRequest)
 
       expect(result).toBeInstanceOf(AkamaiKnowledgeBaseCR)
-      expect(result.spec.pipelineParameters.embeddingModel).toBe('text-embedding-ada-002')
+      expect(result.spec.pipelineParameters.embedding_model).toBe('text-embedding-ada-002')
     })
 
     test('should handle AI models fetch error', async () => {
@@ -239,13 +239,13 @@ describe('AkamaiKnowledgeBaseCR', () => {
           pipelineName: 'test-pipeline',
           pipelineParameters: {
             url: 'https://example.com',
-            tableName: 'existing-kb',
-            embeddingModel: 'test-model',
-            embeddingApiBase: 'http://test-model.ai.svc.cluster.local',
-            embedDim: 768,
-            embedBatchSize: 100,
-            secretName: 'test-secret',
-            secretNamespace: 'team-456',
+            table_name: 'existing-kb',
+            embedding_model: 'test-model',
+            embedding_api_base: 'http://test-model.ai.svc.cluster.local',
+            embed_dim: 768,
+            embed_batch_size: 100,
+            secret_name: 'test-secret',
+            secret_namespace: 'team-456',
           },
         },
       }
@@ -254,7 +254,7 @@ describe('AkamaiKnowledgeBaseCR', () => {
 
       expect(result).toBeInstanceOf(AkamaiKnowledgeBaseCR)
       expect(result.metadata.name).toBe('existing-kb')
-      expect(result.spec.pipelineParameters.embeddingModel).toBe('test-model')
+      expect(result.spec.pipelineParameters.embedding_model).toBe('test-model')
     })
   })
 })
