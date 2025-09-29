@@ -446,12 +446,13 @@ export class TeamConfigService {
     }
   }
 
-  /** Retrieve a collection dynamically from the Teamconfig */
+  /** Retrieve a collection dynamically from the Teamconfig
+   * Try not to use this function */
   public getCollection(collectionId: string): AplResponseObject[] {
     if (!has(this.teamConfig, collectionId)) {
       throw new Error(`Getting TeamConfig collection [${collectionId}] does not exist.`)
     }
-    return this.teamConfig[collectionId]
+    return this.teamConfig[collectionId] as any
   }
 
   /** Update a collection dynamically in the Teamconfig */
