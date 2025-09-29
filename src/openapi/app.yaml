@@ -21,6 +21,7 @@ AppList:
     - keycloak
     - kiali
     - knative
+    - kserve
     - kubeflow-pipelines
     - kured
     - kyverno
