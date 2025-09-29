@@ -211,6 +211,23 @@ describe('Data validation', () => {
     createItemSpy.mockRestore()
   })
 
+  test('should throw ValidationError when team name is under 3 characters', async () => {
+    const teamData: AplTeamSettingsRequest = {
+      kind: 'AplTeamSettingSet',
+      metadata: {
+        name: 'ab',
+        labels: {
+          'apl.io/teamId': 'ab',
+        },
+      },
+      spec: {},
+    }
+
+    await expect(otomiStack.createAplTeam(teamData, false)).rejects.toThrow(
+      new ValidationError('Team name must be at least 3 characters long'),
+    )
+  })
+
   test('should throw ValidationError when team name exceeds 9 characters', async () => {
     const teamData: AplTeamSettingsRequest = {
       kind: 'AplTeamSettingSet',
@@ -750,6 +767,97 @@ describe('Users tests', () => {
         })
       })
     })
+  })
+})
+
+describe('getVersions', () => {
+  let otomiStack: OtomiStack
+
+  beforeEach(async () => {
+    otomiStack = new OtomiStack()
+    await otomiStack.init()
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  test('should return versions with otomi version from settings', () => {
+    const mockSettings = { otomi: { version: '1.2.3' } }
+    jest.spyOn(otomiStack, 'getSettings').mockReturnValue(mockSettings)
+
+    const result = (otomiStack as any).getVersions('abc123')
+
+    expect(result).toHaveProperty('core', '1.2.3')
+    expect(result).toHaveProperty('api')
+    expect(result).toHaveProperty('console')
+    expect(result).toHaveProperty('values', 'abc123')
+    expect(otomiStack.getSettings).toHaveBeenCalledWith(['otomi'])
+  })
+
+  test('should fallback to env.VERSIONS.core when otomi.version is not available', () => {
+    const mockSettings = { otomi: undefined }
+    jest.spyOn(otomiStack, 'getSettings').mockReturnValue(mockSettings)
+
+    const result = (otomiStack as any).getVersions('def456')
+
+    expect(result).toHaveProperty('core')
+    expect(result).toHaveProperty('api')
+    expect(result).toHaveProperty('console')
+    expect(result).toHaveProperty('values', 'def456')
+  })
+
+  test('should fallback to process.env.npm_package_version when env.VERSIONS.api is not available', () => {
+    const originalNpmVersion = process.env.npm_package_version
+    process.env.npm_package_version = '5.0.0'
+
+    const mockSettings = { otomi: { version: '1.2.3' } }
+    jest.spyOn(otomiStack, 'getSettings').mockReturnValue(mockSettings)
+
+    const result = (otomiStack as any).getVersions('ghi789')
+
+    expect(result).toHaveProperty('core', '1.2.3')
+    expect(result).toHaveProperty('api')
+    expect(result).toHaveProperty('console')
+    expect(result).toHaveProperty('values', 'ghi789')
+
+    process.env.npm_package_version = originalNpmVersion
+  })
+
+  test('should handle undefined otomi settings gracefully', () => {
+    const mockSettings = {}
+    jest.spyOn(otomiStack, 'getSettings').mockReturnValue(mockSettings)
+
+    const result = (otomiStack as any).getVersions('xyz123')
+
+    expect(result).toHaveProperty('core')
+    expect(result).toHaveProperty('api')
+    expect(result).toHaveProperty('console')
+    expect(result).toHaveProperty('values', 'xyz123')
+  })
+
+  test('should pass through currentSha as values field', () => {
+    const mockSettings = { otomi: { version: '1.0.0' } }
+    jest.spyOn(otomiStack, 'getSettings').mockReturnValue(mockSettings)
+
+    const testSha = 'unique-commit-sha-123'
+    const result = (otomiStack as any).getVersions(testSha)
+
+    expect(result.values).toBe(testSha)
+    expect(typeof result.values).toBe('string')
+  })
+
+  test('should return all required version fields', () => {
+    const mockSettings = { otomi: { version: '1.0.0' } }
+    jest.spyOn(otomiStack, 'getSettings').mockReturnValue(mockSettings)
+
+    const result = (otomiStack as any).getVersions('test-sha')
+
+    expect(Object.keys(result).sort()).toEqual(['api', 'console', 'core', 'values'])
+    expect(typeof result.core).toBe('string')
+    expect(typeof result.api).toBe('string')
+    expect(typeof result.console).toBe('string')
+    expect(typeof result.values).toBe('string')
   })
 })
 

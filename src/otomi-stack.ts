@@ -1,4 +1,4 @@
-import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -707,6 +707,7 @@ export default class OtomiStack {
 
   async createAplTeam(data: AplTeamSettingsRequest, deploy = true): Promise<AplTeamSettingsResponse> {
     const teamName = data.metadata.name
+    if (teamName.length < 3) throw new ValidationError('Team name must be at least 3 characters long')
     if (teamName.length > 9) throw new ValidationError('Team name must not exceed 9 characters')
 
     if (isEmpty(data.spec.password)) {
@@ -977,6 +978,8 @@ export default class OtomiStack {
   }
 
   async createAplNetpol(teamId: string, data: AplNetpolRequest): Promise<AplNetpolResponse> {
+    if (data.metadata.name.length < 2)
+      throw new ValidationError('Network policy name must be at least 2 characters long')
     try {
       const netpol = this.repoService.getTeamConfigService(teamId).createNetpol(data)
       await this.saveTeamConfigItem(netpol)
@@ -1423,6 +1426,8 @@ export default class OtomiStack {
 
   async createAplBuild(teamId: string, data: AplBuildRequest): Promise<AplBuildResponse> {
     const buildName = `${data?.spec?.imageName}-${data?.spec?.tag}`
+    if (data.spec.secretName && data.spec.secretName.length < 2)
+      throw new ValidationError('Secret name must be at least 2 characters long')
     if (buildName.length > 128) {
       throw new HttpError(
         400,
@@ -1873,6 +1878,9 @@ export default class OtomiStack {
   }
 
   async createAplService(teamId: string, data: AplServiceRequest): Promise<AplServiceResponse> {
+    if (data.metadata.name.length < 2) throw new ValidationError('Service name must be at least 2 characters long')
+    if (data.spec.cname?.tlsSecretName && data.spec.cname?.tlsSecretName.length < 2)
+      throw new ValidationError('Secret name must be at least 2 characters long')
     try {
       const service = this.repoService.getTeamConfigService(teamId).createService(data)
       await this.saveTeamConfigItem(service)
@@ -2206,6 +2214,7 @@ export default class OtomiStack {
   }
 
   async createAplSealedSecret(teamId: string, data: AplSecretRequest): Promise<AplSecretResponse> {
+    if (data.metadata.name.length < 2) throw new ValidationError('Secret name must be at least 2 characters long')
     try {
       const sealedSecret = this.repoService.getTeamConfigService(teamId).createSealedSecret(data)
       await this.saveTeamSealedSecret(sealedSecret)
@@ -2465,6 +2474,16 @@ export default class OtomiStack {
     }
   }
 
+  private getVersions(currentSha: string): Record<string, string> {
+    const { otomi } = this.getSettings(['otomi'])
+    return {
+      core: otomi?.version ?? env.VERSIONS.core,
+      api: env.VERSIONS.api ?? process.env.npm_package_version,
+      console: env.VERSIONS.console,
+      values: currentSha,
+    }
+  }
+
   async getSession(user: k8sUser): Promise<Session> {
     const rootStack = await getSessionStack()
     const valuesSchema = await getValuesSchema()
@@ -2495,12 +2514,7 @@ export default class OtomiStack {
         objStorageApps: env.OBJ_STORAGE_APPS,
         objStorageRegions,
       },
-      versions: {
-        core: env.VERSIONS.core,
-        api: env.VERSIONS.api ?? process.env.npm_package_version,
-        console: env.VERSIONS.console,
-        values: currentSha,
-      },
+      versions: this.getVersions(currentSha),
       valuesSchema,
     }
     return data
