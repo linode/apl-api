@@ -968,7 +968,7 @@ describe('API authz tests', () => {
     const agentData = {
       kind: 'AkamaiAgent',
       metadata: { name: 'test-agent' },
-      spec: { modelName: 'gpt-4', instructions: 'You are a helpful assistant' },
+      spec: { foundationModel: 'gpt-4', agentInstructions: 'You are a helpful assistant' },
     }
 
     test('platform admin can create agent', async () => {
