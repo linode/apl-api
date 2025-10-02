@@ -401,7 +401,7 @@ export default class OtomiStack {
     return {
       cluster: pick(this.repoService.getCluster(), ['name', 'domainSuffix', 'apiServer', 'provider']),
       dns: pick(this.repoService.getDns(), ['zones']),
-      otomi: pick(this.repoService.getOtomi(), ['hasExternalDNS', 'hasExternalIDP', 'isPreInstalled']),
+      otomi: pick(this.repoService.getOtomi(), ['hasExternalDNS', 'hasExternalIDP', 'isPreInstalled', 'aiEnabled']),
       smtp: pick(this.repoService.getSmtp(), ['smarthost']),
       ingressClassNames: map(this.repoService.getIngress()?.classes, 'className') ?? [],
     } as SettingsInfo
