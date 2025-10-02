@@ -274,6 +274,14 @@ Settings:
             platformAdmin: [read-any, update-any]
             teamAdmin: []
             teamMember: []
+        aiEnabled:
+          type: boolean
+          default: false
+          description: Defines if APL enables AI/ML components
+          x-acl:
+            platformAdmin: [read-any, update-any]
+            teamAdmin: []
+            teamMember: []
         globalPullSecret:
           nullable: true
           title: Global pullsecret
