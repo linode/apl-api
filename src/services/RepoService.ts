@@ -6,6 +6,7 @@ import {
   AplBackupResponse,
   AplBuildResponse,
   AplCodeRepoResponse,
+  AplKnowledgeBaseResponse,
   AplNetpolResponse,
   AplPolicyResponse,
   AplSecretResponse,
@@ -135,6 +136,8 @@ export class RepoService {
       services: [],
       sealedsecrets: [],
       backups: [],
+      knowledgeBases: [],
+      agents: [],
       netpols: [],
       settings: {} as AplTeamSettingsResponse,
       apps: [],
@@ -257,6 +260,10 @@ export class RepoService {
 
   public getAllSealedSecrets(): AplSecretResponse[] {
     return this.getTeamIds().flatMap((teamName) => this.getTeamConfigService(teamName).getSealedSecrets())
+  }
+
+  public getAllKnowledgeBases(): AplKnowledgeBaseResponse[] {
+    return this.getTeamIds().flatMap((teamName) => this.getTeamConfigService(teamName).getKnowledgeBases())
   }
 
   public getAllBackups(): AplBackupResponse[] {

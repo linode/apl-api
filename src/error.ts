@@ -57,6 +57,12 @@ export class ApiNotReadyError extends OtomiError {
   }
 }
 
+export class K8sResourceNotFound extends OtomiError {
+  public constructor(k8sResource: string, err?: string) {
+    super(`Kubernetes resource ${k8sResource} not found`, err)
+    this.code = 404
+  }
+}
 export class HttpError extends OtomiError {
   protected static messages: Record<number, string> = {
     400: 'Bad Request',
