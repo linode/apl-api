@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -12,6 +12,7 @@ import { AlreadyExists, ForbiddenError, HttpError, OtomiError, PublicUrlExists, 
 import getRepo, { getWorktreeRepo, Git } from 'src/git'
 import { cleanSession, getSessionStack } from 'src/middleware'
 import {
+  AplAIModelResponse,
   AplBackupRequest,
   AplBackupResponse,
   AplBuildRequest,
@@ -114,6 +115,7 @@ import { getSealedSecretsPEM, sealedSecretManifest, SealedSecretManifestType } f
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchChartYaml, fetchWorkloadCatalog, NewHelmChartValues, sparseCloneChart } from './utils/workloadUtils'
+import { getAIModels } from './ai/aiModelHandler'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -2110,6 +2112,10 @@ export default class OtomiStack {
     }
 
     return names
+  }
+
+  async getAllAIModels(): Promise<AplAIModelResponse[]> {
+    return getAIModels()
   }
 
   async getK8sServices(teamId: string): Promise<Array<K8sService>> {
