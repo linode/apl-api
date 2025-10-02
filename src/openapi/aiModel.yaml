@@ -1,11 +1,10 @@
-AplAIModel:
+AIModel:
+  type: object
   x-acl:
-    platformAdmin:
-      - read-any
-    teamAdmin:
-      - read
-    teamMember:
-      - read
+    platformAdmin: [read-any]
+    teamAdmin: [read-any]
+    teamMember: [read-any]
+  properties: {}
 
 AplAIModelSpec:
   x-acl:
@@ -38,4 +37,5 @@ AplAIModelSpec:
       example: 4096
   required:
     - modelEndpoint
+    - modelType
   type: object

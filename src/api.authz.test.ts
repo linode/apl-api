@@ -769,4 +769,37 @@ describe('API authz tests', () => {
         .expect('Content-Type', /json/)
     })
   })
+
+  describe('AI Models endpoint tests', () => {
+    test('platform admin can get AI models', async () => {
+      jest.spyOn(otomiStack, 'getAllAIModels').mockResolvedValue([])
+      await agent
+        .get('/alpha/ai/models')
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team admin can get AI models', async () => {
+      jest.spyOn(otomiStack, 'getAllAIModels').mockResolvedValue([])
+      await agent
+        .get('/alpha/ai/models')
+        .set('Authorization', `Bearer ${teamAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can get AI models', async () => {
+      jest.spyOn(otomiStack, 'getAllAIModels').mockResolvedValue([])
+      await agent
+        .get('/alpha/ai/models')
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('anonymous user cannot get AI models', async () => {
+      await agent.get('/alpha/ai/models').expect(401)
+    })
+  })
 })
