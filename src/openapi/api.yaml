@@ -2492,7 +2492,7 @@ paths:
     get:
       operationId: getAplKnowledgeBases
       description: Get knowledge bases from a given team
-      x-aclSchema: AplKnowledgeBase
+      x-aclSchema: KnowledgeBase
       responses:
         '200':
           description: Successfully obtained knowledge bases
@@ -2505,7 +2505,7 @@ paths:
     post:
       operationId: createAplKnowledgeBase
       description: Create a team knowledge base
-      x-aclSchema: AplKnowledgeBase
+      x-aclSchema: KnowledgeBase
       requestBody:
         content:
           application/json:
@@ -2529,7 +2529,7 @@ paths:
     get:
       operationId: getAplKnowledgeBase
       description: Get a knowledge base from a given team
-      x-aclSchema: AplKnowledgeBase
+      x-aclSchema: KnowledgeBase
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -2541,7 +2541,7 @@ paths:
     put:
       operationId: editAplKnowledgeBase
       description: Edit a knowledge base from a given team
-      x-aclSchema: AplKnowledgeBase
+      x-aclSchema: KnowledgeBase
       requestBody:
         content:
           application/json:
@@ -2572,7 +2572,7 @@ paths:
     get:
       operationId: getAplAgents
       description: Get agents from a given team
-      x-aclSchema: AplAgent
+      x-aclSchema: Agent
       responses:
         '200':
           description: Successfully obtained agents
@@ -2585,7 +2585,7 @@ paths:
     post:
       operationId: createAplAgent
       description: Create a team agent
-      x-aclSchema: AplAgent
+      x-aclSchema: Agent
       requestBody:
         content:
           application/json:
@@ -2609,7 +2609,7 @@ paths:
     get:
       operationId: getAplAgent
       description: Get an agent from a given team
-      x-aclSchema: AplAgent
+      x-aclSchema: Agent
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -2621,7 +2621,7 @@ paths:
     put:
       operationId: editAplAgent
       description: Edit an agent from a given team
-      x-aclSchema: AplAgent
+      x-aclSchema: Agent
       requestBody:
         content:
           application/json:
@@ -2640,7 +2640,7 @@ paths:
     delete:
       operationId: deleteAplAgent
       description: Delete an agent from a given team
-      x-aclSchema: AplAgent
+      x-aclSchema: Agent
       responses:
         <<: *DefaultGetResponses
         '200':
@@ -2844,7 +2844,7 @@ components:
       properties:
         kind:
           type: string
-          enum: [AplAgent]
+          enum: [AkamaiAgent]
         spec:
           $ref: 'agent.yaml#/AplAgentSpec'
       required:
@@ -2928,7 +2928,7 @@ components:
       properties:
         kind:
           type: string
-          enum: [AplKnowledgeBase]
+          enum: [AkamaiKnowledgeBase]
         spec:
           $ref: 'knowledgeBase.yaml#/AplKnowledgeBaseSpec'
       required:
@@ -3071,6 +3071,8 @@ components:
         - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
 
+    Agent:
+      $ref: 'agent.yaml#/Agent'
     App:
       $ref: 'app.yaml#/App'
     AppList:
@@ -3087,6 +3089,8 @@ components:
       $ref: 'codeRepo.yaml#/CodeRepo'
     K8sService:
       $ref: 'k8s.yaml#/K8sService'
+    KnowledgeBase:
+      $ref: 'knowledgeBase.yaml#/KnowledgeBase'
     Kubecfg:
       $ref: 'kubecfg.yaml#/Kubecfg'
     Netpol:
