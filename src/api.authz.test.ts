@@ -963,4 +963,165 @@ describe('API authz tests', () => {
       await agent.post('/alpha/teams/team1/kb').send(kbData).expect(401)
     })
   })
+
+  describe('Agent endpoint tests', () => {
+    const agentData = {
+      kind: 'AkamaiAgent',
+      metadata: { name: 'test-agent' },
+      spec: { modelName: 'gpt-4', instructions: 'You are a helpful assistant' },
+    }
+
+    test('platform admin can create agent', async () => {
+      jest.spyOn(otomiStack, 'createAplAgent').mockResolvedValue({} as any)
+      await agent
+        .post('/alpha/teams/team1/agents')
+        .send(agentData)
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team admin can create agent', async () => {
+      jest.spyOn(otomiStack, 'createAplAgent').mockResolvedValue({} as any)
+      await agent
+        .post('/alpha/teams/team1/agents')
+        .send(agentData)
+        .set('Authorization', `Bearer ${teamAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can create agent', async () => {
+      jest.spyOn(otomiStack, 'createAplAgent').mockResolvedValue({} as any)
+      await agent
+        .post('/alpha/teams/team1/agents')
+        .send(agentData)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('platform admin can get agents', async () => {
+      jest.spyOn(otomiStack, 'getAplAgents').mockReturnValue([])
+      await agent
+        .get('/alpha/teams/team1/agents')
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team admin can get agents', async () => {
+      jest.spyOn(otomiStack, 'getAplAgents').mockReturnValue([])
+      await agent
+        .get('/alpha/teams/team1/agents')
+        .set('Authorization', `Bearer ${teamAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can get agents', async () => {
+      jest.spyOn(otomiStack, 'getAplAgents').mockReturnValue([])
+      await agent
+        .get('/alpha/teams/team1/agents')
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('platform admin can get specific agent', async () => {
+      jest.spyOn(otomiStack, 'getAplAgent').mockResolvedValue({} as any)
+      await agent
+        .get('/alpha/teams/team1/agents/test-agent')
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team admin can get specific agent', async () => {
+      jest.spyOn(otomiStack, 'getAplAgent').mockResolvedValue({} as any)
+      await agent
+        .get('/alpha/teams/team1/agents/test-agent')
+        .set('Authorization', `Bearer ${teamAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can get specific agent', async () => {
+      jest.spyOn(otomiStack, 'getAplAgent').mockResolvedValue({} as any)
+      await agent
+        .get('/alpha/teams/team1/agents/test-agent')
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('platform admin can update agent', async () => {
+      jest.spyOn(otomiStack, 'editAplAgent').mockResolvedValue({} as any)
+      await agent
+        .put('/alpha/teams/team1/agents/test-agent')
+        .send(agentData)
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team admin can update agent', async () => {
+      jest.spyOn(otomiStack, 'editAplAgent').mockResolvedValue({} as any)
+      await agent
+        .put('/alpha/teams/team1/agents/test-agent')
+        .send(agentData)
+        .set('Authorization', `Bearer ${teamAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can update agent', async () => {
+      jest.spyOn(otomiStack, 'editAplAgent').mockResolvedValue({} as any)
+      await agent
+        .put('/alpha/teams/team1/agents/test-agent')
+        .send(agentData)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('platform admin can delete agent', async () => {
+      jest.spyOn(otomiStack, 'deleteAplAgent').mockResolvedValue()
+      await agent
+        .delete('/alpha/teams/team1/agents/test-agent')
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team admin can delete agent', async () => {
+      jest.spyOn(otomiStack, 'deleteAplAgent').mockResolvedValue()
+      await agent
+        .delete('/alpha/teams/team1/agents/test-agent')
+        .set('Authorization', `Bearer ${teamAdminToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can delete agent', async () => {
+      jest.spyOn(otomiStack, 'deleteAplAgent').mockResolvedValue()
+      await agent
+        .delete('/alpha/teams/team1/agents/test-agent')
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member cannot access other team agents', async () => {
+      await agent.get('/alpha/teams/team2/agents').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
+    })
+
+    test('anonymous user cannot access agents', async () => {
+      await agent.get('/alpha/teams/team1/agents').expect(401)
+    })
+
+    test('anonymous user cannot create agents', async () => {
+      await agent.post('/alpha/teams/team1/agents').send(agentData).expect(401)
+    })
+  })
 })
