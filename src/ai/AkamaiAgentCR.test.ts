@@ -49,7 +49,12 @@ describe('AkamaiAgentCR', () => {
       expect(agentCR.metadata.labels?.['apl.io/teamId']).toBe('team-123')
       expect(agentCR.spec.foundationModel).toBe('gpt-4')
       expect(agentCR.spec.systemPrompt).toBe('You are a helpful assistant')
-      expect(agentCR.spec.knowledgeBase).toBe('test-kb')
+      expect(agentCR.spec.tools).toEqual([
+        {
+          type: 'knowledgeBase',
+          name: 'test-kb',
+        },
+      ])
     })
 
     test('should set teamId label and not merge custom labels', () => {
@@ -73,7 +78,7 @@ describe('AkamaiAgentCR', () => {
 
       const agentCR = new AkamaiAgentCR('team-123', 'test-agent', requestWithoutKB)
 
-      expect(agentCR.spec.knowledgeBase).toBeUndefined()
+      expect(agentCR.spec.tools).toBeUndefined()
     })
   })
 

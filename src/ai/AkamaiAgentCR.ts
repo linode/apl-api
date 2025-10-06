@@ -19,7 +19,12 @@ export class AkamaiAgentCR {
   public spec: {
     foundationModel: string
     systemPrompt: string
-    knowledgeBase?: string
+    tools?: Array<{
+      type: string
+      name: string
+      description?: string
+      endpoint?: string
+    }>
   }
 
   constructor(teamId: string, agentName: string, request: AplAgentRequest) {
@@ -38,7 +43,15 @@ export class AkamaiAgentCR {
     this.spec = {
       foundationModel: request.spec.foundationModel,
       systemPrompt: request.spec.agentInstructions,
-      knowledgeBase: request.spec.knowledgeBase,
+      tools: request.spec.knowledgeBase
+        ? [
+            {
+              type: 'knowledgeBase',
+              name: request.spec.knowledgeBase,
+              description: `Search the ${request.spec.knowledgeBase} knowledge base for relevant information. Use this when you need factual information, documentation, or specific details stored in the knowledge base.`,
+            },
+          ]
+        : undefined,
     }
   }
 
@@ -54,6 +67,9 @@ export class AkamaiAgentCR {
 
   // Transform to API response format
   toApiResponse(teamId: string): AplAgentResponse {
+    // Extract knowledgeBase from tools array (find first knowledgeBase tool)
+    const knowledgeBaseTool = this.spec.tools?.find((tool) => tool.type === 'knowledgeBase')
+
     return {
       kind: 'AkamaiAgent',
       metadata: {
@@ -66,7 +82,7 @@ export class AkamaiAgentCR {
       spec: {
         foundationModel: this.spec.foundationModel,
         agentInstructions: this.spec.systemPrompt,
-        knowledgeBase: this.spec.knowledgeBase || '',
+        knowledgeBase: knowledgeBaseTool?.name || '',
       },
       status: {
         conditions: [
