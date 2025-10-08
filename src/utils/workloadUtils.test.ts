@@ -411,8 +411,8 @@ describe('sparseCloneChart', () => {
     // Verify commit and push were called
     expect(mockGit.add).toHaveBeenCalledWith('.')
     expect(mockGit.commit).toHaveBeenCalledWith(`Add ${chartTargetDirName} helm chart`)
-    expect(mockGit.pull).toHaveBeenCalledWith('origin', 'main', { '--rebase': null })
-    expect(mockGit.push).toHaveBeenCalledWith('origin', 'main')
+    expect(mockGit.pull).toHaveBeenCalledWith('origin', 'refs/heads/main', { '--rebase': null })
+    expect(mockGit.push).toHaveBeenCalledWith('origin', 'refs/heads/main')
   })
 
   test('handles Gitea URLs by encoding credentials', async () => {
@@ -801,8 +801,8 @@ describe('chartRepo', () => {
 
     expect(mockGit.add).toHaveBeenCalledWith('.')
     expect(mockGit.commit).toHaveBeenCalledWith(`Add ${chartName} helm chart`)
-    expect(mockGit.pull).toHaveBeenCalledWith('origin', 'main', { '--rebase': null })
-    expect(mockGit.push).toHaveBeenCalledWith('origin', 'main')
+    expect(mockGit.pull).toHaveBeenCalledWith('origin', 'refs/heads/main', { '--rebase': null })
+    expect(mockGit.push).toHaveBeenCalledWith('origin', 'refs/heads/main')
   })
 })
 
