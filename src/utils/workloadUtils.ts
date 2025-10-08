@@ -239,8 +239,8 @@ export class chartRepo {
   async commitAndPush(chartName: string) {
     await this.git.add('.')
     await this.git.commit(`Add ${chartName} helm chart`)
-    await this.git.pull('origin', 'main', { '--rebase': null })
-    await this.git.push('origin', 'main')
+    await this.git.pull('origin', 'refs/heads/main', { '--rebase': null })
+    await this.git.push('origin', 'refs/heads/main')
   }
 }
 
