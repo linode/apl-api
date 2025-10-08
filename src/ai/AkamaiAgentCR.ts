@@ -18,7 +18,7 @@ export class AkamaiAgentCR {
   }
   public spec: {
     foundationModel: string
-    systemPrompt: string
+    agentInstructions: string
     tools?: Array<{
       type: string
       name: string
@@ -42,16 +42,17 @@ export class AkamaiAgentCR {
     }
     this.spec = {
       foundationModel: request.spec.foundationModel,
-      systemPrompt: request.spec.agentInstructions,
-      tools: request.spec.knowledgeBase
-        ? [
-            {
-              type: 'knowledgeBase',
-              name: request.spec.knowledgeBase,
-              description: `Search the ${request.spec.knowledgeBase} knowledge base for relevant information. Use this when you need factual information, documentation, or specific details stored in the knowledge base.`,
-            },
-          ]
-        : undefined,
+      agentInstructions: request.spec.agentInstructions,
+      tools: request.spec.tools?.map((tool) => ({
+        type: tool.type,
+        name: tool.name,
+        description:
+          tool.description ||
+          (tool.type === 'knowledgeBase'
+            ? `Search the ${tool.name} knowledge base for relevant information. Use this when you need factual information, documentation, or specific details stored in the knowledge base.`
+            : undefined),
+        endpoint: tool.endpoint,
+      })),
     }
   }
 
@@ -67,9 +68,6 @@ export class AkamaiAgentCR {
 
   // Transform to API response format
   toApiResponse(teamId: string): AplAgentResponse {
-    // Extract knowledgeBase from tools array (find first knowledgeBase tool)
-    const knowledgeBaseTool = this.spec.tools?.find((tool) => tool.type === 'knowledgeBase')
-
     return {
       kind: 'AkamaiAgent',
       metadata: {
@@ -81,8 +79,13 @@ export class AkamaiAgentCR {
       },
       spec: {
         foundationModel: this.spec.foundationModel,
-        agentInstructions: this.spec.systemPrompt,
-        knowledgeBase: knowledgeBaseTool?.name || '',
+        agentInstructions: this.spec.agentInstructions,
+        tools: this.spec.tools?.map((tool) => ({
+          type: tool.type,
+          name: tool.name,
+          description: tool.description,
+          endpoint: tool.endpoint,
+        })),
       },
       status: {
         conditions: [

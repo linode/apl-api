@@ -19,10 +19,6 @@ Agent:
 AplAgentSpec:
   type: object
   properties:
-    knowledgeBase:
-      type: string
-      description: Name of the knowledge base to use
-      example: "company-docs"
     foundationModel:
       type: string
       description: Name of the foundation model
@@ -31,6 +27,30 @@ AplAgentSpec:
       type: string
       description: Custom instructions for the agent
       example: "You are a helpful assistant that provides concise answers."
+    tools:
+      type: array
+      description: Tools available to the agent
+      items:
+        type: object
+        properties:
+          type:
+            type: string
+            description: Type of the tool
+            example: "knowledgeBase"
+          name:
+            type: string
+            description: Name of the tool resource
+            example: "company-docs"
+          description:
+            type: string
+            description: Description of what the tool does
+            example: "Search the company-docs knowledge base for relevant information"
+          endpoint:
+            type: string
+            description: Optional endpoint URL for the tool
+        required:
+          - type
+          - name
   required:
     - foundationModel
     - agentInstructions
