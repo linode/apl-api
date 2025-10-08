@@ -83,8 +83,8 @@ export class AkamaiAgentCR {
         tools: this.spec.tools?.map((tool) => ({
           type: tool.type,
           name: tool.name,
-          description: tool.description,
-          endpoint: tool.endpoint,
+          ...(tool.description && { description: tool.description }),
+          ...(tool.endpoint && { endpoint: tool.endpoint }),
         })),
       },
       status: {
