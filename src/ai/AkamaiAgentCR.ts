@@ -18,7 +18,7 @@ export class AkamaiAgentCR {
   }
   public spec: {
     foundationModel: string
-    systemPrompt: string
+    agentInstructions: string
     knowledgeBase?: string
   }
 
@@ -37,7 +37,7 @@ export class AkamaiAgentCR {
     }
     this.spec = {
       foundationModel: request.spec.foundationModel,
-      systemPrompt: request.spec.agentInstructions,
+      agentInstructions: request.spec.agentInstructions,
       knowledgeBase: request.spec.knowledgeBase,
     }
   }
@@ -65,7 +65,7 @@ export class AkamaiAgentCR {
       },
       spec: {
         foundationModel: this.spec.foundationModel,
-        agentInstructions: this.spec.systemPrompt,
+        agentInstructions: this.spec.agentInstructions,
         knowledgeBase: this.spec.knowledgeBase || '',
       },
       status: {

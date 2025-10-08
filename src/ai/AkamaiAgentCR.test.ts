@@ -48,7 +48,7 @@ describe('AkamaiAgentCR', () => {
       expect(agentCR.metadata.namespace).toBe('team-team-123')
       expect(agentCR.metadata.labels?.['apl.io/teamId']).toBe('team-123')
       expect(agentCR.spec.foundationModel).toBe('gpt-4')
-      expect(agentCR.spec.systemPrompt).toBe('You are a helpful assistant')
+      expect(agentCR.spec.agentInstructions).toBe('You are a helpful assistant')
       expect(agentCR.spec.knowledgeBase).toBe('test-kb')
     })
 
@@ -202,7 +202,7 @@ describe('AkamaiAgentCR', () => {
         apiVersion: 'akamai.com/v1',
         kind: 'Agent',
         metadata: { name: 'existing-agent', namespace: 'team-456' },
-        spec: { foundationModel: 'gpt-3.5', systemPrompt: 'Test prompt' },
+        spec: { foundationModel: 'gpt-3.5', agentInstructions: 'Test prompt' },
       }
 
       const result = AkamaiAgentCR.fromCR(crObject)
