@@ -52,10 +52,10 @@ describe('aiModelHandler', () => {
       expect(result).toEqual({
         kind: 'AplAIModel',
         metadata: {
-          name: 'gpt-4-deployment',
+          name: 'gpt-4',
         },
         spec: {
-          displayName: 'gpt-4-deployment',
+          displayName: 'gpt-4',
           modelEndpoint: 'http://gpt-4-deployment.ai-models.svc.cluster.local',
           modelType: 'foundation',
           modelDimension: 1536,
@@ -97,8 +97,8 @@ describe('aiModelHandler', () => {
 
       const result = transformK8sDeploymentToAplAIModel(deploymentWithModelName)
 
-      expect(result.metadata.name).toBe('some-deployment-name')
-      expect(result.spec.displayName).toBe('some-deployment-name')
+      expect(result.metadata.name).toBe('custom-model-name')
+      expect(result.spec.displayName).toBe('custom-model-name')
     })
 
     test('should use modelName from labels when deployment name is missing', () => {
@@ -231,7 +231,7 @@ describe('aiModelHandler', () => {
 
       const result = transformK8sDeploymentToAplAIModel(deploymentWithoutMetadata)
 
-      expect(result.metadata.name).toBeUndefined()
+      expect(result.metadata.name).toBe('')
       expect(result.spec.modelEndpoint).toBe('http://undefined.undefined.svc.cluster.local')
     })
   })
@@ -244,7 +244,7 @@ describe('aiModelHandler', () => {
 
       expect(result).toHaveLength(1)
       expect(result[0].kind).toBe('AplAIModel')
-      expect(result[0].metadata.name).toBe('gpt-4-deployment')
+      expect(result[0].metadata.name).toBe('gpt-4')
       expect(mockedGetDeploymentsWithAIModelLabels).toHaveBeenCalledTimes(1)
     })
 
@@ -276,8 +276,8 @@ describe('aiModelHandler', () => {
       const result = await getAIModels()
 
       expect(result).toHaveLength(2)
-      expect(result[0].metadata.name).toBe('gpt-4-deployment')
-      expect(result[1].metadata.name).toBe('embedding-model')
+      expect(result[0].metadata.name).toBe('gpt-4')
+      expect(result[1].metadata.name).toBe('text-embedding-ada-002')
     })
 
     test('should propagate errors from k8s module', async () => {

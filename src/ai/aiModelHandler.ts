@@ -14,7 +14,7 @@ function getConditions(deployment: V1Deployment) {
 
 export function transformK8sDeploymentToAplAIModel(deployment: V1Deployment): AplAIModelResponse {
   const labels = deployment.metadata?.labels || {}
-  const modelName = deployment.metadata?.name || labels.modelName
+  const modelName = labels.modelName || deployment.metadata?.name || ''
 
   // Convert K8s deployment conditions to schema format
   const conditions = getConditions(deployment)
