@@ -1,5 +1,23 @@
 import { CoreV1Api } from '@kubernetes/client-node'
 import { getCloudttyActiveTime, getLogTime } from './k8s_operations'
+
+// Mock the KubeConfig
+jest.mock('@kubernetes/client-node', () => {
+  const actual = jest.requireActual('@kubernetes/client-node')
+  return {
+    ...actual,
+    KubeConfig: jest.fn().mockImplementation(() => ({
+      loadFromDefault: jest.fn(),
+      makeApiClient: jest.fn((apiClientType) => {
+        if (apiClientType === actual.CoreV1Api) {
+          return new actual.CoreV1Api()
+        }
+        return {}
+      }),
+    })),
+  }
+})
+
 describe('getCloudttyLogTime', () => {
   test('should return the timestamp for a valid log timestamp', () => {
     const timestampMatch = ['[2023/10/10 00:00:00:0000]', '2023/10/10 00:00:00:0000']
@@ -17,7 +35,7 @@ describe('getCloudttyLogTime', () => {
 
 describe('getCloudttyActiveTime', () => {
   afterEach(() => {
-    jest.restoreAllMocks()
+    jest.clearAllMocks()
   })
 
   test('should return the time difference if no clients', async () => {
