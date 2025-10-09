@@ -335,9 +335,16 @@ export class TeamConfigService {
       throw new AlreadyExists(`Agent[${name}] already exists.`)
     }
 
-    // Validate that knowledgeBase exists if specified
-    if (agent.spec.knowledgeBase && !this.validateKnowledgeBaseExists(agent.spec.knowledgeBase)) {
-      throw new ValidationError(`KnowledgeBase[${agent.spec.knowledgeBase}] does not exist.`)
+    // Validate that knowledgeBase exists if specified in tools
+    if (agent.spec.tools) {
+      for (const tool of agent.spec.tools) {
+        if (tool.type === 'knowledgeBase' && tool.name) {
+          const toolName = tool.name as string
+          if (!this.validateKnowledgeBaseExists(toolName)) {
+            throw new ValidationError(`KnowledgeBase[${toolName}] does not exist.`)
+          }
+        }
+      }
     }
 
     const newAgent = this.createAplObject(name, agent) as AplAgentResponse
@@ -367,18 +374,32 @@ export class TeamConfigService {
 
   public updateAgent(name: string, updates: AplAgentRequest): AplAgentResponse {
     const agent = this.getAgent(name)
-    // Validate that knowledgeBase exists if specified
-    if (updates.spec.knowledgeBase && !this.validateKnowledgeBaseExists(updates.spec.knowledgeBase)) {
-      throw new ValidationError(`KnowledgeBase[${agent.spec.knowledgeBase}] does not exist.`)
+    // Validate that knowledgeBase exists if specified in tools
+    if (updates.spec.tools) {
+      for (const tool of updates.spec.tools) {
+        if (tool.type === 'knowledgeBase' && tool.name) {
+          const toolName = tool.name as string
+          if (!this.validateKnowledgeBaseExists(toolName)) {
+            throw new ValidationError(`KnowledgeBase[${toolName}] does not exist.`)
+          }
+        }
+      }
     }
     return updateAplObject(agent, updates) as AplAgentResponse
   }
 
   public patchAgent(name: string, updates: DeepPartial<AplAgentRequest>): AplAgentResponse {
     const agent = this.getAgent(name)
-    // Validate that knowledgeBase exists if specified
-    if (updates.spec && updates.spec.knowledgeBase && !this.validateKnowledgeBaseExists(updates.spec.knowledgeBase)) {
-      throw new ValidationError(`KnowledgeBase[${agent.spec.knowledgeBase}] does not exist.`)
+    // Validate that knowledgeBase exists if specified in tools
+    if (updates.spec?.tools) {
+      for (const tool of updates.spec.tools) {
+        if (tool && tool.type === 'knowledgeBase' && typeof tool.name === 'string') {
+          const toolName = tool.name as string
+          if (!this.validateKnowledgeBaseExists(toolName)) {
+            throw new ValidationError(`KnowledgeBase[${toolName}] does not exist.`)
+          }
+        }
+      }
     }
     const mergeObj = getAplMergeObject(updates)
     return merge(agent, mergeObj)
