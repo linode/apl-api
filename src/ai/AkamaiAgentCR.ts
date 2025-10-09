@@ -18,8 +18,13 @@ export class AkamaiAgentCR {
   }
   public spec: {
     foundationModel: string
-    systemPrompt: string
-    knowledgeBase?: string
+    agentInstructions: string
+    tools?: Array<{
+      type: string
+      name: string
+      description?: string
+      endpoint?: string
+    }>
   }
 
   constructor(teamId: string, agentName: string, request: AplAgentRequest) {
@@ -37,8 +42,17 @@ export class AkamaiAgentCR {
     }
     this.spec = {
       foundationModel: request.spec.foundationModel,
-      systemPrompt: request.spec.agentInstructions,
-      knowledgeBase: request.spec.knowledgeBase,
+      agentInstructions: request.spec.agentInstructions,
+      tools: request.spec.tools?.map((tool) => ({
+        type: tool.type,
+        name: tool.name,
+        description:
+          tool.description ||
+          (tool.type === 'knowledgeBase'
+            ? `Search the ${tool.name} knowledge base for relevant information. Use this when you need factual information, documentation, or specific details stored in the knowledge base.`
+            : undefined),
+        endpoint: tool.endpoint,
+      })),
     }
   }
 
@@ -65,8 +79,13 @@ export class AkamaiAgentCR {
       },
       spec: {
         foundationModel: this.spec.foundationModel,
-        agentInstructions: this.spec.systemPrompt,
-        knowledgeBase: this.spec.knowledgeBase || '',
+        agentInstructions: this.spec.agentInstructions,
+        tools: this.spec.tools?.map((tool) => ({
+          type: tool.type,
+          name: tool.name,
+          ...(tool.description && { description: tool.description }),
+          ...(tool.endpoint && { endpoint: tool.endpoint }),
+        })),
       },
       status: {
         conditions: [

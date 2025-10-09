@@ -30,7 +30,12 @@ describe('AkamaiAgentCR', () => {
     spec: {
       foundationModel: 'gpt-4',
       agentInstructions: 'You are a helpful assistant',
-      knowledgeBase: 'test-kb',
+      tools: [
+        {
+          type: 'knowledgeBase',
+          name: 'test-kb',
+        },
+      ],
     },
   }
 
@@ -48,8 +53,16 @@ describe('AkamaiAgentCR', () => {
       expect(agentCR.metadata.namespace).toBe('team-team-123')
       expect(agentCR.metadata.labels?.['apl.io/teamId']).toBe('team-123')
       expect(agentCR.spec.foundationModel).toBe('gpt-4')
-      expect(agentCR.spec.systemPrompt).toBe('You are a helpful assistant')
-      expect(agentCR.spec.knowledgeBase).toBe('test-kb')
+      expect(agentCR.spec.agentInstructions).toBe('You are a helpful assistant')
+      expect(agentCR.spec.tools).toEqual([
+        {
+          type: 'knowledgeBase',
+          name: 'test-kb',
+          description:
+            'Search the test-kb knowledge base for relevant information. Use this when you need factual information, documentation, or specific details stored in the knowledge base.',
+          endpoint: undefined,
+        },
+      ])
     })
 
     test('should set teamId label and not merge custom labels', () => {
@@ -62,18 +75,45 @@ describe('AkamaiAgentCR', () => {
       expect(agentCR.metadata.labels?.['custom-label']).toBeUndefined()
     })
 
-    test('should handle request without knowledgeBase', () => {
-      const requestWithoutKB = {
+    test('should handle request without tools', () => {
+      const requestWithoutTools = {
         ...mockAgentRequest,
         spec: {
           ...mockAgentRequest.spec,
-          knowledgeBase: undefined,
+          tools: undefined,
         },
       }
 
-      const agentCR = new AkamaiAgentCR('team-123', 'test-agent', requestWithoutKB)
+      const agentCR = new AkamaiAgentCR('team-123', 'test-agent', requestWithoutTools)
 
-      expect(agentCR.spec.knowledgeBase).toBeUndefined()
+      expect(agentCR.spec.tools).toBeUndefined()
+    })
+
+    test('should handle tools with custom description', () => {
+      const requestWithDescription = {
+        ...mockAgentRequest,
+        spec: {
+          ...mockAgentRequest.spec,
+          tools: [
+            {
+              type: 'knowledgeBase',
+              name: 'test-kb',
+              description: 'Custom description for the knowledge base',
+            },
+          ],
+        },
+      }
+
+      const agentCR = new AkamaiAgentCR('team-123', 'test-agent', requestWithDescription)
+
+      expect(agentCR.spec.tools).toEqual([
+        {
+          type: 'knowledgeBase',
+          name: 'test-kb',
+          description: 'Custom description for the knowledge base',
+          endpoint: undefined,
+        },
+      ])
     })
   })
 
@@ -108,7 +148,15 @@ describe('AkamaiAgentCR', () => {
         spec: {
           foundationModel: 'gpt-4',
           agentInstructions: 'You are a helpful assistant',
-          knowledgeBase: 'test-kb',
+          tools: [
+            {
+              type: 'knowledgeBase',
+              name: 'test-kb',
+              description:
+                'Search the test-kb knowledge base for relevant information. Use this when you need factual information, documentation, or specific details stored in the knowledge base.',
+              endpoint: undefined,
+            },
+          ],
         },
         status: {
           conditions: [
@@ -123,19 +171,48 @@ describe('AkamaiAgentCR', () => {
       })
     })
 
-    test('should handle empty knowledgeBase in response', () => {
-      const requestWithoutKB = {
+    test('should handle empty tools array in response', () => {
+      const requestWithoutTools = {
         ...mockAgentRequest,
         spec: {
           ...mockAgentRequest.spec,
-          knowledgeBase: undefined,
+          tools: undefined,
         },
       }
 
-      const agentCR = new AkamaiAgentCR('team-123', 'test-agent', requestWithoutKB)
+      const agentCR = new AkamaiAgentCR('team-123', 'test-agent', requestWithoutTools)
       const response = agentCR.toApiResponse('team-123')
 
-      expect(response.spec.knowledgeBase).toBe('')
+      expect(response.spec.tools).toBeUndefined()
+    })
+
+    test('should preserve custom description and endpoint in response', () => {
+      const requestWithDetails = {
+        ...mockAgentRequest,
+        spec: {
+          ...mockAgentRequest.spec,
+          tools: [
+            {
+              type: 'knowledgeBase',
+              name: 'test-kb',
+              description: 'Custom KB description',
+              endpoint: 'https://api.example.com/kb',
+            },
+          ],
+        },
+      }
+
+      const agentCR = new AkamaiAgentCR('team-123', 'test-agent', requestWithDetails)
+      const response = agentCR.toApiResponse('team-123')
+
+      expect(response.spec.tools).toEqual([
+        {
+          type: 'knowledgeBase',
+          name: 'test-kb',
+          description: 'Custom KB description',
+          endpoint: 'https://api.example.com/kb',
+        },
+      ])
     })
   })
 
@@ -202,7 +279,7 @@ describe('AkamaiAgentCR', () => {
         apiVersion: 'akamai.com/v1',
         kind: 'Agent',
         metadata: { name: 'existing-agent', namespace: 'team-456' },
-        spec: { foundationModel: 'gpt-3.5', systemPrompt: 'Test prompt' },
+        spec: { foundationModel: 'gpt-3.5', agentInstructions: 'Test prompt' },
       }
 
       const result = AkamaiAgentCR.fromCR(crObject)
