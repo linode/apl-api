@@ -1,5 +1,5 @@
 import { V1Deployment } from '@kubernetes/client-node'
-import { transformK8sDeploymentToAplAIModel, getAIModels } from './aiModelHandler'
+import { getAIModels, transformK8sDeploymentToAplAIModel } from './aiModelHandler'
 import * as k8s from './k8s'
 
 // Mock the k8s module
@@ -14,7 +14,9 @@ describe('aiModelHandler', () => {
       name: 'gpt-4-deployment',
       namespace: 'ai-models',
       labels: {
+        app: 'gpt-4',
         modelName: 'gpt-4',
+        modelNameTitle: 'GPT-4o-mini',
         modelType: 'foundation',
         modelDimension: '1536',
       },
@@ -55,8 +57,8 @@ describe('aiModelHandler', () => {
           name: 'gpt-4',
         },
         spec: {
-          displayName: 'gpt-4',
-          modelEndpoint: 'http://gpt-4-deployment.ai-models.svc.cluster.local',
+          displayName: 'GPT-4o-mini',
+          modelEndpoint: 'http://gpt-4.ai-models.svc.cluster.local/openai/v1',
           modelType: 'foundation',
           modelDimension: 1536,
         },
@@ -98,7 +100,7 @@ describe('aiModelHandler', () => {
       const result = transformK8sDeploymentToAplAIModel(deploymentWithModelName)
 
       expect(result.metadata.name).toBe('custom-model-name')
-      expect(result.spec.displayName).toBe('custom-model-name')
+      expect(result.spec.displayName).toBe('GPT-4o-mini')
     })
 
     test('should use modelName from labels when deployment name is missing', () => {
@@ -117,7 +119,7 @@ describe('aiModelHandler', () => {
       const result = transformK8sDeploymentToAplAIModel(deploymentWithoutName)
 
       expect(result.metadata.name).toBe('custom-model-name')
-      expect(result.spec.displayName).toBe('custom-model-name')
+      expect(result.spec.displayName).toBe('GPT-4o-mini')
     })
 
     test('should handle deployment without labels', () => {
@@ -164,7 +166,7 @@ describe('aiModelHandler', () => {
 
       const result = transformK8sDeploymentToAplAIModel(deploymentWithoutNamespace)
 
-      expect(result.spec.modelEndpoint).toBe('http://test-deployment.undefined.svc.cluster.local')
+      expect(result.spec.modelEndpoint).toBe('http://gpt-4.undefined.svc.cluster.local/openai/v1')
     })
 
     test('should handle deployment without status conditions', () => {
@@ -232,7 +234,7 @@ describe('aiModelHandler', () => {
       const result = transformK8sDeploymentToAplAIModel(deploymentWithoutMetadata)
 
       expect(result.metadata.name).toBe('')
-      expect(result.spec.modelEndpoint).toBe('http://undefined.undefined.svc.cluster.local')
+      expect(result.spec.modelEndpoint).toBe('http://.undefined.svc.cluster.local/openai/v1')
     })
   })
 
