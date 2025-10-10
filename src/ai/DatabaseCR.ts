@@ -33,7 +33,7 @@ export class DatabaseCR {
       name: knowledgeBaseName,
       owner: env.DB_OWNER,
       cluster: { name: clusterName },
-      extensions: [{ name: 'pgvector' }, { name: 'pg_stat_statements' }],
+      extensions: [{ name: 'vector' }, { name: 'pg_stat_statements' }],
     }
   }
 
