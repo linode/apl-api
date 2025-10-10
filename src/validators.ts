@@ -96,7 +96,7 @@ export const GIT_PUSH_RETRIES = num({
 })
 export const PIPELINE_NAME = str({
   desc: 'The name of the current pipeline',
-  default: 'doc-ingestion-pipeline',
+  default: 'doc-ingest-pipeline',
 })
 export const KNOWLEDGE_BASE_API_VERSION = str({
   desc: 'The API version for AkamaiKnowledgeBase custom resources',

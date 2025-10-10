@@ -14,7 +14,8 @@ function getConditions(deployment: V1Deployment) {
 
 export function transformK8sDeploymentToAplAIModel(deployment: V1Deployment): AplAIModelResponse {
   const labels = deployment.metadata?.labels || {}
-  const modelName = labels.modelName || deployment.metadata?.name || ''
+  const modelName = labels.modelNameTitle || deployment.metadata?.name || ''
+  const endpointName = labels.app || deployment.metadata?.name || ''
 
   // Convert K8s deployment conditions to schema format
   const conditions = getConditions(deployment)
@@ -26,7 +27,7 @@ export function transformK8sDeploymentToAplAIModel(deployment: V1Deployment): Ap
     },
     spec: {
       displayName: modelName,
-      modelEndpoint: `http://${deployment.metadata?.name}.${deployment.metadata?.namespace}.svc.cluster.local`,
+      modelEndpoint: `http://${endpointName}.${deployment.metadata?.namespace}.svc.cluster.local/openai/v1`,
       modelType: labels.modelType as 'foundation' | 'embedding',
       ...(labels.modelDimension && { modelDimension: parseInt(labels.modelDimension, 10) }),
     },
