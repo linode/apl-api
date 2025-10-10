@@ -72,6 +72,7 @@ import {
   getValuesSchema,
   removeBlankAttributes,
 } from 'src/utils'
+import { deepQuote } from 'src/utils/yamlUtils'
 import {
   cleanEnv,
   CUSTOM_ROOT_CA,
@@ -1853,9 +1854,11 @@ export default class OtomiStack {
   }
 
   async editWorkloadValues(teamId: string, name: string, data: WorkloadValues): Promise<WorkloadValues> {
-    const workload = this.repoService
-      .getTeamConfigService(teamId)
-      .patchWorkload(name, { spec: { values: stringifyYaml(data.values) } })
+    const workload = this.repoService.getTeamConfigService(teamId).patchWorkload(name, {
+      spec: {
+        values: stringifyYaml(deepQuote(data.values)),
+      },
+    })
     await this.saveTeamWorkloadValues(workload)
     await this.doTeamDeployment(
       teamId,
