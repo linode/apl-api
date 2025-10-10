@@ -1,5 +1,5 @@
 import { V1Deployment } from '@kubernetes/client-node'
-import { transformK8sDeploymentToAplAIModel, getAIModels } from './aiModelHandler'
+import { getAIModels, transformK8sDeploymentToAplAIModel } from './aiModelHandler'
 import * as k8s from './k8s'
 
 // Mock the k8s module
@@ -14,6 +14,7 @@ describe('aiModelHandler', () => {
       name: 'gpt-4-deployment',
       namespace: 'ai-models',
       labels: {
+        app: 'gpt-4',
         modelName: 'gpt-4',
         modelType: 'foundation',
         modelDimension: '1536',
