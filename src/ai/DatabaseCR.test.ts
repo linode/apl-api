@@ -48,7 +48,7 @@ describe('DatabaseCR', () => {
     test('should set required PostgreSQL extensions', () => {
       const dbCR = new DatabaseCR('team-123', 'test-kb', 'cluster-name')
 
-      expect(dbCR.spec.extensions).toEqual([{ name: 'pgvector' }, { name: 'pg_stat_statements' }])
+      expect(dbCR.spec.extensions).toEqual([{ name: 'vector' }, { name: 'pg_stat_statements' }])
     })
 
     test('should use environment variable for owner', () => {
