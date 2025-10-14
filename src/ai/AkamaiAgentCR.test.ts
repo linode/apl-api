@@ -60,7 +60,6 @@ describe('AkamaiAgentCR', () => {
           name: 'test-kb',
           description:
             'Search the test-kb knowledge base for relevant information. Use this when you need factual information, documentation, or specific details stored in the knowledge base.',
-          endpoint: undefined,
         },
       ])
     })
@@ -111,7 +110,6 @@ describe('AkamaiAgentCR', () => {
           type: 'knowledgeBase',
           name: 'test-kb',
           description: 'Custom description for the knowledge base',
-          endpoint: undefined,
         },
       ])
     })
@@ -154,7 +152,6 @@ describe('AkamaiAgentCR', () => {
               name: 'test-kb',
               description:
                 'Search the test-kb knowledge base for relevant information. Use this when you need factual information, documentation, or specific details stored in the knowledge base.',
-              endpoint: undefined,
             },
           ],
         },
@@ -186,7 +183,7 @@ describe('AkamaiAgentCR', () => {
       expect(response.spec.tools).toBeUndefined()
     })
 
-    test('should preserve custom description and endpoint in response', () => {
+    test('should preserve custom description and apiUrl in response', () => {
       const requestWithDetails = {
         ...mockAgentRequest,
         spec: {
@@ -196,7 +193,7 @@ describe('AkamaiAgentCR', () => {
               type: 'knowledgeBase',
               name: 'test-kb',
               description: 'Custom KB description',
-              endpoint: 'https://api.example.com/kb',
+              apiUrl: 'https://api.example.com/kb',
             },
           ],
         },
@@ -210,7 +207,7 @@ describe('AkamaiAgentCR', () => {
           type: 'knowledgeBase',
           name: 'test-kb',
           description: 'Custom KB description',
-          endpoint: 'https://api.example.com/kb',
+          apiUrl: 'https://api.example.com/kb',
         },
       ])
     })

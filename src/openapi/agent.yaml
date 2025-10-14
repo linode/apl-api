@@ -22,11 +22,40 @@ AplAgentSpec:
     foundationModel:
       type: string
       description: Name of the foundation model
-      example: "meta-llama-3"
+      example: "llama3-1"
+    foundationModelEndpoint:
+      type: string
+      description: HTTP endpoint URL for the foundation model
+      example: "http://llama-3-1-8b-predictor.team-admin.svc.cluster.local/openai/v1"
     agentInstructions:
       type: string
       description: Custom instructions for the agent
-      example: "You are a helpful assistant that provides concise answers."
+      example: "You are a helpful assistant for App Platform for LKE documentation. Give clear answers to the users."
+    routes:
+      type: array
+      description: Routing configuration to other agents based on conditions
+      items:
+        type: object
+        properties:
+          agent:
+            type: string
+            description: Name of the agent to route to
+            example: "kubernetes-expert"
+          condition:
+            type: string
+            description: Condition that triggers routing to this agent
+            example: "If the question is about Kubernetes"
+          apiUrl:
+            type: string
+            description: API URL of the target agent
+            example: "https://my-other-agent.lke496760.akamai-apl.net"
+          apiKey:
+            type: string
+            description: API key for authenticating with the target agent
+        required:
+          - agent
+          - condition
+          - apiUrl
     tools:
       type: array
       description: Tools available to the agent
@@ -35,19 +64,23 @@ AplAgentSpec:
         properties:
           type:
             type: string
-            description: Type of the tool
+            description: Type of the tool (knowledgeBase, mcpServer, subWorkflow, function)
             example: "knowledgeBase"
           name:
             type: string
             description: Name of the tool resource
-            example: "company-docs"
+            example: "apl-techdocs"
           description:
             type: string
             description: Description of what the tool does
-            example: "Search the company-docs knowledge base for relevant information"
-          endpoint:
+            example: "Search the apl-techdocs knowledge base for relevant information. Use this when you need factual information, documentation, or specific details stored in the knowledge base."
+          apiUrl:
             type: string
-            description: Optional endpoint URL for the tool
+            description: API URL for the tool (for mcpServer and subWorkflow types)
+            example: "https://my-mcp.com"
+          apiKey:
+            type: string
+            description: API key for authenticating with the tool (for mcpServer and subWorkflow types)
         required:
           - type
           - name
