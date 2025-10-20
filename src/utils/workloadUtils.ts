@@ -207,8 +207,8 @@ export class chartRepo {
     this.gitEmail = gitEmail
     this.git = simpleGit(this.localPath)
   }
-  async clone() {
-    await this.git.clone(this.chartRepoUrl, this.localPath)
+  async clone(branch: string = 'main') {
+    await this.git.clone(this.chartRepoUrl, this.localPath, ['--branch', branch, '--single-branch'])
   }
   async cloneSingleChart(refAndPath: string, finalDestinationPath: string) {
     const remoteResult = await this.git.listRemote([this.chartRepoUrl])
@@ -328,7 +328,8 @@ export async function fetchWorkloadCatalog(url: string, helmChartsDir: string, t
     gitUrl = `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
   }
   const gitRepo = new chartRepo(helmChartsDir, gitUrl)
-  await gitRepo.clone()
+  const branch = 'main'
+  await gitRepo.clone(branch)
 
   const files = await readdir(helmChartsDir, 'utf-8')
   const filesToExclude = ['.git', '.gitignore', '.vscode', 'LICENSE', 'README.md']
@@ -356,12 +357,15 @@ export async function fetchWorkloadCatalog(url: string, helmChartsDir: string, t
     }
     try {
       const values = await readFile(`${helmChartsDir}/${folder}/values.yaml`, 'utf-8')
-      const c = await readFile(`${helmChartsDir}/${folder}/Chart.yaml`, 'utf-8')
-      const chartMetadata = YAML.parse(c)
+      // valuesSchema is optional, hence we add a catch at the end to mitigate a loop break out
+      const valuesSchema = await readFile(`${helmChartsDir}/${folder}/values.schema.json`, 'utf-8').catch(() => null)
+      const chart = await readFile(`${helmChartsDir}/${folder}/Chart.yaml`, 'utf-8')
+      const chartMetadata = YAML.parse(chart)
       if (!rbac[folder] || rbac[folder].includes(`team-${teamId}`) || teamId === 'admin') {
         const catalogItem = {
           name: folder,
           values: values || '{}',
+          valuesSchema: valuesSchema || '{}',
           icon: chartMetadata?.icon,
           chartVersion: chartMetadata?.version,
           chartDescription: chartMetadata?.description,
