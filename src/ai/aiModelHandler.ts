@@ -16,7 +16,7 @@ export function transformK8sDeploymentToAplAIModel(deployment: V1Deployment): Ap
   const labels = deployment.metadata?.labels || {}
   const modelName = labels.modelName || deployment.metadata?.name || ''
   const modelNameTitle = labels.modelNameTitle || deployment.metadata?.name || ''
-  const endpointName = labels.app || deployment.metadata?.name || ''
+  const endpointName = labels['serving.knative.dev/service'] || deployment.metadata?.name || ''
 
   // Convert K8s deployment conditions to schema format
   const conditions = getConditions(deployment)
