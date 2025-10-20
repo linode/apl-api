@@ -1,9 +1,11 @@
-import { V1Deployment } from '@kubernetes/client-node'
+import { V1Deployment, V1StatefulSet } from '@kubernetes/client-node'
 import { AplAIModelResponse } from 'src/otomi-models'
-import { getDeploymentsWithAIModelLabels } from './k8s'
+import { getDeploymentsWithAIModelLabels, getStatefulSetsWithAIModelLabels } from './k8s'
 
-function getConditions(deployment: V1Deployment) {
-  return (deployment.status?.conditions || []).map((condition) => ({
+type K8sWorkload = V1Deployment | V1StatefulSet
+
+function getConditions(workload: K8sWorkload) {
+  return (workload.status?.conditions || []).map((condition) => ({
     lastTransitionTime: condition.lastTransitionTime?.toISOString(),
     message: condition.message,
     reason: condition.reason,
@@ -12,14 +14,16 @@ function getConditions(deployment: V1Deployment) {
   }))
 }
 
-export function transformK8sDeploymentToAplAIModel(deployment: V1Deployment): AplAIModelResponse {
-  const labels = deployment.metadata?.labels || {}
-  const modelName = labels.modelName || deployment.metadata?.name || ''
-  const modelNameTitle = labels.modelNameTitle || deployment.metadata?.name || ''
-  const endpointName = labels['serving.knative.dev/service'] || deployment.metadata?.name || ''
+export function transformK8sWorkloadToAplAIModel(workload: K8sWorkload): AplAIModelResponse {
+  const labels = workload.metadata?.labels || {}
+  const modelName = labels.modelName || workload.metadata?.name || ''
+  const endpointName = labels['serving.knative.dev/service'] || workload.metadata?.name || ''
 
-  // Convert K8s deployment conditions to schema format
-  const conditions = getConditions(deployment)
+  // Use /openai/v1 for Knative services, /v1 for regular deployments
+  const endpointPath = labels['serving.knative.dev/service'] ? '/openai/v1' : '/v1'
+
+  // Convert K8s workload conditions to schema format
+  const conditions = getConditions(workload)
 
   return {
     kind: 'AplAIModel',
@@ -27,19 +31,24 @@ export function transformK8sDeploymentToAplAIModel(deployment: V1Deployment): Ap
       name: modelName,
     },
     spec: {
-      displayName: modelNameTitle,
-      modelEndpoint: `http://${endpointName}.${deployment.metadata?.namespace}.svc.cluster.local/openai/v1`,
+      displayName: modelName,
+      modelEndpoint: `http://${endpointName}.${workload.metadata?.namespace}.svc.cluster.local${endpointPath}`,
       modelType: labels.modelType as 'foundation' | 'embedding',
       ...(labels.modelDimension && { modelDimension: parseInt(labels.modelDimension, 10) }),
     },
     status: {
       conditions,
-      phase: deployment.status?.readyReplicas && deployment.status.readyReplicas > 0 ? 'Ready' : 'NotReady',
+      phase: workload.status?.readyReplicas && workload.status.readyReplicas > 0 ? 'Ready' : 'NotReady',
     },
   }
 }
 
 export async function getAIModels(): Promise<AplAIModelResponse[]> {
-  const deployments = await getDeploymentsWithAIModelLabels()
-  return deployments.map(transformK8sDeploymentToAplAIModel)
+  const [deployments, statefulSets] = await Promise.all([
+    getDeploymentsWithAIModelLabels(),
+    getStatefulSetsWithAIModelLabels(),
+  ])
+
+  const allWorkloads: K8sWorkload[] = [...deployments, ...statefulSets]
+  return allWorkloads.map(transformK8sWorkloadToAplAIModel)
 }

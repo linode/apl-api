@@ -1,11 +1,14 @@
 import { V1Deployment } from '@kubernetes/client-node'
-import { getAIModels, transformK8sDeploymentToAplAIModel } from './aiModelHandler'
+import { getAIModels, transformK8sWorkloadToAplAIModel } from './aiModelHandler'
 import * as k8s from './k8s'
 
 // Mock the k8s module
 jest.mock('./k8s')
 const mockedGetDeploymentsWithAIModelLabels = k8s.getDeploymentsWithAIModelLabels as jest.MockedFunction<
   typeof k8s.getDeploymentsWithAIModelLabels
+>
+const mockedGetStatefulSetsWithAIModelLabels = k8s.getStatefulSetsWithAIModelLabels as jest.MockedFunction<
+  typeof k8s.getStatefulSetsWithAIModelLabels
 >
 
 describe('aiModelHandler', () => {
@@ -47,9 +50,9 @@ describe('aiModelHandler', () => {
     jest.clearAllMocks()
   })
 
-  describe('transformK8sDeploymentToAplAIModel', () => {
+  describe('transformK8sWorkloadToAplAIModel', () => {
     test('should transform K8s deployment to AplAIModel with all fields', () => {
-      const result = transformK8sDeploymentToAplAIModel(mockDeployment)
+      const result = transformK8sWorkloadToAplAIModel(mockDeployment)
 
       expect(result).toEqual({
         kind: 'AplAIModel',
@@ -57,8 +60,8 @@ describe('aiModelHandler', () => {
           name: 'gpt-4',
         },
         spec: {
-          displayName: 'GPT-4o-mini',
-          modelEndpoint: 'http://gpt-4.ai-models.svc.cluster.local/openai/v1',
+          displayName: 'gpt-4',
+          modelEndpoint: 'http://gpt-4-deployment.ai-models.svc.cluster.local/openai/v1',
           modelType: 'foundation',
           modelDimension: 1536,
         },
@@ -97,10 +100,10 @@ describe('aiModelHandler', () => {
         },
       }
 
-      const result = transformK8sDeploymentToAplAIModel(deploymentWithModelName)
+      const result = transformK8sWorkloadToAplAIModel(deploymentWithModelName)
 
       expect(result.metadata.name).toBe('custom-model-name')
-      expect(result.spec.displayName).toBe('GPT-4o-mini')
+      expect(result.spec.displayName).toBe('custom-model-name')
     })
 
     test('should use modelName from labels when deployment name is missing', () => {
@@ -116,10 +119,10 @@ describe('aiModelHandler', () => {
         },
       }
 
-      const result = transformK8sDeploymentToAplAIModel(deploymentWithoutName)
+      const result = transformK8sWorkloadToAplAIModel(deploymentWithoutName)
 
       expect(result.metadata.name).toBe('custom-model-name')
-      expect(result.spec.displayName).toBe('GPT-4o-mini')
+      expect(result.spec.displayName).toBe('custom-model-name')
     })
 
     test('should handle deployment without labels', () => {
@@ -131,7 +134,7 @@ describe('aiModelHandler', () => {
         },
       }
 
-      const result = transformK8sDeploymentToAplAIModel(deploymentWithoutLabels)
+      const result = transformK8sWorkloadToAplAIModel(deploymentWithoutLabels)
 
       expect(result.metadata.name).toBe('test-deployment')
       expect(result.spec.modelType).toBeUndefined()
@@ -150,7 +153,7 @@ describe('aiModelHandler', () => {
         },
       }
 
-      const result = transformK8sDeploymentToAplAIModel(deploymentWithoutDimension)
+      const result = transformK8sWorkloadToAplAIModel(deploymentWithoutDimension)
 
       expect(result.spec.modelDimension).toBeUndefined()
     })
@@ -164,9 +167,9 @@ describe('aiModelHandler', () => {
         },
       }
 
-      const result = transformK8sDeploymentToAplAIModel(deploymentWithoutNamespace)
+      const result = transformK8sWorkloadToAplAIModel(deploymentWithoutNamespace)
 
-      expect(result.spec.modelEndpoint).toBe('http://gpt-4.undefined.svc.cluster.local/openai/v1')
+      expect(result.spec.modelEndpoint).toBe('http://test-deployment.undefined.svc.cluster.local/openai/v1')
     })
 
     test('should handle deployment without status conditions', () => {
@@ -178,7 +181,7 @@ describe('aiModelHandler', () => {
         },
       }
 
-      const result = transformK8sDeploymentToAplAIModel(deploymentWithoutConditions)
+      const result = transformK8sWorkloadToAplAIModel(deploymentWithoutConditions)
 
       expect(result.status.conditions).toEqual([])
       expect(result.status.phase).toBe('NotReady')
@@ -193,13 +196,13 @@ describe('aiModelHandler', () => {
         },
       }
 
-      const result = transformK8sDeploymentToAplAIModel(notReadyDeployment)
+      const result = transformK8sWorkloadToAplAIModel(notReadyDeployment)
 
       expect(result.status.phase).toBe('NotReady')
     })
 
     test('should set phase to Ready when has ready replicas', () => {
-      const result = transformK8sDeploymentToAplAIModel(mockDeployment)
+      const result = transformK8sWorkloadToAplAIModel(mockDeployment)
 
       expect(result.status.phase).toBe('Ready')
     })
@@ -221,7 +224,7 @@ describe('aiModelHandler', () => {
         },
       }
 
-      const result = transformK8sDeploymentToAplAIModel(deploymentWithFalseCondition)
+      const result = transformK8sWorkloadToAplAIModel(deploymentWithFalseCondition)
 
       expect(result.status.conditions?.[0]?.status).toBe(false)
     })
@@ -231,7 +234,7 @@ describe('aiModelHandler', () => {
         status: mockDeployment.status,
       } as V1Deployment
 
-      const result = transformK8sDeploymentToAplAIModel(deploymentWithoutMetadata)
+      const result = transformK8sWorkloadToAplAIModel(deploymentWithoutMetadata)
 
       expect(result.metadata.name).toBe('')
       expect(result.spec.modelEndpoint).toBe('http://.undefined.svc.cluster.local/openai/v1')
@@ -241,6 +244,7 @@ describe('aiModelHandler', () => {
   describe('getAIModels', () => {
     test('should return transformed AI models from deployments', async () => {
       mockedGetDeploymentsWithAIModelLabels.mockResolvedValue([mockDeployment])
+      mockedGetStatefulSetsWithAIModelLabels.mockResolvedValue([])
 
       const result = await getAIModels()
 
@@ -248,18 +252,21 @@ describe('aiModelHandler', () => {
       expect(result[0].kind).toBe('AplAIModel')
       expect(result[0].metadata.name).toBe('gpt-4')
       expect(mockedGetDeploymentsWithAIModelLabels).toHaveBeenCalledTimes(1)
+      expect(mockedGetStatefulSetsWithAIModelLabels).toHaveBeenCalledTimes(1)
     })
 
-    test('should return empty array when no deployments found', async () => {
+    test('should return empty array when no deployments or statefulsets found', async () => {
       mockedGetDeploymentsWithAIModelLabels.mockResolvedValue([])
+      mockedGetStatefulSetsWithAIModelLabels.mockResolvedValue([])
 
       const result = await getAIModels()
 
       expect(result).toEqual([])
       expect(mockedGetDeploymentsWithAIModelLabels).toHaveBeenCalledTimes(1)
+      expect(mockedGetStatefulSetsWithAIModelLabels).toHaveBeenCalledTimes(1)
     })
 
-    test('should handle multiple deployments', async () => {
+    test('should handle multiple deployments and statefulsets', async () => {
       const secondDeployment = {
         ...mockDeployment,
         metadata: {
@@ -274,6 +281,7 @@ describe('aiModelHandler', () => {
       }
 
       mockedGetDeploymentsWithAIModelLabels.mockResolvedValue([mockDeployment, secondDeployment])
+      mockedGetStatefulSetsWithAIModelLabels.mockResolvedValue([])
 
       const result = await getAIModels()
 
@@ -285,6 +293,7 @@ describe('aiModelHandler', () => {
     test('should propagate errors from k8s module', async () => {
       const error = new Error('K8s API error')
       mockedGetDeploymentsWithAIModelLabels.mockRejectedValue(error)
+      mockedGetStatefulSetsWithAIModelLabels.mockResolvedValue([])
 
       await expect(getAIModels()).rejects.toThrow('K8s API error')
     })

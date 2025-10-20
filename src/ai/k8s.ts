@@ -1,4 +1,11 @@
-import { AppsV1Api, CustomObjectsApi, KubeConfig, KubernetesObject, V1Deployment } from '@kubernetes/client-node'
+import {
+  AppsV1Api,
+  CustomObjectsApi,
+  KubeConfig,
+  KubernetesObject,
+  V1Deployment,
+  V1StatefulSet,
+} from '@kubernetes/client-node'
 import Debug from 'debug'
 import { KubernetesListObject } from '@kubernetes/client-node/dist/types'
 
@@ -46,6 +53,21 @@ export async function getDeploymentsWithAIModelLabels(): Promise<V1Deployment[]>
     return result.items
   } catch (e) {
     debug('Error fetching deployments from Kubernetes:', e)
+    return []
+  }
+}
+
+export async function getStatefulSetsWithAIModelLabels(): Promise<V1StatefulSet[]> {
+  const appsApi = getAppsApiClient()
+
+  try {
+    const labelSelector = 'modelType,modelName'
+    const result = await appsApi.listStatefulSetForAllNamespaces({ labelSelector })
+
+    debug(`Found ${result.items.length} AI model statefulsets`)
+    return result.items
+  } catch (e) {
+    debug('Error fetching statefulsets from Kubernetes:', e)
     return []
   }
 }
