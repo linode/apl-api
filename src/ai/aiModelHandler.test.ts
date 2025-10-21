@@ -22,6 +22,7 @@ describe('aiModelHandler', () => {
         modelNameTitle: 'GPT-4o-mini',
         modelType: 'foundation',
         modelDimension: '1536',
+        'serving.knative.dev/service': 'gpt-4-deployment',
       },
     },
     status: {
@@ -169,7 +170,7 @@ describe('aiModelHandler', () => {
 
       const result = transformK8sWorkloadToAplAIModel(deploymentWithoutNamespace)
 
-      expect(result.spec.modelEndpoint).toBe('http://test-deployment.undefined.svc.cluster.local/openai/v1')
+      expect(result.spec.modelEndpoint).toBe('http://gpt-4-deployment.undefined.svc.cluster.local/openai/v1')
     })
 
     test('should handle deployment without status conditions', () => {
@@ -237,7 +238,7 @@ describe('aiModelHandler', () => {
       const result = transformK8sWorkloadToAplAIModel(deploymentWithoutMetadata)
 
       expect(result.metadata.name).toBe('')
-      expect(result.spec.modelEndpoint).toBe('http://.undefined.svc.cluster.local/openai/v1')
+      expect(result.spec.modelEndpoint).toBe('http://.undefined.svc.cluster.local/v1')
     })
   })
 
