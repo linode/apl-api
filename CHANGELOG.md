@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.12.0](https://github.com/redkubes/otomi-api/compare/v4.11.0...v4.12.0) (2025-10-21)
+
+
+### Features
+
+* add aiEnabled flag ([#808](https://github.com/redkubes/otomi-api/issues/808)) ([64c2e7c](https://github.com/redkubes/otomi-api/commit/64c2e7c32d9ba04eb759f0d4cec2686d6b6fbb83))
+* add deepQuote for yaml stringify ([#801](https://github.com/redkubes/otomi-api/issues/801)) ([8cb00ed](https://github.com/redkubes/otomi-api/commit/8cb00ed27d25c9f5aad02fb03faa074a64ca948a))
+* add knowledge base apis ([#802](https://github.com/redkubes/otomi-api/issues/802)) ([1b4cab3](https://github.com/redkubes/otomi-api/commit/1b4cab344736773cee4851cafa950a0cea3516b9))
+* add kserve ([#807](https://github.com/redkubes/otomi-api/issues/807)) ([7971391](https://github.com/redkubes/otomi-api/commit/797139102cb40299f2e1af531388e08a0605f862))
+* added API spec for agent inference platform ([#799](https://github.com/redkubes/otomi-api/issues/799)) ([60def0c](https://github.com/redkubes/otomi-api/commit/60def0c191ae22cf74e11496938e51e4ea65a489))
+* adjust kb custom resource ([#811](https://github.com/redkubes/otomi-api/issues/811)) ([1690d2d](https://github.com/redkubes/otomi-api/commit/1690d2d57055be2dab0c4883f4a5211605abad4f))
+* get ai models api ([#800](https://github.com/redkubes/otomi-api/issues/800)) ([d86dfb4](https://github.com/redkubes/otomi-api/commit/d86dfb4880ee663df217ce1ec8ace8620af1fbc9))
+
+
+### Bug Fixes
+
+* add helm chart ([#812](https://github.com/redkubes/otomi-api/issues/812)) ([802480b](https://github.com/redkubes/otomi-api/commit/802480b369285f371110e025e821cbd5bdefdddc))
+* setting endpointname and vector extension ([#814](https://github.com/redkubes/otomi-api/issues/814)) ([7251ed5](https://github.com/redkubes/otomi-api/commit/7251ed578f425bc5e16dc065853491b8af58d7bf))
+* team name minimum added ([#797](https://github.com/redkubes/otomi-api/issues/797)) ([bb1deb9](https://github.com/redkubes/otomi-api/commit/bb1deb9190a4008695d7b3fc9edbd9f33dce56a4))
+
+
+### Others
+
+* **deps:** bump @commitlint/cli from 19.8.1 to 20.0.0 ([#803](https://github.com/redkubes/otomi-api/issues/803)) ([1eea743](https://github.com/redkubes/otomi-api/commit/1eea7436801b6d72aa2b68ae9822a7ff0c1fb65d))
+* **deps:** bump the npm-dependencies group across 1 directory with 40 updates ([#792](https://github.com/redkubes/otomi-api/issues/792)) ([861d0fc](https://github.com/redkubes/otomi-api/commit/861d0fcfb40fb012380ddf21444343ebccacd4d4))
+* **deps:** bump the npm-dependencies group with 14 updates ([#805](https://github.com/redkubes/otomi-api/issues/805)) ([91d83aa](https://github.com/redkubes/otomi-api/commit/91d83aa6ea00f25d358ac97d4e9dea986ced0b68))
+* **deps:** bump uuid from 8.3.2 to 11.1.0 ([#763](https://github.com/redkubes/otomi-api/issues/763)) ([8b767b6](https://github.com/redkubes/otomi-api/commit/8b767b65b07f285bc72b35da80ec82f7353e6ddb))
+
 ## [4.11.0](https://github.com/redkubes/otomi-api/compare/v4.10.0...v4.11.0) (2025-09-01)
 
 
