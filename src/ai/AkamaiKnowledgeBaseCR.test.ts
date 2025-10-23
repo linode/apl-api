@@ -68,7 +68,7 @@ describe('AkamaiKnowledgeBaseCR', () => {
       expect(kbCR.spec.pipelineParameters).toEqual({
         url: 'https://docs.example.com',
         table_name: 'test-kb',
-        embedding_model: 'text-embedding-ada-002',
+        embedding_model: 'nvidia/text-embedding-ada-002',
         embedding_api_base: 'http://embedding-model.ai.svc.cluster.local',
         embed_dim: 1536,
         embed_batch_size: expect.any(Number),
@@ -133,7 +133,7 @@ describe('AkamaiKnowledgeBaseCR', () => {
       expect(response.kind).toBe('AkamaiKnowledgeBase')
       expect(response.metadata.name).toBe('test-kb')
       expect(response.metadata.labels?.['apl.io/teamId']).toBe('team-123')
-      expect(response.spec.modelName).toBe('text-embedding-ada-002')
+      expect(response.spec.modelName).toBe('nvidia/text-embedding-ada-002')
       expect(response.spec.sourceUrl).toBe('https://docs.example.com')
       expect(response.status).toEqual({})
     })
@@ -216,7 +216,7 @@ describe('AkamaiKnowledgeBaseCR', () => {
       const result = await AkamaiKnowledgeBaseCR.create('team-123', 'test-kb', 'cluster-name', mockKnowledgeBaseRequest)
 
       expect(result).toBeInstanceOf(AkamaiKnowledgeBaseCR)
-      expect(result.spec.pipelineParameters.embedding_model).toBe('text-embedding-ada-002')
+      expect(result.spec.pipelineParameters.embedding_model).toBe('nvidia/text-embedding-ada-002')
     })
 
     test('should handle AI models fetch error', async () => {
