@@ -603,6 +603,7 @@ describe('fetchWorkloadCatalog', () => {
     expect(mockGit.clone).toHaveBeenCalledWith(
       'https://git-user:git-password@gitea.example.com/otomi/charts.git',
       helmChartsDir,
+      ['--branch', 'main', '--single-branch'],
     )
     expect(result).toEqual({
       helmCharts: ['chart1', 'chart2'],
@@ -615,6 +616,7 @@ describe('fetchWorkloadCatalog', () => {
           chartDescription: 'Test Chart 1',
           readme: '# Chart 1 README',
           isBeta: false,
+          valuesSchema: '{}',
         },
         {
           name: 'chart2',
@@ -624,6 +626,7 @@ describe('fetchWorkloadCatalog', () => {
           chartDescription: 'Test Chart 2',
           readme: '# Chart 2 README',
           isBeta: true,
+          valuesSchema: '{}',
         },
       ],
     })
@@ -650,6 +653,7 @@ describe('fetchWorkloadCatalog', () => {
           chartDescription: 'Test Chart 1',
           readme: '# Chart 1 README',
           isBeta: false,
+          valuesSchema: '{}',
         },
       ],
     })
@@ -760,7 +764,7 @@ describe('chartRepo', () => {
     const repo = new chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
     await repo.clone()
 
-    expect(mockGit.clone).toHaveBeenCalledWith(chartRepoUrl, localPath)
+    expect(mockGit.clone).toHaveBeenCalledWith(chartRepoUrl, localPath, ['--branch', 'main', '--single-branch'])
   })
 
   test('cloneSingleChart method performs sparse checkout', async () => {
