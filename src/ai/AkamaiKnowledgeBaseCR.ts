@@ -63,7 +63,7 @@ export class AkamaiKnowledgeBaseCR {
       pipelineParameters: {
         url: request.spec.sourceUrl,
         table_name: knowledgeBaseName,
-        embedding_model: embeddingModel.metadata.name,
+        embedding_model: `nvidia/${embeddingModel.metadata.name}`,
         embedding_api_base: embeddingModel.spec.modelEndpoint,
         embed_dim: embeddingModel.spec.modelDimension || env.EMBED_DIM_DEFAULT,
         embed_batch_size: env.EMBED_BATCH_SIZE,
