@@ -19,9 +19,9 @@ export class AkamaiAgentCR {
   public spec: {
     foundationModel: string
     foundationModelEndpoint?: string
-    temperature?: string
-    topP?: string
-    maxTokens?: string
+    temperature?: number
+    topP?: number
+    maxTokens?: number
     agentInstructions: string
     routes?: Array<{
       agent: string
