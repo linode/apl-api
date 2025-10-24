@@ -133,12 +133,7 @@ import { getAIModels } from './ai/aiModelHandler'
 import { AkamaiKnowledgeBaseCR } from './ai/AkamaiKnowledgeBaseCR'
 import { AkamaiAgentCR } from './ai/AkamaiAgentCR'
 import { DatabaseCR } from './ai/DatabaseCR'
-import {
-  getAkamaiAgentCR,
-  getAkamaiKnowledgeBaseCR,
-  listAkamaiAgentCRs,
-  listAkamaiKnowledgeBaseCRs,
-} from './ai/k8s'
+import { getAkamaiAgentCR, getAkamaiKnowledgeBaseCR, listAkamaiAgentCRs, listAkamaiKnowledgeBaseCRs } from './ai/k8s'
 
 interface ExcludedApp extends App {
   managed: boolean
