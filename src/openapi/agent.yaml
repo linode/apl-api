@@ -27,6 +27,18 @@ AplAgentSpec:
       type: string
       description: HTTP endpoint URL for the foundation model
       example: "http://llama-3-1-8b-predictor.team-admin.svc.cluster.local/openai/v1"
+    temperature:
+      type: string
+      description: Temperature parameter for model inference (controls randomness)
+      example: "0.7"
+    topP:
+      type: string
+      description: Top-p parameter for model inference (nucleus sampling)
+      example: "0.9"
+    maxTokens:
+      type: string
+      description: Maximum number of tokens to generate
+      example: "2048"
     agentInstructions:
       type: string
       description: Custom instructions for the agent

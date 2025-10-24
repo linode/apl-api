@@ -19,6 +19,9 @@ export class AkamaiAgentCR {
   public spec: {
     foundationModel: string
     foundationModelEndpoint?: string
+    temperature?: string
+    topP?: string
+    maxTokens?: string
     agentInstructions: string
     routes?: Array<{
       agent: string
@@ -51,6 +54,9 @@ export class AkamaiAgentCR {
     this.spec = {
       foundationModel: request.spec.foundationModel,
       ...(request.spec.foundationModelEndpoint && { foundationModelEndpoint: request.spec.foundationModelEndpoint }),
+      ...(request.spec.temperature && { temperature: request.spec.temperature }),
+      ...(request.spec.topP && { topP: request.spec.topP }),
+      ...(request.spec.maxTokens && { maxTokens: request.spec.maxTokens }),
       agentInstructions: request.spec.agentInstructions,
       ...(request.spec.routes && {
         routes: request.spec.routes.map((route) => ({
@@ -87,7 +93,7 @@ export class AkamaiAgentCR {
   }
 
   // Transform to API response format
-  toApiResponse(teamId: string): AplAgentResponse {
+  toApiResponse(teamId: string, status?: any): AplAgentResponse {
     return {
       kind: 'AkamaiAgent',
       metadata: {
@@ -100,6 +106,9 @@ export class AkamaiAgentCR {
       spec: {
         foundationModel: this.spec.foundationModel,
         ...(this.spec.foundationModelEndpoint && { foundationModelEndpoint: this.spec.foundationModelEndpoint }),
+        ...(this.spec.temperature && { temperature: this.spec.temperature }),
+        ...(this.spec.topP && { topP: this.spec.topP }),
+        ...(this.spec.maxTokens && { maxTokens: this.spec.maxTokens }),
         agentInstructions: this.spec.agentInstructions,
         ...(this.spec.routes && {
           routes: this.spec.routes.map((route) => ({
@@ -119,7 +128,7 @@ export class AkamaiAgentCR {
           })),
         }),
       },
-      status: {
+      status: status || {
         conditions: [
           {
             type: 'AgentDeployed',

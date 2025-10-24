@@ -92,3 +92,89 @@ export async function getKnowledgeBaseCNPGClusters(): Promise<KubernetesObjectWi
     return []
   }
 }
+
+export async function getAkamaiAgentCR(namespace: string, name: string): Promise<KubernetesObject | null> {
+  const customObjectsApi = getCustomObjectsApiClient()
+
+  try {
+    const result = (await customObjectsApi.getNamespacedCustomObject({
+      group: 'akamai.io',
+      version: 'v1alpha1',
+      namespace,
+      plural: 'akamaiagents',
+      name,
+    })) as KubernetesObject
+
+    debug(`Found AkamaiAgent CR: ${namespace}/${name}`)
+    return result
+  } catch (e: any) {
+    if (e.statusCode === 404) {
+      debug(`AkamaiAgent CR not found: ${namespace}/${name}`)
+      return null
+    }
+    debug(`Error fetching AkamaiAgent CR ${namespace}/${name}:`, e)
+    throw e
+  }
+}
+
+export async function getAkamaiKnowledgeBaseCR(namespace: string, name: string): Promise<KubernetesObject | null> {
+  const customObjectsApi = getCustomObjectsApiClient()
+
+  try {
+    const result = (await customObjectsApi.getNamespacedCustomObject({
+      group: 'akamai.io',
+      version: 'v1alpha1',
+      namespace,
+      plural: 'akamaiknowledgebases',
+      name,
+    })) as KubernetesObject
+
+    debug(`Found AkamaiKnowledgeBase CR: ${namespace}/${name}`)
+    return result
+  } catch (e: any) {
+    if (e.statusCode === 404) {
+      debug(`AkamaiKnowledgeBase CR not found: ${namespace}/${name}`)
+      return null
+    }
+    debug(`Error fetching AkamaiKnowledgeBase CR ${namespace}/${name}:`, e)
+    throw e
+  }
+}
+
+export async function listAkamaiAgentCRs(namespace: string): Promise<KubernetesObject[]> {
+  const customObjectsApi = getCustomObjectsApiClient()
+
+  try {
+    const result = (await customObjectsApi.listNamespacedCustomObject({
+      group: 'akamai.io',
+      version: 'v1alpha1',
+      namespace,
+      plural: 'akamaiagents',
+    })) as KubernetesListObject<KubernetesObject>
+
+    debug(`Found ${result.items.length} AkamaiAgent CRs in namespace ${namespace}`)
+    return result.items
+  } catch (e: any) {
+    debug(`Error listing AkamaiAgent CRs in ${namespace}:`, e)
+    return []
+  }
+}
+
+export async function listAkamaiKnowledgeBaseCRs(namespace: string): Promise<KubernetesObject[]> {
+  const customObjectsApi = getCustomObjectsApiClient()
+
+  try {
+    const result = (await customObjectsApi.listNamespacedCustomObject({
+      group: 'akamai.io',
+      version: 'v1alpha1',
+      namespace,
+      plural: 'akamaiknowledgebases',
+    })) as KubernetesListObject<KubernetesObject>
+
+    debug(`Found ${result.items.length} AkamaiKnowledgeBase CRs in namespace ${namespace}`)
+    return result.items
+  } catch (e: any) {
+    debug(`Error listing AkamaiKnowledgeBase CRs in ${namespace}:`, e)
+    return []
+  }
+}

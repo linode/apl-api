@@ -8,7 +8,15 @@ import { readdir, readFile, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, isEmpty, map, mapValues, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
-import { AlreadyExists, ForbiddenError, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
+import {
+  AlreadyExists,
+  ForbiddenError,
+  HttpError,
+  NotExistError,
+  OtomiError,
+  PublicUrlExists,
+  ValidationError,
+} from 'src/error'
 import getRepo, { getWorktreeRepo, Git } from 'src/git'
 import { cleanSession, getSessionStack } from 'src/middleware'
 import {
@@ -125,6 +133,12 @@ import { getAIModels } from './ai/aiModelHandler'
 import { AkamaiKnowledgeBaseCR } from './ai/AkamaiKnowledgeBaseCR'
 import { AkamaiAgentCR } from './ai/AkamaiAgentCR'
 import { DatabaseCR } from './ai/DatabaseCR'
+import {
+  getAkamaiAgentCR,
+  getAkamaiKnowledgeBaseCR,
+  listAkamaiAgentCRs,
+  listAkamaiKnowledgeBaseCRs,
+} from './ai/k8s'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -2422,12 +2436,27 @@ export default class OtomiStack {
   }
 
   async getAplKnowledgeBase(teamId: string, name: string): Promise<AplKnowledgeBaseResponse> {
-    const knowledgeBase = this.repoService.getTeamConfigService(teamId).getKnowledgeBase(name)
-    return knowledgeBase
+    // Fetch directly from Kubernetes cluster
+    const namespace = `team-${teamId}`
+    const cr = await getAkamaiKnowledgeBaseCR(namespace, name)
+
+    if (!cr) {
+      throw new NotExistError(`KnowledgeBase[${name}] does not exist.`)
+    }
+
+    const kbCR = AkamaiKnowledgeBaseCR.fromCR(cr)
+    return kbCR.toApiResponse(teamId, (cr as any).status)
   }
 
-  getAplKnowledgeBases(teamId: string): AplKnowledgeBaseResponse[] {
-    return this.repoService.getTeamConfigService(teamId).getKnowledgeBases()
+  async getAplKnowledgeBases(teamId: string): Promise<AplKnowledgeBaseResponse[]> {
+    // Fetch directly from Kubernetes cluster
+    const namespace = `team-${teamId}`
+    const crs = await listAkamaiKnowledgeBaseCRs(namespace)
+
+    return crs.map((cr) => {
+      const kbCR = AkamaiKnowledgeBaseCR.fromCR(cr)
+      return kbCR.toApiResponse(teamId, (cr as any).status)
+    })
   }
 
   getAllAplKnowledgeBases(): AplKnowledgeBaseResponse[] {
@@ -2523,12 +2552,27 @@ export default class OtomiStack {
   }
 
   async getAplAgent(teamId: string, name: string): Promise<AplAgentResponse> {
-    const agent = this.repoService.getTeamConfigService(teamId).getAgent(name)
-    return agent
+    // Fetch directly from Kubernetes cluster
+    const namespace = `team-${teamId}`
+    const cr = await getAkamaiAgentCR(namespace, name)
+
+    if (!cr) {
+      throw new NotExistError(`Agent[${name}] does not exist.`)
+    }
+
+    const agentCR = AkamaiAgentCR.fromCR(cr)
+    return agentCR.toApiResponse(teamId, (cr as any).status)
   }
 
-  getAplAgents(teamId: string): AplAgentResponse[] {
-    return this.repoService.getTeamConfigService(teamId).getAgents()
+  async getAplAgents(teamId: string): Promise<AplAgentResponse[]> {
+    // Fetch directly from Kubernetes cluster
+    const namespace = `team-${teamId}`
+    const crs = await listAkamaiAgentCRs(namespace)
+
+    return crs.map((cr) => {
+      const agentCR = AkamaiAgentCR.fromCR(cr)
+      return agentCR.toApiResponse(teamId, (cr as any).status)
+    })
   }
 
   private async saveTeamAgent(teamId: string, agent: AplAgentResponse): Promise<void> {

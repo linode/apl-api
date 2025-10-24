@@ -63,7 +63,7 @@ export class AkamaiKnowledgeBaseCR {
       pipelineParameters: {
         url: request.spec.sourceUrl,
         table_name: knowledgeBaseName,
-        embedding_model: `nvidia/${embeddingModel.metadata.name}`,
+        embedding_model: embeddingModel.metadata.name,
         embedding_api_base: embeddingModel.spec.modelEndpoint,
         embed_dim: embeddingModel.spec.modelDimension || env.EMBED_DIM_DEFAULT,
         embed_batch_size: env.EMBED_BATCH_SIZE,
@@ -84,7 +84,7 @@ export class AkamaiKnowledgeBaseCR {
   }
 
   // Transform to API response format
-  toApiResponse(teamId: string): AplKnowledgeBaseResponse {
+  toApiResponse(teamId: string, status?: any): AplKnowledgeBaseResponse {
     return {
       kind: env.KNOWLEDGE_BASE_KIND as 'AkamaiKnowledgeBase',
       metadata: {
@@ -97,7 +97,7 @@ export class AkamaiKnowledgeBaseCR {
         modelName: this.spec.pipelineParameters.embedding_model,
         sourceUrl: this.spec.pipelineParameters.url,
       },
-      status: {},
+      status: status || {},
     }
   }
 
