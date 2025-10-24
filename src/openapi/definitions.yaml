@@ -951,8 +951,8 @@ replicas:
   title: Number of replicas
   default: 1
 repoUrl:
-  description: Path to a remote git repo without protocol. Will use https to access.
-  pattern: ^(.+@)*([\w\d\.]+)(:[\d]+){0,1}/*(.*)$
+  description: Path to a remote git repo without protocol. Will use https or ssh to access.
+  pattern: ^(https?://|ssh://|file://)?(.+@)*([\w\d\.\-]+)(:([\d]+|[\w\d\.\-\/]+))?/*(.*)$
   type: string
   x-message: a valid git repo URL
   example: github.com/example/repo
