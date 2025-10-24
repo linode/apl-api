@@ -2515,6 +2515,9 @@ export default class OtomiStack {
           spec: {
             foundationModel: data.spec?.foundationModel ?? existingAgent.spec.foundationModel,
             foundationModelEndpoint: data.spec?.foundationModelEndpoint ?? existingAgent.spec.foundationModelEndpoint,
+            temperature: data.spec?.temperature ?? existingAgent.spec.temperature,
+            topP: data.spec?.topP ?? existingAgent.spec.topP,
+            maxTokens: data.spec?.maxTokens ?? existingAgent.spec.maxTokens,
             agentInstructions: data.spec?.agentInstructions ?? existingAgent.spec.agentInstructions,
             routes: (data.spec?.routes ?? existingAgent.spec.routes) as typeof existingAgent.spec.routes,
             tools: (data.spec?.tools ?? existingAgent.spec.tools) as typeof existingAgent.spec.tools,
