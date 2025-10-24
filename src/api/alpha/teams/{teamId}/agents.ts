@@ -6,9 +6,9 @@ const debug = Debug('otomi:api:alpha:teams:agents')
 
 export default function (): OperationHandlerArray {
   const get: Operation = [
-    ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
+    async ({ otomi, params: { teamId } }: OpenApiRequestExt, res): Promise<void> => {
       debug(`getAplAgents(${teamId})`)
-      const v = otomi.getAplAgents(decodeURIComponent(teamId))
+      const v = await otomi.getAplAgents(decodeURIComponent(teamId))
       res.json(v)
     },
   ]
