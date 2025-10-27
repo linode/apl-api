@@ -2431,27 +2431,51 @@ export default class OtomiStack {
   }
 
   async getAplKnowledgeBase(teamId: string, name: string): Promise<AplKnowledgeBaseResponse> {
-    // Fetch directly from Kubernetes cluster
-    const namespace = `team-${teamId}`
-    const cr = await getAkamaiKnowledgeBaseCR(namespace, name)
+    // First fetch from repository (Git)
+    const kbFromRepo = this.repoService.getTeamConfigService(teamId).getKnowledgeBase(name)
 
-    if (!cr) {
+    if (!kbFromRepo) {
       throw new NotExistError(`KnowledgeBase[${name}] does not exist.`)
     }
 
-    const kbCR = AkamaiKnowledgeBaseCR.fromCR(cr)
-    return kbCR.toApiResponse(teamId, (cr as any).status)
+    // Then try to update with cluster status
+    const namespace = `team-${teamId}`
+    try {
+      const cr = await getAkamaiKnowledgeBaseCR(namespace, name)
+      if (cr) {
+        // Update the knowledgebase with the cluster status
+        return { ...kbFromRepo, status: (cr as any).status }
+      }
+    } catch (error) {
+      // If cluster fetch fails, just use the repo data with default status
+    }
+
+    return kbFromRepo
   }
 
   async getAplKnowledgeBases(teamId: string): Promise<AplKnowledgeBaseResponse[]> {
-    // Fetch directly from Kubernetes cluster
-    const namespace = `team-${teamId}`
-    const crs = await listAkamaiKnowledgeBaseCRs(namespace)
+    // First fetch from repository (Git)
+    const knowledgeBasesFromRepo = this.repoService.getTeamConfigService(teamId).getKnowledgeBases()
 
-    return crs.map((cr) => {
-      const kbCR = AkamaiKnowledgeBaseCR.fromCR(cr)
-      return kbCR.toApiResponse(teamId, (cr as any).status)
-    })
+    // Then update with cluster status
+    const namespace = `team-${teamId}`
+    const knowledgeBasesWithStatus = await Promise.all(
+      knowledgeBasesFromRepo.map(async (kb) => {
+        try {
+          // Try to fetch the CR from cluster to get the actual status
+          const cr = await getAkamaiKnowledgeBaseCR(namespace, kb.metadata.name)
+          if (cr) {
+            // Update the knowledgebase with the cluster status
+            return { ...kb, status: (cr as any).status }
+          }
+        } catch (error) {
+          // If cluster fetch fails, just use the repo data with default status
+        }
+        return kb
+      }),
+    )
+
+    return knowledgeBasesWithStatus
   }
 
   getAllAplKnowledgeBases(): AplKnowledgeBaseResponse[] {
@@ -2550,27 +2574,51 @@ export default class OtomiStack {
   }
 
   async getAplAgent(teamId: string, name: string): Promise<AplAgentResponse> {
-    // Fetch directly from Kubernetes cluster
-    const namespace = `team-${teamId}`
-    const cr = await getAkamaiAgentCR(namespace, name)
+    // First fetch from repository (Git)
+    const agentFromRepo = this.repoService.getTeamConfigService(teamId).getAgent(name)
 
-    if (!cr) {
+    if (!agentFromRepo) {
       throw new NotExistError(`Agent[${name}] does not exist.`)
     }
 
-    const agentCR = AkamaiAgentCR.fromCR(cr)
-    return agentCR.toApiResponse(teamId, (cr as any).status)
+    // Then try to update with cluster status
+    const namespace = `team-${teamId}`
+    try {
+      const cr = await getAkamaiAgentCR(namespace, name)
+      if (cr) {
+        // Update the agent with the cluster status
+        return { ...agentFromRepo, status: (cr as any).status }
+      }
+    } catch (error) {
+      // If cluster fetch fails, just use the repo data with default status
+    }
+
+    return agentFromRepo
   }
 
   async getAplAgents(teamId: string): Promise<AplAgentResponse[]> {
-    // Fetch directly from Kubernetes cluster
-    const namespace = `team-${teamId}`
-    const crs = await listAkamaiAgentCRs(namespace)
+    // First fetch from repository (Git)
+    const agentsFromRepo = this.repoService.getTeamConfigService(teamId).getAgents()
 
-    return crs.map((cr) => {
-      const agentCR = AkamaiAgentCR.fromCR(cr)
-      return agentCR.toApiResponse(teamId, (cr as any).status)
-    })
+    // Then update with cluster status
+    const namespace = `team-${teamId}`
+    const agentsWithStatus = await Promise.all(
+      agentsFromRepo.map(async (agent) => {
+        try {
+          // Try to fetch the CR from cluster to get the actual status
+          const cr = await getAkamaiAgentCR(namespace, agent.metadata.name)
+          if (cr) {
+            // Update the agent with the cluster status
+            return { ...agent, status: (cr as any).status }
+          }
+        } catch (error) {
+          // If cluster fetch fails, just use the repo data with default status
+        }
+        return agent
+      }),
+    )
+
+    return agentsWithStatus
   }
 
   private async saveTeamAgent(teamId: string, agent: AplAgentResponse): Promise<void> {
