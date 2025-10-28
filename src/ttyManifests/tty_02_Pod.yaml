@@ -9,14 +9,14 @@ metadata:
 spec:
   serviceAccountName: tty-$SUB
   securityContext:
-    runAsUser: 1000
-    runAsGroup: 1000
+    runAsUser: 1001
+    runAsGroup: 1001
   volumes:
     - name: kconfig
       configMap:
         name: kconfig-team-$TARGET_TEAM
   containers:
-    - image: linode/apl-tty:1.2.1
+    - image: linode/apl-tty:1.2.2
       name: po
       resources:
         requests:
@@ -33,4 +33,3 @@ spec:
         - -c
         - bash /etc/kconfig/kconfig.sh && ttyd -w /home/user -p 8080 tmux new -A
 ---
-
