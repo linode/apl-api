@@ -11,12 +11,8 @@ spec:
   securityContext:
     runAsUser: 1001
     runAsGroup: 1001
-  volumes:
-    - name: kconfig
-      configMap:
-        name: kconfig-team-$TARGET_TEAM
   containers:
-    - image: linode/apl-tty:1.2.2
+    - image: linode/apl-tty:1.2.3
       name: po
       resources:
         requests:
@@ -25,11 +21,7 @@ spec:
         limits:
           memory: '256Mi'
           cpu: '500m'
-      volumeMounts:
-        - name: kconfig
-          mountPath: /etc/kconfig
-      command:
-        - bash
-        - -c
-        - bash /etc/kconfig/kconfig.sh && ttyd -w /home/user -W -p 8080 tmux new -A
+      env:
+        - name: NAMESPACE
+          value: team-$TARGET_TEAM
 ---
