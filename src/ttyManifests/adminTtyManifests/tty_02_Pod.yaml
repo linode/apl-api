@@ -9,8 +9,12 @@ metadata:
 spec:
   serviceAccountName: tty-$SUB
   securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
     runAsUser: 1001
     runAsGroup: 1001
+    fsGroup: 1001
   containers:
     - image: linode/apl-tty:1.2.5
       name: po
@@ -24,4 +28,9 @@ spec:
       env:
         - name: NAMESPACE
           value: team-$TARGET_TEAM
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
 ---
