@@ -12,7 +12,7 @@ spec:
     runAsUser: 1001
     runAsGroup: 1001
   containers:
-    - image: linode/apl-tty:1.2.3
+    - image: linode/apl-tty:1.2.4
       name: po
       resources:
         requests:
