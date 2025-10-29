@@ -31,5 +31,5 @@ spec:
       command:
         - bash
         - -c
-        - bash /etc/kconfig/kconfig.sh && ttyd -w /home/user -p 8080 tmux new -A
+        - bash /etc/kconfig/kconfig.sh && ttyd -w /home/user -W -p 8080 tmux new -A
 ---
