@@ -8,7 +8,15 @@ import { readdir, readFile, writeFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, isEmpty, map, mapValues, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
-import { AlreadyExists, ForbiddenError, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
+import {
+  AlreadyExists,
+  ForbiddenError,
+  HttpError,
+  NotExistError,
+  OtomiError,
+  PublicUrlExists,
+  ValidationError,
+} from 'src/error'
 import getRepo, { getWorktreeRepo, Git } from 'src/git'
 import { cleanSession, getSessionStack } from 'src/middleware'
 import {
@@ -125,6 +133,7 @@ import { getAIModels } from './ai/aiModelHandler'
 import { AkamaiKnowledgeBaseCR } from './ai/AkamaiKnowledgeBaseCR'
 import { AkamaiAgentCR } from './ai/AkamaiAgentCR'
 import { DatabaseCR } from './ai/DatabaseCR'
+import { getAkamaiAgentCR, getAkamaiKnowledgeBaseCR, listAkamaiAgentCRs, listAkamaiKnowledgeBaseCRs } from './ai/k8s'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -2422,12 +2431,51 @@ export default class OtomiStack {
   }
 
   async getAplKnowledgeBase(teamId: string, name: string): Promise<AplKnowledgeBaseResponse> {
-    const knowledgeBase = this.repoService.getTeamConfigService(teamId).getKnowledgeBase(name)
-    return knowledgeBase
+    // First fetch from repository (Git)
+    const kbFromRepo = this.repoService.getTeamConfigService(teamId).getKnowledgeBase(name)
+
+    if (!kbFromRepo) {
+      throw new NotExistError(`KnowledgeBase[${name}] does not exist.`)
+    }
+
+    // Then try to update with cluster status
+    const namespace = `team-${teamId}`
+    try {
+      const cr = await getAkamaiKnowledgeBaseCR(namespace, name)
+      if (cr) {
+        // Update the knowledgebase with the cluster status
+        return { ...kbFromRepo, status: (cr as any).status }
+      }
+    } catch (error) {
+      // If cluster fetch fails, just use the repo data with default status
+    }
+
+    return kbFromRepo
   }
 
-  getAplKnowledgeBases(teamId: string): AplKnowledgeBaseResponse[] {
-    return this.repoService.getTeamConfigService(teamId).getKnowledgeBases()
+  async getAplKnowledgeBases(teamId: string): Promise<AplKnowledgeBaseResponse[]> {
+    // First fetch from repository (Git)
+    const knowledgeBasesFromRepo = this.repoService.getTeamConfigService(teamId).getKnowledgeBases()
+
+    // Then update with cluster status
+    const namespace = `team-${teamId}`
+    const knowledgeBasesWithStatus = await Promise.all(
+      knowledgeBasesFromRepo.map(async (kb) => {
+        try {
+          // Try to fetch the CR from cluster to get the actual status
+          const cr = await getAkamaiKnowledgeBaseCR(namespace, kb.metadata.name)
+          if (cr) {
+            // Update the knowledgebase with the cluster status
+            return { ...kb, status: (cr as any).status }
+          }
+        } catch (error) {
+          // If cluster fetch fails, just use the repo data with default status
+        }
+        return kb
+      }),
+    )
+
+    return knowledgeBasesWithStatus
   }
 
   getAllAplKnowledgeBases(): AplKnowledgeBaseResponse[] {
@@ -2490,7 +2538,12 @@ export default class OtomiStack {
           },
           spec: {
             foundationModel: data.spec?.foundationModel ?? existingAgent.spec.foundationModel,
+            foundationModelEndpoint: data.spec?.foundationModelEndpoint ?? existingAgent.spec.foundationModelEndpoint,
+            temperature: data.spec?.temperature ?? existingAgent.spec.temperature,
+            topP: data.spec?.topP ?? existingAgent.spec.topP,
+            maxTokens: data.spec?.maxTokens ?? existingAgent.spec.maxTokens,
             agentInstructions: data.spec?.agentInstructions ?? existingAgent.spec.agentInstructions,
+            routes: (data.spec?.routes ?? existingAgent.spec.routes) as typeof existingAgent.spec.routes,
             tools: (data.spec?.tools ?? existingAgent.spec.tools) as typeof existingAgent.spec.tools,
           },
         })
@@ -2521,12 +2574,51 @@ export default class OtomiStack {
   }
 
   async getAplAgent(teamId: string, name: string): Promise<AplAgentResponse> {
-    const agent = this.repoService.getTeamConfigService(teamId).getAgent(name)
-    return agent
+    // First fetch from repository (Git)
+    const agentFromRepo = this.repoService.getTeamConfigService(teamId).getAgent(name)
+
+    if (!agentFromRepo) {
+      throw new NotExistError(`Agent[${name}] does not exist.`)
+    }
+
+    // Then try to update with cluster status
+    const namespace = `team-${teamId}`
+    try {
+      const cr = await getAkamaiAgentCR(namespace, name)
+      if (cr) {
+        // Update the agent with the cluster status
+        return { ...agentFromRepo, status: (cr as any).status }
+      }
+    } catch (error) {
+      // If cluster fetch fails, just use the repo data with default status
+    }
+
+    return agentFromRepo
   }
 
-  getAplAgents(teamId: string): AplAgentResponse[] {
-    return this.repoService.getTeamConfigService(teamId).getAgents()
+  async getAplAgents(teamId: string): Promise<AplAgentResponse[]> {
+    // First fetch from repository (Git)
+    const agentsFromRepo = this.repoService.getTeamConfigService(teamId).getAgents()
+
+    // Then update with cluster status
+    const namespace = `team-${teamId}`
+    const agentsWithStatus = await Promise.all(
+      agentsFromRepo.map(async (agent) => {
+        try {
+          // Try to fetch the CR from cluster to get the actual status
+          const cr = await getAkamaiAgentCR(namespace, agent.metadata.name)
+          if (cr) {
+            // Update the agent with the cluster status
+            return { ...agent, status: (cr as any).status }
+          }
+        } catch (error) {
+          // If cluster fetch fails, just use the repo data with default status
+        }
+        return agent
+      }),
+    )
+
+    return agentsWithStatus
   }
 
   private async saveTeamAgent(teamId: string, agent: AplAgentResponse): Promise<void> {
