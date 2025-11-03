@@ -203,6 +203,13 @@ export class Git {
     await writeFile(absolutePath, content, 'utf8')
   }
 
+  async writeTextFile(file: string, content: string): Promise<void> {
+    const absolutePath = join(this.path, file)
+    debug(`Writing to file: ${absolutePath}`)
+    await ensureDir(dirname(absolutePath))
+    await writeFile(absolutePath, content, 'utf8')
+  }
+
   async fileExists(relativePath: string): Promise<boolean> {
     const absolutePath = join(this.path, relativePath)
     return await pathExists(absolutePath)
