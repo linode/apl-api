@@ -1,13 +1,19 @@
 import { cloneDeep, find, has, merge, omit, remove, set } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
-import { AlreadyExists, NotExistError } from '../error'
+import { AkamaiKnowledgeBaseCR } from '../ai/AkamaiKnowledgeBaseCR'
+import { AkamaiAgentCR } from '../ai/AkamaiAgentCR'
+import { AlreadyExists, NotExistError, ValidationError } from '../error'
 import {
+  AplAgentRequest,
+  AplAgentResponse,
   AplBackupRequest,
   AplBackupResponse,
   AplBuildRequest,
   AplBuildResponse,
   AplCodeRepoRequest,
   AplCodeRepoResponse,
+  AplKnowledgeBaseRequest,
+  AplKnowledgeBaseResponse,
   AplNetpolRequest,
   AplNetpolResponse,
   AplPolicyRequest,
@@ -39,6 +45,8 @@ export class TeamConfigService {
     this.teamConfig.workloads ??= []
     this.teamConfig.services ??= []
     this.teamConfig.sealedsecrets ??= []
+    this.teamConfig.knowledgeBases ??= []
+    this.teamConfig.agents ??= []
     this.teamConfig.backups ??= []
     this.teamConfig.netpols ??= []
     this.teamConfig.apps ??= []
@@ -260,6 +268,148 @@ export class TeamConfigService {
   }
 
   // =====================================
+  // == KNOWLEDGE BASE CRUD ==
+  // =====================================
+
+  public createKnowledgeBase(knowledgeBase: AplKnowledgeBaseRequest): AplKnowledgeBaseResponse {
+    const { name } = knowledgeBase.metadata
+    if (find(this.teamConfig.knowledgeBases, (item) => item.metadata.name === name)) {
+      throw new AlreadyExists(`KnowledgeBase[${name}] already exists.`)
+    }
+
+    const newKnowledgeBase = this.createAplObject(name, knowledgeBase) as AplKnowledgeBaseResponse
+    this.teamConfig.knowledgeBases.push(newKnowledgeBase)
+    return newKnowledgeBase
+  }
+
+  public getKnowledgeBase(name: string): AplKnowledgeBaseResponse {
+    const knowledgeBase = find(this.teamConfig.knowledgeBases, (item) => item.metadata.name === name)
+    if (!knowledgeBase) {
+      throw new NotExistError(`KnowledgeBase[${name}] does not exist.`)
+    }
+    // If the knowledge base has pipeline parameters, it's a full CR that needs transformation
+    if (knowledgeBase.spec && 'pipelineParameters' in knowledgeBase.spec) {
+      return AkamaiKnowledgeBaseCR.fromCR(knowledgeBase as any).toApiResponse(this.teamConfig.settings.metadata.name)
+    }
+    return knowledgeBase
+  }
+
+  public getKnowledgeBases(): AplKnowledgeBaseResponse[] {
+    const knowledgeBases = this.teamConfig.knowledgeBases ?? []
+    return knowledgeBases.map((kb) => {
+      // If the knowledge base has pipeline parameters, it's a full CR that needs transformation
+      if (kb.spec && 'pipelineParameters' in kb.spec) {
+        return AkamaiKnowledgeBaseCR.fromCR(kb as any).toApiResponse(this.teamConfig.settings.metadata.name)
+      }
+      return kb
+    })
+  }
+
+  public updateKnowledgeBase(name: string, updates: AplKnowledgeBaseRequest): AplKnowledgeBaseResponse {
+    const knowledgeBase = this.getKnowledgeBase(name)
+    return updateAplObject(knowledgeBase, updates) as AplKnowledgeBaseResponse
+  }
+
+  public patchKnowledgeBase(name: string, updates: DeepPartial<AplKnowledgeBaseRequest>): AplKnowledgeBaseResponse {
+    const knowledgeBase = this.getKnowledgeBase(name)
+    const mergeObj = getAplMergeObject(updates)
+    return merge(knowledgeBase, mergeObj)
+  }
+
+  public deleteKnowledgeBase(name: string): void {
+    remove(this.teamConfig.knowledgeBases, (item) => item.metadata.name === name)
+  }
+
+  public validateKnowledgeBaseExists(knowledgeBaseName: string): boolean {
+    const knowledgeBases = this.teamConfig.knowledgeBases ?? []
+    return knowledgeBases.some((kb) => kb.metadata.name === knowledgeBaseName)
+  }
+
+  // =====================================
+  // == AGENT CRUD ==
+  // =====================================
+
+  public createAgent(agent: AplAgentRequest): AplAgentResponse {
+    const { name } = agent.metadata
+    if (find(this.teamConfig.agents, (item) => item.metadata.name === name)) {
+      throw new AlreadyExists(`Agent[${name}] already exists.`)
+    }
+
+    // Validate that knowledgeBase exists if specified in tools
+    if (agent.spec.tools) {
+      for (const tool of agent.spec.tools) {
+        if (tool.type === 'knowledgeBase' && tool.name) {
+          const toolName = tool.name as string
+          if (!this.validateKnowledgeBaseExists(toolName)) {
+            throw new ValidationError(`KnowledgeBase[${toolName}] does not exist.`)
+          }
+        }
+      }
+    }
+
+    const newAgent = this.createAplObject(name, agent) as AplAgentResponse
+    this.teamConfig.agents.push(newAgent)
+    return newAgent
+  }
+
+  public getAgent(name: string): AplAgentResponse {
+    const agent = find(this.teamConfig.agents, (item) => item.metadata.name === name)
+    if (!agent) {
+      throw new NotExistError(`Agent[${name}] does not exist.`)
+    }
+    if (agent.spec && 'foundationModel' in agent.spec) {
+      return AkamaiAgentCR.fromCR(agent as any).toApiResponse(this.teamConfig.settings.metadata.name)
+    }
+    return agent
+  }
+
+  public getAgents(): AplAgentResponse[] {
+    return this.teamConfig.agents.map((agent) => {
+      if (agent.spec && 'foundationModel' in agent.spec) {
+        return AkamaiAgentCR.fromCR(agent as any).toApiResponse(this.teamConfig.settings.metadata.name)
+      }
+      return agent
+    })
+  }
+
+  public updateAgent(name: string, updates: AplAgentRequest): AplAgentResponse {
+    const agent = this.getAgent(name)
+    // Validate that knowledgeBase exists if specified in tools
+    if (updates.spec.tools) {
+      for (const tool of updates.spec.tools) {
+        if (tool.type === 'knowledgeBase' && tool.name) {
+          const toolName = tool.name as string
+          if (!this.validateKnowledgeBaseExists(toolName)) {
+            throw new ValidationError(`KnowledgeBase[${toolName}] does not exist.`)
+          }
+        }
+      }
+    }
+    return updateAplObject(agent, updates) as AplAgentResponse
+  }
+
+  public patchAgent(name: string, updates: DeepPartial<AplAgentRequest>): AplAgentResponse {
+    const agent = this.getAgent(name)
+    // Validate that knowledgeBase exists if specified in tools
+    if (updates.spec?.tools) {
+      for (const tool of updates.spec.tools) {
+        if (tool && tool.type === 'knowledgeBase' && typeof tool.name === 'string') {
+          const toolName = tool.name as string
+          if (!this.validateKnowledgeBaseExists(toolName)) {
+            throw new ValidationError(`KnowledgeBase[${toolName}] does not exist.`)
+          }
+        }
+      }
+    }
+    const mergeObj = getAplMergeObject(updates)
+    return merge(agent, mergeObj)
+  }
+
+  public deleteAgent(name: string): void {
+    remove(this.teamConfig.agents, (item) => item.metadata.name === name)
+  }
+
+  // =====================================
   // == BACKUPS CRUD ==
   // =====================================
 
@@ -446,12 +596,13 @@ export class TeamConfigService {
     }
   }
 
-  /** Retrieve a collection dynamically from the Teamconfig */
+  /** Retrieve a collection dynamically from the Teamconfig
+   * Try not to use this function */
   public getCollection(collectionId: string): AplResponseObject[] {
     if (!has(this.teamConfig, collectionId)) {
       throw new Error(`Getting TeamConfig collection [${collectionId}] does not exist.`)
     }
-    return this.teamConfig[collectionId]
+    return this.teamConfig[collectionId] as any
   }
 
   /** Update a collection dynamically in the Teamconfig */

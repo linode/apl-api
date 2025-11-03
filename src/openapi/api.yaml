@@ -2471,6 +2471,181 @@ paths:
         '200':
           description: Successfully edited app values.
 
+  '/alpha/ai/models':
+    get:
+      operationId: getAIModels
+      description: Get available shared AI models (foundation or embedding)
+      x-aclSchema: AIModel
+      responses:
+        '200':
+          description: Successfully obtained shared AI models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplAIModelResponse'
+
+  '/alpha/teams/{teamId}/kb':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getAplKnowledgeBases
+      description: Get knowledge bases from a given team
+      x-aclSchema: KnowledgeBase
+      responses:
+        '200':
+          description: Successfully obtained knowledge bases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplKnowledgeBaseResponse'
+    post:
+      operationId: createAplKnowledgeBase
+      description: Create a team knowledge base
+      x-aclSchema: KnowledgeBase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplKnowledgeBaseRequest'
+        description: KnowledgeBase object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored knowledge base configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplKnowledgeBaseResponse'
+
+  '/alpha/teams/{teamId}/kb/{knowledgeBaseName}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/knowledgeBaseParams'
+    get:
+      operationId: getAplKnowledgeBase
+      description: Get a knowledge base from a given team
+      x-aclSchema: KnowledgeBase
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained knowledge base configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplKnowledgeBaseRequest'
+    put:
+      operationId: editAplKnowledgeBase
+      description: Edit a knowledge base from a given team
+      x-aclSchema: KnowledgeBase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplKnowledgeBaseRequest'
+        description: KnowledgeBase object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team knowledge base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplKnowledgeBaseResponse'
+    delete:
+      operationId: deleteAplKnowledgeBase
+      description: Delete a knowledge base from a given team
+      x-aclSchema: KnowledgeBase
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a team knowledge base
+
+  '/alpha/teams/{teamId}/agents':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getAplAgents
+      description: Get agents from a given team
+      x-aclSchema: Agent
+      responses:
+        '200':
+          description: Successfully obtained agents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplAgentResponse'
+    post:
+      operationId: createAplAgent
+      description: Create a team agent
+      x-aclSchema: Agent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplAgentRequest'
+        description: Agent object
+        required: true
+      responses:
+        <<: *DefaultPostResponses
+        '200':
+          description: Successfully stored agent configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplAgentResponse'
+
+  '/alpha/teams/{teamId}/agents/{agentName}':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/agentParams'
+    get:
+      operationId: getAplAgent
+      description: Get an agent from a given team
+      x-aclSchema: Agent
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully obtained agent configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplAgentResponse'
+    put:
+      operationId: editAplAgent
+      description: Edit an agent from a given team
+      x-aclSchema: Agent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplAgentRequest'
+        description: Agent object that contains updated values
+        required: true
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully edited a team agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplAgentResponse'
+    delete:
+      operationId: deleteAplAgent
+      description: Delete an agent from a given team
+      x-aclSchema: Agent
+      responses:
+        <<: *DefaultGetResponses
+        '200':
+          description: Successfully deleted a team agent
+
 ## -------------------------------------------- Servers
 #
 #servers:
@@ -2556,6 +2731,20 @@ components:
       required: true
       schema:
         type: string
+    knowledgeBaseParams:
+      name: knowledgeBaseName
+      in: path
+      description: Name of the knowledge base
+      required: true
+      schema:
+        type: string
+    agentParams:
+      name: agentName
+      in: path
+      description: Name of the agent
+      required: true
+      schema:
+        type: string
   securitySchemes:
     groupAuthn:
       type: apiKey
@@ -2633,6 +2822,44 @@ components:
               type: string
       required:
         - status
+    AplAIModel:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AplAIModel]
+        spec:
+          $ref: 'aiModel.yaml#/AplAIModelSpec'
+      required:
+        - kind
+        - spec
+    AplAIModelResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplAIModel'
+        - $ref: '#/components/schemas/aplMetadata'
+        - $ref: '#/components/schemas/aplStatusResponse'
+    AplAgent:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AkamaiAgent]
+        spec:
+          $ref: 'agent.yaml#/AplAgentSpec'
+      required:
+        - kind
+        - spec
+    AplAgentRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplAgent'
+        - $ref: '#/components/schemas/aplMetadata'
+    AplAgentResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplAgent'
+        - $ref: '#/components/schemas/aplTeamMetadata'
+        - $ref: '#/components/schemas/aplStatusResponse'
     AplBackup:
       type: object
       properties:
@@ -2694,6 +2921,27 @@ components:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplCodeRepo'
+        - $ref: '#/components/schemas/aplTeamMetadata'
+        - $ref: '#/components/schemas/aplStatusResponse'
+    AplKnowledgeBase:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AkamaiKnowledgeBase]
+        spec:
+          $ref: 'knowledgeBase.yaml#/AplKnowledgeBaseSpec'
+      required:
+        - kind
+        - spec
+    AplKnowledgeBaseRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplKnowledgeBase'
+        - $ref: '#/components/schemas/aplMetadata'
+    AplKnowledgeBaseResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplKnowledgeBase'
         - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
     AplNetpol:
@@ -2823,6 +3071,8 @@ components:
         - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
 
+    Agent:
+      $ref: 'agent.yaml#/Agent'
     App:
       $ref: 'app.yaml#/App'
     AppList:
@@ -2839,6 +3089,8 @@ components:
       $ref: 'codeRepo.yaml#/CodeRepo'
     K8sService:
       $ref: 'k8s.yaml#/K8sService'
+    KnowledgeBase:
+      $ref: 'knowledgeBase.yaml#/KnowledgeBase'
     Kubecfg:
       $ref: 'kubecfg.yaml#/Kubecfg'
     Netpol:
@@ -2879,6 +3131,8 @@ components:
       $ref: 'testrepoconnect.yaml#/TestRepoConnect'
     InternalRepoUrls:
       $ref: 'internalRepoUrls.yaml#/InternalRepoUrls'
+    AIModel:
+      $ref: 'aiModel.yaml#/AIModel'
     Team:
       $ref: 'team.yaml#/Team'
     TeamAuthz:

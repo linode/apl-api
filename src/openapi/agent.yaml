@@ -1,0 +1,56 @@
+Agent:
+  x-acl:
+    platformAdmin:
+      - create-any
+      - read-any
+      - update-any
+      - delete-any
+    teamAdmin:
+      - create
+      - read
+      - update
+      - delete
+    teamMember:
+      - create
+      - read
+      - update
+      - delete
+
+AplAgentSpec:
+  type: object
+  properties:
+    foundationModel:
+      type: string
+      description: Name of the foundation model
+      example: "meta-llama-3"
+    agentInstructions:
+      type: string
+      description: Custom instructions for the agent
+      example: "You are a helpful assistant that provides concise answers."
+    tools:
+      type: array
+      description: Tools available to the agent
+      items:
+        type: object
+        properties:
+          type:
+            type: string
+            description: Type of the tool
+            example: "knowledgeBase"
+          name:
+            type: string
+            description: Name of the tool resource
+            example: "company-docs"
+          description:
+            type: string
+            description: Description of what the tool does
+            example: "Search the company-docs knowledge base for relevant information"
+          endpoint:
+            type: string
+            description: Optional endpoint URL for the tool
+        required:
+          - type
+          - name
+  required:
+    - foundationModel
+    - agentInstructions

@@ -10,7 +10,6 @@ teamConfig:
             gitea: {}
             grafana: {}
             harbor: {}
-            httpbin: {}
             ingress-nginx: {}
             istio: {}
             jaeger: {}

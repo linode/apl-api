@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -9,9 +9,12 @@ import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, isEmpty, map, mapValues, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema, getSpec } from 'src/app'
 import { AlreadyExists, ForbiddenError, HttpError, OtomiError, PublicUrlExists, ValidationError } from 'src/error'
-import getRepo, { Git } from 'src/git'
+import getRepo, { getWorktreeRepo, Git } from 'src/git'
 import { cleanSession, getSessionStack } from 'src/middleware'
 import {
+  AplAgentRequest,
+  AplAgentResponse,
+  AplAIModelResponse,
   AplBackupRequest,
   AplBackupResponse,
   AplBuildRequest,
@@ -19,6 +22,8 @@ import {
   AplCodeRepoRequest,
   AplCodeRepoResponse,
   AplKind,
+  AplKnowledgeBaseRequest,
+  AplKnowledgeBaseResponse,
   AplNetpolRequest,
   AplNetpolResponse,
   AplPolicyRequest,
@@ -67,6 +72,7 @@ import {
   getValuesSchema,
   removeBlankAttributes,
 } from 'src/utils'
+import { deepQuote } from 'src/utils/yamlUtils'
 import {
   cleanEnv,
   CUSTOM_ROOT_CA,
@@ -80,6 +86,7 @@ import {
   GIT_USER,
   HELM_CHART_CATALOG,
   HIDDEN_APPS,
+  KNOWLEDGE_BASE_KIND,
   OBJ_STORAGE_APPS,
   PREINSTALLED_EXCLUDED_APPS,
   TOOLS_HOST,
@@ -114,6 +121,10 @@ import { getSealedSecretsPEM, sealedSecretManifest, SealedSecretManifestType } f
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchChartYaml, fetchWorkloadCatalog, NewHelmChartValues, sparseCloneChart } from './utils/workloadUtils'
+import { getAIModels } from './ai/aiModelHandler'
+import { AkamaiKnowledgeBaseCR } from './ai/AkamaiKnowledgeBaseCR'
+import { AkamaiAgentCR } from './ai/AkamaiAgentCR'
+import { DatabaseCR } from './ai/DatabaseCR'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -137,6 +148,7 @@ const env = cleanEnv({
   PREINSTALLED_EXCLUDED_APPS,
   HIDDEN_APPS,
   OBJ_STORAGE_APPS,
+  KNOWLEDGE_BASE_KIND,
 })
 
 export const rootPath = '/tmp/otomi/values'
@@ -149,6 +161,18 @@ function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: s
 
 function getTeamWorkloadValuesManagedFilePath(teamId: string, workloadName: string): string {
   return `env/teams/${teamId}/workloads/${workloadName}.managed.yaml`
+}
+
+function getTeamKnowledgeBaseValuesFilePath(teamId: string, knowledgeBaseName: string): string {
+  return `env/teams/${teamId}/knowledgebases/${knowledgeBaseName}`
+}
+
+function getTeamAgentValuesFilePath(teamId: string, agentName: string): string {
+  return `env/teams/${teamId}/agents/${agentName}`
+}
+
+function getTeamDatabaseValuesFilePath(teamId: string, databaseName: string): string {
+  return `env/teams/${teamId}/databases/${databaseName}`
 }
 
 export default class OtomiStack {
@@ -333,6 +357,25 @@ export default class OtomiStack {
     debug(`Values are loaded for ${this.editor} in ${this.sessionId}`)
   }
 
+  async initGitWorktree(mainRepo: Git): Promise<void> {
+    await this.init()
+    debug(`Creating worktree for session ${this.sessionId}`)
+
+    try {
+      await mainRepo.git.revparse(`--verify refs/heads/${env.GIT_BRANCH}`)
+    } catch (error) {
+      const errorMessage = getSanitizedErrorMessage(error)
+      throw new Error(
+        `Main repository does not have branch '${env.GIT_BRANCH}'. Cannot create worktree. ${errorMessage}`,
+      )
+    }
+
+    const worktreePath = this.getRepoPath()
+    this.git = await getWorktreeRepo(mainRepo, worktreePath, env.GIT_BRANCH)
+
+    debug(`Worktree created for ${this.editor} in ${this.sessionId}`)
+  }
+
   getSecretPaths(): string[] {
     // we split secrets from plain data, but have to overcome teams using patternproperties
     const teamProp = 'teamConfig.patternProperties.^[a-z0-9]([-a-z0-9]*[a-z0-9])+$'
@@ -363,7 +406,7 @@ export default class OtomiStack {
     return {
       cluster: pick(this.repoService.getCluster(), ['name', 'domainSuffix', 'apiServer', 'provider']),
       dns: pick(this.repoService.getDns(), ['zones']),
-      otomi: pick(this.repoService.getOtomi(), ['hasExternalDNS', 'hasExternalIDP', 'isPreInstalled']),
+      otomi: pick(this.repoService.getOtomi(), ['hasExternalDNS', 'hasExternalIDP', 'isPreInstalled', 'aiEnabled']),
       smtp: pick(this.repoService.getSmtp(), ['smarthost']),
       ingressClassNames: map(this.repoService.getIngress()?.classes, 'className') ?? [],
     } as SettingsInfo
@@ -692,6 +735,7 @@ export default class OtomiStack {
 
   async createAplTeam(data: AplTeamSettingsRequest, deploy = true): Promise<AplTeamSettingsResponse> {
     const teamName = data.metadata.name
+    if (teamName.length < 3) throw new ValidationError('Team name must be at least 3 characters long')
     if (teamName.length > 9) throw new ValidationError('Team name must not exceed 9 characters')
 
     if (isEmpty(data.spec.password)) {
@@ -962,6 +1006,8 @@ export default class OtomiStack {
   }
 
   async createAplNetpol(teamId: string, data: AplNetpolRequest): Promise<AplNetpolResponse> {
+    if (data.metadata.name.length < 2)
+      throw new ValidationError('Network policy name must be at least 2 characters long')
     try {
       const netpol = this.repoService.getTeamConfigService(teamId).createNetpol(data)
       await this.saveTeamConfigItem(netpol)
@@ -1408,6 +1454,8 @@ export default class OtomiStack {
 
   async createAplBuild(teamId: string, data: AplBuildRequest): Promise<AplBuildResponse> {
     const buildName = `${data?.spec?.imageName}-${data?.spec?.tag}`
+    if (data.spec.secretName && data.spec.secretName.length < 2)
+      throw new ValidationError('Secret name must be at least 2 characters long')
     if (buildName.length > 128) {
       throw new HttpError(
         400,
@@ -1715,14 +1763,15 @@ export default class OtomiStack {
   }
 
   getAllWorkloadNames(): WorkloadName[] {
-    const workloads = this.getAllAplWorkloads().map((workload) => ({
-      metadata: {
-        name: workload.metadata.name,
-        labels: {
-          'apl.io/teamId': workload.metadata.labels['apl.io/teamId'],
+    const workloads = this.getAllAplWorkloads().map((workload) => {
+      const teamId = workload.metadata.labels['apl.io/teamId']
+      return {
+        metadata: {
+          name: workload.metadata.name,
+          namespace: teamId ? `team-${teamId}` : undefined,
         },
-      },
-    }))
+      }
+    })
     return workloads
   }
 
@@ -1809,9 +1858,11 @@ export default class OtomiStack {
   }
 
   async editWorkloadValues(teamId: string, name: string, data: WorkloadValues): Promise<WorkloadValues> {
-    const workload = this.repoService
-      .getTeamConfigService(teamId)
-      .patchWorkload(name, { spec: { values: stringifyYaml(data.values) } })
+    const workload = this.repoService.getTeamConfigService(teamId).patchWorkload(name, {
+      spec: {
+        values: stringifyYaml(deepQuote(data.values)),
+      },
+    })
     await this.saveTeamWorkloadValues(workload)
     await this.doTeamDeployment(
       teamId,
@@ -1857,6 +1908,9 @@ export default class OtomiStack {
   }
 
   async createAplService(teamId: string, data: AplServiceRequest): Promise<AplServiceResponse> {
+    if (data.metadata.name.length < 2) throw new ValidationError('Service name must be at least 2 characters long')
+    if (data.spec.cname?.tlsSecretName && data.spec.cname?.tlsSecretName.length < 2)
+      throw new ValidationError('Secret name must be at least 2 characters long')
     try {
       const service = this.repoService.getTeamConfigService(teamId).createService(data)
       await this.saveTeamConfigItem(service)
@@ -1954,8 +2008,10 @@ export default class OtomiStack {
     try {
       // Commit and push Git changes
       await this.git.save(this.editor!, encryptSecrets, files)
+      // Pull the latest changes to ensure we have the most recent state
+      await rootStack.git.git.pull()
 
-      // Execute the provided action dynamically
+      // Update the team configuration of the root stack
       action(rootStack.repoService.getTeamConfigService(teamId))
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
@@ -1978,8 +2034,9 @@ export default class OtomiStack {
     try {
       // Commit and push Git changes
       await this.git.save(this.editor!, encryptSecrets, files)
-
-      // Execute the provided action dynamically
+      // Pull the latest changes to ensure we have the most recent state
+      await rootStack.git.git.pull()
+      // update the repo configuration of the root stack
       action(rootStack.repoService)
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
@@ -2049,8 +2106,12 @@ export default class OtomiStack {
       pods = res.items
     }
 
+    const excludedLabels = ['helm.sh/chart', 'app.kubernetes.io/managed-by']
+    const filteredLabels = Object.fromEntries(
+      Object.entries(pods[0]?.metadata?.labels ?? {}).filter(([key]) => !excludedLabels.includes(key)),
+    )
     // Return labels of the first matching pod, or empty object
-    return pods.length > 0 ? (pods[0].metadata?.labels ?? {}) : {}
+    return pods.length > 0 ? filteredLabels : {}
   }
 
   async listUniquePodNamesByLabel(labelSelector: string, namespace?: string): Promise<string[]> {
@@ -2079,6 +2140,10 @@ export default class OtomiStack {
     }
 
     return names
+  }
+
+  async getAllAIModels(): Promise<AplAIModelResponse[]> {
+    return getAIModels()
   }
 
   async getK8sServices(teamId: string): Promise<Array<K8sService>> {
@@ -2183,6 +2248,7 @@ export default class OtomiStack {
   }
 
   async createAplSealedSecret(teamId: string, data: AplSecretRequest): Promise<AplSecretResponse> {
+    if (data.metadata.name.length < 2) throw new ValidationError('Secret name must be at least 2 characters long')
     try {
       const sealedSecret = this.repoService.getTeamConfigService(teamId).createSealedSecret(data)
       await this.saveTeamSealedSecret(sealedSecret)
@@ -2287,6 +2353,209 @@ export default class OtomiStack {
   async getSecretsFromK8s(teamId: string): Promise<Array<string>> {
     if (env.isDev) return []
     return await getTeamSecretsFromK8s(`team-${teamId}`)
+  }
+
+  async createAplKnowledgeBase(teamId: string, data: AplKnowledgeBaseRequest): Promise<AplKnowledgeBaseResponse> {
+    if (data.metadata.name.length < 2)
+      throw new ValidationError('Knowledge base name must be at least 2 characters long')
+    try {
+      const knowledgeBase = this.repoService.getTeamConfigService(teamId).createKnowledgeBase(data)
+      await this.saveTeamKnowledgeBase(teamId, knowledgeBase)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createKnowledgeBase(knowledgeBase)
+        },
+        false,
+      )
+      return knowledgeBase
+    } catch (err) {
+      if (err.code === 409) err.publicMessage = 'Knowledge base name already exists'
+      throw err
+    }
+  }
+
+  async editAplKnowledgeBase(
+    teamId: string,
+    name: string,
+    data: DeepPartial<AplKnowledgeBaseRequest>,
+    patch = false,
+  ): Promise<AplKnowledgeBaseResponse> {
+    const existingKB = this.repoService.getTeamConfigService(teamId).getKnowledgeBase(name)
+    const knowledgeBase = patch
+      ? this.repoService.getTeamConfigService(teamId).patchKnowledgeBase(name, {
+          metadata: data.metadata,
+          spec: data.spec,
+        })
+      : this.repoService.getTeamConfigService(teamId).updateKnowledgeBase(name, {
+          kind: 'AkamaiKnowledgeBase',
+          metadata: {
+            name: data.metadata?.name ?? existingKB.metadata.name,
+          },
+          spec: {
+            modelName: data.spec?.modelName ?? existingKB.spec.modelName,
+            sourceUrl: data.spec?.sourceUrl ?? existingKB.spec.sourceUrl,
+          },
+        })
+
+    await this.saveTeamKnowledgeBase(teamId, knowledgeBase)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateKnowledgeBase(name, knowledgeBase)
+      },
+      false,
+    )
+    return knowledgeBase
+  }
+
+  async deleteAplKnowledgeBase(teamId: string, name: string): Promise<void> {
+    const knowledgeBase = await this.getAplKnowledgeBase(teamId, name)
+    this.repoService.getTeamConfigService(teamId).deleteKnowledgeBase(knowledgeBase.metadata.name)
+    const relativePath = getTeamKnowledgeBaseValuesFilePath(teamId, `${name}.yaml`)
+    const databasePath = getTeamDatabaseValuesFilePath(teamId, `${name}.yaml`)
+    await this.git.removeFile(relativePath)
+    await this.git.removeFile(databasePath)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteKnowledgeBase(name)
+      },
+      false,
+    )
+  }
+
+  async getAplKnowledgeBase(teamId: string, name: string): Promise<AplKnowledgeBaseResponse> {
+    const knowledgeBase = this.repoService.getTeamConfigService(teamId).getKnowledgeBase(name)
+    return knowledgeBase
+  }
+
+  getAplKnowledgeBases(teamId: string): AplKnowledgeBaseResponse[] {
+    return this.repoService.getTeamConfigService(teamId).getKnowledgeBases()
+  }
+
+  getAllAplKnowledgeBases(): AplKnowledgeBaseResponse[] {
+    return this.repoService.getAllKnowledgeBases()
+  }
+
+  private async saveTeamKnowledgeBase(teamId: string, knowledgeBase: AplKnowledgeBaseResponse): Promise<void> {
+    const databaseCR = await DatabaseCR.create(teamId, knowledgeBase.metadata.name)
+    const knowledgeBaseCR = await AkamaiKnowledgeBaseCR.create(
+      teamId,
+      knowledgeBase.metadata.name,
+      databaseCR.spec.cluster.name,
+      {
+        kind: 'AkamaiKnowledgeBase',
+        metadata: knowledgeBase.metadata,
+        spec: knowledgeBase.spec,
+      },
+    )
+
+    await this.saveKnowledgeBaseCR(teamId, knowledgeBaseCR)
+    await this.saveDatabaseCR(teamId, databaseCR)
+  }
+
+  // Agent methods - following the same patterns as knowledge base methods
+  async createAplAgent(teamId: string, data: AplAgentRequest): Promise<AplAgentResponse> {
+    if (data.metadata.name.length < 2) throw new ValidationError('Agent name must be at least 2 characters long')
+    try {
+      const agent = this.repoService.getTeamConfigService(teamId).createAgent(data)
+      await this.saveTeamAgent(teamId, agent)
+      await this.doTeamDeployment(
+        teamId,
+        (teamService) => {
+          teamService.createAgent(agent)
+        },
+        false,
+      )
+      return agent
+    } catch (err) {
+      if (err.code === 409) err.publicMessage = 'Agent name already exists'
+      throw err
+    }
+  }
+
+  async editAplAgent(
+    teamId: string,
+    name: string,
+    data: DeepPartial<AplAgentRequest>,
+    patch = false,
+  ): Promise<AplAgentResponse> {
+    const existingAgent = this.repoService.getTeamConfigService(teamId).getAgent(name)
+    const agent = patch
+      ? this.repoService.getTeamConfigService(teamId).patchAgent(name, {
+          metadata: data.metadata,
+          spec: data.spec,
+        })
+      : this.repoService.getTeamConfigService(teamId).updateAgent(name, {
+          kind: 'AkamaiAgent',
+          metadata: {
+            name: data.metadata?.name ?? existingAgent.metadata.name,
+          },
+          spec: {
+            foundationModel: data.spec?.foundationModel ?? existingAgent.spec.foundationModel,
+            agentInstructions: data.spec?.agentInstructions ?? existingAgent.spec.agentInstructions,
+            tools: (data.spec?.tools ?? existingAgent.spec.tools) as typeof existingAgent.spec.tools,
+          },
+        })
+
+    await this.saveTeamAgent(teamId, agent)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.updateAgent(name, agent)
+      },
+      false,
+    )
+    return agent
+  }
+
+  async deleteAplAgent(teamId: string, name: string): Promise<void> {
+    const agent = await this.getAplAgent(teamId, name)
+    this.repoService.getTeamConfigService(teamId).deleteAgent(agent.metadata.name)
+    const relativePath = getTeamAgentValuesFilePath(teamId, `${name}.yaml`)
+    await this.git.removeFile(relativePath)
+    await this.doTeamDeployment(
+      teamId,
+      (teamService) => {
+        teamService.deleteAgent(name)
+      },
+      false,
+    )
+  }
+
+  async getAplAgent(teamId: string, name: string): Promise<AplAgentResponse> {
+    const agent = this.repoService.getTeamConfigService(teamId).getAgent(name)
+    return agent
+  }
+
+  getAplAgents(teamId: string): AplAgentResponse[] {
+    return this.repoService.getTeamConfigService(teamId).getAgents()
+  }
+
+  private async saveTeamAgent(teamId: string, agent: AplAgentResponse): Promise<void> {
+    const agentCR = await AkamaiAgentCR.create(teamId, agent.metadata.name, {
+      kind: 'AkamaiAgent',
+      metadata: agent.metadata,
+      spec: agent.spec,
+    })
+
+    await this.saveAgentCR(teamId, agentCR)
+  }
+
+  private async saveDatabaseCR(teamId: string, databaseCR: DatabaseCR) {
+    const dbPath = getTeamDatabaseValuesFilePath(teamId, `${databaseCR.metadata.name}.yaml`)
+    await this.git.writeFile(dbPath, databaseCR.toRecord())
+  }
+
+  private async saveKnowledgeBaseCR(teamId: string, knowledgeBaseCR: AkamaiKnowledgeBaseCR) {
+    const kbPath = getTeamKnowledgeBaseValuesFilePath(teamId, `${knowledgeBaseCR.metadata.name}.yaml`)
+    await this.git.writeFile(kbPath, knowledgeBaseCR.toRecord())
+  }
+
+  private async saveAgentCR(teamId: string, agentCR: AkamaiAgentCR) {
+    const agentPath = getTeamAgentValuesFilePath(teamId, `${agentCR.metadata.name}.yaml`)
+    await this.git.writeFile(agentPath, agentCR.toRecord())
   }
 
   async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {
@@ -2442,6 +2711,16 @@ export default class OtomiStack {
     }
   }
 
+  private getVersions(currentSha: string): Record<string, string> {
+    const { otomi } = this.getSettings(['otomi'])
+    return {
+      core: otomi?.version ?? env.VERSIONS.core,
+      api: env.VERSIONS.api ?? process.env.npm_package_version,
+      console: env.VERSIONS.console,
+      values: currentSha,
+    }
+  }
+
   async getSession(user: k8sUser): Promise<Session> {
     const rootStack = await getSessionStack()
     const valuesSchema = await getValuesSchema()
@@ -2472,12 +2751,7 @@ export default class OtomiStack {
         objStorageApps: env.OBJ_STORAGE_APPS,
         objStorageRegions,
       },
-      versions: {
-        core: env.VERSIONS.core,
-        api: env.VERSIONS.api ?? process.env.npm_package_version,
-        console: env.VERSIONS.console,
-        values: currentSha,
-      },
+      versions: this.getVersions(currentSha),
       valuesSchema,
     }
     return data

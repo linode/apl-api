@@ -7,12 +7,10 @@ WorkloadName:
     metadata:
       type: object
       properties:
-        labels:
-          type: object
-          additionalProperties:
-            type: string
-          description: Labels for the workload, including teamId.
         name:
           type: string
           description: Name of the workload.
+        namespace:
+          type: string
+          description: Namespace of the workload, including teamId.
   type: object

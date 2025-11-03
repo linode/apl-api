@@ -1,4 +1,4 @@
-import { bool, cleanEnv as clean, CleanedEnvAccessors, CleanOptions, json, num, str, ValidatorSpec } from 'envalid'
+import { bool, CleanedEnvAccessors, cleanEnv as clean, CleanOptions, json, num, str, ValidatorSpec } from 'envalid'
 
 export const AUTHZ_MOCK_IS_PLATFORM_ADMIN = bool({
   desc: 'Indicate if a mocked user is a platform admin',
@@ -93,6 +93,46 @@ export const EXPRESS_PAYLOAD_LIMIT = str({
 export const GIT_PUSH_RETRIES = num({
   desc: 'Amount of retries we do to push and pull in the git save function',
   default: 12,
+})
+export const PIPELINE_NAME = str({
+  desc: 'The name of the current pipeline',
+  default: 'doc-ingest-pipeline',
+})
+export const KNOWLEDGE_BASE_API_VERSION = str({
+  desc: 'The API version for AkamaiKnowledgeBase custom resources',
+  default: 'akamai.io/v1alpha1',
+})
+export const KNOWLEDGE_BASE_KIND = str({
+  desc: 'The kind for AkamaiKnowledgeBase custom resources',
+  default: 'AkamaiKnowledgeBase',
+})
+export const DATABASE_API_VERSION = str({
+  desc: 'The API version for PostgreSQL Database custom resources',
+  default: 'postgresql.cnpg.io/v1',
+})
+export const DATABASE_KIND = str({
+  desc: 'The kind for PostgreSQL Database custom resources',
+  default: 'Database',
+})
+export const DB_OWNER = str({
+  desc: 'The owner for PostgreSQL Database custom resources',
+  default: 'app',
+})
+export const EMBED_DIM_DEFAULT = num({
+  desc: 'Default embedding dimension if not specified by the model',
+  default: 1536,
+})
+export const EMBED_BATCH_SIZE = num({
+  desc: 'Batch size for embedding processing',
+  default: 10,
+})
+export const AGENT_API_VERSION = str({
+  desc: 'The API version for AkamaiAgent custom resources',
+  default: 'akamai.io/v1alpha1',
+})
+export const AGENT_KIND = str({
+  desc: 'The kind for AkamaiAgent custom resources',
+  default: 'AkamaiAgent',
 })
 const { env } = process
 export function cleanEnv<T>(

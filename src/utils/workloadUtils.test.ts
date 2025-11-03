@@ -183,7 +183,6 @@ describe('fetchChartYaml', () => {
 
     const result = await fetchChartYaml(url)
 
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(axios.get).toHaveBeenCalledWith(
       'https://raw.githubusercontent.com/owner/repo/main/charts/mychart/Chart.yaml',
       { responseType: 'text' },
@@ -197,7 +196,7 @@ describe('fetchChartYaml', () => {
     const result = await fetchChartYaml(url)
 
     expect(result).toEqual({ values: {}, error: 'Unsupported Git provider or invalid URL format.' })
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+
     expect(axios.get).not.toHaveBeenCalled()
   })
 
@@ -412,8 +411,8 @@ describe('sparseCloneChart', () => {
     // Verify commit and push were called
     expect(mockGit.add).toHaveBeenCalledWith('.')
     expect(mockGit.commit).toHaveBeenCalledWith(`Add ${chartTargetDirName} helm chart`)
-    expect(mockGit.pull).toHaveBeenCalledWith('origin', 'main', { '--rebase': null })
-    expect(mockGit.push).toHaveBeenCalledWith('origin', 'main')
+    expect(mockGit.pull).toHaveBeenCalledWith('origin', 'refs/heads/main', { '--rebase': null })
+    expect(mockGit.push).toHaveBeenCalledWith('origin', 'refs/heads/main')
   })
 
   test('handles Gitea URLs by encoding credentials', async () => {
@@ -604,6 +603,7 @@ describe('fetchWorkloadCatalog', () => {
     expect(mockGit.clone).toHaveBeenCalledWith(
       'https://git-user:git-password@gitea.example.com/otomi/charts.git',
       helmChartsDir,
+      ['--branch', 'main', '--single-branch'],
     )
     expect(result).toEqual({
       helmCharts: ['chart1', 'chart2'],
@@ -616,6 +616,7 @@ describe('fetchWorkloadCatalog', () => {
           chartDescription: 'Test Chart 1',
           readme: '# Chart 1 README',
           isBeta: false,
+          valuesSchema: '{}',
         },
         {
           name: 'chart2',
@@ -625,6 +626,7 @@ describe('fetchWorkloadCatalog', () => {
           chartDescription: 'Test Chart 2',
           readme: '# Chart 2 README',
           isBeta: true,
+          valuesSchema: '{}',
         },
       ],
     })
@@ -651,6 +653,7 @@ describe('fetchWorkloadCatalog', () => {
           chartDescription: 'Test Chart 1',
           readme: '# Chart 1 README',
           isBeta: false,
+          valuesSchema: '{}',
         },
       ],
     })
@@ -761,7 +764,7 @@ describe('chartRepo', () => {
     const repo = new chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
     await repo.clone()
 
-    expect(mockGit.clone).toHaveBeenCalledWith(chartRepoUrl, localPath)
+    expect(mockGit.clone).toHaveBeenCalledWith(chartRepoUrl, localPath, ['--branch', 'main', '--single-branch'])
   })
 
   test('cloneSingleChart method performs sparse checkout', async () => {
@@ -802,8 +805,8 @@ describe('chartRepo', () => {
 
     expect(mockGit.add).toHaveBeenCalledWith('.')
     expect(mockGit.commit).toHaveBeenCalledWith(`Add ${chartName} helm chart`)
-    expect(mockGit.pull).toHaveBeenCalledWith('origin', 'main', { '--rebase': null })
-    expect(mockGit.push).toHaveBeenCalledWith('origin', 'main')
+    expect(mockGit.pull).toHaveBeenCalledWith('origin', 'refs/heads/main', { '--rebase': null })
+    expect(mockGit.push).toHaveBeenCalledWith('origin', 'refs/heads/main')
   })
 })
 

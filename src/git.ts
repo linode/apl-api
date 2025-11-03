@@ -419,9 +419,54 @@ export class Git {
   async push(): Promise<any> {
     if (!this.url && this.isRootClone()) return
     debug('Pushing')
-    const summary = await this.git.push(this.remote, this.branch)
-    debug('Pushed. Summary: ', summary)
+
+    // For worktrees, push current branch (session branch) to main branch
+    // For main repo, push normally
+    if (!this.isRootClone()) {
+      const currentBranch = await this.git.revparse(['--abbrev-ref', 'HEAD'])
+      const summary = await this.git.push([this.remote, `${currentBranch}:${this.branch}`])
+      debug('Pushed session branch to main. Summary: ', summary)
+    } else {
+      // Original push logic for main repo
+      const summary = await this.git.push(this.remote, this.branch)
+      debug('Pushed. Summary: ', summary)
+    }
     return
+  }
+
+  async createWorktree(worktreePath: string, branch: string = this.branch): Promise<void> {
+    debug(`Creating worktree at: ${worktreePath} from branch: ${branch}`)
+    await ensureDir(dirname(worktreePath), { mode: 0o744 })
+
+    // Use sessionId as branch name (from worktree path)
+    const sessionId = basename(worktreePath)
+    const sessionBranch = sessionId
+
+    // Create worktree with session branch
+    await this.git.raw(['worktree', 'add', '-b', sessionBranch, worktreePath, branch])
+    debug(`Worktree created successfully at: ${worktreePath} on branch: ${sessionBranch}`)
+  }
+
+  async removeWorktree(worktreePath: string): Promise<void> {
+    debug(`Removing worktree at: ${worktreePath}`)
+    try {
+      await this.git.raw(['worktree', 'remove', worktreePath])
+      debug(`Worktree removed successfully: ${worktreePath}`)
+    } catch (error) {
+      const errorMessage = getSanitizedErrorMessage(error)
+      debug(`Error removing worktree: ${errorMessage}`)
+      try {
+        await this.git.raw(['worktree', 'remove', '--force', worktreePath])
+        debug(`Worktree force removed: ${worktreePath}`)
+      } catch (err) {
+        const errMessage = getSanitizedErrorMessage(err)
+        debug(`Failed to force remove worktree: ${errMessage}`)
+        if (await pathExists(worktreePath)) {
+          rmSync(worktreePath, { recursive: true, force: true })
+          debug(`Manually removed worktree directory: ${worktreePath}`)
+        }
+      }
+    }
   }
 
   async getCommitSha(): Promise<string> {
@@ -477,6 +522,23 @@ export class Git {
       throw new GitPullError()
     }
   }
+}
+
+export async function getWorktreeRepo(
+  mainRepo: Git,
+  worktreePath: string,
+  branch: string = mainRepo.branch,
+): Promise<Git> {
+  debug(`Creating worktree repo at: ${worktreePath}`)
+
+  await mainRepo.createWorktree(worktreePath, branch)
+
+  const worktreeRepo = new Git(worktreePath, mainRepo.url, mainRepo.user, mainRepo.email, mainRepo.urlAuth, branch)
+
+  await worktreeRepo.addConfig()
+  await worktreeRepo.initSops()
+
+  return worktreeRepo
 }
 
 export default async function getRepo(

@@ -14,13 +14,13 @@ AppList:
     - gitea
     - grafana
     - harbor
-    - httpbin
     - ingress-nginx
     - istio
     - jaeger
     - keycloak
     - kiali
     - knative
+    - kserve
     - kubeflow-pipelines
     - kured
     - kyverno

@@ -1,0 +1,34 @@
+KnowledgeBase:
+  x-acl:
+    platformAdmin:
+      - create-any
+      - read-any
+      - update-any
+      - delete-any
+    teamAdmin:
+      - create
+      - read
+      - update
+      - delete
+    teamMember:
+      - create
+      - read
+      - update
+      - delete
+
+AplKnowledgeBaseSpec:
+  type: object
+
+  properties:
+    modelName:
+      type: string
+      description: Name of the embedding model service
+      example: "e5-mistral-7b"
+    sourceUrl:
+      type: string
+      format: uri
+      description: Public URL to the data source
+      example: "https://example.com/data.zip"
+  required:
+    - modelName
+    - sourceUrl

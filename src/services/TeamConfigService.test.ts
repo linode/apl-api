@@ -1,8 +1,10 @@
 // Mock UUID to generate predictable values
-import { AlreadyExists, NotExistError } from '../error'
+import { AlreadyExists, NotExistError, ValidationError } from '../error'
 import {
+  AplAgentRequest,
   AplBackupRequest,
   AplBuildRequest,
+  AplKnowledgeBaseRequest,
   AplNetpolRequest,
   AplSecretRequest,
   AplServiceRequest,
@@ -43,6 +45,8 @@ describe('TeamConfigService', () => {
       netpols: [],
       apps: [],
       policies: [],
+      knowledgeBases: [],
+      agents: [],
       settings: teamSettings,
     } as TeamConfig
     service = new TeamConfigService(teamConfig)
@@ -467,6 +471,173 @@ describe('TeamConfigService', () => {
     test('should create a new collection if it does not exist', () => {
       service.updateCollection('customCollection', [{ key: 'value' }])
       expect(service.getCollection('customCollection')).toEqual([{ key: 'value' }])
+    })
+  })
+
+  describe('Agents', () => {
+    const knowledgeBase: AplKnowledgeBaseRequest = {
+      kind: 'AkamaiKnowledgeBase',
+      metadata: { name: 'test-kb' },
+      spec: {
+        modelName: 'text-embedding-model',
+        sourceUrl: 'https://example.com/data.zip',
+      },
+    }
+
+    const agentWithTools: AplAgentRequest = {
+      kind: 'AkamaiAgent',
+      metadata: { name: 'test-agent' },
+      spec: {
+        foundationModel: 'gpt-4',
+        agentInstructions: 'You are a helpful assistant',
+        tools: [
+          {
+            type: 'knowledgeBase',
+            name: 'test-kb',
+          },
+        ],
+      },
+    }
+
+    const agentWithoutTools: AplAgentRequest = {
+      kind: 'AkamaiAgent',
+      metadata: { name: 'simple-agent' },
+      spec: {
+        foundationModel: 'gpt-4',
+        agentInstructions: 'You are a helpful assistant',
+      },
+    }
+
+    test('should create an agent with tools', () => {
+      // First create the knowledge base
+      service.createKnowledgeBase(knowledgeBase)
+
+      const created = service.createAgent(agentWithTools)
+      expect(created).toEqual({
+        kind: 'AkamaiAgent',
+        metadata: {
+          name: 'test-agent',
+          labels: {
+            'apl.io/teamId': 'team1',
+          },
+        },
+        spec: {
+          foundationModel: 'gpt-4',
+          agentInstructions: 'You are a helpful assistant',
+          tools: [
+            {
+              type: 'knowledgeBase',
+              name: 'test-kb',
+            },
+          ],
+        },
+        status: {},
+      })
+      expect(service.getAgents()).toHaveLength(1)
+    })
+
+    test('should create an agent without tools', () => {
+      const created = service.createAgent(agentWithoutTools)
+      expect(created.spec.tools).toBeUndefined()
+      expect(service.getAgents()).toHaveLength(1)
+    })
+
+    test('should throw validation error when knowledge base does not exist', () => {
+      expect(() => service.createAgent(agentWithTools)).toThrow(ValidationError)
+      expect(() => service.createAgent(agentWithTools)).toThrow('KnowledgeBase[test-kb] does not exist.')
+    })
+
+    test('should throw an error when creating duplicate agent', () => {
+      service.createKnowledgeBase(knowledgeBase)
+      service.createAgent(agentWithTools)
+      expect(() => service.createAgent(agentWithTools)).toThrow(AlreadyExists)
+    })
+
+    test('should retrieve an agent by name', () => {
+      service.createKnowledgeBase(knowledgeBase)
+      const created = service.createAgent(agentWithTools)
+      const retrieved = service.getAgent(created.metadata.name)
+
+      // getAgent transforms the agent through AkamaiAgentCR, so we check key properties
+      expect(retrieved.metadata.name).toBe(created.metadata.name)
+      expect(retrieved.spec.foundationModel).toBe(created.spec.foundationModel)
+      expect(retrieved.spec.tools?.length).toBe(1)
+      expect(retrieved.spec.tools?.[0].name).toBe('test-kb')
+    })
+
+    test('should throw an error when retrieving a non-existent agent', () => {
+      expect(() => service.getAgent('non-existent')).toThrow(NotExistError)
+    })
+
+    test('should update an agent with new tools', () => {
+      service.createKnowledgeBase(knowledgeBase)
+      const created = service.createAgent(agentWithoutTools)
+
+      const updated = service.updateAgent(created.metadata.name, {
+        kind: 'AkamaiAgent',
+        metadata: { name: 'simple-agent' },
+        spec: {
+          foundationModel: 'gpt-4',
+          agentInstructions: 'Updated instructions',
+          tools: [
+            {
+              type: 'knowledgeBase',
+              name: 'test-kb',
+            },
+          ],
+        },
+      })
+
+      expect(updated.spec.agentInstructions).toBe('Updated instructions')
+      expect(updated.spec.tools).toEqual([
+        {
+          type: 'knowledgeBase',
+          name: 'test-kb',
+        },
+      ])
+    })
+
+    test('should throw validation error when updating with non-existent knowledge base', () => {
+      const created = service.createAgent(agentWithoutTools)
+
+      expect(() =>
+        service.updateAgent(created.metadata.name, {
+          kind: 'AkamaiAgent',
+          metadata: { name: 'simple-agent' },
+          spec: {
+            foundationModel: 'gpt-4',
+            agentInstructions: 'Updated instructions',
+            tools: [
+              {
+                type: 'knowledgeBase',
+                name: 'non-existent-kb',
+              },
+            ],
+          },
+        }),
+      ).toThrow(ValidationError)
+    })
+
+    test('should patch an agent', () => {
+      service.createKnowledgeBase(knowledgeBase)
+      const created = service.createAgent(agentWithTools)
+
+      const patched = service.patchAgent(created.metadata.name, {
+        spec: {
+          agentInstructions: 'Patched instructions',
+        },
+      })
+
+      expect(patched.spec.agentInstructions).toBe('Patched instructions')
+      expect(patched.spec.foundationModel).toBe('gpt-4') // Original value preserved
+    })
+
+    test('should delete an agent', () => {
+      service.createKnowledgeBase(knowledgeBase)
+      const created = service.createAgent(agentWithTools)
+
+      service.deleteAgent(created.metadata.name)
+      expect(service.getAgents()).toHaveLength(0)
     })
   })
 })

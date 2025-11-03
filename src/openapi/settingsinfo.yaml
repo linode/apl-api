@@ -34,6 +34,9 @@ SettingsInfo:
         isPreInstalled:
           type: boolean
           default: false
+        aiEnabled:
+          type: boolean
+          default: false
         hasExternalIDP:
           type: boolean
           default: false

@@ -1,0 +1,41 @@
+AIModel:
+  type: object
+  x-acl:
+    platformAdmin: [read-any]
+    teamAdmin: [read-any]
+    teamMember: [read-any]
+  properties: {}
+
+AplAIModelSpec:
+  x-acl:
+    platformAdmin:
+      - read-any
+    teamAdmin:
+      - read
+    teamMember:
+      - read
+  properties:
+    displayName:
+        type: string
+        description: User-friendly model display name
+        example: Meta-llama-3
+    modelEndpoint:
+      type: string
+      format: uri
+    modelType:
+      type: string
+      enum:
+        - foundation
+        - embedding
+      description: Model type, foundation for text generation, embedding for vector search
+      example: foundation
+    modelDimension:
+      type: integer
+      minimum: 1
+      maximum: 16384
+      description: Embedding dimension, must be compatible with model and database
+      example: 4096
+  required:
+    - modelEndpoint
+    - modelType
+  type: object
