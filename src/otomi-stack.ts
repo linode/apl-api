@@ -160,11 +160,11 @@ function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: s
 }
 
 function getTeamWorkloadValuesManagedFilePath(teamId: string, workloadName: string): string {
-  return `env/teams/${teamId}/workloads/${workloadName}.managed.yaml`
+  return `env/teams/${teamId}/workloadValues/${workloadName}.managed.yaml`
 }
 
 function getTeamWorkloadValuesFilePath(teamId: string, workloadName: string): string {
-  return `env/teams/${teamId}/workloads/${workloadName}.yaml`
+  return `env/teams/${teamId}/workloadValues/${workloadName}.yaml`
 }
 
 function getTeamKnowledgeBaseValuesFilePath(teamId: string, knowledgeBaseName: string): string {
