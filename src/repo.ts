@@ -399,7 +399,7 @@ export function getFileMap(kind: AplKind, envDir: string): FileMap {
 export function renderManifest(fileMap: FileMap, jsonPath: jsonpath.PathComponent[], data: Record<string, any>) {
   //TODO remove this custom workaround for workloadValues
   if (fileMap.kind === 'AplTeamWorkloadValues') {
-    return { values: data.values }
+    return data.values
   }
   let spec = data
   const labels = {}

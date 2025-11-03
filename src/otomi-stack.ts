@@ -97,7 +97,7 @@ import {
   k8sdelete,
   watchPodUntilRunning,
 } from './k8s_operations'
-import { getFileMaps, loadValues } from './repo'
+import { getFileMap, getFileMaps, loadValues } from './repo'
 import { RepoService } from './services/RepoService'
 import { TeamConfigService } from './services/TeamConfigService'
 import { validateBackupFields } from './utils/backupUtils'
@@ -145,6 +145,10 @@ const clusterSettingsFilePath = 'env/settings/cluster.yaml'
 
 function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: string): string {
   return `env/teams/${teamId}/sealedsecrets/${sealedSecretsName}`
+}
+
+function getTeamWorkloadValuesManagedFilePath(teamId: string, workloadName: string): string {
+  return `env/teams/${teamId}/workloads/${workloadName}.managed.yaml`
 }
 
 export default class OtomiStack {
@@ -795,14 +799,12 @@ export default class OtomiStack {
     const { metadata } = data
     const teamId = metadata.labels['apl.io/teamId']!
     debug(`Saving AplTeamWorkloadValues ${metadata.name} for team ${teamId}`)
-    const values = {
-      name: metadata.name,
-      values: data.spec.values,
-    }
     const configKey = this.getConfigKey('AplTeamWorkloadValues')
-    const repo = this.createTeamConfigInRepo(teamId, configKey, [values])
-    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkloadValues')!
+    const repo = this.createTeamConfigInRepo(teamId, configKey, [data.spec.values])
+    const fileMap = getFileMap('AplTeamWorkloadValues', '')
     await this.git.saveConfig(repo, fileMap, false)
+    const filePathValuesManaged = getTeamWorkloadValuesManagedFilePath(teamId, metadata.name)
+    await this.git.writeFile(filePathValuesManaged, {})
   }
 
   async saveTeamPolicy(teamId: string, data: AplPolicyResponse): Promise<void> {
@@ -841,8 +843,10 @@ export default class OtomiStack {
     const fileMapWorkload = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkload')!
     const repoValues = this.createTeamConfigInRepo(teamId, 'workloads', [data])
     const fileMapValues = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkloadValues')!
+    const filePathValuesManaged = getTeamWorkloadValuesManagedFilePath(teamId, metadata.name)
     await this.git.deleteConfig(repoWorkload, fileMapWorkload)
     await this.git.deleteConfig(repoValues, fileMapValues)
+    await this.git.removeFile(filePathValuesManaged)
   }
 
   getTeamBackups(teamId: string): Backup[] {
