@@ -2,8 +2,11 @@ import type { Config } from '@jest/types'
 
 const config: Config.InitialOptions = {
   roots: ['<rootDir>/src'],
-  moduleDirectories: ['node_modules', __dirname],
   testEnvironment: 'node',
+  moduleNameMapper: {
+    '^src/(.*)$': '<rootDir>/src/$1',
+    '^uuid$': '<rootDir>/src/stubs/uuid.ts',
+  },
   transform: {
     '^.+\\.tsx?$': 'babel-jest',
     '^.+\\.jsx?$': 'babel-jest',

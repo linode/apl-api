@@ -130,9 +130,13 @@ export function authzMiddleware(authz: Authz): RequestHandler {
     } else {
       return next()
     }
-    const otomi: OtomiStack = await getSessionStack(req.user.email)
-    // Now we call the new helper which derives authz based on the new selfService.teamMembers flags.
-    req.user.authz = getTeamSelfServiceAuthz(req.user.teams, otomi)
-    return authorize(req, res, next, authz, otomi.repoService)
+    try {
+      const otomi: OtomiStack = await getSessionStack(req.user.email)
+      // Now we call the new helper which derives authz based on the new selfService.teamMembers flags.
+      req.user.authz = getTeamSelfServiceAuthz(req.user.teams, otomi)
+      return authorize(req, res, next, authz, otomi.repoService)
+    } catch (error) {
+      return next(error)
+    }
   }
 }

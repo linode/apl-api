@@ -1,4 +1,4 @@
-import { bool, CleanedEnvAccessors, cleanEnv as clean, CleanOptions, json, num, str, ValidatorSpec } from 'envalid'
+import { bool, cleanEnv as clean, CleanOptions, json, num, str, ValidatorSpec } from 'envalid'
 
 export const AUTHZ_MOCK_IS_PLATFORM_ADMIN = bool({
   desc: 'Indicate if a mocked user is a platform admin',
@@ -135,10 +135,7 @@ export const AGENT_KIND = str({
   default: 'AkamaiAgent',
 })
 const { env } = process
-export function cleanEnv<T>(
-  validators: { [K in keyof T]: ValidatorSpec<T[K]> },
-  options: CleanOptions<T> = {},
-): Readonly<T & CleanedEnvAccessors> {
+export function cleanEnv<T>(validators: { [K in keyof T]: ValidatorSpec<T[K]> }, options: CleanOptions<T> = {}) {
   if (env.NODE_ENV === 'test') {
     env.GIT_EMAIL = 'testUser@redkubes.com'
     env.GIT_USER = 'testUser'
