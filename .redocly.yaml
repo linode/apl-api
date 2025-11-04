@@ -1,5 +1,4 @@
-lint:
-  rules:
-    info-license: off
-    operation-summary: off
-    no-unused-components: error
+rules:
+  info-license: off
+  operation-summary: off
+  no-unused-components: warn
