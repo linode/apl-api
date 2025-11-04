@@ -485,6 +485,7 @@ export async function loadFileToSpec(
   const jsonPath = getJsonPath(fileMap, filePath)
   try {
     const data = (await deps.loadYaml(filePath)) || {}
+    // ensure that local path does not include envDir and the leading slash
     const localFilePath = filePath.replace(fileMap.envDir, '').replace(/^\/+/, '')
 
     spec.files[localFilePath] = data
