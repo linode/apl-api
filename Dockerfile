@@ -1,4 +1,4 @@
-FROM node:22-alpine as ci
+FROM node:24-alpine as ci
 
 ENV NODE_ENV=test
 ENV BLUEBIRD_DEBUG=0
