@@ -3,13 +3,14 @@ import { mockDeep } from 'jest-mock-extended'
 import { initApp, loadSpec } from 'src/app'
 import getToken from 'src/fixtures/jwt'
 import OtomiStack from 'src/otomi-stack'
-import request, { SuperAgentTest } from 'supertest'
+import request from 'supertest'
 import { HttpError } from './error'
 import { Git } from './git'
 import { getSessionStack } from './middleware'
 import { App, CodeRepo, Repo, SealedSecret } from './otomi-models'
 import { RepoService } from './services/RepoService'
 import * as getValuesSchemaModule from './utils'
+import TestAgent from 'supertest/lib/agent'
 
 const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
@@ -34,7 +35,7 @@ beforeAll(async () => {
 describe('API authz tests', () => {
   let app: Express
   let otomiStack: OtomiStack
-  let agent: SuperAgentTest
+  let agent: TestAgent
 
   beforeAll(async () => {
     const _otomiStack = await getSessionStack()
@@ -47,15 +48,21 @@ describe('API authz tests', () => {
     otomiStack.doRepoDeployment = jest.fn().mockImplementation(() => Promise.resolve())
     otomiStack.doTeamDeployment = jest.fn().mockImplementation(() => Promise.resolve())
     otomiStack.isLoaded = true
-    await otomiStack.createTeam({ name: 'team1' })
-    await otomiStack.createTeam({ name: 'team2' })
+    await otomiStack.createTeam({
+      name: 'team1',
+      resourceQuota: [],
+    })
+    await otomiStack.createTeam({
+      name: 'team2',
+      resourceQuota: [],
+    })
     app = await initApp(otomiStack)
     agent = request.agent(app)
     agent.set('Accept', 'application/json')
   })
 
   beforeEach(() => {
-    jest.spyOn(otomiStack, 'createTeam').mockResolvedValue({ name: 'team' })
+    jest.spyOn(otomiStack, 'createTeam').mockResolvedValue({ name: 'team', resourceQuota: [] })
   })
 
   describe('Platform Admin /settings endpoint tests', () => {
