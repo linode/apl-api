@@ -485,7 +485,9 @@ export async function loadFileToSpec(
   const jsonPath = getJsonPath(fileMap, filePath)
   try {
     const data = (await deps.loadYaml(filePath)) || {}
-    spec.files[filePath] = data
+    const localFilePath = filePath.replace(fileMap.envDir, '').replace(/^\/+/, '')
+
+    spec.files[localFilePath] = data
     if (fileMap.processAs === 'arrayItem') {
       const ref: Record<string, any>[] = get(spec, jsonPath)
       const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
