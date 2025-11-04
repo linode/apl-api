@@ -1,4 +1,5 @@
 /* eslint-disable no-param-reassign */
+import { getSpec } from 'src/app'
 import { debug } from 'console'
 import { RequestHandler } from 'express'
 import { find } from 'lodash'
@@ -44,7 +45,8 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
   const { params, query, body, user } = req
   const teamId = params?.teamId ?? query?.teamId ?? body?.teamId
   const action = HttpMethodMapping[req.method]
-  const schema: string = get(req, 'operationDoc.x-aclSchema', '')
+  // express-openapi-validator uses req.openapi.schema for the operation schema
+  const schema: string = get(req, 'openapi.schema.x-aclSchema', '') || get(req, 'operationDoc.x-aclSchema', '')
   const schemaName = schema.split('/').pop() || null
   // If there is no RBAC then we bail
   if (!schemaName) return next()
@@ -86,9 +88,11 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
   const selector = renameKeys(req.params)
   const collectionId = schemaToRepoMap[schemaName]
   if (collectionId && ['create', 'update'].includes(action)) {
+    // Get API spec from app module (express-openapi-validator doesn't attach apiDoc to req)
+    const apiSpec = getSpec().spec
     let dataOrig = get(
-      req,
-      `apiDoc.components.schemas.TeamSelfService.properties.${schemaName.toLowerCase()}.x-allow-values`,
+      apiSpec,
+      `components.schemas.TeamSelfService.properties.${schemaName.toLowerCase()}.x-allow-values`,
       {},
     )
 

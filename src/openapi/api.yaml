@@ -51,6 +51,7 @@ paths:
   /v1/otomi/values:
     get:
       operationId: getValues
+      x-eov-operation-handler: v1/otomi/values
       description: Get otomi values
       x-aclSchema: OtomiCliValues
       parameters:
@@ -81,6 +82,7 @@ paths:
   /v1/teams:
     get:
       operationId: getTeams
+      x-eov-operation-handler: v1/teams
       description: Get teams collection
       x-aclSchema: Team
       responses:
@@ -94,6 +96,7 @@ paths:
                   $ref: '#/components/schemas/Team'
     post:
       operationId: createTeam
+      x-eov-operation-handler: v1/teams
       description: Create a team
       x-aclSchema: Team
       requestBody:
@@ -117,6 +120,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeam
+      x-eov-operation-handler: v1/teams/{teamId}
       description: Get a specific team
       x-aclSchema: Team
       responses:
@@ -129,6 +133,7 @@ paths:
                 $ref: '#/components/schemas/Team'
     put:
       operationId: editTeam
+      x-eov-operation-handler: v1/teams/{teamId}
       description: Edit a team
       x-aclSchema: Team
       requestBody:
@@ -148,6 +153,7 @@ paths:
                 $ref: '#/components/schemas/Team'
     delete:
       operationId: deleteTeam
+      x-eov-operation-handler: v1/teams/{teamId}
       description: Delete team
       x-aclSchema: Team
       responses:
@@ -158,6 +164,7 @@ paths:
   /v2/teams:
     get:
       operationId: getAplTeams
+      x-eov-operation-handler: v2/teams
       description: Get teams collection
       x-aclSchema: Team
       responses:
@@ -171,6 +178,7 @@ paths:
                   $ref: '#/components/schemas/AplTeamSettingsResponse'
     post:
       operationId: createAplTeam
+      x-eov-operation-handler: v2/teams
       description: Create a team
       x-aclSchema: Team
       requestBody:
@@ -194,6 +202,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getAplTeam
+      x-eov-operation-handler: v2/teams/{teamId}
       description: Get a specific team
       x-aclSchema: Team
       responses:
@@ -206,6 +215,7 @@ paths:
                 $ref: '#/components/schemas/AplTeamSettingsResponse'
     put:
       operationId: editAplTeam
+      x-eov-operation-handler: v2/teams/{teamId}
       description: Edit a team
       x-aclSchema: Team
       requestBody:
@@ -225,6 +235,7 @@ paths:
                 $ref: '#/components/schemas/AplTeamSettingsResponse'
     delete:
       operationId: deleteAplTeam
+      x-eov-operation-handler: v2/teams/{teamId}
       description: Delete team
       x-aclSchema: Team
       responses:
@@ -235,6 +246,7 @@ paths:
   /v1/services:
     get:
       operationId: getAllServices
+      x-eov-operation-handler: v1/services
       description: Get all services running on the cluster
       x-aclSchema: Service
       responses:
@@ -254,6 +266,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamServices
+      x-eov-operation-handler: v1/teams/{teamId}/services
       description: Get services from a given team
       x-aclSchema: Service
       responses:
@@ -270,6 +283,7 @@ paths:
 
     post:
       operationId: createService
+      x-eov-operation-handler: v1/teams/{teamId}/services
       description: Create a service
       x-aclSchema: Service
       requestBody:
@@ -293,6 +307,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamK8sServices
+      x-eov-operation-handler: v1/teams/{teamId}/kubernetes/services
       description: Get services from a given team
       x-aclSchema: Service
       responses:
@@ -307,11 +322,12 @@ paths:
         '400':
           <<: *BadRequest
 
-  '/v1/teams/{teamId}/kubernetes/networkpolicies':
+  '/v1/teams/{teamId}/kubernetes/networkPolicies':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getK8SWorkloadPodLabels
+      x-eov-operation-handler: v1/teams/{teamId}/kubernetes/networkPolicies
       description: Get Podlabels from given workload
       x-aclSchema: NetworkPolicies
       parameters:
@@ -342,6 +358,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: listUniquePodNamesByLabel
+      x-eov-operation-handler: v1/teams/{teamId}/kubernetes/fetchPodsFromLabel
       description: Get pods name from label
       parameters:
         - name: labelSelector
@@ -372,6 +389,7 @@ paths:
       - $ref: '#/components/parameters/serviceParams'
     get:
       operationId: getService
+      x-eov-operation-handler: v1/teams/{teamId}/services/{serviceName}
       description: Get a service from a given team
       x-aclSchema: Service
       responses:
@@ -384,6 +402,7 @@ paths:
                 $ref: '#/components/schemas/Service'
     put:
       operationId: editService
+      x-eov-operation-handler: v1/teams/{teamId}/services/{serviceName}
       description: Edit a service from a given team
       x-aclSchema: Service
       requestBody:

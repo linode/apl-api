@@ -3,7 +3,7 @@ import cors from 'cors'
 import Debug from 'debug'
 import express from 'express'
 import 'express-async-errors'
-import { initialize } from 'express-openapi'
+import * as OpenApiValidator from 'express-openapi-validator'
 import { Server } from 'http'
 import { createLightship } from 'lightship'
 import logger from 'morgan'
@@ -15,6 +15,7 @@ import {
   errorMiddleware,
   getIo,
   getSessionStack,
+  groupAuthzSecurityHandler,
   jwtMiddleware,
   sessionMiddleware,
 } from 'src/middleware'
@@ -203,29 +204,35 @@ export async function initApp(inOtomiStack?: OtomiStack) {
     }, emitResourceStatusInterval)
   }
   app.use(sessionMiddleware(server as Server))
-  // and register session middleware
-  // now we can initialize the more specific routes
-  initialize({
-    // @ts-ignore
-    apiDoc: {
-      ...otomiSpec.spec,
-      'x-express-openapi-additional-middleware': [authzMiddleware(authz)],
-    },
-    app,
-    dependencies: {
-      authz,
-    },
-    enableObjectCoercion: true,
-    paths: apiRoutesPath,
-    errorMiddleware,
-    securityHandlers: {
-      groupAuthz: (req: OpenApiRequestExt): boolean => {
-        return !!req.user
+
+  // Store authz in app.locals so handlers can access it
+  app.locals.authz = authz
+
+  // Install OpenApiValidator middleware
+  app.use(
+    OpenApiValidator.middleware({
+      apiSpec: path.join(__dirname, 'generated-schema.json'),
+      validateRequests: {
+        allowUnknownQueryParameters: false,
+        coerceTypes: true, // Equivalent to enableObjectCoercion
       },
-    },
-    routesGlob: '**/*.{ts,js}',
-    routesIndexFileRegExp: /(?:index)?\.[tj]s$/,
-  })
+      validateResponses: false, // Start with false, can enable later for debugging
+      validateSecurity: {
+        handlers: {
+          groupAuthz: groupAuthzSecurityHandler,
+        },
+      },
+      operationHandlers: path.join(__dirname, 'api'), // Enable operation handlers
+      ignorePaths: /\/api-docs/, // Exclude swagger docs
+    }),
+  )
+
+  // Register authorization middleware after validator
+  app.use(authzMiddleware(authz))
+
+  // Register error middleware
+  app.use(errorMiddleware)
+
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   app.use('/api-docs/swagger', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
   return app
