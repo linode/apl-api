@@ -455,7 +455,7 @@ describe('TeamConfigService', () => {
     })
 
     test('should throw an error when trying to retrieve a non-existent collection', () => {
-      expect(() => service.getCollection('nonExistentCollection')).toThrowError(
+      expect(() => service.getCollection('nonExistentCollection')).toThrow(
         'Getting TeamConfig collection [nonExistentCollection] does not exist.',
       )
     })

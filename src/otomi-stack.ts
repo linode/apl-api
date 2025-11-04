@@ -593,8 +593,8 @@ export default class OtomiStack {
   }
 
   filterExcludedApp(apps: App | App[]) {
-    const preInstalledExcludedApps = PREINSTALLED_EXCLUDED_APPS.default.apps
-    const hiddenApps = HIDDEN_APPS.default.apps
+    const preInstalledExcludedApps = env.PREINSTALLED_EXCLUDED_APPS.apps
+    const hiddenApps = env.HIDDEN_APPS.apps
     const excludedApps = preInstalledExcludedApps.concat(hiddenApps)
     const settingsInfo = this.getSettingsInfo()
     if (!Array.isArray(apps)) {
@@ -2717,7 +2717,7 @@ export default class OtomiStack {
     const { otomi } = this.getSettings(['otomi'])
     return {
       core: otomi?.version ?? env.VERSIONS.core,
-      api: env.VERSIONS.api ?? process.env.npm_package_version,
+      api: env.VERSIONS.api ?? process.env.npm_package_version!,
       console: env.VERSIONS.console,
       values: currentSha,
     }
