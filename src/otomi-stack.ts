@@ -192,6 +192,10 @@ export default class OtomiStack {
     this.sessionId = sessionId ?? 'main'
   }
 
+  getFileContent(path: string): string {
+    return this.repoService.getRepo().files[path] || ''
+  }
+
   getAppList() {
     let apps = getAppList()
     apps = apps.filter((item) => item !== 'ingress-nginx')
@@ -280,16 +284,13 @@ export default class OtomiStack {
     })
   }
 
-  transformWorkloads(workloads: AplWorkloadResponse[], workloadValues: Record<string, any>[]): AplWorkloadResponse[] {
-    const values = {}
-    workloadValues.forEach((value) => {
-      const workloadName = value.name
-      if (workloadName) {
-        values[workloadName] = value.values
-      }
-    })
+  transformWorkloads(workloads: AplWorkloadResponse[], files: string[]): AplWorkloadResponse[] {
     return workloads.map((workload) => {
-      return merge(workload, { spec: { values: values[workload.metadata.name] } })
+      const workloadName = workload.metadata.name
+      const teamId = workload.metadata.labels?.['apl.io/teamId']
+
+      const filePath = getTeamWorkloadValuesFilePath(teamId, workloadName)
+      return merge(workload, { spec: { values: files[filePath] } })
     })
   }
 
@@ -322,10 +323,9 @@ export default class OtomiStack {
         apps: this.transformApps(teamConfig.apps),
         policies: this.transformPolicies(teamName, teamConfig.policies || {}),
         sealedsecrets: this.transformSecrets(teamName, teamConfig.sealedsecrets || []),
-        workloads: this.transformWorkloads(teamConfig.workloads || [], teamConfig.workloadValues || []),
+        workloads: this.transformWorkloads(teamConfig.workloads || [], rawRepo.files || {}),
         settings: this.transformTeamSettings(teamConfig.settings),
       }))
-
       const repo = rawRepo as Repo
       this.repoService = new RepoService(repo)
     }

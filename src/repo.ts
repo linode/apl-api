@@ -485,6 +485,7 @@ export async function loadFileToSpec(
   const jsonPath = getJsonPath(fileMap, filePath)
   try {
     const data = (await deps.loadYaml(filePath)) || {}
+    spec.files[filePath] = data
     if (fileMap.processAs === 'arrayItem') {
       const ref: Record<string, any>[] = get(spec, jsonPath)
       const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
@@ -573,7 +574,9 @@ export async function loadToSpec(
 export async function loadValues(envDir: string, deps = { loadToSpec }): Promise<Record<string, any>> {
   //We need everything to load to spec for the API
   const fileMaps = getFileMaps(envDir)
-  const spec = {}
+  const spec = {
+    files: {},
+  }
 
   await Promise.all(
     fileMaps.map(async (fileMap) => {
