@@ -39,6 +39,7 @@ describe('RepoService', () => {
       obj: {},
       oidc: { issuer: 'https://issuer.com', clientID: 'client-id', clientSecret: 'client-secret' },
       versions: { version: '1.0.0' },
+      files: {},
     } as Repo
     service = new RepoService(repo)
     service.createTeamConfig(teamSettings)
