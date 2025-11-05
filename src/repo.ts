@@ -487,7 +487,7 @@ export async function loadFileToSpec(
     const data = (await deps.loadYaml(filePath)) || {}
     // ensure that local path does not include envDir and the leading slash
     const localFilePath = filePath.replace(fileMap.envDir, '').replace(/^\/+/, '')
-
+    // eslint-disable-next-line no-param-reassign
     spec.files[localFilePath] = data
     if (fileMap.processAs === 'arrayItem') {
       const ref: Record<string, any>[] = get(spec, jsonPath)
