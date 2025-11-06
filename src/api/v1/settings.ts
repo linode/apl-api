@@ -10,8 +10,10 @@ const debug = Debug('otomi:api:v1:settings')
  */
 export const getSettings = (req: OpenApiRequestExt, res: Response): void => {
   const { ids } = req.query
-  debug(`getSettings(${ids})`)
-  const v = req.otomi.getSettings(ids as string[] | undefined)
+  // Handle comma-separated string or array
+  const idsArray = ids ? (typeof ids === 'string' ? ids.split(',') : (ids as string[])) : undefined
+  debug(`getSettings(${idsArray})`)
+  const v = req.otomi.getSettings(idsArray)
   if (v?.otomi) {
     const { otomi: otomiSettings, ...restSettings } = v
     // Remove the otomi.adminPassword from otomi settings response

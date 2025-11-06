@@ -11,7 +11,9 @@ const debug = Debug('otomi:api:v1:apps')
 export const getApps = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId } = req.params
   const { picks } = req.query
-  res.json(req.otomi.getApps(teamId, picks as string[]))
+  // Handle comma-separated string or array
+  const picksArray = typeof picks === 'string' ? picks.split(',') : (picks as string[])
+  res.json(req.otomi.getApps(teamId, picksArray))
 }
 
 /**

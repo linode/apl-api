@@ -212,7 +212,7 @@ export async function initApp(inOtomiStack?: OtomiStack) {
       apiSpec: path.join(__dirname, 'generated-schema.json'),
       validateRequests: {
         allowUnknownQueryParameters: false,
-        coerceTypes: true, // Equivalent to enableObjectCoercion
+        coerceTypes: 'array',
       },
       validateResponses: false, // Start with false, can enable later for debugging
       validateSecurity: {

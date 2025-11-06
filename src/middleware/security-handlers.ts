@@ -21,7 +21,9 @@ import { getSessionStack } from './session'
 export async function groupAuthzSecurityHandler(req: Request, scopes: string[], schema: any): Promise<boolean> {
   const extReq = req as OpenApiRequestExt
 
-  // JWT middleware already ran and set req.user if token was valid
+  // In dev mode, JWT middleware sets a mock user without requiring Authorization header
+  // In production, JWT middleware sets req.user only if valid token exists
+  // Allow requests to proceed if user was set by JWT middleware
   if (!extReq.user) {
     throw { status: 401, message: 'Unauthorized - No valid JWT token provided' }
   }
