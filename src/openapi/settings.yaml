@@ -15,6 +15,7 @@ Settings:
       additionalProperties: false
       $ref: 'cluster.yaml#/Cluster'
       title: Cluster
+      x-externalDocsPath: cluster-settings
     platformBackups:
       additionalProperties: false
       type: object
@@ -73,6 +74,7 @@ Settings:
               $ref: 'definitions.yaml#/wordCharacterPattern'
               x-secret: true
     obj:
+      x-externalDocsPath: object-storage-settings
       type: object
       properties:
         showWizard:
