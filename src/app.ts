@@ -11,7 +11,6 @@ import path from 'path'
 import { CleanOptions } from 'simple-git'
 import { default as Authz } from 'src/authz'
 import {
-  authzMiddleware,
   errorMiddleware,
   getIo,
   getSessionStack,
@@ -226,12 +225,6 @@ export async function initApp(inOtomiStack?: OtomiStack) {
       ignorePaths: /\/api-docs/, // Exclude swagger docs
     }),
   )
-
-  // Register authorization middleware AFTER validator but BEFORE error middleware
-  // NOTE: This runs for requests that don't match operationHandlers
-  // For routes with operationHandlers, authz is done in groupAuthzSecurityHandler
-  app.use(authzMiddleware(authz))
-
   // Register error middleware
   app.use(errorMiddleware)
 
