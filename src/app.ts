@@ -20,7 +20,7 @@ import {
   sessionMiddleware,
 } from 'src/middleware'
 import { setMockIdx } from 'src/mocks'
-import { AplResponseObject, OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
+import { AplResponseObject, OpenAPIDoc, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
 import {
@@ -227,7 +227,9 @@ export async function initApp(inOtomiStack?: OtomiStack) {
     }),
   )
 
-  // Register authorization middleware after validator
+  // Register authorization middleware AFTER validator but BEFORE error middleware
+  // NOTE: This runs for requests that don't match operationHandlers
+  // For routes with operationHandlers, authz is done in groupAuthzSecurityHandler
   app.use(authzMiddleware(authz))
 
   // Register error middleware

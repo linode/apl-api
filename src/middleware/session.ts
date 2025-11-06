@@ -81,24 +81,26 @@ export const getIo = () => io
 // we use session middleware so we can give each user their own otomiStack
 // with a snapshot of the db, the moment they start touching data
 export function sessionMiddleware(server: http.Server): RequestHandler {
-  // socket setup
-  io = new Server(server, { path: '/ws' })
-  io.on('connection', (socket: any) => {
-    socket.on('error', console.error)
-    const users: any[] = []
-    for (const [id, { email }] of io.of('/').sockets as Map<string, any>) {
-      users.push({
-        id,
-        email,
+  // socket setup - only create Socket.IO if we have a server and not in tests
+  if (!env.isTest && server) {
+    io = new Server(server, { path: '/ws' })
+    io.on('connection', (socket: any) => {
+      socket.on('error', console.error)
+      const users: any[] = []
+      for (const [id, { email }] of io.of('/').sockets as Map<string, any>) {
+        users.push({
+          id,
+          email,
+        })
+      }
+      socket.emit('users', users)
+      // notify existing users
+      socket.broadcast.emit('user connected', {
+        userID: socket.id,
+        email: socket.email,
       })
-    }
-    socket.emit('users', users)
-    // notify existing users
-    socket.broadcast.emit('user connected', {
-      userID: socket.id,
-      email: socket.email,
     })
-  })
+  }
 
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
     if (!env.isTest && (!readOnlyStack || !readOnlyStack.isLoaded)) throw new ApiNotReadyError()

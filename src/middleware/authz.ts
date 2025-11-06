@@ -43,11 +43,26 @@ function renameKeys(obj: Record<string, any>) {
 
 export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoService: RepoService): RequestHandler {
   const { params, query, body, user } = req
-  const teamId = params?.teamId ?? query?.teamId ?? body?.teamId
+  // express-openapi-validator stores path params in req.openapi.pathParams
+  const teamId = req.openapi?.pathParams?.teamId ?? params?.teamId ?? query?.teamId ?? body?.teamId
   const action = HttpMethodMapping[req.method]
-  // express-openapi-validator uses req.openapi.schema for the operation schema
-  const schema: string = get(req, 'openapi.schema.x-aclSchema', '') || get(req, 'operationDoc.x-aclSchema', '')
+
+  // express-openapi-validator doesn't expose custom x- extensions on req.openapi.schema
+  // so we need to look it up from the loaded spec using the route path
+  const apiSpec = getSpec().spec
+  const routePath = (req.openapi as any)?.openApiRoute || req.path
+  const method = req.method.toLowerCase()
+
+  console.log('DEBUG authz - routePath:', routePath, 'method:', method)
+  console.log('DEBUG authz - Looking for x-aclSchema at:', `paths['${routePath}']['${method}']['x-aclSchema']`)
+  console.log('DEBUG authz - Available paths:', Object.keys(apiSpec.paths || {}))
+
+  const schema: string =
+    get(apiSpec, `paths['${routePath}']['${method}']['x-aclSchema']`, '') || get(req, 'operationDoc.x-aclSchema', '')
   const schemaName = schema.split('/').pop() || null
+
+  console.log('DEBUG authz - Found schema:', schema, 'schemaName:', schemaName)
+
   // If there is no RBAC then we bail
   if (!schemaName) return next()
 
@@ -85,11 +100,12 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
   }
   const teamSpecificCollections = ['builds', 'services', 'workloads', 'netpols', 'policies', 'sealedSecrets'] // <-- These are fetched per team
 
-  const selector = renameKeys(req.params)
+  // Use openapi.pathParams if available, fallback to params for backward compatibility
+  const pathParams = req.openapi?.pathParams ?? params
+  const selector = renameKeys(pathParams)
   const collectionId = schemaToRepoMap[schemaName]
   if (collectionId && ['create', 'update'].includes(action)) {
-    // Get API spec from app module (express-openapi-validator doesn't attach apiDoc to req)
-    const apiSpec = getSpec().spec
+    // Look up x-allow-values from the API spec for ABAC validation
     let dataOrig = get(
       apiSpec,
       `components.schemas.TeamSelfService.properties.${schemaName.toLowerCase()}.x-allow-values`,

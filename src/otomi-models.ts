@@ -147,6 +147,12 @@ export interface OpenApiRequest extends Request {
       operationId?: string
       'x-aclSchema'?: string
     }
+    // Path parameters parsed from the URL (e.g., {teamId} -> pathParams.teamId)
+    pathParams?: Record<string, any>
+    // The Express route pattern (e.g., /v1/teams/:teamId/coderepos)
+    expressRoute?: string
+    // The OpenAPI route pattern (e.g., /v1/teams/{teamId}/coderepos)
+    openApiRoute?: string
   }
   session: Session
   user?: SessionUser

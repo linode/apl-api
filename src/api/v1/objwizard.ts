@@ -1,19 +1,15 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { ObjWizard, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:objwizard')
 
-export default function (): OperationHandlerArray {
-  const post: Operation = [
-    async ({ otomi, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug('createObjWizard')
-      const v = await otomi.createObjWizard(body as ObjWizard)
-      res.json(v)
-    },
-  ]
-  const api = {
-    post,
-  }
-  return api
+/**
+ * POST /v1/objwizard
+ * Create object wizard
+ */
+export const createObjWizard = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  debug('createObjWizard')
+  const v = await req.otomi.createObjWizard(req.body as ObjWizard)
+  res.json(v)
 }
