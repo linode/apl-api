@@ -22,6 +22,10 @@ export const getPolicy = (req: OpenApiRequestExt, res: Response): void => {
 export const editPolicy = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, policyName } = req.params
   debug(`editPolicy(${policyName})`)
-  const data = await req.otomi.editPolicy(decodeURIComponent(teamId), decodeURIComponent(policyName), req.body as Policy)
+  const data = await req.otomi.editPolicy(
+    decodeURIComponent(teamId),
+    decodeURIComponent(policyName),
+    req.body as Policy,
+  )
   res.json(data)
 }
