@@ -1,6 +1,5 @@
 import Debug from 'debug'
 import { RequestHandler } from 'express'
-import 'express-async-errors'
 import { remove } from 'fs-extra'
 import http from 'http'
 import { cloneDeep } from 'lodash'
