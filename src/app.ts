@@ -212,14 +212,14 @@ export async function initApp(inOtomiStack?: OtomiStack) {
       apiSpec: path.join(__dirname, 'generated-schema.json'),
       validateRequests: {
         allowUnknownQueryParameters: false,
-        coerceTypes: 'array',
+        coerceTypes: 'array', // coerce scalar data to an array with one element and vice versa (as required by the schema).
       },
       validateResponses: false, // Start with false, can enable later for debugging
-      validateSecurity: {
-        handlers: {
-          groupAuthz: groupAuthzSecurityHandler,
-        },
-      },
+      validateSecurity: env.isDev
+        ? false
+        : {
+            handlers: { groupAuthz: groupAuthzSecurityHandler },
+          },
       operationHandlers: path.join(__dirname, 'api'), // Enable operation handlers
       ignorePaths: /\/api-docs/, // Exclude swagger docs
     }),
