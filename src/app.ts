@@ -146,7 +146,8 @@ export const getAppList = (): string[] => {
 }
 
 export async function initApp(inOtomiStack?: OtomiStack) {
-  const lightship = createLightship()
+  // Only create lightship in production (not in tests)
+  const lightship = env.isTest ? null : createLightship()
   const app = express()
   const apiRoutesPath = path.resolve(__dirname, 'api')
   await loadSpec()
@@ -176,15 +177,15 @@ export async function initApp(inOtomiStack?: OtomiStack) {
     server = app
       .listen(PORT, async () => {
         debug(`Listening on :::${PORT}`)
-        lightship.signalReady()
+        lightship?.signalReady()
         // Clone repo after the application is ready to avoid Pod NotReady phenomenon, and thus infinite Pod crash loopback
         ;(await getSessionStack()).initGit()
       })
       .on('error', (e) => {
         console.error(e)
-        lightship.shutdown()
+        lightship?.shutdown()
       })
-    lightship.registerShutdownHandler(() => {
+    lightship?.registerShutdownHandler(() => {
       ;(server as Server).close()
     })
   }
