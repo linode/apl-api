@@ -16,7 +16,6 @@ teamConfig:
             keycloak: {}
             kiali: {}
             knative: {}
-            kured: {}
             tekton: {}
             loki: {}
             minio: {}
