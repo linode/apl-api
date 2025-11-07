@@ -1,15 +1,12 @@
 /* eslint-disable no-param-reassign */
 import { getSpec } from 'src/app'
 import { debug } from 'console'
-import { RequestHandler } from 'express'
 import { find } from 'lodash'
 import get from 'lodash/get'
-import Authz, { getTeamSelfServiceAuthz } from 'src/authz'
+import Authz from 'src/authz'
 import { HttpError } from 'src/error'
 import { OpenApiRequestExt } from 'src/otomi-models'
-import OtomiStack from 'src/otomi-stack'
 import { RepoService } from '../services/RepoService'
-import { getSessionStack } from './session'
 
 const HttpMethodMapping: Record<string, string> = {
   DELETE: 'delete',
@@ -41,34 +38,29 @@ function renameKeys(obj: Record<string, any>) {
 //   }
 // }
 
-export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoService: RepoService): RequestHandler {
-  const { params, query, body, user } = req
+/**
+ * Authorize a request based on RBAC and ABAC rules.
+ * Called by the security handler.
+ * Throws HttpError if authorization fails.
+ */
+export function authorize(req: OpenApiRequestExt, authz: Authz, repoService: RepoService): void {
+  const { body, user } = req
   // express-openapi-validator stores path params in req.openapi.pathParams
-  const teamId = req.openapi?.pathParams?.teamId ?? params?.teamId ?? query?.teamId ?? body?.teamId
+  const teamId = req.openapi?.pathParams?.teamId ?? req.params?.teamId ?? req.query?.teamId ?? body?.teamId
   const action = HttpMethodMapping[req.method]
 
-  // express-openapi-validator doesn't expose custom x- extensions on req.openapi.schema
-  // so we need to look it up from the loaded spec using the route path
+  // Get x-aclSchema from req.openapi.schema (set by express-openapi-validator)
+  const schemaName = (req.openapi?.schema as any)?.['x-aclSchema'] || null
+
+  // If there is no RBAC then we allow the request
+  if (!schemaName) return
+
   const apiSpec = getSpec().spec
-  const routePath = (req.openapi as any)?.openApiRoute || req.path
-  const method = req.method.toLowerCase()
 
-  console.log('DEBUG authz - routePath:', routePath, 'method:', method)
-  console.log('DEBUG authz - Looking for x-aclSchema at:', `paths['${routePath}']['${method}']['x-aclSchema']`)
-  console.log('DEBUG authz - Available paths:', Object.keys(apiSpec.paths || {}))
-
-  const schema: string =
-    get(apiSpec, `paths['${routePath}']['${method}']['x-aclSchema']`, '') || get(req, 'operationDoc.x-aclSchema', '')
-  const schemaName = schema.split('/').pop() || null
-
-  console.log('DEBUG authz - Found schema:', schema, 'schemaName:', schemaName)
-
-  // If there is no RBAC then we bail
-  if (!schemaName) return next()
-
-  // init rules for the user
+  // Initialize rules for the user
   authz.init(user)
 
+  // Check RBAC permissions
   let valid
   const isTeamMember = !user.isPlatformAdmin && user.teams.includes(teamId)
   if (isTeamMember) {
@@ -81,12 +73,15 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
     const key = `${action}:${schemaName}`
     const permission = permissionMap[key]
     valid = permission ? authz.hasSelfService(teamId, permission) : authz.validateWithCasl(action, schemaName, teamId)
-  } else valid = authz.validateWithCasl(action, schemaName, teamId)
+  } else {
+    valid = authz.validateWithCasl(action, schemaName, teamId)
+  }
 
   if (!valid) {
     throw new HttpError(403, `User not allowed to perform "${action}" on "${schemaName}" resource`)
   }
 
+  // Check ABAC permissions for create/update operations
   const schemaToRepoMap: Record<string, string> = {
     Service: 'services',
     Team: 'teamConfig',
@@ -98,11 +93,9 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
     Policy: 'policies',
     SealedSecret: 'sealedSecrets',
   }
-  const teamSpecificCollections = ['builds', 'services', 'workloads', 'netpols', 'policies', 'sealedSecrets'] // <-- These are fetched per team
+  const teamSpecificCollections = ['builds', 'services', 'workloads', 'netpols', 'policies', 'sealedSecrets']
 
-  // Use openapi.pathParams if available, fallback to params for backward compatibility
-  const pathParams = req.openapi?.pathParams ?? params
-  const selector = renameKeys(pathParams)
+  //TODO lookup if we can remove this
   const collectionId = schemaToRepoMap[schemaName]
   if (collectionId && ['create', 'update'].includes(action)) {
     // Look up x-allow-values from the API spec for ABAC validation
@@ -114,6 +107,8 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
 
     if (action === 'update') {
       try {
+        const pathParams = req.openapi?.pathParams ?? req.params
+        const selector = renameKeys(pathParams)
         let collection
         if (teamSpecificCollections.includes(collectionId)) {
           collection = repoService.getTeamConfigService(teamId).getCollection(collectionId)
@@ -122,41 +117,16 @@ export function authorize(req: OpenApiRequestExt, res, next, authz: Authz, repoS
         }
         dataOrig = find(collection, selector) || {}
       } catch (error) {
-        debug('Error in authzMiddleware', error)
+        debug('Error in authorize', error)
       }
     }
 
     const violatedAttributes = authz.validateWithAbac(action, schemaName, teamId, req.body, dataOrig)
     if (violatedAttributes.length > 0) {
-      return res.status(403).send({
-        authz: false,
-        message: `User not allowed to modify the following attributes ${violatedAttributes}" of ${schemaName}" resource`,
-      })
-    }
-  }
-  // TODO: enable next part later:
-  //filter response based on abac
-  // res.json = wrapResponse(
-  //   (obj: Record<string, any>) => authz.filterWithAbac(schemaName, teamId, obj),
-  //   res.json.bind(res),
-  // )
-
-  return next()
-}
-export function authzMiddleware(authz: Authz): RequestHandler {
-  return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
-    if (req.user) {
-      req.isSecurityHandler = true
-    } else {
-      return next()
-    }
-    try {
-      const otomi: OtomiStack = await getSessionStack(req.user.email)
-      // Now we call the new helper which derives authz based on the new selfService.teamMembers flags.
-      req.user.authz = getTeamSelfServiceAuthz(req.user.teams, otomi)
-      return authorize(req, res, next, authz, otomi.repoService)
-    } catch (error) {
-      return next(error)
+      throw new HttpError(
+        403,
+        `User not allowed to modify the following attributes: ${violatedAttributes.join(', ')} of ${schemaName} resource`,
+      )
     }
   }
 }

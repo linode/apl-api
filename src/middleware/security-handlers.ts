@@ -35,36 +35,15 @@ export async function groupAuthzSecurityHandler(req: Request, scopes: string[], 
   const otomiStack = await getSessionStack(extReq.user.email)
   extReq.user.authz = getTeamSelfServiceAuthz(extReq.user.teams, otomiStack)
 
-  // Perform authorization check using the same logic as authzMiddleware
-  // We wrap it in a Promise to handle the middleware's async callback pattern
-  return new Promise((resolve, reject) => {
-    const mockRes = {} as Response
-    const mockNext = (error?: any) => {
-      if (error) {
-        // Convert HttpError to security handler error format
-        const status = error.statusCode || 403
-        const message = error.message || 'Forbidden'
-        reject({ status, message })
-      } else {
-        resolve(true)
-      }
-    }
-
-    try {
-      // Create authz instance and call authorize
-      const authz = new Authz(getSpec().spec)
-      const result = authorize(extReq, mockRes, mockNext, authz, otomiStack.repoService)
-
-      // authorize returns next() or throws, handle the sync return case
-      if (result === undefined) {
-        // If authorize called next() synchronously without error, we're authorized
-        resolve(true)
-      }
-    } catch (error: any) {
-      // authorize threw an error (e.g., HttpError for 403)
-      const status = error.statusCode || error.status || 403
-      const message = error.publicMessage || error.message || 'Forbidden'
-      reject({ status, message })
-    }
-  })
+  // Perform authorization check
+  try {
+    const authz = new Authz(getSpec().spec)
+    authorize(extReq, authz, otomiStack.repoService)
+    return true
+  } catch (error: any) {
+    // authorize threw an error (e.g., HttpError for 403)
+    const status = error.statusCode || error.status || 403
+    const message = error.publicMessage || error.message || 'Forbidden'
+    throw { status, message }
+  }
 }

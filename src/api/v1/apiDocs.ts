@@ -1,5 +1,6 @@
 import Debug from 'debug'
 import { Response } from 'express'
+import { getSpec } from '../../app'
 import { OpenApiRequest } from 'src/otomi-models'
 
 const debug = Debug('otomi:v1:api')
@@ -10,5 +11,5 @@ const debug = Debug('otomi:v1:api')
  */
 export const getApiDoc = (req: OpenApiRequest, res: Response): void => {
   debug('apiDocs')
-  res.json(req.apiDoc)
+  res.json(getSpec().spec)
 }
