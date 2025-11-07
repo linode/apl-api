@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { Request } from 'express'
 import { getSpec } from 'src/app'
 import Authz, { getTeamSelfServiceAuthz } from 'src/authz'
 import { OpenApiRequestExt } from 'src/otomi-models'
@@ -38,7 +38,7 @@ export async function groupAuthzSecurityHandler(req: Request, scopes: string[], 
   // Perform authorization check
   try {
     const authz = new Authz(getSpec().spec)
-    authorize(extReq, authz, otomiStack.repoService)
+    authorize(extReq, authz)
     return true
   } catch (error: any) {
     // authorize threw an error (e.g., HttpError for 403)
