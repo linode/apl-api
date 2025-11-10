@@ -16,6 +16,16 @@ SettingsInfo:
           description: URL to the Kubernetes API. Used to generate the KUBECONFIG for download, for direct access to the cluster.
         provider:
           $ref: 'definitions.yaml#/provider'
+        linode:
+          additionalProperties: false
+          properties:
+            tier:
+              type: string
+              description: Linode Kubernetes Engine tier (standard LKE or enterprise LKE-E)
+              default: standard
+              enum:
+                - standard
+                - enterprise
     dns:
       properties:
         zones:
