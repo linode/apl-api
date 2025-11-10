@@ -1,37 +1,40 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { Build, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:teams:builds')
 
-export default function (): OperationHandlerArray {
-  const del: Operation = [
-    async ({ otomi, params: { teamId, buildName } }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`deleteBuild(${buildName})`)
-      await otomi.deleteBuild(decodeURIComponent(teamId), decodeURIComponent(buildName))
-      res.json({})
-    },
-  ]
-  const get: Operation = [
-    ({ otomi, params: { teamId, buildName } }: OpenApiRequestExt, res): void => {
-      debug(`getBuild(${buildName})`)
-      const data = otomi.getBuild(decodeURIComponent(teamId), decodeURIComponent(buildName))
-      res.json(data)
-    },
-  ]
-  const put: Operation = [
-    ({ otomi, params: { teamId, buildName }, body }: OpenApiRequestExt, res): void => {
-      debug(`editBuild(${buildName})`)
-      const data = otomi.editBuild(decodeURIComponent(teamId), decodeURIComponent(buildName), {
-        ...body,
-      } as Build)
-      res.json(data)
-    },
-  ]
-  const api = {
-    delete: del,
-    get,
-    put,
-  }
-  return api
+/**
+ * GET /v1/teams/{teamId}/builds/{buildName}
+ * Get a specific build
+ */
+export const getBuild = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId, buildName } = req.params
+  debug(`getBuild(${buildName})`)
+  const data = req.otomi.getBuild(decodeURIComponent(teamId), decodeURIComponent(buildName))
+  res.json(data)
+}
+
+/**
+ * PUT /v1/teams/{teamId}/builds/{buildName}
+ * Edit a build
+ */
+export const editBuild = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId, buildName } = req.params
+  debug(`editBuild(${buildName})`)
+  const data = req.otomi.editBuild(decodeURIComponent(teamId), decodeURIComponent(buildName), {
+    ...req.body,
+  } as Build)
+  res.json(data)
+}
+
+/**
+ * DELETE /v1/teams/{teamId}/builds/{buildName}
+ * Delete a build
+ */
+export const deleteBuild = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, buildName } = req.params
+  debug(`deleteBuild(${buildName})`)
+  await req.otomi.deleteBuild(decodeURIComponent(teamId), decodeURIComponent(buildName))
+  res.json({})
 }

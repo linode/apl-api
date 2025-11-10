@@ -1,20 +1,15 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:policies')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    /* business middleware not expressible by OpenAPI documentation goes here */
-    ({ otomi }: OpenApiRequestExt, res): void => {
-      debug('getAllPolicies')
-      const v = otomi.getAllAplPolicies()
-      res.json(v)
-    },
-  ]
-  const api = {
-    get,
-  }
-  return api
+/**
+ * GET /v2/policies
+ * Get all policies across all teams (APL format)
+ */
+export const getAllAplPolicies = (req: OpenApiRequestExt, res: Response): void => {
+  debug('getAllPolicies')
+  const v = req.otomi.getAllAplPolicies()
+  res.json(v)
 }

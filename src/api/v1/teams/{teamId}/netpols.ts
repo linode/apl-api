@@ -1,28 +1,27 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { Netpol, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:teams:netpols')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
-      debug(`getTeamNetpols(${teamId})`)
-      const v = otomi.getTeamNetpols(teamId)
-      res.json(v)
-    },
-  ]
-  const post: Operation = [
-    async ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`createNetpol(${teamId}, ...)`)
-      const v = await otomi.createNetpol(teamId, body as Netpol)
-      res.json(v)
-    },
-  ]
-  const api = {
-    get,
-    post,
-  }
+/**
+ * GET /v1/teams/{teamId}/netpols
+ * Get all network policies for a team
+ */
+export const getTeamNetpols = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId } = req.params
+  debug(`getTeamNetpols(${teamId})`)
+  const v = req.otomi.getTeamNetpols(teamId)
+  res.json(v)
+}
 
-  return api
+/**
+ * POST /v1/teams/{teamId}/netpols
+ * Create a new network policy
+ */
+export const createNetpol = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId } = req.params
+  debug(`createNetpol(${teamId}, ...)`)
+  const v = await req.otomi.createNetpol(teamId, req.body as Netpol)
+  res.json(v)
 }

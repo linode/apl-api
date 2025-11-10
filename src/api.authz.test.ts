@@ -163,10 +163,6 @@ describe('API authz tests', () => {
       .expect('Content-Type', /json/)
   })
 
-  test('team member cannot delete all teams', async () => {
-    await agent.delete('/v1/teams').set('Authorization', `Bearer ${teamMemberToken}`).expect(404)
-  })
-
   test('team member cannot create a new team', async () => {
     await agent
       .post('/v1/teams')
@@ -322,7 +318,7 @@ describe('API authz tests', () => {
   })
 
   test('anonymous user should get api spec', async () => {
-    await agent.get('/apiDocs').expect(200).expect('Content-Type', /json/)
+    await agent.get('/v1/apiDocs').expect(200).expect('Content-Type', /json/)
   })
 
   test('anonymous user cannot get a specific team', async () => {

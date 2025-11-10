@@ -1,19 +1,15 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:testRepoConnect')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    async ({ otomi, query }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`getTestRepoConnect`, query)
-      const { url, teamId, secret }: { url: string; teamId: string; secret: string } = query as any
-      res.json(await otomi.getTestRepoConnect(url, teamId, secret))
-    },
-  ]
-  const api = {
-    get,
-  }
-  return api
+/**
+ * GET /v1/testRepoConnect
+ * Test repository connection
+ */
+export const testRepoConnect = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  debug('getTestRepoConnect', req.query)
+  const { url, teamId, secret } = req.query as { url: string; teamId: string; secret: string }
+  res.json(await req.otomi.getTestRepoConnect(url, teamId, secret))
 }
