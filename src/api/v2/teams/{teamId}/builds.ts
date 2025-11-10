@@ -1,28 +1,27 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { AplBuildRequest, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:builds')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
-      debug(`getTeamBuilds(${teamId})`)
-      const v = otomi.getTeamAplBuilds(decodeURIComponent(teamId))
-      res.json(v)
-    },
-  ]
-  const post: Operation = [
-    async ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`createBuild(${teamId}, ...)`)
-      const v = await otomi.createAplBuild(decodeURIComponent(teamId), body as AplBuildRequest)
-      res.json(v)
-    },
-  ]
-  const api = {
-    get,
-    post,
-  }
+/**
+ * GET /v2/teams/{teamId}/builds
+ * Get all builds for a team (APL format)
+ */
+export const getTeamAplBuilds = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId } = req.params
+  debug(`getTeamBuilds(${teamId})`)
+  const v = req.otomi.getTeamAplBuilds(decodeURIComponent(teamId))
+  res.json(v)
+}
 
-  return api
+/**
+ * POST /v2/teams/{teamId}/builds
+ * Create a new build (APL format)
+ */
+export const createAplBuild = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId } = req.params
+  debug(`createBuild(${teamId}, ...)`)
+  const v = await req.otomi.createAplBuild(decodeURIComponent(teamId), req.body as AplBuildRequest)
+  res.json(v)
 }

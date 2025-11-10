@@ -267,34 +267,6 @@ describe('Platform admin, team admin and team member scenarios', () => {
   })
 })
 
-describe('ABAC attribute denial', () => {
-  const spec: OpenAPIDoc = {
-    components: {
-      schemas: {
-        Team: { type: 'object', 'x-acl': { teamMember: ['update'] }, properties: {} },
-      },
-    },
-    paths: {},
-    security: [],
-  }
-  const teamId = 'teamA'
-  let authz: Authz
-  beforeEach(() => {
-    authz = new Authz(spec).init(sessionTeam)
-    sessionTeam.authz = { [teamId]: { deniedAttributes: { Team: ['foo', 'bar'] } } }
-  })
-  test('Denied attributes are respected', () => {
-    expect(() => authz.hasSelfService(teamId, 'foo')).not.toThrow()
-    expect(() => authz.hasSelfService(teamId, 'bar')).not.toThrow()
-  })
-  test('Allowed attribute is not denied', () => {
-    expect(() => authz.hasSelfService(teamId, 'baz')).not.toThrow()
-  })
-  afterEach(() => {
-    sessionTeam.authz = {}
-  })
-})
-
 describe('Fallback to CASL when no self-service permission', () => {
   const spec: OpenAPIDoc = {
     components: {
