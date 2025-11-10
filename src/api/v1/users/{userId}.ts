@@ -1,35 +1,38 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { OpenApiRequestExt, SessionUser, User } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:users')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    ({ otomi, user: sessionUser, params: { userId } }: OpenApiRequestExt, res): void => {
-      debug(`getUser(${userId})`)
-      const data = otomi.getUser(decodeURIComponent(userId), sessionUser)
-      res.json(data)
-    },
-  ]
-  const put: Operation = [
-    async ({ otomi, params: { userId }, user, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`editUser(${userId})`)
-      const data = await otomi.editUser(decodeURIComponent(userId), body as User, user as SessionUser)
-      res.json(data)
-    },
-  ]
-  const del: Operation = [
-    async ({ otomi, params: { userId } }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`deleteUser(${userId})`)
-      await otomi.deleteUser(decodeURIComponent(userId))
-      res.json({})
-    },
-  ]
-  const api = {
-    get,
-    put,
-    delete: del,
-  }
-  return api
+/**
+ * GET /v1/users/{userId}
+ * Get a specific user
+ */
+export const getUser = (req: OpenApiRequestExt, res: Response): void => {
+  const { userId } = req.params
+  debug(`getUser(${userId})`)
+  const data = req.otomi.getUser(decodeURIComponent(userId), req.user)
+  res.json(data)
+}
+
+/**
+ * PUT /v1/users/{userId}
+ * Edit a user
+ */
+export const editUser = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { userId } = req.params
+  debug(`editUser(${userId})`)
+  const data = await req.otomi.editUser(decodeURIComponent(userId), req.body as User, req.user as SessionUser)
+  res.json(data)
+}
+
+/**
+ * DELETE /v1/users/{userId}
+ * Delete a user
+ */
+export const deleteUser = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { userId } = req.params
+  debug(`deleteUser(${userId})`)
+  await req.otomi.deleteUser(decodeURIComponent(userId))
+  res.json({})
 }

@@ -1,28 +1,27 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { OpenApiRequestExt, Workload } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:teams:workloads')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
-      debug(`getTeamWorkloads(${teamId})`)
-      const v = otomi.getTeamWorkloads(teamId)
-      res.json(v)
-    },
-  ]
-  const post: Operation = [
-    async ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`createWorkload(${teamId}, ...)`)
-      const v = await otomi.createWorkload(teamId, body as Workload)
-      res.json(v)
-    },
-  ]
-  const api = {
-    get,
-    post,
-  }
+/**
+ * GET /v1/teams/{teamId}/workloads
+ * Get all workloads for a team
+ */
+export const getTeamWorkloads = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId } = req.params
+  debug(`getTeamWorkloads(${teamId})`)
+  const v = req.otomi.getTeamWorkloads(teamId)
+  res.json(v)
+}
 
-  return api
+/**
+ * POST /v1/teams/{teamId}/workloads
+ * Create a new workload
+ */
+export const createWorkload = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId } = req.params
+  debug(`createWorkload(${teamId}, ...)`)
+  const v = await req.otomi.createWorkload(teamId, req.body as Workload)
+  res.json(v)
 }

@@ -1,19 +1,15 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:sealedsecrets')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    ({ otomi }: OpenApiRequestExt, res): void => {
-      debug('getAllSealedSecrets')
-      const v = otomi.getAllSealedSecrets()
-      res.json(v)
-    },
-  ]
-  const api = {
-    get,
-  }
-  return api
+/**
+ * GET /v1/sealedsecrets
+ * Get all sealed secrets across all teams
+ */
+export const getAllSealedSecrets = (req: OpenApiRequestExt, res: Response): void => {
+  debug('getAllSealedSecrets')
+  const v = req.otomi.getAllSealedSecrets()
+  res.json(v)
 }

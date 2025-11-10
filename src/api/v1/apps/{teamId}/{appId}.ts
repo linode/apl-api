@@ -1,20 +1,20 @@
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { App, OpenApiRequestExt } from 'src/otomi-models'
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    ({ otomi, params: { teamId, appId } }: OpenApiRequestExt, res): void => {
-      res.json(otomi.getTeamApp(teamId, appId))
-    },
-  ]
-  const put: Operation = [
-    async ({ otomi, body, params: { teamId, appId } }: OpenApiRequestExt, res): Promise<void> => {
-      res.json(await otomi.editApp(teamId, appId, body as App))
-    },
-  ]
-  const api = {
-    get,
-    put,
-  }
-  return api
+/**
+ * GET /v1/apps/{teamId}/{appId}
+ * Get a specific team app
+ */
+export const getTeamApp = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId, appId } = req.params
+  res.json(req.otomi.getTeamApp(teamId, appId))
+}
+
+/**
+ * PUT /v1/apps/{teamId}/{appId}
+ * Edit a team app
+ */
+export const editApp = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, appId } = req.params
+  res.json(await req.otomi.editApp(teamId, appId, req.body as App))
 }

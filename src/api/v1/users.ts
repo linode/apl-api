@@ -1,27 +1,25 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { OpenApiRequestExt, User } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:users')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    ({ otomi, user: sessionUser }: OpenApiRequestExt, res): void => {
-      debug('getAllUsers')
-      const v = otomi.getAllUsers(sessionUser)
-      res.json(v)
-    },
-  ]
-  const post: Operation = [
-    async ({ otomi, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug('createUser')
-      const v = await otomi.createUser(body as User)
-      res.json(v)
-    },
-  ]
-  const api = {
-    get,
-    post,
-  }
-  return api
+/**
+ * GET /v1/users
+ * Get all users
+ */
+export const getAllUsers = (req: OpenApiRequestExt, res: Response): void => {
+  debug('getAllUsers')
+  const v = req.otomi.getAllUsers(req.user)
+  res.json(v)
+}
+
+/**
+ * POST /v1/users
+ * Create a new user
+ */
+export const createUser = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  debug('createUser')
+  const v = await req.otomi.createUser(req.body as User)
+  res.json(v)
 }

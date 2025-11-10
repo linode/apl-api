@@ -1,20 +1,15 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:builds')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    /* business middleware not expressible by OpenAPI documentation goes here */
-    ({ otomi }: OpenApiRequestExt, res): void => {
-      debug('getAllBuilds')
-      const v = otomi.getAllAplBuilds()
-      res.json(v)
-    },
-  ]
-  const api = {
-    get,
-  }
-  return api
+/**
+ * GET /v2/builds
+ * Get all builds across all teams (APL format)
+ */
+export const getAllAplBuilds = (req: OpenApiRequestExt, res: Response): void => {
+  debug('getAllBuilds')
+  const v = req.otomi.getAllAplBuilds()
+  res.json(v)
 }

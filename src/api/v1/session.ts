@@ -1,19 +1,15 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:session')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    async ({ otomi, user }: OpenApiRequestExt, res): Promise<void> => {
-      debug('getSession')
-      const data = await otomi.getSession(user)
-      res.json(data)
-    },
-  ]
-  const api = {
-    get,
-  }
-  return api
+/**
+ * GET /v1/session
+ * Get current session information
+ */
+export const getSession = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  debug('getSession')
+  const data = await req.otomi.getSession(req.user)
+  res.json(data)
 }

@@ -1,52 +1,58 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { AplCodeRepoRequest, DeepPartial, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:codeRepos')
 
-export default function (): OperationHandlerArray {
-  const del: Operation = [
-    async ({ otomi, params: { teamId, codeRepositoryName } }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`deleteCodeRepo(${codeRepositoryName})`)
-      await otomi.deleteCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
-      res.json({})
-    },
-  ]
-  const get: Operation = [
-    ({ otomi, params: { teamId, codeRepositoryName } }: OpenApiRequestExt, res): void => {
-      debug(`getCodeRepo(${codeRepositoryName})`)
-      const data = otomi.getAplCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
-      res.json(data)
-    },
-  ]
-  const put: Operation = [
-    async ({ otomi, params: { teamId, codeRepositoryName }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`editCodeRepo(${codeRepositoryName})`)
-      const data = await otomi.editAplCodeRepo(
-        decodeURIComponent(teamId),
-        decodeURIComponent(codeRepositoryName),
-        body as AplCodeRepoRequest,
-      )
-      res.json(data)
-    },
-  ]
-  const patch: Operation = [
-    async ({ otomi, params: { teamId, codeRepositoryName }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`editCodeRepo(${codeRepositoryName}, patch)`)
-      const data = await otomi.editAplCodeRepo(
-        decodeURIComponent(teamId),
-        decodeURIComponent(codeRepositoryName),
-        body as DeepPartial<AplCodeRepoRequest>,
-        true,
-      )
-      res.json(data)
-    },
-  ]
-  const api = {
-    delete: del,
-    get,
-    put,
-    patch,
-  }
-  return api
+/**
+ * GET /v2/teams/{teamId}/coderepos/{codeRepositoryName}
+ * Get a specific code repository (APL format)
+ */
+export const getAplCodeRepo = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId, codeRepositoryName } = req.params
+  debug(`getCodeRepo(${codeRepositoryName})`)
+  const data = req.otomi.getAplCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
+  res.json(data)
+}
+
+/**
+ * PUT /v2/teams/{teamId}/coderepos/{codeRepositoryName}
+ * Edit a code repository (APL format)
+ */
+export const editAplCodeRepo = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, codeRepositoryName } = req.params
+  debug(`editCodeRepo(${codeRepositoryName})`)
+  const data = await req.otomi.editAplCodeRepo(
+    decodeURIComponent(teamId),
+    decodeURIComponent(codeRepositoryName),
+    req.body as AplCodeRepoRequest,
+  )
+  res.json(data)
+}
+
+/**
+ * PATCH /v2/teams/{teamId}/coderepos/{codeRepositoryName}
+ * Partially update a code repository (APL format)
+ */
+export const patchAplCodeRepo = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, codeRepositoryName } = req.params
+  debug(`editCodeRepo(${codeRepositoryName}, patch)`)
+  const data = await req.otomi.editAplCodeRepo(
+    decodeURIComponent(teamId),
+    decodeURIComponent(codeRepositoryName),
+    req.body as DeepPartial<AplCodeRepoRequest>,
+    true,
+  )
+  res.json(data)
+}
+
+/**
+ * DELETE /v2/teams/{teamId}/coderepos/{codeRepositoryName}
+ * Delete a code repository
+ */
+export const deleteAplCodeRepo = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, codeRepositoryName } = req.params
+  debug(`deleteCodeRepo(${codeRepositoryName})`)
+  await req.otomi.deleteCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
+  res.json({})
 }
