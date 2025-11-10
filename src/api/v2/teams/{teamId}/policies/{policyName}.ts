@@ -1,44 +1,47 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { AplPolicyRequest, DeepPartial, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:policies')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    ({ otomi, params: { teamId, policyName } }: OpenApiRequestExt, res): void => {
-      debug(`getPolicy(${policyName})`)
-      const data = otomi.getAplPolicy(decodeURIComponent(teamId), decodeURIComponent(policyName))
-      res.json(data)
-    },
-  ]
-  const put: Operation = [
-    async ({ otomi, params: { teamId, policyName }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`editPolicy(${policyName})`)
-      const data = await otomi.editAplPolicy(
-        decodeURIComponent(teamId),
-        decodeURIComponent(policyName),
-        body as AplPolicyRequest,
-      )
-      res.json(data)
-    },
-  ]
-  const patch: Operation = [
-    async ({ otomi, params: { teamId, policyName }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`editPolicy(${policyName}, patch)`)
-      const data = await otomi.editAplPolicy(
-        decodeURIComponent(teamId),
-        decodeURIComponent(policyName),
-        body as DeepPartial<AplPolicyRequest>,
-        true,
-      )
-      res.json(data)
-    },
-  ]
-  const api = {
-    get,
-    put,
-    patch,
-  }
-  return api
+/**
+ * GET /v2/teams/{teamId}/policies/{policyName}
+ * Get a specific policy (APL format)
+ */
+export const getAplPolicy = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId, policyName } = req.params
+  debug(`getPolicy(${policyName})`)
+  const data = req.otomi.getAplPolicy(decodeURIComponent(teamId), decodeURIComponent(policyName))
+  res.json(data)
+}
+
+/**
+ * PUT /v2/teams/{teamId}/policies/{policyName}
+ * Edit a policy (APL format)
+ */
+export const editAplPolicy = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, policyName } = req.params
+  debug(`editPolicy(${policyName})`)
+  const data = await req.otomi.editAplPolicy(
+    decodeURIComponent(teamId),
+    decodeURIComponent(policyName),
+    req.body as AplPolicyRequest,
+  )
+  res.json(data)
+}
+
+/**
+ * PATCH /v2/teams/{teamId}/policies/{policyName}
+ * Partially update a policy (APL format)
+ */
+export const patchAplPolicy = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, policyName } = req.params
+  debug(`editPolicy(${policyName}, patch)`)
+  const data = await req.otomi.editAplPolicy(
+    decodeURIComponent(teamId),
+    decodeURIComponent(policyName),
+    req.body as DeepPartial<AplPolicyRequest>,
+    true,
+  )
+  res.json(data)
 }

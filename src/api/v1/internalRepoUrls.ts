@@ -1,20 +1,15 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:internalRepoUrls')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    async ({ otomi, query }: OpenApiRequestExt, res): Promise<string[]> => {
-      debug(`getInternalRepoUrls ${query?.teamId}`)
-      const v = await otomi.getInternalRepoUrls(query?.teamId as string)
-      res.json(v)
-      return v
-    },
-  ]
-  const api = {
-    get,
-  }
-  return api
+/**
+ * GET /v1/internalRepoUrls
+ * Get internal repository URLs
+ */
+export const getInternalRepoUrls = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  debug(`getInternalRepoUrls ${req.query?.teamId}`)
+  const v = await req.otomi.getInternalRepoUrls(req.query?.teamId as string)
+  res.json(v)
 }

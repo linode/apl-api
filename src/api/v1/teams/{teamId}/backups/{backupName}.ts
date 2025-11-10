@@ -1,37 +1,40 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { Backup, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:teams:backups')
 
-export default function (): OperationHandlerArray {
-  const del: Operation = [
-    async ({ otomi, params: { teamId, backupName } }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`deleteBackup(${backupName})`)
-      await otomi.deleteBackup(decodeURIComponent(teamId), decodeURIComponent(backupName))
-      res.json({})
-    },
-  ]
-  const get: Operation = [
-    ({ otomi, params: { teamId, backupName } }: OpenApiRequestExt, res): void => {
-      debug(`getBackup(${backupName})`)
-      const data = otomi.getBackup(decodeURIComponent(teamId), decodeURIComponent(backupName))
-      res.json(data)
-    },
-  ]
-  const put: Operation = [
-    async ({ otomi, params: { teamId, backupName }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`editBackup(${backupName})`)
-      const data = await otomi.editBackup(decodeURIComponent(teamId), decodeURIComponent(backupName), {
-        ...body,
-      } as Backup)
-      res.json(data)
-    },
-  ]
-  const api = {
-    delete: del,
-    get,
-    put,
-  }
-  return api
+/**
+ * GET /v1/teams/{teamId}/backups/{backupName}
+ * Get a specific backup
+ */
+export const getBackup = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId, backupName } = req.params
+  debug(`getBackup(${backupName})`)
+  const data = req.otomi.getBackup(decodeURIComponent(teamId), decodeURIComponent(backupName))
+  res.json(data)
+}
+
+/**
+ * PUT /v1/teams/{teamId}/backups/{backupName}
+ * Edit a backup
+ */
+export const editBackup = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, backupName } = req.params
+  debug(`editBackup(${backupName})`)
+  const data = await req.otomi.editBackup(decodeURIComponent(teamId), decodeURIComponent(backupName), {
+    ...req.body,
+  } as Backup)
+  res.json(data)
+}
+
+/**
+ * DELETE /v1/teams/{teamId}/backups/{backupName}
+ * Delete a backup
+ */
+export const deleteBackup = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, backupName } = req.params
+  debug(`deleteBackup(${backupName})`)
+  await req.otomi.deleteBackup(decodeURIComponent(teamId), decodeURIComponent(backupName))
+  res.json({})
 }
