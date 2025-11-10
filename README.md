@@ -57,7 +57,7 @@ npm run build:spec   # Build OpenAPI specification
 
 - **Git-as-Database**: All configuration stored as YAML in Git repository
 - **OpenAPI-First**: All endpoints auto-generated from `src/openapi/*.yaml` specs
-- **Multi-Tenant**: Team isolation with RBAC/ABAC authorization
+- **Multi-Tenant**: Team isolation with RBAC authorization
 - **Real-time**: WebSocket updates for live status monitoring
 
 ### Key Components
@@ -79,7 +79,7 @@ npm run build:spec   # Build OpenAPI specification
 - **Headers required**: `Authorization`, `Auth-Group`
 - **Mock users** available for testing
 
-### Authorization (RBAC + ABAC)
+### Authorization (RBAC)
 
 - **platformAdmin**: Full system access
 - **teamAdmin**: Manage own team resources

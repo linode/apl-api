@@ -11,7 +11,7 @@ const HttpMethodMapping: Record<string, string> = {
 }
 
 /**
- * Authorize a request based on RBAC and ABAC rules.
+ * Authorize a request based on RBAC rules.
  * Called by the security handler.
  * Throws HttpError if authorization fails.
  */
