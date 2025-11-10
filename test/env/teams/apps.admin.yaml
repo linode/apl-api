@@ -24,7 +24,6 @@ teamConfig:
             rabbitmq: {}
             sealed-secrets: {}
             velero: {}
-            falco: {}
             trivy: {}
             tempo: {}
             otel: {}
