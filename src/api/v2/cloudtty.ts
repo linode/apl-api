@@ -8,7 +8,7 @@ const debug = Debug('otomi:api:v2:cloudtty')
  * GET /v2/cloudtty
  * Connect to CloudTTY
  */
-export const connectCloudtty = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+export const connectAplCloudtty = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const sessionUser = req.user
   debug(`connectCloudtty - ${sessionUser.email} - ${sessionUser.sub}`)
   const { teamId } = req.query as { teamId: string }
@@ -20,7 +20,7 @@ export const connectCloudtty = async (req: OpenApiRequestExt, res: Response): Pr
  * DELETE /v2/cloudtty
  * Delete CloudTTY connection
  */
-export const deleteCloudtty = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+export const deleteAplCloudtty = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const sessionUser = req.user
   debug(`deleteCloudtty - ${sessionUser.email} - ${sessionUser.sub}`)
   await req.otomi.deleteCloudtty(sessionUser)

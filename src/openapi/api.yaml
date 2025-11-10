@@ -1579,7 +1579,7 @@ paths:
 
   '/v2/cloudtty':
     get:
-      operationId: connectCloudtty
+      operationId: connectAplCloudtty
       x-eov-operation-handler: v2/cloudtty
       description: Get a cloudtty iFrameUrl
       x-aclSchema: Cloudtty
@@ -1598,7 +1598,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Cloudtty'
     delete:
-      operationId: deleteCloudtty
+      operationId: deleteAplCloudtty
       x-eov-operation-handler: v2/cloudtty
       description: Delete cloudtty url
       x-aclSchema: Cloudtty
