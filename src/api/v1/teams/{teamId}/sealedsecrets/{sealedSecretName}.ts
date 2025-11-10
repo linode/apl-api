@@ -1,39 +1,42 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { OpenApiRequestExt, SealedSecret } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:teams:sealedsecrets')
 
-export default function (): OperationHandlerArray {
-  const del: Operation = [
-    async ({ otomi, params: { teamId, sealedSecretName } }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`deleteSealedSecret(${sealedSecretName})`)
-      await otomi.deleteSealedSecret(decodeURIComponent(teamId), decodeURIComponent(sealedSecretName))
-      res.json({})
-    },
-  ]
-  const get: Operation = [
-    async ({ otomi, params: { teamId, sealedSecretName } }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`getSealedSecret(${sealedSecretName})`)
-      const data = await otomi.getSealedSecret(decodeURIComponent(teamId), decodeURIComponent(sealedSecretName))
-      res.json(data)
-    },
-  ]
-  const put: Operation = [
-    async ({ otomi, params: { teamId, sealedSecretName }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`editSealedSecret(${sealedSecretName})`)
-      const data = await otomi.editSealedSecret(
-        decodeURIComponent(teamId),
-        decodeURIComponent(sealedSecretName),
-        body as SealedSecret,
-      )
-      res.json(data)
-    },
-  ]
-  const api = {
-    delete: del,
-    get,
-    put,
-  }
-  return api
+/**
+ * GET /v1/teams/{teamId}/sealedsecrets/{sealedSecretName}
+ * Get a specific sealed secret
+ */
+export const getSealedSecret = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, sealedSecretName } = req.params
+  debug(`getSealedSecret(${sealedSecretName})`)
+  const data = await req.otomi.getSealedSecret(decodeURIComponent(teamId), decodeURIComponent(sealedSecretName))
+  res.json(data)
+}
+
+/**
+ * PUT /v1/teams/{teamId}/sealedsecrets/{sealedSecretName}
+ * Edit a sealed secret
+ */
+export const editSealedSecret = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, sealedSecretName } = req.params
+  debug(`editSealedSecret(${sealedSecretName})`)
+  const data = await req.otomi.editSealedSecret(
+    decodeURIComponent(teamId),
+    decodeURIComponent(sealedSecretName),
+    req.body as SealedSecret,
+  )
+  res.json(data)
+}
+
+/**
+ * DELETE /v1/teams/{teamId}/sealedsecrets/{sealedSecretName}
+ * Delete a sealed secret
+ */
+export const deleteSealedSecret = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, sealedSecretName } = req.params
+  debug(`deleteSealedSecret(${sealedSecretName})`)
+  await req.otomi.deleteSealedSecret(decodeURIComponent(teamId), decodeURIComponent(sealedSecretName))
+  res.json({})
 }

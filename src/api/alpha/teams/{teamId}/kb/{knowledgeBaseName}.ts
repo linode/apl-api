@@ -1,39 +1,42 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { AplKnowledgeBaseRequest, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:alpha:teams:kb')
 
-export default function (): OperationHandlerArray {
-  const del: Operation = [
-    async ({ otomi, params: { teamId, knowledgeBaseName } }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`deleteAplKnowledgeBase(${knowledgeBaseName})`)
-      await otomi.deleteAplKnowledgeBase(decodeURIComponent(teamId), decodeURIComponent(knowledgeBaseName))
-      res.json({})
-    },
-  ]
-  const get: Operation = [
-    async ({ otomi, params: { teamId, knowledgeBaseName } }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`getAplKnowledgeBase(${knowledgeBaseName})`)
-      const data = await otomi.getAplKnowledgeBase(decodeURIComponent(teamId), decodeURIComponent(knowledgeBaseName))
-      res.json(data)
-    },
-  ]
-  const put: Operation = [
-    async ({ otomi, params: { teamId, knowledgeBaseName }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`editAplKnowledgeBase(${knowledgeBaseName})`)
-      const data = await otomi.editAplKnowledgeBase(
-        decodeURIComponent(teamId),
-        decodeURIComponent(knowledgeBaseName),
-        body as AplKnowledgeBaseRequest,
-      )
-      res.json(data)
-    },
-  ]
-  const api = {
-    delete: del,
-    get,
-    put,
-  }
-  return api
+/**
+ * GET /alpha/teams/{teamId}/kb/{knowledgeBaseName}
+ * Get a specific knowledge base
+ */
+export const getAplKnowledgeBase = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, knowledgeBaseName } = req.params
+  debug(`getAplKnowledgeBase(${knowledgeBaseName})`)
+  const data = await req.otomi.getAplKnowledgeBase(decodeURIComponent(teamId), decodeURIComponent(knowledgeBaseName))
+  res.json(data)
+}
+
+/**
+ * PUT /alpha/teams/{teamId}/kb/{knowledgeBaseName}
+ * Edit a knowledge base
+ */
+export const editAplKnowledgeBase = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, knowledgeBaseName } = req.params
+  debug(`editAplKnowledgeBase(${knowledgeBaseName})`)
+  const data = await req.otomi.editAplKnowledgeBase(
+    decodeURIComponent(teamId),
+    decodeURIComponent(knowledgeBaseName),
+    req.body as AplKnowledgeBaseRequest,
+  )
+  res.json(data)
+}
+
+/**
+ * DELETE /alpha/teams/{teamId}/kb/{knowledgeBaseName}
+ * Delete a knowledge base
+ */
+export const deleteAplKnowledgeBase = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, knowledgeBaseName } = req.params
+  debug(`deleteAplKnowledgeBase(${knowledgeBaseName})`)
+  await req.otomi.deleteAplKnowledgeBase(decodeURIComponent(teamId), decodeURIComponent(knowledgeBaseName))
+  res.json({})
 }

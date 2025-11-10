@@ -1,28 +1,27 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { AplWorkloadRequest, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:workloads')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
-      debug(`getTeamWorkloads(${teamId})`)
-      const v = otomi.getTeamAplWorkloads(decodeURIComponent(teamId))
-      res.json(v)
-    },
-  ]
-  const post: Operation = [
-    async ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`createWorkload(${teamId}, ...)`)
-      const v = await otomi.createAplWorkload(decodeURIComponent(teamId), body as AplWorkloadRequest)
-      res.json(v)
-    },
-  ]
-  const api = {
-    get,
-    post,
-  }
+/**
+ * GET /v2/teams/{teamId}/workloads
+ * Get all workloads for a team (APL format)
+ */
+export const getTeamAplWorkloads = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId } = req.params
+  debug(`getTeamWorkloads(${teamId})`)
+  const v = req.otomi.getTeamAplWorkloads(decodeURIComponent(teamId))
+  res.json(v)
+}
 
-  return api
+/**
+ * POST /v2/teams/{teamId}/workloads
+ * Create a new workload (APL format)
+ */
+export const createAplWorkload = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId } = req.params
+  debug(`createWorkload(${teamId}, ...)`)
+  const v = await req.otomi.createAplWorkload(decodeURIComponent(teamId), req.body as AplWorkloadRequest)
+  res.json(v)
 }

@@ -2,8 +2,7 @@ import $parser from '@apidevtools/json-schema-ref-parser'
 import cors from 'cors'
 import Debug from 'debug'
 import express from 'express'
-import 'express-async-errors'
-import { initialize } from 'express-openapi'
+import * as OpenApiValidator from 'express-openapi-validator'
 import { Server } from 'http'
 import { createLightship } from 'lightship'
 import logger from 'morgan'
@@ -11,15 +10,15 @@ import path from 'path'
 import { CleanOptions } from 'simple-git'
 import { default as Authz } from 'src/authz'
 import {
-  authzMiddleware,
   errorMiddleware,
   getIo,
   getSessionStack,
+  groupAuthzSecurityHandler,
   jwtMiddleware,
   sessionMiddleware,
 } from 'src/middleware'
 import { setMockIdx } from 'src/mocks'
-import { AplResponseObject, OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
+import { AplResponseObject, OpenAPIDoc, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
 import {
@@ -147,7 +146,8 @@ export const getAppList = (): string[] => {
 }
 
 export async function initApp(inOtomiStack?: OtomiStack) {
-  const lightship = createLightship()
+  // Only create lightship in production (not in tests)
+  const lightship = env.isTest ? null : createLightship()
   const app = express()
   const apiRoutesPath = path.resolve(__dirname, 'api')
   await loadSpec()
@@ -177,15 +177,15 @@ export async function initApp(inOtomiStack?: OtomiStack) {
     server = app
       .listen(PORT, async () => {
         debug(`Listening on :::${PORT}`)
-        lightship.signalReady()
+        lightship?.signalReady()
         // Clone repo after the application is ready to avoid Pod NotReady phenomenon, and thus infinite Pod crash loopback
         ;(await getSessionStack()).initGit()
       })
       .on('error', (e) => {
         console.error(e)
-        lightship.shutdown()
+        lightship?.shutdown()
       })
-    lightship.registerShutdownHandler(() => {
+    lightship?.registerShutdownHandler(() => {
       ;(server as Server).close()
     })
   }
@@ -203,29 +203,31 @@ export async function initApp(inOtomiStack?: OtomiStack) {
     }, emitResourceStatusInterval)
   }
   app.use(sessionMiddleware(server as Server))
-  // and register session middleware
-  // now we can initialize the more specific routes
-  initialize({
-    // @ts-ignore
-    apiDoc: {
-      ...otomiSpec.spec,
-      'x-express-openapi-additional-middleware': [authzMiddleware(authz)],
-    },
-    app,
-    dependencies: {
-      authz,
-    },
-    enableObjectCoercion: true,
-    paths: apiRoutesPath,
-    errorMiddleware,
-    securityHandlers: {
-      groupAuthz: (req: OpenApiRequestExt): boolean => {
-        return !!req.user
+
+  // Store authz in app.locals so handlers can access it
+  app.locals.authz = authz
+
+  // Install OpenApiValidator middleware
+  app.use(
+    OpenApiValidator.middleware({
+      apiSpec: path.join(__dirname, 'generated-schema.json'),
+      validateRequests: {
+        allowUnknownQueryParameters: false,
+        coerceTypes: 'array', // coerce scalar data to an array with one element and vice versa (as required by the schema).
       },
-    },
-    routesGlob: '**/*.{ts,js}',
-    routesIndexFileRegExp: /(?:index)?\.[tj]s$/,
-  })
+      validateResponses: false, // Start with false, can enable later for debugging
+      validateSecurity: env.isDev
+        ? false
+        : {
+            handlers: { groupAuthz: groupAuthzSecurityHandler },
+          },
+      operationHandlers: path.join(__dirname, 'api'), // Enable operation handlers
+      ignorePaths: /\/api-docs/, // Exclude swagger docs
+    }),
+  )
+  // Register error middleware
+  app.use(errorMiddleware)
+
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   app.use('/api-docs/swagger', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
   return app
