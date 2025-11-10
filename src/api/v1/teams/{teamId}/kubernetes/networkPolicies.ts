@@ -1,25 +1,21 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:teams:kubernetes:networkPolicies')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    async ({ otomi, query }: OpenApiRequestExt, res): Promise<void> => {
-      debug('getAllK8sPodLabelsForWorkload')
-      try {
-        const { workloadName, namespace }: { workloadName: string; namespace: string } = query as any
-        const v = await otomi.getK8sPodLabelsForWorkload(workloadName, namespace)
-        res.json(v)
-      } catch (e) {
-        debug(e)
-        res.json([])
-      }
-    },
-  ]
-  const api = {
-    get,
+/**
+ * GET /v1/teams/{teamId}/kubernetes/networkPolicies
+ * Get K8s pod labels for a workload
+ */
+export const getK8sPodLabelsForWorkload = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  debug('getAllK8sPodLabelsForWorkload')
+  try {
+    const { workloadName, namespace } = req.query as { workloadName: string; namespace: string }
+    const v = await req.otomi.getK8sPodLabelsForWorkload(workloadName, namespace)
+    res.json(v)
+  } catch (e) {
+    debug(e)
+    res.json([])
   }
-  return api
 }

@@ -1,19 +1,15 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:workloadCatalog')
 
-export default function (): OperationHandlerArray {
-  const post: Operation = [
-    async ({ otomi, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`workloadCatalog(${body.name})`)
-      const data = await otomi.createWorkloadCatalog(body)
-      res.json(data)
-    },
-  ]
-  const api = {
-    post,
-  }
-  return api
+/**
+ * POST /v1/createWorkloadCatalog
+ * Create workload catalog
+ */
+export const createWorkloadCatalog = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  debug(`workloadCatalog(${req.body.name})`)
+  const data = await req.otomi.createWorkloadCatalog(req.body)
+  res.json(data)
 }

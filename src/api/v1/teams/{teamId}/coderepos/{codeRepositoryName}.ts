@@ -1,37 +1,40 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { CodeRepo, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:teams:codeRepos')
 
-export default function (): OperationHandlerArray {
-  const del: Operation = [
-    async ({ otomi, params: { teamId, codeRepositoryName } }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`deleteCodeRepo(${codeRepositoryName})`)
-      await otomi.deleteCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
-      res.json({})
-    },
-  ]
-  const get: Operation = [
-    ({ otomi, params: { teamId, codeRepositoryName } }: OpenApiRequestExt, res): void => {
-      debug(`getCodeRepo(${codeRepositoryName})`)
-      const data = otomi.getCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
-      res.json(data)
-    },
-  ]
-  const put: Operation = [
-    async ({ otomi, params: { teamId, codeRepositoryName }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`editCodeRepo(${codeRepositoryName})`)
-      const data = await otomi.editCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName), {
-        ...body,
-      } as CodeRepo)
-      res.json(data)
-    },
-  ]
-  const api = {
-    delete: del,
-    get,
-    put,
-  }
-  return api
+/**
+ * GET /v1/teams/{teamId}/coderepos/{codeRepositoryName}
+ * Get a specific code repository
+ */
+export const getCodeRepo = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId, codeRepositoryName } = req.params
+  debug(`getCodeRepo(${codeRepositoryName})`)
+  const data = req.otomi.getCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
+  res.json(data)
+}
+
+/**
+ * PUT /v1/teams/{teamId}/coderepos/{codeRepositoryName}
+ * Edit a code repository
+ */
+export const editCodeRepo = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, codeRepositoryName } = req.params
+  debug(`editCodeRepo(${codeRepositoryName})`)
+  const data = await req.otomi.editCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName), {
+    ...req.body,
+  } as CodeRepo)
+  res.json(data)
+}
+
+/**
+ * DELETE /v1/teams/{teamId}/coderepos/{codeRepositoryName}
+ * Delete a code repository
+ */
+export const deleteCodeRepo = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, codeRepositoryName } = req.params
+  debug(`deleteCodeRepo(${codeRepositoryName})`)
+  await req.otomi.deleteCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
+  res.json({})
 }
