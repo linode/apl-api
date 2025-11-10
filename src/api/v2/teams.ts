@@ -1,29 +1,27 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { AplTeamSettingsRequest, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    ({ otomi }: OpenApiRequestExt, res): void => {
-      debug('getTeams')
-      // we filter admin team here as it is not for console
-      const teams = otomi.getAplTeams() || []
+/**
+ * GET /v2/teams
+ * Get teams collection
+ */
+export const getAplTeams = (req: OpenApiRequestExt, res: Response): void => {
+  debug('getTeams')
+  // we filter admin team here as it is not for console
+  const teams = req.otomi.getAplTeams() || []
 
-      res.json(teams)
-    },
-  ]
-  const post: Operation = [
-    async ({ otomi, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug('createTeam')
-      const data = await otomi.createAplTeam(body as AplTeamSettingsRequest)
-      res.json(data)
-    },
-  ]
-  const api = {
-    get,
-    post,
-  }
-  return api
+  res.json(teams)
+}
+
+/**
+ * POST /v2/teams
+ * Create a team
+ */
+export const createAplTeam = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  debug('createTeam')
+  const data = await req.otomi.createAplTeam(req.body as AplTeamSettingsRequest)
+  res.json(data)
 }
