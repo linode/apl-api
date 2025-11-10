@@ -10,11 +10,12 @@ Settings:
       $ref: 'definitions.yaml#/alerts'
       title: Alerts
       description: Configure alerting endpoints to receive notifications from Alertmanager.
-      x-externalDocsPath: docs/for-ops/console/settings/alerts
+      x-externalDocsPath: alert-settings
     cluster:
       additionalProperties: false
       $ref: 'cluster.yaml#/Cluster'
       title: Cluster
+      x-externalDocsPath: cluster-settings
     platformBackups:
       additionalProperties: false
       type: object
@@ -73,6 +74,7 @@ Settings:
               $ref: 'definitions.yaml#/wordCharacterPattern'
               x-secret: true
     obj:
+      x-externalDocsPath: object-storage-settings
       type: object
       properties:
         showWizard:
@@ -173,7 +175,7 @@ Settings:
                 - type
     dns:
       $ref: 'definitions.yaml#/dns'
-      x-externalDocsPath: docs/for-ops/console/settings/dns
+      x-externalDocsPath: dns
       x-acl:
         platformAdmin: [read-any, update-any]
         teamAdmin: []
@@ -207,7 +209,7 @@ Settings:
               - className
     kms:
       $ref: 'definitions.yaml#/kms'
-      x-externalDocsPath: docs/for-ops/console/settings/key-management
+      x-externalDocsPath: sops
       x-acl:
         platformAdmin: [read-any, update-any]
         teamAdmin: []
@@ -244,7 +246,7 @@ Settings:
           description: Set OIDC claim to be passed by Keycloak as a unique user identifier. It is advised to not change the default.
           default: sub
       type: object
-      x-externalDocsPath: docs/for-ops/console/settings/oidc
+      x-externalDocsPath: oidc-settings
       x-acl:
         platformAdmin: [read-any, update-any]
         teamAdmin: []
@@ -350,7 +352,7 @@ Settings:
           description: Defines if the OCI Registry Cache Service (ORCS) is used to cache images from the public registry.
       required:
         - version
-      x-externalDocsPath: docs/for-ops/console/settings/platform
+      x-externalDocsPath: general-platform-settings
       x-acl:
         platformAdmin: [read-any, update-any]
         teamAdmin: [read]
@@ -368,7 +370,7 @@ Settings:
           type: string
       required:
         - version
-      x-externalDocsPath: docs/for-ops/console/settings/platform
+      x-externalDocsPath: general-platform-settings
       x-acl:
         platformAdmin: [read-any, update-any]
         teamAdmin: [read]
@@ -406,7 +408,7 @@ Settings:
       required:
         - smarthost
       type: object
-      x-externalDocsPath: docs/for-ops/console/settings/smtp
+      x-externalDocsPath: for-ops/console/settings/smtp
       x-acl:
         platformAdmin: [read-any, update-any]
         teamAdmin: []
