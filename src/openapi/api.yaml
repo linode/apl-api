@@ -17,6 +17,7 @@ paths:
   /v1/otomi/values:
     get:
       operationId: getValues
+      x-eov-operation-handler: v1/otomi/values
       description: Get otomi values
       x-aclSchema: OtomiCliValues
       parameters:
@@ -47,6 +48,7 @@ paths:
   /v1/teams:
     get:
       operationId: getTeams
+      x-eov-operation-handler: v1/teams
       description: Get teams collection
       x-aclSchema: Team
       responses:
@@ -60,6 +62,7 @@ paths:
                   $ref: '#/components/schemas/Team'
     post:
       operationId: createTeam
+      x-eov-operation-handler: v1/teams
       description: Create a team
       x-aclSchema: Team
       requestBody:
@@ -86,6 +89,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeam
+      x-eov-operation-handler: v1/teams/{teamId}
       description: Get a specific team
       x-aclSchema: Team
       responses:
@@ -101,6 +105,7 @@ paths:
                 $ref: '#/components/schemas/Team'
     put:
       operationId: editTeam
+      x-eov-operation-handler: v1/teams/{teamId}
       description: Edit a team
       x-aclSchema: Team
       requestBody:
@@ -123,6 +128,7 @@ paths:
                 $ref: '#/components/schemas/Team'
     delete:
       operationId: deleteTeam
+      x-eov-operation-handler: v1/teams/{teamId}
       description: Delete team
       x-aclSchema: Team
       responses:
@@ -136,6 +142,7 @@ paths:
   /v2/teams:
     get:
       operationId: getAplTeams
+      x-eov-operation-handler: v2/teams
       description: Get teams collection
       x-aclSchema: Team
       responses:
@@ -149,6 +156,7 @@ paths:
                   $ref: '#/components/schemas/AplTeamSettingsResponse'
     post:
       operationId: createAplTeam
+      x-eov-operation-handler: v2/teams
       description: Create a team
       x-aclSchema: Team
       requestBody:
@@ -176,6 +184,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getAplTeam
+      x-eov-operation-handler: v2/teams/{teamId}
       description: Get a specific team
       x-aclSchema: Team
       responses:
@@ -191,6 +200,7 @@ paths:
                 $ref: '#/components/schemas/AplTeamSettingsResponse'
     put:
       operationId: editAplTeam
+      x-eov-operation-handler: v2/teams/{teamId}
       description: Edit a team
       x-aclSchema: Team
       requestBody:
@@ -213,6 +223,7 @@ paths:
                 $ref: '#/components/schemas/AplTeamSettingsResponse'
     delete:
       operationId: deleteAplTeam
+      x-eov-operation-handler: v2/teams/{teamId}
       description: Delete team
       x-aclSchema: Team
       responses:
@@ -226,6 +237,7 @@ paths:
   /v1/services:
     get:
       operationId: getAllServices
+      x-eov-operation-handler: v1/services
       description: Get all services running on the cluster
       x-aclSchema: Service
       responses:
@@ -245,6 +257,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamServices
+      x-eov-operation-handler: v1/teams/{teamId}/services
       description: Get services from a given team
       x-aclSchema: Service
       responses:
@@ -261,6 +274,7 @@ paths:
 
     post:
       operationId: createService
+      x-eov-operation-handler: v1/teams/{teamId}/services
       description: Create a service
       x-aclSchema: Service
       requestBody:
@@ -287,7 +301,8 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: getTeamK8sServices
+      operationId: getK8sServices
+      x-eov-operation-handler: v1/teams/{teamId}/kubernetes/services
       description: Get services from a given team
       x-aclSchema: Service
       responses:
@@ -302,11 +317,12 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  '/v1/teams/{teamId}/kubernetes/networkpolicies':
+  '/v1/teams/{teamId}/kubernetes/networkPolicies':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: getK8SWorkloadPodLabels
+      operationId: getK8sPodLabelsForWorkload
+      x-eov-operation-handler: v1/teams/{teamId}/kubernetes/networkPolicies
       description: Get Podlabels from given workload
       x-aclSchema: NetworkPolicies
       parameters:
@@ -336,7 +352,8 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: listUniquePodNamesByLabel
+      operationId: fetchPodsFromLabel
+      x-eov-operation-handler: v1/teams/{teamId}/kubernetes/fetchPodsFromLabel
       description: Get pods name from label
       parameters:
         - name: labelSelector
@@ -367,6 +384,7 @@ paths:
       - $ref: '#/components/parameters/serviceParams'
     get:
       operationId: getService
+      x-eov-operation-handler: v1/teams/{teamId}/services/{serviceName}
       description: Get a service from a given team
       x-aclSchema: Service
       responses:
@@ -382,6 +400,7 @@ paths:
                 $ref: '#/components/schemas/Service'
     put:
       operationId: editService
+      x-eov-operation-handler: v1/teams/{teamId}/services/{serviceName}
       description: Edit a service from a given team
       x-aclSchema: Service
       requestBody:
@@ -404,6 +423,7 @@ paths:
                 $ref: '#/components/schemas/Service'
     delete:
       operationId: deleteService
+      x-eov-operation-handler: v1/teams/{teamId}/services/{serviceName}
       description: Delete a service from a given team
       x-aclSchema: Service
       responses:
@@ -417,6 +437,7 @@ paths:
   /v2/services:
     get:
       operationId: getAllAplServices
+      x-eov-operation-handler: v2/services
       description: Get all services running on the cluster
       x-aclSchema: Service
       responses:
@@ -436,6 +457,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamAplServices
+      x-eov-operation-handler: v2/teams/{teamId}/services
       description: Get services from a given team
       x-aclSchema: Service
       responses:
@@ -452,6 +474,7 @@ paths:
 
     post:
       operationId: createAplService
+      x-eov-operation-handler: v2/teams/{teamId}/services
       description: Create a service
       x-aclSchema: Service
       requestBody:
@@ -480,6 +503,7 @@ paths:
       - $ref: '#/components/parameters/serviceParams'
     get:
       operationId: getAplService
+      x-eov-operation-handler: v2/teams/{teamId}/services/{serviceName}
       description: Get a service from a given team
       x-aclSchema: Service
       responses:
@@ -495,6 +519,7 @@ paths:
                 $ref: '#/components/schemas/AplServiceResponse'
     put:
       operationId: editAplService
+      x-eov-operation-handler: v2/teams/{teamId}/services/{serviceName}
       description: Edit a service from a given team
       x-aclSchema: Service
       requestBody:
@@ -517,6 +542,7 @@ paths:
                 $ref: '#/components/schemas/AplServiceResponse'
     delete:
       operationId: deleteAplService
+      x-eov-operation-handler: v2/teams/{teamId}/services/{serviceName}
       description: Delete a service from a given team
       x-aclSchema: Service
       responses:
@@ -530,6 +556,7 @@ paths:
   /v1/sealedsecrets:
     get:
       operationId: getAllSealedSecrets
+      x-eov-operation-handler: v1/sealedsecrets
       description: Get all sealed secrets
       x-aclSchema: SealedSecret
       responses:
@@ -546,7 +573,8 @@ paths:
 
   /v1/sealedsecretskeys:
     get:
-      operationId: downloadSealedSecretKeys
+      operationId: getSealedSecretKeys
+      x-eov-operation-handler: v1/sealedsecretskeys
       description: Download sealed secret keys
       x-aclSchema: SealedSecretsKeys
       responses:
@@ -566,6 +594,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getSecretsFromK8s
+      x-eov-operation-handler: v1/teams/{teamId}/k8sSecrets
       description: Get secrets from k8s
       x-aclSchema: K8sSecret
       responses:
@@ -584,7 +613,8 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: getSealedSecrets
+      operationId: getTeamSealedSecrets
+      x-eov-operation-handler: v1/teams/{teamId}/sealedsecrets
       description: Get sealed secrets from a given team
       x-aclSchema: SealedSecret
       responses:
@@ -604,6 +634,7 @@ paths:
                 $ref: '#/components/schemas/OpenApiValidationError'
     post:
       operationId: createSealedSecret
+      x-eov-operation-handler: v1/teams/{teamId}/sealedsecrets
       description: Create a team sealed secret
       x-aclSchema: SealedSecret
       parameters:
@@ -639,6 +670,7 @@ paths:
       - $ref: '#/components/parameters/sealedSecretParams'
     get:
       operationId: getSealedSecret
+      x-eov-operation-handler: v1/teams/{teamId}/sealedsecrets/{sealedSecretName}
       description: Get a sealed secret from a given team
       x-aclSchema: SealedSecret
       responses:
@@ -654,6 +686,7 @@ paths:
                 $ref: '#/components/schemas/SealedSecret'
     put:
       operationId: editSealedSecret
+      x-eov-operation-handler: v1/teams/{teamId}/sealedsecrets/{sealedSecretName}
       description: Edit a sealed secret from a given team
       x-aclSchema: SealedSecret
       requestBody:
@@ -676,6 +709,7 @@ paths:
                 $ref: '#/components/schemas/SealedSecret'
     delete:
       operationId: deleteSealedSecret
+      x-eov-operation-handler: v1/teams/{teamId}/sealedsecrets/{sealedSecretName}
       description: Delete a sealed secret from a given team
       x-aclSchema: SealedSecret
       responses:
@@ -688,7 +722,8 @@ paths:
 
   /v2/sealedsecrets:
     get:
-      operationId: getAllAplSecrets
+      operationId: getAllAplSealedSecrets
+      x-eov-operation-handler: v2/sealedsecrets
       description: Get all secrets
       x-aclSchema: SealedSecret
       responses:
@@ -708,6 +743,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getAplSealedSecrets
+      x-eov-operation-handler: v2/teams/{teamId}/sealedsecrets
       description: Get sealed secrets from a given team
       x-aclSchema: SealedSecret
       responses:
@@ -727,6 +763,7 @@ paths:
                 $ref: '#/components/schemas/OpenApiValidationError'
     post:
       operationId: createAplSealedSecret
+      x-eov-operation-handler: v2/teams/{teamId}/sealedsecrets
       description: Create a team sealed secret
       x-aclSchema: SealedSecret
       requestBody:
@@ -755,6 +792,7 @@ paths:
       - $ref: '#/components/parameters/sealedSecretParams'
     get:
       operationId: getAplSealedSecret
+      x-eov-operation-handler: v2/teams/{teamId}/sealedsecrets/{sealedSecretName}
       description: Get a sealed secret from a given team
       x-aclSchema: SealedSecret
       responses:
@@ -770,6 +808,7 @@ paths:
                 $ref: '#/components/schemas/AplSecretResponse'
     put:
       operationId: editAplSealedSecret
+      x-eov-operation-handler: v2/teams/{teamId}/sealedsecrets/{sealedSecretName}
       description: Edit a sealed secret from a given team
       x-aclSchema: SealedSecret
       requestBody:
@@ -792,6 +831,7 @@ paths:
                 $ref: '#/components/schemas/AplSecretResponse'
     delete:
       operationId: deleteAplSealedSecret
+      x-eov-operation-handler: v2/teams/{teamId}/sealedsecrets/{sealedSecretName}
       description: Delete a sealed secret from a given team
       x-aclSchema: SealedSecret
       responses:
@@ -805,6 +845,7 @@ paths:
   '/v1/netpols':
     get:
       operationId: getAllNetpols
+      x-eov-operation-handler: v1/netpols
       x-aclSchema: Netpol
       responses:
         '400':
@@ -825,6 +866,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamNetpols
+      x-eov-operation-handler: v1/teams/{teamId}/netpols
       x-aclSchema: Build
       responses:
         '400':
@@ -841,6 +883,7 @@ paths:
                   $ref: '#/components/schemas/Netpol'
     post:
       operationId: createNetpol
+      x-eov-operation-handler: v1/teams/{teamId}/netpols
       description: Create a team network policy
       x-aclSchema: Netpol
       requestBody:
@@ -869,6 +912,7 @@ paths:
       - $ref: '#/components/parameters/netpolParams'
     get:
       operationId: getNetpol
+      x-eov-operation-handler: v1/teams/{teamId}/netpols/{netpolName}
       description: Get a network policy from a given team
       x-aclSchema: Netpol
       responses:
@@ -884,6 +928,7 @@ paths:
                 $ref: '#/components/schemas/Netpol'
     put:
       operationId: editNetpol
+      x-eov-operation-handler: v1/teams/{teamId}/netpols/{netpolName}
       description: Edit a network policy from a given team
       x-aclSchema: Netpol
       requestBody:
@@ -906,6 +951,7 @@ paths:
                 $ref: '#/components/schemas/Netpol'
     delete:
       operationId: deleteNetpol
+      x-eov-operation-handler: v1/teams/{teamId}/netpols/{netpolName}
       description: Delete a network policy from a given team
       x-aclSchema: Netpol
       responses:
@@ -919,6 +965,7 @@ paths:
   '/v2/netpols':
     get:
       operationId: getAllAplNetpols
+      x-eov-operation-handler: v2/netpols
       x-aclSchema: Netpol
       responses:
         '400':
@@ -939,6 +986,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamAplNetpols
+      x-eov-operation-handler: v2/teams/{teamId}/netpols
       x-aclSchema: Netpol
       responses:
         '400':
@@ -955,6 +1003,7 @@ paths:
                   $ref: '#/components/schemas/AplNetpolResponse'
     post:
       operationId: createAplNetpol
+      x-eov-operation-handler: v2/teams/{teamId}/netpols
       description: Create a team network policy
       x-aclSchema: Netpol
       requestBody:
@@ -983,6 +1032,7 @@ paths:
       - $ref: '#/components/parameters/netpolParams'
     get:
       operationId: getAplNetpol
+      x-eov-operation-handler: v2/teams/{teamId}/netpols/{netpolName}
       description: Get a network policy from a given team
       x-aclSchema: Netpol
       responses:
@@ -998,6 +1048,7 @@ paths:
                 $ref: '#/components/schemas/AplNetpolResponse'
     put:
       operationId: editAplNetpol
+      x-eov-operation-handler: v2/teams/{teamId}/netpols/{netpolName}
       description: Edit a network policy from a given team
       x-aclSchema: Netpol
       requestBody:
@@ -1020,6 +1071,7 @@ paths:
                 $ref: '#/components/schemas/AplNetpolResponse'
     delete:
       operationId: deleteAplNetpol
+      x-eov-operation-handler: v2/teams/{teamId}/netpols/{netpolName}
       description: Delete a network policy from a given team
       x-aclSchema: Netpol
       responses:
@@ -1033,6 +1085,7 @@ paths:
   '/v1/backups':
     get:
       operationId: getAllBackups
+      x-eov-operation-handler: v1/backups
       x-aclSchema: Backup
       responses:
         '400':
@@ -1053,6 +1106,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamBackups
+      x-eov-operation-handler: v1/teams/{teamId}/backups
       x-aclSchema: Backup
       responses:
         '400':
@@ -1069,6 +1123,7 @@ paths:
                   $ref: '#/components/schemas/Backup'
     post:
       operationId: createBackup
+      x-eov-operation-handler: v1/teams/{teamId}/backups
       description: Create a team backup
       x-aclSchema: Backup
       requestBody:
@@ -1097,6 +1152,7 @@ paths:
       - $ref: '#/components/parameters/backupParams'
     delete:
       operationId: deleteBackup
+      x-eov-operation-handler: v1/teams/{teamId}/backups/{backupName}
       description: Delete a backup from a given team
       x-aclSchema: Backup
       responses:
@@ -1108,6 +1164,7 @@ paths:
           description: Successfully deleted a backup
     get:
       operationId: getBackup
+      x-eov-operation-handler: v1/teams/{teamId}/backups/{backupName}
       description: Get a backup from a given team
       x-aclSchema: Backup
       responses:
@@ -1123,6 +1180,7 @@ paths:
                 $ref: '#/components/schemas/Backup'
     put:
       operationId: editBackup
+      x-eov-operation-handler: v1/teams/{teamId}/backups/{backupName}
       description: Edit a backup from a given team
       x-aclSchema: Backup
       requestBody:
@@ -1147,6 +1205,7 @@ paths:
   '/v2/backups':
     get:
       operationId: getAllAplBackups
+      x-eov-operation-handler: v2/backups
       x-aclSchema: Backup
       responses:
         '400':
@@ -1167,6 +1226,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamAplBackups
+      x-eov-operation-handler: v2/teams/{teamId}/backups
       x-aclSchema: Backup
       responses:
         '400':
@@ -1183,6 +1243,7 @@ paths:
                   $ref: '#/components/schemas/AplBackupResponse'
     post:
       operationId: createAplBackup
+      x-eov-operation-handler: v2/teams/{teamId}/backups
       description: Create a team backup
       x-aclSchema: Backup
       requestBody:
@@ -1211,6 +1272,7 @@ paths:
       - $ref: '#/components/parameters/backupParams'
     delete:
       operationId: deleteAplBackup
+      x-eov-operation-handler: v2/teams/{teamId}/backups/{backupName}
       description: Delete a backup from a given team
       x-aclSchema: Backup
       responses:
@@ -1222,6 +1284,7 @@ paths:
           description: Successfully deleted a backup
     get:
       operationId: getAplBackup
+      x-eov-operation-handler: v2/teams/{teamId}/backups/{backupName}
       description: Get a backup from a given team
       x-aclSchema: Backup
       responses:
@@ -1237,6 +1300,7 @@ paths:
                 $ref: '#/components/schemas/AplBackupResponse'
     put:
       operationId: editAplBackup
+      x-eov-operation-handler: v2/teams/{teamId}/backups/{backupName}
       description: Edit a backup from a given team
       x-aclSchema: Backup
       requestBody:
@@ -1261,6 +1325,7 @@ paths:
   '/v1/dashboard':
     get:
       operationId: getDashboard
+      x-eov-operation-handler: v1/dashboard
       parameters:
         - name: teamName
           in: query
@@ -1282,6 +1347,7 @@ paths:
   '/v1/builds':
     get:
       operationId: getAllBuilds
+      x-eov-operation-handler: v1/builds
       x-aclSchema: Build
       responses:
         '400':
@@ -1302,6 +1368,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamBuilds
+      x-eov-operation-handler: v1/teams/{teamId}/builds
       x-aclSchema: Build
       responses:
         '400':
@@ -1318,6 +1385,7 @@ paths:
                   $ref: '#/components/schemas/Build'
     post:
       operationId: createBuild
+      x-eov-operation-handler: v1/teams/{teamId}/builds
       description: Create a team build
       x-aclSchema: Build
       requestBody:
@@ -1346,6 +1414,7 @@ paths:
       - $ref: '#/components/parameters/buildParams'
     delete:
       operationId: deleteBuild
+      x-eov-operation-handler: v1/teams/{teamId}/builds/{buildName}
       description: Delete a build from a given team
       x-aclSchema: Build
       responses:
@@ -1357,6 +1426,7 @@ paths:
           description: Successfully deleted a build
     get:
       operationId: getBuild
+      x-eov-operation-handler: v1/teams/{teamId}/builds/{buildName}
       description: Get a build from a given team
       x-aclSchema: Build
       responses:
@@ -1372,6 +1442,7 @@ paths:
                 $ref: '#/components/schemas/Build'
     put:
       operationId: editBuild
+      x-eov-operation-handler: v1/teams/{teamId}/builds/{buildName}
       description: Edit a build from a given team
       x-aclSchema: Build
       requestBody:
@@ -1396,6 +1467,7 @@ paths:
   '/v2/builds':
     get:
       operationId: getAllAplBuilds
+      x-eov-operation-handler: v2/builds
       x-aclSchema: Build
       responses:
         '400':
@@ -1416,6 +1488,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamAplBuilds
+      x-eov-operation-handler: v2/teams/{teamId}/builds
       x-aclSchema: Build
       responses:
         '400':
@@ -1432,6 +1505,7 @@ paths:
                   $ref: '#/components/schemas/AplBuildResponse'
     post:
       operationId: createAplBuild
+      x-eov-operation-handler: v2/teams/{teamId}/builds
       description: Create a team build
       x-aclSchema: Build
       requestBody:
@@ -1460,6 +1534,7 @@ paths:
       - $ref: '#/components/parameters/buildParams'
     delete:
       operationId: deleteAplBuild
+      x-eov-operation-handler: v2/teams/{teamId}/builds/{buildName}
       description: Delete a build from a given team
       x-aclSchema: Build
       responses:
@@ -1471,6 +1546,7 @@ paths:
           description: Successfully deleted a build
     get:
       operationId: getAplBuild
+      x-eov-operation-handler: v2/teams/{teamId}/builds/{buildName}
       description: Get a build from a given team
       x-aclSchema: Build
       responses:
@@ -1486,6 +1562,7 @@ paths:
                 $ref: '#/components/schemas/AplBuildResponse'
     put:
       operationId: editAplBuild
+      x-eov-operation-handler: v2/teams/{teamId}/builds/{buildName}
       description: Edit a build from a given team
       x-aclSchema: Build
       requestBody:
@@ -1510,6 +1587,7 @@ paths:
   '/v1/policies':
     get:
       operationId: getAllPolicies
+      x-eov-operation-handler: v1/policies
       x-aclSchema: Policies
       responses:
         '400':
@@ -1528,6 +1606,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamPolicies
+      x-eov-operation-handler: v1/teams/{teamId}/policies
       x-aclSchema: Policies
       responses:
         '400':
@@ -1547,6 +1626,7 @@ paths:
       - $ref: '#/components/parameters/policyParams'
     get:
       operationId: getPolicy
+      x-eov-operation-handler: v1/teams/{teamId}/policies/{policyName}
       description: Get a policy from a given team
       x-aclSchema: Policy
       responses:
@@ -1562,6 +1642,7 @@ paths:
                 $ref: '#/components/schemas/Policy'
     put:
       operationId: editPolicy
+      x-eov-operation-handler: v1/teams/{teamId}/policies/{policyName}
       description: Edit a policy from a given team
       x-aclSchema: Policy
       requestBody:
@@ -1586,6 +1667,7 @@ paths:
   '/v2/policies':
     get:
       operationId: getAllAplPolicies
+      x-eov-operation-handler: v2/policies
       x-aclSchema: Policies
       responses:
         '400':
@@ -1606,6 +1688,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamAplPolicies
+      x-eov-operation-handler: v2/teams/{teamId}/policies
       x-aclSchema: Policies
       responses:
         '400':
@@ -1627,6 +1710,7 @@ paths:
       - $ref: '#/components/parameters/policyParams'
     get:
       operationId: getAplPolicy
+      x-eov-operation-handler: v2/teams/{teamId}/policies/{policyName}
       description: Get a policy from a given team
       x-aclSchema: Policy
       responses:
@@ -1642,6 +1726,7 @@ paths:
                 $ref: '#/components/schemas/AplPolicyResponse'
     put:
       operationId: editAplPolicy
+      x-eov-operation-handler: v2/teams/{teamId}/policies/{policyName}
       description: Edit a policy from a given team
       x-aclSchema: Policy
       requestBody:
@@ -1666,6 +1751,7 @@ paths:
   '/v1/k8sVersion':
     get:
       operationId: getK8sVersion
+      x-eov-operation-handler: v1/k8sVersion
       description: Get cluster k8s version
       responses:
         
@@ -1683,6 +1769,7 @@ paths:
   '/v2/cloudtty':
     get:
       operationId: connectAplCloudtty
+      x-eov-operation-handler: v2/cloudtty
       description: Get a cloudtty iFrameUrl
       x-aclSchema: Cloudtty
       parameters:
@@ -1705,6 +1792,7 @@ paths:
                 $ref: '#/components/schemas/Cloudtty'
     delete:
       operationId: deleteAplCloudtty
+      x-eov-operation-handler: v2/cloudtty
       description: Delete cloudtty url
       x-aclSchema: Cloudtty
       responses:
@@ -1714,6 +1802,7 @@ paths:
   '/v1/cloudtty':
     get:
       operationId: connectCloudtty
+      x-eov-operation-handler: v1/cloudtty
       description: Get a cloudtty iFrameUrl
       x-aclSchema: Cloudtty
       parameters:
@@ -1736,6 +1825,7 @@ paths:
                 $ref: '#/components/schemas/Cloudtty'
     delete:
       operationId: deleteCloudtty
+      x-eov-operation-handler: v1/cloudtty
       description: Delete cloudtty url
       x-aclSchema: Cloudtty
       responses:
@@ -1745,6 +1835,7 @@ paths:
   '/v1/users':
     get:
       operationId: getAllUsers
+      x-eov-operation-handler: v1/users
       x-aclSchema: User
       responses:
         '400':
@@ -1761,6 +1852,7 @@ paths:
                   $ref: '#/components/schemas/User'
     post:
       operationId: createUser
+      x-eov-operation-handler: v1/users
       description: Create a team user
       x-aclSchema: User
       requestBody:
@@ -1788,6 +1880,7 @@ paths:
       - $ref: '#/components/parameters/userParams'
     get:
       operationId: getUser
+      x-eov-operation-handler: v1/users/{userId}
       description: Get a user from a given team
       x-aclSchema: User
       responses:
@@ -1803,6 +1896,7 @@ paths:
                 $ref: '#/components/schemas/User'
     put:
       operationId: editUser
+      x-eov-operation-handler: v1/users/{userId}
       description: Edit a user from a given team
       x-aclSchema: User
       requestBody:
@@ -1825,6 +1919,7 @@ paths:
                 $ref: '#/components/schemas/User'
     delete:
       operationId: deleteUser
+      x-eov-operation-handler: v1/users/{userId}
       description: Delete a user from a given team
       x-aclSchema: User
       responses:
@@ -1840,6 +1935,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     put:
       operationId: editTeamUsers
+      x-eov-operation-handler: v1/teams/{teamId}/users
       description: Edit a user from a given team
       x-aclSchema: User
       requestBody:
@@ -1878,6 +1974,7 @@ paths:
   /v1/coderepos:
     get:
       operationId: getAllCodeRepos
+      x-eov-operation-handler: v1/coderepos
       description: Get all code repositories
       x-aclSchema: CodeRepo
       responses:
@@ -1897,6 +1994,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamCodeRepos
+      x-eov-operation-handler: v1/teams/{teamId}/coderepos
       description: Get code repos from a given team
       x-aclSchema: CodeRepo
       responses:
@@ -1916,6 +2014,7 @@ paths:
                 $ref: '#/components/schemas/OpenApiValidationError'
     post:
       operationId: createCodeRepo
+      x-eov-operation-handler: v1/teams/{teamId}/coderepos
       description: Create a team code repo
       x-aclSchema: CodeRepo
       parameters:
@@ -1951,6 +2050,7 @@ paths:
       - $ref: '#/components/parameters/codeRepoParams'
     get:
       operationId: getCodeRepo
+      x-eov-operation-handler: v1/teams/{teamId}/coderepos/{codeRepositoryName}
       description: Get a code repo from a given team
       x-aclSchema: CodeRepo
       responses:
@@ -1966,6 +2066,7 @@ paths:
                 $ref: '#/components/schemas/CodeRepo'
     put:
       operationId: editCodeRepo
+      x-eov-operation-handler: v1/teams/{teamId}/coderepos/{codeRepositoryName}
       description: Edit a code repo from a given team
       x-aclSchema: CodeRepo
       requestBody:
@@ -1988,6 +2089,7 @@ paths:
                 $ref: '#/components/schemas/CodeRepo'
     delete:
       operationId: deleteCodeRepo
+      x-eov-operation-handler: v1/teams/{teamId}/coderepos/{codeRepositoryName}
       description: Delete a code repo from a given team
       x-aclSchema: CodeRepo
       responses:
@@ -2001,6 +2103,7 @@ paths:
   /v2/coderepos:
     get:
       operationId: getAllAplCodeRepos
+      x-eov-operation-handler: v2/coderepos
       description: Get all code repositories
       x-aclSchema: CodeRepo
       responses:
@@ -2020,6 +2123,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamAplCodeRepos
+      x-eov-operation-handler: v2/teams/{teamId}/coderepos
       description: Get code repos from a given team
       x-aclSchema: CodeRepo
       responses:
@@ -2039,6 +2143,7 @@ paths:
                 $ref: '#/components/schemas/OpenApiValidationError'
     post:
       operationId: createAplCodeRepo
+      x-eov-operation-handler: v2/teams/{teamId}/coderepos
       description: Create a team code repo
       x-aclSchema: CodeRepo
       requestBody:
@@ -2067,6 +2172,7 @@ paths:
       - $ref: '#/components/parameters/codeRepoParams'
     get:
       operationId: getAplCodeRepo
+      x-eov-operation-handler: v2/teams/{teamId}/coderepos/{codeRepositoryName}
       description: Get a code repo from a given team
       x-aclSchema: CodeRepo
       responses:
@@ -2082,6 +2188,7 @@ paths:
                 $ref: '#/components/schemas/AplCodeRepoResponse'
     put:
       operationId: editAplCodeRepo
+      x-eov-operation-handler: v2/teams/{teamId}/coderepos/{codeRepositoryName}
       description: Edit a code repo from a given team
       x-aclSchema: CodeRepo
       requestBody:
@@ -2104,6 +2211,7 @@ paths:
                 $ref: '#/components/schemas/AplCodeRepoResponse'
     delete:
       operationId: deleteAplCodeRepo
+      x-eov-operation-handler: v2/teams/{teamId}/coderepos/{codeRepositoryName}
       description: Delete a code repo from a given team
       x-aclSchema: CodeRepo
       responses:
@@ -2117,6 +2225,7 @@ paths:
   '/v1/workloads':
     get:
       operationId: getAllWorkloads
+      x-eov-operation-handler: v1/workloads
       x-aclSchema: Workload
       responses:
         '400':
@@ -2134,7 +2243,8 @@ paths:
 
   '/v1/workloadCatalog':
     post:
-      operationId: workloadCatalog
+      operationId: getWorkloadCatalog
+      x-eov-operation-handler: v1/workloadCatalog
       description: Get workload catalog from a repository
       requestBody:
         content:
@@ -2158,6 +2268,7 @@ paths:
   '/v1/helmChartContent':
     get:
       operationId: getHelmChartContent
+      x-eov-operation-handler: v1/helmChartContent
       parameters:
         - name: url
           in: query
@@ -2183,6 +2294,7 @@ paths:
   '/v1/createWorkloadCatalog':
     post:
       operationId: createWorkloadCatalog
+      x-eov-operation-handler: v1/createWorkloadCatalog
       description: Create workload catalog from a repository
       requestBody:
         content:
@@ -2208,6 +2320,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamWorkloads
+      x-eov-operation-handler: v1/teams/{teamId}/workloads
       x-aclSchema: Workload
       responses:
         '400':
@@ -2224,6 +2337,7 @@ paths:
                   $ref: '#/components/schemas/Workload'
     post:
       operationId: createWorkload
+      x-eov-operation-handler: v1/teams/{teamId}/workloads
       description: Create a team workload
       x-aclSchema: Workload
       requestBody:
@@ -2252,6 +2366,7 @@ paths:
       - $ref: '#/components/parameters/workloadParams'
     delete:
       operationId: deleteWorkload
+      x-eov-operation-handler: v1/teams/{teamId}/workloads/{workloadName}
       description: Delete a workload from a given team
       x-aclSchema: Workload
       responses:
@@ -2263,6 +2378,7 @@ paths:
           description: Successfully deleted a workload
     get:
       operationId: getWorkload
+      x-eov-operation-handler: v1/teams/{teamId}/workloads/{workloadName}
       description: Get a workload from a given team
       x-aclSchema: Workload
       responses:
@@ -2278,6 +2394,7 @@ paths:
                 $ref: '#/components/schemas/Workload'
     put:
       operationId: editWorkload
+      x-eov-operation-handler: v1/teams/{teamId}/workloads/{workloadName}
       description: Edit a workload from a given team
       x-aclSchema: Workload
       requestBody:
@@ -2305,6 +2422,7 @@ paths:
       - $ref: '#/components/parameters/workloadParams'
     get:
       operationId: getWorkloadValues
+      x-eov-operation-handler: v1/teams/{teamId}/workloads/{workloadName}/values
       description: Get workload helm chart values
       x-aclSchema: Workload
       responses:
@@ -2318,6 +2436,7 @@ paths:
           $ref: '#/components/responses/BadRequest'
     put:
       operationId: editWorkloadValues
+      x-eov-operation-handler: v1/teams/{teamId}/workloads/{workloadName}/values
       description: Edit workload values
       x-aclSchema: Workload
       requestBody:
@@ -2342,6 +2461,7 @@ paths:
   '/v2/workloads':
     get:
       operationId: getAllAplWorkloads
+      x-eov-operation-handler: v2/workloads
       x-aclSchema: Workload
       responses:
         '400':
@@ -2359,7 +2479,8 @@ paths:
 
   '/v2/workloadNames':
     get:
-      operationId: getAllAplWorkloadNames
+      operationId: getAllWorkloadNames
+      x-eov-operation-handler: v2/workloadNames
       x-aclSchema: WorkloadName
       responses:
         '400':
@@ -2380,6 +2501,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamAplWorkloads
+      x-eov-operation-handler: v2/teams/{teamId}/workloads
       x-aclSchema: Workload
       responses:
         '400':
@@ -2396,6 +2518,7 @@ paths:
                   $ref: '#/components/schemas/AplWorkloadResponse'
     post:
       operationId: createAplWorkload
+      x-eov-operation-handler: v2/teams/{teamId}/workloads
       description: Create a team workload
       x-aclSchema: Workload
       requestBody:
@@ -2424,6 +2547,7 @@ paths:
       - $ref: '#/components/parameters/workloadParams'
     delete:
       operationId: deleteAplWorkload
+      x-eov-operation-handler: v2/teams/{teamId}/workloads/{workloadName}
       description: Delete a workload from a given team
       x-aclSchema: Workload
       responses:
@@ -2435,6 +2559,7 @@ paths:
           description: Successfully deleted a workload
     get:
       operationId: getAplWorkload
+      x-eov-operation-handler: v2/teams/{teamId}/workloads/{workloadName}
       description: Get a workload from a given team
       x-aclSchema: Workload
       responses:
@@ -2450,6 +2575,7 @@ paths:
                 $ref: '#/components/schemas/AplWorkloadResponse'
     put:
       operationId: editAplWorkload
+      x-eov-operation-handler: v2/teams/{teamId}/workloads/{workloadName}
       description: Edit a workload from a given team
       x-aclSchema: Workload
       requestBody:
@@ -2475,7 +2601,8 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: downloadKubecfg
+      operationId: getKubecfg
+      x-eov-operation-handler: v1/kubecfg/{teamId}
       description: Download a kubecfg for a team
       x-aclSchema: Kubecfg
       responses:
@@ -2494,7 +2621,8 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: downloadDockerConfig
+      operationId: getDockerConfig
+      x-eov-operation-handler: v1/dockerconfig/{teamId}
       description: Download Docker login creds for a team
       x-aclSchema: DockerConfig
       responses:
@@ -2512,6 +2640,7 @@ paths:
   /v1/session:
     get:
       operationId: getSession
+      x-eov-operation-handler: v1/session
       description: Get the session for the current user
       responses:
         '200':
@@ -2525,7 +2654,8 @@ paths:
 
   /v1/apiDocs:
     get:
-      operationId: 'v1apiDocs'
+      operationId: 'getApiDoc'
+      x-eov-operation-handler: v1/apiDocs
       security: []
       description: Get OpenAPIDoc document
       responses:
@@ -2541,6 +2671,7 @@ paths:
   /v1/settingsInfo:
     get:
       operationId: getSettingsInfo
+      x-eov-operation-handler: v1/settingsInfo
       description: Get settings information from the 'settings.yaml' file.
       x-aclSchema: SettingsInfo
       responses:
@@ -2554,6 +2685,7 @@ paths:
   /v1/repoBranches:
     get:
       operationId: getRepoBranches
+      x-eov-operation-handler: v1/repoBranches
       description: Get repo branches from the git providers.
       x-aclSchema: RepoBranches
       parameters:
@@ -2579,7 +2711,8 @@ paths:
 
   /v1/testRepoConnect:
     get:
-      operationId: getTestRepoConnect
+      operationId: testRepoConnect
+      x-eov-operation-handler: v1/testRepoConnect
       description: Get test repo connect information from the git providers.
       x-aclSchema: TestRepoConnect
       parameters:
@@ -2609,6 +2742,7 @@ paths:
   /v1/internalRepoUrls:
     get:
       operationId: getInternalRepoUrls
+      x-eov-operation-handler: v1/internalRepoUrls
       x-aclSchema: InternalRepoUrls
       parameters:
         - name: teamId
@@ -2633,6 +2767,7 @@ paths:
   '/v1/objwizard':
     post:
       operationId: createObjWizard
+      x-eov-operation-handler: v1/objwizard
       description: Create a obj wizard configuration
       x-aclSchema: ObjWizard
       requestBody:
@@ -2658,6 +2793,7 @@ paths:
   /v1/settings:
     get:
       operationId: getSettings
+      x-eov-operation-handler: v1/settings
       description: Get settings from the 'settings.yaml' or 'secret.settings.yaml' file.
       x-aclSchema: Settings
       parameters:
@@ -2682,6 +2818,7 @@ paths:
       - $ref: '#/components/parameters/settingsParams'
     put:
       operationId: editSettings
+      x-eov-operation-handler: v1/settings/{settingId}
       description: Edit settings from the 'settings.yaml' or 'secret.settings.yaml' file.
       x-aclSchema: Settings
       requestBody:
@@ -2708,6 +2845,7 @@ paths:
           type: string
     get:
       operationId: getApps
+      x-eov-operation-handler: v1/apps/{teamId}
       description: Get list of apps for a team
       x-aclSchema: App
       parameters:
@@ -2730,6 +2868,7 @@ paths:
                   $ref: '#/components/schemas/App'
     put:
       operationId: toggleApps
+      x-eov-operation-handler: v1/apps/{teamId}
       description: Turn on/off list of apps for a team
       x-aclSchema: App
       requestBody:
@@ -2760,7 +2899,8 @@ paths:
         schema:
           type: string
     get:
-      operationId: getApp
+      operationId: getTeamApp
+      x-eov-operation-handler: v1/apps/{teamId}/{appId}
       description: Get app information
       x-aclSchema: App
       responses:
@@ -2772,6 +2912,7 @@ paths:
                 $ref: '#/components/schemas/App'
     put:
       operationId: editApp
+      x-eov-operation-handler: v1/apps/{teamId}/{appId}
       description: Edit app values
       x-aclSchema: App
       requestBody:
@@ -2792,6 +2933,7 @@ paths:
   '/alpha/ai/models':
     get:
       operationId: getAIModels
+      x-eov-operation-handler: alpha/ai/models
       description: Get available shared AI models (foundation or embedding)
       x-aclSchema: AIModel
       responses:
@@ -2809,6 +2951,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getAplKnowledgeBases
+      x-eov-operation-handler: alpha/teams/{teamId}/kb
       description: Get knowledge bases from a given team
       x-aclSchema: KnowledgeBase
       responses:
@@ -2822,6 +2965,7 @@ paths:
                   $ref: '#/components/schemas/AplKnowledgeBaseResponse'
     post:
       operationId: createAplKnowledgeBase
+      x-eov-operation-handler: alpha/teams/{teamId}/kb
       description: Create a team knowledge base
       x-aclSchema: KnowledgeBase
       requestBody:
@@ -2850,6 +2994,7 @@ paths:
       - $ref: '#/components/parameters/knowledgeBaseParams'
     get:
       operationId: getAplKnowledgeBase
+      x-eov-operation-handler: alpha/teams/{teamId}/kb/{knowledgeBaseName}
       description: Get a knowledge base from a given team
       x-aclSchema: KnowledgeBase
       responses:
@@ -2865,6 +3010,7 @@ paths:
                 $ref: '#/components/schemas/AplKnowledgeBaseRequest'
     put:
       operationId: editAplKnowledgeBase
+      x-eov-operation-handler: alpha/teams/{teamId}/kb/{knowledgeBaseName}
       description: Edit a knowledge base from a given team
       x-aclSchema: KnowledgeBase
       requestBody:
@@ -2887,6 +3033,7 @@ paths:
                 $ref: '#/components/schemas/AplKnowledgeBaseResponse'
     delete:
       operationId: deleteAplKnowledgeBase
+      x-eov-operation-handler: alpha/teams/{teamId}/kb/{knowledgeBaseName}
       description: Delete a knowledge base from a given team
       x-aclSchema: KnowledgeBase
       responses:
@@ -2902,6 +3049,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getAplAgents
+      x-eov-operation-handler: alpha/teams/{teamId}/agents
       description: Get agents from a given team
       x-aclSchema: Agent
       responses:
@@ -2915,6 +3063,7 @@ paths:
                   $ref: '#/components/schemas/AplAgentResponse'
     post:
       operationId: createAplAgent
+      x-eov-operation-handler: alpha/teams/{teamId}/agents
       description: Create a team agent
       x-aclSchema: Agent
       requestBody:
@@ -2943,6 +3092,7 @@ paths:
       - $ref: '#/components/parameters/agentParams'
     get:
       operationId: getAplAgent
+      x-eov-operation-handler: alpha/teams/{teamId}/agents/{agentName}
       description: Get an agent from a given team
       x-aclSchema: Agent
       responses:
@@ -2958,6 +3108,7 @@ paths:
                 $ref: '#/components/schemas/AplAgentResponse'
     put:
       operationId: editAplAgent
+      x-eov-operation-handler: alpha/teams/{teamId}/agents/{agentName}
       description: Edit an agent from a given team
       x-aclSchema: Agent
       requestBody:
@@ -2980,6 +3131,7 @@ paths:
                 $ref: '#/components/schemas/AplAgentResponse'
     delete:
       operationId: deleteAplAgent
+      x-eov-operation-handler: alpha/teams/{teamId}/agents/{agentName}
       description: Delete an agent from a given team
       x-aclSchema: Agent
       responses:

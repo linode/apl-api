@@ -1,28 +1,27 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { CodeRepo, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:teams:codeRepos')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
-      debug(`getTeamCodeRepos(${teamId})`)
-      const v = otomi.getTeamCodeRepos(teamId)
-      res.json(v)
-    },
-  ]
-  const post: Operation = [
-    async ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`createCodeRepos(${teamId}, ...)`)
-      const v = await otomi.createCodeRepo(teamId, body as CodeRepo)
-      res.json(v)
-    },
-  ]
-  const api = {
-    get,
-    post,
-  }
+/**
+ * GET /v1/teams/{teamId}/coderepos
+ * Get all code repositories for a team
+ */
+export const getTeamCodeRepos = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId } = req.params
+  debug(`getTeamCodeRepos(${teamId})`)
+  const v = req.otomi.getTeamCodeRepos(teamId)
+  res.json(v)
+}
 
-  return api
+/**
+ * POST /v1/teams/{teamId}/coderepos
+ * Create a new code repository
+ */
+export const createCodeRepo = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId } = req.params
+  debug(`createCodeRepos(${teamId}, ...)`)
+  const v = await req.otomi.createCodeRepo(teamId, req.body as CodeRepo)
+  res.json(v)
 }

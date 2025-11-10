@@ -1,37 +1,40 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { OpenApiRequestExt, Service } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:teams:services')
 
-export default function (): OperationHandlerArray {
-  const del: Operation = [
-    async ({ otomi, params: { teamId, serviceName } }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`deleteService(${serviceName})`)
-      await otomi.deleteService(decodeURIComponent(teamId), decodeURIComponent(serviceName))
-      res.json({})
-    },
-  ]
-  const get: Operation = [
-    ({ otomi, params: { teamId, serviceName } }: OpenApiRequestExt, res): void => {
-      debug(`getService(${serviceName})`)
-      const data = otomi.getService(decodeURIComponent(teamId), decodeURIComponent(serviceName))
-      res.json(data)
-    },
-  ]
-  const put: Operation = [
-    async ({ otomi, params: { teamId, serviceName }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`editService(${serviceName})`)
-      const data = await otomi.editService(decodeURIComponent(teamId), decodeURIComponent(serviceName), {
-        ...body,
-      } as Service)
-      res.json(data)
-    },
-  ]
-  const api = {
-    delete: del,
-    get,
-    put,
-  }
-  return api
+/**
+ * GET /v1/teams/{teamId}/services/{serviceName}
+ * Get a specific service
+ */
+export const getService = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId, serviceName } = req.params
+  debug(`getService(${serviceName})`)
+  const data = req.otomi.getService(decodeURIComponent(teamId), decodeURIComponent(serviceName))
+  res.json(data)
+}
+
+/**
+ * PUT /v1/teams/{teamId}/services/{serviceName}
+ * Edit a service
+ */
+export const editService = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, serviceName } = req.params
+  debug(`editService(${serviceName})`)
+  const data = await req.otomi.editService(decodeURIComponent(teamId), decodeURIComponent(serviceName), {
+    ...req.body,
+  } as Service)
+  res.json(data)
+}
+
+/**
+ * DELETE /v1/teams/{teamId}/services/{serviceName}
+ * Delete a service
+ */
+export const deleteService = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, serviceName } = req.params
+  debug(`deleteService(${serviceName})`)
+  await req.otomi.deleteService(decodeURIComponent(teamId), decodeURIComponent(serviceName))
+  res.json({})
 }

@@ -1,6 +1,6 @@
 import { Ability, Subject, subject } from '@casl/ability'
 import Debug from 'debug'
-import { each, forIn, get, isEmpty, isEqual, omit, set } from 'lodash'
+import { each, forIn, get, isEmpty } from 'lodash'
 import { Acl, AclAction, OpenAPIDoc, Schema, SessionUser, TeamAuthz, UserAuthz } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { extract, flattenObject } from 'src/utils'
@@ -195,50 +195,6 @@ export default class Authz {
     const iCan = this.rbac.can(action, sub)
     if (!iCan) debug(`Authz: not authorized (RBAC): ${action} ${schemaName}${teamId ? `/${teamId}` : ''}`)
     return iCan
-  }
-
-  validateWithAbac = (action: string, schemaName: string, teamId: string, body?: any, dataOrig?: any): string[] => {
-    const violatedAttributes: string[] = []
-    if (this.user.roles.includes('platformAdmin')) return violatedAttributes
-
-    if (!['create', 'update'].includes(action))
-      throw new Error('validateWithAbac should only be used for mutating actions')
-    const deniedRoleAttributes = this.getAbacDenied(action, schemaName, teamId)
-    // check if we are denied any attributes by role
-    // also check if we are denied by lack of self service
-    const deniedSelfServiceAttributes = get(
-      this.user.authz,
-      `${teamId}.deniedAttributes.teamMembers`,
-      [],
-    ) as Array<string>
-    // merge denied attributes from both role-based and self-service restrictions
-    const deniedAttributes = [...deniedRoleAttributes, ...deniedSelfServiceAttributes]
-
-    deniedAttributes.forEach((path) => {
-      const val = get(body, path)
-      const origVal = get(dataOrig, path)
-      // undefined value expected for forbidden props, so put back original before save
-      if (val === undefined) set(body, path, origVal)
-      // if a value is provided which is not allowed, mark it as violated
-      else if (!isEqual(val, origVal)) violatedAttributes.push(path)
-    })
-    return violatedAttributes
-  }
-
-  getAbacDenied = (action: string, schemaName: string, teamId: string): string[] => {
-    const schema = this.specRules[schemaName]
-    const aclProps = getAclProps(schema)
-    const violatedAttributes: Array<string> = aclProps.filter(
-      (prop) => !this.validateWithCasl(action, `${schemaName}.${prop}`, teamId),
-    )
-    return violatedAttributes
-  }
-
-  filterWithAbac = (schemaName: string, teamId: string, body: Record<string, any>): any => {
-    if (typeof body !== 'object') return body
-    const deniedRoleAttributes = this.getAbacDenied('read', schemaName, teamId)
-    const ret = (body.length !== undefined ? body : [body]).map((obj) => omit(obj, deniedRoleAttributes))
-    return body.length !== undefined ? ret : ret[0]
   }
 
   hasSelfService = (teamId: string, attribute: string): boolean => {

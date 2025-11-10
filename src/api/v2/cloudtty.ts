@@ -1,28 +1,28 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:cloudtty')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    async ({ otomi, query, user: sessionUser }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`connectCloudtty - ${sessionUser.email} - ${sessionUser.sub}`)
-      const { teamId }: { teamId: string } = query as { teamId: string }
-      const v = await otomi.connectCloudtty(teamId, sessionUser)
-      res.json(v)
-    },
-  ]
-  const del: Operation = [
-    async ({ otomi, user: sessionUser }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`deleteCloudtty - ${sessionUser.email} - ${sessionUser.sub}`)
-      await otomi.deleteCloudtty(sessionUser)
-      res.json({})
-    },
-  ]
-  const api = {
-    get,
-    delete: del,
-  }
-  return api
+/**
+ * GET /v2/cloudtty
+ * Connect to CloudTTY
+ */
+export const connectAplCloudtty = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const sessionUser = req.user
+  debug(`connectCloudtty - ${sessionUser.email} - ${sessionUser.sub}`)
+  const { teamId } = req.query as { teamId: string }
+  const v = await req.otomi.connectCloudtty(teamId, sessionUser)
+  res.json(v)
+}
+
+/**
+ * DELETE /v2/cloudtty
+ * Delete CloudTTY connection
+ */
+export const deleteAplCloudtty = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const sessionUser = req.user
+  debug(`deleteCloudtty - ${sessionUser.email} - ${sessionUser.sub}`)
+  await req.otomi.deleteCloudtty(sessionUser)
+  res.json({})
 }
