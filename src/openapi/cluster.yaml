@@ -10,7 +10,7 @@ Cluster:
     teamMember:
       - read-any
   title: Cluster
-  description: The Kubernetes cluster running APL.
+  description: The Kubernetes cluster running Application Platform.
   properties:
     name:
       title: Name
