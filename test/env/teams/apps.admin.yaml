@@ -5,7 +5,6 @@ teamConfig:
             argocd: {}
             cert-manager: {}
             cnpg: {}
-            drone: {}
             external-dns: {}
             gitea: {}
             grafana: {}

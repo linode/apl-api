@@ -24,7 +24,6 @@ import { extract, getPaths, getValuesSchema } from 'src/utils'
 import {
   CHECK_LATEST_COMMIT_INTERVAL,
   cleanEnv,
-  DRONE_WEBHOOK_SECRET,
   EXPRESS_PAYLOAD_LIMIT,
   GIT_PASSWORD,
   GIT_PUSH_RETRIES,
@@ -35,7 +34,6 @@ import giteaCheckLatest from './gitea/connect'
 import { getBuildStatus, getSealedSecretStatus, getServiceStatus, getWorkloadStatus } from './k8s_operations'
 
 const env = cleanEnv({
-  DRONE_WEBHOOK_SECRET,
   CHECK_LATEST_COMMIT_INTERVAL,
   GIT_USER,
   GIT_PASSWORD,
