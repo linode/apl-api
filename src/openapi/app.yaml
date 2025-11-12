@@ -18,7 +18,6 @@ AppList:
     - istio
     - jaeger
     - keycloak
-    - kiali
     - knative
     - kserve
     - kubeflow-pipelines
