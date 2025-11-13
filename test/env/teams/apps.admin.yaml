@@ -15,7 +15,6 @@ teamConfig:
             jaeger: {}
             keycloak: {}
             knative: {}
-            kured: {}
             tekton: {}
             loki: {}
             minio: {}
