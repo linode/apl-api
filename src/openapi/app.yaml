@@ -10,7 +10,6 @@ AppList:
     - cnpg
     - drone
     - external-dns
-    - falco
     - gitea
     - grafana
     - harbor
@@ -18,11 +17,9 @@ AppList:
     - istio
     - jaeger
     - keycloak
-    - kiali
     - knative
     - kserve
     - kubeflow-pipelines
-    - kured
     - kyverno
     - loki
     - minio

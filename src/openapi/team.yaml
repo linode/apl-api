@@ -112,7 +112,7 @@ Team:
       - read
       - update
   type: object
-  x-externalDocsPath: docs/for-ops/console/teams
+  x-externalDocsPath: platform-teams
 
 AplTeamSpec:
   type: object

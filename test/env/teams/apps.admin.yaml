@@ -14,9 +14,7 @@ teamConfig:
             istio: {}
             jaeger: {}
             keycloak: {}
-            kiali: {}
             knative: {}
-            kured: {}
             tekton: {}
             loki: {}
             minio: {}
@@ -24,7 +22,6 @@ teamConfig:
             rabbitmq: {}
             sealed-secrets: {}
             velero: {}
-            falco: {}
             trivy: {}
             tempo: {}
             otel: {}

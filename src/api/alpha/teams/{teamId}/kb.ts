@@ -1,27 +1,27 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { AplKnowledgeBaseRequest, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:alpha:teams:kb')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
-      debug(`getAplKnowledgeBases(${teamId})`)
-      const v = otomi.getAplKnowledgeBases(decodeURIComponent(teamId))
-      res.json(v)
-    },
-  ]
-  const post: Operation = [
-    async ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`createAplKnowledgeBase(${teamId}, ...)`)
-      const v = await otomi.createAplKnowledgeBase(decodeURIComponent(teamId), body as AplKnowledgeBaseRequest)
-      res.json(v)
-    },
-  ]
-  const api = {
-    get,
-    post,
-  }
-  return api
+/**
+ * GET /alpha/teams/{teamId}/kb
+ * Get all knowledge bases for a team
+ */
+export const getAplKnowledgeBases = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId } = req.params
+  debug(`getAplKnowledgeBases(${teamId})`)
+  const v = req.otomi.getAplKnowledgeBases(decodeURIComponent(teamId))
+  res.json(v)
+}
+
+/**
+ * POST /alpha/teams/{teamId}/kb
+ * Create a new knowledge base
+ */
+export const createAplKnowledgeBase = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId } = req.params
+  debug(`createAplKnowledgeBase(${teamId}, ...)`)
+  const v = await req.otomi.createAplKnowledgeBase(decodeURIComponent(teamId), req.body as AplKnowledgeBaseRequest)
+  res.json(v)
 }

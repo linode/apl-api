@@ -1,28 +1,27 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { AplBackupRequest, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:backups')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
-      debug(`getTeamBackups(${teamId})`)
-      const v = otomi.getTeamAplBackups(decodeURIComponent(teamId))
-      res.json(v)
-    },
-  ]
-  const post: Operation = [
-    async ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`createBackup(${teamId}, ...)`)
-      const v = await otomi.createAplBackup(decodeURIComponent(teamId), body as AplBackupRequest)
-      res.json(v)
-    },
-  ]
-  const api = {
-    get,
-    post,
-  }
+/**
+ * GET /v2/teams/{teamId}/backups
+ * Get all backups for a team (APL format)
+ */
+export const getTeamAplBackups = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId } = req.params
+  debug(`getTeamBackups(${teamId})`)
+  const v = req.otomi.getTeamAplBackups(decodeURIComponent(teamId))
+  res.json(v)
+}
 
-  return api
+/**
+ * POST /v2/teams/{teamId}/backups
+ * Create a new backup (APL format)
+ */
+export const createAplBackup = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId } = req.params
+  debug(`createBackup(${teamId}, ...)`)
+  const v = await req.otomi.createAplBackup(decodeURIComponent(teamId), req.body as AplBackupRequest)
+  res.json(v)
 }

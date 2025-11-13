@@ -1,20 +1,15 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:services')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    /* business middleware not expressible by OpenAPI documentation goes here */
-    ({ otomi }: OpenApiRequestExt, res): void => {
-      debug('getAllServices')
-      const v = otomi.getAllServices()
-      res.json(v)
-    },
-  ]
-  const api = {
-    get,
-  }
-  return api
+/**
+ * GET /v1/services
+ * Get all services running on the cluster
+ */
+export const getAllServices = (req: OpenApiRequestExt, res: Response): void => {
+  debug('getAllServices')
+  const v = req.otomi.getAllServices()
+  res.json(v)
 }

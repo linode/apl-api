@@ -131,13 +131,29 @@ export type V1ApiObject = Build | CodeRepo | Netpol | SealedSecret | Service | W
 export type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T
 
 export interface OpenApiRequest extends Request {
-  operationDoc: {
+  // Support both express-openapi and express-openapi-validator
+  operationDoc?: {
     responses: { '200'?: { content: { 'application/json': { schema: { $ref: string } } } } }
-
     security: any[]
     operationId: string
+    'x-aclSchema'?: string
   }
-  apiDoc: OpenAPIDoc
+  apiDoc?: OpenAPIDoc
+  // express-openapi-validator uses req.openapi
+  openapi?: {
+    schema: {
+      responses?: { '200'?: { content: { 'application/json': { schema: { $ref: string } } } } }
+      security?: any[]
+      operationId?: string
+      'x-aclSchema'?: string
+    }
+    // Path parameters parsed from the URL (e.g., {teamId} -> pathParams.teamId)
+    pathParams?: Record<string, any>
+    // The Express route pattern (e.g., /v1/teams/:teamId/coderepos)
+    expressRoute?: string
+    // The OpenAPI route pattern (e.g., /v1/teams/{teamId}/coderepos)
+    openApiRoute?: string
+  }
   session: Session
   user?: SessionUser
 }
