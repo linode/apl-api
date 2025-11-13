@@ -839,14 +839,16 @@ export default class OtomiStack {
     await this.git.saveConfig(repo, fileMap)
   }
 
-  async saveTeamWorkloadValues(data: AplWorkloadResponse) {
+  async saveTeamWorkloadValues(data: AplWorkloadResponse, createManagedFile = false) {
     const { metadata } = data
     const teamId = metadata.labels['apl.io/teamId']!
     debug(`Saving AplTeamWorkloadValues ${metadata.name} for team ${teamId}`)
     const filePath = getTeamWorkloadValuesFilePath(teamId, metadata.name)
     await this.git.writeTextFile(filePath, data.spec.values || '{}')
-    const filePathValuesManaged = getTeamWorkloadValuesManagedFilePath(teamId, metadata.name)
-    await this.git.writeTextFile(filePathValuesManaged, '')
+    if (createManagedFile) {
+      const filePathValuesManaged = getTeamWorkloadValuesManagedFilePath(teamId, metadata.name)
+      await this.git.writeTextFile(filePathValuesManaged, '')
+    }
   }
 
   async saveTeamPolicy(teamId: string, data: AplPolicyResponse): Promise<void> {
@@ -1789,7 +1791,7 @@ export default class OtomiStack {
     try {
       const workload = this.repoService.getTeamConfigService(teamId).createWorkload(data)
       await this.saveTeamWorkload(workload)
-      await this.saveTeamWorkloadValues(workload)
+      await this.saveTeamWorkloadValues(workload, true)
       await this.doTeamDeployment(
         teamId,
         (teamService) => {
