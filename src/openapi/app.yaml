@@ -21,7 +21,6 @@ AppList:
     - knative
     - kserve
     - kubeflow-pipelines
-    - kured
     - kyverno
     - loki
     - minio
