@@ -192,10 +192,6 @@ export default class OtomiStack {
     this.sessionId = sessionId ?? 'main'
   }
 
-  getFileContent(path: string): string {
-    return this.repoService.getRepo().files[path] || ''
-  }
-
   getAppList() {
     let apps = getAppList()
     apps = apps.filter((item) => item !== 'ingress-nginx')
