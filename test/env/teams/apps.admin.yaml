@@ -14,9 +14,7 @@ teamConfig:
             istio: {}
             jaeger: {}
             keycloak: {}
-            kiali: {}
             knative: {}
-            kured: {}
             tekton: {}
             loki: {}
             minio: {}

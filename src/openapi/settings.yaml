@@ -408,7 +408,6 @@ Settings:
       required:
         - smarthost
       type: object
-      x-externalDocsPath: for-ops/console/settings/smtp
       x-acl:
         platformAdmin: [read-any, update-any]
         teamAdmin: []
