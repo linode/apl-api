@@ -10,7 +10,7 @@ Cluster:
     teamMember:
       - read-any
   title: Cluster
-  description: The Kubernetes cluster running Application Platform.
+  description: The Kubernetes cluster running App Platform.
   properties:
     name:
       title: Name
