@@ -16,7 +16,7 @@ Backup:
       - update
       - delete
   type: object
-  description: Create Velero backup schedules for Persistent Volumes.
+  description: Create backup schedules for Persistent Volumes.
   x-externalDocsPath: disaster-recovery
   properties:
     id:

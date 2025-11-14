@@ -21,7 +21,6 @@ teamConfig:
             prometheus: {}
             rabbitmq: {}
             sealed-secrets: {}
-            velero: {}
             trivy: {}
             tempo: {}
             otel: {}
