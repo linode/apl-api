@@ -52,6 +52,7 @@ export class RepoService {
     this.repo.users ??= []
     this.repo.versions ??= {} as Versions
     this.repo.teamConfig ??= {}
+    this.repo.files ??= {}
   }
 
   public getTeamConfigService(teamName: string): TeamConfigService {
