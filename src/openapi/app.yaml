@@ -31,7 +31,6 @@ AppList:
     - sealed-secrets
     - tempo
     - trivy
-    - velero
 
 App:
   x-acl:

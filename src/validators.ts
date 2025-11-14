@@ -62,7 +62,7 @@ export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '
 export const PREINSTALLED_EXCLUDED_APPS = json({
   desc: 'Applications that are managed by Linode, so they should be excluded from the apps page',
   default: {
-    apps: ['cert-manager', 'minio', 'velero', 'drone', 'external-dns'],
+    apps: ['cert-manager', 'minio', 'drone', 'external-dns'],
   },
 })
 export const HIDDEN_APPS = json({
@@ -77,7 +77,6 @@ export const OBJ_STORAGE_APPS = json({
     { appId: 'harbor', required: false },
     { appId: 'loki', required: false },
     { appId: 'tempo', required: true },
-    { appId: 'velero', required: true },
     { appId: 'thanos', required: true },
     { appId: 'kubeflow-pipelines', required: true },
   ],
