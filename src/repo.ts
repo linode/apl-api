@@ -419,10 +419,6 @@ export function getFileMap(kind: AplKind, envDir: string): FileMap {
 }
 
 export function renderManifest(fileMap: FileMap, jsonPath: jsonpath.PathComponent[], data: Record<string, any>) {
-  //TODO remove this custom workaround for workloadValues
-  if (fileMap.kind === 'AplTeamWorkloadValues') {
-    return { values: data.values }
-  }
   let spec = data
   const labels = {}
   if (fileMap.resourceGroup === 'team') {
@@ -489,6 +485,10 @@ export async function loadFileToSpec(
   const jsonPath = getJsonPath(fileMap, filePath)
   try {
     const data = (await deps.loadYaml(filePath)) || {}
+    // ensure that local path does not include envDir and the leading slash
+    const localFilePath = filePath.replace(fileMap.envDir, '').replace(/^\/+/, '')
+    // eslint-disable-next-line no-param-reassign
+    spec.files[localFilePath] = data
     if (fileMap.processAs === 'arrayItem') {
       const ref: Record<string, any>[] = get(spec, jsonPath)
       const name = filePath.match(/\/([^/]+)\.yaml$/)?.[1]
@@ -577,7 +577,9 @@ export async function loadToSpec(
 export async function loadValues(envDir: string, deps = { loadToSpec }): Promise<Record<string, any>> {
   //We need everything to load to spec for the API
   const fileMaps = getFileMaps(envDir)
-  const spec = {}
+  const spec = {
+    files: {},
+  }
 
   await Promise.all(
     fileMaps.map(async (fileMap) => {
