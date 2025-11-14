@@ -268,6 +268,7 @@ export interface Repo {
   users: User[]
   versions: Versions
   teamConfig: Record<string, TeamConfig>
+  files: Record<string, string>
 }
 
 export interface TeamConfig {
