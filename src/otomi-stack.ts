@@ -1,4 +1,4 @@
-import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -94,6 +94,10 @@ import {
 } from 'src/validators'
 import { v4 as uuidv4 } from 'uuid'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
+import { getAIModels } from './ai/aiModelHandler'
+import { AkamaiAgentCR } from './ai/AkamaiAgentCR'
+import { AkamaiKnowledgeBaseCR } from './ai/AkamaiKnowledgeBaseCR'
+import { DatabaseCR } from './ai/DatabaseCR'
 import {
   apply,
   checkPodExists,
@@ -121,10 +125,6 @@ import { getSealedSecretsPEM, sealedSecretManifest, SealedSecretManifestType } f
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchChartYaml, fetchWorkloadCatalog, NewHelmChartValues, sparseCloneChart } from './utils/workloadUtils'
-import { getAIModels } from './ai/aiModelHandler'
-import { AkamaiKnowledgeBaseCR } from './ai/AkamaiKnowledgeBaseCR'
-import { AkamaiAgentCR } from './ai/AkamaiAgentCR'
-import { DatabaseCR } from './ai/DatabaseCR'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -157,6 +157,14 @@ const clusterSettingsFilePath = 'env/settings/cluster.yaml'
 
 function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: string): string {
   return `env/teams/${teamId}/sealedsecrets/${sealedSecretsName}`
+}
+
+function getTeamWorkloadValuesManagedFilePath(teamId: string, workloadName: string): string {
+  return `env/teams/${teamId}/workloadValues/${workloadName}.managed.yaml`
+}
+
+function getTeamWorkloadValuesFilePath(teamId: string, workloadName: string): string {
+  return `env/teams/${teamId}/workloadValues/${workloadName}.yaml`
 }
 
 function getTeamKnowledgeBaseValuesFilePath(teamId: string, knowledgeBaseName: string): string {
@@ -272,16 +280,13 @@ export default class OtomiStack {
     })
   }
 
-  transformWorkloads(workloads: AplWorkloadResponse[], workloadValues: Record<string, any>[]): AplWorkloadResponse[] {
-    const values = {}
-    workloadValues.forEach((value) => {
-      const workloadName = value.name
-      if (workloadName) {
-        values[workloadName] = value.values
-      }
-    })
+  transformWorkloads(workloads: AplWorkloadResponse[], files: string[]): AplWorkloadResponse[] {
     return workloads.map((workload) => {
-      return merge(workload, { spec: { values: values[workload.metadata.name] } })
+      const workloadName = workload.metadata.name
+      const teamId = workload.metadata.labels?.['apl.io/teamId']
+
+      const filePath = getTeamWorkloadValuesFilePath(teamId, workloadName)
+      return merge(workload, { spec: { values: files[filePath] } })
     })
   }
 
@@ -314,10 +319,9 @@ export default class OtomiStack {
         apps: this.transformApps(teamConfig.apps),
         policies: this.transformPolicies(teamName, teamConfig.policies || {}),
         sealedsecrets: this.transformSecrets(teamName, teamConfig.sealedsecrets || []),
-        workloads: this.transformWorkloads(teamConfig.workloads || [], teamConfig.workloadValues || []),
+        workloads: this.transformWorkloads(teamConfig.workloads || [], rawRepo.files || {}),
         settings: this.transformTeamSettings(teamConfig.settings),
       }))
-
       const repo = rawRepo as Repo
       this.repoService = new RepoService(repo)
     }
@@ -400,7 +404,7 @@ export default class OtomiStack {
 
   getSettingsInfo(): SettingsInfo {
     return {
-      cluster: pick(this.repoService.getCluster(), ['name', 'domainSuffix', 'apiServer', 'provider']),
+      cluster: pick(this.repoService.getCluster(), ['name', 'domainSuffix', 'apiServer', 'provider', 'linode']),
       dns: pick(this.repoService.getDns(), ['zones']),
       otomi: pick(this.repoService.getOtomi(), ['hasExternalDNS', 'hasExternalIDP', 'isPreInstalled', 'aiEnabled']),
       smtp: pick(this.repoService.getSmtp(), ['smarthost']),
@@ -835,18 +839,16 @@ export default class OtomiStack {
     await this.git.saveConfig(repo, fileMap)
   }
 
-  async saveTeamWorkloadValues(data: AplWorkloadResponse) {
+  async saveTeamWorkloadValues(data: AplWorkloadResponse, createManagedFile = false) {
     const { metadata } = data
     const teamId = metadata.labels['apl.io/teamId']!
     debug(`Saving AplTeamWorkloadValues ${metadata.name} for team ${teamId}`)
-    const values = {
-      name: metadata.name,
-      values: data.spec.values,
+    const filePath = getTeamWorkloadValuesFilePath(teamId, metadata.name)
+    await this.git.writeTextFile(filePath, data.spec.values || '{}')
+    if (createManagedFile) {
+      const filePathValuesManaged = getTeamWorkloadValuesManagedFilePath(teamId, metadata.name)
+      await this.git.writeTextFile(filePathValuesManaged, '')
     }
-    const configKey = this.getConfigKey('AplTeamWorkloadValues')
-    const repo = this.createTeamConfigInRepo(teamId, configKey, [values])
-    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkloadValues')!
-    await this.git.saveConfig(repo, fileMap, false)
   }
 
   async saveTeamPolicy(teamId: string, data: AplPolicyResponse): Promise<void> {
@@ -885,8 +887,10 @@ export default class OtomiStack {
     const fileMapWorkload = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkload')!
     const repoValues = this.createTeamConfigInRepo(teamId, 'workloads', [data])
     const fileMapValues = getFileMaps('').find((fm) => fm.kind === 'AplTeamWorkloadValues')!
+    const filePathValuesManaged = getTeamWorkloadValuesManagedFilePath(teamId, metadata.name)
     await this.git.deleteConfig(repoWorkload, fileMapWorkload)
     await this.git.deleteConfig(repoValues, fileMapValues)
+    await this.git.removeFile(filePathValuesManaged)
   }
 
   getTeamBackups(teamId: string): Backup[] {
@@ -1787,7 +1791,7 @@ export default class OtomiStack {
     try {
       const workload = this.repoService.getTeamConfigService(teamId).createWorkload(data)
       await this.saveTeamWorkload(workload)
-      await this.saveTeamWorkloadValues(workload)
+      await this.saveTeamWorkloadValues(workload, true)
       await this.doTeamDeployment(
         teamId,
         (teamService) => {

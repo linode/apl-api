@@ -9,7 +9,6 @@ AppList:
     - cert-manager
     - cnpg
     - external-dns
-    - falco
     - gitea
     - grafana
     - harbor
@@ -20,7 +19,6 @@ AppList:
     - knative
     - kserve
     - kubeflow-pipelines
-    - kured
     - kyverno
     - loki
     - minio

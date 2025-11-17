@@ -15,9 +15,6 @@ k8s:
       disablePolicyChecks: true
     - name: external-dns
       disableIstioInjection: true
-    - name: falco
-      disableIstioInjection: true
-      disablePolicyChecks: true
     - name: harbor
       app: harbor
     - name: apl-harbor-operator
@@ -62,9 +59,6 @@ k8s:
     - name: kfp
       app: kubeflow-pipelines
       disablePolicyChecks: true
-      disableIstioInjection: true
-    - name: kured
-      app: kured
       disableIstioInjection: true
     - name: kyverno
       app: kyverno
@@ -155,9 +149,6 @@ adminApps:
         auth: true
   - name: external-dns
     tags: [ingress, security, tls]
-  - name: falco
-    tags: [security]
-    deps: [prometheus, grafana]
   - name: gitea
     tags: [git]
     isShared: true
@@ -242,8 +233,6 @@ adminApps:
         auth: true
   - name: kserve
     tags: [ai]
-  - name: kured
-    tags: [security]
   - name: tekton
     tags: [buildpacks, ci, pipelines]
     ownHost: true
