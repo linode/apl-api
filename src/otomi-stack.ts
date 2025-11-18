@@ -15,8 +15,6 @@ import {
   AplAgentRequest,
   AplAgentResponse,
   AplAIModelResponse,
-  AplBackupRequest,
-  AplBackupResponse,
   AplBuildRequest,
   AplBuildResponse,
   AplCodeRepoRequest,
@@ -38,7 +36,6 @@ import {
   AplWorkloadRequest,
   AplWorkloadResponse,
   App,
-  Backup,
   Build,
   Cloudtty,
   CodeRepo,
@@ -111,7 +108,6 @@ import {
 import { getFileMaps, loadValues } from './repo'
 import { RepoService } from './services/RepoService'
 import { TeamConfigService } from './services/TeamConfigService'
-import { validateBackupFields } from './utils/backupUtils'
 import {
   getGiteaRepoUrls,
   getPrivateRepoBranches,
@@ -429,7 +425,6 @@ export default class OtomiStack {
         harbor: `lke${lkeClusterId}-harbor`,
         loki: `lke${lkeClusterId}-loki`,
         tempo: `lke${lkeClusterId}-tempo`,
-        velero: `lke${lkeClusterId}-velero`,
         gitea: `lke${lkeClusterId}-gitea`,
         thanos: `lke${lkeClusterId}-thanos`,
         'kubeflow-pipelines': `lke${lkeClusterId}-kubeflow-pipelines`,
@@ -891,94 +886,6 @@ export default class OtomiStack {
     await this.git.deleteConfig(repoWorkload, fileMapWorkload)
     await this.git.deleteConfig(repoValues, fileMapValues)
     await this.git.removeFile(filePathValuesManaged)
-  }
-
-  getTeamBackups(teamId: string): Backup[] {
-    return this.getTeamAplBackups(teamId).map((backup) => getV1ObjectFromApl(backup) as Backup)
-  }
-
-  getTeamAplBackups(teamId: string): AplBackupResponse[] {
-    return this.repoService.getTeamConfigService(teamId).getBackups()
-  }
-
-  getAllBackups(): Backup[] {
-    return this.getAllAplBackups().map((backup) => getV1ObjectFromApl(backup) as Backup)
-  }
-
-  getAllAplBackups(): AplBackupResponse[] {
-    return this.repoService.getAllBackups()
-  }
-
-  async createBackup(teamId: string, data: Backup): Promise<Backup> {
-    const newBackup = await this.createAplBackup(teamId, getAplObjectFromV1('AplTeamBackup', data) as AplBackupRequest)
-    return getV1ObjectFromApl(newBackup) as Backup
-  }
-
-  async createAplBackup(teamId: string, data: AplBackupRequest): Promise<AplBackupResponse> {
-    validateBackupFields(data.metadata.name, data.spec.ttl)
-    try {
-      const backup = this.repoService.getTeamConfigService(teamId).createBackup(data)
-      await this.saveTeamConfigItem(backup)
-      await this.doTeamDeployment(
-        teamId,
-        (teamService) => {
-          teamService.createBackup(backup)
-        },
-        false,
-      )
-      return backup
-    } catch (err) {
-      if (err.code === 409) err.publicMessage = 'Backup name already exists'
-      throw err
-    }
-  }
-
-  getBackup(teamId: string, name: string): Backup {
-    return getV1ObjectFromApl(this.getAplBackup(teamId, name)) as Backup
-  }
-
-  getAplBackup(teamId: string, name: string): AplBackupResponse {
-    return this.repoService.getTeamConfigService(teamId).getBackup(name)
-  }
-
-  async editBackup(teamId: string, name: string, data: Backup): Promise<Backup> {
-    const mergeObj = getV1MergeObject(data) as DeepPartial<AplBackupRequest>
-    const mergedBackup = await this.editAplBackup(teamId, name, mergeObj)
-    return getV1ObjectFromApl(mergedBackup) as Backup
-  }
-
-  async editAplBackup(
-    teamId: string,
-    name: string,
-    data: AplBackupRequest | DeepPartial<AplBackupRequest>,
-    patch = false,
-  ): Promise<AplBackupResponse> {
-    validateBackupFields(data.metadata?.name, data.spec?.ttl)
-    const backup = patch
-      ? this.repoService.getTeamConfigService(teamId).patchBackup(name, data)
-      : this.repoService.getTeamConfigService(teamId).updateBackup(name, data as AplBackupRequest)
-    await this.saveTeamConfigItem(backup)
-    await this.doTeamDeployment(
-      teamId,
-      (teamService) => {
-        teamService.updateBackup(name, backup)
-      },
-      false,
-    )
-    return backup
-  }
-
-  async deleteBackup(teamId: string, name: string): Promise<void> {
-    const backup = this.repoService.getTeamConfigService(teamId).getBackup(name)
-    this.repoService.getTeamConfigService(teamId).deleteBackup(name)
-    await this.deleteTeamConfigItem(backup)
-    await this.doTeamDeployment(
-      teamId,
-      (teamService) => {
-        teamService.deleteBackup(name)
-      },
-      false,
-    )
   }
 
   getTeamNetpols(teamId: string): Netpol[] {
