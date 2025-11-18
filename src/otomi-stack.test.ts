@@ -362,7 +362,7 @@ describe('Workload values', () => {
   })
 
   test('returns filtered apps if App array is submitted isPreinstalled flag is true', () => {
-    const apps: App[] = [{ id: 'external-dns' }, { id: 'drone' }, { id: 'cnpg' }, { id: 'loki' }]
+    const apps: App[] = [{ id: 'external-dns' }, { id: 'cnpg' }, { id: 'loki' }]
     jest.spyOn(otomiStack, 'getSettingsInfo').mockReturnValue({ otomi: { isPreInstalled: true } })
     const filteredApps = otomiStack.filterExcludedApp(apps)
     expect(filteredApps).toEqual([{ id: 'cnpg' }, { id: 'loki' }])
