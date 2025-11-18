@@ -5,9 +5,6 @@ import OtomiStack from 'src/otomi-stack'
 
 export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
-export type Backup = components['schemas']['Backup']
-export type AplBackupRequest = components['schemas']['AplBackupRequest']
-export type AplBackupResponse = components['schemas']['AplBackupResponse']
 export type AplKnowledgeBaseRequest = components['schemas']['AplKnowledgeBaseRequest']
 export type AplKnowledgeBaseResponse = components['schemas']['AplKnowledgeBaseResponse']
 export type AplAgentRequest = components['schemas']['AplAgentRequest']
@@ -74,7 +71,6 @@ export type Otomi = Settings['otomi']
 export type Versions = Settings['versions']
 
 export type AplRequestObject =
-  | AplBackupRequest
   | AplBuildRequest
   | AplCodeRepoRequest
   | AplKnowledgeBaseRequest
@@ -86,7 +82,6 @@ export type AplRequestObject =
   | AplWorkloadRequest
   | AplTeamSettingsRequest
 export type AplResponseObject =
-  | AplBackupResponse
   | AplBuildResponse
   | AplCodeRepoResponse
   | AplKnowledgeBaseResponse
@@ -119,7 +114,6 @@ export type AplKind =
   | 'AplTeamPolicy'
   | 'AplTeamSettingSet'
   | 'AplTeamNetworkControl'
-  | 'AplTeamBackup'
   | 'AplTeamSecret'
   | 'AplTeamService'
   | 'AplTeamWorkload'
@@ -273,7 +267,6 @@ export interface Repo {
 
 export interface TeamConfig {
   apps: App[]
-  backups: AplBackupResponse[]
   builds: AplBuildResponse[]
   codeRepos: AplCodeRepoResponse[]
   knowledgeBases: AplKnowledgeBaseResponse[]

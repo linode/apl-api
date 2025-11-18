@@ -167,7 +167,6 @@ paths:
         description: Team object that needs to be added to the collection
         required: true
       responses:
-
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -285,7 +284,6 @@ paths:
         description: Service object
         required: true
       responses:
-
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -485,7 +483,6 @@ paths:
         description: Service object
         required: true
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -652,7 +649,6 @@ paths:
         description: SealedSecret object
         required: true
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -774,7 +770,6 @@ paths:
         description: SealedSecret object
         required: true
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -894,7 +889,6 @@ paths:
         description: Network policy object
         required: true
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -1014,7 +1008,6 @@ paths:
         description: Network policy object
         required: true
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -1081,246 +1074,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a team network policy
-
-  '/v1/backups':
-    get:
-      operationId: getAllBackups
-      x-eov-operation-handler: v1/backups
-      x-aclSchema: Backup
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '200':
-          description: Successfully obtained all backups configuration
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Backup'
-
-  '/v1/teams/{teamId}/backups':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-    get:
-      operationId: getTeamBackups
-      x-eov-operation-handler: v1/teams/{teamId}/backups
-      x-aclSchema: Backup
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '200':
-          description: Successfully obtained team backups configuration
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Backup'
-    post:
-      operationId: createBackup
-      x-eov-operation-handler: v1/teams/{teamId}/backups
-      description: Create a team backup
-      x-aclSchema: Backup
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Backup'
-        description: Backup object
-        required: true
-      responses:
-        
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '409':
-          $ref: '#/components/responses/OtomiStackError'
-        '200':
-          description: Successfully stored backup configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Backup'
-
-  '/v1/teams/{teamId}/backups/{backupName}':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/backupParams'
-    delete:
-      operationId: deleteBackup
-      x-eov-operation-handler: v1/teams/{teamId}/backups/{backupName}
-      description: Delete a backup from a given team
-      x-aclSchema: Backup
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '200':
-          description: Successfully deleted a backup
-    get:
-      operationId: getBackup
-      x-eov-operation-handler: v1/teams/{teamId}/backups/{backupName}
-      description: Get a backup from a given team
-      x-aclSchema: Backup
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '200':
-          description: Successfully obtained backup configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Backup'
-    put:
-      operationId: editBackup
-      x-eov-operation-handler: v1/teams/{teamId}/backups/{backupName}
-      description: Edit a backup from a given team
-      x-aclSchema: Backup
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Backup'
-        description: Backup object that contains updated values
-        required: true
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '200':
-          description: Successfully edited a team backup
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Backup'
-
-  '/v2/backups':
-    get:
-      operationId: getAllAplBackups
-      x-eov-operation-handler: v2/backups
-      x-aclSchema: Backup
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '200':
-          description: Successfully obtained all backups configuration
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AplBackupResponse'
-
-  '/v2/teams/{teamId}/backups':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-    get:
-      operationId: getTeamAplBackups
-      x-eov-operation-handler: v2/teams/{teamId}/backups
-      x-aclSchema: Backup
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '200':
-          description: Successfully obtained team backups configuration
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AplBackupResponse'
-    post:
-      operationId: createAplBackup
-      x-eov-operation-handler: v2/teams/{teamId}/backups
-      description: Create a team backup
-      x-aclSchema: Backup
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AplBackupRequest'
-        description: Backup object
-        required: true
-      responses:
-        
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '409':
-          $ref: '#/components/responses/OtomiStackError'
-        '200':
-          description: Successfully stored backup configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AplBackupResponse'
-
-  '/v2/teams/{teamId}/backups/{backupName}':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/backupParams'
-    delete:
-      operationId: deleteAplBackup
-      x-eov-operation-handler: v2/teams/{teamId}/backups/{backupName}
-      description: Delete a backup from a given team
-      x-aclSchema: Backup
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '200':
-          description: Successfully deleted a backup
-    get:
-      operationId: getAplBackup
-      x-eov-operation-handler: v2/teams/{teamId}/backups/{backupName}
-      description: Get a backup from a given team
-      x-aclSchema: Backup
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '200':
-          description: Successfully obtained backup configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AplBackupResponse'
-    put:
-      operationId: editAplBackup
-      x-eov-operation-handler: v2/teams/{teamId}/backups/{backupName}
-      description: Edit a backup from a given team
-      x-aclSchema: Backup
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AplBackupRequest'
-        description: Backup object that contains updated values
-        required: true
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '200':
-          description: Successfully edited a team backup
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AplBackupResponse'
 
   '/v1/dashboard':
     get:
@@ -1396,7 +1149,6 @@ paths:
         description: Build object
         required: true
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -1516,7 +1268,6 @@ paths:
         description: Build object
         required: true
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -1754,7 +1505,6 @@ paths:
       x-eov-operation-handler: v1/k8sVersion
       description: Get cluster k8s version
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -1779,7 +1529,6 @@ paths:
           schema:
             type: string
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -1812,7 +1561,6 @@ paths:
           schema:
             type: string
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -1863,7 +1611,6 @@ paths:
         description: User object
         required: true
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -2032,7 +1779,6 @@ paths:
         description: CodeRepo object
         required: true
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -2154,7 +1900,6 @@ paths:
         description: CodeRepo object
         required: true
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -2348,7 +2093,6 @@ paths:
         description: Workload object
         required: true
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -2529,7 +2273,6 @@ paths:
         description: Workload object
         required: true
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -2778,7 +2521,6 @@ paths:
         description: ObjWizard object
         required: true
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -2879,7 +2621,6 @@ paths:
               type: object
         required: true
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -2976,7 +2717,6 @@ paths:
         description: KnowledgeBase object
         required: true
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -3074,7 +2814,6 @@ paths:
         description: Agent object
         required: true
       responses:
-        
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -3150,13 +2889,6 @@ paths:
 # -------------------------------------------- Components
 components:
   parameters:
-    backupParams:
-      name: backupName
-      in: path
-      description: Name of the backup
-      required: true
-      schema:
-        type: string
     buildParams:
       name: buildName
       in: path
@@ -3376,27 +3108,6 @@ components:
         - $ref: '#/components/schemas/AplAgent'
         - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
-    AplBackup:
-      type: object
-      properties:
-        kind:
-          type: string
-          enum: [AplTeamBackup]
-        spec:
-          $ref: 'backup.yaml#/AplBackupSpec'
-      required:
-        - kind
-        - spec
-    AplBackupRequest:
-      allOf:
-        - $ref: '#/components/schemas/AplBackup'
-        - $ref: '#/components/schemas/aplMetadata'
-    AplBackupResponse:
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/AplBackup'
-        - $ref: '#/components/schemas/aplTeamMetadata'
-        - $ref: '#/components/schemas/aplStatusResponse'
     AplBuild:
       type: object
       properties:
@@ -3593,8 +3304,6 @@ components:
       $ref: 'app.yaml#/App'
     AppList:
       $ref: 'app.yaml#/AppList'
-    Backup:
-      $ref: 'backup.yaml#/Backup'
     Build:
       $ref: 'build.yaml#/Build'
     Cloudtty:
