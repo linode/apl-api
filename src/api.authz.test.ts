@@ -79,7 +79,6 @@ describe('API authz tests', () => {
         .put('/v1/settings/alerts')
         .send({
           alerts: {
-            drone: ['msteams'],
             groupInterval: '5m',
             msteams: { highPrio: 'bla', lowPrio: 'bla' },
             receivers: ['slack'],
