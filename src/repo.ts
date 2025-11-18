@@ -350,17 +350,6 @@ export function getFileMaps(envDir: string): Array<FileMap> {
       v2: true,
     },
     {
-      kind: 'AplTeamBackup',
-      envDir,
-      jsonPathExpression: '$.teamConfig.*.backups[*]',
-      pathGlob: `${envDir}/env/teams/*/backups/*.yaml`,
-      processAs: 'arrayItem',
-      resourceGroup: 'team',
-      resourceDir: 'backups',
-      loadToSpec: true,
-      v2: true,
-    },
-    {
       kind: 'AplTeamNetworkControl',
       envDir,
       jsonPathExpression: '$.teamConfig.*.netpols[*]',
