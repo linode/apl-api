@@ -1,6 +1,4 @@
 alerts:
-    drone:
-        - slack
     groupInterval: 5m
     receivers:
         - slack

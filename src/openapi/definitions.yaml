@@ -533,19 +533,6 @@ domainSuffix:
   $ref: '#/domain'
   title: Domain suffix
   description: The domain suffix for the cluster.
-droneGit:
-  properties:
-    clientID:
-      $ref: '#/wordCharacterPattern'
-    clientSecretValue:
-      type: string
-      x-acl:
-        platformAdmin: [read-any, update-any]
-        teamAdmin: []
-        teamMember: []
-      x-secret: true
-  type: object
-  required: [clientID, clientSecretValue]
 duration:
   description: 'Prometheus duration (See: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#configuration-file)'
   pattern: '((([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?|0)'
