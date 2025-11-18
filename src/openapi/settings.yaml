@@ -65,14 +65,6 @@ Settings:
                   $ref: 'definitions.yaml#/backupRetentionPolicy'
                 schedule:
                   $ref: 'definitions.yaml#/backupSchedule'
-        persistentVolumes:
-          title: Backup Persistent Volumes
-          description: 'Add a Linode API token and enable the Velero App to create backups of PVs.'
-          properties:
-            linodeApiToken:
-              type: string
-              $ref: 'definitions.yaml#/wordCharacterPattern'
-              x-secret: true
     obj:
       x-externalDocsPath: object-storage-settings
       type: object
@@ -137,10 +129,6 @@ Settings:
                           type: string
                           $ref: 'definitions.yaml#/wordCharacterPattern'
                           default: cnpg
-                        velero:
-                          type: string
-                          $ref: 'definitions.yaml#/wordCharacterPattern'
-                          default: velero
                         harbor:
                           type: string
                           $ref: 'definitions.yaml#/wordCharacterPattern'
