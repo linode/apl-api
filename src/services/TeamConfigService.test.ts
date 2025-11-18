@@ -2,7 +2,6 @@
 import { AlreadyExists, NotExistError, ValidationError } from '../error'
 import {
   AplAgentRequest,
-  AplBackupRequest,
   AplBuildRequest,
   AplKnowledgeBaseRequest,
   AplNetpolRequest,
@@ -41,7 +40,6 @@ describe('TeamConfigService', () => {
       workloadValues: [],
       services: [],
       sealedsecrets: [],
-      backups: [],
       netpols: [],
       apps: [],
       policies: [],
@@ -260,41 +258,6 @@ describe('TeamConfigService', () => {
 
       service.deleteSealedSecret(createdSecret.metadata.name)
       expect(service.getSealedSecrets()).toHaveLength(0)
-    })
-  })
-
-  describe('Backups', () => {
-    const backup: AplBackupRequest = {
-      kind: 'AplTeamBackup',
-      metadata: { name: 'TestBackup' },
-      spec: { ttl: '1', schedule: '0 0 * * *' },
-    }
-
-    test('should create a backup', () => {
-      const created = service.createBackup(backup)
-      expect(created).toEqual({
-        kind: 'AplTeamBackup',
-        metadata: {
-          name: 'TestBackup',
-          labels: {
-            'apl.io/teamId': 'team1',
-          },
-        },
-        spec: { ttl: '1', schedule: '0 0 * * *' },
-        status: {},
-      })
-      expect(service.getBackup(created.metadata.name)).toEqual(created)
-    })
-
-    test('should throw an error when creating duplicate backup', () => {
-      service.createBackup(backup)
-      expect(() => service.createBackup(backup)).toThrow(AlreadyExists)
-    })
-
-    test('should delete a backup', () => {
-      const created = service.createBackup(backup)
-      service.deleteBackup(created.metadata.name)
-      expect(() => service.getBackup(created.metadata.name)).toThrow(NotExistError)
     })
   })
 

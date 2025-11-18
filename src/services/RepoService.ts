@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from 'uuid'
 import { AlreadyExists } from '../error'
 import {
   Alerts,
-  AplBackupResponse,
   AplBuildResponse,
   AplCodeRepoResponse,
   AplKnowledgeBaseResponse,
@@ -136,7 +135,6 @@ export class RepoService {
       workloads: [],
       services: [],
       sealedsecrets: [],
-      backups: [],
       knowledgeBases: [],
       agents: [],
       netpols: [],
@@ -265,10 +263,6 @@ export class RepoService {
 
   public getAllKnowledgeBases(): AplKnowledgeBaseResponse[] {
     return this.getTeamIds().flatMap((teamName) => this.getTeamConfigService(teamName).getKnowledgeBases())
-  }
-
-  public getAllBackups(): AplBackupResponse[] {
-    return this.getTeamIds().flatMap((teamName) => this.getTeamConfigService(teamName).getBackups())
   }
 
   public getAllCodeRepos(): AplCodeRepoResponse[] {

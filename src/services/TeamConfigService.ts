@@ -1,13 +1,11 @@
 import { cloneDeep, find, has, merge, omit, remove, set } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
-import { AkamaiKnowledgeBaseCR } from '../ai/AkamaiKnowledgeBaseCR'
 import { AkamaiAgentCR } from '../ai/AkamaiAgentCR'
+import { AkamaiKnowledgeBaseCR } from '../ai/AkamaiKnowledgeBaseCR'
 import { AlreadyExists, NotExistError, ValidationError } from '../error'
 import {
   AplAgentRequest,
   AplAgentResponse,
-  AplBackupRequest,
-  AplBackupResponse,
   AplBuildRequest,
   AplBuildResponse,
   AplCodeRepoRequest,
@@ -47,7 +45,6 @@ export class TeamConfigService {
     this.teamConfig.sealedsecrets ??= []
     this.teamConfig.knowledgeBases ??= []
     this.teamConfig.agents ??= []
-    this.teamConfig.backups ??= []
     this.teamConfig.netpols ??= []
     this.teamConfig.apps ??= []
     this.teamConfig.policies ??= []
@@ -407,48 +404,6 @@ export class TeamConfigService {
 
   public deleteAgent(name: string): void {
     remove(this.teamConfig.agents, (item) => item.metadata.name === name)
-  }
-
-  // =====================================
-  // == BACKUPS CRUD ==
-  // =====================================
-
-  public createBackup(backup: AplBackupRequest): AplBackupResponse {
-    const { name } = backup.metadata
-    if (find(this.teamConfig.backups, (item) => item.metadata.name === name)) {
-      throw new AlreadyExists(`Backup[${name}] already exists.`)
-    }
-
-    const newBackup = this.createAplObject(name, backup) as AplBackupResponse
-    this.teamConfig.backups.push(newBackup)
-    return newBackup
-  }
-
-  public getBackup(name: string): AplBackupResponse {
-    const backup = find(this.teamConfig.backups, (item) => item.metadata.name === name)
-    if (!backup) {
-      throw new NotExistError(`Backup[${name}] does not exist.`)
-    }
-    return backup
-  }
-
-  public getBackups(): AplBackupResponse[] {
-    return this.teamConfig.backups ?? []
-  }
-
-  public updateBackup(name: string, updates: AplBackupRequest): AplBackupResponse {
-    const backup = this.getBackup(name)
-    return updateAplObject(backup, updates) as AplBackupResponse
-  }
-
-  public patchBackup(name: string, updates: DeepPartial<AplBackupRequest>): AplBackupResponse {
-    const backup = this.getBackup(name)
-    const mergeObj = getAplMergeObject(updates)
-    return merge(backup, mergeObj)
-  }
-
-  public deleteBackup(name: string): void {
-    remove(this.teamConfig.backups, (item) => item.metadata.name === name)
   }
 
   // =====================================
