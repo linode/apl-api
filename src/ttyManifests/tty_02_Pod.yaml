@@ -16,7 +16,7 @@ spec:
     runAsGroup: 1001
     fsGroup: 1001
   containers:
-    - image: linode/apl-tty:1.2.5
+    - image: linode/apl-tty:1.2.6
       name: po
       resources:
         requests:
