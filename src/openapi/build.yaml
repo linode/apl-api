@@ -98,7 +98,7 @@ buildMode:
           properties:
             repoUrl:
               description: The URL of the Git repo that contains the application code.
-              $ref: 'definitions.yaml#/url'
+              $ref: 'definitions.yaml#/repoUrl'
               title: Repo URL
             path:
               description: The path to the Dockerfile to execute (defaults to ./Dockerfile).
@@ -147,7 +147,7 @@ buildMode:
           properties:
             repoUrl:
               description: The URL of the Git repo that contains the application code.
-              $ref: 'definitions.yaml#/url'
+              $ref: 'definitions.yaml#/repoUrl'
               title: Repo URL
             path:
               description: 'Optional: A subpath within the repo where the source is located'
