@@ -18,7 +18,6 @@ import {
   ValidationError,
 } from 'src/error'
 import getRepo, { getWorktreeRepo, Git } from 'src/git'
-import { getFileMaps } from 'src/repo'
 import { FileStore } from 'src/fileStore/file-store'
 import { getSettingsFileMaps } from 'src/fileStore/file-map'
 import { cleanSession, getSessionStack } from 'src/middleware'
@@ -1029,7 +1028,7 @@ export default class OtomiStack {
       throw new ForbiddenError('Cannot delete the default platform admin user')
     }
 
-    await this.deleteUserFile(user)
+    await this.deleteUserFile(id)
     await this.doDeleteDeployment([filePath], false)
   }
 
@@ -2435,14 +2434,19 @@ export default class OtomiStack {
     return { filePath, content: aplPlatformObject }
   }
 
-  async deleteUserFile(user: User): Promise<void> {
-    debug(`Deleting user ${user.email}`)
-    const filePath = getResourceFilePath('AplUser', user.email)
+  async deleteUserFile(userId: string): Promise<void> {
+    debug(`Deleting user ${userId}`)
+    const filePath = getResourceFilePath('AplUser', userId)
+
     this.fileStore.delete(filePath)
-    const users: User[] = []
-    users.push(user)
-    const fileMap = getFileMaps('').find((fm) => fm.kind === 'AplUser')!
-    await this.git.deleteConfig({ users }, fileMap, 'secrets.')
+
+    await this.git.removeFile(filePath)
+
+    const secretFilePath = getSecretFilePath(filePath)
+    const secretExists = await this.git.fileExists(secretFilePath)
+    if (secretExists) {
+      await this.git.removeFile(secretFilePath)
+    }
   }
 
   async saveTeam(aplTeamObject: AplTeamObject, secretPaths?: string[]): Promise<AplRecord> {
