@@ -42,7 +42,7 @@ export const setSessionStack = async (editor: string, sessionId: string): Promis
     debug(`Creating session ${sessionId} for user ${editor}`)
     sessions[sessionId] = new OtomiStack(editor, sessionId)
     await sessions[sessionId].initGitWorktree(readOnlyStack.git)
-    sessions[sessionId].repoService = cloneDeep(readOnlyStack.repoService)
+    sessions[sessionId].fileStore.copyFrom(readOnlyStack.fileStore)
   } else sessions[sessionId].sessionId = sessionId
   return sessions[sessionId]
 }

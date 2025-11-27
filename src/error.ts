@@ -14,19 +14,19 @@ export class OtomiError extends CustomError {
 }
 export class ForbiddenError extends OtomiError {
   public constructor(err?: string) {
-    super('Forbidden', err)
+    super(err || 'Forbidden', err)
     this.code = 403
   }
 }
 export class NotExistError extends OtomiError {
   public constructor(err?: string) {
-    super('Not Found', err)
+    super(err || 'Not Found', err)
     this.code = 404
   }
 }
 export class AlreadyExists extends OtomiError {
   public constructor(err?: string) {
-    super('Conflict', err)
+    super(err || 'Conflict', err)
     this.code = 409
   }
 }
@@ -45,7 +45,7 @@ export class PublicUrlExists extends OtomiError {
 }
 export class ValidationError extends OtomiError {
   public constructor(err?: string) {
-    super('Invalid values detected', err)
+    super(err || 'Invalid values detected', err)
     this.code = 422
   }
 }

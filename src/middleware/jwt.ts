@@ -38,8 +38,8 @@ export function getUser(user: JWT, otomi: OtomiStack): SessionUser {
     if (group.substring(0, 5) === 'team-' && !sessionUser.teams.includes(teamId)) {
       // we might be assigned team-* without that team yet existing in the values, so ignore those
       if (otomi.isLoaded) {
-        const existing = otomi.repoService.getTeamConfig(teamId)
-        if (existing) {
+        const exists = otomi.getTeamIds().includes(teamId)
+        if (exists) {
           sessionUser.teams.push(teamId)
         }
       }

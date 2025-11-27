@@ -1,5 +1,6 @@
 import { cloneDeep, merge, omit } from 'lodash'
 import { AplKind, AplRequestObject, AplResponseObject, DeepPartial, ServiceSpec, V1ApiObject } from '../otomi-models'
+import { App } from 'supertest/types'
 
 export function getAplObjectFromV1(kind: AplKind, spec: V1ApiObject | ServiceSpec): AplRequestObject {
   return {
@@ -10,9 +11,18 @@ export function getAplObjectFromV1(kind: AplKind, spec: V1ApiObject | ServiceSpe
     spec,
   } as AplRequestObject
 }
+export function getAplObjectFromApp(kind: AplKind, spec: App, name: string): AplRequestObject {
+  return {
+    kind,
+    metadata: {
+      name,
+    },
+    spec,
+  } as AplRequestObject
+}
 
 export function getV1ObjectFromApl(aplObject: AplResponseObject): V1ApiObject {
-  const teamId = aplObject.metadata.labels['apl.io/teamId']
+  const teamId = aplObject.metadata.labels?.['apl.io/teamId']
   return {
     name: aplObject.metadata.name,
     ...(teamId && { teamId }),
