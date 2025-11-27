@@ -14,7 +14,7 @@ export const getTeamApp = (req: OpenApiRequestExt, res: Response): void => {
  * PUT /v1/apps/{teamId}/{appId}
  * Edit a team app
  */
-export const editApp = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+export const editTeamApp = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, appId } = req.params
-  res.json(await req.otomi.editApp(teamId, appId, req.body as App))
+  res.json(await req.otomi.editTeamApp(teamId, appId, req.body as App))
 }
