@@ -2,6 +2,44 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.13.0](https://github.com/redkubes/otomi-api/compare/v4.12.0...v4.13.0) (2025-12-01)
+
+
+### Features
+
+* load workload values as is ([#832](https://github.com/redkubes/otomi-api/issues/832)) ([d6fae09](https://github.com/redkubes/otomi-api/commit/d6fae0942c75f9fa1516031551cb8d7ee95361c9))
+* provide default cluster tier settings ([#839](https://github.com/redkubes/otomi-api/issues/839)) ([b84ef3a](https://github.com/redkubes/otomi-api/commit/b84ef3a411b5c0aad465af0806d5c14d1cfabb2c))
+* remove httpbin ([#824](https://github.com/redkubes/otomi-api/issues/824)) ([9762c94](https://github.com/redkubes/otomi-api/commit/9762c94a10629e57868b6a69e8ae352a3ccf3886))
+* remove jaeger ([#852](https://github.com/redkubes/otomi-api/issues/852)) ([20056aa](https://github.com/redkubes/otomi-api/commit/20056aa2361ceb10b2bcab160f6d3b2e9d848216))
+* remove velero ([#846](https://github.com/redkubes/otomi-api/issues/846)) ([ae29e26](https://github.com/redkubes/otomi-api/commit/ae29e26237b9938fde0e6beb88e34c8ed0ad1952))
+* removing falco ([#838](https://github.com/redkubes/otomi-api/issues/838)) ([4b1a270](https://github.com/redkubes/otomi-api/commit/4b1a2706019ac23cccaa5973ff5444987753716f))
+* removing kiali ([#834](https://github.com/redkubes/otomi-api/issues/834)) ([e81a921](https://github.com/redkubes/otomi-api/commit/e81a921528f6f8ffbe8ce04ef6c52325a645f8e3))
+* removing kured ([#837](https://github.com/redkubes/otomi-api/issues/837)) ([545c976](https://github.com/redkubes/otomi-api/commit/545c97614e6ede3cadd2d21ee034f09690598bbf))
+* replace openapi-express with openapi-express-validator ([#836](https://github.com/redkubes/otomi-api/issues/836)) ([4638401](https://github.com/redkubes/otomi-api/commit/463840133a44561c0d4166d54657deb8e3883362))
+* upgrade node 24 and uuid ([#825](https://github.com/redkubes/otomi-api/issues/825)) ([ecdc483](https://github.com/redkubes/otomi-api/commit/ecdc483f53122ffba5048137d1e05e6f3ac687d9))
+* values schema json support  ([#818](https://github.com/redkubes/otomi-api/issues/818)) ([e49de9d](https://github.com/redkubes/otomi-api/commit/e49de9dec20c12e2b4f49f83b83cd20c6a2d76d6))
+
+
+### Bug Fixes
+
+* broken links to techdocs ([#835](https://github.com/redkubes/otomi-api/issues/835)) ([0ce8823](https://github.com/redkubes/otomi-api/commit/0ce8823ec12041c1985a94f074977f20a04e6f89))
+* change apl to application platform ([#845](https://github.com/redkubes/otomi-api/issues/845)) ([f148dc6](https://github.com/redkubes/otomi-api/commit/f148dc657cfc58b3d76a2ba50b0b0b0b2c9f1c66))
+* remove smtp settings docs link ([#843](https://github.com/redkubes/otomi-api/issues/843)) ([f89fd1f](https://github.com/redkubes/otomi-api/commit/f89fd1f75a1196ef2bbb3516a1507dfeabb91a37))
+* replace anchors with reference in openapi yaml ([#831](https://github.com/redkubes/otomi-api/issues/831)) ([7d2d4b3](https://github.com/redkubes/otomi-api/commit/7d2d4b317d217c41ac7366b843fc6ac07203d798))
+* updating tty image ([#851](https://github.com/redkubes/otomi-api/issues/851)) ([827b8da](https://github.com/redkubes/otomi-api/commit/827b8daf2c1d324e9f96e4686b11969963b83413))
+
+
+### Others
+
+* **deps:** bump actions/upload-artifact from 4 to 5 ([#821](https://github.com/redkubes/otomi-api/issues/821)) ([659e08f](https://github.com/redkubes/otomi-api/commit/659e08fb26ee6b2d9929dc2fc468699b3a485cd0))
+* **deps:** bump axios from 0.27.2 to 1.12.2 ([#804](https://github.com/redkubes/otomi-api/issues/804)) ([b8e8fce](https://github.com/redkubes/otomi-api/commit/b8e8fcede21771786e7f6079097af8ad364bc914))
+* **deps:** bump dotenv from 16.5.0 to 17.2.3 ([#810](https://github.com/redkubes/otomi-api/issues/810)) ([c2b19e2](https://github.com/redkubes/otomi-api/commit/c2b19e2e7937cc87f62b7f6e9b2890d1fdb7412a))
+* **deps:** bump swagger-ui-express from 4.1.6 to 5.0.1 ([#842](https://github.com/redkubes/otomi-api/issues/842)) ([a89ca4b](https://github.com/redkubes/otomi-api/commit/a89ca4beb42188cefc0bf189d3c8ab5ff62ca910))
+* **deps:** bump the npm-dependencies group across 1 directory with 7 updates ([#833](https://github.com/redkubes/otomi-api/issues/833)) ([1739a3a](https://github.com/redkubes/otomi-api/commit/1739a3aaae98a7b7d9391b87ce46091dd04aa95d))
+* **deps:** bump the npm-dependencies group with 6 updates ([#840](https://github.com/redkubes/otomi-api/issues/840)) ([bec7361](https://github.com/redkubes/otomi-api/commit/bec73611a94ee831ee448c89d9841ed8a12a247e))
+* removed drone ([#844](https://github.com/redkubes/otomi-api/issues/844)) ([b125637](https://github.com/redkubes/otomi-api/commit/b12563756db02ab8cfbb8e86e6428b9d70edf621))
+* updated cloud tty image reference and user ([#823](https://github.com/redkubes/otomi-api/issues/823)) ([57dbb77](https://github.com/redkubes/otomi-api/commit/57dbb77f69ff46a8597ba9e5d5899af9c7181920))
+
 ## [4.12.0](https://github.com/redkubes/otomi-api/compare/v4.11.0...v4.12.0) (2025-10-21)
 
 
