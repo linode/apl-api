@@ -163,7 +163,7 @@ export const rootPath = '/tmp/otomi/values'
 const clusterSettingsFilePath = 'env/settings/cluster.yaml'
 
 function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: string): string {
-  return `env/teams/${teamId}/sealedsecrets/${sealedSecretsName}`
+  return `env/teams/${teamId}/sealedsecrets/${sealedSecretsName}.yaml`
 }
 
 function getTeamWorkloadValuesManagedFilePath(teamId: string, workloadName: string): string {
