@@ -576,9 +576,11 @@ export default class OtomiStack {
     if (!picks) return teamApps
 
     if (picks.includes('enabled')) {
-      teamApps = allApps.map((adminApp) => {
-        const teamApp = teamApps.find((app) => app.id === adminApp.id)
-        return teamApp || { id: adminApp.id, enabled: adminApp.enabled }
+      return teamApps.map((teamApp) => {
+        return {
+          id: teamApp?.id,
+          enabled: Boolean(teamApp?.values?.enabled ?? true),
+        }
       })
     }
 
