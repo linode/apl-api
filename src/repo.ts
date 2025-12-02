@@ -473,7 +473,7 @@ export async function loadFileToSpec(
 ): Promise<void> {
   const jsonPath = getJsonPath(fileMap, filePath)
   try {
-    const data = (await deps.loadYaml(filePath)) || {}
+    const data = (await deps.loadYaml(filePath, { isRaw: fileMap.kind === 'AplTeamWorkloadValues' })) || {}
     // ensure that local path does not include envDir and the leading slash
     const localFilePath = filePath.replace(fileMap.envDir, '').replace(/^\/+/, '')
     // eslint-disable-next-line no-param-reassign

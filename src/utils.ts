@@ -65,12 +65,17 @@ export const flattenObject = (
     }, {})
 }
 
-export const loadYaml = async (path: string, opts?: { noError: boolean }): Promise<Record<string, any> | undefined> => {
+export const loadYaml = async (
+  path: string,
+  opts?: { noError?: boolean; isRaw?: boolean },
+): Promise<Record<string, any> | undefined> => {
   if (!(await pathExists(path))) {
     if (opts?.noError) return undefined
     throw new Error(`${path} does not exist`)
   }
-  return parse(await readFile(path, 'utf-8')) as Record<string, any>
+  const rawFile = await readFile(path, 'utf-8')
+  if (opts?.isRaw) return rawFile as any
+  return parse(rawFile) as Record<string, any>
 }
 
 const valuesSchemaEndpointUrl = `${BASEURL}/apl/schema`
