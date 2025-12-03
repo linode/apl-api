@@ -1079,6 +1079,7 @@ paths:
     get:
       operationId: getDashboard
       x-eov-operation-handler: v1/dashboard
+      x-aclSchema: Dashboard
       parameters:
         - name: teamName
           in: query
