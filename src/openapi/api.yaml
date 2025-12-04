@@ -2651,6 +2651,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/App'
+    put:
+      operationId: editApp
+      x-eov-operation-handler: v1/apps/{teamId}/{appId}
+      description: Edit app values
+      x-aclSchema: App
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/App'
+        description: Edit app values
+        required: true
+      responses:
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '200':
+          description: Successfully edited app values.
   '/alpha/ai/models':
     get:
       operationId: getAIModels

@@ -562,7 +562,10 @@ export default class OtomiStack {
 
     const providerSpecificApps = this.filterExcludedApp(allApps) as App[]
 
-    if (teamId === 'admin') return providerSpecificApps
+    if (teamId === 'admin')
+      return providerSpecificApps.map((app) => {
+        return { ...app, enabled: Boolean(app.values?.enabled ?? true) } as App
+      })
 
     const core = this.getCore()
     let teamApps = providerSpecificApps
