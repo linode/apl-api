@@ -5,8 +5,7 @@ import { rmSync } from 'fs'
 import { copy, ensureDir, pathExists, readFile, writeFile } from 'fs-extra'
 import { unlink } from 'fs/promises'
 import { glob } from 'glob'
-import jsonpath from 'jsonpath'
-import { cloneDeep, get, isEmpty, merge, set, unset } from 'lodash'
+import { isEmpty, merge } from 'lodash'
 import { basename, dirname, join } from 'path'
 import simpleGit, { CheckRepoActions, CleanOptions, CommitResult, ResetMode, SimpleGit } from 'simple-git'
 import {
@@ -23,7 +22,6 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { BASEURL } from './constants'
 import { GitPullError, HttpError, ValidationError } from './error'
 import { Core } from './otomi-models'
-import { FileMap, getFilePath, getResourceName, renderManifest, renderManifestForSecrets } from './repo'
 import { getSanitizedErrorMessage, removeBlankAttributes, sanitizeGitPassword } from './utils'
 
 const debug = Debug('otomi:repo')
@@ -235,91 +233,6 @@ export class Git {
     const data = await this.readFile(file)
     const secretData = await this.readFile(secretFile, true)
     return merge(data, secretData) as Core
-  }
-
-  async saveConfig(
-    config: Record<string, any>,
-    fileMap: FileMap,
-    unsetBlankAttributes?: boolean,
-  ): Promise<Promise<void>> {
-    let jsonPathsValuesPublic
-    if (fileMap.kind === 'AplTeamPolicy') {
-      jsonPathsValuesPublic = jsonpath.nodes(config, '$.teamConfig.*.*')
-    } else {
-      jsonPathsValuesPublic = jsonpath.nodes(config, fileMap.jsonPathExpression)
-    }
-    await Promise.all(
-      jsonPathsValuesPublic.map(async (node) => {
-        const nodePath = node.path
-        const nodeValue = node.value
-        try {
-          const filePath = getFilePath(fileMap, nodePath, nodeValue, '')
-          const manifest = fileMap.v2 ? nodeValue : renderManifest(fileMap, nodePath, nodeValue)
-          await this.writeFile(filePath, manifest, unsetBlankAttributes)
-        } catch (e) {
-          console.log(nodePath)
-          console.log(fileMap)
-          throw e
-        }
-      }),
-    )
-  }
-
-  async saveConfigWithSecrets(
-    config: Record<string, any>,
-    secretJsonPaths: string[],
-    fileMap: FileMap,
-  ): Promise<Promise<void>> {
-    const secretData = {}
-    const plainData = cloneDeep(config)
-    secretJsonPaths.forEach((objectPath) => {
-      const val = get(config, objectPath)
-      if (val) {
-        set(secretData, fileMap.v2 ? objectPath.replace('.spec', '') : objectPath, val)
-        unset(plainData, objectPath)
-      }
-    })
-
-    await this.saveConfig(plainData, fileMap)
-    await this.saveSecretConfig(secretData, fileMap)
-  }
-
-  async saveSecretConfig(secretConfig: Record<string, any>, fileMap: FileMap, unsetBlankAttributes?: boolean) {
-    const jsonPathsValuesSecrets = jsonpath.nodes(secretConfig, fileMap.jsonPathExpression)
-    await Promise.all(
-      jsonPathsValuesSecrets.map(async (node) => {
-        const nodePath = node.path
-        const nodeValue = node.value
-        try {
-          const filePath = getFilePath(fileMap, nodePath, nodeValue, 'secrets.')
-          const resourceName = getResourceName(fileMap, nodePath, nodeValue)
-          const manifest = renderManifestForSecrets(fileMap, resourceName, nodeValue)
-          await this.writeFile(filePath, manifest, unsetBlankAttributes)
-        } catch (e) {
-          console.log(nodePath)
-          console.log(fileMap)
-          throw e
-        }
-      }),
-    )
-  }
-
-  async deleteConfig(config: Record<string, any>, fileMap: FileMap, fileNamePrefix = '') {
-    const jsonPathsValuesSecrets = jsonpath.nodes(config, fileMap.jsonPathExpression)
-    await Promise.all(
-      jsonPathsValuesSecrets.map(async (node) => {
-        const nodePath = node.path
-        const nodeValue = node.value
-        try {
-          const filePath = getFilePath(fileMap, nodePath, nodeValue, fileNamePrefix)
-          await this.removeFile(filePath)
-        } catch (e) {
-          console.log(nodePath)
-          console.log(fileMap)
-          throw e
-        }
-      }),
-    )
   }
 
   isRootClone(): boolean {
