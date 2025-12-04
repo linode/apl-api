@@ -2670,7 +2670,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited app values.
-
   '/alpha/ai/models':
     get:
       operationId: getAIModels
