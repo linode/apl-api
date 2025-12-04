@@ -590,7 +590,7 @@ export default class OtomiStack {
     return teamApps.map((app) => pick(app, picks)) as Array<App>
   }
 
-  async editTeamApp(teamId: string, id: string, data: App): Promise<App> {
+  async editApp(teamId: string, id: string, data: App): Promise<App> {
     let app: App = this.getApp(id)
     // Shallow merge, so only first level attributes can be replaced (values, rawValues, etc.)
     app = { ...app, ...data }
