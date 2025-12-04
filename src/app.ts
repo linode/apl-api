@@ -86,10 +86,10 @@ const resourceStatus = async (errorSet) => {
   const { cluster } = otomiStack.getSettings(['cluster'])
   const domainSuffix = cluster?.domainSuffix
   const resources: Record<string, AplResponseObject[]> = {
-    workloads: otomiStack.repoService.getAllWorkloads(),
-    builds: otomiStack.repoService.getAllBuilds(),
-    services: otomiStack.repoService.getAllServices(),
-    secrets: otomiStack.repoService.getAllSealedSecrets(),
+    workloads: otomiStack.getAllAplWorkloads(),
+    builds: otomiStack.getAllAplBuilds(),
+    services: otomiStack.getAllAplServices(),
+    secrets: otomiStack.getAllAplSealedSecrets(),
   }
   const statusFunctions = {
     workloads: getWorkloadStatus,
@@ -131,6 +131,10 @@ export const loadSpec = async (): Promise<void> => {
 }
 export const getSpec = (): OtomiSpec => {
   return otomiSpec
+}
+export function getSecretPaths(): string[] {
+  const { secretPaths } = getSpec()
+  return secretPaths
 }
 export const getAppSchema = (appId: string): Schema => {
   let id: string = appId
