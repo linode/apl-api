@@ -182,16 +182,29 @@ export class FileStore {
       throw new Error(`Unknown kind: ${kind}`)
     }
 
-    // Generate path prefix from template (e.g., 'env/teams/team1/workloads/')
-    const prefix = fileMap.pathTemplate.replace('{teamId}', teamId || '').replace('{name}.yaml', '')
-
     const result = new Map<string, AplObject>()
-    for (const filePath of this.store.keys()) {
-      if (filePath.startsWith(prefix) && filePath.endsWith('.yaml')) {
-        const content = this.store.get(filePath)
-        if (content) result.set(filePath, content)
+
+    if (teamId) {
+      // Specific team: use exact prefix match (e.g., 'env/teams/team1/workloads/')
+      const prefix = fileMap.pathTemplate.replace('{teamId}', teamId).replace('{name}.yaml', '')
+      for (const filePath of this.store.keys()) {
+        if (filePath.startsWith(prefix) && filePath.endsWith('.yaml')) {
+          const content = this.store.get(filePath)
+          if (content) result.set(filePath, content)
+        }
+      }
+    } else {
+      // All teams: match pattern with any teamId (e.g., 'env/teams/*/workloads/')
+      const pattern = fileMap.pathTemplate.replace('{teamId}', '').replace('{name}.yaml', '')
+      const [beforeTeam, afterTeam] = pattern.split('//')
+      for (const filePath of this.store.keys()) {
+        if (filePath.startsWith(beforeTeam) && filePath.includes(afterTeam) && filePath.endsWith('.yaml')) {
+          const content = this.store.get(filePath)
+          if (content) result.set(filePath, content)
+        }
       }
     }
+
     return result
   }
 
