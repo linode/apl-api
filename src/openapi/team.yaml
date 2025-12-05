@@ -110,7 +110,6 @@ Team:
       - update
     teamMember:
       - read
-      - update
   type: object
   x-externalDocsPath: platform-teams
 
