@@ -1,15 +1,15 @@
 // The in-memory key-value store: file path -> parsed content
-import path from 'path'
-import { globSync } from 'glob'
+import Debug from 'debug'
 import { ensureDir } from 'fs-extra'
 import { writeFile } from 'fs/promises'
+import { globSync } from 'glob'
+import { merge } from 'lodash'
+import path from 'path'
 import { stringify as stringifyYaml } from 'yaml'
 import { z } from 'zod'
-import { merge } from 'lodash'
+import { APL_KINDS, AplKind, AplObject, AplPlatformObject, AplRecord, AplTeamObject } from '../otomi-models'
 import { loadYaml } from '../utils'
 import { getFileMapForKind, getFileMaps, getResourceFilePath } from './file-map'
-import { APL_KINDS, AplKind, AplObject, AplPlatformObject, AplRecord, AplTeamObject } from '../otomi-models'
-import Debug from 'debug'
 
 const debug = Debug('otomi:file-store')
 
@@ -44,6 +44,10 @@ function shouldSkipValidation(filePath: string): boolean {
   return filePath.includes('/sealedsecrets/') || filePath.includes('/workloadValues/')
 }
 
+function isRawContent(filePath: string): boolean {
+  return filePath.includes('/workloadValues/')
+}
+
 export class FileStore {
   private store: Map<string, AplObject> = new Map()
 
@@ -68,7 +72,7 @@ export class FileStore {
 
     await Promise.all(
       filesToLoad.map(async (filePath) => {
-        const rawContent = await loadYaml(filePath)
+        const rawContent = await loadYaml(filePath, { isRaw: isRawContent(filePath) })
         const relativePath = path.relative(envDir, filePath).replace(/\.dec$/, '')
 
         // Skip validation for specific file paths
