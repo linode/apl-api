@@ -9,7 +9,7 @@
     }
   },
   "dependencies": {
-    "@apidevtools/json-schema-ref-parser": "14.2.1",
+    "@apidevtools/json-schema-ref-parser": "15.1.2",
     "@casl/ability": "6.7.3",
     "@kubernetes/client-node": "1.4.0",
     "@linode/api-v4": "0.153.0",
