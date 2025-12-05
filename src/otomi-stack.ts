@@ -562,7 +562,10 @@ export default class OtomiStack {
 
     const providerSpecificApps = this.filterExcludedApp(allApps) as App[]
 
-    if (teamId === 'admin') return providerSpecificApps
+    if (teamId === 'admin')
+      return providerSpecificApps.map((app) => {
+        return { ...app, enabled: Boolean(app.values?.enabled ?? true) } as App
+      })
 
     const core = this.getCore()
     let teamApps = providerSpecificApps
@@ -587,7 +590,7 @@ export default class OtomiStack {
     return teamApps.map((app) => pick(app, picks)) as Array<App>
   }
 
-  async editTeamApp(teamId: string, id: string, data: App): Promise<App> {
+  async editApp(teamId: string, id: string, data: App): Promise<App> {
     let app: App = this.getApp(id)
     // Shallow merge, so only first level attributes can be replaced (values, rawValues, etc.)
     app = { ...app, ...data }
@@ -613,7 +616,11 @@ export default class OtomiStack {
           const orig = this.getApp(id)
           if (orig && this.canToggleApp(id)) {
             const filePath = getResourceFilePath('AplApp', id)
-            const aplApp = toPlatformObject('AplApp', id, { enabled, ...orig.values })
+            const aplApp = toPlatformObject('AplApp', id, {
+              ...orig,
+              enabled,
+              values: { ...orig.values, enabled },
+            })
             this.fileStore.set(filePath, aplApp)
 
             const app = { ...orig, enabled }
@@ -1645,8 +1652,13 @@ export default class OtomiStack {
     const teamObject = toTeamObject(teamId, data)
     const aplRecord = await this.saveTeamWorkload(teamObject)
 
-    await this.saveTeamWorkloadValues(teamId, data.metadata.name, data.spec.values || '{}', true)
-    await this.doDeployment(aplRecord, false)
+    const valuesAplRecord = await this.saveTeamWorkloadValues(
+      teamId,
+      data.metadata.name,
+      data.spec.values || '{}',
+      true,
+    )
+    await this.doDeployments([aplRecord, valuesAplRecord], false)
     return aplRecord.content as AplWorkloadResponse
   }
 
@@ -1685,9 +1697,11 @@ export default class OtomiStack {
     const aplRecord = await this.saveTeamWorkload(teamObject)
     const workloadResponse = aplRecord.content as AplWorkloadResponse
     if (data.spec && 'values' in data.spec) {
-      await this.saveTeamWorkloadValues(teamId, name, data.spec.values!)
+      const valuesAplRecord = await this.saveTeamWorkloadValues(teamId, name, data.spec.values!)
+      await this.doDeployments([aplRecord, valuesAplRecord], false)
+    } else {
+      await this.doDeployment(aplRecord, false)
     }
-    await this.doDeployment(aplRecord, false)
     return workloadResponse
   }
 
