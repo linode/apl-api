@@ -10,7 +10,7 @@ Cluster:
     teamMember:
       - read-any
   title: Cluster
-  description: The Kubernetes cluster running APL.
+  description: The Kubernetes cluster running App Platform.
   properties:
     name:
       title: Name
@@ -31,6 +31,16 @@ Cluster:
       default: otomi
     provider:
       $ref: 'definitions.yaml#/provider'
+    linode:
+      additionalProperties: false
+      properties:
+        tier:
+          type: string
+          description: Linode Kubernetes Engine tier (standard LKE or enterprise LKE-E)
+          default: standard
+          enum:
+            - standard
+            - enterprise
     defaultStorageClass:
       title: Default storage class
       type: string

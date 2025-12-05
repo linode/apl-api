@@ -22,9 +22,16 @@ export function errorMiddleware(e, req: OpenApiRequest, res: Response, next): vo
   } else if (Number.isNaN(Number(code))) {
     code = 500
     msg = `${HttpError.fromCode(500).message}`
-  } else if (code === 400 && e?.errors[0].errorCode.includes('openapi.requestValidation')) {
-    const requiredProperties = e?.errors.map((item: any) => item?.path).join(', ')
-    msg = `Required property missing! '${requiredProperties}'`
+  } else if (code === 400 && e?.errors?.length > 0) {
+    // Handle both express-openapi and express-openapi-validator validation errors
+    const errorCode = e?.errors[0]?.errorCode || ''
+    if (errorCode.includes('openapi.requestValidation') || errorCode.includes('request')) {
+      const requiredProperties = e?.errors.map((item: any) => item?.path || item?.dataPath).join(', ')
+      msg = `Required property missing! '${requiredProperties}'`
+    } else if (e?.errors[0]?.message) {
+      // express-openapi-validator format
+      msg = e.errors.map((err: any) => err.message).join(', ')
+    }
   }
   const { otomi } = req as any
   if (otomi?.sessionId && otomi?.sessionId !== 'main') cleanSession(otomi.sessionId as string)

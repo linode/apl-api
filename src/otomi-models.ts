@@ -1,13 +1,10 @@
 import { Request } from 'express'
 import { JSONSchema4 } from 'json-schema'
-import { components, external, operations, paths } from 'src/generated-schema'
+import { components, operations, paths } from 'src/generated-schema'
 import OtomiStack from 'src/otomi-stack'
 
 export type App = components['schemas']['App']
 export type AppList = components['schemas']['AppList']
-export type Backup = components['schemas']['Backup']
-export type AplBackupRequest = components['schemas']['AplBackupRequest']
-export type AplBackupResponse = components['schemas']['AplBackupResponse']
 export type AplKnowledgeBaseRequest = components['schemas']['AplKnowledgeBaseRequest']
 export type AplKnowledgeBaseResponse = components['schemas']['AplKnowledgeBaseResponse']
 export type AplAgentRequest = components['schemas']['AplAgentRequest']
@@ -74,7 +71,6 @@ export type Otomi = Settings['otomi']
 export type Versions = Settings['versions']
 
 export type AplRequestObject =
-  | AplBackupRequest
   | AplBuildRequest
   | AplCodeRepoRequest
   | AplKnowledgeBaseRequest
@@ -86,7 +82,6 @@ export type AplRequestObject =
   | AplWorkloadRequest
   | AplTeamSettingsRequest
 export type AplResponseObject =
-  | AplBackupResponse
   | AplBuildResponse
   | AplCodeRepoResponse
   | AplKnowledgeBaseResponse
@@ -97,47 +92,99 @@ export type AplResponseObject =
   | AplServiceResponse
   | AplWorkloadResponse
   | AplTeamSettingsResponse
-export type AplKind =
-  | 'AplApp'
-  | 'AplAlertSet'
-  | 'AplCluster'
-  | 'AplDatabase'
-  | 'AplDns'
-  | 'AplIngress'
-  | 'AplObjectStorage'
-  | 'AplKms'
-  | 'AplIdentityProvider'
-  | 'AplCapabilitySet'
-  | 'AplSmtp'
-  | 'AplBackupCollection'
-  | 'AplUser'
-  | 'AplPlatformSettingSet'
-  | 'AkamaiKnowledgeBase'
-  | 'AkamaiAgent'
-  | 'AplTeamCodeRepo'
-  | 'AplTeamBuild'
-  | 'AplTeamPolicy'
-  | 'AplTeamSettingSet'
-  | 'AplTeamNetworkControl'
-  | 'AplTeamBackup'
-  | 'AplTeamSecret'
-  | 'AplTeamService'
-  | 'AplTeamWorkload'
-  | 'AplTeamWorkloadValues'
-  | 'AplTeamTool'
-  | 'AplVersion'
+export const APL_KINDS = [
+  'AplApp',
+  'AplAlertSet',
+  'AplCluster',
+  'AplDatabase',
+  'AplDns',
+  'AplIngress',
+  'AplObjectStorage',
+  'AplKms',
+  'AplIdentityProvider',
+  'AplCapabilitySet',
+  'AplSmtp',
+  'AplBackupCollection',
+  'AplUser',
+  'AplPlatformSettingSet',
+  'AkamaiKnowledgeBase',
+  'AkamaiAgent',
+  'AplTeamCodeRepo',
+  'AplTeamBuild',
+  'AplTeamPolicy',
+  'AplTeamSettingSet',
+  'AplTeamNetworkControl',
+  'AplTeamSecret',
+  'AplTeamService',
+  'AplTeamWorkload',
+  'AplTeamWorkloadValues',
+  'AplTeamTool',
+  'AplVersion',
+] as const
+export type AplKind = (typeof APL_KINDS)[number]
 export type V1ApiObject = Build | CodeRepo | Netpol | SealedSecret | Service | Workload
+
+// AplObject: The disk storage format with optional labels and status
+export type AplObject = {
+  kind: AplKind
+  metadata: {
+    name: string
+    labels?: Record<string, string>
+  }
+  spec: Record<string, any>
+  status?: Record<string, any>
+}
+
+export type AplTeamObject = {
+  kind: AplKind
+  metadata: {
+    name: string
+    labels: {
+      'apl.io/teamId': string
+    }
+  }
+  spec: Record<string, any>
+}
+
+export type AplPlatformObject = {
+  kind: AplKind
+  metadata: {
+    name: string
+  }
+  spec: Record<string, any>
+}
+
+export type AplRecord = {
+  filePath: string
+  content: AplObject
+}
 
 export type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T
 
 export interface OpenApiRequest extends Request {
-  operationDoc: {
+  // Support both express-openapi and express-openapi-validator
+  operationDoc?: {
     responses: { '200'?: { content: { 'application/json': { schema: { $ref: string } } } } }
-
     security: any[]
     operationId: string
+    'x-aclSchema'?: string
   }
-  apiDoc: OpenAPIDoc
+  apiDoc?: OpenAPIDoc
+  // express-openapi-validator uses req.openapi
+  openapi?: {
+    schema: {
+      responses?: { '200'?: { content: { 'application/json': { schema: { $ref: string } } } } }
+      security?: any[]
+      operationId?: string
+      'x-aclSchema'?: string
+    }
+    // Path parameters parsed from the URL (e.g., {teamId} -> pathParams.teamId)
+    pathParams?: Record<string, any>
+    // The Express route pattern (e.g., /v1/teams/:teamId/coderepos)
+    expressRoute?: string
+    // The OpenAPI route pattern (e.g., /v1/teams/{teamId}/coderepos)
+    openApiRoute?: string
+  }
   session: Session
   user?: SessionUser
 }
@@ -165,7 +212,6 @@ export interface OtomiSpec {
   components: components
   paths: paths
   operations: operations
-  external: external
 }
 
 export type SchemaType = 'object' | 'array'
@@ -252,11 +298,11 @@ export interface Repo {
   users: User[]
   versions: Versions
   teamConfig: Record<string, TeamConfig>
+  files: Record<string, string>
 }
 
 export interface TeamConfig {
   apps: App[]
-  backups: AplBackupResponse[]
   builds: AplBuildResponse[]
   codeRepos: AplCodeRepoResponse[]
   knowledgeBases: AplKnowledgeBaseResponse[]
@@ -267,4 +313,45 @@ export interface TeamConfig {
   services: AplServiceResponse[]
   settings: AplTeamSettingsResponse
   workloads: AplWorkloadResponse[]
+}
+
+export function toTeamObject(teamId: string, request: AplRequestObject): AplTeamObject {
+  return {
+    kind: request.kind,
+    metadata: {
+      name: request.metadata.name,
+      labels: {
+        'apl.io/teamId': teamId,
+      },
+    },
+    spec: request.spec,
+  }
+}
+
+export function buildTeamObject(existing: AplResponseObject, updatedSpec: Record<string, any>): AplTeamObject {
+  return {
+    kind: existing.kind,
+    metadata: {
+      name: existing.metadata.name,
+      labels: existing.metadata.labels as { 'apl.io/teamId': string },
+    },
+    spec: updatedSpec,
+  }
+}
+
+export function buildPlatformObject(kind: AplKind, name: string, spec: Record<string, any>): AplPlatformObject {
+  return {
+    kind,
+    metadata: { name },
+    spec,
+  }
+}
+
+export function toPlatformObject(kind: AplKind, name: string, spec: Record<string, any>): AplObject {
+  return {
+    kind,
+    metadata: { name },
+    spec,
+    status: {},
+  }
 }

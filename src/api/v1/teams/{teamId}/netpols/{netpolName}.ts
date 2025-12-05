@@ -1,37 +1,40 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { Netpol, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:teams:netpols')
 
-export default function (): OperationHandlerArray {
-  const del: Operation = [
-    async ({ otomi, params: { teamId, netpolName } }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`deleteNetpol(${netpolName})`)
-      await otomi.deleteNetpol(decodeURIComponent(teamId), decodeURIComponent(netpolName))
-      res.json({})
-    },
-  ]
-  const get: Operation = [
-    ({ otomi, params: { teamId, netpolName } }: OpenApiRequestExt, res): void => {
-      debug(`getNetpol(${netpolName})`)
-      const data = otomi.getNetpol(decodeURIComponent(teamId), decodeURIComponent(netpolName))
-      res.json(data)
-    },
-  ]
-  const put: Operation = [
-    async ({ otomi, params: { teamId, netpolName }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`editNetpol(${netpolName})`)
-      const data = await otomi.editNetpol(decodeURIComponent(teamId), decodeURIComponent(netpolName), {
-        ...body,
-      } as Netpol)
-      res.json(data)
-    },
-  ]
-  const api = {
-    delete: del,
-    get,
-    put,
-  }
-  return api
+/**
+ * GET /v1/teams/{teamId}/netpols/{netpolName}
+ * Get a specific network policy
+ */
+export const getNetpol = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId, netpolName } = req.params
+  debug(`getNetpol(${netpolName})`)
+  const data = req.otomi.getNetpol(decodeURIComponent(teamId), decodeURIComponent(netpolName))
+  res.json(data)
+}
+
+/**
+ * PUT /v1/teams/{teamId}/netpols/{netpolName}
+ * Edit a network policy
+ */
+export const editNetpol = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, netpolName } = req.params
+  debug(`editNetpol(${netpolName})`)
+  const data = await req.otomi.editNetpol(decodeURIComponent(teamId), decodeURIComponent(netpolName), {
+    ...req.body,
+  } as Netpol)
+  res.json(data)
+}
+
+/**
+ * DELETE /v1/teams/{teamId}/netpols/{netpolName}
+ * Delete a network policy
+ */
+export const deleteNetpol = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, netpolName } = req.params
+  debug(`deleteNetpol(${netpolName})`)
+  await req.otomi.deleteNetpol(decodeURIComponent(teamId), decodeURIComponent(netpolName))
+  res.json({})
 }

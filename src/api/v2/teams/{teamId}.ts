@@ -1,43 +1,49 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { AplTeamSettingsRequest, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams')
 
-export default function (): OperationHandlerArray {
-  const del: Operation = [
-    async ({ otomi, params: { teamId } }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`deleteTeam(${teamId})`)
-      await otomi.deleteTeam(teamId)
-      res.json({})
-    },
-  ]
-  const get: Operation = [
-    ({ otomi, params: { teamId } }: OpenApiRequestExt, res): void => {
-      debug(`getTeam(${teamId})`)
-      const data = otomi.getAplTeam(teamId)
-      res.json(data)
-    },
-  ]
-  const put: Operation = [
-    async ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`editTeam(${teamId})`)
-      const data = await otomi.editAplTeam(teamId, body as AplTeamSettingsRequest)
-      res.json(data)
-    },
-  ]
-  const patch: Operation = [
-    async ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`editTeam(${teamId}, patch)`)
-      const data = await otomi.editAplTeam(teamId, body as AplTeamSettingsRequest, true)
-      res.json(data)
-    },
-  ]
-  const api = {
-    delete: del,
-    get,
-    put,
-    patch,
-  }
-  return api
+/**
+ * GET /v2/teams/{teamId}
+ * Get a specific team
+ */
+export const getAplTeam = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId } = req.params
+  debug(`getTeam(${teamId})`)
+  const data = req.otomi.getAplTeam(teamId)
+  res.json(data)
+}
+
+/**
+ * PUT /v2/teams/{teamId}
+ * Edit a team
+ */
+export const editAplTeam = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId } = req.params
+  debug(`editTeam(${teamId})`)
+  const data = await req.otomi.editAplTeam(teamId, req.body as AplTeamSettingsRequest)
+  res.json(data)
+}
+
+/**
+ * PATCH /v2/teams/{teamId}
+ * Partially update a team
+ */
+export const patchAplTeam = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId } = req.params
+  debug(`editTeam(${teamId}, patch)`)
+  const data = await req.otomi.editAplTeam(teamId, req.body as AplTeamSettingsRequest, true)
+  res.json(data)
+}
+
+/**
+ * DELETE /v2/teams/{teamId}
+ * Delete team
+ */
+export const deleteAplTeam = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId } = req.params
+  debug(`deleteTeam(${teamId})`)
+  await req.otomi.deleteTeam(teamId)
+  res.json({})
 }

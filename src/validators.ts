@@ -22,7 +22,6 @@ export const VERSIONS = json({
   },
 })
 export const CUSTOM_ROOT_CA = str({ desc: 'The root CA used for certs', default: undefined })
-export const DRONE_WEBHOOK_SECRET = str({ desc: 'The drone secret to validate incoming webhooks', default: undefined })
 export const EDITOR_INACTIVITY_TIMEOUT = num({
   desc: 'Inactivity timeout in days after which editor session is removed to clean mem',
   default: 1,
@@ -62,13 +61,13 @@ export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '
 export const PREINSTALLED_EXCLUDED_APPS = json({
   desc: 'Applications that are managed by Linode, so they should be excluded from the apps page',
   default: {
-    apps: ['cert-manager', 'minio', 'kured', 'velero', 'drone', 'external-dns'],
+    apps: ['cert-manager', 'minio', 'external-dns'],
   },
 })
 export const HIDDEN_APPS = json({
   desc: 'Applications that are hidden from the apps page',
   default: {
-    apps: ['falco'],
+    apps: [''],
   },
 })
 export const OBJ_STORAGE_APPS = json({
@@ -77,7 +76,6 @@ export const OBJ_STORAGE_APPS = json({
     { appId: 'harbor', required: false },
     { appId: 'loki', required: false },
     { appId: 'tempo', required: true },
-    { appId: 'velero', required: true },
     { appId: 'thanos', required: true },
     { appId: 'kubeflow-pipelines', required: true },
   ],

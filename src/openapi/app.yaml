@@ -8,21 +8,16 @@ AppList:
     - argocd
     - cert-manager
     - cnpg
-    - drone
     - external-dns
-    - falco
     - gitea
     - grafana
     - harbor
     - ingress-nginx
     - istio
-    - jaeger
     - keycloak
-    - kiali
     - knative
     - kserve
     - kubeflow-pipelines
-    - kured
     - kyverno
     - loki
     - minio
@@ -34,7 +29,6 @@ AppList:
     - sealed-secrets
     - tempo
     - trivy
-    - velero
 
 App:
   x-acl:

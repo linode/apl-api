@@ -75,6 +75,7 @@ export default defineConfig([
           varsIgnorePattern: '^_',
         },
       ],
+      
       '@typescript-eslint/no-use-before-define': ['error'],
       '@typescript-eslint/restrict-template-expressions': 'off',
       '@typescript-eslint/naming-convention': [

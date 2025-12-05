@@ -2,8 +2,7 @@ import $parser from '@apidevtools/json-schema-ref-parser'
 import cors from 'cors'
 import Debug from 'debug'
 import express from 'express'
-import 'express-async-errors'
-import { initialize } from 'express-openapi'
+import * as OpenApiValidator from 'express-openapi-validator'
 import { Server } from 'http'
 import { createLightship } from 'lightship'
 import logger from 'morgan'
@@ -11,21 +10,20 @@ import path from 'path'
 import { CleanOptions } from 'simple-git'
 import { default as Authz } from 'src/authz'
 import {
-  authzMiddleware,
   errorMiddleware,
   getIo,
   getSessionStack,
+  groupAuthzSecurityHandler,
   jwtMiddleware,
   sessionMiddleware,
 } from 'src/middleware'
 import { setMockIdx } from 'src/mocks'
-import { AplResponseObject, OpenAPIDoc, OpenApiRequestExt, Schema } from 'src/otomi-models'
+import { AplResponseObject, OpenAPIDoc, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
 import {
   CHECK_LATEST_COMMIT_INTERVAL,
   cleanEnv,
-  DRONE_WEBHOOK_SECRET,
   EXPRESS_PAYLOAD_LIMIT,
   GIT_PASSWORD,
   GIT_PUSH_RETRIES,
@@ -36,7 +34,6 @@ import giteaCheckLatest from './gitea/connect'
 import { getBuildStatus, getSealedSecretStatus, getServiceStatus, getWorkloadStatus } from './k8s_operations'
 
 const env = cleanEnv({
-  DRONE_WEBHOOK_SECRET,
   CHECK_LATEST_COMMIT_INTERVAL,
   GIT_USER,
   GIT_PASSWORD,
@@ -89,10 +86,10 @@ const resourceStatus = async (errorSet) => {
   const { cluster } = otomiStack.getSettings(['cluster'])
   const domainSuffix = cluster?.domainSuffix
   const resources: Record<string, AplResponseObject[]> = {
-    workloads: otomiStack.repoService.getAllWorkloads(),
-    builds: otomiStack.repoService.getAllBuilds(),
-    services: otomiStack.repoService.getAllServices(),
-    secrets: otomiStack.repoService.getAllSealedSecrets(),
+    workloads: otomiStack.getAllAplWorkloads(),
+    builds: otomiStack.getAllAplBuilds(),
+    services: otomiStack.getAllAplServices(),
+    secrets: otomiStack.getAllAplSealedSecrets(),
   }
   const statusFunctions = {
     workloads: getWorkloadStatus,
@@ -135,6 +132,10 @@ export const loadSpec = async (): Promise<void> => {
 export const getSpec = (): OtomiSpec => {
   return otomiSpec
 }
+export function getSecretPaths(): string[] {
+  const { secretPaths } = getSpec()
+  return secretPaths
+}
 export const getAppSchema = (appId: string): Schema => {
   let id: string = appId
   if (appId.startsWith('ingress-nginx')) id = 'ingress-nginx-platform'
@@ -147,7 +148,8 @@ export const getAppList = (): string[] => {
 }
 
 export async function initApp(inOtomiStack?: OtomiStack) {
-  const lightship = createLightship()
+  // Only create lightship in production (not in tests)
+  const lightship = env.isTest ? null : createLightship()
   const app = express()
   const apiRoutesPath = path.resolve(__dirname, 'api')
   await loadSpec()
@@ -177,15 +179,15 @@ export async function initApp(inOtomiStack?: OtomiStack) {
     server = app
       .listen(PORT, async () => {
         debug(`Listening on :::${PORT}`)
-        lightship.signalReady()
+        lightship?.signalReady()
         // Clone repo after the application is ready to avoid Pod NotReady phenomenon, and thus infinite Pod crash loopback
         ;(await getSessionStack()).initGit()
       })
       .on('error', (e) => {
         console.error(e)
-        lightship.shutdown()
+        lightship?.shutdown()
       })
-    lightship.registerShutdownHandler(() => {
+    lightship?.registerShutdownHandler(() => {
       ;(server as Server).close()
     })
   }
@@ -203,29 +205,31 @@ export async function initApp(inOtomiStack?: OtomiStack) {
     }, emitResourceStatusInterval)
   }
   app.use(sessionMiddleware(server as Server))
-  // and register session middleware
-  // now we can initialize the more specific routes
-  initialize({
-    // @ts-ignore
-    apiDoc: {
-      ...otomiSpec.spec,
-      'x-express-openapi-additional-middleware': [authzMiddleware(authz)],
-    },
-    app,
-    dependencies: {
-      authz,
-    },
-    enableObjectCoercion: true,
-    paths: apiRoutesPath,
-    errorMiddleware,
-    securityHandlers: {
-      groupAuthz: (req: OpenApiRequestExt): boolean => {
-        return !!req.user
+
+  // Store authz in app.locals so handlers can access it
+  app.locals.authz = authz
+
+  // Install OpenApiValidator middleware
+  app.use(
+    OpenApiValidator.middleware({
+      apiSpec: path.join(__dirname, 'generated-schema.json'),
+      validateRequests: {
+        allowUnknownQueryParameters: false,
+        coerceTypes: 'array', // coerce scalar data to an array with one element and vice versa (as required by the schema).
       },
-    },
-    routesGlob: '**/*.{ts,js}',
-    routesIndexFileRegExp: /(?:index)?\.[tj]s$/,
-  })
+      validateResponses: false, // Start with false, can enable later for debugging
+      validateSecurity: env.isDev
+        ? false
+        : {
+            handlers: { groupAuthz: groupAuthzSecurityHandler },
+          },
+      operationHandlers: path.join(__dirname, 'api'), // Enable operation handlers
+      ignorePaths: /\/api-docs/, // Exclude swagger docs
+    }),
+  )
+  // Register error middleware
+  app.use(errorMiddleware)
+
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   app.use('/api-docs/swagger', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
   return app

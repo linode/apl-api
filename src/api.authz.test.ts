@@ -7,10 +7,10 @@ import request from 'supertest'
 import { HttpError } from './error'
 import { Git } from './git'
 import { getSessionStack } from './middleware'
-import { App, CodeRepo, Repo, SealedSecret } from './otomi-models'
-import { RepoService } from './services/RepoService'
+import { App, CodeRepo, SealedSecret } from './otomi-models'
 import * as getValuesSchemaModule from './utils'
 import TestAgent from 'supertest/lib/agent'
+import { FileStore } from './fileStore/file-store'
 
 const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
@@ -40,22 +40,33 @@ describe('API authz tests', () => {
   beforeAll(async () => {
     const _otomiStack = await getSessionStack()
     _otomiStack.git = mockDeep<Git>()
-    _otomiStack.transformApps = jest.fn().mockReturnValue([])
-    _otomiStack.repoService = new RepoService({} as Repo)
+    _otomiStack.fileStore = new FileStore()
     otomiStack = _otomiStack as jest.Mocked<OtomiStack>
 
     otomiStack.saveTeam = jest.fn().mockResolvedValue(undefined)
-    otomiStack.doRepoDeployment = jest.fn().mockImplementation(() => Promise.resolve())
-    otomiStack.doTeamDeployment = jest.fn().mockImplementation(() => Promise.resolve())
+    otomiStack.doDeleteDeployment = jest.fn().mockImplementation(() => Promise.resolve())
+    otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
+    otomiStack.fileStore.set('env/teams/team1/settings.yaml', {
+      kind: 'AplTeamSettingSet',
+      spec: {},
+      metadata: {
+        name: 'team1',
+        labels: {
+          'apl.io/teamId': 'team1',
+        },
+      },
+    })
+    otomiStack.fileStore.set('env/teams/team2/settings.yaml', {
+      kind: 'AplTeamSettingSet',
+      spec: {},
+      metadata: {
+        name: 'team2',
+        labels: {
+          'apl.io/teamId': 'team2',
+        },
+      },
+    })
     otomiStack.isLoaded = true
-    await otomiStack.createTeam({
-      name: 'team1',
-      resourceQuota: [],
-    })
-    await otomiStack.createTeam({
-      name: 'team2',
-      resourceQuota: [],
-    })
     app = await initApp(otomiStack)
     agent = request.agent(app)
     agent.set('Accept', 'application/json')
@@ -79,7 +90,6 @@ describe('API authz tests', () => {
         .put('/v1/settings/alerts')
         .send({
           alerts: {
-            drone: ['msteams'],
             groupInterval: '5m',
             msteams: { highPrio: 'bla', lowPrio: 'bla' },
             receivers: ['slack'],
@@ -93,6 +103,7 @@ describe('API authz tests', () => {
   })
 
   test('platform admin can update team self-service-flags', async () => {
+    jest.spyOn(otomiStack, 'editTeam').mockReturnValue({} as any)
     await agent
       .put('/v1/teams/team1')
       .send({
@@ -161,10 +172,6 @@ describe('API authz tests', () => {
       .set('Authorization', `Bearer ${teamMemberToken}`)
       .expect(403)
       .expect('Content-Type', /json/)
-  })
-
-  test('team member cannot delete all teams', async () => {
-    await agent.delete('/v1/teams').set('Authorization', `Bearer ${teamMemberToken}`).expect(404)
   })
 
   test('team member cannot create a new team', async () => {
@@ -322,7 +329,7 @@ describe('API authz tests', () => {
   })
 
   test('anonymous user should get api spec', async () => {
-    await agent.get('/apiDocs').expect(200).expect('Content-Type', /json/)
+    await agent.get('/v1/apiDocs').expect(200).expect('Content-Type', /json/)
   })
 
   test('anonymous user cannot get a specific team', async () => {
@@ -751,6 +758,7 @@ describe('API authz tests', () => {
     })
 
     test('platform admin can update policies', async () => {
+      jest.spyOn(otomiStack, 'editAplPolicy').mockReturnValue({} as any)
       await agent
         .put('/v1/teams/team1/policies/disallow-selinux')
         .send(data)
@@ -848,7 +856,7 @@ describe('API authz tests', () => {
     })
 
     test('platform admin can get knowledge bases', async () => {
-      jest.spyOn(otomiStack, 'getAplKnowledgeBases').mockResolvedValue([])
+      jest.spyOn(otomiStack, 'getAplKnowledgeBases').mockReturnValue([])
       await agent
         .get('/alpha/teams/team1/kb')
         .set('Authorization', `Bearer ${platformAdminToken}`)
@@ -857,7 +865,7 @@ describe('API authz tests', () => {
     })
 
     test('team admin can get knowledge bases', async () => {
-      jest.spyOn(otomiStack, 'getAplKnowledgeBases').mockResolvedValue([])
+      jest.spyOn(otomiStack, 'getAplKnowledgeBases').mockReturnValue([])
       await agent
         .get('/alpha/teams/team1/kb')
         .set('Authorization', `Bearer ${teamAdminToken}`)
@@ -866,7 +874,7 @@ describe('API authz tests', () => {
     })
 
     test('team member can get knowledge bases', async () => {
-      jest.spyOn(otomiStack, 'getAplKnowledgeBases').mockResolvedValue([])
+      jest.spyOn(otomiStack, 'getAplKnowledgeBases').mockReturnValue([])
       await agent
         .get('/alpha/teams/team1/kb')
         .set('Authorization', `Bearer ${teamMemberToken}`)
@@ -1009,7 +1017,7 @@ describe('API authz tests', () => {
     })
 
     test('platform admin can get agents', async () => {
-      jest.spyOn(otomiStack, 'getAplAgents').mockResolvedValue([])
+      jest.spyOn(otomiStack, 'getAplAgents').mockReturnValue([])
       await agent
         .get('/alpha/teams/team1/agents')
         .set('Authorization', `Bearer ${platformAdminToken}`)
@@ -1018,7 +1026,7 @@ describe('API authz tests', () => {
     })
 
     test('team admin can get agents', async () => {
-      jest.spyOn(otomiStack, 'getAplAgents').mockResolvedValue([])
+      jest.spyOn(otomiStack, 'getAplAgents').mockReturnValue([])
       await agent
         .get('/alpha/teams/team1/agents')
         .set('Authorization', `Bearer ${teamAdminToken}`)
@@ -1027,7 +1035,7 @@ describe('API authz tests', () => {
     })
 
     test('team member can get agents', async () => {
-      jest.spyOn(otomiStack, 'getAplAgents').mockResolvedValue([])
+      jest.spyOn(otomiStack, 'getAplAgents').mockReturnValue([])
       await agent
         .get('/alpha/teams/team1/agents')
         .set('Authorization', `Bearer ${teamMemberToken}`)
@@ -1036,7 +1044,7 @@ describe('API authz tests', () => {
     })
 
     test('platform admin can get specific agent', async () => {
-      jest.spyOn(otomiStack, 'getAplAgent').mockResolvedValue({} as any)
+      jest.spyOn(otomiStack, 'getAplAgent').mockReturnValue({} as any)
       await agent
         .get('/alpha/teams/team1/agents/test-agent')
         .set('Authorization', `Bearer ${platformAdminToken}`)
@@ -1045,7 +1053,7 @@ describe('API authz tests', () => {
     })
 
     test('team admin can get specific agent', async () => {
-      jest.spyOn(otomiStack, 'getAplAgent').mockResolvedValue({} as any)
+      jest.spyOn(otomiStack, 'getAplAgent').mockReturnValue({} as any)
       await agent
         .get('/alpha/teams/team1/agents/test-agent')
         .set('Authorization', `Bearer ${teamAdminToken}`)
@@ -1054,7 +1062,7 @@ describe('API authz tests', () => {
     })
 
     test('team member can get specific agent', async () => {
-      jest.spyOn(otomiStack, 'getAplAgent').mockResolvedValue({} as any)
+      jest.spyOn(otomiStack, 'getAplAgent').mockReturnValue({} as any)
       await agent
         .get('/alpha/teams/team1/agents/test-agent')
         .set('Authorization', `Bearer ${teamMemberToken}`)

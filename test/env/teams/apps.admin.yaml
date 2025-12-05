@@ -5,26 +5,20 @@ teamConfig:
             argocd: {}
             cert-manager: {}
             cnpg: {}
-            drone: {}
             external-dns: {}
             gitea: {}
             grafana: {}
             harbor: {}
             ingress-nginx: {}
             istio: {}
-            jaeger: {}
             keycloak: {}
-            kiali: {}
             knative: {}
-            kured: {}
             tekton: {}
             loki: {}
             minio: {}
             prometheus: {}
             rabbitmq: {}
             sealed-secrets: {}
-            velero: {}
-            falco: {}
             trivy: {}
             tempo: {}
             otel: {}

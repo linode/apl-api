@@ -1,52 +1,58 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { AplWorkloadRequest, DeepPartial, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:workloads')
 
-export default function (): OperationHandlerArray {
-  const del: Operation = [
-    async ({ otomi, params: { teamId, workloadName } }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`deleteWorkload(${workloadName})`)
-      await otomi.deleteWorkload(decodeURIComponent(teamId), decodeURIComponent(workloadName))
-      res.json({})
-    },
-  ]
-  const get: Operation = [
-    ({ otomi, params: { teamId, workloadName } }: OpenApiRequestExt, res): void => {
-      debug(`getWorkload(${workloadName})`)
-      const data = otomi.getAplWorkload(decodeURIComponent(teamId), decodeURIComponent(workloadName))
-      res.json(data)
-    },
-  ]
-  const put: Operation = [
-    async ({ otomi, params: { teamId, workloadName }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`editWorkload(${workloadName})`)
-      const data = await otomi.editAplWorkload(
-        decodeURIComponent(teamId),
-        decodeURIComponent(workloadName),
-        body as AplWorkloadRequest,
-      )
-      res.json(data)
-    },
-  ]
-  const patch: Operation = [
-    async ({ otomi, params: { teamId, workloadName }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`editWorkload(${workloadName}, patch)`)
-      const data = await otomi.editAplWorkload(
-        decodeURIComponent(teamId),
-        decodeURIComponent(workloadName),
-        body as DeepPartial<AplWorkloadRequest>,
-        true,
-      )
-      res.json(data)
-    },
-  ]
-  const api = {
-    delete: del,
-    get,
-    put,
-    patch,
-  }
-  return api
+/**
+ * GET /v2/teams/{teamId}/workloads/{workloadName}
+ * Get a specific workload (APL format)
+ */
+export const getAplWorkload = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId, workloadName } = req.params
+  debug(`getWorkload(${workloadName})`)
+  const data = req.otomi.getAplWorkload(decodeURIComponent(teamId), decodeURIComponent(workloadName))
+  res.json(data)
+}
+
+/**
+ * PUT /v2/teams/{teamId}/workloads/{workloadName}
+ * Edit a workload (APL format)
+ */
+export const editAplWorkload = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, workloadName } = req.params
+  debug(`editWorkload(${workloadName})`)
+  const data = await req.otomi.editAplWorkload(
+    decodeURIComponent(teamId),
+    decodeURIComponent(workloadName),
+    req.body as AplWorkloadRequest,
+  )
+  res.json(data)
+}
+
+/**
+ * PATCH /v2/teams/{teamId}/workloads/{workloadName}
+ * Partially update a workload (APL format)
+ */
+export const patchAplWorkload = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, workloadName } = req.params
+  debug(`editWorkload(${workloadName}, patch)`)
+  const data = await req.otomi.editAplWorkload(
+    decodeURIComponent(teamId),
+    decodeURIComponent(workloadName),
+    req.body as DeepPartial<AplWorkloadRequest>,
+    true,
+  )
+  res.json(data)
+}
+
+/**
+ * DELETE /v2/teams/{teamId}/workloads/{workloadName}
+ * Delete a workload
+ */
+export const deleteAplWorkload = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, workloadName } = req.params
+  debug(`deleteWorkload(${workloadName})`)
+  await req.otomi.deleteWorkload(decodeURIComponent(teamId), decodeURIComponent(workloadName))
+  res.json({})
 }

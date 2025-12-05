@@ -1,37 +1,40 @@
 import Debug from 'debug'
-import { Operation, OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { OpenApiRequestExt, Workload } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:teams:workloads')
 
-export default function (): OperationHandlerArray {
-  const del: Operation = [
-    async ({ otomi, params: { teamId, workloadName } }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`deleteWorkload(${workloadName})`)
-      await otomi.deleteWorkload(decodeURIComponent(teamId), decodeURIComponent(workloadName))
-      res.json({})
-    },
-  ]
-  const get: Operation = [
-    ({ otomi, params: { teamId, workloadName } }: OpenApiRequestExt, res): void => {
-      debug(`getWorkload(${workloadName})`)
-      const data = otomi.getWorkload(decodeURIComponent(teamId), decodeURIComponent(workloadName))
-      res.json(data)
-    },
-  ]
-  const put: Operation = [
-    async ({ otomi, params: { teamId, workloadName }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`editWorkload(${workloadName})`)
-      const data = await otomi.editWorkload(decodeURIComponent(teamId), decodeURIComponent(workloadName), {
-        ...body,
-      } as Workload)
-      res.json(data)
-    },
-  ]
-  const api = {
-    delete: del,
-    get,
-    put,
-  }
-  return api
+/**
+ * GET /v1/teams/{teamId}/workloads/{workloadName}
+ * Get a specific workload
+ */
+export const getWorkload = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId, workloadName } = req.params
+  debug(`getWorkload(${workloadName})`)
+  const data = req.otomi.getWorkload(decodeURIComponent(teamId), decodeURIComponent(workloadName))
+  res.json(data)
+}
+
+/**
+ * PUT /v1/teams/{teamId}/workloads/{workloadName}
+ * Edit a workload
+ */
+export const editWorkload = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, workloadName } = req.params
+  debug(`editWorkload(${workloadName})`)
+  const data = await req.otomi.editWorkload(decodeURIComponent(teamId), decodeURIComponent(workloadName), {
+    ...req.body,
+  } as Workload)
+  res.json(data)
+}
+
+/**
+ * DELETE /v1/teams/{teamId}/workloads/{workloadName}
+ * Delete a workload
+ */
+export const deleteWorkload = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId, workloadName } = req.params
+  debug(`deleteWorkload(${workloadName})`)
+  await req.otomi.deleteWorkload(decodeURIComponent(teamId), decodeURIComponent(workloadName))
+  res.json({})
 }

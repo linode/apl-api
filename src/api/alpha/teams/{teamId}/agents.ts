@@ -1,29 +1,27 @@
 import Debug from 'debug'
-import { type Operation, type OperationHandlerArray } from 'express-openapi'
+import { Response } from 'express'
 import { AplAgentRequest, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:alpha:teams:agents')
 
-export default function (): OperationHandlerArray {
-  const get: Operation = [
-    async ({ otomi, params: { teamId } }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`getAplAgents(${teamId})`)
-      const v = await otomi.getAplAgents(decodeURIComponent(teamId))
-      res.json(v)
-    },
-  ]
+/**
+ * GET /alpha/teams/{teamId}/agents
+ * Get all agents for a team
+ */
+export const getAplAgents = (req: OpenApiRequestExt, res: Response): void => {
+  const { teamId } = req.params
+  debug(`getAplAgents(${teamId})`)
+  const v = req.otomi.getAplAgents(decodeURIComponent(teamId))
+  res.json(v)
+}
 
-  const post: Operation = [
-    async ({ otomi, params: { teamId }, body }: OpenApiRequestExt, res): Promise<void> => {
-      debug(`createAplAgent(${teamId}, ...)`)
-      const v = await otomi.createAplAgent(decodeURIComponent(teamId), body as AplAgentRequest)
-      res.json(v)
-    },
-  ]
-
-  const api = {
-    get,
-    post,
-  }
-  return api
+/**
+ * POST /alpha/teams/{teamId}/agents
+ * Create a new agent
+ */
+export const createAplAgent = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  const { teamId } = req.params
+  debug(`createAplAgent(${teamId}, ...)`)
+  const v = await req.otomi.createAplAgent(decodeURIComponent(teamId), req.body as AplAgentRequest)
+  res.json(v)
 }

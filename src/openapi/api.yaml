@@ -12,45 +12,12 @@ externalDocs:
   description: 'This is the base url of the external documentation'
   url: https://techdocs.akamai.com/app-platform/docs/ #Using this URL a final docUrl can be made using this+info.version+ the component's x-externalDocsPath
 
-x-responses:
-  BadRequest: &BadRequest
-    description: Bad Request
-    content:
-      application/json:
-        schema:
-          $ref: '#/components/schemas/OpenApiValidationError'
-
-  OtomiStackError: &OtomiStackError
-    description: Resource already exists
-    content:
-      application/json:
-        schema:
-          $ref: '#/components/schemas/OtomiStackError'
-
-  NotFound: &NotFound
-    description: Resource does not exist
-    content:
-      application/json:
-        schema:
-          $ref: '#/components/schemas/OtomiStackError'
-
-x-post-responses: &DefaultPostResponses
-  '400':
-    <<: *BadRequest
-  '409':
-    <<: *OtomiStackError
-
-x-get-responses: &DefaultGetResponses
-  '400':
-    <<: *BadRequest
-  '404':
-    <<: *NotFound
-
 # -------------------------------------------- Paths
 paths:
   /v1/otomi/values:
     get:
       operationId: getValues
+      x-eov-operation-handler: v1/otomi/values
       description: Get otomi values
       x-aclSchema: OtomiCliValues
       parameters:
@@ -81,6 +48,7 @@ paths:
   /v1/teams:
     get:
       operationId: getTeams
+      x-eov-operation-handler: v1/teams
       description: Get teams collection
       x-aclSchema: Team
       responses:
@@ -94,6 +62,7 @@ paths:
                   $ref: '#/components/schemas/Team'
     post:
       operationId: createTeam
+      x-eov-operation-handler: v1/teams
       description: Create a team
       x-aclSchema: Team
       requestBody:
@@ -104,7 +73,10 @@ paths:
         description: Team object that needs to be added to the collection
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully obtained teams collection
           content:
@@ -117,10 +89,14 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeam
+      x-eov-operation-handler: v1/teams/{teamId}
       description: Get a specific team
       x-aclSchema: Team
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained team
           content:
@@ -129,6 +105,7 @@ paths:
                 $ref: '#/components/schemas/Team'
     put:
       operationId: editTeam
+      x-eov-operation-handler: v1/teams/{teamId}
       description: Edit a team
       x-aclSchema: Team
       requestBody:
@@ -139,7 +116,10 @@ paths:
         description: Team object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited team
           content:
@@ -148,16 +128,21 @@ paths:
                 $ref: '#/components/schemas/Team'
     delete:
       operationId: deleteTeam
+      x-eov-operation-handler: v1/teams/{teamId}
       description: Delete team
       x-aclSchema: Team
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a team
 
   /v2/teams:
     get:
       operationId: getAplTeams
+      x-eov-operation-handler: v2/teams
       description: Get teams collection
       x-aclSchema: Team
       responses:
@@ -171,6 +156,7 @@ paths:
                   $ref: '#/components/schemas/AplTeamSettingsResponse'
     post:
       operationId: createAplTeam
+      x-eov-operation-handler: v2/teams
       description: Create a team
       x-aclSchema: Team
       requestBody:
@@ -181,7 +167,10 @@ paths:
         description: Team object that needs to be added to the collection
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully obtained teams collection
           content:
@@ -194,10 +183,14 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getAplTeam
+      x-eov-operation-handler: v2/teams/{teamId}
       description: Get a specific team
       x-aclSchema: Team
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained team
           content:
@@ -206,6 +199,7 @@ paths:
                 $ref: '#/components/schemas/AplTeamSettingsResponse'
     put:
       operationId: editAplTeam
+      x-eov-operation-handler: v2/teams/{teamId}
       description: Edit a team
       x-aclSchema: Team
       requestBody:
@@ -216,7 +210,10 @@ paths:
         description: Team object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited team
           content:
@@ -225,16 +222,21 @@ paths:
                 $ref: '#/components/schemas/AplTeamSettingsResponse'
     delete:
       operationId: deleteAplTeam
+      x-eov-operation-handler: v2/teams/{teamId}
       description: Delete team
       x-aclSchema: Team
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a team
 
   /v1/services:
     get:
       operationId: getAllServices
+      x-eov-operation-handler: v1/services
       description: Get all services running on the cluster
       x-aclSchema: Service
       responses:
@@ -247,13 +249,14 @@ paths:
                 items:
                   $ref: '#/components/schemas/Service'
         '400':
-          <<: *BadRequest
+          $ref: '#/components/responses/BadRequest'
 
   '/v1/teams/{teamId}/services':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamServices
+      x-eov-operation-handler: v1/teams/{teamId}/services
       description: Get services from a given team
       x-aclSchema: Service
       responses:
@@ -266,10 +269,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/Service'
         '400':
-          <<: *BadRequest
+          $ref: '#/components/responses/BadRequest'
 
     post:
       operationId: createService
+      x-eov-operation-handler: v1/teams/{teamId}/services
       description: Create a service
       x-aclSchema: Service
       requestBody:
@@ -280,7 +284,10 @@ paths:
         description: Service object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored service configuration
           content:
@@ -292,7 +299,8 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: getTeamK8sServices
+      operationId: getK8sServices
+      x-eov-operation-handler: v1/teams/{teamId}/kubernetes/services
       description: Get services from a given team
       x-aclSchema: Service
       responses:
@@ -305,13 +313,14 @@ paths:
                 items:
                   $ref: '#/components/schemas/K8sService'
         '400':
-          <<: *BadRequest
+          $ref: '#/components/responses/BadRequest'
 
-  '/v1/teams/{teamId}/kubernetes/networkpolicies':
+  '/v1/teams/{teamId}/kubernetes/networkPolicies':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: getK8SWorkloadPodLabels
+      operationId: getK8sPodLabelsForWorkload
+      x-eov-operation-handler: v1/teams/{teamId}/kubernetes/networkPolicies
       description: Get Podlabels from given workload
       x-aclSchema: NetworkPolicies
       parameters:
@@ -335,13 +344,14 @@ paths:
                 additionalProperties:
                   type: string
         '400':
-          <<: *BadRequest
+          $ref: '#/components/responses/BadRequest'
 
   '/v1/teams/{teamId}/kubernetes/fetchPodsFromLabel':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: listUniquePodNamesByLabel
+      operationId: fetchPodsFromLabel
+      x-eov-operation-handler: v1/teams/{teamId}/kubernetes/fetchPodsFromLabel
       description: Get pods name from label
       parameters:
         - name: labelSelector
@@ -364,7 +374,7 @@ paths:
                 items:
                   type: string
         '400':
-          <<: *BadRequest
+          $ref: '#/components/responses/BadRequest'
 
   '/v1/teams/{teamId}/services/{serviceName}':
     parameters:
@@ -372,10 +382,14 @@ paths:
       - $ref: '#/components/parameters/serviceParams'
     get:
       operationId: getService
+      x-eov-operation-handler: v1/teams/{teamId}/services/{serviceName}
       description: Get a service from a given team
       x-aclSchema: Service
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained service configuration
           content:
@@ -384,6 +398,7 @@ paths:
                 $ref: '#/components/schemas/Service'
     put:
       operationId: editService
+      x-eov-operation-handler: v1/teams/{teamId}/services/{serviceName}
       description: Edit a service from a given team
       x-aclSchema: Service
       requestBody:
@@ -394,7 +409,10 @@ paths:
         description: Service object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited service
           content:
@@ -403,16 +421,21 @@ paths:
                 $ref: '#/components/schemas/Service'
     delete:
       operationId: deleteService
+      x-eov-operation-handler: v1/teams/{teamId}/services/{serviceName}
       description: Delete a service from a given team
       x-aclSchema: Service
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a service
 
   /v2/services:
     get:
       operationId: getAllAplServices
+      x-eov-operation-handler: v2/services
       description: Get all services running on the cluster
       x-aclSchema: Service
       responses:
@@ -425,13 +448,14 @@ paths:
                 items:
                   $ref: '#/components/schemas/AplServiceResponse'
         '400':
-          <<: *BadRequest
+          $ref: '#/components/responses/BadRequest'
 
   '/v2/teams/{teamId}/services':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamAplServices
+      x-eov-operation-handler: v2/teams/{teamId}/services
       description: Get services from a given team
       x-aclSchema: Service
       responses:
@@ -444,10 +468,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/AplServiceResponse'
         '400':
-          <<: *BadRequest
+          $ref: '#/components/responses/BadRequest'
 
     post:
       operationId: createAplService
+      x-eov-operation-handler: v2/teams/{teamId}/services
       description: Create a service
       x-aclSchema: Service
       requestBody:
@@ -458,7 +483,10 @@ paths:
         description: Service object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored service configuration
           content:
@@ -472,10 +500,14 @@ paths:
       - $ref: '#/components/parameters/serviceParams'
     get:
       operationId: getAplService
+      x-eov-operation-handler: v2/teams/{teamId}/services/{serviceName}
       description: Get a service from a given team
       x-aclSchema: Service
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained service configuration
           content:
@@ -484,6 +516,7 @@ paths:
                 $ref: '#/components/schemas/AplServiceResponse'
     put:
       operationId: editAplService
+      x-eov-operation-handler: v2/teams/{teamId}/services/{serviceName}
       description: Edit a service from a given team
       x-aclSchema: Service
       requestBody:
@@ -494,7 +527,10 @@ paths:
         description: Service object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited service
           content:
@@ -503,16 +539,21 @@ paths:
                 $ref: '#/components/schemas/AplServiceResponse'
     delete:
       operationId: deleteAplService
+      x-eov-operation-handler: v2/teams/{teamId}/services/{serviceName}
       description: Delete a service from a given team
       x-aclSchema: Service
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a service
 
   /v1/sealedsecrets:
     get:
       operationId: getAllSealedSecrets
+      x-eov-operation-handler: v1/sealedsecrets
       description: Get all sealed secrets
       x-aclSchema: SealedSecret
       responses:
@@ -525,29 +566,32 @@ paths:
                 items:
                   $ref: '#/components/schemas/SealedSecret'
         '400':
-          <<: *BadRequest
+          $ref: '#/components/responses/BadRequest'
 
   /v1/sealedsecretskeys:
     get:
-      operationId: downloadSealedSecretKeys
+      operationId: getSealedSecretKeys
+      x-eov-operation-handler: v1/sealedsecretskeys
       description: Download sealed secret keys
       x-aclSchema: SealedSecretsKeys
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully downloaded sealed secret keys
           content:
             application/key:
               schema:
                 $ref: '#/components/schemas/SealedSecretsKeys'
-        '400':
-          <<: *BadRequest
 
   '/v1/teams/{teamId}/k8sSecrets':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getSecretsFromK8s
+      x-eov-operation-handler: v1/teams/{teamId}/k8sSecrets
       description: Get secrets from k8s
       x-aclSchema: K8sSecret
       responses:
@@ -560,13 +604,14 @@ paths:
                 items:
                   $ref: '#/components/schemas/K8sSecret'
         '400':
-          <<: *BadRequest
+          $ref: '#/components/responses/BadRequest'
 
   '/v1/teams/{teamId}/sealedsecrets':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: getSealedSecrets
+      operationId: getTeamSealedSecrets
+      x-eov-operation-handler: v1/teams/{teamId}/sealedsecrets
       description: Get sealed secrets from a given team
       x-aclSchema: SealedSecret
       responses:
@@ -586,6 +631,7 @@ paths:
                 $ref: '#/components/schemas/OpenApiValidationError'
     post:
       operationId: createSealedSecret
+      x-eov-operation-handler: v1/teams/{teamId}/sealedsecrets
       description: Create a team sealed secret
       x-aclSchema: SealedSecret
       parameters:
@@ -603,7 +649,10 @@ paths:
         description: SealedSecret object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored sealed secret configuration
           content:
@@ -617,10 +666,14 @@ paths:
       - $ref: '#/components/parameters/sealedSecretParams'
     get:
       operationId: getSealedSecret
+      x-eov-operation-handler: v1/teams/{teamId}/sealedsecrets/{sealedSecretName}
       description: Get a sealed secret from a given team
       x-aclSchema: SealedSecret
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained sealed secret configuration
           content:
@@ -629,6 +682,7 @@ paths:
                 $ref: '#/components/schemas/SealedSecret'
     put:
       operationId: editSealedSecret
+      x-eov-operation-handler: v1/teams/{teamId}/sealedsecrets/{sealedSecretName}
       description: Edit a sealed secret from a given team
       x-aclSchema: SealedSecret
       requestBody:
@@ -639,7 +693,10 @@ paths:
         description: SealedSecret object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited a team sealed secret
           content:
@@ -648,16 +705,21 @@ paths:
                 $ref: '#/components/schemas/SealedSecret'
     delete:
       operationId: deleteSealedSecret
+      x-eov-operation-handler: v1/teams/{teamId}/sealedsecrets/{sealedSecretName}
       description: Delete a sealed secret from a given team
       x-aclSchema: SealedSecret
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a team sealed secret
 
   /v2/sealedsecrets:
     get:
-      operationId: getAllAplSecrets
+      operationId: getAllAplSealedSecrets
+      x-eov-operation-handler: v2/sealedsecrets
       description: Get all secrets
       x-aclSchema: SealedSecret
       responses:
@@ -670,13 +732,14 @@ paths:
                 items:
                   $ref: '#/components/schemas/AplSecretResponse'
         '400':
-          <<: *BadRequest
+          $ref: '#/components/responses/BadRequest'
 
   '/v2/teams/{teamId}/sealedsecrets':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getAplSealedSecrets
+      x-eov-operation-handler: v2/teams/{teamId}/sealedsecrets
       description: Get sealed secrets from a given team
       x-aclSchema: SealedSecret
       responses:
@@ -696,6 +759,7 @@ paths:
                 $ref: '#/components/schemas/OpenApiValidationError'
     post:
       operationId: createAplSealedSecret
+      x-eov-operation-handler: v2/teams/{teamId}/sealedsecrets
       description: Create a team sealed secret
       x-aclSchema: SealedSecret
       requestBody:
@@ -706,7 +770,10 @@ paths:
         description: SealedSecret object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored sealed secret configuration
           content:
@@ -720,10 +787,14 @@ paths:
       - $ref: '#/components/parameters/sealedSecretParams'
     get:
       operationId: getAplSealedSecret
+      x-eov-operation-handler: v2/teams/{teamId}/sealedsecrets/{sealedSecretName}
       description: Get a sealed secret from a given team
       x-aclSchema: SealedSecret
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained sealed secret configuration
           content:
@@ -732,6 +803,7 @@ paths:
                 $ref: '#/components/schemas/AplSecretResponse'
     put:
       operationId: editAplSealedSecret
+      x-eov-operation-handler: v2/teams/{teamId}/sealedsecrets/{sealedSecretName}
       description: Edit a sealed secret from a given team
       x-aclSchema: SealedSecret
       requestBody:
@@ -742,7 +814,10 @@ paths:
         description: SealedSecret object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited a team sealed secret
           content:
@@ -751,19 +826,27 @@ paths:
                 $ref: '#/components/schemas/AplSecretResponse'
     delete:
       operationId: deleteAplSealedSecret
+      x-eov-operation-handler: v2/teams/{teamId}/sealedsecrets/{sealedSecretName}
       description: Delete a sealed secret from a given team
       x-aclSchema: SealedSecret
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a team sealed secret
 
   '/v1/netpols':
     get:
       operationId: getAllNetpols
+      x-eov-operation-handler: v1/netpols
       x-aclSchema: Netpol
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained all network policy configuration
           content:
@@ -778,9 +861,13 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamNetpols
+      x-eov-operation-handler: v1/teams/{teamId}/netpols
       x-aclSchema: Build
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained team network policy configuration
           content:
@@ -791,6 +878,7 @@ paths:
                   $ref: '#/components/schemas/Netpol'
     post:
       operationId: createNetpol
+      x-eov-operation-handler: v1/teams/{teamId}/netpols
       description: Create a team network policy
       x-aclSchema: Netpol
       requestBody:
@@ -801,7 +889,10 @@ paths:
         description: Network policy object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored network policy configuration
           content:
@@ -815,10 +906,14 @@ paths:
       - $ref: '#/components/parameters/netpolParams'
     get:
       operationId: getNetpol
+      x-eov-operation-handler: v1/teams/{teamId}/netpols/{netpolName}
       description: Get a network policy from a given team
       x-aclSchema: Netpol
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained network policy configuration
           content:
@@ -827,6 +922,7 @@ paths:
                 $ref: '#/components/schemas/Netpol'
     put:
       operationId: editNetpol
+      x-eov-operation-handler: v1/teams/{teamId}/netpols/{netpolName}
       description: Edit a network policy from a given team
       x-aclSchema: Netpol
       requestBody:
@@ -837,7 +933,10 @@ paths:
         description: Netwok policy object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited a team network policy
           content:
@@ -846,19 +945,27 @@ paths:
                 $ref: '#/components/schemas/Netpol'
     delete:
       operationId: deleteNetpol
+      x-eov-operation-handler: v1/teams/{teamId}/netpols/{netpolName}
       description: Delete a network policy from a given team
       x-aclSchema: Netpol
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a team network policy
 
   '/v2/netpols':
     get:
       operationId: getAllAplNetpols
+      x-eov-operation-handler: v2/netpols
       x-aclSchema: Netpol
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained all network policy configuration
           content:
@@ -873,9 +980,13 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamAplNetpols
+      x-eov-operation-handler: v2/teams/{teamId}/netpols
       x-aclSchema: Netpol
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained team network policy configuration
           content:
@@ -886,6 +997,7 @@ paths:
                   $ref: '#/components/schemas/AplNetpolResponse'
     post:
       operationId: createAplNetpol
+      x-eov-operation-handler: v2/teams/{teamId}/netpols
       description: Create a team network policy
       x-aclSchema: Netpol
       requestBody:
@@ -896,7 +1008,10 @@ paths:
         description: Network policy object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored network policy configuration
           content:
@@ -910,10 +1025,14 @@ paths:
       - $ref: '#/components/parameters/netpolParams'
     get:
       operationId: getAplNetpol
+      x-eov-operation-handler: v2/teams/{teamId}/netpols/{netpolName}
       description: Get a network policy from a given team
       x-aclSchema: Netpol
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained network policy configuration
           content:
@@ -922,6 +1041,7 @@ paths:
                 $ref: '#/components/schemas/AplNetpolResponse'
     put:
       operationId: editAplNetpol
+      x-eov-operation-handler: v2/teams/{teamId}/netpols/{netpolName}
       description: Edit a network policy from a given team
       x-aclSchema: Netpol
       requestBody:
@@ -932,7 +1052,10 @@ paths:
         description: Netwok policy object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited a team network policy
           content:
@@ -941,206 +1064,21 @@ paths:
                 $ref: '#/components/schemas/AplNetpolResponse'
     delete:
       operationId: deleteAplNetpol
+      x-eov-operation-handler: v2/teams/{teamId}/netpols/{netpolName}
       description: Delete a network policy from a given team
       x-aclSchema: Netpol
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a team network policy
-
-  '/v1/backups':
-    get:
-      operationId: getAllBackups
-      x-aclSchema: Backup
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully obtained all backups configuration
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Backup'
-
-  '/v1/teams/{teamId}/backups':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-    get:
-      operationId: getTeamBackups
-      x-aclSchema: Backup
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully obtained team backups configuration
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Backup'
-    post:
-      operationId: createBackup
-      description: Create a team backup
-      x-aclSchema: Backup
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Backup'
-        description: Backup object
-        required: true
-      responses:
-        <<: *DefaultPostResponses
-        '200':
-          description: Successfully stored backup configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Backup'
-
-  '/v1/teams/{teamId}/backups/{backupName}':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/backupParams'
-    delete:
-      operationId: deleteBackup
-      description: Delete a backup from a given team
-      x-aclSchema: Backup
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully deleted a backup
-    get:
-      operationId: getBackup
-      description: Get a backup from a given team
-      x-aclSchema: Backup
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully obtained backup configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Backup'
-    put:
-      operationId: editBackup
-      description: Edit a backup from a given team
-      x-aclSchema: Backup
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Backup'
-        description: Backup object that contains updated values
-        required: true
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully edited a team backup
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Backup'
-
-  '/v2/backups':
-    get:
-      operationId: getAllAplBackups
-      x-aclSchema: Backup
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully obtained all backups configuration
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AplBackupResponse'
-
-  '/v2/teams/{teamId}/backups':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-    get:
-      operationId: getTeamAplBackups
-      x-aclSchema: Backup
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully obtained team backups configuration
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AplBackupResponse'
-    post:
-      operationId: createAplBackup
-      description: Create a team backup
-      x-aclSchema: Backup
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AplBackupRequest'
-        description: Backup object
-        required: true
-      responses:
-        <<: *DefaultPostResponses
-        '200':
-          description: Successfully stored backup configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AplBackupResponse'
-
-  '/v2/teams/{teamId}/backups/{backupName}':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/backupParams'
-    delete:
-      operationId: deleteAplBackup
-      description: Delete a backup from a given team
-      x-aclSchema: Backup
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully deleted a backup
-    get:
-      operationId: getAplBackup
-      description: Get a backup from a given team
-      x-aclSchema: Backup
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully obtained backup configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AplBackupResponse'
-    put:
-      operationId: editAplBackup
-      description: Edit a backup from a given team
-      x-aclSchema: Backup
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AplBackupRequest'
-        description: Backup object that contains updated values
-        required: true
-      responses:
-        <<: *DefaultGetResponses
-        '200':
-          description: Successfully edited a team backup
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AplBackupResponse'
 
   '/v1/dashboard':
     get:
       operationId: getDashboard
+      x-eov-operation-handler: v1/dashboard
       parameters:
         - name: teamName
           in: query
@@ -1148,7 +1086,10 @@ paths:
           schema:
             type: string
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained dashboard inventory data
           content:
@@ -1159,9 +1100,13 @@ paths:
   '/v1/builds':
     get:
       operationId: getAllBuilds
+      x-eov-operation-handler: v1/builds
       x-aclSchema: Build
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained all builds configuration
           content:
@@ -1176,9 +1121,13 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamBuilds
+      x-eov-operation-handler: v1/teams/{teamId}/builds
       x-aclSchema: Build
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained team builds configuration
           content:
@@ -1189,6 +1138,7 @@ paths:
                   $ref: '#/components/schemas/Build'
     post:
       operationId: createBuild
+      x-eov-operation-handler: v1/teams/{teamId}/builds
       description: Create a team build
       x-aclSchema: Build
       requestBody:
@@ -1199,7 +1149,10 @@ paths:
         description: Build object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored build configuration
           content:
@@ -1213,18 +1166,26 @@ paths:
       - $ref: '#/components/parameters/buildParams'
     delete:
       operationId: deleteBuild
+      x-eov-operation-handler: v1/teams/{teamId}/builds/{buildName}
       description: Delete a build from a given team
       x-aclSchema: Build
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a build
     get:
       operationId: getBuild
+      x-eov-operation-handler: v1/teams/{teamId}/builds/{buildName}
       description: Get a build from a given team
       x-aclSchema: Build
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained build configuration
           content:
@@ -1233,6 +1194,7 @@ paths:
                 $ref: '#/components/schemas/Build'
     put:
       operationId: editBuild
+      x-eov-operation-handler: v1/teams/{teamId}/builds/{buildName}
       description: Edit a build from a given team
       x-aclSchema: Build
       requestBody:
@@ -1243,7 +1205,10 @@ paths:
         description: Build object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited a team build
           content:
@@ -1254,9 +1219,13 @@ paths:
   '/v2/builds':
     get:
       operationId: getAllAplBuilds
+      x-eov-operation-handler: v2/builds
       x-aclSchema: Build
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained all builds configuration
           content:
@@ -1271,9 +1240,13 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamAplBuilds
+      x-eov-operation-handler: v2/teams/{teamId}/builds
       x-aclSchema: Build
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained team builds configuration
           content:
@@ -1284,6 +1257,7 @@ paths:
                   $ref: '#/components/schemas/AplBuildResponse'
     post:
       operationId: createAplBuild
+      x-eov-operation-handler: v2/teams/{teamId}/builds
       description: Create a team build
       x-aclSchema: Build
       requestBody:
@@ -1294,7 +1268,10 @@ paths:
         description: Build object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored build configuration
           content:
@@ -1308,18 +1285,26 @@ paths:
       - $ref: '#/components/parameters/buildParams'
     delete:
       operationId: deleteAplBuild
+      x-eov-operation-handler: v2/teams/{teamId}/builds/{buildName}
       description: Delete a build from a given team
       x-aclSchema: Build
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a build
     get:
       operationId: getAplBuild
+      x-eov-operation-handler: v2/teams/{teamId}/builds/{buildName}
       description: Get a build from a given team
       x-aclSchema: Build
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained build configuration
           content:
@@ -1328,6 +1313,7 @@ paths:
                 $ref: '#/components/schemas/AplBuildResponse'
     put:
       operationId: editAplBuild
+      x-eov-operation-handler: v2/teams/{teamId}/builds/{buildName}
       description: Edit a build from a given team
       x-aclSchema: Build
       requestBody:
@@ -1338,7 +1324,10 @@ paths:
         description: Build object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited a team build
           content:
@@ -1349,9 +1338,13 @@ paths:
   '/v1/policies':
     get:
       operationId: getAllPolicies
+      x-eov-operation-handler: v1/policies
       x-aclSchema: Policies
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained all policy configuration
           content:
@@ -1364,9 +1357,13 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamPolicies
+      x-eov-operation-handler: v1/teams/{teamId}/policies
       x-aclSchema: Policies
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained team policy configuration
           content:
@@ -1380,10 +1377,14 @@ paths:
       - $ref: '#/components/parameters/policyParams'
     get:
       operationId: getPolicy
+      x-eov-operation-handler: v1/teams/{teamId}/policies/{policyName}
       description: Get a policy from a given team
       x-aclSchema: Policy
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained policy configuration
           content:
@@ -1392,6 +1393,7 @@ paths:
                 $ref: '#/components/schemas/Policy'
     put:
       operationId: editPolicy
+      x-eov-operation-handler: v1/teams/{teamId}/policies/{policyName}
       description: Edit a policy from a given team
       x-aclSchema: Policy
       requestBody:
@@ -1402,7 +1404,10 @@ paths:
         description: Policy object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited a team policy
           content:
@@ -1413,9 +1418,13 @@ paths:
   '/v2/policies':
     get:
       operationId: getAllAplPolicies
+      x-eov-operation-handler: v2/policies
       x-aclSchema: Policies
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained all policy configuration
           content:
@@ -1430,9 +1439,13 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamAplPolicies
+      x-eov-operation-handler: v2/teams/{teamId}/policies
       x-aclSchema: Policies
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained team policy configuration
           content:
@@ -1448,10 +1461,14 @@ paths:
       - $ref: '#/components/parameters/policyParams'
     get:
       operationId: getAplPolicy
+      x-eov-operation-handler: v2/teams/{teamId}/policies/{policyName}
       description: Get a policy from a given team
       x-aclSchema: Policy
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained policy configuration
           content:
@@ -1460,6 +1477,7 @@ paths:
                 $ref: '#/components/schemas/AplPolicyResponse'
     put:
       operationId: editAplPolicy
+      x-eov-operation-handler: v2/teams/{teamId}/policies/{policyName}
       description: Edit a policy from a given team
       x-aclSchema: Policy
       requestBody:
@@ -1470,7 +1488,10 @@ paths:
         description: Policy object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited a team policy
           content:
@@ -1481,9 +1502,13 @@ paths:
   '/v1/k8sVersion':
     get:
       operationId: getK8sVersion
+      x-eov-operation-handler: v1/k8sVersion
       description: Get cluster k8s version
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully obtained k8s version
           content:
@@ -1494,6 +1519,7 @@ paths:
   '/v2/cloudtty':
     get:
       operationId: connectAplCloudtty
+      x-eov-operation-handler: v2/cloudtty
       description: Get a cloudtty iFrameUrl
       x-aclSchema: Cloudtty
       parameters:
@@ -1503,7 +1529,10 @@ paths:
           schema:
             type: string
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored cloudtty configuration
           content:
@@ -1512,6 +1541,7 @@ paths:
                 $ref: '#/components/schemas/Cloudtty'
     delete:
       operationId: deleteAplCloudtty
+      x-eov-operation-handler: v2/cloudtty
       description: Delete cloudtty url
       x-aclSchema: Cloudtty
       responses:
@@ -1521,6 +1551,7 @@ paths:
   '/v1/cloudtty':
     get:
       operationId: connectCloudtty
+      x-eov-operation-handler: v1/cloudtty
       description: Get a cloudtty iFrameUrl
       x-aclSchema: Cloudtty
       parameters:
@@ -1530,7 +1561,10 @@ paths:
           schema:
             type: string
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored cloudtty configuration
           content:
@@ -1539,6 +1573,7 @@ paths:
                 $ref: '#/components/schemas/Cloudtty'
     delete:
       operationId: deleteCloudtty
+      x-eov-operation-handler: v1/cloudtty
       description: Delete cloudtty url
       x-aclSchema: Cloudtty
       responses:
@@ -1548,9 +1583,13 @@ paths:
   '/v1/users':
     get:
       operationId: getAllUsers
+      x-eov-operation-handler: v1/users
       x-aclSchema: User
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained all users configuration
           content:
@@ -1561,6 +1600,7 @@ paths:
                   $ref: '#/components/schemas/User'
     post:
       operationId: createUser
+      x-eov-operation-handler: v1/users
       description: Create a team user
       x-aclSchema: User
       requestBody:
@@ -1571,7 +1611,10 @@ paths:
         description: User object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored user configuration
           content:
@@ -1584,10 +1627,14 @@ paths:
       - $ref: '#/components/parameters/userParams'
     get:
       operationId: getUser
+      x-eov-operation-handler: v1/users/{userId}
       description: Get a user from a given team
       x-aclSchema: User
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained user configuration
           content:
@@ -1596,6 +1643,7 @@ paths:
                 $ref: '#/components/schemas/User'
     put:
       operationId: editUser
+      x-eov-operation-handler: v1/users/{userId}
       description: Edit a user from a given team
       x-aclSchema: User
       requestBody:
@@ -1606,7 +1654,10 @@ paths:
         description: User object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited a team user
           content:
@@ -1615,10 +1666,14 @@ paths:
                 $ref: '#/components/schemas/User'
     delete:
       operationId: deleteUser
+      x-eov-operation-handler: v1/users/{userId}
       description: Delete a user from a given team
       x-aclSchema: User
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a user
 
@@ -1627,6 +1682,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     put:
       operationId: editTeamUsers
+      x-eov-operation-handler: v1/teams/{teamId}/users
       description: Edit a user from a given team
       x-aclSchema: User
       requestBody:
@@ -1644,7 +1700,10 @@ paths:
         description: User object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited a team user
           content:
@@ -1662,6 +1721,7 @@ paths:
   /v1/coderepos:
     get:
       operationId: getAllCodeRepos
+      x-eov-operation-handler: v1/coderepos
       description: Get all code repositories
       x-aclSchema: CodeRepo
       responses:
@@ -1674,13 +1734,14 @@ paths:
                 items:
                   $ref: '#/components/schemas/CodeRepo'
         '400':
-          <<: *BadRequest
+          $ref: '#/components/responses/BadRequest'
 
   '/v1/teams/{teamId}/coderepos':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamCodeRepos
+      x-eov-operation-handler: v1/teams/{teamId}/coderepos
       description: Get code repos from a given team
       x-aclSchema: CodeRepo
       responses:
@@ -1700,6 +1761,7 @@ paths:
                 $ref: '#/components/schemas/OpenApiValidationError'
     post:
       operationId: createCodeRepo
+      x-eov-operation-handler: v1/teams/{teamId}/coderepos
       description: Create a team code repo
       x-aclSchema: CodeRepo
       parameters:
@@ -1717,7 +1779,10 @@ paths:
         description: CodeRepo object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored code repo configuration
           content:
@@ -1731,10 +1796,14 @@ paths:
       - $ref: '#/components/parameters/codeRepoParams'
     get:
       operationId: getCodeRepo
+      x-eov-operation-handler: v1/teams/{teamId}/coderepos/{codeRepositoryName}
       description: Get a code repo from a given team
       x-aclSchema: CodeRepo
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained code repo configuration
           content:
@@ -1743,6 +1812,7 @@ paths:
                 $ref: '#/components/schemas/CodeRepo'
     put:
       operationId: editCodeRepo
+      x-eov-operation-handler: v1/teams/{teamId}/coderepos/{codeRepositoryName}
       description: Edit a code repo from a given team
       x-aclSchema: CodeRepo
       requestBody:
@@ -1753,7 +1823,10 @@ paths:
         description: CodeRepo object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited a team code repo
           content:
@@ -1762,16 +1835,21 @@ paths:
                 $ref: '#/components/schemas/CodeRepo'
     delete:
       operationId: deleteCodeRepo
+      x-eov-operation-handler: v1/teams/{teamId}/coderepos/{codeRepositoryName}
       description: Delete a code repo from a given team
       x-aclSchema: CodeRepo
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a team code repo
 
   /v2/coderepos:
     get:
       operationId: getAllAplCodeRepos
+      x-eov-operation-handler: v2/coderepos
       description: Get all code repositories
       x-aclSchema: CodeRepo
       responses:
@@ -1784,13 +1862,14 @@ paths:
                 items:
                   $ref: '#/components/schemas/AplCodeRepoResponse'
         '400':
-          <<: *BadRequest
+          $ref: '#/components/responses/BadRequest'
 
   '/v2/teams/{teamId}/coderepos':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamAplCodeRepos
+      x-eov-operation-handler: v2/teams/{teamId}/coderepos
       description: Get code repos from a given team
       x-aclSchema: CodeRepo
       responses:
@@ -1810,6 +1889,7 @@ paths:
                 $ref: '#/components/schemas/OpenApiValidationError'
     post:
       operationId: createAplCodeRepo
+      x-eov-operation-handler: v2/teams/{teamId}/coderepos
       description: Create a team code repo
       x-aclSchema: CodeRepo
       requestBody:
@@ -1820,7 +1900,10 @@ paths:
         description: CodeRepo object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored code repo configuration
           content:
@@ -1834,10 +1917,14 @@ paths:
       - $ref: '#/components/parameters/codeRepoParams'
     get:
       operationId: getAplCodeRepo
+      x-eov-operation-handler: v2/teams/{teamId}/coderepos/{codeRepositoryName}
       description: Get a code repo from a given team
       x-aclSchema: CodeRepo
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained code repo configuration
           content:
@@ -1846,6 +1933,7 @@ paths:
                 $ref: '#/components/schemas/AplCodeRepoResponse'
     put:
       operationId: editAplCodeRepo
+      x-eov-operation-handler: v2/teams/{teamId}/coderepos/{codeRepositoryName}
       description: Edit a code repo from a given team
       x-aclSchema: CodeRepo
       requestBody:
@@ -1856,7 +1944,10 @@ paths:
         description: CodeRepo object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited a team code repo
           content:
@@ -1865,19 +1956,27 @@ paths:
                 $ref: '#/components/schemas/AplCodeRepoResponse'
     delete:
       operationId: deleteAplCodeRepo
+      x-eov-operation-handler: v2/teams/{teamId}/coderepos/{codeRepositoryName}
       description: Delete a code repo from a given team
       x-aclSchema: CodeRepo
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a team code repo
 
   '/v1/workloads':
     get:
       operationId: getAllWorkloads
+      x-eov-operation-handler: v1/workloads
       x-aclSchema: Workload
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained all workloads configuration
           content:
@@ -1889,7 +1988,8 @@ paths:
 
   '/v1/workloadCatalog':
     post:
-      operationId: workloadCatalog
+      operationId: getWorkloadCatalog
+      x-eov-operation-handler: v1/workloadCatalog
       description: Get workload catalog from a repository
       requestBody:
         content:
@@ -1899,7 +1999,10 @@ paths:
         description: Workload catalog object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully updated a team workload catalog
           content:
@@ -1910,6 +2013,7 @@ paths:
   '/v1/helmChartContent':
     get:
       operationId: getHelmChartContent
+      x-eov-operation-handler: v1/helmChartContent
       parameters:
         - name: url
           in: query
@@ -1917,7 +2021,10 @@ paths:
           schema:
             type: string
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained helm chart content
           content:
@@ -1932,6 +2039,7 @@ paths:
   '/v1/createWorkloadCatalog':
     post:
       operationId: createWorkloadCatalog
+      x-eov-operation-handler: v1/createWorkloadCatalog
       description: Create workload catalog from a repository
       requestBody:
         content:
@@ -1941,7 +2049,10 @@ paths:
         description: Workload catalog object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully updated a team workload catalog
           content:
@@ -1954,9 +2065,13 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamWorkloads
+      x-eov-operation-handler: v1/teams/{teamId}/workloads
       x-aclSchema: Workload
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained team workloads configuration
           content:
@@ -1967,6 +2082,7 @@ paths:
                   $ref: '#/components/schemas/Workload'
     post:
       operationId: createWorkload
+      x-eov-operation-handler: v1/teams/{teamId}/workloads
       description: Create a team workload
       x-aclSchema: Workload
       requestBody:
@@ -1977,7 +2093,10 @@ paths:
         description: Workload object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored workload configuration
           content:
@@ -1991,18 +2110,26 @@ paths:
       - $ref: '#/components/parameters/workloadParams'
     delete:
       operationId: deleteWorkload
+      x-eov-operation-handler: v1/teams/{teamId}/workloads/{workloadName}
       description: Delete a workload from a given team
       x-aclSchema: Workload
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a workload
     get:
       operationId: getWorkload
+      x-eov-operation-handler: v1/teams/{teamId}/workloads/{workloadName}
       description: Get a workload from a given team
       x-aclSchema: Workload
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained workload configuration
           content:
@@ -2011,6 +2138,7 @@ paths:
                 $ref: '#/components/schemas/Workload'
     put:
       operationId: editWorkload
+      x-eov-operation-handler: v1/teams/{teamId}/workloads/{workloadName}
       description: Edit a workload from a given team
       x-aclSchema: Workload
       requestBody:
@@ -2021,7 +2149,10 @@ paths:
         description: Workload object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited a team workload
           content:
@@ -2035,6 +2166,7 @@ paths:
       - $ref: '#/components/parameters/workloadParams'
     get:
       operationId: getWorkloadValues
+      x-eov-operation-handler: v1/teams/{teamId}/workloads/{workloadName}/values
       description: Get workload helm chart values
       x-aclSchema: Workload
       responses:
@@ -2045,9 +2177,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/WorkloadValues'
         '400':
-          <<: *BadRequest
+          $ref: '#/components/responses/BadRequest'
     put:
       operationId: editWorkloadValues
+      x-eov-operation-handler: v1/teams/{teamId}/workloads/{workloadName}/values
       description: Edit workload values
       x-aclSchema: Workload
       requestBody:
@@ -2058,7 +2191,10 @@ paths:
         description: Workload values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited workload values
           content:
@@ -2069,9 +2205,13 @@ paths:
   '/v2/workloads':
     get:
       operationId: getAllAplWorkloads
+      x-eov-operation-handler: v2/workloads
       x-aclSchema: Workload
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained all workloads configuration
           content:
@@ -2083,10 +2223,14 @@ paths:
 
   '/v2/workloadNames':
     get:
-      operationId: getAllAplWorkloadNames
+      operationId: getAllWorkloadNames
+      x-eov-operation-handler: v2/workloadNames
       x-aclSchema: WorkloadName
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained all workload names
           content:
@@ -2101,9 +2245,13 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getTeamAplWorkloads
+      x-eov-operation-handler: v2/teams/{teamId}/workloads
       x-aclSchema: Workload
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained team workloads configuration
           content:
@@ -2114,6 +2262,7 @@ paths:
                   $ref: '#/components/schemas/AplWorkloadResponse'
     post:
       operationId: createAplWorkload
+      x-eov-operation-handler: v2/teams/{teamId}/workloads
       description: Create a team workload
       x-aclSchema: Workload
       requestBody:
@@ -2124,7 +2273,10 @@ paths:
         description: Workload object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored workload configuration
           content:
@@ -2138,18 +2290,26 @@ paths:
       - $ref: '#/components/parameters/workloadParams'
     delete:
       operationId: deleteAplWorkload
+      x-eov-operation-handler: v2/teams/{teamId}/workloads/{workloadName}
       description: Delete a workload from a given team
       x-aclSchema: Workload
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a workload
     get:
       operationId: getAplWorkload
+      x-eov-operation-handler: v2/teams/{teamId}/workloads/{workloadName}
       description: Get a workload from a given team
       x-aclSchema: Workload
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained workload configuration
           content:
@@ -2158,6 +2318,7 @@ paths:
                 $ref: '#/components/schemas/AplWorkloadResponse'
     put:
       operationId: editAplWorkload
+      x-eov-operation-handler: v2/teams/{teamId}/workloads/{workloadName}
       description: Edit a workload from a given team
       x-aclSchema: Workload
       requestBody:
@@ -2168,7 +2329,10 @@ paths:
         description: Workload object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited a team workload
           content:
@@ -2180,11 +2344,15 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: downloadKubecfg
+      operationId: getKubecfg
+      x-eov-operation-handler: v1/kubecfg/{teamId}
       description: Download a kubecfg for a team
       x-aclSchema: Kubecfg
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Succesfully finished the download
           content:
@@ -2196,11 +2364,15 @@ paths:
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
-      operationId: downloadDockerConfig
+      operationId: getDockerConfig
+      x-eov-operation-handler: v1/dockerconfig/{teamId}
       description: Download Docker login creds for a team
       x-aclSchema: DockerConfig
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Succesfully finished the download
           content:
@@ -2211,6 +2383,7 @@ paths:
   /v1/session:
     get:
       operationId: getSession
+      x-eov-operation-handler: v1/session
       description: Get the session for the current user
       responses:
         '200':
@@ -2224,7 +2397,8 @@ paths:
 
   /v1/apiDocs:
     get:
-      operationId: 'v1apiDocs'
+      operationId: 'getApiDoc'
+      x-eov-operation-handler: v1/apiDocs
       security: []
       description: Get OpenAPIDoc document
       responses:
@@ -2240,6 +2414,7 @@ paths:
   /v1/settingsInfo:
     get:
       operationId: getSettingsInfo
+      x-eov-operation-handler: v1/settingsInfo
       description: Get settings information from the 'settings.yaml' file.
       x-aclSchema: SettingsInfo
       responses:
@@ -2253,6 +2428,7 @@ paths:
   /v1/repoBranches:
     get:
       operationId: getRepoBranches
+      x-eov-operation-handler: v1/repoBranches
       description: Get repo branches from the git providers.
       x-aclSchema: RepoBranches
       parameters:
@@ -2278,7 +2454,8 @@ paths:
 
   /v1/testRepoConnect:
     get:
-      operationId: getTestRepoConnect
+      operationId: testRepoConnect
+      x-eov-operation-handler: v1/testRepoConnect
       description: Get test repo connect information from the git providers.
       x-aclSchema: TestRepoConnect
       parameters:
@@ -2308,6 +2485,7 @@ paths:
   /v1/internalRepoUrls:
     get:
       operationId: getInternalRepoUrls
+      x-eov-operation-handler: v1/internalRepoUrls
       x-aclSchema: InternalRepoUrls
       parameters:
         - name: teamId
@@ -2316,7 +2494,10 @@ paths:
           schema:
             type: string
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained internal repo urls
           content:
@@ -2329,6 +2510,7 @@ paths:
   '/v1/objwizard':
     post:
       operationId: createObjWizard
+      x-eov-operation-handler: v1/objwizard
       description: Create a obj wizard configuration
       x-aclSchema: ObjWizard
       requestBody:
@@ -2339,7 +2521,10 @@ paths:
         description: ObjWizard object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully configured obj wizard configuration
           content:
@@ -2350,6 +2535,7 @@ paths:
   /v1/settings:
     get:
       operationId: getSettings
+      x-eov-operation-handler: v1/settings
       description: Get settings from the 'settings.yaml' or 'secret.settings.yaml' file.
       x-aclSchema: Settings
       parameters:
@@ -2374,6 +2560,7 @@ paths:
       - $ref: '#/components/parameters/settingsParams'
     put:
       operationId: editSettings
+      x-eov-operation-handler: v1/settings/{settingId}
       description: Edit settings from the 'settings.yaml' or 'secret.settings.yaml' file.
       x-aclSchema: Settings
       requestBody:
@@ -2384,7 +2571,10 @@ paths:
         description: Put new settings.
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited settings.
 
@@ -2397,6 +2587,7 @@ paths:
           type: string
     get:
       operationId: getApps
+      x-eov-operation-handler: v1/apps/{teamId}
       description: Get list of apps for a team
       x-aclSchema: App
       parameters:
@@ -2419,6 +2610,7 @@ paths:
                   $ref: '#/components/schemas/App'
     put:
       operationId: toggleApps
+      x-eov-operation-handler: v1/apps/{teamId}
       description: Turn on/off list of apps for a team
       x-aclSchema: App
       requestBody:
@@ -2429,7 +2621,10 @@ paths:
               type: object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully toggled apps
   /v1/apps/{teamId}/{appId}:
@@ -2445,7 +2640,8 @@ paths:
         schema:
           type: string
     get:
-      operationId: getApp
+      operationId: getTeamApp
+      x-eov-operation-handler: v1/apps/{teamId}/{appId}
       description: Get app information
       x-aclSchema: App
       responses:
@@ -2457,6 +2653,7 @@ paths:
                 $ref: '#/components/schemas/App'
     put:
       operationId: editApp
+      x-eov-operation-handler: v1/apps/{teamId}/{appId}
       description: Edit app values
       x-aclSchema: App
       requestBody:
@@ -2467,13 +2664,16 @@ paths:
         description: Edit app values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited app values.
-
   '/alpha/ai/models':
     get:
       operationId: getAIModels
+      x-eov-operation-handler: alpha/ai/models
       description: Get available shared AI models (foundation or embedding)
       x-aclSchema: AIModel
       responses:
@@ -2491,6 +2691,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getAplKnowledgeBases
+      x-eov-operation-handler: alpha/teams/{teamId}/kb
       description: Get knowledge bases from a given team
       x-aclSchema: KnowledgeBase
       responses:
@@ -2504,6 +2705,7 @@ paths:
                   $ref: '#/components/schemas/AplKnowledgeBaseResponse'
     post:
       operationId: createAplKnowledgeBase
+      x-eov-operation-handler: alpha/teams/{teamId}/kb
       description: Create a team knowledge base
       x-aclSchema: KnowledgeBase
       requestBody:
@@ -2514,7 +2716,10 @@ paths:
         description: KnowledgeBase object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored knowledge base configuration
           content:
@@ -2528,10 +2733,14 @@ paths:
       - $ref: '#/components/parameters/knowledgeBaseParams'
     get:
       operationId: getAplKnowledgeBase
+      x-eov-operation-handler: alpha/teams/{teamId}/kb/{knowledgeBaseName}
       description: Get a knowledge base from a given team
       x-aclSchema: KnowledgeBase
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained knowledge base configuration
           content:
@@ -2540,6 +2749,7 @@ paths:
                 $ref: '#/components/schemas/AplKnowledgeBaseRequest'
     put:
       operationId: editAplKnowledgeBase
+      x-eov-operation-handler: alpha/teams/{teamId}/kb/{knowledgeBaseName}
       description: Edit a knowledge base from a given team
       x-aclSchema: KnowledgeBase
       requestBody:
@@ -2550,7 +2760,10 @@ paths:
         description: KnowledgeBase object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited a team knowledge base
           content:
@@ -2559,10 +2772,14 @@ paths:
                 $ref: '#/components/schemas/AplKnowledgeBaseResponse'
     delete:
       operationId: deleteAplKnowledgeBase
+      x-eov-operation-handler: alpha/teams/{teamId}/kb/{knowledgeBaseName}
       description: Delete a knowledge base from a given team
       x-aclSchema: KnowledgeBase
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a team knowledge base
 
@@ -2571,6 +2788,7 @@ paths:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getAplAgents
+      x-eov-operation-handler: alpha/teams/{teamId}/agents
       description: Get agents from a given team
       x-aclSchema: Agent
       responses:
@@ -2584,6 +2802,7 @@ paths:
                   $ref: '#/components/schemas/AplAgentResponse'
     post:
       operationId: createAplAgent
+      x-eov-operation-handler: alpha/teams/{teamId}/agents
       description: Create a team agent
       x-aclSchema: Agent
       requestBody:
@@ -2594,7 +2813,10 @@ paths:
         description: Agent object
         required: true
       responses:
-        <<: *DefaultPostResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
         '200':
           description: Successfully stored agent configuration
           content:
@@ -2608,10 +2830,14 @@ paths:
       - $ref: '#/components/parameters/agentParams'
     get:
       operationId: getAplAgent
+      x-eov-operation-handler: alpha/teams/{teamId}/agents/{agentName}
       description: Get an agent from a given team
       x-aclSchema: Agent
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully obtained agent configuration
           content:
@@ -2620,6 +2846,7 @@ paths:
                 $ref: '#/components/schemas/AplAgentResponse'
     put:
       operationId: editAplAgent
+      x-eov-operation-handler: alpha/teams/{teamId}/agents/{agentName}
       description: Edit an agent from a given team
       x-aclSchema: Agent
       requestBody:
@@ -2630,7 +2857,10 @@ paths:
         description: Agent object that contains updated values
         required: true
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully edited a team agent
           content:
@@ -2639,10 +2869,14 @@ paths:
                 $ref: '#/components/schemas/AplAgentResponse'
     delete:
       operationId: deleteAplAgent
+      x-eov-operation-handler: alpha/teams/{teamId}/agents/{agentName}
       description: Delete an agent from a given team
       x-aclSchema: Agent
       responses:
-        <<: *DefaultGetResponses
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a team agent
 
@@ -2654,13 +2888,6 @@ paths:
 # -------------------------------------------- Components
 components:
   parameters:
-    backupParams:
-      name: backupName
-      in: path
-      description: Name of the backup
-      required: true
-      schema:
-        type: string
     buildParams:
       name: buildName
       in: path
@@ -2761,6 +2988,26 @@ components:
   #
   # Please stick to: alphabetical sorting, all Uppercase first and then lowercase.
   # --------------------------------------------
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpenApiValidationError'
+    NotFound:
+      description: Resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OtomiStackError'
+    OtomiStackError:
+      description: Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OtomiStackError'
+
   schemas:
     aplResourceStatusCondition:
       type: object
@@ -2858,27 +3105,6 @@ components:
       type: object
       allOf:
         - $ref: '#/components/schemas/AplAgent'
-        - $ref: '#/components/schemas/aplTeamMetadata'
-        - $ref: '#/components/schemas/aplStatusResponse'
-    AplBackup:
-      type: object
-      properties:
-        kind:
-          type: string
-          enum: [AplTeamBackup]
-        spec:
-          $ref: 'backup.yaml#/AplBackupSpec'
-      required:
-        - kind
-        - spec
-    AplBackupRequest:
-      allOf:
-        - $ref: '#/components/schemas/AplBackup'
-        - $ref: '#/components/schemas/aplMetadata'
-    AplBackupResponse:
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/AplBackup'
         - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
     AplBuild:
@@ -3077,8 +3303,6 @@ components:
       $ref: 'app.yaml#/App'
     AppList:
       $ref: 'app.yaml#/AppList'
-    Backup:
-      $ref: 'backup.yaml#/Backup'
     Build:
       $ref: 'build.yaml#/Build'
     Cloudtty:
