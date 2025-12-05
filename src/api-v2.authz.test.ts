@@ -1031,7 +1031,7 @@ describe('API V2 authz tests', () => {
       })
 
       //TODO check if this is the desired behavior
-      test.skip('team member cannot connect cloudtty for other team', async () => {
+      test('team member cannot connect cloudtty for other team', async () => {
         await agent
           .get('/v2/cloudtty')
           .query({ teamId: 'team2' })
@@ -1047,6 +1047,42 @@ describe('API V2 authz tests', () => {
 
       test('anonymous user cannot delete cloudtty', async () => {
         await agent.delete('/v2/cloudtty').expect(401)
+      })
+    })
+  })
+
+  describe('V1 Dashboard Endpoints', () => {
+    describe('Platform Admin', () => {
+      test('platform admin can connect dashboard', async () => {
+        await agent
+          .get('/v1/dashboard')
+          .query({ teamId: 'team1' })
+          .set('Authorization', `Bearer ${platformAdminToken}`)
+          .expect(200)
+      })
+    })
+
+    describe('Team Member', () => {
+      test('team member can connect dashboard for own team', async () => {
+        await agent
+          .get('/v1/dashboard')
+          .query({ teamId: 'team1' })
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(200)
+      })
+
+      test('team member cannot connect dashboard for other team', async () => {
+        await agent
+          .get('/v1/dashboard')
+          .query({ teamId: 'team2' })
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+    })
+
+    describe('Unauthenticated', () => {
+      test('anonymous user cannot connect dashboard', async () => {
+        await agent.get('/v1/dashboard').query({ teamId: 'team1' }).expect(401)
       })
     })
   })

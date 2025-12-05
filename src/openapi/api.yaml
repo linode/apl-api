@@ -1081,7 +1081,7 @@ paths:
       x-eov-operation-handler: v1/dashboard
       x-aclSchema: Dashboard
       parameters:
-        - name: teamName
+        - name: teamId
           in: query
           description: Name of the team
           schema:
@@ -3312,6 +3312,8 @@ components:
       $ref: 'cluster.yaml#/Cluster'
     CodeRepo:
       $ref: 'codeRepo.yaml#/CodeRepo'
+    Dashboard:
+      $ref: 'dashboard.yaml#/Dashboard'
     K8sService:
       $ref: 'k8s.yaml#/K8sService'
     KnowledgeBase:
