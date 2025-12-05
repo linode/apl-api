@@ -84,7 +84,7 @@ export class AkamaiKnowledgeBaseCR {
   }
 
   // Transform to API response format
-  toApiResponse(teamId: string): AplKnowledgeBaseResponse {
+  toApiResponse(teamId: string, status?: any): AplKnowledgeBaseResponse {
     return {
       kind: env.KNOWLEDGE_BASE_KIND as 'AkamaiKnowledgeBase',
       metadata: {
@@ -97,7 +97,7 @@ export class AkamaiKnowledgeBaseCR {
         modelName: this.spec.pipelineParameters.embedding_model,
         sourceUrl: this.spec.pipelineParameters.url,
       },
-      status: {},
+      status: status || {},
     }
   }
 
