@@ -198,7 +198,10 @@ export class FileStore {
       const pattern = fileMap.pathTemplate.replace('{teamId}', '').replace('{name}.yaml', '')
       const [beforeTeam, afterTeam] = pattern.split('//')
       for (const filePath of this.store.keys()) {
-        if (filePath.startsWith(beforeTeam) && filePath.includes(afterTeam) && filePath.endsWith('.yaml')) {
+        const matchesPattern = afterTeam
+          ? filePath.startsWith(beforeTeam) && filePath.includes(afterTeam) && filePath.endsWith('.yaml')
+          : filePath.startsWith(beforeTeam) && filePath.endsWith('.yaml')
+        if (matchesPattern) {
           const content = this.store.get(filePath)
           if (content) result.set(filePath, content)
         }
