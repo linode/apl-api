@@ -1,4 +1,4 @@
-import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -17,9 +17,9 @@ import {
   PublicUrlExists,
   ValidationError,
 } from 'src/error'
-import getRepo, { getWorktreeRepo, Git } from 'src/git'
-import { FileStore } from 'src/fileStore/file-store'
 import { getSettingsFileMaps } from 'src/fileStore/file-map'
+import { FileStore } from 'src/fileStore/file-store'
+import getRepo, { getWorktreeRepo, Git } from 'src/git'
 import { cleanSession, getSessionStack } from 'src/middleware'
 import {
   AplAgentRequest,
@@ -109,6 +109,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { getAIModels } from './ai/aiModelHandler'
 import { DatabaseCR } from './ai/DatabaseCR'
+import { getResourceFilePath, getSecretFilePath } from './fileStore/file-map'
 import {
   apply,
   checkPodExists,
@@ -132,7 +133,6 @@ import { getSealedSecretsPEM, sealedSecretManifest } from './utils/sealedSecretU
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { ObjectStorageClient } from './utils/wizardUtils'
 import { fetchChartYaml, fetchWorkloadCatalog, NewHelmChartValues, sparseCloneChart } from './utils/workloadUtils'
-import { getResourceFilePath, getSecretFilePath } from './fileStore/file-map'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -616,15 +616,13 @@ export default class OtomiStack {
           const orig = this.getApp(id)
           if (orig && this.canToggleApp(id)) {
             const filePath = getResourceFilePath('AplApp', id)
-            const aplApp = toPlatformObject('AplApp', id, {
-              ...orig,
-              enabled,
-              values: { ...orig.values, enabled },
-            })
-            this.fileStore.set(filePath, aplApp)
+            const aplApp = this.fileStore.get(filePath)
+            if (!aplApp) {
+              throw new NotExistError(`App ${id} not found`)
+            }
+            set(aplApp, 'spec.enabled', enabled)
 
-            const app = { ...orig, enabled }
-            await this.saveAdminApp(app)
+            await this.saveAppToggle(aplApp)
             return { filePath, content: aplApp } as AplRecord
           }
           return undefined
@@ -2395,6 +2393,11 @@ export default class OtomiStack {
     }
 
     return { filePath, content: aplObject }
+  }
+  async saveAppToggle(app: AplObject): Promise<void> {
+    const globalPaths = getSecretPaths()
+    const appSecretPaths = this.extractAppSecretPaths(app.metadata.name, globalPaths)
+    await this.saveWithSecrets(app, appSecretPaths)
   }
 
   async saveAdminApp(app: App, secretPaths?: string[]): Promise<void> {
