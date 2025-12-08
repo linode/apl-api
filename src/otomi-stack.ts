@@ -617,9 +617,8 @@ export default class OtomiStack {
           if (orig && this.canToggleApp(id)) {
             const filePath = getResourceFilePath('AplApp', id)
             const aplApp = toPlatformObject('AplApp', id, {
-              ...orig,
               enabled,
-              values: { ...orig.values, enabled },
+              ...orig.values,
             })
             this.fileStore.set(filePath, aplApp)
 
