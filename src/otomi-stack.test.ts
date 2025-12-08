@@ -5,7 +5,7 @@ import {
   AplTeamSettingsRequest,
   App,
   SessionUser,
-  User
+  User,
 } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { loadSpec } from './app'
