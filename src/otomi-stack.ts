@@ -383,7 +383,7 @@ export default class OtomiStack {
         const fileMap = settingsFileMaps.get(key)
         if (!fileMap) return // Skip unknown keys
 
-        const files = this.fileStore.getByKind(fileMap.kind)
+        const files = this.fileStore.getPlatformResourcesByKind(fileMap.kind)
         for (const [, content] of files) {
           settings[key] = content?.spec || content
         }
@@ -399,7 +399,7 @@ export default class OtomiStack {
 
     // No keys specified: fetch all settings
     for (const [name, fileMap] of settingsFileMaps.entries()) {
-      const files = this.fileStore.getByKind(fileMap.kind)
+      const files = this.fileStore.getPlatformResourcesByKind(fileMap.kind)
       for (const [, content] of files) {
         settings[name] = content?.spec || content
       }
@@ -643,7 +643,7 @@ export default class OtomiStack {
     const teamIds = this.fileStore.getTeamIds()
 
     for (const teamId of teamIds) {
-      const settingsFiles = this.fileStore.getByKind('AplTeamSettingSet', teamId)
+      const settingsFiles = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamSettingSet', teamId)
       for (const [, content] of settingsFiles) {
         // v1 format: return spec directly
         const team = getV1ObjectFromApl(content as AplTeamSettingsResponse) as Team
@@ -667,7 +667,7 @@ export default class OtomiStack {
 
     for (const teamId of teamIds) {
       if (teamId === 'admin') continue
-      const settingsFiles = this.fileStore.getByKind('AplTeamSettingSet', teamId)
+      const settingsFiles = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamSettingSet', teamId)
       for (const [, content] of settingsFiles) {
         if (content) {
           // Return full v2 object with password removed
@@ -859,7 +859,7 @@ export default class OtomiStack {
   }
 
   getTeamAplNetpols(teamId: string): AplNetpolResponse[] {
-    const files = this.fileStore.getByKind('AplTeamNetworkControl', teamId)
+    const files = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamNetworkControl', teamId)
     return Array.from(files.values()) as AplNetpolResponse[]
   }
 
@@ -868,7 +868,7 @@ export default class OtomiStack {
   }
 
   getAllAplNetpols(): AplNetpolResponse[] {
-    const files = this.fileStore.getByKind('AplTeamNetworkControl')
+    const files = this.fileStore.getAllTeamResourcesByKind('AplTeamNetworkControl')
     return Array.from(files.values()) as AplNetpolResponse[]
   }
 
@@ -936,7 +936,7 @@ export default class OtomiStack {
   }
 
   getAllUsers(sessionUser: SessionUser): Array<User> {
-    const files = this.fileStore.getByKind('AplUser')
+    const files = this.fileStore.getPlatformResourcesByKind('AplUser')
     const aplObjects = Array.from(files.values()) as AplObject[]
     const users = aplObjects.map((aplObject) => {
       return { ...aplObject.spec, id: aplObject.metadata.name } as User
@@ -970,7 +970,7 @@ export default class OtomiStack {
     const user: User = { ...data, id: userId, initialPassword }
 
     // Get existing users' emails
-    const files = this.fileStore.getByKind('AplUser')
+    const files = this.fileStore.getPlatformResourcesByKind('AplUser')
     let existingUsersEmail = Array.from(files.values()).map((aplObject: AplObject) => aplObject.spec.email)
 
     if (!env.isDev) {
@@ -1120,7 +1120,7 @@ export default class OtomiStack {
   }
 
   getTeamAplCodeRepos(teamId: string): AplCodeRepoResponse[] {
-    const files = this.fileStore.getByKind('AplTeamCodeRepo', teamId)
+    const files = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamCodeRepo', teamId)
     return Array.from(files.values()) as AplCodeRepoResponse[]
   }
 
@@ -1129,7 +1129,7 @@ export default class OtomiStack {
   }
 
   getAllAplCodeRepos(): AplCodeRepoResponse[] {
-    const files = this.fileStore.getByKind('AplTeamCodeRepo')
+    const files = this.fileStore.getAllTeamResourcesByKind('AplTeamCodeRepo')
     return Array.from(files.values()) as AplCodeRepoResponse[]
   }
 
@@ -1298,7 +1298,7 @@ export default class OtomiStack {
   }
 
   getTeamAplBuilds(teamId: string): AplBuildResponse[] {
-    const files = this.fileStore.getByKind('AplTeamBuild', teamId)
+    const files = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamBuild', teamId)
     return Array.from(files.values()) as AplBuildResponse[]
   }
 
@@ -1307,7 +1307,7 @@ export default class OtomiStack {
   }
 
   getAllAplBuilds(): AplBuildResponse[] {
-    const files = this.fileStore.getByKind('AplTeamBuild')
+    const files = this.fileStore.getAllTeamResourcesByKind('AplTeamBuild')
     return Array.from(files.values()) as AplBuildResponse[]
   }
 
@@ -1387,7 +1387,7 @@ export default class OtomiStack {
   }
 
   getTeamAplPolicies(teamId: string): AplPolicyResponse[] {
-    const files = this.fileStore.getByKind('AplTeamPolicy', teamId)
+    const files = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamPolicy', teamId)
     return Array.from(files.values()) as AplPolicyResponse[]
   }
 
@@ -1401,7 +1401,7 @@ export default class OtomiStack {
   }
 
   getAllAplPolicies(): AplPolicyResponse[] {
-    const files = this.fileStore.getByKind('AplTeamPolicy')
+    const files = this.fileStore.getAllTeamResourcesByKind('AplTeamPolicy')
     return Array.from(files.values()) as AplPolicyResponse[]
   }
 
@@ -1610,7 +1610,7 @@ export default class OtomiStack {
   }
 
   getTeamAplWorkloads(teamId: string): AplWorkloadResponse[] {
-    const files = this.fileStore.getByKind('AplTeamWorkload', teamId)
+    const files = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamWorkload', teamId)
     return Array.from(files.values()) as AplWorkloadResponse[]
   }
 
@@ -1632,7 +1632,7 @@ export default class OtomiStack {
   }
 
   getAllAplWorkloads(): AplWorkloadResponse[] {
-    const files = this.fileStore.getByKind('AplTeamWorkload')
+    const files = this.fileStore.getAllTeamResourcesByKind('AplTeamWorkload')
     return Array.from(files.values()) as AplWorkloadResponse[]
   }
 
@@ -1738,7 +1738,7 @@ export default class OtomiStack {
   }
 
   getAllAplServices(): AplServiceResponse[] {
-    const files = this.fileStore.getByKind('AplTeamService')
+    const files = this.fileStore.getAllTeamResourcesByKind('AplTeamService')
     return Array.from(files.values()) as AplServiceResponse[]
   }
 
@@ -1747,7 +1747,7 @@ export default class OtomiStack {
   }
 
   getTeamAplServices(teamId: string): AplServiceResponse[] {
-    const files = this.fileStore.getByKind('AplTeamService', teamId)
+    const files = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamService', teamId)
     return Array.from(files.values()) as AplServiceResponse[]
   }
 
@@ -2155,7 +2155,7 @@ export default class OtomiStack {
   }
 
   getAllAplSealedSecrets(): AplSecretResponse[] {
-    const files = this.fileStore.getByKind('AplTeamSecret')
+    const files = this.fileStore.getAllTeamResourcesByKind('AplTeamSecret')
     return Array.from(files.values()) as AplSecretResponse[]
   }
 
@@ -2167,7 +2167,7 @@ export default class OtomiStack {
   }
 
   getAplSealedSecrets(teamId: string): AplSecretResponse[] {
-    const files = this.fileStore.getByKind('AplTeamSecret', teamId)
+    const files = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamSecret', teamId)
     return Array.from(files.values()) as AplSecretResponse[]
   }
 
@@ -2229,7 +2229,7 @@ export default class OtomiStack {
   }
 
   getAplKnowledgeBases(teamId: string): AplKnowledgeBaseResponse[] {
-    const files = this.fileStore.getByKind('AkamaiKnowledgeBase', teamId)
+    const files = this.fileStore.getTeamResourcesByKindAndTeamId('AkamaiKnowledgeBase', teamId)
     return Array.from(files.values()) as AplKnowledgeBaseResponse[]
   }
 
@@ -2294,12 +2294,12 @@ export default class OtomiStack {
   }
 
   getAplAgents(teamId: string): AplAgentResponse[] {
-    const files = this.fileStore.getByKind('AkamaiAgent', teamId)
+    const files = this.fileStore.getTeamResourcesByKindAndTeamId('AkamaiAgent', teamId)
     return Array.from(files.values()) as AplAgentResponse[]
   }
 
   getAllAplAgents(): AplAgentResponse[] {
-    const files = this.fileStore.getByKind('AkamaiAgent')
+    const files = this.fileStore.getAllTeamResourcesByKind('AkamaiAgent')
     return Array.from(files.values()) as AplAgentResponse[]
   }
 
