@@ -1,15 +1,15 @@
 // The in-memory key-value store: file path -> parsed content
-import path from 'path'
-import { globSync } from 'glob'
+import Debug from 'debug'
 import { ensureDir } from 'fs-extra'
 import { writeFile } from 'fs/promises'
+import { globSync } from 'glob'
+import { merge } from 'lodash'
+import path from 'path'
 import { stringify as stringifyYaml } from 'yaml'
 import { z } from 'zod'
-import { merge } from 'lodash'
-import { loadYaml } from '../utils'
-import { getFileMapForKind, getFileMaps, getResourceFilePath } from './file-map'
 import { APL_KINDS, AplKind, AplObject, AplPlatformObject, AplRecord, AplTeamObject } from '../otomi-models'
-import Debug from 'debug'
+import { loadRawYaml, loadYaml } from '../utils'
+import { getFileMapForKind, getFileMaps, getResourceFilePath } from './file-map'
 
 const debug = Debug('otomi:file-store')
 
@@ -44,6 +44,10 @@ function shouldSkipValidation(filePath: string): boolean {
   return filePath.includes('/sealedsecrets/') || filePath.includes('/workloadValues/')
 }
 
+function isRawContent(filePath: string): boolean {
+  return filePath.includes('/workloadValues/')
+}
+
 export class FileStore {
   private store: Map<string, AplObject> = new Map()
 
@@ -68,29 +72,33 @@ export class FileStore {
 
     await Promise.all(
       filesToLoad.map(async (filePath) => {
-        const rawContent = await loadYaml(filePath)
-        const relativePath = path.relative(envDir, filePath).replace(/\.dec$/, '')
+        try {
+          const rawContent = isRawContent(filePath) ? await loadRawYaml(filePath) : await loadYaml(filePath)
+          const relativePath = path.relative(envDir, filePath).replace(/\.dec$/, '')
 
-        // Skip validation for specific file paths
-        if (shouldSkipValidation(filePath)) {
-          allFiles.set(relativePath, rawContent as AplObject)
-          return
+          // Skip validation for specific file paths
+          if (shouldSkipValidation(filePath)) {
+            allFiles.set(relativePath, rawContent as AplObject)
+            return
+          }
+
+          // Validate all other kinds
+          const result = AplObjectSchema.safeParse(rawContent)
+
+          if (!result.success) {
+            debug(`Validation failed for ${relativePath}:`, result.error.message)
+            return
+          }
+
+          if (!result.data) {
+            debug(`No content found for ${relativePath}`)
+            return
+          }
+
+          allFiles.set(relativePath, result.data as AplObject)
+        } catch (error) {
+          debug(`Failed to load file ${filePath}:`, error)
         }
-
-        // Validate all other kinds
-        const result = AplObjectSchema.safeParse(rawContent)
-
-        if (!result.success) {
-          debug(`Validation failed for ${relativePath}:`, result.error.message)
-          return
-        }
-
-        if (!result.data) {
-          debug(`No content found for ${relativePath}`)
-          return
-        }
-
-        allFiles.set(relativePath, result.data as AplObject)
       }),
     )
 
@@ -171,23 +179,72 @@ export class FileStore {
     return filePath
   }
 
-  // Generic method for all resources (platform and team)
-  getByKind(kind: AplKind, teamId?: string): Map<string, AplObject> {
+  // Get platform resources (no team scope - e.g., AplUser, settings)
+  getPlatformResourcesByKind(kind: AplKind): Map<string, AplObject> {
     const fileMap = getFileMapForKind(kind)
     if (!fileMap) {
       throw new Error(`Unknown kind: ${kind}`)
     }
 
-    // Generate path prefix from template (e.g., 'env/teams/team1/workloads/')
-    const prefix = fileMap.pathTemplate.replace('{teamId}', teamId || '').replace('{name}.yaml', '')
-
+    // Platform resources don't have {teamId} in their path
+    // e.g., 'env/settings/{name}.yaml' → 'env/settings/'
+    const prefix = fileMap.pathTemplate.replace('{name}.yaml', '')
     const result = new Map<string, AplObject>()
+
     for (const filePath of this.store.keys()) {
       if (filePath.startsWith(prefix) && filePath.endsWith('.yaml')) {
         const content = this.store.get(filePath)
         if (content) result.set(filePath, content)
       }
     }
+
+    return result
+  }
+
+  // Get ALL team resources across all teams (e.g., all workloads, all services)
+  getAllTeamResourcesByKind(kind: AplKind): Map<string, AplObject> {
+    const fileMap = getFileMapForKind(kind)
+    if (!fileMap) {
+      throw new Error(`Unknown kind: ${kind}`)
+    }
+
+    // Extract resource path segment from template
+    // e.g., 'env/teams/{teamId}/workloads/{name}.yaml' → '/workloads'
+    const parts = fileMap.pathTemplate.split('{teamId}')
+    const resourcePath = parts[1].replace('/{name}.yaml', '')
+    const result = new Map<string, AplObject>()
+
+    // Match any path containing this resource segment
+    // e.g., matches 'env/teams/*/workloads/*.yaml'
+    for (const filePath of this.store.keys()) {
+      if (filePath.includes(resourcePath) && filePath.endsWith('.yaml')) {
+        const content = this.store.get(filePath)
+        if (content) result.set(filePath, content)
+      }
+    }
+
+    return result
+  }
+
+  getTeamResourcesByKindAndTeamId(kind: AplKind, teamId: string): Map<string, AplObject> {
+    const fileMap = getFileMapForKind(kind)
+    if (!fileMap) {
+      throw new Error(`Unknown kind: ${kind}`)
+    }
+
+    // Generate exact prefix for this team
+    // e.g., 'env/teams/team1/workloads/'
+    const prefix = fileMap.pathTemplate.replace('{teamId}', teamId).replace('{name}.yaml', '')
+    const result = new Map<string, AplObject>()
+
+    // Exact prefix match
+    for (const filePath of this.store.keys()) {
+      if (filePath.startsWith(prefix) && filePath.endsWith('.yaml')) {
+        const content = this.store.get(filePath)
+        if (content) result.set(filePath, content)
+      }
+    }
+
     return result
   }
 
