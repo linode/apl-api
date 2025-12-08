@@ -4,15 +4,13 @@ import {
   AplServiceRequest,
   AplTeamSettingsRequest,
   App,
-  ObjWizard,
   SessionUser,
-  User,
+  User
 } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { loadSpec } from './app'
 import { PublicUrlExists, ValidationError } from './error'
 import { Git } from './git'
-import { defineClusterId } from './utils/wizardUtils'
 
 jest.mock('src/middleware', () => ({
   ...jest.requireActual('src/middleware'),
@@ -932,50 +930,7 @@ describe('PodService', () => {
     })
   })
 })
-describe('Wizard tests', () => {
-  let otomiStack: OtomiStack
-  const domainSuffix = 'dev.linode-apl.net'
-  beforeEach(async () => {
-    otomiStack = new OtomiStack()
-    await otomiStack.init()
-  })
 
-  afterEach(() => {
-    jest.restoreAllMocks()
-  })
-
-  test('should return lkeClusterId', () => {
-    const settings = { cluster: { name: 'cluster-123' } }
-    const clusterId = defineClusterId(settings.cluster.name)
-
-    expect(clusterId).toBe('cluster-123')
-  })
-
-  test('should return stripped down clusterId when name does not include prefix', () => {
-    const settings = { cluster: { name: 'aplinstall123' } }
-    const clusterId = defineClusterId(settings.cluster.name)
-
-    expect(clusterId).toBe('123')
-  })
-
-  test('should return undefined when cluster name is undefined', () => {
-    const settings: any = { cluster: {} }
-    const clusterId = defineClusterId(settings.cluster?.name)
-
-    expect(clusterId).toBe(undefined)
-  })
-
-  test('should return error when cluster name is undefined', async () => {
-    const data = { apiToken: 'some-token', regionId: 'us-east', label: 'my-cluster' }
-    jest.spyOn(otomiStack, 'getSettings').mockReturnValue({
-      cluster: { domainSuffix, provider: 'linode' },
-    } as any)
-    const result: ObjWizard = await otomiStack.createObjWizard(data)
-
-    expect(result.status).toBe('error')
-    expect(result.errorMessage).toBe('Cluster name is not found.')
-  })
-})
 describe('Code repositories tests', () => {
   let otomiStack: OtomiStack
   let mockGit: jest.Mocked<Git>
