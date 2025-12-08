@@ -78,6 +78,11 @@ export const loadYaml = async (
   return parse(rawFile) as Record<string, any>
 }
 
+export async function loadRawYaml(path: string) {
+  const rawFile = await readFile(path, 'utf-8')
+  return rawFile as any
+}
+
 const valuesSchemaEndpointUrl = `${BASEURL}/apl/schema`
 let valuesSchema: Record<string, any>
 

@@ -8,7 +8,7 @@ import path from 'path'
 import { stringify as stringifyYaml } from 'yaml'
 import { z } from 'zod'
 import { APL_KINDS, AplKind, AplObject, AplPlatformObject, AplRecord, AplTeamObject } from '../otomi-models'
-import { loadYaml } from '../utils'
+import { loadRawYaml, loadYaml } from '../utils'
 import { getFileMapForKind, getFileMaps, getResourceFilePath } from './file-map'
 
 const debug = Debug('otomi:file-store')
@@ -72,29 +72,33 @@ export class FileStore {
 
     await Promise.all(
       filesToLoad.map(async (filePath) => {
-        const rawContent = await loadYaml(filePath, { isRaw: isRawContent(filePath) })
-        const relativePath = path.relative(envDir, filePath).replace(/\.dec$/, '')
+        try {
+          const rawContent = isRawContent(filePath) ? await loadRawYaml(filePath) : await loadYaml(filePath)
+          const relativePath = path.relative(envDir, filePath).replace(/\.dec$/, '')
 
-        // Skip validation for specific file paths
-        if (shouldSkipValidation(filePath)) {
-          allFiles.set(relativePath, rawContent as AplObject)
-          return
+          // Skip validation for specific file paths
+          if (shouldSkipValidation(filePath)) {
+            allFiles.set(relativePath, rawContent as AplObject)
+            return
+          }
+
+          // Validate all other kinds
+          const result = AplObjectSchema.safeParse(rawContent)
+
+          if (!result.success) {
+            debug(`Validation failed for ${relativePath}:`, result.error.message)
+            return
+          }
+
+          if (!result.data) {
+            debug(`No content found for ${relativePath}`)
+            return
+          }
+
+          allFiles.set(relativePath, result.data as AplObject)
+        } catch (error) {
+          debug(`Failed to load file ${filePath}:`, error)
         }
-
-        // Validate all other kinds
-        const result = AplObjectSchema.safeParse(rawContent)
-
-        if (!result.success) {
-          debug(`Validation failed for ${relativePath}:`, result.error.message)
-          return
-        }
-
-        if (!result.data) {
-          debug(`No content found for ${relativePath}`)
-          return
-        }
-
-        allFiles.set(relativePath, result.data as AplObject)
       }),
     )
 
