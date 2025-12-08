@@ -1,4 +1,4 @@
-import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -17,9 +17,9 @@ import {
   PublicUrlExists,
   ValidationError,
 } from 'src/error'
-import getRepo, { getWorktreeRepo, Git } from 'src/git'
-import { FileStore } from 'src/fileStore/file-store'
 import { getSettingsFileMaps } from 'src/fileStore/file-map'
+import { FileStore } from 'src/fileStore/file-store'
+import getRepo, { getWorktreeRepo, Git } from 'src/git'
 import { cleanSession, getSessionStack } from 'src/middleware'
 import {
   AplAgentRequest,
@@ -109,6 +109,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { getAIModels } from './ai/aiModelHandler'
 import { DatabaseCR } from './ai/DatabaseCR'
+import { getResourceFilePath, getSecretFilePath } from './fileStore/file-map'
 import {
   apply,
   checkPodExists,
@@ -130,9 +131,8 @@ import {
 import { getAplObjectFromV1, getV1MergeObject, getV1ObjectFromApl } from './utils/manifests'
 import { getSealedSecretsPEM, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
-import { ObjectStorageClient } from './utils/wizardUtils'
+import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
 import { fetchChartYaml, fetchWorkloadCatalog, NewHelmChartValues, sparseCloneChart } from './utils/workloadUtils'
-import { getResourceFilePath, getSecretFilePath } from './fileStore/file-map'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -301,12 +301,11 @@ export default class OtomiStack {
     const createdBuckets = [] as Array<string>
     if (data?.apiToken && data?.regionId) {
       const { cluster } = this.getSettings(['cluster'])
-      let lkeClusterId: null | number = null
-      if (cluster?.name?.includes('aplinstall')) {
-        lkeClusterId = Number(cluster?.name?.replace('aplinstall', ''))
-      } else if (lkeClusterId === null) {
-        return { status: 'error', errorMessage: 'Cluster ID is not found in the cluster name.' }
+      let lkeClusterId: undefined | string = defineClusterId(cluster?.name)
+      if (lkeClusterId === undefined) {
+        return { status: 'error', errorMessage: 'Cluster name is not found.' }
       }
+
       const bucketNames = {
         cnpg: `lke${lkeClusterId}-cnpg`,
         harbor: `lke${lkeClusterId}-harbor`,
