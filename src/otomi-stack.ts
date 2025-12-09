@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -1667,9 +1667,11 @@ export default class OtomiStack {
 
   getAplWorkload(teamId: string, name: string): AplWorkloadResponse {
     const workload = this.fileStore.getTeamResource('AplTeamWorkload', teamId, name)
+    const workloadValues = this.fileStore.getTeamResource('AplTeamWorkloadValues', teamId, name)
     if (!workload) {
       throw new NotExistError(`Workload ${name} not found in team ${teamId}`)
     }
+    set(workload, 'spec.values', workloadValues || '')
     return workload as AplWorkloadResponse
   }
 
