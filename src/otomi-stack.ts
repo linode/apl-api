@@ -615,15 +615,13 @@ export default class OtomiStack {
           const orig = this.getApp(id)
           if (orig && this.canToggleApp(id)) {
             const filePath = getResourceFilePath('AplApp', id)
-            const aplApp = toPlatformObject('AplApp', id, {
-              ...orig,
-              enabled,
-              values: { ...orig.values, enabled },
-            })
-            this.fileStore.set(filePath, aplApp)
+            const aplApp = this.fileStore.get(filePath)
+            if (!aplApp) {
+              throw new NotExistError(`App ${id} not found`)
+            }
+            set(aplApp, 'spec.enabled', enabled)
 
-            const app = { ...orig, enabled }
-            await this.saveAdminApp(app)
+            await this.saveAppToggle(aplApp)
             return { filePath, content: aplApp } as AplRecord
           }
           return undefined
@@ -1668,9 +1666,11 @@ export default class OtomiStack {
 
   getAplWorkload(teamId: string, name: string): AplWorkloadResponse {
     const workload = this.fileStore.getTeamResource('AplTeamWorkload', teamId, name)
+    const workloadValues = this.fileStore.getTeamResource('AplTeamWorkloadValues', teamId, name)
     if (!workload) {
       throw new NotExistError(`Workload ${name} not found in team ${teamId}`)
     }
+    set(workload, 'spec.values', workloadValues || '')
     return workload as AplWorkloadResponse
   }
 
@@ -2389,6 +2389,11 @@ export default class OtomiStack {
     }
 
     return { filePath, content: aplObject }
+  }
+  async saveAppToggle(app: AplObject): Promise<void> {
+    const globalPaths = getSecretPaths()
+    const appSecretPaths = this.extractAppSecretPaths(app.metadata.name, globalPaths)
+    await this.saveWithSecrets(app, appSecretPaths)
   }
 
   async saveAdminApp(app: App, secretPaths?: string[]): Promise<void> {
