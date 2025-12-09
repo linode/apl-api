@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.13.1](https://github.com/redkubes/otomi-api/compare/v4.12.0...v4.13.1) (2025-12-09)
+
+### Others
+
+* bump to node 24 ([#864](https://github.com/redkubes/otomi-api/issues/864)) ([e031e22](https://github.com/redkubes/otomi-api/commit/e031e224787c03ee9b5db44f4cc81df03d1fce5f))
+
 ## [4.13.0](https://github.com/redkubes/otomi-api/compare/v4.12.0...v4.13.0) (2025-12-01)
 
 
