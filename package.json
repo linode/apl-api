@@ -126,7 +126,7 @@
   },
   "scripts": {
     "build": "npm run clean && npm run build:models && tsc && tsc-alias --dir dist -v && copyup --error src/generated-schema.json src/values-schema.yaml src/ttyManifests/*.yaml src/ttyManifests/adminTtyManifests/*.yaml dist/src && copyup --error ./src/license/license.pem ./dist/src",
-    "build:models": "npm run build:spec && openapi-typescript src/generated-schema.json -o src/generated-schema.ts",
+    "build:models": "npm run build:spec && openapi-typescript src/generated-schema.json -o src/generated-schema.ts --default-non-nullable false",
     "build:spec": "tsx src/build-spec.ts",
     "clean": "rm -rf dist >/dev/null",
     "cz": "git-cz",
