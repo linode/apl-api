@@ -11,10 +11,10 @@ Cloudtty:
       - update-any
       - delete-any
     teamMember:
-      - create-any
-      - read-any
-      - update-any
-      - delete-any
+      - create
+      - read
+      - update
+      - delete
   type: object
   x-externalDocsPath: shell-tty
   properties:
