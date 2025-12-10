@@ -11,7 +11,9 @@ const config: Config.InitialOptions = {
     '^.+\\.tsx?$': 'babel-jest',
     '^.+\\.jsx?$': 'babel-jest',
   },
-  transformIgnorePatterns: ['/node_modules/(?!(@kubernetes/client-node|openid-client|oauth4webapi|jose)/)'],
+  transformIgnorePatterns: [
+    '/node_modules/(?!(@kubernetes/client-node|@apidevtools/json-schema-ref-parser|openid-client|oauth4webapi|jose)/)',
+  ],
   silent: false,
   verbose: true,
 }
