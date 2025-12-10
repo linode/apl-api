@@ -239,6 +239,13 @@ appsInfo:
     dependencies: Prometheus, Grafana, Otel
     about: Grafana Tempo is an open source, easy-to-use and high-scale distributed tracing backend. Tempo is cost-efficient, requiring only object storage to operate, and is deeply integrated with Grafana, Prometheus, and Loki.
     integration: APL installs and configures Tempo based on best-practices defaults. By default storage is configured to use the tempo bucket of the local Minio instance. For each team a Grafana agent is installed and configured to enable writes to the Tempo cluster.
+    isDeprecated: true
+    deprecationInfo:
+      message: Grafana Tempo is being deprecated.
+      reasons:
+        - This tracing tool is not considered as essential to run the platform.
+      options:
+        - Click 'I understand' to continue using Grafana Tempo.
   thanos:
     title: Thanos
     appVersion: 0.36.1
@@ -249,7 +256,14 @@ appsInfo:
     license: Apache 2.0
     dependencies: Prometheus, Grafana
     about: Thanos is a tool to set up a Highly Available Prometheus with long-term storage capabilities.
-    integration: APL installs and configures Thanos using sidecars ans leverages the central object storage configuration.
+    integration: APL installs and configures Thanos using sidecars and leverages the central object storage configuration.
+    isDeprecated: true
+    deprecationInfo:
+      message: Thanos is being deprecated.
+      reasons:
+        - Since most users opt to store metrics externally, thanos saw limited adoption.
+      options:
+        - Click 'I understand' to continue using Thanos
   trivy:
     title: Trivy Operator
     appVersion: 0.28.0

@@ -21,7 +21,7 @@ FROM ci as clean
 # below command removes the packages specified in devDependencies and set NODE_ENV to production
 RUN npm prune --production
 # --------------- Production stage
-FROM node:22-alpine AS prod
+FROM node:24-alpine AS prod
 
 ENV NODE_ENV=production
 ENV NODE_PATH='dist'
