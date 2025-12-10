@@ -9,7 +9,7 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set npm token
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -25,7 +25,7 @@ jobs:
           nvm use
           node -v
           npm install
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           repository: linode/apl-core
           path: apl-core
