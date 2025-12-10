@@ -929,6 +929,7 @@ quantityMem:
 rawValues:
   description: 'May define value overrides for a chart. WARNING: these values currently have no schema and will not be validated.'
   type: object
+  additionalProperties: true
   x-acl:
     platformAdmin: [read-any, update-any]
     teamAdmin: []
