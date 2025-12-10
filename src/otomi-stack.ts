@@ -538,7 +538,7 @@ export default class OtomiStack {
     const app = this.getApp(id)
     this.filterExcludedApp(app)
 
-    if (teamId === 'admin') return app
+    if (teamId === 'admin') return this.filterAppSecrets(app)
     return { id: app.id, enabled: app.enabled }
   }
 
@@ -564,7 +564,8 @@ export default class OtomiStack {
 
     if (teamId === 'admin')
       return providerSpecificApps.map((app) => {
-        return { ...app, enabled: Boolean(app.values?.enabled ?? true) } as App
+        const filtered = this.filterAppSecrets(app)
+        return { ...filtered, enabled: Boolean(app.values?.enabled ?? true) } as App
       })
 
     const core = this.getCore()
@@ -574,7 +575,10 @@ export default class OtomiStack {
         const inTeamApps = !!core.teamApps.find((a) => a.name === app.id)
         if (isShared || inTeamApps) return app
       })
-      .filter((app): app is App => app !== undefined) // Ensures no `undefined` elements
+      .filter((app): app is App => app !== undefined)
+
+    // Filter secrets from team apps
+    teamApps = teamApps.map((app) => this.filterAppSecrets(app))
 
     if (!picks) return teamApps
 
@@ -2326,6 +2330,25 @@ export default class OtomiStack {
   private extractAppSecretPaths(appName: string, globalPaths: string[]): string[] {
     const appPrefix = `apps.${appName}.`
     return globalPaths.filter((path) => path.startsWith(appPrefix)).map((path) => path.replace(appPrefix, ''))
+  }
+
+  private filterAppSecrets(app: App): App {
+    if (!app.values) return app
+
+    const globalSecretPaths = getSecretPaths()
+    const appSecretPaths = this.extractAppSecretPaths(app.id, globalSecretPaths)
+
+    if (appSecretPaths.length === 0) return app
+
+    // Clone the app to avoid mutating original
+    const filteredApp = cloneDeep(app)
+
+    // Remove each secret path from the values
+    appSecretPaths.forEach((secretPath) => {
+      unset(filteredApp.values, secretPath)
+    })
+
+    return filteredApp
   }
 
   private extractSettingsSecretPaths(kind: AplKind, globalPaths: string[]): string[] {
