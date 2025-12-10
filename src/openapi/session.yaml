@@ -5,6 +5,7 @@ Session:
       # readOnly: true
     core:
       type: object
+      additionalProperties: true
       # readOnly: true
     corrupt:
       type: boolean
@@ -60,4 +61,5 @@ Session:
           type: string
     valuesSchema:
       type: object
+      additionalProperties: true
   type: object
