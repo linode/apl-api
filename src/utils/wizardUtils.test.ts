@@ -15,11 +15,13 @@ jest.mock('@linode/api-v4', () => ({
 
 import { createBucket, createObjectStorageKeys, ObjectStorageKey, setToken } from '@linode/api-v4'
 import { OtomiError } from 'src/error'
-import { ObjectStorageClient } from './wizardUtils'
+import { ObjWizard } from 'src/otomi-models'
+import OtomiStack from 'src/otomi-stack'
+import { defineClusterId, ObjectStorageClient } from './wizardUtils'
 
 describe('ObjectStorageClient', () => {
   let client: ObjectStorageClient
-  const clusterId = 12345
+  let clusterId: string | undefined = '12345'
 
   beforeEach(() => {
     client = new ObjectStorageClient('test-token')
@@ -35,7 +37,16 @@ describe('ObjectStorageClient', () => {
   describe('createObjectStorageBucket', () => {
     const label = 'test-bucket'
     const region = 'us-east'
+    let otomiStack: OtomiStack
+    const domainSuffix = 'dev.linode-apl.net'
+    beforeEach(async () => {
+      otomiStack = new OtomiStack()
+      await otomiStack.init()
+    })
 
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
     it('should successfully create bucket', async () => {
       const mockResponse = { label: 'test-bucket' }
       ;(createBucket as jest.Mock).mockResolvedValue(mockResponse)
@@ -81,6 +92,38 @@ describe('ObjectStorageClient', () => {
       // @ts-ignore
       expect(result.code).toBe(500)
     })
+
+    test('should return lkeClusterId', () => {
+      const settings = { cluster: { name: 'cluster-123' } }
+      clusterId = defineClusterId(settings.cluster.name)
+
+      expect(clusterId).toBe('cluster-123')
+    })
+
+    test('should return stripped down clusterId when name does not include prefix', () => {
+      const settings = { cluster: { name: 'aplinstall123' } }
+      clusterId = defineClusterId(settings.cluster.name)
+
+      expect(clusterId).toBe('123')
+    })
+
+    test('should return undefined when cluster name is undefined', () => {
+      const settings: any = { cluster: {} }
+      clusterId = defineClusterId(settings.cluster?.name)
+
+      expect(clusterId).toBe(undefined)
+    })
+
+    test('should return error when cluster name is undefined', async () => {
+      const data = { apiToken: 'some-token', regionId: 'us-east', label: 'my-cluster' }
+      jest.spyOn(otomiStack, 'getSettings').mockReturnValue({
+        cluster: { domainSuffix, provider: 'linode' },
+      } as any)
+      const result: ObjWizard = await otomiStack.createObjWizard(data)
+
+      expect(result.status).toBe('error')
+      expect(result.errorMessage).toBe('Cluster name is not found.')
+    })
   })
 
   describe('createObjectStorageKey', () => {
@@ -103,7 +146,7 @@ describe('ObjectStorageClient', () => {
       }
       ;(createObjectStorageKeys as jest.Mock).mockResolvedValue(mockResponse)
 
-      const result = await client.createObjectStorageKey(clusterId, region, bucketNames)
+      const result = await client.createObjectStorageKey(clusterId!, region, bucketNames)
 
       expect(createObjectStorageKeys).toHaveBeenCalledWith({
         label: `lke${clusterId}-key-1704110400000`,
@@ -125,7 +168,7 @@ describe('ObjectStorageClient', () => {
       }
       ;(createObjectStorageKeys as jest.Mock).mockRejectedValue(mockError)
 
-      const result = await client.createObjectStorageKey(clusterId, region, bucketNames)
+      const result = await client.createObjectStorageKey(clusterId!, region, bucketNames)
       expect(result).toBeInstanceOf(OtomiError)
       // @ts-ignore
       expect(result.publicMessage).toBe('Your OAuth token is not authorized to use this endpoint')
