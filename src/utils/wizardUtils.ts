@@ -28,7 +28,7 @@ export class ObjectStorageClient {
   }
 
   public async createObjectStorageKey(
-    lkeClusterId: number,
+    lkeClusterId: string,
     region: string,
     bucketNames: string[],
   ): Promise<Pick<ObjectStorageKey, 'access_key' | 'secret_key' | 'regions'> | OtomiError> {
@@ -55,4 +55,9 @@ export class ObjectStorageClient {
       return error
     }
   }
+}
+// define cluster id based on cluster name
+export function defineClusterId(clusterName: string | undefined): string | undefined {
+  if (!clusterName) return undefined
+  return clusterName.replace('aplinstall', '')
 }
