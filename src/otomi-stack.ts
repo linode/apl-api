@@ -2270,7 +2270,12 @@ export default class OtomiStack {
       ? merge(cloneDeep(existing.spec), data.spec)
       : {
           foundationModel: data.spec?.foundationModel ?? existing.spec.foundationModel,
+          foundationModelEndpoint: data.spec?.foundationModelEndpoint ?? existing.spec.foundationModelEndpoint,
+          temperature: data.spec?.temperature ?? existing.spec.temperature,
+          topP: data.spec?.topP ?? existing.spec.topP,
+          maxTokens: data.spec?.maxTokens ?? existing.spec.maxTokens,
           agentInstructions: data.spec?.agentInstructions ?? existing.spec.agentInstructions,
+          routes: (data.spec?.routes ?? existing.spec.routes) as typeof existing.spec.routes,
           tools: (data.spec?.tools ?? existing.spec.tools) as typeof existing.spec.tools,
         }
 
