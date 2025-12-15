@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.13.2](https://github.com/redkubes/otomi-api/compare/v4.13.1...v4.13.2) (2025-12-15)
+
+
+### Bug Fixes
+
+* update getK8sPodLabelsForWorkload x-aclSchema ([#870](https://github.com/redkubes/otomi-api/issues/870)) ([6fdd3b5](https://github.com/redkubes/otomi-api/commit/6fdd3b5d6e924f91ca243bbb552daa6a64d72ef2))
+
 ### [4.13.1](https://github.com/redkubes/otomi-api/compare/v4.12.0...v4.13.1) (2025-12-09)
 
 ### Others
