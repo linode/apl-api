@@ -42,6 +42,21 @@ export const GIT_REPO_URL = str({
   devDefault: `file://${process.env.HOME}/workspace/linode/values-ofld1`,
 })
 export const GIT_USER = str({ desc: 'The git username' })
+export const CLUSTER_DOMAIN_SUFFIX = str({
+  desc: 'Domain suffix for the cluster (e.g., example.com)',
+  example: 'otomi.example.com',
+  devDefault: 'otomi.local',
+})
+export const JWT_ISSUER = str({
+  desc: 'Expected JWT issuer URL',
+  example: 'https://keycloak.example.com/realms/otomi',
+  default: undefined,
+})
+export const JWT_AUDIENCE = str({
+  desc: 'Expected JWT audience',
+  example: 'otomi-api',
+  default: 'otomi-api',
+})
 export const HELM_CHART_CATALOG = str({
   desc: 'The helm chart catalog',
   devDefault: 'https://github.com/linode/apl-charts.git',

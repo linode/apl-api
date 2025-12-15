@@ -9,6 +9,7 @@ import logger from 'morgan'
 import path from 'path'
 import { CleanOptions } from 'simple-git'
 import { default as Authz } from 'src/authz'
+import { waitForJwksReady } from 'src/jwt-verification'
 import {
   errorMiddleware,
   getIo,
@@ -174,6 +175,10 @@ export async function initApp(inOtomiStack?: OtomiStack) {
   }
   let server: Server | undefined
   if (!inOtomiStack && !env.isTest) {
+    // Wait for JWKS to be ready before starting server
+    // This prevents JWT verification failures during startup
+    await waitForJwksReady()
+
     // initialize full server
     const { PORT = 8080 } = process.env
     server = app

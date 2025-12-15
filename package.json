@@ -16,6 +16,7 @@
     "@types/json-schema": "7.0.15",
     "@types/jsonwebtoken": "9.0.10",
     "axios": "1.13.2",
+    "jose": "^5.2.0",
     "clean-deep": "3.4.0",
     "cors": "2.8.5",
     "debug": "4.4.3",
