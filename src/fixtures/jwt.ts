@@ -1,7 +1,8 @@
 import jwt, { SignOptions } from 'jsonwebtoken'
 import nock from 'nock'
+import { cleanEnv, OIDC_ENDPOINT } from 'src/validators'
 
-const { env } = process
+const env = cleanEnv({ OIDC_ENDPOINT })
 
 const privateKey = `-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAwaZ3afW0/zYy3HfJwAAr83PDdZvADuSJ6jTZk1+jprdHdG6P
@@ -43,9 +44,8 @@ const nockReply = {
     },
   ],
 }
-env.OIDC_ENDPOINT = 'https://bla.dida'
 
-nock(env.OIDC_ENDPOINT).persist().get('/.well-known/jwks.json').reply(200, nockReply)
+nock(env.OIDC_ENDPOINT).persist().get('/protocol/openid-connect/certs').reply(200, nockReply)
 
 export default function getToken(groups: string[], roles?: string[]): string {
   const payload = {

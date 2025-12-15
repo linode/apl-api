@@ -42,20 +42,15 @@ export const GIT_REPO_URL = str({
   devDefault: `file://${process.env.HOME}/workspace/linode/values-ofld1`,
 })
 export const GIT_USER = str({ desc: 'The git username' })
-export const CLUSTER_DOMAIN_SUFFIX = str({
-  desc: 'Domain suffix for the cluster (e.g., example.com)',
-  example: 'otomi.example.com',
-  devDefault: 'otomi.local',
-})
-export const JWT_ISSUER = str({
+export const OIDC_ENDPOINT = str({
   desc: 'Expected JWT issuer URL',
   example: 'https://keycloak.example.com/realms/otomi',
-  default: undefined,
+  devDefault: 'https://keycloak.example.com/realms/otomi',
 })
 export const JWT_AUDIENCE = str({
   desc: 'Expected JWT audience',
-  example: 'otomi-api',
-  default: 'otomi-api',
+  example: 'otomi',
+  default: 'otomi',
 })
 export const HELM_CHART_CATALOG = str({
   desc: 'The helm chart catalog',
@@ -69,7 +64,6 @@ export const GIT_PROVIDER_URL_PATTERNS = json({
     bitbucket: 'bitbucket\\.org\\/([^\\/]+)\\/([^\\/]+)\\/(?:src|raw)\\/([^\\/]+)\\/(.+)',
   },
 })
-export const OIDC_ENDPOINT = str()
 export const REGION = str({ desc: 'The cloud region' })
 export const ROARR_LOG = bool({ desc: 'To enable Lightship logs', default: false })
 export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '127.0.0.1' })

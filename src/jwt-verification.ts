@@ -1,12 +1,12 @@
 import { createRemoteJWKSet, jwtVerify } from 'jose'
 import Debug from 'debug'
-import { cleanEnv, CLUSTER_DOMAIN_SUFFIX } from 'src/validators'
+import { cleanEnv, JWT_AUDIENCE, OIDC_ENDPOINT } from 'src/validators'
 
 const debug = Debug('otomi:jwt')
-const env = cleanEnv({ CLUSTER_DOMAIN_SUFFIX })
+const env = cleanEnv({ OIDC_ENDPOINT, JWT_AUDIENCE })
 
 // JWKS endpoint - adjust based on your Keycloak/auth setup
-const JWKS_URL = `https://keycloak.${env.CLUSTER_DOMAIN_SUFFIX}/realms/otomi/protocol/openid-connect/certs`
+const JWKS_URL = `${env.OIDC_ENDPOINT}/protocol/openid-connect/certs`
 
 // Create remote JWKS - automatically caches and refreshes keys
 const JWKS = createRemoteJWKSet(new URL(JWKS_URL))
@@ -35,8 +35,8 @@ export async function verifyJwt(token: string): Promise<JWTPayload> {
 
   try {
     const { payload } = await jwtVerify(bearerToken, JWKS, {
-      issuer: `https://keycloak.${env.CLUSTER_DOMAIN_SUFFIX}/realms/otomi`,
-      audience: 'otomi-api', // Adjust to your configured audience
+      issuer: env.OIDC_ENDPOINT,
+      audience: env.JWT_AUDIENCE, // Adjust to your configured audience
     })
 
     debug('JWT verified successfully:', payload.sub)
