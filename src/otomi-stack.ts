@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -508,7 +508,9 @@ export default class OtomiStack {
     this.fileStore.set(filePath, aplObject)
 
     await this.saveSettings()
-    await this.doDeployment({ filePath, content: aplObject })
+    await this.doDeployment({ filePath, content: aplObject }, true, [
+      `${this.getRepoPath()}/env/settings/secrets.${settingId}.yaml`,
+    ])
     return settings
   }
 
@@ -603,7 +605,7 @@ export default class OtomiStack {
     this.fileStore.set(filePath, aplApp)
 
     await this.saveAdminApp(app)
-    await this.doDeployment({ filePath, content: aplApp })
+    await this.doDeployment({ filePath, content: aplApp }, true, [`${this.getRepoPath()}/env/apps/secrets.${id}.yaml`])
     return this.getApp(id)
   }
 
@@ -636,7 +638,7 @@ export default class OtomiStack {
     if (aplRecords.length === 0) {
       throw new Error(`Failed toggling apps ${ids.toString()}`)
     }
-    await this.doDeployments(aplRecords)
+    await this.doDeployments(aplRecords, false)
   }
 
   getTeams(): Array<Team> {
@@ -933,7 +935,7 @@ export default class OtomiStack {
 
   async deleteNetpol(teamId: string, name: string): Promise<void> {
     const filePath = await this.deleteTeamConfigItem('AplTeamNetworkControl', teamId, name)
-    await this.doDeleteDeployment([filePath], false)
+    await this.doDeleteDeployment([filePath])
   }
 
   getAllUsers(sessionUser: SessionUser): Array<User> {
@@ -1039,7 +1041,7 @@ export default class OtomiStack {
     }
 
     await this.deleteUserFile(id)
-    await this.doDeleteDeployment([filePath], false)
+    await this.doDeleteDeployment([filePath])
   }
 
   private canTeamAdminUpdateUserTeams(sessionUser: SessionUser, existingUser: User, updatedUserTeams: string[]) {
@@ -1197,7 +1199,7 @@ export default class OtomiStack {
 
   async deleteCodeRepo(teamId: string, name: string): Promise<void> {
     const filePath = await this.deleteTeamConfigItem('AplTeamCodeRepo', teamId, name)
-    await this.doDeleteDeployment([filePath], false)
+    await this.doDeleteDeployment([filePath])
   }
 
   async getRepoBranches(codeRepoName: string, teamId: string): Promise<string[]> {
@@ -1376,7 +1378,7 @@ export default class OtomiStack {
 
   async deleteBuild(teamId: string, name: string): Promise<void> {
     const filePath = await this.deleteTeamConfigItem('AplTeamBuild', teamId, name)
-    await this.doDeleteDeployment([filePath], false)
+    await this.doDeleteDeployment([filePath])
   }
 
   getTeamPolicies(teamId: string): Policies {
@@ -1710,7 +1712,7 @@ export default class OtomiStack {
 
   async deleteWorkload(teamId: string, name: string): Promise<void> {
     const filePath = await this.deleteTeamWorkload('AplTeamWorkload', teamId, name)
-    await this.doDeleteDeployment([filePath], false)
+    await this.doDeleteDeployment([filePath])
   }
 
   async editWorkloadValues(teamId: string, name: string, data: WorkloadValues): Promise<WorkloadValues> {
@@ -1812,7 +1814,7 @@ export default class OtomiStack {
 
   async deleteService(teamId: string, name: string): Promise<void> {
     const filePath = await this.deleteTeamConfigItem('AplTeamService', teamId, name)
-    await this.doDeleteDeployment([filePath], false)
+    await this.doDeleteDeployment([filePath])
   }
 
   checkPublicUrlInUse(teamId: string, service: AplServiceRequest): void {
@@ -1880,12 +1882,12 @@ export default class OtomiStack {
     }
   }
 
-  async doDeleteDeployment(filePaths: string[], encryptSecrets = true, files?: string[]): Promise<void> {
+  async doDeleteDeployment(filePaths: string[]): Promise<void> {
     const rootStack = await getSessionStack()
 
     try {
       // Commit and push Git changes
-      await this.git.save(this.editor!, encryptSecrets, files)
+      await this.git.save(this.editor!, false)
       // Pull the latest changes to ensure we have the most recent state
       await rootStack.git.git.pull()
 
@@ -2137,7 +2139,7 @@ export default class OtomiStack {
   async deleteSealedSecret(teamId: string, name: string): Promise<void> {
     const filePath = this.fileStore.deleteTeamResource('AplTeamSecret', teamId, name)
     await this.git.removeFile(filePath)
-    await this.doDeleteDeployment([filePath], false)
+    await this.doDeleteDeployment([filePath])
   }
 
   async getSealedSecret(teamId: string, name: string): Promise<SealedSecret> {
@@ -2220,7 +2222,7 @@ export default class OtomiStack {
     const databasePath = getTeamDatabaseValuesFilePath(teamId, `${name}.yaml`)
     await this.git.removeFile(relativePath)
     await this.git.removeFile(databasePath)
-    await this.doDeleteDeployment([filePath], false)
+    await this.doDeleteDeployment([filePath])
   }
 
   async getAplKnowledgeBase(teamId: string, name: string): Promise<AplKnowledgeBaseResponse> {
@@ -2290,7 +2292,7 @@ export default class OtomiStack {
     const filePath = this.fileStore.deleteTeamResource('AkamaiAgent', teamId, name)
 
     await this.git.removeFile(filePath)
-    await this.doDeleteDeployment([filePath], false)
+    await this.doDeleteDeployment([filePath])
   }
 
   getAplAgent(teamId: string, name: string): AplAgentResponse {
