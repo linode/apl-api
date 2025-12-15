@@ -51,6 +51,7 @@ export default function getToken(groups: string[], roles?: string[]): string {
   const payload = {
     name: 'Joe Test',
     email: 'test.user@test.net',
+    sub: 'mock-sub-value',
     groups,
     roles,
   }
