@@ -42,10 +42,15 @@ export const GIT_REPO_URL = str({
   devDefault: `file://${process.env.HOME}/workspace/linode/values-ofld1`,
 })
 export const GIT_USER = str({ desc: 'The git username' })
-export const OIDC_ENDPOINT = str({
+export const SSO_ISSUER = str({
   desc: 'Expected JWT issuer URL',
   example: 'https://keycloak.example.com/realms/otomi',
   devDefault: 'https://keycloak.example.com/realms/otomi',
+})
+export const SSO_JWKS_URI = str({
+  desc: 'Expected JWT issuer URL',
+  example: 'https://keycloak.example.com/realms/otomi/protocol/openid-connect/certs',
+  devDefault: 'https://keycloak.example.com/realms/otomi/protocol/openid-connect/certs',
 })
 export const JWT_AUDIENCE = str({
   desc: 'Expected JWT audience',

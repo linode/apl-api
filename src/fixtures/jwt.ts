@@ -1,8 +1,8 @@
 import jwt, { SignOptions } from 'jsonwebtoken'
 import nock from 'nock'
-import { cleanEnv, OIDC_ENDPOINT } from 'src/validators'
+import { cleanEnv, SSO_ISSUER } from 'src/validators'
 
-const env = cleanEnv({ OIDC_ENDPOINT })
+const env = cleanEnv({ SSO_ISSUER })
 
 const privateKey = `-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAwaZ3afW0/zYy3HfJwAAr83PDdZvADuSJ6jTZk1+jprdHdG6P
@@ -45,7 +45,7 @@ const nockReply = {
   ],
 }
 
-nock(env.OIDC_ENDPOINT).persist().get('/protocol/openid-connect/certs').reply(200, nockReply)
+nock(env.SSO_ISSUER).persist().get('/protocol/openid-connect/certs').reply(200, nockReply)
 
 export default function getToken(groups: string[], roles?: string[]): string {
   const payload = {
@@ -59,7 +59,7 @@ export default function getToken(groups: string[], roles?: string[]): string {
     algorithm: 'RS256',
     expiresIn: '1d',
     audience: 'otomi',
-    issuer: env.OIDC_ENDPOINT,
+    issuer: env.SSO_ISSUER,
   }
 
   let token

@@ -1,7 +1,6 @@
 /* eslint-disable no-param-reassign */
 import Debug from 'debug'
 import { RequestHandler } from 'express'
-import { jwtDecode } from 'jwt-decode'
 import { verifyJwt } from 'src/jwt-verification'
 import { getMockEmail, getMockGroups, getMockName } from 'src/mocks'
 import { JWT, OpenApiRequestExt, SessionUser } from 'src/otomi-models'
@@ -83,6 +82,7 @@ export function jwtMiddleware(): RequestHandler {
 
       // Extract user info from verified payload
       const { name, email, roles, groups, sub } = payload
+
       req.user = getUser({ name, email, roles: roles || [], groups: groups || [], sub }, otomi)
 
       return next()
