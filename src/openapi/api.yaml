@@ -322,7 +322,7 @@ paths:
       operationId: getK8sPodLabelsForWorkload
       x-eov-operation-handler: v1/teams/{teamId}/kubernetes/networkPolicies
       description: Get Podlabels from given workload
-      x-aclSchema: NetworkPolicies
+      x-aclSchema: Netpol
       parameters:
         - name: workloadName
           in: query
