@@ -1,8 +1,8 @@
 Settings:
   x-acl:
     platformAdmin: [read-any, update-any]
-    teamAdmin: [read]
-    teamMember: [read]
+    teamAdmin: [read-any]
+    teamMember: [read-any]
   additionalProperties: false
   properties:
     alerts:
