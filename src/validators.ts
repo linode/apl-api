@@ -146,6 +146,14 @@ export const AGENT_KIND = str({
   desc: 'The kind for AkamaiAgent custom resources',
   default: 'AkamaiAgent',
 })
+export const STARTUP_RETRY_COUNT = num({
+  desc: 'Number of retries for startup dependencies (JWKS, tools server)',
+  default: 300,
+})
+export const STARTUP_RETRY_INTERVAL_MS = num({
+  desc: 'Retry interval in milliseconds for startup dependencies',
+  default: 1000,
+})
 const { env } = process
 export function cleanEnv<T>(validators: { [K in keyof T]: ValidatorSpec<T[K]> }, options: CleanOptions<T> = {}) {
   if (env.NODE_ENV === 'test') {

@@ -1,10 +1,17 @@
 import { createRemoteJWKSet, JWTPayload, jwtVerify } from 'jose'
 import Debug from 'debug'
 import retry from 'async-retry'
-import { cleanEnv, JWT_AUDIENCE, SSO_ISSUER, SSO_JWKS_URI } from 'src/validators'
+import {
+  cleanEnv,
+  JWT_AUDIENCE,
+  SSO_ISSUER,
+  SSO_JWKS_URI,
+  STARTUP_RETRY_COUNT,
+  STARTUP_RETRY_INTERVAL_MS,
+} from 'src/validators'
 
 const debug = Debug('otomi:jwt')
-const env = cleanEnv({ SSO_ISSUER, JWT_AUDIENCE, SSO_JWKS_URI })
+const env = cleanEnv({ SSO_ISSUER, JWT_AUDIENCE, SSO_JWKS_URI, STARTUP_RETRY_COUNT, STARTUP_RETRY_INTERVAL_MS })
 const JWKS_URL = env.SSO_JWKS_URI
 
 // Create remote JWKS - automatically caches and refreshes keys
@@ -42,7 +49,7 @@ export async function verifyJwt(token: string): Promise<AppJWTPayload> {
     }
   } catch (error: any) {
     debug('JWT verification failed:', error.message)
-    throw new Error(`JWT verification failed: ${error.message}`)
+    throw error
   }
 }
 
@@ -74,9 +81,9 @@ export async function waitForJwksReady(): Promise<void> {
       }
     },
     {
-      retries: 300, // 10 minutes total with 2s minTimeout
-      minTimeout: 2000,
-      maxTimeout: 2000,
+      retries: env.STARTUP_RETRY_COUNT,
+      minTimeout: env.STARTUP_RETRY_INTERVAL_MS,
+      maxTimeout: env.STARTUP_RETRY_INTERVAL_MS,
     },
   )
 }

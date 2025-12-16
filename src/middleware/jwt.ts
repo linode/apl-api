@@ -87,7 +87,6 @@ export function jwtMiddleware(): RequestHandler {
 
       return next()
     } catch (error: any) {
-      debug('JWT verification failed:', error.message)
       return res.status(401).send({
         message: 'Unauthorized',
         error: `JWT verification failed: ${error.message}`,
