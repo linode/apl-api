@@ -53,31 +53,32 @@ export async function verifyJwt(token: string): Promise<AppJWTPayload> {
   }
 }
 
-/**
- * Wait for JWKS endpoint to become ready during startup
- * This prevents race conditions during pod initialization
- */
 export async function waitForJwksReady(): Promise<void> {
   debug('Waiting for JWKS endpoint to become ready...')
 
   await retry(
     async () => {
       try {
-        // Try a dummy verification, we only care that JWKS fetch succeeds
-        // The verification will fail (invalid token), but JWKS fetch should work
-        await verifyJwt('invalid.fake.token').catch(() => {})
-
-        debug('JWKS endpoint reachable — continuing startup.')
+        // Try a dummy verification with an invalid token
+        // We only care that JWKS fetch succeeds, not that the token is valid
+        await verifyJwt('invalid.fake.token')
       } catch (err: any) {
-        // Check if error is network/connection related (not verification)
-        if (err?.code === 'ECONNREFUSED' || err?.message?.includes('fetch')) {
-          debug(`JWKS not ready yet, retrying...`)
-          throw err // Retry
-        } else {
-          // JWKS is reachable, just token validation failed (expected)
-          debug('JWKS endpoint reachable — continuing startup.')
+        // If we get a JWT verification error, JWKS successfully fetched and processed the token
+        // This means JWKS is working! (Even though token was rejected - that's expected)
+        const isJwtVerificationError =
+          err?.code?.startsWith('ERR_JW') || // jose library error codes (ERR_JWS_INVALID, ERR_JWT_INVALID, etc.)
+          err?.message?.includes('signature') ||
+          err?.message?.includes('invalid') ||
+          err?.message?.includes('expired') ||
+          err?.message?.includes('claim')
+
+        if (isJwtVerificationError) {
+          debug('JWKS endpoint reachable (token verification worked) — continuing startup.')
           return
         }
+
+        debug(`JWKS not ready yet: ${err.message}, retrying...`)
+        throw err
       }
     },
     {

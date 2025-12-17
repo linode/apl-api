@@ -18,6 +18,7 @@ import {
   jwtMiddleware,
   sessionMiddleware,
 } from 'src/middleware'
+import { apiRateLimiter, authRateLimiter } from 'src/middleware/rate-limit'
 import { setMockIdx } from 'src/mocks'
 import { AplResponseObject, OpenAPIDoc, Schema } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
@@ -158,6 +159,15 @@ export async function initApp(inOtomiStack?: OtomiStack) {
   app.use(logger('dev'))
   app.use(cors())
   app.use(express.json({ limit: env.EXPRESS_PAYLOAD_LIMIT }))
+
+  // Apply rate limiting BEFORE JWT verification to prevent DoS attacks
+  if (!env.isTest) {
+    app.use('/v1', apiRateLimiter) // General API rate limit for v1
+    app.use('/v1', authRateLimiter) // Stricter rate limit for JWT verification on v1
+    app.use('/v2', apiRateLimiter) // General API rate limit for v2
+    app.use('/v2', authRateLimiter) // Stricter rate limit for JWT verification on v2
+  }
+
   app.use(jwtMiddleware())
   if (env.isDev) {
     app.all('/mock/:idx', (req, res, next) => {
@@ -175,7 +185,6 @@ export async function initApp(inOtomiStack?: OtomiStack) {
   }
   let server: Server | undefined
   if (!inOtomiStack && !env.isTest) {
-    // Wait for JWKS to be ready before starting server
     // This prevents JWT verification failures during startup
     await waitForJwksReady()
 
