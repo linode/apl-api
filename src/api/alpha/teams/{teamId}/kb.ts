@@ -8,10 +8,10 @@ const debug = Debug('otomi:api:alpha:teams:kb')
  * GET /alpha/teams/{teamId}/kb
  * Get all knowledge bases for a team
  */
-export const getAplKnowledgeBases = (req: OpenApiRequestExt, res: Response): void => {
+export const getAplKnowledgeBases = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId } = req.params
   debug(`getAplKnowledgeBases(${teamId})`)
-  const v = req.otomi.getAplKnowledgeBases(decodeURIComponent(teamId))
+  const v = await req.otomi.getAplKnowledgeBases(decodeURIComponent(teamId))
   res.json(v)
 }
 

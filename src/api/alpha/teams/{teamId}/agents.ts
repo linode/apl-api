@@ -8,10 +8,10 @@ const debug = Debug('otomi:api:alpha:teams:agents')
  * GET /alpha/teams/{teamId}/agents
  * Get all agents for a team
  */
-export const getAplAgents = (req: OpenApiRequestExt, res: Response): void => {
+export const getAplAgents = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId } = req.params
   debug(`getAplAgents(${teamId})`)
-  const v = req.otomi.getAplAgents(decodeURIComponent(teamId))
+  const v = await req.otomi.getAplAgents(decodeURIComponent(teamId))
   res.json(v)
 }
 

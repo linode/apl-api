@@ -14,6 +14,12 @@ const debug = Debug('otomi:ai:k8s')
 let appsApiClient: AppsV1Api | undefined
 let customObjectsApiClient: CustomObjectsApi | undefined
 
+export interface KubernetesObjectWithStatus extends KubernetesObject {
+  status: {
+    [key: string]: any
+  }
+}
+
 // Export function to reset api clients for testing
 export function resetApiClients(): void {
   appsApiClient = undefined
@@ -141,7 +147,7 @@ export async function getAkamaiKnowledgeBaseCR(namespace: string, name: string):
   }
 }
 
-export async function listAkamaiAgentCRs(namespace: string): Promise<KubernetesObject[]> {
+export async function listAkamaiAgentCRs(namespace: string): Promise<KubernetesObjectWithStatus[]> {
   const customObjectsApi = getCustomObjectsApiClient()
 
   try {
@@ -150,7 +156,7 @@ export async function listAkamaiAgentCRs(namespace: string): Promise<KubernetesO
       version: 'v1alpha1',
       namespace,
       plural: 'akamaiagents',
-    })) as KubernetesListObject<KubernetesObject>
+    })) as KubernetesListObject<KubernetesObjectWithStatus>
 
     debug(`Found ${result.items.length} AkamaiAgent CRs in namespace ${namespace}`)
     return result.items
@@ -160,7 +166,7 @@ export async function listAkamaiAgentCRs(namespace: string): Promise<KubernetesO
   }
 }
 
-export async function listAkamaiKnowledgeBaseCRs(namespace: string): Promise<KubernetesObject[]> {
+export async function listAkamaiKnowledgeBaseCRs(namespace: string): Promise<KubernetesObjectWithStatus[]> {
   const customObjectsApi = getCustomObjectsApiClient()
 
   try {
@@ -169,7 +175,7 @@ export async function listAkamaiKnowledgeBaseCRs(namespace: string): Promise<Kub
       version: 'v1alpha1',
       namespace,
       plural: 'akamaiknowledgebases',
-    })) as KubernetesListObject<KubernetesObject>
+    })) as KubernetesListObject<KubernetesObjectWithStatus>
 
     debug(`Found ${result.items.length} AkamaiKnowledgeBase CRs in namespace ${namespace}`)
     return result.items
