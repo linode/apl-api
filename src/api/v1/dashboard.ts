@@ -9,8 +9,8 @@ const debug = Debug('otomi:api:v1:dashboard')
  * Get dashboard information
  */
 export const getDashboard = (req: OpenApiRequestExt, res: Response): void => {
-  const { teamName } = req.query
-  debug(`getDashboard(${teamName})`)
-  const v = req.otomi.getDashboard(teamName as string)
+  const { teamId } = req.query
+  debug(`getDashboard(${teamId})`)
+  const v = req.otomi.getDashboard(teamId as string)
   res.json(v)
 }
