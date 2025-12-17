@@ -1278,13 +1278,13 @@ export default class OtomiStack {
     return internalRepoUrls
   }
 
-  getDashboard(teamName: string): Array<any> {
-    const codeRepos = teamName ? this.getTeamAplCodeRepos(teamName) : this.getAllCodeRepos()
-    const builds = teamName ? this.getTeamAplBuilds(teamName) : this.getAllBuilds()
-    const workloads = teamName ? this.getTeamAplWorkloads(teamName) : this.getAllWorkloads()
-    const services = teamName ? this.getTeamAplServices(teamName) : this.getAllServices()
-    const secrets = teamName ? this.getAplSealedSecrets(teamName) : this.getAllAplSealedSecrets()
-    const netpols = teamName ? this.getTeamAplNetpols(teamName) : this.getAllNetpols()
+  getDashboard(teamId: string): Array<any> {
+    const codeRepos = teamId ? this.getTeamAplCodeRepos(teamId) : this.getAllCodeRepos()
+    const builds = teamId ? this.getTeamAplBuilds(teamId) : this.getAllBuilds()
+    const workloads = teamId ? this.getTeamAplWorkloads(teamId) : this.getAllWorkloads()
+    const services = teamId ? this.getTeamAplServices(teamId) : this.getAllServices()
+    const secrets = teamId ? this.getAplSealedSecrets(teamId) : this.getAllAplSealedSecrets()
+    const netpols = teamId ? this.getTeamAplNetpols(teamId) : this.getAllNetpols()
 
     return [
       { name: 'code-repositories', count: codeRepos?.length },
