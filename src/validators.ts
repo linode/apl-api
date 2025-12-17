@@ -160,11 +160,11 @@ export const RATE_LIMIT_WINDOW_MS = num({
 })
 export const RATE_LIMIT_MAX_REQUESTS = num({
   desc: 'Maximum number of requests per IP per time window for general API rate limiting',
-  default: 100,
+  default: 2000,
 })
 export const RATE_LIMIT_AUTH_MAX_ATTEMPTS = num({
   desc: 'Maximum number of failed authentication attempts per IP per time window',
-  default: 10,
+  default: 500,
 })
 const { env } = process
 export function cleanEnv<T>(validators: { [K in keyof T]: ValidatorSpec<T[K]> }, options: CleanOptions<T> = {}) {
