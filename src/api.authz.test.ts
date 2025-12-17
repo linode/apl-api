@@ -1139,7 +1139,10 @@ describe('API authz tests', () => {
       await agent.post('/alpha/teams/team1/agents').send(agentData).expect(401)
     })
   })
-  test('team member can access settings', async () => {
-    await agent.get('/v1/settings').set('Authorization', `Bearer ${teamMemberToken}`).expect(200)
+  test('team member cannot access settings', async () => {
+    await agent.get('/v1/settings').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
+  })
+  test('team admin cannot access settings', async () => {
+    await agent.get('/v1/settings').set('Authorization', `Bearer ${teamAdminToken}`).expect(403)
   })
 })
