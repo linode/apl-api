@@ -186,7 +186,12 @@ export async function initApp(inOtomiStack?: OtomiStack) {
   let server: Server | undefined
   if (!inOtomiStack && !env.isTest) {
     // This prevents JWT verification failures during startup
-    await waitForJwksReady()
+    // Skip JWKS check in development mode to allow local development without Keycloak
+    if (!env.isDev) {
+      await waitForJwksReady()
+    } else {
+      debug('Skipping JWKS verification in development mode')
+    }
 
     // initialize full server
     const { PORT = 8080 } = process.env
