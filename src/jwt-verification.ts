@@ -61,7 +61,7 @@ export async function waitForJwksReady(): Promise<void> {
       try {
         // Try a dummy verification with an invalid token
         // We only care that JWKS fetch succeeds, not that the token is valid
-        const invalidJWT = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.invalid_signature'                                                                                               
+        const invalidJWT = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.invalid_signature'
         await verifyJwt(invalidJWT)
       } catch (err: any) {
         // If we get a JWT verification error, JWKS successfully fetched and processed the token
