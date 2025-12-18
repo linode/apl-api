@@ -641,7 +641,11 @@ export default class OtomiStack {
     if (aplRecords.length === 0) {
       throw new Error(`Failed toggling apps ${ids.toString()}`)
     }
-    await this.doDeployments(aplRecords, false)
+    await this.doDeployments(
+      aplRecords,
+      true,
+      ids.map((id) => `${this.getRepoPath()}/env/apps/secrets.${id}.yaml`),
+    )
   }
 
   getTeams(): Array<Team> {
