@@ -2,6 +2,47 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.14.0](https://github.com/redkubes/otomi-api/compare/v4.13.0...v4.14.0) (2025-12-19)
+
+
+### Features
+
+* add filestore as in-memory object ([#857](https://github.com/redkubes/otomi-api/issues/857)) ([4eaa765](https://github.com/redkubes/otomi-api/commit/4eaa7658bdc69dd02d28164dae44dc9973116bf5))
+* add JWT verification ([#875](https://github.com/redkubes/otomi-api/issues/875)) ([dd0ff66](https://github.com/redkubes/otomi-api/commit/dd0ff66f52acb92d01bbe6c84f40f092a430d602))
+* deprecate tempo ([#854](https://github.com/redkubes/otomi-api/issues/854)) ([f743986](https://github.com/redkubes/otomi-api/commit/f743986577c22734c6f5fc779e8f622626583572))
+* deprecated thanos ([#853](https://github.com/redkubes/otomi-api/issues/853)) ([622082c](https://github.com/redkubes/otomi-api/commit/622082ca731fd378ab5751a37fc879cf6fa4f523))
+* unset secrets from app endpoints ([#868](https://github.com/redkubes/otomi-api/issues/868)) ([50b6548](https://github.com/redkubes/otomi-api/commit/50b6548a39493bfe99368b59e7db9ca0929349c1))
+
+
+### Bug Fixes
+
+* add default status object when loading file store ([#878](https://github.com/redkubes/otomi-api/issues/878)) ([7b2e255](https://github.com/redkubes/otomi-api/commit/7b2e255fb09a70f488c073000181f633ff2d7453))
+* authorization for v2 endpoints and add tests for it ([#861](https://github.com/redkubes/otomi-api/issues/861)) ([c1ec1a8](https://github.com/redkubes/otomi-api/commit/c1ec1a81b9bed97bfb16fa8d3d88b71b9cf24f15))
+* dashboard endpoint ([#876](https://github.com/redkubes/otomi-api/issues/876)) ([037d3f1](https://github.com/redkubes/otomi-api/commit/037d3f129a3065a504ba31b7bfe64a762f29a770))
+* encryp toggling of apps ([#877](https://github.com/redkubes/otomi-api/issues/877)) ([d3b240c](https://github.com/redkubes/otomi-api/commit/d3b240c67efc8d3dc465dcb9cf8119947f8a2e73))
+* load workload values ([#860](https://github.com/redkubes/otomi-api/issues/860)) ([9d09335](https://github.com/redkubes/otomi-api/commit/9d09335e855a13aaa3ab8af5ec187a1aea0a91f4))
+* object storage wizard clusterId fix ([#867](https://github.com/redkubes/otomi-api/issues/867)) ([c2ea23b](https://github.com/redkubes/otomi-api/commit/c2ea23bf4b34a4b6dd6c61ae49f9066116da0608))
+* re-encrypting values ([#871](https://github.com/redkubes/otomi-api/issues/871)) ([fba49e1](https://github.com/redkubes/otomi-api/commit/fba49e185e17139e5f71a70d1e9a46c5f7b6a476))
+* return workload values correctly from workloads get endpoint ([#869](https://github.com/redkubes/otomi-api/issues/869)) ([9d95e88](https://github.com/redkubes/otomi-api/commit/9d95e88b0ade8a70a24e970626497be0c32b7485))
+* revert structural change of app values on toggle ([#863](https://github.com/redkubes/otomi-api/issues/863)) ([97bafa0](https://github.com/redkubes/otomi-api/commit/97bafa0658c84b29446e797bad2c8f890dec5d8d))
+* saving workloadValues and toggling apps ([#862](https://github.com/redkubes/otomi-api/issues/862)) ([03bc0b3](https://github.com/redkubes/otomi-api/commit/03bc0b37848af1641bb6df396cf2adf065204b76))
+* update getK8sPodLabelsForWorkload x-aclSchema ([#870](https://github.com/redkubes/otomi-api/issues/870)) ([30187c0](https://github.com/redkubes/otomi-api/commit/30187c0e6d1ebce8e992523d3a3ab78f4a882699))
+
+
+### Others
+
+* bump to node 24 ([#864](https://github.com/redkubes/otomi-api/issues/864)) ([e4d32da](https://github.com/redkubes/otomi-api/commit/e4d32daf7385e8da4154fef3f8d984073b1ba8e2))
+* **deps:** bump @apidevtools/json-schema-ref-parser from 14.2.1 to 15.1.2 ([#849](https://github.com/redkubes/otomi-api/issues/849)) ([78b3304](https://github.com/redkubes/otomi-api/commit/78b3304095fbe43cc2e2432028aa0696e4a6e7a6))
+* **deps:** bump @eslint/compat from 1.4.1 to 2.0.0 ([#848](https://github.com/redkubes/otomi-api/issues/848)) ([50a3c6e](https://github.com/redkubes/otomi-api/commit/50a3c6e76c21765ea4e987158c45e082716ab97a))
+* **deps:** bump actions/checkout from 5 to 6 ([#855](https://github.com/redkubes/otomi-api/issues/855)) ([e7f2ed3](https://github.com/redkubes/otomi-api/commit/e7f2ed3d5e3d4b31c9f2b9dc7a4001f645c0616c))
+* **deps:** bump actions/upload-artifact from 5 to 6 ([#874](https://github.com/redkubes/otomi-api/issues/874)) ([880a828](https://github.com/redkubes/otomi-api/commit/880a8284dd298212e51c1ee7cce6a06f10b8914c))
+* **deps:** bump glob from 11.0.3 to 13.0.0 ([#866](https://github.com/redkubes/otomi-api/issues/866)) ([f0af2e1](https://github.com/redkubes/otomi-api/commit/f0af2e156d4daa62307f2b25314cee10e58baa7e))
+* **deps:** bump openapi-schema-validator from 3.0.3 to 12.1.3 ([#827](https://github.com/redkubes/otomi-api/issues/827)) ([3420429](https://github.com/redkubes/otomi-api/commit/342042912899be1a30e2952656493d025a7b39e0))
+* **deps:** bump openapi-typescript from 5.3.0 to 7.10.1 ([#841](https://github.com/redkubes/otomi-api/issues/841)) ([5fefc19](https://github.com/redkubes/otomi-api/commit/5fefc1948da9d9425fc22b5bc5e3836d92822a71))
+* **deps:** bump the npm-dependencies group across 1 directory with 13 updates ([#859](https://github.com/redkubes/otomi-api/issues/859)) ([fd3d131](https://github.com/redkubes/otomi-api/commit/fd3d1311bada40f9f7e2e699bf35dc6eea9fa094))
+* **deps:** bump the npm-dependencies group with 10 updates ([#865](https://github.com/redkubes/otomi-api/issues/865)) ([e534191](https://github.com/redkubes/otomi-api/commit/e534191558919d00d2cc477fd974ab3455fe916c))
+* **deps:** bump the npm-dependencies group with 6 updates ([#872](https://github.com/redkubes/otomi-api/issues/872)) ([ec1601d](https://github.com/redkubes/otomi-api/commit/ec1601d9090a0afc1ffe84453f53c856c46c52fe))
+
 ## [4.13.0](https://github.com/redkubes/otomi-api/compare/v4.12.0...v4.13.0) (2025-12-01)
 
 
