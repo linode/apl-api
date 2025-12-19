@@ -1,12 +1,14 @@
 /* eslint-disable no-param-reassign */
-import { debug } from 'console'
+import Debug from 'debug'
 import { RequestHandler } from 'express'
-import { jwtDecode } from 'jwt-decode'
+import { verifyJwt } from 'src/jwt-verification'
 import { getMockEmail, getMockGroups, getMockName } from 'src/mocks'
 import { JWT, OpenApiRequestExt, SessionUser } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { cleanEnv } from 'src/validators'
 import { getSessionStack } from './session'
+
+const debug = Debug('otomi:jwt-middleware')
 
 const env = cleanEnv({})
 
@@ -52,6 +54,8 @@ export function jwtMiddleware(): RequestHandler {
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
     const token = req.header('Authorization')
     const otomi = await getSessionStack() // we can use the readonly version
+
+    // Development mode - bypass real JWT verification
     if (env.isDev) {
       req.user = getUser(
         {
@@ -65,19 +69,27 @@ export function jwtMiddleware(): RequestHandler {
       )
       return next()
     }
+
+    // No token - anonymous request
     if (!token) {
       debug('anonymous request')
       return next()
     }
+
     try {
-      const { name, email, roles, groups, sub } = jwtDecode<JWT>(token)
-      req.user = getUser({ name, email, roles, groups, sub }, otomi)
+      // Cryptographically verify JWT with JWKS
+      const payload = await verifyJwt(token)
+
+      // Extract user info from verified payload
+      const { name, email, roles, groups, sub } = payload
+
+      req.user = getUser({ name, email, roles: roles || [], groups: groups || [], sub }, otomi)
+
       return next()
-    } catch (error) {
-      debug('JWT decode fails:', error.message)
+    } catch (error: any) {
       return res.status(401).send({
         message: 'Unauthorized',
-        error: 'JWT decode fails',
+        error: `JWT verification failed: ${error.message}`,
       })
     }
   }
