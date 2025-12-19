@@ -33,6 +33,7 @@ export async function verifyJwt(token: string): Promise<AppJWTPayload> {
     const { payload } = await jwtVerify(bearerToken, JWKS, {
       issuer: env.SSO_ISSUER,
       audience: env.JWT_AUDIENCE,
+      clockTolerance: 60, // 60 seconds clock tolerance for clock skew between issuer and verifier
     })
     if (!payload.email || !payload.name || !payload.sub) {
       throw new Error('JWT missing required claims')
