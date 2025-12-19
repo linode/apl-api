@@ -21,7 +21,7 @@ const AplObjectSchema = z.object({
     labels: z.record(z.string(), z.string()).optional(),
   }),
   spec: z.record(z.string(), z.any()),
-  status: z.record(z.string(), z.any()).optional(),
+  status: z.record(z.string(), z.any()).default({}),
 })
 
 export function getTeamIdFromPath(filePath: string): string | undefined {
