@@ -42,6 +42,21 @@ export const GIT_REPO_URL = str({
   devDefault: `file://${process.env.HOME}/workspace/linode/values-ofld1`,
 })
 export const GIT_USER = str({ desc: 'The git username' })
+export const SSO_ISSUER = str({
+  desc: 'Expected JWT issuer URL',
+  example: 'https://keycloak.example.com/realms/otomi',
+  devDefault: 'https://keycloak.example.com/realms/otomi',
+})
+export const SSO_JWKS_URI = str({
+  desc: 'Expected JWT issuer URL',
+  example: 'https://keycloak.example.com/realms/otomi/protocol/openid-connect/certs',
+  devDefault: 'https://keycloak.example.com/realms/otomi/protocol/openid-connect/certs',
+})
+export const JWT_AUDIENCE = str({
+  desc: 'Expected JWT audience',
+  example: 'otomi',
+  default: 'otomi',
+})
 export const HELM_CHART_CATALOG = str({
   desc: 'The helm chart catalog',
   devDefault: 'https://github.com/linode/apl-charts.git',
@@ -54,7 +69,6 @@ export const GIT_PROVIDER_URL_PATTERNS = json({
     bitbucket: 'bitbucket\\.org\\/([^\\/]+)\\/([^\\/]+)\\/(?:src|raw)\\/([^\\/]+)\\/(.+)',
   },
 })
-export const OIDC_ENDPOINT = str()
 export const REGION = str({ desc: 'The cloud region' })
 export const ROARR_LOG = bool({ desc: 'To enable Lightship logs', default: false })
 export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '127.0.0.1' })
@@ -131,6 +145,26 @@ export const AGENT_API_VERSION = str({
 export const AGENT_KIND = str({
   desc: 'The kind for AkamaiAgent custom resources',
   default: 'AkamaiAgent',
+})
+export const STARTUP_RETRY_COUNT = num({
+  desc: 'Number of retries for startup dependencies (JWKS, tools server)',
+  default: 300,
+})
+export const STARTUP_RETRY_INTERVAL_MS = num({
+  desc: 'Retry interval in milliseconds for startup dependencies',
+  default: 1000,
+})
+export const RATE_LIMIT_WINDOW_MS = num({
+  desc: 'Rate limiting time window in milliseconds',
+  default: 300000, // 5 minutes
+})
+export const RATE_LIMIT_MAX_REQUESTS = num({
+  desc: 'Maximum number of requests per IP per time window for general API rate limiting',
+  default: 2000,
+})
+export const RATE_LIMIT_AUTH_MAX_ATTEMPTS = num({
+  desc: 'Maximum number of failed authentication attempts per IP per time window',
+  default: 500,
 })
 const { env } = process
 export function cleanEnv<T>(validators: { [K in keyof T]: ValidatorSpec<T[K]> }, options: CleanOptions<T> = {}) {

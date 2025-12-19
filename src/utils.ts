@@ -1,4 +1,6 @@
 import axios from 'axios'
+import retry from 'async-retry'
+import Debug from 'debug'
 import cleanDeep, { CleanOptions } from 'clean-deep'
 import { pathExists } from 'fs-extra'
 import { readdir, readFile } from 'fs/promises'
@@ -7,10 +9,14 @@ import cloneDeep from 'lodash/cloneDeep'
 import { Cluster, Dns } from 'src/otomi-models'
 import { parse, stringify } from 'yaml'
 import { BASEURL } from './constants'
-import { cleanEnv, GIT_PASSWORD } from './validators'
+import { cleanEnv, GIT_PASSWORD, STARTUP_RETRY_COUNT, STARTUP_RETRY_INTERVAL_MS } from './validators'
+
+const debug = Debug('otomi:utils')
 
 const env = cleanEnv({
   GIT_PASSWORD,
+  STARTUP_RETRY_COUNT,
+  STARTUP_RETRY_INTERVAL_MS,
 })
 
 export function arrayToObject(array: [] = [], keyName = 'name', keyValue = 'value'): Record<string, unknown> {
@@ -85,7 +91,25 @@ const valuesSchemaEndpointUrl = `${BASEURL}/apl/schema`
 let valuesSchema: Record<string, any>
 
 export const getValuesSchema = async (): Promise<Record<string, any>> => {
-  const res = await axios.get(valuesSchemaEndpointUrl)
+  debug('Fetching values schema from tools server...')
+
+  const res = await retry(
+    async () => {
+      try {
+        return await axios.get(valuesSchemaEndpointUrl)
+      } catch (error: any) {
+        debug(`Tools server not ready yet (${error.code}), retrying...`)
+        throw error
+      }
+    },
+    {
+      retries: env.STARTUP_RETRY_COUNT,
+      minTimeout: env.STARTUP_RETRY_INTERVAL_MS,
+      maxTimeout: env.STARTUP_RETRY_INTERVAL_MS,
+    },
+  )
+
+  debug('Values schema fetched successfully')
   valuesSchema = omit(res.data, ['definitions'])
   return valuesSchema
 }
