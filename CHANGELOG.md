@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### Bug Fixes
 
+* add default status object when loading file store ([#878](https://github.com/redkubes/otomi-api/issues/878)) ([7b2e255](https://github.com/redkubes/otomi-api/commit/7b2e255fb09a70f488c073000181f633ff2d7453))
 * authorization for v2 endpoints and add tests for it ([#861](https://github.com/redkubes/otomi-api/issues/861)) ([c1ec1a8](https://github.com/redkubes/otomi-api/commit/c1ec1a81b9bed97bfb16fa8d3d88b71b9cf24f15))
 * dashboard endpoint ([#876](https://github.com/redkubes/otomi-api/issues/876)) ([037d3f1](https://github.com/redkubes/otomi-api/commit/037d3f129a3065a504ba31b7bfe64a762f29a770))
 * encryp toggling of apps ([#877](https://github.com/redkubes/otomi-api/issues/877)) ([d3b240c](https://github.com/redkubes/otomi-api/commit/d3b240c67efc8d3dc465dcb9cf8119947f8a2e73))
