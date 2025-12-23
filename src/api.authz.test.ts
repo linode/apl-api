@@ -856,7 +856,7 @@ describe('API authz tests', () => {
     })
 
     test('platform admin can get knowledge bases', async () => {
-      jest.spyOn(otomiStack, 'getAplKnowledgeBases').mockReturnValue([])
+      jest.spyOn(otomiStack, 'getAplKnowledgeBases').mockResolvedValue([])
       await agent
         .get('/alpha/teams/team1/kb')
         .set('Authorization', `Bearer ${platformAdminToken}`)
@@ -865,7 +865,7 @@ describe('API authz tests', () => {
     })
 
     test('team admin can get knowledge bases', async () => {
-      jest.spyOn(otomiStack, 'getAplKnowledgeBases').mockReturnValue([])
+      jest.spyOn(otomiStack, 'getAplKnowledgeBases').mockResolvedValue([])
       await agent
         .get('/alpha/teams/team1/kb')
         .set('Authorization', `Bearer ${teamAdminToken}`)
@@ -874,7 +874,7 @@ describe('API authz tests', () => {
     })
 
     test('team member can get knowledge bases', async () => {
-      jest.spyOn(otomiStack, 'getAplKnowledgeBases').mockReturnValue([])
+      jest.spyOn(otomiStack, 'getAplKnowledgeBases').mockResolvedValue([])
       await agent
         .get('/alpha/teams/team1/kb')
         .set('Authorization', `Bearer ${teamMemberToken}`)
@@ -1017,7 +1017,7 @@ describe('API authz tests', () => {
     })
 
     test('platform admin can get agents', async () => {
-      jest.spyOn(otomiStack, 'getAplAgents').mockReturnValue([])
+      jest.spyOn(otomiStack, 'getAplAgents').mockResolvedValue([])
       await agent
         .get('/alpha/teams/team1/agents')
         .set('Authorization', `Bearer ${platformAdminToken}`)
@@ -1026,7 +1026,7 @@ describe('API authz tests', () => {
     })
 
     test('team admin can get agents', async () => {
-      jest.spyOn(otomiStack, 'getAplAgents').mockReturnValue([])
+      jest.spyOn(otomiStack, 'getAplAgents').mockResolvedValue([])
       await agent
         .get('/alpha/teams/team1/agents')
         .set('Authorization', `Bearer ${teamAdminToken}`)
@@ -1035,7 +1035,7 @@ describe('API authz tests', () => {
     })
 
     test('team member can get agents', async () => {
-      jest.spyOn(otomiStack, 'getAplAgents').mockReturnValue([])
+      jest.spyOn(otomiStack, 'getAplAgents').mockResolvedValue([])
       await agent
         .get('/alpha/teams/team1/agents')
         .set('Authorization', `Bearer ${teamMemberToken}`)
