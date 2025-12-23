@@ -144,6 +144,7 @@ export type AplTeamObject = {
     }
   }
   spec: Record<string, any>
+  status?: Record<string, any>
 }
 
 export type AplPlatformObject = {
@@ -325,6 +326,7 @@ export function toTeamObject(teamId: string, request: AplRequestObject): AplTeam
       },
     },
     spec: request.spec,
+    status: {},
   }
 }
 
@@ -336,6 +338,7 @@ export function buildTeamObject(existing: AplResponseObject, updatedSpec: Record
       labels: existing.metadata.labels as { 'apl.io/teamId': string },
     },
     spec: updatedSpec,
+    status: existing.status || {},
   }
 }
 
