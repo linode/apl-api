@@ -30,6 +30,7 @@ import {
   GIT_PASSWORD,
   GIT_PUSH_RETRIES,
   GIT_USER,
+  TRUST_PROXY,
 } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
 import giteaCheckLatest from './gitea/connect'
@@ -41,6 +42,7 @@ const env = cleanEnv({
   GIT_PASSWORD,
   EXPRESS_PAYLOAD_LIMIT,
   GIT_PUSH_RETRIES,
+  TRUST_PROXY,
 })
 
 const debug = Debug('otomi:app')
@@ -153,6 +155,14 @@ export async function initApp(inOtomiStack?: OtomiStack) {
   // Only create lightship in production (not in tests)
   const lightship = env.isTest ? null : createLightship()
   const app = express()
+
+  // Configure trust proxy for rate limiting behind Kubernetes Ingress
+  // See: https://github.com/express-rate-limit/express-rate-limit/wiki/Troubleshooting-Proxy-Issues
+  // Set to number of proxies between user and server (typically 1 for Kubernetes Ingress)
+  if (!env.isTest && env.TRUST_PROXY > 0) {
+    app.set('trust proxy', env.TRUST_PROXY)
+  }
+
   const apiRoutesPath = path.resolve(__dirname, 'api')
   await loadSpec()
   const authz = new Authz(otomiSpec.spec)
