@@ -168,7 +168,7 @@ export const RATE_LIMIT_AUTH_MAX_ATTEMPTS = num({
 })
 export const TRUST_PROXY = num({
   desc: 'Number of reverse proxies to trust for client IP detection (0 to disable, 1 for Kubernetes Ingress, 2 for LB + Ingress)',
-  default: 1,
+  default: 2,
   devDefault: 0,
 })
 const { env } = process
