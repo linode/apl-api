@@ -166,6 +166,11 @@ export const RATE_LIMIT_AUTH_MAX_ATTEMPTS = num({
   desc: 'Maximum number of failed authentication attempts per IP per time window',
   default: 500,
 })
+export const TRUST_PROXY = num({
+  desc: 'Number of reverse proxies to trust for client IP detection (0 to disable, 1 for Kubernetes Ingress, 2 for LB + Ingress)',
+  default: 2,
+  devDefault: 0,
+})
 const { env } = process
 export function cleanEnv<T>(validators: { [K in keyof T]: ValidatorSpec<T[K]> }, options: CleanOptions<T> = {}) {
   if (env.NODE_ENV === 'test') {
