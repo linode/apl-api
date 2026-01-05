@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.14.1](https://github.com/redkubes/otomi-api/compare/v4.13.0...v4.14.1) (2026-01-05)
+
+
+### Features
+
+* add optional status field to model and initialize in requests ([#885](https://github.com/redkubes/otomi-api/issues/885)) ([086a61a](https://github.com/redkubes/otomi-api/commit/086a61a06b7f252e2af825e9d51233d3de28eb00))
+
+
+
 ## [4.14.0](https://github.com/redkubes/otomi-api/compare/v4.13.0...v4.14.0) (2025-12-19)
 
 
