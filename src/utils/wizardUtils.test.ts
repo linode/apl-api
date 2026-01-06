@@ -108,7 +108,7 @@ describe('ObjectStorageClient', () => {
     })
 
     test('should return undefined when clusterId is not a string', () => {
-      const settings = { cluster: { name: 123 } }
+      const settings = { cluster: { name: 123 as any } }
       clusterId = defineClusterId(settings.cluster.name)
 
       expect(clusterId).toBe(undefined)
