@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.14.2](https://github.com/redkubes/otomi-api/compare/v4.14.1...v4.14.2) (2026-01-06)
+
+
+### Features
+
+* add TRUST_PROXY configuration for client IP detection ([#884](https://github.com/redkubes/otomi-api/issues/884)) ([55e43e6](https://github.com/redkubes/otomi-api/commit/55e43e6fe3a7a52437bd124ab36cb5ffaa587254))
+
 ### [4.14.1](https://github.com/redkubes/otomi-api/compare/v4.13.0...v4.14.1) (2026-01-05)
 
 
