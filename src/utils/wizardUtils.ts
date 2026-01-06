@@ -57,7 +57,8 @@ export class ObjectStorageClient {
   }
 }
 // define cluster id based on cluster name
-export function defineClusterId(clusterName: string | undefined): string | undefined {
-  if (!clusterName || typeof clusterName !== 'string') return undefined
-  return clusterName.replace('aplinstall', '')
+export function defineClusterId(clusterName: string | number | undefined): string | undefined {
+  if (!clusterName) return undefined
+  const clusterNameStr = String(clusterName)
+  return clusterNameStr.replace('aplinstall', '')
 }
