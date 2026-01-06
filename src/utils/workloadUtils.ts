@@ -28,6 +28,19 @@ function throwChartError(message: string) {
   }
   throw err
 }
+export function isGiteaURL(url: string) {
+  let hostname = ''
+  if (url) {
+    try {
+      hostname = new URL(url).hostname
+    } catch (e) {
+      // ignore
+      return false
+    }
+  }
+  const giteaPattern = /^gitea\..+/i
+  return giteaPattern.test(hostname)
+}
 
 export function detectGitProvider(url) {
   if (!url || typeof url !== 'string') return null
