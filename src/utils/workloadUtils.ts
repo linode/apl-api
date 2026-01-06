@@ -28,19 +28,6 @@ function throwChartError(message: string) {
   }
   throw err
 }
-export function isGiteaURL(url: string) {
-  let hostname = ''
-  if (url) {
-    try {
-      hostname = new URL(url).hostname
-    } catch (e) {
-      // ignore
-      return false
-    }
-  }
-  const giteaPattern = /^gitea\..+/i
-  return giteaPattern.test(hostname)
-}
 
 export function detectGitProvider(url) {
   if (!url || typeof url !== 'string') return null
@@ -268,6 +255,7 @@ export async function sparseCloneChart(
   chartTargetDirName: string,
   chartIcon?: string,
   allowTeams?: boolean,
+  clusterDomainSuffix?: string,
 ): Promise<boolean> {
   const details = detectGitProvider(gitRepositoryUrl)
   if (!details) return false
@@ -278,7 +266,7 @@ export async function sparseCloneChart(
 
   if (!existsSync(localHelmChartsDir)) mkdirSync(localHelmChartsDir, { recursive: true })
   let gitUrl = helmChartCatalogUrl
-  if (isGiteaURL(helmChartCatalogUrl)) {
+  if (helmChartCatalogUrl === `https://gitea.${clusterDomainSuffix}`) {
     const [protocol, bareUrl] = helmChartCatalogUrl.split('://')
     const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
     const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
@@ -318,10 +306,15 @@ export async function sparseCloneChart(
   return true
 }
 
-export async function fetchWorkloadCatalog(url: string, helmChartsDir: string, teamId: string): Promise<Promise<any>> {
+export async function fetchWorkloadCatalog(
+  url: string,
+  helmChartsDir: string,
+  teamId: string,
+  clusterDomainSuffix?: string,
+): Promise<Promise<any>> {
   if (!existsSync(helmChartsDir)) mkdirSync(helmChartsDir, { recursive: true })
   let gitUrl = url
-  if (isGiteaURL(url)) {
+  if (url === `https://gitea.${clusterDomainSuffix}`) {
     const [protocol, bareUrl] = url.split('://')
     const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
     const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
