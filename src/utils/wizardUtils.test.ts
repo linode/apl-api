@@ -107,7 +107,7 @@ describe('ObjectStorageClient', () => {
       expect(clusterId).toBe('123')
     })
 
-    test('should return 123 when clusterId is ', () => {
+    test('should return 123 when clusterId is a number', () => {
       const settings = { cluster: { name: 123 } }
       clusterId = defineClusterId(settings.cluster.name)
 
