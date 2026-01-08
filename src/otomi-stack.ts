@@ -542,7 +542,7 @@ export default class OtomiStack {
     const app = this.getApp(id)
     this.filterExcludedApp(app)
 
-    if (teamId === 'admin') return this.filterAppSecrets(app)
+    if (teamId === 'admin') return app
     return { id: app.id, enabled: app.enabled }
   }
 
