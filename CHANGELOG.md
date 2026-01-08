@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.14.3](https://github.com/redkubes/otomi-api/compare/v4.14.2...v4.14.3) (2026-01-08)
+
+
+### Bug Fixes
+
+* exclude admin team from filter app secrets ([#890](https://github.com/redkubes/otomi-api/issues/890)) ([ea40d9b](https://github.com/redkubes/otomi-api/commit/ea40d9bca1eecbdc1f57f21d217e5377b60d37f0))
+
 ### [4.14.2](https://github.com/redkubes/otomi-api/compare/v4.14.1...v4.14.2) (2026-01-06)
 
 
