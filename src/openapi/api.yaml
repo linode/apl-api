@@ -1991,6 +1991,7 @@ paths:
     post:
       operationId: getWorkloadCatalog
       x-eov-operation-handler: v1/workloadCatalog
+      x-aclSchema: Workload
       description: Get workload catalog from a repository
       requestBody:
         content:
@@ -2015,6 +2016,7 @@ paths:
     get:
       operationId: getHelmChartContent
       x-eov-operation-handler: v1/helmChartContent
+      x-aclSchema: Workload
       parameters:
         - name: url
           in: query
@@ -2041,6 +2043,7 @@ paths:
     post:
       operationId: createWorkloadCatalog
       x-eov-operation-handler: v1/createWorkloadCatalog
+      x-aclSchema: Workload
       description: Create workload catalog from a repository
       requestBody:
         content:
