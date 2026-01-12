@@ -2594,15 +2594,6 @@ paths:
       x-eov-operation-handler: v1/apps/{teamId}
       description: Get list of apps for a team
       x-aclSchema: App
-      parameters:
-        - name: picks
-          in: query
-          description: Selection of properties to return.
-          schema:
-            type: array
-            items:
-              type: string
-              uniqueItems: true
       responses:
         '200':
           description: The request is successful.
@@ -2611,7 +2602,12 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/App'
+                  type: object
+                  properties:
+                    id:
+                      $ref: '#/components/schemas/App/properties/id'
+                    enabled:
+                      $ref: '#/components/schemas/App/properties/enabled'
     put:
       operationId: toggleApps
       x-eov-operation-handler: v1/apps/{teamId}

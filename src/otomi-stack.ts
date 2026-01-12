@@ -560,7 +560,7 @@ export default class OtomiStack {
     return { values: content.spec, id: content.metadata.name } as App
   }
 
-  getApps(teamId: string, picks?: string[]): Array<App> {
+  getApps(teamId: string): Array<App> {
     const appList = this.getAppList()
 
     const allApps = appList.map((id) => {
@@ -571,12 +571,14 @@ export default class OtomiStack {
 
     if (teamId === 'admin')
       return providerSpecificApps.map((app) => {
-        const filtered = this.filterAppSecrets(app)
-        return { ...filtered, enabled: Boolean(app.values?.enabled ?? true) } as App
+        return {
+          id: app.id,
+          enabled: Boolean(app.values?.enabled ?? true),
+        }
       })
 
     const core = this.getCore()
-    let teamApps = providerSpecificApps
+    const teamApps = providerSpecificApps
       .map((app: App) => {
         const isShared = !!core.adminApps.find((a) => a.name === app.id)?.isShared
         const inTeamApps = !!core.teamApps.find((a) => a.name === app.id)
@@ -584,21 +586,12 @@ export default class OtomiStack {
       })
       .filter((app): app is App => app !== undefined)
 
-    // Filter secrets from team apps
-    teamApps = teamApps.map((app) => this.filterAppSecrets(app))
-
-    if (!picks) return teamApps
-
-    if (picks.includes('enabled')) {
-      return teamApps.map((teamApp) => {
-        return {
-          id: teamApp?.id,
-          enabled: Boolean(teamApp?.values?.enabled ?? true),
-        }
-      })
-    }
-
-    return teamApps.map((app) => pick(app, picks)) as Array<App>
+    return teamApps.map((app) => {
+      return {
+        id: app.id,
+        enabled: Boolean(app.values?.enabled ?? true),
+      }
+    })
   }
 
   async editApp(teamId: string, id: string, data: App): Promise<App> {
@@ -2351,25 +2344,6 @@ export default class OtomiStack {
   private extractAppSecretPaths(appName: string, globalPaths: string[]): string[] {
     const appPrefix = `apps.${appName}.`
     return globalPaths.filter((path) => path.startsWith(appPrefix)).map((path) => path.replace(appPrefix, ''))
-  }
-
-  private filterAppSecrets(app: App): App {
-    if (!app.values) return app
-
-    const globalSecretPaths = getSecretPaths()
-    const appSecretPaths = this.extractAppSecretPaths(app.id, globalSecretPaths)
-
-    if (appSecretPaths.length === 0) return app
-
-    // Clone the app to avoid mutating original
-    const filteredApp = cloneDeep(app)
-
-    // Remove each secret path from the values
-    appSecretPaths.forEach((secretPath) => {
-      unset(filteredApp.values, secretPath)
-    })
-
-    return filteredApp
   }
 
   private extractSettingsSecretPaths(kind: AplKind, globalPaths: string[]): string[] {
