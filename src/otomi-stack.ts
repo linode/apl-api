@@ -603,11 +603,16 @@ export default class OtomiStack {
 
   async editApp(teamId: string, id: string, data: App): Promise<App> {
     let app: App = this.getApp(id)
-    // Shallow merge, so only first level attributes can be replaced (values, rawValues, etc.)
-    app = { ...app, ...data }
+    // Only merge editable data sections
+    const updatedValues = {
+      enabled: !!data.values?.enabled,
+      values: omit(data.values, ['enabled', '_rawValues']),
+      rawValues: (data.values?._rawValues as Record<string, any>) || undefined,
+    }
+    app = { ...app, ...updatedValues }
 
     const filePath = getResourceFilePath('AplApp', id)
-    const aplApp = toPlatformObject('AplApp', id, { enabled: app.enabled, ...app.values })
+    const aplApp = toPlatformObject('AplApp', id, { enabled: app.enabled, _rawValues: app.rawValues, ...app.values })
     this.fileStore.set(filePath, aplApp)
 
     await this.saveAdminApp(app)
