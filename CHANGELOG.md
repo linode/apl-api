@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.14.4](https://github.com/redkubes/otomi-api/compare/v4.14.3...v4.14.4) (2026-01-12)
+
+
+### Bug Fixes
+
+* destructure input data before merge ([#891](https://github.com/redkubes/otomi-api/issues/891)) ([39c9d99](https://github.com/redkubes/otomi-api/commit/39c9d99e6efdc04b762ac015da2048fdca2fd484))
+* getApps endpoint and limits data ([#892](https://github.com/redkubes/otomi-api/issues/892)) ([51cf309](https://github.com/redkubes/otomi-api/commit/51cf30913b13422fe42aa628966df94dcc03888a))
+
 ### [4.14.3](https://github.com/redkubes/otomi-api/compare/v4.14.2...v4.14.3) (2026-01-08)
 
 
