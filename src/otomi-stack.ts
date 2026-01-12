@@ -132,7 +132,13 @@ import { getAplObjectFromV1, getV1MergeObject, getV1ObjectFromApl } from './util
 import { getSealedSecretsPEM, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
-import { fetchChartYaml, fetchWorkloadCatalog, NewHelmChartValues, sparseCloneChart } from './utils/workloadUtils'
+import {
+  fetchChartYaml,
+  fetchWorkloadCatalog,
+  isInteralGiteaURL,
+  NewHelmChartValues,
+  sparseCloneChart,
+} from './utils/workloadUtils'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -1226,10 +1232,9 @@ export default class OtomiStack {
       const isPrivate = !!secretName
       const isSSH = !!sshPrivateKey
 
-      const repoUrl =
-        repositoryUrl === `https://gitea.${cluster?.domainSuffix}`
-          ? repositoryUrl
-          : normalizeRepoUrl(repositoryUrl, isPrivate, isSSH)
+      const repoUrl = isInteralGiteaURL(repositoryUrl, cluster?.domainSuffix)
+        ? repositoryUrl
+        : normalizeRepoUrl(repositoryUrl, isPrivate, isSSH)
 
       if (!repoUrl) return ['HEAD']
 
