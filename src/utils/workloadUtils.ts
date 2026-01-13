@@ -42,6 +42,16 @@ export function isGiteaURL(url: string) {
   return giteaPattern.test(hostname)
 }
 
+export function isInteralGiteaURL(repositoryUrl: string, clusterDomainSuffix?: string) {
+  if (!clusterDomainSuffix) return false
+  try {
+    const url = new URL(repositoryUrl)
+    return url.hostname === `gitea.${clusterDomainSuffix}`
+  } catch {
+    return false
+  }
+}
+
 export function detectGitProvider(url) {
   if (!url || typeof url !== 'string') return null
 
@@ -258,6 +268,7 @@ export class chartRepo {
  * @param allowTeams - Boolean indicating if teams are allowed to use the chart.
  *                     If false, the key is set to [].
  *                     If true, the key is set to null.
+ * @param clusterDomainSuffix - domainSuffix set in cluster settings, used to check if URL is an interal Gitea URL
  */
 export async function sparseCloneChart(
   gitRepositoryUrl: string,
@@ -268,6 +279,7 @@ export async function sparseCloneChart(
   chartTargetDirName: string,
   chartIcon?: string,
   allowTeams?: boolean,
+  clusterDomainSuffix?: string,
 ): Promise<boolean> {
   const details = detectGitProvider(gitRepositoryUrl)
   if (!details) return false
@@ -278,7 +290,7 @@ export async function sparseCloneChart(
 
   if (!existsSync(localHelmChartsDir)) mkdirSync(localHelmChartsDir, { recursive: true })
   let gitUrl = helmChartCatalogUrl
-  if (isGiteaURL(helmChartCatalogUrl)) {
+  if (isInteralGiteaURL(helmChartCatalogUrl, clusterDomainSuffix)) {
     const [protocol, bareUrl] = helmChartCatalogUrl.split('://')
     const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
     const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
@@ -318,10 +330,15 @@ export async function sparseCloneChart(
   return true
 }
 
-export async function fetchWorkloadCatalog(url: string, helmChartsDir: string, teamId: string): Promise<Promise<any>> {
+export async function fetchWorkloadCatalog(
+  url: string,
+  helmChartsDir: string,
+  teamId: string,
+  clusterDomainSuffix?: string,
+): Promise<Promise<any>> {
   if (!existsSync(helmChartsDir)) mkdirSync(helmChartsDir, { recursive: true })
   let gitUrl = url
-  if (isGiteaURL(url)) {
+  if (isInteralGiteaURL(url, clusterDomainSuffix)) {
     const [protocol, bareUrl] = url.split('://')
     const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
     const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)

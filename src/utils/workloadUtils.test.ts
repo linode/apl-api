@@ -116,6 +116,40 @@ describe('detectGitProvider', () => {
 })
 
 // ----------------------------------------------------------------
+// Tests for isInteralGiteaURL
+describe('isInteralGiteaURL', () => {
+  it('returns true for a valid internal gitea URL', () => {
+    const result = workloadUtils.isInteralGiteaURL('https://gitea.cluster.local/my-org/my-repo', 'cluster.local')
+
+    expect(result).toBe(true)
+  })
+
+  it('returns false for a non-gitea hostname', () => {
+    const result = workloadUtils.isInteralGiteaURL('https://github.com/my-org/my-repo', 'cluster.local')
+
+    expect(result).toBe(false)
+  })
+
+  it('returns false when clusterDomainSuffix is missing', () => {
+    const result = workloadUtils.isInteralGiteaURL('https://gitea.cluster.local/my-org/my-repo')
+
+    expect(result).toBe(false)
+  })
+
+  it('returns false when URL hostname does not exactly match', () => {
+    const result = workloadUtils.isInteralGiteaURL('https://gitea.other.local/my-org/my-repo', 'cluster.local')
+
+    expect(result).toBe(false)
+  })
+
+  it('returns false for an invalid URL', () => {
+    const result = workloadUtils.isInteralGiteaURL('not-a-real-url', 'cluster.local')
+
+    expect(result).toBe(false)
+  })
+})
+
+// ----------------------------------------------------------------
 // Tests for getGitCloneUrl
 describe('getGitCloneUrl', () => {
   test('returns null for null input', () => {
@@ -350,6 +384,7 @@ describe('sparseCloneChart', () => {
   const chartTargetDirName = 'cassandra'
   const chartIcon = 'https://example.com/icon.png'
   const allowTeams = true
+  const clusterDomainSuffix = 'example.com'
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -389,6 +424,7 @@ describe('sparseCloneChart', () => {
       chartTargetDirName,
       chartIcon,
       allowTeams,
+      clusterDomainSuffix,
     )
 
     expect(result).toBe(true)
@@ -430,6 +466,7 @@ describe('sparseCloneChart', () => {
     }
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
     jest.spyOn(workloadUtils, 'isGiteaURL').mockImplementation(() => true)
+    jest.spyOn(workloadUtils, 'isInteralGiteaURL').mockImplementation(() => true)
 
     await sparseCloneChart(
       gitRepositoryUrl,
@@ -440,6 +477,7 @@ describe('sparseCloneChart', () => {
       chartTargetDirName,
       chartIcon,
       allowTeams,
+      clusterDomainSuffix,
     )
 
     // Check that clone was called with encoded URL
@@ -597,7 +635,9 @@ describe('fetchWorkloadCatalog', () => {
     }
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
 
-    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'admin')
+    jest.spyOn(workloadUtils, 'isInteralGiteaURL').mockReturnValue(true)
+
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'admin', 'example.com')
 
     expect(fs.mkdirSync).toHaveBeenCalledWith(helmChartsDir, { recursive: true })
     expect(mockGit.clone).toHaveBeenCalledWith(
