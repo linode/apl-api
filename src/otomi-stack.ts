@@ -132,7 +132,13 @@ import { getAplObjectFromV1, getV1MergeObject, getV1ObjectFromApl } from './util
 import { getSealedSecretsPEM, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
-import { fetchChartYaml, fetchWorkloadCatalog, NewHelmChartValues, sparseCloneChart } from './utils/workloadUtils'
+import {
+  fetchChartYaml,
+  fetchWorkloadCatalog,
+  isInteralGiteaURL,
+  NewHelmChartValues,
+  sparseCloneChart,
+} from './utils/workloadUtils'
 import { listAkamaiAgentCRs, listAkamaiKnowledgeBaseCRs } from './ai/k8s'
 import { AkamaiAgentCR } from './ai/AkamaiAgentCR'
 import { AkamaiKnowledgeBaseCR } from './ai/AkamaiKnowledgeBaseCR'
@@ -1211,6 +1217,7 @@ export default class OtomiStack {
     if (!codeRepoName) return ['HEAD']
     const coderepo = this.getCodeRepo(teamId, codeRepoName)
     const { repositoryUrl, secret: secretName } = coderepo
+    const { cluster } = this.getSettings(['cluster'])
     try {
       let sshPrivateKey = '',
         username = '',
@@ -1225,7 +1232,8 @@ export default class OtomiStack {
 
       const isPrivate = !!secretName
       const isSSH = !!sshPrivateKey
-      const repoUrl = repositoryUrl.startsWith('https://gitea')
+
+      const repoUrl = isInteralGiteaURL(repositoryUrl, cluster?.domainSuffix)
         ? repositoryUrl
         : normalizeRepoUrl(repositoryUrl, isPrivate, isSSH)
 
@@ -1567,8 +1575,9 @@ export default class OtomiStack {
 
     if (!url) throw new OtomiError(400, 'Helm chart catalog URL is not set')
 
+    const { cluster } = this.getSettings(['cluster'])
     try {
-      const { helmCharts, catalog } = await fetchWorkloadCatalog(url, helmChartsDir, teamId)
+      const { helmCharts, catalog } = await fetchWorkloadCatalog(url, helmChartsDir, teamId, cluster?.domainSuffix)
       return { url, helmCharts, catalog }
     } catch (error) {
       debug('Error fetching workload catalog')
@@ -1589,6 +1598,7 @@ export default class OtomiStack {
     const localHelmChartsDir = `/tmp/otomi/charts/${uuid}`
     const helmChartCatalogUrl = env.HELM_CHART_CATALOG
     const { user, email } = this.git
+    const { cluster } = this.getSettings(['cluster'])
 
     try {
       await sparseCloneChart(
@@ -1600,6 +1610,7 @@ export default class OtomiStack {
         chartTargetDirName,
         chartIcon,
         allowTeams,
+        cluster?.domainSuffix,
       )
       return true
     } catch (error) {
