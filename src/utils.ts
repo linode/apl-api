@@ -6,7 +6,7 @@ import { pathExists } from 'fs-extra'
 import { lstat, readdir, readFile, realpath } from 'fs/promises'
 import { isArray, isEmpty, memoize, mergeWith, omit } from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
-import { isAbsolute as pathIsAbsolute, relative as pathRelative, resolve as pathResolve } from 'path'
+import { isAbsolute, relative, resolve } from 'path'
 import { Cluster, Dns } from 'src/otomi-models'
 import { parse, stringify } from 'yaml'
 import { BASEURL } from './constants'
@@ -149,7 +149,7 @@ export function getPaths(tree: Record<string, unknown>): Array<string> {
 export async function safeReadTextFile(baseDir: string, targetPath: string): Promise<string> {
   const baseReal = await realpath(baseDir)
 
-  const targetAbs = pathResolve(targetPath)
+  const targetAbs = resolve(targetPath)
 
   // If the path exists, refuse symlinks explicitly
   const st = await lstat(targetAbs)
@@ -159,8 +159,8 @@ export async function safeReadTextFile(baseDir: string, targetPath: string): Pro
 
   const targetReal = await realpath(targetAbs)
 
-  const rel = pathRelative(baseReal, targetReal)
-  if (rel.startsWith('..') || pathIsAbsolute(rel)) {
+  const rel = relative(baseReal, targetReal)
+  if (rel.startsWith('..') || isAbsolute(rel)) {
     throw new Error(`Refusing to read outside repo: ${targetReal}`)
   }
 
