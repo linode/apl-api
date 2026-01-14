@@ -129,7 +129,12 @@ import {
   testPublicRepoConnect,
 } from './utils/codeRepoUtils'
 import { getAplObjectFromV1, getV1MergeObject, getV1ObjectFromApl } from './utils/manifests'
-import { getSealedSecretsPEM, sealedSecretManifest } from './utils/sealedSecretUtils'
+import {
+  getSealedSecretsPEM,
+  sealedSecretManifest,
+  SealedSecretManifestType,
+  toSealedSecretResponse,
+} from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
 import {
@@ -2168,7 +2173,7 @@ export default class OtomiStack {
     if (!sealedSecret) {
       throw new NotExistError(`SealedSecret ${name} not found in team ${teamId}`)
     }
-    return sealedSecret as AplSecretResponse
+    return toSealedSecretResponse(sealedSecret as SealedSecretManifestType)
   }
 
   getAllSealedSecrets(): SealedSecret[] {
@@ -2177,7 +2182,7 @@ export default class OtomiStack {
 
   getAllAplSealedSecrets(): AplSecretResponse[] {
     const files = this.fileStore.getAllTeamResourcesByKind('AplTeamSecret')
-    return Array.from(files.values()) as AplSecretResponse[]
+    return Array.from(files.values()).map((secret) => toSealedSecretResponse(secret as SealedSecretManifestType))
   }
 
   getSealedSecrets(teamId: string): SealedSecret[] {
@@ -2189,7 +2194,7 @@ export default class OtomiStack {
 
   getAplSealedSecrets(teamId: string): AplSecretResponse[] {
     const files = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamSecret', teamId)
-    return Array.from(files.values()) as AplSecretResponse[]
+    return Array.from(files.values()).map((secret) => toSealedSecretResponse(secret as SealedSecretManifestType))
   }
 
   async getSecretsFromK8s(teamId: string): Promise<Array<string>> {
