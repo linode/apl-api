@@ -5,6 +5,7 @@ import { readFile } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
 import path from 'path'
 import simpleGit, { SimpleGit } from 'simple-git'
+import { safeReadTextFile } from 'src/utils'
 import { GIT_PROVIDER_URL_PATTERNS, cleanEnv } from 'src/validators'
 import YAML from 'yaml'
 
@@ -366,7 +367,7 @@ export async function fetchWorkloadCatalog(
   for (const folder of folders) {
     let readme = ''
     try {
-      const chartReadme = await readFile(`${helmChartsDir}/${folder}/README.md`, 'utf-8')
+      const chartReadme = await safeReadTextFile(helmChartsDir, `${folder}/README.md`)
       readme = chartReadme
     } catch (error) {
       debug(`Error while parsing chart README.md file : ${error.message}`)
