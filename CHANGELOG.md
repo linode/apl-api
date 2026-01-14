@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.14.5](https://github.com/redkubes/otomi-api/compare/v4.14.4...v4.14.5) (2026-01-14)
+
+
+### Bug Fixes
+
+* sealed secret response data ([#896](https://github.com/redkubes/otomi-api/issues/896)) ([24ddb0a](https://github.com/redkubes/otomi-api/commit/24ddb0a1cb518f6297c52a079a48e59c9b8ba612))
+
 ### [4.14.4](https://github.com/redkubes/otomi-api/compare/v4.14.3...v4.14.4) (2026-01-12)
 
 
