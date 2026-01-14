@@ -149,7 +149,7 @@ export function getPaths(tree: Record<string, unknown>): Array<string> {
 export async function safeReadTextFile(baseDir: string, targetPath: string): Promise<string> {
   const baseReal = await realpath(baseDir)
 
-  const targetAbs = resolve(targetPath)
+  const targetAbs = resolve(baseDir, targetPath)
 
   // If the path exists, refuse symlinks explicitly
   const st = await lstat(targetAbs)

@@ -367,7 +367,7 @@ export async function fetchWorkloadCatalog(
   for (const folder of folders) {
     let readme = ''
     try {
-      const chartReadme = await safeReadTextFile(helmChartsDir, `${helmChartsDir}/${folder}/README.md`)
+      const chartReadme = await safeReadTextFile(helmChartsDir, `${folder}/README.md`)
       readme = chartReadme
     } catch (error) {
       debug(`Error while parsing chart README.md file : ${error.message}`)
