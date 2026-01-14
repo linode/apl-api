@@ -66,6 +66,32 @@ export function sealedSecretManifest(data: AplSecretResponse): SealedSecretManif
   }
 }
 
+export function toSealedSecretResponse(data: SealedSecretManifestType): AplSecretResponse {
+  {
+    return {
+      kind: 'AplTeamSecret',
+      metadata: {
+        name: data.metadata.name,
+        labels: {
+          'apl.io/teamId': data.metadata.labels?.['apl.io/teamId'] || '',
+        },
+      },
+      spec: {
+        namespace: data.spec.template.metadata.namespace,
+        type: data.spec.template.type,
+        immutable: data.spec.template.immutable,
+        encryptedData: data.spec.encryptedData,
+        metadata: {
+          annotations: data.spec.template.metadata.annotations,
+          labels: data.spec.template.metadata.labels,
+          finalizers: data.spec.template.metadata.finalizers,
+        },
+      },
+      status: {},
+    }
+  }
+}
+
 function getPEM(certificate): string {
   const x509 = new X509Certificate(certificate)
   const value = x509.publicKey
