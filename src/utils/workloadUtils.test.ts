@@ -6,6 +6,7 @@ import * as fsPromises from 'fs/promises'
 import path from 'path'
 import simpleGit from 'simple-git'
 import YAML from 'yaml'
+import * as utils from '../utils'
 import * as workloadUtils from './workloadUtils'
 import {
   chartRepo,
@@ -636,6 +637,11 @@ describe('fetchWorkloadCatalog', () => {
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
 
     jest.spyOn(workloadUtils, 'isInteralGiteaURL').mockReturnValue(true)
+    jest.spyOn(utils, 'safeReadTextFile').mockImplementation(async (_baseDir, filePath) => {
+      if (filePath.includes('chart1')) return '# Chart 1 README'
+      if (filePath.includes('chart2')) return '# Chart 2 README'
+      throw new Error('missing')
+    })
 
     const result = await fetchWorkloadCatalog(url, helmChartsDir, 'admin', 'example.com')
 
@@ -678,6 +684,11 @@ describe('fetchWorkloadCatalog', () => {
       clone: jest.fn().mockResolvedValue(undefined),
     }
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+
+    jest.spyOn(utils, 'safeReadTextFile').mockImplementation(async (_baseDir, filePath) => {
+      if (filePath.includes('chart1')) return '# Chart 1 README'
+      throw new Error('missing')
+    })
 
     const result = await fetchWorkloadCatalog(url, helmChartsDir, '1')
 
@@ -730,6 +741,11 @@ describe('fetchWorkloadCatalog', () => {
         )
       }
       return Promise.reject(new Error(`File not found: ${filePath}`))
+    })
+
+    jest.spyOn(utils, 'safeReadTextFile').mockImplementation(async (_baseDir, filePath) => {
+      if (filePath.endsWith('chart1/README.md')) return Promise.reject(new Error('File not found'))
+      throw new Error('missing')
     })
 
     const result = await fetchWorkloadCatalog(url, helmChartsDir, 'admin')
