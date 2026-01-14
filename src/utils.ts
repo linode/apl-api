@@ -1,11 +1,12 @@
-import axios from 'axios'
 import retry from 'async-retry'
-import Debug from 'debug'
+import axios from 'axios'
 import cleanDeep, { CleanOptions } from 'clean-deep'
+import Debug from 'debug'
 import { pathExists } from 'fs-extra'
-import { readdir, readFile } from 'fs/promises'
+import { lstat, readdir, readFile, realpath } from 'fs/promises'
 import { isArray, isEmpty, memoize, mergeWith, omit } from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
+import { isAbsolute, relative, resolve } from 'path'
 import { Cluster, Dns } from 'src/otomi-models'
 import { parse, stringify } from 'yaml'
 import { BASEURL } from './constants'
@@ -143,6 +144,27 @@ export const extract = memoize((obj: Record<string, any>, f) => {
 
 export function getPaths(tree: Record<string, unknown>): Array<string> {
   return Object.keys(flattenObject(tree))
+}
+
+export async function safeReadTextFile(baseDir: string, targetPath: string): Promise<string> {
+  const baseReal = await realpath(baseDir)
+
+  const targetAbs = resolve(baseDir, targetPath)
+
+  // If the path exists, refuse symlinks explicitly
+  const st = await lstat(targetAbs)
+  if (st.isSymbolicLink()) {
+    throw new Error(`Refusing to read symlink: ${targetAbs}`)
+  }
+
+  const targetReal = await realpath(targetAbs)
+
+  const rel = relative(baseReal, targetReal)
+  if (rel.startsWith('..') || isAbsolute(rel)) {
+    throw new Error(`Refusing to read outside repo: ${targetReal}`)
+  }
+
+  return readFile(targetAbs, 'utf-8')
 }
 
 export function getServiceUrl({

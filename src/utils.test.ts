@@ -1,5 +1,8 @@
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'fs'
+import os from 'os'
+import path from 'path'
 import { Cluster } from 'src/otomi-models'
-import { getSanitizedErrorMessage, getServiceUrl, sanitizeGitPassword } from 'src/utils'
+import { getSanitizedErrorMessage, getServiceUrl, safeReadTextFile, sanitizeGitPassword } from 'src/utils'
 import { cleanEnv, GIT_PASSWORD } from './validators'
 
 describe('Utils', () => {
@@ -80,6 +83,59 @@ describe('Utils', () => {
     test('extract message from exception', () => {
       expect(getSanitizedErrorMessage(new Error('test error'))).toEqual('test error')
       expect(getSanitizedErrorMessage(new Error(`test error ${env.GIT_PASSWORD}`))).toEqual('test error ****')
+    })
+  })
+
+  describe('safeReadTextFile', () => {
+    let tmpRoot: string
+    let baseDir: string
+    let outsideDir: string
+
+    beforeEach(() => {
+      tmpRoot = mkdtempSync(path.join(os.tmpdir(), 'safe-read-'))
+      baseDir = path.join(tmpRoot, 'repo')
+      outsideDir = path.join(tmpRoot, 'outside')
+
+      mkdirSync(baseDir, { recursive: true })
+      mkdirSync(outsideDir, { recursive: true })
+    })
+
+    afterEach(() => {
+      rmSync(tmpRoot, { recursive: true, force: true })
+    })
+
+    test('reads a regular file inside baseDir', async () => {
+      const filePath = path.join(baseDir, 'README.md')
+      writeFileSync(filePath, 'hello', 'utf-8')
+
+      await expect(safeReadTextFile(baseDir, filePath)).resolves.toBe('hello')
+    })
+
+    test('rejects symlink explicitly', async () => {
+      const outsideTarget = path.join(outsideDir, 'secret.txt')
+      writeFileSync(outsideTarget, 'nope', 'utf-8')
+
+      const linkPath = path.join(baseDir, 'README.md')
+      symlinkSync(outsideTarget, linkPath)
+
+      await expect(safeReadTextFile(baseDir, linkPath)).rejects.toThrow(`Refusing to read symlink: ${linkPath}`)
+    })
+
+    test('rejects paths that resolve outside baseDir', async () => {
+      const outsideFile = path.join(outsideDir, 'config.yaml')
+      writeFileSync(outsideFile, 'topsecret', 'utf-8')
+
+      await expect(safeReadTextFile(baseDir, outsideFile)).rejects.toThrow(/Refusing to read outside repo:/)
+    })
+
+    test('rejects symlink even if it points inside baseDir', async () => {
+      const realFile = path.join(baseDir, 'real.txt')
+      writeFileSync(realFile, 'inside', 'utf-8')
+
+      const linkPath = path.join(baseDir, 'link.txt')
+      symlinkSync(realFile, linkPath)
+
+      await expect(safeReadTextFile(baseDir, linkPath)).rejects.toThrow(`Refusing to read symlink: ${linkPath}`)
     })
   })
 })
