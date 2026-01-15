@@ -4,6 +4,7 @@ import { components, operations, paths } from 'src/generated-schema'
 import OtomiStack from 'src/otomi-stack'
 
 export type App = components['schemas']['App']
+export type AppEnabled = components['schemas']['AppEnabled']
 export type AppList = components['schemas']['AppList']
 export type AplKnowledgeBaseRequest = components['schemas']['AplKnowledgeBaseRequest']
 export type AplKnowledgeBaseResponse = components['schemas']['AplKnowledgeBaseResponse']
