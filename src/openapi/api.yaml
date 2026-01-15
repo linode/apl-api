@@ -2582,18 +2582,19 @@ paths:
         '200':
           description: Successfully edited settings.
 
-  /v1/apps/{teamId}:
-    parameters:
-      - in: path
-        name: teamId
-        required: true
-        schema:
-          type: string
+  /v1/apps:
     get:
       operationId: getApps
-      x-eov-operation-handler: v1/apps/{teamId}
-      description: Get list of apps for a team
+      x-eov-operation-handler: v1/apps
+      description: Get list of apps ids and their enabled status, optionally filtered by team
       x-aclSchema: App
+      parameters:
+        - in: query
+          name: teamId
+          required: false
+          schema:
+            type: string
+          description: Optional teamId to filter apps
       responses:
         '200':
           description: The request is successful.
@@ -2608,6 +2609,14 @@ paths:
                       $ref: '#/components/schemas/App/properties/id'
                     enabled:
                       $ref: '#/components/schemas/App/properties/enabled'
+
+  /v1/apps/{teamId}:
+    parameters:
+      - in: path
+        name: teamId
+        required: true
+        schema:
+          type: string
     put:
       operationId: toggleApps
       x-eov-operation-handler: v1/apps/{teamId}

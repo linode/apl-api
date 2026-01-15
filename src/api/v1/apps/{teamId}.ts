@@ -3,16 +3,6 @@ import { Response } from 'express'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:apps')
-
-/**
- * GET /v1/apps/{teamId}
- * Get apps for a team
- */
-export const getApps = (req: OpenApiRequestExt, res: Response): void => {
-  const { teamId } = req.params
-  res.json(req.otomi.getApps(teamId))
-}
-
 /**
  * PUT /v1/apps/{teamId}
  * Toggle apps for a team

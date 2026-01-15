@@ -565,7 +565,7 @@ export default class OtomiStack {
     return { values: content.spec, id: content.metadata.name } as App
   }
 
-  getApps(teamId: string): Array<App> {
+  getApps(teamId?: string): Array<App> {
     const appList = this.getAppList()
 
     const allApps = appList.map((id) => {
@@ -574,24 +574,25 @@ export default class OtomiStack {
 
     const providerSpecificApps = this.filterExcludedApp(allApps) as App[]
 
-    if (teamId === 'admin')
-      return providerSpecificApps.map((app) => {
+    if (teamId) {
+      const core = this.getCore()
+      const teamApps = providerSpecificApps
+        .map((app: App) => {
+          const isShared = !!core.adminApps.find((a) => a.name === app.id)?.isShared
+          const inTeamApps = !!core.teamApps.find((a) => a.name === app.id)
+          if (isShared || inTeamApps) return app
+        })
+        .filter((app): app is App => app !== undefined)
+
+      return teamApps.map((app) => {
         return {
           id: app.id,
           enabled: Boolean(app.values?.enabled ?? true),
         }
       })
+    }
 
-    const core = this.getCore()
-    const teamApps = providerSpecificApps
-      .map((app: App) => {
-        const isShared = !!core.adminApps.find((a) => a.name === app.id)?.isShared
-        const inTeamApps = !!core.teamApps.find((a) => a.name === app.id)
-        if (isShared || inTeamApps) return app
-      })
-      .filter((app): app is App => app !== undefined)
-
-    return teamApps.map((app) => {
+    return providerSpecificApps.map((app) => {
       return {
         id: app.id,
         enabled: Boolean(app.values?.enabled ?? true),
