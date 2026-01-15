@@ -60,3 +60,15 @@ App:
       type: object
       additionalProperties: true
   required: [id]
+
+AppEnabled:
+  x-acl:
+    platformAdmin: [read-any]
+    teamAdmin: [read-any]
+    teamMember: [read-any]
+  type: object
+  properties:
+    id:
+      $ref: 'definitions.yaml#/idName'
+    enabled:
+      type: boolean
