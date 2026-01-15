@@ -11,6 +11,7 @@ const debug = Debug('otomi:api:v1:apps')
  */
 export const getTeamApps = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId } = req.params
+  debug('getTeamApps', teamId)
   res.json(req.otomi.getTeamApps(teamId))
 }
 
