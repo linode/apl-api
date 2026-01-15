@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.14.6](https://github.com/redkubes/otomi-api/compare/v4.14.5...v4.14.6) (2026-01-15)
+
+
+### Bug Fixes
+
+* apps enabled status ([#897](https://github.com/redkubes/otomi-api/issues/897)) ([4172472](https://github.com/redkubes/otomi-api/commit/41724722a50dad5c5296bea70dab3ff95d419bb5))
+
 ### [4.14.5](https://github.com/redkubes/otomi-api/compare/v4.14.4...v4.14.5) (2026-01-14)
 
 
