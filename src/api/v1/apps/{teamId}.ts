@@ -7,10 +7,12 @@ const debug = Debug('otomi:api:v1:apps')
 /**
  * GET /v1/apps/{teamId}
  * Get apps for a team
+ * Returns list of team apps with their ids and enabled status
  */
-export const getApps = (req: OpenApiRequestExt, res: Response): void => {
+export const getTeamApps = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId } = req.params
-  res.json(req.otomi.getApps(teamId))
+  debug('getTeamApps', teamId)
+  res.json(req.otomi.getTeamApps(teamId))
 }
 
 /**

@@ -2582,18 +2582,12 @@ paths:
         '200':
           description: Successfully edited settings.
 
-  /v1/apps/{teamId}:
-    parameters:
-      - in: path
-        name: teamId
-        required: true
-        schema:
-          type: string
+  /v1/apps:
     get:
       operationId: getApps
-      x-eov-operation-handler: v1/apps/{teamId}
-      description: Get list of apps for a team
-      x-aclSchema: App
+      x-eov-operation-handler: v1/apps
+      description: Get list of all apps ids and their enabled status
+      x-aclSchema: AppEnabled
       responses:
         '200':
           description: The request is successful.
@@ -2602,12 +2596,29 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    id:
-                      $ref: '#/components/schemas/App/properties/id'
-                    enabled:
-                      $ref: '#/components/schemas/App/properties/enabled'
+                  $ref: '#/components/schemas/AppEnabled'
+
+  /v1/apps/{teamId}:
+    parameters:
+      - in: path
+        name: teamId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getTeamApps
+      x-eov-operation-handler: v1/apps/{teamId}
+      description: Get list of team apps ids and their enabled status
+      x-aclSchema: AppEnabled
+      responses:
+        '200':
+          description: The request is successful.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AppEnabled'
     put:
       operationId: toggleApps
       x-eov-operation-handler: v1/apps/{teamId}
@@ -3301,6 +3312,8 @@ components:
       $ref: 'agent.yaml#/Agent'
     App:
       $ref: 'app.yaml#/App'
+    AppEnabled:
+      $ref: 'app.yaml#/AppEnabled'
     AppList:
       $ref: 'app.yaml#/AppList'
     Build:
