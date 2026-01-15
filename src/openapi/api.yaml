@@ -2586,15 +2586,8 @@ paths:
     get:
       operationId: getApps
       x-eov-operation-handler: v1/apps
-      description: Get list of apps ids and their enabled status, optionally filtered by team
+      description: Get list of all apps ids and their enabled status
       x-aclSchema: App
-      parameters:
-        - in: query
-          name: teamId
-          required: false
-          schema:
-            type: string
-          description: Optional teamId to filter apps
       responses:
         '200':
           description: The request is successful.
@@ -2617,6 +2610,25 @@ paths:
         required: true
         schema:
           type: string
+    get:
+      operationId: getTeamApps
+      x-eov-operation-handler: v1/apps/{teamId}
+      description: Get list of team apps ids and their enabled status
+      x-aclSchema: App
+      responses:
+        '200':
+          description: The request is successful.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      $ref: '#/components/schemas/App/properties/id'
+                    enabled:
+                      $ref: '#/components/schemas/App/properties/enabled'
     put:
       operationId: toggleApps
       x-eov-operation-handler: v1/apps/{teamId}
