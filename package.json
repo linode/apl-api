@@ -62,7 +62,7 @@
     "@types/jest": "30.0.0",
     "@types/jsonpath": "0.2.4",
     "@types/lodash": "4.17.23",
-    "@types/node": "24.10.1",
+    "@types/node": "25.0.9",
     "@types/supertest": "6.0.3",
     "@typescript-eslint/eslint-plugin": "8.53.0",
     "@typescript-eslint/parser": "8.53.0",
