@@ -178,6 +178,23 @@ export async function initApp(inOtomiStack?: OtomiStack) {
     app.use('/v2', authRateLimiter) // Stricter rate limit for JWT verification on v2
   }
 
+  /**
+   * Inject Authorization header for OpenAPI security validation.
+   *
+   * express-openapi-validator requires this header before calling the
+   * security handler, enabling x-aclSchema permission validation during development.
+   *
+   * Note: JWT middleware ignores this in dev env and uses mock user data.
+   */
+  if (env.isDev) {
+    app.use((req, _res, next) => {
+      if (!req.headers.authorization) {
+        Object.assign(req.headers, { authorization: 'Bearer dev-env-token' })
+      }
+      next()
+    })
+  }
+
   app.use(jwtMiddleware())
   if (env.isDev) {
     app.all('/mock/:idx', (req, res, next) => {
@@ -247,11 +264,9 @@ export async function initApp(inOtomiStack?: OtomiStack) {
         coerceTypes: 'array', // coerce scalar data to an array with one element and vice versa (as required by the schema).
       },
       validateResponses: false, // Start with false, can enable later for debugging
-      validateSecurity: env.isDev
-        ? false
-        : {
-            handlers: { groupAuthz: groupAuthzSecurityHandler },
-          },
+      validateSecurity: {
+        handlers: { groupAuthz: groupAuthzSecurityHandler },
+      },
       operationHandlers: path.join(__dirname, 'api'), // Enable operation handlers
       ignorePaths: /\/api-docs/, // Exclude swagger docs
     }),
