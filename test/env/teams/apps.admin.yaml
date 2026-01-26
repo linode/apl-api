@@ -20,6 +20,5 @@ teamConfig:
             rabbitmq: {}
             sealed-secrets: {}
             trivy: {}
-            tempo: {}
             otel: {}
             kyverno: {}

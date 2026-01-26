@@ -27,7 +27,6 @@ AppList:
     - tekton
     - thanos
     - sealed-secrets
-    - tempo
     - trivy
 
 App:
