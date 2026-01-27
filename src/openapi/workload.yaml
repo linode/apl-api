@@ -42,9 +42,9 @@ Workload:
       description: Chart is a Helm chart name, and must be specified for applications sourced from a Helm repo.
       $ref: 'definitions.yaml#/wordCharacterPattern'
     revision:
-      description: In case of Git, this can be commit, tag, or branch. If omitted, will equal to HEAD. In case of Helm, this is a semver tag for the Chart's version.
+      description: In case of Git, this can be commit, tag, or branch. If omitted, will equal to main. In case of Helm, this is a semver tag for the Chart's version.
       $ref: 'definitions.yaml#/wordCharacterPattern'
-      default: HEAD
+      default: main
     chartMetadata:
       title: Chart metadata
       properties:
@@ -194,7 +194,7 @@ AplWorkloadSpec:
     revision:
       description: In case of Git, this can be commit, tag, or branch. If omitted, will equal to HEAD. In case of Helm, this is a semver tag for the Chart's version.
       $ref: 'definitions.yaml#/wordCharacterPattern'
-      default: HEAD
+      default: main
     chartMetadata:
       title: Chart metadata
       properties:
