@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -144,6 +144,9 @@ import {
   NewHelmChartValues,
   sparseCloneChart,
 } from './utils/workloadUtils'
+import { listAkamaiAgentCRs, listAkamaiKnowledgeBaseCRs } from './ai/k8s'
+import { AkamaiAgentCR } from './ai/AkamaiAgentCR'
+import { AkamaiKnowledgeBaseCR } from './ai/AkamaiKnowledgeBaseCR'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -2252,12 +2255,12 @@ export default class OtomiStack {
     if (!knowledgeBase) {
       throw new NotExistError(`Knowledge base ${name} not found in team ${teamId}`)
     }
-    return knowledgeBase as AplKnowledgeBaseResponse
+    return AkamaiKnowledgeBaseCR.fromCR(knowledgeBase).toApiResponse(teamId)
   }
 
-  getAplKnowledgeBases(teamId: string): AplKnowledgeBaseResponse[] {
-    const files = this.fileStore.getTeamResourcesByKindAndTeamId('AkamaiKnowledgeBase', teamId)
-    return Array.from(files.values()) as AplKnowledgeBaseResponse[]
+  async getAplKnowledgeBases(teamId: string): Promise<AplKnowledgeBaseResponse[]> {
+    const knowledgeBases = await listAkamaiKnowledgeBaseCRs(`team-${teamId}`)
+    return knowledgeBases.map((kb) => AkamaiKnowledgeBaseCR.fromCR(kb).toApiResponse(teamId, kb.status))
   }
 
   private async saveTeamKnowledgeBase(aplTeamObject: AplTeamObject): Promise<AplRecord> {
@@ -2294,7 +2297,12 @@ export default class OtomiStack {
       ? merge(cloneDeep(existing.spec), data.spec)
       : {
           foundationModel: data.spec?.foundationModel ?? existing.spec.foundationModel,
+          foundationModelEndpoint: data.spec?.foundationModelEndpoint ?? existing.spec.foundationModelEndpoint,
+          temperature: data.spec?.temperature ?? existing.spec.temperature,
+          topP: data.spec?.topP ?? existing.spec.topP,
+          maxTokens: data.spec?.maxTokens ?? existing.spec.maxTokens,
           agentInstructions: data.spec?.agentInstructions ?? existing.spec.agentInstructions,
+          routes: (data.spec?.routes ?? existing.spec.routes) as typeof existing.spec.routes,
           tools: (data.spec?.tools ?? existing.spec.tools) as typeof existing.spec.tools,
         }
 
@@ -2317,12 +2325,12 @@ export default class OtomiStack {
     if (!agent) {
       throw new NotExistError(`Agent ${name} not found in team ${teamId}`)
     }
-    return agent as AplAgentResponse
+    return AkamaiAgentCR.fromCR(agent).toApiResponse(teamId)
   }
 
-  getAplAgents(teamId: string): AplAgentResponse[] {
-    const files = this.fileStore.getTeamResourcesByKindAndTeamId('AkamaiAgent', teamId)
-    return Array.from(files.values()) as AplAgentResponse[]
+  async getAplAgents(teamId: string): Promise<AplAgentResponse[]> {
+    const agents = await listAkamaiAgentCRs(`team-${teamId}`)
+    return agents.map((agent) => AkamaiAgentCR.fromCR(agent).toApiResponse(teamId, agent.status))
   }
 
   getAllAplAgents(): AplAgentResponse[] {
