@@ -131,10 +131,6 @@ Settings:
                           type: string
                           $ref: 'definitions.yaml#/wordCharacterPattern'
                           default: harbor
-                        tempo:
-                          type: string
-                          $ref: 'definitions.yaml#/wordCharacterPattern'
-                          default: tempo
                         gitea:
                           type: string
                           $ref: 'definitions.yaml#/wordCharacterPattern'

@@ -321,7 +321,6 @@ export default class OtomiStack {
         cnpg: `lke${lkeClusterId}-cnpg`,
         harbor: `lke${lkeClusterId}-harbor`,
         loki: `lke${lkeClusterId}-loki`,
-        tempo: `lke${lkeClusterId}-tempo`,
         gitea: `lke${lkeClusterId}-gitea`,
         thanos: `lke${lkeClusterId}-thanos`,
         'kubeflow-pipelines': `lke${lkeClusterId}-kubeflow-pipelines`,
