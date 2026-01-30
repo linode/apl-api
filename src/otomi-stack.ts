@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -39,8 +39,6 @@ import {
   AplPolicyRequest,
   AplPolicyResponse,
   AplRecord,
-  AplSecretRequest,
-  AplSecretResponse,
   AplServiceRequest,
   AplServiceResponse,
   AplTeamObject,
@@ -62,6 +60,8 @@ import {
   Policies,
   Policy,
   SealedSecret,
+  SealedSecretManifestRequest,
+  SealedSecretManifestResponse,
   Service,
   ServiceSpec,
   Session,
@@ -129,12 +129,7 @@ import {
   testPublicRepoConnect,
 } from './utils/codeRepoUtils'
 import { getAplObjectFromV1, getV1MergeObject, getV1ObjectFromApl } from './utils/manifests'
-import {
-  getSealedSecretsPEM,
-  sealedSecretManifest,
-  SealedSecretManifestType,
-  toSealedSecretResponse,
-} from './utils/sealedSecretUtils'
+import { ensureSealedSecretMetadata, getSealedSecretsPEM, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
 import {
@@ -835,11 +830,10 @@ export default class OtomiStack {
     return aplRecord
   }
 
-  async saveTeamSealedSecret(teamId: string, data: AplSecretRequest): Promise<AplRecord> {
+  async saveTeamSealedSecret(teamId: string, data: SealedSecretManifestRequest): Promise<AplRecord> {
     debug(`Saving sealed secrets of team: ${teamId}`)
     const { metadata } = data
-    const aplObject = toTeamObject(teamId, data) as AplSecretResponse
-    const sealedSecretChartValues = sealedSecretManifest(aplObject)
+    const sealedSecretChartValues = sealedSecretManifest(teamId, data)
     const aplRecord = this.fileStore.set(
       getTeamSealedSecretsValuesFilePath(teamId, metadata.name),
       sealedSecretChartValues,
@@ -2104,98 +2098,171 @@ export default class OtomiStack {
   }
 
   async createSealedSecret(teamId: string, data: SealedSecret): Promise<SealedSecret> {
-    const newSecret = await this.createAplSealedSecret(
-      teamId,
-      getAplObjectFromV1('AplTeamSecret', data) as AplSecretRequest,
-    )
-    return getV1ObjectFromApl(newSecret) as SealedSecret
+    // Convert V1 format to SealedSecretManifestRequest
+    const request: SealedSecretManifestRequest = {
+      kind: 'SealedSecret',
+      metadata: { name: data.name },
+      spec: {
+        encryptedData: data.encryptedData || {},
+        template: {
+          type: data.template?.type,
+          immutable: data.template?.immutable,
+          metadata: data.template?.metadata,
+        },
+      },
+    }
+    const manifest = await this.createAplSealedSecret(teamId, request)
+    // Convert back to V1 format
+    return {
+      name: manifest.metadata.name,
+      namespace: manifest.spec.template?.metadata?.namespace,
+      encryptedData: manifest.spec.encryptedData,
+      template: manifest.spec.template,
+    } as SealedSecret
   }
 
-  async createAplSealedSecret(teamId: string, data: AplSecretRequest): Promise<AplSecretResponse> {
+  async createAplSealedSecret(
+    teamId: string,
+    data: SealedSecretManifestRequest,
+  ): Promise<SealedSecretManifestResponse> {
     if (data.metadata.name.length < 2) throw new ValidationError('Secret name must be at least 2 characters long')
-    if (this.fileStore.getTeamResource(data.kind, teamId, data.metadata.name)) {
+    if (this.fileStore.getTeamResource('SealedSecret', teamId, data.metadata.name)) {
       throw new AlreadyExists('SealedSecret name already exists')
     }
     const aplRecord = await this.saveTeamSealedSecret(teamId, data)
     await this.doDeployment(aplRecord, false)
-    return aplRecord.content as AplSecretResponse
+    return aplRecord.content as unknown as SealedSecretManifestResponse
   }
 
   async editSealedSecret(teamId: string, name: string, data: SealedSecret): Promise<SealedSecret> {
-    const mergeObj = getV1MergeObject(data) as DeepPartial<AplSecretRequest>
-    const mergedSecret = await this.editAplSealedSecret(teamId, name, mergeObj)
-    return getV1ObjectFromApl(mergedSecret) as SealedSecret
+    // Convert V1 format to SealedSecretManifestRequest
+    const request: DeepPartial<SealedSecretManifestRequest> = {
+      kind: 'SealedSecret',
+      metadata: { name },
+      spec: {
+        encryptedData: data.encryptedData,
+        template: {
+          type: data.template?.type,
+          immutable: data.template?.immutable,
+          metadata: data.template?.metadata,
+        },
+      },
+    }
+    const manifest = await this.editAplSealedSecret(teamId, name, request)
+    // Convert back to V1 format
+    return {
+      name: manifest.metadata.name,
+      namespace: manifest.spec.template?.metadata?.namespace,
+      encryptedData: manifest.spec.encryptedData,
+      template: manifest.spec.template,
+    } as SealedSecret
   }
 
   async editAplSealedSecret(
     teamId: string,
     name: string,
-    data: DeepPartial<AplSecretRequest>,
+    data: DeepPartial<SealedSecretManifestRequest>,
     patch = false,
-  ): Promise<AplSecretResponse> {
+  ): Promise<SealedSecretManifestResponse> {
     const existing = await this.getAplSealedSecret(teamId, name)
-    const namespace = data.spec?.namespace ?? existing.spec.namespace ?? `team-${teamId}`
 
-    const updatedSpec = patch
-      ? merge(cloneDeep(existing.spec), {
-          encryptedData: data.spec?.encryptedData,
-          namespace,
-        })
-      : ({
-          ...existing.spec,
-          encryptedData: data.spec?.encryptedData,
-          namespace,
-          immutable: data.spec?.immutable ?? existing.spec.immutable,
-          metadata: data.spec?.metadata ?? existing.spec.metadata,
-        } as SealedSecret)
+    let updatedRequest: SealedSecretManifestRequest
+    if (patch) {
+      // Merge mode: merge encryptedData
+      updatedRequest = {
+        kind: 'SealedSecret',
+        metadata: { name },
+        spec: {
+          encryptedData: merge(
+            cloneDeep(existing.spec.encryptedData || {}),
+            (data.spec?.encryptedData || {}) as Record<string, string>,
+          ),
+          template: (data.spec?.template ?? existing.spec.template) as SealedSecretManifestRequest['spec']['template'],
+        },
+      }
+    } else {
+      // Replace mode: use provided encryptedData or existing
+      updatedRequest = {
+        kind: 'SealedSecret',
+        metadata: { name },
+        spec: {
+          encryptedData: ((data.spec?.encryptedData ?? existing.spec.encryptedData) || {}) as Record<string, string>,
+          template: {
+            type: data.spec?.template?.type ?? existing.spec.template?.type,
+            immutable: data.spec?.template?.immutable ?? existing.spec.template?.immutable,
+            metadata: (data.spec?.template?.metadata ?? existing.spec.template?.metadata) as
+              | { annotations?: Record<string, string>; labels?: Record<string, string>; finalizers?: string[] }
+              | undefined,
+          },
+        },
+      }
+    }
 
-    const aplRecord = await this.saveTeamSealedSecret(teamId, {
-      kind: existing.kind,
-      metadata: existing.metadata,
-      spec: updatedSpec,
-    })
+    const aplRecord = await this.saveTeamSealedSecret(teamId, updatedRequest)
     await this.doDeployment(aplRecord, false)
-    return aplRecord.content as AplSecretResponse
+    return aplRecord.content as unknown as SealedSecretManifestResponse
   }
 
   async deleteSealedSecret(teamId: string, name: string): Promise<void> {
-    const filePath = this.fileStore.deleteTeamResource('AplTeamSecret', teamId, name)
+    const filePath = this.fileStore.deleteTeamResource('SealedSecret', teamId, name)
     await this.git.removeFile(filePath)
     await this.doDeleteDeployment([filePath])
   }
 
   async getSealedSecret(teamId: string, name: string): Promise<SealedSecret> {
-    const aplSecret = await this.getAplSealedSecret(teamId, name)
-    return getV1ObjectFromApl(aplSecret) as SealedSecret
+    const manifest = await this.getAplSealedSecret(teamId, name)
+    // Convert to V1 format
+    return {
+      name: manifest.metadata.name,
+      namespace: manifest.spec.template?.metadata?.namespace,
+      encryptedData: manifest.spec.encryptedData,
+      template: manifest.spec.template,
+    } as SealedSecret
   }
 
-  async getAplSealedSecret(teamId: string, name: string): Promise<AplSecretResponse> {
-    const sealedSecret = this.fileStore.getTeamResource('AplTeamSecret', teamId, name)
+  async getAplSealedSecret(teamId: string, name: string): Promise<SealedSecretManifestResponse> {
+    const sealedSecret = this.fileStore.getTeamResource('SealedSecret', teamId, name)
     if (!sealedSecret) {
       throw new NotExistError(`SealedSecret ${name} not found in team ${teamId}`)
     }
-    return toSealedSecretResponse(sealedSecret as SealedSecretManifestType)
+    return ensureSealedSecretMetadata(sealedSecret as SealedSecretManifestResponse, teamId)
   }
 
   getAllSealedSecrets(): SealedSecret[] {
-    return this.getAllAplSealedSecrets().map(getV1ObjectFromApl) as SealedSecret[]
+    return this.getAllAplSealedSecrets().map((manifest) => ({
+      name: manifest.metadata.name,
+      namespace: manifest.spec.template?.metadata?.namespace,
+      encryptedData: manifest.spec.encryptedData,
+      template: manifest.spec.template,
+      teamId: manifest.metadata.labels?.['apl.io/teamId'],
+    })) as SealedSecret[]
   }
 
-  getAllAplSealedSecrets(): AplSecretResponse[] {
-    const files = this.fileStore.getAllTeamResourcesByKind('AplTeamSecret')
-    return Array.from(files.values()).map((secret) => toSealedSecretResponse(secret as SealedSecretManifestType))
+  getAllAplSealedSecrets(): SealedSecretManifestResponse[] {
+    const files = this.fileStore.getAllTeamResourcesByKind('SealedSecret')
+    return Array.from(files.values()).map((secret) => {
+      const manifest = secret as SealedSecretManifestResponse
+      // Derive teamId from namespace (format: team-{teamId})
+      const teamId = manifest.metadata.namespace?.replace(/^team-/, '') || manifest.metadata.labels?.['apl.io/teamId']
+      return teamId ? ensureSealedSecretMetadata(manifest, teamId) : manifest
+    })
   }
 
   getSealedSecrets(teamId: string): SealedSecret[] {
-    return this.getAplSealedSecrets(teamId).map((secret) => ({
-      ...getV1ObjectFromApl(secret),
+    return this.getAplSealedSecrets(teamId).map((manifest) => ({
+      name: manifest.metadata.name,
+      namespace: manifest.spec.template?.metadata?.namespace,
+      encryptedData: manifest.spec.encryptedData,
+      template: manifest.spec.template,
       teamId,
     })) as SealedSecret[]
   }
 
-  getAplSealedSecrets(teamId: string): AplSecretResponse[] {
-    const files = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamSecret', teamId)
-    return Array.from(files.values()).map((secret) => toSealedSecretResponse(secret as SealedSecretManifestType))
+  getAplSealedSecrets(teamId: string): SealedSecretManifestResponse[] {
+    const files = this.fileStore.getTeamResourcesByKindAndTeamId('SealedSecret', teamId)
+    return Array.from(files.values()).map((secret) =>
+      ensureSealedSecretMetadata(secret as SealedSecretManifestResponse, teamId),
+    )
   }
 
   async getSecretsFromK8s(teamId: string): Promise<Array<string>> {
