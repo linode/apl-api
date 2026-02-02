@@ -20,7 +20,6 @@ AppList:
     - kubeflow-pipelines
     - kyverno
     - loki
-    - minio
     - otel
     - prometheus
     - rabbitmq
