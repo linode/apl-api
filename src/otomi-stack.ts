@@ -97,7 +97,6 @@ import {
   GIT_PASSWORD,
   GIT_REPO_URL,
   GIT_USER,
-  HELM_CHART_CATALOG,
   HIDDEN_APPS,
   KNOWLEDGE_BASE_KIND,
   OBJ_STORAGE_APPS,
@@ -161,7 +160,6 @@ const env = cleanEnv({
   GIT_PASSWORD,
   GIT_REPO_URL,
   GIT_USER,
-  HELM_CHART_CATALOG,
   TOOLS_HOST,
   VERSIONS,
   PREINSTALLED_EXCLUDED_APPS,
@@ -1577,7 +1575,7 @@ export default class OtomiStack {
     const uuid = uuidv4()
     const helmChartsDir = `/tmp/otomi/charts/${uuid}`
 
-    const url = clientUrl || env?.HELM_CHART_CATALOG
+    const url = clientUrl || 'https://github.com/linode/apl-charts.git'
 
     if (!url) throw new OtomiError(400, 'Helm chart catalog URL is not set')
 
@@ -1602,7 +1600,7 @@ export default class OtomiStack {
 
     const uuid = uuidv4()
     const localHelmChartsDir = `/tmp/otomi/charts/${uuid}`
-    const helmChartCatalogUrl = env.HELM_CHART_CATALOG
+    const helmChartCatalogUrl = 'https://github.com/linode/apl-charts.git'
     const { user, email } = this.git
     const { cluster } = this.getSettings(['cluster'])
 
