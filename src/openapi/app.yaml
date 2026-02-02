@@ -25,7 +25,6 @@ AppList:
     - prometheus
     - rabbitmq
     - tekton
-    - thanos
     - sealed-secrets
     - trivy
 
