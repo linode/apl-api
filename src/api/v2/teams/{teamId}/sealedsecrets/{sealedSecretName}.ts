@@ -1,12 +1,12 @@
 import Debug from 'debug'
 import { Response } from 'express'
-import { AplSecretRequest, DeepPartial, OpenApiRequestExt } from 'src/otomi-models'
+import { DeepPartial, OpenApiRequestExt, SealedSecretManifestRequest } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:sealedsecrets')
 
 /**
  * GET /v2/teams/{teamId}/sealedsecrets/{sealedSecretName}
- * Get a specific sealed secret (APL format)
+ * Get a specific sealed secret (SealedSecret manifest format)
  */
 export const getAplSealedSecret = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, sealedSecretName } = req.params
@@ -17,7 +17,7 @@ export const getAplSealedSecret = async (req: OpenApiRequestExt, res: Response):
 
 /**
  * PUT /v2/teams/{teamId}/sealedsecrets/{sealedSecretName}
- * Edit a sealed secret (APL format)
+ * Edit a sealed secret (SealedSecret manifest format)
  */
 export const editAplSealedSecret = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, sealedSecretName } = req.params
@@ -25,14 +25,14 @@ export const editAplSealedSecret = async (req: OpenApiRequestExt, res: Response)
   const data = await req.otomi.editAplSealedSecret(
     decodeURIComponent(teamId),
     decodeURIComponent(sealedSecretName),
-    req.body as AplSecretRequest,
+    req.body as SealedSecretManifestRequest,
   )
   res.json(data)
 }
 
 /**
  * PATCH /v2/teams/{teamId}/sealedsecrets/{sealedSecretName}
- * Partially update a sealed secret (APL format)
+ * Partially update a sealed secret (SealedSecret manifest format)
  */
 export const patchAplSealedSecret = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, sealedSecretName } = req.params
@@ -40,7 +40,7 @@ export const patchAplSealedSecret = async (req: OpenApiRequestExt, res: Response
   const data = await req.otomi.editAplSealedSecret(
     decodeURIComponent(teamId),
     decodeURIComponent(sealedSecretName),
-    req.body as DeepPartial<AplSecretRequest>,
+    req.body as DeepPartial<SealedSecretManifestRequest>,
     true,
   )
   res.json(data)
