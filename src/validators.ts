@@ -89,7 +89,6 @@ export const OBJ_STORAGE_APPS = json({
   default: [
     { appId: 'harbor', required: false },
     { appId: 'loki', required: false },
-    { appId: 'thanos', required: true },
     { appId: 'kubeflow-pipelines', required: true },
   ],
 })
