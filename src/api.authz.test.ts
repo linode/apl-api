@@ -48,28 +48,36 @@ describe('API authz tests', () => {
     otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
     otomiStack.fileStore.set('env/teams/team1/settings.yaml', {
       kind: 'AplTeamSettingSet',
-      spec: {
-        selfService: {
-          teamMembers: {
-            downloadKubeconfig: true,
-            downloadDockerLogin: true,
-          },
-        },
-      },
       metadata: {
         name: 'team1',
         labels: {
           'apl.io/teamId': 'team1',
         },
       },
+      spec: {
+        selfService: {
+          teamMembers: {
+            downloadKubeconfig: true,
+            downloadDockerLogin: true,
+            editSecurityPolicies: true,
+          },
+        },
+      },
     })
     otomiStack.fileStore.set('env/teams/team2/settings.yaml', {
       kind: 'AplTeamSettingSet',
-      spec: {},
       metadata: {
         name: 'team2',
         labels: {
           'apl.io/teamId': 'team2',
+        },
+      },
+      spec: {
+        selfService: {
+          teamMembers: {
+            downloadKubeconfig: true,
+            downloadDockerLogin: true,
+          },
         },
       },
     })
@@ -81,6 +89,10 @@ describe('API authz tests', () => {
 
   beforeEach(() => {
     jest.spyOn(otomiStack, 'createTeam').mockResolvedValue({ name: 'team', resourceQuota: [] })
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
   describe('Platform Admin /settings endpoint tests', () => {
@@ -782,9 +794,9 @@ describe('API authz tests', () => {
         .expect('Content-Type', /json/)
     })
 
-    test('team member can not update policies', async () => {
+    test('team member can not update policies of other team', async () => {
       await agent
-        .put('/v1/teams/team1/policies/disallow-selinux')
+        .put('/v1/teams/team2/policies/disallow-selinux')
         .send(data)
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(403)
