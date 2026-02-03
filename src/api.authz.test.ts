@@ -7,7 +7,7 @@ import request from 'supertest'
 import { HttpError } from './error'
 import { Git } from './git'
 import { getSessionStack } from './middleware'
-import { App, CodeRepo, SealedSecret } from './otomi-models'
+import { App, CodeRepo, Netpol, SealedSecret } from './otomi-models'
 import * as getValuesSchemaModule from './utils'
 import TestAgent from 'supertest/lib/agent'
 import { FileStore } from './fileStore/file-store'
@@ -48,7 +48,14 @@ describe('API authz tests', () => {
     otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
     otomiStack.fileStore.set('env/teams/team1/settings.yaml', {
       kind: 'AplTeamSettingSet',
-      spec: {},
+      spec: {
+        selfService: {
+          teamMembers: {
+            downloadKubeconfig: true,
+            downloadDockerLogin: true,
+          },
+        },
+      },
       metadata: {
         name: 'team1',
         labels: {
@@ -782,6 +789,167 @@ describe('API authz tests', () => {
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(403)
         .expect('Content-Type', /json/)
+    })
+  })
+
+  describe('Network policy endpoints tests', () => {
+    const data = {
+      name: 'demo-netpol',
+      ruleType: {
+        type: 'ingress',
+        ingress: { mode: 'AllowAll', toLabelName: 'app', toLabelValue: 'my-app' },
+      },
+    }
+
+    test('team member can create its own netpol', async () => {
+      jest.spyOn(otomiStack, 'createNetpol').mockResolvedValue({} as Netpol)
+      await agent
+        .post(`/v1/teams/${teamId}/netpols`)
+        .send(data)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+    })
+
+    test('team member can read its own netpol', async () => {
+      jest.spyOn(otomiStack, 'getNetpol').mockReturnValue({} as Netpol)
+      await agent
+        .get(`/v1/teams/${teamId}/netpols/my-netpol`)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+    })
+
+    test('team member can update its own netpol', async () => {
+      jest.spyOn(otomiStack, 'editNetpol').mockResolvedValue({} as Netpol)
+
+      await agent
+        .put(`/v1/teams/${teamId}/netpols/my-netpol`)
+        .send(data)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+    })
+
+    test('team member can delete its own netpol', async () => {
+      jest.spyOn(otomiStack, 'deleteNetpol').mockResolvedValue()
+
+      await agent
+        .delete(`/v1/teams/${teamId}/netpols/my-netpol`)
+        .set('Content-Type', 'application/json')
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member cannot create others netpol', async () => {
+      await agent
+        .post(`/v1/teams/${otherTeamId}/netpols`)
+        .send(data)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(403)
+    })
+
+    test('team member cannot read others netpol', async () => {
+      await agent
+        .get(`/v1/teams/${otherTeamId}/netpols/my-netpol`)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(403)
+    })
+
+    test('team member cannot update others netpol', async () => {
+      await agent
+        .put(`/v1/teams/${otherTeamId}/netpols/my-netpol`)
+        .send(data)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(403)
+    })
+
+    test('team member cannot delete others netpol', async () => {
+      await agent
+        .delete(`/v1/teams/${otherTeamId}/netpols/my-netpol`)
+        .set('Content-Type', 'application/json')
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(403)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member can get its own team netpols', async () => {
+      await agent
+        .get(`/v1/teams/${teamId}/netpols`)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+    })
+
+    test('team member cannot get others team netpols', async () => {
+      await agent.get(`/v1/teams/${otherTeamId}/netpols`).set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
+    })
+
+    test('team member cannot get all netpols', async () => {
+      await agent.get('/v1/netpols').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
+    })
+
+    test('platform admin can get all netpols', async () => {
+      await agent.get('/v1/netpols').set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
+    })
+  })
+
+  describe('Kubecfg endpoint tests', () => {
+    test('team member can get its own kubecfg', async () => {
+      jest.spyOn(otomiStack, 'getKubecfg').mockResolvedValue({ exportConfig: () => '{}' } as never)
+      await agent.get(`/v1/kubecfg/${teamId}`).set('Authorization', `Bearer ${teamMemberToken}`).expect(200)
+    })
+
+    test('team member cannot get others kubecfg', async () => {
+      await agent.get(`/v1/kubecfg/${otherTeamId}`).set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
+    })
+
+    test('team admin can get its own kubecfg', async () => {
+      jest.spyOn(otomiStack, 'getKubecfg').mockResolvedValue({ exportConfig: () => '{}' } as never)
+      await agent.get(`/v1/kubecfg/${teamId}`).set('Authorization', `Bearer ${teamAdminToken}`).expect(200)
+    })
+
+    test('team admin cannot get others kubecfg', async () => {
+      await agent.get(`/v1/kubecfg/${otherTeamId}`).set('Authorization', `Bearer ${teamAdminToken}`).expect(403)
+    })
+
+    test('platform admin can get any kubecfg', async () => {
+      jest.spyOn(otomiStack, 'getKubecfg').mockResolvedValue({ exportConfig: () => '{}' } as never)
+      await agent.get(`/v1/kubecfg/${otherTeamId}`).set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
+    })
+
+    test('anonymous user cannot get kubecfg', async () => {
+      await agent.get(`/v1/kubecfg/${teamId}`).expect(401)
+    })
+  })
+
+  describe('DockerConfig endpoint tests', () => {
+    test('team member can get its own dockerconfig', async () => {
+      jest.spyOn(otomiStack, 'getDockerConfig').mockResolvedValue('{}')
+      await agent.get(`/v1/dockerconfig/${teamId}`).set('Authorization', `Bearer ${teamMemberToken}`).expect(200)
+    })
+
+    test('team member cannot get others dockerconfig', async () => {
+      await agent.get(`/v1/dockerconfig/${otherTeamId}`).set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
+    })
+
+    test('team admin can get its own dockerconfig', async () => {
+      jest.spyOn(otomiStack, 'getDockerConfig').mockResolvedValue('{}')
+      await agent.get(`/v1/dockerconfig/${teamId}`).set('Authorization', `Bearer ${teamAdminToken}`).expect(200)
+    })
+
+    test('team admin cannot get others dockerconfig', async () => {
+      await agent.get(`/v1/dockerconfig/${otherTeamId}`).set('Authorization', `Bearer ${teamAdminToken}`).expect(403)
+    })
+
+    test('platform admin can get any dockerconfig', async () => {
+      jest.spyOn(otomiStack, 'getDockerConfig').mockResolvedValue('{}')
+      await agent
+        .get(`/v1/dockerconfig/${otherTeamId}`)
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+    })
+
+    test('anonymous user cannot get dockerconfig', async () => {
+      await agent.get(`/v1/dockerconfig/${teamId}`).expect(401)
     })
   })
 
