@@ -125,10 +125,6 @@ Settings:
                           type: string
                           $ref: 'definitions.yaml#/wordCharacterPattern'
                           default: gitea
-                        thanos:
-                          type: string
-                          $ref: 'definitions.yaml#/wordCharacterPattern'
-                          default: thanos
                         kubeflow-pipelines:
                           type: string
                           $ref: 'definitions.yaml#/wordCharacterPattern'
