@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -322,7 +322,6 @@ export default class OtomiStack {
         harbor: `lke${lkeClusterId}-harbor`,
         loki: `lke${lkeClusterId}-loki`,
         gitea: `lke${lkeClusterId}-gitea`,
-        thanos: `lke${lkeClusterId}-thanos`,
         'kubeflow-pipelines': `lke${lkeClusterId}-kubeflow-pipelines`,
       }
       const objectStorageClient = new ObjectStorageClient(data.apiToken)
