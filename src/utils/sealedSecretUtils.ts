@@ -1,59 +1,31 @@
 import { X509Certificate } from 'crypto'
 import { isEmpty } from 'lodash'
-import { AplSecretResponse } from 'src/otomi-models'
+import { SealedSecretManifestRequest, SealedSecretManifestResponse } from 'src/otomi-models'
 import { ValidationError } from '../error'
 import { getSealedSecretsCertificate } from '../k8s_operations'
 
-export interface SealedSecretManifestType {
-  apiVersion: string
-  kind: string
-  metadata: {
-    name: string
-    namespace: string
-    annotations?: Record<string, string>
-    finalizers?: string[]
-    labels?: Record<string, string>
-  }
-  spec: {
-    encryptedData: Record<string, string>
-    template: {
-      type:
-        | 'kubernetes.io/opaque'
-        | 'kubernetes.io/dockercfg'
-        | 'kubernetes.io/dockerconfigjson'
-        | 'kubernetes.io/basic-auth'
-        | 'kubernetes.io/ssh-auth'
-        | 'kubernetes.io/tls'
-      immutable: boolean
-      metadata: {
-        name: string
-        namespace: string
-        annotations?: Record<string, string>
-        finalizers?: string[]
-        labels?: Record<string, string>
-      }
-    }
-  }
-}
+export function sealedSecretManifest(teamId: string, data: SealedSecretManifestRequest): SealedSecretManifestResponse {
+  const { annotations, labels, finalizers } = data.spec?.template?.metadata || {}
+  const namespace = `team-${teamId}`
 
-export function sealedSecretManifest(data: AplSecretResponse): SealedSecretManifestType {
-  const { annotations, labels, finalizers } = data.spec.metadata || {}
-  const namespace = data.spec.namespace!
   return {
     apiVersion: 'bitnami.com/v1alpha1',
     kind: 'SealedSecret',
     metadata: {
-      ...data.metadata,
+      name: data.metadata.name,
       annotations: {
         'sealedsecrets.bitnami.com/namespace-wide': 'true',
+      },
+      labels: {
+        'apl.io/teamId': teamId,
       },
       namespace,
     },
     spec: {
       encryptedData: data.spec.encryptedData || {},
       template: {
-        type: data.spec.type || 'kubernetes.io/opaque',
-        immutable: data.spec.immutable || false,
+        type: data.spec.template?.type || 'kubernetes.io/opaque',
+        immutable: data.spec.template?.immutable || false,
         metadata: {
           name: data.metadata.name,
           namespace,
@@ -63,32 +35,34 @@ export function sealedSecretManifest(data: AplSecretResponse): SealedSecretManif
         },
       },
     },
+    status: {},
   }
 }
 
-export function toSealedSecretResponse(data: SealedSecretManifestType): AplSecretResponse {
-  {
-    return {
-      kind: 'AplTeamSecret',
-      metadata: {
-        name: data.metadata.name,
-        labels: {
-          'apl.io/teamId': data.metadata.labels?.['apl.io/teamId'] || '',
-        },
+export function ensureSealedSecretMetadata(
+  manifest: SealedSecretManifestResponse,
+  teamId: string,
+): SealedSecretManifestResponse {
+  const hasCorrectLabel = manifest.metadata.labels?.['apl.io/teamId'] === teamId
+  const hasCorrectAnnotation = manifest.metadata.annotations?.['sealedsecrets.bitnami.com/namespace-wide'] === 'true'
+
+  if (hasCorrectLabel && hasCorrectAnnotation) {
+    return manifest
+  }
+
+  return {
+    ...manifest,
+    metadata: {
+      ...manifest.metadata,
+      annotations: {
+        ...manifest.metadata.annotations,
+        'sealedsecrets.bitnami.com/namespace-wide': 'true',
       },
-      spec: {
-        namespace: data.spec.template.metadata.namespace,
-        type: data.spec.template.type,
-        immutable: data.spec.template.immutable,
-        encryptedData: data.spec.encryptedData,
-        metadata: {
-          annotations: data.spec.template.metadata.annotations,
-          labels: data.spec.template.metadata.labels,
-          finalizers: data.spec.template.metadata.finalizers,
-        },
+      labels: {
+        ...manifest.metadata.labels,
+        'apl.io/teamId': teamId,
       },
-      status: {},
-    }
+    },
   }
 }
 

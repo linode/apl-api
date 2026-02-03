@@ -11,7 +11,7 @@ import Debug from 'debug'
 import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import { promisify } from 'util'
-import { AplBuildResponse, AplSecretResponse, AplServiceResponse, AplWorkloadResponse } from './otomi-models'
+import { AplBuildResponse, AplServiceResponse, AplWorkloadResponse, SealedSecretManifestResponse } from './otomi-models'
 
 const debug = Debug('otomi:api:k8sOperations')
 
@@ -433,10 +433,10 @@ export async function getSealedSecretSyncedStatus(name: string, namespace: strin
   }
 }
 
-export async function getSealedSecretStatus(sealedsecret: AplSecretResponse): Promise<string> {
+export async function getSealedSecretStatus(sealedsecret: SealedSecretManifestResponse): Promise<string> {
   const { name, labels } = sealedsecret.metadata
   const teamName = labels['apl.io/teamId']
-  const namespace = sealedsecret.spec.namespace ?? `team-${teamName}`
+  const namespace = sealedsecret.spec.template?.metadata?.namespace ?? `team-${teamName}`
   const value = await getSecretValues(name, namespace)
   const syncedStatus = await getSealedSecretSyncedStatus(name, namespace)
 

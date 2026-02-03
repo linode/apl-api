@@ -20,7 +20,7 @@ import {
 } from 'src/middleware'
 import { apiRateLimiter, authRateLimiter } from 'src/middleware/rate-limit'
 import { setMockIdx } from 'src/mocks'
-import { AplResponseObject, OpenAPIDoc, Schema } from 'src/otomi-models'
+import { AplResponseObject, OpenAPIDoc, Schema, SealedSecretManifestResponse } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
 import {
@@ -89,7 +89,7 @@ const resourceStatus = async (errorSet) => {
   }
   const { cluster } = otomiStack.getSettings(['cluster'])
   const domainSuffix = cluster?.domainSuffix
-  const resources: Record<string, AplResponseObject[]> = {
+  const resources: Record<string, (AplResponseObject | SealedSecretManifestResponse)[]> = {
     workloads: otomiStack.getAllAplWorkloads(),
     builds: otomiStack.getAllAplBuilds(),
     services: otomiStack.getAllAplServices(),

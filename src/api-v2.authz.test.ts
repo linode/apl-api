@@ -491,10 +491,18 @@ describe('API V2 authz tests', () => {
   })
 
   describe('V2 Sealed Secret Endpoints', () => {
-    const secretData = createTeamResource('AplTeamSecret', {
-      type: 'kubernetes.io/opaque',
-      encryptedData: { key: 'value' },
-    })
+    const secretData = {
+      kind: 'SealedSecret',
+      metadata: {
+        name: 'test-secret',
+      },
+      spec: {
+        encryptedData: { key: 'value' },
+        template: {
+          type: 'kubernetes.io/opaque',
+        },
+      },
+    }
 
     describe('Platform Admin', () => {
       test('platform admin can get all sealed secrets', async () => {
