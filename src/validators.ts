@@ -57,6 +57,10 @@ export const JWT_AUDIENCE = str({
   example: 'otomi',
   default: 'otomi',
 })
+export const HELM_CHART_CATALOG = str({
+  desc: 'The helm chart catalog',
+  default: 'https://github.com/linode/apl-charts.git',
+})
 export const GIT_PROVIDER_URL_PATTERNS = json({
   desc: 'Regular expressions to match and extract information from URLs of supported git providers (GitHub, GitLab, Bitbucket) for cloning Helm charts.',
   default: {
