@@ -730,7 +730,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AplSecretResponse'
+                  $ref: '#/components/schemas/SealedSecretManifestResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
 
@@ -750,7 +750,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AplSecretResponse'
+                  $ref: '#/components/schemas/SealedSecretManifestResponse'
         '400':
           description: Bad Request
           content:
@@ -766,7 +766,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AplSecretRequest'
+              $ref: '#/components/schemas/SealedSecretManifestRequest'
         description: SealedSecret object
         required: true
       responses:
@@ -779,7 +779,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AplSecretResponse'
+                $ref: '#/components/schemas/SealedSecretManifestResponse'
 
   '/v2/teams/{teamId}/sealedsecrets/{sealedSecretName}':
     parameters:
@@ -800,7 +800,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AplSecretResponse'
+                $ref: '#/components/schemas/SealedSecretManifestResponse'
     put:
       operationId: editAplSealedSecret
       x-eov-operation-handler: v2/teams/{teamId}/sealedsecrets/{sealedSecretName}
@@ -810,7 +810,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AplSecretRequest'
+              $ref: '#/components/schemas/SealedSecretManifestRequest'
         description: SealedSecret object that contains updated values
         required: true
       responses:
@@ -823,7 +823,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AplSecretResponse'
+                $ref: '#/components/schemas/SealedSecretManifestResponse'
     delete:
       operationId: deleteAplSealedSecret
       x-eov-operation-handler: v2/teams/{teamId}/sealedsecrets/{sealedSecretName}
@@ -2833,6 +2833,16 @@ components:
           properties:
             name:
               $ref: 'definitions.yaml#/idName'
+            namespace:
+              $ref: 'definitions.yaml#/idName'
+            annotations:
+              type: object
+              additionalProperties:
+                type: string
+            labels:
+              type: object
+              additionalProperties:
+                type: string
           required:
             - name
       required:
@@ -2845,6 +2855,12 @@ components:
           properties:
             name:
               $ref: 'definitions.yaml#/idName'
+            namespace:
+              $ref: 'definitions.yaml#/idName'
+            annotations:
+              type: object
+              additionalProperties:
+                type: string
             labels:
               type: object
               properties:
@@ -3014,25 +3030,28 @@ components:
         - $ref: '#/components/schemas/AplPolicy'
         - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
-    AplSecret:
+    SealedSecretManifest:
       type: object
       properties:
+        apiVersion:
+          type: string
+          enum: ['bitnami.com/v1alpha1']
         kind:
           type: string
-          enum: [AplTeamSecret]
+          enum: [SealedSecret]
         spec:
-          $ref: 'sealedsecret.yaml#/AplSealedSecretSpec'
+          $ref: '#/components/schemas/SealedSecretManifestSpec'
       required:
         - kind
         - spec
-    AplSecretRequest:
+    SealedSecretManifestRequest:
       allOf:
-        - $ref: '#/components/schemas/AplSecret'
+        - $ref: '#/components/schemas/SealedSecretManifest'
         - $ref: '#/components/schemas/aplMetadata'
-    AplSecretResponse:
+    SealedSecretManifestResponse:
       type: object
       allOf:
-        - $ref: '#/components/schemas/AplSecret'
+        - $ref: '#/components/schemas/SealedSecretManifest'
         - $ref: '#/components/schemas/aplTeamMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
     AplService:
@@ -3139,6 +3158,8 @@ components:
       $ref: 'policies.yaml#/Policies'
     SealedSecret:
       $ref: 'sealedsecret.yaml#/SealedSecret'
+    SealedSecretManifestSpec:
+      $ref: 'sealedsecret.yaml#/SealedSecretManifestSpec'
     SealedSecretsKeys:
       $ref: 'sealedsecretskeys.yaml#/SealedSecretsKeys'
     K8sSecret:

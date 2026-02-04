@@ -163,8 +163,8 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
     name: 'services',
   })
 
-  maps.set('AplTeamSecret', {
-    kind: 'AplTeamSecret',
+  maps.set('SealedSecret', {
+    kind: 'SealedSecret',
     envDir,
     pathGlob: `${envDir}/env/teams/*/sealedsecrets/*.yaml`,
     pathTemplate: 'env/teams/{teamId}/sealedsecrets/{name}.yaml',

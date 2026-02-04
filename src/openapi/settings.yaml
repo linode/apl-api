@@ -84,16 +84,6 @@ Settings:
                   enum:
                     - disabled
                   default: disabled
-            - title: minioLocal
-              type: object
-              x-hideTitle: true
-              description: Select to use the self-hosted Minio instance. Make sure to activate Minio first.
-              properties:
-                type:
-                  type: string
-                  enum:
-                    - minioLocal
-                  default: minioLocal
             - title: Linode
               type: object
               x-hideTitle: true
@@ -135,10 +125,6 @@ Settings:
                           type: string
                           $ref: 'definitions.yaml#/wordCharacterPattern'
                           default: gitea
-                        thanos:
-                          type: string
-                          $ref: 'definitions.yaml#/wordCharacterPattern'
-                          default: thanos
                         kubeflow-pipelines:
                           type: string
                           $ref: 'definitions.yaml#/wordCharacterPattern'

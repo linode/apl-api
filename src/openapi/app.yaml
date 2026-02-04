@@ -20,12 +20,10 @@ AppList:
     - kubeflow-pipelines
     - kyverno
     - loki
-    - minio
     - otel
     - prometheus
     - rabbitmq
     - tekton
-    - thanos
     - sealed-secrets
     - trivy
 
