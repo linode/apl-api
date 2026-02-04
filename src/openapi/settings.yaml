@@ -84,16 +84,6 @@ Settings:
                   enum:
                     - disabled
                   default: disabled
-            - title: minioLocal
-              type: object
-              x-hideTitle: true
-              description: Select to use the self-hosted Minio instance. Make sure to activate Minio first.
-              properties:
-                type:
-                  type: string
-                  enum:
-                    - minioLocal
-                  default: minioLocal
             - title: Linode
               type: object
               x-hideTitle: true
