@@ -62,6 +62,8 @@ export type AplPolicyRequest = components['schemas']['AplPolicyRequest']
 export type AplPolicyResponse = components['schemas']['AplPolicyResponse']
 export type Cloudtty = components['schemas']['Cloudtty']
 export type TeamAuthz = components['schemas']['TeamAuthz']
+export type AplCatalogRequest = components['schemas']['AplCatalogRequest']
+export type AplCatalogResponse = components['schemas']['AplCatalogResponse']
 // Derived setting models
 export type Alerts = Settings['alerts']
 export type Cluster = Settings['cluster']
@@ -99,6 +101,7 @@ export const APL_KINDS = [
   'AplApp',
   'AplAlertSet',
   'AplCluster',
+  'AplCatalog',
   'AplDatabase',
   'AplDns',
   'AplIngress',

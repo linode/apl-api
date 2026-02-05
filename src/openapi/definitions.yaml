@@ -244,6 +244,34 @@ azureTenantId:
   title: Azure tenant id
   description: An Azure tenant id. Defaults to one found in metadata.
   type: string
+appCatalog:
+  type: object
+  additionalProperties: false
+  properties:
+    name:
+      type: string
+      description: 'A lowercase name that starts with a letter and may contain dashes.'
+      pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])$'
+    url:
+      type: string
+      description: 'Git repository URL for the catalog'
+      pattern: "^(https?|git|ssh)://.*\\.git$"
+    branch:
+      type: string
+      description: 'Git branch or tag to use'
+      default: 'main'
+    enabled:
+      type: boolean
+      description: 'Whether this catalog is active'
+      default: true
+    secretName:
+      type: string
+      description: 'Kubernetes secret name containing git credentials (for private repos)'
+      pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+  required:
+    - name
+    - url
+    - branch
 backupTtl:
   default: 168h
   description: Expiration of the backup. Defaults to 7 days.

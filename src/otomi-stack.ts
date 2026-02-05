@@ -1,4 +1,4 @@
-import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -27,6 +27,8 @@ import {
   AplAIModelResponse,
   AplBuildRequest,
   AplBuildResponse,
+  AplCatalogRequest,
+  AplCatalogResponse,
   AplCodeRepoRequest,
   AplCodeRepoResponse,
   AplKind,
@@ -829,6 +831,15 @@ export default class OtomiStack {
     return aplRecord
   }
 
+  async saveCatalog(data: AplCatalogRequest): Promise<AplRecord> {
+    debug(`Saving catalog: ${data.metadata.name}`)
+
+    const filePath = this.fileStore.setPlatformResource(data)
+    await this.git.writeFile(filePath, data)
+
+    return { filePath, content: data }
+  }
+
   async saveTeamSealedSecret(teamId: string, data: SealedSecretManifestRequest): Promise<AplRecord> {
     debug(`Saving sealed secrets of team: ${teamId}`)
     const { metadata } = data
@@ -1560,6 +1571,22 @@ export default class OtomiStack {
     } catch (error) {
       debug('Failed to delete cloudtty')
     }
+  }
+
+  getAllAplCatalogs(): AplCatalogResponse[] {
+    const files = this.fileStore.getAllTeamResourcesByKind('AplCatalog')
+    return Array.from(files.values()) as AplCatalogResponse[]
+  }
+
+  async createAplCatalog(data: AplCatalogRequest): Promise<AplCatalogResponse> {
+    if (this.fileStore.getPlatformResourcesByKind('AplCatalog')) {
+      throw new AlreadyExists('AplCatalog name already exists')
+    }
+
+    const aplRecord = await this.saveCatalog(data)
+
+    await this.doDeployments([aplRecord], false)
+    return aplRecord.content as AplCatalogResponse
   }
 
   async getWorkloadCatalog(data: {

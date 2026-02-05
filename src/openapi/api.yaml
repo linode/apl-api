@@ -1718,6 +1718,134 @@ paths:
                       $ref: '#/components/schemas/User/properties/id'
                     teams:
                       $ref: '#/components/schemas/User/properties/teams'
+  /v2/catalogs:
+    get:
+      operationId: getAllAplCatalogs
+      x-eov-operation-handler: v2/catalogs
+      description: Get all catalogs
+      x-aclSchema: AplCatalogSpec
+      responses:
+        '200':
+          description: Successfully obtained app catalogs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplCatalogResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenApiValidationError'
+  post:
+    operationId: createAplCatalog
+    x-eov-operation-handler: v2/catalogs
+    description: Create a app catalog
+    x-aclSchema: AplCatalogSpec
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AplCatalogRequest'
+      description: catalog object
+      required: true
+    responses:
+      '200':
+        description: Successfully stored app catalog configuration
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplCatalogResponse'
+      '400':
+        $ref: '#/components/responses/BadRequest'
+      '403':
+        $ref: '#/components/responses/Forbidden'
+      '409':
+        $ref: '#/components/responses/OtomiStackError'
+
+'/v2/catalogs/{name}':
+  put:
+    operationId: updateAplCatalog
+    x-eov-operation-handler: v2/catalogs
+    description: Update an existing app catalog configuration
+    x-aclSchema: AplCatalogSpec
+    parameters:
+      - name: name
+        in: path
+        required: true
+        description: Catalog name
+        schema:
+          type: string
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AplCatalogRequest'
+      required: true
+    responses:
+      '200':
+        description: Successfully updated app catalog
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplCatalogResponse'
+      '400':
+        $ref: '#/components/responses/BadRequest'
+      '403':
+        $ref: '#/components/responses/Forbidden'
+      '409':
+        $ref: '#/components/responses/OtomiStackError'
+  delete:
+    operationId: deleteAplCatalog
+    x-eov-operation-handler: v2/catalogs
+    description: Delete a app catalog configuration
+    x-aclSchema: AplCatalogSpec
+    parameters:
+      - name: name
+        in: path
+        required: true
+        description: Catalog name
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Successfully deleted app catalog
+      '400':
+        $ref: '#/components/responses/BadRequest'
+      '403':
+        $ref: '#/components/responses/Forbidden'
+      '409':
+        $ref: '#/components/responses/OtomiStackError'
+
+'/v2/catalogs/{catalogName}/charts':
+  get:
+    operationId: getChartsFromCatalog
+    x-eov-operation-handler: v2/catalogsCharts
+    description: Get app catalogs charts list
+    x-aclSchema: AplCatalogSpec
+    responses:
+      '200':
+        description: Successfully obtained app catalogs charts
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/AplCatalogChartResponse'
+      '400':
+        description: Bad Request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenApiValidationError'
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtomiStackError'
 
   /v1/coderepos:
     get:
@@ -2711,6 +2839,13 @@ components:
       required: true
       schema:
         type: string
+    catalogParams:
+      name: catalogName
+      in: path
+      description: Name of the catalog
+      required: true
+      schema:
+        type: string
     codeRepoParams:
       name: codeRepositoryName
       in: path
@@ -2803,6 +2938,13 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/OtomiStackError'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OtomiStackError'
+
     OtomiStackError:
       description: Resource already exists
       content:
@@ -2945,6 +3087,48 @@ components:
       allOf:
         - $ref: '#/components/schemas/AplBuild'
         - $ref: '#/components/schemas/aplTeamMetadata'
+        - $ref: '#/components/schemas/aplStatusResponse'
+    AplCatalog:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AplCatalog]
+        spec:
+          $ref: 'catalog.yaml#/AplCatalogSpec'
+      required:
+        - kind
+        - spec
+    AplCatalogRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplCatalog'
+        - $ref: '#/components/schemas/aplMetadata'
+    AplCatalogResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplCatalog'
+        - $ref: '#/components/schemas/aplMetadata'
+        - $ref: '#/components/schemas/aplStatusResponse'
+    AplCatalogChart:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [AplCatalogChart]
+        spec:
+          $ref: 'catalog.yaml#/AplCatalogChartSpec'
+      required:
+        - kind
+        - spec
+    AplCatalogChartRequest:
+      allOf:
+        - $ref: '#/components/schemas/AplCatalogChart'
+        - $ref: '#/components/schemas/aplMetadata'
+    AplCatalogChartResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AplCatalogChart'
+        - $ref: '#/components/schemas/aplMetadata'
         - $ref: '#/components/schemas/aplStatusResponse'
     AplCodeRepo:
       type: object
