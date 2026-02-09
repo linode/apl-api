@@ -2,7 +2,7 @@ import Debug from 'debug'
 import { Response } from 'express'
 import { AplCatalogRequest, OpenApiRequestExt } from 'src/otomi-models'
 
-const debug = Debug('otomi:api:v2:workloads')
+const debug = Debug('otomi:api:v2:catalogs')
 
 /**
  * GET /v2/catalogs

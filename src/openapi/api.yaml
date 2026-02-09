@@ -1723,7 +1723,7 @@ paths:
       operationId: getAllAplCatalogs
       x-eov-operation-handler: v2/catalogs
       description: Get all catalogs
-      x-aclSchema: AplCatalogSpec
+      x-aclSchema: Catalog
       responses:
         '200':
           description: Successfully obtained app catalogs
@@ -1739,113 +1739,113 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OpenApiValidationError'
-  post:
-    operationId: createAplCatalog
-    x-eov-operation-handler: v2/catalogs
-    description: Create a app catalog
-    x-aclSchema: AplCatalogSpec
-    requestBody:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/AplCatalogRequest'
-      description: catalog object
-      required: true
-    responses:
-      '200':
-        description: Successfully stored app catalog configuration
+    post:
+      operationId: createAplCatalog
+      x-eov-operation-handler: v2/catalogs
+      description: Create a app catalog
+      x-aclSchema: Catalog
+      requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AplCatalogResponse'
-      '400':
-        $ref: '#/components/responses/BadRequest'
-      '403':
-        $ref: '#/components/responses/Forbidden'
-      '409':
-        $ref: '#/components/responses/OtomiStackError'
-
-'/v2/catalogs/{name}':
-  put:
-    operationId: updateAplCatalog
-    x-eov-operation-handler: v2/catalogs
-    description: Update an existing app catalog configuration
-    x-aclSchema: AplCatalogSpec
-    parameters:
-      - name: name
-        in: path
+              $ref: '#/components/schemas/AplCatalogRequest'
+        description: catalog object
         required: true
-        description: Catalog name
-        schema:
-          type: string
-    requestBody:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/AplCatalogRequest'
-      required: true
-    responses:
-      '200':
-        description: Successfully updated app catalog
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AplCatalogResponse'
-      '400':
-        $ref: '#/components/responses/BadRequest'
-      '403':
-        $ref: '#/components/responses/Forbidden'
-      '409':
-        $ref: '#/components/responses/OtomiStackError'
-  delete:
-    operationId: deleteAplCatalog
-    x-eov-operation-handler: v2/catalogs
-    description: Delete a app catalog configuration
-    x-aclSchema: AplCatalogSpec
-    parameters:
-      - name: name
-        in: path
-        required: true
-        description: Catalog name
-        schema:
-          type: string
-    responses:
-      '200':
-        description: Successfully deleted app catalog
-      '400':
-        $ref: '#/components/responses/BadRequest'
-      '403':
-        $ref: '#/components/responses/Forbidden'
-      '409':
-        $ref: '#/components/responses/OtomiStackError'
+      responses:
+        '200':
+          description: Successfully stored app catalog configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplCatalogResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
 
-'/v2/catalogs/{catalogName}/charts':
-  get:
-    operationId: getChartsFromCatalog
-    x-eov-operation-handler: v2/catalogsCharts
-    description: Get app catalogs charts list
-    x-aclSchema: AplCatalogSpec
-    responses:
-      '200':
-        description: Successfully obtained app catalogs charts
+  '/v2/catalogs/{catalogId}':
+    parameters:
+      - $ref: '#/components/parameters/catalogParams'
+    get:
+      operationId: getAplCatalog
+      x-eov-operation-handler: v2/catalogs/{catalogId}
+      description: Get a specific catalog
+      x-aclSchema: Catalog
+      responses:
+        '200':
+          description: Successfully obtained app catalog
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplCatalogResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      operationId: editAplCatalog
+      x-eov-operation-handler: v2/catalogs/{catalogId}
+      description: Update an existing app catalog configuration
+      x-aclSchema: Catalog
+      requestBody:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/AplCatalogChartResponse'
-      '400':
-        description: Bad Request
+              $ref: '#/components/schemas/AplCatalogRequest'
+        required: true
+      responses:
+        '200':
+          description: Successfully updated app catalog
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplCatalogResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
+    patch:
+      operationId: patchAplCatalog
+      x-eov-operation-handler: v2/catalogs/{catalogId}
+      description: Partially update a catalog
+      x-aclSchema: Catalog
+      requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OpenApiValidationError'
-      '401':
-        description: Unauthorized
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OtomiStackError'
+              $ref: '#/components/schemas/AplCatalogRequest'
+        required: true
+      responses:
+        '200':
+          description: Successfully patched app catalog
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplCatalogResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
+    delete:
+      operationId: deleteAplCatalog
+      x-eov-operation-handler: v2/catalogs/{catalogId}
+      description: Delete a app catalog configuration
+      x-aclSchema: Catalog
+      responses:
+        '200':
+          description: Successfully deleted app catalog
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
 
   /v1/coderepos:
     get:
@@ -2840,9 +2840,9 @@ components:
       schema:
         type: string
     catalogParams:
-      name: catalogName
+      name: catalogId
       in: path
-      description: Name of the catalog
+      description: ID of the catalog
       required: true
       schema:
         type: string
@@ -3090,6 +3090,14 @@ components:
         - $ref: '#/components/schemas/aplStatusResponse'
     AplCatalog:
       type: object
+      x-acl:
+        platformAdmin:
+          - create-any
+          - read-any
+          - update-any
+          - delete-any
+        teamAdmin: [read-any]
+        teamMember: [read-any]
       properties:
         kind:
           type: string
@@ -3312,6 +3320,8 @@ components:
       $ref: 'app.yaml#/AppList'
     Build:
       $ref: 'build.yaml#/Build'
+    Catalog:
+      $ref: 'catalog.yaml#/Catalog'
     Cloudtty:
       $ref: 'cloudtty.yaml#/Cloudtty'
     Cluster:

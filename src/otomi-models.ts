@@ -62,6 +62,7 @@ export type AplPolicyRequest = components['schemas']['AplPolicyRequest']
 export type AplPolicyResponse = components['schemas']['AplPolicyResponse']
 export type Cloudtty = components['schemas']['Cloudtty']
 export type TeamAuthz = components['schemas']['TeamAuthz']
+export type Catalog = components['schemas']['Catalog']
 export type AplCatalogRequest = components['schemas']['AplCatalogRequest']
 export type AplCatalogResponse = components['schemas']['AplCatalogResponse']
 // Derived setting models

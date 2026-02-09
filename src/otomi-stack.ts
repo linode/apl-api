@@ -52,6 +52,7 @@ import {
   Build,
   buildPlatformObject,
   buildTeamObject,
+  Catalog,
   Cloudtty,
   CodeRepo,
   Core,
@@ -831,7 +832,7 @@ export default class OtomiStack {
     return aplRecord
   }
 
-  async saveCatalog(data: AplCatalogRequest): Promise<AplRecord> {
+  async saveCatalog(data: AplPlatformObject): Promise<AplRecord> {
     debug(`Saving catalog: ${data.metadata.name}`)
 
     const filePath = this.fileStore.setPlatformResource(data)
@@ -1574,7 +1575,7 @@ export default class OtomiStack {
   }
 
   getAllAplCatalogs(): AplCatalogResponse[] {
-    const files = this.fileStore.getAllTeamResourcesByKind('AplCatalog')
+    const files = this.fileStore.getPlatformResourcesByKind('AplCatalog')
     return Array.from(files.values()) as AplCatalogResponse[]
   }
 
@@ -1589,21 +1590,58 @@ export default class OtomiStack {
     return aplRecord.content as AplCatalogResponse
   }
 
+  getAplCatalog(name: string): AplCatalogResponse {
+    const catalog = this.fileStore.getPlatformResource('AplCatalog', name)
+    if (!catalog) {
+      throw new NotExistError(`AplCatalog with name: ${name} not found`)
+    }
+    return catalog as AplCatalogResponse
+  }
+
+  async editAplCatalog(
+    name: string,
+    data: AplCatalogRequest | DeepPartial<AplCatalogRequest>,
+    patch = false,
+  ): Promise<AplCatalogResponse> {
+    const existing = this.getAplCatalog(name)
+    const updatedSpec = patch ? merge(cloneDeep(existing.spec), data.spec) : ({ ...existing, ...data.spec } as Catalog)
+    const platformObject = buildPlatformObject(existing.kind, existing.metadata.name, updatedSpec)
+
+    const aplRecord = await this.saveCatalog(platformObject)
+    const catalogResponse = aplRecord.content as AplCatalogResponse
+    await this.doDeployment(aplRecord, false)
+
+    return catalogResponse
+  }
+
+  async deleteAplCatalog(name: string): Promise<void> {
+    const filePath = this.fileStore.deletePlatformResource('AplCatalog', name)
+
+    await this.git.removeFile(filePath)
+    await this.doDeleteDeployment([filePath])
+  }
+
   async getWorkloadCatalog(data: {
-    url?: string
+    url: string
+    catalogName: string
     teamId: string
+    branch: string
   }): Promise<{ url: string; helmCharts: any; catalog: any }> {
-    const { url: clientUrl, teamId } = data
+    const { url: clientUrl, teamId, catalogName } = data
     const uuid = uuidv4()
-    const helmChartsDir = `/tmp/otomi/charts/${uuid}`
+    const helmChartsDir = `/tmp/otomi/charts/${teamId}/${catalogName}-${uuid}`
 
-    const url = clientUrl || env?.HELM_CHART_CATALOG
-
-    if (!url) throw new OtomiError(400, 'Helm chart catalog URL is not set')
+    const url = clientUrl
 
     const { cluster } = this.getSettings(['cluster'])
     try {
-      const { helmCharts, catalog } = await fetchWorkloadCatalog(url, helmChartsDir, teamId, cluster?.domainSuffix)
+      const { helmCharts, catalog } = await fetchWorkloadCatalog(
+        url,
+        helmChartsDir,
+        teamId,
+        data.branch,
+        cluster?.domainSuffix,
+      )
       return { url, helmCharts, catalog }
     } catch (error) {
       debug('Error fetching workload catalog')

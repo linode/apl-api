@@ -335,6 +335,7 @@ export async function fetchWorkloadCatalog(
   url: string,
   helmChartsDir: string,
   teamId: string,
+  branch: string,
   clusterDomainSuffix?: string,
 ): Promise<Promise<any>> {
   if (!existsSync(helmChartsDir)) mkdirSync(helmChartsDir, { recursive: true })
@@ -346,7 +347,6 @@ export async function fetchWorkloadCatalog(
     gitUrl = `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
   }
   const gitRepo = new chartRepo(helmChartsDir, gitUrl)
-  const branch = 'main'
   await gitRepo.clone(branch)
 
   const files = await readdir(helmChartsDir, 'utf-8')

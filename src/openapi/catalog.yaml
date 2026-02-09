@@ -1,3 +1,31 @@
+Catalog:
+  x-acl:
+    platformAdmin:
+      - create-any
+      - read-any
+      - update-any
+      - delete-any
+    teamAdmin:
+      - read
+    teamMembers:
+      - read
+  type: object
+  properties:
+    name:
+      $ref: 'definitions.yaml#/idName'
+    repositoryUrl:
+      $ref: 'definitions.yaml#/repoUrl'
+    branch:
+      type: string
+      default: main
+    enabled:
+      type: boolean
+      default: true
+  required:
+    - name
+    - repositoryUrl
+    - branch
+
 AplCatalogSpec:
   type: object
   properties:
@@ -15,16 +43,6 @@ AplCatalogSpec:
     - name
     - repositoryUrl
     - branch
-  x-acl:
-    platformAdmin:
-      - create-any
-      - read-any
-      - update-any
-      - delete-any
-    teamAdmin:
-      - read
-    teamMember:
-      - read
 
 AplCatalogChartSpec:
   type: array
