@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.14.7](https://github.com/redkubes/otomi-api/compare/v4.14.6...v4.14.7) (2026-02-09)
+
+
+### Bug Fixes
+
+* delete cloudtty 403 error ([#913](https://github.com/redkubes/otomi-api/issues/913)) ([d836af3](https://github.com/redkubes/otomi-api/commit/d836af32efa2c5d08a932b5c7dd84cd6a9f21757))
+
 ### [4.14.6](https://github.com/redkubes/otomi-api/compare/v4.14.5...v4.14.6) (2026-01-15)
 
 
