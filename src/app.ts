@@ -27,19 +27,15 @@ import {
   CHECK_LATEST_COMMIT_INTERVAL,
   cleanEnv,
   EXPRESS_PAYLOAD_LIMIT,
-  GIT_PASSWORD,
   GIT_PUSH_RETRIES,
-  GIT_USER,
   TRUST_PROXY,
 } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
-import giteaCheckLatest from './gitea/connect'
+import getLatestRemoteCommitSha from './git/connect'
 import { getBuildStatus, getSealedSecretStatus, getServiceStatus, getWorkloadStatus } from './k8s_operations'
 
 const env = cleanEnv({
   CHECK_LATEST_COMMIT_INTERVAL,
-  GIT_USER,
-  GIT_PASSWORD,
   EXPRESS_PAYLOAD_LIMIT,
   GIT_PUSH_RETRIES,
   TRUST_PROXY,
@@ -55,13 +51,12 @@ type OtomiSpec = {
 }
 
 // get the latest commit from Gitea and checks it against the local values
-const checkAgainstGitea = async () => {
-  const encodedToken = Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')
+const checkAgainstGit = async () => {
   const otomiStack = await getSessionStack()
-  const latestOtomiVersion = await giteaCheckLatest(encodedToken)
+  const latestOtomiVersion = await getLatestRemoteCommitSha()
   // check the local version against the latest online version
   // if the latest online is newer it will be pulled locally
-  if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== otomiStack.git.commitSha) {
+  if (latestOtomiVersion && latestOtomiVersion !== otomiStack.git.commitSha) {
     debug('Local values differentiate from Git repository, retrieving latest values')
     // Remove all .dec files
     await otomiStack.git.git.clean([CleanOptions.FORCE, CleanOptions.IGNORED_ONLY, CleanOptions.RECURSIVE])
@@ -207,7 +202,7 @@ export async function initApp(inOtomiStack?: OtomiStack) {
   if (!env.isTest) {
     const gitCheckVersionInterval = env.CHECK_LATEST_COMMIT_INTERVAL * 60 * 1000
     setInterval(async function () {
-      await checkAgainstGitea()
+      await checkAgainstGit()
     }, gitCheckVersionInterval)
   }
   let server: Server | undefined

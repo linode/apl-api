@@ -188,6 +188,7 @@ function getTeamDatabaseValuesFilePath(teamId: string, databaseName: string): st
   return `env/teams/${teamId}/databases/${databaseName}`
 }
 
+const DEFAULT_GITEA_URL = 'gitea-http.gitea.svc.cluster.local'
 export default class OtomiStack {
   private coreValues: Core
   editor?: string
@@ -1280,10 +1281,10 @@ export default class OtomiStack {
 
   async getInternalRepoUrls(teamId: string): Promise<string[]> {
     if (env.isDev || !teamId || teamId === 'admin') return []
+    if (!env.GIT_REPO_URL.includes(DEFAULT_GITEA_URL)) return []
     const { cluster, otomi } = this.getSettings(['cluster', 'otomi'])
-    const gitea = this.getApp('gitea')
-    const username = (gitea?.values?.adminUsername ?? '') as string
-    const password = (gitea?.values?.adminPassword ?? otomi?.adminPassword ?? '') as string
+    const username = (otomi?.git?.username ?? '') as string
+    const password = (otomi?.git?.password ?? '') as string
     const orgName = `team-${teamId}`
     const domainSuffix = cluster?.domainSuffix
     const internalRepoUrls = (await getGiteaRepoUrls(username, password, orgName, domainSuffix)) || []
