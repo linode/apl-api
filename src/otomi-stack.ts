@@ -593,7 +593,7 @@ export default class OtomiStack {
     return teamApps.map((app) => {
       return {
         id: app.id,
-        enabled: Boolean(app.values?.enabled ?? true),
+        enabled: app.enabled ?? true,
       }
     })
   }
