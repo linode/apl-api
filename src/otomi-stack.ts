@@ -27,6 +27,7 @@ import {
   AplAIModelResponse,
   AplBuildRequest,
   AplBuildResponse,
+  AplCatalog,
   AplCatalogRequest,
   AplCatalogResponse,
   AplCodeRepoRequest,
@@ -52,7 +53,6 @@ import {
   Build,
   buildPlatformObject,
   buildTeamObject,
-  Catalog,
   Cloudtty,
   CodeRepo,
   Core,
@@ -1628,7 +1628,9 @@ export default class OtomiStack {
     patch = false,
   ): Promise<AplCatalogResponse> {
     const existing = this.getAplCatalog(name)
-    const updatedSpec = patch ? merge(cloneDeep(existing.spec), data.spec) : ({ ...existing, ...data.spec } as Catalog)
+    const updatedSpec = patch
+      ? merge(cloneDeep(existing.spec), data.spec)
+      : ({ ...existing, ...data.spec } as AplCatalog)
     const platformObject = buildPlatformObject(existing.kind, existing.metadata.name, updatedSpec)
 
     const aplRecord = await this.saveCatalog(platformObject)
@@ -1671,11 +1673,11 @@ export default class OtomiStack {
     return this.fetchCatalog(url, helmChartsDir, branch)
   }
 
-  async getAplCatalogCharts(name: string): Promise<{ url: string; helmCharts: any; catalog: any }> {
+  async getAplCatalogCharts(name: string): Promise<{ url: string; helmCharts: any; catalog: any; branch: string }> {
     const catalog = this.getAplCatalog(name)
     const { repositoryUrl, branch, name: catalogName } = catalog.spec
     const charts = await this.getBYOWorkloadCatalog(repositoryUrl, branch, catalogName)
-    return charts
+    return { ...charts, branch }
   }
 
   async getHelmChartContent(url: string): Promise<any> {
