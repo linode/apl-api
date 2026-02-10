@@ -1580,7 +1580,7 @@ export default class OtomiStack {
   }
 
   async createAplCatalog(data: AplCatalogRequest): Promise<AplCatalogResponse> {
-    if (this.fileStore.getPlatformResourcesByKind('AplCatalog')) {
+    if (this.fileStore.getPlatformResource('AplCatalog', data.metadata.name)) {
       throw new AlreadyExists('AplCatalog name already exists')
     }
 
