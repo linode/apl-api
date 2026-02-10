@@ -47,3 +47,25 @@ export const deleteAplCatalog = async (req: OpenApiRequestExt, res: Response): P
   await req.otomi.deleteAplCatalog(decodeURIComponent(catalogId))
   res.json({})
 }
+
+// /**
+//  * GET /v2/catalogs/{catalogId}/charts
+//  * Get charts for a specific catalog
+//  */
+// export const getAplCatalogsCharts = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+//   const { catalogId } = req.params
+//   debug(`getAplCatalog(${catalogId})`)
+//   const data = req.otomi.getAplCatalogCharts(decodeURIComponent(catalogId))
+//   res.json(data)
+// }
+
+// /**
+//  * GET /v2/catalogs/{catalogId}/charts
+//  * Get charts for a specific catalog
+//  */
+// export const getAplCatalogsCharts = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+//   const { catalogId } = req.params
+//   debug(`getAplCatalogsCharts(${catalogId})`)
+//   const data = req.otomi.getBYOWorkloadCatalog(req.body)
+//   res.json(data)
+// }

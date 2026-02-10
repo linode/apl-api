@@ -402,3 +402,64 @@ export async function fetchWorkloadCatalog(
   if (!catalog.length) throwChartError(`There are no directories at '${url}'`)
   return { helmCharts, catalog }
 }
+
+export async function fetchBYOWorkloadCatalog(
+  url: string,
+  helmChartsDir: string,
+  branch: string,
+  clusterDomainSuffix?: string,
+): Promise<Promise<any>> {
+  if (!existsSync(helmChartsDir)) mkdirSync(helmChartsDir, { recursive: true })
+  let gitUrl = url
+  if (isInteralGiteaURL(url, clusterDomainSuffix)) {
+    const [protocol, bareUrl] = url.split('://')
+    const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
+    const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
+    gitUrl = `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
+  }
+  const gitRepo = new chartRepo(helmChartsDir, gitUrl)
+
+  await gitRepo.clone(branch)
+
+  const files = await readdir(helmChartsDir, 'utf-8')
+  const filesToExclude = ['.git', '.gitignore', '.vscode', 'LICENSE', 'README.md']
+  const folders = files.filter((f) => !filesToExclude.includes(f))
+
+  let betaCharts: string[] = []
+
+  const catalog: any[] = []
+  const helmCharts: string[] = []
+  for (const folder of folders) {
+    let readme = ''
+    try {
+      const chartReadme = await safeReadTextFile(helmChartsDir, `${folder}/README.md`)
+      readme = chartReadme
+    } catch (error) {
+      debug(`Error while parsing chart README.md file : ${error.message}`)
+      readme = 'There is no `README` for this chart.'
+    }
+    try {
+      const values = await readFile(`${helmChartsDir}/${folder}/values.yaml`, 'utf-8')
+      // valuesSchema is optional, hence we add a catch at the end to mitigate a loop break out
+      const valuesSchema = await readFile(`${helmChartsDir}/${folder}/values.schema.json`, 'utf-8').catch(() => null)
+      const chart = await readFile(`${helmChartsDir}/${folder}/Chart.yaml`, 'utf-8')
+      const chartMetadata = YAML.parse(chart)
+      const catalogItem = {
+        name: folder,
+        values: values || '{}',
+        valuesSchema: valuesSchema || '{}',
+        icon: chartMetadata?.icon,
+        chartVersion: chartMetadata?.version,
+        chartDescription: chartMetadata?.description,
+        readme,
+        isBeta: betaCharts.includes(folder),
+      }
+      catalog.push(catalogItem)
+      helmCharts.push(folder)
+    } catch (error) {
+      debug(`Error while parsing ${folder}/Chart.yaml and ${folder}/values.yaml files : ${error.message}`)
+    }
+  }
+  if (!catalog.length) throwChartError(`There are no directories at '${url}'`)
+  return { helmCharts, catalog }
+}

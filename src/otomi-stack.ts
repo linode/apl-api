@@ -136,6 +136,7 @@ import { ensureSealedSecretMetadata, getSealedSecretsPEM, sealedSecretManifest }
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
 import {
+  fetchBYOWorkloadCatalog,
   fetchChartYaml,
   fetchWorkloadCatalog,
   isInteralGiteaURL,
@@ -1636,6 +1637,33 @@ export default class OtomiStack {
     const { cluster } = this.getSettings(['cluster'])
     try {
       const { helmCharts, catalog } = await fetchWorkloadCatalog(url, helmChartsDir, teamId, cluster?.domainSuffix)
+      return { url, helmCharts, catalog }
+    } catch (error) {
+      debug('Error fetching workload catalog')
+      throw new OtomiError(404, 'No helm chart catalog found!')
+    } finally {
+      if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
+    }
+  }
+
+  async getAplCatalogCharts(name: string): Promise<{ url: string; helmCharts: any; catalog: any }> {
+    const catalog = this.getAplCatalog(name)
+    const { repositoryUrl, branch, name: catalogName } = catalog.spec
+    const charts = await this.getBYOWorkloadCatalog(repositoryUrl, branch, catalogName)
+    return charts
+  }
+
+  async getBYOWorkloadCatalog(
+    url: string,
+    branch: string,
+    catalogName: string,
+  ): Promise<{ url: string; helmCharts: any; catalog: any }> {
+    const uuid = uuidv4()
+    const helmChartsDir = `/tmp/otomi/charts/${catalogName}/${branch}/charts/${uuid}`
+
+    const { cluster } = this.getSettings(['cluster'])
+    try {
+      const { helmCharts, catalog } = await fetchBYOWorkloadCatalog(url, helmChartsDir, branch, cluster?.domainSuffix)
       return { url, helmCharts, catalog }
     } catch (error) {
       debug('Error fetching workload catalog')

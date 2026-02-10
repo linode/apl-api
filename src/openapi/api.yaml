@@ -1847,6 +1847,30 @@ paths:
         '409':
           $ref: '#/components/responses/OtomiStackError'
 
+  '/v2/catalogs/{catalogId}/charts':
+    parameters:
+      - $ref: '#/components/parameters/catalogParams'
+    get:
+      operationId: getAplCatalogsCharts
+      x-eov-operation-handler: v2/catalogs/{catalogId}/charts
+      description: Get charts for a specific catalog
+      x-aclSchema: Catalog
+      responses:
+        '200':
+          description: Successfully obtained app catalog charts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AplCatalogChartResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenApiValidationError'
+
   /v1/coderepos:
     get:
       operationId: getAllCodeRepos
@@ -3128,10 +3152,6 @@ components:
       required:
         - kind
         - spec
-    AplCatalogChartRequest:
-      allOf:
-        - $ref: '#/components/schemas/AplCatalogChart'
-        - $ref: '#/components/schemas/aplMetadata'
     AplCatalogChartResponse:
       type: object
       allOf:
