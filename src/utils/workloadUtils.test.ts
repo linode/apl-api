@@ -643,7 +643,7 @@ describe('fetchWorkloadCatalog', () => {
       throw new Error('missing')
     })
 
-    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'admin', 'example.com')
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', 'example.com', 'admin')
 
     expect(fs.mkdirSync).toHaveBeenCalledWith(helmChartsDir, { recursive: true })
     expect(mockGit.clone).toHaveBeenCalledWith(
@@ -690,7 +690,7 @@ describe('fetchWorkloadCatalog', () => {
       throw new Error('missing')
     })
 
-    const result = await fetchWorkloadCatalog(url, helmChartsDir, '1', 'main')
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, '1')
 
     // Only chart1 should be accessible to team-1
     expect(result).toEqual({
@@ -748,7 +748,7 @@ describe('fetchWorkloadCatalog', () => {
       throw new Error('missing')
     })
 
-    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'admin', 'main')
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, 'admin')
 
     // Should include chart1 with default README message
     expect(result.catalog[0].readme).toBe('There is no `README` for this chart.')
@@ -781,7 +781,7 @@ describe('fetchWorkloadCatalog', () => {
       return Promise.reject(new Error(`File not found: ${filePath}`))
     })
 
-    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'admin', 'main')
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', 'example.com', 'admin')
 
     // Should include charts in the catalog
     expect(result.helmCharts).toEqual(['chart1'])
