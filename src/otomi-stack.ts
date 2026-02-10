@@ -1622,26 +1622,20 @@ export default class OtomiStack {
   }
 
   async getWorkloadCatalog(data: {
-    url: string
-    catalogName: string
+    url?: string
     teamId: string
-    branch: string
   }): Promise<{ url: string; helmCharts: any; catalog: any }> {
-    const { url: clientUrl, teamId, catalogName } = data
+    const { url: clientUrl, teamId } = data
     const uuid = uuidv4()
-    const helmChartsDir = `/tmp/otomi/charts/${teamId}/${catalogName}-${uuid}`
+    const helmChartsDir = `/tmp/otomi/charts/${uuid}`
 
-    const url = clientUrl
+    const url = clientUrl || env?.HELM_CHART_CATALOG
+
+    if (!url) throw new OtomiError(400, 'Helm chart catalog URL is not set')
 
     const { cluster } = this.getSettings(['cluster'])
     try {
-      const { helmCharts, catalog } = await fetchWorkloadCatalog(
-        url,
-        helmChartsDir,
-        teamId,
-        data.branch,
-        cluster?.domainSuffix,
-      )
+      const { helmCharts, catalog } = await fetchWorkloadCatalog(url, helmChartsDir, teamId, cluster?.domainSuffix)
       return { url, helmCharts, catalog }
     } catch (error) {
       debug('Error fetching workload catalog')
