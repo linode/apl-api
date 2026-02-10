@@ -136,7 +136,6 @@ import { ensureSealedSecretMetadata, getSealedSecretsPEM, sealedSecretManifest }
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
 import {
-  fetchBYOWorkloadCatalog,
   fetchChartYaml,
   fetchWorkloadCatalog,
   isInteralGiteaURL,
@@ -1575,6 +1574,30 @@ export default class OtomiStack {
     }
   }
 
+  private async fetchCatalog(
+    url: string,
+    helmChartsDir: string,
+    branch: string,
+    teamId?: string,
+  ): Promise<{ url: string; helmCharts: any; catalog: any }> {
+    const { cluster } = this.getSettings(['cluster'])
+    try {
+      const { helmCharts, catalog } = await fetchWorkloadCatalog(
+        url,
+        helmChartsDir,
+        branch,
+        cluster?.domainSuffix,
+        teamId,
+      )
+      return { url, helmCharts, catalog }
+    } catch (error) {
+      debug('Error fetching workload catalog')
+      throw new OtomiError(404, 'No helm chart catalog found!')
+    } finally {
+      if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
+    }
+  }
+
   getAllAplCatalogs(): AplCatalogResponse[] {
     const files = this.fileStore.getPlatformResourcesByKind('AplCatalog')
     return Array.from(files.values()) as AplCatalogResponse[]
@@ -1627,30 +1650,14 @@ export default class OtomiStack {
     teamId: string
   }): Promise<{ url: string; helmCharts: any; catalog: any }> {
     const { url: clientUrl, teamId } = data
-    const uuid = uuidv4()
-    const helmChartsDir = `/tmp/otomi/charts/${uuid}`
-
     const url = clientUrl || env?.HELM_CHART_CATALOG
 
     if (!url) throw new OtomiError(400, 'Helm chart catalog URL is not set')
 
-    const { cluster } = this.getSettings(['cluster'])
-    try {
-      const { helmCharts, catalog } = await fetchWorkloadCatalog(url, helmChartsDir, teamId, cluster?.domainSuffix)
-      return { url, helmCharts, catalog }
-    } catch (error) {
-      debug('Error fetching workload catalog')
-      throw new OtomiError(404, 'No helm chart catalog found!')
-    } finally {
-      if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
-    }
-  }
+    const uuid = uuidv4()
+    const helmChartsDir = `/tmp/otomi/charts/${uuid}`
 
-  async getAplCatalogCharts(name: string): Promise<{ url: string; helmCharts: any; catalog: any }> {
-    const catalog = this.getAplCatalog(name)
-    const { repositoryUrl, branch, name: catalogName } = catalog.spec
-    const charts = await this.getBYOWorkloadCatalog(repositoryUrl, branch, catalogName)
-    return charts
+    return this.fetchCatalog(url, helmChartsDir, 'main', teamId)
   }
 
   async getBYOWorkloadCatalog(
@@ -1661,16 +1668,14 @@ export default class OtomiStack {
     const uuid = uuidv4()
     const helmChartsDir = `/tmp/otomi/charts/${catalogName}/${branch}/charts/${uuid}`
 
-    const { cluster } = this.getSettings(['cluster'])
-    try {
-      const { helmCharts, catalog } = await fetchBYOWorkloadCatalog(url, helmChartsDir, branch, cluster?.domainSuffix)
-      return { url, helmCharts, catalog }
-    } catch (error) {
-      debug('Error fetching workload catalog')
-      throw new OtomiError(404, 'No helm chart catalog found!')
-    } finally {
-      if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
-    }
+    return this.fetchCatalog(url, helmChartsDir, branch)
+  }
+
+  async getAplCatalogCharts(name: string): Promise<{ url: string; helmCharts: any; catalog: any }> {
+    const catalog = this.getAplCatalog(name)
+    const { repositoryUrl, branch, name: catalogName } = catalog.spec
+    const charts = await this.getBYOWorkloadCatalog(repositoryUrl, branch, catalogName)
+    return charts
   }
 
   async getHelmChartContent(url: string): Promise<any> {
