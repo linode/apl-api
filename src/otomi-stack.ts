@@ -1,4 +1,4 @@
-import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -27,6 +27,9 @@ import {
   AplAIModelResponse,
   AplBuildRequest,
   AplBuildResponse,
+  AplCatalog,
+  AplCatalogRequest,
+  AplCatalogResponse,
   AplCodeRepoRequest,
   AplCodeRepoResponse,
   AplKind,
@@ -830,6 +833,15 @@ export default class OtomiStack {
     return aplRecord
   }
 
+  async saveCatalog(data: AplPlatformObject): Promise<AplRecord> {
+    debug(`Saving catalog: ${data.metadata.name}`)
+
+    const filePath = this.fileStore.setPlatformResource(data)
+    await this.git.writeFile(filePath, data)
+
+    return { filePath, content: data }
+  }
+
   async saveTeamSealedSecret(teamId: string, data: SealedSecretManifestRequest): Promise<AplRecord> {
     debug(`Saving sealed secrets of team: ${teamId}`)
     const { metadata } = data
@@ -1564,21 +1576,21 @@ export default class OtomiStack {
     }
   }
 
-  async getWorkloadCatalog(data: {
-    url?: string
-    teamId: string
-  }): Promise<{ url: string; helmCharts: any; catalog: any }> {
-    const { url: clientUrl, teamId } = data
-    const uuid = uuidv4()
-    const helmChartsDir = `/tmp/otomi/charts/${uuid}`
-
-    const url = clientUrl || env?.HELM_CHART_CATALOG
-
-    if (!url) throw new OtomiError(400, 'Helm chart catalog URL is not set')
-
+  private async fetchCatalog(
+    url: string,
+    helmChartsDir: string,
+    branch: string,
+    teamId?: string,
+  ): Promise<{ url: string; helmCharts: any; catalog: any }> {
     const { cluster } = this.getSettings(['cluster'])
     try {
-      const { helmCharts, catalog } = await fetchWorkloadCatalog(url, helmChartsDir, teamId, cluster?.domainSuffix)
+      const { helmCharts, catalog } = await fetchWorkloadCatalog(
+        url,
+        helmChartsDir,
+        branch,
+        cluster?.domainSuffix,
+        teamId,
+      )
       return { url, helmCharts, catalog }
     } catch (error) {
       debug('Error fetching workload catalog')
@@ -1586,6 +1598,88 @@ export default class OtomiStack {
     } finally {
       if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
     }
+  }
+
+  getAllAplCatalogs(): AplCatalogResponse[] {
+    const files = this.fileStore.getPlatformResourcesByKind('AplCatalog')
+    return Array.from(files.values()) as AplCatalogResponse[]
+  }
+
+  async createAplCatalog(data: AplCatalogRequest): Promise<AplCatalogResponse> {
+    if (this.fileStore.getPlatformResource('AplCatalog', data.metadata.name)) {
+      throw new AlreadyExists('AplCatalog name already exists')
+    }
+
+    const aplRecord = await this.saveCatalog(data)
+
+    await this.doDeployments([aplRecord], false)
+    return aplRecord.content as AplCatalogResponse
+  }
+
+  getAplCatalog(name: string): AplCatalogResponse {
+    const catalog = this.fileStore.getPlatformResource('AplCatalog', name)
+    if (!catalog) {
+      throw new NotExistError(`AplCatalog with name: ${name} not found`)
+    }
+    return catalog as AplCatalogResponse
+  }
+
+  async editAplCatalog(
+    name: string,
+    data: AplCatalogRequest | DeepPartial<AplCatalogRequest>,
+    patch = false,
+  ): Promise<AplCatalogResponse> {
+    const existing = this.getAplCatalog(name)
+    const updatedSpec = patch
+      ? merge(cloneDeep(existing.spec), data.spec)
+      : ({ ...existing, ...data.spec } as AplCatalog)
+    const platformObject = buildPlatformObject(existing.kind, existing.metadata.name, updatedSpec)
+
+    const aplRecord = await this.saveCatalog(platformObject)
+    const catalogResponse = aplRecord.content as AplCatalogResponse
+    await this.doDeployment(aplRecord, false)
+
+    return catalogResponse
+  }
+
+  async deleteAplCatalog(name: string): Promise<void> {
+    const filePath = this.fileStore.deletePlatformResource('AplCatalog', name)
+
+    await this.git.removeFile(filePath)
+    await this.doDeleteDeployment([filePath])
+  }
+
+  async getWorkloadCatalog(data: {
+    url?: string
+    teamId: string
+  }): Promise<{ url: string; helmCharts: any; catalog: any }> {
+    const { url: clientUrl, teamId } = data
+    const url = clientUrl || env?.HELM_CHART_CATALOG
+
+    if (!url) throw new OtomiError(400, 'Helm chart catalog URL is not set')
+
+    const uuid = uuidv4()
+    const helmChartsDir = `/tmp/otomi/charts/${uuid}`
+
+    return this.fetchCatalog(url, helmChartsDir, 'main', teamId)
+  }
+
+  async getBYOWorkloadCatalog(
+    url: string,
+    branch: string,
+    catalogName: string,
+  ): Promise<{ url: string; helmCharts: any; catalog: any }> {
+    const uuid = uuidv4()
+    const helmChartsDir = `/tmp/otomi/charts/${catalogName}/${branch}/charts/${uuid}`
+
+    return this.fetchCatalog(url, helmChartsDir, branch)
+  }
+
+  async getAplCatalogCharts(name: string): Promise<{ url: string; helmCharts: any; catalog: any; branch: string }> {
+    const catalog = this.getAplCatalog(name)
+    const { repositoryUrl, branch, name: catalogName } = catalog.spec
+    const charts = await this.getBYOWorkloadCatalog(repositoryUrl, branch, catalogName)
+    return { ...charts, branch }
   }
 
   async getHelmChartContent(url: string): Promise<any> {
