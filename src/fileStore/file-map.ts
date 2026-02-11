@@ -91,6 +91,14 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
     name: 'otomi',
   })
 
+  maps.set('AplCatalog', {
+    kind: 'AplCatalog',
+    envDir,
+    pathGlob: `${envDir}/env/catalogs/*.{yaml,yaml.dec}`,
+    pathTemplate: 'env/catalogs/{name}.yaml',
+    name: 'catalogs',
+  })
+
   maps.set('AplBackupCollection', {
     kind: 'AplBackupCollection',
     envDir,
