@@ -167,14 +167,25 @@ export class FileStore {
     return filePath
   }
 
+  deleteTeamResource(kind: AplKind, teamId: string, name: string): string {
+    const filePath = getResourceFilePath(kind, name, teamId)
+    this.store.delete(filePath)
+    return filePath
+  }
+
+  getPlatformResource(kind: AplKind, name: string): AplObject | undefined {
+    const filePath = getResourceFilePath(kind, name)
+    return this.store.get(filePath)
+  }
+
   setPlatformResource(aplPlatformObject: AplPlatformObject): string {
     const filePath = getResourceFilePath(aplPlatformObject.kind, aplPlatformObject.metadata.name)
     this.store.set(filePath, aplPlatformObject)
     return filePath
   }
 
-  deleteTeamResource(kind: AplKind, teamId: string, name: string): string {
-    const filePath = getResourceFilePath(kind, name, teamId)
+  deletePlatformResource(kind: AplKind, name: string): string {
+    const filePath = getResourceFilePath(kind, name)
     this.store.delete(filePath)
     return filePath
   }
