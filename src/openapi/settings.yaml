@@ -238,7 +238,7 @@ Settings:
             repoUrl:
               type: string
               description: |
-                The base URL of the Git repository (without credentials). Auto-derived for internal Gitea.
+                The base URL of the Git repository (without credentials).
               pattern: '^https?://.+'
             username:
               type: string

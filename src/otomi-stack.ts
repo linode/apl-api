@@ -295,10 +295,21 @@ export default class OtomiStack {
 
   getSettingsInfo(): SettingsInfo {
     const settings = this.getSettings(['cluster', 'dns', 'otomi', 'smtp', 'ingress'])
+    const otomiInfo = pick(settings.otomi, [
+      'hasExternalDNS',
+      'hasExternalIDP',
+      'isPreInstalled',
+      'aiEnabled',
+      'git.repoUrl',
+      'git.branch',
+    ])
+    if (otomiInfo.git?.repoUrl?.includes('gitea-http.gitea.svc.cluster.local')) {
+      otomiInfo.git.repoUrl = `https://gitea.${settings.cluster?.domainSuffix}/otomi/values`
+    }
     return {
       cluster: pick(settings.cluster, ['name', 'domainSuffix', 'apiServer', 'provider', 'linode']),
       dns: pick(settings.dns, ['zones']),
-      otomi: pick(settings.otomi, ['hasExternalDNS', 'hasExternalIDP', 'isPreInstalled', 'aiEnabled']),
+      otomi: otomiInfo,
       smtp: pick(settings.smtp, ['smarthost']),
       ingressClassNames: map(settings.ingress?.classes, 'className') ?? [],
     } as SettingsInfo
