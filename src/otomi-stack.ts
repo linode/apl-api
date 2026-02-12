@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -191,7 +191,6 @@ function getTeamDatabaseValuesFilePath(teamId: string, databaseName: string): st
   return `env/teams/${teamId}/databases/${databaseName}`
 }
 
-const DEFAULT_GITEA_URL = 'gitea-http.gitea.svc.cluster.local'
 export default class OtomiStack {
   private coreValues: Core
   editor?: string

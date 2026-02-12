@@ -50,7 +50,7 @@ type OtomiSpec = {
   valuesSchema: Record<string, any>
 }
 
-// get the latest commit from Gitea and checks it against the local values
+// get the latest commit from Git and checks it against the local values
 const checkAgainstGit = async () => {
   const otomiStack = await getSessionStack()
   const latestOtomiVersion = await getLatestRemoteCommitSha()
