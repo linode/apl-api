@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -295,10 +295,21 @@ export default class OtomiStack {
 
   getSettingsInfo(): SettingsInfo {
     const settings = this.getSettings(['cluster', 'dns', 'otomi', 'smtp', 'ingress'])
+    const otomiInfo = pick(settings.otomi, [
+      'hasExternalDNS',
+      'hasExternalIDP',
+      'isPreInstalled',
+      'aiEnabled',
+      'git.repoUrl',
+      'git.branch',
+    ])
+    if (otomiInfo.git?.repoUrl?.includes('gitea-http.gitea.svc.cluster.local')) {
+      otomiInfo.git.repoUrl = `https://gitea.${settings.cluster?.domainSuffix}/otomi/values`
+    }
     return {
       cluster: pick(settings.cluster, ['name', 'domainSuffix', 'apiServer', 'provider', 'linode']),
       dns: pick(settings.dns, ['zones']),
-      otomi: pick(settings.otomi, ['hasExternalDNS', 'hasExternalIDP', 'isPreInstalled', 'aiEnabled']),
+      otomi: otomiInfo,
       smtp: pick(settings.smtp, ['smarthost']),
       ingressClassNames: map(settings.ingress?.classes, 'className') ?? [],
     } as SettingsInfo
@@ -1292,10 +1303,11 @@ export default class OtomiStack {
 
   async getInternalRepoUrls(teamId: string): Promise<string[]> {
     if (env.isDev || !teamId || teamId === 'admin') return []
-    const { cluster, otomi } = this.getSettings(['cluster', 'otomi'])
     const gitea = this.getApp('gitea')
-    const username = (gitea?.values?.adminUsername ?? '') as string
-    const password = (gitea?.values?.adminPassword ?? otomi?.adminPassword ?? '') as string
+    if (!gitea?.values?.enabled) return []
+    const { cluster, otomi } = this.getSettings(['cluster', 'otomi'])
+    const username = (otomi?.git?.username ?? '') as string
+    const password = (otomi?.git?.password ?? '') as string
     const orgName = `team-${teamId}`
     const domainSuffix = cluster?.domainSuffix
     const internalRepoUrls = (await getGiteaRepoUrls(username, password, orgName, domainSuffix)) || []

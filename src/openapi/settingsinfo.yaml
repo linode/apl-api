@@ -50,6 +50,15 @@ SettingsInfo:
         hasExternalIDP:
           type: boolean
           default: false
+        git:
+          properties:
+            repoUrl:
+              type: string
+              description: The base URL of the Git repository (without credentials).
+              pattern: '^https?://.+'
+            branch:
+              type: string
+              description: The branch to use in the Git repository.
     smtp:
       properties:
         smarthost:
