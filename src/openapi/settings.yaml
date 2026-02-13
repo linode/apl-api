@@ -228,6 +228,42 @@ Settings:
       type: object
       additionalProperties: false
       properties:
+        git:
+          type: object
+          title: Git Configuration
+          description: |
+            Git configuration for APL values repository.
+          additionalProperties: false
+          properties:
+            repoUrl:
+              type: string
+              description: |
+                The base URL of the Git repository (without credentials).
+              pattern: '^https?://.+'
+            username:
+              type: string
+              description: |
+                Username for authenticating with the Git repository.
+                Defaults to 'otomi-admin' for internal Gitea.
+            password:
+              type: string
+              description: Password or token for authenticating with the Git repository
+              x-secret: '{{ randAlphaNum 20 }}'
+            email:
+              type: string
+              description: |
+                Email address to use for Git commits.
+                Defaults to 'pipeline@cluster.local' for internal Gitea.
+              format: email
+            branch:
+              type: string
+              description: The branch to use in the Git repository
+          required:
+            - repoUrl
+            - username
+            - password
+            - email
+            - branch
         adminPassword:
           description: Master admin password that will be used for all apps that are not configured to use their own password.
           $ref: 'definitions.yaml#/adminPassword'
