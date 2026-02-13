@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.16.0](https://github.com/redkubes/otomi-api/compare/v4.15.0...v4.16.0) (2026-02-13)
+
+
+### Features
+
+* add api auth tests for netpols, kubecfg and dockercfg ([#912](https://github.com/redkubes/otomi-api/issues/912)) ([dbefa52](https://github.com/redkubes/otomi-api/commit/dbefa52c47a938dde52ce8e3c391b27ef6981bd9))
+* byo catalog support ([#919](https://github.com/redkubes/otomi-api/issues/919)) ([1fe6405](https://github.com/redkubes/otomi-api/commit/1fe6405e41855fd2f7d867c29f0eb45b309971f0))
+* make api work with external Git source ([#915](https://github.com/redkubes/otomi-api/issues/915)) ([ca9eed1](https://github.com/redkubes/otomi-api/commit/ca9eed122953d5635f8d5cf3333982c8f219bbf9))
+* remove Minio ([#909](https://github.com/redkubes/otomi-api/issues/909)) ([7ad3d63](https://github.com/redkubes/otomi-api/commit/7ad3d636efeb973faed6ef4574c821bb4d49b050))
+* remove thanos ([#908](https://github.com/redkubes/otomi-api/issues/908)) ([acc18c9](https://github.com/redkubes/otomi-api/commit/acc18c9ff82b1df160bc05585db1d621d3556760))
+* update sealed secret handling to use SealedSecret manifest format ([#907](https://github.com/redkubes/otomi-api/issues/907)) ([8097dc4](https://github.com/redkubes/otomi-api/commit/8097dc45caa23c9b48361d12c272008be684ef85))
+
+
+### Bug Fixes
+
+* default environment variable ([#914](https://github.com/redkubes/otomi-api/issues/914)) ([e8a4dfc](https://github.com/redkubes/otomi-api/commit/e8a4dfca71a6f6a42a06a210378c2aea09a5b469))
+* delete cloudtty 403 error ([#913](https://github.com/redkubes/otomi-api/issues/913)) ([233ba0b](https://github.com/redkubes/otomi-api/commit/233ba0b898843194a78016f583ff2f5cad30e74a))
+* teamApps setting enabled correctly ([#920](https://github.com/redkubes/otomi-api/issues/920)) ([7f454c8](https://github.com/redkubes/otomi-api/commit/7f454c876a6cff4ab756fd6ea65f09db9b71e403))
+
+
+### Others
+
+* **deps:** bump the npm-dependencies group across 1 directory with 18 updates ([#911](https://github.com/redkubes/otomi-api/issues/911)) ([cb0896c](https://github.com/redkubes/otomi-api/commit/cb0896cb206ed9786a397a3793feae204a550c86))
+
 ## [4.15.0](https://github.com/redkubes/otomi-api/compare/v4.14.0...v4.15.0) (2026-02-02)
 
 
