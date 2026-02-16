@@ -10,7 +10,12 @@ const debug = Debug('otomi:api:v2:catalogs')
  */
 export const getAllAplCatalogs = (req: OpenApiRequestExt, res: Response): void => {
   debug('getAllCatalogs')
-  const v = req.otomi.getAllAplCatalogs()
+  const { enabled } = req.query
+  const filter = {}
+  if (enabled !== undefined) {
+    filter['enabled'] = String(enabled) === 'true'
+  }
+  const v = req.otomi.getAllAplCatalogs(filter)
   res.json(v)
 }
 

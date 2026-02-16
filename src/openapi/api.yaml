@@ -1724,6 +1724,13 @@ paths:
       x-eov-operation-handler: v2/catalogs
       description: Get all catalogs
       x-aclSchema: AplCatalog
+      parameters:
+        - name: enabled
+          in: query
+          description: Filter catalogs by enabled status
+          required: false
+          schema:
+            type: boolean
       responses:
         '200':
           description: Successfully obtained app catalogs

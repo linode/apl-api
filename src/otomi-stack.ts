@@ -1610,9 +1610,13 @@ export default class OtomiStack {
     }
   }
 
-  getAllAplCatalogs(): AplCatalogResponse[] {
+  getAllAplCatalogs(catalogFilter: { enabled?: boolean }): AplCatalogResponse[] {
     const files = this.fileStore.getPlatformResourcesByKind('AplCatalog')
-    return Array.from(files.values()) as AplCatalogResponse[]
+    let catalogs = Array.from(files.values()) as AplCatalogResponse[]
+    if (catalogFilter.enabled !== undefined) {
+      catalogs = catalogs.filter((catalog) => catalog.spec.enabled === catalogFilter.enabled)
+    }
+    return catalogs
   }
 
   async createAplCatalog(data: AplCatalogRequest): Promise<AplCatalogResponse> {
