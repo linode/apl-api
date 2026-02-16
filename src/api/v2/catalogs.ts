@@ -13,7 +13,7 @@ export const getAllAplCatalogs = (req: OpenApiRequestExt, res: Response): void =
   const { enabled } = req.query
   const filter = {}
   if (enabled !== undefined) {
-    filter['enabled'] = String(enabled) === 'true'
+    filter['enabled'] = enabled
   }
   const v = req.otomi.getAllAplCatalogs(filter)
   res.json(v)
