@@ -1,4 +1,4 @@
-import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -27,7 +27,6 @@ import {
   AplAIModelResponse,
   AplBuildRequest,
   AplBuildResponse,
-  AplCatalog,
   AplCatalogRequest,
   AplCatalogResponse,
   AplCodeRepoRequest,
@@ -1610,9 +1609,13 @@ export default class OtomiStack {
     }
   }
 
-  getAllAplCatalogs(): AplCatalogResponse[] {
+  getAllAplCatalogs(catalogFilter: { enabled?: boolean }): AplCatalogResponse[] {
     const files = this.fileStore.getPlatformResourcesByKind('AplCatalog')
-    return Array.from(files.values()) as AplCatalogResponse[]
+    let catalogs = Array.from(files.values()) as AplCatalogResponse[]
+    if (catalogFilter.enabled !== undefined) {
+      catalogs = catalogs.filter((catalog) => catalog.spec.enabled === catalogFilter.enabled)
+    }
+    return catalogs
   }
 
   async createAplCatalog(data: AplCatalogRequest): Promise<AplCatalogResponse> {
@@ -1640,9 +1643,7 @@ export default class OtomiStack {
     patch = false,
   ): Promise<AplCatalogResponse> {
     const existing = this.getAplCatalog(name)
-    const updatedSpec = patch
-      ? merge(cloneDeep(existing.spec), data.spec)
-      : ({ ...existing, ...data.spec } as AplCatalog)
+    const updatedSpec = patch ? merge(cloneDeep(existing.spec), data.spec) : { ...existing.spec, ...data.spec }
     const platformObject = buildPlatformObject(existing.kind, existing.metadata.name, updatedSpec)
 
     const aplRecord = await this.saveCatalog(platformObject)
