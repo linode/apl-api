@@ -472,7 +472,7 @@ export async function fetchWorkloadCatalog(
     }
   }
 
-  if (!catalog.length) throwChartError(`There are no directories at '${url}'`)
+  if (!catalog.length) debug(`There are no directories at '${url}'`)
 
   return { helmCharts, catalog }
 }

@@ -1603,7 +1603,7 @@ export default class OtomiStack {
       return { url, helmCharts, catalog }
     } catch (error) {
       debug('Error fetching workload catalog')
-      throw new OtomiError(404, 'No helm chart catalog found!')
+      return { url, helmCharts: [], catalog: [] }
     } finally {
       if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
     }
