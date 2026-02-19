@@ -60,6 +60,7 @@ describe('API authz tests', () => {
           teamMembers: {
             downloadKubeconfig: true,
             downloadDockerLogin: true,
+            createServices: true,
             editSecurityPolicies: true,
           },
         },

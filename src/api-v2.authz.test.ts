@@ -14,6 +14,7 @@ import { AplKind } from './otomi-models'
 const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
 const teamMemberToken = getToken(['team-team1'])
+const team2MemberToken = getToken(['team-team2'])
 
 function createTeamResource(kind: AplKind, spec: Record<string, any>) {
   return {
@@ -57,21 +58,34 @@ describe('API V2 authz tests', () => {
     otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
     otomiStack.fileStore.set('env/teams/team1/settings.yaml', {
       kind: 'AplTeamSettingSet',
-      spec: {},
       metadata: {
         name: 'team1',
         labels: {
           'apl.io/teamId': 'team1',
         },
       },
+      spec: {
+        selfService: {
+          teamMembers: {
+            createServices: true,
+            editSecurityPolicies: false,
+          },
+        },
+      },
     })
     otomiStack.fileStore.set('env/teams/team2/settings.yaml', {
       kind: 'AplTeamSettingSet',
-      spec: {},
       metadata: {
         name: 'team2',
         labels: {
           'apl.io/teamId': 'team2',
+        },
+      },
+      spec: {
+        selfService: {
+          teamMembers: {
+            createServices: false,
+          },
         },
       },
     })
@@ -1093,5 +1107,23 @@ describe('API V2 authz tests', () => {
         await agent.get('/v1/dashboard').query({ teamId: 'team1' }).expect(401)
       })
     })
+  })
+
+  test('team member cannot create its own services when disabled', async () => {
+    jest.spyOn(otomiStack, 'createService').mockResolvedValue({} as any)
+    await agent
+      .post('/v1/teams/team2/services')
+      .send({
+        name: 'newservice',
+        serviceType: 'ksvcPredeployed',
+        ingress: { type: 'cluster' },
+        networkPolicy: {
+          ingressPrivate: { mode: 'DenyAll' },
+        },
+      })
+      .set('Content-Type', 'application/json')
+      .set('Authorization', `Bearer ${team2MemberToken}`)
+      .expect(403)
+      .expect('Content-Type', /json/)
   })
 })
