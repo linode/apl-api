@@ -59,7 +59,7 @@ export function authorize(req: OpenApiRequestExt, authz: Authz): void {
     const spec = req.body.spec as Record<string, unknown>
     for (const prop of Object.keys(spec)) {
       if (!authz.validatePropertyWithCasl(action, schemaName, prop, teamId)) {
-        throw new HttpError(403, `User not allowed to perform "${action}" on "${schemaName}" resource`)
+        throw new HttpError(403, `User not allowed to perform "${action}" on "${schemaName}.${prop}" resource`)
       }
     }
   }
