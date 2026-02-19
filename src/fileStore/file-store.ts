@@ -9,7 +9,7 @@ import { stringify as stringifyYaml } from 'yaml'
 import { z } from 'zod'
 import { APL_KINDS, AplKind, AplObject, AplPlatformObject, AplRecord, AplTeamObject } from '../otomi-models'
 import { loadRawYaml, loadYaml } from '../utils'
-import { getFileMapForKind, getFileMaps, getResourceFilePath } from './file-map'
+import { getFileMapForKind, getFileMaps, getNamespaceResourceFilePath, getResourceFilePath } from './file-map'
 
 const debug = Debug('otomi:file-store')
 
@@ -173,8 +173,19 @@ export class FileStore {
     return filePath
   }
 
+  deleteNamespaceResource(kind: AplKind, namespace: string, name: string): string {
+    const filePath = getNamespaceResourceFilePath(kind, name, namespace)
+    this.store.delete(filePath)
+    return filePath
+  }
+
   getPlatformResource(kind: AplKind, name: string): AplObject | undefined {
     const filePath = getResourceFilePath(kind, name)
+    return this.store.get(filePath)
+  }
+
+  getNamespaceResource(kind: AplKind, name: string, namespace: string): AplObject | undefined {
+    const filePath = getNamespaceResourceFilePath(kind, name, namespace)
     return this.store.get(filePath)
   }
 
@@ -227,6 +238,36 @@ export class FileStore {
 
     // Match any path containing this resource segment
     // e.g., matches 'env/teams/*/workloads/*.yaml'
+    for (const filePath of this.store.keys()) {
+      if (filePath.includes(resourcePath) && filePath.endsWith('.yaml')) {
+        const content = this.store.get(filePath)
+        if (content) result.set(filePath, content)
+      }
+    }
+
+    return result
+  }
+
+  getAllNamespaceResourcesByKind(kind: AplKind): Map<string, AplObject> {
+    const fileMap = getFileMapForKind(kind)
+    if (!fileMap) {
+      throw new Error(`Unknown kind: ${kind}`)
+    }
+
+    // Expect a namespace-scoped template like:
+    // 'env/namespaces/{namespace}/sealedsecrets/{name}.yaml'
+    const parts = fileMap.pathTemplate.split('{namespace}')
+    if (parts.length < 2) {
+      throw new Error(`Kind ${kind} is not namespace-scoped (missing {namespace} in pathTemplate)`)
+    }
+
+    // Extract resource path segment from template
+    // e.g. 'env/namespaces/{namespace}/sealedsecrets/{name}.yaml' -> '/sealedsecrets'
+    const resourcePath = parts[1].replace('/{name}.yaml', '')
+    const result = new Map<string, AplObject>()
+
+    // Match any path containing this resource segment
+    // e.g. matches 'env/namespaces/*/sealedsecrets/*.yaml'
     for (const filePath of this.store.keys()) {
       if (filePath.includes(resourcePath) && filePath.endsWith('.yaml')) {
         const content = this.store.get(filePath)
