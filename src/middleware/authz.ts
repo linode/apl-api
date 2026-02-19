@@ -39,6 +39,7 @@ export function authorize(req: OpenApiRequestExt, authz: Authz): void {
       'read:DockerConfig': 'downloadDockerLogin',
       'create:Cloudtty': 'useCloudShell',
       'update:Policy': 'editSecurityPolicies',
+      'create:Service': 'createServices',
     }
     const key = `${action}:${schemaName}`
     const permission = permissionMap[key]
