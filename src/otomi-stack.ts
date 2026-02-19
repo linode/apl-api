@@ -1590,6 +1590,7 @@ export default class OtomiStack {
     helmChartsDir: string,
     branch: string,
     teamId?: string,
+    chartsPath?: string,
   ): Promise<{ url: string; helmCharts: any; catalog: any }> {
     const { cluster } = this.getSettings(['cluster'])
     try {
@@ -1599,6 +1600,7 @@ export default class OtomiStack {
         branch,
         cluster?.domainSuffix,
         teamId,
+        chartsPath,
       )
       return { url, helmCharts, catalog }
     } catch (error) {
@@ -1679,17 +1681,23 @@ export default class OtomiStack {
     url: string,
     branch: string,
     catalogName: string,
+    chartsPath?: string,
   ): Promise<{ url: string; helmCharts: any; catalog: any }> {
     const uuid = uuidv4()
     const helmChartsDir = `/tmp/otomi/charts/${catalogName}/${branch}/charts/${uuid}`
 
-    return this.fetchCatalog(url, helmChartsDir, branch)
+    return this.fetchCatalog(url, helmChartsDir, branch, undefined, chartsPath)
   }
 
   async getAplCatalogCharts(name: string): Promise<{ url: string; helmCharts: any; catalog: any; branch: string }> {
     const catalog = this.getAplCatalog(name)
-    const { repositoryUrl, branch, name: catalogName } = catalog.spec
-    const charts = await this.getBYOWorkloadCatalog(repositoryUrl, branch, catalogName)
+    const { repositoryUrl, branch, name: catalogName, chartsPath } = catalog.spec
+    const charts = await this.getBYOWorkloadCatalog(
+      repositoryUrl,
+      branch,
+      catalogName,
+      chartsPath as string | undefined,
+    )
     return { ...charts, branch }
   }
 

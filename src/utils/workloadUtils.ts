@@ -435,6 +435,7 @@ async function getChartFolders(helmChartsDir: string): Promise<string[]> {
  * @param branch - Git branch to checkout (defaults to 'main')
  * @param clusterDomainSuffix - Cluster domain suffix for internal Gitea URL detection
  * @param teamId - Optional team ID for RBAC filtering. If not provided, all charts are returned
+ * @param chartsPath - Optional subdirectory path where charts are located (e.g., 'charts' or 'helm-charts')
  */
 export async function fetchWorkloadCatalog(
   url: string,
@@ -442,6 +443,7 @@ export async function fetchWorkloadCatalog(
   branch: string = 'main',
   clusterDomainSuffix?: string,
   teamId?: string,
+  chartsPath?: string,
 ): Promise<{ helmCharts: string[]; catalog: any[] }> {
   // Ensure directory exists
   if (!existsSync(helmChartsDir)) mkdirSync(helmChartsDir, { recursive: true })
@@ -451,11 +453,24 @@ export async function fetchWorkloadCatalog(
   const gitRepo = new chartRepo(helmChartsDir, gitUrl)
   await gitRepo.clone(branch)
 
-  // Get chart folders
-  const folders = await getChartFolders(helmChartsDir)
+  // Determine the charts directory path
+  const chartsDir = chartsPath ? `${helmChartsDir}/${chartsPath}` : helmChartsDir
 
-  // Read RBAC configuration
-  const { rbac, betaCharts } = await readRbacConfig(helmChartsDir)
+  // Check if subdirectory exists
+  if (chartsPath && !existsSync(chartsDir)) {
+    debug(`Charts subdirectory '${chartsPath}' not found at '${url}'`)
+    return { helmCharts: [], catalog: [] }
+  }
+
+  // Get chart folders
+  const folders = await getChartFolders(chartsDir)
+
+  // Read RBAC configuration (try chartsDir first, fallback to root)
+  let rbacConfig = await readRbacConfig(chartsDir)
+  if (!rbacConfig.rbac || Object.keys(rbacConfig.rbac).length === 0) {
+    rbacConfig = await readRbacConfig(helmChartsDir)
+  }
+  const { rbac, betaCharts } = rbacConfig
 
   // Process each chart folder
   const catalog: any[] = []
@@ -465,7 +480,7 @@ export async function fetchWorkloadCatalog(
     // Check RBAC access
     if (!isChartAccessible(folder, rbac, teamId)) continue
 
-    const catalogItem = await processChartFolder(helmChartsDir, folder, betaCharts)
+    const catalogItem = await processChartFolder(chartsDir, folder, betaCharts)
     if (catalogItem) {
       catalog.push(catalogItem)
       helmCharts.push(folder)

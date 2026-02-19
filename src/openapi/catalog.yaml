@@ -9,6 +9,9 @@ AplCatalogSpec:
     branch:
       type: string
       default: main
+    chartsPath:
+      type: string
+      description: Optional subdirectory path where charts are located (e.g., 'charts' or 'helm-charts')
     enabled:
       type: boolean
       default: true
