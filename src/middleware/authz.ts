@@ -51,4 +51,16 @@ export function authorize(req: OpenApiRequestExt, authz: Authz): void {
   if (!valid) {
     throw new HttpError(403, `User not allowed to perform "${action}" on "${schemaName}" resource`)
   }
+
+  // Validate properties from v2 request bodies that the user is not allowed their action on.
+  // v2 bodies always wrap resource properties under a `spec` key.
+  const isWriteOp = ['create', 'update'].includes(action)
+  if (isWriteOp && req.path?.startsWith('/v2/') && req.body?.spec && !user.isPlatformAdmin) {
+    const spec = req.body.spec as Record<string, unknown>
+    for (const prop of Object.keys(spec)) {
+      if (!authz.validatePropertyWithCasl(action, schemaName, prop, teamId)) {
+        throw new HttpError(403, `User not allowed to perform "${action}" on "${schemaName}" resource`)
+      }
+    }
+  }
 }
