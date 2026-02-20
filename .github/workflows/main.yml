@@ -37,9 +37,14 @@ jobs:
         uses: actions/checkout@v6
       - name: Fetch values-schema.yaml from apl-core
         run: |
-          curl -sL -H "Authorization: token ${{ env.BOT_TOKEN }}" \
+          # Try matching branch first, fall back to main
+          curl -sL -f -H "Authorization: token ${{ env.BOT_TOKEN }}" \
+            "https://raw.githubusercontent.com/linode/apl-core/${{ env.TAG }}/values-schema.yaml" \
+            -o src/values-schema.yaml 2>/dev/null \
+          || curl -sL -f -H "Authorization: token ${{ env.BOT_TOKEN }}" \
             "https://raw.githubusercontent.com/linode/apl-core/main/values-schema.yaml" \
             -o src/values-schema.yaml
+          echo "Schema fetched for branch: ${{ env.TAG }} (with main fallback)"
       - name: CI tests, image build and push tag for main or branch
         uses: whoan/docker-build-with-cache-action@v8
         with:
