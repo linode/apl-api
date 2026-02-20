@@ -5,7 +5,7 @@ import { rmSync } from 'fs'
 import { copy, ensureDir, pathExists, readFile, writeFile } from 'fs-extra'
 import { unlink } from 'fs/promises'
 import { glob } from 'glob'
-import { isEmpty, merge } from 'lodash'
+import { merge } from 'lodash'
 import { basename, dirname, join } from 'path'
 import simpleGit, { CheckRepoActions, CleanOptions, CommitResult, ResetMode, SimpleGit } from 'simple-git'
 import {
@@ -20,7 +20,7 @@ import {
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { BASEURL } from './constants'
-import { GitPullError, HttpError, ValidationError } from './error'
+import { GitPullError } from './error'
 import { Core } from './otomi-models'
 import { getSanitizedErrorMessage, removeBlankAttributes, sanitizeGitPassword } from './utils'
 
@@ -37,8 +37,6 @@ const env = cleanEnv({
 })
 
 const baseUrl = BASEURL
-const prepareUrl = `${baseUrl}/prepare`
-const initUrl = `${baseUrl}/init`
 const valuesUrl = `${baseUrl}/otomi/values`
 
 const getProtocol = (url): string => (url && url.includes('://') ? url.split('://')[0] : 'http')
@@ -54,8 +52,6 @@ function getUrlAuth(url, user, password): string | undefined {
   return protocol === 'file' ? `${protocol}://${bareUrl}` : `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
 }
 
-const secretFileRegex = new RegExp(`^(.*/)?secrets.*.yaml(.dec)?$`)
-
 export class Git {
   branch: string
   commitSha: string
@@ -66,7 +62,6 @@ export class Git {
   path: string
   remote: string
   remoteBranch: string
-  secretFilePostfix = ''
   url: string | undefined
   urlAuth: string | undefined
   user: string
@@ -96,18 +91,6 @@ export class Git {
     return getProtocol(this.url)
   }
 
-  async requestInitValues(): Promise<AxiosResponse | void> {
-    debug(`Tools: requesting "init" on values repo path ${this.path}`)
-    const res = await axios.get(initUrl, { params: { envDir: this.path } })
-    return res
-  }
-
-  async requestPrepareValues(files?: string[]): Promise<AxiosResponse | void> {
-    debug(`Tools: requesting "prepare" on values repo path ${this.path}`)
-    const res = await axios.get(prepareUrl, { params: { envDir: this.path, files } })
-    return res
-  }
-
   async requestValues(params): Promise<AxiosResponse> {
     debug(`Tools: requesting "otomi/values" ${this.path}`)
     const res = await axios.get(valuesUrl, { params: { envDir: this.path, ...params } })
@@ -134,15 +117,7 @@ export class Git {
     await this.git.addRemote(this.remote, this.url!)
   }
 
-  async initSops(): Promise<void> {
-    if (this.secretFilePostfix === '.dec') return
-    this.secretFilePostfix = (await pathExists(join(this.path, '.sops.yaml'))) ? '.dec' : ''
-  }
-
   getSafePath(file: string): string {
-    if (this.secretFilePostfix === '') return file
-    // otherwise we might have to give *.dec variant for secrets
-    if (file.match(secretFileRegex) && !file.endsWith(this.secretFilePostfix)) return `${file}${this.secretFilePostfix}`
     return file
   }
 
@@ -151,17 +126,7 @@ export class Git {
     const exists = await this.fileExists(file)
     if (exists) {
       debug(`Removing file: ${absolutePath}`)
-      // Remove empty secret file due to https://github.com/mozilla/sops/issues/926 issue
       await unlink(absolutePath)
-    }
-    if (file.match(secretFileRegex)) {
-      // also remove the encrypted file as they are operated on in pairs
-      const encFile = `${file}${this.secretFilePostfix}`
-      if (await this.fileExists(encFile)) {
-        const absolutePathEnc = join(this.path, encFile)
-        debug(`Removing enc file: ${absolutePathEnc}`)
-        await unlink(absolutePathEnc)
-      }
     }
   }
 
@@ -185,10 +150,6 @@ export class Git {
   async writeFile(file: string, data: Record<string, unknown>, unsetBlankAttributes = true): Promise<void> {
     let cleanedData = data
     if (unsetBlankAttributes) cleanedData = removeBlankAttributes(data, { emptyArrays: true })
-    if (isEmpty(cleanedData) && file.match(secretFileRegex)) {
-      // remove empty secrets file which sops can't handle
-      return this.removeFile(file)
-    }
     // we also bail when no changes found
     const hasDiff = await this.diffFile(file, data)
     if (!hasDiff) return
@@ -304,8 +265,6 @@ export class Git {
       const summJson = JSON.stringify(summary)
       debug(`Pull summary: ${summJson}`)
       this.commitSha = await this.getCommitSha()
-      if (!skipRequest) await this.requestInitValues()
-      await this.initSops()
     } catch (e) {
       const eMessage = getSanitizedErrorMessage(e)
       debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', eMessage)
@@ -393,24 +352,7 @@ export class Git {
     return this.git.revparse('HEAD')
   }
 
-  async save(editor: string, encryptSecrets = true, files?: string[]): Promise<void> {
-    // prepare values first
-    try {
-      if (encryptSecrets) {
-        await this.requestPrepareValues(files)
-      } else {
-        debug(`Data does not need to be encrypted`)
-      }
-    } catch (e) {
-      debug(`ERROR: ${JSON.stringify(e)}`)
-      if (e.response) {
-        const { status } = e.response as AxiosResponse
-        if (status === 422) throw new ValidationError()
-        throw HttpError.fromCode(status)
-      }
-      throw new HttpError(500, `${e}`)
-    }
-    // all good? commit
+  async save(editor: string): Promise<void> {
     await this.commit(editor)
     try {
       // we are in a unique developer branch, so we can pull, push, and merge
@@ -456,7 +398,6 @@ export async function getWorktreeRepo(
   const worktreeRepo = new Git(worktreePath, mainRepo.url, mainRepo.user, mainRepo.email, mainRepo.urlAuth, branch)
 
   await worktreeRepo.addConfig()
-  await worktreeRepo.initSops()
 
   return worktreeRepo
 }

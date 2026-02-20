@@ -14,7 +14,7 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
   maps.set('AplApp', {
     kind: 'AplApp',
     envDir,
-    pathGlob: `${envDir}/env/apps/*.{yaml,yaml.dec}`,
+    pathGlob: `${envDir}/env/apps/*.yaml`,
     pathTemplate: 'env/apps/{name}.yaml',
     name: 'apps',
   })
@@ -22,7 +22,7 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
   maps.set('AplAlertSet', {
     kind: 'AplAlertSet',
     envDir,
-    pathGlob: `${envDir}/env/settings/*alerts.{yaml,yaml.dec}`,
+    pathGlob: `${envDir}/env/settings/*alerts.yaml`,
     pathTemplate: 'env/settings/alerts.yaml',
     name: 'alerts',
   })
@@ -30,7 +30,7 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
   maps.set('AplCluster', {
     kind: 'AplCluster',
     envDir,
-    pathGlob: `${envDir}/env/settings/cluster.{yaml,yaml.dec}`,
+    pathGlob: `${envDir}/env/settings/cluster.yaml`,
     pathTemplate: 'env/settings/cluster.yaml',
     name: 'cluster',
   })
@@ -38,7 +38,7 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
   maps.set('AplDatabase', {
     kind: 'AplDatabase',
     envDir,
-    pathGlob: `${envDir}/env/databases/*.{yaml,yaml.dec}`,
+    pathGlob: `${envDir}/env/databases/*.yaml`,
     pathTemplate: 'env/databases/{name}.yaml',
     name: 'databases',
   })
@@ -46,7 +46,7 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
   maps.set('AplDns', {
     kind: 'AplDns',
     envDir,
-    pathGlob: `${envDir}/env/settings/*dns.{yaml,yaml.dec}`,
+    pathGlob: `${envDir}/env/settings/*dns.yaml`,
     pathTemplate: 'env/settings/dns.yaml',
     name: 'dns',
   })
@@ -62,7 +62,7 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
   maps.set('AplKms', {
     kind: 'AplKms',
     envDir,
-    pathGlob: `${envDir}/env/settings/*kms.{yaml,yaml.dec}`,
+    pathGlob: `${envDir}/env/settings/*kms.yaml`,
     pathTemplate: 'env/settings/kms.yaml',
     name: 'kms',
   })
@@ -70,7 +70,7 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
   maps.set('AplObjectStorage', {
     kind: 'AplObjectStorage',
     envDir,
-    pathGlob: `${envDir}/env/settings/*obj.{yaml,yaml.dec}`,
+    pathGlob: `${envDir}/env/settings/*obj.yaml`,
     pathTemplate: 'env/settings/obj.yaml',
     name: 'obj',
   })
@@ -78,7 +78,7 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
   maps.set('AplIdentityProvider', {
     kind: 'AplIdentityProvider',
     envDir,
-    pathGlob: `${envDir}/env/settings/*oidc.{yaml,yaml.dec}`,
+    pathGlob: `${envDir}/env/settings/*oidc.yaml`,
     pathTemplate: 'env/settings/oidc.yaml',
     name: 'oidc',
   })
@@ -86,7 +86,7 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
   maps.set('AplCapabilitySet', {
     kind: 'AplCapabilitySet',
     envDir,
-    pathGlob: `${envDir}/env/settings/*otomi.{yaml,yaml.dec}`,
+    pathGlob: `${envDir}/env/settings/*otomi.yaml`,
     pathTemplate: 'env/settings/otomi.yaml',
     name: 'otomi',
   })
@@ -94,7 +94,7 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
   maps.set('AplCatalog', {
     kind: 'AplCatalog',
     envDir,
-    pathGlob: `${envDir}/env/catalogs/*.{yaml,yaml.dec}`,
+    pathGlob: `${envDir}/env/catalogs/*.yaml`,
     pathTemplate: 'env/catalogs/{name}.yaml',
     name: 'catalogs',
   })
@@ -102,7 +102,7 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
   maps.set('AplBackupCollection', {
     kind: 'AplBackupCollection',
     envDir,
-    pathGlob: `${envDir}/env/settings/*platformBackups.{yaml,yaml.dec}`,
+    pathGlob: `${envDir}/env/settings/*platformBackups.yaml`,
     pathTemplate: 'env/settings/platformBackups.yaml',
     name: 'platformBackups',
   })
@@ -110,7 +110,7 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
   maps.set('AplSmtp', {
     kind: 'AplSmtp',
     envDir,
-    pathGlob: `${envDir}/env/settings/*smtp.{yaml,yaml.dec}`,
+    pathGlob: `${envDir}/env/settings/*smtp.yaml`,
     pathTemplate: 'env/settings/smtp.yaml',
     name: 'smtp',
   })
@@ -118,7 +118,7 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
   maps.set('AplUser', {
     kind: 'AplUser',
     envDir,
-    pathGlob: `${envDir}/env/users/*.{yaml,yaml.dec}`,
+    pathGlob: `${envDir}/env/users/*.yaml`,
     pathTemplate: 'env/users/{name}.yaml',
     name: 'users',
   })
@@ -206,7 +206,7 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
   maps.set('AplTeamSettingSet', {
     kind: 'AplTeamSettingSet',
     envDir,
-    pathGlob: `${envDir}/env/teams/*/*settings{.yaml,.yaml.dec}`,
+    pathGlob: `${envDir}/env/teams/*/*settings.yaml`,
     pathTemplate: 'env/teams/{teamId}/settings.yaml',
     name: 'settings',
   })
@@ -214,7 +214,7 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
   maps.set('AplTeamTool', {
     kind: 'AplTeamTool',
     envDir,
-    pathGlob: `${envDir}/env/teams/*/*apps{.yaml,.yaml.dec}`,
+    pathGlob: `${envDir}/env/teams/*/*apps.yaml`,
     pathTemplate: 'env/teams/{teamId}/apps.yaml',
     name: 'apps',
   })
@@ -240,17 +240,6 @@ export function getResourceFilePath(kind: AplKind, name: string, teamId?: string
   }
 
   return fileMap.pathTemplate.replace('{teamId}', teamId || '').replace('{name}', name)
-}
-
-// Derive secret file path from main file path
-// e.g., 'env/teams/demo/settings.yaml' -> 'env/teams/demo/secrets.settings.yaml'
-// e.g., 'env/apps/harbor.yaml' -> 'env/apps/secrets.harbor.yaml'
-export function getSecretFilePath(mainFilePath: string): string {
-  const parts = mainFilePath.split('/')
-  const filename = parts[parts.length - 1]
-  const dir = parts.slice(0, -1).join('/')
-
-  return `${dir}/secrets.${filename}`
 }
 
 // Get all FileMap entries that are settings (env/settings/*)
