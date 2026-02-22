@@ -38,6 +38,29 @@ jest.mock('src/utils/userUtils', () => {
   }
 })
 
+const mockListUserSecretsFromK8s = jest.fn().mockResolvedValue([])
+const mockGetUserSecretFromK8s = jest.fn().mockResolvedValue(undefined)
+jest.mock('./k8s_operations', () => {
+  const originalModule = jest.requireActual('./k8s_operations')
+  return {
+    __esModule: true,
+    ...originalModule,
+    listUserSecretsFromK8s: (...args: any[]) => mockListUserSecretsFromK8s(...args),
+    getUserSecretFromK8s: (...args: any[]) => mockGetUserSecretFromK8s(...args),
+    getSecretValues: jest.fn().mockResolvedValue({ adminPassword: 'test-admin-password' }),
+  }
+})
+
+jest.mock('./utils/sealedSecretUtils', () => {
+  const originalModule = jest.requireActual('./utils/sealedSecretUtils')
+  return {
+    __esModule: true,
+    ...originalModule,
+    createPlatformSealedSecretManifest: jest.fn().mockResolvedValue('mock-sealed-secret-yaml'),
+    createUserSealedSecret: jest.fn().mockResolvedValue('mock-user-sealed-secret-yaml'),
+  }
+})
+
 beforeAll(async () => {
   jest.spyOn(console, 'log').mockImplementation(() => {})
   jest.spyOn(console, 'debug').mockImplementation(() => {})
@@ -47,11 +70,38 @@ beforeAll(async () => {
   await loadSpec()
 })
 
+// Track users created in tests for K8s mock
+const testK8sUsers: any[] = []
+
+beforeEach(() => {
+  testK8sUsers.length = 0
+  mockListUserSecretsFromK8s.mockResolvedValue([])
+  mockGetUserSecretFromK8s.mockResolvedValue(undefined)
+})
+
 // Helper functions for FileStore-based tests
 function createTestUser(otomiStack: OtomiStack, user: User): void {
   const { buildPlatformObject } = require('./otomi-models')
   const aplUser = buildPlatformObject('AplUser', user.id!, user as any)
   otomiStack.fileStore.setPlatformResource(aplUser)
+
+  // Also register in K8s mock for getAllUsers/getUser
+  const k8sUser = {
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName || '',
+    lastName: user.lastName || '',
+    initialPassword: user.initialPassword || '',
+    isPlatformAdmin: user.isPlatformAdmin || false,
+    isTeamAdmin: user.isTeamAdmin || false,
+    teams: user.teams || [],
+  }
+  testK8sUsers.push(k8sUser)
+  mockListUserSecretsFromK8s.mockResolvedValue([...testK8sUsers])
+  mockGetUserSecretFromK8s.mockImplementation((id: string) => {
+    const found = testK8sUsers.find((u) => u.id === id)
+    return Promise.resolve(found || undefined)
+  })
 }
 
 function createTestTeam(otomiStack: OtomiStack, teamId: string, spec: any = {}): void {
@@ -156,27 +206,27 @@ describe('Data validation', () => {
   test('should create a password when password is not specified', async () => {
     await otomiStack.createTeam({ name: 'test' })
 
-    // Verify FileStore was updated with a generated password
+    // Password should NOT be in the team settings (it's in a SealedSecret now)
     const teamSettings = otomiStack.fileStore.getTeamResource('AplTeamSettingSet', 'test', 'settings')
     expect(teamSettings).toBeDefined()
-    expect(teamSettings?.spec.password).toBeTruthy()
-    expect(teamSettings?.spec.password.length).toBeGreaterThan(0)
+    expect(teamSettings?.spec.password).toBeUndefined()
 
-    // Verify Git operations were called
+    // Verify Git operations were called (writeFile for team settings + writeTextFile for SealedSecret)
     expect(mockGit.writeFile).toHaveBeenCalled()
+    expect(mockGit.writeTextFile).toHaveBeenCalled()
   })
 
   test('should not create a password when password is specified', async () => {
     const myPassword = 'someAwesomePassword'
     await otomiStack.createTeam({ name: 'test', password: myPassword })
 
-    // Verify FileStore was updated with the specified password
+    // Password should NOT be in the team settings (it's encrypted in a SealedSecret)
     const teamSettings = otomiStack.fileStore.getTeamResource('AplTeamSettingSet', 'test', 'settings')
     expect(teamSettings).toBeDefined()
-    expect(teamSettings?.spec.password).toBe(myPassword)
+    expect(teamSettings?.spec.password).toBeUndefined()
 
-    // Verify Git operations were called
-    expect(mockGit.writeFile).toHaveBeenCalled()
+    // Verify Git operations were called (SealedSecret was written)
+    expect(mockGit.writeTextFile).toHaveBeenCalled()
   })
 
   test('should throw ValidationError when team name is under 3 characters', async () => {
@@ -436,13 +486,13 @@ describe('Users tests', () => {
       createTestUser(otomiStack, teamMember1)
     })
 
-    it('should return full user for platform admin', () => {
-      const result = otomiStack.getUser(teamMember1.id!, platformAdminSession)
+    it('should return full user for platform admin', async () => {
+      const result = await otomiStack.getUser(teamMember1.id!, platformAdminSession)
       expect(result).toMatchObject(teamMember1)
     })
 
-    it('should return limited user info for team admin', () => {
-      const result = otomiStack.getUser(teamMember1.id!, teamAdminSession)
+    it('should return limited user info for team admin', async () => {
+      const result = await otomiStack.getUser(teamMember1.id!, teamAdminSession)
       expect(result).toEqual({
         id: teamMember1.id,
         email: teamMember1.email,
@@ -452,22 +502,22 @@ describe('Users tests', () => {
       })
     })
 
-    it('should throw 403 for regular user', () => {
+    it('should throw 403 for regular user', async () => {
       try {
-        otomiStack.getUser(teamMember1.id!, { ...sessionUser, isPlatformAdmin: false, isTeamAdmin: false })
+        await otomiStack.getUser(teamMember1.id!, { ...sessionUser, isPlatformAdmin: false, isTeamAdmin: false })
         fail('Expected error was not thrown')
       } catch (err: any) {
         expect(err).toHaveProperty('code', 403)
       }
     })
 
-    it('should return all users for platform admin in getAllUsers', () => {
-      const users = otomiStack.getAllUsers(platformAdminSession)
+    it('should return all users for platform admin in getAllUsers', async () => {
+      const users = await otomiStack.getAllUsers(platformAdminSession)
       expect(users.some((u) => u.id === teamMember1.id)).toBe(true)
     })
 
-    it('should return limited info for team admin in getAllUsers', () => {
-      const users = otomiStack.getAllUsers(teamAdminSession)
+    it('should return limited info for team admin in getAllUsers', async () => {
+      const users = await otomiStack.getAllUsers(teamAdminSession)
       expect(users[0]).toHaveProperty('id')
       expect(users[0]).toHaveProperty('email')
       expect(users[0]).toHaveProperty('isPlatformAdmin')
@@ -478,9 +528,9 @@ describe('Users tests', () => {
       expect(users[0]).not.toHaveProperty('lastName')
     })
 
-    it('should throw 403 for regular user in getAllUsers', () => {
+    it('should throw 403 for regular user in getAllUsers', async () => {
       try {
-        otomiStack.getAllUsers({ ...sessionUser, isPlatformAdmin: false, isTeamAdmin: false })
+        await otomiStack.getAllUsers({ ...sessionUser, isPlatformAdmin: false, isTeamAdmin: false })
         fail('Expected error was not thrown')
       } catch (err: any) {
         expect(err).toHaveProperty('code', 403)
@@ -578,9 +628,8 @@ describe('Users tests', () => {
 
         expect(result.firstName).toBe('edited')
 
-        // Verify FileStore was updated
-        const storedUser = otomiStack.fileStore.get(`env/users/${user.id}.yaml`)
-        expect(storedUser?.spec.firstName).toBe('edited')
+        // Verify SealedSecret was written via Git
+        expect(mockGit.writeTextFile).toHaveBeenCalled()
       })
 
       it('should not allow non-platform admin to edit a user', async () => {

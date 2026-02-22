@@ -4,13 +4,13 @@ import { initApp, loadSpec } from 'src/app'
 import getToken from 'src/fixtures/jwt'
 import OtomiStack from 'src/otomi-stack'
 import request from 'supertest'
+import TestAgent from 'supertest/lib/agent'
 import { HttpError } from './error'
+import { FileStore } from './fileStore/file-store'
 import { Git } from './git'
 import { getSessionStack } from './middleware'
 import { App, CodeRepo, Netpol, SealedSecret } from './otomi-models'
 import * as getValuesSchemaModule from './utils'
-import TestAgent from 'supertest/lib/agent'
-import { FileStore } from './fileStore/file-store'
 
 const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
@@ -19,7 +19,29 @@ const userToken = getToken([])
 const teamId = 'team1'
 const otherTeamId = 'team2'
 
-jest.mock('./k8s_operations')
+jest.mock('./k8s_operations', () => {
+  const original = jest.requireActual('./k8s_operations')
+  return {
+    ...original,
+    apply: jest.fn(),
+    checkPodExists: jest.fn(),
+    getCloudttyActiveTime: jest.fn(),
+    getKubernetesVersion: jest.fn().mockResolvedValue('x.x.x'),
+    getSecretValues: jest.fn().mockResolvedValue({ adminPassword: 'test-admin-password' }),
+    getTeamSecretsFromK8s: jest.fn().mockResolvedValue([]),
+    getUserSecretFromK8s: jest.fn().mockResolvedValue(undefined),
+    listUserSecretsFromK8s: jest.fn().mockResolvedValue([]),
+    k8sdelete: jest.fn(),
+    watchPodUntilRunning: jest.fn(),
+    getSealedSecretsCertificate: jest.fn().mockResolvedValue(''),
+    getSealedSecretSyncedStatus: jest.fn().mockResolvedValue('NotFound'),
+    getSealedSecretStatus: jest.fn().mockResolvedValue('NotFound'),
+    getSealedSecretsKeys: jest.fn().mockResolvedValue({}),
+    getWorkloadStatus: jest.fn().mockResolvedValue('NotFound'),
+    getBuildStatus: jest.fn().mockResolvedValue('NotFound'),
+    getServiceStatus: jest.fn().mockResolvedValue('NotFound'),
+  }
+})
 jest.mock('./utils/sealedSecretUtils')
 beforeAll(async () => {
   jest.spyOn(console, 'log').mockImplementation(() => {})

@@ -1,7 +1,8 @@
 import { X509Certificate } from 'crypto'
 import Debug from 'debug'
 import { isEmpty } from 'lodash'
-import { SealedSecretManifestRequest, SealedSecretManifestResponse } from 'src/otomi-models'
+import { SealedSecretManifestRequest, SealedSecretManifestResponse, User } from 'src/otomi-models'
+import { stringify as stringifyYaml } from 'yaml'
 import { ValidationError } from '../error'
 import { getSealedSecretsCertificate } from '../k8s_operations'
 
@@ -128,4 +129,65 @@ export async function ensureEncryptedData(
     result[key] = await encryptSecretValue(pem, namespace, value)
   }
   return result
+}
+
+/**
+ * Creates a SealedSecret manifest for a platform-level secret (not team-scoped).
+ * Used for secrets in apl-secrets, apl-users, and other platform namespaces.
+ */
+export async function createPlatformSealedSecretManifest(
+  name: string,
+  namespace: string,
+  data: Record<string, string>,
+): Promise<string> {
+  const pem = await getSealedSecretsPEM()
+  if (!pem) throw new ValidationError('Cannot encrypt: SealedSecrets PEM not available')
+
+  const encryptedData: Record<string, string> = {}
+  for (const [key, value] of Object.entries(data)) {
+    encryptedData[key] = await encryptSecretValue(pem, namespace, value)
+  }
+
+  const manifest = {
+    apiVersion: 'bitnami.com/v1alpha1',
+    kind: 'SealedSecret',
+    metadata: {
+      annotations: {
+        'sealedsecrets.bitnami.com/namespace-wide': 'true',
+      },
+      name,
+      namespace,
+    },
+    spec: {
+      encryptedData,
+      template: {
+        immutable: false,
+        metadata: { name, namespace },
+        type: 'Opaque',
+      },
+    },
+  }
+
+  return stringifyYaml(manifest, undefined, { indent: 4, sortMapEntries: true })
+}
+
+/**
+ * Creates a SealedSecret manifest YAML for a user in the apl-users namespace.
+ * All user fields are encrypted as individual keys.
+ */
+export async function createUserSealedSecret(user: User): Promise<string> {
+  const namespace = 'apl-users'
+  const name = user.id as string
+
+  const data: Record<string, string> = {
+    email: user.email,
+    firstName: user.firstName || '',
+    lastName: user.lastName || '',
+    initialPassword: user.initialPassword || '',
+    isPlatformAdmin: String(user.isPlatformAdmin || false),
+    isTeamAdmin: String(user.isTeamAdmin || false),
+    teams: JSON.stringify(user.teams || []),
+  }
+
+  return createPlatformSealedSecretManifest(name, namespace, data)
 }

@@ -119,7 +119,10 @@ import {
   getKubernetesVersion,
   getSecretValues,
   getTeamSecretsFromK8s,
+  getUserSecretFromK8s,
   k8sdelete,
+  listUserSecretsFromK8s,
+  UserSecretData,
   watchPodUntilRunning,
 } from './k8s_operations'
 import {
@@ -132,6 +135,8 @@ import {
 } from './utils/codeRepoUtils'
 import { getAplObjectFromV1, getV1MergeObject, getV1ObjectFromApl } from './utils/manifests'
 import {
+  createPlatformSealedSecretManifest,
+  createUserSealedSecret,
   ensureEncryptedData,
   ensureSealedSecretMetadata,
   getSealedSecretsPEM,
@@ -149,6 +154,19 @@ import {
 
 interface ExcludedApp extends App {
   managed: boolean
+}
+
+function userSecretDataToUser(data: UserSecretData): User {
+  return {
+    id: data.id,
+    email: data.email,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    initialPassword: data.initialPassword,
+    isPlatformAdmin: data.isPlatformAdmin,
+    isTeamAdmin: data.isTeamAdmin,
+    teams: data.teams,
+  } as User
 }
 
 const debug = Debug('otomi:otomi-stack')
@@ -752,10 +770,10 @@ export default class OtomiStack {
     if (teamName.length < 3) throw new ValidationError('Team name must be at least 3 characters long')
     if (teamName.length > 9) throw new ValidationError('Team name must not exceed 9 characters')
 
-    if (isEmpty(data.spec.password)) {
+    let password = data.spec.password as string
+    if (isEmpty(password)) {
       debug(`creating password for team '${teamName}'`)
-      // eslint-disable-next-line no-param-reassign
-      data.spec.password = generatePassword({
+      password = generatePassword({
         length: 16,
         numbers: true,
         symbols: false,
@@ -764,6 +782,16 @@ export default class OtomiStack {
         strict: true,
       })
     }
+
+    // Encrypt password into a SealedSecret manifest
+    const sealedSecretName = `team-${teamName}-settings-secrets`
+    const sealedSecretYaml = await createPlatformSealedSecretManifest(sealedSecretName, 'apl-secrets', { password })
+    const sealedSecretPath = `env/manifests/ns/apl-secrets/${sealedSecretName}.yaml`
+    await this.git.writeTextFile(sealedSecretPath, sealedSecretYaml)
+
+    // Remove password from team spec before saving settings.yaml
+    // eslint-disable-next-line no-param-reassign
+    delete data.spec.password
 
     const teamObject = toTeamObject(teamName, data)
     const team = await this.saveTeam(teamObject)
@@ -976,20 +1004,18 @@ export default class OtomiStack {
     await this.doDeleteDeployment([filePath])
   }
 
-  getAllUsers(sessionUser: SessionUser): Array<User> {
-    const files = this.fileStore.getPlatformResourcesByKind('AplUser')
-    const aplObjects = Array.from(files.values()) as AplObject[]
-    const users = aplObjects.map((aplObject) => {
-      return { ...aplObject.spec, id: aplObject.metadata.name } as User
-    })
+  async getAllUsers(sessionUser: SessionUser): Promise<Array<User>> {
+    const k8sUsers = await listUserSecretsFromK8s()
+    const users: User[] = k8sUsers.map((u) => userSecretDataToUser(u))
+
     if (sessionUser.isPlatformAdmin) {
       return users
     } else if (sessionUser.isTeamAdmin) {
       const usersWithBasicInfo = users.map((user) => {
         const { id, email, isPlatformAdmin, isTeamAdmin, teams } = user
-        return { id, email, isPlatformAdmin, isTeamAdmin, teams }
+        return { id, email, isPlatformAdmin, isTeamAdmin, teams } as User
       })
-      return usersWithBasicInfo as Array<User>
+      return usersWithBasicInfo
     }
     throw new ForbiddenError()
   }
@@ -1010,19 +1036,23 @@ export default class OtomiStack {
     const userId = uuidv4()
     const user: User = { ...data, id: userId, initialPassword }
 
-    // Get existing users' emails
-    const files = this.fileStore.getPlatformResourcesByKind('AplUser')
-    let existingUsersEmail = Array.from(files.values()).map((aplObject: AplObject) => aplObject.spec.email)
+    // Check for existing users in K8s and Keycloak
+    const existingK8sUsers = await listUserSecretsFromK8s()
+    let existingUsersEmail = existingK8sUsers.map((u) => u.email)
 
-    if (!env.isDev) {
-      const { otomi, cluster } = this.getSettings(['otomi', 'cluster'])
-      const keycloak = this.getApp('keycloak')
-      const keycloakBaseUrl = `https://keycloak.${cluster?.domainSuffix}`
-      const realm = 'otomi'
-      const username = keycloak?.values?.adminUsername as string
-      const password = otomi?.adminPassword as string
-      existingUsersEmail = await getKeycloakUsers(keycloakBaseUrl, realm, username, password)
+    const { cluster } = this.getSettings(['cluster'])
+    const keycloak = this.getApp('keycloak')
+    const keycloakBaseUrl = `https://keycloak.${cluster?.domainSuffix}`
+    const realm = 'otomi'
+    const username = keycloak?.values?.adminUsername as string
+    // Read admin password from K8s secret instead of disk values (stripped by bootstrap)
+    const platformSecrets = await getSecretValues('otomi-platform-secrets', 'apl-secrets')
+    const adminPassword = platformSecrets?.adminPassword
+    if (!adminPassword) {
+      throw new HttpError(500, 'Admin password not found in platform secrets')
     }
+    existingUsersEmail = await getKeycloakUsers(keycloakBaseUrl, realm, username, adminPassword)
+
     if (existingUsersEmail.some((existingUser) => existingUser === user.email)) {
       throw new AlreadyExists('User email already exists')
     }
@@ -1032,18 +1062,18 @@ export default class OtomiStack {
     return user
   }
 
-  getUser(id: string, sessionUser: SessionUser): User {
-    const filePath = getResourceFilePath('AplUser', id)
-    const user = this.fileStore.get(filePath)
-    if (!user) {
+  async getUser(id: string, sessionUser: SessionUser): Promise<User> {
+    const k8sUserData = await getUserSecretFromK8s(id)
+    if (!k8sUserData) {
       throw new NotExistError(`User ${id} not found`)
     }
+    const user = userSecretDataToUser(k8sUserData)
 
     if (sessionUser.isPlatformAdmin) {
-      return { ...user.spec, id } as User
+      return user
     }
     if (sessionUser.isTeamAdmin) {
-      const { email, isPlatformAdmin, isTeamAdmin, teams } = user.spec
+      const { email, isPlatformAdmin, isTeamAdmin, teams } = user
       return { id, email, isPlatformAdmin, isTeamAdmin, teams } as User
     }
     throw new ForbiddenError()
@@ -1054,13 +1084,19 @@ export default class OtomiStack {
       throw new ForbiddenError('Only platform admins can modify user details.')
     }
 
-    const filePath = getResourceFilePath('AplUser', id)
-    const existing = this.fileStore.get(filePath)
-    if (!existing) {
+    const existingK8s = await getUserSecretFromK8s(id)
+    if (!existingK8s) {
       throw new NotExistError(`User ${id} not found`)
     }
+    const existingUser = userSecretDataToUser(existingK8s)
 
-    const user: User = { ...existing, ...data, id }
+    // Merge updates, preserving initialPassword from existing secret
+    const user: User = {
+      ...existingUser,
+      ...data,
+      id,
+      initialPassword: existingUser.initialPassword,
+    }
 
     const aplRecord = await this.saveUser(user)
     await this.doDeployment(aplRecord)
@@ -1068,18 +1104,24 @@ export default class OtomiStack {
   }
 
   async deleteUser(id: string): Promise<void> {
-    const filePath = getResourceFilePath('AplUser', id)
-    const aplObject = this.fileStore.get(filePath)
-    if (!aplObject) {
+    const existingK8s = await getUserSecretFromK8s(id)
+    if (!existingK8s) {
       throw new NotExistError(`User ${id} not found`)
     }
-    const user = aplObject.spec as User
-    if (user.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
+    if (existingK8s.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
       throw new ForbiddenError('Cannot delete the default platform admin user')
     }
 
-    await this.deleteUserFile(id)
-    await this.doDeleteDeployment([filePath])
+    // Remove SealedSecret manifest from git
+    const sealedSecretPath = `env/manifests/ns/apl-users/${id}.yaml`
+    await this.git.removeFile(sealedSecretPath)
+
+    // Also remove legacy AplUser file if it exists
+    const legacyFilePath = getResourceFilePath('AplUser', id)
+    await this.git.removeFile(legacyFilePath)
+    this.fileStore.delete(legacyFilePath)
+
+    await this.doDeleteDeployment([sealedSecretPath])
   }
 
   private canTeamAdminUpdateUserTeams(sessionUser: SessionUser, existingUser: User, updatedUserTeams: string[]) {
@@ -1124,12 +1166,11 @@ export default class OtomiStack {
       if (!userData.id) {
         throw new NotExistError(`User ${userData.id} not found`)
       }
-      const filePath = getResourceFilePath('AplUser', userData.id)
-      const aplObject = this.fileStore.get(filePath)
-      if (!aplObject) {
+      const existingK8s = await getUserSecretFromK8s(userData.id)
+      if (!existingK8s) {
         throw new NotExistError(`User ${userData.id} not found`)
       }
-      const existingUser = aplObject.spec as User
+      const existingUser = userSecretDataToUser(existingK8s)
 
       if (
         !sessionUser.isPlatformAdmin &&
@@ -2566,11 +2607,21 @@ export default class OtomiStack {
     if (!user.id) {
       throw new Error('User id not set')
     }
-    const aplPlatformObject = buildPlatformObject('AplUser', user.id, user as unknown as Record<string, any>)
-    const filePath = this.fileStore.setPlatformResource(aplPlatformObject)
-    await this.git.writeFile(filePath, aplPlatformObject)
 
-    return { filePath, content: aplPlatformObject }
+    // Write SealedSecret manifest with all user fields encrypted
+    const sealedSecretYaml = await createUserSealedSecret(user)
+    const sealedSecretPath = `env/manifests/ns/apl-users/${user.id}.yaml`
+    await this.git.writeTextFile(sealedSecretPath, sealedSecretYaml)
+
+    // Build a content object for the AplRecord (used by doDeployment to update fileStore)
+    const content = {
+      apiVersion: 'apl.io/v1',
+      kind: 'AplUser',
+      metadata: { name: user.id },
+      spec: { id: user.id, email: user.email, teams: user.teams || [] },
+    } as unknown as AplObject
+
+    return { filePath: sealedSecretPath, content }
   }
 
   async deleteUserFile(userId: string): Promise<void> {
