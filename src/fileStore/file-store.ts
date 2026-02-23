@@ -250,32 +250,82 @@ export class FileStore {
 
   getAllNamespaceResourcesByKind(kind: AplKind): Map<string, AplObject> {
     const fileMap = getFileMapForKind(kind)
-    if (!fileMap) {
-      throw new Error(`Unknown kind: ${kind}`)
-    }
+    if (!fileMap) throw new Error(`Unknown kind: ${kind}`)
 
-    // Expect a namespace-scoped template like:
-    // 'env/namespaces/{namespace}/sealedsecrets/{name}.yaml'
     const parts = fileMap.pathTemplate.split('{namespace}')
     if (parts.length < 2) {
       throw new Error(`Kind ${kind} is not namespace-scoped (missing {namespace} in pathTemplate)`)
     }
 
-    // Extract resource path segment from template
-    // e.g. 'env/namespaces/{namespace}/sealedsecrets/{name}.yaml' -> '/sealedsecrets'
-    const resourcePath = parts[1].replace('/{name}.yaml', '')
+    // parts[0] => 'env/namespaces/'
+    const namespacePrefix = parts[0]
+
+    // parts[1] => '/sealedsecrets/{name}.yaml'  -> '/sealedsecrets/'
+    const resourceDir = parts[1].replace('{name}.yaml', '') // keeps trailing slash
+
     const result = new Map<string, AplObject>()
 
-    // Match any path containing this resource segment
-    // e.g. matches 'env/namespaces/*/sealedsecrets/*.yaml'
     for (const filePath of this.store.keys()) {
-      if (filePath.includes(resourcePath) && filePath.endsWith('.yaml')) {
-        const content = this.store.get(filePath)
-        if (content) result.set(filePath, content)
-      }
+      if (!filePath.startsWith(namespacePrefix)) continue
+      if (!filePath.includes(resourceDir)) continue
+      if (!filePath.endsWith('.yaml')) continue
+
+      const content = this.store.get(filePath)
+      if (content) result.set(filePath, content)
     }
 
     return result
+  }
+
+  getNamespaceResourcesByKind(kind: AplKind, namespace: string): Map<string, AplObject> {
+    const fileMap = getFileMapForKind(kind)
+    if (!fileMap) throw new Error(`Unknown kind: ${kind}`)
+
+    const parts = fileMap.pathTemplate.split('{namespace}')
+    if (parts.length < 2) {
+      throw new Error(`Kind ${kind} is not namespace-scoped (missing {namespace} in pathTemplate)`)
+    }
+
+    const namespacePrefix = parts[0] // 'env/namespaces/'
+    const resourceDir = parts[1].replace('{name}.yaml', '') // '/sealedsecrets/'
+
+    const result = new Map<string, AplObject>()
+
+    // Only match this namespace:
+    // env/namespaces/{namespace}/sealedsecrets/*.yaml
+    const requiredPrefix = `${namespacePrefix}${namespace}${resourceDir}`
+
+    for (const filePath of this.store.keys()) {
+      if (!filePath.startsWith(requiredPrefix)) continue
+      if (!filePath.endsWith('.yaml')) continue
+
+      const content = this.store.get(filePath)
+      if (content) result.set(filePath, content)
+    }
+
+    return result
+  }
+
+  // Return namespaces that contain at least one sealedsecret
+  getNamespacesWithSealedSecrets(): string[] {
+    const prefix = 'env/namespaces/'
+    const segment = '/sealedsecrets/'
+
+    const namespaces = new Set<string>()
+
+    for (const filePath of this.store.keys()) {
+      if (!filePath.startsWith(prefix)) continue
+      if (!filePath.includes(segment)) continue
+      if (!filePath.endsWith('.yaml')) continue
+
+      // env/namespaces/{namespace}/sealedsecrets/{name}.yaml
+      const match = filePath.match(/^env\/namespaces\/([^/]+)\//)
+      const namespace = match?.[1]
+
+      if (namespace) namespaces.add(namespace)
+    }
+
+    return Array.from(namespaces)
   }
 
   getTeamResourcesByKindAndTeamId(kind: AplKind, teamId: string): Map<string, AplObject> {

@@ -871,7 +871,7 @@ export default class OtomiStack {
   async saveNamespaceSealedSecret(namespace: string, data: SealedSecretManifestRequest): Promise<AplRecord> {
     debug(`Saving sealed secrets for namsapce: ${namespace}`)
     const { metadata } = data
-    const sealedSecretChartValues = sealedSecretManifest('team-admin', data)
+    const sealedSecretChartValues = sealedSecretManifest('team-admin', data, namespace)
     const aplRecord = this.fileStore.set(
       getNamespaceSealedSecretsValuesFilePath(namespace, metadata.name),
       sealedSecretChartValues,
@@ -2443,21 +2443,31 @@ export default class OtomiStack {
     })
   }
 
+  getNamespacesWithSealedSecrets(): string[] {
+    return this.fileStore.getNamespacesWithSealedSecrets()
+  }
+
   getAllAplNamespaceSealedSecrets(): SealedSecretManifestResponse[] {
     const files = this.fileStore.getAllNamespaceResourcesByKind('AplNamespaceSealedSecret')
 
     return Array.from(files.entries()).map(([filePath, secret]) => {
       const manifest = secret as SealedSecretManifestResponse
 
-      // Extract namespace from path:
-      // env/namespaces/{namespace}/sealedsecrets/{name}.yaml
-      const match = filePath.match(/env\/namespaces\/([^/]+)\//)
+      // strict match: env/namespaces/{namespace}/...
+      const match = filePath.match(/^env\/namespaces\/([^/]+)\//)
       const namespace = match?.[1]
 
-      if (namespace) {
-        set(manifest, 'spec.template.metadata.namespace', namespace)
-      }
+      if (namespace) set(manifest, 'spec.template.metadata.namespace', namespace)
+      return manifest
+    })
+  }
 
+  getAplNamespaceSealedSecrets(namespace: string): SealedSecretManifestResponse[] {
+    const files = this.fileStore.getNamespaceResourcesByKind('AplNamespaceSealedSecret', namespace)
+
+    return Array.from(files.values()).map((secret) => {
+      const manifest = secret as SealedSecretManifestResponse
+      set(manifest, 'spec.template.metadata.namespace', namespace)
       return manifest
     })
   }

@@ -10,8 +10,8 @@ const debug = Debug('otomi:api:v2:namespaces:sealedsecrets')
  */
 export const getAplNamespaceSealedSecrets = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { namespace } = req.params
-  debug(`gertAplNamespaceSealedSecrets(${namespace}, ...)`)
-  const v = await req.otomi.getAllAplNamespaceSealedSecrets()
+  debug(`getAplNamespaceSealedSecrets(${namespace}, ...)`)
+  const v = await req.otomi.getAplNamespaceSealedSecrets(decodeURIComponent(namespace))
   res.json(v)
 }
 
