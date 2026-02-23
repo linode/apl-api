@@ -31,6 +31,8 @@ AplCatalogChartSpec:
         type: string
       chart:
         type: object
+      chartsPath:
+        type: string
   required:
     - name
     - version

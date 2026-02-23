@@ -1591,7 +1591,7 @@ export default class OtomiStack {
     branch: string,
     teamId?: string,
     chartsPath?: string,
-  ): Promise<{ url: string; helmCharts: any; catalog: any }> {
+  ): Promise<{ url: string; helmCharts: any; catalog: any; chartsPath?: string }> {
     const { cluster } = this.getSettings(['cluster'])
     try {
       const { helmCharts, catalog } = await fetchWorkloadCatalog(
@@ -1602,10 +1602,10 @@ export default class OtomiStack {
         teamId,
         chartsPath,
       )
-      return { url, helmCharts, catalog }
+      return { url, helmCharts, catalog, chartsPath }
     } catch (error) {
       debug('Error fetching workload catalog')
-      return { url, helmCharts: [], catalog: [] }
+      return { url, helmCharts: [], catalog: [], chartsPath }
     } finally {
       if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
     }
@@ -1682,7 +1682,7 @@ export default class OtomiStack {
     branch: string,
     catalogName: string,
     chartsPath?: string,
-  ): Promise<{ url: string; helmCharts: any; catalog: any }> {
+  ): Promise<{ url: string; helmCharts: any; catalog: any; chartsPath?: string }> {
     const uuid = uuidv4()
     const helmChartsDir = `/tmp/otomi/charts/${catalogName}/${branch}/charts/${uuid}`
 
