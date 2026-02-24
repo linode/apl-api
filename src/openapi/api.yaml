@@ -1524,6 +1524,7 @@ paths:
         description: Id of the team
         schema:
           type: string
+          pattern: '^[a-z0-9-]+$'
     get:
       operationId: connectAplCloudtty
       x-eov-operation-handler: v2/cloudtty
@@ -1556,6 +1557,7 @@ paths:
         description: Id of the team
         schema:
           type: string
+          pattern: '^[a-z0-9-]+$'
     get:
       operationId: connectCloudtty
       x-eov-operation-handler: v1/cloudtty
