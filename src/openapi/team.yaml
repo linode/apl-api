@@ -40,7 +40,7 @@ TeamSelfService:
         - downloadDockerLogin
   x-acl:
     platformAdmin: [read-any, update-any]
-    teamAdmin: [read]
+    teamAdmin: [read, update]
     teamMember: [read]
 
 Team:
@@ -63,10 +63,6 @@ Team:
     password:
       type: string
       writeOnly: true
-      x-acl:
-        platformAdmin: [read-any, update-any]
-        teamAdmin: []
-        teamMember: []
     managedMonitoring:
       title: Managed monitoring
       description: 'Activate a platform managed Grafana or Alertmanager instance.'
@@ -127,10 +123,6 @@ AplTeamSpec:
     password:
       type: string
       writeOnly: true
-      x-acl:
-        platformAdmin: [read-any, update-any]
-        teamAdmin: []
-        teamMember: []
     managedMonitoring:
       title: Managed monitoring
       description: 'Activate a platform managed Grafana or Alertmanager instance.'
