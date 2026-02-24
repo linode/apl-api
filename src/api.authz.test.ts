@@ -15,6 +15,7 @@ import { FileStore } from './fileStore/file-store'
 const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
 const teamMemberToken = getToken(['team-team1'])
+const team2MemberToken = getToken(['team-team2'])
 const userToken = getToken([])
 const teamId = 'team1'
 const otherTeamId = 'team2'
@@ -59,6 +60,7 @@ describe('API authz tests', () => {
           teamMembers: {
             downloadKubeconfig: true,
             downloadDockerLogin: true,
+            createServices: true,
             editSecurityPolicies: true,
           },
         },
@@ -77,6 +79,7 @@ describe('API authz tests', () => {
           teamMembers: {
             downloadKubeconfig: true,
             downloadDockerLogin: true,
+            createServices: false,
           },
         },
       },
@@ -963,6 +966,24 @@ describe('API authz tests', () => {
     test('anonymous user cannot get dockerconfig', async () => {
       await agent.get(`/v1/dockerconfig/${teamId}`).expect(401)
     })
+  })
+
+  test('team member cannot create its own services when disabled', async () => {
+    jest.spyOn(otomiStack, 'createService').mockResolvedValue({} as any)
+    await agent
+      .post('/v1/teams/team2/services')
+      .send({
+        name: 'newservice',
+        serviceType: 'ksvcPredeployed',
+        ingress: { type: 'cluster' },
+        networkPolicy: {
+          ingressPrivate: { mode: 'DenyAll' },
+        },
+      })
+      .set('Content-Type', 'application/json')
+      .set('Authorization', `Bearer ${team2MemberToken}`)
+      .expect(403)
+      .expect('Content-Type', /json/)
   })
 
   test('team member cannot access settings', async () => {
