@@ -2262,7 +2262,7 @@ export default class OtomiStack {
     data: SealedSecretManifestRequest,
   ): Promise<SealedSecretManifestResponse> {
     if (data.metadata.name.length < 2) throw new ValidationError('Secret name must be at least 2 characters long')
-    if (this.fileStore.getNamespaceResource('AplNamespaceSealedSecret', namespace, data.metadata.name)) {
+    if (this.fileStore.getNamespaceResource('AplNamespaceSealedSecret', data.metadata.name, namespace)) {
       throw new AlreadyExists('SealedSecret name already exists')
     }
     const aplRecord = await this.saveNamespaceSealedSecret(namespace, data)
@@ -2416,7 +2416,7 @@ export default class OtomiStack {
   }
 
   async getAplNamespaceSealedSecret(namespace: string, name: string): Promise<SealedSecretManifestResponse> {
-    const sealedSecret = this.fileStore.getNamespaceResource('AplNamespaceSealedSecret', namespace, name)
+    const sealedSecret = this.fileStore.getNamespaceResource('AplNamespaceSealedSecret', name, namespace)
     if (!sealedSecret) {
       throw new NotExistError(`SealedSecret ${name} not found in namespace ${namespace}`)
     }
