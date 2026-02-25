@@ -5,10 +5,13 @@ import { cleanEnv } from 'src/validators'
 import { ValidationError } from '../error'
 import { getSealedSecretsCertificate } from '../k8s_operations'
 
-const env = cleanEnv({})
-export function sealedSecretManifest(teamId: string, data: SealedSecretManifestRequest): SealedSecretManifestResponse {
+export function sealedSecretManifest(
+  teamId: string,
+  data: SealedSecretManifestRequest,
+  namespaceParam?: string,
+): SealedSecretManifestResponse {
   const { annotations, labels, finalizers } = data.spec?.template?.metadata || {}
-  const namespace = `team-${teamId}`
+  const namespace = namespaceParam ?? `team-${teamId}`
 
   return {
     apiVersion: 'bitnami.com/v1alpha1',
