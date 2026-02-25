@@ -116,6 +116,7 @@ export const APL_KINDS = [
   'AplPlatformSettingSet',
   'AkamaiKnowledgeBase',
   'AkamaiAgent',
+  'AplNamespaceSealedSecret',
   'AplTeamCodeRepo',
   'AplTeamBuild',
   'AplTeamPolicy',

@@ -197,6 +197,10 @@ function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: s
   return `env/teams/${teamId}/sealedsecrets/${sealedSecretsName}.yaml`
 }
 
+function getNamespaceSealedSecretsValuesFilePath(namespace: string, sealedSecretsName: string): string {
+  return `env/namespaces/${namespace}/sealedsecrets/${sealedSecretsName}.yaml`
+}
+
 function getTeamWorkloadValuesManagedFilePath(teamId: string, workloadName: string): string {
   return `env/teams/${teamId}/workloadValues/${workloadName}.managed.yaml`
 }
@@ -891,6 +895,19 @@ export default class OtomiStack {
     const sealedSecretChartValues = sealedSecretManifest(teamId, data)
     const aplRecord = this.fileStore.set(
       getTeamSealedSecretsValuesFilePath(teamId, metadata.name),
+      sealedSecretChartValues,
+    )
+    await this.git.writeFile(aplRecord.filePath, sealedSecretChartValues as any)
+
+    return aplRecord
+  }
+
+  async saveNamespaceSealedSecret(namespace: string, data: SealedSecretManifestRequest): Promise<AplRecord> {
+    debug(`Saving sealed secrets for namsapce: ${namespace}`)
+    const { metadata } = data
+    const sealedSecretChartValues = sealedSecretManifest('team-admin', data, namespace)
+    const aplRecord = this.fileStore.set(
+      getNamespaceSealedSecretsValuesFilePath(namespace, metadata.name),
       sealedSecretChartValues,
     )
     await this.git.writeFile(aplRecord.filePath, sealedSecretChartValues as any)
@@ -2285,6 +2302,19 @@ export default class OtomiStack {
     return aplRecord.content as unknown as SealedSecretManifestResponse
   }
 
+  async createAplNamespaceSealedSecret(
+    namespace: string,
+    data: SealedSecretManifestRequest,
+  ): Promise<SealedSecretManifestResponse> {
+    if (data.metadata.name.length < 2) throw new ValidationError('Secret name must be at least 2 characters long')
+    if (this.fileStore.getNamespaceResource('AplNamespaceSealedSecret', data.metadata.name, namespace)) {
+      throw new AlreadyExists('SealedSecret name already exists')
+    }
+    const aplRecord = await this.saveNamespaceSealedSecret(namespace, data)
+    await this.doDeployment(aplRecord)
+    return aplRecord.content as unknown as SealedSecretManifestResponse
+  }
+
   async editSealedSecret(teamId: string, name: string, data: SealedSecret): Promise<SealedSecret> {
     // Convert V1 format to SealedSecretManifestRequest
     const request: DeepPartial<SealedSecretManifestRequest> = {
@@ -2354,8 +2384,59 @@ export default class OtomiStack {
     return aplRecord.content as unknown as SealedSecretManifestResponse
   }
 
+  async editAplNamespaceSealedSecret(
+    namespace: string,
+    name: string,
+    data: DeepPartial<SealedSecretManifestRequest>,
+    patch = false,
+  ): Promise<SealedSecretManifestResponse> {
+    const existing = await this.getAplNamespaceSealedSecret(namespace, name)
+
+    let updatedRequest: SealedSecretManifestRequest
+    if (patch) {
+      // Merge mode: merge encryptedData
+      updatedRequest = {
+        kind: 'SealedSecret',
+        metadata: { name },
+        spec: {
+          encryptedData: merge(
+            cloneDeep(existing.spec.encryptedData || {}),
+            (data.spec?.encryptedData || {}) as Record<string, string>,
+          ),
+          template: (data.spec?.template ?? existing.spec.template) as SealedSecretManifestRequest['spec']['template'],
+        },
+      }
+    } else {
+      // Replace mode: use provided encryptedData or existing
+      updatedRequest = {
+        kind: 'SealedSecret',
+        metadata: { name },
+        spec: {
+          encryptedData: ((data.spec?.encryptedData ?? existing.spec.encryptedData) || {}) as Record<string, string>,
+          template: {
+            type: data.spec?.template?.type ?? existing.spec.template?.type,
+            immutable: data.spec?.template?.immutable ?? existing.spec.template?.immutable,
+            metadata: (data.spec?.template?.metadata ?? existing.spec.template?.metadata) as
+              | { annotations?: Record<string, string>; labels?: Record<string, string>; finalizers?: string[] }
+              | undefined,
+          },
+        },
+      }
+    }
+
+    const aplRecord = await this.saveNamespaceSealedSecret(namespace, updatedRequest)
+    await this.doDeployment(aplRecord)
+    return aplRecord.content as unknown as SealedSecretManifestResponse
+  }
+
   async deleteSealedSecret(teamId: string, name: string): Promise<void> {
     const filePath = this.fileStore.deleteTeamResource('SealedSecret', teamId, name)
+    await this.git.removeFile(filePath)
+    await this.doDeleteDeployment([filePath])
+  }
+
+  async deleteAplNamespaceSealedSecret(namespace: string, name: string): Promise<void> {
+    const filePath = this.fileStore.deleteNamespaceResource('AplNamespaceSealedSecret', namespace, name)
     await this.git.removeFile(filePath)
     await this.doDeleteDeployment([filePath])
   }
@@ -2379,6 +2460,14 @@ export default class OtomiStack {
     return ensureSealedSecretMetadata(sealedSecret as SealedSecretManifestResponse, teamId)
   }
 
+  async getAplNamespaceSealedSecret(namespace: string, name: string): Promise<SealedSecretManifestResponse> {
+    const sealedSecret = this.fileStore.getNamespaceResource('AplNamespaceSealedSecret', name, namespace)
+    if (!sealedSecret) {
+      throw new NotExistError(`SealedSecret ${name} not found in namespace ${namespace}`)
+    }
+    return ensureSealedSecretMetadata(sealedSecret as SealedSecretManifestResponse, 'team-admin')
+  }
+
   getAllSealedSecrets(): SealedSecret[] {
     return this.getAllAplSealedSecrets().map((manifest) => ({
       name: manifest.metadata.name,
@@ -2396,6 +2485,35 @@ export default class OtomiStack {
       // Derive teamId from namespace (format: team-{teamId})
       const teamId = manifest.metadata.namespace?.replace(/^team-/, '') || manifest.metadata.labels?.['apl.io/teamId']
       return teamId ? ensureSealedSecretMetadata(manifest, teamId) : manifest
+    })
+  }
+
+  getNamespacesWithSealedSecrets(): string[] {
+    return this.fileStore.getNamespacesWithSealedSecrets()
+  }
+
+  getAllAplNamespaceSealedSecrets(): SealedSecretManifestResponse[] {
+    const files = this.fileStore.getAllNamespaceResourcesByKind('AplNamespaceSealedSecret')
+
+    return Array.from(files.entries()).map(([filePath, secret]) => {
+      const manifest = secret as SealedSecretManifestResponse
+
+      // strict match: env/namespaces/{namespace}/...
+      const match = filePath.match(/^env\/namespaces\/([^/]+)\//)
+      const namespace = match?.[1]
+
+      if (namespace) set(manifest, 'spec.template.metadata.namespace', namespace)
+      return manifest
+    })
+  }
+
+  getAplNamespaceSealedSecrets(namespace: string): SealedSecretManifestResponse[] {
+    const files = this.fileStore.getNamespaceResourcesByKind('AplNamespaceSealedSecret', namespace)
+
+    return Array.from(files.values()).map((secret) => {
+      const manifest = secret as SealedSecretManifestResponse
+      set(manifest, 'spec.template.metadata.namespace', namespace)
+      return manifest
     })
   }
 

@@ -179,6 +179,14 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
     name: 'sealedsecrets',
   })
 
+  maps.set('AplNamespaceSealedSecret', {
+    kind: 'SealedSecret',
+    envDir,
+    pathGlob: `${envDir}/env/namespaces/*/sealedsecrets/*.yaml`,
+    pathTemplate: 'env/namespaces/{namespace}/sealedsecrets/{name}.yaml',
+    name: 'sealedsecrets',
+  })
+
   maps.set('AkamaiKnowledgeBase', {
     kind: 'AkamaiKnowledgeBase',
     envDir,
@@ -240,6 +248,26 @@ export function getResourceFilePath(kind: AplKind, name: string, teamId?: string
   }
 
   return fileMap.pathTemplate.replace('{teamId}', teamId || '').replace('{name}', name)
+}
+
+export function getNamespaceResourceFilePath(kind: AplKind, name: string, namespace: string): string {
+  const fileMap = getFileMapForKind(kind)
+  if (!fileMap) {
+    throw new Error(`Unknown kind: ${kind}`)
+  }
+
+  return fileMap.pathTemplate.replace('{namespace}', namespace || '').replace('{name}', name)
+}
+
+// Derive secret file path from main file path
+// e.g., 'env/teams/demo/settings.yaml' -> 'env/teams/demo/secrets.settings.yaml'
+// e.g., 'env/apps/harbor.yaml' -> 'env/apps/secrets.harbor.yaml'
+export function getSecretFilePath(mainFilePath: string): string {
+  const parts = mainFilePath.split('/')
+  const filename = parts[parts.length - 1]
+  const dir = parts.slice(0, -1).join('/')
+
+  return `${dir}/secrets.${filename}`
 }
 
 // Get all FileMap entries that are settings (env/settings/*)
