@@ -836,7 +836,121 @@ paths:
           $ref: '#/components/responses/NotFound'
         '200':
           description: Successfully deleted a team sealed secret
-
+  '/v2/namespaces':
+    get:
+      operationId: getNamespacesWithSealedSecrets
+      x-eov-operation-handler: v2/namespaces/namespaces
+      description: Get namespaces that contain sealed secrets
+      responses:
+        '200':
+          description: List of namespaces
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  '/v2/namespaces/{namespace}/sealedsecrets':
+    parameters:
+      - $ref: '#/components/parameters/namespaceParams'
+    get:
+      operationId: getAplNamespaceSealedSecrets
+      x-eov-operation-handler: v2/namespaces/{namespace}/sealedsecrets
+      description: Get sealed secrets from a given namespace
+      x-aclSchema: SealedSecret
+      responses:
+        '200':
+          description: Successfully obtained sealed secrets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SealedSecretManifestResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenApiValidationError'
+    post:
+      operationId: createAplNamespaceSealedSecret
+      x-eov-operation-handler: v2/namespaces/{namespace}/sealedsecrets
+      description: Create a namespace sealed secret
+      x-aclSchema: SealedSecret
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SealedSecretManifestRequest'
+        description: SealedSecret object
+        required: true
+      responses:
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/OtomiStackError'
+        '200':
+          description: Successfully stored sealed secret configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SealedSecretManifestResponse'
+  '/v2/namespaces/{namespace}/sealedsecrets/{sealedSecretName}':
+    parameters:
+      - $ref: '#/components/parameters/namespaceParams'
+      - $ref: '#/components/parameters/sealedSecretParams'
+    get:
+      operationId: getAplNamespaceSealedSecret
+      x-eov-operation-handler: v2/namespaces/{namespace}/sealedsecrets/{sealedSecretName}
+      description: Get a sealed secret from a given namespace
+      x-aclSchema: SealedSecret
+      responses:
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '200':
+          description: Successfully obtained sealed secret configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SealedSecretManifestResponse'
+    put:
+      operationId: editAplNamespaceSealedSecret
+      x-eov-operation-handler: v2/namespaces/{namespace}/sealedsecrets/{sealedSecretName}
+      description: Edit a sealed secret from a given namespace
+      x-aclSchema: SealedSecret
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SealedSecretManifestRequest'
+        description: SealedSecret object that contains updated values
+        required: true
+      responses:
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '200':
+          description: Successfully edited a namespace sealed secret
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SealedSecretManifestResponse'
+    delete:
+      operationId: deleteAplNamespaceSealedSecret
+      x-eov-operation-handler: v2/namespaces/{namespace}/sealedsecrets/{sealedSecretName}
+      description: Delete a sealed secret from a given namespace
+      x-aclSchema: SealedSecret
+      responses:
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '200':
+          description: Successfully deleted a namespace sealed secret
   '/v1/netpols':
     get:
       operationId: getAllNetpols
@@ -2890,6 +3004,13 @@ components:
       name: teamId
       in: path
       description: ID of team
+      required: true
+      schema:
+        type: string
+    namespaceParams:
+      name: namespace
+      in: path
+      description: Namspace to write file under in manifest
       required: true
       schema:
         type: string
