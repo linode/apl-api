@@ -412,14 +412,22 @@ async function processChartFolder(
 
   try {
     const values = await safeReadTextFile(helmChartsDir, `${folder}/values.yaml`)
-    const valuesSchema = await safeReadTextFile(helmChartsDir, `${folder}/values.schema.json`)
+
+    let valuesSchema = '{}'
+    try {
+      const schemaContent = await safeReadTextFile(helmChartsDir, `${folder}/values.schema.json`)
+      valuesSchema = schemaContent || '{}'
+    } catch {
+      // values.schema.json is optional
+    }
+
     const chart = await safeReadTextFile(helmChartsDir, `${folder}/Chart.yaml`)
     const chartMetadata = YAML.parse(chart)
 
     return {
       name: folder,
       values: values || '{}',
-      valuesSchema: valuesSchema || '{}',
+      valuesSchema,
       icon: chartMetadata?.icon,
       chartVersion: chartMetadata?.version,
       chartDescription: chartMetadata?.description,
