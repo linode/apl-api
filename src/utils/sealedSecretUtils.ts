@@ -1,9 +1,11 @@
 import { X509Certificate } from 'crypto'
 import { isEmpty } from 'lodash'
 import { SealedSecretManifestRequest, SealedSecretManifestResponse } from 'src/otomi-models'
+import { cleanEnv } from 'src/validators'
 import { ValidationError } from '../error'
 import { getSealedSecretsCertificate } from '../k8s_operations'
 
+const env = cleanEnv({})
 export function sealedSecretManifest(teamId: string, data: SealedSecretManifestRequest): SealedSecretManifestResponse {
   const { annotations, labels, finalizers } = data.spec?.template?.metadata || {}
   const namespace = `team-${teamId}`
@@ -78,7 +80,7 @@ function getPEM(certificate): string {
 
 export async function getSealedSecretsPEM(): Promise<string> {
   try {
-    if (process.env.NODE_ENV?.toString() === 'development') return ''
+    if (env.isDev) return ''
     else {
       const certificate = await getSealedSecretsCertificate()
       if (!certificate) {
