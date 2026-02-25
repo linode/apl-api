@@ -2,11 +2,13 @@ import { X509Certificate } from 'crypto'
 import Debug from 'debug'
 import { isEmpty } from 'lodash'
 import { SealedSecretManifestRequest, SealedSecretManifestResponse, User } from 'src/otomi-models'
+import { cleanEnv } from 'src/validators'
 import { stringify as stringifyYaml } from 'yaml'
 import { ValidationError } from '../error'
 import { getSealedSecretsCertificate } from '../k8s_operations'
 
 const debug = Debug('otomi:sealedSecretUtils')
+const env = cleanEnv({})
 
 export function sealedSecretManifest(
   teamId: string,
@@ -86,15 +88,16 @@ function getPEM(certificate): string {
 
 export async function getSealedSecretsPEM(): Promise<string> {
   try {
-    const certificate = await getSealedSecretsCertificate()
-    if (!certificate) {
-      if (process.env.NODE_ENV === 'development') return ''
-      throw new ValidationError('SealedSecrets certificate not found')
+    if (env.isDev) return ''
+    else {
+      const certificate = await getSealedSecretsCertificate()
+      if (!certificate) {
+        throw new ValidationError('SealedSecrets certificate not found')
+      }
+      return getPEM(certificate)
     }
-    return getPEM(certificate)
   } catch (error) {
     console.error('Error fetching SealedSecrets certificate:', error)
-    if (process.env.NODE_ENV === 'development') return ''
     throw new ValidationError('SealedSecrets certificate not found')
   }
 }

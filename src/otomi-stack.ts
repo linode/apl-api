@@ -1652,7 +1652,8 @@ export default class OtomiStack {
     helmChartsDir: string,
     branch: string,
     teamId?: string,
-  ): Promise<{ url: string; helmCharts: any; catalog: any }> {
+    chartsPath?: string,
+  ): Promise<{ url: string; helmCharts: any; catalog: any; chartsPath?: string }> {
     const { cluster } = this.getSettings(['cluster'])
     try {
       const { helmCharts, catalog } = await fetchWorkloadCatalog(
@@ -1661,11 +1662,12 @@ export default class OtomiStack {
         branch,
         cluster?.domainSuffix,
         teamId,
+        chartsPath,
       )
-      return { url, helmCharts, catalog }
+      return { url, helmCharts, catalog, chartsPath }
     } catch (error) {
       debug('Error fetching workload catalog')
-      throw new OtomiError(404, 'No helm chart catalog found!')
+      return { url, helmCharts: [], catalog: [], chartsPath }
     } finally {
       if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
     }
@@ -1741,17 +1743,23 @@ export default class OtomiStack {
     url: string,
     branch: string,
     catalogName: string,
-  ): Promise<{ url: string; helmCharts: any; catalog: any }> {
+    chartsPath?: string,
+  ): Promise<{ url: string; helmCharts: any; catalog: any; chartsPath?: string }> {
     const uuid = uuidv4()
     const helmChartsDir = `/tmp/otomi/charts/${catalogName}/${branch}/charts/${uuid}`
 
-    return this.fetchCatalog(url, helmChartsDir, branch)
+    return this.fetchCatalog(url, helmChartsDir, branch, undefined, chartsPath)
   }
 
   async getAplCatalogCharts(name: string): Promise<{ url: string; helmCharts: any; catalog: any; branch: string }> {
     const catalog = this.getAplCatalog(name)
-    const { repositoryUrl, branch, name: catalogName } = catalog.spec
-    const charts = await this.getBYOWorkloadCatalog(repositoryUrl, branch, catalogName)
+    const { repositoryUrl, branch, name: catalogName, chartsPath } = catalog.spec
+    const charts = await this.getBYOWorkloadCatalog(
+      repositoryUrl,
+      branch,
+      catalogName,
+      chartsPath as string | undefined,
+    )
     return { ...charts, branch }
   }
 
@@ -2315,6 +2323,19 @@ export default class OtomiStack {
     return aplRecord.content as unknown as SealedSecretManifestResponse
   }
 
+  async createAplNamespaceSealedSecret(
+    namespace: string,
+    data: SealedSecretManifestRequest,
+  ): Promise<SealedSecretManifestResponse> {
+    if (data.metadata.name.length < 2) throw new ValidationError('Secret name must be at least 2 characters long')
+    if (this.fileStore.getNamespaceResource('AplNamespaceSealedSecret', data.metadata.name, namespace)) {
+      throw new AlreadyExists('SealedSecret name already exists')
+    }
+    const aplRecord = await this.saveNamespaceSealedSecret(namespace, data)
+    await this.doDeployment(aplRecord, false)
+    return aplRecord.content as unknown as SealedSecretManifestResponse
+  }
+
   async editSealedSecret(teamId: string, name: string, data: SealedSecret): Promise<SealedSecret> {
     // Convert V1 format to SealedSecretManifestRequest
     const request: DeepPartial<SealedSecretManifestRequest> = {
@@ -2426,6 +2447,51 @@ export default class OtomiStack {
 
     const aplRecord = await this.saveNamespaceSealedSecret(namespace, updatedRequest)
     await this.doDeployment(aplRecord)
+    return aplRecord.content as unknown as SealedSecretManifestResponse
+  }
+
+  async editAplNamespaceSealedSecret(
+    namespace: string,
+    name: string,
+    data: DeepPartial<SealedSecretManifestRequest>,
+    patch = false,
+  ): Promise<SealedSecretManifestResponse> {
+    const existing = await this.getAplNamespaceSealedSecret(namespace, name)
+
+    let updatedRequest: SealedSecretManifestRequest
+    if (patch) {
+      // Merge mode: merge encryptedData
+      updatedRequest = {
+        kind: 'SealedSecret',
+        metadata: { name },
+        spec: {
+          encryptedData: merge(
+            cloneDeep(existing.spec.encryptedData || {}),
+            (data.spec?.encryptedData || {}) as Record<string, string>,
+          ),
+          template: (data.spec?.template ?? existing.spec.template) as SealedSecretManifestRequest['spec']['template'],
+        },
+      }
+    } else {
+      // Replace mode: use provided encryptedData or existing
+      updatedRequest = {
+        kind: 'SealedSecret',
+        metadata: { name },
+        spec: {
+          encryptedData: ((data.spec?.encryptedData ?? existing.spec.encryptedData) || {}) as Record<string, string>,
+          template: {
+            type: data.spec?.template?.type ?? existing.spec.template?.type,
+            immutable: data.spec?.template?.immutable ?? existing.spec.template?.immutable,
+            metadata: (data.spec?.template?.metadata ?? existing.spec.template?.metadata) as
+              | { annotations?: Record<string, string>; labels?: Record<string, string>; finalizers?: string[] }
+              | undefined,
+          },
+        },
+      }
+    }
+
+    const aplRecord = await this.saveNamespaceSealedSecret(namespace, updatedRequest)
+    await this.doDeployment(aplRecord, false)
     return aplRecord.content as unknown as SealedSecretManifestResponse
   }
 
