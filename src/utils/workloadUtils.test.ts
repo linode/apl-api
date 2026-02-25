@@ -28,6 +28,7 @@ jest.mock('fs/promises', () => ({
 }))
 jest.mock('fs', () => ({
   existsSync: jest.fn(),
+  lstatSync: jest.fn(),
   mkdirSync: jest.fn(),
   renameSync: jest.fn(),
   rmSync: jest.fn(),
@@ -577,6 +578,7 @@ describe('fetchWorkloadCatalog', () => {
     jest.clearAllMocks()
     process.env = { ...originalEnv, GIT_USER: 'git-user', GIT_PASSWORD: 'git-password' }
     ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+    ;(fs.lstatSync as jest.Mock).mockReturnValue({ isDirectory: () => true })
 
     // Mock directory structure
     ;(fsPromises.readdir as jest.Mock).mockResolvedValue(['.git', 'chart1', 'chart2', 'README.md', 'rbac.yaml'])
@@ -727,6 +729,33 @@ describe('fetchWorkloadCatalog', () => {
     // Should include charts in the catalog
     expect(result.helmCharts).toEqual(['chart1'])
     expect(result.catalog).toHaveLength(1)
+  })
+
+  test('returns empty results when chartsPath resolves outside helmChartsDir', async () => {
+    const mockGit = {
+      clone: jest.fn().mockResolvedValue(undefined),
+    }
+    ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+    ;(fs.existsSync as jest.Mock).mockReturnValue(true)
+
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, 'admin', '../outside')
+
+    expect(result).toEqual({ helmCharts: [], catalog: [] })
+    expect(fsPromises.readdir).not.toHaveBeenCalled()
+  })
+
+  test('returns empty results when chartsPath points to a file', async () => {
+    const mockGit = {
+      clone: jest.fn().mockResolvedValue(undefined),
+    }
+    ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+    ;(fs.existsSync as jest.Mock).mockReturnValue(true)
+    ;(fs.lstatSync as jest.Mock).mockReturnValue({ isDirectory: () => false })
+
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, 'admin', 'Chart.yaml')
+
+    expect(result).toEqual({ helmCharts: [], catalog: [] })
+    expect(fsPromises.readdir).not.toHaveBeenCalled()
   })
 })
 

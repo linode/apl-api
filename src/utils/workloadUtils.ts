@@ -1,6 +1,6 @@
 import axios from 'axios'
 import Debug from 'debug'
-import { existsSync, mkdirSync, renameSync, rmSync } from 'fs'
+import { existsSync, lstatSync, mkdirSync, renameSync, rmSync } from 'fs'
 import { readFile } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
 import path from 'path'
@@ -457,6 +457,7 @@ async function getChartFolders(helmChartsDir: string): Promise<string[]> {
  * @param branch - Git branch to checkout (defaults to 'main')
  * @param clusterDomainSuffix - Cluster domain suffix for internal Gitea URL detection
  * @param teamId - Optional team ID for RBAC filtering. If not provided, all charts are returned
+ * @param chartsPath - Optional subdirectory path where charts are located (e.g., 'charts' or 'helm-charts')
  */
 export async function fetchWorkloadCatalog(
   url: string,
@@ -464,20 +465,55 @@ export async function fetchWorkloadCatalog(
   branch: string = 'main',
   clusterDomainSuffix?: string,
   teamId?: string,
+  chartsPath?: string,
 ): Promise<{ helmCharts: string[]; catalog: any[] }> {
+  const resolvedHelmChartsDir = path.resolve(helmChartsDir)
+
   // Ensure directory exists
-  if (!existsSync(helmChartsDir)) mkdirSync(helmChartsDir, { recursive: true })
+  if (!existsSync(resolvedHelmChartsDir)) mkdirSync(resolvedHelmChartsDir, { recursive: true })
 
   // Clone repository
   const gitUrl = encodeGitCredentials(url, clusterDomainSuffix)
-  const gitRepo = new chartRepo(helmChartsDir, gitUrl)
+  const gitRepo = new chartRepo(resolvedHelmChartsDir, gitUrl)
   await gitRepo.clone(branch)
 
-  // Get chart folders
-  const folders = await getChartFolders(helmChartsDir)
+  // Determine the charts directory path
+  const chartsDir = chartsPath ? path.resolve(resolvedHelmChartsDir, chartsPath) : resolvedHelmChartsDir
 
-  // Read RBAC configuration
-  const { rbac, betaCharts } = await readRbacConfig(helmChartsDir)
+  const isWithinHelmChartsDir =
+    chartsDir === resolvedHelmChartsDir || chartsDir.startsWith(`${resolvedHelmChartsDir}${path.sep}`)
+  if (!isWithinHelmChartsDir) {
+    debug(`Charts subdirectory '${chartsPath}' resolves outside '${resolvedHelmChartsDir}'`)
+    return { helmCharts: [], catalog: [] }
+  }
+
+  // Check if subdirectory exists
+  if (chartsPath && !existsSync(chartsDir)) {
+    debug(`Charts subdirectory '${chartsPath}' not found at '${url}'`)
+    return { helmCharts: [], catalog: [] }
+  }
+
+  if (chartsPath) {
+    try {
+      if (!lstatSync(chartsDir).isDirectory()) {
+        debug(`Charts path '${chartsPath}' is not a directory at '${url}'`)
+        return { helmCharts: [], catalog: [] }
+      }
+    } catch {
+      debug(`Unable to stat charts subdirectory '${chartsPath}' at '${url}'`)
+      return { helmCharts: [], catalog: [] }
+    }
+  }
+
+  // Get chart folders
+  const folders = await getChartFolders(chartsDir)
+
+  // Read RBAC configuration (try chartsDir first, fallback to root)
+  let rbacConfig = await readRbacConfig(chartsDir)
+  if (!rbacConfig.rbac || Object.keys(rbacConfig.rbac).length === 0) {
+    rbacConfig = await readRbacConfig(helmChartsDir)
+  }
+  const { rbac, betaCharts } = rbacConfig
 
   // Process each chart folder
   const catalog: any[] = []
@@ -487,14 +523,14 @@ export async function fetchWorkloadCatalog(
     // Check RBAC access
     if (!isChartAccessible(folder, rbac, teamId)) continue
 
-    const catalogItem = await processChartFolder(helmChartsDir, folder, betaCharts)
+    const catalogItem = await processChartFolder(chartsDir, folder, betaCharts)
     if (catalogItem) {
       catalog.push(catalogItem)
       helmCharts.push(folder)
     }
   }
 
-  if (!catalog.length) throwChartError(`There are no directories at '${url}'`)
+  if (!catalog.length) debug(`There are no directories at '${url}'`)
 
   return { helmCharts, catalog }
 }

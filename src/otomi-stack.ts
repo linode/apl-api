@@ -1609,7 +1609,8 @@ export default class OtomiStack {
     helmChartsDir: string,
     branch: string,
     teamId?: string,
-  ): Promise<{ url: string; helmCharts: any; catalog: any }> {
+    chartsPath?: string,
+  ): Promise<{ url: string; helmCharts: any; catalog: any; chartsPath?: string }> {
     const { cluster } = this.getSettings(['cluster'])
     try {
       const { helmCharts, catalog } = await fetchWorkloadCatalog(
@@ -1618,11 +1619,12 @@ export default class OtomiStack {
         branch,
         cluster?.domainSuffix,
         teamId,
+        chartsPath,
       )
-      return { url, helmCharts, catalog }
+      return { url, helmCharts, catalog, chartsPath }
     } catch (error) {
       debug('Error fetching workload catalog')
-      throw new OtomiError(404, 'No helm chart catalog found!')
+      return { url, helmCharts: [], catalog: [], chartsPath }
     } finally {
       if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
     }
@@ -1700,17 +1702,23 @@ export default class OtomiStack {
     url: string,
     branch: string,
     catalogName: string,
-  ): Promise<{ url: string; helmCharts: any; catalog: any }> {
+    chartsPath?: string,
+  ): Promise<{ url: string; helmCharts: any; catalog: any; chartsPath?: string }> {
     const uuid = uuidv4()
     const helmChartsDir = `/tmp/otomi/charts/${catalogName}/${branch}/charts/${uuid}`
 
-    return this.fetchCatalog(url, helmChartsDir, branch)
+    return this.fetchCatalog(url, helmChartsDir, branch, undefined, chartsPath)
   }
 
   async getAplCatalogCharts(name: string): Promise<{ url: string; helmCharts: any; catalog: any; branch: string }> {
     const catalog = this.getAplCatalog(name)
-    const { repositoryUrl, branch, name: catalogName } = catalog.spec
-    const charts = await this.getBYOWorkloadCatalog(repositoryUrl, branch, catalogName)
+    const { repositoryUrl, branch, name: catalogName, chartsPath } = catalog.spec
+    const charts = await this.getBYOWorkloadCatalog(
+      repositoryUrl,
+      branch,
+      catalogName,
+      chartsPath as string | undefined,
+    )
     return { ...charts, branch }
   }
 
