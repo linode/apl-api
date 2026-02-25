@@ -305,18 +305,11 @@ export class FileStore {
 
   // Return namespaces that contain at least one sealedsecret
   getNamespacesWithSealedSecrets(): string[] {
-    const prefix = 'env/namespaces/'
-    const segment = '/sealedsecrets/'
-
     const namespaces = new Set<string>()
 
     for (const filePath of this.store.keys()) {
-      if (!filePath.startsWith(prefix)) continue
-      if (!filePath.includes(segment)) continue
-      if (!filePath.endsWith('.yaml')) continue
-
-      // env/namespaces/{namespace}/sealedsecrets/{name}.yaml
-      const match = filePath.match(/^env\/namespaces\/([^/]+)\//)
+      // env/manifests/ns/{namespace}/{name}.yaml
+      const match = filePath.match(/^env\/manifests\/ns\/([^/]+)\/[^/]+\.yaml$/)
       const namespace = match?.[1]
 
       if (namespace) namespaces.add(namespace)

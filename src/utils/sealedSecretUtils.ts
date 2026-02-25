@@ -51,9 +51,9 @@ export function sealedSecretManifest(
 
 export function ensureSealedSecretMetadata(
   manifest: SealedSecretManifestResponse,
-  teamId: string,
+  teamId?: string,
 ): SealedSecretManifestResponse {
-  const hasCorrectLabel = manifest.metadata.labels?.['apl.io/teamId'] === teamId
+  const hasCorrectLabel = teamId ? manifest.metadata.labels?.['apl.io/teamId'] === teamId : true
   const hasCorrectAnnotation = manifest.metadata.annotations?.['sealedsecrets.bitnami.com/namespace-wide'] === 'true'
 
   if (hasCorrectLabel && hasCorrectAnnotation) {
@@ -70,7 +70,7 @@ export function ensureSealedSecretMetadata(
       },
       labels: {
         ...manifest.metadata.labels,
-        'apl.io/teamId': teamId,
+        ...(teamId && { 'apl.io/teamId': teamId }),
       },
     },
   }

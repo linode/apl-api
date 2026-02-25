@@ -182,8 +182,8 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
   maps.set('AplNamespaceSealedSecret', {
     kind: 'SealedSecret',
     envDir,
-    pathGlob: `${envDir}/env/namespaces/*/sealedsecrets/*.yaml`,
-    pathTemplate: 'env/namespaces/{namespace}/sealedsecrets/{name}.yaml',
+    pathGlob: `${envDir}/env/manifests/ns/*/*.yaml`,
+    pathTemplate: 'env/manifests/ns/{namespace}/{name}.yaml',
     name: 'sealedsecrets',
   })
 
