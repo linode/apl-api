@@ -1,6 +1,6 @@
 import axios from 'axios'
 import Debug from 'debug'
-import { existsSync, mkdirSync, renameSync, rmSync } from 'fs'
+import { existsSync, lstatSync, mkdirSync, renameSync, rmSync } from 'fs'
 import { readFile } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
 import path from 'path'
@@ -445,21 +445,42 @@ export async function fetchWorkloadCatalog(
   teamId?: string,
   chartsPath?: string,
 ): Promise<{ helmCharts: string[]; catalog: any[] }> {
+  const resolvedHelmChartsDir = path.resolve(helmChartsDir)
+
   // Ensure directory exists
-  if (!existsSync(helmChartsDir)) mkdirSync(helmChartsDir, { recursive: true })
+  if (!existsSync(resolvedHelmChartsDir)) mkdirSync(resolvedHelmChartsDir, { recursive: true })
 
   // Clone repository
   const gitUrl = encodeGitCredentials(url, clusterDomainSuffix)
-  const gitRepo = new chartRepo(helmChartsDir, gitUrl)
+  const gitRepo = new chartRepo(resolvedHelmChartsDir, gitUrl)
   await gitRepo.clone(branch)
 
   // Determine the charts directory path
-  const chartsDir = chartsPath ? `${helmChartsDir}/${chartsPath}` : helmChartsDir
+  const chartsDir = chartsPath ? path.resolve(resolvedHelmChartsDir, chartsPath) : resolvedHelmChartsDir
+
+  const isWithinHelmChartsDir =
+    chartsDir === resolvedHelmChartsDir || chartsDir.startsWith(`${resolvedHelmChartsDir}${path.sep}`)
+  if (!isWithinHelmChartsDir) {
+    debug(`Charts subdirectory '${chartsPath}' resolves outside '${resolvedHelmChartsDir}'`)
+    return { helmCharts: [], catalog: [] }
+  }
 
   // Check if subdirectory exists
   if (chartsPath && !existsSync(chartsDir)) {
     debug(`Charts subdirectory '${chartsPath}' not found at '${url}'`)
     return { helmCharts: [], catalog: [] }
+  }
+
+  if (chartsPath) {
+    try {
+      if (!lstatSync(chartsDir).isDirectory()) {
+        debug(`Charts path '${chartsPath}' is not a directory at '${url}'`)
+        return { helmCharts: [], catalog: [] }
+      }
+    } catch {
+      debug(`Unable to stat charts subdirectory '${chartsPath}' at '${url}'`)
+      return { helmCharts: [], catalog: [] }
+    }
   }
 
   // Get chart folders
