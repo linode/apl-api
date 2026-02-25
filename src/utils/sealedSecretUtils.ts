@@ -5,6 +5,7 @@ import { cleanEnv } from 'src/validators'
 import { ValidationError } from '../error'
 import { getSealedSecretsCertificate } from '../k8s_operations'
 
+const env = cleanEnv({})
 export function sealedSecretManifest(
   teamId: string,
   data: SealedSecretManifestRequest,
