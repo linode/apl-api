@@ -2323,19 +2323,6 @@ export default class OtomiStack {
     return aplRecord.content as unknown as SealedSecretManifestResponse
   }
 
-  async createAplNamespaceSealedSecret(
-    namespace: string,
-    data: SealedSecretManifestRequest,
-  ): Promise<SealedSecretManifestResponse> {
-    if (data.metadata.name.length < 2) throw new ValidationError('Secret name must be at least 2 characters long')
-    if (this.fileStore.getNamespaceResource('AplNamespaceSealedSecret', data.metadata.name, namespace)) {
-      throw new AlreadyExists('SealedSecret name already exists')
-    }
-    const aplRecord = await this.saveNamespaceSealedSecret(namespace, data)
-    await this.doDeployment(aplRecord, false)
-    return aplRecord.content as unknown as SealedSecretManifestResponse
-  }
-
   async editSealedSecret(teamId: string, name: string, data: SealedSecret): Promise<SealedSecret> {
     // Convert V1 format to SealedSecretManifestRequest
     const request: DeepPartial<SealedSecretManifestRequest> = {
@@ -2447,51 +2434,6 @@ export default class OtomiStack {
 
     const aplRecord = await this.saveNamespaceSealedSecret(namespace, updatedRequest)
     await this.doDeployment(aplRecord)
-    return aplRecord.content as unknown as SealedSecretManifestResponse
-  }
-
-  async editAplNamespaceSealedSecret(
-    namespace: string,
-    name: string,
-    data: DeepPartial<SealedSecretManifestRequest>,
-    patch = false,
-  ): Promise<SealedSecretManifestResponse> {
-    const existing = await this.getAplNamespaceSealedSecret(namespace, name)
-
-    let updatedRequest: SealedSecretManifestRequest
-    if (patch) {
-      // Merge mode: merge encryptedData
-      updatedRequest = {
-        kind: 'SealedSecret',
-        metadata: { name },
-        spec: {
-          encryptedData: merge(
-            cloneDeep(existing.spec.encryptedData || {}),
-            (data.spec?.encryptedData || {}) as Record<string, string>,
-          ),
-          template: (data.spec?.template ?? existing.spec.template) as SealedSecretManifestRequest['spec']['template'],
-        },
-      }
-    } else {
-      // Replace mode: use provided encryptedData or existing
-      updatedRequest = {
-        kind: 'SealedSecret',
-        metadata: { name },
-        spec: {
-          encryptedData: ((data.spec?.encryptedData ?? existing.spec.encryptedData) || {}) as Record<string, string>,
-          template: {
-            type: data.spec?.template?.type ?? existing.spec.template?.type,
-            immutable: data.spec?.template?.immutable ?? existing.spec.template?.immutable,
-            metadata: (data.spec?.template?.metadata ?? existing.spec.template?.metadata) as
-              | { annotations?: Record<string, string>; labels?: Record<string, string>; finalizers?: string[] }
-              | undefined,
-          },
-        },
-      }
-    }
-
-    const aplRecord = await this.saveNamespaceSealedSecret(namespace, updatedRequest)
-    await this.doDeployment(aplRecord, false)
     return aplRecord.content as unknown as SealedSecretManifestResponse
   }
 
