@@ -9,9 +9,9 @@ name: Build test push release
 on:
   push:
     branches:
-      - '**'
+      - "**"
     tags-ignore:
-      - '*'
+      - "*"
 env:
   COMMIT_MSG: ${{ github.event.head_commit.message }}
   CACHE_REGISTRY: ghcr.io
@@ -35,11 +35,21 @@ jobs:
           echo "TAG=$tag" >> $GITHUB_ENV
       - name: Checkout
         uses: actions/checkout@v6
+      - name: Fetch values-schema.yaml from apl-core
+        run: |
+          # Try matching branch first, fall back to main
+          curl -sL -f -H "Authorization: token ${{ env.BOT_TOKEN }}" \
+            "https://raw.githubusercontent.com/linode/apl-core/${{ env.TAG }}/values-schema.yaml" \
+            -o src/values-schema.yaml 2>/dev/null \
+          || curl -sL -f -H "Authorization: token ${{ env.BOT_TOKEN }}" \
+            "https://raw.githubusercontent.com/linode/apl-core/main/values-schema.yaml" \
+            -o src/values-schema.yaml
+          echo "Schema fetched for branch: ${{ env.TAG }} (with main fallback)"
       - name: CI tests, image build and push tag for main or branch
         uses: whoan/docker-build-with-cache-action@v8
         with:
           username: ${{ env.BOT_USERNAME }}
-          password: '${{ env.BOT_TOKEN }}'
+          password: "${{ env.BOT_TOKEN }}"
           registry: ${{ env.CACHE_REGISTRY }}
           image_name: ${{ env.CACHE_REPO }}
           image_tag: ${{ env.TAG }}

@@ -1,11 +1,15 @@
 import { X509Certificate } from 'crypto'
+import Debug from 'debug'
 import { isEmpty } from 'lodash'
-import { SealedSecretManifestRequest, SealedSecretManifestResponse } from 'src/otomi-models'
+import { SealedSecretManifestRequest, SealedSecretManifestResponse, User } from 'src/otomi-models'
 import { cleanEnv } from 'src/validators'
+import { stringify as stringifyYaml } from 'yaml'
 import { ValidationError } from '../error'
 import { getSealedSecretsCertificate } from '../k8s_operations'
 
+const debug = Debug('otomi:sealedSecretUtils')
 const env = cleanEnv({})
+
 export function sealedSecretManifest(
   teamId: string,
   data: SealedSecretManifestRequest,
@@ -47,9 +51,9 @@ export function sealedSecretManifest(
 
 export function ensureSealedSecretMetadata(
   manifest: SealedSecretManifestResponse,
-  teamId: string,
+  teamId?: string,
 ): SealedSecretManifestResponse {
-  const hasCorrectLabel = manifest.metadata.labels?.['apl.io/teamId'] === teamId
+  const hasCorrectLabel = teamId ? manifest.metadata.labels?.['apl.io/teamId'] === teamId : true
   const hasCorrectAnnotation = manifest.metadata.annotations?.['sealedsecrets.bitnami.com/namespace-wide'] === 'true'
 
   if (hasCorrectLabel && hasCorrectAnnotation) {
@@ -66,7 +70,7 @@ export function ensureSealedSecretMetadata(
       },
       labels: {
         ...manifest.metadata.labels,
-        'apl.io/teamId': teamId,
+        ...(teamId && { 'apl.io/teamId': teamId }),
       },
     },
   }
@@ -96,4 +100,101 @@ export async function getSealedSecretsPEM(): Promise<string> {
     console.error('Error fetching SealedSecrets certificate:', error)
     throw new ValidationError('SealedSecrets certificate not found')
   }
+}
+
+// Kubeseal ciphertext is a long base64 string (typically 300+ chars).
+// Plain text values are shorter and likely not valid base64.
+function isEncryptedValue(value: string): boolean {
+  if (value.length < 200) return false
+  return /^[A-Za-z0-9+/=]+$/.test(value)
+}
+
+export async function encryptSecretValue(pem: string, namespace: string, value: string): Promise<string> {
+  const { encryptSecretItem } = await import('@linode/kubeseal-encrypt')
+  return encryptSecretItem(pem, namespace, value)
+}
+
+/**
+ * Ensures all encryptedData values are encrypted.
+ * If any values appear to be plain text, encrypts them server-side as a fallback.
+ */
+export async function ensureEncryptedData(
+  encryptedData: Record<string, string>,
+  teamId: string,
+): Promise<Record<string, string>> {
+  const namespace = `team-${teamId}`
+  const plainTextKeys = Object.entries(encryptedData).filter(([, value]) => !isEncryptedValue(value))
+
+  if (plainTextKeys.length === 0) return encryptedData
+
+  debug(`Encrypting ${plainTextKeys.length} plain text value(s) server-side for namespace ${namespace}`)
+  const pem = await getSealedSecretsPEM()
+  if (!pem) throw new ValidationError('Cannot encrypt: SealedSecrets PEM not available')
+
+  const result = { ...encryptedData }
+  for (const [key, value] of plainTextKeys) {
+    result[key] = await encryptSecretValue(pem, namespace, value)
+  }
+  return result
+}
+
+/**
+ * Creates a SealedSecret manifest for a platform-level secret (not team-scoped).
+ * Used for secrets in apl-secrets, apl-users, and other platform namespaces.
+ */
+export async function createPlatformSealedSecretManifest(
+  name: string,
+  namespace: string,
+  data: Record<string, string>,
+): Promise<string> {
+  const pem = await getSealedSecretsPEM()
+  if (!pem) throw new ValidationError('Cannot encrypt: SealedSecrets PEM not available')
+
+  const encryptedData: Record<string, string> = {}
+  for (const [key, value] of Object.entries(data)) {
+    encryptedData[key] = await encryptSecretValue(pem, namespace, value)
+  }
+
+  const manifest = {
+    apiVersion: 'bitnami.com/v1alpha1',
+    kind: 'SealedSecret',
+    metadata: {
+      annotations: {
+        'sealedsecrets.bitnami.com/namespace-wide': 'true',
+      },
+      name,
+      namespace,
+    },
+    spec: {
+      encryptedData,
+      template: {
+        immutable: false,
+        metadata: { name, namespace },
+        type: 'Opaque',
+      },
+    },
+  }
+
+  return stringifyYaml(manifest, undefined, { indent: 4, sortMapEntries: true })
+}
+
+/**
+ * Creates a SealedSecret manifest YAML for a user in the apl-users namespace.
+ * All user fields are encrypted as individual keys.
+ */
+export async function createUserSealedSecret(user: User): Promise<string> {
+  const namespace = 'apl-users'
+  const name = user.id as string
+
+  const data: Record<string, string> = {
+    email: user.email,
+    firstName: user.firstName || '',
+    lastName: user.lastName || '',
+    initialPassword: user.initialPassword || '',
+    isPlatformAdmin: String(user.isPlatformAdmin || false),
+    isTeamAdmin: String(user.isTeamAdmin || false),
+    teams: JSON.stringify(user.teams || []),
+  }
+
+  return createPlatformSealedSecretManifest(name, namespace, data)
 }

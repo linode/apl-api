@@ -1,8 +1,8 @@
-name: 'postman'
+name: "postman"
 on:
   pull_request:
     branches:
-      - '*'
+      - "*"
   workflow_dispatch:
 jobs:
   postman:
@@ -57,6 +57,8 @@ jobs:
           npm install
           npm run compile
           NODE_PATH="/usr/local/lib/node_modules" npm run server > $GITHUB_WORKSPACE/core.log 2>&1 &
+      - name: Sync values schema from apl-core
+        run: cp apl-core/values-schema.yaml src/values-schema.yaml
       - name: Start api
         run: |
           npm install

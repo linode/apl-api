@@ -527,3 +527,71 @@ export async function getTeamSecretsFromK8s(namespace: string) {
     debug(`Failed to get team secrets from k8s for ${namespace}.`)
   }
 }
+
+export interface UserSecretData {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  initialPassword: string
+  isPlatformAdmin: boolean
+  isTeamAdmin: boolean
+  teams: string[]
+}
+
+function decodeUserSecret(name: string, data: Record<string, string>): UserSecretData {
+  const decoded: Record<string, string> = {}
+  Object.entries(data || {}).forEach(([key, value]) => {
+    decoded[key] = Buffer.from(value, 'base64').toString('utf-8')
+  })
+  return {
+    id: name,
+    email: decoded.email || '',
+    firstName: decoded.firstName || '',
+    lastName: decoded.lastName || '',
+    initialPassword: decoded.initialPassword || '',
+    isPlatformAdmin: decoded.isPlatformAdmin === 'true',
+    isTeamAdmin: decoded.isTeamAdmin === 'true',
+    teams: decoded.teams ? JSON.parse(decoded.teams) : [],
+  }
+}
+
+/**
+ * List all user secrets from the apl-users namespace and return decoded user data.
+ */
+export async function listUserSecretsFromK8s(namespace = 'apl-users'): Promise<UserSecretData[]> {
+  const kc = new KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(CoreV1Api)
+  try {
+    const res: any = await k8sApi.listNamespacedSecret({ namespace })
+    const users: UserSecretData[] = []
+    for (const item of res.items || []) {
+      // Skip service account tokens and other non-user secrets
+      if (item.type !== 'Opaque') continue
+      if (!item.data?.email) continue
+      users.push(decodeUserSecret(item.metadata.name, item.data))
+    }
+    return users
+  } catch (error) {
+    debug(`Failed to list user secrets from k8s for ${namespace}.`)
+    return []
+  }
+}
+
+/**
+ * Read a single user's K8s secret from the apl-users namespace.
+ */
+export async function getUserSecretFromK8s(uuid: string, namespace = 'apl-users'): Promise<UserSecretData | undefined> {
+  const kc = new KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(CoreV1Api)
+  try {
+    const res = await k8sApi.readNamespacedSecret({ name: uuid, namespace })
+    if (!res.data) return undefined
+    return decodeUserSecret(uuid, res.data)
+  } catch (error) {
+    debug(`Failed to get user secret ${uuid} from k8s for ${namespace}.`)
+    return undefined
+  }
+}

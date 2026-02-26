@@ -36,10 +36,6 @@ export async function writeFileToDisk(repoPath: string, relativePath: string, co
   await writeFile(fullPath, yamlContent, 'utf8')
 }
 
-function hasDecryptedFile(filePath: string, fileList: string[]): boolean {
-  return fileList.includes(`${filePath}.dec`)
-}
-
 function shouldSkipValidation(filePath: string): boolean {
   return filePath.includes('/sealedsecrets/') || filePath.includes('/workloadValues/')
 }
@@ -66,15 +62,13 @@ export class FileStore {
       }),
     )
 
-    const filesToLoad = fileMapResults.flatMap((files) =>
-      files.filter((filePath) => !hasDecryptedFile(filePath, files)),
-    )
+    const filesToLoad = fileMapResults.flat()
 
     await Promise.all(
       filesToLoad.map(async (filePath) => {
         try {
           const rawContent = isRawContent(filePath) ? await loadRawYaml(filePath) : await loadYaml(filePath)
-          const relativePath = path.relative(envDir, filePath).replace(/\.dec$/, '')
+          const relativePath = path.relative(envDir, filePath)
 
           // Skip validation for specific file paths
           if (shouldSkipValidation(filePath)) {
@@ -102,24 +96,27 @@ export class FileStore {
       }),
     )
 
-    // PASS 2: Merge secret files into main files
-    for (const [filePath, content] of allFiles.entries()) {
-      if (filePath.includes('/secrets.')) {
-        // This is a secret file - find its main file
-        const mainFilePath = filePath.replace('/secrets.', '/')
-        const mainContent = allFiles.get(mainFilePath)
+    // PASS 2: Merge legacy secret files (secrets.*.yaml) into main files
+    // This provides backward compatibility for installations migrating from SOPS encryption
+    const hasSecretFiles = Array.from(allFiles.keys()).some((fp) => fp.includes('/secrets.'))
+    if (hasSecretFiles) {
+      for (const [filePath, content] of allFiles.entries()) {
+        if (filePath.includes('/secrets.')) {
+          // This is a secret file - find its main file
+          const mainFilePath = filePath.replace('/secrets.', '/')
+          const mainContent = allFiles.get(mainFilePath)
 
-        if (mainContent) {
-          // Normal case: merge secret spec into main spec using DEEP merge
-          mainContent.spec = merge({}, mainContent.spec, content.spec)
-          // Keep the merged main file in allFiles for final storage
-        } else {
-          // Special case (users): no main file exists, secret IS the main
-          // Store at main path (without secrets. prefix)
-          allFiles.set(mainFilePath, content)
+          if (mainContent) {
+            // Normal case: merge secret spec into main spec using DEEP merge
+            mainContent.spec = merge({}, mainContent.spec, content.spec)
+          } else {
+            // Special case (users): no main file exists, secret IS the main
+            // Store at main path (without secrets. prefix)
+            allFiles.set(mainFilePath, content)
+          }
+          // Remove secret file from map (don't store separately)
+          allFiles.delete(filePath)
         }
-        // Remove secret file from map (don't store separately)
-        allFiles.delete(filePath)
       }
     }
 
@@ -308,18 +305,11 @@ export class FileStore {
 
   // Return namespaces that contain at least one sealedsecret
   getNamespacesWithSealedSecrets(): string[] {
-    const prefix = 'env/namespaces/'
-    const segment = '/sealedsecrets/'
-
     const namespaces = new Set<string>()
 
     for (const filePath of this.store.keys()) {
-      if (!filePath.startsWith(prefix)) continue
-      if (!filePath.includes(segment)) continue
-      if (!filePath.endsWith('.yaml')) continue
-
-      // env/namespaces/{namespace}/sealedsecrets/{name}.yaml
-      const match = filePath.match(/^env\/namespaces\/([^/]+)\//)
+      // env/manifests/ns/{namespace}/{name}.yaml
+      const match = filePath.match(/^env\/manifests\/ns\/([^/]+)\/[^/]+\.yaml$/)
       const namespace = match?.[1]
 
       if (namespace) namespaces.add(namespace)
