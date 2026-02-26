@@ -6,14 +6,28 @@ import { readdir, writeFile } from 'fs/promises'
 import path from 'path'
 import simpleGit, { SimpleGit } from 'simple-git'
 import { safeReadTextFile } from 'src/utils'
-import { GIT_PROVIDER_URL_PATTERNS, cleanEnv } from 'src/validators'
+import { cleanEnv, GIT_PROVIDER_URL_PATTERNS } from 'src/validators'
 import YAML from 'yaml'
+import { BadRequestError } from '../error'
 
 const debug = Debug('apl:workloadUtils')
 
 const env = cleanEnv({
   GIT_PROVIDER_URL_PATTERNS,
 })
+
+export async function validateGitUrl(url: string): Promise<void> {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    throw new BadRequestError(`Invalid URL: ${url}`)
+  }
+
+  if (parsed.protocol !== 'https:') {
+    throw new BadRequestError('Only HTTPS URLs are allowed for git repositories')
+  }
+}
 
 export interface NewHelmChartValues {
   gitRepositoryUrl: string
@@ -397,15 +411,23 @@ async function processChartFolder(
   const readme = await readChartReadme(helmChartsDir, folder)
 
   try {
-    const values = await readFile(`${helmChartsDir}/${folder}/values.yaml`, 'utf-8')
-    const valuesSchema = await readFile(`${helmChartsDir}/${folder}/values.schema.json`, 'utf-8').catch(() => null)
-    const chart = await readFile(`${helmChartsDir}/${folder}/Chart.yaml`, 'utf-8')
+    const values = await safeReadTextFile(helmChartsDir, `${folder}/values.yaml`)
+
+    let valuesSchema = '{}'
+    try {
+      const schemaContent = await safeReadTextFile(helmChartsDir, `${folder}/values.schema.json`)
+      valuesSchema = schemaContent || '{}'
+    } catch {
+      // values.schema.json is optional
+    }
+
+    const chart = await safeReadTextFile(helmChartsDir, `${folder}/Chart.yaml`)
     const chartMetadata = YAML.parse(chart)
 
     return {
       name: folder,
       values: values || '{}',
-      valuesSchema: valuesSchema || '{}',
+      valuesSchema,
       icon: chartMetadata?.icon,
       chartVersion: chartMetadata?.version,
       chartDescription: chartMetadata?.description,
