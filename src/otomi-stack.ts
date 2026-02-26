@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -10,6 +10,7 @@ import { cloneDeep, filter, get, isEmpty, map, merge, omit, pick, set, unset } f
 import { getAppList, getAppSchema, getSecretPaths } from 'src/app'
 import {
   AlreadyExists,
+  BadRequestError,
   ForbiddenError,
   HttpError,
   NotExistError,
@@ -140,6 +141,7 @@ import {
   isInteralGiteaURL,
   NewHelmChartValues,
   sparseCloneChart,
+  validateGitUrl,
 } from './utils/workloadUtils'
 
 interface ExcludedApp extends App {
@@ -1686,7 +1688,9 @@ export default class OtomiStack {
     const { url: clientUrl, teamId } = data
     const url = clientUrl || env?.HELM_CHART_CATALOG
 
-    if (!url) throw new OtomiError(400, 'Helm chart catalog URL is not set')
+    if (!url) throw new BadRequestError('Helm chart catalog URL is not set')
+
+    await validateGitUrl(url)
 
     const uuid = uuidv4()
     const helmChartsDir = `/tmp/otomi/charts/${uuid}`
