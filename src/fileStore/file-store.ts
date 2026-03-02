@@ -257,7 +257,7 @@ export class FileStore {
       throw new Error(`Kind ${kind} is not namespace-scoped (missing {namespace} in pathTemplate)`)
     }
 
-    // parts[0] => 'env/namespaces/'
+    // parts[0] => 'env/manifests/namespaces/'
     const namespacePrefix = parts[0]
 
     // parts[1] => '/sealedsecrets/{name}.yaml'  -> '/sealedsecrets/'
@@ -286,13 +286,13 @@ export class FileStore {
       throw new Error(`Kind ${kind} is not namespace-scoped (missing {namespace} in pathTemplate)`)
     }
 
-    const namespacePrefix = parts[0] // 'env/namespaces/'
+    const namespacePrefix = parts[0] // 'env/manifests/namespaces/'
     const resourceDir = parts[1].replace('{name}.yaml', '') // '/sealedsecrets/'
 
     const result = new Map<string, AplObject>()
 
     // Only match this namespace:
-    // env/namespaces/{namespace}/sealedsecrets/*.yaml
+    // env/manifests/namespaces/{namespace}/sealedsecrets/*.yaml
     const requiredPrefix = `${namespacePrefix}${namespace}${resourceDir}`
 
     for (const filePath of this.store.keys()) {
@@ -308,20 +308,28 @@ export class FileStore {
 
   // Return namespaces that contain at least one sealedsecret
   getNamespacesWithSealedSecrets(): string[] {
-    const prefix = 'env/namespaces/'
-    const segment = '/sealedsecrets/'
+    const sealedSecretKind: AplKind = 'AplNamespaceSealedSecret'
+
+    const fileMap = getFileMapForKind(sealedSecretKind)
+    if (!fileMap) throw new Error(`Unknown kind: ${sealedSecretKind}`)
+
+    const parts = fileMap.pathTemplate.split('{namespace}')
+    if (parts.length < 2) {
+      throw new Error(`Kind ${sealedSecretKind} is not namespace-scoped (missing {namespace} in pathTemplate)`)
+    }
+
+    const namespacePrefix = parts[0]
+    const resourceDir = parts[1].replace('{name}.yaml', '') // keeps trailing slash
 
     const namespaces = new Set<string>()
 
     for (const filePath of this.store.keys()) {
-      if (!filePath.startsWith(prefix)) continue
-      if (!filePath.includes(segment)) continue
+      if (!filePath.startsWith(namespacePrefix)) continue
+      if (!filePath.includes(resourceDir)) continue
       if (!filePath.endsWith('.yaml')) continue
 
-      // env/namespaces/{namespace}/sealedsecrets/{name}.yaml
-      const match = filePath.match(/^env\/namespaces\/([^/]+)\//)
-      const namespace = match?.[1]
-
+      const rest = filePath.slice(namespacePrefix.length)
+      const namespace = rest.split('/')[0]
       if (namespace) namespaces.add(namespace)
     }
 

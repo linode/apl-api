@@ -1,4 +1,4 @@
-import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -177,7 +177,7 @@ function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: s
 }
 
 function getNamespaceSealedSecretsValuesFilePath(namespace: string, sealedSecretsName: string): string {
-  return `env/namespaces/${namespace}/sealedsecrets/${sealedSecretsName}.yaml`
+  return `env/manifests/namespaces/${namespace}/sealedsecrets/${sealedSecretsName}.yaml`
 }
 
 function getTeamWorkloadValuesManagedFilePath(teamId: string, workloadName: string): string {
@@ -2465,8 +2465,8 @@ export default class OtomiStack {
     return Array.from(files.entries()).map(([filePath, secret]) => {
       const manifest = secret as SealedSecretManifestResponse
 
-      // strict match: env/namespaces/{namespace}/...
-      const match = filePath.match(/^env\/namespaces\/([^/]+)\//)
+      // strict match: env/manifests/namespaces/{namespace}/...
+      const match = filePath.match(/^env\/manifests\/namespaces\/([^/]+)\//)
       const namespace = match?.[1]
 
       if (namespace) set(manifest, 'spec.template.metadata.namespace', namespace)
