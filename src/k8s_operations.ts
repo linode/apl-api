@@ -568,7 +568,7 @@ export async function listUserSecretsFromK8s(namespace = 'apl-users'): Promise<U
     const users: UserSecretData[] = []
     for (const item of res.items || []) {
       // Skip service account tokens and other non-user secrets
-      if (item.type !== 'Opaque') continue
+      if (item.type !== 'kubernetes.io/opaque') continue
       if (!item.data?.email) continue
       users.push(decodeUserSecret(item.metadata.name, item.data))
     }
