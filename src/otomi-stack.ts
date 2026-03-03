@@ -873,7 +873,7 @@ export default class OtomiStack {
   async saveNamespaceSealedSecret(namespace: string, data: SealedSecretManifestRequest): Promise<AplRecord> {
     debug(`Saving sealed secrets for namsapce: ${namespace}`)
     const { metadata } = data
-    const sealedSecretChartValues = sealedSecretManifest('team-admin', data, namespace)
+    const sealedSecretChartValues = sealedSecretManifest(undefined, data, namespace)
     const aplRecord = this.fileStore.set(
       getNamespaceSealedSecretsValuesFilePath(namespace, metadata.name),
       sealedSecretChartValues,
@@ -2432,7 +2432,7 @@ export default class OtomiStack {
     if (!sealedSecret) {
       throw new NotExistError(`SealedSecret ${name} not found in namespace ${namespace}`)
     }
-    return ensureSealedSecretMetadata(sealedSecret as SealedSecretManifestResponse, 'team-admin')
+    return ensureSealedSecretMetadata(sealedSecret as SealedSecretManifestResponse)
   }
 
   getAllSealedSecrets(): SealedSecret[] {

@@ -308,6 +308,7 @@ export class FileStore {
 
   // Return namespaces that contain at least one sealedsecret
   getNamespacesWithSealedSecrets(): string[] {
+    // Requires a unique AplNamespaceSealedSecret kind because SealedSecret is used for teams, see file-map.ts
     const sealedSecretKind: AplKind = 'AplNamespaceSealedSecret'
 
     const fileMap = getFileMapForKind(sealedSecretKind)
