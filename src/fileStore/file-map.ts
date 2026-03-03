@@ -179,11 +179,12 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
     name: 'sealedsecrets',
   })
 
+  // TODO: unify with SealedSecrets when migrated to manifests
   maps.set('AplNamespaceSealedSecret', {
     kind: 'SealedSecret',
     envDir,
-    pathGlob: `${envDir}/env/namespaces/*/sealedsecrets/*.yaml`,
-    pathTemplate: 'env/namespaces/{namespace}/sealedsecrets/{name}.yaml',
+    pathGlob: `${envDir}/env/manifests/namespaces/*/sealedsecrets/*.yaml`,
+    pathTemplate: 'env/manifests/namespaces/{namespace}/sealedsecrets/{name}.yaml',
     name: 'sealedsecrets',
   })
 

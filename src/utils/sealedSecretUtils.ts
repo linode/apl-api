@@ -11,7 +11,7 @@ const debug = Debug('otomi:sealedSecretUtils')
 const env = cleanEnv({})
 
 export function sealedSecretManifest(
-  teamId: string,
+  teamId: string | undefined,
   data: SealedSecretManifestRequest,
   namespaceParam?: string,
 ): SealedSecretManifestResponse {
@@ -26,9 +26,11 @@ export function sealedSecretManifest(
       annotations: {
         'sealedsecrets.bitnami.com/namespace-wide': 'true',
       },
-      labels: {
-        'apl.io/teamId': teamId,
-      },
+      ...(teamId && {
+        labels: {
+          'apl.io/teamId': teamId,
+        },
+      }),
       namespace,
     },
     spec: {
@@ -46,14 +48,14 @@ export function sealedSecretManifest(
       },
     },
     status: {},
-  }
+  } as SealedSecretManifestResponse
 }
 
 export function ensureSealedSecretMetadata(
   manifest: SealedSecretManifestResponse,
-  teamId: string,
+  teamId?: string,
 ): SealedSecretManifestResponse {
-  const hasCorrectLabel = manifest.metadata.labels?.['apl.io/teamId'] === teamId
+  const hasCorrectLabel = teamId ? manifest.metadata.labels?.['apl.io/teamId'] === teamId : true
   const hasCorrectAnnotation = manifest.metadata.annotations?.['sealedsecrets.bitnami.com/namespace-wide'] === 'true'
 
   if (hasCorrectLabel && hasCorrectAnnotation) {
@@ -70,7 +72,7 @@ export function ensureSealedSecretMetadata(
       },
       labels: {
         ...manifest.metadata.labels,
-        'apl.io/teamId': teamId,
+        ...(teamId && { 'apl.io/teamId': teamId }),
       },
     },
   }
