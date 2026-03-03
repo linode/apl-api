@@ -9,7 +9,7 @@ describe('FileStore.getNamespacesWithSealedSecrets', () => {
     ;(fileStore as any).store = new Map()
 
     jest.spyOn(fileMap, 'getFileMapForKind').mockReturnValue({
-      pathTemplate: 'env/namespaces/{namespace}/sealedsecrets/{name}.yaml',
+      pathTemplate: 'env/manifests/namespaces/{namespace}/sealedsecrets/{name}.yaml',
     } as any)
   })
 
@@ -20,9 +20,9 @@ describe('FileStore.getNamespacesWithSealedSecrets', () => {
   it('returns unique namespaces that contain sealedsecrets', () => {
     const store = (fileStore as any).store as Map<string, any>
 
-    store.set('env/namespaces/argocd/sealedsecrets/a.yaml', {})
-    store.set('env/namespaces/argocd/sealedsecrets/b.yaml', {})
-    store.set('env/namespaces/harbor/sealedsecrets/x.yaml', {})
+    store.set('env/manifests/namespaces/argocd/sealedsecrets/a.yaml', {})
+    store.set('env/manifests/namespaces/argocd/sealedsecrets/b.yaml', {})
+    store.set('env/manifests/namespaces/harbor/sealedsecrets/x.yaml', {})
 
     const result = fileStore.getNamespacesWithSealedSecrets()
 
@@ -33,7 +33,7 @@ describe('FileStore.getNamespacesWithSealedSecrets', () => {
     const store = (fileStore as any).store as Map<string, any>
 
     store.set('env/teams/team-a/sealedsecrets/a.yaml', {})
-    store.set('env/namespaces/argocd/sealedsecrets/a.yaml', {})
+    store.set('env/manifests/namespaces/argocd/sealedsecrets/a.yaml', {})
 
     const result = fileStore.getNamespacesWithSealedSecrets()
 
