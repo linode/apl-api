@@ -232,6 +232,36 @@ export default class OtomiStack {
     this.sessionId = sessionId ?? 'main'
   }
 
+  private static sealedSecretToUserData(manifest: SealedSecretManifestResponse): UserSecretData {
+    const data = manifest.spec.encryptedData
+    return {
+      id: manifest.metadata.name,
+      email: data.email || '',
+      firstName: data.firstName || '',
+      lastName: data.lastName || '',
+      initialPassword: data.initialPassword || '',
+      isPlatformAdmin: data.isPlatformAdmin === 'true',
+      isTeamAdmin: data.isTeamAdmin === 'true',
+      teams: typeof data.teams === 'string' ? JSON.parse(data.teams) : data.teams || [],
+    } as UserSecretData
+  }
+
+  private async listUserSecretData(): Promise<UserSecretData[]> {
+    if (env.isDev) {
+      return this.getAplNamespaceSealedSecrets('apl-users').map((m) => OtomiStack.sealedSecretToUserData(m))
+    }
+    return listUserSecretsFromK8s()
+  }
+
+  private async getUserSecretData(id: string): Promise<UserSecretData | undefined> {
+    if (env.isDev) {
+      const manifest = this.fileStore.getNamespaceResource('AplNamespaceSealedSecret', id, 'apl-users')
+      if (!manifest) return undefined
+      return OtomiStack.sealedSecretToUserData(manifest as SealedSecretManifestResponse)
+    }
+    return getUserSecretFromK8s(id)
+  }
+
   getAppList() {
     let apps = getAppList()
     apps = apps.filter((item) => item !== 'ingress-nginx')
@@ -792,7 +822,7 @@ export default class OtomiStack {
     // Encrypt password into a SealedSecret manifest
     const sealedSecretName = `team-${teamName}-settings-secrets`
     const sealedSecretYaml = await createPlatformSealedSecretManifest(sealedSecretName, 'apl-secrets', { password })
-    const sealedSecretPath = `env/manifests/ns/apl-secrets/${sealedSecretName}.yaml`
+    const sealedSecretPath = `env/manifests/namespaces/apl-secrets/sealedsecrets/${sealedSecretName}.yaml`
     await this.git.writeTextFile(sealedSecretPath, sealedSecretYaml)
 
     // Remove password from team spec before saving settings.yaml
@@ -1024,8 +1054,8 @@ export default class OtomiStack {
   }
 
   async getAllUsers(sessionUser: SessionUser): Promise<Array<User>> {
-    const k8sUsers = await listUserSecretsFromK8s()
-    const users: User[] = k8sUsers.map((u) => userSecretDataToUser(u))
+    const usersData = await this.listUserSecretData()
+    const users: User[] = usersData.map((u) => userSecretDataToUser(u))
 
     if (sessionUser.isPlatformAdmin) {
       return users
@@ -1055,22 +1085,25 @@ export default class OtomiStack {
     const userId = uuidv4()
     const user: User = { ...data, id: userId, initialPassword }
 
-    // Check for existing users in K8s and Keycloak
-    const existingK8sUsers = await listUserSecretsFromK8s()
-    let existingUsersEmail = existingK8sUsers.map((u) => u.email)
+    // Check for existing users
+    const existingUsers = await this.listUserSecretData()
+    const existingUsersEmail = existingUsers.map((u) => u.email)
 
-    const { cluster } = this.getSettings(['cluster'])
-    const keycloak = this.getApp('keycloak')
-    const keycloakBaseUrl = `https://keycloak.${cluster?.domainSuffix}`
-    const realm = 'otomi'
-    const username = keycloak?.values?.adminUsername as string
-    // Read admin password from K8s secret instead of disk values (stripped by bootstrap)
-    const platformSecrets = await getSecretValues('otomi-platform-secrets', 'apl-secrets')
-    const adminPassword = platformSecrets?.adminPassword
-    if (!adminPassword) {
-      throw new HttpError(500, 'Admin password not found in platform secrets')
+    if (!env.isDev) {
+      // In production, also check Keycloak for existing users
+      const { cluster } = this.getSettings(['cluster'])
+      const keycloak = this.getApp('keycloak')
+      const keycloakBaseUrl = `https://keycloak.${cluster?.domainSuffix}`
+      const realm = 'otomi'
+      const username = keycloak?.values?.adminUsername as string
+      const platformSecrets = await getSecretValues('otomi-platform-secrets', 'apl-secrets')
+      const adminPassword = platformSecrets?.adminPassword
+      if (!adminPassword) {
+        throw new HttpError(500, 'Admin password not found in platform secrets')
+      }
+      const keycloakEmails = await getKeycloakUsers(keycloakBaseUrl, realm, username, adminPassword)
+      existingUsersEmail.push(...keycloakEmails.filter((e) => !existingUsersEmail.includes(e)))
     }
-    existingUsersEmail = await getKeycloakUsers(keycloakBaseUrl, realm, username, adminPassword)
 
     if (existingUsersEmail.some((existingUser) => existingUser === user.email)) {
       throw new AlreadyExists('User email already exists')
@@ -1082,11 +1115,11 @@ export default class OtomiStack {
   }
 
   async getUser(id: string, sessionUser: SessionUser): Promise<User> {
-    const k8sUserData = await getUserSecretFromK8s(id)
-    if (!k8sUserData) {
+    const userData = await this.getUserSecretData(id)
+    if (!userData) {
       throw new NotExistError(`User ${id} not found`)
     }
-    const user = userSecretDataToUser(k8sUserData)
+    const user = userSecretDataToUser(userData)
 
     if (sessionUser.isPlatformAdmin) {
       return user
@@ -1103,11 +1136,11 @@ export default class OtomiStack {
       throw new ForbiddenError('Only platform admins can modify user details.')
     }
 
-    const existingK8s = await getUserSecretFromK8s(id)
-    if (!existingK8s) {
+    const existingData = await this.getUserSecretData(id)
+    if (!existingData) {
       throw new NotExistError(`User ${id} not found`)
     }
-    const existingUser = userSecretDataToUser(existingK8s)
+    const existingUser = userSecretDataToUser(existingData)
 
     // Merge updates, preserving initialPassword from existing secret
     const user: User = {
@@ -1123,16 +1156,16 @@ export default class OtomiStack {
   }
 
   async deleteUser(id: string): Promise<void> {
-    const existingK8s = await getUserSecretFromK8s(id)
-    if (!existingK8s) {
+    const existingData = await this.getUserSecretData(id)
+    if (!existingData) {
       throw new NotExistError(`User ${id} not found`)
     }
-    if (existingK8s.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
+    if (existingData.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
       throw new ForbiddenError('Cannot delete the default platform admin user')
     }
 
     // Remove SealedSecret manifest from git
-    const sealedSecretPath = `env/manifests/ns/apl-users/${id}.yaml`
+    const sealedSecretPath = `env/manifests/namespaces/apl-users/sealedsecrets/${id}.yaml`
     await this.git.removeFile(sealedSecretPath)
 
     // Also remove legacy AplUser file if it exists
@@ -1180,16 +1213,17 @@ export default class OtomiStack {
     }
 
     const aplRecords: AplRecord[] = []
+    const updatedUsers: Pick<User, 'id' | 'teams'>[] = []
 
     for (const userData of data) {
       if (!userData.id) {
         throw new NotExistError(`User ${userData.id} not found`)
       }
-      const existingK8s = await getUserSecretFromK8s(userData.id)
-      if (!existingK8s) {
+      const existingData = await this.getUserSecretData(userData.id)
+      if (!existingData) {
         throw new NotExistError(`User ${userData.id} not found`)
       }
-      const existingUser = userSecretDataToUser(existingK8s)
+      const existingUser = userSecretDataToUser(existingData)
 
       if (
         !sessionUser.isPlatformAdmin &&
@@ -1203,15 +1237,12 @@ export default class OtomiStack {
       const updatedUser: User = { ...existingUser, teams: userData.teams }
       const aplRecord = await this.saveUser(updatedUser)
       aplRecords.push(aplRecord)
+      updatedUsers.push({ id: updatedUser.id!, teams: updatedUser.teams || [] })
     }
 
     await this.doDeployments(aplRecords)
 
-    const users = aplRecords.map((aplRecord: AplRecord) => ({
-      id: aplRecord.content.spec.id,
-      teams: aplRecord.content.spec.teams || [],
-    }))
-    return users
+    return updatedUsers
   }
 
   getTeamCodeRepos(teamId: string): CodeRepo[] {
@@ -2740,16 +2771,11 @@ export default class OtomiStack {
 
     // Write SealedSecret manifest with all user fields encrypted
     const sealedSecretYaml = await createUserSealedSecret(user)
-    const sealedSecretPath = `env/manifests/ns/apl-users/${user.id}.yaml`
+    const sealedSecretPath = `env/manifests/namespaces/apl-users/sealedsecrets/${user.id}.yaml`
     await this.git.writeTextFile(sealedSecretPath, sealedSecretYaml)
 
-    // Build a content object for the AplRecord (used by doDeployment to update fileStore)
-    const content = {
-      apiVersion: 'apl.io/v1',
-      kind: 'AplUser',
-      metadata: { name: user.id },
-      spec: { id: user.id, email: user.email, teams: user.teams || [] },
-    } as unknown as AplObject
+    // Store the actual SealedSecret manifest in the fileStore so it stays in sync with disk
+    const content = parseYaml(sealedSecretYaml) as unknown as AplObject
 
     return { filePath: sealedSecretPath, content }
   }

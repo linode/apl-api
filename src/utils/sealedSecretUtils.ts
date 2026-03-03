@@ -150,11 +150,15 @@ export async function createPlatformSealedSecretManifest(
   data: Record<string, string>,
 ): Promise<string> {
   const pem = await getSealedSecretsPEM()
-  if (!pem) throw new ValidationError('Cannot encrypt: SealedSecrets PEM not available')
 
+  // In dev mode (no PEM), store values as plain text
   const encryptedData: Record<string, string> = {}
-  for (const [key, value] of Object.entries(data)) {
-    encryptedData[key] = await encryptSecretValue(pem, namespace, value)
+  if (pem) {
+    for (const [key, value] of Object.entries(data)) {
+      encryptedData[key] = await encryptSecretValue(pem, namespace, value)
+    }
+  } else {
+    Object.assign(encryptedData, data)
   }
 
   const manifest = {
@@ -172,7 +176,7 @@ export async function createPlatformSealedSecretManifest(
       template: {
         immutable: false,
         metadata: { name, namespace },
-        type: 'Opaque',
+        type: 'kubernetes.io/opaque',
       },
     },
   }

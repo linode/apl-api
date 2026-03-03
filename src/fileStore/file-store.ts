@@ -331,6 +331,9 @@ export class FileStore {
       if (namespace) namespaces.add(namespace)
     }
 
+    // apl-users secrets are managed separately via user endpoints, not platform secrets
+    namespaces.delete('apl-users')
+
     return Array.from(namespaces)
   }
 
