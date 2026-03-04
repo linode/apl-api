@@ -1,5 +1,6 @@
 import Debug from 'debug'
 import { Response } from 'express'
+import { omit } from 'lodash'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v1:settings')
@@ -15,10 +16,7 @@ export const getSettings = (req: OpenApiRequestExt, res: Response): void => {
   debug(`getSettings(${idsArray})`)
   const v = req.otomi.getSettings(idsArray)
   if (v?.otomi) {
-    const { otomi: otomiSettings, ...restSettings } = v
-    // Remove the otomi.adminPassword from otomi settings response
-    const { adminPassword, ...restOtomiSettings } = otomiSettings
-    res.json({ ...restSettings, otomi: restOtomiSettings })
+    res.json(omit(v, ['otomi.adminPassword', 'otomi.git.password']))
   } else {
     res.json(v)
   }
