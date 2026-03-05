@@ -1400,9 +1400,9 @@ export default class OtomiStack {
     if ((env.isDev && !(await isK8sReachable())) || !teamId || teamId === 'admin') return []
     const gitea = this.getApp('gitea')
     if (!gitea?.values?.enabled) return []
-    const { cluster, otomi } = this.getSettings(['cluster', 'otomi'])
-    const username = (otomi?.git?.username ?? '') as string
-    const password = (otomi?.git?.password ?? '') as string
+    const { cluster } = this.getSettings(['cluster'])
+    const username = env.GIT_USER
+    const password = env.GIT_PASSWORD
     const orgName = `team-${teamId}`
     const domainSuffix = cluster?.domainSuffix
     const internalRepoUrls = (await getGiteaRepoUrls(username, password, orgName, domainSuffix)) || []
