@@ -121,6 +121,7 @@ import {
   getSecretValues,
   getTeamSecretsFromK8s,
   getUserSecretFromK8s,
+  isK8sReachable,
   k8sdelete,
   listUserSecretsFromK8s,
   UserSecretData,
@@ -247,14 +248,14 @@ export default class OtomiStack {
   }
 
   private async listUserSecretData(): Promise<UserSecretData[]> {
-    if (env.isDev) {
+    if (env.isDev && !(await isK8sReachable())) {
       return this.getAplNamespaceSealedSecrets('apl-users').map((m) => OtomiStack.sealedSecretToUserData(m))
     }
     return listUserSecretsFromK8s()
   }
 
   private async getUserSecretData(id: string): Promise<UserSecretData | undefined> {
-    if (env.isDev) {
+    if (env.isDev && !(await isK8sReachable())) {
       const manifest = this.fileStore.getNamespaceResource('AplNamespaceSealedSecret', id, 'apl-users')
       if (!manifest) return undefined
       return OtomiStack.sealedSecretToUserData(manifest as SealedSecretManifestResponse)
@@ -1396,7 +1397,7 @@ export default class OtomiStack {
   }
 
   async getInternalRepoUrls(teamId: string): Promise<string[]> {
-    if (env.isDev || !teamId || teamId === 'admin') return []
+    if ((env.isDev && !(await isK8sReachable())) || !teamId || teamId === 'admin') return []
     const gitea = this.getApp('gitea')
     if (!gitea?.values?.enabled) return []
     const { cluster, otomi } = this.getSettings(['cluster', 'otomi'])
@@ -2230,7 +2231,7 @@ export default class OtomiStack {
   }
 
   async getK8sServices(teamId: string): Promise<Array<K8sService>> {
-    if (env.isDev) return []
+    if (env.isDev && !(await isK8sReachable())) return []
 
     const client = this.getApiClient()
     const collection: K8sService[] = []
@@ -2578,7 +2579,7 @@ export default class OtomiStack {
   }
 
   async getSecretsFromK8s(teamId: string): Promise<Array<string>> {
-    if (env.isDev) return []
+    if (env.isDev && !(await isK8sReachable())) return []
     return await getTeamSecretsFromK8s(`team-${teamId}`)
   }
 

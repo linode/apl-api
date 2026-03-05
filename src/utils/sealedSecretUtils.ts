@@ -5,7 +5,7 @@ import { SealedSecretManifestRequest, SealedSecretManifestResponse, User } from 
 import { cleanEnv } from 'src/validators'
 import { stringify as stringifyYaml } from 'yaml'
 import { ValidationError } from '../error'
-import { getSealedSecretsCertificate } from '../k8s_operations'
+import { getSealedSecretsCertificate, isK8sReachable } from '../k8s_operations'
 
 const debug = Debug('otomi:sealedSecretUtils')
 const env = cleanEnv({})
@@ -90,7 +90,7 @@ function getPEM(certificate): string {
 
 export async function getSealedSecretsPEM(): Promise<string> {
   try {
-    if (env.isDev) return ''
+    if (env.isDev && !(await isK8sReachable())) return ''
     else {
       const certificate = await getSealedSecretsCertificate()
       if (!certificate) {

@@ -595,3 +595,19 @@ export async function getUserSecretFromK8s(uuid: string, namespace = 'apl-users'
     return undefined
   }
 }
+
+let _k8sReachable: boolean | null = null
+
+export async function isK8sReachable(): Promise<boolean> {
+  if (_k8sReachable !== null) return _k8sReachable
+  try {
+    const kc = new KubeConfig()
+    kc.loadFromDefault()
+    const versionApi = kc.makeApiClient(VersionApi)
+    await versionApi.getCode()
+    _k8sReachable = true
+  } catch {
+    _k8sReachable = false
+  }
+  return _k8sReachable
+}
