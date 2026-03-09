@@ -102,7 +102,7 @@ export async function checkPodExists(namespace: string, podName: string): Promis
 }
 
 export async function k8sdelete(
-  teamId: string,
+  namespace: string,
   sub: string,
   isPlatformAdmin: boolean,
   userTeams: string[],
@@ -113,7 +113,6 @@ export async function k8sdelete(
   const customObjectsApi = kc.makeApiClient(CustomObjectsApi)
   const rbacAuthorizationV1Api = kc.makeApiClient(RbacAuthorizationV1Api)
   const resourceName = sub
-  const namespace = `team-${teamId}`
   try {
     await customObjectsApi.deleteNamespacedCustomObject({
       group: 'security.istio.io',

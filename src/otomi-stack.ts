@@ -1506,6 +1506,8 @@ export default class OtomiStack {
   }
 
   async connectCloudtty(teamId: string, sessionUser: SessionUser): Promise<Cloudtty> {
+    const isAdmin = sessionUser.isPlatformAdmin
+    const targetNamespace = isAdmin ? 'team-admin' : `team-${teamId}`
     if (!sessionUser.sub) {
       debug('No user sub found, cannot connect to shell.')
       throw new OtomiError(500, 'No user sub found, cannot connect to shell.')
@@ -1527,14 +1529,14 @@ export default class OtomiStack {
     }
 
     // if cloudtty shell does not exists then check if the pod is running and return it
-    if (await checkPodExists('team-admin', `tty-${sessionUser.sub}`)) {
+    if (await checkPodExists(targetNamespace, `tty-${sessionUser.sub}`)) {
       return { iFrameUrl: `https://tty.${variables.FQDN}/${sessionUser.sub}` }
     }
 
     if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
 
     //if user is admin then read the manifests from ./dist/src/ttyManifests/adminTtyManifests
-    const files = sessionUser.isPlatformAdmin
+    const files = isAdmin
       ? await readdir('./dist/src/ttyManifests/adminTtyManifests', 'utf-8')
       : await readdir('./dist/src/ttyManifests', 'utf-8')
     const filteredFiles = files.filter((file) => file.startsWith('tty'))
@@ -1574,13 +1576,13 @@ export default class OtomiStack {
     )
     await writeFile('/tmp/ttyd.yaml', fileContents, 'utf-8')
     await apply('/tmp/ttyd.yaml')
-    await watchPodUntilRunning('team-admin', `tty-${sessionUser.sub}`)
+    await watchPodUntilRunning(targetNamespace, `tty-${sessionUser.sub}`)
 
     // check the pod every 30 minutes and terminate it after 2 hours of inactivity
     const ISACTIVE_INTERVAL = 30 * 60 * 1000
     const TERMINATE_TIMEOUT = 2 * 60 * 60 * 1000
     const intervalId = setInterval(() => {
-      getCloudttyActiveTime('team-admin', `tty-${sessionUser.sub}`).then((activeTime: number) => {
+      getCloudttyActiveTime(targetNamespace, `tty-${sessionUser.sub}`).then((activeTime: number) => {
         if (activeTime > TERMINATE_TIMEOUT) {
           this.deleteCloudtty(teamId, sessionUser)
           clearInterval(intervalId)
@@ -1594,10 +1596,11 @@ export default class OtomiStack {
 
   async deleteCloudtty(teamId: string, sessionUser: SessionUser): Promise<void> {
     const { sub, isPlatformAdmin, teams } = sessionUser as { sub: string; isPlatformAdmin: boolean; teams: string[] }
+    const namespace = isPlatformAdmin ? 'team-admin' : `team-${teamId}`
     const userTeams = teams.map((teamName) => `team-${teamName}`)
     try {
-      if (await checkPodExists(`team-${teamId}`, `tty-${sessionUser.sub}`)) {
-        await k8sdelete(teamId, sub, isPlatformAdmin, userTeams)
+      if (await checkPodExists(namespace, `tty-${sessionUser.sub}`)) {
+        await k8sdelete(namespace, sub, isPlatformAdmin, userTeams)
       }
     } catch (error) {
       debug('Failed to delete cloudtty')
