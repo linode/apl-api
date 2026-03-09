@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -289,6 +289,14 @@ export default class OtomiStack {
       throw new Error(
         `Main repository does not have branch '${env.GIT_BRANCH}'. Cannot create worktree. ${errorMessage}`,
       )
+    }
+
+    // Pull latest changes so the worktree starts from up-to-date state
+    try {
+      debug(`Pulled latest changes before creating worktree for session ${this.sessionId}`)
+      await mainRepo.pull(true, true)
+    } catch (e) {
+      debug(`Warning: could not pull latest before creating worktree: ${getSanitizedErrorMessage(e)}`)
     }
 
     const worktreePath = this.getRepoPath()
