@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -1582,7 +1582,7 @@ export default class OtomiStack {
     const intervalId = setInterval(() => {
       getCloudttyActiveTime('team-admin', `tty-${sessionUser.sub}`).then((activeTime: number) => {
         if (activeTime > TERMINATE_TIMEOUT) {
-          this.deleteCloudtty(sessionUser)
+          this.deleteCloudtty(teamId, sessionUser)
           clearInterval(intervalId)
           debug(`Cloudtty terminated after ${TERMINATE_TIMEOUT / (60 * 60 * 1000)} hours of inactivity`)
         }
@@ -1592,12 +1592,12 @@ export default class OtomiStack {
     return { iFrameUrl: `https://tty.${variables.FQDN}/${sessionUser.sub}` }
   }
 
-  async deleteCloudtty(sessionUser: SessionUser): Promise<void> {
+  async deleteCloudtty(teamId: string, sessionUser: SessionUser): Promise<void> {
     const { sub, isPlatformAdmin, teams } = sessionUser as { sub: string; isPlatformAdmin: boolean; teams: string[] }
     const userTeams = teams.map((teamName) => `team-${teamName}`)
     try {
-      if (await checkPodExists('team-admin', `tty-${sessionUser.sub}`)) {
-        await k8sdelete({ sub, isPlatformAdmin, userTeams })
+      if (await checkPodExists(`team-${teamId}`, `tty-${sessionUser.sub}`)) {
+        await k8sdelete(teamId, sub, isPlatformAdmin, userTeams)
       }
     } catch (error) {
       debug('Failed to delete cloudtty')

@@ -27,7 +27,7 @@ spec:
           cpu: '500m'
       env:
         - name: NAMESPACE
-          value: team-$TARGET_TEAM
+          value: $TARGET_TEAM
       securityContext:
         allowPrivilegeEscalation: false
         capabilities:

@@ -4,7 +4,7 @@ metadata:
   labels:
     app: tty-$SUB
   name: tty-$SUB
-  namespace: team-admin
+  namespace: $TARGET_TEAM
 spec:
   ports:
     - name: 8080-8080
@@ -15,4 +15,3 @@ spec:
     app: tty-$SUB
   type: ClusterIP
 ---
-

@@ -101,34 +101,25 @@ export async function checkPodExists(namespace: string, podName: string): Promis
   }
 }
 
-export async function k8sdelete({
-  sub,
-  isPlatformAdmin,
-  userTeams,
-}: {
-  sub: string
-  isPlatformAdmin: boolean
-  userTeams: string[]
-}): Promise<void> {
+export async function k8sdelete(
+  teamId: string,
+  sub: string,
+  isPlatformAdmin: boolean,
+  userTeams: string[],
+): Promise<void> {
   const kc = new KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(CoreV1Api)
   const customObjectsApi = kc.makeApiClient(CustomObjectsApi)
   const rbacAuthorizationV1Api = kc.makeApiClient(RbacAuthorizationV1Api)
   const resourceName = sub
-  const namespace = 'team-admin'
+  const namespace = `team-${teamId}`
   try {
-    const apiVersion = 'v1beta1'
-    const apiGroupAuthz = 'security.istio.io'
-    const apiGroupVS = 'networking.istio.io'
-    const pluralAuth = 'authorizationpolicies'
-    const pluralVS = 'virtualservices'
-
     await customObjectsApi.deleteNamespacedCustomObject({
-      group: apiGroupAuthz,
-      version: apiVersion,
+      group: 'security.istio.io',
+      version: 'v1beta1',
       namespace,
-      plural: pluralAuth,
+      plural: 'authorizationpolicies',
       name: `tty-${resourceName}`,
     })
 
@@ -147,10 +138,10 @@ export async function k8sdelete({
     await k8sApi.deleteNamespacedService({ name: `tty-${resourceName}`, namespace })
 
     await customObjectsApi.deleteNamespacedCustomObject({
-      group: apiGroupVS,
-      version: apiVersion,
+      group: 'gateway.networking.k8s.io',
+      version: 'v1',
       namespace,
-      plural: pluralVS,
+      plural: 'httproutes',
       name: `tty-${resourceName}`,
     })
   } catch (error) {
