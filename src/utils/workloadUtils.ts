@@ -1,9 +1,10 @@
 import axios from 'axios'
 import Debug from 'debug'
-import { existsSync, lstatSync, mkdirSync, renameSync, rmSync } from 'fs'
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, renameSync, rmSync } from 'fs'
 import { readFile } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
-import path from 'path'
+import { tmpdir } from 'os'
+import path, { join } from 'path'
 import simpleGit, { SimpleGit } from 'simple-git'
 import { safeReadTextFile } from 'src/utils'
 import { cleanEnv, GIT_PROVIDER_URL_PATTERNS } from 'src/validators'
@@ -339,6 +340,92 @@ export async function sparseCloneChart(
   return true
 }
 
+export async function sparseCheckoutChart(
+  gitRepositoryUrl: string,
+  targetBaseDir: string,
+  chartTargetDirName: string,
+): Promise<{ success: true; chartPath: string } | { success: false; error: string }> {
+  const details = detectGitProvider(gitRepositoryUrl)
+  if (!details) {
+    return { success: false, error: 'Could not detect git provider details from URL.' }
+  }
+
+  const gitCloneUrl = getGitCloneUrl(details)
+  if (!gitCloneUrl) {
+    return { success: false, error: 'Could not resolve clone URL from repository details.' }
+  }
+
+  if (!existsSync(targetBaseDir)) {
+    mkdirSync(targetBaseDir, { recursive: true })
+  }
+
+  const tempCloneDir = mkdtempSync(join(tmpdir(), 'chart-sparse-'))
+  const finalDestinationPath = join(targetBaseDir, chartTargetDirName)
+
+  try {
+    // Remove any previous output at the destination.
+    rmSync(finalDestinationPath, { recursive: true, force: true })
+
+    // Normalize the sparse path.
+    // Existing code assumed filePath may point at Chart.yaml, so strip that if present.
+    const sparsePath = details.filePath.replace(/\/?Chart\.yaml$/, '')
+    const refAndPath = `${details.branch}/${sparsePath}`
+
+    const gitSingleChart = new chartRepo(tempCloneDir, gitCloneUrl)
+
+    await gitSingleChart.cloneSingleChart(refAndPath, finalDestinationPath)
+
+    // We only want the checked-out files, not the repo metadata.
+    rmSync(join(finalDestinationPath, '.git'), { recursive: true, force: true })
+
+    return {
+      success: true,
+      chartPath: finalDestinationPath,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown sparse checkout error.',
+    }
+  } finally {
+    rmSync(tempCloneDir, { recursive: true, force: true })
+  }
+}
+
+export async function sparseCheckoutPath(
+  gitCloneUrl: string,
+  ref: string,
+  sparsePath: string,
+  targetBaseDir: string,
+  targetDirName: string,
+): Promise<{ success: true; checkoutPath: string } | { success: false; error: string }> {
+  if (!existsSync(targetBaseDir)) mkdirSync(targetBaseDir, { recursive: true })
+
+  const tempCloneDir = mkdtempSync(join(tmpdir(), 'sparse-checkout-'))
+  const finalDestinationPath = join(targetBaseDir, targetDirName)
+
+  try {
+    rmSync(finalDestinationPath, { recursive: true, force: true })
+
+    const normalizedSparsePath = sparsePath.replace(/^\/+/, '').replace(/\/+$/, '')
+    const refAndPath = `${ref}/${normalizedSparsePath}`
+
+    const repo = new chartRepo(tempCloneDir, gitCloneUrl)
+    await repo.cloneSingleChart(refAndPath, finalDestinationPath)
+
+    rmSync(join(finalDestinationPath, '.git'), { recursive: true, force: true })
+
+    return { success: true, checkoutPath: finalDestinationPath }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown sparse checkout error.',
+    }
+  } finally {
+    rmSync(tempCloneDir, { recursive: true, force: true })
+  }
+}
+
 /**
  * Encodes Git credentials into the URL for internal Gitea repositories
  */
@@ -533,4 +620,81 @@ export async function fetchWorkloadCatalog(
   if (!catalog.length) debug(`There are no directories at '${url}'`)
 
   return { helmCharts, catalog }
+}
+
+export async function fetchWorkloadCatalogChart(
+  url: string,
+  helmChartsDir: string,
+  branch: string = 'main',
+  chartName: string,
+  clusterDomainSuffix?: string,
+  teamId?: string,
+  chartsPath?: string,
+): Promise<any | null> {
+  const resolvedHelmChartsDir = path.resolve(helmChartsDir)
+
+  if (!existsSync(resolvedHelmChartsDir)) {
+    mkdirSync(resolvedHelmChartsDir, { recursive: true })
+  }
+
+  const gitUrl = encodeGitCredentials(url, clusterDomainSuffix)
+
+  const sparsePath = chartsPath ? `${chartsPath}/${chartName}` : chartName
+  const checkoutResult = await sparseCheckoutPath(gitUrl, branch, sparsePath, resolvedHelmChartsDir, chartName)
+
+  if (!checkoutResult.success) {
+    debug(`Sparse checkout failed for chart '${chartName}' from '${url}': ${checkoutResult.error}`)
+    return null
+  }
+
+  const chartDir = checkoutResult.checkoutPath
+
+  // RBAC check if needed
+  let rbacConfig = await readRbacConfig(resolvedHelmChartsDir)
+  if (!rbacConfig.rbac || Object.keys(rbacConfig.rbac).length === 0) {
+    // optional fallback if rbac.yaml lives one level up in repo structure
+    const fallbackDir = chartsPath ? path.resolve(resolvedHelmChartsDir, '..') : resolvedHelmChartsDir
+    rbacConfig = await readRbacConfig(fallbackDir)
+  }
+
+  const { rbac, betaCharts } = rbacConfig
+  if (!isChartAccessible(chartName, rbac, teamId)) {
+    return null
+  }
+
+  try {
+    const values = await safeReadTextFile(chartDir, 'values.yaml')
+
+    let valuesSchema = '{}'
+    try {
+      const schemaContent = await safeReadTextFile(chartDir, 'values.schema.json')
+      valuesSchema = schemaContent || '{}'
+    } catch {
+      // optional
+    }
+
+    const chartYaml = await safeReadTextFile(chartDir, 'Chart.yaml')
+    const chartMetadata = YAML.parse(chartYaml)
+
+    let readme = 'There is no `README` for this chart.'
+    try {
+      readme = await safeReadTextFile(chartDir, 'README.md')
+    } catch {
+      // optional
+    }
+
+    return {
+      name: chartName,
+      values: values || '{}',
+      valuesSchema,
+      icon: chartMetadata?.icon,
+      chartVersion: chartMetadata?.version,
+      chartDescription: chartMetadata?.description,
+      readme,
+      isBeta: betaCharts.includes(chartName),
+    }
+  } catch (error) {
+    debug(`Error parsing chart '${chartName}' in '${chartDir}': ${error.message}`)
+    return null
+  }
 }
