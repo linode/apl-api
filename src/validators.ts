@@ -11,7 +11,7 @@ export const AUTHZ_MOCK_IS_TEAM_ADMIN = bool({
 export const AUTHZ_MOCK_TEAM = str({ desc: 'Comma separated list of teams a user belongs to', default: undefined })
 export const CATALOG_CACHE_REFRESH_INTERVAL_MS = num({
   desc: 'Interval in milliseconds for refreshing the BYO catalog cache',
-  default: 600000, // 10 minutes
+  default: 60000, // 1 minute
 })
 export const CATALOG_CACHE_PATH = str({
   desc: 'The file path for the BYO catalog cache',
