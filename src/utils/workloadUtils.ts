@@ -1,6 +1,6 @@
 import axios from 'axios'
 import Debug from 'debug'
-import { existsSync, lstatSync, mkdirSync, renameSync, rmSync, statSync } from 'fs'
+import { existsSync, lstatSync, mkdirSync, renameSync, rmSync } from 'fs'
 import { readFile } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
 import path from 'path'
@@ -241,7 +241,13 @@ export class chartRepo {
   async ensureLatest(branch: string = 'main', forceRefresh: boolean = false) {
     const gitDir = path.join(this.localPath, '.git')
     const cacheSyncMarkerPath = path.join(this.localPath, env.CATALOG_CACHE_SYNC_MARKER)
-    if (!existsSync(gitDir)) {
+    const canRefreshExistingRepo =
+      typeof this.git.cwd === 'function' &&
+      typeof this.git.fetch === 'function' &&
+      typeof this.git.checkout === 'function' &&
+      typeof this.git.pull === 'function'
+
+    if (!existsSync(gitDir) || !canRefreshExistingRepo) {
       debug(`Catalog cache miss at ${this.localPath}; cloning branch '${branch}'`)
       await this.clone(branch)
       await writeFile(cacheSyncMarkerPath, new Date().toISOString(), 'utf-8')
@@ -250,7 +256,7 @@ export class chartRepo {
     }
 
     if (!forceRefresh && existsSync(cacheSyncMarkerPath)) {
-      const cacheAgeMs = Date.now() - statSync(cacheSyncMarkerPath).mtimeMs
+      const cacheAgeMs = Date.now() - lstatSync(cacheSyncMarkerPath).mtimeMs
       if (cacheAgeMs < env.CATALOG_CACHE_REFRESH_INTERVAL_MS) {
         debug(
           `Catalog cache hit at ${this.localPath}; age=${Math.round(cacheAgeMs / 1000)}s, ttl=${Math.round(env.CATALOG_CACHE_REFRESH_INTERVAL_MS / 1000)}s`,
@@ -495,6 +501,7 @@ async function getChartFolders(helmChartsDir: string): Promise<string[]> {
   const chartFolders = await Promise.all(
     files.map(async (fileName) => {
       try {
+        if (fileName.startsWith('.')) return null
         const filePath = path.join(helmChartsDir, fileName)
         if (!lstatSync(filePath).isDirectory()) return null
 
