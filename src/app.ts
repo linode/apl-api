@@ -24,6 +24,7 @@ import { AplResponseObject, OpenAPIDoc, Schema, SealedSecretManifestResponse } f
 import { default as OtomiStack } from 'src/otomi-stack'
 import { extract, getPaths, getValuesSchema } from 'src/utils'
 import {
+  CATALOG_CACHE_REFRESH_INTERVAL_MS,
   CHECK_LATEST_COMMIT_INTERVAL,
   cleanEnv,
   EXPRESS_PAYLOAD_LIMIT,
@@ -35,6 +36,7 @@ import getLatestRemoteCommitSha from './git/connect'
 import { getBuildStatus, getSealedSecretStatus, getServiceStatus, getWorkloadStatus } from './k8s_operations'
 
 const env = cleanEnv({
+  CATALOG_CACHE_REFRESH_INTERVAL_MS,
   CHECK_LATEST_COMMIT_INTERVAL,
   EXPRESS_PAYLOAD_LIMIT,
   GIT_PUSH_RETRIES,
@@ -146,6 +148,24 @@ export const getAppList = (): string[] => {
   return appsSchema.enum as string[]
 }
 
+let isCatalogRefreshRunning = false
+let catalogRefreshInterval: ReturnType<typeof setInterval> | undefined
+
+export const cloneCatalogRepositories = async (): Promise<void> => {
+  if (isCatalogRefreshRunning) {
+    debug('Catalog cache refresh is already running, skipping scheduled run')
+    return
+  }
+
+  isCatalogRefreshRunning = true
+  try {
+    const otomiStack = await getSessionStack()
+    await otomiStack.refreshBYOCatalogCache()
+  } finally {
+    isCatalogRefreshRunning = false
+  }
+}
+
 export async function initApp(inOtomiStack?: OtomiStack) {
   // Only create lightship in production (not in tests)
   const lightship = env.isTest ? null : createLightship()
@@ -158,7 +178,6 @@ export async function initApp(inOtomiStack?: OtomiStack) {
     app.set('trust proxy', env.TRUST_PROXY)
   }
 
-  const apiRoutesPath = path.resolve(__dirname, 'api')
   await loadSpec()
   const authz = new Authz(otomiSpec.spec)
   app.use(logger('dev'))
@@ -221,14 +240,35 @@ export async function initApp(inOtomiStack?: OtomiStack) {
       .listen(PORT, async () => {
         debug(`Listening on :::${PORT}`)
         lightship?.signalReady()
-        // Clone repo after the application is ready to avoid Pod NotReady phenomenon, and thus infinite Pod crash loopback
-        ;(await getSessionStack()).initGit()
+        // // Clone repo after the application is ready to avoid Pod NotReady phenomenon, and thus infinite Pod crash loopback
+        // ;(await getSessionStack()).initGit()
+
+        // Initialize git, warm catalog cache, and then start periodic refresh in one sequenced background task
+        void (async () => {
+          const sessionStack = await getSessionStack()
+          await sessionStack.initGit()
+          void cloneCatalogRepositories()
+
+          if (!catalogRefreshInterval) {
+            catalogRefreshInterval = setInterval(() => {
+              void cloneCatalogRepositories().catch((e) => {
+                debug(e)
+              })
+            }, env.CATALOG_CACHE_REFRESH_INTERVAL_MS)
+          }
+        })().catch((e) => {
+          debug(e)
+        })
       })
       .on('error', (e) => {
         console.error(e)
         lightship?.shutdown()
       })
     lightship?.registerShutdownHandler(() => {
+      if (catalogRefreshInterval) {
+        clearInterval(catalogRefreshInterval)
+        catalogRefreshInterval = undefined
+      }
       ;(server as Server).close()
     })
   }
@@ -271,6 +311,7 @@ export async function initApp(inOtomiStack?: OtomiStack) {
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   app.use('/api-docs/swagger', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
+
   return app
 }
 

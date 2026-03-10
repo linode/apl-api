@@ -757,6 +757,27 @@ describe('fetchWorkloadCatalog', () => {
     expect(result).toEqual({ helmCharts: [], catalog: [] })
     expect(fsPromises.readdir).not.toHaveBeenCalled()
   })
+
+  test('ignores folders without Chart.yaml', async () => {
+    const mockGit = {
+      clone: jest.fn().mockResolvedValue(undefined),
+    }
+    ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+    ;(fsPromises.readdir as jest.Mock).mockResolvedValue(['chart1', 'chart2'])
+
+    const baseImpl = (utils.safeReadTextFile as jest.Mock).getMockImplementation()!
+    ;(utils.safeReadTextFile as jest.Mock).mockImplementation(async (_baseDir, filePath) => {
+      if (filePath.endsWith('chart2/Chart.yaml') || filePath.endsWith('chart2/chart.yaml')) {
+        throw new Error('Chart manifest not found')
+      }
+      return baseImpl(_baseDir, filePath)
+    })
+
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, 'admin')
+
+    expect(result.helmCharts).toEqual(['chart1'])
+    expect(result.helmCharts).not.toContain('chart2')
+  })
 })
 
 // ----------------------------------------------------------------
@@ -974,6 +995,7 @@ describe('Helper functions integration tests', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     process.env = { ...originalEnv, GIT_USER: 'git-user', GIT_PASSWORD: 'git-password' }
+    ;(fs.lstatSync as jest.Mock).mockReturnValue({ isDirectory: () => true })
     jest.spyOn(utils, 'safeReadTextFile').mockResolvedValue('# README')
   })
 
@@ -1201,19 +1223,26 @@ describe('Helper functions integration tests', () => {
   })
 
   describe('getChartFolders (tested via fetchWorkloadCatalog)', () => {
-    test('excludes system files from chart list', async () => {
+    test('excludes hidden entries and non-directory files from chart list', async () => {
       const mockGit = { clone: jest.fn().mockResolvedValue(undefined) }
       ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
       ;(fs.existsSync as jest.Mock).mockReturnValue(false)
       ;(fsPromises.readdir as jest.Mock).mockResolvedValue([
         '.git',
+        '.github',
         '.gitignore',
         '.vscode',
         'LICENSE',
         'README.md',
+        'notes.txt',
         'chart1',
         'chart2',
       ])
+      ;(fs.lstatSync as jest.Mock).mockImplementation((targetPath: string) => {
+        const isDirectory =
+          targetPath.endsWith('/chart1') || targetPath.endsWith('/chart2') || targetPath.endsWith('/.github')
+        return { isDirectory: () => isDirectory }
+      })
       ;(fsExtra.readFile as unknown as jest.Mock).mockImplementation((filePath) => {
         if (filePath.endsWith('rbac.yaml')) return Promise.reject(new Error('Not found'))
         return Promise.reject(new Error('File not found'))
@@ -1221,7 +1250,7 @@ describe('Helper functions integration tests', () => {
 
       const result = await fetchWorkloadCatalog('https://example.com/charts.git', '/tmp/test', 'main')
 
-      // Should only include chart1 and chart2, not system files
+      // Should only include chart directories, excluding hidden folders and files
       expect(result.helmCharts).toEqual(['chart1', 'chart2'])
     })
   })
