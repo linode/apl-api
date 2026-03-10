@@ -638,7 +638,7 @@ describe('fetchWorkloadCatalog', () => {
     expect(mockGit.clone).toHaveBeenCalledWith(
       'https://git-user:git-password@gitea.example.com/otomi/charts.git',
       helmChartsDir,
-      ['--branch', 'main', '--single-branch'],
+      ['--branch', 'main', '--single-branch', '--depth', '1'],
     )
     expect(result).toEqual({
       helmCharts: ['chart1', 'chart2'],
@@ -811,7 +811,13 @@ describe('chartRepo', () => {
     const repo = new chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
     await repo.clone()
 
-    expect(mockGit.clone).toHaveBeenCalledWith(chartRepoUrl, localPath, ['--branch', 'main', '--single-branch'])
+    expect(mockGit.clone).toHaveBeenCalledWith(chartRepoUrl, localPath, [
+      '--branch',
+      'main',
+      '--single-branch',
+      '--depth',
+      '1',
+    ])
   })
 
   test('cloneSingleChart method performs sparse checkout', async () => {
@@ -1028,7 +1034,7 @@ describe('Helper functions integration tests', () => {
       expect(mockGit.clone).toHaveBeenCalledWith(
         'https://git-user:git-password@gitea.cluster.local/otomi/charts.git',
         helmChartsDir,
-        ['--branch', 'main', '--single-branch'],
+        ['--branch', 'main', '--single-branch', '--depth', '1'],
       )
     })
 
@@ -1052,7 +1058,13 @@ describe('Helper functions integration tests', () => {
       }
 
       // Verify that clone was called with original URL
-      expect(mockGit.clone).toHaveBeenCalledWith(githubUrl, helmChartsDir, ['--branch', 'main', '--single-branch'])
+      expect(mockGit.clone).toHaveBeenCalledWith(githubUrl, helmChartsDir, [
+        '--branch',
+        'main',
+        '--single-branch',
+        '--depth',
+        '1',
+      ])
     })
   })
 
