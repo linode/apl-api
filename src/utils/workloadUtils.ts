@@ -236,7 +236,7 @@ export class chartRepo {
     this.git = simpleGit(this.localPath)
   }
   async clone(branch: string = 'main') {
-    await this.git.clone(this.chartRepoUrl, this.localPath, ['--branch', branch, '--single-branch'])
+    await this.git.clone(this.chartRepoUrl, this.localPath, ['--branch', branch, '--single-branch', '--depth', '1'])
   }
   async ensureLatest(branch: string = 'main', forceRefresh: boolean = false) {
     const gitDir = path.join(this.localPath, '.git')
