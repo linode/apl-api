@@ -1654,7 +1654,7 @@ export default class OtomiStack {
     await this.doDeployments([aplRecord], false)
     try {
       const { repositoryUrl, branch, name, chartsPath } = data.spec
-      await this.getBYOWorkloadCatalog(repositoryUrl, branch, name, chartsPath as string | undefined, true)
+      void this.getBYOWorkloadCatalog(repositoryUrl, branch, name, chartsPath as string | undefined, true)
     } catch {
       debug(`Unable to warm cache for catalog ${data.spec.name}`)
     }
@@ -1683,7 +1683,7 @@ export default class OtomiStack {
     await this.doDeployment(aplRecord, false)
     try {
       const { repositoryUrl, branch, name: catalogName, chartsPath } = catalogResponse.spec
-      await this.getBYOWorkloadCatalog(repositoryUrl, branch, catalogName, chartsPath as string | undefined, true)
+      void this.getBYOWorkloadCatalog(repositoryUrl, branch, catalogName, chartsPath as string | undefined, true)
     } catch {
       debug(`Unable to warm cache for catalog ${catalogResponse.spec.name}`)
     }
