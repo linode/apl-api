@@ -648,32 +648,16 @@ export async function fetchWorkloadCatalog(
   return { helmCharts, catalog }
 }
 
-export async function fetchWorkloadCatalogChart(
-  url: string,
-  helmChartsDir: string,
-  chartName: string,
-  branch: string = 'main',
-  clusterDomainSuffix?: string,
-  teamId?: string,
-  chartsPath?: string,
-): Promise<any | null> {
+export async function fetchWorkloadCatalogChart(helmChartsDir: string, chartName: string): Promise<any | null> {
   const resolvedHelmChartsDir = path.resolve(helmChartsDir)
 
   if (!existsSync(resolvedHelmChartsDir)) {
     mkdirSync(resolvedHelmChartsDir, { recursive: true })
   }
 
-  const gitUrl = encodeGitCredentials(url, clusterDomainSuffix)
+  const finalDestinationPath = join(resolvedHelmChartsDir, chartName)
 
-  const sparsePath = chartsPath ? `${chartsPath}/${chartName}` : chartName
-  const checkoutResult = await sparseCheckoutPath(gitUrl, branch, sparsePath, resolvedHelmChartsDir, chartName)
-
-  if (!checkoutResult.success) {
-    debug(`Sparse checkout failed for chart '${chartName}' from '${url}': ${checkoutResult.error}`)
-    return null
-  }
-
-  const chartDir = checkoutResult.checkoutPath
+  const chartDir = finalDestinationPath
 
   try {
     const values = await safeReadTextFile(chartDir, 'values.yaml')

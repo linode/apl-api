@@ -1760,7 +1760,6 @@ export default class OtomiStack {
   ): Promise<{ url: string; branch: string; chart: any | null; chartsPath?: string }> {
     const catalog = this.getAplCatalog(name)
     const { repositoryUrl, branch, chartsPath } = catalog.spec
-    const { cluster } = this.getSettings(['cluster'])
     const encodedCatalogName = encodeURIComponent(catalog.spec.name)
     const encodedBranch = encodeURIComponent(branch)
     const helmChartsDir = chartsPath
@@ -1768,15 +1767,7 @@ export default class OtomiStack {
       : `${env.CATALOG_CACHE_PATH}/${encodedCatalogName}/${encodedBranch}`
 
     try {
-      const chart = await fetchWorkloadCatalogChart(
-        repositoryUrl,
-        helmChartsDir,
-        chartName,
-        branch,
-        cluster?.domainSuffix,
-        undefined,
-        chartsPath as string | undefined,
-      )
+      const chart = await fetchWorkloadCatalogChart(helmChartsDir, chartName)
 
       return { url: repositoryUrl, branch, chart, chartsPath }
     } catch (error) {
