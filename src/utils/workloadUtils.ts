@@ -406,7 +406,9 @@ export async function sparseCheckoutPath(
   const finalDestinationPath = join(targetBaseDir, targetDirName)
 
   try {
-    rmSync(finalDestinationPath, { recursive: true, force: true })
+    if (existsSync(finalDestinationPath)) {
+      return { success: true, checkoutPath: finalDestinationPath }
+    }
 
     const normalizedSparsePath = sparsePath.replace(/^\/+/, '').replace(/\/+$/, '')
     const refAndPath = `${ref}/${normalizedSparsePath}`

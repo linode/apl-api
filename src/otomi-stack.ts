@@ -1761,9 +1761,11 @@ export default class OtomiStack {
     const catalog = this.getAplCatalog(name)
     const { repositoryUrl, branch, chartsPath } = catalog.spec
     const { cluster } = this.getSettings(['cluster'])
-
-    const uuid = uuidv4()
-    const helmChartsDir = `/tmp/otomi/charts/${name}/${branch}/chart/${uuid}`
+    const encodedCatalogName = encodeURIComponent(catalog.spec.name)
+    const encodedBranch = encodeURIComponent(branch)
+    const helmChartsDir = chartsPath
+      ? `${env.CATALOG_CACHE_PATH}/${encodedCatalogName}/${encodedBranch}/${chartsPath}`
+      : `${env.CATALOG_CACHE_PATH}/${encodedCatalogName}/${encodedBranch}`
 
     try {
       const chart = await fetchWorkloadCatalogChart(
@@ -1780,8 +1782,6 @@ export default class OtomiStack {
     } catch (error) {
       debug(`Error fetching workload chart '${chartName}': ${error.message}`)
       return { url: repositoryUrl, branch, chart: null, chartsPath }
-    } finally {
-      if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
     }
   }
 
