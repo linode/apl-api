@@ -1631,34 +1631,6 @@ export default class OtomiStack {
     }
   }
 
-  private async fetchCatalogChart(
-    url: string,
-    helmChartsDir: string,
-    branch: string,
-    chartName: string,
-    teamId?: string,
-    chartsPath?: string,
-  ): Promise<any | null> {
-    const { cluster } = this.getSettings(['cluster'])
-
-    try {
-      return await fetchWorkloadCatalogChart(
-        url,
-        helmChartsDir,
-        chartName,
-        branch,
-        cluster?.domainSuffix,
-        teamId,
-        chartsPath,
-      )
-    } catch (error) {
-      debug(`Error fetching workload chart '${chartName}': ${error.message}`)
-      return null
-    } finally {
-      if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
-    }
-  }
-
   getAllAplCatalogs(catalogFilter: { enabled?: boolean }): AplCatalogResponse[] {
     const files = this.fileStore.getPlatformResourcesByKind('AplCatalog')
     let catalogs = Array.from(files.values()) as AplCatalogResponse[]
@@ -1737,19 +1709,6 @@ export default class OtomiStack {
     const helmChartsDir = `/tmp/otomi/charts/${catalogName}/${branch}/charts/${uuid}`
 
     return this.fetchCatalog(url, helmChartsDir, branch, undefined, chartsPath)
-  }
-
-  async getBYOWorkloadCatalogChart(
-    url: string,
-    branch: string,
-    catalogName: string,
-    chartName: string,
-    chartsPath?: string,
-  ): Promise<any | null> {
-    const uuid = uuidv4()
-    const helmChartsDir = `/tmp/otomi/charts/${catalogName}/${branch}/chart/${uuid}`
-
-    return this.fetchCatalogChart(url, helmChartsDir, branch, chartName, undefined, chartsPath)
   }
 
   async getAplCatalogCharts(name: string): Promise<{ url: string; helmCharts: any; catalog: any; branch: string }> {

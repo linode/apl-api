@@ -597,19 +597,6 @@ export async function fetchWorkloadCatalogChart(
 
   const chartDir = checkoutResult.checkoutPath
 
-  // RBAC check if needed
-  let rbacConfig = await readRbacConfig(resolvedHelmChartsDir)
-  if (!rbacConfig.rbac || Object.keys(rbacConfig.rbac).length === 0) {
-    // optional fallback if rbac.yaml lives one level up in repo structure
-    const fallbackDir = chartsPath ? path.resolve(resolvedHelmChartsDir, '..') : resolvedHelmChartsDir
-    rbacConfig = await readRbacConfig(fallbackDir)
-  }
-
-  const { rbac, betaCharts } = rbacConfig
-  if (!isChartAccessible(chartName, rbac, teamId)) {
-    return null
-  }
-
   try {
     const values = await safeReadTextFile(chartDir, 'values.yaml')
 
@@ -639,7 +626,6 @@ export async function fetchWorkloadCatalogChart(
       chartVersion: chartMetadata?.version,
       chartDescription: chartMetadata?.description,
       readme,
-      isBeta: betaCharts.includes(chartName),
     }
   } catch (error) {
     debug(`Error parsing chart '${chartName}' in '${chartDir}': ${error.message}`)
