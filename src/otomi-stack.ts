@@ -2974,7 +2974,7 @@ export default class OtomiStack {
     const allRegions: Region[] = []
     try {
       let page = 1
-      let totalPages = 1
+      let totalPages: number
       do {
         const response: ResourcePage<Region> = await getRegions({ page, page_size: 500 })
         allRegions.push(...response.data)
