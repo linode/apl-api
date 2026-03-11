@@ -1,7 +1,7 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
-import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
+import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
 import { existsSync, rmSync } from 'fs'
 import { pathExists, unlink } from 'fs-extra'
 import { readdir, readFile, writeFile } from 'fs/promises'
@@ -104,6 +104,7 @@ import {
   HIDDEN_APPS,
   KNOWLEDGE_BASE_KIND,
   OBJ_STORAGE_APPS,
+  OBJECT_STORAGE_UI_EXCLUSIONS,
   PREINSTALLED_EXCLUDED_APPS,
   TOOLS_HOST,
   VERSIONS,
@@ -167,6 +168,7 @@ const env = cleanEnv({
   HIDDEN_APPS,
   OBJ_STORAGE_APPS,
   KNOWLEDGE_BASE_KIND,
+  OBJECT_STORAGE_UI_EXCLUSIONS,
 })
 
 export const rootPath = '/tmp/otomi/values'
@@ -2915,17 +2917,7 @@ export default class OtomiStack {
     const valuesSchema = await getValuesSchema()
     const currentSha = rootStack.git.commitSha
     const { obj } = this.getSettings(['obj'])
-    let regions
-    try {
-      regions = await getRegions()
-    } catch (error) {
-      debug('Error fetching object storage regions:', error.message)
-    }
-    const objStorageRegions =
-      regions?.data
-        ?.filter((region) => region.capabilities.includes('Object Storage'))
-        ?.map(({ id, label }) => ({ id, label }))
-        ?.sort((a, b) => a.label.localeCompare(b.label)) || []
+    const objStorageRegions = await this.getObjStorageRegions()
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
       core: this.getCore() as Record<string, any>,
@@ -2944,5 +2936,29 @@ export default class OtomiStack {
       valuesSchema,
     }
     return data
+  }
+
+  private async getObjStorageRegions() {
+    const allRegions: Region[] = []
+    try {
+      let page = 1
+      let totalPages = 1
+      do {
+        const response: ResourcePage<Region> = await getRegions({ page, page_size: 500 })
+        allRegions.push(...response.data)
+        totalPages = response.pages
+        page++
+      } while (page <= totalPages)
+    } catch (error) {
+      debug('Error fetching object storage regions:', error.message)
+    }
+    const objStorageRegions = allRegions
+      .filter(
+        (region) =>
+          region.capabilities?.includes('Object Storage') && !env.OBJECT_STORAGE_UI_EXCLUSIONS.includes(region.id),
+      )
+      .sort((a, b) => a.label.localeCompare(b.label))
+      .map(({ id, label }) => ({ id, label }))
+    return objStorageRegions
   }
 }
