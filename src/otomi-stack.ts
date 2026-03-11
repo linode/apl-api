@@ -1645,8 +1645,8 @@ export default class OtomiStack {
       return await fetchWorkloadCatalogChart(
         url,
         helmChartsDir,
-        branch,
         chartName,
+        branch,
         cluster?.domainSuffix,
         teamId,
         chartsPath,
@@ -1770,16 +1770,29 @@ export default class OtomiStack {
   ): Promise<{ url: string; branch: string; chart: any | null; chartsPath?: string }> {
     const catalog = this.getAplCatalog(name)
     const { repositoryUrl, branch, chartsPath } = catalog.spec
+    const { cluster } = this.getSettings(['cluster'])
 
-    const chart = await this.getBYOWorkloadCatalogChart(
-      repositoryUrl,
-      branch,
-      name,
-      chartName,
-      chartsPath as string | undefined,
-    )
+    const uuid = uuidv4()
+    const helmChartsDir = `/tmp/otomi/charts/${name}/${branch}/chart/${uuid}`
 
-    return { url: repositoryUrl, branch, chart, chartsPath }
+    try {
+      const chart = await fetchWorkloadCatalogChart(
+        repositoryUrl,
+        helmChartsDir,
+        chartName,
+        branch,
+        cluster?.domainSuffix,
+        undefined,
+        chartsPath as string | undefined,
+      )
+
+      return { url: repositoryUrl, branch, chart, chartsPath }
+    } catch (error) {
+      debug(`Error fetching workload chart '${chartName}': ${error.message}`)
+      return { url: repositoryUrl, branch, chart: null, chartsPath }
+    } finally {
+      if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
+    }
   }
 
   async getHelmChartContent(url: string): Promise<any> {

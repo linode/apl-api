@@ -340,58 +340,6 @@ export async function sparseCloneChart(
   return true
 }
 
-export async function sparseCheckoutChart(
-  gitRepositoryUrl: string,
-  targetBaseDir: string,
-  chartTargetDirName: string,
-): Promise<{ success: true; chartPath: string } | { success: false; error: string }> {
-  const details = detectGitProvider(gitRepositoryUrl)
-  if (!details) {
-    return { success: false, error: 'Could not detect git provider details from URL.' }
-  }
-
-  const gitCloneUrl = getGitCloneUrl(details)
-  if (!gitCloneUrl) {
-    return { success: false, error: 'Could not resolve clone URL from repository details.' }
-  }
-
-  if (!existsSync(targetBaseDir)) {
-    mkdirSync(targetBaseDir, { recursive: true })
-  }
-
-  const tempCloneDir = mkdtempSync(join(tmpdir(), 'chart-sparse-'))
-  const finalDestinationPath = join(targetBaseDir, chartTargetDirName)
-
-  try {
-    // Remove any previous output at the destination.
-    rmSync(finalDestinationPath, { recursive: true, force: true })
-
-    // Normalize the sparse path.
-    // Existing code assumed filePath may point at Chart.yaml, so strip that if present.
-    const sparsePath = details.filePath.replace(/\/?Chart\.yaml$/, '')
-    const refAndPath = `${details.branch}/${sparsePath}`
-
-    const gitSingleChart = new chartRepo(tempCloneDir, gitCloneUrl)
-
-    await gitSingleChart.cloneSingleChart(refAndPath, finalDestinationPath)
-
-    // We only want the checked-out files, not the repo metadata.
-    rmSync(join(finalDestinationPath, '.git'), { recursive: true, force: true })
-
-    return {
-      success: true,
-      chartPath: finalDestinationPath,
-    }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown sparse checkout error.',
-    }
-  } finally {
-    rmSync(tempCloneDir, { recursive: true, force: true })
-  }
-}
-
 export async function sparseCheckoutPath(
   gitCloneUrl: string,
   ref: string,
@@ -625,8 +573,8 @@ export async function fetchWorkloadCatalog(
 export async function fetchWorkloadCatalogChart(
   url: string,
   helmChartsDir: string,
-  branch: string = 'main',
   chartName: string,
+  branch: string = 'main',
   clusterDomainSuffix?: string,
   teamId?: string,
   chartsPath?: string,

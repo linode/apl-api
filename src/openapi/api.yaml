@@ -2016,10 +2016,8 @@ paths:
                 $ref: '#/components/schemas/AplCatalogChartResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpenApiValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/coderepos:
     get:
       operationId: getAllCodeRepos
