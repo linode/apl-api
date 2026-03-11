@@ -1,9 +1,10 @@
 import axios from 'axios'
 import Debug from 'debug'
-import { existsSync, lstatSync, mkdirSync, renameSync, rmSync } from 'fs'
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, renameSync, rmSync } from 'fs'
 import { readFile } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
-import path from 'path'
+import { tmpdir } from 'os'
+import path, { join } from 'path'
 import simpleGit, { SimpleGit } from 'simple-git'
 import { safeReadTextFile } from 'src/utils'
 import {
@@ -392,6 +393,40 @@ export async function sparseCloneChart(
   return true
 }
 
+export async function sparseCheckoutPath(
+  gitCloneUrl: string,
+  ref: string,
+  sparsePath: string,
+  targetBaseDir: string,
+  targetDirName: string,
+): Promise<{ success: true; checkoutPath: string } | { success: false; error: string }> {
+  if (!existsSync(targetBaseDir)) mkdirSync(targetBaseDir, { recursive: true })
+
+  const tempCloneDir = mkdtempSync(join(tmpdir(), 'sparse-checkout-'))
+  const finalDestinationPath = join(targetBaseDir, targetDirName)
+
+  try {
+    rmSync(finalDestinationPath, { recursive: true, force: true })
+
+    const normalizedSparsePath = sparsePath.replace(/^\/+/, '').replace(/\/+$/, '')
+    const refAndPath = `${ref}/${normalizedSparsePath}`
+
+    const repo = new chartRepo(tempCloneDir, gitCloneUrl)
+    await repo.cloneSingleChart(refAndPath, finalDestinationPath)
+
+    rmSync(join(finalDestinationPath, '.git'), { recursive: true, force: true })
+
+    return { success: true, checkoutPath: finalDestinationPath }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown sparse checkout error.',
+    }
+  } finally {
+    rmSync(tempCloneDir, { recursive: true, force: true })
+  }
+}
+
 /**
  * Encodes Git credentials into the URL for internal Gitea repositories
  */
@@ -609,4 +644,67 @@ export async function fetchWorkloadCatalog(
   if (!catalog.length) debug(`There are no directories at '${url}'`)
 
   return { helmCharts, catalog }
+}
+
+export async function fetchWorkloadCatalogChart(
+  url: string,
+  helmChartsDir: string,
+  chartName: string,
+  branch: string = 'main',
+  clusterDomainSuffix?: string,
+  teamId?: string,
+  chartsPath?: string,
+): Promise<any | null> {
+  const resolvedHelmChartsDir = path.resolve(helmChartsDir)
+
+  if (!existsSync(resolvedHelmChartsDir)) {
+    mkdirSync(resolvedHelmChartsDir, { recursive: true })
+  }
+
+  const gitUrl = encodeGitCredentials(url, clusterDomainSuffix)
+
+  const sparsePath = chartsPath ? `${chartsPath}/${chartName}` : chartName
+  const checkoutResult = await sparseCheckoutPath(gitUrl, branch, sparsePath, resolvedHelmChartsDir, chartName)
+
+  if (!checkoutResult.success) {
+    debug(`Sparse checkout failed for chart '${chartName}' from '${url}': ${checkoutResult.error}`)
+    return null
+  }
+
+  const chartDir = checkoutResult.checkoutPath
+
+  try {
+    const values = await safeReadTextFile(chartDir, 'values.yaml')
+
+    let valuesSchema = '{}'
+    try {
+      const schemaContent = await safeReadTextFile(chartDir, 'values.schema.json')
+      valuesSchema = schemaContent || '{}'
+    } catch {
+      // optional
+    }
+
+    const chartYaml = await safeReadTextFile(chartDir, 'Chart.yaml')
+    const chartMetadata = YAML.parse(chartYaml)
+
+    let readme = 'There is no `README` for this chart.'
+    try {
+      readme = await safeReadTextFile(chartDir, 'README.md')
+    } catch {
+      // optional
+    }
+
+    return {
+      name: chartName,
+      values: values || '{}',
+      valuesSchema,
+      icon: chartMetadata?.icon,
+      chartVersion: chartMetadata?.version,
+      chartDescription: chartMetadata?.description,
+      readme,
+    }
+  } catch (error) {
+    debug(`Error parsing chart '${chartName}' in '${chartDir}': ${error.message}`)
+    return null
+  }
 }

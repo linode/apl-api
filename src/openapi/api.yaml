@@ -2013,6 +2013,31 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
+  '/v2/catalogs/{catalogId}/charts/{chartName}':
+    parameters:
+      - $ref: '#/components/parameters/catalogParams'
+      - name: chartName
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Name of the chart to fetch
+    get:
+      operationId: getAplCatalogsChart
+      x-eov-operation-handler: v2/catalogs/{catalogId}/charts/{chartName}
+      description: Get a single chart for a specific catalog
+      x-aclSchema: AplCatalog
+      responses:
+        '200':
+          description: Successfully obtained app catalog chart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplCatalogChartResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/coderepos:
     get:
       operationId: getAllCodeRepos
