@@ -240,8 +240,6 @@ export async function initApp(inOtomiStack?: OtomiStack) {
       .listen(PORT, async () => {
         debug(`Listening on :::${PORT}`)
         lightship?.signalReady()
-        // // Clone repo after the application is ready to avoid Pod NotReady phenomenon, and thus infinite Pod crash loopback
-        // ;(await getSessionStack()).initGit()
 
         // Initialize git, warm catalog cache, and then start periodic refresh in one sequenced background task
         void (async () => {
