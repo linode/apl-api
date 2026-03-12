@@ -29,14 +29,6 @@ Service:
     namespace:
       $ref: 'definitions.yaml#/idName'
       description: A Kubernetes namespace.
-      x-acl:
-        platformAdmin:
-          - create-any
-          - read-any
-          - update-any
-          - delete-any
-        teamAdmin: []
-        teamMember: []
     port:
       type: integer
       minimum: 1
