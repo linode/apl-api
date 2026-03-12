@@ -9,6 +9,18 @@ export const AUTHZ_MOCK_IS_TEAM_ADMIN = bool({
   default: true,
 })
 export const AUTHZ_MOCK_TEAM = str({ desc: 'Comma separated list of teams a user belongs to', default: undefined })
+export const CATALOG_CACHE_REFRESH_INTERVAL_MS = num({
+  desc: 'Interval in milliseconds for refreshing the BYO catalog cache',
+  default: 600000, // 10 minutes
+})
+export const CATALOG_CACHE_PATH = str({
+  desc: 'The file path for the BYO catalog cache',
+  default: '/tmp/otomi/charts-cache',
+})
+export const CATALOG_CACHE_SYNC_MARKER = str({
+  desc: 'The file name for the BYO catalog cache sync marker',
+  default: '.apl-cache-last-sync',
+})
 export const DEFAULT_PLATFORM_ADMIN_EMAIL = str({
   desc: 'The email address for the default platform admin user.',
   devDefault: 'platform-admin@dev.linode-apl.net',
