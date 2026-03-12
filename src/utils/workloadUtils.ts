@@ -1,19 +1,25 @@
 import axios from 'axios'
 import Debug from 'debug'
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, renameSync, rmSync } from 'fs'
+import { existsSync, lstatSync, mkdirSync, renameSync, rmSync } from 'fs'
 import { readFile } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
-import { tmpdir } from 'os'
-import path, { join } from 'path'
+import path from 'path'
 import simpleGit, { SimpleGit } from 'simple-git'
 import { safeReadTextFile } from 'src/utils'
-import { cleanEnv, GIT_PROVIDER_URL_PATTERNS } from 'src/validators'
+import {
+  CATALOG_CACHE_REFRESH_INTERVAL_MS,
+  CATALOG_CACHE_SYNC_MARKER,
+  cleanEnv,
+  GIT_PROVIDER_URL_PATTERNS,
+} from 'src/validators'
 import YAML from 'yaml'
 import { BadRequestError } from '../error'
 
 const debug = Debug('apl:workloadUtils')
 
 const env = cleanEnv({
+  CATALOG_CACHE_REFRESH_INTERVAL_MS,
+  CATALOG_CACHE_SYNC_MARKER,
   GIT_PROVIDER_URL_PATTERNS,
 })
 
@@ -230,7 +236,53 @@ export class chartRepo {
     this.git = simpleGit(this.localPath)
   }
   async clone(branch: string = 'main') {
-    await this.git.clone(this.chartRepoUrl, this.localPath, ['--branch', branch, '--single-branch'])
+    await this.git.clone(this.chartRepoUrl, this.localPath, ['--branch', branch, '--single-branch', '--depth', '1'])
+  }
+  async ensureLatest(branch: string = 'main', forceRefresh: boolean = false) {
+    const gitDir = path.join(this.localPath, '.git')
+    const cacheSyncMarkerPath = path.join(this.localPath, env.CATALOG_CACHE_SYNC_MARKER)
+    const canRefreshExistingRepo =
+      typeof this.git.cwd === 'function' &&
+      typeof this.git.fetch === 'function' &&
+      typeof this.git.checkout === 'function' &&
+      typeof this.git.pull === 'function'
+
+    if (!existsSync(gitDir) || !canRefreshExistingRepo) {
+      debug(`Catalog cache miss at ${this.localPath}; cloning branch '${branch}'`)
+      await this.clone(branch)
+      await writeFile(cacheSyncMarkerPath, new Date().toISOString(), 'utf-8')
+      debug(`Catalog cache initialized at ${this.localPath}`)
+      return
+    }
+
+    if (!forceRefresh && existsSync(cacheSyncMarkerPath)) {
+      const cacheAgeMs = Date.now() - lstatSync(cacheSyncMarkerPath).mtimeMs
+      if (cacheAgeMs < env.CATALOG_CACHE_REFRESH_INTERVAL_MS) {
+        debug(
+          `Catalog cache hit at ${this.localPath}; age=${Math.round(cacheAgeMs / 1000)}s, ttl=${Math.round(env.CATALOG_CACHE_REFRESH_INTERVAL_MS / 1000)}s`,
+        )
+        return
+      }
+      debug(
+        `Catalog cache expired at ${this.localPath}; age=${Math.round(cacheAgeMs / 1000)}s, ttl=${Math.round(env.CATALOG_CACHE_REFRESH_INTERVAL_MS / 1000)}s`,
+      )
+    } else if (forceRefresh) {
+      debug(`Catalog cache force-refresh requested at ${this.localPath}`)
+    } else {
+      debug(`Catalog cache marker missing at ${this.localPath}; refreshing`)
+    }
+
+    debug(`Refreshing catalog cache at ${this.localPath} for branch '${branch}'`)
+    await this.git.cwd(this.localPath)
+    await this.git.fetch('origin', branch)
+    try {
+      await this.git.checkout(branch)
+    } catch {
+      await this.git.checkout(['-B', branch, `origin/${branch}`])
+    }
+    await this.git.pull('origin', branch, { '--ff-only': null })
+    await writeFile(cacheSyncMarkerPath, new Date().toISOString(), 'utf-8')
+    debug(`Catalog cache refreshed at ${this.localPath}`)
   }
   async cloneSingleChart(refAndPath: string, finalDestinationPath: string) {
     const remoteResult = await this.git.listRemote([this.chartRepoUrl])
@@ -340,40 +392,6 @@ export async function sparseCloneChart(
   return true
 }
 
-export async function sparseCheckoutPath(
-  gitCloneUrl: string,
-  ref: string,
-  sparsePath: string,
-  targetBaseDir: string,
-  targetDirName: string,
-): Promise<{ success: true; checkoutPath: string } | { success: false; error: string }> {
-  if (!existsSync(targetBaseDir)) mkdirSync(targetBaseDir, { recursive: true })
-
-  const tempCloneDir = mkdtempSync(join(tmpdir(), 'sparse-checkout-'))
-  const finalDestinationPath = join(targetBaseDir, targetDirName)
-
-  try {
-    rmSync(finalDestinationPath, { recursive: true, force: true })
-
-    const normalizedSparsePath = sparsePath.replace(/^\/+/, '').replace(/\/+$/, '')
-    const refAndPath = `${ref}/${normalizedSparsePath}`
-
-    const repo = new chartRepo(tempCloneDir, gitCloneUrl)
-    await repo.cloneSingleChart(refAndPath, finalDestinationPath)
-
-    rmSync(join(finalDestinationPath, '.git'), { recursive: true, force: true })
-
-    return { success: true, checkoutPath: finalDestinationPath }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown sparse checkout error.',
-    }
-  } finally {
-    rmSync(tempCloneDir, { recursive: true, force: true })
-  }
-}
-
 /**
  * Encodes Git credentials into the URL for internal Gitea repositories
  */
@@ -480,8 +498,27 @@ async function processChartFolder(
  */
 async function getChartFolders(helmChartsDir: string): Promise<string[]> {
   const files = await readdir(helmChartsDir, 'utf-8')
-  const filesToExclude = ['.git', '.gitignore', '.vscode', 'LICENSE', 'README.md']
-  return files.filter((f) => !filesToExclude.includes(f))
+  const chartFolders = await Promise.all(
+    files.map(async (fileName) => {
+      try {
+        if (fileName.startsWith('.')) return null
+        const filePath = path.join(helmChartsDir, fileName)
+        if (!lstatSync(filePath).isDirectory()) return null
+
+        try {
+          await safeReadTextFile(helmChartsDir, `${fileName}/Chart.yaml`)
+          return fileName
+        } catch {
+          await safeReadTextFile(helmChartsDir, `${fileName}/chart.yaml`)
+          return fileName
+        }
+      } catch {
+        return null
+      }
+    }),
+  )
+
+  return chartFolders.filter((folder): folder is string => folder !== null)
 }
 
 /**
@@ -501,6 +538,7 @@ export async function fetchWorkloadCatalog(
   clusterDomainSuffix?: string,
   teamId?: string,
   chartsPath?: string,
+  forceRefresh: boolean = false,
 ): Promise<{ helmCharts: string[]; catalog: any[] }> {
   const resolvedHelmChartsDir = path.resolve(helmChartsDir)
 
@@ -510,7 +548,7 @@ export async function fetchWorkloadCatalog(
   // Clone repository
   const gitUrl = encodeGitCredentials(url, clusterDomainSuffix)
   const gitRepo = new chartRepo(resolvedHelmChartsDir, gitUrl)
-  await gitRepo.clone(branch)
+  await gitRepo.ensureLatest(branch, forceRefresh)
 
   // Determine the charts directory path
   const chartsDir = chartsPath ? path.resolve(resolvedHelmChartsDir, chartsPath) : resolvedHelmChartsDir
@@ -542,7 +580,10 @@ export async function fetchWorkloadCatalog(
 
   // Get chart folders
   const folders = await getChartFolders(chartsDir)
-
+  if (!folders.length) {
+    debug(`No chart folders found in '${chartsDir}' at '${url}'`)
+    return { helmCharts: [], catalog: [] }
+  }
   // Read RBAC configuration (try chartsDir first, fallback to root)
   let rbacConfig = await readRbacConfig(chartsDir)
   if (!rbacConfig.rbac || Object.keys(rbacConfig.rbac).length === 0) {
@@ -568,67 +609,4 @@ export async function fetchWorkloadCatalog(
   if (!catalog.length) debug(`There are no directories at '${url}'`)
 
   return { helmCharts, catalog }
-}
-
-export async function fetchWorkloadCatalogChart(
-  url: string,
-  helmChartsDir: string,
-  chartName: string,
-  branch: string = 'main',
-  clusterDomainSuffix?: string,
-  teamId?: string,
-  chartsPath?: string,
-): Promise<any | null> {
-  const resolvedHelmChartsDir = path.resolve(helmChartsDir)
-
-  if (!existsSync(resolvedHelmChartsDir)) {
-    mkdirSync(resolvedHelmChartsDir, { recursive: true })
-  }
-
-  const gitUrl = encodeGitCredentials(url, clusterDomainSuffix)
-
-  const sparsePath = chartsPath ? `${chartsPath}/${chartName}` : chartName
-  const checkoutResult = await sparseCheckoutPath(gitUrl, branch, sparsePath, resolvedHelmChartsDir, chartName)
-
-  if (!checkoutResult.success) {
-    debug(`Sparse checkout failed for chart '${chartName}' from '${url}': ${checkoutResult.error}`)
-    return null
-  }
-
-  const chartDir = checkoutResult.checkoutPath
-
-  try {
-    const values = await safeReadTextFile(chartDir, 'values.yaml')
-
-    let valuesSchema = '{}'
-    try {
-      const schemaContent = await safeReadTextFile(chartDir, 'values.schema.json')
-      valuesSchema = schemaContent || '{}'
-    } catch {
-      // optional
-    }
-
-    const chartYaml = await safeReadTextFile(chartDir, 'Chart.yaml')
-    const chartMetadata = YAML.parse(chartYaml)
-
-    let readme = 'There is no `README` for this chart.'
-    try {
-      readme = await safeReadTextFile(chartDir, 'README.md')
-    } catch {
-      // optional
-    }
-
-    return {
-      name: chartName,
-      values: values || '{}',
-      valuesSchema,
-      icon: chartMetadata?.icon,
-      chartVersion: chartMetadata?.version,
-      chartDescription: chartMetadata?.description,
-      readme,
-    }
-  } catch (error) {
-    debug(`Error parsing chart '${chartName}' in '${chartDir}': ${error.message}`)
-    return null
-  }
 }
