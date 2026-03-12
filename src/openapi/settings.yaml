@@ -261,7 +261,6 @@ Settings:
           required:
             - repoUrl
             - username
-            - password
             - email
             - branch
         adminPassword:
