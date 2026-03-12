@@ -1,6 +1,7 @@
 import Debug from 'debug'
 import { Response } from 'express'
 import { OpenApiRequestExt, Settings } from 'src/otomi-models'
+import { omit } from 'lodash'
 
 const debug = Debug('otomi:api:v1:settings')
 
@@ -13,5 +14,9 @@ export const editSettings = async (req: OpenApiRequestExt, res: Response): Promi
   const ids = Object.keys(req.body as Settings)
   debug(`editSettings(${ids.join(',')})`)
   const v = await req.otomi.editSettings(req.body as Settings, settingId)
-  res.json(v)
+  if (v?.otomi) {
+    res.json(omit(v, ['otomi.adminPassword', 'otomi.git.password']))
+  } else {
+    res.json(v)
+  }
 }
