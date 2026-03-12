@@ -503,11 +503,15 @@ export default class OtomiStack {
     const settings = this.getSettings()
     await this.editIngressApps(settings, data, settingId)
     const updatedSettingsData: any = { ...data }
-    // Preserve the otomi.adminPassword when editing otomi settings
+    // Preserve the otomi.adminPassword and otomi.git.password when editing otomi settings
     if (settingId === 'otomi') {
       updatedSettingsData.otomi = {
         ...updatedSettingsData.otomi,
         adminPassword: settings.otomi?.adminPassword,
+        git: {
+          ...updatedSettingsData.otomi?.git,
+          password: settings.otomi?.git?.password,
+        },
       }
       // convert otomi.nodeSelector to object
       if (Array.isArray(updatedSettingsData.otomi.nodeSelector)) {
