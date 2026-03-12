@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
@@ -503,14 +503,14 @@ export default class OtomiStack {
     const settings = this.getSettings()
     await this.editIngressApps(settings, data, settingId)
     const updatedSettingsData: any = { ...data }
-    // Preserve the otomi.adminPassword and otomi.git.password when editing otomi settings
+    // Preserve the otomi.adminPassword and otomi.git.password if not present when editing otomi settings
     if (settingId === 'otomi') {
       updatedSettingsData.otomi = {
         ...updatedSettingsData.otomi,
         adminPassword: settings.otomi?.adminPassword,
         git: {
           ...updatedSettingsData.otomi?.git,
-          password: settings.otomi?.git?.password,
+          ...(!updatedSettingsData.otomi?.git?.password && { password: settings.otomi?.git?.password }),
         },
       }
       // convert otomi.nodeSelector to object
