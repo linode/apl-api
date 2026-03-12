@@ -1,10 +1,9 @@
 import axios from 'axios'
 import Debug from 'debug'
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, renameSync, rmSync } from 'fs'
+import { existsSync, lstatSync, mkdirSync, renameSync, rmSync } from 'fs'
 import { readFile } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
-import { tmpdir } from 'os'
-import path, { join } from 'path'
+import path from 'path'
 import simpleGit, { SimpleGit } from 'simple-git'
 import { safeReadTextFile } from 'src/utils'
 import {
@@ -391,42 +390,6 @@ export async function sparseCloneChart(
   await gitRepo.commitAndPush(chartTargetDirName)
 
   return true
-}
-
-export async function sparseCheckoutPath(
-  gitCloneUrl: string,
-  ref: string,
-  sparsePath: string,
-  targetBaseDir: string,
-  targetDirName: string,
-): Promise<{ success: true; checkoutPath: string } | { success: false; error: string }> {
-  if (!existsSync(targetBaseDir)) mkdirSync(targetBaseDir, { recursive: true })
-
-  const tempCloneDir = mkdtempSync(join(tmpdir(), 'sparse-checkout-'))
-  const finalDestinationPath = join(targetBaseDir, targetDirName)
-
-  try {
-    if (existsSync(finalDestinationPath)) {
-      return { success: true, checkoutPath: finalDestinationPath }
-    }
-
-    const normalizedSparsePath = sparsePath.replace(/^\/+/, '').replace(/\/+$/, '')
-    const refAndPath = `${ref}/${normalizedSparsePath}`
-
-    const repo = new chartRepo(tempCloneDir, gitCloneUrl)
-    await repo.cloneSingleChart(refAndPath, finalDestinationPath)
-
-    rmSync(join(finalDestinationPath, '.git'), { recursive: true, force: true })
-
-    return { success: true, checkoutPath: finalDestinationPath }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown sparse checkout error.',
-    }
-  } finally {
-    rmSync(tempCloneDir, { recursive: true, force: true })
-  }
 }
 
 /**
