@@ -139,7 +139,6 @@ import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
 import {
   fetchChartYaml,
   fetchWorkloadCatalog,
-  fetchWorkloadCatalogChart,
   isInteralGiteaURL,
   NewHelmChartValues,
   sparseCloneChart,
@@ -1653,12 +1652,10 @@ export default class OtomiStack {
     const aplRecord = await this.saveCatalog(data)
 
     await this.doDeployments([aplRecord], false)
-    try {
-      const { repositoryUrl, branch, name, chartsPath } = data.spec
-      void this.getBYOWorkloadCatalog(repositoryUrl, branch, name, chartsPath as string | undefined, true)
-    } catch {
-      debug(`Unable to warm cache for catalog ${data.spec.name}`)
-    }
+    const { repositoryUrl, branch, name, chartsPath } = data.spec
+    void this.getBYOWorkloadCatalog(repositoryUrl, branch, name, chartsPath as string | undefined, true).catch((e) =>
+      debug(`Unable to warm cache for catalog ${data.spec.name}`, e),
+    )
     return aplRecord.content as AplCatalogResponse
   }
 
@@ -1760,16 +1757,18 @@ export default class OtomiStack {
   ): Promise<{ url: string; branch: string; chart: any | null; chartsPath?: string }> {
     const catalog = this.getAplCatalog(name)
     const { repositoryUrl, branch, chartsPath } = catalog.spec
+    const { cluster } = this.getSettings(['cluster'])
     const encodedCatalogName = encodeURIComponent(catalog.spec.name)
     const encodedBranch = encodeURIComponent(branch)
-    const helmChartsDir = chartsPath
-      ? `${env.CATALOG_CACHE_PATH}/${encodedCatalogName}/${encodedBranch}/${chartsPath}`
-      : `${env.CATALOG_CACHE_PATH}/${encodedCatalogName}/${encodedBranch}`
+    const helmChartsDir = `${env.CATALOG_CACHE_PATH}/${encodedCatalogName}/${encodedBranch}`
 
     try {
-      const chart = await fetchWorkloadCatalogChart(helmChartsDir, chartName)
+      const singleChart =
+        (
+          await fetchWorkloadCatalog(repositoryUrl, helmChartsDir, branch, cluster?.domainSuffix, undefined, chartsPath)
+        ).catalog.find((c) => c.name === chartName) || null
 
-      return { url: repositoryUrl, branch, chart, chartsPath }
+      return { url: repositoryUrl, branch, chart: singleChart, chartsPath }
     } catch (error) {
       debug(`Error fetching workload chart '${chartName}': ${error.message}`)
       return { url: repositoryUrl, branch, chart: null, chartsPath }
