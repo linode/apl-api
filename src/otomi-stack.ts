@@ -90,6 +90,7 @@ import {
 } from 'src/utils'
 import { deepQuote } from 'src/utils/yamlUtils'
 import {
+  CATALOG_CACHE_PATH,
   cleanEnv,
   CUSTOM_ROOT_CA,
   DEFAULT_PLATFORM_ADMIN_EMAIL,
@@ -151,6 +152,7 @@ interface ExcludedApp extends App {
 const debug = Debug('otomi:otomi-stack')
 
 const env = cleanEnv({
+  CATALOG_CACHE_PATH,
   CUSTOM_ROOT_CA,
   DEFAULT_PLATFORM_ADMIN_EMAIL,
   EDITOR_INACTIVITY_TIMEOUT,
@@ -1618,6 +1620,8 @@ export default class OtomiStack {
     branch: string,
     teamId?: string,
     chartsPath?: string,
+    keepLocalClone: boolean = false,
+    forceRefresh: boolean = false,
   ): Promise<{ url: string; helmCharts: any; catalog: any; chartsPath?: string }> {
     const { cluster } = this.getSettings(['cluster'])
     try {
@@ -1628,13 +1632,14 @@ export default class OtomiStack {
         cluster?.domainSuffix,
         teamId,
         chartsPath,
+        forceRefresh,
       )
       return { url, helmCharts, catalog, chartsPath }
     } catch (error) {
       debug('Error fetching workload catalog')
       return { url, helmCharts: [], catalog: [], chartsPath }
     } finally {
-      if (existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
+      if (!keepLocalClone && existsSync(helmChartsDir)) rmSync(helmChartsDir, { recursive: true, force: true })
     }
   }
 
@@ -1655,6 +1660,10 @@ export default class OtomiStack {
     const aplRecord = await this.saveCatalog(data)
 
     await this.doDeployments([aplRecord], false)
+    const { repositoryUrl, branch, name, chartsPath } = data.spec
+    void this.getBYOWorkloadCatalog(repositoryUrl, branch, name, chartsPath as string | undefined, true).catch((e) =>
+      debug(`Unable to warm cache for catalog ${data.spec.name}`, e),
+    )
     return aplRecord.content as AplCatalogResponse
   }
 
@@ -1678,7 +1687,12 @@ export default class OtomiStack {
     const aplRecord = await this.saveCatalog(platformObject)
     const catalogResponse = aplRecord.content as AplCatalogResponse
     await this.doDeployment(aplRecord, false)
-
+    try {
+      const { repositoryUrl, branch, name: catalogName, chartsPath } = catalogResponse.spec
+      void this.getBYOWorkloadCatalog(repositoryUrl, branch, catalogName, chartsPath as string | undefined, true)
+    } catch {
+      debug(`Unable to warm cache for catalog ${catalogResponse.spec.name}`)
+    }
     return catalogResponse
   }
 
@@ -1687,6 +1701,9 @@ export default class OtomiStack {
 
     await this.git.removeFile(filePath)
     await this.doDeleteDeployment([filePath])
+    // delete the cached charts for this catalog
+    const cacheDir = `${env.CATALOG_CACHE_PATH}/${encodeURIComponent(name)}`
+    if (existsSync(cacheDir)) rmSync(cacheDir, { recursive: true, force: true })
   }
 
   async getWorkloadCatalog(data: {
@@ -1711,11 +1728,23 @@ export default class OtomiStack {
     branch: string,
     catalogName: string,
     chartsPath?: string,
+    forceRefresh: boolean = false,
   ): Promise<{ url: string; helmCharts: any; catalog: any; chartsPath?: string }> {
-    const uuid = uuidv4()
-    const helmChartsDir = `/tmp/otomi/charts/${catalogName}/${branch}/charts/${uuid}`
+    const encodedCatalogName = encodeURIComponent(catalogName)
+    const encodedBranch = encodeURIComponent(branch)
+    const helmChartsDir = `${env.CATALOG_CACHE_PATH}/${encodedCatalogName}/${encodedBranch}`
 
-    return this.fetchCatalog(url, helmChartsDir, branch, undefined, chartsPath)
+    return this.fetchCatalog(url, helmChartsDir, branch, undefined, chartsPath, true, forceRefresh)
+  }
+
+  async refreshBYOCatalogCache(catalogName?: string): Promise<void> {
+    const catalogs = this.getAllAplCatalogs({ enabled: true })
+    const selectedCatalogs = catalogName ? catalogs.filter((catalog) => catalog.spec.name === catalogName) : catalogs
+
+    for (const catalog of selectedCatalogs) {
+      const { repositoryUrl, branch, name, chartsPath } = catalog.spec
+      await this.getBYOWorkloadCatalog(repositoryUrl, branch, name, chartsPath as string | undefined, true)
+    }
   }
 
   async getAplCatalogCharts(name: string): Promise<{ url: string; helmCharts: any; catalog: any; branch: string }> {
@@ -1728,6 +1757,30 @@ export default class OtomiStack {
       chartsPath as string | undefined,
     )
     return { ...charts, branch }
+  }
+
+  async getAplCatalogChart(
+    name: string,
+    chartName: string,
+  ): Promise<{ url: string; branch: string; chart: any | null; chartsPath?: string }> {
+    const catalog = this.getAplCatalog(name)
+    const { repositoryUrl, branch, chartsPath } = catalog.spec
+    const { cluster } = this.getSettings(['cluster'])
+    const encodedCatalogName = encodeURIComponent(catalog.spec.name)
+    const encodedBranch = encodeURIComponent(branch)
+    const helmChartsDir = `${env.CATALOG_CACHE_PATH}/${encodedCatalogName}/${encodedBranch}`
+
+    try {
+      const singleChart =
+        (
+          await fetchWorkloadCatalog(repositoryUrl, helmChartsDir, branch, cluster?.domainSuffix, undefined, chartsPath)
+        ).catalog.find((c) => c.name === chartName) || null
+
+      return { url: repositoryUrl, branch, chart: singleChart, chartsPath }
+    } catch (error) {
+      debug(`Error fetching workload chart '${chartName}': ${error.message}`)
+      return { url: repositoryUrl, branch, chart: null, chartsPath }
+    }
   }
 
   async getHelmChartContent(url: string): Promise<any> {
