@@ -310,6 +310,14 @@ export default class OtomiStack {
       )
     }
 
+    // Pull latest changes so the worktree starts from up-to-date state
+    try {
+      debug(`Pulled latest changes before creating worktree for session ${this.sessionId}`)
+      await mainRepo.pull(true, true)
+    } catch (e) {
+      debug(`Warning: could not pull latest before creating worktree: ${getSanitizedErrorMessage(e)}`)
+    }
+
     const worktreePath = this.getRepoPath()
     this.git = await getWorktreeRepo(mainRepo, worktreePath, env.GIT_BRANCH)
     this.fileStore = new FileStore()

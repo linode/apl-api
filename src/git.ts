@@ -273,18 +273,26 @@ export class Git {
         // Remove local changes so that no conflict can happen
         debug('Removing local changes.')
         await this.git.reset(ResetMode.HARD)
-        debug(`Go to ${this.branch} branch`)
-        await this.git.checkout(this.branch)
-        debug('Removing local changes.')
-        await this.git.reset(ResetMode.HARD)
-        debug('Cleaning local values and directories.')
-        await this.git.clean(CleanOptions.FORCE, ['-d'])
-        debug('Get the latest branch from:', this.remote)
-        await this.git.fetch(this.remote, this.branch)
-        debug('Reconciling divergent branches.')
-        await this.git.merge([`${this.remote}/${this.branch}`, '--strategy-option=theirs'])
-        debug('Trying to remove upstream commits: ', this.remote)
-        await this.git.push([this.remote, this.branch, '--force'])
+        if (this.isRootClone()) {
+          debug(`Go to ${this.branch} branch`)
+          await this.git.checkout(this.branch)
+          debug('Removing local changes.')
+          await this.git.reset(ResetMode.HARD)
+          debug('Cleaning local values and directories.')
+          await this.git.clean(CleanOptions.FORCE, ['-d'])
+          debug('Get the latest branch from:', this.remote)
+          await this.git.fetch(this.remote, this.branch)
+          debug('Reconciling divergent branches.')
+          await this.git.merge([`${this.remote}/${this.branch}`, '--strategy-option=theirs'])
+          debug('Trying to remove upstream commits: ', this.remote)
+          await this.git.push([this.remote, this.branch, '--force'])
+        } else {
+          // Worktree recovery: rebase session branch on top of remote; our changes win conflicts
+          debug('Get the latest branch from:', this.remote)
+          await this.git.fetch(this.remote, this.branch)
+          debug('Rebasing session branch on top of remote.')
+          await this.git.raw(['rebase', `${this.remote}/${this.branch}`, '--strategy-option=ours'])
+        }
       } catch (error) {
         const errorMessage = getSanitizedErrorMessage(error)
         debug('Failed to remove upstream commits: ', errorMessage)
