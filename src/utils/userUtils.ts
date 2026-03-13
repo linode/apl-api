@@ -1,5 +1,9 @@
 import axios from 'axios'
-import { ROOT_KEYCLOAK_USER, cleanEnv } from 'src/validators'
+import { SealedSecretManifestResponse, User } from 'src/otomi-models'
+import { cleanEnv, ROOT_KEYCLOAK_USER } from 'src/validators'
+import { FileStore } from '../fileStore/file-store'
+import { getUserSecretFromK8s, isK8sReachable, listUserSecretsFromK8s, UserSecretData } from '../k8s_operations'
+import { sealedSecretToUserData } from './sealedSecretUtils'
 
 const env = cleanEnv({
   ROOT_KEYCLOAK_USER,
@@ -60,6 +64,19 @@ export async function getKeycloakUsers(
 
     return []
   }
+}
+
+export function userSecretDataToUser(data: UserSecretData): User {
+  return {
+    id: data.id,
+    email: data.email,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    initialPassword: data.initialPassword,
+    isPlatformAdmin: data.isPlatformAdmin,
+    isTeamAdmin: data.isTeamAdmin,
+    teams: data.teams,
+  } as User
 }
 
 // gitea username blacklist and validation
@@ -129,4 +146,22 @@ export function isValidUsername(username: string): { valid: boolean; error: stri
   }
 
   return { valid: true, error: null }
+}
+
+export async function listUserSecretData(
+  getAplNamespaceSealedSecrets: (namespace: string) => SealedSecretManifestResponse[],
+): Promise<UserSecretData[]> {
+  if (env.isDev && !(await isK8sReachable())) {
+    return getAplNamespaceSealedSecrets('apl-users').map((m) => sealedSecretToUserData(m))
+  }
+  return listUserSecretsFromK8s()
+}
+
+export async function getUserSecretData(id: string, fileStore: FileStore): Promise<UserSecretData | undefined> {
+  if (env.isDev && !(await isK8sReachable())) {
+    const manifest = fileStore.getNamespaceResource('AplNamespaceSealedSecret', id, 'apl-users')
+    if (!manifest) return undefined
+    return sealedSecretToUserData(manifest as SealedSecretManifestResponse)
+  }
+  return getUserSecretFromK8s(id)
 }

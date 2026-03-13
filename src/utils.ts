@@ -1,23 +1,19 @@
-import retry from 'async-retry'
-import axios from 'axios'
+import $RefParser, { JSONSchema } from '@apidevtools/json-schema-ref-parser'
 import cleanDeep, { CleanOptions } from 'clean-deep'
 import Debug from 'debug'
 import { pathExists } from 'fs-extra'
 import { lstat, readdir, readFile, realpath } from 'fs/promises'
 import { isArray, isEmpty, memoize, mergeWith, omit } from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
-import { isAbsolute, relative, resolve } from 'path'
+import { isAbsolute, join, relative, resolve } from 'path'
 import { Cluster, Dns } from 'src/otomi-models'
 import { parse, stringify } from 'yaml'
-import { BASEURL } from './constants'
-import { cleanEnv, GIT_PASSWORD, STARTUP_RETRY_COUNT, STARTUP_RETRY_INTERVAL_MS } from './validators'
+import { cleanEnv, GIT_PASSWORD } from './validators'
 
 const debug = Debug('otomi:utils')
 
 const env = cleanEnv({
   GIT_PASSWORD,
-  STARTUP_RETRY_COUNT,
-  STARTUP_RETRY_INTERVAL_MS,
 })
 
 export function arrayToObject(array: [] = [], keyName = 'name', keyValue = 'value'): Record<string, unknown> {
@@ -88,30 +84,15 @@ export async function loadRawYaml(path: string) {
   return rawFile as any
 }
 
-const valuesSchemaEndpointUrl = `${BASEURL}/apl/schema`
 let valuesSchema: Record<string, any>
 
 export const getValuesSchema = async (): Promise<Record<string, any>> => {
-  debug('Fetching values schema from tools server...')
-
-  const res = await retry(
-    async () => {
-      try {
-        return await axios.get(valuesSchemaEndpointUrl)
-      } catch (error: any) {
-        debug(`Tools server not ready yet (${error.code}), retrying...`)
-        throw error
-      }
-    },
-    {
-      retries: env.STARTUP_RETRY_COUNT,
-      minTimeout: env.STARTUP_RETRY_INTERVAL_MS,
-      maxTimeout: env.STARTUP_RETRY_INTERVAL_MS,
-    },
-  )
-
-  debug('Values schema fetched successfully')
-  valuesSchema = omit(res.data, ['definitions'])
+  debug('Loading values schema from local file...')
+  const schemaPath = join(__dirname, 'values-schema.yaml')
+  const schema = await loadYaml(schemaPath)
+  const derefSchema = await $RefParser.dereference(schema as JSONSchema)
+  valuesSchema = omit(derefSchema as Record<string, any>, ['definitions'])
+  debug('Values schema loaded successfully')
   return valuesSchema
 }
 

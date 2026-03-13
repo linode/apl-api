@@ -8,7 +8,7 @@ const debug = Debug('otomi:api:v1:settingsinfo')
  * GET /v1/settingsInfo
  * Get settings info
  */
-export const getSettingsInfo = (req: OpenApiRequestExt, res: Response): void => {
+export const getSettingsInfo = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   debug('getSettingsInfo')
-  res.json(req.otomi.getSettingsInfo())
+  res.json(await req.otomi.getSettingsInfo())
 }
