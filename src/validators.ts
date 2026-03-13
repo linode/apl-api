@@ -181,6 +181,10 @@ export const TRUST_PROXY = num({
   default: 2,
   devDefault: 0,
 })
+export const OBJECT_STORAGE_UI_EXCLUSIONS = json<string[]>({
+  desc: 'Object Storage regions hidden in the UI',
+  default: ['fr-par-2', 'in-bom-2'],
+})
 const { env } = process
 export function cleanEnv<T>(validators: { [K in keyof T]: ValidatorSpec<T[K]> }, options: CleanOptions<T> = {}) {
   if (env.NODE_ENV === 'test') {
