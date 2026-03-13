@@ -1,11 +1,12 @@
+import { encryptSecretItem } from '@linode/kubeseal-encrypt'
 import { X509Certificate } from 'crypto'
 import Debug from 'debug'
-import { isEmpty } from 'lodash'
+import { get, isEmpty, unset } from 'lodash'
 import { SealedSecretManifestRequest, SealedSecretManifestResponse, User } from 'src/otomi-models'
 import { cleanEnv } from 'src/validators'
 import { stringify as stringifyYaml } from 'yaml'
 import { ValidationError } from '../error'
-import { getSealedSecretsCertificate, isK8sReachable } from '../k8s_operations'
+import { getSealedSecretsCertificate, isK8sReachable, UserSecretData } from '../k8s_operations'
 
 const debug = Debug('otomi:sealedSecretUtils')
 const env = cleanEnv({})
@@ -112,7 +113,6 @@ function isEncryptedValue(value: string): boolean {
 }
 
 export async function encryptSecretValue(pem: string, namespace: string, value: string): Promise<string> {
-  const { encryptSecretItem } = await import('@linode/kubeseal-encrypt')
   return encryptSecretItem(pem, namespace, value)
 }
 
@@ -138,6 +138,20 @@ export async function ensureEncryptedData(
     result[key] = await encryptSecretValue(pem, namespace, value)
   }
   return result
+}
+
+export function sealedSecretToUserData(manifest: SealedSecretManifestResponse): UserSecretData {
+  const data = manifest.spec.encryptedData
+  return {
+    id: manifest.metadata.name,
+    email: data.email || '',
+    firstName: data.firstName || '',
+    lastName: data.lastName || '',
+    initialPassword: data.initialPassword || '',
+    isPlatformAdmin: data.isPlatformAdmin === 'true',
+    isTeamAdmin: data.isTeamAdmin === 'true',
+    teams: typeof data.teams === 'string' ? JSON.parse(data.teams) : data.teams || [],
+  } as UserSecretData
 }
 
 /**
@@ -203,4 +217,79 @@ export async function createUserSealedSecret(user: User): Promise<string> {
   }
 
   return createPlatformSealedSecretManifest(name, namespace, data)
+}
+
+/**
+ * Walks a JSON schema and returns dot-paths to all properties marked with `x-secret`.
+ * Schema keywords (properties, items, anyOf, etc.) and numeric array indices are stripped from paths.
+ */
+export function extractSecretPaths(schema: Record<string, any>, prefix = ''): string[] {
+  const paths: string[] = []
+  if (!schema || typeof schema !== 'object') return paths
+
+  if (schema.properties) {
+    const properties = schema.properties as Record<string, Record<string, unknown>>
+    for (const [key, value] of Object.entries(properties)) {
+      const childPath = prefix ? `${prefix}.${key}` : key
+      const prop = value as Record<string, any>
+      if (prop && 'x-secret' in prop) {
+        paths.push(childPath)
+      }
+      paths.push(...extractSecretPaths(prop, childPath))
+    }
+  }
+
+  if (schema.definitions) {
+    const definitions = schema.definitions as Record<string, Record<string, unknown>>
+    for (const [key, value] of Object.entries(definitions)) {
+      const childPath = prefix ? `${prefix}.${key}` : key
+      const def = value as Record<string, any>
+      if (def && 'x-secret' in def) {
+        paths.push(childPath)
+      }
+      paths.push(...extractSecretPaths(def, childPath))
+    }
+  }
+
+  if (schema.items) {
+    // items shares the same prefix (array items don't add path segments)
+    paths.push(...extractSecretPaths(schema.items as Record<string, any>, prefix))
+  }
+
+  for (const keyword of ['anyOf', 'allOf', 'oneOf']) {
+    if (Array.isArray(schema[keyword])) {
+      for (const branch of schema[keyword]) {
+        paths.push(...extractSecretPaths(branch as Record<string, any>, prefix))
+      }
+    }
+  }
+
+  return [...new Set(paths)]
+}
+
+/**
+ * Extracts secret values from a settings data object at the given dot-paths.
+ * Returns a flat record mapping dot-paths to their string values (only non-empty).
+ */
+export function extractSettingsSecrets(secretPaths: string[], data: Record<string, any>): Record<string, string> {
+  const secrets: Record<string, string> = {}
+  for (const path of secretPaths) {
+    const value = get(data, path)
+    if (value !== undefined && value !== null && value !== '') {
+      const dataKey = path.replace(/\./g, '_')
+      secrets[dataKey] = String(value)
+    }
+  }
+  return secrets
+}
+
+/**
+ * Removes secret values from a settings data object at the given dot-paths.
+ * Mutates the data object in place and returns it.
+ */
+export function removeSettingsSecrets(secretPaths: string[], data: Record<string, any>): Record<string, any> {
+  for (const path of secretPaths) {
+    unset(data, path)
+  }
+  return data
 }

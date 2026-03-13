@@ -83,7 +83,7 @@ const resourceStatus = async (errorSet) => {
     debug('Values are not loaded yet')
     return
   }
-  const { cluster } = otomiStack.getSettings(['cluster'])
+  const { cluster } = await otomiStack.getSettings(['cluster'])
   const domainSuffix = cluster?.domainSuffix
   const resources: Record<string, (AplResponseObject | SealedSecretManifestResponse)[]> = {
     workloads: otomiStack.getAllAplWorkloads(),

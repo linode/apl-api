@@ -114,6 +114,7 @@ describe('API authz tests', () => {
 
   beforeEach(() => {
     jest.spyOn(otomiStack, 'createTeam').mockResolvedValue({ name: 'team', resourceQuota: [] })
+    jest.spyOn(getValuesSchemaModule, 'getValuesSchema').mockResolvedValue({})
   })
 
   afterEach(() => {

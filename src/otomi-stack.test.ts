@@ -330,17 +330,17 @@ describe('Workload values', () => {
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
   })
 
-  test('returns filtered apps if App array is submitted isPreinstalled flag is true', () => {
+  test('returns filtered apps if App array is submitted isPreinstalled flag is true', async () => {
     const apps: App[] = [{ id: 'external-dns' }, { id: 'cnpg' }, { id: 'loki' }]
-    jest.spyOn(otomiStack, 'getSettingsInfo').mockReturnValue({ otomi: { isPreInstalled: true } })
-    const filteredApps = otomiStack.filterExcludedApp(apps)
+    jest.spyOn(otomiStack, 'getSettingsInfo').mockResolvedValue({ otomi: { isPreInstalled: true } })
+    const filteredApps = await otomiStack.filterExcludedApp(apps)
     expect(filteredApps).toEqual([{ id: 'cnpg' }, { id: 'loki' }])
   })
 
-  test('returns app with managed = true if single App is in excludedList and isPreinstalled flag is true', () => {
+  test('returns app with managed = true if single App is in excludedList and isPreinstalled flag is true', async () => {
     const app: App = { id: 'external-dns' }
-    jest.spyOn(otomiStack, 'getSettingsInfo').mockReturnValue({ otomi: { isPreInstalled: true } })
-    const filteredApp = otomiStack.filterExcludedApp(app)
+    jest.spyOn(otomiStack, 'getSettingsInfo').mockResolvedValue({ otomi: { isPreInstalled: true } })
+    const filteredApp = await otomiStack.filterExcludedApp(app)
     expect(filteredApp).toEqual({ id: 'external-dns', managed: true })
   })
 })
@@ -443,7 +443,7 @@ describe('Users tests', () => {
     const { getSessionStack } = require('src/middleware')
     jest.mocked(getSessionStack).mockResolvedValue(otomiStack)
 
-    jest.spyOn(otomiStack, 'getSettings').mockReturnValue({
+    jest.spyOn(otomiStack, 'getSettings').mockResolvedValue({
       cluster: { name: 'default-cluster', domainSuffix, provider: 'linode' },
     })
     jest.spyOn(otomiStack, 'doDeleteDeployment').mockResolvedValue()
@@ -781,11 +781,11 @@ describe('getVersions', () => {
     jest.restoreAllMocks()
   })
 
-  test('should return versions with otomi version from settings', () => {
+  test('should return versions with otomi version from settings', async () => {
     const mockSettings = { otomi: { version: '1.2.3' } }
-    jest.spyOn(otomiStack, 'getSettings').mockReturnValue(mockSettings)
+    jest.spyOn(otomiStack, 'getSettings').mockResolvedValue(mockSettings)
 
-    const result = (otomiStack as any).getVersions('abc123')
+    const result = await (otomiStack as any).getVersions('abc123')
 
     expect(result).toHaveProperty('core', '1.2.3')
     expect(result).toHaveProperty('api')
@@ -794,11 +794,11 @@ describe('getVersions', () => {
     expect(otomiStack.getSettings).toHaveBeenCalledWith(['otomi'])
   })
 
-  test('should fallback to env.VERSIONS.core when otomi.version is not available', () => {
+  test('should fallback to env.VERSIONS.core when otomi.version is not available', async () => {
     const mockSettings = { otomi: undefined }
-    jest.spyOn(otomiStack, 'getSettings').mockReturnValue(mockSettings)
+    jest.spyOn(otomiStack, 'getSettings').mockResolvedValue(mockSettings)
 
-    const result = (otomiStack as any).getVersions('def456')
+    const result = await (otomiStack as any).getVersions('def456')
 
     expect(result).toHaveProperty('core')
     expect(result).toHaveProperty('api')
@@ -806,14 +806,14 @@ describe('getVersions', () => {
     expect(result).toHaveProperty('values', 'def456')
   })
 
-  test('should fallback to process.env.npm_package_version when env.VERSIONS.api is not available', () => {
+  test('should fallback to process.env.npm_package_version when env.VERSIONS.api is not available', async () => {
     const originalNpmVersion = process.env.npm_package_version
     process.env.npm_package_version = '5.0.0'
 
     const mockSettings = { otomi: { version: '1.2.3' } }
-    jest.spyOn(otomiStack, 'getSettings').mockReturnValue(mockSettings)
+    jest.spyOn(otomiStack, 'getSettings').mockResolvedValue(mockSettings)
 
-    const result = (otomiStack as any).getVersions('ghi789')
+    const result = await (otomiStack as any).getVersions('ghi789')
 
     expect(result).toHaveProperty('core', '1.2.3')
     expect(result).toHaveProperty('api')
@@ -823,11 +823,11 @@ describe('getVersions', () => {
     process.env.npm_package_version = originalNpmVersion
   })
 
-  test('should handle undefined otomi settings gracefully', () => {
+  test('should handle undefined otomi settings gracefully', async () => {
     const mockSettings = {}
-    jest.spyOn(otomiStack, 'getSettings').mockReturnValue(mockSettings)
+    jest.spyOn(otomiStack, 'getSettings').mockResolvedValue(mockSettings)
 
-    const result = (otomiStack as any).getVersions('xyz123')
+    const result = await (otomiStack as any).getVersions('xyz123')
 
     expect(result).toHaveProperty('core')
     expect(result).toHaveProperty('api')
@@ -835,22 +835,22 @@ describe('getVersions', () => {
     expect(result).toHaveProperty('values', 'xyz123')
   })
 
-  test('should pass through currentSha as values field', () => {
+  test('should pass through currentSha as values field', async () => {
     const mockSettings = { otomi: { version: '1.0.0' } }
-    jest.spyOn(otomiStack, 'getSettings').mockReturnValue(mockSettings)
+    jest.spyOn(otomiStack, 'getSettings').mockResolvedValue(mockSettings)
 
     const testSha = 'unique-commit-sha-123'
-    const result = (otomiStack as any).getVersions(testSha)
+    const result = await (otomiStack as any).getVersions(testSha)
 
     expect(result.values).toBe(testSha)
     expect(typeof result.values).toBe('string')
   })
 
-  test('should return all required version fields', () => {
+  test('should return all required version fields', async () => {
     const mockSettings = { otomi: { version: '1.0.0' } }
-    jest.spyOn(otomiStack, 'getSettings').mockReturnValue(mockSettings)
+    jest.spyOn(otomiStack, 'getSettings').mockResolvedValue(mockSettings)
 
-    const result = (otomiStack as any).getVersions('test-sha')
+    const result = await (otomiStack as any).getVersions('test-sha')
 
     expect(Object.keys(result).sort()).toEqual(['api', 'console', 'core', 'values'])
     expect(typeof result.core).toBe('string')
