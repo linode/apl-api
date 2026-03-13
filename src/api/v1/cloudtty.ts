@@ -23,6 +23,7 @@ export const connectCloudtty = async (req: OpenApiRequestExt, res: Response): Pr
 export const deleteCloudtty = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const sessionUser = req.user
   debug(`deleteCloudtty - ${sessionUser.email} - ${sessionUser.sub}`)
-  await req.otomi.deleteCloudtty(sessionUser)
+  const { teamId } = req.query as { teamId: string }
+  await req.otomi.deleteCloudtty(teamId, sessionUser)
   res.json({})
 }
