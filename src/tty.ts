@@ -2,7 +2,6 @@ import {
   ApiException,
   CoreV1Api,
   CustomObjectsApi,
-  CustomObjectsApiCreateNamespacedCustomObjectRequest,
   KubeConfig,
   KubernetesObject,
   RbacAuthorizationV1Api,
@@ -14,7 +13,7 @@ export default class CloudTty {
   private k8sApi: CoreV1Api
   private customObjectsApi: CustomObjectsApi
   private rbacAuthorizationApi: RbacAuthorizationV1Api
-  private debug: Debug.Debugger
+  private readonly debug: Debug.Debugger
 
   constructor() {
     const kc = new KubeConfig()
@@ -22,6 +21,17 @@ export default class CloudTty {
     this.k8sApi = kc.makeApiClient(CoreV1Api)
     this.customObjectsApi = kc.makeApiClient(CustomObjectsApi)
     this.rbacAuthorizationApi = kc.makeApiClient(RbacAuthorizationV1Api)
+
+    // Bind every method on each client instance
+    for (const client of [this.k8sApi, this.customObjectsApi, this.rbacAuthorizationApi]) {
+      const proto = Object.getPrototypeOf(client)
+      Object.getOwnPropertyNames(proto)
+        .filter((m) => typeof client[m] === 'function')
+        .forEach((m) => {
+          client[m] = client[m].bind(client)
+        })
+    }
+
     this.debug = Debug('tty')
   }
 
