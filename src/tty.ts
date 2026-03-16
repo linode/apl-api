@@ -18,6 +18,7 @@ export default class CloudTty {
 
   constructor() {
     const kc = new KubeConfig()
+    kc.loadFromDefault()
     this.k8sApi = kc.makeApiClient(CoreV1Api)
     this.customObjectsApi = kc.makeApiClient(CustomObjectsApi)
     this.rbacAuthorizationApi = kc.makeApiClient(RbacAuthorizationV1Api)
