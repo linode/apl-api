@@ -3,8 +3,7 @@ import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions } from '@linode/api-v4'
 import { existsSync, rmSync } from 'fs'
-import { pathExists, unlink } from 'fs-extra'
-import { readdir, readFile, writeFile } from 'fs/promises'
+import { readFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, get, isEmpty, map, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema, getSecretPaths } from 'src/app'
@@ -114,13 +113,11 @@ import { getAIModels } from './ai/aiModelHandler'
 import { DatabaseCR } from './ai/DatabaseCR'
 import { getResourceFilePath, getSecretFilePath } from './fileStore/file-map'
 import {
-  apply,
   checkPodExists,
   getCloudttyActiveTime,
   getKubernetesVersion,
   getSecretValues,
   getTeamSecretsFromK8s,
-  k8sdelete,
   watchPodUntilRunning,
 } from './k8s_operations'
 import {
@@ -143,6 +140,7 @@ import {
   sparseCloneChart,
   validateGitUrl,
 } from './utils/workloadUtils'
+import CloudTty from './tty'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -203,10 +201,12 @@ export default class OtomiStack {
   isLoaded = false
   git: Git
   fileStore: FileStore
+  cloudTty: CloudTty
 
   constructor(editor?: string, sessionId?: string) {
     this.editor = editor
     this.sessionId = sessionId ?? 'main'
+    this.cloudTty = new CloudTty()
   }
 
   getAppList() {
@@ -1533,58 +1533,16 @@ export default class OtomiStack {
       return { iFrameUrl: `https://tty.${variables.FQDN}/${sessionUser.sub}` }
     }
 
-    if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
-
-    //if user is admin then read the manifests from ./dist/src/ttyManifests/adminTtyManifests
-    const files = isAdmin
-      ? await readdir('./dist/src/ttyManifests/adminTtyManifests', 'utf-8')
-      : await readdir('./dist/src/ttyManifests', 'utf-8')
-    const filteredFiles = files.filter((file) => file.startsWith('tty'))
-    const variableKeys = Object.keys(variables)
-
-    const podContentAddTargetTeam = (fileContent) => {
-      const regex = new RegExp(`\\$TARGET_TEAM`, 'g')
-      return fileContent.replace(regex, teamId)
-    }
-
-    // iterates over the rolebinding file and replace the $TARGET_TEAM with the team name for teams
-    const rolebindingContentsForUsers = (fileContent) => {
-      const rolebindingArray: string[] = []
-      userTeams?.forEach((team: string) => {
-        const regex = new RegExp(`\\$TARGET_TEAM`, 'g')
-        const rolebindingForTeam: string = fileContent.replace(regex, team)
-        rolebindingArray.push(rolebindingForTeam)
-      })
-      return rolebindingArray.join('\n')
-    }
-
-    const fileContents = await Promise.all(
-      filteredFiles.map(async (file) => {
-        let fileContent = sessionUser.isPlatformAdmin
-          ? await readFile(`./dist/src/ttyManifests/adminTtyManifests/${file}`, 'utf-8')
-          : await readFile(`./dist/src/ttyManifests/${file}`, 'utf-8')
-        variableKeys.forEach((key) => {
-          const regex = new RegExp(`\\$${key}`, 'g')
-          fileContent = fileContent.replace(regex, variables[key] as string)
-        })
-        if (file === 'tty_02_Pod.yaml') fileContent = podContentAddTargetTeam(fileContent)
-        if (!sessionUser.isPlatformAdmin && file === 'tty_03_Rolebinding.yaml') {
-          fileContent = rolebindingContentsForUsers(fileContent)
-        }
-        return fileContent
-      }),
-    )
-    await writeFile('/tmp/ttyd.yaml', fileContents, 'utf-8')
-    await apply('/tmp/ttyd.yaml')
+    await this.cloudTty.createTty(teamId, sessionUser, variables.FQDN)
     await watchPodUntilRunning(targetNamespace, `tty-${sessionUser.sub}`)
 
     // check the pod every 30 minutes and terminate it after 2 hours of inactivity
     const ISACTIVE_INTERVAL = 30 * 60 * 1000
     const TERMINATE_TIMEOUT = 2 * 60 * 60 * 1000
     const intervalId = setInterval(() => {
-      getCloudttyActiveTime(targetNamespace, `tty-${sessionUser.sub}`).then((activeTime: number) => {
+      getCloudttyActiveTime(targetNamespace, `tty-${sessionUser.sub}`).then(async (activeTime: number) => {
         if (activeTime > TERMINATE_TIMEOUT) {
-          this.deleteCloudtty(teamId, sessionUser)
+          await this.cloudTty.deleteTty(teamId, sessionUser)
           clearInterval(intervalId)
           debug(`Cloudtty terminated after ${TERMINATE_TIMEOUT / (60 * 60 * 1000)} hours of inactivity`)
         }
@@ -1595,16 +1553,7 @@ export default class OtomiStack {
   }
 
   async deleteCloudtty(teamId: string, sessionUser: SessionUser): Promise<void> {
-    const { sub, isPlatformAdmin, teams } = sessionUser as { sub: string; isPlatformAdmin: boolean; teams: string[] }
-    const namespace = isPlatformAdmin ? 'team-admin' : `team-${teamId}`
-    const userTeams = teams.map((teamName) => `team-${teamName}`)
-    try {
-      if (await checkPodExists(namespace, `tty-${sessionUser.sub}`)) {
-        await k8sdelete(namespace, sub, isPlatformAdmin, userTeams)
-      }
-    } catch (error) {
-      debug('Failed to delete cloudtty')
-    }
+    await this.cloudTty.deleteTty(teamId, sessionUser)
   }
 
   private async fetchCatalog(
