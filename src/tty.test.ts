@@ -257,7 +257,7 @@ describe('CloudTty', () => {
   test('deleteTty removes namespaced and team-scoped resources for team users', async () => {
     const tty = new CloudTty()
     const deleteAuthorizationPolicy = jest.spyOn(tty, 'deleteAuthorizationPolicy').mockResolvedValue()
-    const createServiceAccount = jest.spyOn(tty, 'createServiceAccount').mockResolvedValue({ kind: 'ok' })
+    const deleteServiceAccount = jest.spyOn(tty, 'deleteServiceAccount').mockResolvedValue()
     const deletePod = jest.spyOn(tty, 'deletePod').mockResolvedValue()
     const deleteClusterRoleBinding = jest.spyOn(tty, 'deleteClusterRoleBinding').mockResolvedValue()
     const deleteRoleBinding = jest.spyOn(tty, 'deleteRoleBinding').mockResolvedValue()
@@ -267,7 +267,7 @@ describe('CloudTty', () => {
     await tty.deleteTty('team-1', { sub: 'user-1', isPlatformAdmin: false, teams: ['a', 'b'] } as SessionUser)
 
     expect(deleteAuthorizationPolicy).toHaveBeenCalledWith('team-team-1', 'user-1')
-    expect(createServiceAccount).toHaveBeenCalledWith('team-team-1', 'user-1')
+    expect(deleteServiceAccount).toHaveBeenCalledWith('team-team-1', 'user-1')
     expect(deletePod).toHaveBeenCalledWith('team-team-1', 'user-1')
     expect(deleteClusterRoleBinding).not.toHaveBeenCalled()
     expect(deleteRoleBinding).toHaveBeenCalledTimes(2)

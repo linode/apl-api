@@ -80,11 +80,11 @@ export default class CloudTty {
         ],
       },
     }
-    const params: CustomObjectsApiCreateNamespacedCustomObjectRequest = {
+    const params = {
       group: 'security.istio.io',
       version: 'v1',
-      namespace,
       plural: 'authorizationpolicies',
+      namespace,
       body,
     }
     return this.createOrPatch(
@@ -389,7 +389,7 @@ export default class CloudTty {
     const { sub, isPlatformAdmin, teams } = sessionUser
     const namespace = isPlatformAdmin ? 'team-admin' : `team-${teamId}`
     await this.deleteAuthorizationPolicy(namespace, sub!)
-    await this.createServiceAccount(namespace, sub!)
+    await this.deleteServiceAccount(namespace, sub!)
     await this.deletePod(namespace, sub!)
     if (isPlatformAdmin) {
       await this.deleteClusterRoleBinding()
