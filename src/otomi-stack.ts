@@ -201,12 +201,18 @@ export default class OtomiStack {
   isLoaded = false
   git: Git
   fileStore: FileStore
-  cloudTty: CloudTty
+  private cloudTty: CloudTty
 
   constructor(editor?: string, sessionId?: string) {
     this.editor = editor
     this.sessionId = sessionId ?? 'main'
-    this.cloudTty = new CloudTty()
+  }
+
+  getCloudTty() {
+    if (!this.cloudTty) {
+      this.cloudTty = new CloudTty()
+    }
+    return this.cloudTty
   }
 
   getAppList() {
@@ -1533,7 +1539,7 @@ export default class OtomiStack {
       return { iFrameUrl: `https://tty.${variables.FQDN}/${sessionUser.sub}` }
     }
 
-    await this.cloudTty.createTty(teamId, sessionUser, variables.FQDN)
+    await this.getCloudTty().createTty(teamId, sessionUser, variables.FQDN)
     await watchPodUntilRunning(targetNamespace, `tty-${sessionUser.sub}`)
 
     // check the pod every 30 minutes and terminate it after 2 hours of inactivity
@@ -1542,7 +1548,7 @@ export default class OtomiStack {
     const intervalId = setInterval(() => {
       getCloudttyActiveTime(targetNamespace, `tty-${sessionUser.sub}`).then(async (activeTime: number) => {
         if (activeTime > TERMINATE_TIMEOUT) {
-          await this.cloudTty.deleteTty(teamId, sessionUser)
+          await this.getCloudTty().deleteTty(teamId, sessionUser)
           clearInterval(intervalId)
           debug(`Cloudtty terminated after ${TERMINATE_TIMEOUT / (60 * 60 * 1000)} hours of inactivity`)
         }
@@ -1553,7 +1559,7 @@ export default class OtomiStack {
   }
 
   async deleteCloudtty(teamId: string, sessionUser: SessionUser): Promise<void> {
-    await this.cloudTty.deleteTty(teamId, sessionUser)
+    await this.getCloudTty().deleteTty(teamId, sessionUser)
   }
 
   private async fetchCatalog(
