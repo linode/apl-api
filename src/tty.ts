@@ -47,7 +47,7 @@ export default class CloudTty {
       if (error instanceof ApiException && error.code === 404) {
         return
       } else {
-        this.debug.log(error)
+        this.debug(error)
       }
     }
   }
