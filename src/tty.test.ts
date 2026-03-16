@@ -60,6 +60,7 @@ jest.mock('@kubernetes/client-node', () => {
     RbacAuthorizationV1Api,
     KubeConfig: jest.fn().mockImplementation(() => ({
       makeApiClient: mockMakeApiClient,
+      loadFromDefault: jest.fn(),
     })),
   }
 })
