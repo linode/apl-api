@@ -31,10 +31,10 @@ export default class CloudTty {
     params: T,
   ): Promise<KubernetesObject> {
     try {
-      return createFunc(params)
+      return await createFunc(params)
     } catch (error) {
       if (error instanceof ApiException && error.code === 409) {
-        return patchFunc(params)
+        return await patchFunc(params)
       } else {
         throw error
       }
