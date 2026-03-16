@@ -1,64 +1,8 @@
-import {
-  CoreV1Api,
-  CustomObjectsApi,
-  KubeConfig,
-  KubernetesObject,
-  KubernetesObjectApi,
-  RbacAuthorizationV1Api,
-  VersionApi,
-} from '@kubernetes/client-node'
+import { CoreV1Api, CustomObjectsApi, KubeConfig, VersionApi } from '@kubernetes/client-node'
 import Debug from 'debug'
-import * as fs from 'fs'
-import * as yaml from 'js-yaml'
-import { promisify } from 'util'
 import { AplBuildResponse, AplServiceResponse, AplWorkloadResponse, SealedSecretManifestResponse } from './otomi-models'
 
 const debug = Debug('otomi:api:k8sOperations')
-
-/**
- * Replicate the functionality of `kubectl apply`.  That is, create the resources defined in the `specFile` if they do
- * not exist, patch them if they do exist.
- *
- * @param specPath File system path to a YAML Kubernetes spec.
- * @return Array of resources created
- */
-export async function apply(specPath: string): Promise<KubernetesObject[]> {
-  const kc = new KubeConfig()
-  kc.loadFromDefault()
-  const client = KubernetesObjectApi.makeApiClient(kc) as any
-  const fsReadFileP = promisify(fs.readFile)
-  const specString = await fsReadFileP(specPath, 'utf8')
-  const specs: any = yaml.loadAll(specString)
-  const validSpecs = specs.filter((s) => s && s.kind && s.metadata)
-  const created: KubernetesObject[] = []
-  for (const spec of validSpecs) {
-    // this is to convince the old version of TypeScript that metadata exists even though we already filtered specs
-    // without metadata out
-    spec.metadata = spec.metadata || {}
-    spec.metadata.annotations = spec.metadata.annotations || {}
-    delete spec.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration']
-    spec.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration'] = JSON.stringify(spec)
-    try {
-      // try to get the resource, if it does not exist an error will be thrown and we will end up in the catch
-      // block.
-      await client.read(spec)
-      // we got the resource, so it exists, so patch it
-      //
-      // Note that this could fail if the spec refers to a custom resource. For custom resources you may need
-      // to specify a different patch merge strategy in the content-type header.
-      //
-      // See: https://github.com/kubernetes/kubernetes/issues/97423
-      const response = await client.patch(spec)
-      created.push(response.body)
-    } catch (e) {
-      // we did not get the resource, so it does not exist, so create it
-      const response = await client.create(spec)
-      created.push(response.body)
-    }
-  }
-  debug(`Cloudtty is created!`)
-  return created
-}
 
 export async function watchPodUntilRunning(namespace: string, podName: string) {
   let isRunning = false
@@ -98,53 +42,6 @@ export async function checkPodExists(namespace: string, podName: string): Promis
     const errorMessage = err.response?.body?.message ?? err.response?.body?.reason ?? 'Error checking if pod exists'
     debug(`Failed to check pod status for ${podName} in namespace ${namespace}: ${errorMessage}`)
     return false
-  }
-}
-
-export async function k8sdelete(
-  namespace: string,
-  sub: string,
-  isPlatformAdmin: boolean,
-  userTeams: string[],
-): Promise<void> {
-  const kc = new KubeConfig()
-  kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(CoreV1Api)
-  const customObjectsApi = kc.makeApiClient(CustomObjectsApi)
-  const rbacAuthorizationV1Api = kc.makeApiClient(RbacAuthorizationV1Api)
-  const resourceName = sub
-  try {
-    await customObjectsApi.deleteNamespacedCustomObject({
-      group: 'security.istio.io',
-      version: 'v1beta1',
-      namespace,
-      plural: 'authorizationpolicies',
-      name: `tty-${resourceName}`,
-    })
-
-    await k8sApi.deleteNamespacedServiceAccount({ name: `tty-${resourceName}`, namespace })
-    await k8sApi.deleteNamespacedPod({ name: `tty-${resourceName}`, namespace })
-    if (!isPlatformAdmin) {
-      for (const team of userTeams!) {
-        await rbacAuthorizationV1Api.deleteNamespacedRoleBinding({
-          name: `tty-${team}-${resourceName}-rolebinding`,
-          namespace: team,
-        })
-      }
-    } else {
-      await rbacAuthorizationV1Api.deleteClusterRoleBinding({ name: 'tty-admin-clusterrolebinding' })
-    }
-    await k8sApi.deleteNamespacedService({ name: `tty-${resourceName}`, namespace })
-
-    await customObjectsApi.deleteNamespacedCustomObject({
-      group: 'gateway.networking.k8s.io',
-      version: 'v1',
-      namespace,
-      plural: 'httproutes',
-      name: `tty-${resourceName}`,
-    })
-  } catch (error) {
-    debug(`Failed to delete resources for ${resourceName} in namespace ${namespace}.`)
   }
 }
 
