@@ -1534,7 +1534,6 @@ export default class OtomiStack {
       debug('No user sub found, cannot connect to shell.')
       throw new OtomiError(500, 'No user sub found, cannot connect to shell.')
     }
-    const userTeams = sessionUser.teams.map((teamName) => `team-${teamName}`)
     const variables = {
       FQDN: '',
       SUB: sessionUser.sub,
