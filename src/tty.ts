@@ -196,13 +196,13 @@ export default class CloudTty {
     await this.deleteIfExists(this.k8sApi.deleteNamespacedPod, { namespace, name: `tty-${sub}` })
   }
 
-  async createRoleBinding(namespace: string, sub: string): Promise<KubernetesObject> {
+  async createRoleBinding(accountNamespace: string, targetNamespace: string, sub: string): Promise<KubernetesObject> {
     const body = {
       apiVersion: 'rbac.authorization.k8s.io/v1',
       kind: 'RoleBinding',
       metadata: {
         name: `tty-${sub}-rolebinding`,
-        namespace,
+        namespace: targetNamespace,
       },
       roleRef: {
         apiGroup: 'rbac.authorization.k8s.io',
@@ -213,7 +213,7 @@ export default class CloudTty {
         {
           kind: 'ServiceAccount',
           name: `tty-${sub}`,
-          namespace,
+          namespace: accountNamespace,
         },
       ],
     }
@@ -221,15 +221,15 @@ export default class CloudTty {
       this.rbacAuthorizationApi.createNamespacedRoleBinding,
       this.rbacAuthorizationApi.patchNamespacedRoleBinding,
       {
-        namespace,
+        namespace: targetNamespace,
         body,
       },
     )
   }
 
-  async deleteRoleBinding(namespace: string, sub: string): Promise<void> {
+  async deleteRoleBinding(targetNamespace: string, sub: string): Promise<void> {
     await this.deleteIfExists(this.rbacAuthorizationApi.deleteNamespacedRoleBinding, {
-      namespace,
+      namespace: targetNamespace,
       name: `tty-${sub}-rolebinding`,
     })
   }
@@ -388,7 +388,7 @@ export default class CloudTty {
       await this.createClusterRoleBinding(namespace, sub!)
     } else if (teams) {
       for (const team of teams) {
-        await this.createRoleBinding(`team-${team}`, sub!)
+        await this.createRoleBinding(namespace, `team-${team}`, sub!)
       }
     }
     await this.createService(namespace, sub!)

@@ -242,16 +242,12 @@ describe('CloudTty', () => {
     jest.spyOn(tty, 'createService').mockResolvedValue({ kind: 'ok' })
     jest.spyOn(tty, 'createRoute').mockResolvedValue({ kind: 'ok' })
 
-    await tty.createTty(
-      'team-1',
-      { sub: 'user-1', isPlatformAdmin: false, teams: ['a', 'b'] } as SessionUser,
-      'example.org',
-    )
+    await tty.createTty('a', { sub: 'user-1', isPlatformAdmin: false, teams: ['a', 'b'] } as SessionUser, 'example.org')
 
     expect(createClusterRoleBinding).not.toHaveBeenCalled()
     expect(createRoleBinding).toHaveBeenCalledTimes(2)
-    expect(createRoleBinding).toHaveBeenNthCalledWith(1, 'team-a', 'user-1')
-    expect(createRoleBinding).toHaveBeenNthCalledWith(2, 'team-b', 'user-1')
+    expect(createRoleBinding).toHaveBeenNthCalledWith(1, 'team-a', 'team-a', 'user-1')
+    expect(createRoleBinding).toHaveBeenNthCalledWith(2, 'team-a', 'team-b', 'user-1')
   })
 
   test('deleteTty removes namespaced and team-scoped resources for team users', async () => {
@@ -264,16 +260,16 @@ describe('CloudTty', () => {
     const deleteService = jest.spyOn(tty, 'deleteService').mockResolvedValue()
     const deleteRoute = jest.spyOn(tty, 'deleteRoute').mockResolvedValue()
 
-    await tty.deleteTty('team-1', { sub: 'user-1', isPlatformAdmin: false, teams: ['a', 'b'] } as SessionUser)
+    await tty.deleteTty('a', { sub: 'user-1', isPlatformAdmin: false, teams: ['a', 'b'] } as SessionUser)
 
-    expect(deleteAuthorizationPolicy).toHaveBeenCalledWith('team-team-1', 'user-1')
-    expect(deleteServiceAccount).toHaveBeenCalledWith('team-team-1', 'user-1')
-    expect(deletePod).toHaveBeenCalledWith('team-team-1', 'user-1')
+    expect(deleteAuthorizationPolicy).toHaveBeenCalledWith('team-a', 'user-1')
+    expect(deleteServiceAccount).toHaveBeenCalledWith('team-a', 'user-1')
+    expect(deletePod).toHaveBeenCalledWith('team-a', 'user-1')
     expect(deleteClusterRoleBinding).not.toHaveBeenCalled()
     expect(deleteRoleBinding).toHaveBeenCalledTimes(2)
     expect(deleteRoleBinding).toHaveBeenNthCalledWith(1, 'team-a', 'user-1')
     expect(deleteRoleBinding).toHaveBeenNthCalledWith(2, 'team-b', 'user-1')
-    expect(deleteService).toHaveBeenCalledWith('team-team-1', 'user-1')
-    expect(deleteRoute).toHaveBeenCalledWith('team-team-1', 'user-1')
+    expect(deleteService).toHaveBeenCalledWith('team-a', 'user-1')
+    expect(deleteRoute).toHaveBeenCalledWith('team-a', 'user-1')
   })
 })
