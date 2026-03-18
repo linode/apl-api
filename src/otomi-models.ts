@@ -65,6 +65,7 @@ export type TeamAuthz = components['schemas']['TeamAuthz']
 export type AplCatalog = components['schemas']['AplCatalog']
 export type AplCatalogRequest = components['schemas']['AplCatalogRequest']
 export type AplCatalogResponse = components['schemas']['AplCatalogResponse']
+export type AplCatalogChartResponse = components['schemas']['AplCatalogChartResponse']
 // Derived setting models
 export type Alerts = Settings['alerts']
 export type Cluster = Settings['cluster']
@@ -103,6 +104,7 @@ export const APL_KINDS = [
   'AplAlertSet',
   'AplCluster',
   'AplCatalog',
+  'AplCatalogChart',
   'AplDatabase',
   'AplDns',
   'AplIngress',

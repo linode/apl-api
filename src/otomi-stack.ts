@@ -28,6 +28,7 @@ import {
   AplAIModelResponse,
   AplBuildRequest,
   AplBuildResponse,
+  AplCatalogChartResponse,
   AplCatalogRequest,
   AplCatalogResponse,
   AplCodeRepoRequest,
@@ -867,10 +868,11 @@ export default class OtomiStack {
   async saveCatalog(data: AplPlatformObject): Promise<AplRecord> {
     debug(`Saving catalog: ${data.metadata.name}`)
 
-    const filePath = this.fileStore.setPlatformResource(data)
-    await this.git.writeFile(filePath, data)
+    const content = toPlatformObject(data.kind, data.metadata.name, data.spec)
+    const filePath = this.fileStore.setPlatformResource(content)
+    await this.git.writeFile(filePath, content)
 
-    return { filePath, content: data }
+    return { filePath, content }
   }
 
   async saveTeamSealedSecret(teamId: string, data: SealedSecretManifestRequest): Promise<AplRecord> {
@@ -1753,22 +1755,24 @@ export default class OtomiStack {
     }
   }
 
-  async getAplCatalogCharts(name: string): Promise<{ url: string; helmCharts: any; catalog: any; branch: string }> {
+  async getAplCatalogCharts(name: string): Promise<AplCatalogChartResponse[]> {
     const catalog = this.getAplCatalog(name)
     const { repositoryUrl, branch, name: catalogName, chartsPath } = catalog.spec
-    const charts = await this.getBYOWorkloadCatalog(
+    const { catalog: chartCatalog } = await this.getBYOWorkloadCatalog(
       repositoryUrl,
       branch,
       catalogName,
       chartsPath as string | undefined,
     )
-    return { ...charts, branch }
+    return (chartCatalog || []).map(
+      (chart: any) =>
+        toPlatformObject('AplCatalogChart', chart.name, [
+          { ...chart, chartsPath, branch, repositoryUrl },
+        ]) as unknown as AplCatalogChartResponse,
+    )
   }
 
-  async getAplCatalogChart(
-    name: string,
-    chartName: string,
-  ): Promise<{ url: string; branch: string; chart: any | null; chartsPath?: string }> {
+  async getAplCatalogChart(name: string, chartName: string): Promise<AplCatalogChartResponse> {
     const catalog = this.getAplCatalog(name)
     const { repositoryUrl, branch, chartsPath } = catalog.spec
     const { cluster } = this.getSettings(['cluster'])
@@ -1782,10 +1786,14 @@ export default class OtomiStack {
           await fetchWorkloadCatalog(repositoryUrl, helmChartsDir, branch, cluster?.domainSuffix, undefined, chartsPath)
         ).catalog.find((c) => c.name === chartName) || null
 
-      return { url: repositoryUrl, branch, chart: singleChart, chartsPath }
+      return toPlatformObject(
+        'AplCatalogChart',
+        chartName,
+        singleChart ? [{ ...singleChart, chartsPath, branch, repositoryUrl }] : [],
+      ) as unknown as AplCatalogChartResponse
     } catch (error) {
       debug(`Error fetching workload chart '${chartName}': ${error.message}`)
-      return { url: repositoryUrl, branch, chart: null, chartsPath }
+      return toPlatformObject('AplCatalogChart', chartName, []) as unknown as AplCatalogChartResponse
     }
   }
 
