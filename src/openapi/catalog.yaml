@@ -33,6 +33,10 @@ AplCatalogChartSpec:
         type: object
       chartsPath:
         type: string
+      branch:
+        type: string
+      repositoryUrl:
+        type: string
   required:
     - name
     - version
