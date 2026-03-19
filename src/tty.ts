@@ -74,7 +74,7 @@ export default class CloudTty {
       spec: {
         selector: {
           matchLabels: {
-            app: 'tty-$SUB',
+            app: `tty-${sub}`,
           },
         },
         action: 'ALLOW',
