@@ -1,4 +1,4 @@
-import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
@@ -123,6 +123,7 @@ import {
   getTeamSecretsFromK8s,
   watchPodUntilRunning,
 } from './k8s_operations'
+import CloudTty from './tty'
 import {
   getGiteaRepoUrls,
   getPrivateRepoBranches,
@@ -143,7 +144,6 @@ import {
   sparseCloneChart,
   validateGitUrl,
 } from './utils/workloadUtils'
-import CloudTty from './tty'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -318,7 +318,7 @@ export default class OtomiStack {
   }
 
   getSettingsInfo(): SettingsInfo {
-    const settings = this.getSettings(['cluster', 'dns', 'otomi', 'smtp', 'ingress'])
+    const settings = this.getSettings(['cluster', 'dns', 'otomi', 'ingress'])
     const otomiInfo = pick(settings.otomi, [
       'hasExternalDNS',
       'hasExternalIDP',
@@ -334,7 +334,6 @@ export default class OtomiStack {
       cluster: pick(settings.cluster, ['name', 'domainSuffix', 'apiServer', 'provider', 'linode']),
       dns: pick(settings.dns, ['zones']),
       otomi: otomiInfo,
-      smtp: pick(settings.smtp, ['smarthost']),
       ingressClassNames: map(settings.ingress?.classes, 'className') ?? [],
     } as SettingsInfo
   }
@@ -2694,7 +2693,6 @@ export default class OtomiStack {
     const settingsPrefixMap: Record<string, string> = {
       AplDns: 'dns.',
       AplKms: 'kms.',
-      AplSmtp: 'smtp.',
       AplIdentityProvider: 'oidc.',
       AplCapabilitySet: 'otomi.',
       AplAlertSet: 'alerts.',
