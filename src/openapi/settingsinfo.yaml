@@ -59,10 +59,6 @@ SettingsInfo:
             branch:
               type: string
               description: The branch to use in the Git repository.
-    smtp:
-      properties:
-        smarthost:
-          type: string
     ingressClassNames:
       description: Ingress class names that are used by the cluster.
       items:

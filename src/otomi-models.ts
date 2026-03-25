@@ -71,7 +71,6 @@ export type Alerts = Settings['alerts']
 export type Cluster = Settings['cluster']
 export type Dns = Settings['dns']
 export type Ingress = Settings['ingress']
-export type Smtp = Settings['smtp']
 export type Kms = Settings['kms']
 export type Oidc = Settings['oidc']
 export type Otomi = Settings['otomi']
@@ -112,7 +111,6 @@ export const APL_KINDS = [
   'AplKms',
   'AplIdentityProvider',
   'AplCapabilitySet',
-  'AplSmtp',
   'AplBackupCollection',
   'AplUser',
   'AplPlatformSettingSet',
@@ -305,7 +303,6 @@ export interface Repo {
   oidc: Oidc
   otomi: Otomi
   platformBackups: Record<string, any>
-  smtp: Smtp
   users: User[]
   versions: Versions
   teamConfig: Record<string, TeamConfig>

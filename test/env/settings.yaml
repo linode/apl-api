@@ -53,10 +53,4 @@ otomi:
     isHomeMonitored: true
     isMultitenant: true
     version: latest
-smtp:
-    auth_password: somesecretvalue
-    auth_identity: no-reply@doma.in
-    from: no-reply@doma.in
-    hello: doma.in
-    smarthost: smtp-relay.gmail.com:587
 version: 5
