@@ -1,4 +1,4 @@
-import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
@@ -54,7 +54,6 @@ import {
   buildPlatformObject,
   buildTeamObject,
   Cloudtty,
-  CodeRepo,
   Core,
   DeepPartial,
   K8sService,
@@ -81,6 +80,8 @@ import {
   WorkloadName,
   WorkloadValues,
 } from 'src/otomi-models'
+import type { CodeRepoContext } from 'src/stack/modules/coderepo'
+import { codeRepoModule } from 'src/stack/modules/coderepo'
 import {
   arrayToObject,
   getSanitizedErrorMessage,
@@ -119,18 +120,10 @@ import {
   checkPodExists,
   getCloudttyActiveTime,
   getKubernetesVersion,
-  getSecretValues,
   getTeamSecretsFromK8s,
   watchPodUntilRunning,
 } from './k8s_operations'
-import {
-  getGiteaRepoUrls,
-  getPrivateRepoBranches,
-  getPublicRepoBranches,
-  normalizeRepoUrl,
-  testPrivateRepoConnect,
-  testPublicRepoConnect,
-} from './utils/codeRepoUtils'
+import CloudTty from './tty'
 import { getAplObjectFromV1, getV1MergeObject, getV1ObjectFromApl } from './utils/manifests'
 import { ensureSealedSecretMetadata, getSealedSecretsPEM, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
@@ -138,12 +131,10 @@ import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
 import {
   fetchChartYaml,
   fetchWorkloadCatalog,
-  isInteralGiteaURL,
   NewHelmChartValues,
   sparseCloneChart,
   validateGitUrl,
 } from './utils/workloadUtils'
-import CloudTty from './tty'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -1193,64 +1184,20 @@ export default class OtomiStack {
     return users
   }
 
-  getTeamCodeRepos(teamId: string): CodeRepo[] {
-    return this.getTeamAplCodeRepos(teamId).map((codeRepo) => getV1ObjectFromApl(codeRepo) as CodeRepo)
-  }
-
   getTeamAplCodeRepos(teamId: string): AplCodeRepoResponse[] {
-    const files = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamCodeRepo', teamId)
-    return Array.from(files.values()) as AplCodeRepoResponse[]
-  }
-
-  getAllCodeRepos(): CodeRepo[] {
-    return this.getAllAplCodeRepos().map((codeRepo) => getV1ObjectFromApl(codeRepo) as CodeRepo)
+    return codeRepoModule.getTeamAplCodeRepos(this.getCodeRepoContext(), teamId)
   }
 
   getAllAplCodeRepos(): AplCodeRepoResponse[] {
-    const files = this.fileStore.getAllTeamResourcesByKind('AplTeamCodeRepo')
-    return Array.from(files.values()) as AplCodeRepoResponse[]
-  }
-
-  async createCodeRepo(teamId: string, data: CodeRepo): Promise<CodeRepo> {
-    const newCodeRepo = await this.createAplCodeRepo(
-      teamId,
-      getAplObjectFromV1('AplTeamCodeRepo', data) as AplCodeRepoRequest,
-    )
-    return getV1ObjectFromApl(newCodeRepo) as CodeRepo
-  }
-
-  async createAplCodeRepo(teamId: string, data: AplCodeRepoRequest): Promise<AplCodeRepoResponse> {
-    // Check if URL already exists
-    const existingRepos = this.getTeamAplCodeRepos(teamId)
-    const allRepoUrls = existingRepos.map((repo) => repo.spec.repositoryUrl) || []
-    if (allRepoUrls.includes(data.spec.repositoryUrl)) throw new AlreadyExists('Code repository URL already exists')
-    const allNames = existingRepos.map((repo) => repo.metadata.name) || []
-    if (allNames.includes(data.metadata.name)) throw new AlreadyExists('Code repo name already exists')
-    if (!data.spec.private) unset(data.spec, 'secret')
-    if (data.spec.gitService === 'gitea') unset(data.spec, 'private')
-
-    const teamObject = toTeamObject(teamId, data)
-    const aplRecord = await this.saveTeamConfigItem(teamObject)
-    await this.doDeployment(aplRecord, false)
-    return aplRecord.content as AplCodeRepoResponse
-  }
-
-  getCodeRepo(teamId: string, name: string): CodeRepo {
-    return getV1ObjectFromApl(this.getAplCodeRepo(teamId, name)) as CodeRepo
+    return codeRepoModule.getAllAplCodeRepos(this.getCodeRepoContext())
   }
 
   getAplCodeRepo(teamId: string, name: string): AplCodeRepoResponse {
-    const codeRepo = this.fileStore.getTeamResource('AplTeamCodeRepo', teamId, name)
-    if (!codeRepo) {
-      throw new NotExistError(`Code repo ${name} not found in team ${teamId}`)
-    }
-    return codeRepo as AplCodeRepoResponse
+    return codeRepoModule.getAplCodeRepo(this.getCodeRepoContext(), teamId, name)
   }
 
-  async editCodeRepo(teamId: string, name: string, data: CodeRepo): Promise<CodeRepo> {
-    const mergeObj = getV1MergeObject(data) as DeepPartial<AplCodeRepoRequest>
-    const mergedCodeRepo = await this.editAplCodeRepo(teamId, name, mergeObj)
-    return getV1ObjectFromApl(mergedCodeRepo) as CodeRepo
+  async createAplCodeRepo(teamId: string, data: AplCodeRepoRequest): Promise<AplCodeRepoResponse> {
+    return await codeRepoModule.createAplCodeRepo(this.getCodeRepoContext(), teamId, data)
   }
 
   async editAplCodeRepo(
@@ -1259,101 +1206,19 @@ export default class OtomiStack {
     data: DeepPartial<AplCodeRepoRequest>,
     patch = false,
   ): Promise<AplCodeRepoResponse> {
-    if (!data.spec?.private) unset(data.spec, 'secret')
-    if (data.spec?.gitService === 'gitea') unset(data.spec, 'private')
-
-    const existing = this.getAplCodeRepo(teamId, name)
-    const updatedSpec = patch ? merge(cloneDeep(existing.spec), data.spec) : { ...existing.spec, ...data.spec }
-
-    const teamObject = buildTeamObject(existing, updatedSpec)
-
-    const aplRecord = await this.saveTeamConfigItem(teamObject)
-    await this.doDeployment(aplRecord, false)
-    return aplRecord.content as AplCodeRepoResponse
+    return await codeRepoModule.editAplCodeRepo(this.getCodeRepoContext(), teamId, name, data, patch)
   }
 
-  async deleteCodeRepo(teamId: string, name: string): Promise<void> {
-    const filePath = await this.deleteTeamConfigItem('AplTeamCodeRepo', teamId, name)
-    await this.doDeleteDeployment([filePath])
-  }
-
-  async getRepoBranches(codeRepoName: string, teamId: string): Promise<string[]> {
-    if (!codeRepoName) return ['HEAD']
-    const coderepo = this.getCodeRepo(teamId, codeRepoName)
-    const { repositoryUrl, secret: secretName } = coderepo
-    const { cluster } = this.getSettings(['cluster'])
-    try {
-      let sshPrivateKey = '',
-        username = '',
-        accessToken = ''
-
-      if (secretName) {
-        const secret = await getSecretValues(secretName, `team-${teamId}`)
-        sshPrivateKey = secret?.['ssh-privatekey'] || ''
-        username = secret?.username || ''
-        accessToken = secret?.password || ''
-      }
-
-      const isPrivate = !!secretName
-      const isSSH = !!sshPrivateKey
-
-      const repoUrl = isInteralGiteaURL(repositoryUrl, cluster?.domainSuffix)
-        ? repositoryUrl
-        : normalizeRepoUrl(repositoryUrl, isPrivate, isSSH)
-
-      if (!repoUrl) return ['HEAD']
-
-      if (isPrivate) return await getPrivateRepoBranches(repoUrl, sshPrivateKey, username, accessToken)
-
-      return await getPublicRepoBranches(repoUrl)
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || error?.message || 'Failed to get repo branches'
-      debug('Error getting branches:', errorMessage)
-      return []
-    }
+  async deleteAplCodeRepo(teamId: string, name: string): Promise<void> {
+    return await codeRepoModule.deleteAplCodeRepo(this.getCodeRepoContext(), teamId, name)
   }
 
   async getTestRepoConnect(url: string, teamId: string, secretName: string): Promise<TestRepoConnect> {
-    try {
-      let sshPrivateKey = '',
-        username = '',
-        accessToken = ''
-
-      const isPrivate = !!secretName
-
-      if (isPrivate) {
-        const secret = await getSecretValues(secretName, `team-${teamId}`)
-        sshPrivateKey = secret?.['ssh-privatekey'] || ''
-        username = secret?.username || ''
-        accessToken = secret?.password || ''
-      }
-
-      const isSSH = !!sshPrivateKey
-      const repoUrl = normalizeRepoUrl(url, isPrivate, isSSH)
-
-      if (!repoUrl) return { status: 'failed' }
-
-      if (isPrivate) {
-        return (await testPrivateRepoConnect(repoUrl, sshPrivateKey, username, accessToken)) as TestRepoConnect
-      }
-
-      return (await testPublicRepoConnect(repoUrl)) as TestRepoConnect
-    } catch (error) {
-      return { status: 'failed' }
-    }
+    return await codeRepoModule.getTestRepoConnect(this.getCodeRepoContext(), url, teamId, secretName)
   }
 
   async getInternalRepoUrls(teamId: string): Promise<string[]> {
-    if (env.isDev || !teamId || teamId === 'admin') return []
-    const gitea = this.getApp('gitea')
-    if (!gitea?.values?.enabled) return []
-    const { cluster, otomi } = this.getSettings(['cluster', 'otomi'])
-    const username = (otomi?.git?.username ?? '') as string
-    const password = (otomi?.git?.password ?? '') as string
-    const orgName = `team-${teamId}`
-    const domainSuffix = cluster?.domainSuffix
-    const internalRepoUrls = (await getGiteaRepoUrls(username, password, orgName, domainSuffix)) || []
-    return internalRepoUrls
+    return await codeRepoModule.getInternalRepoUrls(this.getCodeRepoContext(), teamId)
   }
 
   getDashboard(teamId: string): Array<any> {
@@ -2682,6 +2547,19 @@ export default class OtomiStack {
       kind: aplObject.kind,
       metadata: aplObject.metadata,
       spec: omit(secretSpec, ['id', 'teamId', 'name']),
+    }
+  }
+
+  private getCodeRepoContext(): CodeRepoContext {
+    return {
+      fileStore: this.fileStore,
+      git: this.git,
+      getSettings: this.getSettings.bind(this),
+      getApp: this.getApp.bind(this),
+      saveTeamConfigItem: this.saveTeamConfigItem.bind(this),
+      deleteTeamConfigItem: this.deleteTeamConfigItem.bind(this),
+      doDeployment: this.doDeployment.bind(this),
+      doDeleteDeployment: this.doDeleteDeployment.bind(this),
     }
   }
 
