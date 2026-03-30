@@ -11,7 +11,7 @@ const debug = Debug('otomi:api:v2:teams:codeRepos')
 export const getAplCodeRepo = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId, codeRepositoryName } = req.params
   debug(`getCodeRepo(${codeRepositoryName})`)
-  const data = req.otomi.getAplCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
+  const data = req.otomi.codeRepos.get(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
   res.json(data)
 }
 
@@ -22,7 +22,7 @@ export const getAplCodeRepo = (req: OpenApiRequestExt, res: Response): void => {
 export const editAplCodeRepo = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, codeRepositoryName } = req.params
   debug(`editCodeRepo(${codeRepositoryName})`)
-  const data = await req.otomi.editAplCodeRepo(
+  const data = await req.otomi.codeRepos.edit(
     decodeURIComponent(teamId),
     decodeURIComponent(codeRepositoryName),
     req.body as AplCodeRepoRequest,
@@ -37,7 +37,7 @@ export const editAplCodeRepo = async (req: OpenApiRequestExt, res: Response): Pr
 export const patchAplCodeRepo = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, codeRepositoryName } = req.params
   debug(`editCodeRepo(${codeRepositoryName}, patch)`)
-  const data = await req.otomi.editAplCodeRepo(
+  const data = await req.otomi.codeRepos.edit(
     decodeURIComponent(teamId),
     decodeURIComponent(codeRepositoryName),
     req.body as DeepPartial<AplCodeRepoRequest>,
@@ -53,6 +53,6 @@ export const patchAplCodeRepo = async (req: OpenApiRequestExt, res: Response): P
 export const deleteAplCodeRepo = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, codeRepositoryName } = req.params
   debug(`deleteCodeRepo(${codeRepositoryName})`)
-  await req.otomi.deleteCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
+  await req.otomi.codeRepos.delete(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
   res.json({})
 }
