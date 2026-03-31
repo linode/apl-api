@@ -10,6 +10,6 @@ const debug = Debug('otomi:api:v2:codeRepos')
  */
 export const getAllAplCodeRepos = (req: OpenApiRequestExt, res: Response): void => {
   debug('getAllCodeRepos')
-  const v = req.otomi.getAllAplCodeRepos()
+  const v = req.otomi.codeRepos.getAllApl()
   res.json(v)
 }

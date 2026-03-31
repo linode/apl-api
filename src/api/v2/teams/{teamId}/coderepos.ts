@@ -11,7 +11,7 @@ const debug = Debug('otomi:api:v2:teams:codeRepos')
 export const getTeamAplCodeRepos = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId } = req.params
   debug(`getTeamCodeRepos(${teamId})`)
-  const v = req.otomi.getTeamAplCodeRepos(decodeURIComponent(teamId))
+  const v = req.otomi.codeRepos.getByTeamApl(decodeURIComponent(teamId))
   res.json(v)
 }
 
@@ -22,6 +22,6 @@ export const getTeamAplCodeRepos = (req: OpenApiRequestExt, res: Response): void
 export const createAplCodeRepo = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId } = req.params
   debug(`createCodeRepos(${teamId}, ...)`)
-  const v = await req.otomi.createAplCodeRepo(decodeURIComponent(teamId), req.body as AplCodeRepoRequest)
+  const v = await req.otomi.codeRepos.create(decodeURIComponent(teamId), req.body as AplCodeRepoRequest)
   res.json(v)
 }

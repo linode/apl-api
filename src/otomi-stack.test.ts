@@ -975,8 +975,8 @@ describe('Code repositories tests', () => {
     }
     otomiStack.fileStore.setTeamResource(codeRepo)
 
-    jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
-    jest.spyOn(otomiStack, 'doDeleteDeployment').mockResolvedValue()
+    jest.spyOn(otomiStack.deployer, 'doDeployment').mockResolvedValue()
+    jest.spyOn(otomiStack.deployer, 'doDeleteDeployment').mockResolvedValue()
     jest.spyOn(mockGit, 'removeFile').mockResolvedValue()
   })
 
@@ -985,7 +985,7 @@ describe('Code repositories tests', () => {
   })
 
   test('should create an internal code repository', async () => {
-    const codeRepo = await otomiStack.createCodeRepo('demo', {
+    const codeRepo = await otomiStack.codeRepos.createV1('demo', {
       name: 'code-2',
       gitService: 'gitea',
       repositoryUrl: 'https://gitea-new.test.com',
@@ -1011,12 +1011,12 @@ describe('Code repositories tests', () => {
       'env/teams/demo/codeRepos/code-2.yaml',
       expect.objectContaining({ kind: 'AplTeamCodeRepo' }),
     )
-    expect(otomiStack.doDeployment).toHaveBeenCalled()
+    expect(otomiStack.deployer.doDeployment).toHaveBeenCalled()
   })
 
   test('should get an existing internal code repository', () => {
     // code-1 is already pre-created in beforeEach
-    const result = otomiStack.getCodeRepo('demo', 'code-1')
+    const result = otomiStack.codeRepos.getV1('demo', 'code-1')
 
     expect(result).toEqual({
       teamId: 'demo',
@@ -1027,7 +1027,7 @@ describe('Code repositories tests', () => {
   })
 
   test('should edit an existing internal code repository', async () => {
-    const codeRepo = await otomiStack.editCodeRepo('demo', 'code-1', {
+    const codeRepo = await otomiStack.codeRepos.editV1('demo', 'code-1', {
       teamId: 'demo',
       name: 'code-1',
       gitService: 'gitea',
@@ -1048,7 +1048,7 @@ describe('Code repositories tests', () => {
 
     // Verify Git operations
     expect(mockGit.writeFile).toHaveBeenCalled()
-    expect(otomiStack.doDeployment).toHaveBeenCalled()
+    expect(otomiStack.deployer.doDeployment).toHaveBeenCalled()
   })
 
   test('should delete an existing internal code repository', async () => {
@@ -1056,7 +1056,7 @@ describe('Code repositories tests', () => {
     let stored = otomiStack.fileStore.getTeamResource('AplTeamCodeRepo', 'demo', 'code-1')
     expect(stored).toBeDefined()
 
-    await otomiStack.deleteCodeRepo('demo', 'code-1')
+    await otomiStack.codeRepos.delete('demo', 'code-1')
 
     // Verify it was deleted from FileStore
     stored = otomiStack.fileStore.getTeamResource('AplTeamCodeRepo', 'demo', 'code-1')
@@ -1064,11 +1064,11 @@ describe('Code repositories tests', () => {
 
     // Verify Git operations
     expect(mockGit.removeFile).toHaveBeenCalled()
-    expect(otomiStack.doDeleteDeployment).toHaveBeenCalled()
+    expect(otomiStack.deployer.doDeleteDeployment).toHaveBeenCalled()
   })
 
   test('should create an external public code repository', async () => {
-    const codeRepo = await otomiStack.createCodeRepo('demo', {
+    const codeRepo = await otomiStack.codeRepos.createV1('demo', {
       name: 'ext-pub-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
@@ -1107,7 +1107,7 @@ describe('Code repositories tests', () => {
     }
     otomiStack.fileStore.setTeamResource(extPubRepo)
 
-    const result = otomiStack.getCodeRepo('demo', 'ext-pub-get')
+    const result = otomiStack.codeRepos.getV1('demo', 'ext-pub-get')
     expect(result).toEqual({
       teamId: 'demo',
       name: 'ext-pub-get',
@@ -1132,7 +1132,7 @@ describe('Code repositories tests', () => {
     }
     otomiStack.fileStore.setTeamResource(extPubRepo)
 
-    const codeRepo = await otomiStack.editCodeRepo('demo', 'ext-pub-edit', {
+    const codeRepo = await otomiStack.codeRepos.editV1('demo', 'ext-pub-edit', {
       teamId: 'demo',
       name: 'ext-pub-edit',
       gitService: 'github',
@@ -1168,7 +1168,7 @@ describe('Code repositories tests', () => {
     }
     otomiStack.fileStore.setTeamResource(extPubRepo)
 
-    await otomiStack.deleteCodeRepo('demo', 'ext-pub-del')
+    await otomiStack.codeRepos.delete('demo', 'ext-pub-del')
 
     // Verify it was deleted
     const stored = otomiStack.fileStore.getTeamResource('AplTeamCodeRepo', 'demo', 'ext-pub-del')
@@ -1176,7 +1176,7 @@ describe('Code repositories tests', () => {
   })
 
   test('should create an external private code repository', async () => {
-    const codeRepo = await otomiStack.createCodeRepo('demo', {
+    const codeRepo = await otomiStack.codeRepos.createV1('demo', {
       name: 'ext-priv-1',
       gitService: 'github',
       repositoryUrl: 'https://github.test.com',
@@ -1219,7 +1219,7 @@ describe('Code repositories tests', () => {
     }
     otomiStack.fileStore.setTeamResource(extPrivRepo)
 
-    const codeRepo = await otomiStack.editCodeRepo('demo', 'ext-priv-edit', {
+    const codeRepo = await otomiStack.codeRepos.editV1('demo', 'ext-priv-edit', {
       teamId: 'demo',
       name: 'ext-priv-edit',
       gitService: 'github',
@@ -1261,7 +1261,7 @@ describe('Code repositories tests', () => {
     }
     otomiStack.fileStore.setTeamResource(extPrivRepo)
 
-    await otomiStack.deleteCodeRepo('demo', 'ext-priv-del')
+    await otomiStack.codeRepos.delete('demo', 'ext-priv-del')
 
     // Verify it was deleted
     const stored = otomiStack.fileStore.getTeamResource('AplTeamCodeRepo', 'demo', 'ext-priv-del')
