@@ -1310,6 +1310,10 @@ export default class OtomiStack {
   }
 
   async createAplBuild(teamId: string, data: AplBuildRequest): Promise<AplBuildResponse> {
+    const tekton = this.getApp('tekton')
+    const harbor = this.getApp('harbor')
+    if (!tekton?.values?.enabled || !harbor?.values?.enabled)
+      throw new ForbiddenError('Tekton and Harbor need to be enabled, cannot create container image')
     const buildName = `${data?.spec?.imageName}-${data?.spec?.tag}`
     if (data.spec.secretName && data.spec.secretName.length < 2)
       throw new ValidationError('Secret name must be at least 2 characters long')
