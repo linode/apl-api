@@ -93,7 +93,7 @@ export const PREINSTALLED_EXCLUDED_APPS = json({
 export const HIDDEN_APPS = json({
   desc: 'Applications that are hidden from the apps page',
   default: {
-    apps: ['ingress-nginx'],
+    apps: ['ingress-nginx-platform'],
   },
 })
 export const OBJ_STORAGE_APPS = json({
