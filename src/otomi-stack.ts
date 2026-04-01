@@ -1469,8 +1469,9 @@ export default class OtomiStack {
     const gitea = this.getApp('gitea')
     if (!gitea?.values?.enabled) return []
     const { cluster } = await this.getSettings(['cluster'])
-    const username = gitea.values?.adminUsername as string
-    const password = gitea.values?.adminPassword as string
+    const username = (gitea.values?.adminUsername as string) || 'otomi-admin'
+    const otomiSecrets = await getSecretValues('otomi-secrets', 'apl-secrets')
+    const password = otomiSecrets?.git_password
     const orgName = `team-${teamId}`
     const domainSuffix = cluster?.domainSuffix
     const internalRepoUrls = (await getGiteaRepoUrls(username, password, orgName, domainSuffix)) || []
