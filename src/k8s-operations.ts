@@ -1,6 +1,12 @@
-import { CoreV1Api, CustomObjectsApi, KubeConfig, VersionApi } from '@kubernetes/client-node'
+import { CoreV1Api, CustomObjectsApi, KubeConfig, V1Service, VersionApi } from '@kubernetes/client-node'
 import Debug from 'debug'
-import { AplBuildResponse, AplServiceResponse, AplWorkloadResponse, SealedSecretManifestResponse } from './otomi-models'
+import {
+  AplBuildResponse,
+  AplServiceResponse,
+  AplWorkloadResponse,
+  K8sService,
+  SealedSecretManifestResponse,
+} from './otomi-models'
 
 const debug = Debug('otomi:api:k8sOperations')
 
@@ -413,4 +419,50 @@ export async function getTeamSecretsFromK8s(namespace: string) {
   } catch (error) {
     debug(`Failed to get team secrets from k8s for ${namespace}.`)
   }
+}
+
+export function toK8sService(item: V1Service): K8sService | null {
+  const knativeServiceTypeLabel = 'networking.internal.knative.dev/serviceType'
+  const knativeServiceLabel = 'serving.knative.dev/service'
+  const appNameLabel = 'app.kubernetes.io/name'
+
+  const labels = item.metadata?.labels ?? {}
+
+  // Filter out knative private services
+  if (labels[knativeServiceTypeLabel] === 'Private') return null
+  // Filter out services that are knative service revision
+  if (item.spec?.type === 'ClusterIP' && labels[knativeServiceLabel]) return null
+
+  let name = item.metadata?.name ?? 'unknown'
+  let managedByKnative = false
+
+  if (item.spec?.type === 'ExternalName' && labels[knativeServiceLabel]) {
+    name = labels[knativeServiceLabel]
+    managedByKnative = true
+  }
+
+  // Group canary services (e.g. foo-v1 and foo-v2) by their common app.kubernetes.io/name label
+  const canonicalName = labels[appNameLabel] ?? name
+  const ports = item.spec?.ports?.map((p) => p.port) ?? []
+
+  return { name: canonicalName, ports, managedByKnative }
+}
+
+export function groupK8sServices(services: K8sService[]): K8sService[] {
+  const grouped = new Map<string, K8sService>()
+
+  for (const svc of services) {
+    const existing = grouped.get(svc.name)
+    if (existing) {
+      grouped.set(svc.name, {
+        ...existing,
+        ports: Array.from(new Set([...(existing.ports ?? []), ...(svc.ports ?? [])])),
+        managedByKnative: existing.managedByKnative || svc.managedByKnative,
+      })
+    } else {
+      grouped.set(svc.name, svc)
+    }
+  }
+
+  return Array.from(grouped.values())
 }
