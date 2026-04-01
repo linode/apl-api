@@ -1,5 +1,5 @@
 import { CoreV1Api, V1Service } from '@kubernetes/client-node'
-import { getCloudttyActiveTime, getLogTime, groupK8sServices, toK8sService } from './k8s-operations'
+import { getCloudttyActiveTime, getLogTime, mergeCanaryServices, toK8sService } from './k8s-operations'
 
 // Mock the KubeConfig
 jest.mock('@kubernetes/client-node', () => {
@@ -30,9 +30,9 @@ describe('toK8sService', () => {
     expect(result).toEqual({ name: 'my-svc', ports: [8080], managedByKnative: false })
   })
 
-  test('uses app.kubernetes.io/name label as canonical name', () => {
-    const svc = makeService({ metadata: { name: 'my-svc-v1', labels: { 'app.kubernetes.io/name': 'my-svc' } } })
-    expect(toK8sService(svc)?.name).toBe('my-svc')
+  test('returns the raw service name', () => {
+    const svc = makeService({ metadata: { name: 'my-svc-v1', labels: {} } })
+    expect(toK8sService(svc)?.name).toBe('my-svc-v1')
   })
 
   test('filters out knative private services', () => {
@@ -60,40 +60,45 @@ describe('toK8sService', () => {
   })
 })
 
-describe('groupK8sServices', () => {
-  test('returns services unchanged when no duplicates', () => {
+describe('mergeCanaryServices', () => {
+  test('returns services unchanged when no canary variants present', () => {
     const services = [
       { name: 'svc-a', ports: [80], managedByKnative: false },
       { name: 'svc-b', ports: [8080], managedByKnative: false },
     ]
-    expect(groupK8sServices(services)).toEqual(services)
+    expect(mergeCanaryServices(services)).toEqual(services)
   })
 
-  test('merges canary variants with the same canonical name', () => {
+  test('groups -v1 and -v2 variants into a single entry with the base name', () => {
     const services = [
-      { name: 'my-svc', ports: [80], managedByKnative: false },
-      { name: 'my-svc', ports: [80], managedByKnative: false },
+      { name: 'my-svc-v1', ports: [80], managedByKnative: false },
+      { name: 'my-svc-v2', ports: [80], managedByKnative: false },
     ]
-    expect(groupK8sServices(services)).toEqual([{ name: 'my-svc', ports: [80], managedByKnative: false }])
+    expect(mergeCanaryServices(services)).toEqual([{ name: 'my-svc', ports: [80], managedByKnative: false }])
   })
 
-  test('deduplicates ports across merged services', () => {
+  test('does not strip suffix when only one variant exists', () => {
+    const services = [{ name: 'my-svc-v1', ports: [80], managedByKnative: false }]
+    expect(mergeCanaryServices(services)).toEqual([{ name: 'my-svc-v1', ports: [80], managedByKnative: false }])
+  })
+
+  test('deduplicates ports when merging canary variants', () => {
     const services = [
-      { name: 'my-svc', ports: [80, 443], managedByKnative: false },
-      { name: 'my-svc', ports: [443, 8080], managedByKnative: false },
+      { name: 'my-svc-v1', ports: [80, 443], managedByKnative: false },
+      { name: 'my-svc-v2', ports: [443, 8080], managedByKnative: false },
     ]
-    const result = groupK8sServices(services)
+    const result = mergeCanaryServices(services)
     expect(result).toHaveLength(1)
     expect(result[0].ports).toEqual(expect.arrayContaining([80, 443, 8080]))
     expect(result[0].ports).toHaveLength(3)
   })
 
-  test('propagates managedByKnative if any service in the group has it set', () => {
+  test('propagates managedByKnative if any variant in the group has it set', () => {
     const services = [
-      { name: 'my-svc', ports: [80], managedByKnative: false },
-      { name: 'my-svc', ports: [80], managedByKnative: true },
+      { name: 'my-svc-v1', ports: [80], managedByKnative: false },
+      { name: 'my-svc-v2', ports: [80], managedByKnative: true },
     ]
-    expect(groupK8sServices(services)[0].managedByKnative).toBe(true)
+    expect(mergeCanaryServices(services)[0].managedByKnative).toBe(true)
   })
 })
 

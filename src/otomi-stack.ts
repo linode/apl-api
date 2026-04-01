@@ -121,7 +121,7 @@ import {
   getKubernetesVersion,
   getSecretValues,
   getTeamSecretsFromK8s,
-  groupK8sServices,
+  mergeCanaryServices,
   toK8sService,
   watchPodUntilRunning,
 } from './k8s-operations'
@@ -2196,7 +2196,7 @@ export default class OtomiStack {
     const { items } = await this.getApiClient().listNamespacedService({ namespace: `team-${teamId}` })
     const mapped = items.flatMap((item) => toK8sService(item) ?? [])
 
-    return groupK8sServices(mapped)
+    return mergeCanaryServices(mapped)
   }
 
   async getKubecfg(teamId: string): Promise<KubeConfig> {

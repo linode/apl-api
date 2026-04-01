@@ -424,7 +424,6 @@ export async function getTeamSecretsFromK8s(namespace: string) {
 export function toK8sService(item: V1Service): K8sService | null {
   const knativeServiceTypeLabel = 'networking.internal.knative.dev/serviceType'
   const knativeServiceLabel = 'serving.knative.dev/service'
-  const appNameLabel = 'app.kubernetes.io/name'
 
   const labels = item.metadata?.labels ?? {}
 
@@ -441,28 +440,24 @@ export function toK8sService(item: V1Service): K8sService | null {
     managedByKnative = true
   }
 
-  // Group canary services (e.g. foo-v1 and foo-v2) by their common app.kubernetes.io/name label
-  const canonicalName = labels[appNameLabel] ?? name
   const ports = item.spec?.ports?.map((p) => p.port) ?? []
 
-  return { name: canonicalName, ports, managedByKnative }
+  return { name, ports, managedByKnative }
 }
 
-export function groupK8sServices(services: K8sService[]): K8sService[] {
-  const grouped = new Map<string, K8sService>()
+// Canary deployments produce two services: <name>-v1 and <name>-v2.
+// This function consolidates them into a single entry with the base name.
+// It works in two steps:
+//   1. Filter: drop -v2 when a matching -v1 exists (keeping only one representative)
+//   2. Map: rename the remaining -v1 to the base name when a matching -v2 exists
+// Services without a matching counterpart are left unchanged.
+export function mergeCanaryServices(services: K8sService[]): K8sService[] {
+  const nameSet = new Set(services.map((s) => s.name))
 
-  for (const svc of services) {
-    const existing = grouped.get(svc.name)
-    if (existing) {
-      grouped.set(svc.name, {
-        ...existing,
-        ports: Array.from(new Set([...(existing.ports ?? []), ...(svc.ports ?? [])])),
-        managedByKnative: existing.managedByKnative || svc.managedByKnative,
-      })
-    } else {
-      grouped.set(svc.name, svc)
-    }
-  }
-
-  return Array.from(grouped.values())
+  return services
+    .filter((svc) => !svc.name.endsWith('-v2') || !nameSet.has(svc.name.replace(/-v2$/, '-v1')))
+    .map((svc) => {
+      const baseName = svc.name.replace(/-v1$/, '')
+      return nameSet.has(`${baseName}-v2`) ? { ...svc, name: baseName } : svc
+    })
 }
