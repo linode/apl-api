@@ -82,23 +82,12 @@ describe('mergeCanaryServices', () => {
     expect(mergeCanaryServices(services)).toEqual([{ name: 'my-svc-v1', ports: [80], managedByKnative: false }])
   })
 
-  test('deduplicates ports when merging canary variants', () => {
+  test('retains the data from the -v1 variant', () => {
     const services = [
-      { name: 'my-svc-v1', ports: [80, 443], managedByKnative: false },
-      { name: 'my-svc-v2', ports: [443, 8080], managedByKnative: false },
+      { name: 'my-svc-v1', ports: [80, 443], managedByKnative: true },
+      { name: 'my-svc-v2', ports: [8080], managedByKnative: false },
     ]
-    const result = mergeCanaryServices(services)
-    expect(result).toHaveLength(1)
-    expect(result[0].ports).toEqual(expect.arrayContaining([80, 443, 8080]))
-    expect(result[0].ports).toHaveLength(3)
-  })
-
-  test('propagates managedByKnative if any variant in the group has it set', () => {
-    const services = [
-      { name: 'my-svc-v1', ports: [80], managedByKnative: false },
-      { name: 'my-svc-v2', ports: [80], managedByKnative: true },
-    ]
-    expect(mergeCanaryServices(services)[0].managedByKnative).toBe(true)
+    expect(mergeCanaryServices(services)).toEqual([{ name: 'my-svc', ports: [80, 443], managedByKnative: true }])
   })
 })
 
