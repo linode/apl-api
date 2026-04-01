@@ -107,14 +107,6 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
     name: 'platformBackups',
   })
 
-  maps.set('AplSmtp', {
-    kind: 'AplSmtp',
-    envDir,
-    pathGlob: `${envDir}/env/settings/*smtp.yaml`,
-    pathTemplate: 'env/settings/smtp.yaml',
-    name: 'smtp',
-  })
-
   maps.set('AplUser', {
     kind: 'AplUser',
     envDir,

@@ -12,6 +12,14 @@ import { loadSpec } from './app'
 import { PublicUrlExists, ValidationError } from './error'
 import { Git } from './git'
 
+jest.mock('./tty', () => ({
+  __esModule: true,
+  default: jest.fn().mockImplementation(() => ({
+    createTty: jest.fn(),
+    deleteTty: jest.fn(),
+  })),
+}))
+
 jest.mock('src/middleware', () => ({
   ...jest.requireActual('src/middleware'),
   getSessionStack: jest.fn(),

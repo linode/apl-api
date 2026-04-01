@@ -3,8 +3,7 @@ import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
 import { existsSync, rmSync } from 'fs'
-import { pathExists, unlink } from 'fs-extra'
-import { readdir, readFile, writeFile } from 'fs/promises'
+import { readFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, isEmpty, map, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema } from 'src/app'
@@ -28,6 +27,7 @@ import {
   AplAIModelResponse,
   AplBuildRequest,
   AplBuildResponse,
+  AplCatalogChartResponse,
   AplCatalogRequest,
   AplCatalogResponse,
   AplCodeRepoRequest,
@@ -116,16 +116,15 @@ import { getAIModels } from './ai/aiModelHandler'
 import { DatabaseCR } from './ai/DatabaseCR'
 import { getResourceFilePath } from './fileStore/file-map'
 import {
-  apply,
   checkPodExists,
   getCloudttyActiveTime,
   getKubernetesVersion,
   getSecretValues,
   getTeamSecretsFromK8s,
   isK8sReachable,
-  k8sdelete,
   watchPodUntilRunning,
 } from './k8s_operations'
+import CloudTty from './tty'
 import {
   getGiteaRepoUrls,
   getPrivateRepoBranches,
@@ -224,10 +223,18 @@ export default class OtomiStack {
   isLoaded = false
   git: Git
   fileStore: FileStore
+  private cloudTty: CloudTty
 
   constructor(editor?: string, sessionId?: string) {
     this.editor = editor
     this.sessionId = sessionId ?? 'main'
+  }
+
+  getCloudTty() {
+    if (!this.cloudTty) {
+      this.cloudTty = new CloudTty()
+    }
+    return this.cloudTty
   }
 
   async getAppList() {
@@ -344,7 +351,6 @@ export default class OtomiStack {
       cluster: pick(settings.cluster, ['name', 'domainSuffix', 'apiServer', 'provider', 'linode']),
       dns: pick(settings.dns, ['zones']),
       otomi: otomiInfo,
-      smtp: pick(settings.smtp, ['smarthost']),
       ingressClassNames: map(settings.ingress?.classes, 'className') ?? [],
     } as SettingsInfo
   }
@@ -968,10 +974,11 @@ export default class OtomiStack {
   async saveCatalog(data: AplPlatformObject): Promise<AplRecord> {
     debug(`Saving catalog: ${data.metadata.name}`)
 
-    const filePath = this.fileStore.setPlatformResource(data)
-    await this.git.writeFile(filePath, data)
+    const content = toPlatformObject(data.kind, data.metadata.name, data.spec)
+    const filePath = this.fileStore.setPlatformResource(content)
+    await this.git.writeFile(filePath, content)
 
-    return { filePath, content: data }
+    return { filePath, content }
   }
 
   async saveTeamSealedSecret(teamId: string, inData: SealedSecretManifestRequest): Promise<AplRecord> {
@@ -1512,6 +1519,10 @@ export default class OtomiStack {
   }
 
   async createAplBuild(teamId: string, data: AplBuildRequest): Promise<AplBuildResponse> {
+    const tekton = this.getApp('tekton')
+    const harbor = this.getApp('harbor')
+    if (!tekton?.values?.enabled || !harbor?.values?.enabled)
+      throw new ForbiddenError('Tekton and Harbor need to be enabled, cannot create container image')
     const buildName = `${data?.spec?.imageName}-${data?.spec?.tag}`
     if (data.spec.secretName && data.spec.secretName.length < 2)
       throw new ValidationError('Secret name must be at least 2 characters long')
@@ -1644,11 +1655,12 @@ export default class OtomiStack {
   }
 
   async connectCloudtty(teamId: string, sessionUser: SessionUser): Promise<Cloudtty> {
+    const isAdmin = sessionUser.isPlatformAdmin
+    const targetNamespace = isAdmin ? 'team-admin' : `team-${teamId}`
     if (!sessionUser.sub) {
       debug('No user sub found, cannot connect to shell.')
       throw new OtomiError(500, 'No user sub found, cannot connect to shell.')
     }
-    const userTeams = sessionUser.teams.map((teamName) => `team-${teamName}`)
     const variables = {
       FQDN: '',
       SUB: sessionUser.sub,
@@ -1665,62 +1677,20 @@ export default class OtomiStack {
     }
 
     // if cloudtty shell does not exists then check if the pod is running and return it
-    if (await checkPodExists('team-admin', `tty-${sessionUser.sub}`)) {
+    if (await checkPodExists(targetNamespace, `tty-${sessionUser.sub}`)) {
       return { iFrameUrl: `https://tty.${variables.FQDN}/${sessionUser.sub}` }
     }
 
-    if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
-
-    //if user is admin then read the manifests from ./dist/src/ttyManifests/adminTtyManifests
-    const files = sessionUser.isPlatformAdmin
-      ? await readdir('./dist/src/ttyManifests/adminTtyManifests', 'utf-8')
-      : await readdir('./dist/src/ttyManifests', 'utf-8')
-    const filteredFiles = files.filter((file) => file.startsWith('tty'))
-    const variableKeys = Object.keys(variables)
-
-    const podContentAddTargetTeam = (fileContent) => {
-      const regex = new RegExp(`\\$TARGET_TEAM`, 'g')
-      return fileContent.replace(regex, teamId)
-    }
-
-    // iterates over the rolebinding file and replace the $TARGET_TEAM with the team name for teams
-    const rolebindingContentsForUsers = (fileContent) => {
-      const rolebindingArray: string[] = []
-      userTeams?.forEach((team: string) => {
-        const regex = new RegExp(`\\$TARGET_TEAM`, 'g')
-        const rolebindingForTeam: string = fileContent.replace(regex, team)
-        rolebindingArray.push(rolebindingForTeam)
-      })
-      return rolebindingArray.join('\n')
-    }
-
-    const fileContents = await Promise.all(
-      filteredFiles.map(async (file) => {
-        let fileContent = sessionUser.isPlatformAdmin
-          ? await readFile(`./dist/src/ttyManifests/adminTtyManifests/${file}`, 'utf-8')
-          : await readFile(`./dist/src/ttyManifests/${file}`, 'utf-8')
-        variableKeys.forEach((key) => {
-          const regex = new RegExp(`\\$${key}`, 'g')
-          fileContent = fileContent.replace(regex, variables[key] as string)
-        })
-        if (file === 'tty_02_Pod.yaml') fileContent = podContentAddTargetTeam(fileContent)
-        if (!sessionUser.isPlatformAdmin && file === 'tty_03_Rolebinding.yaml') {
-          fileContent = rolebindingContentsForUsers(fileContent)
-        }
-        return fileContent
-      }),
-    )
-    await writeFile('/tmp/ttyd.yaml', fileContents, 'utf-8')
-    await apply('/tmp/ttyd.yaml')
-    await watchPodUntilRunning('team-admin', `tty-${sessionUser.sub}`)
+    await this.getCloudTty().createTty(teamId, sessionUser, variables.FQDN)
+    await watchPodUntilRunning(targetNamespace, `tty-${sessionUser.sub}`)
 
     // check the pod every 30 minutes and terminate it after 2 hours of inactivity
     const ISACTIVE_INTERVAL = 30 * 60 * 1000
     const TERMINATE_TIMEOUT = 2 * 60 * 60 * 1000
     const intervalId = setInterval(() => {
-      getCloudttyActiveTime('team-admin', `tty-${sessionUser.sub}`).then((activeTime: number) => {
+      getCloudttyActiveTime(targetNamespace, `tty-${sessionUser.sub}`).then(async (activeTime: number) => {
         if (activeTime > TERMINATE_TIMEOUT) {
-          this.deleteCloudtty(sessionUser)
+          await this.getCloudTty().deleteTty(teamId, sessionUser)
           clearInterval(intervalId)
           debug(`Cloudtty terminated after ${TERMINATE_TIMEOUT / (60 * 60 * 1000)} hours of inactivity`)
         }
@@ -1730,16 +1700,8 @@ export default class OtomiStack {
     return { iFrameUrl: `https://tty.${variables.FQDN}/${sessionUser.sub}` }
   }
 
-  async deleteCloudtty(sessionUser: SessionUser): Promise<void> {
-    const { sub, isPlatformAdmin, teams } = sessionUser as { sub: string; isPlatformAdmin: boolean; teams: string[] }
-    const userTeams = teams.map((teamName) => `team-${teamName}`)
-    try {
-      if (await checkPodExists('team-admin', `tty-${sessionUser.sub}`)) {
-        await k8sdelete({ sub, isPlatformAdmin, userTeams })
-      }
-    } catch (error) {
-      debug('Failed to delete cloudtty')
-    }
+  async deleteCloudtty(teamId: string, sessionUser: SessionUser): Promise<void> {
+    await this.getCloudTty().deleteTty(teamId, sessionUser)
   }
 
   private async fetchCatalog(
@@ -1875,22 +1837,24 @@ export default class OtomiStack {
     }
   }
 
-  async getAplCatalogCharts(name: string): Promise<{ url: string; helmCharts: any; catalog: any; branch: string }> {
+  async getAplCatalogCharts(name: string): Promise<AplCatalogChartResponse[]> {
     const catalog = this.getAplCatalog(name)
     const { repositoryUrl, branch, name: catalogName, chartsPath } = catalog.spec
-    const charts = await this.getBYOWorkloadCatalog(
+    const { catalog: chartCatalog } = await this.getBYOWorkloadCatalog(
       repositoryUrl,
       branch,
       catalogName,
       chartsPath as string | undefined,
     )
-    return { ...charts, branch }
+    return (chartCatalog || []).map(
+      (chart: any) =>
+        toPlatformObject('AplCatalogChart', chart.name, [
+          { ...chart, chartsPath, branch, repositoryUrl },
+        ]) as unknown as AplCatalogChartResponse,
+    )
   }
 
-  async getAplCatalogChart(
-    name: string,
-    chartName: string,
-  ): Promise<{ url: string; branch: string; chart: any | null; chartsPath?: string }> {
+  async getAplCatalogChart(name: string, chartName: string): Promise<AplCatalogChartResponse> {
     const catalog = this.getAplCatalog(name)
     const { repositoryUrl, branch, chartsPath } = catalog.spec
     const { cluster } = await this.getSettings(['cluster'])
@@ -1904,10 +1868,14 @@ export default class OtomiStack {
           await fetchWorkloadCatalog(repositoryUrl, helmChartsDir, branch, cluster?.domainSuffix, undefined, chartsPath)
         ).catalog.find((c) => c.name === chartName) || null
 
-      return { url: repositoryUrl, branch, chart: singleChart, chartsPath }
+      return toPlatformObject(
+        'AplCatalogChart',
+        chartName,
+        singleChart ? [{ ...singleChart, chartsPath, branch, repositoryUrl }] : [],
+      ) as unknown as AplCatalogChartResponse
     } catch (error) {
       debug(`Error fetching workload chart '${chartName}': ${error.message}`)
-      return { url: repositoryUrl, branch, chart: null, chartsPath }
+      return toPlatformObject('AplCatalogChart', chartName, []) as unknown as AplCatalogChartResponse
     }
   }
 

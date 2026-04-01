@@ -300,6 +300,9 @@ export async function initApp(inOtomiStack?: OtomiStack) {
   // Register error middleware
   app.use(errorMiddleware)
 
+  app.get('/api-docs/swagger/swagger.json', (_req, res) => {
+    res.json(otomiSpec.spec)
+  })
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   app.use('/api-docs/swagger', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
 
