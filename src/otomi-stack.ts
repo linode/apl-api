@@ -138,10 +138,12 @@ import { getAplObjectFromV1, getV1MergeObject, getV1ObjectFromApl } from './util
 import {
   createPlatformSealedSecretManifest,
   createUserSealedSecret,
+  encryptAndMergeSecrets,
   ensureEncryptedData,
   ensureSealedSecretMetadata,
   extractSecretPaths,
   extractSettingsSecrets,
+  filterChangedSecrets,
   getSealedSecretsPEM,
   removeSettingsSecrets,
   sealedSecretManifest,
@@ -504,6 +506,51 @@ export default class OtomiStack {
     }
   }
 
+  /**
+   * Extracts secrets from settings data, encrypts changed values,
+   * merges with existing sealed secret, and saves the result.
+   */
+  private async extractAndStoreSettingsSecrets(
+    settingId: string,
+    updatedSettingsData: Record<string, any>,
+  ): Promise<AplRecord | undefined> {
+    const valuesSchema = await getValuesSchema()
+    const subSchema = valuesSchema.properties?.[settingId]
+    if (!subSchema) return undefined
+
+    const secretPaths = extractSecretPaths(subSchema)
+    const newSecrets = extractSettingsSecrets(secretPaths, updatedSettingsData[settingId])
+    if (Object.keys(newSecrets).length === 0) return undefined
+
+    const sealedSecretName = `${settingId}-secrets`
+    const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_SECRETS_NAMESPACE, sealedSecretName)
+
+    const existingManifest = await this.git.readFile(sealedSecretPath)
+    const existingEncryptedData: Record<string, string> =
+      (existingManifest?.spec?.encryptedData as Record<string, string>) || {}
+
+    const changedSecrets = filterChangedSecrets(newSecrets, existingEncryptedData)
+    const mergedEncryptedData = await encryptAndMergeSecrets(
+      sealedSecretName,
+      APL_SECRETS_NAMESPACE,
+      changedSecrets,
+      existingEncryptedData,
+    )
+
+    return this.saveNamespaceSealedSecret(APL_SECRETS_NAMESPACE, {
+      kind: 'SealedSecret',
+      metadata: { name: sealedSecretName },
+      spec: {
+        encryptedData: mergedEncryptedData,
+        template: {
+          type: 'kubernetes.io/opaque',
+          immutable: false,
+          metadata: { name: sealedSecretName, namespace: APL_SECRETS_NAMESPACE },
+        },
+      },
+    })
+  }
+
   private transformOtomiNodeSelector(settings: Settings): void {
     const nodeSelector = settings.otomi?.nodeSelector
     if (!Array.isArray(nodeSelector)) {
@@ -583,65 +630,13 @@ export default class OtomiStack {
       }
     }
 
-    // Extract secrets from settings data and store as SealedSecret
+    const sealedSecretRecord = await this.extractAndStoreSettingsSecrets(settingId, updatedSettingsData)
+
+    // Strip secrets from settings before disk storage
     const valuesSchema = await getValuesSchema()
     const subSchema = valuesSchema.properties?.[settingId]
-    let sealedSecretRecord: AplRecord | undefined
     if (subSchema) {
       const secretPaths = extractSecretPaths(subSchema)
-      const newSecrets = extractSettingsSecrets(secretPaths, updatedSettingsData[settingId])
-      const sealedSecretName = `${settingId}-secrets`
-      const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_SECRETS_NAMESPACE, sealedSecretName)
-
-      // Merge new secrets with existing sealed secret so unchanged secrets are preserved.
-      // Existing values are already encrypted; only new plaintext values get encrypted by
-      // createPlatformSealedSecretManifest, so we encrypt new values first, then merge.
-      if (Object.keys(newSecrets).length > 0) {
-        const existingManifest = await this.git.readFile(sealedSecretPath)
-        const existingEncryptedData: Record<string, string> =
-          (existingManifest?.spec?.encryptedData as Record<string, string>) || {}
-
-        // Filter out unchanged secrets: if the incoming value matches the existing
-        // encrypted value, the user didn't change it — skip to avoid double encryption
-        const changedSecrets: Record<string, string> = {}
-        for (const [key, value] of Object.entries(newSecrets)) {
-          if (existingEncryptedData[key] !== value) {
-            changedSecrets[key] = value
-          }
-        }
-
-        let mergedEncryptedData: Record<string, string>
-        if (Object.keys(changedSecrets).length > 0) {
-          // Encrypt only the actually changed values
-          const freshYaml = await createPlatformSealedSecretManifest(
-            sealedSecretName,
-            APL_SECRETS_NAMESPACE,
-            changedSecrets,
-          )
-          const freshManifest = parseYaml(freshYaml) as Record<string, any>
-          const freshEncryptedData: Record<string, string> = freshManifest.spec.encryptedData as Record<string, string>
-          mergedEncryptedData = { ...existingEncryptedData, ...freshEncryptedData }
-        } else {
-          // Nothing actually changed — keep existing data as-is
-          mergedEncryptedData = existingEncryptedData
-        }
-
-        // Save via saveNamespaceSealedSecret to update both disk and fileStore
-        // using the same code path as the /namespaces endpoint
-        sealedSecretRecord = await this.saveNamespaceSealedSecret(APL_SECRETS_NAMESPACE, {
-          kind: 'SealedSecret',
-          metadata: { name: sealedSecretName },
-          spec: {
-            encryptedData: mergedEncryptedData,
-            template: {
-              type: 'kubernetes.io/opaque',
-              immutable: false,
-              metadata: { name: sealedSecretName, namespace: APL_SECRETS_NAMESPACE },
-            },
-          },
-        })
-      }
-      // Remove secrets from a clone for disk storage — keep originals for the response
       const diskData = cloneDeep(updatedSettingsData[settingId])
       removeSettingsSecrets(secretPaths, diskData)
       settings[settingId] = removeBlankAttributes(diskData as Record<string, any>)

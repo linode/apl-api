@@ -5,7 +5,7 @@ import { get, isEmpty, unset } from 'lodash'
 import { APL_USERS_NAMESPACE } from 'src/constants'
 import { SealedSecretManifestRequest, SealedSecretManifestResponse, User } from 'src/otomi-models'
 import { cleanEnv } from 'src/validators'
-import { stringify as stringifyYaml } from 'yaml'
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { ValidationError } from '../error'
 import { getSealedSecretsCertificate, isK8sReachable, UserSecretData } from '../k8s_operations'
 
@@ -296,4 +296,42 @@ export function removeSettingsSecrets(secretPaths: string[], data: Record<string
     unset(data, path)
   }
   return data
+}
+
+/**
+ * Compares incoming secret values against existing encrypted data.
+ * Returns only secrets whose values differ from the existing encrypted values,
+ * preventing double encryption of unchanged secrets.
+ */
+export function filterChangedSecrets(
+  newSecrets: Record<string, string>,
+  existingEncryptedData: Record<string, string>,
+): Record<string, string> {
+  const changed: Record<string, string> = {}
+  for (const [key, value] of Object.entries(newSecrets)) {
+    if (existingEncryptedData[key] !== value) {
+      changed[key] = value
+    }
+  }
+  return changed
+}
+
+/**
+ * Encrypts changed secrets and merges them with existing encrypted data.
+ * If no secrets changed, returns the existing data as-is.
+ */
+export async function encryptAndMergeSecrets(
+  sealedSecretName: string,
+  namespace: string,
+  changedSecrets: Record<string, string>,
+  existingEncryptedData: Record<string, string>,
+): Promise<Record<string, string>> {
+  if (Object.keys(changedSecrets).length === 0) {
+    return existingEncryptedData
+  }
+
+  const freshYaml = await createPlatformSealedSecretManifest(sealedSecretName, namespace, changedSecrets)
+  const freshManifest = parseYaml(freshYaml) as Record<string, any>
+  const freshEncryptedData = freshManifest.spec.encryptedData as Record<string, string>
+  return { ...existingEncryptedData, ...freshEncryptedData }
 }
